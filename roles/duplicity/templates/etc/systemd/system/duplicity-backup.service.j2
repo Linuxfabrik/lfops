@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2022021701
+
+[Unit]
+Description=duplicity-backup service
+
+[Service]
+ExecStart=/usr/local/bin/duplicity-backup
+Type=oneshot
+User=root

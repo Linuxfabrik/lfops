@@ -1,0 +1,36 @@
+- block:
+
+  - name: 'dnf -y install python3-virtualenv'
+    ansible.builtin.package:
+      name:
+        - 'python3-virtualenv'
+      state: 'present'
+
+  # - name: 'Deploy /etc/systemd/system/python-venv-update.service'
+  #   ansible.builtin.template:
+  #     src: 'etc/systemd/system/python-venv-update.service.j2'
+  #     dest: '/etc/systemd/system/python-venv-update.service'
+  #     owner: 'root'
+  #     group: 'root'
+  #     mode: 0644
+
+  # - name: 'Deploy /etc/systemd/system/python-venv-update.timer'
+  #   ansible.builtin.template:
+  #     src: 'etc/systemd/system/python-venv-update.timer.j2'
+  #     dest: '/etc/systemd/system/python-venv-update.timer'
+  #     owner: 'root'
+  #     group: 'root'
+  #     mode: 0644
+
+  - name: 'Deploy the python-venv-update script'
+    ansible.builtin.file:
+      path: '/opt/python-venv'
+      state: 'directory'
+
+  - ansible.builtin.include_tasks: 'create-venv.yml'
+    loop: '{{ python_venv__combined_venvs }}'
+    loop_control:
+      loop_var: 'venv'
+
+  tags:
+    - 'python_venv'

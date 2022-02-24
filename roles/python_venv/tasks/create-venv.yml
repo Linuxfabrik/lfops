@@ -1,0 +1,31 @@
+- name: 'Create virtualenv in /opt/python-venv/{{ venv.name }}'
+  ansible.builtin.shell:
+    cmd: 'python3 -m venv {% if venv.system_site_packages|d("True") %} --system-site-packages {% endif %} {{ venv.name }}'
+    chdir: '/opt/python-venv'
+    creates: '/opt/python-venv/{{ venv.name }}/bin/activate'
+
+- name: 'pip install -U pip wheel'
+  ansible.builtin.pip:
+    name:
+      - 'pip'
+      - 'wheel'
+    state: 'latest'
+    virtualenv: '/opt/python-venv/{{ venv.name }}'
+
+- name: 'Install dnf package requirements'
+  ansible.builtin.package:
+    name: '{{ venv.package_requirements }}'
+    state: 'present'
+
+- name: 'Install packages using pip'
+  ansible.builtin.pip:
+    name: '{{ venv.packages }}'
+    state: 'present'
+    virtualenv: '/opt/python-venv/{{ venv.name }}'
+
+# - ansible.builtin.name: 'systemctl {{ duplicity__timer_enabled | bool | ternary("enable", "disable") }} python-venv-update@.timer --now'
+#   systemd:
+#       name: 'python-venv-update@.timer'
+#       state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
+#       enabled: '{{ duplicity__timer_enabled }}'
+#       daemon_reload: true

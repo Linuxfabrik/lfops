@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2022021801
+
+# TODO: error handling, throw worst exit code but continue
+
+source /etc/duplicity/duplicity.conf
+source /opt/python-venv/duplicity/bin/activate
+
+# do backups
+for SRC in "${BACKUP_SOURCES[@]}"
+do
+    ionice --class=3 nice --adjustment=19 duplicity \
+        --asynchronous-upload \
+        --cf-backend="$CF_BACKEND" \
+        --copy-links \
+        --encrypt-key="$ENCRYPT_KEY" \
+        --exclude-other-filesystems \
+        --full-if-older-than="$RETENTION_TIME" \
+        --log-file=/var/log/duplicity.log \
+        --log-timestamp \
+        --num-retries=3 \
+        --verbosity="$LOGLEVEL" \
+        --volsize=200 \
+        "$SRC" \
+        "$BACKUP_DEST$SRC"
+
+    # Delete all backup sets older than the given time. Old backup sets will not be deleted if
+    # backup sets newer than time depend on them. Note, this action cannot be combined with backup
+    # or other actions, such as cleanup. Note also that --force will be needed to delete the files
+    # instead of just listing them.
+    nice --adjustment=19 duplicity remove-older-than "$RETENTION_TIME" \
+        --force \
+        --log-file=/var/log/duplicity.log \
+        --log-timestamp \
+        --num-retries=3 \
+        --verbosity="$LOGLEVEL" \
+        "$BACKUP_DEST$SRC"
+done

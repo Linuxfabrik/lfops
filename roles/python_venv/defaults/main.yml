@@ -1,0 +1,11 @@
+python_venv__dependent_venvs: []
+python_venv__group_venvs: []
+python_venv__host_venvs: []
+python_venv__role_venvs: []
+
+python_venv__combined_venvs: '{{ python_venv__role_venvs +
+  python_venv__group_venvs +
+  python_venv__host_venvs +
+  python_venv__dependent_venvs
+  | flatten
+ }}'

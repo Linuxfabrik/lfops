@@ -1,0 +1,19 @@
+# {{ ansible_managed }}
+# 2022021701
+
+# Backup Behaviour
+BACKUP_SOURCES=({{ duplicity__backup_sources | map('quote') | join(' ') }})
+BACKUP_DEST='{{ duplicity__backup_dest }}'
+RETENTION_TIME='{{ duplicity__retention_time }}'
+LOGLEVEL='{{ duplicity__loglevel }}' # error, warning, notice, info, debug
+
+# Swift Storage Backend
+CF_BACKEND='{{ duplicity__cf_backend }}'
+export SWIFT_AUTHURL='{{ duplicity__swift_authurl }}'
+export SWIFT_USERNAME='{{ duplicity__swift_username }}'
+export SWIFT_PASSWORD='{{ duplicity__swift_password }}'
+export SWIFT_AUTHVERSION='{{ duplicity__swift_authversion }}'
+export SWIFT_TENANTNAME='{{ duplicity__swift_tenantname }}'
+
+# GPG
+export ENCRYPT_KEY='{{ duplicity__gpg_key["key"]["fingerprint"] }}'

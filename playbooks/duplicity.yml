@@ -1,0 +1,42 @@
+- name: 'Manage and configure duplicity'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lf_duplicity'
+
+  pre_tasks:
+
+    # A list of tasks to execute before roles, regardless of used tags.
+    # Examples:
+    # * Disable Monitoring alerts
+    # * Disable the server in haproxy
+    # * Take server out of load balancer pool
+    # * Test the runtime environment
+    # * Gather OS family to build groups where roles can be applied later on
+
+    # - name: 'Preflight'
+    #   include_role:
+    #     name: 'lf-preflight'
+    #   tags:
+    #     - 'always'
+
+  roles:
+
+    - role: 'repo-epel'
+      when:
+        - (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] in ['7', '8'])
+
+    - role: 'python_venv'
+      python_venv__dependent_venvs:
+        - '{{ duplicity__python_venv__dependent_venvs|d({}) }}'
+      when:
+        - not duplicity__skip_python_venv|d(False)
+
+    - role: 'duplicity'
+
+  post_tasks:
+
+    # A list of tasks to execute after the roles, regardless of used tags.
+    # Examples:
+    # * Set SELinux Booleans, Policies etc.
+    # * Set Icinga2 Tags
+    # ...

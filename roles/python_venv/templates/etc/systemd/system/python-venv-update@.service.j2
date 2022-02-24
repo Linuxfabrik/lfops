@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2022021701
+
+[Unit]
+Description=python-venv update service for /opt/python-venv/%i
+
+[Service]
+ExecStart=/opt/python-venv/python-venv-update
+Type=oneshot
+User=root

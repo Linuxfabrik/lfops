@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022021701
+
+[Unit]
+Description=python-venv update timer for /opt/python-venv/%i
+
+[Timer]
+OnCalendar={{ python_venv__on_calendar }}
+Unit=python-venv@%i.service
+
+[Install]
+WantedBy=timers.target
