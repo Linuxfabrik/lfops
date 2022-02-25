@@ -31,7 +31,7 @@
   - name: 'Generate gpg key'
     linuxfabrik.lfops.gpg_key:
       name_real: 'duplicity'
-      name_email: 'info@linuxfabrik.ch'
+      name_email: '{{ ansible_facts["user_id"] }}@{{ ansible_facts["nodename"] }}'
       key_type: 'RSA'
       key_length: 4096
       passphrase: '{{ duplicity__gpg_passphrase }}'
