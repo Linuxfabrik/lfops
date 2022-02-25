@@ -4,16 +4,16 @@
 
 To install the latest **stable** release:
 ```bash
-ansible-galaxy collection install linuxfabrik.ansible_mlp
+ansible-galaxy collection install linuxfabrik.lfops
 ```
 
 To install the latest **development** version:
 ```bash
 # via HTTPS
-ansible-galaxy collection install git+https://github.com/linuxfabrik/ansible_mlp.git
+ansible-galaxy collection install git+https://github.com/Linuxfabrik/lfops.git
 
 # via SSH
-ansible-galaxy collection install git@github.com:linuxfabrik/ansible_mlp.git
+ansible-galaxy collection install git@github.com:Linuxfabrik/lfops.git
 ```
 
 To develop directly in the git repository:
