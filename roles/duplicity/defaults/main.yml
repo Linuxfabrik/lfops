@@ -18,7 +18,7 @@ duplicity__loglevel: 'notice' # error, warning, notice, info, debug
 duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45|random(seed=inventory_hostname) }}'
 duplicity__on_calendar_hour: '23'
 duplicity__retention_time: '30D' # days
-duplicity__save_gpg_keys_to_bitwarden: False
+duplicity__save_gpg_keys_to_bitwarden: false
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
 duplicity__swift_authversion: '3'
 duplicity__timer_enabled: true

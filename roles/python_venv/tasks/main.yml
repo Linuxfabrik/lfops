@@ -22,7 +22,7 @@
   #     group: 'root'
   #     mode: 0644
 
-  - name: 'Deploy the python-venv-update script'
+  - name: 'mkdir -p /opt/python-venv'
     ansible.builtin.file:
       path: '/opt/python-venv'
       state: 'directory'

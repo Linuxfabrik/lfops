@@ -1,11 +1,5 @@
 - block:
 
-  # - name: 'dnf -y install duplicity'
-  #   ansible.builtin.yum:
-  #     name:
-  #       - 'duplicity'
-  #     state: 'present'
-
   - name: mkdir /etc/duplicity
     ansible.builtin.file:
       path: '/etc/duplicity'
@@ -25,9 +19,6 @@
 
 - block:
 
-  # - name: 'Gather the package facts to get the installed duplicity version'
-  #   ansible.builtin.package_facts:
-
   - name: 'Generate gpg key'
     linuxfabrik.lfops.gpg_key:
       name_real: 'duplicity'
@@ -43,27 +34,27 @@
   - block:
 
     - name: 'Create temporary directory for the gpg keys'
-      tempfile:
+      ansible.builtin.tempfile:
         state: 'directory'
         suffix: '{{ ansible_facts["nodename"] }}-gpg-keys'
       delegate_to: 'localhost'
-      changed_when: False
+      changed_when: false
       register: duplicity__tempdir
 
     - name: 'Save the private key to the temporary directory'
-      copy:
+      ansible.builtin.copy:
         dest: '{{ duplicity__tempdir["path"] }}/private-key'
         content: '{{ duplicity__gpg_key["ascii_armored_private_key"] }}'
         mode: 0600
-      changed_when: False
+      changed_when: false
       delegate_to: 'localhost'
 
     - name: 'Save the public key to the temporary directory'
-      copy:
+      ansible.builtin.copy:
         dest: '{{ duplicity__tempdir["path"] }}/public-key'
         content: '{{ duplicity__gpg_key["ascii_armored_public_key"] }}'
         mode: 0600
-      changed_when: False
+      changed_when: false
       delegate_to: 'localhost'
 
     - name: 'Save the gpg keys in bitwarden'
@@ -78,10 +69,10 @@
       delegate_to: 'localhost'
 
     - name: 'Delete temporary directory'
-      file:
+      ansible.builtin.file:
         path: '{{ duplicity__tempdir["path"] }}'
         state: 'absent'
-      changed_when: False
+      changed_when: false
 
     # block
     when: 'duplicity__save_gpg_keys_to_bitwarden and not ansible_check_mode'
