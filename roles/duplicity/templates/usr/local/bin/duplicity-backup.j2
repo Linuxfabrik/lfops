@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2022021801
+# 2022022501
 
-# TODO: error handling, throw worst exit code but continue
+exit_code=0
+check_exit_code() {
+    if [[ $1 -gt $exit_code ]]; then
+        exit_code=$1
+    fi
+}
 
 source /etc/duplicity/duplicity.conf
 source /opt/python-venv/duplicity/bin/activate
@@ -24,6 +29,7 @@ do
         --volsize=200 \
         "$SRC" \
         "$BACKUP_DEST$SRC"
+    check_exit_code $?
 
     # Delete all backup sets older than the given time. Old backup sets will not be deleted if
     # backup sets newer than time depend on them. Note, this action cannot be combined with backup
@@ -36,4 +42,7 @@ do
         --num-retries=3 \
         --verbosity="$LOGLEVEL" \
         "$BACKUP_DEST$SRC"
+    check_exit_code $?
 done
+
+exit $exit_code
