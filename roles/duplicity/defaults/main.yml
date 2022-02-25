@@ -33,4 +33,5 @@ duplicity__python_venv__dependent_venvs:
     package_requirements:
       - 'gcc'
       - 'librsync-devel'
-
+    exposed_binaries:
+      - 'duplicity'
