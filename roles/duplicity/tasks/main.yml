@@ -8,11 +8,6 @@
       group: 'root'
       mode: 0755
 
-  - name: 'Create /var/log/duplicity'
-    ansible.builtin.file:
-      path: '/var/log/duplicity'
-      state: 'directory'
-
   tags:
     - 'duplicity'
 
