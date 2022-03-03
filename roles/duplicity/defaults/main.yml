@@ -14,6 +14,15 @@ duplicity__backup_sources:
   - '/var/www/html'
 
 duplicity__cf_backend: 'swift'
+duplicity__excludes:
+  - '**/*.git*'
+  - '**/*.svn*'
+  - '**/*.temp'
+  - '**/*.tmp'
+  - '**/.cache'
+  - '**/cache'
+  - '**/log'
+
 duplicity__loglevel: 'notice' # error, warning, notice, info, debug
 duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45|random(seed=inventory_hostname) }}'
 duplicity__on_calendar_hour: '23'

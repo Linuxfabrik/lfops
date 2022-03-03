@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2022022501
+# 2022030201
 
 exit_code=0
 check_exit_code() {
@@ -13,10 +13,9 @@ source /etc/duplicity/duplicity.conf
 source /opt/python-venv/duplicity/bin/activate
 
 # do backups
-for SRC in "${BACKUP_SOURCES[@]}"
-do
+for SRC in "${BACKUP_SOURCES[@]}"; do
+    echo -e "\n\n=== Start of backups for $SRC ===" >> /var/log/duplicity.log
     ionice --class=3 nice --adjustment=19 duplicity \
-        --asynchronous-upload \
         --cf-backend="$CF_BACKEND" \
         --copy-links \
         --encrypt-key="$ENCRYPT_KEY" \
@@ -27,6 +26,9 @@ do
         --num-retries=3 \
         --verbosity="$LOGLEVEL" \
         --volsize=200 \
+{% for exclude in duplicity__excludes %}
+        --exclude '{{ exclude }}' \
+{% endfor %}
         "$SRC" \
         "$BACKUP_DEST$SRC"
     check_exit_code $?
@@ -43,6 +45,7 @@ do
         --verbosity="$LOGLEVEL" \
         "$BACKUP_DEST$SRC"
     check_exit_code $?
+    echo -e "=== End of backups for $SRC ===" >> /var/log/duplicity.log
 done
 
 exit $exit_code
