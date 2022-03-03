@@ -1,23 +1,7 @@
 - name: 'Manage and configure duplicity'
   collections: ['linuxfabrik.lfops']
   hosts:
-    - 'lf_duplicity'
-
-  pre_tasks:
-
-    # A list of tasks to execute before roles, regardless of used tags.
-    # Examples:
-    # * Disable Monitoring alerts
-    # * Disable the server in haproxy
-    # * Take server out of load balancer pool
-    # * Test the runtime environment
-    # * Gather OS family to build groups where roles can be applied later on
-
-    # - name: 'Preflight'
-    #   include_role:
-    #     name: 'lf-preflight'
-    #   tags:
-    #     - 'always'
+    - 'lfops_duplicity'
 
   roles:
 
@@ -32,11 +16,3 @@
         - not duplicity__skip_python_venv|d(False)
 
     - role: 'duplicity'
-
-  post_tasks:
-
-    # A list of tasks to execute after the roles, regardless of used tags.
-    # Examples:
-    # * Set SELinux Booleans, Policies etc.
-    # * Set Icinga2 Tags
-    # ...
