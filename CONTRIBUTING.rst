@@ -1,5 +1,5 @@
-Linuxfabrik's Ansible Role Developer Guidelines
-===============================================
+Linuxfabrik's Ansible Development Guidelines
+============================================
 
 Rules of Thumb
 --------------
@@ -10,7 +10,7 @@ Rules of Thumb
     .. code-block:: yaml
 
           - name: Create new DBA '{{ mariadb_root.user }}' after a fresh installation
-            command: mysql --unbuffered --execute '{{ item }}'
+            ansible.builtin.command: mysql --unbuffered --execute '{{ item }}'
             with_items:
               - create user if not exists "{{ mariadb_root.user }}"@"%" identified by "{{ mariadb_root.password }}";
               - grant all privileges on *.* to "{{ mariadb_root.user }}"@"%" with grant option;
@@ -73,7 +73,7 @@ Quotes
 
     # bad
     - name: start robot named S1m0ne
-      service:
+      ansible.builtin.service:
         name: s1m0ne
         state: started
         enabled: true
@@ -81,7 +81,7 @@ Quotes
 
     # good
     - name: 'start robot named S1m0ne'
-      service:
+      ansible.builtin.service:
         name: 's1m0ne'
         state: 'started'
         enabled: true
@@ -89,7 +89,7 @@ Quotes
 
     # double quotes w/ nested single quotes
     - name: 'start all robots'
-      service:
+      ansible.builtin.service:
         name: '{{ item["robot_name"] }}''
         state: 'started'
         enabled: true
@@ -98,12 +98,12 @@ Quotes
 
     # double quotes to escape characters
     - name 'print some text on two lines'
-      debug:
+      ansible.builtin.debug:
         msg: "This text is on\ntwo lines"
 
     # folded scalar style
     - name: 'robot infos'
-      debug:
+      ansible.builtin.debug:
         msg: >
           Robot {{ item['robot_name'] }} is {{ item['status'] }} and in {{ item['az'] }}
           availability zone with a {{ item['curiosity_quotient'] }} curiosity quotient.
@@ -111,13 +111,13 @@ Quotes
 
     # folded scalar when the string has nested quotes already
     - name: 'print some text'
-      debug:
+      ansible.builtin.debug:
         msg: >
           "I haven’t the slightest idea," said the Hatter.
 
     # don't quote booleans/numbers
     - name: 'download google homepage'
-      get_url:
+      ansible.builtin.get_url:
         dest: '/tmp'
         timeout: 60
         url: 'https://google.com'
@@ -125,18 +125,18 @@ Quotes
 
     # variables example 1
     - name: 'set a variable'
-      set_fact:
+      ansible.builtin.set_fact:
         my_var: 'test'
 
     # variables example 2
     - name: 'print my_var'
-      debug:
+      ansible.builtin.debug:
         var: my_var
       when: ansible_facts['os_family'] == 'Darwin'
 
     # variables example 3
     - name: 'set another variable'
-      set_fact:
+      ansible.builtin.set_fact:
         my_second_var: '{{ my_var }}'
 
 Why?
@@ -167,7 +167,7 @@ See also:
 Deploying files to the remote server
 ------------------------------------
 
-* Always use the ``template`` module instead of the ``copy`` module, even if there are currently no variables in the file. This makes it easier to extend later on, and allows the usage of an automatically generated header.
+* Always use the ``ansible.builtin.template`` module instead of the ``ansible.builtin.copy`` module, even if there are currently no variables in the file. This makes it easier to extend later on, and allows the usage of an automatically generated header.
 
 * Always add the following to the top of templates, using the appropriate comment syntax:
 
@@ -176,7 +176,7 @@ Deploying files to the remote server
         # {{ ansible_managed }}
         # 2021081601
 
-* Do not use ``# Rendered at {{ template_run_date }}``. Such a timestamp is the date of the last change to the template itself, but changes on every Ansible run.
+* Do not use ``{{ template_run_date }}``. Such a timestamp is the date of the last change to the template itself, but changes on every Ansible run.
 
 * Use the target path for the file in the ``template`` folder, for example: ``templates/etc/httpd/sites-available/default.conf.j2``. This makes it clear what the file is for, and avoids name collisions.
 
@@ -195,15 +195,15 @@ Modules
 
 * Always use meta modules wherever possible:
 
-    * ``package`` instead of ``yum``, ``dnf`` or ``apt``
-    * ``service`` instead of ``systemd``
+    * ``ansible.builtin.package`` instead of ``ansible.builtin.yum``, ``ansible.builtin.dnf`` or ``ansible.builtin.apt``
+    * ``ansible.builtin.service`` instead of ``ansible.builtin.systemd``
 
 * Use some modules in preference to others:
 
-    * ``command`` or ``win_command`` over ``shell`` over ``raw``
-    * ``template`` over ``copy`` if deploying files to the remote host (see above)
+    * ``ansible.builtin.command`` or ``ansible.windows.win_command`` over ``ansible.builtin.shell`` over ``ansible.builtin.raw``
+    * ``ansible.builtin.template`` over ``ansible.builtin.copy`` if deploying files to the remote host (see above)
 
-* Always use ``state: 'present'`` for the ``package`` module - we are installing, not updating.
+* Always use ``state: 'present'`` for the ``ansible.builtin.package`` module - we are installing, not updating.
 * Always use the FQCN of the module.
 
 
@@ -211,25 +211,11 @@ Tags
 ----
 
 * Naming scheme: ``role_name`` and ``role_name:section``, for example ``apache_httpd``, ``apache_httpd:vhosts``.
-* If tags are used, the role should only do what one expects from the tag name. For example, the ``mariadb:user`` tag only manages MariaDB users.
+* The role should only do what one expects from the tag name. For example, the ``mariadb:user`` tag only manages MariaDB users.
 * The README of a role should provide a list of the available tags and what they do.
 * The tags should be set in the role itself. Do not set them in the playbook.
-
-Rollen-Tags, Schlüsselwörter zur Steuerung: bei jedem Task überlegen, zu welchen Bereichen dieser gehört. Ein Task wird in der Regel mehrere Tags besitzen. Tags sind notwendig: ohne Tags kann man einen Ansible-Run nicht auf eine bestimmte Rolle einschränken.
-
-    <rollenname> Rollen-Identifikator Installationsroutinen sollten idempotent sein, können aber nicht immer (Beispiel kernel-disable-transparent-hugepages), und sollten dann skippen.
-
-    <rollenname>-configure Man möchte seine Applikation idempotent konfigurieren. Falls Tasks das nicht garantieren können, skippen. Gehören auf jeden Fall auch immer zu „…-install".
-
-    <rollenname>-user Anlegen von Usern. Kann auch zu „…-install" gehören.
-
-    <rollenname>-database Anlegen von Datenbanken. Kann auch zu „…-install" gehören.
-
-    <rollenname>-restart Kann auch zu „…-install" gehören.
-
-    <rollenname>-uninstall
-
-* Blocks/Tasks that install base packages do not need a tag like ``apache:pkgs``, ``apache:setup`` or ``apache:install``. Why? There is no reason to just run the setup task by tag, you always need to do at least some configuration afterwards.
+* Blocks/tasks that install base packages do not need a tag like ``apache:pkgs``, ``apache:setup`` or ``apache:install``. Why? There is no reason to just run the setup task by tag, you always need to do at least some configuration afterwards.
+* For each task, consider to which areas it belongs. A task will usually have multiple tags.
 
 
 Being OS-specific
@@ -300,10 +286,10 @@ For example:
 Variables
 ---------
 
-* ./vars: Variables that are not to be edited by users
-* ./defaults: Default variables for the role, might be overridden by the user using group_vars or host_vars
+* ``./vars``: Variables that are not to be edited by users
+* ``./defaults``: Default variables for the role, might be overridden by the user using group_vars or host_vars
 * Naming scheme: ``<role name>__<optional: config file>_<setting name>``, for example ``apache_httpd__server_admin``.
-* Every argument accepted from outside of the role should be given a default value in defaults/main.yml. This allows a single place for users to look to see what inputs are expected. Avoid giving default values in vars/main.yml as such values are very high in the precedence order and are difficult for users and consumers of a role to override.
+* Every argument accepted from outside of the role should be given a default value in ``defaults/main.yml``. This allows a single place for users to look to see what inputs are expected. Avoid giving default values in vars/main.yml as such values are very high in the precedence order and are difficult for users and consumers of a role to override.
 * No need to invent new names, use the key-names from the config file (if possible), for example ``redis__maxmemory``.
 * Avoid embedding large lists or "magic values" directly into the playbook. Such static lists should be placed into the ``vars/main.yml`` file and named appropriately.
 * Any secrets (passwords, tokens etc.) should not be provided with default values in the role. The tasks should be implemented in such a way that any secrets required, but not provided, should result in task execution failure. It is important for a secure-by-default implementation to ensure that an environment is not vulnerable due to the production use of default secrets. Deployers must be forced to properly provide their own secret variable values. Example:
@@ -340,24 +326,13 @@ Variables
 Ansible Facts / Magic Vars
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Currently, Ansible recognizes both the new fact naming system (using
-ansible_facts) and the old pre-2.5 "facts injected as separate variables" naming
-system.
-
-You can turn off the old naming system by setting the inject_facts_as_vars
-parameter in the [default] section of the Ansible configuration file to false. The
-default setting is currently true.
-
-The default value of inject_facts_as_vars will probably change to false
-in a future version of Ansible. If it is set to false, you can only reference Ansible
-facts using the new ansible_facts.* naming system.
-
+* Always use ``ansible_facts``. Currently, Ansible recognizes both the new fact naming system (using ``ansible_facts``) and the old pre-2.5 "facts injected as separate variables" naming system. The old naming system will be deprecated in a future release of Ansible.
 
 
 Documenting Variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-Document variables in the README. Have a look at lf-httpd-apache/README.rst on how this could look like.
+* Document variables in the ``README``. Have a look at ``httpd-apache/README.md`` on how this could look like.
 
 
 Handling default values
