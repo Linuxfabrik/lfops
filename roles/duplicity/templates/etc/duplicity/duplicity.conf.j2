@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022021701
+# 2022030401
 
 # Backup Behaviour
 BACKUP_SOURCES=({{ duplicity__backup_sources | map('quote') | join(' ') }})
@@ -17,3 +17,4 @@ export SWIFT_TENANTNAME='{{ duplicity__swift_tenantname }}'
 
 # GPG
 export ENCRYPT_KEY='{{ duplicity__gpg_key["key"]["fingerprint"] }}'
+export PASSPHRASE=''

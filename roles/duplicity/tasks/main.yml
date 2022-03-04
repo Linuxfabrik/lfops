@@ -20,58 +20,37 @@
       name_email: '{{ ansible_facts["user_id"] }}@{{ ansible_facts["nodename"] }}'
       key_type: 'RSA'
       key_length: 4096
-      passphrase: '{{ duplicity__gpg_passphrase }}'
       subkey_type: 'RSA'
       subkey_length: 4096
     register: duplicity__gpg_key
 
+  - name: 'Deploy the public master GPG key to /tmp/public-master-key'
+    ansible.builtin.copy:
+      dest: '/tmp/public-master-key'
+      content: '{{ duplicity__public_master_key }}'
+      mode: 0600
+    changed_when: false
 
-  - block:
+  - name: 'gpg --import /tmp/public-master-key'
+    ansible.builtin.command: 'gpg --import /tmp/public-master-key'
+    register: 'duplicity__gpg_import_result'
+    changed_when: '"not changed" not in duplicity__gpg_import_result.stderr'
 
-    - name: 'Create temporary directory for the gpg keys'
-      ansible.builtin.tempfile:
-        state: 'directory'
-        suffix: '{{ ansible_facts["nodename"] }}-gpg-keys'
-      delegate_to: 'localhost'
-      changed_when: false
-      register: duplicity__tempdir
+  - name: 'gpg --import /tmp/public-master-key'
+    ansible.builtin.command: 'gpg --import /tmp/public-master-key'
+    register: 'duplicity__gpg_import_result'
+    changed_when: '"not changed" not in duplicity__gpg_import_result.stderr'
 
-    - name: 'Save the private key to the temporary directory'
-      ansible.builtin.copy:
-        dest: '{{ duplicity__tempdir["path"] }}/private-key'
-        content: '{{ duplicity__gpg_key["ascii_armored_private_key"] }}'
-        mode: 0600
-      changed_when: false
-      delegate_to: 'localhost'
+  - name: 'rm -f /tmp/public-master-key'
+    ansible.builtin.file:
+      path: '/tmp/public-master-key'
+      state: 'absent'
+    changed_when: false
 
-    - name: 'Save the public key to the temporary directory'
-      ansible.builtin.copy:
-        dest: '{{ duplicity__tempdir["path"] }}/public-key'
-        content: '{{ duplicity__gpg_key["ascii_armored_public_key"] }}'
-        mode: 0600
-      changed_when: false
-      delegate_to: 'localhost'
-
-    - name: 'Save the gpg keys in bitwarden'
-      linuxfabrik.lfops.bitwarden_item:
-        hostname: '{{ ansible_facts["nodename"] }}'
-        purpose: 'duplicity GPG Keys'
-        attachments:
-          - '{{ duplicity__tempdir["path"] }}/private-key'
-          - '{{ duplicity__tempdir["path"] }}/public-key'
-        collection_id: '{{ bitwarden__collection_id | default(omit) }}'
-        organization_id: '{{ bitwarden__organization_id | default(omit) }}'
-      delegate_to: 'localhost'
-
-    - name: 'Delete temporary directory'
-      ansible.builtin.file:
-        path: '{{ duplicity__tempdir["path"] }}'
-        state: 'absent'
-      changed_when: false
-
-    # block
-    when: 'duplicity__save_gpg_keys_to_bitwarden and not ansible_check_mode'
-
+  - name: "echo '{{ duplicity__public_master_long_keyid }}:6:' | gpg --import-ownertrust # set trust to ultimate"
+    ansible.builtin.shell: "echo '{{ duplicity__public_master_long_keyid }}:6:' | gpg --import-ownertrust"
+    register: 'duplicity__gpg_import_ownertrust_result'
+    changed_when: '"ownertrust" in duplicity__gpg_import_ownertrust_result.stderr'
 
   - name: 'Deploy /etc/duplicity/duplicity.conf'
     ansible.builtin.template:
