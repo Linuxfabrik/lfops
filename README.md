@@ -1,5 +1,10 @@
 # Ansible Collection of Roles, Playbooks and Plugins for managing Linux-based data centers
 
+## Requirements
+
+You need at least Ansible v2.10 (we are using Ansible v2.12+).
+
+
 ## Installation
 
 To install the latest **stable** release:
@@ -22,6 +27,7 @@ git clone git@github.com:Linuxfabrik/lfops.git
 mkdir -p ~/.ansible/collections/ansible_collections/linuxfabrik/
 ln -s /path/to/lfops ~/.ansible/collections/ansible_collections/linuxfabrik/
 ```
+
 
 ## Documentation
 
