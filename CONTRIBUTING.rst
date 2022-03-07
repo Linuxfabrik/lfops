@@ -205,6 +205,18 @@ Modules
 
 * Always use ``state: 'present'`` for the ``ansible.builtin.package`` module - we are installing, not updating.
 * Always use the FQCN of the module.
+* ``ansible.builtin.uri`` module: if consuming a RESTful API, check if it is returning the required content
+
+    .. code-block:: yaml
+
+        tasks:
+          - ansible.builtin.uri:
+              url: http://api.myapp.com
+              return_content: yes
+            register: apiresponse
+          - fail:
+              msg: 'version was not provided'
+            when: "'version' not in apiresponse.content"
 
 
 Tags
