@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2022030701
+# 2022030702
 
 exit_code=0
 check_exit_code() {
+    # ignore missing directories (backup_dir_doesnt_exist = 13)
+    if [[ $1 -eq 13 ]]; then
+        return
+    fi
+
     if [[ $1 -gt $exit_code ]]; then
         exit_code=$1
     fi
@@ -14,7 +19,7 @@ source /opt/python-venv/duplicity/bin/activate
 
 # do backups
 for SRC in "${BACKUP_SOURCES[@]}"; do
-    echo -e "\n\n=== Start of backups for $SRC ===" >> /var/log/duplicity.log
+    echo -e "\n\n=== Start of backups for $SRC at $(date --iso-8601=seconds) ===" >> /var/log/duplicity.log
     ionice --class=3 nice --adjustment=19 duplicity \
         --cf-backend="$CF_BACKEND" \
         --copy-links \
@@ -46,7 +51,7 @@ for SRC in "${BACKUP_SOURCES[@]}"; do
         --verbosity="$LOGLEVEL" \
         "$BACKUP_DEST$SRC"
     check_exit_code $?
-    echo -e "=== End of backups for $SRC ===" >> /var/log/duplicity.log
+    echo -e "=== End of backups for $SRC at $(date --iso-8601=seconds) ===" >> /var/log/duplicity.log
 done
 
 exit $exit_code
