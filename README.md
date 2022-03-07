@@ -7,12 +7,12 @@ You need at least Ansible v2.10 (we are using Ansible v2.12+).
 
 ## Installation
 
-To install the latest **stable** release:
+To install the latest **stable** release of the collection:
 ```bash
 ansible-galaxy collection install linuxfabrik.lfops
 ```
 
-To install the latest **development** version:
+To install the latest **development** version of the collection:
 ```bash
 # via HTTPS
 ansible-galaxy collection install git+https://github.com/Linuxfabrik/lfops.git
@@ -21,7 +21,7 @@ ansible-galaxy collection install git+https://github.com/Linuxfabrik/lfops.git
 ansible-galaxy collection install git@github.com:Linuxfabrik/lfops.git
 ```
 
-To develop directly in the git repository:
+To use the git repository directly (just for development purposes):
 ```bash
 git clone git@github.com:Linuxfabrik/lfops.git
 mkdir -p ~/.ansible/collections/ansible_collections/linuxfabrik/
