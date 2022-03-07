@@ -1,0 +1,51 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.include_tasks: 'platform-variables.yml'
+
+  - name: 'Perform platform/version specific tasks'
+    ansible.builtin.include_tasks: 'platform-tasks.yml'
+
+  tags:
+    - 'repo-epel'
+
+
+- block:
+
+  - name: 'yum -y install epel-release'
+    yum:
+      name: 'epel-release'
+      state: 'present'
+
+  when: lfops__repo_mirror_url is not defined or not lfops__repo_mirror_url|length
+  tags:
+    - 'repo-epel'
+
+
+- block:
+
+  - name: 'deploy the repo files (mirror: {{ lfops__repo_mirror_url | default("") }})'
+    template:
+      src: '{{ item }}.j2'
+      dest: '/etc/yum.repos.d/{{ item | basename | trim(".j2") }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0644
+    loop: '{{ repo_epel__repo_files }}'
+
+  - name: 'curl {{ repo_epel__gpg_key_url }} -O /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
+    get_url:
+      url: '{{ repo_epel__gpg_key_url }}'
+      dest: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
+    delegate_to: localhost
+    check_mode: no # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }} to {{ repo_epel__gpg_key_dest }}'
+    copy:
+      src: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
+      dest: '{{ repo_epel__gpg_key_dest }}'
+
+  when:
+    - lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length
+  tags:
+    - 'repo-epel'

@@ -1,0 +1,38 @@
+# {{ ansible_managed }}
+# 2020091001
+
+[epel]
+name=Extra Packages for Enterprise Linux $releasever - $basearch
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/8/Everything/x86_64
+{% else %}
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Everything/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% endif %}
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+
+[epel-debuginfo]
+name=Extra Packages for Enterprise Linux $releasever - $basearch - Debug
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/8/Everything/x86_64/debug
+{% else %}
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Everything/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% endif %}
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+
+[epel-source]
+name=Extra Packages for Enterprise Linux $releasever - $basearch - Source
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/8/Everything/SRPMS
+{% else %}
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Everything/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% endif %}
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1

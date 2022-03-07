@@ -1,0 +1,24 @@
+# {{ ansible_managed }}
+# 2021100601
+
+# Rocky-PowerTools.repo
+#
+# The mirrorlist system uses the connecting IP address of the client and the
+# update status of each mirror to pick current mirrors that are geographically
+# close to the client.  You should use this for Rocky updates unless you are
+# manually picking other mirrors.
+#
+# If the mirrorlist does not work for you, you can try the commented out
+# baseurl line instead.
+
+[powertools]
+name=Rocky Linux $releasever - PowerTools
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/rocky/$releasever/PowerTools/$basearch/os/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=PowerTools-$releasever
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/PowerTools/$basearch/os/
+{% endif %}
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rockyofficial

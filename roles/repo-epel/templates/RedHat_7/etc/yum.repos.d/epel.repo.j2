@@ -1,0 +1,38 @@
+# {{ ansible_managed }}
+# 2020091001
+
+[epel]
+name=Extra Packages for Enterprise Linux 7 - $basearch
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/7/x86_64
+{% else %}
+#baseurl=http://download.fedoraproject.org/pub/epel/7/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch
+{% endif %}
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+
+[epel-debuginfo]
+name=Extra Packages for Enterprise Linux 7 - $basearch - Debug
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/7/x86_64/debug
+{% else %}
+#baseurl=http://download.fedoraproject.org/pub/epel/7/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-7&arch=$basearch
+{% endif %}
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgcheck=1
+
+[epel-source]
+name=Extra Packages for Enterprise Linux 7 - $basearch - Source
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/7/SRPMS
+{% else %}
+#baseurl=http://download.fedoraproject.org/pub/epel/7/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-7&arch=$basearch
+{% endif %}
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgcheck=1

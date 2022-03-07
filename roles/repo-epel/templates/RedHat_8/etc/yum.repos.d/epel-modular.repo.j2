@@ -1,0 +1,39 @@
+# {{ ansible_managed }}
+# 2020091001
+
+[epel-modular]
+name=Extra Packages for Enterprise Linux Modular $releasever - $basearch
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/8/Modular/x86_64/
+{% else %}
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Modular/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-modular-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% endif %}
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+
+[epel-modular-debuginfo]
+name=Extra Packages for Enterprise Linux Modular $releasever - $basearch - Debug
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/8/Modular/x86_64/debug
+{% else %}
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Modular/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-modular-debug-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% endif %}
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+
+[epel-modular-source]
+name=Extra Packages for Enterprise Linux Modular $releasever - $basearch - Source
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/8/Modular/x86_64/SRPMS
+{% else %}
+#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Modular/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-modular-source-$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% endif %}
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+

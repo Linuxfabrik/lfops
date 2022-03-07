@@ -1,0 +1,4 @@
+- fail:
+    msg: 'You are trying to use this role with an unsupported OS.'
+  tags:
+    - 'always'

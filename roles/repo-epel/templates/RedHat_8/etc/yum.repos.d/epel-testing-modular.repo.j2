@@ -1,0 +1,38 @@
+# {{ ansible_managed }}
+# 2020091001
+
+[epel-testing-modular]
+name=Extra Packages for Enterprise Linux Modular $releasever - Testing - $basearch
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/testing/8/Modular/x86_64
+{% else %}
+#baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Modular/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-modular-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+
+[epel-testing-modular-debuginfo]
+name=Extra Packages for Enterprise Linux Modular $releasever - Testing - $basearch - Debug
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/testing/8/Modular/x86_64/debug
+{% else %}
+#baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Modular/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-modular-debug-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% endif %}
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
+
+[epel-testing-modular-source]
+name=Extra Packages for Enterprise Linux Modular $releasever - Testing - $basearch - Source
+{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
+baseurl={{ lfops__repo_mirror_url }}/epel/testing/8/Modular/SRPMS
+{% else %}
+#baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Modular/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-modular-source-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% endif %}
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+gpgcheck=1
