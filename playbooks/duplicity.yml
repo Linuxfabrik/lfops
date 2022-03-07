@@ -5,7 +5,7 @@
 
   roles:
 
-    - role: 'repo-epel'
+    - role: 'repo_epel'
       when:
         - (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] in ['7', '8'])
 
