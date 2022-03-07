@@ -20,8 +20,6 @@
       name_email: '{{ ansible_facts["user_id"] }}@{{ ansible_facts["nodename"] }}'
       key_type: 'RSA'
       key_length: 4096
-      subkey_type: 'RSA'
-      subkey_length: 4096
     register: duplicity__gpg_key
 
   - name: 'Deploy the public master GPG key to /tmp/public-master-key'

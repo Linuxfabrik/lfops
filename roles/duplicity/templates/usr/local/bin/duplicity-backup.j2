@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2022030401
+# 2022030701
 
 exit_code=0
 check_exit_code() {
@@ -18,7 +18,7 @@ for SRC in "${BACKUP_SOURCES[@]}"; do
     ionice --class=3 nice --adjustment=19 duplicity \
         --cf-backend="$CF_BACKEND" \
         --copy-links \
-        --encrypt-key="$ENCRYPT_KEY" \
+        --encrypt-key="$GPG_KEY" \
         --encrypt-key='{{ duplicity__public_master_long_keyid }}' \
         --exclude-other-filesystems \
         --full-if-older-than="$RETENTION_TIME" \
