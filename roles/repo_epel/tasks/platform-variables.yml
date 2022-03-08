@@ -9,14 +9,14 @@
 # * distribution_distribution_version (e.g. RedHat8.3) is the most specific
 
 - name: 'Set platform/version specific variables'
-  include_vars: '{{ __vars_file }}'
+  ansible.builtin.include_vars: '{{ __vars_file }}'
   loop:
-    - '{{ ansible_facts["os_family"] }}.yml'                                                        # "RedHat.yml"
-    - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'      # "RedHat7.yml"
-    - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'            # "RedHat7.3.yml"
-    - '{{ ansible_facts["distribution"] }}.yml'                                                     # "CentOS.yml"
-    - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'   # "CentOS7.yml"
-    - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'         # "CentOS7.3.yml"
+    - '{{ ansible_facts["os_family"] }}.yml'                                                     # "RedHat.yml"
+    - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'    # "RedHat7.yml"
+    - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'          # "RedHat7.3.yml"
+    - '{{ ansible_facts["distribution"] }}.yml'                                                  # "CentOS.yml"
+    - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml' # "CentOS7.yml"
+    - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'       # "CentOS7.3.yml"
   vars:
     __vars_file: '{{ role_path }}/vars/{{ item }}'
   when: __vars_file is file

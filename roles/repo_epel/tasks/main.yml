@@ -13,7 +13,7 @@
 - block:
 
   - name: 'yum -y install epel-release'
-    yum:
+    ansible.builtin.package:
       name: 'epel-release'
       state: 'present'
 
@@ -25,7 +25,7 @@
 - block:
 
   - name: 'deploy the repo files (mirror: {{ lfops__repo_mirror_url | default("") }})'
-    template:
+    ansible.builtin.template:
       src: '{{ item }}.j2'
       dest: '/etc/yum.repos.d/{{ item | basename | trim(".j2") }}'
       owner: 'root'
@@ -34,14 +34,14 @@
     loop: '{{ repo_epel__repo_files }}'
 
   - name: 'curl {{ repo_epel__gpg_key_url }} -O /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
-    get_url:
+    ansible.builtin.get_url:
       url: '{{ repo_epel__gpg_key_url }}'
       dest: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
     delegate_to: localhost
     check_mode: no # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }} to {{ repo_epel__gpg_key_dest }}'
-    copy:
+    ansible.builtin.copy:
       src: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
       dest: '{{ repo_epel__gpg_key_dest }}'
 

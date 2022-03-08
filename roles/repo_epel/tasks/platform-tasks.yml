@@ -2,7 +2,7 @@
 # case, use lookup('first_found') with the file list in order of most specific to least specific:
 
 - name: 'Perform platform/version specific tasks'
-  include_tasks: '{{ lookup("first_found", __task_file) }}'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
   vars:
     __task_file:
       files:
