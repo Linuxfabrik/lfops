@@ -17,7 +17,7 @@
       name: 'epel-release'
       state: 'present'
 
-  when: lfops__repo_mirror_url is not defined or not lfops__repo_mirror_url|length
+  when: lfops__repo_mirror_url is not defined or not lfops__repo_mirror_url | length
   tags:
     - 'repo-epel'
 
@@ -37,15 +37,14 @@
     ansible.builtin.get_url:
       url: '{{ repo_epel__gpg_key_url }}'
       dest: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
-    delegate_to: localhost
-    check_mode: no # run task even if `--check` is specified
+    delegate_to: 'localhost'
+    check_mode: False # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }} to {{ repo_epel__gpg_key_dest }}'
     ansible.builtin.copy:
       src: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
       dest: '{{ repo_epel__gpg_key_dest }}'
 
-  when:
-    - lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length
+  when: lfops__repo_mirror_url is defined and lfops__repo_mirror_url | length
   tags:
     - 'repo-epel'

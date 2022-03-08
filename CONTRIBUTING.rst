@@ -311,7 +311,7 @@ Variables
         assert:
           that:
             - stig__grub2_password is defined
-            - stig__grub2_password|length
+            - stig__grub2_password | length
           quiet: true
           fail_msg: Please define bootloader passwords for your hosts ("stig__grub2_password").
 
@@ -350,7 +350,7 @@ Documenting Variables
 Handling default values
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-1. A Jinja template contains vendor defaults using ``{{ variable|d('vendor-default-value') }}``.
+1. A Jinja template contains vendor defaults using ``{{ variable | d('vendor-default-value') }}``.
 2. Is overridden by ``defaults/main.yml`` using Linuxfabrik's best practice value ``variable: linuxfabrik-default-value``.
 3. May be overriden by the customer by using a ``group_vars`` or ``host_vars``  definition.
 
