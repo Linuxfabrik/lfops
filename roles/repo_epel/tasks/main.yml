@@ -7,7 +7,7 @@
     ansible.builtin.include_tasks: 'platform-tasks.yml'
 
   tags:
-    - 'repo-epel'
+    - 'repo_epel'
 
 
 - block:
@@ -19,7 +19,7 @@
 
   when: lfops__repo_mirror_url is not defined or not lfops__repo_mirror_url | length
   tags:
-    - 'repo-epel'
+    - 'repo_epel'
 
 
 - block:
@@ -47,4 +47,4 @@
 
   when: lfops__repo_mirror_url is defined and lfops__repo_mirror_url | length
   tags:
-    - 'repo-epel'
+    - 'repo_epel'
