@@ -1,7 +1,7 @@
-# duplicity__gpg_passphrase: ''
-# duplicity__swift_password: ''
 # duplicity__swift_tenantname: ''
-# duplicity__swift_username: ''
+# duplicity__swift_login:
+#   username: ''
+#   password: ''
 
 duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}/{{ ansible_facts["nodename"] }}'
 duplicity__backup_dest_container: 'backups' # can be used to seperate backups by environments / customers
@@ -27,7 +27,6 @@ duplicity__loglevel: 'notice' # error, warning, notice, info, debug
 duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45|random(seed=inventory_hostname) }}'
 duplicity__on_calendar_hour: '23'
 duplicity__retention_time: '30D' # days
-duplicity__save_gpg_keys_to_bitwarden: false
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
 duplicity__swift_authversion: '3'
 duplicity__timer_enabled: true
