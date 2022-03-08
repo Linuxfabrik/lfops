@@ -240,14 +240,14 @@ To indicate on which operating system platforms the role can be used, (empty) fi
 
 Assume you have the following OS-specific task files, in order of most specific to least specific:
 
-* ``tasks/CentOS_7.4.yml``
-* ``tasks/CentOS_7.yml``
+* ``tasks/CentOS7.4.yml``
+* ``tasks/CentOS7.yml``
 * ``tasks/RedHat.yml``
 * ``tasks/main.yml``
 
 Now, if you run Ansible against a *CentOS 7.9* host, for example, only these tasks are processed by ``platform-tasks.yml`` in the following order :
 
-1. ``tasks/CentOS_7.yml``
+1. ``tasks/CentOS7.yml``
 2. ``tasks/main.yml``
 
 
@@ -260,8 +260,8 @@ Variables with the same name are overridden by the files in ``vars/`` in order f
 
 * ``os_family`` covers a group of closely related platforms (e.g. ``RedHat`` covers ``RHEL``, ``CentOS``, ``Fedora``)
 * ``distribution`` (e.g. ``CentOS``) is more specific than os_family
-* ``distribution_major_version`` (e.g. ``CentOS_7``) is more specific than distribution
-* ``distribution_version`` (e.g. ``CentOS_7.9``) is the most specific
+* ``distribution_major_version`` (e.g. ``CentOS7``) is more specific than distribution
+* ``distribution_version`` (e.g. ``CentOS7.9``) is the most specific
 
 As always be aware of the fact that dicts and lists are completely replaced, not merged.
 
@@ -275,24 +275,24 @@ For example:
 * Amazon.yml
 * Archlinux.yml
 * CentOS.yml
-* CentOS_6.yml
-* CentOS_7.yml
-* CentOS_7.3.yml
+* CentOS6.yml
+* CentOS7.yml
+* CentOS7.3.yml
 * Container Linux by CoreOS.yml
 * Debian.yml
-* Debian_11.yml
+* Debian11.yml
 * Fedora.yml
-* Fedora_33.yml
+* Fedora33.yml
 * FreeBSD.yml
 * Gentoo.yml
 * OpenBSD.yml
-* openSUSE Leap_15.yml
+* openSUSE Leap15.yml
 * RedHat.yml
-* RedHat_8.yml
-* RedHat_8.2.yml
+* RedHat8.yml
+* RedHat8.2.yml
 * Suse.yml
 * Ubuntu.yml
-* Ubuntu_20.yml
+* Ubuntu20.yml
 
 
 Variables
