@@ -4,6 +4,12 @@
     - 'always'
 
 
+- name: 'Store the github release version'
+  ansible.builtin.set_fact:
+    monitoring_plugins__github_version: '{{ monitoring_plugins__repo_version }}'
+  when: 'monitoring_plugins__repo_version != "latest"'
+
+
 - block:
 
   - name: 'Get latest release version'
@@ -15,7 +21,7 @@
 
   - name: 'Store the latest release version'
     ansible.builtin.set_fact:
-      monitoring_plugins__repo_version: '{{ monitoring_plugins__github_release["json"]["tag_name"] }}'
+      monitoring_plugins__github_version: '{{ monitoring_plugins__github_release["json"]["tag_name"] }}'
 
   # block
   when: 'monitoring_plugins__repo_version == "latest"'
@@ -29,7 +35,7 @@
     ansible.builtin.git:
       repo: '{{ monitoring_plugins__repo_url }}'
       dest: '/tmp/ansible.monitoring-plugins-repo'
-      version: '{{ monitoring_plugins__repo_version }}'
+      version: '{{ monitoring_plugins__github_version }}'
       depth: 1
     delegate_to: 'localhost'
     run_once: True
@@ -47,7 +53,7 @@
       ansible.builtin.git:
         repo: '{{ monitoring_plugins__repo_url }}'
         dest: '/tmp/ansible.monitoring-plugins-repo'
-        version: '{{ monitoring_plugins__repo_version }}'
+        version: '{{ monitoring_plugins__github_version }}'
         depth: 1
       delegate_to: 'localhost'
       run_once: True
@@ -63,7 +69,7 @@
     ansible.builtin.git:
       repo: '{{ monitoring_plugins__lib_repo_url }}'
       dest: '/tmp/ansible.lib-repo'
-      version: '{{ monitoring_plugins__repo_version }}'
+      version: '{{ monitoring_plugins__github_version }}'
       depth: 1
     delegate_to: 'localhost'
     run_once: True
@@ -81,7 +87,7 @@
       ansible.builtin.git:
         repo: '{{ monitoring_plugins__lib_repo_url }}'
         dest: '/tmp/ansible.lib-repo'
-        version: '{{ monitoring_plugins__repo_version }}'
+        version: '{{ monitoring_plugins__github_version }}'
         depth: 1
       delegate_to: 'localhost'
       run_once: True
