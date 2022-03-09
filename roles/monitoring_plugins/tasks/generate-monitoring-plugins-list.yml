@@ -7,18 +7,28 @@
       # use_regex: yes
       recurse: yes
       depth: 2
+      hidden: true
     register: find_result
     run_once: true
 
   - set_fact:
-      monitoring_plugins__plugin_list:
-        "{{ find_result.files
-        | map(attribute='path')
-        | map('regex_search', '/tmp/ansible\\.monitoring-plugins-repo/check-plugins/(?P<check>.*)/(?P=check)' ~ monitoring_plugins__python_version)
-        | map('regex_replace', '/tmp/ansible\\.monitoring-plugins-repo/check-plugins/(?P<check>.*)/(?P=check)' ~ monitoring_plugins__python_version, '\\g<check>')
-        | reject('search', 'example')
-        | reject('search', 'None')
-        | select('string') | list | unique }}"
+      monitoring_plugins__check_plugin_search_name: "{{
+          (ansible_facts['os_family'] == 'Windows') | bool | ternary(
+            '.windows',
+            '(?P=check)' ~ monitoring_plugins__python_version
+          )
+        }}"
+
+  - set_fact:
+      monitoring_plugins__plugin_list: "{{
+          find_result.files
+          | map(attribute='path')
+          | map('regex_search', '/tmp/ansible\\.monitoring-plugins-repo/check-plugins/(?P<check>.*)/' ~ monitoring_plugins__check_plugin_search_name)
+          | map('regex_replace', '/tmp/ansible\\.monitoring-plugins-repo/check-plugins/(?P<check>.*)/' ~ monitoring_plugins__check_plugin_search_name, '\\g<check>')
+          | reject('search', 'example')
+          | reject('search', 'None')
+          | select('string') | list | unique
+        }}"
     when: monitoring_plugins__plugin_list is not defined
 
   delegate_to: 'localhost'
