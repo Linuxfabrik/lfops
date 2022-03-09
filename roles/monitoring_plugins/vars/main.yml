@@ -1,0 +1,2 @@
+monitoring_plugins__lib_repo_url: 'https://github.com/Linuxfabrik/lib.git'
+monitoring_plugins__repo_url: 'https://github.com/Linuxfabrik/monitoring-plugins.git'

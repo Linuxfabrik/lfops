@@ -1,0 +1,82 @@
+- block:
+
+  - name: Make sure the plugin directory exists (Windows)
+    ansible.windows.win_file:
+      path: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\'
+      state: directory
+
+
+- block:
+
+  - name: 'Copy lib for the Linuxfabrik monitoring plugins (Windows)'
+    ansible.windows.win_copy:
+      src: '{{ item }}'
+      dest: 'C:\ProgramData\icinga2\usr\lib64\nagios\plugins\lib\'
+    with_fileglob:
+      - '/tmp/ansible.lib-repo/*{{ monitoring_plugins__python_version }}.py'
+
+  - name: 'Copy the Linuxfabrik monitoring plugins (Windows)'
+    ansible.windows.win_copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}{{ monitoring_plugins__python_version }}'
+      dest: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\{{ item }}.py'
+    loop: '{{ monitoring_plugins__plugin_list }}'
+
+  # block
+  when: monitoring_plugins_windows_method == 'python'
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Download the Linuxfabrik monitoring plugins (Windows)'
+    ansible.builtin.get_url:
+      url: 'https://download.linuxfabrik.ch/monitoring-plugins/windows/{{ monitoring_plugins__repo_version }}.zip'
+      dest: '/tmp/ansible.{{ monitoring_plugins__repo_version }}.zip'
+    delegate_to: 'localhost'
+    check_mode: False # run task even if `--check` is specified
+
+  - name: 'Copy the Linuxfabrik monitoring plugins (Windows)'
+    ansible.windows.win_copy:
+      src: '/tmp/ansible.{{ monitoring_plugins__repo_version }}.zip'
+      dest: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\{{ monitoring_plugins__repo_version }}.zip'
+
+  - name: 'Unzip the Linuxfabrik monitoring plugins (Windows)'
+    community.windows.win_unzip:
+      src: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\{{ monitoring_plugins__repo_version }}.zip'
+      dest: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\'
+
+  - name: 'Remove the zip file (Windows)'
+    ansible.windows.win_file:
+      path: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\{{ monitoring_plugins__repo_version }}.zip'
+      state: 'absent'
+
+  # block
+  when: monitoring_plugins_windows_method == 'nuitka'
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Remove old compile artifacts'
+    ansible.windows.win_file:
+      path: 'C:\\nuitka-compile-temp'
+      state: absent
+
+  - name: 'Compile the monitoring plugins using nuitka'
+    ansible.windows.win_command: 'py -3.9 -m nuitka --mingw64 --follow-imports --output-dir C:\\nuitka-compile-temp --remove-output --standalone {{ item }}.py'
+    args:
+      chdir: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\'
+    loop: '{{ monitoring_plugins__plugin_list }}'
+
+  - name: 'Remove .dist from the folder names'
+    ansible.windows.win_command: 'cmd.exe /c "rename {{ item }}.dist {{ item }}"'
+    args:
+      chdir: 'C:\\nuitka-compile-temp'
+    loop: '{{ monitoring_plugins__plugin_list }}'
+
+  # block
+  tags:
+    - 'never'
+    - 'monitoring_plugins::nuitka_compile'

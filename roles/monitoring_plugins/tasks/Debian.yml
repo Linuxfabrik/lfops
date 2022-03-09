@@ -1,0 +1,7 @@
+- name: 'Make sure sudo is installed on debian or ubuntu'
+  apt:
+    name: 'sudo'
+    state: 'present'
+    update_cache: True
+  tags:
+    - 'monitoring-plugins'

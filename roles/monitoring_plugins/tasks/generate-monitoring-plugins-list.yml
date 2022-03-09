@@ -1,0 +1,25 @@
+- block:
+
+  - name: 'Create the list of available check plugins'
+    find:
+      paths: '/tmp/ansible.monitoring-plugins-repo/check-plugins/'
+      # patterns: '/tmp/ansible\.monitoring-plugins-repo/check-plugins/(?P<check>.*)/(?P=check)2' # this does not work, as it only tries matching against the basename
+      # use_regex: yes
+      recurse: yes
+      depth: 2
+    register: find_result
+    run_once: true
+
+  - set_fact:
+      monitoring_plugins__plugin_list:
+        "{{ find_result.files
+        | map(attribute='path')
+        | map('regex_search', '/tmp/ansible\\.monitoring-plugins-repo/check-plugins/(?P<check>.*)/(?P=check)' ~ monitoring_plugins__python_version)
+        | map('regex_replace', '/tmp/ansible\\.monitoring-plugins-repo/check-plugins/(?P<check>.*)/(?P=check)' ~ monitoring_plugins__python_version, '\\g<check>')
+        | reject('search', 'example')
+        | reject('search', 'None')
+        | select('string') | list | unique }}"
+    when: monitoring_plugins__plugin_list is not defined
+
+  delegate_to: 'localhost'
+  check_mode: False # run task even if `--check` is specified

@@ -1,0 +1,178 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.include_tasks: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Get latest release version'
+    uri:
+      url: 'https://api.github.com/repos/linuxfabrik/monitoring-plugins/releases/latest'
+    register: monitoring_plugins__github_release
+    check_mode: False # run task even if `--check` is specified
+    delegate_to: 'localhost'
+
+  - name: 'Store the latest release version'
+    ansible.builtin.set_fact:
+      monitoring_plugins__repo_version: '{{ monitoring_plugins__github_release["json"]["tag_name"] }}'
+
+  # block
+  when: 'monitoring_plugins__repo_version == "latest"'
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Clone the monitoring plugins git repo to localhost'
+    ansible.builtin.git:
+      repo: '{{ monitoring_plugins__repo_url }}'
+      dest: '/tmp/ansible.monitoring-plugins-repo'
+      version: '{{ monitoring_plugins__repo_version }}'
+      depth: 1
+    delegate_to: 'localhost'
+    run_once: True
+    check_mode: False # run task even if `--check` is specified
+
+  rescue:
+
+    - name: 'Remove the old repo and clone again'
+      ansible.builtin.file:
+        path: '/tmp/ansible.monitoring-plugins-repo'
+        state: 'absent'
+      delegate_to: 'localhost'
+
+    - name: 'Clone the monitoring plugins git repo to localhost'
+      ansible.builtin.git:
+        repo: '{{ monitoring_plugins__repo_url }}'
+        dest: '/tmp/ansible.monitoring-plugins-repo'
+        version: '{{ monitoring_plugins__repo_version }}'
+        depth: 1
+      delegate_to: 'localhost'
+      run_once: True
+      check_mode: False # run task even if `--check` is specified
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Clone the lib git repo to localhost'
+    ansible.builtin.git:
+      repo: '{{ monitoring_plugins__lib_repo_url }}'
+      dest: '/tmp/ansible.lib-repo'
+      version: '{{ monitoring_plugins__repo_version }}'
+      depth: 1
+    delegate_to: 'localhost'
+    run_once: True
+    check_mode: False # run task even if `--check` is specified
+
+  rescue:
+
+    - name: 'Remove the old repo and clone again'
+      ansible.builtin.file:
+        path: '/tmp/ansible.lib-repo'
+        state: 'absent'
+      delegate_to: 'localhost'
+
+    - name: 'Clone the lib git repo to localhost'
+      ansible.builtin.git:
+        repo: '{{ monitoring_plugins__lib_repo_url }}'
+        dest: '/tmp/ansible.lib-repo'
+        version: '{{ monitoring_plugins__repo_version }}'
+        depth: 1
+      delegate_to: 'localhost'
+      run_once: True
+      check_mode: False # run task even if `--check` is specified
+
+  tags:
+    - 'monitoring_plugins'
+
+
+
+- ansible.builtin.import_tasks: 'generate-monitoring-plugins-list.yml'
+  tags:
+    - 'monitoring_plugins'
+    - 'monitoring_plugins::nuitka_compile'
+
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: 'platform-tasks.yml'
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Copy the /etc/sudoers.d/icinga2-plugins file to the server (Linux)'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["distribution"] ~ ansible_facts["distribution_major_version"] }}.sudoers'
+      dest: '/etc/sudoers.d/monitoring-plugins'
+
+  - name: 'Make sure to remove the legacy sudoers file'
+    ansible.builtin.file:
+      path: '/etc/sudoers.d/icinga2-plugins'
+      state: 'absent'
+
+  - name: 'Ensure the lib folder exists (Linux)'
+    ansible.builtin.file:
+      path: '/usr/lib64/nagios/plugins/lib'
+      state: 'directory'
+      mode: 0755
+
+  - name: 'Copy lib for the Linuxfabrik monitoring plugins (Linux)'
+    ansible.builtin.copy:
+      src: '{{ item }}'
+      dest: '/usr/lib64/nagios/plugins/lib'
+      owner: 'root'
+      mode: 0755
+    with_fileglob:
+      - '/tmp/ansible.lib-repo/*.py'
+
+  - name: 'Make sure the linuxfabrik plugin cache is removed'
+    ansible.builtin.file:
+      path: '/tmp/linuxfabrik-plugin-cache.db'
+      state: 'absent'
+
+  - name: 'Make sure the database of the check plugin is removed'
+    ansible.builtin.command: 'rm -f --{% for item in monitoring_plugins__plugin_list %} /tmp/{{ item }}.db{% endfor %}'
+    args:
+      warn: False # this is much faster than using the file module and looping over monitoring_plugins__plugin_list
+
+  - name: 'Copy the Linuxfabrik monitoring plugins (Linux)'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}{{ monitoring_plugins__python_version }}'
+      dest: '/usr/lib64/nagios/plugins/{{ item }}'
+      owner: 'root'
+      mode: 0755
+    loop: '{{ monitoring_plugins__plugin_list }}'
+
+  # block
+  when: ansible_facts['os_family'] != 'Windows'
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Check if custom plugins exist'
+    ansible.builtin.stat:
+      path: '../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
+    delegate_to: 'localhost'
+    changed_when: False
+    register: monitoring_plugins__custom_plugins
+
+  - name: 'Copy the custom plugins to /usr/lib64/nagios/plugins'
+    ansible.builtin.copy:
+      src: '../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
+      dest: '/usr/lib64/nagios/'
+      mode: preserve
+      backup: True
+    when: monitoring_plugins__custom_plugins.stat.exists
+
+  # block
+  when: ansible_facts['os_family'] != 'Windows'
+  tags:
+    - 'monitoring_plugins'
+    - 'monitoring_plugins::custom'
