@@ -5,6 +5,13 @@
     creates: '/opt/python-venv/{{ venv.name }}/bin/activate'
   ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
 
+- name: 'Make sure the venv is root-owned and not writeable by others' # this is to prevent privilege escalation
+  ansible.builtin.file:
+    path: '/opt/python-venv/{{ venv.name }}'
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+
 - name: 'pip install -U pip wheel'
   ansible.builtin.pip:
     name:
