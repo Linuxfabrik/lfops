@@ -22,7 +22,7 @@
     loop: '{{ monitoring_plugins__plugin_list }}'
 
   # block
-  when: monitoring_plugins_windows_method == 'python'
+  when: monitoring_plugins__windows_method == 'python'
   tags:
     - 'monitoring_plugins'
 
@@ -52,7 +52,7 @@
       state: 'absent'
 
   # block
-  when: monitoring_plugins_windows_method == 'nuitka'
+  when: monitoring_plugins__windows_method == 'nuitka'
   tags:
     - 'monitoring_plugins'
 
