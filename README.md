@@ -3,7 +3,7 @@
 
 ## Installation
 
-To install the latest **stable** release of the collection:
+To install the **latest stable** release of the collection:
 ```bash
 ansible-galaxy collection install linuxfabrik.lfops
 ```
