@@ -1,9 +1,10 @@
 - block:
 
-  - name: 'dnf -y install python3-virtualenv'
+  - name: 'dnf -y install python3-virtualenv python3-devel'
     ansible.builtin.package:
       name:
         - 'python3-virtualenv'
+        - 'python3-devel'
       state: 'present'
 
   # - name: 'Deploy /etc/systemd/system/python-venv-update.service'
