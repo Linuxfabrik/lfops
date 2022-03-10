@@ -3,8 +3,8 @@
 #   username: ''
 #   password: ''
 
-duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}/{{ ansible_facts["nodename"] }}'
-duplicity__backup_dest_container: '{{ ansible_nodename }}' # can be used to separate backups by environments / customers
+duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}'
+duplicity__backup_dest_container: '{{ ansible_nodename }}'
 
 duplicity__group_backup_sources: []
 duplicity__host_backup_sources: []
