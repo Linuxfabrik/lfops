@@ -2,7 +2,7 @@
 # 2022030402
 
 # Backup Behaviour
-BACKUP_SOURCES=({{ duplicity__backup_sources | map('quote') | join(' ') }})
+BACKUP_SOURCES=({{ duplicity__combined_backup_sources | map('quote') | join(' ') }})
 BACKUP_DEST='{{ duplicity__backup_dest }}'
 RETENTION_TIME='{{ duplicity__retention_time }}'
 LOGLEVEL='{{ duplicity__loglevel }}' # error, warning, notice, info, debug

@@ -4,14 +4,24 @@
 #   password: ''
 
 duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}/{{ ansible_facts["nodename"] }}'
-duplicity__backup_dest_container: 'backups' # can be used to seperate backups by environments / customers
-duplicity__backup_sources:
+duplicity__backup_dest_container: '{{ ansible_nodename }}' # can be used to separate backups by environments / customers
+
+duplicity__group_backup_sources: []
+duplicity__host_backup_sources: []
+duplicity__role_backup_sources:
+  - '/backup'
   - '/etc'
   - '/home'
   - '/opt'
   - '/root'
   - '/var/spool/cron'
-  - '/var/www/html'
+
+duplicity__combined_backup_sources: '{{
+    duplicity__role_backup_sources +
+    duplicity__group_backup_sources +
+    duplicity__host_backup_sources
+    | flatten
+ }}'
 
 duplicity__cf_backend: 'swift'
 duplicity__excludes:
