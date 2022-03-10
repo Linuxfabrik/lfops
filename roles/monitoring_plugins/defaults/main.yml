@@ -1,6 +1,6 @@
-monitoring_plugins__python_version: 3 # or 2
-monitoring_plugins__repo_version: 'latest' # latest for the latest release, a specific release name, or main for the development version
+monitoring_plugins__python_version: 3
+monitoring_plugins__repo_version: 'latest'
 
-monitoring_plugins__windows_method: 'nuitka' # or python
+monitoring_plugins__windows_variant: 'nuitka'
 
 # monitoring_plugins__plugin_list: []
