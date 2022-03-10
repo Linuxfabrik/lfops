@@ -1,5 +1,5 @@
-linuxfabrik.lfos.monitoring_plugins
-===================================
+linuxfabrik.lfops.monitoring_plugins
+====================================
 
 This role deploys the `Linuxfabik Monitoring Plugins <https://github.com/Linuxfabrik/monitoring-plugins>`_ and the corresponding `Plugin Library <https://github.com/Linuxfabrik/monitoring-plugins>`_ to ``/usr/lib64/nagios/plugins/`` and ``/usr/lib64/nagios/plugins/lib`` respectively, allowing them to be easily executed by a monitoring system.
 
@@ -13,7 +13,7 @@ Tested on
 * Windows
 * Suse
 
-Additionally, this role allows you to deploy custom plugins which are placed under ``../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins``.
+Additionally, this role allows you to deploy custom plugins which are placed under ``../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins`` on the ansible host.
 
 
 Requirements
@@ -24,7 +24,7 @@ Mandatory:
 * On RHEL-compatible systems, enable the EPEL repository (e.g. use the ``linuxfabrik.lfops.repo_epel`` role).
 * python2 (including the ``python2-psutil`` module)
 
-These requirements can also manually be fulfilled for CentOS 7/8 using:
+These requirements can also manually be fulfilled for RHEL 7/8 using:
 
 .. code-block:: bash
 
@@ -83,7 +83,7 @@ Which version of the monitoring plugins should be deployed? Possible options:
 
 * ``latest``: The latest release. See the `Releases <https://github.com/Linuxfabrik/monitoring-plugins/releases>`_.
 * ``main``: The development version. Use with care.
-* A specific release. See the `Releases <https://github.com/Linuxfabrik/monitoring-plugins/releases>`_.
+* A specific release, for example ``2022030201``. See the `Releases <https://github.com/Linuxfabrik/monitoring-plugins/releases>`_.
 
 Default:
 
@@ -115,6 +115,14 @@ monitoring_plugins__plugin_list
 Overwrite the automatically generated list of monitoring plugins that should be deployed.
 
 Default: unset
+
+Example:
+
+.. code-block:: yaml
+
+    monitoring_plugins__plugin_list:
+      - 'about-me'
+      - 'cpu-usage'
 
 
 Examples
