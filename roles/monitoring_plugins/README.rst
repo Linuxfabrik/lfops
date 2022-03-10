@@ -1,7 +1,7 @@
 linuxfabrik.lfops.monitoring_plugins
 ====================================
 
-This role deploys the `Linuxfabik Monitoring Plugins <https://github.com/Linuxfabrik/monitoring-plugins>`_ and the corresponding `Plugin Library <https://github.com/Linuxfabrik/monitoring-plugins>`_ to ``/usr/lib64/nagios/plugins/`` and ``/usr/lib64/nagios/plugins/lib`` respectively, allowing them to be easily executed by a monitoring system.
+This role deploys the `Linuxfabik Monitoring Plugins <https://github.com/Linuxfabrik/monitoring-plugins>`_ to ``/usr/lib64/nagios/plugins/``, allowing them to be easily executed by a monitoring system.
 
 Tested on
 
@@ -15,25 +15,25 @@ Tested on
 
 Additionally, this role allows you to deploy custom plugins which are placed under ``../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins`` on the ansible host.
 
+It also installs the `Linuxfabrik Plugin Library <https://github.com/Linuxfabrik/monitoring-plugins>`_ to ``/usr/lib64/nagios/plugins/lib``, a must have for all Monitoring Plugins.
+
+What this role does **NOT** do:
+
+* Install Python 3 (or Python 2 if needed)
+* Install all other 3rd party libraries used by some of the Monitoring Plugins:
+
+    * BeautifulSoup4
+    * lxml
+    * mysql.connector
+    * psutil
+
+* If on Windows and you want to compile the python plugins using Nuitka, you need of course Nuitka.
+
 
 Requirements
 ------------
 
-Mandatory:
-
-* On RHEL-compatible systems, enable the EPEL repository (e.g. use the ``linuxfabrik.lfops.repo_epel`` role).
-* python2 (including the ``python2-psutil`` module)
-
-These requirements can also manually be fulfilled for RHEL 7/8 using:
-
-.. code-block:: bash
-
-    yum -y install epel-release
-    yum -y install python2 python2-psutil
-
-Optional:
-
-* Have a look at the individual requirements of each check.
+Prepare your target node as described in the `Monitoring-Plugins README <https://github.com/Linuxfabrik/monitoring-plugins>`_.
 
 
 Tags
@@ -43,9 +43,9 @@ Tags
     :header-rows: 1
 
     Tag,                                What it does
-    monitoring_plugins,                 "Deploy the monitoring plugins, including custom plugins"
+    monitoring_plugins,                 "Deploy the monitoring plugins, including Linuxfabrik libraries and custom plugins"
     monitoring_plugins::custom,         "Only deploy the custom plugins"
-    monitoring_plugins::nuitka_compile, "Windows only. Compile the python plugins using nuitka"
+    monitoring_plugins::nuitka_compile, "Windows only: Only compile the python plugins using nuitka"
 
 
 Role Variables
@@ -66,8 +66,8 @@ monitoring_plugins__python_version
 
 For which python version should the monitoring plugins be deployed? Possible options:
 
-* ``2``: For python2
-* ``3``: For python3
+* ``3``: For Python 3
+* ``2``: For Python 2
 
 Default:
 
@@ -81,7 +81,7 @@ monitoring_plugins__repo_version
 
 Which version of the monitoring plugins should be deployed? Possible options:
 
-* ``latest``: The latest release. See the `Releases <https://github.com/Linuxfabrik/monitoring-plugins/releases>`_.
+* ``latest``: The **latest stable** release. See the `Releases <https://github.com/Linuxfabrik/monitoring-plugins/releases>`_.
 * ``main``: The development version. Use with care.
 * A specific release, for example ``2022030201``. See the `Releases <https://github.com/Linuxfabrik/monitoring-plugins/releases>`_.
 
@@ -99,8 +99,8 @@ Windows only.
 
 Which variant of the monitoring plugins should be deployed? Possible options:
 
-* ``nuitka``: Deploy the nuitka-compiled checks. This does not require python on the system.
-* ``python``: Deploy the plain python. This requires python on the system.
+* ``nuitka``: Deploy the nuitka-compiled checks (EXE files). This does not require python on the system.
+* ``python``: Deploy the plain python checks. This requires Python to be installed on Windows.
 
 Default:
 
@@ -128,7 +128,7 @@ Example:
 Examples
 --------
 
-Install or update just the ``php-version`` check plugin from the ``develop`` branch to/on server ``test01`` in ``mynet``:
+Install or update just the ``php-version`` check plugin to/on server ``test01`` in ``mynet``, using the latest stable version:
 
 .. code-block:: bash
 
