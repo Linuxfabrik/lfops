@@ -17,14 +17,14 @@
       name: 'epel-release'
       state: 'present'
 
-  when: lfops__repo_mirror_url is not defined or not lfops__repo_mirror_url | length
+  when: repo_epel__mirror_url is not defined or not repo_epel__mirror_url | length
   tags:
     - 'repo_epel'
 
 
 - block:
 
-  - name: 'deploy the repo files (mirror: {{ lfops__repo_mirror_url | default("") }})'
+  - name: 'deploy the repo files (mirror: {{ repo_epel__mirror_url | default("") }})'
     ansible.builtin.template:
       src: '{{ item }}.j2'
       dest: '/etc/yum.repos.d/{{ item | basename | trim(".j2") }}'
@@ -45,6 +45,6 @@
       src: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
       dest: '{{ repo_epel__gpg_key_dest }}'
 
-  when: lfops__repo_mirror_url is defined and lfops__repo_mirror_url | length
+  when: repo_epel__mirror_url is defined and repo_epel__mirror_url | length
   tags:
     - 'repo_epel'

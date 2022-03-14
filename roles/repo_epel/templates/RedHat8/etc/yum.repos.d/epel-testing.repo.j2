@@ -3,8 +3,8 @@
 
 [epel-testing]
 name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch
-{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
-baseurl={{ lfops__repo_mirror_url }}/epel/testing/8/Everything/x86_64
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url|length %}
+baseurl={{ repo_epel__mirror_url }}/epel/testing/8/Everything/x86_64
 {% else %}
 #baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Everything/$basearch
 metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
@@ -15,8 +15,8 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
 
 [epel-testing-debuginfo]
 name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch - Debug
-{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
-baseurl={{ lfops__repo_mirror_url }}/epel/testing/8/Everything/x86_64/debug
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url|length %}
+baseurl={{ repo_epel__mirror_url }}/epel/testing/8/Everything/x86_64/debug
 {% else %}
 #baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Everything/$basearch/debug
 metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-debug-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
@@ -27,8 +27,8 @@ gpgcheck=1
 
 [epel-testing-source]
 name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch - Source
-{% if lfops__repo_mirror_url is defined and lfops__repo_mirror_url|length %}
-baseurl={{ lfops__repo_mirror_url }}/epel/testing/8/Everything/SRPMS
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url|length %}
+baseurl={{ repo_epel__mirror_url }}/epel/testing/8/Everything/SRPMS
 {% else %}
 #baseurl=https://download.fedoraproject.org/pub/epel/testing/$releasever/Everything/SRPMS
 metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-source-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
