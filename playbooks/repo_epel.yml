@@ -1,0 +1,10 @@
+- name: 'Manage and configure the EPEL Repository'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_repo_epel'
+
+  roles:
+
+    - role: 'repo_epel'
+      when:
+        - (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] in ['7', '8'])
