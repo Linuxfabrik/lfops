@@ -2,6 +2,12 @@
 # duplicity__swift_login:
 #   username: ''
 #   password: ''
+#
+# duplicity__public_master_long_keyid: 'LLZGH2BITI2LRLJCLFWEAJQ93N6MWTKBARQDMYX5'
+# duplicity__public_master_key: |-
+#   -----BEGIN PGP PUBLIC KEY BLOCK-----
+#   ...
+#   -----END PGP PUBLIC KEY BLOCK-----
 
 duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}'
 duplicity__backup_dest_container: '{{ ansible_nodename }}'
@@ -23,7 +29,6 @@ duplicity__combined_backup_sources: '{{
     | flatten
  }}'
 
-duplicity__cf_backend: 'swift'
 duplicity__excludes:
   - '**/*.git*'
   - '**/*.svn*'
@@ -39,7 +44,7 @@ duplicity__on_calendar_hour: '23'
 duplicity__retention_time: '30D' # days
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
 duplicity__swift_authversion: '3'
-duplicity__timer_enabled: true
+duplicity__timer_enabled: True
 
 
 duplicity__python_venv__dependent_venvs:

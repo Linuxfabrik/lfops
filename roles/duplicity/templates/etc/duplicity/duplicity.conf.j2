@@ -8,7 +8,7 @@ RETENTION_TIME='{{ duplicity__retention_time }}'
 LOGLEVEL='{{ duplicity__loglevel }}' # error, warning, notice, info, debug
 
 # Swift Storage Backend
-CF_BACKEND='{{ duplicity__cf_backend }}'
+CF_BACKEND='swift'
 export SWIFT_AUTHURL='{{ duplicity__swift_authurl }}'
 export SWIFT_USERNAME='{{ duplicity__swift_login["username"] }}'
 export SWIFT_PASSWORD='{{ duplicity__swift_login["password"] }}'
