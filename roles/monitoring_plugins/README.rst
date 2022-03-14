@@ -21,11 +21,13 @@ Additionally, this role allows you to deploy custom plugins which are placed und
 Requirements
 ------------
 
-Mandatory:
+Mandatory
+~~~~~~~~~
 
 * Install Python 3 (or Python 2 if needed)
 
-Optional:
+Optional
+~~~~~~~~
 
 * Most check plugins require the ``psutil`` library. On RHEL-compatible systems, enable the EPEL repository (e.g. use the ``linuxfabrik.lfops.repo_epel`` role), then install ``python3-psutil``.
 * Have a look at the individual requirements of each check.
