@@ -17,7 +17,12 @@ Mandatory
 ~~~~~~~~~
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the ``linuxfabrik.lfops.repo_epel`` role.
-* Install ``duplicity``, ``python-swiftclient`` and ``python-keystoneclient`` into a Python virtual environment in ``/opt/python-venv/duplicity``. This can be done using the ``linuxfabrik.lfops.python_venv`` role.
+* Install ``duplicity``, ``python-swiftclient`` and ``python-keystoneclient`` into a Python 3 virtual environment in ``/opt/python-venv/duplicity``. This can be done using the ``linuxfabrik.lfops.python_venv`` role.
+
+.. attention::
+
+    Make sure the virtual environment is not writable by other users to prevent privilege escalation.
+    This is also done by the ``linuxfabrik.lfops.python_venv`` role.
 
 
 Optional
@@ -35,7 +40,7 @@ Tags
     Tag,                       What it does
     duplicity,                 "Installs and configures duplicity"
     duplicity:configure,       "Deploys the configuration for duplicity"
-    duplicity:state,           "Manges the state of the daily systemd timer"
+    duplicity:state,           "Manages the state of the daily systemd timer"
 
 
 Role Variables
@@ -146,9 +151,9 @@ Default:
 duplicity__host_backup_sources / duplicity__group_backup_sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These variables are intended to be used in a host / host group variable file in the Ansible inventory. Note that the group variable can only be used in one host group at a time.
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
-List of source paths which are included in the backup.
+A list of source paths which are included in the backup.
 
 Default:
 
@@ -162,6 +167,7 @@ Example:
 .. code-block:: yaml
 
     duplicity__host_backup_sources:
+      - '/data'
       - '/var/www/html'
 
 

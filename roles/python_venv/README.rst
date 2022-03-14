@@ -1,7 +1,7 @@
 linuxfabrik.lfops.python_venv
 =============================
 
-This role creates and manages different Python 3 virtual environments (venv). These are placed beneath ``/opt/python-venv/`` on the target system.
+This role creates and manages different `Python 3 virtual environments (venv) <https://docs.python.org/3/library/venv.html>`_. These are placed beneath ``/opt/python-venv/`` on the target system.
 
 Tested on
 
@@ -52,7 +52,7 @@ Optional
 python_venv__host_venvs / python_venv__group_venvs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These variables are intended to be used in a host / host group variable file in the Ansible inventory. Note that the group variable can only be used in one host group at a time.
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
 Dictionary containing definitions for the virtual environments.
 
@@ -76,7 +76,7 @@ Subkeys:
 
 ``exposed_binaries``
     Optional, list.
-    List of binaries which should be linked to ``/usr/local/bin`` for easier access on the command line. The binaries are expected to lie beneath ``/opt/python-venv/name/bin/``.
+    List of binaries which should be linked to ``/usr/local/bin`` for easier access on the command line. The binaries are expected to exist beneath ``/opt/python-venv/name/bin/``.
 
 Default:
 
