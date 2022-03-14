@@ -1,6 +1,6 @@
 - name: 'Create virtualenv in /opt/python-venv/{{ venv.name }}'
   ansible.builtin.command:
-    cmd: 'python3 -m venv {% if venv.system_site_packages|d("True") %} --system-site-packages {% endif %} {{ venv.name }}'
+    cmd: 'python3 -m venv {% if venv.system_site_packages | d("True") %} --system-site-packages {% endif %} {{ venv.name }}'
     chdir: '/opt/python-venv'
     creates: '/opt/python-venv/{{ venv.name }}/bin/activate'
   ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
@@ -22,7 +22,7 @@
 
 - name: 'Install dnf package requirements'
   ansible.builtin.package:
-    name: '{{ venv.package_requirements | default([]) }}'
+    name: '{{ venv.package_requirements | d([]) }}'
     state: 'present'
 
 - name: 'Install packages using pip'
@@ -36,7 +36,7 @@
     src: '/opt/python-venv/{{ venv.name }}/bin/{{ item }}'
     path: '/usr/local/bin/{{ item }}'
     state: 'link'
-  loop: '{{ venv.exposed_binaries | default([]) }}'
+  loop: '{{ venv.exposed_binaries | d([]) }}'
 
 # - ansible.builtin.name: 'systemctl {{ duplicity__timer_enabled | bool | ternary("enable", "disable") }} python-venv-update@.timer --now'
 #   systemd:
