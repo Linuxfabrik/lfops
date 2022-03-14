@@ -21,10 +21,12 @@ Additionally, this role allows you to deploy custom plugins which are placed und
 Requirements
 ------------
 
+
 Mandatory
 ~~~~~~~~~
 
 * Install Python 3 (or Python 2 if needed)
+
 
 Optional
 ~~~~~~~~
@@ -49,7 +51,7 @@ Tags
 Role Variables
 --------------
 
-* Have a look at the ``main/defaults.yml`` for the variable defaults.
+Have a look at the ``main/defaults.yml`` for the variable defaults.
 
 
 Mandatory
@@ -129,7 +131,7 @@ Example:
 Examples
 --------
 
-Install or update just the ``php-version`` check plugin to/on server ``test01`` in ``mynet``, using the latest stable version:
+Install or update just the ``php-version`` check plugin to/on the ``test01`` server in ``mynet``, using the latest stable version:
 
 .. code-block:: bash
 
