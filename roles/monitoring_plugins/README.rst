@@ -13,27 +13,23 @@ Tested on
 * Windows
 * Suse
 
+It also installs the `Linuxfabrik Plugin Library <https://github.com/Linuxfabrik/monitoring-plugins>`_ to ``/usr/lib64/nagios/plugins/lib``, which are a requirement of the Monitoring Plugins.
+
 Additionally, this role allows you to deploy custom plugins which are placed under ``../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins`` on the ansible host.
-
-It also installs the `Linuxfabrik Plugin Library <https://github.com/Linuxfabrik/monitoring-plugins>`_ to ``/usr/lib64/nagios/plugins/lib``, a must have for all Monitoring Plugins.
-
-What this role does **NOT** do:
-
-* Install Python 3 (or Python 2 if needed)
-* Install all other 3rd party libraries used by some of the Monitoring Plugins:
-
-    * BeautifulSoup4
-    * lxml
-    * mysql.connector
-    * psutil
-
-* If on Windows and you want to compile the python plugins using Nuitka, you need of course Nuitka.
 
 
 Requirements
 ------------
 
-Prepare your target node as described in the `Monitoring-Plugins README <https://github.com/Linuxfabrik/monitoring-plugins>`_.
+Mandatory:
+
+* Install Python 3 (or Python 2 if needed)
+
+Optional:
+
+* Most check plugins require the ``psutil`` library. On RHEL-compatible systems, enable the EPEL repository (e.g. use the ``linuxfabrik.lfops.repo_epel`` role), then install ``python3-psutil``.
+* Have a look at the individual requirements of each check.
+* To compile the plugins on Windows using Nutika, you need to install it: https://nuitka.net/doc/download.html#pypi
 
 
 Tags
@@ -43,9 +39,9 @@ Tags
     :header-rows: 1
 
     Tag,                                What it does
-    monitoring_plugins,                 "Deploy the monitoring plugins, including Linuxfabrik libraries and custom plugins"
+    monitoring_plugins,                 "Deploy the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins"
     monitoring_plugins::custom,         "Only deploy the custom plugins"
-    monitoring_plugins::nuitka_compile, "Windows only: Only compile the python plugins using nuitka"
+    monitoring_plugins::nuitka_compile, "Windows only: Only compile the Python plugins using nuitka"
 
 
 Role Variables
@@ -53,18 +49,21 @@ Role Variables
 
 * Have a look at the ``main/defaults.yml`` for the variable defaults.
 
+
 Mandatory
 ~~~~~~~~~
 
 This role does not have any mandatory variables.
 
+
 Optional
 ~~~~~~~~
+
 
 monitoring_plugins__python_version
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For which python version should the monitoring plugins be deployed? Possible options:
+For which Python version should the monitoring plugins be deployed? Possible options:
 
 * ``3``: For Python 3
 * ``2``: For Python 2
@@ -99,8 +98,8 @@ Windows only.
 
 Which variant of the monitoring plugins should be deployed? Possible options:
 
-* ``nuitka``: Deploy the nuitka-compiled checks (EXE files). This does not require python on the system.
-* ``python``: Deploy the plain python checks. This requires Python to be installed on Windows.
+* ``nuitka``: Deploy the nuitka-compiled checks (EXE files). This does not require Python on the system.
+* ``python``: Deploy the plain Python plugins. This requires Python to be installed on Windows.
 
 Default:
 
