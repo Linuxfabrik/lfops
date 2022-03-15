@@ -28,4 +28,4 @@ ln -s /path/to/lfops ~/.ansible/collections/ansible_collections/linuxfabrik/
 ## Documentation
 
 * Roles: Each role has its own README file.
-* Plugins: The documentation for all plugins is available through `ansible-doc`. For example: `ansible-doc linuxfabrik.lfops.gpg_key` shows the documentation for the GPG key managing module.
+* Plugins: The documentation for all plugins is available through `ansible-doc`. For example, `ansible-doc linuxfabrik.lfops.gpg_key` shows the documentation for the GPG key managing module.
