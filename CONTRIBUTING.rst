@@ -344,7 +344,7 @@ Ansible Facts / Magic Vars
 Documenting Variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-* Document variables in the ``README``. Have a look at ``httpd-apache/README.md`` on how this could look like.
+* Document variables in the ``README``. Have a look at ``python_venv/README.md`` on how this could look like.
 
 
 Handling default values
