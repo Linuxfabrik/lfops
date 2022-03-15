@@ -1,4 +1,4 @@
-# Ansible Collection of Roles, Playbooks and Plugins for managing Linux-based data centers
+# Ansible Collection of Roles, Playbooks and Plugins for managing Linux-based Data Centers
 
 
 ## Installation
