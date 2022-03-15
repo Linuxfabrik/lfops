@@ -1,7 +1,7 @@
 linuxfabrik.lfops.duplicity
 ===========================
 
-This role configures daily file-based backups using `duplicity <https://duplicity.gitlab.io/>`_. Currently, this role focusses on using `OpenStack Object Storage ("Swift") <https://wiki.openstack.org/wiki/Swift>`_ as the storage backend.
+This role configures daily file-based backups using `duplicity <https://duplicity.gitlab.io/>`_. Currently, this role is focused on using `OpenStack Object Storage ("Swift") <https://wiki.openstack.org/wiki/Swift>`_ as the storage backend.
 
 Tested on
 
@@ -16,13 +16,12 @@ Requirements
 Mandatory
 ~~~~~~~~~
 
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the ``linuxfabrik.lfops.repo_epel`` role.
-* Install ``duplicity``, ``python-swiftclient`` and ``python-keystoneclient`` into a Python 3 virtual environment in ``/opt/python-venv/duplicity``. This can be done using the ``linuxfabrik.lfops.python_venv`` role.
+* On RHEL-compatible systems, enable the EPEL repository. This can be done using the `linuxfabrik.lfops.repo_epel <https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel>`_ role.
+* Install ``duplicity``, ``python-swiftclient`` and ``python-keystoneclient`` into a Python 3 virtual environment in ``/opt/python-venv/duplicity``. This can be done using the `linuxfabrik.lfops.python_venv <https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv>`_ role.
 
 .. attention::
 
-    Make sure the virtual environment is not writable by other users to prevent privilege escalation.
-    This is also done by the ``linuxfabrik.lfops.python_venv`` role.
+    Make sure the virtual environment is not writable by other users to prevent privilege escalation. This is also done by the `linuxfabrik.lfops.python_venv <https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv>`_ role.
 
 
 Optional
@@ -70,7 +69,7 @@ Example:
 duplicity__public_master_long_keyid
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The long keyid of the master GPG key. Obtain using ``gpg --list-secret-keys --keyid-format=long``.
+The long key ID of the master GPG key. Obtain it using ``gpg --list-secret-keys --keyid-format=long``.
 
 Example:
 
@@ -82,7 +81,7 @@ Example:
 duplicity__public_master_key
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ASCII-armored public master GPG key. Obtain using ``gpg --armor --export $GPG_KEY``. This key is imported on the server and is used in addition to the server's own GPG key to encrypt the backups. This means that the backups can be restored using either this or the server's private key.
+The ASCII-armored public master GPG key. Obtain it using ``gpg --armor --export $GPG_KEY``. This key is imported on the server and is used in addition to the server's own GPG key to encrypt the backups. This means that the backups can be restored using either this or the server's private key (which is pretty cool).
 
 Example:
 
@@ -200,6 +199,12 @@ Set the loglevel. Possible options:
 * notice
 * info
 * debug
+
+Default:
+
+.. code-block:: yaml
+
+    duplicity__loglevel: 'notice'
 
 
 duplicity__on_calendar
