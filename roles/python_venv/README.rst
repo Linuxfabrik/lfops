@@ -1,7 +1,7 @@
 linuxfabrik.lfops.python_venv
 =============================
 
-This role creates and manages different `Python 3 virtual environments (venv) <https://docs.python.org/3/library/venv.html>`_. These are placed beneath ``/opt/python-venv/`` on the target system.
+This role creates and manages various `Python 3 virtual environments (venv) <https://docs.python.org/3/library/venv.html>`_. These are placed below ``/opt/python-venv/`` on the target system.
 
 Tested on
 
@@ -31,7 +31,7 @@ Tags
     :header-rows: 1
 
     Tag,                       What it does
-    python_venv,               "Creates and manages the virtual environments"
+    python_venv,               Creates and manages the virtual environments
 
 
 Role Variables
@@ -60,7 +60,7 @@ Subkeys:
 
 ``name``
     Mandatory, string.
-    The name of the virtual environment. Will be used for the folder name beneath ``/opt/python-venv``.
+    The name of the virtual environment. Will be used for the folder name below ``/opt/python-venv``.
 
 ``packages``
     Mandatory, list.
@@ -68,7 +68,7 @@ Subkeys:
 
 ``system_site_packages``
     Optional, boolean. Defaults to ``True``.
-    Give the virtual environment access to the system site-packages dir.
+    Allows the virtual environment to access the system site-packages dir.
 
 ``package_requirements``
     Optional, list.
@@ -76,7 +76,7 @@ Subkeys:
 
 ``exposed_binaries``
     Optional, list.
-    List of binaries which should be linked to ``/usr/local/bin`` for easier access on the command line. The binaries are expected to exist beneath ``/opt/python-venv/name/bin/``.
+    List of binaries which should be linked to ``/usr/local/bin`` for easier access on the command line. The binaries are expected to exist below ``/opt/python-venv/name/bin/``.
 
 Default:
 
