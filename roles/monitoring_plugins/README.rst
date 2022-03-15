@@ -15,7 +15,7 @@ Tested on
 
 It also installs the `Linuxfabrik Plugin Library <https://github.com/Linuxfabrik/monitoring-plugins>`_ to ``/usr/lib64/nagios/plugins/lib``, which are a requirement of the Monitoring Plugins.
 
-Additionally, this role allows you to deploy custom plugins which are placed under ``../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins`` on the ansible host.
+Additionally, this role allows you to deploy custom plugins which are placed under ``../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins`` on the Ansible control node.
 
 
 Requirements
@@ -31,9 +31,9 @@ Mandatory
 Optional
 ~~~~~~~~
 
-* Most check plugins require the ``psutil`` library. On RHEL-compatible systems, enable the EPEL repository (e.g. use the ``linuxfabrik.lfops.repo_epel`` role), then install ``python3-psutil``.
-* Have a look at the individual requirements of each check.
-* To compile the plugins on Windows using Nutika, you need to install it: https://nuitka.net/doc/download.html#pypi
+* Round about 20 check plugins require the 3rd party `psutil <https://psutil.readthedocs.io/en/latest/>`_ library. On RHEL-compatible systems, enable the EPEL repository (for example by using the `linuxfabrik.lfops.repo_epel <https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel>`_ role), then install ``python3-psutil``.
+* Look at the individual requirements of each check in its README file on `GitHub <https://github.com/Linuxfabrik/monitoring-plugins>`_ or on `docs.linuxfabrik.ch <https://docs.linuxfabrik.ch/monitoring-plugins/000-check-plugins.html>`_ to identify any dependencies on additional third-party libraries.
+* To compile the Python plugins on Windows using `Nutika <https://nuitka.net/>`_, you need to `install it first <https://nuitka.net/doc/download.html#pypi`_.
 
 
 Tags
@@ -45,7 +45,7 @@ Tags
     Tag,                                What it does
     monitoring_plugins,                 "Deploy the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins"
     monitoring_plugins::custom,         "Only deploy the custom plugins"
-    monitoring_plugins::nuitka_compile, "Windows only: Only compile the Python plugins using nuitka"
+    monitoring_plugins::nuitka_compile, "Windows only: Only compile the Python plugins using Nuitka"
 
 
 Role Variables
