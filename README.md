@@ -1,4 +1,4 @@
-# Ansible Collection of Roles, Playbooks and Plugins for managing Linux-based Data Centers
+# LFOps - Ansible Collection of Roles, Playbooks and Plugins for managing Linux-based Data Centers
 
 
 ## Installation
