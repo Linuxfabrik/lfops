@@ -31,7 +31,7 @@
 
 - block:
 
-  - name: 'Clone the monitoring plugins git repo to localhost'
+  - name: 'Clone the monitoring plugins git repo to localhost (version: {{ monitoring_plugins__github_version }})'
     ansible.builtin.git:
       repo: '{{ monitoring_plugins__repo_url }}'
       dest: '/tmp/ansible.monitoring-plugins-repo'
@@ -49,7 +49,7 @@
         state: 'absent'
       delegate_to: 'localhost'
 
-    - name: 'Clone the monitoring plugins git repo to localhost'
+    - name: 'Clone the monitoring plugins git repo to localhost (version: {{ monitoring_plugins__github_version }})'
       ansible.builtin.git:
         repo: '{{ monitoring_plugins__repo_url }}'
         dest: '/tmp/ansible.monitoring-plugins-repo'
@@ -65,7 +65,7 @@
 
 - block:
 
-  - name: 'Clone the lib git repo to localhost'
+  - name: 'Clone the lib git repo to localhost (version: {{ monitoring_plugins__github_version }})'
     ansible.builtin.git:
       repo: '{{ monitoring_plugins__lib_repo_url }}'
       dest: '/tmp/ansible.lib-repo'
@@ -83,7 +83,7 @@
         state: 'absent'
       delegate_to: 'localhost'
 
-    - name: 'Clone the lib git repo to localhost'
+    - name: 'Clone the lib git repo to localhost (version: {{ monitoring_plugins__github_version }})'
       ansible.builtin.git:
         repo: '{{ monitoring_plugins__lib_repo_url }}'
         dest: '/tmp/ansible.lib-repo'
