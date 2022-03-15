@@ -33,7 +33,7 @@ Optional
 
 * Round about 20 check plugins require the 3rd party `psutil <https://psutil.readthedocs.io/en/latest/>`_ library. On RHEL-compatible systems, enable the EPEL repository (for example by using the `linuxfabrik.lfops.repo_epel <https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel>`_ role), then install ``python3-psutil``.
 * Look at the individual requirements of each check in its README file on `GitHub <https://github.com/Linuxfabrik/monitoring-plugins>`_ or on `docs.linuxfabrik.ch <https://docs.linuxfabrik.ch/monitoring-plugins/000-check-plugins.html>`_ to identify any dependencies on additional third-party libraries.
-* To compile the Python plugins on Windows using `Nutika <https://nuitka.net/>`_, you need to `install it first <https://nuitka.net/doc/download.html#pypi`_.
+* To compile the Python plugins on Windows using `Nutika <https://nuitka.net/>`_, you need to `install it first <https://nuitka.net/doc/download.html#pypi>`_.
 
 
 Tags
