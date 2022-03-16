@@ -67,7 +67,7 @@ Quotes
 
 * | We always quote strings and prefer single quotes over double quotes. The only time you should use double quotes is when they are nested within single quotes (e.g. Jinja map reference), or when your string requires escaping characters (e.g. using ``\n`` to represent a newline).
 * | If you must write a long string, we use the "folded scalar" (``>`` converts newlines to spaces, ``|`` keeps newlines) style and omit all special quoting.
-* | The only things you should avoid quoting are booleans (e.g. ``true``/``false``), numbers (e.g. ``42``), and things referencing the local Ansible environment (e.g. boolean logic or names of variables we are assigning values to).
+* | The only things you should avoid quoting are booleans (e.g. ``True``/``False``), numbers (e.g. ``42``), and things referencing the local Ansible environment (e.g. boolean logic or names of variables we are assigning values to).
 
 .. code-block:: yml
 
@@ -76,25 +76,25 @@ Quotes
       ansible.builtin.service:
         name: s1m0ne
         state: started
-        enabled: true
-      become: true
+        enabled: True
+      become: True
 
     # good
     - name: 'start robot named S1m0ne'
       ansible.builtin.service:
         name: 's1m0ne'
         state: 'started'
-        enabled: true
-      become: true
+        enabled: True
+      become: True
 
     # double quotes w/ nested single quotes
     - name: 'start all robots'
       ansible.builtin.service:
         name: '{{ item["robot_name"] }}''
         state: 'started'
-        enabled: true
+        enabled: True
       with_items: '{{ robots }}'
-      become: true
+      become: True
 
     # double quotes to escape characters
     - name 'print some text on two lines'
@@ -121,7 +121,7 @@ Quotes
         dest: '/tmp'
         timeout: 60
         url: 'https://google.com'
-        validate_certs: true
+        validate_certs: True
 
     # variables example 1
     - name: 'set a variable'
@@ -312,7 +312,7 @@ Variables
           that:
             - stig__grub2_password is defined
             - stig__grub2_password | length
-          quiet: true
+          quiet: True
           fail_msg: Please define bootloader passwords for your hosts ("stig__grub2_password").
 
 * Your role might accept variable injection from another role. It depends on the context on how to implement that. Examples:

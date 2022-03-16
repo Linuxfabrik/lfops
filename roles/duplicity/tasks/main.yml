@@ -27,7 +27,7 @@
       dest: '/tmp/public-master-key'
       content: '{{ duplicity__public_master_key }}'
       mode: 0600
-    changed_when: false
+    changed_when: False
 
   - name: 'gpg --import /tmp/public-master-key'
     ansible.builtin.command: 'gpg --import /tmp/public-master-key'
@@ -43,7 +43,7 @@
     ansible.builtin.file:
       path: '/tmp/public-master-key'
       state: 'absent'
-    changed_when: false
+    changed_when: False
 
   - name: "echo '{{ duplicity__public_master_long_keyid }}:6:' | gpg --import-ownertrust # set trust to ultimate"
     ansible.builtin.shell: "echo '{{ duplicity__public_master_long_keyid }}:6:' | gpg --import-ownertrust"
@@ -98,7 +98,7 @@
         name: 'duplicity-backup.timer'
         state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
         enabled: '{{ duplicity__timer_enabled }}'
-        daemon_reload: true
+        daemon_reload: True
 
   tags:
     - 'duplicity'

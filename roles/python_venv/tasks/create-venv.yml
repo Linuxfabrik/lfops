@@ -43,4 +43,4 @@
 #       name: 'python-venv-update@.timer'
 #       state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
 #       enabled: '{{ duplicity__timer_enabled }}'
-#       daemon_reload: true
+#       daemon_reload: True

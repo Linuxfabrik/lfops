@@ -7,9 +7,9 @@
       # use_regex: yes
       recurse: yes
       depth: 2
-      hidden: true
+      hidden: True
     register: find_result
-    run_once: true
+    run_once: True
 
   - set_fact:
       monitoring_plugins__check_plugin_search_name: "{{
