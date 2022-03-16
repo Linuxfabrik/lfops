@@ -1,5 +1,5 @@
-linuxfabrik.lfops.repo_epel
-===========================
+Role linuxfabrik.lfops.repo_epel
+================================
 
 This role deploys the `Extra Packages for Enterprise Linux (EPEL) Repository <https://docs.fedoraproject.org/en-US/epel/>`_.
 
@@ -38,7 +38,7 @@ Tags
 Role Variables
 --------------
 
-Have a look at the ``main/defaults.yml`` for the variable defaults.
+Have a look at the ``defaults/main.yml`` for the variable defaults.
 
 
 Mandatory

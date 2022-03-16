@@ -1,5 +1,5 @@
-linuxfabrik.lfops.python_venv
-=============================
+Role linuxfabrik.lfops.python_venv
+==================================
 
 This role creates and manages various `Python 3 virtual environments (venv) <https://docs.python.org/3/library/venv.html>`_. These are placed below ``/opt/python-venv/`` on the target system.
 
@@ -37,7 +37,7 @@ Tags
 Role Variables
 --------------
 
-Have a look at the ``main/defaults.yml`` for the variable defaults.
+Have a look at the ``defaults/main.yml`` for the variable defaults.
 
 
 Mandatory

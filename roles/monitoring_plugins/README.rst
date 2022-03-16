@@ -1,5 +1,5 @@
-linuxfabrik.lfops.monitoring_plugins
-====================================
+Role linuxfabrik.lfops.monitoring_plugins
+=========================================
 
 This role deploys the `Linuxfabik Monitoring Plugins <https://github.com/Linuxfabrik/monitoring-plugins>`_ to ``/usr/lib64/nagios/plugins/``, allowing them to be easily executed by a monitoring system.
 
@@ -44,14 +44,14 @@ Tags
 
     Tag,                                What it does
     monitoring_plugins,                 "Deploy the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins"
-    monitoring_plugins::custom,         "Only deploy the custom plugins"
-    monitoring_plugins::nuitka_compile, "Windows only: Only compile the Python plugins using Nuitka"
+    monitoring_plugins:custom,          "Only deploy the custom plugins"
+    monitoring_plugins:nuitka_compile,  "Windows only: Only compile the Python plugins using Nuitka"
 
 
 Role Variables
 --------------
 
-Have a look at the ``main/defaults.yml`` for the variable defaults.
+Have a look at the ``defaults/main.yml`` for the variable defaults.
 
 
 Mandatory
