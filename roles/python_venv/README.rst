@@ -1,7 +1,9 @@
-Role linuxfabrik.lfops.python_venv
-==================================
+Ansible Role python_venv
+========================
 
 This role creates and manages various `Python 3 virtual environments (venv) <https://docs.python.org/3/library/venv.html>`_. These are placed below ``/opt/python-venv/`` on the target system.
+
+FQCN: linuxfabrik.lfops.python_venv
 
 Tested on
 
