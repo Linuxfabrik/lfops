@@ -31,11 +31,11 @@
 
 - block:
 
-  - name: 'Clone the monitoring plugins git repo to localhost (version: {{ monitoring_plugins__github_version }})'
+  - name: 'Clone the monitoring plugins git repo to localhost (version: {{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }})'
     ansible.builtin.git:
       repo: '{{ monitoring_plugins__repo_url }}'
       dest: '/tmp/ansible.monitoring-plugins-repo'
-      version: '{{ monitoring_plugins__github_version }}'
+      version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
       depth: 1
     delegate_to: 'localhost'
     run_once: True
@@ -49,11 +49,11 @@
         state: 'absent'
       delegate_to: 'localhost'
 
-    - name: 'Clone the monitoring plugins git repo to localhost (version: {{ monitoring_plugins__github_version }})'
+    - name: 'Clone the monitoring plugins git repo to localhost (version: {{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }})'
       ansible.builtin.git:
         repo: '{{ monitoring_plugins__repo_url }}'
         dest: '/tmp/ansible.monitoring-plugins-repo'
-        version: '{{ monitoring_plugins__github_version }}'
+        version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
         depth: 1
       delegate_to: 'localhost'
       run_once: True
@@ -65,11 +65,11 @@
 
 - block:
 
-  - name: 'Clone the lib git repo to localhost (version: {{ monitoring_plugins__github_version }})'
+  - name: 'Clone the lib git repo to localhost (version: {{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }})'
     ansible.builtin.git:
       repo: '{{ monitoring_plugins__lib_repo_url }}'
       dest: '/tmp/ansible.lib-repo'
-      version: '{{ monitoring_plugins__github_version }}'
+      version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
       depth: 1
     delegate_to: 'localhost'
     run_once: True
@@ -83,11 +83,11 @@
         state: 'absent'
       delegate_to: 'localhost'
 
-    - name: 'Clone the lib git repo to localhost (version: {{ monitoring_plugins__github_version }})'
+    - name: 'Clone the lib git repo to localhost (version: {{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }})'
       ansible.builtin.git:
         repo: '{{ monitoring_plugins__lib_repo_url }}'
         dest: '/tmp/ansible.lib-repo'
-        version: '{{ monitoring_plugins__github_version }}'
+        version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
         depth: 1
       delegate_to: 'localhost'
       run_once: True
