@@ -1,7 +1,9 @@
-Role linuxfabrik.lfops.repo_epel
-================================
+Ansible Role repo_epel
+======================
 
 This role deploys the `Extra Packages for Enterprise Linux (EPEL) Repository <https://docs.fedoraproject.org/en-US/epel/>`_.
+
+FQCN: linuxfabrik.lfops.repo_epel
 
 Tested on
 
