@@ -1,7 +1,9 @@
-Role linuxfabrik.lfops.monitoring_plugins
-=========================================
+Ansible Role monitoring_plugins
+===============================
 
 This role deploys the `Linuxfabik Monitoring Plugins <https://github.com/Linuxfabrik/monitoring-plugins>`_ to ``/usr/lib64/nagios/plugins/``, allowing them to be easily executed by a monitoring system.
+
+FQCN: linuxfabrik.lfops.monitoring_plugins
 
 Tested on
 
