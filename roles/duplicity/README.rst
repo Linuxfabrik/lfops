@@ -1,7 +1,9 @@
-Role linuxfabrik.lfops.duplicity
-================================
+Ansible Role duplicity
+======================
 
 This role configures daily file-based backups using `duplicity <https://duplicity.gitlab.io/>`_. Currently, this role is focused on using `OpenStack Object Storage ("Swift") <https://wiki.openstack.org/wiki/Swift>`_ as the storage backend.
+
+FQCN: linuxfabrik.lfops.duplicity
 
 Tested on
 
