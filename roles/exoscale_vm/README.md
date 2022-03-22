@@ -113,7 +113,7 @@ exoscale_vm__state: 'started'
 ```
 
 
-##### exoscale_vm__ssh_key
+#### exoscale_vm__ssh_key
 
 The name of the SSH-key depoited in Exoscale [here](https://portal.exoscale.com/compute/keypairs). Defaults to using the local username of the Ansible control node.
 
