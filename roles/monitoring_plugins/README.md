@@ -35,11 +35,11 @@ Additionally, this role allows you to deploy custom plugins which are placed und
 
 ## Tags
 
-| Tag | What it does |
-| --- | ------------ |
-| monitoring_plugins | Deploy the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins |
-| monitoring_plugins:custom | Only deploy the custom plugins |
-| monitoring_plugins:nuitka_compile | Windows only: Only compile the Python plugins using Nuitka |
+| Tag                               | What it does                                                                               |
+| ---                               | ------------                                                                               |
+| monitoring_plugins                | Deploy the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins |
+| monitoring_plugins:custom         | Only deploy the custom plugins                                                             |
+| monitoring_plugins:nuitka_compile | Windows only: Only compile the Python plugins using Nuitka                                 |
 
 
 ## Role Variables
@@ -61,10 +61,11 @@ Overwrite the automatically generated list of monitoring plugins that should be 
 Default: unset
 
 Example:
-
-    monitoring_plugins__plugin_list:
-      - 'about-me'
-      - 'cpu-usage'
+```yaml
+monitoring_plugins__plugin_list:
+  - 'about-me'
+  - 'cpu-usage'
+```
 
 
 #### monitoring_plugins__python_version
@@ -75,8 +76,9 @@ For which Python version should the monitoring plugins be deployed? Possible opt
 * `2`: For Python 2
 
 Default:
-
-    monitoring_plugins__python_version: 3
+```yaml
+monitoring_plugins__python_version: 3
+```
 
 
 #### monitoring_plugins__repo_version
@@ -88,8 +90,9 @@ Which version of the monitoring plugins should be deployed? Possible options:
 * A specific release, for example `2022030201`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).
 
 Default:
-
-    monitoring_plugins__repo_version: 'latest'
+```yaml
+monitoring_plugins__repo_version: 'latest'
+```
 
 
 #### monitoring_plugins__windows_variant
@@ -102,19 +105,21 @@ Which variant of the monitoring plugins should be deployed? Possible options:
 * `python`: Deploy the plain Python plugins. This requires Python to be installed on Windows.
 
 Default:
-
-    monitoring_plugins__windows_variant: 'nuitka'
+```yaml
+monitoring_plugins__windows_variant: 'nuitka'
+```
 
 
 ## Examples
 
 Install or update just the `php-version` check plugin to/on the `test01` server in `mynet`, using the latest stable version:
-
-    ansible-playbook \
-        linuxfabrik.lfops.monitoring_plugins \
-        --inventory environments/mynet/inventory \
-        --extra-vars='{"monitoring_plugins": ["php-version"]}' \
-        --limit test01
+```bash
+ansible-playbook \
+    linuxfabrik.lfops.monitoring_plugins \
+    --inventory environments/mynet/inventory \
+    --extra-vars='{"monitoring_plugins": ["php-version"]}' \
+    --limit test01
+```
 
 
 ## License

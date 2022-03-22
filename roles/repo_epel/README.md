@@ -24,8 +24,8 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag | What it does |
-| --- | ------------ |
+| Tag       | What it does               |
+| ---       | ------------               |
 | repo_epel | Deploy the EPEL Repository |
 
 
@@ -46,8 +46,9 @@ This role does not have any mandatory variables.
 Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles, or else to `''`.
 
 Default:
-
-    repo_epel__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+```yaml
+repo_epel__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+```
 
 
 ## License

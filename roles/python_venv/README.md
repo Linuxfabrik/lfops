@@ -24,8 +24,8 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag | What it does |
-| --- | ------------ |
+| Tag         | What it does                                 |
+| ---         | ------------                                 |
 | python_venv | Creates and manages the virtual environments |
 
 
@@ -56,23 +56,25 @@ Subkeys:
 * `system_site_packages`:  Optional, boolean. Defaults to `True`. Allows the virtual environment to access the system site-packages dir.
 
 Default:
-
-    python_venv__host_venvs: []
-    python_venv__group_venvs: []
+```yaml
+python_venv__host_venvs: []
+python_venv__group_venvs: []
+```
 
 Example:
-
-    python_venv__host_venvs:
-      - name: 'duplicity'
-        packages:
-          - 'duplicity'
-          - 'python-swiftclient'
-          - 'python-keystoneclient'
-        package_requirements:
-          - 'gcc'
-          - 'librsync-devel'
-        exposed_binaries:
-          - 'duplicity'
+```yaml
+python_venv__host_venvs:
+  - name: 'duplicity'
+    packages:
+      - 'duplicity'
+      - 'python-swiftclient'
+      - 'python-keystoneclient'
+    package_requirements:
+      - 'gcc'
+      - 'librsync-devel'
+    exposed_binaries:
+      - 'duplicity'
+```
 
 
 ## License

@@ -29,11 +29,11 @@ Tested on
 
 ## Tags
 
-| Tag | What it does |
-| --- | ------------ |
-| duplicity | Installs and configures duplicity |
-| duplicity:configure | Deploys the configuration for duplicity |
-| duplicity:state | Manages the state of the daily systemd timer |
+| Tag                 | What it does                                 |
+| ---                 | ------------                                 |
+| duplicity           | Installs and configures duplicity            |
+| duplicity:configure | Deploys the configuration for duplicity      |
+| duplicity:state     | Manages the state of the daily systemd timer |
 
 
 ## Role Variables
@@ -48,20 +48,21 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 The ASCII-armored public master GPG key. Obtain it using `gpg --armor --export $GPG_KEY`. This key is imported on the server and is used in addition to the server's own GPG key to encrypt the backups. This means that the backups can be restored using either this or the server's private key (which is pretty cool).
 
 Example:
-
-    duplicity__public_master_key: |-
-      -----BEGIN PGP PUBLIC KEY BLOCK-----
-      ...
-      -----END PGP PUBLIC KEY BLOCK-----
-
+```yaml
+duplicity__public_master_key: |-
+  -----BEGIN PGP PUBLIC KEY BLOCK-----
+  ...
+  -----END PGP PUBLIC KEY BLOCK-----
+```
 
 #### duplicity__public_master_long_keyid
 
 The long key ID of the master GPG key. Obtain it using `gpg --list-secret-keys --keyid-format=long`.
 
 Example:
-
-    duplicity__public_master_long_keyid: 'LLZGH2BITI2LRLJCLFWEAJQ93N6MWTKBARQDMYX5'
+```yaml
+duplicity__public_master_long_keyid: 'LLZGH2BITI2LRLJCLFWEAJQ93N6MWTKBARQDMYX5'
+```
 
 
 #### duplicity__swift_login
@@ -76,10 +77,11 @@ Subkeys:
 Default: unset
 
 Example:
-
-    duplicity__swift_login:
-      username: 'SBI-MF827483'
-      password: 'some-secret-password'
+```yaml
+duplicity__swift_login:
+  username: 'SBI-MF827483'
+  password: 'some-secret-password'
+```
 
 
 #### duplicity__swift_tenantname
@@ -89,8 +91,9 @@ The Swift Tenantname. Usually, this is given by the provider of the Swift Storag
 Default: unset
 
 Example:
-
-    duplicity__swift_tenantname: 'sb_project_SBI-MF827483'
+```yaml
+duplicity__swift_tenantname: 'sb_project_SBI-MF827483'
+```
 
 
 ### Optional
@@ -100,8 +103,9 @@ Example:
 The backup destination. This will be used in combination with the backup source path to create the target URL for `duplicity`.
 
 Default:
-
-    duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}'
+```yaml
+duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}'
+```
 
 
 #### duplicity__backup_dest_container
@@ -109,8 +113,9 @@ Default:
 The Swift container. This can be used to separate backups on the destination. By default, this will be used in `duplicity__backup_dest`.
 
 Default:
-
-    duplicity__backup_dest_container: '{{ ansible_nodename }}'
+```yaml
+duplicity__backup_dest_container: '{{ ansible_nodename }}'
+```
 
 
 #### duplicity__excludes
@@ -118,15 +123,16 @@ Default:
 List of exclude shell patterns for `duplicity`. Have a look at `man duplicity` for details.
 
 Default:
-
-    duplicity__excludes:
-      - '**/*.git*'
-      - '**/*.svn*'
-      - '**/*.temp'
-      - '**/*.tmp'
-      - '**/.cache'
-      - '**/cache'
-      - '**/log'
+```yaml
+duplicity__excludes:
+  - '**/*.git*'
+  - '**/*.svn*'
+  - '**/*.temp'
+  - '**/*.tmp'
+  - '**/.cache'
+  - '**/cache'
+  - '**/log'
+```
 
 
 #### duplicity__host_backup_sources / duplicity__group_backup_sources
@@ -145,15 +151,17 @@ By default, the following directories are always backed up:
 These variables allow you to add additional directories to the backup.
 
 Default:
-
-    duplicity__host_backup_sources: []
-    duplicity__group_backup_sources: []
+```yaml
+duplicity__host_backup_sources: []
+duplicity__group_backup_sources: []
+```
 
 Example:
-
-    duplicity__host_backup_sources:
-      - '/data'
-      - '/var/www/html'
+```yaml
+duplicity__host_backup_sources:
+  - '/data'
+  - '/var/www/html'
+```
 
 
 #### duplicity__loglevel
@@ -167,8 +175,9 @@ Set the loglevel. Possible options:
 * debug
 
 Default:
-
-    duplicity__loglevel: 'notice'
+```yaml
+duplicity__loglevel: 'notice'
+```
 
 
 #### duplicity__on_calendar
@@ -176,8 +185,9 @@ Default:
 The `OnCalendar` definition for the daily systemd timer. Have a look at `man systemd.time(7)` for the format.
 
 Default:
-
-    duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45|random(seed=inventory_hostname) }}'
+```yaml
+duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45|random(seed=inventory_hostname) }}'
+```
 
 
 #### duplicity__on_calendar_hour
@@ -185,8 +195,9 @@ Default:
 A shorthand to set the hour of `duplicity__on_calendar`.
 
 Default:
-
-    duplicity__on_calendar_hour: '23'
+```yaml
+duplicity__on_calendar_hour: '23'
+```
 
 
 #### duplicity__retention_time
@@ -194,8 +205,9 @@ Default:
 The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`.
 
 Default:
-
-    duplicity__retention_time: '30D' # days
+```yaml
+duplicity__retention_time: '30D' # days
+```
 
 
 #### duplicity__swift_authurl
@@ -203,8 +215,9 @@ Default:
 The Authentication URL for Swift. Usually, this is given by the provider of the Swift Storage.
 
 Default:
-
-    duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
+```yaml
+duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
+```
 
 
 #### duplicity__swift_authversion
@@ -212,8 +225,9 @@ Default:
 The Authentication Version for Swift. Usually, this is given by the provider of the Swift Storage.
 
 Default:
-
-    duplicity__swift_authversion: '3'
+```yaml
+duplicity__swift_authversion: '3'
+```
 
 
 #### duplicity__timer_enabled
@@ -221,8 +235,9 @@ Default:
 The state of the daily systemd timer.
 
 Default:
-
-    duplicity__timer_enabled: True
+```yaml
+duplicity__timer_enabled: True
+```
 
 
 ## License
