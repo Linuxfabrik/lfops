@@ -1,0 +1,35 @@
+- block:
+
+  # - name: 'Gather facts'
+  #   ansible.builtin.gather_facts:
+  #   register: 'exoscale_vm__gather_facts_result'
+  #   ignore_unreachable: True
+
+  # - name: 'Gather cloudstack facts'
+  #   ngine_io.cloudstack.cs_facts:
+  #   register: 'exoscale_vm__gather_cs_facts'
+  #   when: 'not (exoscale_vm__gather_facts_result["unreachable"] | default(False))'
+
+  # - name: 'Cloudstack facts'
+  #   debug:
+  #     var: 'exoscale_vm__gather_cs_facts'
+  #   when: 'not (exoscale_vm__gather_facts_result["unreachable"] | default(False))'
+
+  - name: 'Manage the VM at Exoscale'
+    ngine_io.cloudstack.cs_instance:
+      api_key: '{{ exoscale_vm__api_key }}'
+      api_secret: '{{ exoscale_vm__api_secret }}'
+      api_url: 'https://api.exoscale.com/compute'
+      name: '{{ exoscale_vm__name }}'
+      zone: '{{ exoscale_vm__zone }}'
+      template: '{{ exoscale_vm__template }}'
+      service_offering: '{{ exoscale_vm__service_offering }}'
+      ssh_key: '{{ exoscale_vm__ssh_key }}'
+      state: '{{ exoscale_vm__state }}'
+    connection: 'local'
+    register: 'exoscale_vm__instance_result'
+
+  # - meta: refresh_inventory
+
+  tags:
+    - exoscale_vm

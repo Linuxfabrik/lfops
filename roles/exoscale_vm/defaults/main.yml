@@ -1,0 +1,3 @@
+exoscale_vm__name: '{{ inventory_hostname }}'
+exoscale_vm__ssh_key: '{{ lookup("env", "USER") }}'
+exoscale_vm__state: 'started'
