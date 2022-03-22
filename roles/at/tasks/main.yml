@@ -1,4 +1,4 @@
-- name: 'Install or update at'
+- name: 'Install at'
   ansible.builtin.package:
     name: 'at'
     state: 'present'
@@ -6,19 +6,17 @@
     - 'at'
 
 
-
 - block:
 
-  - name: 'systemctl: atd enabled = {{ at__service_enabled | default(True) }}'
+  - name: 'systemctl: atd enabled = {{ at__service_enabled }}'
     ansible.builtin.service:
       name: 'atd'
-      enabled: '{{ at__service_enabled | default(True) }}'
+      enabled: '{{ at__service_enabled }}'
 
-  - name: "systemctl: atd state = {{ at__service_state | default('started') }}"
+  - name: "systemctl: atd state = {{ at__service_state }}"
     ansible.builtin.service:
       name: 'atd'
-      state: "{{ at__service_state | default('started') }}"
-    register: systemctl_result
+      state: "{{ at__service_state }}"
 
   tags:
     - 'at'
