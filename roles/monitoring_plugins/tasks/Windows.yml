@@ -5,6 +5,9 @@
       path: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\'
       state: directory
 
+  tags:
+    - 'monitoring_plugins'
+
 
 - block:
 
