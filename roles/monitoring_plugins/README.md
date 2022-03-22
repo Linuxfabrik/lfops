@@ -57,6 +57,7 @@ This role does not have any mandatory variables.
 #### monitoring_plugins__plugin_list
 
 Overwrite the automatically generated list of monitoring plugins that should be deployed.
+Note: This does not work for the compiled Nuitka plugins, as they are all packaged in a single zip-file.
 
 Default: unset
 
