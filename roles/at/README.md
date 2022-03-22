@@ -38,23 +38,24 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 This role does not have any mandatory variables.
 
 
+### Optional
+
 #### at__service_enabled 
 
-Sets if the atd service is on at boot. Possible options:
+Sets if the atd service is started on boot. Possible options:
 
 * True
 * False
 
 Default:
-
-```
+```yaml
 at__service_enabled: True
 ```
 
 
 #### at__service_state
 
-Sets the state of the atd service immediately. Possible options:
+Sets the state of the atd service. Possible options:
 
 * started
 * stopped
@@ -62,15 +63,10 @@ Sets the state of the atd service immediately. Possible options:
 * reloaded
 
 Default:
-
-```
+```yaml
 at__service_state: 'started'
 ```
 
-
-### Optional
-
-This role does not have any optional variables.
 
 ## License
 
@@ -80,4 +76,3 @@ This role does not have any optional variables.
 ## Author Information
 
 [Linuxfabrik GmbH, Zurich](https://www.linuxfabrik.ch)
-
