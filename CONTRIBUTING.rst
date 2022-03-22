@@ -355,6 +355,14 @@ Handling default values
 3. May be overriden by the customer by using a ``group_vars`` or ``host_vars``  definition.
 
 
+Git Commits
+-----------
+
+* Commit messages must start with "role:role_name: ", "plugin:plugin_name: ", or "module:module_name: " and clearly and precisely state what has changed. Example: ``role:duplicity: adjust name_email of gpg key to allow differentation``.
+* If there is an issue, the commit message must consist of the issue title followed by "(fix #issueno)", for example: ``role:duplicity: adjust encryption to use a master gpg key (fix #12)``.
+* For the first commit, use the message ``add <name>``.
+
+
 Credits
 -------
 
