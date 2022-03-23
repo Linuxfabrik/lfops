@@ -21,15 +21,15 @@
       api_secret: '{{ exoscale_vm__api_secret }}'
       api_url: 'https://api.exoscale.com/compute'
       name: '{{ exoscale_vm__name }}'
-      zone: '{{ exoscale_vm__zone }}'
-      template: '{{ exoscale_vm__template }}'
       service_offering: '{{ exoscale_vm__service_offering }}'
       ssh_key: '{{ exoscale_vm__ssh_key }}'
       state: '{{ exoscale_vm__state }}'
+      template: '{{ exoscale_vm__template }}'
+      zone: '{{ exoscale_vm__zone }}'
     connection: 'local'
     register: 'exoscale_vm__instance_result'
 
   # - meta: refresh_inventory
 
   tags:
-    - exoscale_vm
+    - 'exoscale_vm'

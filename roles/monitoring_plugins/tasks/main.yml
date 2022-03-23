@@ -97,7 +97,6 @@
     - 'monitoring_plugins'
 
 
-
 - ansible.builtin.import_tasks: 'generate-monitoring-plugins-list.yml'
   tags:
     - 'monitoring_plugins'
@@ -115,6 +114,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["distribution"] ~ ansible_facts["distribution_major_version"] }}.sudoers'
       dest: '/etc/sudoers.d/monitoring-plugins'
+      mode: '0640'
 
   - name: 'Make sure to remove the legacy sudoers file'
     ansible.builtin.file:
@@ -125,14 +125,14 @@
     ansible.builtin.file:
       path: '/usr/lib64/nagios/plugins/lib'
       state: 'directory'
-      mode: 0755
+      mode: '0755'
 
   - name: 'Copy lib for the Linuxfabrik monitoring plugins (Linux)'
     ansible.builtin.copy:
       src: '{{ item }}'
       dest: '/usr/lib64/nagios/plugins/lib'
       owner: 'root'
-      mode: 0755
+      mode: '0755'
     with_fileglob:
       - '/tmp/ansible.lib-repo/*.py'
 
@@ -144,14 +144,15 @@
   - name: 'Make sure the database of the check plugin is removed'
     ansible.builtin.command: 'rm -f --{% for item in monitoring_plugins__plugin_list %} /tmp/{{ item }}.db{% endfor %}'
     args:
-      warn: False # this is much faster than using the file module and looping over monitoring_plugins__plugin_list
+      warn: False
 
+  # this is much faster than using the file module and looping over monitoring_plugins__plugin_list
   - name: 'Copy the Linuxfabrik monitoring plugins (Linux)'
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}{{ monitoring_plugins__python_version }}'
       dest: '/usr/lib64/nagios/plugins/{{ item }}'
       owner: 'root'
-      mode: 0755
+      mode: '0755'
     loop: '{{ monitoring_plugins__plugin_list }}'
 
   # block
@@ -173,7 +174,7 @@
     ansible.builtin.copy:
       src: '../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
       dest: '/usr/lib64/nagios/'
-      mode: preserve
+      mode: 'preserve'
       backup: True
     when: monitoring_plugins__custom_plugins.stat.exists
 
