@@ -31,7 +31,8 @@
     community.general.sudoers:
       name: 'lfops_login'
       group: '{{ login__passwordless_sudo_group }}'
-      commands: 'ALL=(ALL:ALL) NOPASSWD:ALL'
+      commands: 'ALL'
+      nopassword: True
       state: 'present'
     when: 'login__passwordless_sudo_group is defined and login__passwordless_sudo_group | length'
 
