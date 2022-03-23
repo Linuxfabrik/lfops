@@ -2,7 +2,7 @@
 
 This role removes all `cockpit*` packages from the system.
 
-FQCN: linuxfabrik.lfops.at
+FQCN: linuxfabrik.lfops.cockpit
 
 Tested on
 
