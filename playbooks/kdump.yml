@@ -1,0 +1,8 @@
+- name: 'Configures kdump on the Servers'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_kdump'
+
+  roles:
+
+    - role: 'kdump'

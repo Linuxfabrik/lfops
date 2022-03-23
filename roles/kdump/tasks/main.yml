@@ -1,0 +1,14 @@
+- block:
+
+  - name: "systemctl: kdump enabled = {{ kdump__service_enabled }}"
+    ansible.builtin.service:
+      name: 'kdump'
+      enabled: "{{ kdump__service_enabled | d(True) }}"
+
+  - name: "systemctl: kdump state = {{ kdump__service_state }}"
+    ansible.builtin.service:
+      name: 'kdump'
+      state: "{{ kdump__service_state | d('started') }}"
+
+  tags:
+    - 'kdump'
