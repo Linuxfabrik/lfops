@@ -1,0 +1,39 @@
+- block:
+
+  - name: 'Get list of required groups'
+    set_fact:
+      login__required_groups: '{{ login__users|map(attribute="additional_groups", default="None") | flatten | unique }}'
+
+  - name: 'Create the required groups'
+    group:
+      name: '{{ item }}'
+      state: 'present'
+    loop: '{{ login__required_groups }}'
+
+  - name: 'Create the user with the given groups and a home directory'
+    user:
+      name: '{{ item.name }}'
+      createhome: True
+      groups: '{{ item.additional_groups | d([]) }}'
+      append: False
+      state: '{{ item.state | d("present") }}'
+    loop: '{{ login__users }}'
+
+  - name: 'Set up authorized keys'
+    ansible.posix.authorized_key:
+      user: '{{ item.name }}'
+      state: '{{ item.state | d("present") }}'
+      key: "{{ item.sshd_authorized_keys | d([]) | join('\n') }}" # do not swap quotes - else \n will be used literally
+      exclusive: '{{ item.remove_other_sshd_authorized_keys | d(True) }}'
+    loop: '{{ login__users }}'
+
+  - name: 'Allow "{{ login__passwordless_sudo_group }}" group to have password-less sudo'
+    community.general.sudoers:
+      name: 'lfops_login'
+      group: '{{ login__passwordless_sudo_group }}'
+      commands: 'ALL=(ALL:ALL) NOPASSWD:ALL'
+      state: 'present'
+    when: 'login__passwordless_sudo_group is defined and login__passwordless_sudo_group | length'
+
+  tags:
+    - 'login'
