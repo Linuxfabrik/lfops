@@ -1,0 +1,7 @@
+- block:
+  - name: "dnf -y remove 'cockpit*'"
+    ansible.builtin.package:
+      name: 'cockpit*'
+      state: 'absent'
+  tags:
+    - 'cockpit'
