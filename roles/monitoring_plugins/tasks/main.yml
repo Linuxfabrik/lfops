@@ -114,7 +114,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["distribution"] ~ ansible_facts["distribution_major_version"] }}.sudoers'
       dest: '/etc/sudoers.d/monitoring-plugins'
-      mode: '0640'
+      mode: 0640
 
   - name: 'Make sure to remove the legacy sudoers file'
     ansible.builtin.file:
@@ -125,14 +125,14 @@
     ansible.builtin.file:
       path: '/usr/lib64/nagios/plugins/lib'
       state: 'directory'
-      mode: '0755'
+      mode: 0755
 
   - name: 'Copy lib for the Linuxfabrik monitoring plugins (Linux)'
     ansible.builtin.copy:
       src: '{{ item }}'
       dest: '/usr/lib64/nagios/plugins/lib'
       owner: 'root'
-      mode: '0755'
+      mode: 0755
     with_fileglob:
       - '/tmp/ansible.lib-repo/*.py'
 
@@ -152,7 +152,7 @@
       src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}{{ monitoring_plugins__python_version }}'
       dest: '/usr/lib64/nagios/plugins/{{ item }}'
       owner: 'root'
-      mode: '0755'
+      mode: 0755
     loop: '{{ monitoring_plugins__plugin_list }}'
 
   # block

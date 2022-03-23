@@ -10,7 +10,7 @@
     path: '/opt/python-venv/{{ venv.name }}'
     owner: 'root'
     group: 'root'
-    mode: '0644'
+    mode: 0644
 
 - name: 'pip install -U pip wheel'
   ansible.builtin.pip:
