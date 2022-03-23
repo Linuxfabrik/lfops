@@ -1,6 +1,6 @@
 # Ansible Role cockpit
 
-TODO
+This role removes all `cockpit*` packages from the system.
 
 FQCN: linuxfabrik.lfops.at
 
@@ -8,6 +8,7 @@ Tested on
 
 * RHEL 8 (and compatible)
 * Fedora Server 35
+
 
 ## Requirements
 
@@ -22,9 +23,9 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag          | What it does                                 |
-| ---          | ------------                                 |
-| cockpit      | It removes the cockpit package               |
+| Tag     | What it does                 |
+| ---     | ------------                 |
+| cockpit | Removes all cockpit packages |
 
 
 ## Role Variables
