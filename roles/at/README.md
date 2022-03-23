@@ -1,6 +1,6 @@
 # Ansible Role at
 
-TODO
+This role installs at, a daemon that allows commands to be run at a specified time.
 
 FQCN: linuxfabrik.lfops.at
 
@@ -40,9 +40,9 @@ This role does not have any mandatory variables.
 
 ### Optional
 
-#### at__service_enabled 
+#### at__service_enabled
 
-Sets if the atd service is started on boot. Possible options:
+Enables or disables the atd service, analogous to `systemctl enable/disable`. Possible options:
 
 * True
 * False
@@ -55,7 +55,7 @@ at__service_enabled: True
 
 #### at__service_state
 
-Sets the state of the atd service. Possible options:
+Changes the state of the atd service, analogous to `systemctl start/stop/restart/reload`. Possible options:
 
 * started
 * stopped
