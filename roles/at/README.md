@@ -25,7 +25,7 @@ This role does not have any optional requirements.
 | Tag          | What it does                         |
 | ---          | ------------                         |
 | at           | Installs and configures at/atd       |
-| at:systemctl | Control the state of the atd service |
+| at:systemctl | Controls the state of the atd service |
 
 
 ## Role Variables
