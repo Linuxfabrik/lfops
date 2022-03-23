@@ -8,6 +8,7 @@ FQCN: linuxfabrik.lfops.login
 Tested on
 
 * RHEL 8 (and compatible)
+* Fedora Server 35
 
 
 ## Requirements
