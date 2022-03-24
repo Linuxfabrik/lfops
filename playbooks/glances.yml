@@ -1,0 +1,12 @@
+- name: 'Installs glances on the Servers'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_glances'
+
+  roles:
+
+    - role: 'repo_epel'
+      when:
+        - (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] in ['7', '8'])
+
+    - role: 'glances'
