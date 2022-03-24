@@ -17,14 +17,16 @@
       groups: '{{ item.additional_groups | d([]) }}'
       append: False
       state: '{{ item.state | d("present") }}'
+      remove: True #  only affects `state=absent`
     loop: '{{ login__users }}'
 
   - name: 'Set up authorized keys'
     ansible.posix.authorized_key:
       user: '{{ item.name }}'
-      state: '{{ item.state | d("present") }}'
+      state: 'present'
       key: "{{ item.sshd_authorized_keys | d([]) | join('\n') }}" # do not swap quotes - else \n will be used literally
       exclusive: '{{ item.remove_other_sshd_authorized_keys | d(True) }}'
+    when: 'item.state | d("present") == "present"'
     loop: '{{ login__users }}'
 
   - name: 'Allow "{{ login__passwordless_sudo_group }}" group to have password-less sudo'
