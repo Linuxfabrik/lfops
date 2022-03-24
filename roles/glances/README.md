@@ -1,6 +1,6 @@
 # Ansible Role glances
 
-This role installs [glances](https://nicolargo.github.io/glances/).
+This role installs [glances](https://nicolargo.github.io/glances/). It also aliases `top` to `glances -t 1`.
 
 FQCN: linuxfabrik.lfops.glances
 
@@ -23,9 +23,9 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag     | What it does                                       |
-| ---     | ------------                                       |
-| glances | Installs glances and configures an alias for `top` |
+| Tag     | What it does                              |
+| ---     | ------------                              |
+| glances | Installs glances and configures the alias |
 
 
 ## Role Variables
