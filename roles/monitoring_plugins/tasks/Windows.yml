@@ -82,4 +82,4 @@
   # block
   tags:
     - 'never'
-    - 'monitoring_plugins::nuitka_compile'
+    - 'monitoring_plugins:nuitka_compile'
