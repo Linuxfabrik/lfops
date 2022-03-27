@@ -65,19 +65,22 @@ Style Guide
 Quotes
 ------
 
-* | We always quote strings and prefer single quotes over double quotes. The only time you should use double quotes is when they are nested within single quotes (e.g. Jinja map reference), or when your string requires escaping characters (e.g. using ``\n`` to represent a newline).
-* | If you must write a long string, we use the "folded scalar" (``>`` converts newlines to spaces, ``|`` keeps newlines) style and omit all special quoting.
-* | The only things you should avoid quoting are booleans (e.g. ``True``/``False``), numbers (e.g. ``42``), and things referencing the local Ansible environment (e.g. boolean logic or names of variables we are assigning values to).
+* We always quote strings and prefer single quotes over double quotes. The only time you should use double quotes is when they are nested within single quotes (e.g. Jinja map reference), or when your string requires escaping characters (e.g. using ``\n`` to represent a newline).
+* If you must write a long string, we use the "folded scalar" (``>`` converts newlines to spaces, ``|`` keeps newlines) style and omit all special quoting.
+* Do not quote booleans (e.g. ``True``/``False``).
+* Do not quote numbers (e.g. ``42``).
+* Do not quote octal numbers (e.g. ``0755``).
+* Do not quote things referencing the local Ansible environment (e.g. boolean logic in ``when:` statements or names of variables we are assigning values to).
 
 .. code-block:: yml
 
     # bad
     - name: start robot named S1m0ne
-      ansible.builtin.service:
+      service:
         name: s1m0ne
         state: started
-        enabled: True
-      become: True
+        enabled: true
+      become: yes
 
     # good
     - name: 'start robot named S1m0ne'
