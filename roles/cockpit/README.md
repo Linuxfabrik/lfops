@@ -1,6 +1,6 @@
 # Ansible Role cockpit
 
-This role removes all `cockpit*` packages from the system.
+This role simply removes all `cockpit*` packages from the system.
 
 FQCN: linuxfabrik.lfops.cockpit
 
@@ -30,17 +30,7 @@ This role does not have any optional requirements.
 
 ## Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/cockpit/defaults/main.yml) for the variable defaults.
-
-
-### Mandatory
-
-This role does not have any mandatory variables.
-
-
-### Optional
-
-This role does not have any optional variables.
+This role does not have any role variables.
 
 
 ## License
