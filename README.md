@@ -3,12 +3,12 @@
 
 ## Installation
 
-To install the **latest stable** release of the collection:
+To install the **stable** release of the collection:
 ```bash
 ansible-galaxy collection install linuxfabrik.lfops
 ```
 
-To install the latest **development** version of the collection (requires ansible >= 2.10):
+To install the **development** version of the collection (requires ansible >= 2.10):
 ```bash
 # via HTTPS
 ansible-galaxy collection install git+https://github.com/Linuxfabrik/lfops.git
