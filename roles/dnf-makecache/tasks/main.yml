@@ -1,0 +1,34 @@
+- block:
+
+  - name: 'Perform platform/version specific tasks'
+    ansible.builtin.include_tasks: 'platform-tasks.yml'
+
+  tags:
+    - 'always'
+    - 'dnf-makecache'
+
+
+- block:
+
+  - name: 'systemctl: dnf-makecache.service enabled = {{ dnf_makecache__service_enabled }}'
+    ansible.builtin.systemd:
+      name: 'dnf-makecache.service'
+      enabled: '{{ dnf_makecache__service_enabled }}'
+
+  - name: 'systemctl: dnf-makecache.service state = {{ dnf_makecache__service_state }}'
+    ansible.builtin.systemd:
+      name: 'dnf-makecache.service'
+      state: '{{ dnf_makecache__service_state }}'
+
+  - name: 'systemctl: dnf-makecache.timer enabled = {{ dnf_makecache__service_enabled }}'
+    ansible.builtin.systemd:
+      name: 'dnf-makecache.timer'
+      enabled: '{{ dnf_makecache__service_enabled }}'
+
+  - name: 'systemctl: dnf-makecache.timer state = {{ dnf_makecache__service_state }}'
+    ansible.builtin.systemd:
+      name: 'dnf-makecache.timer'
+      state: '{{ dnf_makecache__service_state }}'
+
+  tags:
+    - 'dnf-makecache'

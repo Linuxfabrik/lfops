@@ -1,0 +1,2 @@
+dnf_makecache__service_enabled: 'no'
+dnf_makecache__service_state: 'stopped'
