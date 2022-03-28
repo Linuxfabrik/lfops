@@ -1,4 +1,4 @@
-- name: 'Stops and disables kdump'
+- name: 'Stop and disable kdump'
   collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_kdump'

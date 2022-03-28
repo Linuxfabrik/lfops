@@ -1,4 +1,4 @@
-- name: 'Installs at'
+- name: 'Install at'
   collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_at'
