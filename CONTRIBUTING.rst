@@ -253,6 +253,15 @@ Now, if you run Ansible against a *CentOS 7.9* host, for example, only these tas
 1. ``tasks/CentOS7.yml``
 2. ``tasks/main.yml``
 
+Include the ``platform-tasks.yml`` in the ``tasks/main.yml`` like this:
+
+.. code-block:: yaml
+
+    - name: 'Perform platform/version specific tasks'
+      ansible.builtin.include_tasks: 'platform-tasks.yml'
+      tags:
+        - 'always'
+
 
 OS-specific Variables
 ---------------------
@@ -267,6 +276,15 @@ Variables with the same name are overridden by the files in ``vars/`` in order f
 * ``distribution_version`` (e.g. ``CentOS7.9``) is the most specific
 
 As always be aware of the fact that dicts and lists are completely replaced, not merged.
+
+Include the ``platform-variables.yml`` in the ``tasks/main.yml`` like this:
+
+.. code-block:: yaml
+
+    - name: 'Set platform/version specific variables'
+      ansible.builtin.include_tasks: 'platform-variables.yml'
+      tags:
+        - 'always'
 
 
 OS-specific Filenames
