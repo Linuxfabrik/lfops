@@ -16,7 +16,7 @@
       body: >
         {
           "type": "Host",
-          "filter": "host.name==\"{{ monitoring_plugins__icinga2_cn }}.linuxfabrik.it\"",
+          "filter": "host.name==\"{{ monitoring_plugins__icinga2_cn }}\"",
           "start_time": "{{ lookup('pipe', 'date +%s') }}",
           "end_time": "{{ lookup('pipe', 'date +%s') | int + 3600 }}",
           "author": "Ansible Role linuxfabrik.lfops.monitoring_plugins",
@@ -105,7 +105,7 @@
       body: >
         {
           "type": "Downtime",
-          "filter": "host.name==\"{{ monitoring_plugins__icinga2_cn }}.linuxfabrik.it\" && downtime.author==\"Ansible Role linuxfabrik.lfops.monitoring_plugins\""
+          "filter": "host.name==\"{{ monitoring_plugins__icinga2_cn }}\" && downtime.author==\"Ansible Role linuxfabrik.lfops.monitoring_plugins\""
         }
       body_format: 'json'
       status_code: 200
