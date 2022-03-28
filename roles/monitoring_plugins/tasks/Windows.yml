@@ -115,6 +115,7 @@
       and (monitoring_plugins__icinga2_api_user is defined and monitoring_plugins__icinga2_api_user | length)
       and (monitoring_plugins__icinga2_api_password is defined and monitoring_plugins__icinga2_api_password | length)'
     delegate_to: 'localhost'
+    ignore_errors: True # we still want to start the icinga2 service again
 
   - name: 'Start the Icinga2 service'
     win_service:
