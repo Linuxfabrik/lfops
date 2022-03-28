@@ -1,0 +1,6 @@
+- block:
+
+  - name: 'Be sure Network Manager is removed'
+    yum:
+      name: NetworkManager
+      state: absent
