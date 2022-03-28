@@ -1,9 +1,9 @@
 - block:
 
-  - name: Make sure the plugin directory exists (Windows)
+  - name: 'Make sure the plugin directory exists (Windows)'
     ansible.windows.win_file:
       path: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\'
-      state: directory
+      state: 'directory'
 
   tags:
     - 'monitoring_plugins'
