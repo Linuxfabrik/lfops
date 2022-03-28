@@ -1,6 +1,6 @@
-# Ansible Role at
+# Ansible Role kdump
 
-TODO
+This role stops and disables the `kdump` service. Since most of the time, kdump is not required, but permanently reserves space in the memory for the capture kernel, we usually disable it.
 
 FQCN: linuxfabrik.lfops.kdump
 
@@ -23,9 +23,9 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag          | What it does                         |
-| ---          | ------------                         |
-| kdump        | Controls the state of the kdump service |
+| Tag   | What it does                            |
+| ---   | ------------                            |
+| kdump | Controls the state of the kdump service |
 
 
 ## Role Variables
