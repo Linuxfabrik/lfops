@@ -4,6 +4,7 @@
     ansible.builtin.include_tasks: 'platform-tasks.yml'
 
   tags:
+    - 'always'
     - 'network'
 
 
@@ -11,11 +12,12 @@
 
   - name: 'Disable route to the ZEROCONF network that is added to the routing table by the network initscripts'
     lineinfile:
-      path: /etc/sysconfig/network
+      path: '/etc/sysconfig/network'
       line: 'NOZEROCONF=yes'
-      state: present
+      state: 'present'
+
   - debug:
-      msg: "Please restart the network manually if needed."
+      msg: 'Please restart the network manually if needed.'
 
   tags:
     - 'network'
