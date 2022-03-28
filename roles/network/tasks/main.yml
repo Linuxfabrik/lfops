@@ -11,12 +11,12 @@
 - block:
 
   - name: 'Disable route to the ZEROCONF network that is added to the routing table by the network initscripts'
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: '/etc/sysconfig/network'
       line: 'NOZEROCONF=yes'
       state: 'present'
 
-  - debug:
+  - ansible.builtin.debug:
       msg: 'Please restart the network manually if needed.'
 
   tags:
