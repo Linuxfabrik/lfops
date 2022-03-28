@@ -23,9 +23,9 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag   | What it does                            |
-| ---   | ------------                            |
-| kdump | Controls the state of the kdump service |
+| Tag   | What it does                           |
+| ---   | ------------                           |
+| kdump | Stops and disables the `kdump` service |
 
 
 ## Role Variables
