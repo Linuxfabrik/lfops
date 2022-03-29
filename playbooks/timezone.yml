@@ -1,0 +1,11 @@
+- name: 'Manage and configure Timezone'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_timezone'
+
+  roles:
+
+    - role: 'timezone'
+      when:
+        - ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] in ['7', '8']
+          or ansible_facts['distribution'] == 'Fedora'
