@@ -30,7 +30,7 @@ This role does not have any optional requirements.
 
 ## Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/dnf-makecahce/defaults/main.yml) for the variable defaults.
+Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/dnf-makecache/defaults/main.yml) for the variable defaults.
 
 
 ### Mandatory
