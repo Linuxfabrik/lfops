@@ -1,4 +1,4 @@
-- name: 'Removes the cockpit package'
+- name: 'Remove the cockpit packages'
   collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_cockpit'

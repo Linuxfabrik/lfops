@@ -1,9 +1,41 @@
 - block:
 
-  - name: Make sure the plugin directory exists (Windows)
+  - name: 'Make sure the plugin directory exists (Windows)'
     ansible.windows.win_file:
       path: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\'
-      state: directory
+      state: 'directory'
+
+  - name: 'Set a downtime for the host (Windows)'
+    uri:
+      url: '{{ monitoring_plugins__icinga2_api_url }}/actions/schedule-downtime'
+      validate_certs: False
+      user: '{{ monitoring_plugins__icinga2_api_user }}'
+      password: '{{ monitoring_plugins__icinga2_api_password }}'
+      force_basic_auth: True
+      method: 'POST'
+      body: >
+        {
+          "type": "Host",
+          "filter": "host.name==\"{{ monitoring_plugins__icinga2_cn }}\"",
+          "start_time": "{{ lookup('pipe', 'date +%s') }}",
+          "end_time": "{{ lookup('pipe', 'date +%s') | int + 3600 }}",
+          "author": "Ansible Role linuxfabrik.lfops.monitoring_plugins",
+          "comment": "Downtime during deployment of the monitoring-plugins",
+          "all_services": true
+        }
+      body_format: 'json'
+      status_code: 200
+      headers:
+        Accept: 'application/json'
+    when: '(monitoring_plugins__icinga2_api_url is defined and monitoring_plugins__icinga2_api_url | length)
+      and (monitoring_plugins__icinga2_api_user is defined and monitoring_plugins__icinga2_api_user | length)
+      and (monitoring_plugins__icinga2_api_password is defined and monitoring_plugins__icinga2_api_password | length)'
+    delegate_to: 'localhost'
+
+  - name: 'Stop the Icinga2 service'
+    win_service:
+      name: 'Icinga 2'
+      state: 'stopped'
 
   tags:
     - 'monitoring_plugins'
@@ -56,6 +88,40 @@
 
   # block
   when: monitoring_plugins__windows_variant == 'nuitka'
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Remove the downtime for the host (Windows)'
+    uri:
+      url: '{{ monitoring_plugins__icinga2_api_url }}/actions/remove-downtime'
+      validate_certs: False
+      user: '{{ monitoring_plugins__icinga2_api_user }}'
+      password: '{{ monitoring_plugins__icinga2_api_password }}'
+      force_basic_auth: True
+      method: 'POST'
+      body: >
+        {
+          "type": "Downtime",
+          "filter": "host.name==\"{{ monitoring_plugins__icinga2_cn }}\" && downtime.author==\"Ansible Role linuxfabrik.lfops.monitoring_plugins\""
+        }
+      body_format: 'json'
+      status_code: 200
+      headers:
+        Accept: 'application/json'
+    when: '(monitoring_plugins__icinga2_api_url is defined and monitoring_plugins__icinga2_api_url | length)
+      and (monitoring_plugins__icinga2_api_user is defined and monitoring_plugins__icinga2_api_user | length)
+      and (monitoring_plugins__icinga2_api_password is defined and monitoring_plugins__icinga2_api_password | length)'
+    delegate_to: 'localhost'
+    ignore_errors: True # we still want to start the icinga2 service again
+
+  - name: 'Start the Icinga2 service'
+    win_service:
+      name: 'Icinga 2'
+      state: 'started'
+
   tags:
     - 'monitoring_plugins'
 

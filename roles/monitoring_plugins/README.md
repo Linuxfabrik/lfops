@@ -18,6 +18,8 @@ It also installs the [Linuxfabrik Plugin Library](https://github.com/Linuxfabrik
 
 Additionally, this role allows you to deploy custom plugins which are placed under `../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins` on the Ansible control node.
 
+Windows only: Since you cannot change files that are currently used by a process in Windows, when running against a Windows host, this role first stops the Icinga2 service, deploys the plugins and starts the service again. Optionally, it sets a downtime for each host. Have a look at the optional role variables below for this.
+
 
 ## Requirements
 
@@ -108,6 +110,46 @@ Which variant of the monitoring plugins should be deployed? Possible options:
 Default:
 ```yaml
 monitoring_plugins__windows_variant: 'nuitka'
+```
+
+
+#### monitoring_plugins__icinga2_api_url
+
+The address of the Icinga2 master API. This is required to schedule a downtime for Windows hosts.
+
+Default: unset
+
+Example:
+```yaml
+monitoring_plugins__icinga2_api_url: 'https://192.0.2.3:5665/v1'
+```
+
+
+#### monitoring_plugins__icinga2_api_user
+
+The Icinga2 API user. This is required to schedule a downtime for Windows hosts. Therefore, it needs to have the following permissions:
+
+```
+permissions = [ "actions/schedule-downtime", "actions/remove-downtime" ]
+```
+
+Default: unset
+
+Example:
+```yaml
+monitoring_plugins__icinga2_api_user: 'downtime-api-user'
+```
+
+
+#### monitoring_plugins__icinga2_api_password
+
+The password of the `monitoring_plugins__icinga2_api_user`. This is required to schedule a downtime for Windows hosts.
+
+Default: unset
+
+Example:
+```yaml
+monitoring_plugins__icinga2_api_password: 'my-secret-password'
 ```
 
 

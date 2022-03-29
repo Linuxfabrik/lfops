@@ -24,9 +24,10 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag       | What it does                                                                                                                                                             |
+| Tag       | What it does                                                                                                                                       |
 | ---       | ------------                                                                                                                                       |
 | network   | Ensures that the Network Manager is removed and disables the route to the ZEROCONF network added to the routing table by the network initscripts   |
+
 
 
 ## Role Variables

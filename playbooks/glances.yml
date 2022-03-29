@@ -1,4 +1,4 @@
-- name: 'Installs glances on the Servers'
+- name: 'Install glances'
   collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_glances'
