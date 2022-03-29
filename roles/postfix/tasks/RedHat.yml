@@ -1,0 +1,8 @@
+- block:
+
+  - name: 'Install postfix & cyrus-sasl-plain on RedHat family'
+    ansible.builtin.package:
+      name:
+        - 'postfix'
+        - 'cyrus-sasl-plain'
+      state: 'present'

@@ -1,0 +1,11 @@
+  - name: 'Install postfix, mailutils, sasl2-bin & libsasl2-2 on Debian family'
+    ansible.builtin.package:
+      name:
+        - 'postfix'
+        - 'mailutils'
+        - 'sasl2-bin'
+        - 'libsasl2-2'
+      update_cache: true
+      state: 'present'
+    environment:
+        DEBIAN_FRONTEND: noninteractive
