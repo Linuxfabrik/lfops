@@ -13,9 +13,9 @@ Tested on
 
 ## duba (Duplicity Backup)
 
-The role comes with the special Python wrapper script ``duba`` for duplicity, implemented by Linuxfabrik. The script currently does a massive parallel backup on a Swift storage backend with duplicity, where the number of duplicity processes is (processor count + 1). The script's configuration file is located at `/etc/duba/duba.json`.
+The role comes with the special Python wrapper script ``duba`` for duplicity, implemented by Linuxfabrik. The script currently does a massive parallel backup to a Swift storage backend with duplicity, where the number of duplicity processes is (processor count + 1). The script's configuration file is located at `/etc/duba/duba.json`.
 
-To start a backup, simply use `duba` (or `duba --config=/etc/duba/duba.json --command=backup`). Have a look at `duba --help` for details.
+To start a backup, simply call `duba` (or `duba --config=/etc/duba/duba.json --command=backup`). Have a look at `duba --help` for details.
 
 
 
