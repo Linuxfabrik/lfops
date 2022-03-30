@@ -1,5 +1,15 @@
 - block:
 
+  - name: 'Perform platform/version specific tasks'
+    ansible.builtin.include_tasks: 'platform-tasks.yml'
+
+  tags:
+    - 'always'
+    - 'postfix'
+
+
+- block:
+
   - name: 'Create plain sasl_passwd file'
     ansible.builtin.template:
       src: 'sasl_passwd.j2'

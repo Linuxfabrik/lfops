@@ -3,8 +3,8 @@ postfix__relayhost_username: 'noreply@mydomain.ch'
 postfix__relayhost_password: 'mycomplex-password'
 postfix__inet_protocols: 'all'
 postfix__smtp_sasl_auth_enable: 'yes'
-postfix__enabled: true
-postfix__started: true
+postfix__enabled: 'yes'
+postfix__state: 'started'
 
 postfix__debconf_selections:
  - name: postfix

@@ -6,3 +6,6 @@
         - 'postfix'
         - 'cyrus-sasl-plain'
       state: 'present'
+  
+  tags:
+    - 'postfix'
