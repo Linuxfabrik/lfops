@@ -38,7 +38,7 @@
       state: 'stopped'
     register: monitoring_plugins__icinga2_service_stop_result
     # ignore errors if the service does not exist
-    failed_when: '{{ monitoring_plugins__icinga2_service_stop_result["failed"] is defined and monitoring_plugins__icinga2_service_stop_result["failed"] and not "is not installed" in monitoring_plugins__icinga2_service_stop_result["msg"] }}'
+    failed_when: 'monitoring_plugins__icinga2_service_stop_result["failed"] is defined and monitoring_plugins__icinga2_service_stop_result["failed"] and not "is not installed" in monitoring_plugins__icinga2_service_stop_result["msg"]'
 
   tags:
     - 'monitoring_plugins'
