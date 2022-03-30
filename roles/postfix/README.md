@@ -56,6 +56,8 @@ Password for the specified user
 
 #### postfix__inet_protocols
 
+The Internet protocols Postfix will attempt to use when making or accepting connections. Specify one or more of "ipv4" or "ipv6", separated by whitespace or commas. The form "all" is equivalent to "ipv4, ipv6" or "ipv4", depending on whether the operating system implements IPv6.
+
 Default:
 ```yaml
 postfix__inet_protocols: 'all'
@@ -63,6 +65,8 @@ postfix__inet_protocols: 'all'
 
 
 #### postfix__smtp_sasl_auth_enable
+
+Enable SASL authentication in the Postfix SMTP client. By default, the Postfix SMTP client uses no authentication. 
 
 Default:
 ```yaml
@@ -72,6 +76,11 @@ postfix__smtp_sasl_auth_enable: 'yes'
 
 #### postfix__service_enabled
 
+Enables or disables the postfix service, analogous to `systemctl enable/disable`. Possible options:
+
+* True
+* False
+
 Default:
 ```yaml
 postfix__service_enabled: True
@@ -79,6 +88,13 @@ postfix__service_enabled: True
 
 
 #### postfix__service_state:
+
+Changes the state of the postfix service, analogous to `systemctl start/stop/restart/reload`. Possible options:
+
+* started
+* stopped
+* restarted
+* reloaded
 
 Default:
 ```yaml
@@ -91,10 +107,10 @@ postfix__service_state: 'started'
 Default:
 ```yaml
 postfix__debconf_selections:
- - name: postfix
-   question: postfix/main_mailer_type
-   value: No configuration
-   vtype: select
+ - name: 'postfix'
+   question: 'postfix/main_mailer_type'
+   value: 'No configuration'
+   vtype: 'select'
 ```
 
 ## License
