@@ -281,7 +281,7 @@ def do_backup(config):
             except ValueError as e:
                 logger.error(f'Value Error "{e}" calling command "{cmd}"')
                 sys.exit(206)
-            except e:
+            except Exception as e:
                 logger.error(f'Unknown error "{e}" while calling command "{cmd}"')
                 sys.exit(207)
 
