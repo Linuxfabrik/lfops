@@ -1,6 +1,8 @@
 #!/opt/python-venv/duplicity/bin/python
 # -*- coding: utf-8; py-indent-offset: 4 -*-
 #
+# {{ ansible_managed }}
+#
 # Author:  Linuxfabrik GmbH, Zurich, Switzerland
 # Contact: info (at) linuxfabrik (dot) ch
 #          https://www.linuxfabrik.ch/
@@ -17,9 +19,9 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2022032904'
+__version__ = '2022033001'
 
-DESCRIPTION = 'Do a massive parallel backup on a Swift storage backend with duplicity.'
+DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
 
 def parse_args():
@@ -174,7 +176,7 @@ def do_backup(config):
             except ValueError as e:
                 logger.error(f'Value Error "{e}" calling command "{cmd}"')
                 sys.exit(206)
-            except e:
+            except Exception as e:
                 logger.error(f'Unknown error "{e}" while calling command "{cmd}"')
                 sys.exit(207)
 
