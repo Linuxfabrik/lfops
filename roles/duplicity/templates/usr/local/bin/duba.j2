@@ -68,6 +68,7 @@ def init_logging():
 
 
 def load_config(config_file='/etc/duba/duba.json'):
+    logger = logging.getLogger()
     # load config file
     try:
         with open(config_file, 'r') as f:
@@ -99,6 +100,7 @@ def do_backup(config):
        all backups older than the given retention time.
        This function works and is fast, but the code is not very good and could be improved later.
     """
+    logger = logging.getLogger()
     logger.info('Starting backup...')
 
     # count the number of logical processors to limit number of processes (taken from psutil)
@@ -339,7 +341,6 @@ def main():
     except SystemExit:
         sys.exit(221)
 
-    global logger
     config = load_config(args.CONFIG_FILE)
     logger = init_logging()
 
