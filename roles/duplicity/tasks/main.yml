@@ -1,8 +1,8 @@
 - block:
 
-  - name: mkdir /etc/duplicity
+  - name: 'mkdir /etc/duba'
     ansible.builtin.file:
-      path: '/etc/duplicity'
+      path: '/etc/duba'
       state: 'directory'
       owner: 'root'
       group: 'root'
@@ -14,18 +14,18 @@
 
 - block:
 
-  - name: 'Generate gpg key'
+  - name: 'Generate local gpg key'
     linuxfabrik.lfops.gpg_key:
       name_real: 'duplicity'
       name_email: '{{ ansible_facts["user_id"] }}@{{ ansible_facts["nodename"] }}'
       key_type: 'RSA'
       key_length: 4096
-    register: duplicity__gpg_key
+    register: duplicity__gpg_encrypt_local_key
 
   - name: 'Deploy the public master GPG key to /tmp/public-master-key'
     ansible.builtin.copy:
       dest: '/tmp/public-master-key'
-      content: '{{ duplicity__public_master_key }}'
+      content: '{{ duplicity__gpg_encrypt_master_key_block }}'
       mode: 0600
     changed_when: False
 
@@ -45,43 +45,29 @@
       state: 'absent'
     changed_when: False
 
-  - name: "echo '{{ duplicity__public_master_long_keyid }}:6:' | gpg --import-ownertrust # set trust to ultimate"
-    ansible.builtin.shell: "echo '{{ duplicity__public_master_long_keyid }}:6:' | gpg --import-ownertrust"
+  - name: "echo '{{ duplicity__gpg_encrypt_master_key }}:6:' | gpg --import-ownertrust # set trust to ultimate"
+    ansible.builtin.shell: "echo '{{ duplicity__gpg_encrypt_master_key }}:6:' | gpg --import-ownertrust"
     register: 'duplicity__gpg_import_ownertrust_result'
     changed_when: '"ownertrust" in duplicity__gpg_import_ownertrust_result.stderr'
 
-  - name: 'Deploy /etc/duplicity/duplicity.conf'
+  - name: 'Deploy /etc/duba/duba.json'
     ansible.builtin.template:
-      src: 'etc/duplicity/duplicity.conf.j2'
-      dest: '/etc/duplicity/duplicity.conf'
+      src: 'etc/duba/duba.json.j2'
+      dest: '/etc/duba/duba.json'
       mode: 0600 # file contains secrets
 
-  - name: 'Deploy /usr/local/bin/duplicity-backup'
+  - name: 'Deploy /etc/systemd/system/duba.service'
     ansible.builtin.template:
-      src: 'usr/local/bin/duplicity-backup.j2'
-      dest: '/usr/local/bin/duplicity-backup'
-      owner: 'root'
-      mode: 0755
-
-  - name: 'Deploy /etc/logrotate.d/duplicity'
-    ansible.builtin.template:
-      src: 'etc/logrotate.d/duplicity.j2'
-      dest: '/etc/logrotate.d/duplicity'
-      owner: 'root'
-      mode: 0644
-
-  - name: 'Deploy /etc/systemd/system/duplicity-backup.service'
-    ansible.builtin.template:
-      src: 'etc/systemd/system/duplicity-backup.service.j2'
-      dest: '/etc/systemd/system/duplicity-backup.service'
+      src: 'etc/systemd/system/duba.service.j2'
+      dest: '/etc/systemd/system/duba.service'
       owner: 'root'
       group: 'root'
       mode: 0644
 
-  - name: 'Deploy /etc/systemd/system/duplicity-backup.timer'
+  - name: 'Deploy /etc/systemd/system/duba.timer'
     ansible.builtin.template:
-      src: 'etc/systemd/system/duplicity-backup.timer.j2'
-      dest: '/etc/systemd/system/duplicity-backup.timer'
+      src: 'etc/systemd/system/duba.timer.j2'
+      dest: '/etc/systemd/system/duba.timer'
       owner: 'root'
       group: 'root'
       mode: 0644
@@ -93,12 +79,27 @@
 
 - block:
 
-  - name: 'systemctl {{ duplicity__timer_enabled | bool | ternary("enable", "disable") }} duplicity-backup.timer --now'
+  - name: 'Deploy /usr/local/bin/duba'
+    ansible.builtin.template:
+      src: 'usr/local/bin/duba.j2'
+      dest: '/usr/local/bin/duba'
+      owner: 'root'
+      mode: 0755
+
+  tags:
+    - 'duplicity'
+    - 'duplicity:configure'
+    - 'duplicity:script'
+
+
+- block:
+
+  - name: 'systemctl {{ duplicity__timer_enabled | bool | ternary("enable", "disable") }} duba.timer --now'
     ansible.builtin.systemd:
-        name: 'duplicity-backup.timer'
-        state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
-        enabled: '{{ duplicity__timer_enabled }}'
-        daemon_reload: True
+      name: 'duba.timer'
+      state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ duplicity__timer_enabled }}'
+      daemon_reload: True
 
   tags:
     - 'duplicity'
