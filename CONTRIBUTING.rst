@@ -185,6 +185,8 @@ Deploying files to the remote server
 
 * Always use the ``.j2`` file extension for files in the ``template`` folder.
 
+* If deploying self-written scripts, copy them to ``/usr/local/bin`` (due to SELinux).
+
 
 Handlers
 --------
@@ -382,6 +384,12 @@ Git Commits
 * Commit messages must start with "role:role_name: ", "plugin:plugin_name: ", or "module:module_name: " and clearly and precisely state what has changed. Example: ``role:duplicity: adjust name_email of gpg key to allow differentation``.
 * If there is an issue, the commit message must consist of the issue title followed by "(fix #issueno)", for example: ``role:duplicity: adjust encryption to use a master gpg key (fix #12)``.
 * For the first commit, use the message ``add <name>``.
+
+
+Releases
+--------
+
+Releases are available on Ansible Galaxy. Changelogs have to be written according to https://keepachangelog.com/en/1.0.0/.
 
 
 Credits
