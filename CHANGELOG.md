@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 * This CHANGELOG.
+* Role duplicity: Implemented massive-parallel backups.
+
+
+### Deprecated
+#### Role: duplicity
+* Renamed `duplicity__public_master_long_keyid` variable to `duplicity__gpg_encrypt_master_key`.
+* Renamed `duplicity__public_master_key` variable to `duplicity__gpg_encrypt_master_key_block`.
+* Changed the format of `duplicity__host_backup_sources`.
 
 
 ## [1.0.1] - 2022-03-17
