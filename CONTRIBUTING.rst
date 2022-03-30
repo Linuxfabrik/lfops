@@ -159,6 +159,8 @@ So called "Block Scalar Styles":
 
 Any indention remains only for the first line of a multiline variable content.
 
+Insert whitespaces around Jinja filters like so: ``{{ my_var | d("my_default") }}``.
+
 
 See also:
 
