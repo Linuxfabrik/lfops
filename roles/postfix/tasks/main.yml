@@ -42,7 +42,7 @@
     with_items:
       - { regexp: '(?i)^inet_protocols =',                line: 'inet_protocols = {{ postfix__inet_protocols }}' }
       - { regexp: '(?i)^relayhost =',                     line: 'relayhost = {{ postfix__relayhost }}' }
-      - { regexp: '(?i)^#?smtp_sasl_auth_enable =',       line: 'smtp_sasl_auth_enable = {{ postfix__smtp_sasl_auth_enable }}' }
+      - { regexp: '(?i)^#?smtp_sasl_auth_enable =',       line: 'smtp_sasl_auth_enable = {{ postfix__smtp_sasl_auth_enable | bool | ternary("yes", "no") }}' }
       - { regexp: '(?i)^#?smtp_sasl_security_options =',  line: 'smtp_sasl_security_options = noanonymous' }
       - { regexp: '(?i)^#?smtp_sasl_password_maps =',     line: 'smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd' }
     notify: 'postfix: restart postfix'
