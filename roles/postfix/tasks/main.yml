@@ -45,22 +45,22 @@
       - { regexp: '(?i)^#?smtp_sasl_auth_enable =',       line: 'smtp_sasl_auth_enable = {{ postfix__smtp_sasl_auth_enable }}' }
       - { regexp: '(?i)^#?smtp_sasl_security_options =',  line: 'smtp_sasl_security_options = noanonymous' }
       - { regexp: '(?i)^#?smtp_sasl_password_maps =',     line: 'smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd' }
-    notify: 'restart postfix'
+    notify: 'postfix: restart postfix'
 
   tags:
     - 'postfix'
 
 - block:
 
-  - name: 'systemctl: postfix enabled = {{ postfix__enabled }}'
+  - name: 'systemctl: postfix enabled = {{ postfix__service_enabled }}'
     ansible.builtin.systemd:
       name: 'postfix.service'
-      enabled: '{{ postfix__enabled }}'
+      enabled: '{{ postfix__service_enabled }}'
 
-  - name: 'systemctl: postfix state = {{ postfix__state }}'
+  - name: 'systemctl: postfix state = {{ postfix__service_state }}'
     ansible.builtin.systemd:
       name: 'postfix.service'
-      state: '{{ postfix__state }}'
+      state: '{{ postfix__service_state }}'
     register: postfix__systemctl_result
     
   tags:

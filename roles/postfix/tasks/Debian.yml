@@ -7,7 +7,7 @@
         - 'mailutils'
         - 'sasl2-bin'
         - 'libsasl2-2'
-      update_cache: yes
+      update_cache: True
       state: 'present'
     environment:
         DEBIAN_FRONTEND: 'noninteractive'
