@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2022021701
+# 2022032901
 
 [Unit]
-Description=duplicity-backup timer
+Description=duba timer
 
 [Timer]
 OnCalendar={{ duplicity__on_calendar }}
-Unit=duplicity-backup.service
+Unit=duba.service
 
 [Install]
 WantedBy=timers.target

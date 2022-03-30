@@ -1,27 +1,22 @@
-# duplicity__swift_tenantname: ''
-# duplicity__swift_login:
-#   username: ''
-#   password: ''
-#
-# duplicity__public_master_long_keyid: 'LLZGH2BITI2LRLJCLFWEAJQ93N6MWTKBARQDMYX5'
-# duplicity__public_master_key: |-
-#   -----BEGIN PGP PUBLIC KEY BLOCK-----
-#   ...
-#   -----END PGP PUBLIC KEY BLOCK-----
-
-duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}'
 duplicity__backup_dest_container: '{{ ansible_nodename }}'
+duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}'
+duplicity__backup_retention_time: '30D' # days
 
 duplicity__group_backup_sources: []
 duplicity__host_backup_sources: []
 duplicity__role_backup_sources:
-  - '/backup'
-  - '/etc'
-  - '/home'
-  - '/opt'
-  - '/root'
-  - '/var/spool/cron'
-
+  - path: '/backup'
+    divide: False
+  - path: '/etc'
+    divide: False
+  - path: '/home'
+    divide: False
+  - path: '/opt'
+    divide: False
+  - path: '/root'
+    divide: False
+  - path: '/var/spool/cron'
+    divide: False
 duplicity__combined_backup_sources: '{{
     duplicity__role_backup_sources +
     duplicity__group_backup_sources +
@@ -38,14 +33,25 @@ duplicity__excludes:
   - '**/cache'
   - '**/log'
 
-duplicity__loglevel: 'notice' # error, warning, notice, info, debug
-duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45|random(seed=inventory_hostname) }}'
+duplicity__timer_enabled: True
 duplicity__on_calendar_hour: '23'
-duplicity__retention_time: '30D' # days
+duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 59|random(seed=inventory_hostname) }}'
+
+duplicity__loglevel: 'notice' # error, warning, notice, info, debug
+
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
 duplicity__swift_authversion: '3'
-duplicity__timer_enabled: True
+duplicity__swift_tenantname: ''
+duplicity__swift_login:
+ username: ''
+ password: ''
 
+duplicity__gpg_encrypt_master_key: ''
+duplicity__gpg_encrypt_master_key_block: |-
+ -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+ ...
+ -----END PGP PUBLIC KEY BLOCK-----
 
 duplicity__python_venv__dependent_venvs:
   - name: 'duplicity'

@@ -1,6 +1,6 @@
 # Ansible Role duplicity
 
-This role configures daily file-based backups using [duplicity](https://duplicity.gitlab.io/). Currently, this role is focused on using [OpenStack Object Storage ("Swift")](https://wiki.openstack.org/wiki/Swift) as the storage backend.
+This role configures *daily file-based* backups using [duplicity](https://duplicity.gitlab.io/). Currently, this role is focused on using [OpenStack Object Storage ("Swift")](https://wiki.openstack.org/wiki/Swift) as the storage backend.
 
 FQCN: linuxfabrik.lfops.duplicity
 
@@ -8,6 +8,15 @@ Tested on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
+* Fedora 35
+
+
+## duba (Duplicity Backup)
+
+The role comes with the special Python wrapper script ``duba`` for duplicity, implemented by Linuxfabrik. The script currently does a massive parallel backup on a Swift storage backend with duplicity, where the number of duplicity processes is (processor count + 1). The script's configuration file is located at `/etc/duba/duba.json`.
+
+To start a backup, simply use `duba` (or `duba --config=/etc/duba/duba.json --command=backup`). Have a look at `duba --help` for details.
+
 
 
 ## Requirements
@@ -25,6 +34,7 @@ Tested on
 ### Optional
 
 * Create a symbolic link from `/opt/python-venv/duplicity/bin/duplicity` to `/usr/local/bin/duplicity` for easier usage on the command line.
+* Either configure journald to persist your logs and do the rotating, or use logrotated.
 
 
 ## Tags
@@ -34,6 +44,7 @@ Tested on
 | duplicity           | Installs and configures duplicity            |
 | duplicity:configure | Deploys the configuration for duplicity      |
 | duplicity:state     | Manages the state of the daily systemd timer |
+| duplicity:script    | Just deploys the `duba` script               |
 
 
 ## Role Variables
@@ -43,25 +54,30 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 
 ### Mandatory
 
-#### duplicity__public_master_key
-
-The ASCII-armored public master GPG key. Obtain it using `gpg --armor --export $GPG_KEY`. This key is imported on the server and is used in addition to the server's own GPG key to encrypt the backups. This means that the backups can be restored using either this or the server's private key (which is pretty cool).
-
-Example:
-```yaml
-duplicity__public_master_key: |-
-  -----BEGIN PGP PUBLIC KEY BLOCK-----
-  ...
-  -----END PGP PUBLIC KEY BLOCK-----
-```
-
-#### duplicity__public_master_long_keyid
+#### duplicity__gpg_encrypt_master_key
 
 The long key ID of the master GPG key. Obtain it using `gpg --list-secret-keys --keyid-format=long`.
 
 Example:
 ```yaml
-duplicity__public_master_long_keyid: 'LLZGH2BITI2LRLJCLFWEAJQ93N6MWTKBARQDMYX5'
+duplicity__gpg_encrypt_master_key: 'LLZGH2BITI2LRLJCLFWEAJQ93N6MWTKBARQDMYX5'
+```
+
+
+#### duplicity__gpg_encrypt_master_key_block
+
+The ASCII-armored public master GPG key. Obtain it using `gpg --armor --export $GPG_KEY`. This key is imported on the server and is used in addition to the server's own GPG key to encrypt the backups. This means that the backups can be restored using either the master or the server's private key (which is pretty cool in case of a desaster recovery).
+
+Be aware of the empty line between `-----BEGIN PGP PUBLIC KEY BLOCK-----` and your public key block.
+
+Example:
+```yaml
+duplicity__gpg_encrypt_master_key_block: |-
+  -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+  6ec3d2aed2a54122817ca02b43a7e340kgKEdlbmVyYXRlZCBieSBBbnNpYmxlLi
+  ...
+  -----END PGP PUBLIC KEY BLOCK-----
 ```
 
 
@@ -71,10 +87,9 @@ The Swift username and password. Usually, this is given by the provider of the S
 
 Subkeys:
 
-* `username`: Mandatory, string. The Swift username.
-* `password`: Mandatory, string. The Swift password.
+* `username`: Mandatory, string. Default `''`. The Swift username.
+* `password`: Mandatory, string. Default `''`. The Swift password.
 
-Default: unset
 
 Example:
 ```yaml
@@ -88,7 +103,7 @@ duplicity__swift_login:
 
 The Swift Tenantname. Usually, this is given by the provider of the Swift Storage.
 
-Default: unset
+Default: `''`
 
 Example:
 ```yaml
@@ -97,16 +112,6 @@ duplicity__swift_tenantname: 'sb_project_SBI-MF827483'
 
 
 ### Optional
-
-#### duplicity__backup_dest
-
-The backup destination. This will be used in combination with the backup source path to create the target URL for `duplicity`.
-
-Default:
-```yaml
-duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}'
-```
-
 
 #### duplicity__backup_dest_container
 
@@ -118,9 +123,66 @@ duplicity__backup_dest_container: '{{ ansible_nodename }}'
 ```
 
 
+#### duplicity__backup_dest
+
+The backup destination. This will be used in combination with the backup source path to create the target URL for `duplicity`.
+
+Default:
+```yaml
+duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}'
+```
+
+
+#### duplicity__backup_retention_time
+
+The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`.
+
+Default:
+```yaml
+duplicity__backup_retention_time: '30D' # days
+```
+
+
+#### duplicity__host_backup_sources / duplicity__group_backup_sources
+
+By default, the following directories are always backed up:
+
+* /backup
+* /etc
+* /home
+* /opt
+* /root
+* /var/spool/cron
+
+These variables allow you to add additional directories to the backup and are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
+
+Subkeys:
+
+* `path`: Mandatory, string. Path to the folder to be backed up.
+* `divide`: Optional, boolean. Defaults to `False`. Whether to split a large directory at its first level to perform parallel backups. Imagine a computer with 4 processor cores and the folder `data` containing 100 files and folders. If `divide` is set to `True`, `duba` will start and control 5 duplicate processes at once to speed up the backup process by almost a factor of 5.
+* `excludes`: Optional, list. Defaults to `[]`. List of patterns that should not be included in the backup for this `path`.
+
+Default:
+```yaml
+duplicity__host_backup_sources: []
+duplicity__group_backup_sources: []
+```
+
+Example:
+```yaml
+duplicity__host_backup_sources:
+  - path: '/var/www/html'
+    divide: False
+    excludes:
+      - '/var/www/html/nextcloud/data'
+  - path: '/var/www/html/nextcloud/data'
+    divide: True
+```
+
+
 #### duplicity__excludes
 
-List of exclude shell patterns for `duplicity`. Have a look at `man duplicity` for details.
+List of *global* exclude shell patterns for `duplicity`. Have a look at `man duplicity` for details.
 
 Default:
 ```yaml
@@ -135,32 +197,33 @@ duplicity__excludes:
 ```
 
 
-#### duplicity__host_backup_sources / duplicity__group_backup_sources
+#### duplicity__timer_enabled
 
-These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
-
-By default, the following directories are always backed up:
-
-* /backup
-* /etc
-* /home
-* /opt
-* /root
-* /var/spool/cron
-
-These variables allow you to add additional directories to the backup.
+The state of the daily systemd timer.
 
 Default:
 ```yaml
-duplicity__host_backup_sources: []
-duplicity__group_backup_sources: []
+duplicity__timer_enabled: True
 ```
 
-Example:
+
+#### duplicity__on_calendar_hour
+
+A shorthand to set the hour of `duplicity__on_calendar`.
+
+Default:
 ```yaml
-duplicity__host_backup_sources:
-  - '/data'
-  - '/var/www/html'
+duplicity__on_calendar_hour: '23'
+```
+
+
+#### duplicity__on_calendar
+
+The `OnCalendar` definition for the daily systemd timer. Have a look at `man systemd.time(7)` for the format.
+
+Default:
+```yaml
+duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45|random(seed=inventory_hostname) }}'
 ```
 
 
@@ -177,36 +240,6 @@ Set the loglevel. Possible options:
 Default:
 ```yaml
 duplicity__loglevel: 'notice'
-```
-
-
-#### duplicity__on_calendar
-
-The `OnCalendar` definition for the daily systemd timer. Have a look at `man systemd.time(7)` for the format.
-
-Default:
-```yaml
-duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45|random(seed=inventory_hostname) }}'
-```
-
-
-#### duplicity__on_calendar_hour
-
-A shorthand to set the hour of `duplicity__on_calendar`.
-
-Default:
-```yaml
-duplicity__on_calendar_hour: '23'
-```
-
-
-#### duplicity__retention_time
-
-The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`.
-
-Default:
-```yaml
-duplicity__retention_time: '30D' # days
 ```
 
 
@@ -230,13 +263,14 @@ duplicity__swift_authversion: '3'
 ```
 
 
-#### duplicity__timer_enabled
+#### duplicity__skip_python_venv
 
-The state of the daily systemd timer.
+Skips the creation of a Python Virtual Environment for duplicity, if it is set to `True`.
+
 
 Default:
 ```yaml
-duplicity__timer_enabled: True
+duplicity__skip_python_venv: False
 ```
 
 

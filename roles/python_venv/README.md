@@ -8,6 +8,7 @@ Tested on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
+* Fedora 35
 
 
 ## Requirements

@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2022032901
+
+[Unit]
+Description=duba (Duplicity Backup) service
+
+[Service]
+ExecStart=/usr/local/bin/duba
+Type=oneshot
+User=root
