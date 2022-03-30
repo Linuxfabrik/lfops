@@ -6,17 +6,15 @@
 #          https://www.linuxfabrik.ch/
 # License: The Unlicense, see https://unlicense.org/.
 
-import argparse # pylint: disable=C0413
-import json # pylint: disable=C0413
-import logging # pylint: disable=C0413
-import os # pylint: disable=C0413
-import re # pylint: disable=C0413
-import subprocess # pylint: disable=C0413
-import sys # pylint: disable=C0413
-import time # pylint: disable=C0413
-
-from traceback import format_exc # pylint: disable=C0413
-
+import argparse  # pylint: disable=C0413
+import json  # pylint: disable=C0413
+import logging  # pylint: disable=C0413
+import os  # pylint: disable=C0413
+import re  # pylint: disable=C0413
+import subprocess  # pylint: disable=C0413
+import sys  # pylint: disable=C0413
+import time  # pylint: disable=C0413
+from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
 __version__ = '2022032904'
@@ -347,7 +345,7 @@ def main():
 
     try:
         os.mkdir(config.get('logdir', '/var/log/duplicity'), 0o640)
-    except OSError as error: 
+    except OSError as error:
         pass
 
     if args.COMMAND == 'backup':
