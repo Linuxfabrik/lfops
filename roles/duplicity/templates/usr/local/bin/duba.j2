@@ -194,7 +194,7 @@ def do_backup(config):
                             proc.kill()
                             proc.communicate()
                         running_procs.remove(proc)
-                        if retc != 0 and retc != 13:
+                        if retc not in (0, 13):
                             # just ignore missing directories (backup_dir_doesnt_exist = 13)
                             global_retc = retc
                         logger.debug('Process terminated')
@@ -223,11 +223,10 @@ def do_backup(config):
             break
 
     logger.info('Starting cleanup...')
-    """Delete all backup sets older than the given time. Old backup sets will not be deleted if
-       backup sets newer than time depend on them. Note, this action cannot be combined with backup
-       or other actions, such as cleanup. Note also that --force will be needed to delete the files
-       instead of just listing them.
-    """
+    # Delete all backup sets older than the given time. Old backup sets will not be deleted if
+    # backup sets newer than time depend on them. Note, this action cannot be combined with backup
+    # or other actions, such as cleanup. Note also that --force will be needed to delete the files
+    # instead of just listing them.
 
     # iterate over backup dirs and spawn processes
     for src in config.get('backup_sources', []):
@@ -346,7 +345,7 @@ def main():
 
     try:
         os.mkdir(config.get('logdir', '/var/log/duplicity'), 0o640)
-    except OSError as error:
+    except OSError:
         pass
 
     if args.COMMAND == 'backup':
