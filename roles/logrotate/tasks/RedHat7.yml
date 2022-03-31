@@ -1,0 +1,10 @@
+  - name: 'Copy system logrotate templates to /etc/logrotate.d'
+    ansible.builtin.template:
+      src: 'etc/logrotate.d/syslog.j2'
+      dest: '/etc/logrotate.d/syslog'
+      owner: 'root'
+      group: 'root'
+      mode: 0644
+
+  tags:
+    - 'logrotate'

@@ -1,0 +1,22 @@
+- block:
+
+  - name: 'install logrotate'
+    ansible.builtin.package:
+      name: 'logrotate'
+      state: 'present'
+
+  - name: 'Copy logrotate.conf template to /etc'
+    ansible.builtin.template:
+      src: 'etc/logrotate.conf.j2'
+      dest: '/etc/logrotate.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0644
+
+  tags:
+    - 'logrotate'
+
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: 'platform-tasks.yml'
+  tags:
+    - 'always'
