@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+# 2022033101
+
+/var/log/cron
+/var/log/maillog
+/var/log/messages
+/var/log/secure
+/var/log/spooler
+{
+    copytruncate
+    daily
+    dateext
+    missingok
+    rotate {{ logrotate__rotate_days }}
+    sharedscripts
+    postrotate
+{% if ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '7' %}
+        /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+{% else %}
+        /usr/bin/systemctl kill -s HUP rsyslog.service >/dev/null 2>&1 || true
+{% endif %}
+    endscript
+}
