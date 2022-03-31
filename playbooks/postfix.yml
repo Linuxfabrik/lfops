@@ -1,0 +1,8 @@
+- name: 'Stop and disable postfix'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_postfix'
+
+  roles:
+
+    - role: 'postfix'

@@ -1,0 +1,8 @@
+- name: 'Stop and disable python_venv'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_python_venv'
+
+  roles:
+
+    - role: 'python_venv'
