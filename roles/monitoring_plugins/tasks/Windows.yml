@@ -6,7 +6,7 @@
       state: 'directory'
 
   - name: 'Set a downtime for the host (Windows)'
-    uri:
+    ansible.builtin.uri:
       url: '{{ monitoring_plugins__icinga2_api_url }}/actions/schedule-downtime'
       validate_certs: False
       user: '{{ monitoring_plugins__icinga2_api_user }}'
@@ -33,7 +33,7 @@
     delegate_to: 'localhost'
 
   - name: 'Stop the Icinga2 service'
-    win_service:
+    ansible.windows.win_service:
       name: 'Icinga 2'
       state: 'stopped'
     register: monitoring_plugins__icinga2_service_stop_result
@@ -98,7 +98,7 @@
 - block:
 
   - name: 'Remove the downtime for the host (Windows)'
-    uri:
+    ansible.builtin.uri:
       url: '{{ monitoring_plugins__icinga2_api_url }}/actions/remove-downtime'
       validate_certs: False
       user: '{{ monitoring_plugins__icinga2_api_user }}'
@@ -121,7 +121,7 @@
     ignore_errors: True # we still want to start the icinga2 service again
 
   - name: 'Start the Icinga2 service'
-    win_service:
+    ansible.windows.win_service:
       name: 'Icinga 2'
       state: 'started'
     register: monitoring_plugins__icinga2_service_start_result

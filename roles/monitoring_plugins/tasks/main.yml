@@ -13,7 +13,7 @@
 - block:
 
   - name: 'Get latest release version'
-    uri:
+    ansible.builtin.uri: # TOOD fqcn
       url: 'https://api.github.com/repos/linuxfabrik/monitoring-plugins/releases/latest'
     register: monitoring_plugins__github_release
     check_mode: False # run task even if `--check` is specified
