@@ -164,7 +164,7 @@ These variables allow you to add additional directories to the backup and are in
 Subkeys:
 
 * `path`: Mandatory, string. Path to the folder to be backed up.
-* `divide`: Optional, boolean. Defaults to `False`. Whether to split a large directory at its first level to perform parallel backups. Imagine a computer with 4 processor cores and the folder `data` containing 100 files and folders. If `divide` is set to `True`, `duba` will start and control 5 duplicate processes at once to speed up the backup process by almost a factor of 5.
+* `divide`: Optional, boolean. Defaults to `false`. Whether to split a large directory at its first level to perform parallel backups. Imagine a computer with 4 processor cores and the folder `data` containing 100 files and folders. If `divide` is set to `true`, `duba` will start and control 5 duplicate processes at once to speed up the backup process by almost a factor of 5.
 * `excludes`: Optional, list. Defaults to `[]`. List of patterns that should not be included in the backup for this `path`.
 
 Default:
@@ -177,11 +177,11 @@ Example:
 ```yaml
 duplicity__host_backup_sources:
   - path: '/var/www/html'
-    divide: False
+    divide: false
     excludes:
       - '/var/www/html/nextcloud/data'
   - path: '/var/www/html/nextcloud/data'
-    divide: True
+    divide: true
 ```
 
 
