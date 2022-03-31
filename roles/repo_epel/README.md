@@ -12,14 +12,7 @@ Tested on
 
 ## Requirements
 
-### Mandatory
-
-This role does not have any mandatory requirements.
-
-
-### Optional
-
-This role does not have any optional requirements.
+This role does not have any requirements.
 
 
 ## Tags
