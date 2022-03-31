@@ -18,7 +18,7 @@
       dest: '/etc/profile.d/{{ item }}'
       owner: 'root'
       mode: 0o644
-    with_items:
+    loop:
       - 'alias.sh'
       - 'editor.sh'
       - 'history.sh'
@@ -26,6 +26,7 @@
 
   tags:
     - 'tools'
+
 
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: 'platform-tasks.yml'

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-#2019052801
+# 2022033101
 
 RED="\[\033[1;31m\]"
 GREEN="\[\033[1;32m\]"
@@ -11,8 +11,8 @@ PSRED="[$RED\$(date +%H:%M:%S) \u@\h \w$NO_COLOR]\$ "
 PSYELLOW="[$YELLOW\$(date +%H:%M:%S) \u@\h \w$NO_COLOR]\$ "
 PSGREEN="[$GREEN\$(date +%H:%M:%S) \u@\h \w$NO_COLOR]\$ "
 
-{% if prompt_ps1 is defined and prompt_ps1|length %}
-export PS1={{ prompt_ps1 }}
+{% if tools__prompt_ps1 is defined and tools__prompt_ps1 | length %}
+export PS1="{{ tools__prompt_ps1 }}"
 {% else %}
 {% if 'test' in group_names %}
 export PS1=$PSGREEN
