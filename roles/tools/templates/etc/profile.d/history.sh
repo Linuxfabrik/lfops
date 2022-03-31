@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+# 2019090301
+
+HISTSIZE=100000
+HISTTIMEFORMAT="%Y-%m-%d %T $USER $SUDO_USER "
