@@ -41,17 +41,6 @@ duplicity__loglevel: 'notice' # error, warning, notice, info, debug
 
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
 duplicity__swift_authversion: '3'
-duplicity__swift_tenantname: ''
-duplicity__swift_login:
- username: ''
- password: ''
-
-duplicity__gpg_encrypt_master_key: ''
-duplicity__gpg_encrypt_master_key_block: |-
- -----BEGIN PGP PUBLIC KEY BLOCK-----
-
- ...
- -----END PGP PUBLIC KEY BLOCK-----
 
 duplicity__python_venv__dependent_venvs:
   - name: 'duplicity'
