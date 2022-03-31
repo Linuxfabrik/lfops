@@ -11,6 +11,6 @@
       state: 'present'
     environment:
         DEBIAN_FRONTEND: 'noninteractive'
-  
+
   tags:
     - 'postfix'

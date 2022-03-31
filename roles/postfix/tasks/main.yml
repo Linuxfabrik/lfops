@@ -50,6 +50,7 @@
   tags:
     - 'postfix'
 
+
 - block:
 
   - name: 'systemctl: postfix enabled = {{ postfix__service_enabled }}'
@@ -62,8 +63,7 @@
       name: 'postfix.service'
       state: '{{ postfix__service_state }}'
     register: postfix__systemctl_result
-    
+
   tags:
     - 'postfix'
     - 'postfix-systemctl'
-

@@ -1,4 +1,4 @@
-- name: restart postfix
+- name: 'postfix: restart postfix'
   ansible.builtin.systemd:
-    name: postfix
-    state: restarted
+    name: 'postfix'
+    state: 'restarted'

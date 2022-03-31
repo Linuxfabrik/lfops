@@ -1,10 +1,8 @@
-postfix__relayhost: 'mail.myprovider.com:587'
-postfix__relayhost_username: 'noreply@mydomain.ch'
-postfix__relayhost_password: 'mycomplex-password'
 postfix__inet_protocols: 'all'
-postfix__smtp_sasl_auth_enable: 'yes'
+postfix__relayhost_password: ''
 postfix__service_enabled: True
 postfix__service_state: 'started'
+postfix__smtp_sasl_auth_enable: True
 
 postfix__debconf_selections:
  - name: 'postfix'

@@ -26,9 +26,9 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag     | What it does     |
-| ---     | ------------     |
-| postfix | Installs postfix |
+| Tag     | What it does                    |
+| ---     | ------------                    |
+| postfix | Installs and configures postfix |
 
 
 ## Role Variables
@@ -42,35 +42,53 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 
 Host name of the mail server.
 
+Example:
+```yaml
+postfix__relayhost: 'mail.example.com:587'
+```
+
 #### postfix__relayhost_username
 
 Username with access to the mail server.
 
+Example:
+```yaml
+postfix__relayhost_username: 'noreply@example.com'
+```
+
 
 ### Optional
 
-#### postfix__relayhost_password:
+#### postfix__relayhost_password
 
 Password for the specified user
 
-
-#### postfix__inet_protocols
-
-The Internet protocols Postfix will attempt to use when making or accepting connections. Specify one or more of "ipv4" or "ipv6", separated by whitespace or commas. The form "all" is equivalent to "ipv4, ipv6" or "ipv4", depending on whether the operating system implements IPv6.
-
 Default:
 ```yaml
-postfix__inet_protocols: 'all'
+postfix__relayhost_password: ''
 ```
 
 
 #### postfix__smtp_sasl_auth_enable
 
-Enable SASL authentication in the Postfix SMTP client. By default, the Postfix SMTP client uses no authentication. 
+Enable SASL authentication in the Postfix SMTP client. By default, the Postfix SMTP client uses no authentication. Possible options:
+
+* True
+* False
 
 Default:
 ```yaml
-postfix__smtp_sasl_auth_enable: 'yes'
+postfix__smtp_sasl_auth_enable: True
+```
+
+
+#### postfix__inet_protocols
+
+The Internet protocols Postfix will attempt to use when making or accepting connections. Specify one or more of `ipv4` or `ipv6`, separated by whitespace or commas. The form `all` is equivalent to `ipv4, ipv6` or `ipv4`, depending on whether the operating system implements IPv6.
+
+Default:
+```yaml
+postfix__inet_protocols: 'all'
 ```
 
 
@@ -102,7 +120,7 @@ postfix__service_state: 'started'
 ```
 
 
-#### postfix__debconf_selections:
+#### postfix__debconf_selections:
 
 Default:
 ```yaml
