@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'install logrotate'
+  - name: 'Install logrotate'
     ansible.builtin.package:
       name: 'logrotate'
       state: 'present'
@@ -15,6 +15,7 @@
 
   tags:
     - 'logrotate'
+
 
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: 'platform-tasks.yml'

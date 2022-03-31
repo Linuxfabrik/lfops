@@ -25,9 +25,9 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag         | What it does                        |
-| ---         | ------------                        |
-| logrotate   | Install and configure logrotation   |
+| Tag       | What it does                         |
+| ---       | ------------                         |
+| logrotate | Installs and configures log rotation |
 
 
 ## Role Variables
@@ -44,7 +44,7 @@ This role does not have any mandatory variables.
 
 #### logrotate__rotate_days
 
-After how many days should the log files be rotated.
+For how many days the rotated files should be kept.
 
 Default:
 ```yaml
@@ -60,4 +60,3 @@ logrotate__rotate_days: 14
 ## Author Information
 
 [Linuxfabrik GmbH, Zurich](https://www.linuxfabrik.ch)
-
