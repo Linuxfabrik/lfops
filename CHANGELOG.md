@@ -12,9 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Renamed `duplicity__public_master_key` variable to `duplicity__gpg_encrypt_master_key_block`.
 * Changed the format of `duplicity__host_backup_sources`.
 
-
 ### Added
 * This CHANGELOG.
+* Role at
+* Role cockpit
+* Role dnf-makecache
+* Role exoscale_vm
+* Role glances
+* Role kdump
+* Role login
+* Role network
+* Role timezone
+
+### Changed
 * Role duplicity: Implemented massive-parallel backups.
 
 
