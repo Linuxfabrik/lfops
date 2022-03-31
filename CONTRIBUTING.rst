@@ -27,7 +27,7 @@ Rules of Thumb
 Pre-Commit
 ----------
 
-We are using `pre-commit <https://pre-commit.com/>`_ to any changes adhere to the styling rules. Install `pre-commit <https://pre-commit.com/#install>`_, then configure it as a git-hook using: ``pre-commit install``.
+We are using `pre-commit <https://pre-commit.com/>`_ to make sure any changes adhere to the styling rules. Install `pre-commit <https://pre-commit.com/#install>`_, then configure it as a git-hook using: ``pre-commit install``.
 
 
 Style Guide
