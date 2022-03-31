@@ -14,8 +14,8 @@
 
   - name: 'Enhance session profiles for all users in /etc/profile.d'
     ansible.builtin.template:
-      src: "etc/profile.d/{{ item }}"
-      dest: "/etc/profile.d/{{ item }}"
+      src: 'etc/profile.d/{{ item }}'
+      dest: '/etc/profile.d/{{ item }}'
       owner: 'root'
       mode: 0o644
     with_items:
