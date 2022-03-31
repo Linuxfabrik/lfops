@@ -5,7 +5,7 @@
     dest: '/etc/logrotate.d/rsyslog'
     owner: 'root'
     group: 'root'
-    mode: 0644
+    mode: 0o644
 
   tags:
     - 'logrotate'

@@ -1,0 +1,33 @@
+extends: 'default'
+
+yaml-files:
+  - '*.yaml'
+  - '*.yml'
+  - '.yamllint.yml'
+
+rules:
+  comments:
+    min-spaces-from-content: 1
+
+  comments-indentation:
+    level: 'warning'
+
+  document-start: 'disable'
+
+  empty-values: 'enable'
+
+  indentation:
+    spaces: 2
+    indent-sequences: 'whatever'
+
+  line-length: 'disable'
+
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: false
+
+  quoted-strings: 'enable'
+
+  truthy:
+    check-keys: false
+    allowed-values: ['True', 'False']

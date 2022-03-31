@@ -6,7 +6,7 @@
       state: 'directory'
       owner: 'root'
       group: 'root'
-      mode: 0755
+      mode: 0o755
 
   tags:
     - 'duplicity'
@@ -20,13 +20,13 @@
       name_email: '{{ ansible_facts["user_id"] }}@{{ ansible_facts["nodename"] }}'
       key_type: 'RSA'
       key_length: 4096
-    register: duplicity__gpg_encrypt_local_key
+    register: 'duplicity__gpg_encrypt_local_key'
 
   - name: 'Deploy the public master GPG key to /tmp/public-master-key'
     ansible.builtin.copy:
       dest: '/tmp/public-master-key'
       content: '{{ duplicity__gpg_encrypt_master_key_block }}'
-      mode: 0600
+      mode: 0o600
     changed_when: False
 
   - name: 'gpg --import /tmp/public-master-key'
@@ -54,7 +54,7 @@
     ansible.builtin.template:
       src: 'etc/duba/duba.json.j2'
       dest: '/etc/duba/duba.json'
-      mode: 0600 # file contains secrets
+      mode: 0o600 # file contains secrets
 
   - name: 'Deploy /etc/systemd/system/duba.service'
     ansible.builtin.template:
@@ -62,7 +62,7 @@
       dest: '/etc/systemd/system/duba.service'
       owner: 'root'
       group: 'root'
-      mode: 0644
+      mode: 0o644
 
   - name: 'Deploy /etc/systemd/system/duba.timer'
     ansible.builtin.template:
@@ -70,7 +70,7 @@
       dest: '/etc/systemd/system/duba.timer'
       owner: 'root'
       group: 'root'
-      mode: 0644
+      mode: 0o644
 
   tags:
     - 'duplicity'
@@ -84,7 +84,7 @@
       src: 'usr/local/bin/duba.j2'
       dest: '/usr/local/bin/duba'
       owner: 'root'
-      mode: 0755
+      mode: 0o755
 
   tags:
     - 'duplicity'

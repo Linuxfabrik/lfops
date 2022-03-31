@@ -17,7 +17,7 @@
       name: 'epel-release'
       state: 'present'
 
-  when: repo_epel__mirror_url is not defined or not repo_epel__mirror_url | length
+  when: 'repo_epel__mirror_url is not defined or not repo_epel__mirror_url | length'
   tags:
     - 'repo_epel'
 
@@ -30,14 +30,14 @@
       dest: '/etc/yum.repos.d/{{ item | basename | trim(".j2") }}'
       owner: 'root'
       group: 'root'
-      mode: 0644
+      mode: 0o644
     loop: '{{ repo_epel__repo_files }}'
 
   - name: 'curl {{ repo_epel__gpg_key_url }} --remote-name /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
     ansible.builtin.get_url:
       url: '{{ repo_epel__gpg_key_url }}'
       dest: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
-      mode: 0644
+      mode: 0o644
     delegate_to: 'localhost'
     check_mode: False # run task even if `--check` is specified
 
@@ -45,8 +45,8 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
       dest: '{{ repo_epel__gpg_key_dest }}'
-      mode: 0644
+      mode: 0o644
 
-  when: repo_epel__mirror_url is defined and repo_epel__mirror_url | length
+  when: 'repo_epel__mirror_url is defined and repo_epel__mirror_url | length'
   tags:
     - 'repo_epel'

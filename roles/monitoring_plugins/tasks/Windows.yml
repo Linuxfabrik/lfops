@@ -36,7 +36,7 @@
     ansible.windows.win_service:
       name: 'Icinga 2'
       state: 'stopped'
-    register: monitoring_plugins__icinga2_service_stop_result
+    register: 'monitoring_plugins__icinga2_service_stop_result'
     # ignore errors if the service does not exist
     failed_when: 'monitoring_plugins__icinga2_service_stop_result["failed"] is defined and monitoring_plugins__icinga2_service_stop_result["failed"] and not "is not installed" in monitoring_plugins__icinga2_service_stop_result["msg"]'
 
@@ -60,7 +60,7 @@
     loop: '{{ monitoring_plugins__plugin_list }}'
 
   # block
-  when: monitoring_plugins__windows_variant == 'python'
+  when: 'monitoring_plugins__windows_variant == "python"'
   tags:
     - 'monitoring_plugins'
 
@@ -90,7 +90,7 @@
       state: 'absent'
 
   # block
-  when: monitoring_plugins__windows_variant == 'nuitka'
+  when: 'monitoring_plugins__windows_variant == "nuitka"'
   tags:
     - 'monitoring_plugins'
 
@@ -124,7 +124,7 @@
     ansible.windows.win_service:
       name: 'Icinga 2'
       state: 'started'
-    register: monitoring_plugins__icinga2_service_start_result
+    register: 'monitoring_plugins__icinga2_service_start_result'
     # ignore errors if the service does not exist
     failed_when: 'monitoring_plugins__icinga2_service_start_result["failed"] is defined and monitoring_plugins__icinga2_service_start_result["failed"] and not "is not installed" in monitoring_plugins__icinga2_service_start_result["msg"]'
 
@@ -137,7 +137,7 @@
   - name: 'Remove old compile artifacts'
     ansible.windows.win_file:
       path: 'C:\\nuitka-compile-temp'
-      state: absent
+      state: 'absent'
 
   - name: 'Compile the monitoring plugins using nuitka'
     ansible.windows.win_command: 'py -3.9 -m nuitka --mingw64 --follow-imports --output-dir C:\\nuitka-compile-temp --remove-output --standalone {{ item }}.py'

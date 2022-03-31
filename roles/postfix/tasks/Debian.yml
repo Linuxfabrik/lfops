@@ -10,7 +10,7 @@
       update_cache: True
       state: 'present'
     environment:
-        DEBIAN_FRONTEND: 'noninteractive'
+      DEBIAN_FRONTEND: 'noninteractive'
 
   tags:
     - 'postfix'

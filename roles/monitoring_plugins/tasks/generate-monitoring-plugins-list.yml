@@ -8,7 +8,7 @@
       recurse: True
       depth: 2
       hidden: True
-    register: find_result
+    register: 'find_result'
     run_once: True
 
   - ansible.builtin.set_fact:
@@ -29,7 +29,7 @@
           | reject('search', 'None')
           | select('string') | list | unique
         }}"
-    when: monitoring_plugins__plugin_list is not defined
+    when: 'monitoring_plugins__plugin_list is not defined'
 
   delegate_to: 'localhost'
   check_mode: False # run task even if `--check` is specified

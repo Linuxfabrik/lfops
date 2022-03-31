@@ -19,4 +19,4 @@
     - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'       # "CentOS7.3.yml"
   vars:
     __vars_file: '{{ role_path }}/vars/{{ item }}'
-  when: __vars_file is file
+  when: '__vars_file is file'

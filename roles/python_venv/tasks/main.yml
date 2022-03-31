@@ -27,7 +27,7 @@
     ansible.builtin.file:
       path: '/opt/python-venv'
       state: 'directory'
-      mode: 0755
+      mode: 0o755
 
   - ansible.builtin.include_tasks: 'create-venv.yml'
     loop: '{{ python_venv__combined_venvs }}'
