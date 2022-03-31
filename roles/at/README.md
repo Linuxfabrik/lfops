@@ -22,9 +22,9 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag          | What it does                         |
-| ---          | ------------                         |
-| at           | Installs and configures at/atd       |
+| Tag          | What it does                          |
+| ---          | ------------                          |
+| at           | Installs and configures at/atd        |
 | at:systemctl | Controls the state of the atd service |
 
 

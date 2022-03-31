@@ -24,9 +24,9 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag       | What it does               |
-| ---       | ------------               |
-| repo_epel | Deploy the EPEL Repository |
+| Tag       | What it does                |
+| ---       | ------------                |
+| repo_epel | Deploys the EPEL Repository |
 
 
 ## Role Variables

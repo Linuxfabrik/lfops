@@ -24,9 +24,9 @@ Tested on
 
 ## Tags
 
-| Tag         | What it does                   |
-| ---         | ------------                   |
-| exoscale_vm | Create and manage the instance |
+| Tag         | What it does                     |
+| ---         | ------------                     |
+| exoscale_vm | Creates and manages the instance |
 
 
 ## Role Variables

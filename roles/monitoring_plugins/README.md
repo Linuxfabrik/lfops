@@ -37,11 +37,11 @@ Windows only: Since you cannot change files that are currently used by a process
 
 ## Tags
 
-| Tag                               | What it does                                                                               |
-| ---                               | ------------                                                                               |
-| monitoring_plugins                | Deploy the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins |
-| monitoring_plugins:custom         | Only deploy the custom plugins                                                             |
-| monitoring_plugins:nuitka_compile | Windows only: Only compile the Python plugins using Nuitka                                 |
+| Tag                               | What it does                                                                                |
+| ---                               | ------------                                                                                |
+| monitoring_plugins                | Deploys the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins |
+| monitoring_plugins:custom         | Only deploys the custom plugins                                                             |
+| monitoring_plugins:nuitka_compile | Windows only: Only compiles the Python plugins using Nuitka                                 |
 
 
 ## Role Variables

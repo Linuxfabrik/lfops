@@ -25,9 +25,9 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag   | What it does                                       |
-| ---   | ------------                                       |
-| login | Manage users, their groups and ssh authorized_keys |
+| Tag   | What it does                                        |
+| ---   | ------------                                        |
+| login | Manages users, their groups and ssh authorized_keys |
 
 
 ## Role Variables

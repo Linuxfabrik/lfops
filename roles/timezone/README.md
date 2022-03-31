@@ -24,9 +24,9 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag          | What it does                         |
-| ---          | ------------                         |
-| timezone     | Set timezone to timezone__timezone   |
+| Tag      | What it does      |
+| ---      | ------------      |
+| timezone | Sets the timezone |
 
 
 ## Role Variables
