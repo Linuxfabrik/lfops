@@ -17,7 +17,7 @@ Role: duplicity
 * This CHANGELOG.
 * Role: at
 * Role: cockpit
-* Role: dnf-makecache
+* Role: dnf_makecache
 * Role: exoscale_vm
 * Role: glances
 * Role: kdump
