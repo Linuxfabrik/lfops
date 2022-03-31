@@ -29,3 +29,8 @@ ln -s /path/to/lfops ~/.ansible/collections/ansible_collections/linuxfabrik/
 
 * Roles: Each role has its own README file.
 * Plugins: The documentation for all plugins is available through `ansible-doc`. For example, `ansible-doc linuxfabrik.lfops.gpg_key` shows the documentation for the GPG key managing module.
+
+
+## Known Limitations
+
+Combined lists and dictionaries containing default values cannot be unset or overwritten, they can only be extended (for example duplicity__combined_backup_sources`).
