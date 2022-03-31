@@ -1,2 +1,2 @@
-kdump__service_enabled: False
+kdump__service_enabled: false
 kdump__service_state: 'stopped'

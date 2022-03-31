@@ -39,7 +39,7 @@
       dest: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
       mode: 0o644
     delegate_to: 'localhost'
-    check_mode: False # run task even if `--check` is specified
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }} to {{ repo_epel__gpg_key_dest }}'
     ansible.builtin.copy:

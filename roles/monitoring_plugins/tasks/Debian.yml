@@ -2,6 +2,6 @@
   apt:
     name: 'sudo'
     state: 'present'
-    update_cache: True
+    update_cache: true
   tags:
     - 'monitoring-plugins'

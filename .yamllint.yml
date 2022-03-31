@@ -30,4 +30,3 @@ rules:
 
   truthy:
     check-keys: false
-    allowed-values: ['True', 'False']

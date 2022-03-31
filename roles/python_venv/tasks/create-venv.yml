@@ -1,6 +1,6 @@
 - name: 'Create virtualenv in /opt/python-venv/{{ venv.name }}'
   ansible.builtin.command:
-    cmd: 'python3 -m venv {% if venv.system_site_packages | d("True") %} --system-site-packages {% endif %} {{ venv.name }}'
+    cmd: 'python3 -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %} {{ venv.name }}'
     chdir: '/opt/python-venv'
     creates: '/opt/python-venv/{{ venv.name }}/bin/activate'
   ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
@@ -43,4 +43,4 @@
 #       name: 'python-venv-update@.timer'
 #       state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
 #       enabled: '{{ duplicity__timer_enabled }}'
-#       daemon_reload: True
+#       daemon_reload: true

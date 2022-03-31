@@ -2,7 +2,7 @@
   collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_exoscale_vm'
-  gather_facts: False
+  gather_facts: false
 
   roles:
 

@@ -5,11 +5,11 @@
       paths: '/tmp/ansible.monitoring-plugins-repo/check-plugins/'
       # patterns: '/tmp/ansible\.monitoring-plugins-repo/check-plugins/(?P<check>.*)/(?P=check)2' # this does not work, as it only tries matching against the basename
       # use_regex: yes
-      recurse: True
+      recurse: true
       depth: 2
-      hidden: True
+      hidden: true
     register: 'find_result'
-    run_once: True
+    run_once: true
 
   - ansible.builtin.set_fact:
       monitoring_plugins__check_plugin_search_name: "{{
@@ -32,4 +32,4 @@
     when: 'monitoring_plugins__plugin_list is not defined'
 
   delegate_to: 'localhost'
-  check_mode: False # run task even if `--check` is specified
+  check_mode: false # run task even if `--check` is specified

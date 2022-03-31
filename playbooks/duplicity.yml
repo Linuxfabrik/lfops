@@ -14,6 +14,6 @@
       python_venv__dependent_venvs:
         - '{{ duplicity__python_venv__dependent_venvs | d({}) }}'
       when:
-        - 'not duplicity__skip_python_venv | d(False)'
+        - 'not duplicity__skip_python_venv | d(false)'
 
     - role: 'duplicity'

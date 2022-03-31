@@ -40,7 +40,7 @@ Style Guide
 * Try to name tasks after their respective shell commands. Exceptions are STIG tasks (they are too small, and too many to achieve a consistent naming).
 * Split long Jinja2 expressions into multiple lines.
 * Use the ``| bool`` filter when using bare variables (expressions consisting of just one variable reference without any operator).
-* Use ``True`` / ``False`` instead of ``yes`` / ``no``, as they are actually part of YAML.
+* Use ``true`` / ``false`` instead of ``yes`` / ``no``, as they are actually part of YAML.
 * Indent list items:
 
     Do:
@@ -73,7 +73,7 @@ Quotes
 
 * We always quote strings and prefer single quotes over double quotes. The only time you should use double quotes is when they are nested within single quotes (e.g. Jinja map reference), or when your string requires escaping characters (e.g. using ``\n`` to represent a newline).
 * If you must write a long string, we use the "folded scalar" (``>`` converts newlines to spaces, ``|`` keeps newlines) style and omit all special quoting.
-* Do not quote booleans (e.g. ``True``/``False``).
+* Do not quote booleans (e.g. ``true``/``false``).
 * Do not quote numbers (e.g. ``42``).
 * Do not quote octal numbers (e.g. ``0755``).
 * Do not quote things referencing the local Ansible environment (e.g. boolean logic in ``when:` statements or names of variables we are assigning values to).
@@ -85,7 +85,7 @@ Quotes
       service:
         name: s1m0ne
         state: started
-        enabled: true
+        enabled: True
       become: yes
 
     # good
@@ -93,17 +93,17 @@ Quotes
       ansible.builtin.service:
         name: 's1m0ne'
         state: 'started'
-        enabled: True
-      become: True
+        enabled: true
+      become: true
 
     # double quotes w/ nested single quotes
     - name: 'start all robots'
       ansible.builtin.service:
         name: '{{ item["robot_name"] }}''
         state: 'started'
-        enabled: True
+        enabled: true
       with_items: '{{ robots }}'
-      become: True
+      become: true
 
     # double quotes to escape characters
     - name 'print some text on two lines'
@@ -130,7 +130,7 @@ Quotes
         dest: '/tmp'
         timeout: 60
         url: 'https://google.com'
-        validate_certs: True
+        validate_certs: true
 
     # variables example 1
     - name: 'set a variable'
@@ -343,7 +343,7 @@ Variables
           that:
             - stig__grub2_password is defined
             - stig__grub2_password | length
-          quiet: True
+          quiet: true
           fail_msg: Please define bootloader passwords for your hosts ("stig__grub2_password").
 
 * Your role might accept variable injection from another role. It depends on the context on how to implement that. Examples:

@@ -3,17 +3,17 @@
   # - name: 'Gather facts'
   #   ansible.builtin.gather_facts:
   #   register: 'exoscale_vm__gather_facts_result'
-  #   ignore_unreachable: True
+  #   ignore_unreachable: true
 
   # - name: 'Gather cloudstack facts'
   #   ngine_io.cloudstack.cs_facts:
   #   register: 'exoscale_vm__gather_cs_facts'
-  #   when: 'not (exoscale_vm__gather_facts_result["unreachable"] | default(False))'
+  #   when: 'not (exoscale_vm__gather_facts_result["unreachable"] | default(false))'
 
   # - name: 'Cloudstack facts'
   #   debug:
   #     var: 'exoscale_vm__gather_cs_facts'
-  #   when: 'not (exoscale_vm__gather_facts_result["unreachable"] | default(False))'
+  #   when: 'not (exoscale_vm__gather_facts_result["unreachable"] | default(false))'
 
   - name: 'Manage the VM at Exoscale'
     ngine_io.cloudstack.cs_instance:

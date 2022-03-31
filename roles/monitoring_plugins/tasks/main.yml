@@ -16,7 +16,7 @@
     ansible.builtin.uri: # TOOD fqcn
       url: 'https://api.github.com/repos/linuxfabrik/monitoring-plugins/releases/latest'
     register: 'monitoring_plugins__github_release'
-    check_mode: False # run task even if `--check` is specified
+    check_mode: false # run task even if `--check` is specified
     delegate_to: 'localhost'
 
   - name: 'Store the latest release version'
@@ -38,8 +38,8 @@
       version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
       depth: 1
     delegate_to: 'localhost'
-    run_once: True
-    check_mode: False # run task even if `--check` is specified
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
 
   rescue:
 
@@ -56,8 +56,8 @@
         version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
         depth: 1
       delegate_to: 'localhost'
-      run_once: True
-      check_mode: False # run task even if `--check` is specified
+      run_once: true
+      check_mode: false # run task even if `--check` is specified
 
   tags:
     - 'monitoring_plugins'
@@ -72,8 +72,8 @@
       version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
       depth: 1
     delegate_to: 'localhost'
-    run_once: True
-    check_mode: False # run task even if `--check` is specified
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
 
   rescue:
 
@@ -90,8 +90,8 @@
         version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
         depth: 1
       delegate_to: 'localhost'
-      run_once: True
-      check_mode: False # run task even if `--check` is specified
+      run_once: true
+      check_mode: false # run task even if `--check` is specified
 
   tags:
     - 'monitoring_plugins'
@@ -144,7 +144,7 @@
   - name: 'Make sure the database of the check plugin is removed'
     ansible.builtin.command: 'rm -f --{% for item in monitoring_plugins__plugin_list %} /tmp/{{ item }}.db{% endfor %}'
     args:
-      warn: False
+      warn: false
 
   # this is much faster than using the file module and looping over monitoring_plugins__plugin_list
   - name: 'Copy the Linuxfabrik monitoring plugins (Linux)'
@@ -167,7 +167,7 @@
     ansible.builtin.stat:
       path: '../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
     delegate_to: 'localhost'
-    changed_when: False
+    changed_when: false
     register: 'monitoring_plugins__custom_plugins'
 
   - name: 'Copy the custom plugins to /usr/lib64/nagios/plugins'
@@ -175,7 +175,7 @@
       src: '../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
       dest: '/usr/lib64/nagios/'
       mode: 'preserve'
-      backup: True
+      backup: true
     when: 'monitoring_plugins__custom_plugins.stat.exists'
 
   # block
