@@ -44,12 +44,12 @@ This role does not have any mandatory variables.
 
 Enables or disables the atd service, analogous to `systemctl enable/disable`. Possible options:
 
-* True
-* False
+* true
+* false
 
 Default:
 ```yaml
-at__service_enabled: True
+at__service_enabled: true
 ```
 
 

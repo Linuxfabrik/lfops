@@ -208,7 +208,7 @@ The state of the daily systemd timer.
 
 Default:
 ```yaml
-duplicity__timer_enabled: True
+duplicity__timer_enabled: true
 ```
 
 

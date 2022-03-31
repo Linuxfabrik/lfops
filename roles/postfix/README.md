@@ -73,12 +73,12 @@ postfix__relayhost_password: ''
 
 Enable SASL authentication in the Postfix SMTP client. By default, the Postfix SMTP client uses no authentication. Possible options:
 
-* True
-* False
+* true
+* false
 
 Default:
 ```yaml
-postfix__smtp_sasl_auth_enable: True
+postfix__smtp_sasl_auth_enable: true
 ```
 
 
@@ -96,12 +96,12 @@ postfix__inet_protocols: 'all'
 
 Enables or disables the postfix service, analogous to `systemctl enable/disable`. Possible options:
 
-* True
-* False
+* true
+* false
 
 Default:
 ```yaml
-postfix__service_enabled: True
+postfix__service_enabled: true
 ```
 
 

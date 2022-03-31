@@ -85,7 +85,7 @@ Quotes
       service:
         name: s1m0ne
         state: started
-        enabled: True
+        enabled: true
       become: yes
 
     # good

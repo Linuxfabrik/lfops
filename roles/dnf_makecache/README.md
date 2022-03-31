@@ -44,12 +44,12 @@ This role does not have any mandatory variables.
 
 Enables or disables the dnf-makecache service, analogous to `systemctl enable/disable`. Possible options:
 
-* True
-* False
+* true
+* false
 
 Default:
 ```yaml
-dnf_makecache__service_enabled: False
+dnf_makecache__service_enabled: false
 ```
 
 #### dnf_makecache__service_state

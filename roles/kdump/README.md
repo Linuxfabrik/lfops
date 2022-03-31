@@ -44,12 +44,12 @@ This role does not have any mandatory variables.
 
 Enables or disables the kdump service, analogous to `systemctl enable/disable`. Possible options:
 
-* True
-* False
+* true
+* false
 
 Default:
 ```yaml
-kdump__service_enabled: False
+kdump__service_enabled: false
 ```
 
 

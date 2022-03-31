@@ -61,7 +61,7 @@ Subkeys:
 * `state`: Optional, string. Defaults to `present`. The state of the user account. Possible options: `present`, `absent`.
 * `additional_groups`: Optional, list. Defaults to `[]`. Additional groups the user account should be in.
 * `sshd_authorized_keys`: Optional, list. Defaults to `[]`. List of sshd authorized_keys for the user account.
-* `remove_other_sshd_authorized_keys`: Optional, boolean. Defaults to `True`. Whether to remove all other non-specified keys from the authorized_keys file.
+* `remove_other_sshd_authorized_keys`: Optional, boolean. Defaults to `true`. Whether to remove all other non-specified keys from the authorized_keys file.
 
 Default:
 ```yaml
@@ -78,7 +78,7 @@ Example:
       -  '{{ login__passwordless_sudo_group }}'
     sshd_authorized_keys:
       - 'ssh-ed25519 M4wt6qfbtyAaBnhSJDzoQEAOwiQM7k9lTvhYhNHJ7i6ciWH9uXJlbpbDF4Wv5lSr8t1maY test@example.com'
-    remove_other_sshd_authorized_keys: True
+    remove_other_sshd_authorized_keys: true
 ```
 
 

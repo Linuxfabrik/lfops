@@ -54,7 +54,7 @@ Subkeys:
 * `name`: Mandatory, string. The name of the virtual environment. Will be used for the folder name below `/opt/python-venv`.
 * `package_requirements`: Optional, list. These packages will be installed before installing the pip `packages` using the default package manager (e.g. `dnf`).
 * `packages`: Mandatory, list. These packages will be installed in the virtual environment using `pip`.
-* `system_site_packages`:  Optional, boolean. Defaults to `True`. Allows the virtual environment to access the system site-packages dir.
+* `system_site_packages`:  Optional, boolean. Defaults to `true`. Allows the virtual environment to access the system site-packages dir.
 
 Default:
 ```yaml
