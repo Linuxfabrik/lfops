@@ -33,4 +33,4 @@ ln -s /path/to/lfops ~/.ansible/collections/ansible_collections/linuxfabrik/
 
 ## Known Limitations
 
-Combined lists and dictionaries containing default values cannot be unset or overwritten, they can only be extended (for example duplicity__combined_backup_sources`).
+Combined lists and dictionaries containing default values cannot be unset or overwritten, they can only be extended (for example `duplicity__combined_backup_sources`).
