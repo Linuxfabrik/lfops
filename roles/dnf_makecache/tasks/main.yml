@@ -5,7 +5,7 @@
 
   tags:
     - 'always'
-    - 'dnf-makecache'
+    - 'dnf_makecache'
 
 
 - block:
@@ -31,4 +31,4 @@
       state: '{{ dnf_makecache__service_state }}'
 
   tags:
-    - 'dnf-makecache'
+    - 'dnf_makecache'

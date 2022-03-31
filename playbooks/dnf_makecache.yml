@@ -1,11 +1,11 @@
-- name: 'Manages the Service DNF-Makecache on the Servers'
+- name: 'Manages the DNF-Makecache service'
   collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_dnf_makecache'
 
   roles:
 
-    - role: 'dnf-makecache'
+    - role: 'dnf_makecache'
       when:
         - ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] in ['8']
           or ansible_facts['distribution'] == 'Fedora'

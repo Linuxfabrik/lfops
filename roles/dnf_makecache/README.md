@@ -2,7 +2,7 @@
 
 This role ensures that the Systemd-Service DNF-Makecache is disabled.
 
-FQCN: linuxfabrik.lfops.dnf-makecache
+FQCN: linuxfabrik.lfops.dnf_makecache
 
 Tested on
 
@@ -23,14 +23,14 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag           | What it does                                    |
-| ---           | ------------                                    |
-| dnf-makecache | Ensures that the Service Makecache is disabled  |
+| Tag           | What it does                                |
+| ---           | ------------                                |
+| dnf_makecache | Manages the dnf-makecache service and timer |
 
 
 ## Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/dnf-makecache/defaults/main.yml) for the variable defaults.
+Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/dnf_makecache/defaults/main.yml) for the variable defaults.
 
 
 ### Mandatory
