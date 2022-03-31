@@ -15,15 +15,15 @@ Role: duplicity
 
 ### Added
 * This CHANGELOG.
-* Role at
-* Role cockpit
-* Role dnf-makecache
-* Role exoscale_vm
-* Role glances
-* Role kdump
-* Role login
-* Role network
-* Role timezone
+* Role: at
+* Role: cockpit
+* Role: dnf-makecache
+* Role: exoscale_vm
+* Role: glances
+* Role: kdump
+* Role: login
+* Role: network
+* Role: timezone
 
 ### Changed
 * Role duplicity: Implemented massive-parallel backups.
