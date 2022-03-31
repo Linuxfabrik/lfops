@@ -1,0 +1,132 @@
+- block:
+
+  - name: 'Get the list of services'
+    ansible.builtin.service_facts: # yamllint disable-line rule:empty-values
+
+  - name: 'Be sure firewalld is stopped, disabled and masked'
+    ansible.builtin.systemd:
+      name: 'firewalld.service'
+      state: 'stopped'
+      enabled: false
+      masked: true
+    when:
+      - 'firewall__firewall != "firewalld"'
+      - '"firewalld.service" in ansible_facts["services"]'
+
+  - name: 'Be sure fwb is stopped, disabled and masked'
+    ansible.builtin.systemd:
+      name: 'fwb.service'
+      state: 'stopped'
+      enabled: false
+      masked: true
+    when:
+      - 'firewall__firewall != "fwbuilder"'
+      - '"fwb.service" in ansible_facts["services"]'
+
+  - name: 'Be sure iptables is stopped, disabled and masked'
+    ansible.builtin.systemd:
+      name: 'iptables.service'
+      state: 'stopped'
+      enabled: false
+      masked: true
+    when:
+      - 'firewall__firewall != "iptables"'
+      - '"iptables.service" in ansible_facts["services"]'
+
+  - name: 'Be sure ufw is stopped, disabled and masked'
+    ansible.builtin.systemd:
+      name: 'ufw.service'
+      state: 'stopped'
+      enabled: false
+      masked: true
+    when:
+      - 'firewall__firewall != "ufw"'
+      - '"ufw.service" in ansible_facts["services"]'
+
+  tags:
+    - 'firewall'
+
+
+- block:
+
+  - name: 'Be sure firewalld is started, enabled and not masked'
+    ansible.builtin.systemd:
+      name: 'firewalld.service'
+      state: 'started'
+      enabled: true
+      masked: false
+
+  when: 'firewall__firewall == "firewalld"'
+  tags:
+    - 'firewall'
+
+
+- block:
+
+  - name: 'Deploy fwbuilder systemd service file'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/fwb.service.j2'
+      dest: '/etc/systemd/system/fwb.service'
+      owner: 'root'
+      mode: 0o644
+
+  - name: 'Be sure fwb is started, enabled and not masked'
+    ansible.builtin.systemd:
+      name: 'fwb.service'
+      state: 'started'
+      enabled: true
+      masked: false
+      daemon_reload: true
+
+  when: 'firewall__firewall == "fwbuilder"'
+  tags:
+    - 'firewall'
+
+
+- block:
+
+  - name: 'Make sure iptables-services is installed'
+    ansible.builtin.package:
+      name: 'iptables-services'
+      state: 'present'
+
+  - name: 'Be sure iptables is started, enabled and not masked'
+    ansible.builtin.systemd:
+      name: 'iptables'
+      state: 'started'
+      enabled: true
+      masked: false
+
+  - name: 'Copy iptables definition to /etc/sysconfig/iptables'
+    ansible.builtin.copy:
+      src: "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables"
+      dest: '/etc/sysconfig/'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+    when: 'inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/etc/sysconfig/iptables" is file'
+    register: 'firewall__iptables_definition_result'
+
+  - name: 'systemctl restart iptables.service'
+    ansible.builtin.systemd:
+      name: 'iptables.service'
+      state: 'restarted'
+    when: 'firewall__iptables_definition_result is changed'
+
+  when: 'firewall__firewall == "iptables"'
+  tags:
+    - 'firewall-iptables'
+
+
+- block:
+
+  - name: 'Be sure ufw is started, enabled and not masked'
+    ansible.builtin.systemd:
+      name: 'ufw.service'
+      state: 'started'
+      enabled: true
+      masked: false
+
+  when: 'firewall__firewall == "ufw"'
+  tags:
+    - 'firewall-iptables'
