@@ -24,6 +24,11 @@ Rules of Thumb
 * The role should support the installation and configuration of multiple major versions of the software. For example, PHP 7.1, 7.2, 7.3 etc. should all be supported by a single role. Upgrades are either done manually or using Ansible, depending on the software and the implementation effort.
 * Document all changes in the CHANGELOG.md file.
 
+Pre-Commit
+----------
+
+We are using `pre-commit <https://pre-commit.com/>`_ to any changes adhere to the styling rules. Install `pre-commit <https://pre-commit.com/#install>`_, then configure it as a git-hook using: ``pre-commit install``.
+
 
 Style Guide
 -----------

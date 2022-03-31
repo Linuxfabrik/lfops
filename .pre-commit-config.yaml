@@ -1,0 +1,47 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-yaml
+      - id: detect-private-key
+      - id: check-ast
+      - id: check-byte-order-marker
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: mixed-line-ending
+
+  # - repo: https://github.com/pycqa/isort
+  #   rev: 5.10.1
+  #   hooks:
+  #     - id: isort
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.26.0
+    hooks:
+      - id: yamllint
+        files: \.(yaml|yml)$
+        types: [file, yaml]
+        entry: yamllint
+
+#   - repo: local
+#     hooks:
+#       - id: pylint
+#         name: pylint
+#         entry: pylint
+#         language: system
+#         types: [python]
+#         args:
+#           [
+#             "-rn", # Only display messages
+#             "-sn", # Don't display the score
+#             "--disable=C0103,C0114,C0116,C0301",
+#           ]
