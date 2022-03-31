@@ -58,6 +58,8 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 
 The long key ID of the master GPG key. Obtain it using `gpg --list-secret-keys --keyid-format=long`.
 
+Default: unset
+
 Example:
 ```yaml
 duplicity__gpg_encrypt_master_key: 'LLZGH2BITI2LRLJCLFWEAJQ93N6MWTKBARQDMYX5'
@@ -66,9 +68,11 @@ duplicity__gpg_encrypt_master_key: 'LLZGH2BITI2LRLJCLFWEAJQ93N6MWTKBARQDMYX5'
 
 #### duplicity__gpg_encrypt_master_key_block
 
-The ASCII-armored public master GPG key. Obtain it using `gpg --armor --export $GPG_KEY`. This key is imported on the server and is used in addition to the server's own GPG key to encrypt the backups. This means that the backups can be restored using either the master or the server's private key (which is pretty cool in case of a desaster recovery).
+The ASCII-armored public master GPG key. Obtain it using `gpg --armor --export $GPG_KEY`. This key is imported on the server and is used in addition to the server's own local GPG key to encrypt the backups. This means that the backups can be restored using either the master or the server's local private key (which is pretty cool in case of a desaster recovery).
 
 Be aware of the empty line between `-----BEGIN PGP PUBLIC KEY BLOCK-----` and your public key block.
+
+Default: unset
 
 Example:
 ```yaml
@@ -90,6 +94,7 @@ Subkeys:
 * `username`: Mandatory, string. The Swift username.
 * `password`: Mandatory, string. The Swift password.
 
+Default: unset
 
 Example:
 ```yaml
@@ -103,7 +108,7 @@ duplicity__swift_login:
 
 The Swift Tenantname. Usually, this is given by the provider of the Swift Storage.
 
-Default: `''`
+Default: unset
 
 Example:
 ```yaml
@@ -260,17 +265,6 @@ The Authentication Version for Swift. Usually, this is given by the provider of 
 Default:
 ```yaml
 duplicity__swift_authversion: '3'
-```
-
-
-#### duplicity__skip_python_venv
-
-Skips the creation of a Python Virtual Environment for duplicity, if it is set to `True`.
-
-
-Default:
-```yaml
-duplicity__skip_python_venv: False
 ```
 
 
