@@ -22,7 +22,7 @@ This role does not have any requirements.
 | Tag             | What it does                                   |
 | ---             | ------------                                   |
 | postfix         | Installs and configures postfix                |
-| postfix:state   | Manages the state of the sshd systemd service  |
+| postfix:state   | Manages the state of the postfix systemd service  |
 
 ## Role Variables
 
