@@ -1,6 +1,33 @@
 # Ansible Role tools
 
-This role ensures that tools is installed and configured.
+This role ensures that some additional tools are installed and the Bash environment is configured.
+
+Tools that this role installs:
+
+* bash-completion
+* lsof
+* nano
+* rsync
+* tmux
+* vim
+* wget
+
+This role sets some alias's:
+
+* dmesg
+* lf-confirm
+* poweroff
+* reboot
+* reboot
+* schedule-icinga-downtime
+* whatismyip
+
+Bash:
+
+* export EDITOR
+* HISTSIZE=100000
+* HISTTIMEFORMAT="%Y-%m-%d %T $USER $SUDO_USER "
+* Customizes the Bash prompt
 
 FQCN: linuxfabrik.lfops.tools
 
