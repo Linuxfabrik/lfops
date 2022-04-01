@@ -24,6 +24,7 @@ Role: duplicity
 * Role: kdump
 * Role: login
 * Role: network
+* Role: sshd
 * Role: timezone
 
 ### Changed
