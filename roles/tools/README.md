@@ -24,7 +24,7 @@ Bash:
 * export EDITOR
 * HISTSIZE=100000
 * HISTTIMEFORMAT="%Y-%m-%d %T $USER $SUDO_USER "
-* Customizes the Bash prompt
+* Colorizes the Bash prompt and sets it to something like `[19:54:24 user@server ~]$ `
 
 FQCN: linuxfabrik.lfops.tools
 
