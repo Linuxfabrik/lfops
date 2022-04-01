@@ -1,0 +1,8 @@
+- name: 'Install PHP on the system, optionally with additional modules'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_php'
+
+  roles:
+
+    - role: 'php'

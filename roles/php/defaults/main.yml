@@ -1,0 +1,24 @@
+php__version: '8.0'
+
+php__dependent_modules: []
+php__group_modules: []
+php__host_modules: []
+php__role_modules:
+  - 'php-opcache'
+
+php__combined_modules: '{{ php__role_modules +
+  php__group_modules +
+  php__host_modules +
+  php__dependent_modules
+  | flatten
+ }}'
+
+php__ini_display_errors: 'Off'
+php__ini_display_startup_errors: 'Off'
+php__ini_error_reporting: 'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT'
+php__ini_max_input_time: 300
+php__ini_memory_limit: '64M'
+php__ini_post_max_size: '50M'
+php__ini_session_sid_length: 32
+php__ini_session_trans_sid_tags: 'a=href,area=href,frame=src,input=src,form=fakeentry'
+php__ini_upload_max_filesize: '20M'
