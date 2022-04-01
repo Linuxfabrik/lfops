@@ -11,7 +11,6 @@
       validate: '/usr/sbin/sshd -t -f %s'
     when:
       - 'sshd__ciphers is defined'
-      - 'sshd__ciphers != false'
     notify: 'sshd: systemctl restart sshd'
 
   - name: 'Change MACs in /etc/ssh/sshd_config to {{ sshd__macs }}'
@@ -23,7 +22,6 @@
       validate: '/usr/sbin/sshd -t -f %s'
     when:
       - 'sshd__macs is defined'
-      - 'sshd__macs != false'
     notify: 'sshd: systemctl restart sshd'
 
   - name: 'Change KexAlgorithms in /etc/ssh/sshd_config to {{ sshd__kex }}'
@@ -35,7 +33,6 @@
       validate: '/usr/sbin/sshd -t -f %s'
     when:
       - 'sshd__kex is defined'
-      - 'sshd__kex != false'
     notify: 'sshd: systemctl restart sshd'
 
   - name: 'Change PasswordAuthentication in /etc/ssh/sshd_config to {{ sshd__password_authentication }}'
@@ -58,7 +55,7 @@
 
   tags:
     - 'sshd'
-    - 'sshd-configure'
+    - 'sshd:configure'
 
 - block:
 
@@ -75,5 +72,5 @@
 
   tags:
     - 'sshd'
-    - 'sshd-configure'
-    - 'sshd-systemctl'
+    - 'sshd:configure'
+    - 'sshd:systemctl'

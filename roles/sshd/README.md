@@ -33,7 +33,7 @@ This role does not have any optional requirements.
 
 ## Role Variables
 
-This role does not have any variables.
+Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/sshd/defaults/main.yml) for the variable defaults.
 
 
 ### Mandatory

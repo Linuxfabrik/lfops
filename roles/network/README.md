@@ -42,7 +42,7 @@ This role does not have any mandatory variables.
 
 ### Optional
 
-This role does not have any mandatory variables.
+This role does not have any optional variables.
 
 
 

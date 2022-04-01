@@ -26,10 +26,10 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag     | What it does                    |
-| ---     | ------------                    |
-| postfix | Installs and configures postfix |
-
+| Tag             | What it does                                   |
+| ---             | ------------                                   |
+| postfix         | Installs and configures postfix                |
+| postfix:state   | Manages the state of the sshd systemd service  |
 
 ## Role Variables
 
