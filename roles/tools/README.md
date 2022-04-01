@@ -12,14 +12,11 @@ Tools that this role installs:
 * vim
 * wget
 
-This role sets some alias's:
+This role sets some new Bash alias for:
 
 * dmesg
-* lf-confirm
 * poweroff
 * reboot
-* reboot
-* schedule-icinga-downtime
 * whatismyip
 
 Bash:
