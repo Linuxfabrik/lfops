@@ -1,0 +1,8 @@
+- name: 'Stop and disable firewall'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_firewall'
+
+  roles:
+
+    - role: 'firewall'

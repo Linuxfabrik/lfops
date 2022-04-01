@@ -19,6 +19,7 @@ Role: duplicity
 * Role: cockpit
 * Role: dnf_makecache
 * Role: exoscale_vm
+* Role: firewall
 * Role: glances
 * Role: kdump
 * Role: login

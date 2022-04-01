@@ -1,0 +1,34 @@
+- block:
+
+  - name: 'Install additional tools like nano etc.'
+    ansible.builtin.package:
+      name:
+        - 'bash-completion'
+        - 'lsof'
+        - 'nano'
+        - 'rsync'
+        - 'tmux'
+        - 'vim'
+        - 'wget'
+      state: 'present'
+
+  - name: 'Enhance session profiles for all users in /etc/profile.d'
+    ansible.builtin.template:
+      src: 'etc/profile.d/{{ item }}'
+      dest: '/etc/profile.d/{{ item }}'
+      owner: 'root'
+      mode: 0o644
+    loop:
+      - 'alias.sh'
+      - 'editor.sh'
+      - 'history.sh'
+      - 'prompt.sh'
+
+  tags:
+    - 'tools'
+
+
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: 'platform-tasks.yml'
+  tags:
+    - 'always'

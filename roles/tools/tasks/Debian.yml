@@ -1,0 +1,9 @@
+- block:
+
+  - name: 'Install additional tools for Debian'
+    ansible.builtin.package:
+      name:
+        - 'iftop'
+
+  tags:
+    - 'tools'

@@ -19,7 +19,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2022033101'
+__version__ = '2022033102'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -62,7 +62,7 @@ def init_logging():
     console_logger = logging.StreamHandler()
     console_logger.setLevel(logging.DEBUG)
     console_logger.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: duby.py - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'
+            '%(asctime)s %(levelname)s: duba - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'
     ))
     logger.addHandler(console_logger)
 
