@@ -1,0 +1,8 @@
+- block:
+
+  - name: 'Perform platform/version specific tasks'
+    ansible.builtin.include_tasks: 'platform-tasks.yml'
+
+  tags:
+    - 'always'
+    - 'sshd'
