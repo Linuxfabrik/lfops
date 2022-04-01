@@ -1,0 +1,12 @@
+python__version: 3
+
+python__group_modules: []
+python__host_modules: []
+python__role_modules: []
+
+python__combined_modules: '{{ python__role_modules +
+  python__group_modules +
+  python__host_modules +
+  python__dependent_modules
+  | flatten
+ }}'

@@ -1,0 +1,26 @@
+- block:
+
+  - name: 'Download the python{{ python__version }}-install.exe (Windows)'
+    ansible.windows.win_get_url:
+      url: 'https://www.python.org/ftp/python/{{ python__version }}/python-{{ python__version }}-amd64.exe'
+      dest: 'C:\python-install.exe'
+
+  - name: 'Install python3 (Windows)'
+    ansible.windows.win_command: 'C:\python-install.exe /quiet /passive InstallAllUsers=1 Include_test=0'
+
+  - name: 'Remove the python3-install.exe (Windows)'
+    ansible.windows.win_file:
+      path: 'C:\python3-install.exe'
+      state: 'absent'
+
+  - name: "py -{{ python__version | regex_replace('\\.\\d$', '') }} -m pip install --upgrade setuptools pip wheel (Windows)"
+    ansible.windows.win_shell: "py -{{ python__version | regex_replace('\\.\\d$', '') }} -m pip install --upgrade setuptools pip wheel"
+    when: 'python__modules is defined and python__modules | length'
+
+  - name: 'Install additional python modules (Windows)'
+    ansible.windows.win_shell: "py -{{ python__version | regex_replace('\\.\\d$', '') }} -m pip install {{ item }}"
+    loop: "{{ python__modules }}"
+    when: 'python__modules is defined and python__modules | length'
+
+  tags:
+    - 'python3'
