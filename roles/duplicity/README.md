@@ -134,7 +134,7 @@ The backup destination. This will be used in combination with the backup source 
 
 Default:
 ```yaml
-duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}'
+duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | trim("/") }}'
 ```
 
 
@@ -228,7 +228,7 @@ The `OnCalendar` definition for the daily systemd timer. Have a look at `man sys
 
 Default:
 ```yaml
-duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45|random(seed=inventory_hostname) }}'
+duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45 | random(seed=inventory_hostname) }}'
 ```
 
 

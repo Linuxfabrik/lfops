@@ -11,7 +11,8 @@
     register: 'find_result'
     run_once: true
 
-  - ansible.builtin.set_fact:
+  - name: 'Set filter'
+    ansible.builtin.set_fact:
       monitoring_plugins__check_plugin_search_name: "{{
           (ansible_facts['os_family'] == 'Windows') | bool | ternary(
             '.windows',
@@ -19,7 +20,8 @@
           )
         }}"
 
-  - ansible.builtin.set_fact:
+  - name: 'Apply filters'
+    ansible.builtin.set_fact:
       monitoring_plugins__plugin_list: "{{
           find_result.files
           | map(attribute='path')

@@ -2,7 +2,7 @@
 
   - name: 'Get list of required groups'
     ansible.builtin.set_fact:
-      login__required_groups: '{{ login__users|map(attribute="additional_groups", default="None") | flatten | unique }}'
+      login__required_groups: '{{ login__users | map(attribute="additional_groups", default="None") | flatten | unique }}'
 
   - name: 'Create the required groups'
     ansible.builtin.group:
