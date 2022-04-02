@@ -26,6 +26,7 @@ Role: duplicity
 * Role: network
 * Role: sshd
 * Role: timezone
+* Role: yum_utils
 
 ### Changed
 * Role duplicity: Implemented massive-parallel backups.
