@@ -229,7 +229,7 @@ Modules
             register: apiresponse
           - fail:
               msg: 'version was not provided'
-            when: '"version" not in apiresponse.content'
+            when: "version" not in apiresponse.content
 
 
 Tags
