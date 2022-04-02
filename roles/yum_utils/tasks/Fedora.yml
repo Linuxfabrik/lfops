@@ -6,4 +6,4 @@
       state: 'present'
 
   tags:
-    - 'dnf_utils'
+    - 'yum_utils'
