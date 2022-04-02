@@ -1,11 +1,6 @@
 - block:
 
-  - name: 'Be sure mailx is installed'
-    ansible.builtin.package:
-      name: 'mailx'
-      state: 'present'
-
-  - name: 'Be sure mailx is installed'
+  - name: 'Install mailx package'
     ansible.builtin.package:
       name: 'bsd-mailx'
       state: 'present'

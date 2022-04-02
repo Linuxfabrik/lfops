@@ -1,6 +1,6 @@
 # Ansible Role mailx
 
-This role copies bash scripts that make sending mail easier to /root
+This role installs [mailx](http://heirloom.sourceforge.net/mailx.html) and deploys a bash wrapper script that make sending mail easier to `/root/send-mail`.
 
 FQCN: linuxfabrik.lfops.mailx
 
@@ -19,9 +19,9 @@ This role does not have any requirements.
 
 ## Tags
 
-| Tag     | What it does                                               |
-| ---     | ------------                                               |
-| mailx   | copies bash scripts that make sending mail easier to /root |
+| Tag   | What it does                              |
+| ---   | ------------                              |
+| mailx | Installs mailx and deploys wrapper script |
 
 
 ## Role Variables
