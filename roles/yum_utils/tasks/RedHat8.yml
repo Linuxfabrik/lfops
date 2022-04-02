@@ -1,0 +1,9 @@
+- block:
+
+  - name: 'Install package dnf-utils'
+    ansible.builtin.package:
+      name: 'dnf-utils'
+      state: 'present'
+
+  tags:
+    - 'dnf_utils'
