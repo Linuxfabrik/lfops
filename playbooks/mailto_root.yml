@@ -1,0 +1,12 @@
+- name: 'Configures mail to root'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_mailto_root'
+
+  roles:
+
+    - role: 'mailto_root'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]
+          or ansible_facts["distribution"] == "Fedora"
+          or ansible_facts["os_family"] == "Debian"'
