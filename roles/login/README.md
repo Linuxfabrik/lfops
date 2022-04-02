@@ -63,6 +63,7 @@ login__users: []
 
 Example:
 ```yaml
+login__users:
   - name: 'test'
     state: 'present'
     additional_groups:
