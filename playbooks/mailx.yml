@@ -1,0 +1,12 @@
+- name: 'Copies bash scripts that make sending mail easier to /root'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_mailx'
+
+  roles:
+
+    - role: 'mailx'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]
+          or ansible_facts["distribution"] == "Fedora"
+          or ansible_facts["distribution"] == "Debian"'
