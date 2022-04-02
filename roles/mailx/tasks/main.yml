@@ -1,0 +1,19 @@
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: 'platform-tasks.yml'
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Copy bash scripts that make sending mail easier to /root'
+    ansible.builtin.copy:
+      src: '{{ item }}'
+      dest: '/root/{{ item }}'
+      owner: 'root'
+      mode: 0o700
+    with_items:
+      - 'send-mail'
+
+  tags:
+    - 'mailx'
