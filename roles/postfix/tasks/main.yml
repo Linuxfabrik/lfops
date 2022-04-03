@@ -12,7 +12,7 @@
 
   - name: 'Create plain sasl_passwd file'
     ansible.builtin.template:
-      src: 'sasl_passwd.j2'
+      src: 'etc/postfix/sasl_passwd.j2'
       dest: '/etc/postfix/sasl_passwd'
       owner: 'root'
       group: 'root'

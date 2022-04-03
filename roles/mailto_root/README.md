@@ -13,8 +13,8 @@ Tested on
 
 ### Mandatory
 
-* Installed mailx. This can be done using the [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx) role.
 * Installed and configured postfix. This can be done using the [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix) role.
+* Installed mailx. This can be done using the [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx) role.
 
 
 ### Optional
@@ -49,13 +49,13 @@ mailto_root__to:
   - 'root@other.example'
 ```
 
-#### mailto_root_from
+#### mailto_root__from
 
 The sender address from which the relayed mail should be sent.
 
 Example:
 ```yaml
-mailto_root_from: 'noreply@example.com'
+mailto_root__from: 'noreply@example.com'
 ```
 
 

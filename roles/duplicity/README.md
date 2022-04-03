@@ -18,7 +18,6 @@ The role comes with the special Python wrapper script `duba` for duplicity, impl
 To start a backup, simply call `duba` (or `duba --config=/etc/duba/duba.json --command=backup`). Have a look at `duba --help` for details.
 
 
-
 ## Requirements
 
 ### Mandatory

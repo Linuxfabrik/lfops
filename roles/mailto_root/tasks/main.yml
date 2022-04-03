@@ -29,10 +29,9 @@
   - name: 'Deploy /etc/postfix/canonical'
     ansible.builtin.template:
       src: 'etc/postfix/canonical.j2'
-      path: '/etc/postfix/canonical'
-
-  - name: 'Run postmap'
-    ansible.builtin.shell: '/usr/sbin/postmap /etc/postfix/canonical'
+      dest: '/etc/postfix/canonical'
+      mode: 0o644
+    notify: 'mailto_root: postmap /etc/postfix/canonical'
 
   - name: 'Run all handlers immediately'
     ansible.builtin.meta: 'flush_handlers'
@@ -47,8 +46,8 @@
   - name: 'Send test mail to internal root (should be delivered to {{ mailto_root__to }})'
     ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to root" root'
 
-  - name: 'Send test mail to {{ mailto_root__to }}'
-    ansible.builtin.shell: 'echo "Testmail" | mail -s \"Test from $(hostname) to {{ mailto_root__to[0] }}\" {{ mailto_root__to[0] }}'
+  - name: 'Send test mail to {{ mailto_root__to[0] }}'
+    ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to {{ mailto_root__to[0] }}" {{ mailto_root__to[0] }}'
 
   tags:
     - 'mailto_root'
