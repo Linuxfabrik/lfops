@@ -14,43 +14,28 @@
     ansible.builtin.lineinfile:
       path: '/etc/aliases'
       regexp: '^#?root:'
-      line: 'root: {{ mailto_root__to }}'
+      line: 'root: {{ mailto_root__to | join(",") }}'
       state: 'present'
+    notify: 'mailto_root: newaliases'
 
-  - name: 'Run newaliases'
-    ansible.builtin.shell: '/usr/bin/newaliases'
-
-  - name: 'Enhance postfix main.cf'
+  - name: 'Adjust /etc/postfix/main.cf to use /etc/postfix/canonical'
     ansible.builtin.lineinfile:
       path: '/etc/postfix/main.cf'
       regexp: '^#?sender_canonical_maps'
       line: 'sender_canonical_maps = regexp:/etc/postfix/canonical'
       state: 'present'
-    register: 'maincf'
+    notify: 'mailto_root: reload postfix'
 
-  - name: 'Remove all other postfix canonical entries'
-    ansible.builtin.lineinfile:
+  - name: 'Deploy /etc/postfix/canonical'
+    ansible.builtin.template:
+      src: 'etc/postfix/canonical.j2'
       path: '/etc/postfix/canonical'
-      regexp: '^[^#]'
-      state: 'absent'
-    register: 'canonical_entries'
-
-  - name: 'Enhance postfix canonical'
-    ansible.builtin.lineinfile:
-      path: '/etc/postfix/canonical'
-      regexp: '^/\.\+@'
-      line: '/^.+@{{ ansible_facts["nodename"] }}(\\.local.*)?$/ {{ mailto_root__from }}'
-      state: 'present'
-    register: 'canonical'
 
   - name: 'Run postmap'
     ansible.builtin.shell: '/usr/sbin/postmap /etc/postfix/canonical'
 
-  - name: 'systemctl restart postfix'
-    ansible.builtin.systemd:
-      name: 'postfix'
-      state: 'restarted'
-    when: 'maincf.changed or canonical_entries.changed or canonical.changed'
+  - name: 'Run all handlers immediately'
+    ansible.builtin.meta: 'flush_handlers'
 
   tags:
     - 'mailto_root'
@@ -63,7 +48,7 @@
     ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to root" root'
 
   - name: 'Send test mail to {{ mailto_root__to }}'
-    ansible.builtin.shell: 'echo "Testmail" | mail -s \"Test from $(hostname) to {{ mailto_root__to }}\" {{ mailto_root__to }}'
+    ansible.builtin.shell: 'echo "Testmail" | mail -s \"Test from $(hostname) to {{ mailto_root__to[0] }}\" {{ mailto_root__to[0] }}'
 
   tags:
     - 'mailto_root'

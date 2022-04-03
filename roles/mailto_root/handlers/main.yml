@@ -1,4 +1,8 @@
-- name: 'mailto_root: restart postfix'
-  ansible.builtin.systemd:
+- name: 'mailto_root: newaliases'
+  ansible.builtin.command: '/usr/bin/newaliases'
+  notify: 'mailto_root: reload postfix'
+
+- name: 'mailto_root: reload postfix'
+  ansible.builtin.service:
     name: 'postfix'
-    state: 'restarted'
+    state: 'reloaded'
