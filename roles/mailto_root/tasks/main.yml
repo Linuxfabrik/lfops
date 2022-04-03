@@ -1,0 +1,70 @@
+- block:
+
+  - name: 'Perform platform/version specific tasks'
+    ansible.builtin.include_tasks: 'platform-tasks.yml'
+
+  tags:
+    - 'always'
+    - 'mailto_root'
+
+
+- block:
+
+  - name: 'Change root mail address'
+    ansible.builtin.lineinfile:
+      path: '/etc/aliases'
+      regexp: '^#?root:'
+      line: 'root: {{ mailto_root__to }}'
+      state: 'present'
+
+  - name: 'Run newaliases'
+    ansible.builtin.shell: '/usr/bin/newaliases'
+
+  - name: 'Enhance postfix main.cf'
+    ansible.builtin.lineinfile:
+      path: '/etc/postfix/main.cf'
+      regexp: '^#?sender_canonical_maps'
+      line: 'sender_canonical_maps = regexp:/etc/postfix/canonical'
+      state: 'present'
+    register: 'maincf'
+
+  - name: 'Remove all other postfix canonical entries'
+    ansible.builtin.lineinfile:
+      path: '/etc/postfix/canonical'
+      regexp: '^[^#]'
+      state: 'absent'
+    register: 'canonical_entries'
+
+  - name: 'Enhance postfix canonical'
+    ansible.builtin.lineinfile:
+      path: '/etc/postfix/canonical'
+      regexp: '^/\.\+@'
+      line: '/^.+@{{ ansible_facts["nodename"] }}(\\.local.*)?$/ {{ mailto_root__from }}'
+      state: 'present'
+    register: 'canonical'
+
+  - name: 'Run postmap'
+    ansible.builtin.shell: '/usr/sbin/postmap /etc/postfix/canonical'
+
+  - name: 'systemctl restart postfix'
+    ansible.builtin.systemd:
+      name: 'postfix'
+      state: 'restarted'
+    when: 'maincf.changed or canonical_entries.changed or canonical.changed'
+
+  tags:
+    - 'mailto_root'
+    - 'mailto_root:configure'
+
+
+- block:
+
+  - name: 'Send test mail to internal root (should be delivered to {{ mailto_root__to }})'
+    ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to root" root'
+
+  - name: 'Send test mail to {{ mailto_root__to }}'
+    ansible.builtin.shell: 'echo "Testmail" | mail -s \"Test from $(hostname) to {{ mailto_root__to }}\" {{ mailto_root__to }}'
+
+  tags:
+    - 'mailto_root'
+    - 'mailto_root:testmail'

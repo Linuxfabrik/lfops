@@ -1,0 +1,13 @@
+- block:
+
+  - name: 'Ensure /etc/postfix/canonical is present'
+    ansible.builtin.file:
+      path: '/etc/postfix/canonical'
+      state: 'touch'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'mailto_root'
+    - 'mailto_root:configure'

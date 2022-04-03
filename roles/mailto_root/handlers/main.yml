@@ -1,4 +1,4 @@
-- name: 'postfix: restart postfix'
+- name: 'mailto_root: restart postfix'
   ansible.builtin.systemd:
     name: 'postfix'
     state: 'restarted'

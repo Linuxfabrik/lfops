@@ -26,10 +26,11 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag                  | What it does               |
-| ---                  | ------------               |
-| mailto_root          | Configures mailto_root     |
-| mailto_root:testmail | Sends a test mail to root  |
+| Tag                    | What it does                             |
+| ---                    | ------------                             |
+| mailto_root            | Configures mailto_root                   |
+| mailto_root:configure  | Configures mailto_root without testmail  |
+| mailto_root:testmail   | Sends a test mail to root                |
 
 
 ## Role Variables
