@@ -23,6 +23,7 @@ Role: duplicity
 * Role: glances
 * Role: kdump
 * Role: login
+* Role: mailto_root
 * Role: network
 * Role: sshd
 * Role: timezone
