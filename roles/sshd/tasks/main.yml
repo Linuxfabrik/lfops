@@ -35,20 +35,20 @@
       - 'sshd__kex is defined'
     notify: 'sshd: systemctl restart sshd'
 
-  - name: 'Change PasswordAuthentication in /etc/ssh/sshd_config to {{ sshd__password_authentication }}'
+  - name: 'Change PasswordAuthentication in /etc/ssh/sshd_config to {{ sshd__password_authentication | bool | ternary("yes", "no") }}'
     ansible.builtin.lineinfile:
       path: '/etc/ssh/sshd_config'
       regexp: '^PasswordAuthentication'
-      line: 'PasswordAuthentication {{ sshd__password_authentication }}'
+      line: 'PasswordAuthentication {{ sshd__password_authentication | bool | ternary("yes", "no") }}'
       state: 'present'
       validate: '/usr/sbin/sshd -t -f %s'
     notify: 'sshd: systemctl restart sshd'
 
-  - name: 'Change UseDNS in /etc/ssh/sshd_config to {{ sshd__use_dns }}'
+  - name: 'Change UseDNS in /etc/ssh/sshd_config to {{ sshd__use_dns | bool | ternary("yes", "no") }}'
     ansible.builtin.lineinfile:
       path: '/etc/ssh/sshd_config'
       regexp: '^#?UseDNS'
-      line: 'UseDNS {{ sshd__use_dns }}'
+      line: 'UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}'
       state: 'present'
       validate: '/usr/sbin/sshd -t -f %s'
     notify: 'sshd: systemctl restart sshd'
