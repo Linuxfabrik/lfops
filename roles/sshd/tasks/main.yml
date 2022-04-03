@@ -1,8 +1,76 @@
+# (?i) case insensitive - http://docs.python.org/2/library/re.html
+# ^#?text = string starting with "text", commented or not
 - block:
 
-  - name: 'Perform platform/version specific tasks'
-    ansible.builtin.include_tasks: 'platform-tasks.yml'
+  - name: 'Change Ciphers in /etc/ssh/sshd_config to {{ sshd__ciphers }}'
+    ansible.builtin.lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^#?Ciphers'
+      line: 'Ciphers {{ sshd__ciphers }}'
+      state: 'present'
+      validate: '/usr/sbin/sshd -t -f %s'
+    when:
+      - 'sshd__ciphers is defined'
+    notify: 'sshd: systemctl restart sshd'
+
+  - name: 'Change MACs in /etc/ssh/sshd_config to {{ sshd__macs }}'
+    ansible.builtin.lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^#?MACS'
+      line: 'MACs {{ sshd__macs }}'
+      state: 'present'
+      validate: '/usr/sbin/sshd -t -f %s'
+    when:
+      - 'sshd__macs is defined'
+    notify: 'sshd: systemctl restart sshd'
+
+  - name: 'Change KexAlgorithms in /etc/ssh/sshd_config to {{ sshd__kex }}'
+    ansible.builtin.lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^#?KexAlgorithms'
+      line: 'KexAlgorithms {{ sshd__kex }}'
+      state: 'present'
+      validate: '/usr/sbin/sshd -t -f %s'
+    when:
+      - 'sshd__kex is defined'
+    notify: 'sshd: systemctl restart sshd'
+
+  - name: 'Change PasswordAuthentication in /etc/ssh/sshd_config to {{ sshd__password_authentication }}'
+    ansible.builtin.lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^PasswordAuthentication'
+      line: 'PasswordAuthentication {{ sshd__password_authentication }}'
+      state: 'present'
+      validate: '/usr/sbin/sshd -t -f %s'
+    notify: 'sshd: systemctl restart sshd'
+
+  - name: 'Change UseDNS in /etc/ssh/sshd_config to {{ sshd__use_dns }}'
+    ansible.builtin.lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^#?UseDNS'
+      line: 'UseDNS {{ sshd__use_dns }}'
+      state: 'present'
+      validate: '/usr/sbin/sshd -t -f %s'
+    notify: 'sshd: systemctl restart sshd'
 
   tags:
-    - 'always'
     - 'sshd'
+    - 'sshd:configure'
+
+- block:
+
+  - name: 'systemctl: sshd enabled = {{ sshd__service_enabled }}'
+    ansible.builtin.systemd:
+      name: 'sshd.service'
+      enabled: '{{ sshd__service_enabled }}'
+
+  - name: 'systemctl: sshd state = {{ sshd__service_state }}'
+    ansible.builtin.systemd:
+      name: 'sshd.service'
+      state: '{{ sshd__service_state }}'
+    register: 'sshd__systemctl_result'
+
+  tags:
+    - 'sshd'
+    - 'sshd:configure'
+    - 'sshd:systemctl'
