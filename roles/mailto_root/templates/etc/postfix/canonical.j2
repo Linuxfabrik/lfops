@@ -1,0 +1,4 @@
+# {{ ansible_managed }}
+# 2022040301
+
+/^.+@{{ ansible_facts['nodename'] }}(\\.local.*)?$/ {{ mailto_root__from }}
