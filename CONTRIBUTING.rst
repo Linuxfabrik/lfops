@@ -20,9 +20,11 @@ Rules of Thumb
             failed_when: mariadb_new_dba_result.rc != 0 and mariadb_new_dba_result.stderr is not match('ERROR \d+ \(28000\).*')
 
 * If a role was run without tags, it should deliver a completely installed application (assuming it installs an application).
-* Do not over-engineer the role during the development - it should fulfill its use case but can grow and be improved on later.
+* Do not over-engineer the role during the development - it should fulfill its use case, but can grow and be improved on later.
 * The role should support the installation and configuration of multiple major versions of the software. For example, PHP 7.1, 7.2, 7.3 etc. should all be supported by a single role. Upgrades are either done manually or using Ansible, depending on the software and the implementation effort.
+* Do not use role dependencies via meta/main.yml``. Dependencies make it harder to maintain a role, especially if it has many complex dependencies.
 * Document all changes in the `CHANGELOG.md <https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md>`_ file.
+
 
 Pre-Commit
 ----------
