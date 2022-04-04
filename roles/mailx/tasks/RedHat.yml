@@ -1,9 +1,0 @@
-- block:
-
-  - name: 'Install mailx package'
-    ansible.builtin.package:
-      name: 'mailx'
-      state: 'present'
-
-  tags:
-    - 'mailx'

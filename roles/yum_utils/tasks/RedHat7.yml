@@ -1,9 +1,0 @@
-- block:
-
-  - name: 'Install package yum-utils'
-    ansible.builtin.package:
-      name: 'yum-utils'
-      state: 'present'
-
-  tags:
-    - 'yum_utils'

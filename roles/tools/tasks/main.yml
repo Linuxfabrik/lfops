@@ -4,6 +4,7 @@
     ansible.builtin.package:
       name:
         - 'bash-completion'
+        - 'iftop'
         - 'lsof'
         - 'nano'
         - 'rsync'
@@ -26,9 +27,3 @@
 
   tags:
     - 'tools'
-
-
-- name: 'Perform platform/version specific tasks'
-  ansible.builtin.include_tasks: 'platform-tasks.yml'
-  tags:
-    - 'always'

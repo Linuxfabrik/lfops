@@ -1,8 +1,17 @@
-- block:
-
-  - name: 'Perform platform/version specific tasks'
-    ansible.builtin.include_tasks: 'platform-tasks.yml'
-
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
   tags:
     - 'always'
+
+
+- block:
+
+  - name: 'Install package {{ yum_utils__package }}'
+    ansible.builtin.package:
+      name: '{{ yum_utils__package }}'
+      state: 'present'
+
+  tags:
     - 'yum_utils'

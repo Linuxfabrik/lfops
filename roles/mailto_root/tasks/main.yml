@@ -1,15 +1,5 @@
 - block:
 
-  - name: 'Perform platform/version specific tasks'
-    ansible.builtin.include_tasks: 'platform-tasks.yml'
-
-  tags:
-    - 'always'
-    - 'mailto_root'
-
-
-- block:
-
   - name: 'Change root mail address'
     ansible.builtin.lineinfile:
       path: '/etc/aliases'
@@ -43,10 +33,10 @@
 
 - block:
 
-  - name: 'Send test mail to internal root (should be delivered to {{ mailto_root__to }})'
+  - name: 'Send test mail to internal root (should be delivered to {{ mailto_root__to }})' # noqa no-changed-when
     ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to root" root'
 
-  - name: 'Send test mail to {{ mailto_root__to[0] }}'
+  - name: 'Send test mail to {{ mailto_root__to[0] }}' # noqa no-changed-when
     ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to {{ mailto_root__to[0] }}" {{ mailto_root__to[0] }}'
 
   tags:

@@ -260,17 +260,28 @@ Assume you have the following OS-specific task files, in order of most specific 
 * ``tasks/RedHat.yml``
 * ``tasks/main.yml``
 
-Now, if you run Ansible against a *CentOS 7.9* host, for example, only these tasks are processed by ``platform-tasks.yml`` in the following order :
+Now, if you run Ansible against a *CentOS 7.9* host, for example, only these tasks are processed in the following order:
 
 1. ``tasks/CentOS7.yml``
 2. ``tasks/main.yml``
 
-Include the ``platform-tasks.yml`` in the ``tasks/main.yml`` like this:
+Include the OS-specific tasks in the ``tasks/main.yml`` like this:
 
 .. code-block:: yaml
 
     - name: 'Perform platform/version specific tasks'
-      ansible.builtin.include_tasks: 'platform-tasks.yml'
+      ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+      vars:
+        __task_file:
+          files:
+            - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+            - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+            - '{{ ansible_facts["distribution"] }}.yml'
+            - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+            - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+            - '{{ ansible_facts["os_family"] }}.yml'
+          paths:
+            - '{{ role_path }}/tasks'
       tags:
         - 'always'
 
@@ -294,7 +305,9 @@ Include the ``platform-variables.yml`` in the ``tasks/main.yml`` like this:
 .. code-block:: yaml
 
     - name: 'Set platform/version specific variables'
-      ansible.builtin.include_tasks: 'platform-variables.yml'
+      ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'platform-variables.yml'
       tags:
         - 'always'
 

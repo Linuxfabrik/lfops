@@ -1,9 +1,0 @@
-- block:
-
-  - name: 'Install package dnf-utils'
-    ansible.builtin.package:
-      name: 'dnf-utils'
-      state: 'present'
-
-  tags:
-    - 'yum_utils'
