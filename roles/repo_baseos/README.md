@@ -1,38 +1,30 @@
-# Ansible Role python_venv
+# Ansible Role repo_baseos
 
-This role creates and manages various [Python 3 virtual environments (venv)](https://docs.python.org/3/library/venv.html). These are placed below `/opt/python-venv/` on the target system.
+This role deploys the BaseOS repositories, which can be used to set a custom mirror server.
 
-FQCN: linuxfabrik.lfops.python_venv
+FQCN: linuxfabrik.lfops.repo_baseos
 
 Tested on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
-* Fedora 35
 
 
 ## Requirements
 
-### Mandatory
-
-* Install Python 3
-
-
-### Optional
-
-This role does not have any optional requirements.
+This role does not have any requirements.
 
 
 ## Tags
 
-| Tag         | What it does                                 |
-| ---         | ------------                                 |
-| python_venv | Creates and manages the virtual environments |
+| Tag         | What it does                    |
+| ---         | ------------                    |
+| repo_baseos | Deploys the BaseOS repositories |
 
 
 ## Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/python_venv/defaults/main.yml) for the variable defaults.
+Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/repo_baseos/defaults/main.yml) for the variable defaults.
 
 
 ### Mandatory
@@ -42,39 +34,13 @@ This role does not have any mandatory variables.
 
 ### Optional
 
-#### python_venv__host_venvs / python_venv__group_venvs
+#### repo_baseos__mirror_url
 
-These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
-
-Dictionary containing definitions for the virtual environments.
-
-Subkeys:
-
-* `exposed_binaries`: Optional, list. List of binaries which should be linked to `/usr/local/bin` for easier access on the command line. The binaries are expected to exist below `/opt/python-venv/name/bin/`.
-* `name`: Mandatory, string. The name of the virtual environment. Will be used for the folder name below `/opt/python-venv`.
-* `package_requirements`: Optional, list. These packages will be installed before installing the pip `packages` using the default package manager (e.g. `dnf`).
-* `packages`: Mandatory, list. These packages will be installed in the virtual environment using `pip`.
-* `system_site_packages`:  Optional, boolean. Defaults to `true`. Allows the virtual environment to access the system site-packages dir.
+Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles, or else to `''`.
 
 Default:
 ```yaml
-python_venv__host_venvs: []
-python_venv__group_venvs: []
-```
-
-Example:
-```yaml
-python_venv__host_venvs:
-  - name: 'duplicity'
-    packages:
-      - 'duplicity'
-      - 'python-swiftclient'
-      - 'python-keystoneclient'
-    package_requirements:
-      - 'gcc'
-      - 'librsync-devel'
-    exposed_binaries:
-      - 'duplicity'
+repo_baseos__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
 ```
 
 
