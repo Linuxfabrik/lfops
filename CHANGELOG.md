@@ -22,6 +22,7 @@ Role: duplicity
 * Role: firewall
 * Role: glances
 * Role: kdump
+* Role: libselinux_python
 * Role: login
 * Role: mailto_root
 * Role: network

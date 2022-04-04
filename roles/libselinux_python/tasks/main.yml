@@ -1,0 +1,12 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.include_tasks: 'platform-variables.yml'
+
+  - name: 'Make sure SELinux python bindings are installed'
+    yum:
+      name: '{{ libselinux_python__package }}'
+      state: 'present'
+
+  tags:
+    - 'libselinux_python'
