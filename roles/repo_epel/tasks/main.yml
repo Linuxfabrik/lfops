@@ -27,7 +27,7 @@
   - name: 'deploy the repo files (mirror: {{ repo_epel__mirror_url | default("") }})'
     ansible.builtin.template:
       src: '{{ item }}.j2'
-      dest: '/etc/yum.repos.d/{{ item | basename | trim(".j2") }}'
+      dest: '/etc/yum.repos.d/{{ item | basename }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
