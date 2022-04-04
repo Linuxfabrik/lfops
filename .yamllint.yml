@@ -9,9 +9,6 @@ rules:
   comments:
     min-spaces-from-content: 1
 
-  comments-indentation:
-    level: 'warning'
-
   document-start: 'disable'
 
   empty-values: 'enable'
