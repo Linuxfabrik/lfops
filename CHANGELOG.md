@@ -25,6 +25,7 @@ Role: duplicity
 * Role: login
 * Role: mailto_root
 * Role: network
+* Role: repo_baseos
 * Role: sshd
 * Role: timezone
 * Role: yum_utils
