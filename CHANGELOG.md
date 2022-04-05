@@ -14,6 +14,9 @@ Role: duplicity
 * Changed the format of `duplicity__host_backup_sources`.
 
 ### Added
+
+New features:
+
 * This CHANGELOG.
 * Role: at
 * Role: cockpit
@@ -33,6 +36,9 @@ Role: duplicity
 * Role: yum_utils
 
 ### Changed
+
+Changes in existing functionality:
+
 * Role duplicity: Implemented massive-parallel backups.
 
 
