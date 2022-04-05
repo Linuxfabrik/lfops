@@ -72,6 +72,13 @@
       group: 'root'
       mode: 0o644
 
+  - name: 'Deploy /etc/logrotate.d/duplicity'
+    ansible.builtin.template:
+      src: 'etc/logrotate.d/duplicity.j2'
+      dest: '/etc/logrotate.d/duplicity'
+      owner: 'root'
+      mode: 0o644
+
   tags:
     - 'duplicity'
     - 'duplicity:configure'
