@@ -71,6 +71,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'duplicity: systemctl daemon-reload'
 
   - name: 'Deploy /etc/logrotate.d/duplicity'
     ansible.builtin.template:
