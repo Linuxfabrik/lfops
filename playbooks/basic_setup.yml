@@ -109,29 +109,29 @@
       when:
         - 'not basic_setup__skip_monitoring_plugins | d(false)'
 
-    # - role: 'linuxfabrik.lfops.repo-icinga2' TODO
-    #   when:
-    #     - not basic_setup__skip_repo_icinga2 | d(false)
+    - role: 'linuxfabrik.lfops.repo_icinga'
+      when:
+        - 'not basic_setup__skip_repo_icinga | d(false)'
 
     # - role: 'linuxfabrik.lfops.icinga2-agent' TODO
     #   when:
-    #     - not basic_setup__skip_icinga2_agent | d(false)
+    #     - 'not basic_setup__skip_icinga2_agent | d(false)'
 
     # - role: 'linuxfabrik.lfops.icinga2-log-level' TODO
     #   when:
-    #     - not basic_setup__skip_icinga2_log_level | d(false)
+    #     - 'not basic_setup__skip_icinga2_log_level | d(false)'
 
 
     # === Security ===
     # - role: 'linuxfabrik.lfops.freeipa-client' TODO
     #   when:
-    #     - not basic_setup__skip_freeipa_client | d(true)
+    #     - 'not basic_setup__skip_freeipa_client | d(true)'
 
     # - role: 'linuxfabrik.lfops.audit' TODO
     #   when:
-    #     - not basic_setup__skip_audit | d(true)
+    #     - 'not basic_setup__skip_audit | d(true)'
 
     # lower the FUTURE policy to FUTURE:LINUXFABRIK first, otherwise linuxfabrik.lfops.repo_epel and other things won't work
     # - role: 'linuxfabrik.lfops.crypto-policy' TODO
     #   when:
-    #     - not basic_setup__skip_crypto_policy | d(true)
+    #     - 'not basic_setup__skip_crypto_policy | d(true)'

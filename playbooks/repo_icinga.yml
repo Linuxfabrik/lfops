@@ -1,0 +1,8 @@
+- name: 'Manage and configure the Icinga Package Repository'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_repo_icinga'
+
+  roles:
+
+    - role: 'repo_icinga'
