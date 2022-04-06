@@ -71,7 +71,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify: 'duplicity: systemctl daemon-reload'
+    register: 'duplicity__systemd_duba_timer_result'
 
   - name: 'Deploy /etc/logrotate.d/duplicity'
     ansible.builtin.template:
@@ -107,7 +107,7 @@
       name: 'duba.timer'
       state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ duplicity__timer_enabled }}'
-      daemon_reload: true
+      daemon_reload: 'duplicity__systemd_duba_timer_result is changed'
 
   tags:
     - 'duplicity'

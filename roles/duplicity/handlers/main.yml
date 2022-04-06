@@ -1,3 +1,0 @@
-- name: 'duplicity: systemctl daemon-reload'
-  ansible.builtin.systemd:
-    daemon_reload: True
