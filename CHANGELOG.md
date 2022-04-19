@@ -24,6 +24,7 @@ New features:
 * Role: exoscale_vm
 * Role: firewall
 * Role: glances
+* Role: hetzner_vm
 * Role: kdump
 * Role: libselinux_python
 * Role: login
