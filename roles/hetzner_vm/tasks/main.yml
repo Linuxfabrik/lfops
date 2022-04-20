@@ -1,18 +1,5 @@
 - block:
 
-  - name: 'Manage the Volumes at Hetzner'
-    hetzner.hcloud.hcloud_volume:
-      api_token: '{{ hetzner_vm__api_token }}'
-      automount: false
-      name: '{{ item.name }}'
-      location: '{{ hetzner_vm__location }}'
-      size: '{{ item.size }}'
-      format: '{{ item.format | default("xfs") }}'
-      state: '{{ item.state | default("present") }}'
-    loop: '{{ hetzner_vm__volumes }}'
-    connection: 'local'
-    register: 'hetzner_vm__volumes_result'
-
   - name: 'Manage the VMs at Hetzner'
     hetzner.hcloud.hcloud_server:
       api_token: '{{ hetzner_vm__api_token }}'
@@ -22,14 +9,23 @@
       name: '{{ hetzner_vm__name }}'
       server_type: '{{ hetzner_vm__server_type }}'
       ssh_keys: '{{ hetzner_vm__ssh_keys }}'
-      volumes: >-
-        {{ hetzner_vm__volumes_result["results"]
-          | selectattr("hcloud_volume", "iterable")
-          | map(attribute="hcloud_volume")
-          | map(attribute="id")
-        }}
+      force: '{{ hetzner_vm__force }}'
+      upgrade_disk: '{{ hetzner_vm__upgrade_disk }}'
       state: '{{ hetzner_vm__state }}'
     connection: 'local'
+
+  - name: 'Manage the Volumes at Hetzner'
+    hetzner.hcloud.hcloud_volume:
+      api_token: '{{ hetzner_vm__api_token }}'
+      automount: false
+      name: '{{ item.name }}'
+      size: '{{ item.size }}'
+      format: '{{ item.format | default("xfs") }}'
+      server: '{{ hetzner_vm__name }}'
+      state: '{{ item.state | default("present") }}'
+    loop: '{{ hetzner_vm__volumes }}'
+    connection: 'local'
+    register: 'hetzner_vm__volumes_result'
 
   tags:
     - 'hetzner_vm'

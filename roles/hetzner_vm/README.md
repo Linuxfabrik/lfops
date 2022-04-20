@@ -57,7 +57,7 @@ hetzner_vm__image: 'rocky-8'
 ```
 
 
-##### hetzner_vm__location
+#### hetzner_vm__location
 
 The Hetzner location the instance should run in. The possible options can be obtained using `hcloud location list`.
 
@@ -67,9 +67,9 @@ hetzner_vm__location: 'nbg1'
 ```
 
 
-##### hetzner_vm__service_offering
+#### hetzner_vm__server_type
 
-The Hetzner server type. The possible options can be obtained using `hcloud server-type list`.
+The Hetzner server type. The possible options can be obtained using `hcloud server-type list`. Note that you cannot upgrade a running instance. Either stop the instance using `hetzner_vm__state: 'stopped'` or set `hetzner_vm__force: true`.
 
 Example:
 ```yaml
@@ -96,13 +96,33 @@ hetzner_vm__state: 'started'
 ```
 
 
+#### hetzner_vm__force
+
+Force the update of the server. This may power off the server. The rescaling process will usually take just a few minutes. Also have a look at `hetzner_vm__upgrade_disk`.
+
+Default:
+```yaml
+hetzner_vm__force: false
+```
+
+
+#### hetzner_vm__upgrade_disk
+
+Resize the disk when resizing the server. This will prevent downgrades to a `hetzner_vm__server_type` with a smaller disk later on, as the disk cannot be shrunk.
+
+Default:
+```yaml
+hetzner_vm__upgrade_disk: false
+```
+
+
 #### hetzner_vm__volumes
 
 Dictionary of volumes that should be managed and attached to this server.
 
 Subkeys:
 * `name`: Mandatory, string. The name of the volume.
-* `size`: Mandatory, integer. The size in GBs. Has to be higher than 10.
+* `size`: Mandatory, integer. The size in GBs. Has to be higher than 10. Note that shrinking of volumes is not supported.
 * `format`: Optional, string. The format of the volume. Possible options: `xfs`, `ext4`.
 * `state`: Optional, string. Defaults to `present`. The state of the volume. Possible options: `present`, `absent`.
 
