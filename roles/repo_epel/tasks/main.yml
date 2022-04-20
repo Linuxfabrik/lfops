@@ -8,7 +8,7 @@
 
 - block:
 
-  - name: 'yum -y install epel-release'
+  - name: 'dnf -y install epel-release'
     ansible.builtin.package:
       name: 'epel-release'
       state: 'present'

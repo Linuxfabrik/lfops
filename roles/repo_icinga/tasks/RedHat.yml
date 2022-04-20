@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'yum -y install {{ repo_icinga__rpm_release_url }}'
+  - name: 'dnf -y install {{ repo_icinga__rpm_release_url }}'
     ansible.builtin.dnf:
       name: '{{ repo_icinga__rpm_release_url }}'
       state: 'present'
