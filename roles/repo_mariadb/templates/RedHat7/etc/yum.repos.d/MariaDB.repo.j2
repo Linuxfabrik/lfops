@@ -1,0 +1,46 @@
+# {{ ansible_managed }}
+# 2022042001
+
+[mariadb-main]
+name = MariaDB Server
+{% if mirror_url is defined and mirror_url|length %}
+baseurl = {{ mirror_url }}/MariaDB/mariadb-{{ repo_mariadb__version }}/yum/rhel/7/x86_64
+{% else %}
+baseurl = https://downloads.mariadb.com/MariaDB/mariadb-{{ repo_mariadb__version }}/yum/rhel/$releasever/$basearch
+{% endif %}
+gpgkey = file:///etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY
+gpgcheck = 1
+enabled = 1
+{% if repo_outbound_proxy is defined and repo_outbound_proxy|length %}
+proxy = {{ repo_outbound_proxy }}
+{% endif %}
+
+[mariadb-maxscale]
+# To use the latest stable release of MaxScale, use "latest" as the version
+# To use the latest beta (or stable if no current beta) release of MaxScale, use "beta" as the version
+name = MariaDB MaxScale
+{% if mirror_url is defined and mirror_url|length %}
+baseurl = {{ mirror_url }}/MariaDB/MaxScale/2.4/centos/7/x86_64
+{% else %}
+baseurl = https://downloads.mariadb.com/MaxScale/2.4/centos/$releasever/$basearch
+{% endif %}
+gpgkey = file:///etc/pki/rpm-gpg/MariaDB-MaxScale-GPG-KEY
+gpgcheck = 1
+enabled = 1
+{% if repo_outbound_proxy is defined and repo_outbound_proxy|length %}
+proxy = {{ repo_outbound_proxy }}
+{% endif %}
+
+[mariadb-tools]
+name = MariaDB Tools
+{% if mirror_url is defined and mirror_url|length %}
+baseurl = {{ mirror_url }}/MariaDB/Tools/rhel/7/x86_64
+{% else %}
+baseurl = https://downloads.mariadb.com/Tools/rhel/$releasever/$basearch
+{% endif %}
+gpgkey = file:///etc/pki/rpm-gpg/MariaDB-Enterprise-GPG-KEY
+gpgcheck = 1
+enabled = 1
+{% if repo_outbound_proxy is defined and repo_outbound_proxy|length %}
+proxy = {{ repo_outbound_proxy }}
+{% endif %}
