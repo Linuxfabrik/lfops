@@ -63,6 +63,11 @@
 
 - block:
 
+  - name: 'Make sure iptables is installed (required for fwb)'
+    ansible.builtin.package:
+      name: 'iptables'
+      state: 'present'
+
   - name: 'Deploy fwbuilder systemd service file'
     ansible.builtin.template:
       src: 'etc/systemd/system/fwb.service.j2'
