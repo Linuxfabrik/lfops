@@ -3,7 +3,9 @@ maridb_server__state: 'started'
 
 mariadb_server__admin_host: 'localhost'
 
+mariadb_server__dump_directory: '/backup/mariadb-dump'
 mariadb_server__dump_mydumper_package: 'mydumper'
+mariadb_server__dump_threads: 4
 
 mariadb_server__dump_user_host: 'localhost'
 mariadb_server__dump_user_priv:

@@ -6,9 +6,8 @@
 # {{ ansible_managed }}
 # 2022042101
 
-# TODO
-HOST='{{ mariadb_dump_user.host | default('localhost') }}'
-USER='{{ mariadb_dump_user.user | default('mariadb-backup') }}'
-PASSWORD='{{ mariadb_dump_user.password | default('') }}'
-BACKUP_DIR='{{ mariadb_dump_options.dir | default('/backup/mariadb-dump') }}'
-THREADS='{{ mariadb_dump_options.threads | default('4') }}'
+HOST='{{ mariadb_server__dump_user_host }}'
+USER='{{ mariadb_server__dump_login.username }}'
+PASSWORD='{{ mariadb_server__dump_login.password }}'
+BACKUP_DIR='{{ mariadb_server__dump_directory }}'
+THREADS='{{ mariadb_server__dump_threads }}'

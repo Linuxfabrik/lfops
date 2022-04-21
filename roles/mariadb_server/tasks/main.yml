@@ -174,7 +174,7 @@
 - block:
 
   - name: 'grant backup privileges on dbs.tables to {{ mariadb_server__monitoring_login.username }}@{{ mariadb_server__monitoring_user_host }}'
-    mariadb_user:
+    linuxfabrik.lfops.mariadb_user:
       login_user: "{{ mariadb_server__admin_login.username }}"
       login_password: "{{ mariadb_server__admin_login.password }}"
       user: "{{ mariadb_server__monitoring_login.username }}"
@@ -252,7 +252,7 @@
 - block:
 
   - name: 'Create, update or delete MariaDB users'
-    mariadb_user: # TODO, fqcn?
+    linuxfabrik.lfops.mariadb_user:
       login_user: "{{ mariadb_server__admin_login.username }}"
       login_password: "{{ mariadb_server__admin_login.password }}"
       user: "{{ item.username }}"
