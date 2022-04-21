@@ -68,6 +68,9 @@
           or (ansible_facts["distribution"] == "Fedora")'
 
     - role: 'linuxfabrik.lfops.kdump'
+      # not running against fedora, because fedora has no kdump by default
+      when:
+        - 'ansible_facts["distribution"] != "Fedora"'
 
     - role: 'linuxfabrik.lfops.network'
       # not running against fedora, as fedora requires NetworkManager
