@@ -18,6 +18,7 @@ Role: duplicity
 New features:
 
 * This CHANGELOG.
+
 * Role: at
 * Role: cockpit
 * Role: dnf_makecache
@@ -29,6 +30,7 @@ New features:
 * Role: libselinux_python
 * Role: login
 * Role: mailto_root
+* Role: mariadb_server
 * Role: network
 * Role: repo_baseos
 * Role: repo_icinga
@@ -36,6 +38,8 @@ New features:
 * Role: sshd
 * Role: timezone
 * Role: yum_utils
+
+* Module: mariadb_user
 
 ### Changed
 

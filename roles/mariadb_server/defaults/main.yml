@@ -1,0 +1,57 @@
+mariadb_server__enabled: true
+maridb_server__state: 'started'
+
+mariadb_server__admin_host: 'localhost'
+
+mariadb_server__dump_mydumper_package: 'mydumper'
+
+mariadb_server__dump_user_host: 'localhost'
+mariadb_server__dump_user_priv:
+  - '*.*:usage'
+mariadb_server__dump_user_state: 'present'
+
+mariadb_server__monitoring_user_host: 'localhost'
+mariadb_server__monitoring_user_priv:
+  - '*.*:usage'
+mariadb_server__monitoring_user_state: 'present'
+
+mariadb_server__python__dependent_modules:
+  - 'python3-PyMySQL'
+
+# Defaults that Linuxfabrik finds useful
+# 10.5 settings
+mariadb_server__10_5_character_set_server: 'utf8mb4'
+mariadb_server__10_5_collation_server: 'utf8mb4_unicode_ci'
+mariadb_server__10_5_expire_logs_days: 14
+mariadb_server__10_5_innodb_file_per_table: 'ON'
+mariadb_server__10_5_innodb_io_capacity: 400
+mariadb_server__10_5_join_buffer_size: '1M'
+mariadb_server__10_5_max_allowed_packet: '32M'
+mariadb_server__10_5_max_connections: 151
+mariadb_server__10_5_max_heap_table_size: '64M'
+mariadb_server__10_5_performance_schema: 'ON'
+mariadb_server__10_5_query_cache_limit: '4M'
+mariadb_server__10_5_query_cache_size: 0
+mariadb_server__10_5_query_cache_type: 'OFF'
+mariadb_server__10_5_skip_name_resolve: 'OFF'
+mariadb_server__10_5_tmp_table_size: '64M'
+
+# Defaults that Linuxfabrik finds useful
+# 10.6 settings
+mariadb_server__10_6_character_set_server: 'utf8mb4'
+mariadb_server__10_6_collation_server: 'utf8mb4_unicode_ci'
+mariadb_server__10_6_expire_logs_days: 14
+mariadb_server__10_6_innodb_file_per_table: 'ON'
+mariadb_server__10_6_innodb_io_capacity: 400
+mariadb_server__10_6_join_buffer_size: '1M'
+mariadb_server__10_6_max_allowed_packet: '32M'
+mariadb_server__10_6_max_connections: 151
+mariadb_server__10_6_max_heap_table_size: '64M'
+mariadb_server__10_6_performance_schema: 'ON'
+mariadb_server__10_6_query_cache_limit: '4M'
+mariadb_server__10_6_query_cache_size: 0
+mariadb_server__10_6_query_cache_type: 'OFF'
+mariadb_server__10_6_skip_name_resolve: 'OFF'
+mariadb_server__10_6_tmp_table_size: '64M'
+mariadb_server__10_6_innodb_flush_log_at_trx_commit: 1
+mariadb_server__10_6_lower_case_table_names: 0

@@ -1,0 +1,14 @@
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
+
+# {{ ansible_managed }}
+# 2022042101
+
+# TODO
+HOST='{{ mariadb_dump_user.host | default('localhost') }}'
+USER='{{ mariadb_dump_user.user | default('mariadb-backup') }}'
+PASSWORD='{{ mariadb_dump_user.password | default('') }}'
+BACKUP_DIR='{{ mariadb_dump_options.dir | default('/backup/mariadb-dump') }}'
+THREADS='{{ mariadb_dump_options.threads | default('4') }}'

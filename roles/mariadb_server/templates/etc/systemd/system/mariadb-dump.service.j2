@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2020112301
+
+[Unit]
+Description=mariadbdump Service
+
+[Service]
+ExecStart=/usr/local/bin/mariadb-dump
+Type=oneshot
+User=root
+
+[Install]
+WantedBy=basic.target
