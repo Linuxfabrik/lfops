@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2022040501
+# 2022042201
 
 [icinga-stable-release]
 name=ICINGA (stable release for epel)
 {% if repo_icinga__mirror_url is defined and repo_icinga__mirror_url|length %}
-baseurl={{ repo_icinga__mirror_url }}/icinga/epel/$releasever/release/
+baseurl={{ repo_icinga__mirror_url }}/{{ repo_icinga__release_url_suffix }}
 {% else %}
-baseurl=http://packages.icinga.com/epel/$releasever/release/
+baseurl=https://packages.icinga.com/{{ repo_icinga__release_url_suffix }}
 {% endif %}
 enabled=1
 gpgcheck=1

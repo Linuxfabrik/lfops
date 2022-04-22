@@ -4,9 +4,9 @@
 [icinga-snapshot-builds]
 name=ICINGA (snapshot builds for epel)
 {% if repo_icinga__mirror_url is defined and repo_icinga__mirror_url|length %}
-baseurl={{ repo_icinga__mirror_url }}/icinga/epel/$releasever/snapshot/
+baseurl={{ repo_icinga__mirror_url }}/{{ repo_icinga__snapshot_url_suffix }}
 {% else %}
-baseurl=http://packages.icinga.com/epel/$releasever/snapshot/
+baseurl=https://packages.icinga.com/{{ repo_icinga__snapshot_url_suffix }}
 {% endif %}
 enabled=0
 gpgcheck=1
