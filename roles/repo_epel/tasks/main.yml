@@ -1,18 +1,14 @@
-- block:
-
-  - name: 'Set platform/version specific variables'
-    ansible.builtin.include_tasks: 'platform-variables.yml'
-
-  - name: 'Perform platform/version specific tasks'
-    ansible.builtin.include_tasks: 'platform-tasks.yml'
-
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
   tags:
-    - 'repo_epel'
+    - 'always'
 
 
 - block:
 
-  - name: 'yum -y install epel-release'
+  - name: 'dnf -y install epel-release'
     ansible.builtin.package:
       name: 'epel-release'
       state: 'present'
@@ -27,7 +23,7 @@
   - name: 'deploy the repo files (mirror: {{ repo_epel__mirror_url | default("") }})'
     ansible.builtin.template:
       src: '{{ item }}.j2'
-      dest: '/etc/yum.repos.d/{{ item | basename | trim(".j2") }}'
+      dest: '/etc/yum.repos.d/{{ item | basename }}'
       owner: 'root'
       group: 'root'
       mode: 0o644

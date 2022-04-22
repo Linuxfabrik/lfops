@@ -18,7 +18,6 @@ The role comes with the special Python wrapper script `duba` for duplicity, impl
 To start a backup, simply call `duba` (or `duba --config=/etc/duba/duba.json --command=backup`). Have a look at `duba --help` for details.
 
 
-
 ## Requirements
 
 ### Mandatory
@@ -134,7 +133,7 @@ The backup destination. This will be used in combination with the backup source 
 
 Default:
 ```yaml
-duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container|trim("/") }}'
+duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | trim("/") }}'
 ```
 
 
@@ -228,7 +227,7 @@ The `OnCalendar` definition for the daily systemd timer. Have a look at `man sys
 
 Default:
 ```yaml
-duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45|random(seed=inventory_hostname) }}'
+duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45 | random(seed=inventory_hostname) }}'
 ```
 
 
@@ -245,6 +244,16 @@ Set the loglevel. Possible options:
 Default:
 ```yaml
 duplicity__loglevel: 'notice'
+```
+
+
+#### duplicity__logrotate
+
+Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space).
+
+Default:
+```yaml
+duplicity__logrotate: 14
 ```
 
 

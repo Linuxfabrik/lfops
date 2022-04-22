@@ -1,0 +1,50 @@
+- block:
+
+  - name: 'dnf -y install {{ repo_icinga__rpm_release_url }}'
+    ansible.builtin.dnf:
+      name: '{{ repo_icinga__rpm_release_url }}'
+      state: 'present'
+      disable_gpg_check: true
+
+  when:
+    - 'repo_icinga__mirror_url is not defined or not repo_icinga__mirror_url | length'
+  tags:
+    - 'repo_icinga'
+
+
+- block:
+
+  - name: 'deploy the icinga-release repo (mirror: {{ repo_icinga__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/ICINGA-release.repo.j2'
+      dest: '/etc/yum.repos.d/ICINGA-release.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'deploy the icinga-snapshot repo (mirror: {{ repo_icinga__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/ICINGA-snapshot.repo.j2'
+      dest: '/etc/yum.repos.d/ICINGA-snapshot.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'curl https://packages.icinga.com/icinga.key -O /tmp/ansible.RPM-GPG-KEY-ICINGA'
+    ansible.builtin.get_url:
+      url: 'https://packages.icinga.com/icinga.key'
+      dest: '/tmp/ansible.RPM-GPG-KEY-ICINGA'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.RPM-GPG-KEY-ICINGA to /etc/pki/rpm-gpg/RPM-GPG-KEY-ICINGA'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.RPM-GPG-KEY-ICINGA'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-ICINGA'
+
+  when:
+    - 'repo_icinga__mirror_url is defined'
+    - 'repo_icinga__mirror_url | length'
+  tags:
+    - 'repo_icinga'

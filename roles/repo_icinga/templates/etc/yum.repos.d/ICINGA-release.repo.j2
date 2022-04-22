@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2022040501
+
+[icinga-stable-release]
+name=ICINGA (stable release for epel)
+{% if repo_icinga__mirror_url is defined and repo_icinga__mirror_url|length %}
+baseurl={{ repo_icinga__mirror_url }}/icinga/epel/$releasever/release/
+{% else %}
+baseurl=http://packages.icinga.com/epel/$releasever/release/
+{% endif %}
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ICINGA

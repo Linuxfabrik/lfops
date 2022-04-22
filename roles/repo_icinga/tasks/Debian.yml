@@ -1,0 +1,37 @@
+- block:
+
+  - name: 'apt install apt-transport-https python-apt'
+    ansible.builtin.apt:
+      name:
+        - 'apt-transport-https'
+        - 'python-apt'
+      state: 'present'
+
+  - name: 'Add Apt signing key for icinga repository'
+    ansible.builtin.apt_key:
+      url: 'https://packages.icinga.com/icinga.key'
+      state: 'present'
+
+  - name: 'Add Icinga main repository for Debian'
+    ansible.builtin.apt_repository:
+      repo: 'deb http://packages.icinga.com/{{ ansible_facts["distribution"] | lower }} icinga-{{ ansible_facts["distribution_release"] }} main'
+      validate_certs: false
+      state: 'present'
+
+  - name: 'Add Icinga source repository for Debian'
+    ansible.builtin.apt_repository:
+      repo: 'deb-src http://packages.icinga.com/{{ ansible_facts["distribution"] | lower }} icinga-{{ ansible_facts["distribution_release"] }} main'
+      validate_certs: false
+      state: 'present'
+
+  - name: 'Add Backport source repository for Debian 9'
+    ansible.builtin.apt_repository:
+      repo: 'deb https://deb.debian.org/debian {{ ansible_facts["distribution_release"] }}-backports main'
+      validate_certs: false
+      state: 'present'
+    when:
+      - 'ansible_facts["distribution_major_version"] == "9"'
+      - 'ansible_facts["distribution"] == "Debian"'
+
+  tags:
+    - 'repo_icinga'

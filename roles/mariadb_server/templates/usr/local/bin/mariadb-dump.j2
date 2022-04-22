@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
+
+# {{ ansible_managed }}
+# 2020112301
+
+
+function exit_with_first_failed_retc() {
+    for retc in $@; do
+        if [ $retc -ne 0 ]; then
+            exit $retc
+        fi
+    done
+}
+
+
+source /etc/mariadb-dump.conf
+
+mkdir -p $BACKUP_DIR
+
+mysql --host=$HOST --user=$USER --password=$PASSWORD \
+    --execute='SET GLOBAL innodb_buffer_pool_dump_now = ON;'
+mysql_table_lock_retc=$?
+
+# https://github.com/maxbube/mydumper
+mydumper --host=$HOST --user=$USER --password=$PASSWORD \
+    --build-empty-files \
+    --compress \
+    --events \
+    --less-locking \
+    --logfile $BACKUP_DIR/mydumper.log \
+    --outputdir $BACKUP_DIR \
+    --routines \
+    --threads $THREADS \
+    --triggers \
+    --updated-since 1 \
+    --use-savepoints \
+    --verbose 3
+mydumper_retc=$?
+
+mysql --host=$HOST --user=$USER --password=$PASSWORD \
+    --execute='SET GLOBAL innodb_buffer_pool_load_now = ON;'
+mysql_table_unlock_retc=$?
+
+exit_with_first_failed_retc $mydumper_retc $mysql_table_lock_retc $mysql_table_unlock_retc

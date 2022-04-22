@@ -1,15 +1,5 @@
 - block:
 
-  - name: 'Perform platform/version specific tasks'
-    ansible.builtin.include_tasks: 'platform-tasks.yml'
-
-  tags:
-    - 'always'
-    - 'dnf_makecache'
-
-
-- block:
-
   - name: 'systemctl: dnf-makecache.service enabled = {{ dnf_makecache__service_enabled }}'
     ansible.builtin.systemd:
       name: 'dnf-makecache.service'

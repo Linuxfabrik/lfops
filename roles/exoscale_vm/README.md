@@ -51,7 +51,6 @@ Example:
 Set the Exoscale secret corresponding to the API key.
 
 Example:
-
 ```yaml
 exoscale_vm__api_secret: '4Is7jmDfzCONfJtEfxqX1VePSK9p7iZLafJy9ItC'
 ```
@@ -62,7 +61,6 @@ exoscale_vm__api_secret: '4Is7jmDfzCONfJtEfxqX1VePSK9p7iZLafJy9ItC'
 The Exoscale zone the instance should be in.  The possible options can be obtained using `exo zone list`.
 
 Example:
-
 ```yaml
 exoscale_vm__zone: 'ch-dk-2'
 ```
@@ -70,10 +68,9 @@ exoscale_vm__zone: 'ch-dk-2'
 
 #### exoscale_vm__template
 
-The Exoscale template for the instance. The possible options can be obtained using `exo compute instance-template list `.
+The Exoscale template for the instance. The possible options can be obtained using `exo compute instance-template list`.
 
 Example:
-
 ```yaml
 exoscale_vm__template: 'Rocky Linux 8 (Green Obsidian) 64-bit'
 ```
@@ -84,7 +81,6 @@ exoscale_vm__template: 'Rocky Linux 8 (Green Obsidian) 64-bit'
 The Exoscale template for the instance. The possible options can be obtained using `exo compute instance-type list --verbose`.
 
 Example:
-
 ```yaml
 exoscale_vm__service_offering: 'b6cd1ff5-3a2f-4e9d-a4d1-8988c1191fe8' # standard.tiny
 ```
@@ -107,7 +103,6 @@ The state of the instance. Possible options:
 * absent
 
 Default:
-
 ```yaml
 exoscale_vm__state: 'started'
 ```
@@ -118,7 +113,6 @@ exoscale_vm__state: 'started'
 The name of the SSH-key depoited in Exoscale [here](https://portal.exoscale.com/compute/keypairs). Defaults to using the local username of the Ansible control node.
 
 Default:
-
 ```yaml
 exoscale_vm__ssh_key: '{{ lookup("env", "USER") }}'
 ```
@@ -128,8 +122,7 @@ exoscale_vm__ssh_key: '{{ lookup("env", "USER") }}'
 
 The name of the instance. By default, it uses the Ansible inventory name.
 
-Example:
-
+Default:
 ```yaml
 exoscale_vm__name: '{{ inventory_hostname }}'
 ```

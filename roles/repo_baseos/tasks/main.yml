@@ -1,0 +1,22 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'deploy the repo files (mirror: {{ repo_baseos__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: '{{ item }}.j2'
+      dest: '/etc/yum.repos.d/{{ item | basename }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    loop: '{{ repo_baseos__repo_files }}'
+
+  when: 'repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length'
+  tags:
+    - 'repo_baseos'

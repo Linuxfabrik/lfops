@@ -1,0 +1,15 @@
+- block:
+
+  - name: 'add RPM signing key for icinga repository'
+    ansible.builtin.rpm_key:
+      state: 'present'
+      key: 'https://packages.icinga.com/icinga.key'
+
+  - name: 'add icinga repository'
+    community.general.zypper_repository:
+      name: 'icinga-stable-release'
+      repo: 'https://packages.icinga.com/SUSE/$releasever/release/'
+      state: 'present'
+
+  tags:
+    - 'repo_icinga'

@@ -1,0 +1,44 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  vars:
+    __task_file:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'deploy the repo files (mirror: {{ repo_mariadb__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: '{{ item }}.j2'
+      dest: '/etc/yum.repos.d/{{ item | basename }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    loop: '{{ repo_mariadb__repo_files }}'
+
+  - ansible.builtin.include_tasks: 'download-gpg-key.yml'
+    loop: '{{ repo_mariadb__gpg_keys }}'
+    loop_control:
+      loop_var: 'gpg_key'
+
+  tags:
+    - 'repo_mariadb'

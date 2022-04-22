@@ -1,0 +1,8 @@
+- name: 'Install yum-utils'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_yum_utils'
+
+  roles:
+
+    - role: 'yum_utils'

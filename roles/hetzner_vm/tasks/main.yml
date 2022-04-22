@@ -1,0 +1,31 @@
+- block:
+
+  - name: 'Manage the VMs at Hetzner'
+    hetzner.hcloud.hcloud_server:
+      api_token: '{{ hetzner_vm__api_token }}'
+      backups: '{{ hetzner_vm__backups }}'
+      image: '{{ hetzner_vm__image }}'
+      location: '{{ hetzner_vm__location }}'
+      name: '{{ hetzner_vm__name }}'
+      server_type: '{{ hetzner_vm__server_type }}'
+      ssh_keys: '{{ hetzner_vm__ssh_keys }}'
+      force: '{{ hetzner_vm__force }}'
+      upgrade_disk: '{{ hetzner_vm__upgrade_disk }}'
+      state: '{{ hetzner_vm__state }}'
+    connection: 'local'
+
+  - name: 'Manage the Volumes at Hetzner'
+    hetzner.hcloud.hcloud_volume:
+      api_token: '{{ hetzner_vm__api_token }}'
+      automount: false
+      name: '{{ item.name }}'
+      size: '{{ item.size }}'
+      format: '{{ item.format | default("xfs") }}'
+      server: '{{ hetzner_vm__name }}'
+      state: '{{ item.state | default("present") }}'
+    loop: '{{ hetzner_vm__volumes }}'
+    connection: 'local'
+    register: 'hetzner_vm__volumes_result'
+
+  tags:
+    - 'hetzner_vm'

@@ -1,0 +1,2 @@
+repo_baseos__repo_files:
+  - 'CentOS7/etc/yum.repos.d/CentOS-Base.repo'

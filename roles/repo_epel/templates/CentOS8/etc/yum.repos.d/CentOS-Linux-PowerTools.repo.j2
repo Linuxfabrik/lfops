@@ -13,7 +13,7 @@
 
 [powertools]
 name=CentOS Linux $releasever - PowerTools
-{% if repo_epel__mirror_url is defined and repo_epel__mirror_url|length %}
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/centos/$releasever/PowerTools/$basearch/os/
 {% else %}
 mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=PowerTools&infra=$infra

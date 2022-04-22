@@ -20,9 +20,11 @@ Rules of Thumb
             failed_when: mariadb_new_dba_result.rc != 0 and mariadb_new_dba_result.stderr is not match('ERROR \d+ \(28000\).*')
 
 * If a role was run without tags, it should deliver a completely installed application (assuming it installs an application).
-* Do not over-engineer the role during the development - it should fulfill its use case but can grow and be improved on later.
+* Do not over-engineer the role during the development - it should fulfill its use case, but can grow and be improved on later.
 * The role should support the installation and configuration of multiple major versions of the software. For example, PHP 7.1, 7.2, 7.3 etc. should all be supported by a single role. Upgrades are either done manually or using Ansible, depending on the software and the implementation effort.
-* Document all changes in the CHANGELOG.md file.
+* Do not use role dependencies via meta/main.yml``. Dependencies make it harder to maintain a role, especially if it has many complex dependencies.
+* Document all changes in the `CHANGELOG.md <https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md>`_ file.
+
 
 Pre-Commit
 ----------
@@ -229,7 +231,7 @@ Modules
             register: apiresponse
           - fail:
               msg: 'version was not provided'
-            when: '"version" not in apiresponse.content'
+            when: "version" not in apiresponse.content
 
 
 Tags
@@ -258,17 +260,28 @@ Assume you have the following OS-specific task files, in order of most specific 
 * ``tasks/RedHat.yml``
 * ``tasks/main.yml``
 
-Now, if you run Ansible against a *CentOS 7.9* host, for example, only these tasks are processed by ``platform-tasks.yml`` in the following order :
+Now, if you run Ansible against a *CentOS 7.9* host, for example, only these tasks are processed in the following order:
 
 1. ``tasks/CentOS7.yml``
 2. ``tasks/main.yml``
 
-Include the ``platform-tasks.yml`` in the ``tasks/main.yml`` like this:
+Include the OS-specific tasks in the ``tasks/main.yml`` like this:
 
 .. code-block:: yaml
 
     - name: 'Perform platform/version specific tasks'
-      ansible.builtin.include_tasks: 'platform-tasks.yml'
+      ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+      vars:
+        __task_file:
+          files:
+            - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+            - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+            - '{{ ansible_facts["distribution"] }}.yml'
+            - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+            - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+            - '{{ ansible_facts["os_family"] }}.yml'
+          paths:
+            - '{{ role_path }}/tasks'
       tags:
         - 'always'
 
@@ -292,7 +305,9 @@ Include the ``platform-variables.yml`` in the ``tasks/main.yml`` like this:
 .. code-block:: yaml
 
     - name: 'Set platform/version specific variables'
-      ansible.builtin.include_tasks: 'platform-variables.yml'
+      ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'platform-variables.yml'
       tags:
         - 'always'
 

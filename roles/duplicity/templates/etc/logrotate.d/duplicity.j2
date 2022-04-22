@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2022040501
+
+/var/log/duplicity.log
+{
+    copytruncate
+    daily
+    dateext
+    missingok
+    rotate {{ duplicity__logrotate | d(14) }}
+}

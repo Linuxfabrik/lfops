@@ -1,0 +1,4 @@
+# {{ ansible_managed }}
+# 2022040302
+
+/^.+@{{ ansible_facts['nodename'] }}(\.local.*)?$/ {{ mailto_root__from }}

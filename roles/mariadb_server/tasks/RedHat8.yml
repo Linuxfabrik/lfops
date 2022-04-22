@@ -1,0 +1,8 @@
+- name: 'dnf -y install compat-openssl10'
+  ansible.builtin.package:
+    name:
+      - 'compat-openssl10'
+    state: 'present'
+  tags:
+    - 'mariadb'
+    - 'mariadb:dump'

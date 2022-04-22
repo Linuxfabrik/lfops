@@ -1,0 +1,44 @@
+- block:
+
+  - name: 'Change root mail address'
+    ansible.builtin.lineinfile:
+      path: '/etc/aliases'
+      regexp: '^#?root:'
+      line: 'root: {{ mailto_root__to | join(",") }}'
+      state: 'present'
+    notify: 'mailto_root: newaliases'
+
+  - name: 'Adjust /etc/postfix/main.cf to use /etc/postfix/canonical'
+    ansible.builtin.lineinfile:
+      path: '/etc/postfix/main.cf'
+      regexp: '^#?sender_canonical_maps'
+      line: 'sender_canonical_maps = regexp:/etc/postfix/canonical'
+      state: 'present'
+    notify: 'mailto_root: reload postfix'
+
+  - name: 'Deploy /etc/postfix/canonical'
+    ansible.builtin.template:
+      src: 'etc/postfix/canonical.j2'
+      dest: '/etc/postfix/canonical'
+      mode: 0o644
+    notify: 'mailto_root: postmap /etc/postfix/canonical'
+
+  - name: 'Run all handlers immediately'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'mailto_root'
+    - 'mailto_root:configure'
+
+
+- block:
+
+  - name: 'Send test mail to internal root (should be delivered to {{ mailto_root__to }})' # noqa no-changed-when
+    ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to root" root'
+
+  - name: 'Send test mail to {{ mailto_root__to[0] }}' # noqa no-changed-when
+    ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to {{ mailto_root__to[0] }}" {{ mailto_root__to[0] }}'
+
+  tags:
+    - 'mailto_root'
+    - 'mailto_root:testmail'

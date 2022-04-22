@@ -1,18 +1,26 @@
-- block:
-
-  - name: 'Perform platform/version specific tasks'
-    ansible.builtin.include_tasks: 'platform-tasks.yml'
-
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  vars:
+    __task_file:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
     - 'always'
-    - 'postfix'
 
 
 - block:
 
   - name: 'Create plain sasl_passwd file'
     ansible.builtin.template:
-      src: 'sasl_passwd.j2'
+      src: 'etc/postfix/sasl_passwd.j2'
       dest: '/etc/postfix/sasl_passwd'
       owner: 'root'
       group: 'root'

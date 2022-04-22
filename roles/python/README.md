@@ -35,7 +35,7 @@ This role does not have any mandatory variables.
 
 #### python__version
 
-The python version to install. Possible options for Linux:
+The Python version to install. Possible options for Linux:
 
 * 2
 * 3
@@ -57,7 +57,7 @@ python__version: '3.10.4'
 
 These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
-List of additional python modules that should be installed via the standard package manager.
+List of additional Python modules that should be installed via the standard package manager.
 
 Default:
 ```yaml
