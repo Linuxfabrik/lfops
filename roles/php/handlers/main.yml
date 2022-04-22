@@ -1,4 +1,4 @@
-- name: 'php: systemctl restart php-fpm'
-  systemd:
+- name: 'php: restart php-fpm'
+  ansible.builtin.service:
     name: 'php-fpm'
     state: 'restarted'

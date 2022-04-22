@@ -32,6 +32,7 @@ New features:
 * Role: mailto_root
 * Role: mariadb_server
 * Role: network
+* Role: php
 * Role: repo_baseos
 * Role: repo_icinga
 * Role: repo_mariadb
