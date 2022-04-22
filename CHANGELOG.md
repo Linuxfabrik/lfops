@@ -24,6 +24,7 @@ New features:
 * Role: dnf_makecache
 * Role: exoscale_vm
 * Role: firewall
+* Role: git
 * Role: glances
 * Role: hetzner_vm
 * Role: kdump
