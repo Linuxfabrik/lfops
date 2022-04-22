@@ -1,0 +1,11 @@
+- name: 'Install and configure Keycloak'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_keycloak'
+
+  roles:
+
+    - role: 'repo_mariadb'
+    - role: 'mariadb'
+    - role: 'python'
+    - role: 'keycloak'

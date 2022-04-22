@@ -1,0 +1,17 @@
+[Unit]
+Description=Keycloak Service
+After=network.target
+
+[Service]
+User=keycloak
+Group=keycloak
+{% if keycloak__mode == 'production' %}
+ExecStart=/opt/keycloak-{{ keycloak__version }}/bin/kc.sh start --https-certificate-file=/opt/keycloak-{{ keycloak__version }}/tls/keycloak.pem --https-certificate-key-file=/opt/keycloak-{{ keycloak__version }}/tls/keycloak.key --https-protocols={{ keycloak__https_protocols }} --db-url-host={{ keycloak__db_host }} --db-url-database={{ keycloak__db_name }} --db-username={{ keycloak__db_user }} --db-password={{ keycloak__db_password }} --hostname={{ keycloak__hostname_url }} --hostname-strict-backchannel=true {% if keycloak__proxy_mode is defined and keycloak__proxy_mode == 'edge' %} --proxy edge {% elif keycloak__proxy_mode is defined and keycloak__proxy_mode == 'reencrypt' %} --proxy reencrypt {% elif keycloak__proxy_mode is defined and keycloak__proxy_mode == 'passthrough' %} --proxy passthrough {% endif %}
+{% else %}
+ExecStart=/opt/keycloak-{{ keycloak__version }}/bin/kc.sh start-dev
+{% endif %}
+
+WorkingDirectory=/opt/keycloak-{{ keycloak__version }}
+
+[Install]
+WantedBy=multi-user.target
