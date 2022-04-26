@@ -1,7 +1,0 @@
-- name: 'yum install java'
-  ansible.builtin.package:
-    name:
-      - 'java'
-    state: 'present'
-  tags:
-    - 'java'
