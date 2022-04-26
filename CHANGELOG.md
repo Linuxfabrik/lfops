@@ -26,6 +26,7 @@ New features:
 * Role: firewall
 * Role: git
 * Role: glances
+* Role: java
 * Role: hetzner_vm
 * Role: kdump
 * Role: keycloak
