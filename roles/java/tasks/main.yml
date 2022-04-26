@@ -1,21 +1,16 @@
-- name: 'yum install java'
-  yum:
-    name:
-      - 'java'
-    state: 'present'
-  when:
-    - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]
-      or ansible_facts["distribution"] == "Fedora"'
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  vars:
+    __task_file:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
-    - 'java'
-
-
-- name: 'apt-get install default-jdk'
-  apt:
-    name:
-      - 'default-jdk'
-    state: 'present'
-  when:
-    - 'ansible_facts["os_family"] == "Debian"'
-  tags:
-    - 'java'
+    - 'always'

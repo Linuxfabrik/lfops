@@ -6,10 +6,7 @@ FQCN: linuxfabrik.lfops.java
 
 Tested on
 
-* Debian
 * RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* Fedora
 
 
 ## Requirements

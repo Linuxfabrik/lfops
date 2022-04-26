@@ -1,0 +1,7 @@
+- name: 'apt-get install default-jdk'
+  ansible.builtin.package:
+    name:
+      - 'default-jdk'
+    state: 'present'
+  tags:
+    - 'java'
