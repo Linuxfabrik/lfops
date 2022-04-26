@@ -264,8 +264,8 @@
   no_log: true
 
   when:
-    - 'mariadb_server_users is defined'
-    - 'mariadb_server_users | length'
+    - 'mariadb_server__users is defined'
+    - 'mariadb_server__users | length'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:user'
