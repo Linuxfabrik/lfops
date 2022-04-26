@@ -1,16 +1,18 @@
-
-
-- name: Ensure group 'keycloak' exists
+- name: 'Ensure group keycloak exists'
   ansible.builtin.group:
     name: 'keycloak'
     state: 'present'
+  tags:
+    - 'keycloak'
 
 
-- name: Add the user 'keycloak' with primary group of 'keycloak'
+- name: 'Add the user keycloak with primary group of keycloak'
   ansible.builtin.user:
     name: 'keycloak'
     comment: 'User for Keycloak service'
     group: 'keycloak'
+  tags:
+    - 'keycloak'
 
 
 - name: 'Download and unpack archive'
@@ -18,6 +20,8 @@
     src: 'https://github.com/keycloak/keycloak/releases/download/{{ keycloak__version }}/keycloak-{{ keycloak__version }}.tar.gz'
     dest: '/opt'
     remote_src: true
+  tags:
+    - 'keycloak'
 
 
 - block:
@@ -44,7 +48,7 @@
       organization_name: 'Linuxfabrik GmbH'
       subject_alt_name:
         - "DNS:keycloak.local"
-    register: csr
+    register: 'csr'
     when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
 
   - name: 'Create simple self-signed certificate'
@@ -63,6 +67,19 @@
       chdir: '/opt/keycloak-{{ keycloak__version }}'
 
   when: 'keycloak__mode == "production"'
+  tags:
+    - 'keycloak'
+
+
+- name: "Configure sysconfig file for keycloak service"
+  ansible.builtin.template:
+    src: 'etc/sysconfig/keycloak-sysconfig.j2'
+    dest: '/etc/sysconfig/keycloak'
+    owner: 'root'
+    group: 'root'
+    mode: 0o640
+  tags:
+    - 'keycloak'
 
 
 - name: 'Create keycloak.service'
@@ -71,7 +88,9 @@
     dest: '/etc/systemd/system/keycloak.service'
     owner: 'root'
     group: 'root'
-    mode: 0644
+    mode: 0o644
+  tags:
+    - 'keycloak'
 
 
 - name: 'systemctl enable --now keycloak.service'
@@ -80,4 +99,5 @@
     state: 'started'
     enabled: true
     daemon_reload: true
-
+  tags:
+    - 'keycloak'

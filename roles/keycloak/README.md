@@ -42,11 +42,6 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 
 ### Mandatory
 
-This role does not have any mandatory variables.
-
-
-### Optional
-
 #### keycloak__mode
 
 Specifies the mode keycloak is supposed to run in.
@@ -55,6 +50,29 @@ Possible options:
 
 * production
 * development
+
+
+#### keycloak__admin_user
+
+The Keycloak admin user.
+
+
+#### keycloak__admin_pass
+
+The Keycloak admin user's password.
+
+
+#### keycloak__db_user
+
+The database user for keycloak.
+
+
+#### keycloak__db_password
+
+The Keycloak database user's password.
+
+
+### Optional
 
 Default:
 ```yaml
@@ -67,9 +85,9 @@ Specifies the database server keycloak is supposed to use.
 
 Possible options:
 
-* mariadb 
-* mssql	
-* mysql	
+* mariadb
+* mssql
+* mysql
 * oracle
 * postgres
 
