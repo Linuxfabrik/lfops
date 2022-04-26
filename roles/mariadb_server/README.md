@@ -73,7 +73,10 @@ todo
 
 Default:
 ```yaml
-mariadb_server__admin_host: 'localhost'
+mariadb_server__admin_host:
+  - '127.0.0.1'
+  - '::1'
+  - 'localhost'
 ```
 
 #### mariadb_server__dump_login

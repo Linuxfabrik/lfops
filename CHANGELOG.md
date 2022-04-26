@@ -48,6 +48,7 @@ New features:
 Changes in existing functionality:
 
 * Role duplicity: Implemented massive-parallel backups.
+* Role mariadb_server: Changed `mariadb_server__admin_host` to a list.
 
 
 ## [1.0.1] - 2022-03-17

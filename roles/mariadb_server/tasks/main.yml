@@ -74,11 +74,11 @@
 - block:
 
   - name: 'Create new DBA "{{ mariadb_server__admin_login.username }}" after a fresh installation'
-    ansible.builtin.command: "mysql --unbuffered --execute '{{ item }}'"
-    loop:
-      - 'create user if not exists "{{ mariadb_server__admin_login.username }}"@"{{ mariadb_server__admin_host }}" identified by "{{ mariadb_server__admin_login.password }}";'
-      - 'grant all privileges on *.* to "{{ mariadb_server__admin_login.username }}"@"{{ mariadb_server__admin_host }}" with grant option;'
-      - 'flush privileges;'
+    ansible.builtin.shell: |-
+      mysql --unbuffered --execute 'create user if not exists "{{ mariadb_server__admin_login.username }}"@"{{ item }}" identified by "{{ mariadb_server__admin_login.password }}";'
+      mysql --unbuffered --execute 'grant all privileges on *.* to "{{ mariadb_server__admin_login.username }}"@"{{ item }}" with grant option;'
+      mysql --unbuffered --execute 'flush privileges;'
+    loop: '{{ mariadb_server__admin_host }}'
     register: 'mariadb_server__admin_login_result'
     changed_when: 'mariadb_server__admin_login_result.stderr is not match("ERROR \d+ \(28000\).*")'
     failed_when: 'mariadb_server__admin_login_result.rc != 0 and mariadb_server__admin_login_result.stderr is not match("ERROR \d+ \(28000\).*")'
