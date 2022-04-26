@@ -1,0 +1,50 @@
+- block:
+
+  - name: 'yum -y install php'
+    ansible.builtin.package:
+      name: 'php'
+      state: 'present'
+  tags:
+    - 'php'
+
+
+- block:
+
+  - name: 'Install additional php modules'
+    ansible.builtin.package:
+      name: "{{ php__modules }}"
+      state: 'present'
+    when: 'php__modules is defined'
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts: # yamllint disable-line rule:empty-values
+
+  - name: 'Get php version'
+    ansible.builtin.set_fact:
+      php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_replace("\.\d+$", "") }}'
+
+  - name: 'Deploy the /etc/php.d/z00-linuxfabrik.ini'
+    ansible.builtin.template:
+      src: 'etc/php.d/{{ php__installed_version  }}-z00-linuxfabrik.ini.j2'
+      dest: '/etc/php.d/z00-linuxfabrik.ini'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'php: restart php-fpm'
+
+  - name: 'Deploy opcache.ini'
+    ansible.builtin.template:
+      src: 'etc/php.d/{{ php__installed_version  }}-10-opcache.ini.j2'
+      dest: '/etc/php.d/10-opcache.ini'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'php: restart php-fpm'
+
+
+  - name: 'flush handlers so that the mariadb can be used by other roles later'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'php'
+    - 'php:configure'

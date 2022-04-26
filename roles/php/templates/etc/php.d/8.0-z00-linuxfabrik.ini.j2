@@ -1,0 +1,30 @@
+; {{ ansible_managed }}
+; 2020100801
+
+[PHP]
+date.timezone = Europe/Zurich
+default_socket_timeout = 10
+display_errors = {{ php_ini_display_errors | default('off') }}
+display_startup_errors = {{ php_ini_display_startup_errors | default('off') }}
+error_reporting = {{ php_ini_error_reporting | default('E_ALL & ~E_DEPRECATED & ~E_STRICT') }}
+expose_php = Off
+html_errors = Off
+max_execution_time = {{ php_ini_max_execution_time | default('30') }}
+max_file_uploads = {{ php_ini_max_file_uploads | default('50') }}
+max_input_time = {{ php_ini_max_input_time | default('60') }}
+memory_limit = {{ php_ini_memory_limit | default('128M') }}
+post_max_size = {{ php_ini_post_max_size | default('8M') }}
+upload_max_filesize = {{ php_ini_upload_max_filesize | default('2M') }}
+realpath_cache_size = 128K
+realpath_cache_ttl = 3600
+serialize_precision = 17
+
+[mail function]
+SMTP = {{ php_ini_smtp | default('localhost') }}
+smtp_port = 25
+mail.add_x_header = On
+
+[Session]
+session.gc_maxlifetime = 86400
+session.sid_length = {{ php_ini_session_sid_length | default(26) }}
+session.trans_sid_tags = "{{ php_ini_session_trans_sid_tags | default("a=href,area=href,frame=src,form=") }}"
