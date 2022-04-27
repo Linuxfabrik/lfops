@@ -8,7 +8,6 @@ Tested on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
-* Fedora
 
 
 ## Requirements
@@ -51,37 +50,49 @@ Possible options:
 * production
 * development
 
-
-#### keycloak__admin_user
-
-The Keycloak admin user.
-
-
-#### keycloak__admin_pass
-
-The Keycloak admin user's password.
-
-
-#### keycloak__db_user
-
-The database user for keycloak.
-
-
-#### keycloak__db_password
-
-The Keycloak database user's password.
-
-
-### Optional
-
 Default:
 ```yaml
 keycloak__mode: 'production'
 ```
 
+
+#### keycloak__hostname
+
+The hostname where keycloak is reachable.
+Mandatory if in production mode.
+
+Example:
+```yml
+keycloak__hostname: 'keycloak.local'
+```
+
+
+#### keycloak__admin_user
+
+The Keycloak admin user.
+Mandatory if in production mode.
+
+Example:
+```yml
+keycloak__admin_user: 'keycloak-admin'
+```
+
+
+#### keycloak__admin_pass
+
+The Keycloak admin user's password.
+Mandatory if in production mode.
+
+Example:
+```yml
+keycloak__admin_password: '***'
+```
+
+
 #### keycloak__dbserver
 
 Specifies the database server keycloak is supposed to use.
+Mandatory if in production mode.
 
 Possible options:
 
@@ -95,6 +106,72 @@ Default:
 ```yaml
 keycloak__dbserver: 'mariadb'
 ```
+
+
+#### keycloak__db_host
+
+The host where the database for keycloak is running.
+Mandatory if in production mode.
+
+Default:
+```yml
+keycloak__db_host: 'localhost'
+```
+
+
+#### keycloak__db_name
+
+The database name for keycloak.
+Mandatory if in production mode.
+
+Default:
+```yml
+keycloak__db_name: 'keycloak'
+```
+
+
+#### keycloak__db_user
+
+The database user for keycloak.
+Mandatory if in production mode.
+
+Default:
+```yml
+keycloak__db_user: 'keycloak'
+```
+
+
+#### keycloak__db_password
+
+The Keycloak database user's password.
+Mandatory if in production mode.
+
+Example:
+```yml
+keycloak__db_password: '***'
+```
+
+
+#### keycloak__version
+
+The version of Keycloak that should be installed.
+
+Default:
+```yml
+keycloak__version: '18.0.0'
+```
+
+#### keycloak__https_protocols
+
+The cipher suites Keycloak is supposed to be using.
+
+Default:
+```yml
+keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
+```
+
+
+### Optional
 
 ### keycloak__proxy_mode
 

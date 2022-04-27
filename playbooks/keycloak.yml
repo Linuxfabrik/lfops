@@ -23,6 +23,6 @@
 
     - role: 'python'
 
-#    - role: 'java'
+    - role: 'java'
 
     - role: 'keycloak'

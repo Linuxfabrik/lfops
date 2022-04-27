@@ -15,6 +15,16 @@
     - 'keycloak'
 
 
+- name: 'Create log directory "/var/log/keycloak"'
+  ansible.builtin.file:
+    path: '/var/log/keycloak'
+    state: 'directory'
+    owner: 'keycloak'
+    group: 'keycloak'
+  tags:
+    - 'keycloak'
+
+
 - name: 'Download and unpack archive'
   ansible.builtin.unarchive:
     src: 'https://github.com/keycloak/keycloak/releases/download/{{ keycloak__version }}/keycloak-{{ keycloak__version }}.tar.gz'
@@ -23,6 +33,15 @@
   tags:
     - 'keycloak'
 
+- name: 'chown -R keycloak:keycloak /opt/keycloak-{{ keycloak__version }}'
+  ansible.builtin.file:
+    path: '/opt/keycloak-{{ keycloak__version }}'
+    state: 'directory'
+    recurse: true
+    owner: 'keycloak'
+    group: 'keycloak'
+  tags:
+    - 'keycloak'
 
 - block:
 
@@ -65,6 +84,14 @@
     ansible.builtin.shell: 'bin/kc.sh build --db {{ keycloak__db_server }}'
     args:
       chdir: '/opt/keycloak-{{ keycloak__version }}'
+
+  - name: 'chown -R keycloak:keycloak /opt/keycloak-{{ keycloak__version }}'
+    ansible.builtin.file:
+      path: '/opt/keycloak-{{ keycloak__version }}'
+      state: 'directory'
+      recurse: true
+      owner: 'keycloak'
+      group: 'keycloak'
 
   when: 'keycloak__mode == "production"'
   tags:
