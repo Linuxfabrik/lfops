@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2022030102
+
+export LC_ALL=C
+
+PIDOF=$(which pidof)
+REBOOT=$(which reboot)
+
+schedule_downtime_and_reboot () {
+    {% if icinga2_master is defined and icinga2_master|length %}
+        # needed for Icinga to set downtime (max. 5 minutes downtime)
+        START_TIME=$(date +%s)
+        END_TIME=$(( START_TIME + 300 ))
+        DATA="{ \"type\": \"Host\", \"filter\": \"match(\\\"{{ ansible_facts['fqdn'] }}\\\", host.name)\", \"start_time\": \"$START_TIME\", \"end_time\": \"$END_TIME\", \"author\": \"{{ ansible_facts['fqdn'] }}\", \"comment\": \"Automatic reboot due to updates.\" , \"all_services\": true }"
+        curl --connect-timeout 5 --insecure --silent --user {{ icinga2_api_user }}:{{ icinga2_api_password }} --header 'Accept: application/json' --request POST 'https://{{ icinga2_master }}:5665/v1/actions/schedule-downtime' --data "$DATA" 1> /dev/null
+    {% endif %}
+
+    echo "$REBOOT" | at now +1 minutes 2> /dev/null
+    exit 0
+}
+
+send_msg () {
+{% if ansible_facts['distribution'] == 'Debian' %}
+    echo -n "$MSGBODY" | mail -s "$SUBJECT" -a "From: $SENDER" "$RECIPIENTS"
+{% else %}
+    echo -n "$MSGBODY" | mail -s "$SUBJECT" -r "$SENDER" "$RECIPIENTS"
+{% endif %}
+{% if system_update__rocketchat_url is defined and system_update__rocketchat_url|length %}
+    /usr/bin/curl --silent --output /dev/null --data-urlencode \
+        "text=${SUBJECT}
+
+        ${MSGBODY}
+        {{ system_update__rocketchat_msg_suffix | default('') }}" \
+        --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
+        "{{ system_update__rocketchat_url }}"
+{% endif %}
+}
+
+{% if system_update__pre_reboot_code is defined and system_update__pre_reboot_code|length %}
+pre_reboot_code () {
+{# use a for loop for the indentation #}
+{% for line in system_update__pre_reboot_code.splitlines() %}
+    {{ line }}
+{% endfor %}
+}
+{% endif %}
+
+SUBJECT_PREFIX="{{ system_update__notification_hostname_prefix }}$(hostname --short)"
+SENDER="{{ system_update__notification_hostname_prefix }}$(hostname --short) <{{ system_update__notification_sender }}>"
+RECIPIENTS="{{ system_update__notification_recipients }}"
+
+# do the update, and print only critical errors about which we must be told
+{% if ansible_facts['os_family'] == 'RedHat' %}
+yum -y update 1> /dev/null 2> /tmp/system-update-stderr
+if [ $? -ne 0 ]; then
+    SUBJECT="$SUBJECT_PREFIX - System update failed"
+    MSGBODY=$(</tmp/system-update-stderr)
+    send_msg
+    exit 1
+fi
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+apt-get update 1> /dev/null
+export DEBIAN_FRONTEND=noninteractive
+yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" upgrade > /tmp/update_output
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'RedHat' %}
+# after any update, notify root user about new rpmsave or rpmnew files
+# ignore messages like 'find: ‘/proc/26144’: No such file or directory'
+find / -mount -name '*.rpmnew' -exec /root/send-mail "{{ system_update__notification_hostname_prefix }}$(hostname --short) - rpmnew File found" "{}"  {{ system_update__new_configfile_notification_recipients }} \; 2> /dev/null
+find / -mount -name '*.rpmsave' -exec /root/send-mail "{{ system_update__notification_hostname_prefix }}$(hostname --short) - rpmsave File found" "{}" {{ system_update__new_configfile_notification_recipients }} \; 2> /dev/null
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+# after any update, notify root user about new rpmsave or rpmnew files
+# ignore messages like 'find: ‘/proc/26144’: No such file or directory'
+find / -mount -name '*.dpkg-dist' -exec /root/send-mail "{{ system_update__notification_hostname_prefix }}$(hostname --short) - dpkg-dist File found" "{}"  {{ system_update__new_configfile_notification_recipients }} \; 2> /dev/null
+find / -mount -name '*.ucf-dist' -exec /root/send-mail "{{ system_update__notification_hostname_prefix }}$(hostname --short) - ucf-dist File found" "{}"  {{ system_update__new_configfile_notification_recipients}} \; 2> /dev/null
+{% endif %}
+
+# any restarts needed?
+{% if ansible_facts['os_family'] == 'RedHat' %}
+needs-restarting --reboothint 1> /dev/null
+if [ $? -eq 1 ]; then
+    # save time and don't wait for any apache graceful finishing
+    kill -9 "$($PIDOF httpd)" 2> /dev/null
+    SUBJECT="$SUBJECT_PREFIX - Reboot due to Kernel Updates"
+    MSGBODY=$(yum history info)
+{% if system_update__pre_reboot_code is defined and system_update__pre_reboot_code|length %}
+    pre_reboot_code
+{% endif %}
+    send_msg
+    schedule_downtime_and_reboot
+fi
+
+needs-restarting > /tmp/needs-restarting
+if [ -s /tmp/needs-restarting ]; then
+    # save time and don't wait for any graceful finishing apache
+    kill -9 "$($PIDOF httpd)" 2> /dev/null
+    SUBJECT="$SUBJECT_PREFIX - Reboot due to Service Updates"
+    MSGBODY=$(cat /tmp/needs-restarting; yum history info)
+{% if system_update__pre_reboot_code is defined and system_update__pre_reboot_code|length %}
+    pre_reboot_code
+{% endif %}
+    send_msg
+    schedule_downtime_and_reboot
+fi
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+if [ -f /var/run/reboot-required ]; then
+    # save time and don't wait for any apache graceful finishing
+    kill -9 "$($PIDOF apache2)" 2> /dev/null
+    SUBJECT="$SUBJECT_PREFIX - Reboot due to Updates"
+    MSGBODY=$(cat /tmp/update_output)
+{% if system_update__pre_reboot_code is defined and system_update__pre_reboot_code|length %}
+    pre_reboot_code
+{% endif %}
+    send_msg
+    schedule_downtime_and_reboot
+fi
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'RedHat' %}
+SUBJECT="$SUBJECT_PREFIX - System updated without Reboot"
+MSGBODY=$(yum history info)
+send_msg
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+SUBJECT="$SUBJECT_PREFIX - System updated without Reboot"
+MSGBODY=$(cat /tmp/check-update | grep upgradable)
+send_msg
+{% endif %}
+
+{% if system_update__include_on_no_reboot is defined and system_update__include_on_no_reboot|length %}
+source {{ system_update__include_on_no_reboot }}
+{% endif %}

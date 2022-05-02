@@ -1,0 +1,68 @@
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  vars:
+    __task_file:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Copy notify-and-schedule script to /usr/local/bin'
+    template:
+      src: 'usr/local/bin/notify-and-schedule.j2'
+      dest: '/usr/local/bin/notify-and-schedule'
+      owner: 'root'
+      group: 'root'
+      mode: 0o744
+
+  - name: 'Copy update-and-reboot script to /usr/local/bin'
+    template:
+      src: 'usr/local/bin/update-and-reboot.j2'
+      dest: '/usr/local/bin/update-and-reboot'
+      owner: 'root'
+      group: 'root'
+      mode: 0o744
+
+  - name: 'Copt notify-and-schedule.service to /etc/systemd/system/'
+    template:
+      src: 'etc/systemd/system/notify-and-schedule.service.j2'
+      dest: '/etc/systemd/system/notify-and-schedule.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Copy notify-and-schedule.timer to /etc/systemd/system/'
+    template:
+      src: 'etc/systemd/system/notify-and-schedule.timer.j2'
+      dest: '/etc/systemd/system/notify-and-schedule.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'system_update'
+
+
+- block:
+
+  - name: 'systemctl {{ system_update__update_enabled | bool | ternary("enable", "disable") }} notify-and-schedule.timer --now'
+    systemd:
+      name: 'notify-and-schedule.timer'
+      state: '{{ system_update__update_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ system_update__update_enabled }}'
+      daemon_reload: true
+
+  tags:
+    - 'system_update'
+    - 'system_update__state'

@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+# 2021081601
+
+[Unit]
+Description=notify-and-schedule Service
+
+[Service]
+ExecStart=/usr/local/bin/notify-and-schedule
+Type=oneshot
+User=root
+KillMode=process
+
+[Install]
+WantedBy=basic.target
