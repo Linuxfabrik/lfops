@@ -1,7 +1,7 @@
 repo_epel__gpg_key_dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8'
 repo_epel__gpg_key_url: 'https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-8'
 repo_epel__repo_files:
-  - 'templates/RedHat8/etc/yum.repos.d/epel-modular.repo'
-  - 'templates/RedHat8/etc/yum.repos.d/epel-testing-modular.repo'
-  - 'templates/RedHat8/etc/yum.repos.d/epel-testing.repo'
-  - 'templates/RedHat8/etc/yum.repos.d/epel.repo'
+  - 'RedHat8/etc/yum.repos.d/epel-modular.repo'
+  - 'RedHat8/etc/yum.repos.d/epel-testing-modular.repo'
+  - 'RedHat8/etc/yum.repos.d/epel-testing.repo'
+  - 'RedHat8/etc/yum.repos.d/epel.repo'

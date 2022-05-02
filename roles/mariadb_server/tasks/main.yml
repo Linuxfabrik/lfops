@@ -1,0 +1,284 @@
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  vars:
+    __task_file:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'dnf -y install mariadb-server mysqltuner libzstd'
+    ansible.builtin.package:
+      name:
+        - 'mariadb-server'
+        - 'mysqltuner'
+        - 'libzstd'
+      state: 'present'
+
+  tags:
+    - 'mariadb_server'
+
+
+- block:
+
+  - name: 'deploy /etc/my.cnf.d/z00-server.cnf'
+    ansible.builtin.template:
+      src: 'etc/my.cnf.d/{{ mariadb_server__version }}/z00-server.cnf.j2'
+      dest: '/etc/my.cnf.d/z00-server.cnf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'mariadb_server: restart mariadb'
+
+  - name: 'sysctl -w vm.swappiness=10; sysctl -p'
+    ansible.posix.sysctl:
+      name: 'vm.swappiness'
+      value: 10
+      state: 'present'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:configure'
+
+
+- block:
+
+  - name: 'systemctl enable mariadb = {{ mariadb_server__enabled }}'
+    ansible.builtin.service:
+      name: 'mariadb.service'
+      enabled: "{{ mariadb_server__enabled }}"
+
+  - name: 'systemctl start mariadb = {{ maridb_server__state }}'
+    ansible.builtin.service:
+      name: 'mariadb.service'
+      state: "{{ maridb_server__state }}"
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:configure'
+    - 'mariadb_server:state'
+
+
+# mysql_secure_installation
+- block:
+
+  - name: 'Create new DBA "{{ mariadb_server__admin_login.username }}" after a fresh installation'
+    ansible.builtin.shell: |-
+      mysql --unbuffered --execute 'create user if not exists "{{ mariadb_server__admin_login.username }}"@"{{ item }}" identified by "{{ mariadb_server__admin_login.password }}";'
+      mysql --unbuffered --execute 'grant all privileges on *.* to "{{ mariadb_server__admin_login.username }}"@"{{ item }}" with grant option;'
+      mysql --unbuffered --execute 'flush privileges;'
+    loop: '{{ mariadb_server__admin_host }}'
+    register: 'mariadb_server__admin_login_result'
+    changed_when: 'mariadb_server__admin_login_result.stderr is not match("ERROR \d+ \(28000\).*")'
+    failed_when: 'mariadb_server__admin_login_result.rc != 0 and mariadb_server__admin_login_result.stderr is not match("ERROR \d+ \(28000\).*")'
+
+  - name: 'secure installation the same way mysql_secure_installation does'
+    ansible.builtin.command: "mysql --unbuffered --execute '{{ item }}'"
+    loop:
+      - 'delete from mysql.global_priv where user="";'
+      - 'drop database if exists test;'
+      - 'delete from mysql.db where db="test" or db="test\\_%";'
+      - 'flush privileges;'
+      - 'drop user if exists "root"@"::1"'
+      - 'drop user if exists "root"@"localhost"'
+      - 'drop user if exists "root"@"localhost"'
+    register: 'mariadb_server__secure_installation_result'
+    changed_when: 'mariadb_server__secure_installation_result.stderr is not match("ERROR \d+ \(28000\).*")'
+    failed_when: 'mariadb_server__secure_installation_result.rc != 0 and mariadb_server__secure_installation_result.stderr is not match("ERROR \d+ \(28000\).*")'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:secure_installation'
+
+
+# configure backup (mariadb-dump user, scripts and timer)
+- block:
+
+  - name: 'dnf -y install {{ mariadb_server_dump_mydumper_package }}'
+    ansible.builtin.dnf:
+      name:
+        - '{{ mariadb_server_dump_mydumper_package }}'
+      state: 'present'
+      disable_gpg_check: true
+
+  - name: 'deploy /usr/local/bin/mariadb-dump'
+    ansible.builtin.template:
+      src: 'usr/local/bin/mariadb-dump.j2'
+      dest: '/usr/local/bin/mariadb-dump'
+      mode: 0o755
+
+  - name: 'deploy /etc/mariadb-dump.conf'
+    ansible.builtin.template:
+      src: 'etc/mariadb-dump.conf.j2'
+      dest: '/etc/mariadb-dump.conf'
+      mode: 0o600
+
+  - name: 'grant backup privileges on dbs.tables to {{ mariadb_server__dump_login.username }}@{{ mariadb_server__dump_user_host }}'
+    linuxfabrik.lfops.mariadb_user:
+      login_user: "{{ mariadb_server__admin_login.username }}"
+      login_password: "{{ mariadb_server__admin_login.password }}"
+      user: "{{ mariadb_server__dump_login.username }}"
+      host: "{{ mariadb_server__dump_user_host }}"
+      password: "{{ mariadb_server__dump_login.password }}"
+      priv: "{{ mariadb_server__dump_user_priv }}"
+      state: "{{ mariadb_server__dump_user_state }}"
+
+  - name: 'deploy /etc/systemd/system/mariadb-dump.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/mariadb-dump.service.j2'
+      dest: '/etc/systemd/system/mariadb-dump.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'deploy /etc/systemd/system/mariadb-dump.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/mariadb-dump.timer.j2'
+      dest: '/etc/systemd/system/mariadb-dump.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'mariadb_server__dump_systemd_timer_result'
+
+  - name: 'systemctl enable mariadb-dump.timer --now'
+    ansible.builtin.systemd:
+      name: 'mariadb-dump.timer'
+      state: 'started'
+      enabled: true
+      daemon_reload: 'mariadb_server__dump_systemd_timer_result is changed'
+
+  # only on a standalone server; or if on replica set, only on the primary
+  when:
+    - 'mariadb_server_dump_user is defined'
+    - 'mariadb_server_dump_user | length'
+    - 'mariadb_server_dump_options is defined'
+    - 'mariadb_server_dump_options | length'
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:configure'
+    - 'mariadb_server:dump'
+
+
+# configure monitoring (mariadb-monitoring user)
+- block:
+
+  - name: 'grant backup privileges on dbs.tables to {{ mariadb_server__monitoring_login.username }}@{{ mariadb_server__monitoring_user_host }}'
+    linuxfabrik.lfops.mariadb_user:
+      login_user: "{{ mariadb_server__admin_login.username }}"
+      login_password: "{{ mariadb_server__admin_login.password }}"
+      user: "{{ mariadb_server__monitoring_login.username }}"
+      host: "{{ mariadb_server__monitoring_user_host }}"
+      password: "{{ mariadb_server__monitoring_login.password }}"
+      priv: "{{ mariadb_server__monitoring_user_priv }}"
+      state: "{{ mariadb_server__monitoring_user_state }}"
+
+  when:
+    - 'mariadb_server__monitoring is defined'
+    - 'mariadb_server__monitoring | length'
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:configure'
+
+
+- block:
+
+  - name: 'create directories for mariadb_sys_schema'
+    ansible.builtin.file:
+      path: '/tmp/mariadb_sys_schema/{{ item.path }}'
+      state: 'directory'
+      mode: '{{ item.mode }}'
+    loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
+    when: 'item.state == "directory"'
+
+  - name: 'deploy collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage'
+    ansible.builtin.template:
+      src: '{{ item.src }}'
+      dest: '/tmp/mariadb_sys_schema/{{ item.path | trim(".j2") }}'
+      mode: '{{ item.mode }}'
+    loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
+    when: 'item.state == "file"'
+
+  - name: 'mysql --user "{{ mariadb_server__admin_login.username }}" --password="..." < mariadb_sys_install.sql'
+    # do NOT do: --password "{{ mariadb_server__admin_login.password }}" - this way mysql expects the input from STDIN and treats the password as a database name
+    ansible.builtin.shell: 'mysql --user "{{ mariadb_server__admin_login.username }}" --password="{{ mariadb_server__admin_login.password }}" < mariadb_sys_install.sql'
+    args:
+      chdir: '/tmp/mariadb_sys_schema'
+    changed_when: false # TODO
+
+  - name: 'rm -rf /tmp/mariadb_sys_schema'
+    ansible.builtin.file:
+      path: '/tmp/mariadb_sys_schema'
+      state: 'absent'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:configure'
+    - 'mariadb_server:sys_schema'
+
+
+# database management
+- block:
+
+  - name: 'Create or delete mariadb databases'
+    community.mysql.mysql_db:
+      login_user: "{{ mariadb_server__admin_login.username }}"
+      login_password: "{{ mariadb_server__admin_login.password }}"
+      name: "{{ item.name }}"
+      collation: "{{ item.collation | default('utf8_general_ci') }}"
+      encoding: "{{ item.encoding | default('utf8') }}"
+      state: "{{ item.state | default('present') }}"
+    loop: "{{ mariadb_server__databases }}"
+
+  when:
+    - 'mariadb_server__databases is defined'
+    - 'mariadb_server__databases | length'
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:database'
+
+
+# user management
+- block:
+
+  - name: 'Create, update or delete MariaDB users'
+    linuxfabrik.lfops.mariadb_user:
+      login_user: "{{ mariadb_server__admin_login.username }}"
+      login_password: "{{ mariadb_server__admin_login.password }}"
+      user: "{{ item.username }}"
+      host: "{{ item.host | default('localhost') }}"
+      password: "{{ item.password | default(omit) }}"
+      priv: "{{ item.priv | default(omit) }}"
+      state: "{{ item.state | default('present') }}"
+    loop: '{{ mariadb_server__users }}'
+  no_log: true
+
+  when:
+    - 'mariadb_server__users is defined'
+    - 'mariadb_server__users | length'
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:user'
+
+
+- name: 'flush handlers so that the mariadb can be used by other roles later'
+  ansible.builtin.meta: 'flush_handlers'
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:configure'
+    - 'mariadb_server:database'
+    - 'mariadb_server:dump'
+    - 'mariadb_server:secure_installation'
+    - 'mariadb_server:state'
+    - 'mariadb_server:sys_schema'
+    - 'mariadb_server:user'

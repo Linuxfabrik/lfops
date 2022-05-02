@@ -1,3 +1,11 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - block:
 
   - name: 'Install logrotate'
@@ -13,11 +21,13 @@
       group: 'root'
       mode: 0o644
 
+  - name: 'Copy system logrotate templates to /etc/logrotate.d'
+    ansible.builtin.template:
+      src: 'etc/logrotate.d/syslog.j2'
+      dest: '/etc/logrotate.d/{{ logrotate__syslog_filename }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
   tags:
     - 'logrotate'
-
-
-- name: 'Perform platform/version specific tasks'
-  ansible.builtin.include_tasks: 'platform-tasks.yml'
-  tags:
-    - 'always'

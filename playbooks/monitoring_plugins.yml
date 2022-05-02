@@ -9,4 +9,9 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
 
+    - role: 'python'
+      python__dependent_modules: '{{ monitoring_plugins__python__dependent_modules | d([]) }}'
+      when:
+        - 'not monitoring_plugins__skip_python | d(false)'
+
     - role: 'monitoring_plugins'

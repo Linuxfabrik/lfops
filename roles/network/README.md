@@ -28,7 +28,6 @@ This role does not have any requirements.
 This role does not have any role variables.
 
 
-
 ## License
 
 [The Unlicense](https://unlicense.org/)

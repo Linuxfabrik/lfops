@@ -3,7 +3,7 @@
 
 [epel-modular]
 name=Extra Packages for Enterprise Linux Modular $releasever - $basearch
-{% if repo_epel__mirror_url is defined and repo_epel__mirror_url|length %}
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/8/Modular/x86_64/
 {% else %}
 #baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Modular/$basearch
@@ -15,7 +15,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
 
 [epel-modular-debuginfo]
 name=Extra Packages for Enterprise Linux Modular $releasever - $basearch - Debug
-{% if repo_epel__mirror_url is defined and repo_epel__mirror_url|length %}
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/8/Modular/x86_64/debug
 {% else %}
 #baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Modular/$basearch/debug
@@ -27,7 +27,7 @@ gpgcheck=1
 
 [epel-modular-source]
 name=Extra Packages for Enterprise Linux Modular $releasever - $basearch - Source
-{% if repo_epel__mirror_url is defined and repo_epel__mirror_url|length %}
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/8/Modular/x86_64/SRPMS
 {% else %}
 #baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Modular/SRPMS

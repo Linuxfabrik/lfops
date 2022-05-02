@@ -1,0 +1,18 @@
+- block:
+
+  - name: 'Install python{{ python__version }}'
+    ansible.builtin.package:
+      name:
+        - 'python{{ python__version }}'
+      state: 'present'
+
+  - name: 'Install additional python modules'
+    ansible.builtin.package:
+      name: "{{ python__modules }}"
+      state: 'present'
+    when: 'python__modules is defined and python__modules | length'
+
+  # block
+  when: 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'python'

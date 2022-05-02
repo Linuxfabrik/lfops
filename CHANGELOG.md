@@ -14,20 +14,42 @@ Role: duplicity
 * Changed the format of `duplicity__host_backup_sources`.
 
 ### Added
+
+New features:
+
 * This CHANGELOG.
+
 * Role: at
 * Role: cockpit
 * Role: dnf_makecache
 * Role: exoscale_vm
 * Role: firewall
+* Role: git
 * Role: glances
+* Role: java
+* Role: hetzner_vm
 * Role: kdump
+* Role: libselinux_python
 * Role: login
+* Role: mailto_root
+* Role: mariadb_server
 * Role: network
+* Role: php
+* Role: repo_baseos
+* Role: repo_icinga
+* Role: repo_mariadb
+* Role: sshd
 * Role: timezone
+* Role: yum_utils
+
+* Module: mariadb_user
 
 ### Changed
+
+Changes in existing functionality:
+
 * Role duplicity: Implemented massive-parallel backups.
+* Role mariadb_server: Changed `mariadb_server__admin_host` to a list.
 
 
 ## [1.0.1] - 2022-03-17

@@ -1,0 +1,8 @@
+- name: 'Install Python on the system, optionally with additional modules'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_python'
+
+  roles:
+
+    - role: 'python'
