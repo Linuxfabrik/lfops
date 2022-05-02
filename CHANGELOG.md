@@ -29,6 +29,7 @@ New features:
 * Role: java
 * Role: hetzner_vm
 * Role: kdump
+* Role: keycloak
 * Role: libselinux_python
 * Role: login
 * Role: mailto_root

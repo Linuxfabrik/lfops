@@ -1,0 +1,28 @@
+- name: 'Install and configure Keycloak'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_keycloak'
+
+  roles:
+
+    - role: 'repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+
+    - role: 'repo_mariadb'
+      repo_mariadb__version: '{{ mariadb_server__version }}'
+      when:
+        - 'not mariadb_server__skip_repo_mariadb | d(false)'
+
+    - role: 'python'
+      python__dependent_modules: '{{ mariadb_server__python__dependent_modules | d([]) }}'
+      when:
+        - 'not mariadb_server__skip_python | d(false)'
+
+    - role: 'mariadb_server'
+
+    - role: 'python'
+
+    - role: 'java'
+
+    - role: 'keycloak'

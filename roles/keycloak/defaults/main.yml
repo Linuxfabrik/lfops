@@ -1,0 +1,6 @@
+keycloak__version: '18.0.0'
+keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
+keycloak__db_server: 'mariadb'
+keycloak__db_host: 'localhost'
+keycloak__db_name: 'keycloak'
+keycloak__db_user: 'keycloak'

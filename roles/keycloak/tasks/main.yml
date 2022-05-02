@@ -1,0 +1,130 @@
+- name: 'Ensure group keycloak exists'
+  ansible.builtin.group:
+    name: 'keycloak'
+    state: 'present'
+  tags:
+    - 'keycloak'
+
+
+- name: 'Add the user keycloak with primary group of keycloak'
+  ansible.builtin.user:
+    name: 'keycloak'
+    comment: 'User for Keycloak service'
+    group: 'keycloak'
+  tags:
+    - 'keycloak'
+
+
+- name: 'Create log directory "/var/log/keycloak"'
+  ansible.builtin.file:
+    path: '/var/log/keycloak'
+    state: 'directory'
+    owner: 'keycloak'
+    group: 'keycloak'
+  tags:
+    - 'keycloak'
+
+
+- name: 'Download and unpack archive'
+  ansible.builtin.unarchive:
+    src: 'https://github.com/keycloak/keycloak/releases/download/{{ keycloak__version }}/keycloak-{{ keycloak__version }}.tar.gz'
+    dest: '/opt'
+    remote_src: true
+  tags:
+    - 'keycloak'
+
+- name: 'chown -R keycloak:keycloak /opt/keycloak-{{ keycloak__version }}'
+  ansible.builtin.file:
+    path: '/opt/keycloak-{{ keycloak__version }}'
+    state: 'directory'
+    recurse: true
+    owner: 'keycloak'
+    group: 'keycloak'
+  tags:
+    - 'keycloak'
+
+- block:
+
+  - name: 'Create directory /opt/keycloak-{{ keycloak__version }}/tls'
+    ansible.builtin.file:
+      path: '/opt/keycloak-{{ keycloak__version }}/tls'
+      state: 'directory'
+      owner: 'keycloak'
+      group: 'keycloak'
+    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
+
+  - name: 'Create private key (RSA, 4096 bits)'
+    community.crypto.openssl_privatekey:
+      path: '/opt/keycloak-{{ keycloak__version }}/tls/keycloak.key'
+      owner: 'keycloak'
+      group: 'keycloak'
+    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
+
+  - name: 'Create certificate signing request (CSR) for self-signed certificate'
+    community.crypto.openssl_csr_pipe:
+      privatekey_path: '/opt/keycloak-{{ keycloak__version }}/tls/keycloak.key'
+      common_name: 'linuxfabrik.ch'
+      organization_name: 'Linuxfabrik GmbH'
+      subject_alt_name:
+        - "DNS:keycloak.local"
+    register: 'csr'
+    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
+
+  - name: 'Create simple self-signed certificate'
+    community.crypto.x509_certificate:
+      path: '/opt/keycloak-{{ keycloak__version }}/tls/keycloak.pem'
+      owner: 'keycloak'
+      group: 'keycloak'
+      privatekey_path: '/opt/keycloak-{{ keycloak__version }}/tls/keycloak.key'
+      csr_content: "{{ csr.csr }}"
+      provider: 'selfsigned'
+    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
+
+  - name: 'Change the working directory to /opt/keycloak-{{ keycloak__version }} and bin/kc.sh build --db {{ keycloak__db_server }}'
+    ansible.builtin.shell: 'bin/kc.sh build --db {{ keycloak__db_server }}'
+    args:
+      chdir: '/opt/keycloak-{{ keycloak__version }}'
+
+  - name: 'chown -R keycloak:keycloak /opt/keycloak-{{ keycloak__version }}'
+    ansible.builtin.file:
+      path: '/opt/keycloak-{{ keycloak__version }}'
+      state: 'directory'
+      recurse: true
+      owner: 'keycloak'
+      group: 'keycloak'
+
+  when: 'keycloak__mode == "production"'
+  tags:
+    - 'keycloak'
+
+
+- name: "Configure sysconfig file for keycloak service"
+  ansible.builtin.template:
+    src: 'etc/sysconfig/keycloak-sysconfig.j2'
+    dest: '/etc/sysconfig/keycloak'
+    owner: 'root'
+    group: 'root'
+    mode: 0o640
+  tags:
+    - 'keycloak'
+
+
+- name: 'Create keycloak.service'
+  ansible.builtin.template:
+    src: 'etc/systemd/system/keycloak.service.j2'
+    dest: '/etc/systemd/system/keycloak.service'
+    owner: 'root'
+    group: 'root'
+    mode: 0o644
+  tags:
+    - 'keycloak'
+
+
+- name: 'systemctl enable --now keycloak.service'
+  ansible.builtin.systemd:
+    name: 'keycloak.service'
+    state: 'started'
+    enabled: true
+    daemon_reload: true
+  tags:
+    - 'keycloak'
