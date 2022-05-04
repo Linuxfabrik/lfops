@@ -1,0 +1,3 @@
+repo_icinga__rpm_release_url: 'https://packages.icinga.com/epel/icinga-rpm-release-{{ ansible_facts["distribution_major_version"] }}-latest.noarch.rpm'
+repo_icinga__release_url_suffix: 'epel/$releasever/release/'
+repo_icinga__snapshot_url_suffix: 'epel/$snapshotver/snapshot/'
