@@ -1,0 +1,6 @@
+# vi: ft=yaml
+
+skip_list:
+  - yaml
+
+var_naming_pattern: '^([a-z][a-z_]*)?__[a-z0-9_]*$'
