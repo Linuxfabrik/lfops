@@ -1,4 +1,4 @@
-- name: 'Ensures that the Network Manager is removed and disables the route to the ZEROCONF network'
+- name: 'Configures the network settings on the server.'
   collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_network'

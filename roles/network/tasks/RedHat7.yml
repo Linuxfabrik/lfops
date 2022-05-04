@@ -1,6 +1,0 @@
-- block:
-
-  - name: 'Be sure Network Manager is removed'
-    ansible.builtin.package:
-      name: 'NetworkManager'
-      state: 'absent'

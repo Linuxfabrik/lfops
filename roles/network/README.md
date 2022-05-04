@@ -1,31 +1,38 @@
 # Ansible Role Network
 
-This role ensures that the Network Manager is removed and disables the route to the ZEROCONF network, added to the routing table by the network initscripts.
+This role configures the network settings on the server. It also disables the [zeroconf](http://www.zeroconf.org/).
+
+The role heavily relies on the [linux_system_roles.network Role](https://github.com/linux-system-roles/network).
 
 FQCN: linuxfabrik.lfops.network
 
 Tested on
 
-* RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
 
 
 ## Requirements
 
-This role does not have any requirements.
+## Mandatory
+
+* Install the [Linux System Roles](https://linux-system-roles.github.io/) on the Ansible control node. For example by calling `ansible-galaxy collection install fedora.linux_system_roles`.
+
+## Optional
+
+This role does not have optional requirements.
 
 
 ## Tags
 
-| Tag     | What it does                                                                                                                                     |
-| ---     | ------------                                                                                                                                     |
-| network | Ensures that the Network Manager is removed and disables the route to the ZEROCONF network added to the routing table by the network initscripts |
+| Tag     | What it does                    |
+| ---     | ------------                    |
+| network | Configures the network settings |
 
 
 
 ## Role Variables
 
-This role does not have any role variables.
+Have a look at the available role variables from the [linux_system_roles.network Role](https://github.com/linux-system-roles/network/blob/main/README.md).
 
 
 ## License

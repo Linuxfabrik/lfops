@@ -19,6 +19,8 @@ New features:
 
 * This CHANGELOG.
 
+* Role network: Added functionality to configure network connections.
+
 * Role: at
 * Role: cockpit
 * Role: dnf_makecache
@@ -26,8 +28,8 @@ New features:
 * Role: firewall
 * Role: git
 * Role: glances
-* Role: java
 * Role: hetzner_vm
+* Role: java
 * Role: kdump
 * Role: keycloak
 * Role: libselinux_python
