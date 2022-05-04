@@ -1,15 +1,6 @@
-icinga2_api_user: ''
-icinga2_api_password: ''
-icinga2_master: ''
-
-system_update__notification_hostname_prefix: ''
-
 system_update__notify_time_wday: "mon"
 system_update__notify_time_hour: "09"
 system_update__notify_time_minute: "30"
 
 system_update__update_time: "04:04 + 1 days"
 system_update__update_enabled: true
-
-# allow setting via legacy variables, but it also allows setting update_on_calendar directly
-system_update__update_on_calendar: '{{ system_update__notify_time_wday }} {{ system_update__notify_time_hour }}:{{ system_update__notify_time_minute }}'

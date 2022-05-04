@@ -24,7 +24,7 @@ send_msg () {
 SUBJECT_PREFIX="{{ system_update__notification_hostname_prefix }}$(hostname --short)"
 SUBJECT="$SUBJECT_PREFIX - Update at {{ system_update__update_time }}"
 SENDER="{{ system_update__notification_hostname_prefix }}$(hostname --short) <{{ system_update__notification_sender }}>"
-RECIPIENTS="{{ system_update__notification_recipients }}"
+RECIPIENTS="{{ system_update__notification_recipients|join(' ' ) }}"
 
 cat > /tmp/check-update << 'EOF'
 Please reply to this mail if you have any concerns.
@@ -49,10 +49,6 @@ elif [ "$retc" -eq 1 ]; then
     MSGBODY=$(</tmp/system-update-check-stderr)
     send_msg
     exit 1
-{% if system_update__include_on_no_reboot is defined and system_update__include_on_no_reboot|length %}
-else
-    echo "{{ system_update__include_on_no_reboot }}" | at {{ system_update__update_time }} 2> /dev/null
-{% endif %}
 fi
 {% endif %}
 
@@ -67,9 +63,5 @@ if [ $(grep upgradable /tmp/check-update | wc -l) -gt 0 ]; then
     MSGBODY=$(cat /tmp/check-update)
     send_msg
     echo "/usr/local/bin/update-and-reboot" | at {{ system_update__update_time }} 2> /dev/null
-{% if system_update__include_on_no_reboot is defined and system_update__include_on_no_reboot|length %}
-else
-    echo "{{ system_update__include_on_no_reboot }}" | at {{ system_update__update_time }} 2> /dev/null
-{% endif %}
 fi
 {% endif %}

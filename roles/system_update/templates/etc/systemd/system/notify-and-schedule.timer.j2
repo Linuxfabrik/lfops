@@ -5,7 +5,7 @@
 Description=notify-and-schedule Timer
 
 [Timer]
-OnCalendar={{ system_update__update_on_calendar }}
+OnCalendar={{ system_update__notify_time_wday }} {{ system_update__notify_time_hour }}:{{ system_update__notify_time_minute }}
 Unit=notify-and-schedule.service
 
 [Install]

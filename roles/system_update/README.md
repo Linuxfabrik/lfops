@@ -14,10 +14,10 @@ Tested on
 
 ## Requirements
 
-### Roles:
+### Roles
 
-* at
-* mailx
+* linuxfabrik.lfops.at
+* linuxfabrik.lfops.mailx
 
 
 ## Tags
@@ -25,7 +25,7 @@ Tested on
 | Tag   				| What it does                               		 	  |
 | ---   				| ------------                              		 	  |
 | system_uodate 		| Sets up automatic system update via systemd timer.	  |
-| system_update__state 	| Determines whether notify-and-schedule.timer is enabled |
+| system_update:state 	| Determines whether notify-and-schedule.timer is enabled |
 
 
 ## Role Variables
@@ -34,11 +34,13 @@ Tested on
 
 #### system_update__notification_recipients
 
-The recipients of update and reboot notifications. This can consist of multiple addresses separated by whitespaces.
+A list of recipients to notify about update schedules, the updates themselves and reboots.
 
 Example:
 ```yaml
-system_update__notification_recipients: 'info@example.com support@example.com'
+system_update__notification_recipients:
+	- 'info@example.com'
+	- 'support@example.com'
 ```
 
 
@@ -64,11 +66,13 @@ system_update__notification_hostname_prefix: '1234'
 
 #### system_update__new_configfile_notification_recipients
 
-The recipients of new config file notifications. This can consist of multiple addresses separated by whitespaces.
+A list of recipients to notify if new versions config files have been found.
 
 Example:
 ```yaml
-system_update__new_configfile_notification_recipients: 'info@example.com support@example.com'
+system_update__new_configfile_notification_recipients:
+	- 'info@example.com'
+	- 'support@example.com'
 ```
 
 
@@ -104,7 +108,7 @@ system_update__notify_time_minute: '30'
 
 #### system_update__update_time
 
-The time when to actually execute the updates and to reboot.
+The time when to actually execute the updates and to reboot, relative to the time which has been set in 'system_update__notify_time_wday', 'system_update__notify_time_hour' and 'system_update__notify_time_minute'.
 
 Example:
 ```yaml
@@ -122,48 +126,65 @@ system_update__update_enabled: true
 ```
 
 
-#### system_update__update_on_calendar
+#### system_update__icinga2_api_user
 
-Allow setting via legacy variables, but it also allows setting update_on_calendar directly.
-
-Default:
-```yaml
-system_update__update_on_calendar: '{{ system_update__notify_time_wday }} {{ system_update__notify_time_hour }}:{{ system_update__notify_time_minute }}'
-```
+The Icinga2 API User used to set the downtime for the corresponding host and all it's services.
 
 Example:
 ```yaml
-system_update__update_on_calendar: 'mon 09:30'
+system_update__icinga2_api_user: 'username'
 ```
 
 
-#### icinga2_api_user
+#### system_update__icinga2_api_password
 
-The Icinga2 API User used to set downtimes.
+The password for the Icinga2 API User used to set the downtime for the corresponding host and all it's services.
 
-Default:
+Example:
 ```yaml
-icinga2_api_user: ''
+system_update__icinga2_api_password: '1234abcd'
 ```
 
 
-#### icinga2_api_password
+#### system_update__icinga2_master
 
-The password for the Icinga2 API User used to set downtimes.
+The hostname or ip address of the Icinga2 master instance where to set the downtime for the corresponding host and all it's services.
 
-Default:
+Example:
 ```yaml
-icinga2_api_password: ''
+system_update__icinga2_master: 'icinga.example.com'
 ```
 
 
-#### icinga2_master
+#### system_update__rocketchat_url
 
-The hostname or ip address of the Icinga2 master instance.
+The URL to a potential Rocket.Chat Server to send notifications about the updates to.
 
-Default:
+Example:
 ```yaml
-icinga2_master: ''
+system_update__rocketchat_url: 'rocketchat.example.com'
+```
+
+
+#### system_update__rocketchat_msg_suffix
+
+A suffix to the Rocket.Chat notifications. This can be used to mention other users.
+
+Example:
+```yaml
+system_update__rocketchat_msg_suffix: '@administrator'
+```
+
+
+#### system_update__post_update_code
+
+This codeblock will be executed after the updates have been installed and before a potentially scheduled reboot.
+
+Example:
+```yaml
+system_update__post_update_code: |-
+  VAR='hello world'
+  echo $VAR
 ```
 
 

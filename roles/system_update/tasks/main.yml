@@ -19,7 +19,7 @@
 - block:
 
   - name: 'Copy notify-and-schedule script to /usr/local/bin'
-    template:
+    ansible.builtin.template:
       src: 'usr/local/bin/notify-and-schedule.j2'
       dest: '/usr/local/bin/notify-and-schedule'
       owner: 'root'
@@ -27,7 +27,7 @@
       mode: 0o744
 
   - name: 'Copy update-and-reboot script to /usr/local/bin'
-    template:
+    ansible.builtin.template:
       src: 'usr/local/bin/update-and-reboot.j2'
       dest: '/usr/local/bin/update-and-reboot'
       owner: 'root'
@@ -35,7 +35,7 @@
       mode: 0o744
 
   - name: 'Copt notify-and-schedule.service to /etc/systemd/system/'
-    template:
+    ansible.builtin.template:
       src: 'etc/systemd/system/notify-and-schedule.service.j2'
       dest: '/etc/systemd/system/notify-and-schedule.service'
       owner: 'root'
@@ -43,7 +43,7 @@
       mode: 0o644
 
   - name: 'Copy notify-and-schedule.timer to /etc/systemd/system/'
-    template:
+    ansible.builtin.template:
       src: 'etc/systemd/system/notify-and-schedule.timer.j2'
       dest: '/etc/systemd/system/notify-and-schedule.timer'
       owner: 'root'
@@ -57,7 +57,7 @@
 - block:
 
   - name: 'systemctl {{ system_update__update_enabled | bool | ternary("enable", "disable") }} notify-and-schedule.timer --now'
-    systemd:
+    ansible.builtin.systemd:
       name: 'notify-and-schedule.timer'
       state: '{{ system_update__update_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ system_update__update_enabled }}'
@@ -65,4 +65,4 @@
 
   tags:
     - 'system_update'
-    - 'system_update__state'
+    - 'system_update:state'
