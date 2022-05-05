@@ -1,6 +1,7 @@
 # Ansible Role system_update
 
-This role configures automatic system updates.
+This role configures the system to check for system updates, to schedule updates and reboots and to send notifications via email or Rocket.Chat.
+The update check can be set to a specific weekday and daytime. The execution of available updates and necessary reboots can be scheduled relatively to the specific update check time e.g. "04:00 + 1 days".
 
 FQCN: linuxfabrik.lfops.system_update
 
@@ -22,9 +23,9 @@ Tested on
 
 ## Tags
 
-| Tag   				| What it does                               		 	  |
-| ---   				| ------------                              		 	  |
-| system_uodate 		| Sets up automatic system update via systemd timer.	  |
+| Tag   								| What it does                               		 	 				|
+| ---   								| ------------                              		 	  			|
+| system_uodate 				| Sets up automatic system update via systemd timer.	  	|
 | system_update:state 	| Determines whether notify-and-schedule.timer is enabled |
 
 
