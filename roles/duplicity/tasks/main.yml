@@ -107,7 +107,7 @@
       name: 'duba.timer'
       state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ duplicity__timer_enabled }}'
-      daemon_reload: 'duplicity__systemd_duba_timer_result is changed'
+      daemon_reload: '{{ duplicity__systemd_duba_timer_result is changed }}'
 
   tags:
     - 'duplicity'
