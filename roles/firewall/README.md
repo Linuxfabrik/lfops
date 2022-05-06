@@ -1,6 +1,6 @@
 # Ansible Role firewall
 
-This role configures a firewall on the system. For the currently supported firewalls, see the options for the `firewall__firewall` variable.
+This role configures a firewall on the system. For the currently supported firewalls, see the options for the `firewall__firewall` variable below.
 
 FQCN: linuxfabrik.lfops.firewall
 
