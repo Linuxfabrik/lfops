@@ -29,6 +29,7 @@
       state: 'stopped'
       enabled: false
       masked: true
+    ignore_errors: true # If iptables.service does not exist, e.g. on Debian like systems
     when:
       - 'firewall__firewall != "iptables"'
       - '"iptables.service" in ansible_facts["services"]'
@@ -88,39 +89,20 @@
     - 'firewall'
 
 
-- block:
-
-  - name: 'Make sure iptables-services is installed'
-    ansible.builtin.package:
-      name: 'iptables-services'
-      state: 'present'
-
-  - name: 'Be sure iptables is started, enabled and not masked'
-    ansible.builtin.systemd:
-      name: 'iptables'
-      state: 'started'
-      enabled: true
-      masked: false
-
-  - name: 'Copy iptables definition to /etc/sysconfig/iptables'
-    ansible.builtin.copy:
-      src: "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables"
-      dest: '/etc/sysconfig/'
-      owner: 'root'
-      group: 'root'
-      mode: 0o600
-    when: 'inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/etc/sysconfig/iptables" is file'
-    register: 'firewall__iptables_definition_result'
-
-  - name: 'systemctl restart iptables.service'
-    ansible.builtin.systemd:
-      name: 'iptables.service'
-      state: 'restarted'
-    when: 'firewall__iptables_definition_result is changed'
-
-  when: 'firewall__firewall == "iptables"'
-  tags:
-    - 'firewall-iptables'
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  vars:
+    __task_file:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
 
 
 - block:
