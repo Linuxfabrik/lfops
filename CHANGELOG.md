@@ -41,6 +41,7 @@ New features:
 * Role: repo_baseos
 * Role: repo_icinga
 * Role: repo_mariadb
+* Role: repo_mydumper
 * Role: sshd
 * Role: timezone
 * Role: yum_utils
