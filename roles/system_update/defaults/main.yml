@@ -1,6 +1,3 @@
-system_update__notify_time_wday: "mon"
-system_update__notify_time_hour: "09"
-system_update__notify_time_minute: "30"
-
-system_update__update_time: "04:04 + 1 days"
 system_update__update_enabled: true
+system_update__update_on_calendar: 'mon 10:00'
+system_update__update_time: '04:00 + 1 days'
