@@ -1,0 +1,35 @@
+- block:
+
+  - name: 'dnf install bind -y'
+    ansible.builtin.package:
+      name:
+        - 'bind'
+      state: 'present'
+
+  - name: 'systemctl {{ bind__named_service_enabled | bool | ternary("enable", "disable") }} --now named.service'
+    ansible.builtin.systemd:
+      name: 'named.service'
+      enabled: '{{ bind__named_service_enabled }}'
+      state: '{{ bind__named_service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'deploy /etc/named.conf'
+    ansible.builtin.template:
+      src: 'etc/named.conf.j2'
+      dest: '/etc/named.conf'
+      owner: 'root'
+      group: 'named'
+      mode: 0o640
+    notify: 'bind: reload named'
+
+  - name: 'deploy the forward and reverse zones'
+    ansible.builtin.template:
+      src: 'var/named/raw.zone.j2'
+      dest: '/var/named/{{ item.file }}'
+      owner: 'root'
+      group: 'named'
+      mode: 0o640
+    loop: '{{ bind__zones }}'
+    notify: 'bind: reload named'
+
+  tags:
+    - 'bind'

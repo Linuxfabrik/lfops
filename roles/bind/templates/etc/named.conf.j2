@@ -1,0 +1,70 @@
+# {{ ansible_managed }}
+# 2022050901
+
+acl "trusted" {
+    localhost;
+    localnets;
+    {% for item in bind__trusted_networks %}
+    {{ item }};
+    {% endfor %}
+};
+
+options {
+    allow-query-cache { trusted; };
+    allow-recursion { trusted; };
+    allow-transfer { none; };
+    bindkeys-file "/etc/named.iscdlv.key";
+    directory "/var/named";
+    disable-empty-zone yes;
+    dnssec-enable no;
+    dnssec-validation no;
+    dump-file "/var/named/data/cache_dump.db";
+    filter-aaaa-on-v4 yes;
+    forward only;
+    forwarders {
+        {% for item in bind__forwarders %}
+        {{ item }};
+        {% endfor %}
+    };
+    listen-on port 53 {
+        {% for item in bind__listen_on_addresses %}
+        {{ item }};
+        {% endfor %}
+    };
+    listen-on-v6 { none; };
+    managed-keys-directory "/var/named/dynamic";
+    memstatistics-file "/var/named/data/named_mem_stats.txt";
+    pid-file "/run/named/named.pid";
+    recursion yes;
+    session-keyfile "/run/named/session.key";
+    statistics-file "/var/named/data/named_stats.txt";
+    version "Linuxfabrik";
+};
+
+logging {
+    channel default_debug {
+        file "data/named.run";
+        severity dynamic;
+    };
+};
+
+zone "." IN {
+    type hint;
+    file "named.ca";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+
+{% for item in bind__zones %}
+zone "{{ item.name }}" IN {
+    type master;
+    file "{{ item.file }}";
+    # do normal iterative resolution (do not forward)
+    forwarders { };
+    allow-query { trusted; };
+    allow-transfer { trusted; };
+    allow-update { none; };
+};
+
+{% endfor %}

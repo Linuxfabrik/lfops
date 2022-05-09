@@ -1,0 +1,8 @@
+- name: 'Install and configure bind'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_bind'
+
+  roles:
+
+    - role: 'bind'

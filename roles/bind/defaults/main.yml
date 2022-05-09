@@ -1,0 +1,8 @@
+bind__forwarders:
+  - '1.0.0.1'
+  - '1.1.1.1'
+bind__listen_on_addresses:
+  - 'any'
+bind__named_service_enabled: true
+bind__trusted_networks: []
+bind__zones: []

@@ -22,6 +22,7 @@ New features:
 * Role network: Added functionality to configure network connections.
 
 * Role: at
+* Role: bind
 * Role: cockpit
 * Role: dnf_makecache
 * Role: exoscale_vm
