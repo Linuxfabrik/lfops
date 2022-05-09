@@ -103,6 +103,32 @@ influxdb_users:
 ```
 
 
+#### influxdb__dump_timer_enabled
+
+Enables or disables the named service, analogous to `systemctl enable/disable --now`. Possible options:
+
+* true
+* false
+
+Default:
+```yaml
+influxdb__dump_timer_enabled: true
+```
+
+
+#### influxdb__service_enabled
+
+Enables or disables the named service, analogous to `systemctl enable/disable --now`. Possible options:
+
+* true
+* false
+
+Default:
+```yaml
+influxdb__service_enabled: true
+```
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)
