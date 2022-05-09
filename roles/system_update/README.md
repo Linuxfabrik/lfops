@@ -67,7 +67,7 @@ system_update__notification_hostname_prefix: '1234'
 
 #### system_update__new_configfile_notification_recipients
 
-A list of recipients to notify if new versions config files have been found.
+A list of email recipients to notify if new versions config files have been found.
 
 Example:
 ```yaml
