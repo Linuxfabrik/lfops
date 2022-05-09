@@ -1,0 +1,8 @@
+- name: 'Ignore some crappy mirror servers'
+  ansible.builtin.lineinfile:
+    path: '/etc/yum/pluginconf.d/fastestmirror.conf'
+    regexp: '(?i)^#?exclude='
+    line: 'exclude=mirror.spreitzer.ch, ftp.plusline.net'
+    state: 'present'
+  tags:
+    - 'system_update'
