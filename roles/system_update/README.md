@@ -179,7 +179,7 @@ system_update__rocketchat_msg_suffix: '@administrator'
 
 #### system_update__post_update_code
 
-This codeblock will be executed after the updates have been installed and before a potentially scheduled reboot.
+This codeblock will be executed after the updates have been installed and before a potential reboot.
 
 Example:
 ```yaml
