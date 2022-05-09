@@ -10,7 +10,7 @@ send_msg () {
 {% else %}
     echo -n "$MSGBODY" | mail -s "$SUBJECT" -r "$SENDER" "$RECIPIENTS"
 {% endif %}
-{% if system_update__rocketchat_url is defined and system_update__rocketchat_url|length %}
+{% if system_update__rocketchat_url is defined and system_update__rocketchat_url | length %}
     /usr/bin/curl --silent --output /dev/null --data-urlencode \
         "text=${SUBJECT}
 
