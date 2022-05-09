@@ -35,7 +35,7 @@ Tested on
 
 #### system_update__notification_recipients
 
-A list of recipients to notify about update schedules, the updates themselves and reboots.
+A list of email recipients to notify about update schedules, the updates themselves and reboots.
 
 Example:
 ```yaml
