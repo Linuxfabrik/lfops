@@ -40,6 +40,7 @@ New features:
 * Role: php
 * Role: repo_baseos
 * Role: repo_icinga
+* Role: repo_influxdb
 * Role: repo_mariadb
 * Role: repo_mydumper
 * Role: sshd
