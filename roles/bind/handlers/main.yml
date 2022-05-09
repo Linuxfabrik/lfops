@@ -2,3 +2,8 @@
   ansible.builtin.service:
     state: 'reloaded'
     name: 'named'
+
+- name: 'bind: restart named'
+  ansible.builtin.service:
+    state: 'restarted'
+    name: 'named'

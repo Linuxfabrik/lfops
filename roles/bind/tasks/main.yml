@@ -12,6 +12,15 @@
       enabled: '{{ bind__named_service_enabled }}'
       state: '{{ bind__named_service_enabled | bool | ternary("started", "stopped") }}'
 
+  - name: 'deploy /etc/sysconfig/named'
+    ansible.builtin.template:
+      src: 'etc/sysconfig/named.j2'
+      dest: '/etc/sysconfig/named'
+      owner: 'root'
+      group: 'root'
+      mode: 0o640
+    notify: 'bind: restart named'
+
   - name: 'deploy /etc/named.conf'
     ansible.builtin.template:
       src: 'etc/named.conf.j2'
