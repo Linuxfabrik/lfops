@@ -33,9 +33,9 @@
   tags:
     - 'keycloak'
 
-- name: 'chown -R keycloak:keycloak /opt/keycloak-{{ keycloak__version }}'
+- name: 'chown -R keycloak:keycloak /opt/keycloak'
   ansible.builtin.file:
-    path: '/opt/keycloak-{{ keycloak__version }}'
+    path: '/opt/keycloak'
     state: 'directory'
     recurse: true
     owner: 'keycloak'
@@ -45,9 +45,9 @@
 
 - block:
 
-  - name: 'Create directory /opt/keycloak-{{ keycloak__version }}/tls'
+  - name: 'Create directory /opt/keycloak/tls'
     ansible.builtin.file:
-      path: '/opt/keycloak-{{ keycloak__version }}/tls'
+      path: '/opt/keycloak/tls'
       state: 'directory'
       owner: 'keycloak'
       group: 'keycloak'
@@ -55,14 +55,14 @@
 
   - name: 'Create private key (RSA, 4096 bits)'
     community.crypto.openssl_privatekey:
-      path: '/opt/keycloak-{{ keycloak__version }}/tls/keycloak.key'
+      path: '/opt/keycloak/tls/keycloak.key'
       owner: 'keycloak'
       group: 'keycloak'
     when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
 
   - name: 'Create certificate signing request (CSR) for self-signed certificate'
     community.crypto.openssl_csr_pipe:
-      privatekey_path: '/opt/keycloak-{{ keycloak__version }}/tls/keycloak.key'
+      privatekey_path: '/opt/keycloak/tls/keycloak.key'
       common_name: 'linuxfabrik.ch'
       organization_name: 'Linuxfabrik GmbH'
       subject_alt_name:
@@ -72,22 +72,22 @@
 
   - name: 'Create simple self-signed certificate'
     community.crypto.x509_certificate:
-      path: '/opt/keycloak-{{ keycloak__version }}/tls/keycloak.pem'
+      path: '/opt/keycloak/tls/keycloak.pem'
       owner: 'keycloak'
       group: 'keycloak'
-      privatekey_path: '/opt/keycloak-{{ keycloak__version }}/tls/keycloak.key'
+      privatekey_path: '/opt/keycloak/tls/keycloak.key'
       csr_content: "{{ csr.csr }}"
       provider: 'selfsigned'
     when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
 
-  - name: 'Change the working directory to /opt/keycloak-{{ keycloak__version }} and bin/kc.sh build --db {{ keycloak__db_server }}'
+  - name: 'Change the working directory to /opt/keycloak and bin/kc.sh build --db {{ keycloak__db_server }}'
     ansible.builtin.shell: 'bin/kc.sh build --db {{ keycloak__db_server }}'
     args:
-      chdir: '/opt/keycloak-{{ keycloak__version }}'
+      chdir: '/opt/keycloak'
 
-  - name: 'chown -R keycloak:keycloak /opt/keycloak-{{ keycloak__version }}'
+  - name: 'chown -R keycloak:keycloak /opt/keycloak'
     ansible.builtin.file:
-      path: '/opt/keycloak-{{ keycloak__version }}'
+      path: '/opt/keycloak'
       state: 'directory'
       recurse: true
       owner: 'keycloak'
