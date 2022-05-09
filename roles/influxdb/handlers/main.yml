@@ -1,0 +1,4 @@
+- name: 'influxdb: restart influxdb'
+  ansible.builtin.service:
+    name: 'influxdb'
+    state: 'restarted'

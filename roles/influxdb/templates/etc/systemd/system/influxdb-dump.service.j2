@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2022050901
+
+[Unit]
+Description=Dumps (Backups) for InfluxDB
+
+[Service]
+ExecStart=/usr/local/bin/influxdb-dump
+Type=oneshot
+User=root

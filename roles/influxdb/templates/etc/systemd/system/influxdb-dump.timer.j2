@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022050901
+
+[Unit]
+Description=influxdb-dump Timer
+
+[Timer]
+OnCalendar=*-*-* 5:{{ 59 | random(seed=inventory_hostname) }}
+Unit=influxdb-dump.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,16 @@
+- name: 'Manage and configure influxdb'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_influxdb'
+
+  roles:
+
+    - role: 'repo_influxdb'
+
+    - role: 'python_venv'
+      python_venv__dependent_venvs:
+        - '{{ influxdb__python_venv__dependent_venvs | d({}) }}'
+      when:
+        - 'not influxdb__skip_python_venv | d(false)'
+
+    - role: 'influxdb'

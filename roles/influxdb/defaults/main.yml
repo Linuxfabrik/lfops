@@ -1,0 +1,10 @@
+influxdb__dump_timer_enabled: true
+influxdb__service_enabled: true
+influxdb__databases: []
+influxdb__users: []
+
+influxdb__python_venv__dependent_venvs:
+  - name: 'influxdb'
+    packages:
+      - 'influxdb'
+      - 'requests'

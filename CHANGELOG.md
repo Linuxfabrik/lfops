@@ -29,6 +29,7 @@ New features:
 * Role: git
 * Role: glances
 * Role: hetzner_vm
+* Role: influxdb
 * Role: java
 * Role: kdump
 * Role: keycloak
