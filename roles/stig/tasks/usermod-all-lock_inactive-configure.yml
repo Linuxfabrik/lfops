@@ -1,0 +1,13 @@
+- ansible.builtin.debug:
+    msg:
+      - 'usermod-all-lock_inactive-configure.yml'
+
+- ansible.builtin.command: 'useradd --defaults --inactive {{ stig__user_inactivelock_days }}'
+  changed_when: false
+
+- ansible.builtin.shell: 'grep -E ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1'
+  register: 'shell_output'
+  changed_when: false
+
+- ansible.builtin.shell: 'chage --inactive {{ stig__user_inactivelock_days }} {{ item }}'
+  loop: '"{{ shell_output.stdout_lines }}"'

@@ -1,0 +1,10 @@
+- ansible.builtin.debug:
+    msg:
+      - 'rsyncd-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'rsyncd'
+    state: 'stopped'
+    enabled: false
+  when:
+    - "'rsyncd.service' in ansible_facts['services']"

@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2021101501
+
+[Unit]
+Description=aide-check Timer
+
+[Timer]
+OnCalendar={{ stig__aide_calendar }}
+Unit=aide-check.service
+
+[Install]
+WantedBy=timers.target

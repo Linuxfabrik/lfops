@@ -1,0 +1,29 @@
+- ansible.builtin.debug:
+    msg:
+      - 'rpm-setperms-configure.yml'
+
+- ansible.builtin.command: 'rpm -Va --nomtime --nosize --nolinkto --nodeps --nosignature --nofiledigest --nordev --nocaps --nouser --nogroup'
+  args:
+    warn: false
+  register: 'shell_output'
+  failed_when: 'shell_output.rc > 1'
+  changed_when: false
+  check_mode: false
+
+- ansible.builtin.command: 'rpm -qf "{{ item }}"'
+  args:
+    warn: false
+  with_items: '{{ shell_output.stdout_lines | map(''regex_findall'',
+    ''^[.]+[M]+.* (\/.*)'', ''\1'') | map(''join'') | select(''match'', ''(\/.*)'')
+    | list | unique }}'
+  register: 'list_of_packages'
+  changed_when: false
+  check_mode: false
+  when: 'shell_output.stdout_lines | length'
+
+- ansible.builtin.command: 'rpm --setperms "{{ item }}"'
+  args:
+    warn: false
+  with_items: '{{ list_of_packages.results | map(attribute=''stdout_lines'') | list
+    | unique }}'
+  when: 'shell_output.stdout_lines | length'

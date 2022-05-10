@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'nginx-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'nginx'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"nginx.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["nginx.service"]["state"] == "running" or ansible_facts["services"]["nginx.service"]["status"] == "enabled"'

@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'ypserv-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'ypserv'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"ypserv.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["ypserv.service"]["state"] == "running" or ansible_facts["services"]["ypserv.service"]["status"] == "enabled"'

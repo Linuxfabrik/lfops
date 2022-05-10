@@ -1,0 +1,82 @@
+- block:
+
+  - name: 'Get latest version'
+    sqlite_query:
+      db: 'stig.db'
+      path: '{{ role_path }}/library'
+      query_type: 'select'
+      query: >
+        SELECT profile_version
+        FROM profile
+        WHERE
+          profile_name = :profile_name
+        ORDER BY profile_version DESC
+        LIMIT 1
+      named_args:
+        profile_name: '{{ s.profile_name }}'
+      as_dict: false
+    delegate_to: 'localhost'
+    register: 'latest_version'
+
+  - ansible.builtin.set_fact:
+      profile_version: '{{ latest_version.query_result | first | first }}'
+  when: 's.profile_version is not defined or s.profile_version == "latest"'
+
+- ansible.builtin.set_fact:
+    profile_version: '"{{ s.profile_version }}"'
+  when: 's.profile_version is defined'
+
+- name: 'Get a list of matching profile remediations from the STIG database'
+  sqlite_query:
+    db: 'stig.db'
+    path: '{{ role_path }}/library'
+    query_type: 'select'
+    query: >
+      SELECT control_name, remediation_name
+      FROM profile as p
+      LEFT JOIN control as c ON p.control_id = c.id
+      WHERE
+        profile_name = :profile_name
+        and profile_version = :profile_version
+        and remediation_name <> ""
+        and control_id NOTNULL
+        {% if s.control_name_include is defined and s.control_name_include %}and control_name REGEXP :control_name_include{% endif %}
+        {% if s.control_name_exclude is defined and s.control_name_exclude %}and control_name NOT REGEXP :control_name_exclude{% endif %}
+        {% if also_use_controls_disabled_by_default is defined and also_use_controls_disabled_by_default %}{% else %}and enabled = 1{% endif %}
+      ORDER BY exec_order ASC
+    named_args:
+      profile_name: '{{ s.profile_name }}'
+      profile_version: '{{ profile_version }}'
+      control_name_include: '{{ s.control_name_include | default([]) | join("|") }}'
+      control_name_exclude: '{{ s.control_name_exclude | default([]) | join("|") }}'
+    as_dict: false
+  delegate_to: 'localhost'
+  connection: 'local'
+  register: 'remediations'
+
+- name: 'Info: "Remediations to be applied"'
+  ansible.builtin.debug:
+    msg: '{{ control_name[0] }}'
+  loop: '{{ remediations.query_result }}'
+  loop_control:
+    loop_var: 'control_name'
+
+- ansible.builtin.debug:
+    msg:
+      - 'If you want to remediate afterwards, run this:'
+      - "./audit.py --lengthy --profile-name='{{ s.profile_name }}' --profile-version='{{ profile_version }}' --hostname={{ inventory_hostname }} --control-name-include='{{ s.control_name_include | default([]) | join('|') }}' --control-name-exclude='{{ s.control_name_exclude | default([]) | join('|') }}'"
+
+- ansible.builtin.pause:
+    prompt: 'Do you want to continue? (y/N)'
+  register: 'confirm'
+
+- ansible.builtin.meta: 'end_play'
+  when: 'confirm is defined and confirm.user_input != "y"'
+
+- name: 'Action: "Start applying remediations now"'
+  ansible.builtin.include_role:
+    name: 'stig'
+    tasks_from: '{{ action_item[1] }}'
+  loop: '{{ remediations.query_result }}'
+  loop_control:
+    loop_var: 'action_item'

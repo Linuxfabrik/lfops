@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'httpd-remove.yml'
+
+- ansible.builtin.package:
+    name: 'httpd'
+    state: 'absent'

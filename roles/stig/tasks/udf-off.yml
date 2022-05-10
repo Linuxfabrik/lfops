@@ -1,0 +1,13 @@
+- ansible.builtin.debug:
+    msg:
+      - 'udf-off.yml'
+
+- block:
+    # First run "modprobe" to let the task fail when the kernel module is used.
+    # This prevents the kernel module from being permanently disabled by "template".
+  - community.general.modprobe:
+      name: 'udf'
+      state: 'absent'
+  - ansible.builtin.template:
+      src: 'etc/modprobe.d/udf.conf.j2'
+      dest: '/etc/modprobe.d/udf.conf'

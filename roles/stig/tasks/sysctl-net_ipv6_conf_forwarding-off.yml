@@ -1,0 +1,15 @@
+- ansible.builtin.debug:
+    msg:
+      - 'sysctl-net_ipv6_conf_forwarding-off.yml'
+
+- ansible.posix.sysctl:
+    name: '{{ item.name }}'
+    value: '{{ item.value }}'
+    sysctl_set: true
+    state: 'present'
+    reload: true
+    ignoreerrors: true
+  loop:
+    - {name: 'net.ipv6.conf.all.forwarding', value: 0}
+  when:
+    - 'ipv6_enabled'

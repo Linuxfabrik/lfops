@@ -1,0 +1,14 @@
+- ansible.builtin.debug:
+    msg:
+      - 'crypto-policy-configure.yml'
+
+- ansible.builtin.command: 'fips-mode-setup --enable'
+  # Kernel initramdisks are being regenerated. This might take some time.
+  changed_when: false
+  when:
+    - 'stig__crypto_policy | lower == "fips"'
+
+- ansible.builtin.command: 'update-crypto-policies --set "FUTURE"'
+  changed_when: false
+  when:
+    - 'stig__crypto_policy | lower == "future"'

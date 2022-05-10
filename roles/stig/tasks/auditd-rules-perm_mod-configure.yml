@@ -1,0 +1,10 @@
+- ansible.builtin.debug:
+    msg:
+      - 'auditd-rules-perm_mod-configure.yml'
+
+- ansible.builtin.template:
+    src: 'etc/audit/rules.d/perm-mod.rules.j2'
+    dest: '/etc/audit/rules.d/perm-mod.rules'
+    owner: 'root'
+    group: 'root'
+    mode: 0o600

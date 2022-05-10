@@ -1,0 +1,9 @@
+- ansible.builtin.debug:
+    msg:
+      - 'passwd-chmod.yml'
+
+- ansible.builtin.file:
+    path: '/etc/passwd'
+    owner: 'root'
+    group: 'root'
+    mode: 0o644

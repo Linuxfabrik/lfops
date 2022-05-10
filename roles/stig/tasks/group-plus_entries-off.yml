@@ -1,0 +1,8 @@
+- ansible.builtin.debug:
+    msg:
+      - 'group-plus_entries-off.yml'
+
+- ansible.builtin.replace:
+    path: '/etc/group'
+    regexp: '^\+'
+    replace: ''

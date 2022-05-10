@@ -1,0 +1,5 @@
+- ansible.builtin.debug:
+    msg:
+      - 'selinux-semanage_httpd-configure.yml'
+
+- ansible.builtin.command: 'semanage permissive --delete httpd_t'

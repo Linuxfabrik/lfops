@@ -1,0 +1,10 @@
+- ansible.builtin.debug:
+    msg:
+      - 'issue-chmod.yml'
+
+- ansible.builtin.file:
+    path: '/etc/issue'
+    state: 'file'
+    owner: 'root'
+    group: 'root'
+    mode: 0o644

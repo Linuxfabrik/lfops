@@ -1,0 +1,23 @@
+- ansible.builtin.debug:
+    msg:
+      - 'login_defs-pass_warn_age-configure.yml'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/login.defs'
+    create: false
+    regexp: '(?i)^\s*PASS_WARN_AGE\s+'
+    state: 'absent'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/login.defs'
+    create: true
+    line: 'PASS_WARN_AGE {{ stig__pass_warn_age }}'
+    state: 'present'
+
+- ansible.builtin.shell: 'grep -E ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1'
+  register: 'shell_output'
+  changed_when: false
+
+- ansible.builtin.command: 'chage --warndays {{ stig__pass_warn_age }} "{{ item }}"'
+  changed_when: false
+  loop: '{{ shell_output.stdout_lines }}'

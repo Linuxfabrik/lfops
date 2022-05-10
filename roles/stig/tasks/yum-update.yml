@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'yum-update.yml'
+
+- ansible.builtin.yum:
+    name: '"*"'
+    state: 'latest'

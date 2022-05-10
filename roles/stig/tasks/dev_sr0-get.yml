@@ -1,0 +1,8 @@
+- ansible.builtin.debug:
+    msg:
+      - 'dev_sr0-get.yml'
+
+- ansible.builtin.command: 'findmnt "/dev/sr0"'
+  register: 'device_sr0'
+  failed_when: 'device_sr0.rc > 1'
+  changed_when: false

@@ -1,0 +1,10 @@
+- ansible.builtin.debug:
+    msg:
+      - 'ssh-host-key-public-chmod.yml'
+
+- ansible.builtin.command: '"{{ item }}"'
+  become: true
+  changed_when: false
+  loop:
+    - "find /etc/ssh -xdev -type f -name 'ssh_host_*_key.pub' -exec chown root:root {} \\;"
+    - "find /etc/ssh -xdev -type f -name 'ssh_host_*_key.pub' -exec chmod 0644 {} \\;"

@@ -1,0 +1,13 @@
+- ansible.builtin.debug:
+    msg:
+      - 'sysctl-net_ipv4_tcp_syncookies-on.yml'
+
+- ansible.posix.sysctl:
+    name: '{{ item.name }}'
+    value: '{{ item.value }}'
+    sysctl_set: true
+    state: 'present'
+    reload: true
+    ignoreerrors: true
+  loop:
+    - {name: 'net.ipv4.tcp_syncookies', value: 1}

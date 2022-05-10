@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'dhcpd-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'dhcpd'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"dhcpd.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["dhcpd.service"]["state"] == "running" or ansible_facts["services"]["dhcpd.service"]["status"] == "enabled"'

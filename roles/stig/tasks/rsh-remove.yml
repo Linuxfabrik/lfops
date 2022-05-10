@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'rsh-remove.yml'
+
+- ansible.builtin.package:
+    name: 'rsh'
+    state: 'absent'

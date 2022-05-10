@@ -1,0 +1,27 @@
+- ansible.builtin.debug:
+    msg:
+      - 'chrony-configure.yml'
+
+- block:
+
+  - ansible.builtin.lineinfile:
+      path: '/etc/sysconfig/chronyd'
+      regexp: '^(#)?OPTIONS'
+      line: 'OPTIONS="-u chrony"'
+      state: 'present'
+      create: true
+
+  - ansible.builtin.template:
+      src: 'etc/chrony.conf.j2'
+      dest: '/etc/chrony.conf'
+      mode: 0o644
+    notify: 'stig: systemctl restart chronyd'
+
+  - name: 'systemctl {{ stig__chrony_service_enabled | bool | ternary("enable", "disable") }} --now chronyd.service'
+    ansible.builtin.systemd:
+      name: 'chronyd.service'
+      enabled: '{{ stig__chrony_service_enabled }}'
+      state: '{{ stig__chrony_service_enabled | bool | ternary("started", "stopped") }}'
+
+  when:
+    - '"systemd-timesyncd.service" not in ansible_facts["services"]'

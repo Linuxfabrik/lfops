@@ -1,0 +1,10 @@
+- ansible.builtin.debug:
+    msg:
+      - 'cron_monthly-chmod.yml'
+
+- ansible.builtin.file:
+    path: '/etc/cron.monthly'
+    state: 'directory'
+    owner: 'root'
+    group: 'root'
+    mode: 0o700

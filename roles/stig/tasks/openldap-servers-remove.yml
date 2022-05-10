@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'openldap-servers-remove.yml'
+
+- ansible.builtin.package:
+    name: 'openldap-servers'
+    state: 'absent'

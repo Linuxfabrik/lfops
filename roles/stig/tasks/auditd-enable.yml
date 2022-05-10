@@ -1,0 +1,10 @@
+- ansible.builtin.debug:
+    msg:
+      - 'auditd-enable.yml'
+
+- ansible.builtin.systemd:
+    name: 'auditd'
+    state: 'started'
+    enabled: true
+  when:
+    - "'auditd.service' in ansible_facts['services']"

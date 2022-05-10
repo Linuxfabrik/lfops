@@ -1,0 +1,10 @@
+- ansible.builtin.debug:
+    msg:
+      - 'auditd-max_log_file_action-configure.yml'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/audit/auditd.conf'
+    create: true
+    regexp: '^max_log_file_action\s*=.*'
+    line: 'max_log_file_action = keep_logs'
+    state: 'present'

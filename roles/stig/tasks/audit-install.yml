@@ -1,0 +1,9 @@
+- ansible.builtin.debug:
+    msg:
+      - 'audit-install.yml'
+
+- ansible.builtin.package:
+    name:
+      - 'audit'
+      - 'audit-libs'
+    state: 'present'

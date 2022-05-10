@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'ypserv-remove.yml'
+
+- ansible.builtin.package:
+    name: 'ypserv'
+    state: 'absent'

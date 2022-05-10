@@ -1,0 +1,10 @@
+- ansible.builtin.debug:
+    msg:
+      - 'rsyslog-enable.yml'
+
+- ansible.builtin.systemd:
+    name: 'rsyslog'
+    state: 'started'
+    enabled: true
+  when:
+    - "'rsyslog.service' in ansible_facts['services']"

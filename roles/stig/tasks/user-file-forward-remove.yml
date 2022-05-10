@@ -1,0 +1,13 @@
+- ansible.builtin.debug:
+    msg:
+      - 'user-file-forward-remove.yml'
+
+- ansible.builtin.shell: "awk -F: '{print $1}' /etc/passwd | sort | uniq"
+  changed_when: false
+  check_mode: false
+  register: 'shell_output'
+
+- ansible.builtin.file:
+    path: '~{{ item }}/.forward'
+    state: 'absent'
+  loop: '{{ shell_output.stdout_lines | flatten | default([]) }}'

@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'motd-configure.yml'
+
+- ansible.builtin.file:
+    path: '/etc/motd'
+    state: 'absent'

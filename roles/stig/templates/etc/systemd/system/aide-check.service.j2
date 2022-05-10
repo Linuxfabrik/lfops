@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2020110901
+
+[Unit]
+Description=aide-check Service
+
+[Service]
+ExecStart=/usr/sbin/aide --check
+Type=oneshot
+User=root
+
+[Install]
+WantedBy=basic.target

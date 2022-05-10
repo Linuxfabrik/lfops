@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'sudo-install.yml'
+
+- ansible.builtin.package:
+    name: 'sudo'
+    state: 'present'

@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'named-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'named'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"named.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["named.service"]["state"] == "running" or ansible_facts["services"]["named.service"]["status"] == "enabled"'

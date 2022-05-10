@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'dnf-update.yml'
+
+- ansible.builtin.dnf:
+    name: '"*"'
+    state: 'latest'

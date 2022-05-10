@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'cups-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'cups'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"cups.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["cups.service"]["state"] == "running" or ansible_facts["services"]["cups.service"]["status"] == "enabled"'

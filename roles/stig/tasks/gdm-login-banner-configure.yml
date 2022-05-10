@@ -1,0 +1,37 @@
+- ansible.builtin.debug:
+    msg:
+      - 'gdm-login-banner-configure.yml'
+
+# https://help.gnome.org/admin/system-admin-guide/stable/login-banner.html.en
+
+- block:
+
+  - ansible.builtin.lineinfile:
+      path: '/etc/dconf/profile/gdm'
+      regexp: '"{{ item.regexp }}"'
+      line: '"{{ item.line }}"'
+      state: 'present'
+      create: true
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    loop:
+      - {regexp: 'user-db', line: 'user-db: user'}
+      - {regexp: 'system-db', line: 'system-db: gdm'}
+      - {regexp: 'file-db', line: 'file-db: /usr/share/gdm/greeter-dconf-defaults'}
+
+  - ini_file:
+      path: '/etc/dconf/db/gdm.d/01-banner-message'
+      section: 'org/gnome/login-screen'
+      option: '"{{ item.option }}"'
+      value: '"{{ item.value }}"'
+      create: true
+    loop:
+      - {option: 'banner-message-enable', value: 'true'}
+      - {option: 'banner-message-text', value: "'{{ stig__gdm_login_banner_text | trim }}'"}
+
+  - ansible.builtin.command: 'dconf update'
+    changed_when: false
+
+  when:
+    - '"gdm.service" in ansible_facts["services"]'

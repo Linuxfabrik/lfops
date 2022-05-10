@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'lighttpd-remove.yml'
+
+- ansible.builtin.package:
+    name: 'lighttpd'
+    state: 'absent'

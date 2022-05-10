@@ -1,0 +1,84 @@
+- name: 'stig: grub2-mkconfig EFI'
+  become: true
+  ansible.builtin.command: 'grub2-mkconfig --output /boot/efi/EFI/{{ ansible_facts["distribution"] | lower }}/grub.cfg'
+  when: 'booted_in_efi_mode | bool'
+  changed_when: true
+  notify: 'stig: chmod 0600 /boot/efi/EFI/DISTR/grub.cfg'
+
+- name: 'stig: chmod 0600 /boot/efi/EFI/DISTR/grub.cfg'
+  ansible.builtin.file:
+    path: '/boot/efi/EFI/{{ ansible_facts["distribution"] | lower }}/grub.cfg'
+    owner: 'root'
+    group: 'root'
+    mode: '0600'
+  changed_when: true
+  notify: 'stig: chmod 0600 /boot/efi/EFI/DISTR/grubenv'
+
+- name: 'stig: chmod 0600 /boot/efi/EFI/DISTR/grubenv'
+  ansible.builtin.file:
+    path: '/boot/efi/EFI/{{ ansible_facts["distribution"] | lower }}/grubenv'
+    owner: 'root'
+    group: 'root'
+    mode: '0600'
+
+
+- name: 'stig: grub2-mkconfig BIOS'
+  become: true
+  ansible.builtin.command: 'grub2-mkconfig --output /boot/grub2/grub.cfg'
+  when: 'booted_in_bios_mode | bool'
+  changed_when: true
+  notify: 'stig: chmod 0600 /boot/grub2/grub.cfg'
+
+- name: 'stig: chmod 0600 /boot/grub2/grub.cfg'
+  ansible.builtin.file:
+    path: '/boot/grub2/grub.cfg'
+    owner: 'root'
+    group: 'root'
+    mode: '0600'
+  changed_when: true
+  notify: 'stig: chmod 0600 /boot/grub2/grubenv'
+
+- name: 'stig: chmod 0600 /boot/grub2/grubenv'
+  ansible.builtin.file:
+    path: '/boot/grub2/grubenv'
+    owner: 'root'
+    group: 'root'
+    mode: '0600'
+
+
+- name: 'stig: service auditd restart'
+  # `systemctl restart auditd` is NOT possible, we have to do it like so:
+  ansible.builtin.command: '/sbin/service auditd restart'
+  changed_when: false
+  check_mode: false
+  failed_when: false
+  args:
+    warn: false
+
+
+- name: 'stig: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: 'stig: systemctl restart chronyd'
+  ansible.builtin.systemd:
+    state: 'restarted'
+    name: 'chronyd'
+
+
+- name: 'stig: systemctl restart postfix'
+  ansible.builtin.systemd:
+    state: 'restarted'
+    name: 'postfix'
+
+
+- name: 'stig: systemctl restart sshd'
+  ansible.builtin.systemd:
+    state: 'restarted'
+    name: 'sshd'
+
+
+- name: 'stig: systemctl restart rsyslog'
+  ansible.builtin.systemd:
+    state: 'restarted'
+    name: 'rsyslog'

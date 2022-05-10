@@ -1,0 +1,16 @@
+- ansible.builtin.debug:
+    msg:
+      - 'dev_sr0-noexec-on.yml'
+
+- name: 'Update the Ansible facts to get latest information'
+  ansible.builtin.setup: # yamllint disable-line rule:empty-values
+
+- ansible.posix.mount:
+    path: '{{ item.mount }}'
+    state: 'mounted'
+    fstype: '{{ item.fstype }}'
+    src: '{{ item.device }}'
+    opts: '{{ item.options.split(",") | union(["noexec"]) | join(",") }}'
+  when: 'item.mount == "/dev/sr0"'
+  loop: '{{ ansible_facts["mounts"] }}'
+  ignore_errors: true

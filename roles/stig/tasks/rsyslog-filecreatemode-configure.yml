@@ -1,0 +1,8 @@
+- ansible.builtin.debug:
+    msg:
+      - 'rsyslog-filecreatemode-configure.yml'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/rsyslog.conf'
+    regexp: '^\$FileCreateMode'
+    line: '$FileCreateMode 0640'

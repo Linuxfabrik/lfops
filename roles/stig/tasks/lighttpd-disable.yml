@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'lighttpd-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'lighttpd'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"lighttpd.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["lighttpd.service"]["state"] == "running" or ansible_facts["services"]["lighttpd.service"]["status"] == "enabled"'
