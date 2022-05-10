@@ -46,6 +46,7 @@ New features:
 * Role: repo_mariadb
 * Role: repo_mydumper
 * Role: sshd
+* Role: stig
 * Role: system_update
 * Role: timezone
 * Role: yum_utils
