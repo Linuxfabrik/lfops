@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022050901
+# 2022051001
 
 acl "trusted" {
     localhost;
@@ -63,7 +63,7 @@ zone "{{ item.name }}" IN {
     # do normal iterative resolution (do not forward)
     forwarders { };
     allow-query { trusted; };
-    allow-transfer { trusted; };
+    allow-transfer { none; };
     allow-update { none; };
 };
 
