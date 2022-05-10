@@ -1,6 +1,6 @@
 # Ansible Role bind
 
-This role installs and configures [bind](https://www.isc.org/bind/) as a DNS server.
+This role installs and configures [bind](https://www.isc.org/bind/) as a DNS server. Currently, it only supports standalone configurations, no primary-replica configuration.
 
 FQCN: linuxfabrik.lfops.bind
 
