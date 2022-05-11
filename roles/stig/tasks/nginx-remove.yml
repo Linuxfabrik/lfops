@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'nginx-remove.yml'
+
+- ansible.builtin.package:
+    name: 'nginx'
+    state: 'absent'

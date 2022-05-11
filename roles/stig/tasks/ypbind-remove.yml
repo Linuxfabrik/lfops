@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'ypbind-remove.yml'
+
+- ansible.builtin.package:
+    name: 'ypbind'
+    state: 'absent'

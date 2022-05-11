@@ -1,0 +1,9 @@
+- ansible.builtin.debug:
+    msg:
+      - 'journald-compress-on.yml'
+
+- ansible.builtin.lineinfile:
+    dest: '/etc/systemd/journald.conf'
+    regexp: '"^#?Compress="'
+    line: 'Compress=yes'
+    state: 'present'

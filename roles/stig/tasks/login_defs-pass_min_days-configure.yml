@@ -1,0 +1,23 @@
+- ansible.builtin.debug:
+    msg:
+      - 'login_defs-pass_min_days-configure.yml'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/login.defs'
+    create: false
+    regexp: '(?i)^\s*PASS_MIN_DAYS\s+'
+    state: 'absent'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/login.defs'
+    create: true
+    line: 'PASS_MIN_DAYS {{ stig__pass_min_days }}'
+    state: 'present'
+
+- ansible.builtin.shell: 'grep -E ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1'
+  register: 'shell_output'
+  changed_when: false
+
+- ansible.builtin.command: 'chage --mindays {{ stig__pass_min_days }} "{{ item }}"'
+  changed_when: false
+  loop: '{{ shell_output.stdout_lines }}'

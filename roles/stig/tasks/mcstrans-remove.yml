@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'mcstrans-remove.yml'
+
+- ansible.builtin.package:
+    name: 'mcstrans'
+    state: 'absent'

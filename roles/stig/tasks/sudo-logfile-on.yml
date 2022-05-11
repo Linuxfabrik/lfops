@@ -1,0 +1,9 @@
+- ansible.builtin.debug:
+    msg:
+      - 'sudo-logfile-on.yml'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/sudoers'
+    regexp: '^Defaults\s+logfile='
+    line: 'Defaults    logfile="{{ stig__sudo_logfile }}"'
+    state: 'present'

@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'dhcp-remove.yml'
+
+- ansible.builtin.package:
+    name: 'dhcp'
+    state: 'absent'

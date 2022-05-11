@@ -1,0 +1,17 @@
+- ansible.builtin.debug:
+    msg:
+      - 'sshd-loglevel-configure.yml'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/ssh/sshd_config'
+    create: false
+    regexp: '(?i)^\s*LogLevel\s+'
+    state: 'absent'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/ssh/sshd_config'
+    create: true
+    line: 'LogLevel {{ stig__sshd_loglevel }}'
+    state: 'present'
+    insertbefore: '^[#\s]*Match'
+    validate: '/usr/sbin/sshd -t -f %s'

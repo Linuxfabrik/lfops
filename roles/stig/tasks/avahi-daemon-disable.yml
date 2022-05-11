@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'avahi-daemon-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'avahi-daemon'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"avahi-daemon.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["avahi-daemon.service"]["state"] == "running" or ansible_facts["services"]["avahi-daemon.service"]["status"] == "enabled"'

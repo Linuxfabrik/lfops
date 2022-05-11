@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# 2021101401
+
+-w /var/log/faillog -p wa -k logins
+-w /var/log/lastlog -p wa -k logins
+-w /var/run/faillock/ -p wa -k logins

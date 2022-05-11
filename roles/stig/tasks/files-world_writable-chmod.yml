@@ -1,0 +1,15 @@
+- ansible.builtin.debug:
+    msg:
+      - 'files-world_writable-chmod.yml'
+
+- ansible.builtin.shell: "df --local --portability | awk '{if (NR!=1) print $6}' | xargs -I '{}' find '{}' -xdev -type f -perm -0002"
+  register: 'shell_output'
+  changed_when: false
+
+- ansible.builtin.file:
+    path: '{{ item }}'
+    mode: 'o-w'
+    state: 'touch'
+  loop: '{{ shell_output.stdout_lines }}'
+  when:
+    - 'shell_output.stdout_lines | length'

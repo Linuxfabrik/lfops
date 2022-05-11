@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'prelink-remove.yml'
+
+- ansible.builtin.package:
+    name: 'prelink'
+    state: 'absent'

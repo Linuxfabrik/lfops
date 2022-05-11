@@ -1,0 +1,12 @@
+- ansible.builtin.debug:
+    msg:
+      - 'grub-selinux-on.yml'
+
+- ansible.builtin.replace:
+    path: '/etc/default/grub'
+    regexp: '(selinux|enforcing)\s*=\s*0\s*'
+  # ignore errors in case the line is completely missing
+  ignore_errors: true
+  notify:
+    - 'grub2-mkconfig EFI'
+    - 'grub2-mkconfig BIOS'

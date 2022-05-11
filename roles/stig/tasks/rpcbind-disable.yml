@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'rpcbind-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'rpcbind'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"rpcbind.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["rpcbind.service"]["state"] == "running" or ansible_facts["services"]["rpcbind.service"]["status"] == "enabled"'

@@ -1,0 +1,35 @@
+- ansible.builtin.debug:
+    msg:
+      - 'single-user-mode-auth-on.yml'
+
+- ansible.builtin.lineinfile:
+    path: '/usr/lib/systemd/system/rescue.service'
+    regexp: '^\s*ExecStart=-'
+    line: 'ExecStart=-/usr/lib/systemd/systemd-sulogin-shell rescue'
+  when:
+    - 'ansible_facts["os_family"] in ["RedHat"]'
+    - 'ansible_facts["distribution_major_version"] in ["8"]'
+
+- ansible.builtin.lineinfile:
+    path: '/usr/lib/systemd/system/emergency.service'
+    regexp: '^\s*ExecStart=-'
+    line: 'ExecStart=-/usr/lib/systemd/systemd-sulogin-shell emergency'
+  when:
+    - 'ansible_facts["os_family"] in ["RedHat"]'
+    - 'ansible_facts["distribution_major_version"] in ["8"]'
+
+- ansible.builtin.lineinfile:
+    path: '/usr/lib/systemd/system/rescue.service'
+    regexp: '^\s*ExecStart=-'
+    line: 'ExecStart=-/bin/sh -c "/sbin/sulogin; /usr/bin/systemctl --fail --no-block default"'
+  when:
+    - 'ansible_facts["os_family"] in ["RedHat"]'
+    - 'ansible_facts["distribution_major_version"] in ["7"]'
+
+- ansible.builtin.lineinfile:
+    path: '/usr/lib/systemd/system/emergency.service'
+    regexp: '^\s*ExecStart=-'
+    line: 'ExecStart=-/bin/sh -c "/sbin/sulogin; /usr/bin/systemctl --fail --no-block default"'
+  when:
+    - 'ansible_facts["os_family"] in ["RedHat"]'
+    - 'ansible_facts["distribution_major_version"] in ["7"]'

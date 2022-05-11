@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'telnet-server-remove.yml'
+
+- ansible.builtin.package:
+    name: 'telnet-server'
+    state: 'absent'

@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'avahi-remove.yml'
+
+- ansible.builtin.package:
+    name: 'avahi-autoipd,avahi'
+    state: 'absent'

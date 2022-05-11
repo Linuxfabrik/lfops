@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# 2021101501
+
+{% for proc in priv_procs.stdout_lines|sort -%}
+-a always,exit -F path={{ proc }} -F perm=x -F auid>={{ stig__uid_min }} -F auid!=4294967295 -k privileged
+{% endfor %}

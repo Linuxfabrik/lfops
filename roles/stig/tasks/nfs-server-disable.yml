@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'nfs-server-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'nfs-server'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"nfs-server.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["nfs-server.service"]["state"] == "running" or ansible_facts["services"]["nfs-server.service"]["status"] == "enabled"'

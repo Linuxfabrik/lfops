@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'var_log-chmod.yml'
+
+- ansible.builtin.command: 'find /var/log/ -type f -perm /g+wx,o+rwx -exec chmod g-wx,o-rwx "{}" +'
+  changed_when: false
+  failed_when: false

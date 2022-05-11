@@ -1,0 +1,13 @@
+- ansible.builtin.debug:
+    msg:
+      - 'rsyslog-input_tcp-off.yml'
+
+- ansible.builtin.replace:
+    path: '/etc/rsyslog.conf'
+    regexp: '{{ item }}'
+    replace: '#\1'
+  loop:
+    - '^(input\(type="imtcp")'
+    - '^(input\(type="imudp")'
+    - '^(module\(load="imtcp")'
+    - '^(module\(load="imudp")'

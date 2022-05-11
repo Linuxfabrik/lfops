@@ -1,0 +1,18 @@
+- ansible.builtin.debug:
+    msg:
+      - 'at-restrictions-configure.yml'
+
+- ansible.builtin.file:
+    path: '/etc/at.deny'
+    state: 'absent'
+
+- ansible.builtin.stat:
+    path: '/etc/at.allow'
+  register: 'p'
+
+- ansible.builtin.file:
+    path: '/etc/at.allow'
+    state: '{{ "file" if p.stat.exists else "touch" }}'
+    owner: 'root'
+    group: 'root'
+    mode: 0o600

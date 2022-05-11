@@ -1,0 +1,10 @@
+- ansible.builtin.debug:
+    msg:
+      - 'crontab-chmod.yml'
+
+- ansible.builtin.file:
+    path: '/etc/crontab'
+    state: 'file'
+    owner: 'root'
+    group: 'root'
+    mode: '0600'

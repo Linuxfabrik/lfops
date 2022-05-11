@@ -1,0 +1,8 @@
+- ansible.builtin.debug:
+    msg:
+      - 'httpd-other-chown.yml'
+
+- ansible.builtin.file:
+    path: '/etc/httpd'
+    mode: 'o-w'
+    recurse: true

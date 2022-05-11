@@ -1,0 +1,14 @@
+- ansible.builtin.debug:
+    msg:
+      - 'usermod-all-future_pwdchange_lock-configure.yml'
+
+- ansible.builtin.set_fact:
+    epoch_in_days: '{{ (ansible_date_time["epoch"] | int / 86400) }}'
+
+- ansible.builtin.shell: "cat /etc/shadow | awk -F: '{if($3>{{ epoch_in_days }})print$1}'"
+  register: 'shell_output'
+
+- ansible.builtin.user:
+    name: '{{ item }}'
+    password: '!'   # by setting '!' as a password, we change the pwddate and disable the account
+  loop: '{{ shell_output.stdout_lines }}'

@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'xinetd-remove.yml'
+
+- ansible.builtin.package:
+    name: 'xinetd'
+    state: 'absent'

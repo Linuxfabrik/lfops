@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'openldap-clients-remove.yml'
+
+- ansible.builtin.package:
+    name: 'openldap-clients'
+    state: 'absent'

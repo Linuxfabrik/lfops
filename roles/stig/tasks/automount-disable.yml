@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'automount-disable.yml'
+
+- name: 'Disable service autofs'
+  ansible.builtin.systemd:
+    name: 'autofs'
+    enabled: false
+    state: 'stopped'
+  when:
+    - "'autofs.service' in ansible_facts['services']"

@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'dovecot-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'dovecot'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"dovecot.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["dovecot.service"]["state"] == "running" or ansible_facts["services"]["dovecot.service"]["status"] == "enabled"'

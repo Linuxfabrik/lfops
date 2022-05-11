@@ -1,0 +1,15 @@
+- ansible.builtin.debug:
+    msg:
+      - 'home-nodev-on.yml'
+
+- name: 'Update the Ansible facts to get latest information'
+  ansible.builtin.setup: # yamllint disable-line rule:empty-values
+
+- ansible.posix.mount:
+    path: '{{ item.mount }}'
+    state: 'mounted'
+    fstype: '{{ item.fstype }}'
+    src: '{{ item.device }}'
+    opts: '{{ item.options.split(",") | union(["nodev"]) | join(",") }}'
+  when: 'item.mount == "/home"'
+  loop: '{{ ansible_facts["mounts"] }}'

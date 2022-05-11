@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'bind-remove.yml'
+
+- ansible.builtin.package:
+    name: 'bind'
+    state: 'absent'

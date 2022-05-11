@@ -1,0 +1,7 @@
+- ansible.builtin.debug:
+    msg:
+      - 'xorg-x11-remove.yml'
+
+- ansible.builtin.package:
+    name: 'xorg-x11-server-common'
+    state: 'absent'

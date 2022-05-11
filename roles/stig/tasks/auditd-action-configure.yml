@@ -1,0 +1,38 @@
+- ansible.builtin.debug:
+    msg:
+      - 'auditd-action-configure.yml'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/audit/auditd.conf'
+    create: true
+    regexp: '^space_left\s*=.*'
+    line: 'space_left = 75'
+    state: 'present'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/audit/auditd.conf'
+    create: true
+    regexp: '^space_left_action\s*=.*'
+    line: 'space_left_action = email'
+    state: 'present'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/audit/auditd.conf'
+    create: true
+    regexp: '^action_mail_acct\s*=.*'
+    line: 'action_mail_acct = root'
+    state: 'present'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/audit/auditd.conf'
+    create: true
+    regexp: '^admin_space_left\s*=.*'
+    line: 'admin_space_left = 50'
+    state: 'present'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/audit/auditd.conf'
+    create: true
+    regexp: '^admin_space_left_action\s*=.*'
+    line: 'admin_space_left_action = halt'
+    state: 'present'

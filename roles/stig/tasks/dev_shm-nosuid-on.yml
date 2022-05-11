@@ -1,0 +1,30 @@
+- ansible.builtin.debug:
+    msg:
+      - 'dev_shm-nosuid-on.yml'
+
+- name: 'Update the Ansible facts to get latest information'
+  ansible.builtin.setup: # yamllint disable-line rule:empty-values
+
+- ansible.builtin.command: 'findmnt --kernel "/dev/shm"'
+  register: 'device_name'
+  failed_when: 'device_name.rc > 1'
+  changed_when: false
+
+- ansible.builtin.set_fact:
+    mount_info: '{{ mount_info | default({}) | combine({item.0: item.1}) }}'
+  with_together:
+    - '{{ device_name.stdout_lines[0].split() | list | lower }}'
+    - '{{ device_name.stdout_lines[1].split() | list }}'
+  when:
+    - 'device_name.stdout is defined and device_name.stdout_lines is defined'
+    - 'device_name.stdout | length'
+
+- ansible.posix.mount:
+    path: '/dev/shm'
+    src: '{{ mount_info.source }}'
+    opts: '{{ mount_info.options.split(",") | union(["nosuid"]) | join(",") }}'
+    state: 'mounted'
+    fstype: '{{ mount_info.fstype }}'
+  when:
+    - 'device_name.stdout is defined'
+    - 'device_name.stdout | length'

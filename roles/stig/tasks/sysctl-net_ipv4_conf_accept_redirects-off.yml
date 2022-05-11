@@ -1,0 +1,14 @@
+- ansible.builtin.debug:
+    msg:
+      - 'sysctl-net_ipv4_conf_accept_redirects-off.yml'
+
+- ansible.posix.sysctl:
+    name: '{{ item.name }}'
+    value: '{{ item.value }}'
+    sysctl_set: true
+    state: 'present'
+    reload: true
+    ignoreerrors: true
+  loop:
+    - {name: 'net.ipv4.conf.all.accept_redirects', value: 0}
+    - {name: 'net.ipv4.conf.default.accept_redirects', value: 0}

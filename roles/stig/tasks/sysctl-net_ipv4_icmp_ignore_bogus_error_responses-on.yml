@@ -1,0 +1,13 @@
+- ansible.builtin.debug:
+    msg:
+      - 'sysctl-net_ipv4_icmp_ignore_bogus_error_responses-on.yml'
+
+- ansible.posix.sysctl:
+    name: '{{ item.name }}'
+    value: '{{ item.value }}'
+    sysctl_set: true
+    state: 'present'
+    reload: true
+    ignoreerrors: true
+  loop:
+    - {name: 'net.ipv4.icmp_ignore_bogus_error_responses', value: 1}

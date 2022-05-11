@@ -1,0 +1,34 @@
+- ansible.builtin.debug:
+    msg:
+      - 'audit-backlog_limit-configure.yml'
+
+- ansible.builtin.slurp:
+    src: '/etc/default/grub'
+  register: 'etc_default_grub'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/default/grub'
+    regexp: '^GRUB_CMDLINE_LINUX'
+    # b64decode: needed because of the slurp module
+    # regex_search('^GRUB_CMDLINE_LINUX.*$', multiline=true): get the GRUB_CMDLINE_LINUX
+    # regex_replace('(^GRUB_CMDLINE_LINUX\s*=\s*|\")', '')).split(' '): remove the GRUB_CMDLINE_LINUX= and all quotes and split by spaces. this leaves all the options as a list
+    # map('regex_replace', '^audit_backlog_limit=.*$', ''): remove the audit_backlog_limit option from the list
+    # list: needed to make a list out of the generator again
+    # union(['audit_backlog_limit=1']): add the audit_backlog_limit option back with the wanted value
+    # select(): remove all empty elements. this prevents multiple whitespaces in the final GRUB_CMDLINE_LINUX
+    # join(' '): join the modified options using a space
+    line: >
+      GRUB_CMDLINE_LINUX="{{
+      (etc_default_grub['content']
+      | b64decode
+      | regex_search('^GRUB_CMDLINE_LINUX.*$', multiline=true)
+      | regex_replace('(^GRUB_CMDLINE_LINUX\s*=\s*|\")', '')).split(' ')
+      | map('regex_replace', '^audit_backlog_limit=.*$', '')
+      | list
+      | union(['audit_backlog_limit=' ~ stig__audit_backlog_limit])
+      | select()
+      | join(' ')
+      }}"
+  notify:
+    - 'grub2-mkconfig EFI'
+    - 'grub2-mkconfig BIOS'

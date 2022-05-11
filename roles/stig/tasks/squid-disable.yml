@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'squid-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'squid'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"squid.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["squid.service"]["state"] == "running" or ansible_facts["services"]["squid.service"]["status"] == "enabled"'

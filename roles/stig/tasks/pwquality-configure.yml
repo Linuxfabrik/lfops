@@ -1,0 +1,23 @@
+- ansible.builtin.debug:
+    msg:
+      - 'pwquality-configure.yml'
+
+- ansible.builtin.lineinfile:
+    path: '/etc/security/pwquality.conf'
+    create: false
+    regexp: '^{{ item.key }}'
+    state: 'absent'
+  loop:
+    - {key: 'minlen', value: '{{ stig__pwquality_minlen }}'}
+    - {key: 'minclass', value: '{{ stig__pwquality_minclass }}'}
+
+- ansible.builtin.lineinfile:
+    path: '/etc/security/pwquality.conf'
+    create: true
+    line: '{{ item.key }} = {{ item.value }}'
+    state: 'present'
+  loop:
+    - {key: 'minlen', value: '{{ stig__pwquality_minlen }}'}
+    - {key: 'minclass', value: '{{ stig__pwquality_minclass }}'}
+
+# TODO: 'missing 'Run the following to update the system-auth and password-auth files''

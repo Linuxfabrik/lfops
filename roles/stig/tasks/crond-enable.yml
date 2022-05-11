@@ -1,0 +1,10 @@
+- ansible.builtin.debug:
+    msg:
+      - 'crond-enable.yml'
+
+- ansible.builtin.systemd:
+    name: 'crond'
+    state: 'started'
+    enabled: true
+  when:
+    - "'crond.service' in ansible_facts['services']"

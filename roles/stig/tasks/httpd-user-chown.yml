@@ -1,0 +1,8 @@
+- ansible.builtin.debug:
+    msg:
+      - 'httpd-user-chown.yml'
+
+- ansible.builtin.file:
+    path: '/etc/httpd'
+    owner: 'root'
+    recurse: true

@@ -1,0 +1,11 @@
+- ansible.builtin.debug:
+    msg:
+      - 'httpd-disable.yml'
+
+- ansible.builtin.systemd:
+    name: 'httpd'
+    state: 'stopped'
+    enabled: false
+  when:
+    - '"httpd.service" in ansible_facts["services"]'
+    - 'ansible_facts["services"]["httpd.service"]["state"] == "running" or ansible_facts["services"]["httpd.service"]["status"] == "enabled"'
