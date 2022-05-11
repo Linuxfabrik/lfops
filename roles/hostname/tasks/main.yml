@@ -1,0 +1,3 @@
+- name: 'hostnamectl set-hostname {{ hostname__hostname }}'
+  ansible.builtin.hostname:
+    name: '{{ hostname__hostname }}'

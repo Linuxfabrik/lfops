@@ -1,0 +1,2 @@
+hostname__domain_name: ''
+hostname__hostname: '{{ (inventory_hostname ~ "." ~ hostname__domain_name) | trim(".") }}'
