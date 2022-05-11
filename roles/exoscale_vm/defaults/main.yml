@@ -1,3 +1,4 @@
+exoscale_vm__disk_size: 10
 exoscale_vm__name: '{{ inventory_hostname }}'
 exoscale_vm__ssh_key: '{{ lookup("env", "USER") }}'
 exoscale_vm__state: 'started'

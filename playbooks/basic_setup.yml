@@ -1,4 +1,4 @@
-- name: 'The Linuxfabrik basic setup.'
+- name: 'The Linuxfabrik basic setup'
   hosts:
     - 'lfops_basic_setup'
 

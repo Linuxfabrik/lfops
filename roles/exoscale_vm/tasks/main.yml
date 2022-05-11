@@ -1,20 +1,5 @@
 - block:
 
-  # - name: 'Gather facts'
-  #   ansible.builtin.gather_facts:
-  #   register: 'exoscale_vm__gather_facts_result'
-  #   ignore_unreachable: true
-
-  # - name: 'Gather cloudstack facts'
-  #   ngine_io.cloudstack.cs_facts:
-  #   register: 'exoscale_vm__gather_cs_facts'
-  #   when: 'not (exoscale_vm__gather_facts_result["unreachable"] | default(false))'
-
-  # - name: 'Cloudstack facts'
-  #   debug:
-  #     var: 'exoscale_vm__gather_cs_facts'
-  #   when: 'not (exoscale_vm__gather_facts_result["unreachable"] | default(false))'
-
   - name: 'Manage the VM at Exoscale'
     ngine_io.cloudstack.cs_instance:
       api_key: '{{ exoscale_vm__api_key }}'
@@ -26,10 +11,33 @@
       state: '{{ exoscale_vm__state }}'
       template: '{{ exoscale_vm__template }}'
       zone: '{{ exoscale_vm__zone }}'
-    connection: 'local'
-    register: 'exoscale_vm__instance_result'
+      root_disk_size: '{{ exoscale_vm__disk_size }}'
+    delegate_to: 'localhost'
 
-  # - meta: refresh_inventory
+  - name: 'Create the networks required by the VM'
+    ngine_io.cloudstack.cs_network:
+      api_key: '{{ exoscale_vm__api_key }}'
+      api_secret: '{{ exoscale_vm__api_secret }}'
+      api_url: 'https://api.exoscale.com/compute'
+      name: '{{ item }}'
+      zone: '{{ exoscale_vm__zone }}'
+      state: 'present' # never delete, as it could be used by other VMs as well
+      network_offering: 'Private Network'
+    loop: '{{ exoscale_vm__private_networks }}'
+    when: 'exoscale_vm__state == "present"'
+    delegate_to: 'localhost'
+
+  - name: "Manage the VM's networks"
+    ngine_io.cloudstack.cs_instance_nic:
+      api_key: '{{ exoscale_vm__api_key }}'
+      api_secret: '{{ exoscale_vm__api_secret }}'
+      api_url: 'https://api.exoscale.com/compute'
+      name: '{{ exoscale_vm__name }}'
+      network: '{{ item }}'
+      zone: '{{ exoscale_vm__zone }}'
+    loop: '{{ exoscale_vm__private_networks }}'
+    when: 'exoscale_vm__state == "present"'
+    delegate_to: 'localhost'
 
   tags:
     - 'exoscale_vm'

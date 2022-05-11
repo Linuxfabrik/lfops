@@ -39,7 +39,7 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 #### exoscale_vm__api_key
 
 Set the Exoscale API key. API keys can be managed [here](https://portal.exoscale.com/iam/api-keys).
-We recommend creating a restricted key with all services except "account" and "iam".
+We recommend creating a unrestricted key, because else some operations fail.
 
 Example:
 
@@ -78,7 +78,7 @@ exoscale_vm__template: 'Rocky Linux 8 (Green Obsidian) 64-bit'
 
 ##### exoscale_vm__service_offering
 
-The Exoscale template for the instance. The possible options can be obtained using `exo compute instance-type list --verbose`.
+The Exoscale template for the instance. The possible options can be obtained using `exo compute instance-type list --verbose`. Note that these changes will only be applied to stopped instances.
 
 Example:
 ```yaml
@@ -87,6 +87,15 @@ exoscale_vm__service_offering: 'b6cd1ff5-3a2f-4e9d-a4d1-8988c1191fe8' # standard
 
 
 ### Optional
+
+#### exoscale_vm__disk_size
+
+The disk size in GBs. Has to be higher than 10. Note that shrinking of volumes is not supported, and that these changes will only be applied to stopped instances.
+
+Default:
+```yaml
+exoscale_vm__disk_size: 10
+```
 
 #### exoscale_vm__state
 
