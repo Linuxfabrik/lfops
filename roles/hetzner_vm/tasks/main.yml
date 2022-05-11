@@ -12,7 +12,7 @@
       force: '{{ hetzner_vm__force }}'
       upgrade_disk: '{{ hetzner_vm__upgrade_disk }}'
       state: '{{ hetzner_vm__state }}'
-    connection: 'local'
+    delegate_to: 'localhost'
 
   - name: 'Manage the Volumes at Hetzner'
     hetzner.hcloud.hcloud_volume:
@@ -24,8 +24,7 @@
       server: '{{ hetzner_vm__name }}'
       state: '{{ item.state | default("present") }}'
     loop: '{{ hetzner_vm__volumes }}'
-    connection: 'local'
-    register: 'hetzner_vm__volumes_result'
+    delegate_to: 'localhost'
 
   tags:
     - 'hetzner_vm'
