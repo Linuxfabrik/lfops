@@ -44,7 +44,7 @@ DESCRIPTION = """A working Linuxfabrik monitoring plugin, written in Python 3, a
 
 DEFAULT_HOSTNAME = 'localhost'
 DEFAULT_LENGTHY = False
-DEFAULT_PATH = '../library'
+DEFAULT_PATH = '.'
 DEFAULT_USERNAME = 'root'
 
 STIG_PROFILES = [

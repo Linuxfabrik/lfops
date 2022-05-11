@@ -53,11 +53,10 @@ Place this Ansible role in an appropriate directory:
 
     stig
     ├── defaults
-    ├── files: Home of the audit.py Python script
+    ├── files: Home of the audit.py Python script and of stig.db (SQLite database file)
     │   ├── audits: Contains all Audit Snippets (Bash)
     │   └── lib: Home of Linuxfabrik libraries
     ├── handlers
-    ├── library: Home of stig.db (SQLite database file) and Ansible libraries
     ├── tasks: Contains a collection of remediation tasks used across various STIGs, for example CIS CentOS Linux 8.
     └── templates: Jinja templates for Ansible
 

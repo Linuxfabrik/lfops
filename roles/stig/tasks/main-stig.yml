@@ -3,7 +3,7 @@
   - name: 'Get latest version'
     sqlite_query:
       db: 'stig.db'
-      path: '{{ role_path }}/library'
+      path: '{{ role_path }}/files'
       query_type: 'select'
       query: >
         SELECT profile_version
@@ -29,7 +29,7 @@
 - name: 'Get a list of matching profile remediations from the STIG database'
   sqlite_query:
     db: 'stig.db'
-    path: '{{ role_path }}/library'
+    path: '{{ role_path }}/files'
     query_type: 'select'
     query: >
       SELECT control_name, remediation_name

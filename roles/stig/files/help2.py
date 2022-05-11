@@ -21,7 +21,7 @@ from lib.globals3 import STATE_OK, STATE_UNKNOWN # pylint: disable=C0413
 
 
 def main():
-    success, conn = lib.db_sqlite3.connect(path='../library', filename='stig.db')
+    success, conn = lib.db_sqlite3.connect(path='.', filename='stig.db')
     if not success:
         return False
 
