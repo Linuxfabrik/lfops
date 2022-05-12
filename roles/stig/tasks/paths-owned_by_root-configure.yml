@@ -13,4 +13,4 @@
     state: 'directory'
     owner: 'root'
     mode: 'o-w,g-w'
-  loop: '"{{ shell_output.stdout_lines }}"'
+  loop: '{{ shell_output.stdout_lines }}'

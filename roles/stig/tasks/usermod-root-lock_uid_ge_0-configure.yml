@@ -10,6 +10,6 @@
 - ansible.builtin.command: 'passwd -l {{ item }}'
   changed_when: false
   failed_when: false
-  loop: '"{{ shell_output.stdout_lines }}"'
+  loop: '{{ shell_output.stdout_lines }}'
   when:
     - 'shell_output.rc'

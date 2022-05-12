@@ -32,11 +32,14 @@ from termcolor import colored
 
 import lib.base3 # pylint: disable=C0413
 import lib.db_sqlite3 # pylint: disable=C0413
+import lib.shell3 # pylint: disable=C0413
+import lib.time3 # pylint: disable=C0413
+import lib.txt3 # pylint: disable=C0413
 from lib.globals3 import STATE_OK, STATE_UNKNOWN # pylint: disable=C0413
 
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2021121601'
+__version__ = '2022051101'
 
 DESCRIPTION = """A working Linuxfabrik monitoring plugin, written in Python 3, as a basis for
                 further development, and much more text to help admins get this check up and
@@ -270,12 +273,12 @@ def main():
         args.USERNAME,
         args.HOSTNAME,
     )
-    stdout, stderr, retc = lib.base3.coe(lib.base3.shell_exec(cmd))
+    stdout, stderr, retc = lib.base3.coe(lib.shell3.shell_exec(cmd))
     cmd = 'scp audits/lib-apache-httpd.sh {}@{}:/tmp/'.format(
         args.USERNAME,
         args.HOSTNAME,
     )
-    stdout, stderr, retc = lib.base3.coe(lib.base3.shell_exec(cmd))
+    stdout, stderr, retc = lib.base3.coe(lib.shell3.shell_exec(cmd))
     # The scp utility exits 0 on success, and >0 if an error occurs.
     if retc != 0:
         print(f'The command "{cmd}" failed with:\n{stderr}')
@@ -303,7 +306,7 @@ def main():
                     args.HOSTNAME,
                     audit['audit_name'],
             )
-            stdout, stderr, retc = lib.base3.coe(lib.base3.shell_exec(cmd, shell=True))
+            stdout, stderr, retc = lib.base3.coe(lib.shell3.shell_exec(cmd, shell=True))
             # ssh exits with the exit status of the remote command or with 255 if an error occurred.
             if retc == 255:
                 print(f'The command "{cmd}" failed with:\n{stderr}')
@@ -357,14 +360,14 @@ def main():
         args.PROFILE_NAME,
         get_latest(args),
         args.HOSTNAME,
-        lib.base3.now(as_type='iso'),
+        lib.time3.now(as_type='iso'),
     )
 
     if total_score:
         msg += '* Score:     {}/{} {} ({}%)\n* Grade:     {}'.format(
             host_score,
             total_score,
-            lib.base3.pluralize('point', total_score),
+            lib.txt3.pluralize('point', total_score),
             percentage,
             get_grade(percentage),
         )

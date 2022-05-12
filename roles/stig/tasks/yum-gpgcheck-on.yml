@@ -10,7 +10,7 @@
 - ansible.builtin.replace:
     # "ini_file" does not work here because the section names all vary
     # "with_fileglob" is against local system files on the Ansible controller
-    path: '"{{ item }}"'
+    path: '{{ item }}'
     regexp: 'gpgcheck\s*=\s*0'
     replace: 'gpgcheck=1'
   loop: '{{ files_matched.files | map(attribute="path") | list }}'

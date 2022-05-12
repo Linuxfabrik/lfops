@@ -10,4 +10,4 @@
   changed_when: false
 
 - ansible.builtin.shell: 'chage --inactive {{ stig__user_inactivelock_days }} {{ item }}'
-  loop: '"{{ shell_output.stdout_lines }}"'
+  loop: '{{ shell_output.stdout_lines }}'

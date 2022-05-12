@@ -10,7 +10,7 @@
     path: '{{ item }}'
     regexp: '^(\s*)(daily|weekly|monthly|yearly)$'
     replace: '\1daily'
-  loop: '"{{ files_matched.files | map(attribute="path") | list }}"'
+  loop: '{{ files_matched.files | map(attribute="path") | list }}'
 
 - ansible.builtin.replace:
     path: '/etc/logrotate.conf'

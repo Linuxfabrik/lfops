@@ -3,7 +3,7 @@
       - 'umask-configure.yml'
 
 - ansible.builtin.replace:
-    path: '"{{ item }}"'
+    path: '{{ item }}'
     regexp: '^\s*umask.*'
     replace: 'umask {{ stig__umask }}'
   loop:
@@ -17,7 +17,7 @@
   register: 'files_matched'
 
 - ansible.builtin.replace:
-    path: '"{{ item }}"'
+    path: '{{ item }}'
     regexp: '^\s*umask.*'
     replace: 'umask {{ stig__umask }}'
-  loop: '"{{ files_matched.files | map(attribute="path") | list }}"'
+  loop: '{{ files_matched.files | map(attribute="path") | list }}'

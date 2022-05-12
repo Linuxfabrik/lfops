@@ -5,5 +5,5 @@
 - ansible.builtin.lineinfile:
     path: '/etc/sudoers'
     regexp: '^Defaults\s+use_pty'
-    line: '"Defaults    use_pty"'
+    line: 'Defaults    use_pty'
     state: 'present'

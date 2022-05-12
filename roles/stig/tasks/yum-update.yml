@@ -3,5 +3,5 @@
       - 'yum-update.yml'
 
 - ansible.builtin.yum:
-    name: '"*"'
+    name: '*'
     state: 'latest'

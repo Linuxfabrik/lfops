@@ -3,5 +3,5 @@
       - 'dnf-update.yml'
 
 - ansible.builtin.dnf:
-    name: '"*"'
+    name: '*'
     state: 'latest'

@@ -4,6 +4,6 @@
 
 - ansible.builtin.lineinfile:
     dest: '/etc/systemd/journald.conf'
-    regexp: '"^#?Compress="'
+    regexp: '^#?Compress='
     line: 'Compress=yes'
     state: 'present'

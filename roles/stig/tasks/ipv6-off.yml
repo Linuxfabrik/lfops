@@ -34,8 +34,8 @@
       | join(' ')
       }}"
   notify:
-    - 'grub2-mkconfig EFI'
-    - 'grub2-mkconfig BIOS'
+    - 'stig: grub2-mkconfig EFI'
+    - 'stig: grub2-mkconfig BIOS'
 # this task is inspired by OpenSCAP
 
 - ansible.builtin.lineinfile:

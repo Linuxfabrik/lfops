@@ -8,5 +8,5 @@
   # ignore errors in case the line is completely missing
   ignore_errors: true
   notify:
-    - 'grub2-mkconfig EFI'
-    - 'grub2-mkconfig BIOS'
+    - 'stig: grub2-mkconfig EFI'
+    - 'stig: grub2-mkconfig BIOS'

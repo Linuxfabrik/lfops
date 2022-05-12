@@ -4,8 +4,8 @@
 
 - ansible.builtin.lineinfile:
     path: '/etc/rsyslog.conf'
-    regexp: '"{{ item.regexp }}"'
-    line: '"{{ item.line }}"'
+    regexp: '{{ item.regexp }}'
+    line: '{{ item.line }}'
     state: 'present'
     create: true
   loop:

@@ -4,6 +4,6 @@
 
 - ansible.builtin.lineinfile:
     path: '/etc/systemd/journald.conf'
-    regexp: '"^#?Storage="'
+    regexp: '^#?Storage='
     line: 'Storage=persistent'
     state: 'present'

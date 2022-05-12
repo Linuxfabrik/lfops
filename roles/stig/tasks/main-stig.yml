@@ -1,7 +1,7 @@
 - block:
 
   - name: 'Get latest version'
-    sqlite_query:
+    linuxfabrik.lfops.sqlite_query:
       db: 'stig.db'
       path: '{{ role_path }}/files'
       query_type: 'select'
@@ -9,7 +9,7 @@
         SELECT profile_version
         FROM profile
         WHERE
-          profile_name = :profile_name
+        profile_name = :profile_name
         ORDER BY profile_version DESC
         LIMIT 1
       named_args:
@@ -23,11 +23,11 @@
   when: 's.profile_version is not defined or s.profile_version == "latest"'
 
 - ansible.builtin.set_fact:
-    profile_version: '"{{ s.profile_version }}"'
+    profile_version: '{{ s.profile_version }}'
   when: 's.profile_version is defined'
 
 - name: 'Get a list of matching profile remediations from the STIG database'
-  sqlite_query:
+  linuxfabrik.lfops.sqlite_query:
     db: 'stig.db'
     path: '{{ role_path }}/files'
     query_type: 'select'
@@ -36,13 +36,13 @@
       FROM profile as p
       LEFT JOIN control as c ON p.control_id = c.id
       WHERE
-        profile_name = :profile_name
-        and profile_version = :profile_version
-        and remediation_name <> ""
-        and control_id NOTNULL
-        {% if s.control_name_include is defined and s.control_name_include %}and control_name REGEXP :control_name_include{% endif %}
-        {% if s.control_name_exclude is defined and s.control_name_exclude %}and control_name NOT REGEXP :control_name_exclude{% endif %}
-        {% if also_use_controls_disabled_by_default is defined and also_use_controls_disabled_by_default %}{% else %}and enabled = 1{% endif %}
+      profile_name = :profile_name
+      and profile_version = :profile_version
+      and remediation_name <> ""
+      and control_id NOTNULL
+      {% if s.control_name_include is defined and s.control_name_include %}and control_name REGEXP :control_name_include{% endif %}
+      {% if s.control_name_exclude is defined and s.control_name_exclude %}and control_name NOT REGEXP :control_name_exclude{% endif %}
+      {% if also_use_controls_disabled_by_default is defined and also_use_controls_disabled_by_default %}{% else %}and enabled = 1{% endif %}
       ORDER BY exec_order ASC
     named_args:
       profile_name: '{{ s.profile_name }}'
@@ -64,7 +64,7 @@
 - ansible.builtin.debug:
     msg:
       - 'If you want to remediate afterwards, run this:'
-      - "./audit.py --lengthy --profile-name='{{ s.profile_name }}' --profile-version='{{ profile_version }}' --hostname={{ inventory_hostname }} --control-name-include='{{ s.control_name_include | default([]) | join('|') }}' --control-name-exclude='{{ s.control_name_exclude | default([]) | join('|') }}'"
+      - "./audit.py --lengthy --profile-name={{ s.profile_name | quote }} --profile-version={{ profile_version | quote }} --hostname={{ inventory_hostname | quote }}{% if s.control_name_include is defined and s.control_name_include %} --control-name-include={{ s.control_name_include | default([]) | join('|') | quote }} {% endif %}{% if s.control_name_exclude is defined and s.control_name_exclude %} --control-name-exclude={{ s.control_name_exclude | default([]) | join('|') | quote }}{% endif %}"
 
 - ansible.builtin.pause:
     prompt: 'Do you want to continue? (y/N)'

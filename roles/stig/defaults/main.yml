@@ -1,4 +1,4 @@
-stig__aide_calendar: '"*-*-* 05:{{ 59 | random(start=0, seed=inventory_hostname) }}:00"'
+stig__aide_calendar: '*-*-* 05:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
 
 # Just for Apache httpd:
 #   The OWASP ModSecurity Core Rules Set (CRS) is a set of open source web application

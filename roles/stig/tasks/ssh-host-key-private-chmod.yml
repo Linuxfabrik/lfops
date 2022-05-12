@@ -2,7 +2,7 @@
     msg:
       - 'ssh-host-key-private-chmod.yml'
 
-- ansible.builtin.command: '"{{ item }}"'
+- ansible.builtin.command: '{{ item }}'
   become: true
   changed_when: false
   loop:
