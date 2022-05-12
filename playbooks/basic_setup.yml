@@ -98,9 +98,9 @@
 
 
     # === Automatic updates ===
-    # - role: 'linuxfabrik.lfops.system_update' TODO
-    #   when:
-    #     - not basic_setup__skip_system_update | d(false)
+    - role: 'linuxfabrik.lfops.system_update'
+      when:
+        - 'not basic_setup__skip_system_update | d(false)'
 
 
     # === Backups ===
