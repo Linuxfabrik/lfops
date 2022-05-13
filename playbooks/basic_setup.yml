@@ -17,6 +17,9 @@
 
   roles:
 
+    # we need correct network settings for the rest to work
+    - role: 'linuxfabrik.lfops.network'
+
     # === Basic repositories ===
     - role: 'linuxfabrik.lfops.repo_baseos'
       when:
@@ -75,8 +78,6 @@
       # not running against fedora, because fedora has no kdump by default
       when:
         - 'ansible_facts["distribution"] != "Fedora"'
-
-    - role: 'linuxfabrik.lfops.network'
 
 
     # === SSH ===
