@@ -95,7 +95,7 @@ Possible options:
 
 Example:
 ```yaml
-sshd__password_authentication: true
+sshd__password_authentication: false
 ```
 
 #### sshd__service_enabled
