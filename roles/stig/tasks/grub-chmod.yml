@@ -11,8 +11,8 @@
       path: '{{ item.mount }}'
       state: 'present'
       fstype: '{{ item.fstype }}'
-      dump: '0'
-      passno: '2'
+      dump: 0
+      passno: 2
       src: 'UUID={{ item.uuid }}'
       opts: '{{ item.options | regex_replace("fmask=\\d{3,},?", "") | split(",") | union(["fmask=0077"]) | join(",") }}'
     when: 'item.mount == "/boot/efi"'
@@ -23,6 +23,13 @@
       owner: 'root'
       group: 'root'
       mode: 'og-rwx'
+
+  - ansible.builtin.file:
+      path: '/boot/efi/EFI/{{ ansible_facts["distribution"] | lower }}/grub.cfg'
+      owner: 'root'
+      group: 'root'
+      mode: 'og-rwx'
+    ignore_errors: true # this file could be absent
 
   when:
     - 'booted_in_efi_mode | bool'

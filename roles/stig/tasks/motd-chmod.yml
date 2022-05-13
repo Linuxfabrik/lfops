@@ -6,7 +6,7 @@
     path: '/etc/motd'
     state: 'file'
     owner: 'root'
-    ansible.builtin.group: 'root'
+    group: 'root'
     mode: 0o644
   # ignore non-existing file
   ignore_errors: true

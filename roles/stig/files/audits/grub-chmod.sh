@@ -7,7 +7,7 @@ source /tmp/lib.sh
 tst1="" tst2="" tst3="" tst4="" test1="" test2="" efidir="" gbdir=""
 grubdir="" grubfile="" userfile=""
 
-efidir=$(find /boot/efi/EFI/* -type d -not -name 'BOOT')
+efidir=$(find /boot/efi/EFI/* -maxdepth 0 -type d -not -name 'BOOT')
 gbdir=$(find /boot -maxdepth 1 -type d -name 'grub*')
 
 for file in "$efidir"/grub.cfg "$efidir"/grub.conf; do
