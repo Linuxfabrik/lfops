@@ -6,18 +6,18 @@
       line: 'NOZEROCONF=yes'
       state: 'present'
 
+  - name: 'Use fedora.linux_system_roles.network role to configure the network'
+    include_role:
+      name: 'fedora.linux_system_roles.network'
+
   - name: 'dnf remove hc-utils # hetzner cloud utilities - they cause problems with NetworkManager'
     ansible.builtin.package:
       name:
         - 'hc-utils'
       state: 'absent'
 
-  - name: 'Use fedora.linux_system_roles.network role to configure the network'
-    include_role:
-      name: 'fedora.linux_system_roles.network'
-
   - ansible.builtin.debug:
-      msg: 'Please restart the network manually if needed.'
+      msg: 'Please restart the network manually if needed (systemctl restart NetworkManager).'
 
   tags:
     - 'network'
