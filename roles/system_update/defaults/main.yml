@@ -1,3 +1,4 @@
+system_update__notification_hostname_prefix: ''
 system_update__update_enabled: true
 system_update__update_on_calendar: 'mon 10:00'
 system_update__update_time: '04:00 + 1 days'
