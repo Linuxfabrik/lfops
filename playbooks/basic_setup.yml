@@ -75,9 +75,6 @@
         - 'ansible_facts["distribution"] != "Fedora"'
 
     - role: 'linuxfabrik.lfops.network'
-      # not running against fedora, as fedora requires NetworkManager
-      when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
 
 
     # === SSH ===
