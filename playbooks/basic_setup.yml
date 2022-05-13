@@ -62,6 +62,8 @@
 
     - role: 'linuxfabrik.lfops.logrotate'
 
+    - role: 'linuxfabrik.lfops.cloud_init'
+
     - role: 'linuxfabrik.lfops.cockpit'
 
     - role: 'linuxfabrik.lfops.dnf_makecache'

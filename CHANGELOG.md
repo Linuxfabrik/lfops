@@ -23,6 +23,7 @@ New features:
 
 * Role: at
 * Role: bind
+* Role: cloud_init
 * Role: cockpit
 * Role: dnf_makecache
 * Role: exoscale_vm
