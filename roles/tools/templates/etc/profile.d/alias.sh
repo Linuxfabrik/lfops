@@ -1,8 +1,9 @@
 # {{ ansible_managed }}
-# 2020022001
+# 2022051601
 
 alias whatismyip="curl ipecho.net/plain"
 alias dmesg='dmesg --level=emerg,alert,crit,err --reltime'
+alias glances="glances --disable-docker"
 
 function lf-confirm() {
     echo -n "Are you sure? [y/N] "
