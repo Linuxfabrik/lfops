@@ -30,11 +30,6 @@
       value: 1
       state: 'present'
 
-  - name: 'deploy the logrotate file'
-    ansible.builtin.template:
-      src: 'etc/logrotate.d/openvpn.j2'
-      dest: '/etc/logrotate.d/openvpn'
-
   tags:
     - 'openvpn_server'
 

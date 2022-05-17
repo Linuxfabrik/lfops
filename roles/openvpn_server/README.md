@@ -1,6 +1,6 @@
 # Ansible Role openvpn_server
 
-This role installs and configures [OpenVPN](https://openvpn.net/) as a server.
+This role installs and configures [OpenVPN](https://openvpn.net/) as a server. Currently, the only supported configuration is a multi-client server.
 
 FQCN: linuxfabrik.lfops.openvpn_server
 
@@ -14,6 +14,8 @@ Tested on
 ### Mandatory
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
+* Create a certificate for the OpenVPN server and save it on the server as `/etc/openvpn/server/server.p12`.
+* Generate a certificate revocation list and save it on the server as `/etc/openvpn/server/server.p12`.
 
 
 ### Optional
