@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2022051701
+
+/var/log/openvpn.log
+{
+    copytruncate
+    daily
+    dateext
+    missingok
+    rotate 14
+}

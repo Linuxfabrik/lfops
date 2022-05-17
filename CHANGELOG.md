@@ -41,6 +41,7 @@ New features:
 * Role: mailto_root
 * Role: mariadb_server
 * Role: network
+* Role: openvpn_server
 * Role: php
 * Role: repo_baseos
 * Role: repo_icinga

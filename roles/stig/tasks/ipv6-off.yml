@@ -56,3 +56,8 @@
     - 'net.ipv6.conf.default.disable_ipv6'
   # throws an error if ipv6 is already disabled, so just go on
   ignore_errors: true
+
+# set the new state for the later tasks
+- ansible.builtin.set_fact:
+    ipv6_disabled: true
+    ipv6_enabled: false

@@ -1,0 +1,36 @@
+# {{ ansible_managed }}
+# 2022051701
+
+auth SHA384
+cipher AES-256-CBC
+# crl file (or directory) is read every time a peer connects,
+# and it has to contain at least one item
+crl-verify /etc/openvpn/server/crl.pem
+client-config-dir /etc/openvpn/ccd
+daemon
+dev tun
+dh /etc/openvpn/dh2048.pem
+duplicate-cn
+group openvpn
+keepalive 10 60
+log-append /var/log/openvpn.log
+persist-key
+persist-tun
+pkcs12 /etc/openvpn/server/server.p12
+port {{ openvpn_server__port }}
+proto udp
+
+{% for item in openvpn_server__pushs %}
+push "{{ item }}"
+{% endfor %}
+
+server {{ openvpn_server__client_network }} {{ openvpn_server__client_netmask }}
+
+status /var/log/openvpn-status.log
+syslog
+tls-cipher TLS-RSA-WITH-AES-256-GCM-SHA384:TLS-RSA-WITH-AES-256-CBC-SHA256:TLS-RSA-WITH-AES-256-CBC-SHA
+tls-server
+tls-version-min 1.2
+topology subnet
+user openvpn
+verb 4
