@@ -1,0 +1,25 @@
+auth SHA384
+auth-nocache
+tls-cipher TLS-RSA-WITH-AES-256-GCM-SHA384:TLS-RSA-WITH-AES-256-CBC-SHA256:TLS-RSA-WITH-AES-256-CBC-SHA
+tls-version-min 1.2
+remote-cert-tls server
+data-ciphers-fallback AES-256-GCM
+
+pkcs12 /etc/openvpn/001.p12
+verify-x509-name {{ inventory_hostname }} name
+
+dev tun
+client
+nobind
+proto udp
+persist-key
+persist-tun
+keepalive 10 60
+
+remote {{ inventory_hostname }} {{ openvpn_server__port }}
+
+# 0 is silent, except for fatal errors
+# 4 is reasonable for general usage
+# 5 and 6 can help to debug connection problems
+# 9 is extremely verbose
+verb 3

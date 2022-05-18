@@ -1,6 +1,6 @@
 # Ansible Role openvpn_server
 
-This role installs and configures [OpenVPN](https://openvpn.net/) as a server. Currently, the only supported configuration is a multi-client server.
+This role installs and configures [OpenVPN](https://openvpn.net/) as a server. Currently, the only supported configuration is a multi-client server. A corresponding client config will be generated to `/tmp/` on the ansible control node.
 
 FQCN: linuxfabrik.lfops.openvpn_server
 

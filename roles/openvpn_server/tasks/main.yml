@@ -58,6 +58,12 @@
       proto: 'udp'
       setype: 'openvpn_port_t'
 
+  - name: 'deploy example client config to /tmp/{{ inventory_hostname }}.conf (on ansible control node)'
+    ansible.builtin.template:
+      src: 'tmp/client.conf.j2'
+      dest: '/tmp/{{ inventory_hostname }}.conf'
+    delegate_to: 'localhost'
+
   tags:
     - 'openvpn_server'
 
