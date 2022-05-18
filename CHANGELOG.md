@@ -32,6 +32,7 @@ New features:
 * Role: glances
 * Role: hetzner_vm
 * Role: hostname
+* Role: icingaweb2_module_vspheredb
 * Role: influxdb
 * Role: java
 * Role: kdump

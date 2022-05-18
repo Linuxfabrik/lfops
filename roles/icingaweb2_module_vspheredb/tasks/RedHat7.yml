@@ -1,0 +1,12 @@
+- name: 'Get the list of installed packages'
+  ansible.builtin.package_facts: # yamllint disable-line rule:empty-values
+
+- name: 'Get php version'
+  ansible.builtin.set_fact:
+    php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_replace("\.\d+$", "") }}'
+
+- name: 'install rh-{{ php__installed_version }}-php-soap'
+  ansible.builtin.package:
+    name:
+      - 'rh-{{ php__installed_version }}-php-soap'
+    state: 'present'
