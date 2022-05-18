@@ -1,7 +1,7 @@
 - block:
 
   - name: 'dnf install openvpn -y'
-    ansible.builtin.yum:
+    ansible.builtin.package:
       name: 'openvpn'
       state: 'present'
 
