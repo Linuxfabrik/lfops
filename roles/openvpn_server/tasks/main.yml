@@ -30,6 +30,27 @@
       value: 1
       state: 'present'
 
+  - name: 'Deploy /etc/openvpn/server/server.p12'
+    ansible.builtin.copy:
+      src: '{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/openvpn/server/server.p12'
+      dest: '/etc/openvpn/server/server.p12'
+      mode: 0o400
+      owner: 'root'
+      group: 'root'
+      seuser: 'system_u'
+      serole: 'object_r'
+      setype: 'openvpn_etc_t'
+
+  - name: 'Deploy /etc/openvpn/server/crl.pem'
+    ansible.builtin.copy:
+      src: '{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/openvpn/server/crl.pem'
+      dest: '/etc/openvpn/server/crl.pem'
+      mode: 0o600
+      owner: 'openvpn'
+      group: 'openvpn'
+      seuser: 'system_u'
+      serole: 'object_r'
+      setype: 'openvpn_etc_t'
   tags:
     - 'openvpn_server'
 
