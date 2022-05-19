@@ -26,9 +26,9 @@
     #   when:
     #     - 'not basic_setup__skip_freeipa_client | d(true)'
 
-    # - role: 'linuxfabrik.lfops.audit' TODO
-    #   when:
-    #     - 'not basic_setup__skip_audit | d(true)'
+    - role: 'linuxfabrik.lfops.audit'
+      when:
+        - 'not basic_setup__skip_audit | d(false)'
 
     # lower the FUTURE policy to FUTURE:LINUXFABRIK first, otherwise linuxfabrik.lfops.repo_epel and other things won't work
     - role: 'linuxfabrik.lfops.crypto_policy'

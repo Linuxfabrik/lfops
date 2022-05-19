@@ -22,6 +22,7 @@ New features:
 * Role network: Added functionality to configure network connections.
 
 * Role: at
+* Role: audit
 * Role: bind
 * Role: chrony
 * Role: cloud_init

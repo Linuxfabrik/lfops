@@ -1,0 +1,33 @@
+- block:
+
+  - name: 'dnf install audit audit-libs -y'
+    ansible.builtin.package:
+      name:
+        - 'audit'
+        - 'audit-libs'
+      state: 'present'
+
+  - name: 'deploy /etc/audit/auditd.conf'
+    ansible.builtin.template:
+      src: 'etc/audit/auditd.conf.j2'
+      dest: '/etc/audit/auditd.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o640
+    notify: 'audit: restart auditd'
+
+  tags:
+    - 'audit'
+
+
+- block:
+
+  - name: 'systemctl {{ audit__service_enabled | bool | ternary("enable", "disable") }} --now auditd.service'
+    ansible.builtin.systemd:
+      name: 'auditd.service'
+      enabled: '{{ audit__service_enabled }}'
+      state: '{{ audit__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'audit'
+    - 'audit:state'
