@@ -1,0 +1,29 @@
+- block:
+
+  - name: 'dnf install chrony -y'
+    ansible.builtin.package:
+      name: 'chrony'
+      state: 'present'
+
+  - name: 'Deploy /etc/chrony.conf'
+    ansible.builtin.template:
+      src: 'etc/chrony.conf.j2'
+      dest: '/etc/chrony.conf'
+      mode: 0o644
+    notify: 'chrony: restart chronyd.service'
+
+  tags:
+    - 'chrony'
+
+
+- block:
+
+  - name: 'systemctl {{ chrony__service_enabled | bool | ternary("enable", "disable") }} --now chronyd.service'
+    ansible.builtin.systemd:
+      name: 'chronyd.service'
+      enabled: '{{ chrony__service_enabled }}'
+      state: '{{ chrony__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'chrony'
+    - 'chrony:state'

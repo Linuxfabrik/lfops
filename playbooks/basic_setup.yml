@@ -79,6 +79,8 @@
       when:
         - 'ansible_facts["distribution"] != "Fedora"'
 
+    - role: 'chrony'
+
 
     # === SSH ===
     # TODO: does this work with CIS?
