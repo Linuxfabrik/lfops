@@ -63,6 +63,7 @@
       src: 'tmp/client.conf.j2'
       dest: '/tmp/{{ inventory_hostname }}.conf'
     delegate_to: 'localhost'
+    changed_when: false # not an actual config change to the server
 
   tags:
     - 'openvpn_server'
