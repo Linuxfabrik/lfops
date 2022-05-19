@@ -26,6 +26,7 @@ New features:
 * Role: chrony
 * Role: cloud_init
 * Role: cockpit
+* Role: crypto_policy
 * Role: dnf_makecache
 * Role: exoscale_vm
 * Role: firewall

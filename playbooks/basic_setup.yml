@@ -20,6 +20,22 @@
     # we need correct network settings for the rest to work
     - role: 'linuxfabrik.lfops.network'
 
+
+    # === Security ===
+    # - role: 'linuxfabrik.lfops.freeipa-client' TODO
+    #   when:
+    #     - 'not basic_setup__skip_freeipa_client | d(true)'
+
+    # - role: 'linuxfabrik.lfops.audit' TODO
+    #   when:
+    #     - 'not basic_setup__skip_audit | d(true)'
+
+    # lower the FUTURE policy to FUTURE:LINUXFABRIK first, otherwise linuxfabrik.lfops.repo_epel and other things won't work
+    - role: 'linuxfabrik.lfops.crypto_policy'
+      when:
+        - 'not basic_setup__skip_crypto_policy | d(false)'
+
+
     # === Basic repositories ===
     - role: 'linuxfabrik.lfops.repo_baseos'
       when:
@@ -134,18 +150,3 @@
     # - role: 'linuxfabrik.lfops.icinga2-log-level' TODO
     #   when:
     #     - 'not basic_setup__skip_icinga2_log_level | d(false)'
-
-
-    # === Security ===
-    # - role: 'linuxfabrik.lfops.freeipa-client' TODO
-    #   when:
-    #     - 'not basic_setup__skip_freeipa_client | d(true)'
-
-    # - role: 'linuxfabrik.lfops.audit' TODO
-    #   when:
-    #     - 'not basic_setup__skip_audit | d(true)'
-
-    # lower the FUTURE policy to FUTURE:LINUXFABRIK first, otherwise linuxfabrik.lfops.repo_epel and other things won't work
-    # - role: 'linuxfabrik.lfops.crypto-policy' TODO
-    #   when:
-    #     - 'not basic_setup__skip_crypto_policy | d(true)'
