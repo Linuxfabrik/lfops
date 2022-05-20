@@ -46,6 +46,7 @@ New features:
 * Role: mariadb_server
 * Role: network
 * Role: openvpn_server
+* Role: perl
 * Role: php
 * Role: repo_baseos
 * Role: repo_icinga
