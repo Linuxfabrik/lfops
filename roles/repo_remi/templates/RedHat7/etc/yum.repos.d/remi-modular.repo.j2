@@ -1,0 +1,32 @@
+# {{ ansible_managed }}
+# 2020091001
+
+# Repository: https://rpms.remirepo.net/
+# Blog:       https://blog.remirepo.net/
+# Forum:      https://forum.remirepo.net/
+
+[remi-modular]
+name=Remi's Modular repository for Enterprise Linux 7 - $basearch
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/7/modular/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/7/modular/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/7/modular/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/7/modular/mirror
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+
+[remi-modular-test]
+name=Remi's Modular testing repository for Enterprise Linux 7 - $basearch
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/7/modular-test/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/7/modular-test/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/7/modular-test/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/7/modular-test/mirror
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi

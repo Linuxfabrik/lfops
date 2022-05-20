@@ -1,0 +1,4 @@
+repo_remi__repo_files:
+  - 'RedHat8/etc/yum.repos.d/remi-modular.repo'
+  - 'RedHat8/etc/yum.repos.d/remi-safe.repo'
+  - 'RedHat8/etc/yum.repos.d/remi.repo'

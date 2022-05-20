@@ -52,6 +52,7 @@ New features:
 * Role: repo_influxdb
 * Role: repo_mariadb
 * Role: repo_mydumper
+* Role: repo_remi
 * Role: sshd
 * Role: stig
 * Role: system_update

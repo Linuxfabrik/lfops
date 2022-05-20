@@ -1,0 +1,30 @@
+# {{ ansible_managed }}
+# 2020121801
+
+# This repository is safe to use with RHEL/CentOS base repository
+# it only provides additional packages for the PHP stack
+# all dependencies are in base repository or in EPEL
+
+[remi-safe]
+name=Safe Remi's RPM repository for Enterprise Linux 8 - $basearch
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/8/safe/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/8/safe/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/8/safe/$basearch/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/8/safe/$basearch/mirror
+{% endif %}
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8
+
+[remi-safe-debuginfo]
+name=Remi's RPM repository for Enterprise Linux 8 - $basearch - debuginfo
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/8/debug-remi/x86_64/
+{% else %}
+baseurl=http://rpms.remirepo.net/enterprise/8/debug-remi/$basearch/
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8
