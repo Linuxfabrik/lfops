@@ -356,15 +356,3 @@ Apply the remedies of "CIS CentOS Linux 8" to a Rocky machine (use this as a sta
 .. code-block:: bash
 
     ansible-playbook --inventory=path/to/hosts.yml path/to/playbook.yml --extra-vars="ansible_ssh_user=root"
-
-
-History
--------
-
-This role combines older audits and Ansible roles and therefore replaces them:
-
-* https://git.linuxfabrik.ch/linuxfabrik/audits
-* https://git.linuxfabrik.ch/linuxfabrik-ansible/roles/stig-cis-apache-http-server-2.4-benchmark-v2.0.0
-* https://git.linuxfabrik.ch/linuxfabrik-ansible/roles/stig-cis-centos-linux-7-benchmark-v3.0.0
-* https://git.linuxfabrik.ch/linuxfabrik-ansible/roles/stig-cis-centos-linux-8-benchmark-v1.0.0.1
-* https://git.linuxfabrik.ch/linuxfabrik-ansible/roles/stig-remediations
