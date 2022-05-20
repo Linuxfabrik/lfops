@@ -1,0 +1,8 @@
+- name: 'Configure kernel settings'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_kernel_settings'
+
+  roles:
+
+    - role: 'kernel_settings'

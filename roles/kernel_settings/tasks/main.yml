@@ -1,0 +1,12 @@
+- block:
+
+  - name: 'Use fedora.linux_system_roles.kernel_settings role to configure the kernel settings'
+    include_role:
+      name: 'fedora.linux_system_roles.kernel_settings'
+
+  - ansible.builtin.debug:
+      msg: 'Please restart the server manually to apply new kernel settings.'
+    when: 'kernel_settings_reboot_required is defined and kernel_settings_reboot_required | bool'
+
+  tags:
+    - 'kernel_settings'

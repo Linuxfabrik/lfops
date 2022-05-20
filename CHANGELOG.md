@@ -39,6 +39,7 @@ New features:
 * Role: influxdb
 * Role: java
 * Role: kdump
+* Role: kernel_settings
 * Role: keycloak
 * Role: libselinux_python
 * Role: login
