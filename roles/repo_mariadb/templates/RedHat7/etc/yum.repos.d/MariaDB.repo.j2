@@ -11,9 +11,6 @@ baseurl = https://downloads.mariadb.com/MariaDB/mariadb-{{ repo_mariadb__version
 gpgkey = file:///etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY
 gpgcheck = 1
 enabled = 1
-{% if repo_outbound_proxy is defined and repo_outbound_proxy|length %}
-proxy = {{ repo_outbound_proxy }}
-{% endif %}
 
 [mariadb-maxscale]
 # To use the latest stable release of MaxScale, use "latest" as the version
@@ -27,9 +24,6 @@ baseurl = https://downloads.mariadb.com/MaxScale/2.4/centos/$releasever/$basearc
 gpgkey = file:///etc/pki/rpm-gpg/MariaDB-MaxScale-GPG-KEY
 gpgcheck = 1
 enabled = 1
-{% if repo_outbound_proxy is defined and repo_outbound_proxy|length %}
-proxy = {{ repo_outbound_proxy }}
-{% endif %}
 
 [mariadb-tools]
 name = MariaDB Tools
@@ -41,6 +35,3 @@ baseurl = https://downloads.mariadb.com/Tools/rhel/$releasever/$basearch
 gpgkey = file:///etc/pki/rpm-gpg/MariaDB-Enterprise-GPG-KEY
 gpgcheck = 1
 enabled = 1
-{% if repo_outbound_proxy is defined and repo_outbound_proxy|length %}
-proxy = {{ repo_outbound_proxy }}
-{% endif %}
