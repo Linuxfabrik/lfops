@@ -52,7 +52,7 @@
       serole: 'object_r'
       setype: 'openvpn_etc_t'
 
-  - name: 'semanage port -a -t openvpn_port_t -p udp {{ openvpn_server__port }}'
+  - name: 'semanage port --add --type openvpn_port_t --proto udp {{ openvpn_server__port }}'
     community.general.seport:
       ports: '{{ openvpn_server__port }}'
       proto: 'udp'
