@@ -14,7 +14,6 @@
       owner: 'root'
       group: 'root'
       mode: 0o640
-    notify: 'audit: restart auditd'
 
   tags:
     - 'audit'
