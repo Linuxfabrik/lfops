@@ -55,7 +55,7 @@
 
   tags:
     - 'sshd'
-    - 'sshd:configure'
+
 
 - block:
 
@@ -72,5 +72,4 @@
 
   tags:
     - 'sshd'
-    - 'sshd:configure'
     - 'sshd:state'

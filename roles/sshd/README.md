@@ -27,7 +27,6 @@ This role does not have any optional requirements.
 | Tag           | What it does                                   |
 | ---           | ------------                                   |
 | ssh           | Configures sshd                                |
-| ssh:configure | Deploys the configuration for sshd             |
 | ssh:state     | Manages the state of the sshd systemd service  |
 
 
