@@ -2,6 +2,21 @@
 # ^#?text = string starting with "text", commented or not
 - block:
 
+  - name: 'Change Port in /etc/ssh/sshd_config to {{ sshd__port }}'
+    ansible.builtin.lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^#?Port'
+      line: 'Port {{ sshd__port }}'
+      state: 'present'
+      validate: '/usr/sbin/sshd -t -f %s'
+    notify: 'sshd: reload sshd'
+
+  - name: 'semanage port --add --type ssh_port_t --proto tcp {{ sshd__port }}'
+    community.general.seport:
+      ports: '{{ sshd__port }}'
+      proto: 'tcp'
+      setype: 'ssh_port_t'
+
   - name: 'Change Ciphers in /etc/ssh/sshd_config to {{ sshd__ciphers }}'
     ansible.builtin.lineinfile:
       path: '/etc/ssh/sshd_config'

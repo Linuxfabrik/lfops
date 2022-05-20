@@ -97,6 +97,17 @@ Example:
 sshd__password_authentication: false
 ```
 
+
+#### sshd__port
+
+Which port the sshd server should use.
+
+Default:
+```yaml
+sshd__port: 22
+```
+
+
 #### sshd__service_enabled
 
 Enables or disables the sshd service, analogous to `systemctl enable/disable`. Possible options:
