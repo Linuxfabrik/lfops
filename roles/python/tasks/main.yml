@@ -8,9 +8,8 @@
 
   - name: 'Install additional python modules'
     ansible.builtin.package:
-      name: "{{ python__modules }}"
+      name: "{{ python__combined_modules }}"
       state: 'present'
-    when: 'python__modules is defined and python__modules | length'
 
   # block
   when: 'ansible_facts["os_family"] != "Windows"'
