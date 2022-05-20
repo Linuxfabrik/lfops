@@ -1,8 +1,10 @@
 - block:
 
-  - name: 'yum -y install php'
+  - name: 'dnf install php php-fpm -y'
     ansible.builtin.package:
-      name: 'php'
+      name:
+        - 'php'
+        - 'php-fpm'
       state: 'present'
   tags:
     - 'php'
@@ -41,10 +43,21 @@
       mode: 0o644
     notify: 'php: restart php-fpm'
 
-
   - name: 'flush handlers so that the mariadb can be used by other roles later'
     ansible.builtin.meta: 'flush_handlers'
 
   tags:
     - 'php'
-    - 'php:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm'
+    ansible.builtin.service:
+      name: 'php-fpm'
+      enabled: '{{ php__fpm_service_enabled }}'
+      state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'php'
+    - 'php:state'
