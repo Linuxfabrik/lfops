@@ -12,10 +12,6 @@
     #   when:
     #     - 'not setup_firewall__skip_fail2ban | d(false)'
 
-    # - role: 'linuxfabrik.lfops.ipaserver' TODO
-    #   when:
-    #     - 'not setup_firewall__skip_ipaserver | d(false)'
-
     - role: 'linuxfabrik.lfops.openvpn_server'
       when:
         - 'not setup_firewall__skip_openvpn_server | d(false)'
