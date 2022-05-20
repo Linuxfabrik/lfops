@@ -7,6 +7,7 @@ FQCN: linuxfabrik.lfops.repo_remi
 Tested on
 
 * RHEL 8 (and compatible)
+* Fedora 35
 
 
 ## Requirements

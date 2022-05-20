@@ -8,9 +8,9 @@
 
 - block:
 
-  - name: 'dnf install https://rpms.remirepo.net/enterprise/remi-release-{{ ansible_facts["distribution_major_version"] }}.rpm'
+  - name: 'dnf install {{ repo_remi__package }}'
     ansible.builtin.package:
-      name: 'https://rpms.remirepo.net/enterprise/remi-release-{{ ansible_facts["distribution_major_version"] }}.rpm'
+      name: '{{ repo_remi__package }}'
       state: 'present'
       disable_gpg_check: true
 
