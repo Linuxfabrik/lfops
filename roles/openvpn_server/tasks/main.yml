@@ -1,0 +1,82 @@
+- block:
+
+  - name: 'dnf install openvpn -y'
+    ansible.builtin.package:
+      name: 'openvpn'
+      state: 'present'
+
+  - name: 'Generate DH Parameters with 2048 bits size'
+    community.crypto.openssl_dhparam:
+      path: '/etc/openvpn/dh2048.pem'
+      size: 2048
+      mode: 0o440
+      group: 'openvpn'
+
+  - name: 'mkdir /etc/openvpn/ccd'
+    ansible.builtin.file:
+      path: '/etc/openvpn/ccd'
+      state: 'directory'
+      group: 'openvpn'
+
+  - name: 'deploy /etc/openvpn/server/server.conf'
+    ansible.builtin.template:
+      src: 'etc/openvpn/server/server.conf.j2'
+      dest: '/etc/openvpn/server/server.conf'
+      group: 'openvpn'
+
+  - name: 'set "ip forwarding on" in /proc and reload the sysctl file'
+    ansible.posix.sysctl:
+      name: 'net.ipv4.ip_forward'
+      value: 1
+      state: 'present'
+
+  - name: 'Deploy /etc/openvpn/server/server.p12'
+    ansible.builtin.copy:
+      src: '{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/openvpn/server/server.p12'
+      dest: '/etc/openvpn/server/server.p12'
+      mode: 0o400
+      owner: 'root'
+      group: 'root'
+      seuser: 'system_u'
+      serole: 'object_r'
+      setype: 'openvpn_etc_t'
+
+  - name: 'Deploy /etc/openvpn/server/crl.pem'
+    ansible.builtin.copy:
+      src: '{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/openvpn/server/crl.pem'
+      dest: '/etc/openvpn/server/crl.pem'
+      mode: 0o600
+      owner: 'openvpn'
+      group: 'openvpn'
+      seuser: 'system_u'
+      serole: 'object_r'
+      setype: 'openvpn_etc_t'
+
+  - name: 'semanage port --add --type openvpn_port_t --proto udp {{ openvpn_server__port }}'
+    community.general.seport:
+      ports: '{{ openvpn_server__port }}'
+      proto: 'udp'
+      setype: 'openvpn_port_t'
+
+  - name: 'deploy example client config to /tmp/{{ inventory_hostname }}.conf (on ansible control node)'
+    ansible.builtin.template:
+      src: 'tmp/client.conf.j2'
+      dest: '/tmp/{{ inventory_hostname }}.conf'
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change to the server
+
+  tags:
+    - 'openvpn_server'
+
+
+- block:
+
+  - name: 'systemctl {{ openvpn_server__service_enabled | bool | ternary("enable", "disable") }} --now openvpn-server@server.service'
+    ansible.builtin.systemd:
+      name: 'openvpn-server@server.service'
+      enabled: '{{ openvpn_server__service_enabled }}'
+      state: '{{ openvpn_server__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'openvpn_server'
+    - 'openvpn_server:state'

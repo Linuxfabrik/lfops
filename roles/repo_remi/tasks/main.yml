@@ -1,0 +1,57 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'repo_remi'
+
+
+- block:
+
+  - name: 'dnf install {{ repo_remi__package }}'
+    ansible.builtin.package:
+      name: '{{ repo_remi__package }}'
+      state: 'present'
+      disable_gpg_check: true
+
+  - name: 'yum-config-manager --enable remi'
+    command: 'yum-config-manager --enable remi'
+    changed_when: false
+
+  when: 'repo_remi__mirror_url is not defined or not repo_remi__mirror_url | length'
+  tags:
+    - 'repo_remi'
+
+
+- block:
+
+  - name: 'deploy the repo files (mirror: {{ repo_remi__mirror_url }})'
+    ansible.builtin.template:
+      src: '{{ item }}.j2'
+      dest: '/etc/yum.repos.d/{{ item | basename }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    loop: '{{ repo_remi__repo_files }}'
+
+  when: 'repo_remi__mirror_url is defined and repo_remi__mirror_url | length'
+  tags:
+    - 'repo_remi'
+
+
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  vars:
+    __task_file:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
+  tags:
+    - 'repo_remi'

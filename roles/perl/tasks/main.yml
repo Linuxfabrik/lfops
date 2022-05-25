@@ -1,0 +1,7 @@
+- name: 'dnf install perl -y'
+  ansible.builtin.package:
+    name: 'perl'
+    state: 'present'
+
+  tags:
+    - 'perl'

@@ -1,0 +1,5 @@
+- name: 'install php-soap'
+  ansible.builtin.package:
+    name:
+      - 'php-soap'
+    state: 'present'

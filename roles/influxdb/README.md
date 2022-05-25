@@ -105,7 +105,7 @@ influxdb_users:
 
 #### influxdb__dump_timer_enabled
 
-Enables or disables the named service, analogous to `systemctl enable/disable --now`. Possible options:
+Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. Possible options:
 
 * true
 * false
@@ -118,7 +118,7 @@ influxdb__dump_timer_enabled: true
 
 #### influxdb__service_enabled
 
-Enables or disables the named service, analogous to `systemctl enable/disable --now`. Possible options:
+Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. Possible options:
 
 * true
 * false

@@ -1,0 +1,45 @@
+# {{ ansible_managed }}
+# 2022051801
+
+auth SHA384
+cipher AES-256-GCM
+tls-cipher TLS-RSA-WITH-AES-256-GCM-SHA384:TLS-RSA-WITH-AES-256-CBC-SHA256:TLS-RSA-WITH-AES-256-CBC-SHA
+tls-server
+tls-version-min 1.2
+
+# and it has to contain at least one item
+# crl file (or directory) is read every time a peer connects,
+crl-verify /etc/openvpn/server/crl.pem
+dh /etc/openvpn/dh2048.pem
+pkcs12 /etc/openvpn/server/server.p12
+
+port {{ openvpn_server__port }}
+dev tun
+proto udp
+persist-key
+persist-tun
+user openvpn
+group openvpn
+explicit-exit-notify 1
+
+client-config-dir /etc/openvpn/ccd
+duplicate-cn
+keepalive 10 60
+topology subnet
+
+{% for item in openvpn_server__pushs %}
+push "{{ item }}"
+{% endfor %}
+
+server {{ openvpn_server__client_network }} {{ openvpn_server__client_netmask }}
+
+{# do not use these settings, as they break logging to journald. using log-append would write a logfile without timestamps, due to the --suppres-timestamps in the systemd service file
+#daemon
+#log-append /var/log/openvpn.log
+#syslog #}
+status /var/log/openvpn-status.log
+# 0 is silent, except for fatal errors
+# 4 is reasonable for general usage
+# 5 and 6 can help to debug connection problems
+# 9 is extremely verbose
+verb 4

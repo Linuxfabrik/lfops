@@ -1,2 +1,2 @@
-- import_playbook: 'exoscale_vm.yml'
-- import_playbook: 'hetzner_vm.yml'
+- ansible.builtin.import_playbook: 'exoscale_vm.yml'
+- ansible.builtin.import_playbook: 'hetzner_vm.yml'

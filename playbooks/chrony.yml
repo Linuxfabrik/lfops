@@ -1,0 +1,8 @@
+- name: 'Install and configure chrony'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_chrony'
+
+  roles:
+
+    - role: 'chrony'

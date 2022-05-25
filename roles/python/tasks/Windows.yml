@@ -15,12 +15,11 @@
 
   - name: "py -{{ python__version | regex_replace('\\.\\d$', '') }} -m pip install --upgrade setuptools pip wheel (Windows)"
     ansible.windows.win_shell: "py -{{ python__version | regex_replace('\\.\\d$', '') }} -m pip install --upgrade setuptools pip wheel"
-    when: 'python__modules is defined and python__modules | length'
 
   - name: 'Install additional python modules (Windows)'
     ansible.windows.win_shell: "py -{{ python__version | regex_replace('\\.\\d$', '') }} -m pip install {{ item }}"
-    loop: "{{ python__modules }}"
-    when: 'python__modules is defined and python__modules | length'
+    loop: "{{ python__combined_modules }}"
+    when: 'python__combined_modules is defined and python__combined_modules | length'
 
   tags:
     - 'python3'

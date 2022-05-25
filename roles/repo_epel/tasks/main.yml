@@ -20,7 +20,7 @@
 
 - block:
 
-  - name: 'deploy the repo files (mirror: {{ repo_epel__mirror_url | default("") }})'
+  - name: 'deploy the repo files (mirror: {{ repo_epel__mirror_url }})'
     ansible.builtin.template:
       src: '{{ item }}.j2'
       dest: '/etc/yum.repos.d/{{ item | basename }}'

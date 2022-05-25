@@ -1,0 +1,53 @@
+# {{ ansible_managed }}
+# 2020091001
+
+# This repository only provides PHP 7.1 and its extensions
+# NOTICE: common dependencies are in "remi-safe"
+
+[remi-php71]
+name=Remi's PHP 7.1 RPM repository for Enterprise Linux 7 - $basearch
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/7/php71/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/7/php71/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/7/php71/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/7/php71/mirror
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+
+[remi-php71-debuginfo]
+name=Remi's PHP 7.1 RPM repository for Enterprise Linux 7 - $basearch - debuginfo
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/7/debug-php71/x86_64/
+{% else %}
+baseurl=http://rpms.remirepo.net/enterprise/7/debug-php71/$basearch/
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+
+[remi-php71-test]
+name=Remi's PHP 7.1 test RPM repository for Enterprise Linux 7 - $basearch
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/7/test71/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/7/test71/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/7/test71/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/7/test71/mirror
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+
+[remi-php71-test-debuginfo]
+name=Remi's PHP 7.1 test RPM repository for Enterprise Linux 7 - $basearch - debuginfo
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/7/debug-test71/x86_64/
+{% else %}
+baseurl=http://rpms.remirepo.net/enterprise/7/debug-test71/$basearch/
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi

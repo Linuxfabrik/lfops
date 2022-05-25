@@ -1,0 +1,8 @@
+- name: 'Install and configure OpenVPN as a server'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_openvpn_server'
+
+  roles:
+
+    - role: 'openvpn_server'

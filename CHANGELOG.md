@@ -22,9 +22,12 @@ New features:
 * Role network: Added functionality to configure network connections.
 
 * Role: at
+* Role: audit
 * Role: bind
+* Role: chrony
 * Role: cloud_init
 * Role: cockpit
+* Role: crypto_policy
 * Role: dnf_makecache
 * Role: exoscale_vm
 * Role: firewall
@@ -32,21 +35,26 @@ New features:
 * Role: glances
 * Role: hetzner_vm
 * Role: hostname
+* Role: icingaweb2_module_vspheredb
 * Role: influxdb
 * Role: java
 * Role: kdump
+* Role: kernel_settings
 * Role: keycloak
 * Role: libselinux_python
 * Role: login
 * Role: mailto_root
 * Role: mariadb_server
 * Role: network
+* Role: openvpn_server
+* Role: perl
 * Role: php
 * Role: repo_baseos
 * Role: repo_icinga
 * Role: repo_influxdb
 * Role: repo_mariadb
 * Role: repo_mydumper
+* Role: repo_remi
 * Role: sshd
 * Role: stig
 * Role: system_update

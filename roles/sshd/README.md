@@ -27,7 +27,6 @@ This role does not have any optional requirements.
 | Tag           | What it does                                   |
 | ---           | ------------                                   |
 | ssh           | Configures sshd                                |
-| ssh:configure | Deploys the configuration for sshd             |
 | ssh:state     | Manages the state of the sshd systemd service  |
 
 
@@ -97,6 +96,17 @@ Example:
 ```yaml
 sshd__password_authentication: false
 ```
+
+
+#### sshd__port
+
+Which port the sshd server should use.
+
+Default:
+```yaml
+sshd__port: 22
+```
+
 
 #### sshd__service_enabled
 

@@ -65,6 +65,9 @@
       - regexp: '(?i)^#?smtp_sasl_password_maps ='
         line: 'smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd'
 
+  - name: 'flush handlers so that postfix can be used by the later roles'
+    ansible.builtin.meta: 'flush_handlers'
+
   tags:
     - 'postfix'
 
