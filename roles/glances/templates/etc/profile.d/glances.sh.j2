@@ -1,5 +1,10 @@
 # {{ ansible_managed }}
 # 2022051701
 
+{% if ansible_facts['distribution'] == 'RedHat' and ansible_facts['distribution_major_version']|int  < 8 %}
 alias top='glances -t 1 --disable-docker'
 alias glances='glances -t 1 --disable-docker'
+{% else %}
+alias top='glances -t 1'
+alias glances='glances -t 1'
+{% endif %}
