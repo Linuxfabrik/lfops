@@ -5,7 +5,7 @@ tls-version-min 1.2
 remote-cert-tls server
 data-ciphers-fallback AES-256-GCM
 
-pkcs12 /etc/openvpn/001.p12
+pkcs12 /etc/openvpn/{{ inventory_hostname }}.p12
 verify-x509-name {{ inventory_hostname }} name
 
 dev tun
