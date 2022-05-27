@@ -1,0 +1,84 @@
+- block:
+
+  - name: 'curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online ...'
+    ansible.builtin.shell: |-
+      curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online \
+        --home /opt/acme.sh \
+        --config-home /etc/acme.sh \
+        --cert-home  /etc/acme.sh/certs \
+        --accountemail  "{{ acme_sh__account_email }}" \
+        --accountkey  /etc/acme.sh/account.key \
+        --accountconf /etc/acme.sh/account.conf \
+        --no-cron
+    args:
+      creates: '/opt/acme.sh/acme.sh'
+    register: 'acme_sh__install_result'
+    failed_when:
+      - '"Install success" not in acme_sh__install_result.stdout'
+      - '"skipped" not in acme_sh__install_result.stdout'
+
+  - name: 'Deploy /etc/systemd/system/acme-sh.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/acme-sh.service.j2'
+      dest: '/etc/systemd/system/acme-sh.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy /etc/systemd/system/acme-sh.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/acme-sh.timer.j2'
+      dest: '/etc/systemd/system/acme-sh.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'mkdir -p /var/www/html/letsencrypt/.well-known/acme-challenge'
+    ansible.builtin.file:
+      path: '/var/www/html/letsencrypt/.well-known/acme-challenge'
+      state: 'directory'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o755
+
+  - name: "echo 'it works' > /var/www/html/letsencrypt/.well-known/acme-challenge/index.html"
+    ansible.builtin.copy:
+      content: 'it works'
+      dest: '/var/www/html/letsencrypt/.well-known/acme-challenge/index.html'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o644
+
+  tags:
+    - 'acme_sh'
+
+
+- block:
+
+  - name: 'acme.sh --list'
+    ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --list'
+    changed_when: false # just gathering information
+    register: 'acme_sh__list_result'
+
+  - ansible.builtin.include_tasks: 'issue-cert.yml'
+    loop: '{{ acme_sh__certificates }}'
+    loop_control:
+      loop_var: 'certificate'
+    when: 'certificate is not in acme_sh__list_result.stdout'
+
+  tags:
+    - 'acme_sh'
+    - 'acme_sh:certificates'
+
+
+- block:
+
+  - name: 'systemctl {{ acme_sh__timer_enabled | bool | ternary("enable", "disable") }} acme-sh.timer --now'
+    ansible.builtin.systemd:
+      name: 'acme-sh.timer'
+      state: '{{ acme_sh__timer_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ acme_sh__timer_enabled }}'
+
+  tags:
+    - 'acme_sh'
+    - 'acme_sh:state'

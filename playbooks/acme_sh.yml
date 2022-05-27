@@ -1,0 +1,10 @@
+- name: 'Install and configure acme.sh'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_acme_sh'
+
+  roles:
+
+    - role: 'openssl'
+    - role: 'tar'
+    - role: 'acme_sh'

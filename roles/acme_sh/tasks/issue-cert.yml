@@ -1,0 +1,27 @@
+- name: 'curl http://{{ certificate }}/.well-known/acme-challenge/index.html'
+  ansible.builtin.uri:
+    url: 'http://{{ certificate }}/.well-known/acme-challenge/index.html'
+    return_content: true
+    timeout: 8
+  register: 'acme_sh__curl_result'
+
+- name: 'check if acme-challenge was reachable'
+  ansible.builtin.assert:
+    that: '"it works" in acme_sh__curl_result.content'
+    fail_msg: 'could not reach http://{{ certificate }}/.well-known/acme-challenge/index.html. please make sure the url is reachable for acme.sh to work.'
+
+# - name: 'acme.sh --issue ...'
+#   ansible.builtin.command: |-
+#     acme.sh --issue \
+#     --domain '{{ certificate }}' \
+#     --webroot /var/www/html/letsencrypt \
+#     --server https://acme-v02.api.letsencrypt.org/directory
+
+# - name: 'acme.sh --install-cert ...'
+#   ansible.builtin.command: |-
+#     acme.sh --install-cert \
+#     --domain '{{ certificate }}' \
+#     --cert-file "/etc/pki/tls/certs/{{ certificate }}.crt" \
+#     --key-file "/etc/pki/tls/private/{{ certificate }}.key" \
+#     --fullchain-file "/etc/pki/tls/certs/{{ certificate }}-fullchain.crt" \
+#     --reloadcmd "{{ acme_sh__reload_cmd }}"
