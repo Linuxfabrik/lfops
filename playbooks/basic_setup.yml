@@ -47,33 +47,6 @@
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
 
 
-    # === Mailing ===
-    - role: 'linuxfabrik.lfops.mailx'
-
-    - role: 'linuxfabrik.lfops.postfix'
-
-    - role: 'linuxfabrik.lfops.mailto_root'
-
-
-    # === Various tools / dependencies ===
-
-    - role: 'linuxfabrik.lfops.python'
-      when:
-        - 'not basic_setup__skip_python | d(false)'
-
-    - role: 'linuxfabrik.lfops.glances'
-
-    - role: 'linuxfabrik.lfops.tools'
-
-    - role: 'linuxfabrik.lfops.at'
-
-    - role: 'linuxfabrik.lfops.yum_utils'
-
-    - role: 'linuxfabrik.lfops.libselinux_python'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-
-
     # === Sensible defaults ===
     - role: 'linuxfabrik.lfops.hostname'
 
@@ -98,6 +71,25 @@
     - role: 'chrony'
 
 
+    # === Various tools / dependencies ===
+
+    - role: 'linuxfabrik.lfops.python'
+      when:
+        - 'not basic_setup__skip_python | d(false)'
+
+    - role: 'linuxfabrik.lfops.glances'
+
+    - role: 'linuxfabrik.lfops.tools'
+
+    - role: 'linuxfabrik.lfops.at'
+
+    - role: 'linuxfabrik.lfops.yum_utils'
+
+    - role: 'linuxfabrik.lfops.libselinux_python'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+
     # === SSH ===
     # TODO: does this work with CIS?
     - role: 'linuxfabrik.lfops.sshd'
@@ -113,6 +105,14 @@
     - role: 'linuxfabrik.lfops.firewall'
       when:
         - 'not basic_setup__skip_firewall | d(false)'
+
+
+    # === Mailing ===
+    - role: 'linuxfabrik.lfops.mailx'
+
+    - role: 'linuxfabrik.lfops.postfix'
+
+    - role: 'linuxfabrik.lfops.mailto_root'
 
 
     # === Automatic updates ===
