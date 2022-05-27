@@ -1,0 +1,7 @@
+- name: 'dnf install openssl -y'
+  ansible.builtin.package:
+    name: 'openssl'
+    state: 'present'
+
+  tags:
+    - 'openssl'
