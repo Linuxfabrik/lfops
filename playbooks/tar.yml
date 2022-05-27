@@ -1,0 +1,8 @@
+- name: 'Install tar'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_tar'
+
+  roles:
+
+    - role: 'tar'

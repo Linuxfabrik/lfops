@@ -58,6 +58,7 @@ New features:
 * Role: sshd
 * Role: stig
 * Role: system_update
+* Role: tar
 * Role: timezone
 * Role: yum_utils
 
