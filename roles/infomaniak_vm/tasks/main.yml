@@ -1,0 +1,174 @@
+- block:
+
+  - name: 'Manage the networks for the VM'
+    openstack.cloud.network:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__username }}'
+        password: '{{ infomaniak_vm__password }}'
+        project_id: '{{ infomaniak_vm__project_id }}'
+        project_name: '{{ infomaniak_vm__username }}'
+        user_domain_name: 'default'
+      region_name: 'dc3-a'
+      name: '{{ item["name"] }}'
+      state: 'present' # we only use state present, as other vms could use the network too
+    delegate_to: 'localhost'
+    loop: '{{ infomaniak_vm__networks }}'
+    when: 'infomaniak_vm__state != "absent"'
+
+  - name: 'Manage the subnets for the VM'
+    openstack.cloud.subnet:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__username }}'
+        password: '{{ infomaniak_vm__password }}'
+        project_id: '{{ infomaniak_vm__project_id }}'
+        project_name: '{{ infomaniak_vm__username }}'
+        user_domain_name: 'default'
+      region_name: 'dc3-a'
+      name: '{{ item["name"] }}--subnet'
+      network_name: '{{ item ["name"] }}'
+      cidr: '{{ item["cidr"] }}'
+      gateway_ip: '{{ item["cidr"] | ansible.utils.nthhost("1") }}'
+      enable_dhcp: false
+      state: 'present' # we only use state present, as other vms could use the network too
+    delegate_to: 'localhost'
+    loop: '{{ infomaniak_vm__networks }}'
+    when:
+      - 'infomaniak_vm__state != "absent"'
+      - 'item["cidr"] is defined'
+
+  - name: 'Manage the ports for the VM'
+    openstack.cloud.port:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__username }}'
+        password: '{{ infomaniak_vm__password }}'
+        project_id: '{{ infomaniak_vm__project_id }}'
+        project_name: '{{ infomaniak_vm__username }}'
+        user_domain_name: 'default'
+      region_name: 'dc3-a'
+      name: '{{ infomaniak_vm__name }}--{{ item["name"] }}--port'
+      network: '{{ item["name"] }}'
+      fixed_ips:
+        - ip_address: '{{ item["fixed_ip"] }}'
+      state: 'present'
+    delegate_to: 'localhost'
+    loop: '{{ infomaniak_vm__networks }}'
+    when:
+      - 'infomaniak_vm__state != "absent"'
+      - 'item["fixed_ip"] is defined'
+
+  - name: 'Manage the security group for the VM'
+    openstack.cloud.security_group:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__username }}'
+        password: '{{ infomaniak_vm__password }}'
+        project_id: '{{ infomaniak_vm__project_id }}'
+        project_name: '{{ infomaniak_vm__username }}'
+        user_domain_name: 'default'
+      region_name: 'dc3-a'
+      name: '{{ infomaniak_vm__name }}'
+      state: 'present'
+    delegate_to: 'localhost'
+    when:
+      - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length'
+      - 'infomaniak_vm__state != "absent"'
+
+  - name: 'Manage the required security group rules for the VM'
+    openstack.cloud.security_group_rule:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__username }}'
+        password: '{{ infomaniak_vm__password }}'
+        project_id: '{{ infomaniak_vm__project_id }}'
+        project_name: '{{ infomaniak_vm__username }}'
+        user_domain_name: 'default'
+      region_name: 'dc3-a'
+      security_group: '{{ infomaniak_vm__name }}'
+      direction: '{{ item["direction"] | default("ingress") }}'
+      protocol: '{{ item["protocol"] | default(omit) }}'
+      port_range_min: '{{ item["port_range_min"] | default(omit) }}'
+      port_range_max: '{{ item["port_range_max"] | default(omit) }}'
+      remote_ip_prefix: '{{ item["remote_ip_prefix"] | default(omit) }}'
+      state: 'present'
+    loop: '{{ infomaniak_vm__security_group_rules }}'
+    delegate_to: 'localhost'
+    when:
+      - 'infomaniak_vm__security_group_rules is defined'
+      - 'infomaniak_vm__state != "absent"'
+
+  - name: 'Create the list of nics for the VM (1/2)'
+    ansible.builtin.set_fact:
+      infomaniak_vm__nics: '{{ infomaniak_vm__nics | default([]) + [{ "net-name": item["name"] }] }}'
+    loop: '{{ infomaniak_vm__networks }}'
+    when: 'item["fixed_ip"] is not defined'
+
+  - name: 'Create the list of nics for the VM (2/2)'
+    ansible.builtin.set_fact:
+      infomaniak_vm__nics: '{{ infomaniak_vm__nics | default([]) + [{ "port-name": infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port" }] }}'
+    loop: '{{ infomaniak_vm__networks }}'
+    when: 'item["fixed_ip"] is defined'
+
+  - name: 'Manage the VM at Infomaniak'
+    openstack.cloud.server:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__username }}'
+        password: '{{ infomaniak_vm__password }}'
+        project_id: '{{ infomaniak_vm__project_id }}'
+        project_name: '{{ infomaniak_vm__username }}'
+        user_domain_name: 'default'
+      region_name: 'dc3-a'
+      name: '{{ infomaniak_vm__name }}'
+      key_name: '{{ infomaniak_vm__key_name }}'
+      image: '{{ infomaniak_vm__image }}'
+      flavor: '{{ infomaniak_vm__flavor }}'
+      nics: '{{ infomaniak_vm__nics }}'
+      volume_size: '{{ infomaniak_vm__volume_size | default(omit) }}'
+      boot_from_volume: '{{ infomaniak_vm__volume_size is defined | bool }}'
+      terminate_volume: true # delete volume when deleting VM
+      security_groups: '{{ (infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length) | ternary(["default", infomaniak_vm__name], ["default"]) }}'
+      state: '{{ infomaniak_vm__state }}'
+      auto_ip: false # not all VMs need to have a public ip
+    delegate_to: 'localhost'
+
+  # Cleanup
+  - name: 'Cleanup ports when deleting VM'
+    openstack.cloud.port:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__username }}'
+        password: '{{ infomaniak_vm__password }}'
+        project_id: '{{ infomaniak_vm__project_id }}'
+        project_name: '{{ infomaniak_vm__username }}'
+        user_domain_name: 'default'
+      region_name: 'dc3-a'
+      name: '{{ infomaniak_vm__name }}--{{ item["name"] }}--port'
+      state: 'absent'
+    delegate_to: 'localhost'
+    loop: '{{ infomaniak_vm__networks }}'
+    when:
+      - 'infomaniak_vm__state == "absent"'
+      - 'item["fixed_ip"] is defined'
+
+  - name: 'Cleanup security group when deleting VM'
+    openstack.cloud.security_group:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__username }}'
+        password: '{{ infomaniak_vm__password }}'
+        project_id: '{{ infomaniak_vm__project_id }}'
+        project_name: '{{ infomaniak_vm__username }}'
+        user_domain_name: 'default'
+      region_name: 'dc3-a'
+      name: '{{ infomaniak_vm__name }}'
+      state: 'absent'
+    delegate_to: 'localhost'
+    when:
+      - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length'
+      - 'infomaniak_vm__state == "absent"'
+
+  tags:
+    - 'infomaniak_vm'

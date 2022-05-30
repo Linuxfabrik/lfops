@@ -38,6 +38,7 @@ New features:
 * Role: hostname
 * Role: icingaweb2_module_vspheredb
 * Role: influxdb
+* Role: infomaniak_vm
 * Role: java
 * Role: kdump
 * Role: kernel_settings
