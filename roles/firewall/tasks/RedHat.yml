@@ -30,4 +30,4 @@
 
   when: 'firewall__firewall == "iptables"'
   tags:
-    - 'firewall-iptables'
+    - 'firewall'
