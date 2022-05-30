@@ -46,7 +46,7 @@ This role does not have any mandatory variables.
 
 These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
-Dictionary containing definitions for the virtual environments.
+A list of dictionaries containing definitions for the virtual environments.
 
 Subkeys:
 
