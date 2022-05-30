@@ -39,7 +39,7 @@ The hostname to set. This could be a fully qualified domain name (FQDN). Default
 
 Default:
 ```yaml
-hostname__hostname: '{{ inventory_hostname ~ hostname__domain_name | strip(".") }}'
+hostname__hostname: '{{ (inventory_hostname ~ "." ~ hostname__domain_name) | trim(".") }}'
 ```
 
 
