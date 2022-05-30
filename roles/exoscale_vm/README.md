@@ -78,7 +78,7 @@ exoscale_vm__template: 'Rocky Linux 8 (Green Obsidian) 64-bit'
 
 ##### exoscale_vm__service_offering
 
-The Exoscale template for the instance. The possible options can be obtained using `exo compute instance-type list --verbose`. Note that these changes will only be applied to stopped instances.
+The Exoscale service offering. This defines the amount of CPU cores, RAM and disk space. The possible options can be obtained using `exo compute instance-type list --verbose`. Note that these changes will only be applied to stopped instances.
 
 Example:
 ```yaml
