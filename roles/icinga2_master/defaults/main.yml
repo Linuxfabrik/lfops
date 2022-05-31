@@ -3,8 +3,9 @@ icinga2_master__cn: '{{ ansible_facts["nodename"] }}'
 icinga2_master__database_enable_ha: false
 icinga2_master__database_host: 'localhost'
 icinga2_master__database_name: 'icinga2_ido'
-icinga2_master__influxdb_database: 'icinga2'
+icinga2_master__influxdb_database_name: 'icinga2'
 icinga2_master__influxdb_enable_ha: false
 icinga2_master__influxdb_host: 'localhost'
 icinga2_master__influxdb_retention: '216d'
+icinga2_master__node_role: 'primary'
 icinga2_master__service_enabled: true

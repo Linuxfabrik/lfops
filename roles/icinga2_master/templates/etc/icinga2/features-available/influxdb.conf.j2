@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022053001
+# 2022053101
 
 /**
  * The InfluxdbWriter type writes check result metrics and
@@ -9,7 +9,7 @@
 object InfluxdbWriter "influxdb" {
   host = "{{ icinga2_master__influxdb_host }}"
   port = 8086
-  database = "{{ icinga2_master__influxdb_database }}"
+  database = "{{ icinga2_master__influxdb_database_name }}"
   username = "{{ icinga2_master__influxdb_login.username }}"
   password = "{{ icinga2_master__influxdb_login.password }}"
   enable_send_thresholds = true

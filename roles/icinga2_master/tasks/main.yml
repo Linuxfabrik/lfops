@@ -144,8 +144,8 @@
     ansible.builtin.uri:
       url: 'https://{{ icinga2_master__primary_host }}:{{ icinga2_master__primary_port }}/v1/actions/generate-ticket'
       validate_certs: false
-      user: "{{ icinga2_master__api_login.username }}"
-      password: "{{ icinga2_master__api_login.password }}"
+      user: "{{ icinga2_master__api_ticket_login.username }}"
+      password: "{{ icinga2_master__api_ticket_login.password }}"
       force_basic_auth: true
       method: 'POST'
       body: >
@@ -159,8 +159,8 @@
     ignore_errors: true
     register: 'icinga2_master__ticket_result'
     when:
-      - 'icinga2_master__api_login.username is defined and icinga2_master__api_login.username | length'
-      - 'icinga2_master__api_login.password is defined and icinga2_master__api_login.password | length'
+      - 'icinga2_master__api_ticket_login.username is defined and icinga2_master__api_ticket_login.username | length'
+      - 'icinga2_master__api_ticket_login.password is defined and icinga2_master__api_ticket_login.password | length'
 
   - name: 'execute icinga2 node setup as {{ icinga2_master__cn }} against {{ icinga2_master__primary_host }}:{{ icinga2_master__primary_port }}'
     ansible.builtin.command: >-

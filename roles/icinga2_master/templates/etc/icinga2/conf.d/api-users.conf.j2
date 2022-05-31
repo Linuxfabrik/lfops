@@ -1,13 +1,6 @@
 # {{ ansible_managed }}
 # 2022053101
 
-{#
-object ApiUser "{{ icinga2_master__api_login.username }}" {
-  password = "{{ icinga2_master__api_login.password }}"
-  permissions = [ "actions/reschedule-check", "actions/schedule-downtime", "actions/remove-downtime", "actions/generate-ticket", "objects/query/host", "status/query", "objects/query/service" ]
-}
-#}
-
 {% for item in icinga2_master__api_users %}
 object ApiUser "{{ item.username }}" {
   password = "{{ item.password }}"
