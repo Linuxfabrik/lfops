@@ -39,7 +39,7 @@
       --skip-column-names
       --silent
       --execute="SHOW TABLES LIKE 'icinga_dbversion'"
-    register: 'icinga2_master__table_exists'
+    register: 'icinga2_master__table_exists_result'
     check_mode: false # run task even if `--check` is specified
     changed_when: false # just gathering info, no actual change
 
@@ -53,7 +53,7 @@
       state: 'import'
       target: '/usr/share/icinga2-ido-mysql/schema/mysql.sql'
     # this module is not idempotent when state is import, and will import the dump file each time if run more than once.
-    when: 'icinga2_master__table_exists.stdout == ""'
+    when: 'icinga2_master__table_exists_result.stdout == ""'
 
   - name: 'deploy /etc/icinga2/features-available/ido-mysql.conf'
     ansible.builtin.template:
