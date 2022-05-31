@@ -261,7 +261,7 @@
       priv: "{{ item.priv | default(omit) }}"
       state: "{{ item.state | default('present') }}"
     loop: '{{ mariadb_server__combined_users }}'
-  no_log: true
+    no_log: true
 
   tags:
     - 'mariadb_server'
