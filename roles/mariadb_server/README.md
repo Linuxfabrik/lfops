@@ -121,7 +121,7 @@ mariadb_server__host_databases: []
 
 Example:
 ```yaml
-mariadb_server__databases:
+mariadb_server__host_databases:
   - name: 'test-db'
     collation: 'utf8_general_ci' # default
     encoding: 'utf8' # default
