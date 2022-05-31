@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2022053101
+
+object IdoMysqlConnection "ido-mysql" {
+  host = "{{ icinga2_master__database_host }}"
+  user = "{{ icinga2_master__database_login.username }}"
+  password = "{{ icinga2_master__database_login.password }}"
+  database = "{{ icinga2_master__database_name }}"
+  enable_ha = {{ icinga2_master__database_enable_ha | string | lower }}
+}
