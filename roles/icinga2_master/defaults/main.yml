@@ -9,3 +9,31 @@ icinga2_master__influxdb_host: 'localhost'
 icinga2_master__influxdb_retention: '216d'
 icinga2_master__node_role: 'primary'
 icinga2_master__service_enabled: true
+
+icinga2_master__mariadb_server__dependent_databases:
+  - name: '{{ icinga2_master__database_name }}'
+    collation: 'utf8_general_ci'
+    encoding: 'utf8'
+    state: 'present'
+
+icinga2_master__mariadb_server__dependent_users:
+  - username: '{{ icinga2_master__database_login.username }}'
+    password: '{{ icinga2_master__database_login.password }}'
+    host: '{{ icinga2_master__database_host }}'
+    priv:
+      - '{{ icinga2_master__database_name }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
+    state: 'present'
+
+icinga2_master__influxdb__dependent_databases:
+  - name: '{{ icinga2_master__influxdb_database_name }}'
+    state: 'present'
+    retention: '{{ icinga2_master__influxdb_retention }}'
+
+icinga2_master__influxdb__dependent_users:
+  - name: '{{ icinga2_master__influxdb_login.username }}'
+    password: '{{ icinga2_master__influxdb_login.password }}'
+    state: 'present'
+    admin: false
+    grants:
+      - database: '{{ icinga2_master__influxdb_database_name }}'
+        privilege: 'ALL'

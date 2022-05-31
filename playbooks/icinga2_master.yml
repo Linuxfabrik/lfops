@@ -21,6 +21,10 @@
         - 'not icinga2_master__skip_python | d(false)'
 
     - role: 'mariadb_server'
+      mariadb_server__dependent_databases:
+        - '{{ icinga2_master__mariadb_server__dependent_databases | d({}) }}'
+      mariadb_server__dependent_users:
+        - '{{ icinga2_master__mariadb_server__dependent_users | d({}) }}'
       when:
         - 'not icinga2_master__skip_mariadb_server | d(false)'
 
@@ -35,6 +39,10 @@
         - 'not icinga2_master__skip_python_venv | d(false)'
 
     - role: 'influxdb'
+      influxdb__dependent_databases:
+        - '{{ icinga2_master__influxdb__dependent_databases | d({}) }}'
+      influxdb__dependent_users:
+        - '{{ icinga2_master__influxdb__dependent_users | d({}) }}'
       when:
         - 'not icinga2_master__skip_influxdb | d(false)'
 
