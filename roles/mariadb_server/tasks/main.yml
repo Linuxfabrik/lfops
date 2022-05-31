@@ -241,7 +241,7 @@
       collation: "{{ item.collation | default('utf8_general_ci') }}"
       encoding: "{{ item.encoding | default('utf8') }}"
       state: "{{ item.state | default('present') }}"
-    loop: "{{ mariadb_server__databases }}"
+    loop: "{{ mariadb_server__combined_databases }}"
 
   tags:
     - 'mariadb_server'
