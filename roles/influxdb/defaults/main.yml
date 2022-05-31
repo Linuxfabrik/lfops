@@ -1,10 +1,30 @@
 influxdb__dump_timer_enabled: true
 influxdb__service_enabled: true
-influxdb__databases: []
-influxdb__users: []
 
 influxdb__python_venv__dependent_venvs:
   - name: 'influxdb'
     packages:
       - 'influxdb'
       - 'requests'
+
+influxdb__dependent_databases: []
+influxdb__group_databases: []
+influxdb__host_databases: []
+influxdb__role_databases: []
+influxdb__combined_databases: '{{ influxdb__role_databases +
+  influxdb__group_databases +
+  influxdb__host_databases +
+  influxdb__dependent_databases
+  | flatten
+ }}'
+
+influxdb__dependent_users: []
+influxdb__group_users: []
+influxdb__host_users: []
+influxdb__role_users: []
+influxdb__combined_users: '{{ influxdb__role_users +
+  influxdb__group_users +
+  influxdb__host_users +
+  influxdb__dependent_users
+  | flatten
+ }}'

@@ -40,13 +40,13 @@
       seconds: 5
     when: 'influxdb__systemctl_result["changed"] | bool'
 
-  - name: 'create new admin user "{{ influxdb__admin_login.username }}"'
+  - name: 'create new admin user "{{ influxdb__admin_login["username"] }}"'
     community.general.influxdb_user:
       # always pass the username and password, if there is no admin account it doesn't matter, and prevents the task from failing on the 2nd run
-      username: "{{ influxdb__admin_login.username }}"
-      password: "{{ influxdb__admin_login.password | default(omit) }}"
-      user_name: "{{ influxdb__admin_login.username }}"
-      user_password: "{{ influxdb__admin_login.password }}"
+      username: '{{ influxdb__admin_login.username }}'
+      password: '{{ influxdb__admin_login.password | default(omit) }}'
+      user_name: '{{ influxdb__admin_login.username }}'
+      user_password: '{{ influxdb__admin_login.password }}'
       admin: true
       state: 'present'
     register: 'influxdb__create_admin_result'
@@ -96,30 +96,34 @@
 
   - name: 'Create or delete influxdb databases'
     community.general.influxdb_database:
-      database_name: "{{ item.name }}"
-      password: "{{ influxdb__admin_login.password | default(omit) }}"
-      username: "{{ influxdb__admin_login.username }}"
-      state: "{{ item.state | default('present') }}"
-    with_items: "{{ influxdb__databases }}"
+      database_name: '{{ item.name }}'
+      password: '{{ influxdb__admin_login.password | default(omit) }}'
+      username: '{{ influxdb__admin_login.username }}'
+      state: '{{ item.state | default("present") }}'
+    loop: '{{ influxdb__combined_databases }}'
+    vars:
+      ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
 
   - name: 'Drop retention policy if exists'
     community.general.influxdb_query:
-      database_name: "{{ item.name }}"
-      password: "{{ influxdb__admin_login.password | default(omit) }}"
-      username: "{{ influxdb__admin_login.username }}"
+      database_name: '{{ item.name }}'
+      password: '{{ influxdb__admin_login.password | default(omit) }}'
+      username: '{{ influxdb__admin_login.username }}'
       query: 'DROP RETENTION POLICY lf_retention_policy ON icinga_influxdb'
-    with_items: "{{ influxdb__databases }}"
+    loop: '{{ influxdb__combined_databases }}'
+    vars:
+      ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
 
   - name: 'Create retention policy'
     community.general.influxdb_retention_policy:
-      database_name: "{{ item.name }}"
+      database_name: '{{ item.name }}'
       policy_name: 'lf_retention_policy'
-      password: "{{ influxdb__admin_login.password | default(omit) }}"
-      username: "{{ influxdb__admin_login.username }}"
-      duration: "{{ item.retention }}"
+      password: '{{ influxdb__admin_login.password | default(omit) }}'
+      username: '{{ influxdb__admin_login.username }}'
+      duration: '{{ item.retention }}'
       replication: 1
       default: true
-    with_items: "{{ influxdb__databases }}"
+    loop: '{{ influxdb__combined_databases }}'
     vars:
       ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
 
@@ -132,12 +136,12 @@
   community.general.influxdb_user:
     login_username: '{{ influxdb__admin_login.username }}'
     login_password: '{{ influxdb__admin_login.password | default(omit) }}'
-    user_name: "{{ item.name }}"
-    user_password: "{{ item.password }}"
-    state: "{{ item.state | default('present') }}"
-    grants: "{{ item.grants | default(omit) }}"
-    admin: "{{ item.admin | default(false) }}"
-  with_items: '{{ influxdb__users }}'
+    user_name: '{{ item.name }}'
+    user_password: '{{ item.password }}'
+    state: '{{ item.state | default("present") }}'
+    grants: '{{ item.grants | default(omit) }}'
+    admin: '{{ item.admin | default(false) }}'
+  loop: '{{ influxdb__combined_users }}'
   vars:
     ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
   tags:

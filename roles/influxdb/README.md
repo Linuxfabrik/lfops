@@ -59,7 +59,9 @@ influxdb__admin_login:
 
 ### Optional
 
-#### influxdb__databases
+#### influxdb__host_databases / influxdb__group_databases
+
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
 List of InfluxDB databases that should be created or deleted.
 
@@ -78,7 +80,10 @@ influxdb_databases:
 ```
 
 
-#### influxdb__users
+#### influxdb__host_users / influxdb__group_users
+
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
+
 
 List of InfluxDB users that should be created, updated or deleted.
 
