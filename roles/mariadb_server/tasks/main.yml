@@ -243,9 +243,6 @@
       state: "{{ item.state | default('present') }}"
     loop: "{{ mariadb_server__databases }}"
 
-  when:
-    - 'mariadb_server__databases is defined'
-    - 'mariadb_server__databases | length'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:database'
@@ -263,12 +260,9 @@
       password: "{{ item.password | default(omit) }}"
       priv: "{{ item.priv | default(omit) }}"
       state: "{{ item.state | default('present') }}"
-    loop: '{{ mariadb_server__users }}'
+    loop: '{{ mariadb_server__combined_users }}'
   no_log: true
 
-  when:
-    - 'mariadb_server__users is defined'
-    - 'mariadb_server__users | length'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:user'
