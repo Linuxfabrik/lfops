@@ -200,6 +200,7 @@
       mode: '{{ item.mode }}'
     loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
     when: 'item.state == "directory"'
+    changed_when: false # no actual change to the application
 
   - name: 'deploy collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage'
     ansible.builtin.template:
@@ -208,6 +209,7 @@
       mode: '{{ item.mode }}'
     loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
     when: 'item.state == "file"'
+    changed_when: false # no actual change to the application
 
   - name: 'mysql --user "{{ mariadb_server__admin_login.username }}" --password="..." < mariadb_sys_install.sql'
     # do NOT do: --password "{{ mariadb_server__admin_login.password }}" - this way mysql expects the input from STDIN and treats the password as a database name
@@ -220,6 +222,7 @@
     ansible.builtin.file:
       path: '/tmp/mariadb_sys_schema'
       state: 'absent'
+    changed_when: false # no actual change to the application
 
   tags:
     - 'mariadb_server'
