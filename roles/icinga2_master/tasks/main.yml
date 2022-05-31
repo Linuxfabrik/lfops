@@ -6,7 +6,6 @@
         - 'icinga2'
         - 'icinga2-ido-mysql'
         - 'icinga2-selinux'
-        - 'icingacli'
         - 'nano-icinga2'
         - 'vim-icinga2'
       state: 'present'
