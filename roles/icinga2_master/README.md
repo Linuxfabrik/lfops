@@ -66,7 +66,9 @@ icinga2_master__influxdb_login:
 
 ### Optional
 
-#### icinga2_master__api_users
+#### icinga2_master__host_api_users / icinga2_master__group_api_users
+
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
 A list of dictionaries for the icinga2 API users.
 
@@ -79,12 +81,13 @@ Subkeys:
 
 Default:
 ```yaml
-icinga2_master__api_users: []
+icinga2_master__group_api_users: []
+icinga2_master__host_api_users: []
 ```
 
 Example:
 ```yaml
-icinga2_master__api_users:
+icinga2_master__host_api_users:
 
   - username: 'ticket-user'
     password: 'password'

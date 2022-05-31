@@ -1,4 +1,16 @@
 icinga2_master__additional_master_endpoints: []
+
+icinga2_master__dependent_api_users: []
+icinga2_master__group_api_users: []
+icinga2_master__host_api_users: []
+icinga2_master__role_api_users: []
+icinga2_master__combined_api_users: '{{ icinga2_master__role_api_users +
+  icinga2_master__group_api_users +
+  icinga2_master__host_api_users +
+  icinga2_master__dependent_api_users
+  | flatten
+ }}'
+
 icinga2_master__cn: '{{ ansible_facts["nodename"] }}'
 icinga2_master__database_enable_ha: false
 icinga2_master__database_host: 'localhost'
