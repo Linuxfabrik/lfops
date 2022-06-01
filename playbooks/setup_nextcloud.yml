@@ -1,0 +1,66 @@
+- name: 'The Linuxfabrik Nextcloud setup'
+  hosts:
+    - 'lfops_setup_nextcloud'
+
+  roles:
+
+#     - role: 'linuxfabrik.lfops.coturn'
+#       when:
+#         - 'not setup_nextcloud__skip_coturn | d(false)'
+
+    - role: 'yum_utils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_nextcloud__skip_yum_utils | default(false)'
+
+    - role: 'linuxfabrik.lfops.repo_remi'
+      when:
+        - 'not setup_nextcloud__skip_repo_remi | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_mydumper'
+      when:
+        - 'not setup_nextcloud__skip_repo_mydumper | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_mariadb'
+      when:
+        - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
+
+#     - role: 'linuxfabrik.lfops.repo_collabora_code'
+#       when:
+#         - 'not setup_nextcloud__skip_repo_collabora_code | d(false)'
+
+    # TODO: how do we pass variables, ideally while still allowing overwrites via the inventory -> use host/group/dependent variables, combine them in the defaults/main.yml and then pass them to the role (+ document this in the README)
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      when:
+        - 'not setup_nextcloud__skip_kernel_settings | d(false)'
+
+    - role: 'repo_remi'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not setup_nextcloud__skip_repo_remi | default(false)'
+
+    - role: 'linuxfabrik.lfops.php'
+      when:
+        - 'not setup_nextcloud__skip_php | d(false)'
+
+#     - role: 'linuxfabrik.lfops.apache_httpd'
+#       when:
+#         - 'not setup_nextcloud__skip_apache_httpd | d(false)'
+
+#     - role: 'linuxfabrik.lfops.redis'
+#       when:
+#         - 'not setup_nextcloud__skip_redis | d(false)'
+
+    - role: 'linuxfabrik.lfops.mariadb_server'
+      when:
+        - 'not setup_nextcloud__skip_mariadb_server | d(false)'
+
+#     - role: 'linuxfabrik.lfops.collabora_code'
+#       when:
+#         - 'not setup_nextcloud__skip_collabora_code | d(false)'
+
+#     - role: 'linuxfabrik.lfops.fail2ban'
+#       when:
+#         - 'not setup_nextcloud__skip_fail2ban | d(false)'
+
+#     - role: 'linuxfabrik.lfops.nextcloud'
