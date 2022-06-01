@@ -5,4 +5,9 @@
 
   roles:
 
+    - role: 'repo_remi'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
+        - 'not mariadb_server__skip_repo_remi | d(false)'
+
     - role: 'php'
