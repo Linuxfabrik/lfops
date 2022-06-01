@@ -1,0 +1,103 @@
+icingaweb2__database_host: 'localhost'
+icingaweb2__database_name: 'icingaweb2'
+icingaweb2__default_theme: 'Icinga'
+
+
+icingaweb2__dependent_authentications: []
+icingaweb2__group_authentications: []
+icingaweb2__host_authentications: []
+icingaweb2__role_authentications:
+  - name: '{{ icingaweb2__database_name }}'
+    backend: 'db'
+    resource: '{{ icingaweb2__database_name }}'
+icingaweb2__combined_authentications: '{{ icingaweb2__role_authentications +
+  icingaweb2__group_authentications +
+  icingaweb2__host_authentications +
+  icingaweb2__dependent_authentications
+  | flatten
+ }}'
+
+icingaweb2__dependent_groups: []
+icingaweb2__group_groups: []
+icingaweb2__host_groups: []
+icingaweb2__role_groups: []
+icingaweb2__combined_groups: '{{ icingaweb2__role_groups +
+  icingaweb2__group_groups +
+  icingaweb2__host_groups +
+  icingaweb2__dependent_groups
+  | flatten
+ }}'
+
+icingaweb2__dependent_navigation_menu_entries: []
+icingaweb2__group_navigation_menu_entries: []
+icingaweb2__host_navigation_menu_entries: []
+icingaweb2__role_navigation_menu_entries: []
+icingaweb2__combined_navigation_menu_entries: '{{ icingaweb2__role_navigation_menu_entries +
+  icingaweb2__group_navigation_menu_entries +
+  icingaweb2__host_navigation_menu_entries +
+  icingaweb2__dependent_navigation_menu_entries
+  | flatten
+ }}'
+
+icingaweb2__dependent_resources: []
+icingaweb2__group_resources: []
+icingaweb2__host_resources: []
+icingaweb2__role_resources:
+  - name: '{{ icingaweb2__database_name }}'
+    type: 'db'
+    db: 'mysql'
+    host: '{{ icingaweb2__database_host }}'
+    port: 3306
+    dbname: '{{ icingaweb2__database_name }}'
+    username: '{{ icingaweb2__database_login.username }}'
+    password: '{{ icingaweb2__database_login.password }}'
+    charset: 'utf8mb4'
+icingaweb2__combined_resources: '{{ icingaweb2__role_resources +
+  icingaweb2__group_resources +
+  icingaweb2__host_resources +
+  icingaweb2__dependent_resources
+  | flatten
+ }}'
+
+icingaweb2__dependent_roles: []
+icingaweb2__group_roles: []
+icingaweb2__host_roles: []
+icingaweb2__role_roles: []
+icingaweb2__combined_roles: '{{ icingaweb2__role_roles +
+  icingaweb2__group_roles +
+  icingaweb2__host_roles +
+  icingaweb2__dependent_roles
+  | flatten
+ }}'
+
+
+icingaweb2__icinga2_master__dependent_api_users:
+  - username: '{{ icingaweb2__api_user_login.username }}'
+    password: '{{ icingaweb2__api_user_login.password }}'
+    permissions:
+      - 'actions/*'
+      - 'objects/modify/*'
+      - 'objects/query/*'
+      - 'status/query'
+
+icingaweb2__php__dependent_modules:
+  - 'php-curl'
+  - 'php-intl'
+  - 'php-mbstring'
+  - 'php-pecl-imagick'
+  - 'php-process'
+  - 'php-xml'
+
+icingaweb2__mariadb_server__dependent_databases:
+  - name: '{{ icingaweb2__database_name }}'
+    collation: 'utf8_general_ci'
+    encoding: 'utf8'
+    state: 'present'
+
+icingaweb2__mariadb_server__dependent_users:
+  - username: '{{ icingaweb2__database_login.username }}'
+    password: '{{ icingaweb2__database_login.password }}'
+    host: '{{ icingaweb2__database_host }}'
+    priv:
+      - '{{ icingaweb2__database_name }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
+    state: 'present'

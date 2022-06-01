@@ -37,6 +37,7 @@ New features:
 * Role: hetzner_vm
 * Role: hostname
 * Role: icinga2_master
+* Role: icingaweb2
 * Role: icingaweb2_module_vspheredb
 * Role: influxdb
 * Role: infomaniak_vm
