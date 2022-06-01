@@ -55,6 +55,7 @@
       group: 'root'
       mode: 0o644
     register: 'mariadb_server__socket_selinux_workaround_result'
+    notify: 'mariadb_server: restart mariadb'
 
   - name: 'systemctl daemon-reload'
     ansible.builtin.systemd:
