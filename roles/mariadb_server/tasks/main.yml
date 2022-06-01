@@ -47,6 +47,20 @@
       value: 10
       state: 'present'
 
+  - name: 'Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf.j2'
+      dest: '/etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'mariadb_server__socket_selinux_workaround_result'
+
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: 'mariadb_server__socket_selinux_workaround_result is changed'
+
   tags:
     - 'mariadb_server'
     - 'mariadb_server:configure'
