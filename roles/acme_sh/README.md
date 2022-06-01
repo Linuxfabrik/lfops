@@ -43,7 +43,7 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 
 Email address for the Let's encrypt account. This address will receive expiry emails.
 
-Default:
+Example:
 ```yaml
 acme_sh__account_email: 'info@example.com'
 ```
