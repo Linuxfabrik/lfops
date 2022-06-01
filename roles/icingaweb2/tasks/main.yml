@@ -98,9 +98,9 @@
       --password={{ icingaweb2__database_login.password | quote }}
       {{ icingaweb2__database_name | quote }}
       --execute="
-        insert into icingaweb_user
+        INSERT INTO icingaweb_user
         (name, active, password_hash)
-        values ('{{ item.username }}', 1, '$(php -r 'echo password_hash("{{ item.password }}", password_default);')')
+        VALUES ('{{ item.username }}', 1, '$(php -r 'echo password_hash("{{ item.password }}", PASSWORD_DEFAULT);')')
       ;"
     loop: "{{ icingaweb2__users }}"
     register: 'icingaweb2__mysql_user_insert_result'
