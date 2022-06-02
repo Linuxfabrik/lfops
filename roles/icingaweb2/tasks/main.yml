@@ -84,6 +84,14 @@
       group: 'icingaweb2'
       mode: 0o664
 
+  - name: 'chown g+rws /etc/icingaweb2/enabledModules'
+    ansible.builtin.file:
+      path: '/etc/icingaweb2/enabledModules'
+      state: 'directory'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o2770
+
   tags:
     - 'icingaweb2'
 
