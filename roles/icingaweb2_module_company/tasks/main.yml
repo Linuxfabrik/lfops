@@ -15,7 +15,7 @@
 
 - block:
 
-  - name: 'curl https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz -O /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz '
+  - name: 'curl https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz -O /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
     ansible.builtin.get_url:
       url: 'https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz'
       dest: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
@@ -23,12 +23,12 @@
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz to /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+  - name: 'copy /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz to the server'
     ansible.builtin.copy:
       src: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
       dest: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
 
-  - name: 'Unarchive icingaweb2 module company'
+  - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/company /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
     ansible.builtin.unarchive:
       src: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
       dest: '/usr/share/icingaweb2/modules/company'
@@ -36,7 +36,7 @@
       extra_opts:
         - '--strip-components=1'
 
-  - name: 'Delete unused file /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+  - name: 'rm -f /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
     ansible.builtin.file:
       path: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
       state: 'absent'
