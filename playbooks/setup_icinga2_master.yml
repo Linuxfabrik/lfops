@@ -89,3 +89,7 @@
     - role: 'icingaweb2_module_company'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_company | default(false)'
+
+    - role: 'icingaweb2_module_incubator'
+      when:
+        - 'not setup_icinga2_master__skip_icingaweb2_module_incubator | default(false)'
