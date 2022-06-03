@@ -10,6 +10,24 @@
         - 'vim-icinga2'
       state: 'present'
 
+  - name: 'setsebool -P icinga2_can_connect_all on'
+    ansible.posix.seboolean:
+      name: 'icinga2_can_connect_all'
+      state: true
+      persistent: true
+
+  - name: 'setsebool -P icinga2_run_sudo on'
+    ansible.posix.seboolean:
+      name: 'icinga2_run_sudo'
+      state: true
+      persistent: true
+
+  - name: 'setsebool -P nagios_run_sudo on # this is for the plugins, not the icinga2 core itself'
+    ansible.posix.seboolean:
+      name: 'nagios_run_sudo'
+      state: true
+      persistent: true
+
   tags:
     - 'icinga2_master'
 
@@ -29,7 +47,7 @@
 
 - block:
 
-  - name: 'Check if the icinga2 tables exist'
+  - name: 'check if the icinga2 tables exist'
     ansible.builtin.command: >
       mysql
       --host={{ icinga2_master__database_host | quote }}
@@ -38,7 +56,7 @@
       {{ icinga2_master__database_name | quote }}
       --skip-column-names
       --silent
-      --execute="SHOW TABLES LIKE 'icinga_dbversion'"
+      --execute="show tables like 'icinga_dbversion'"
     register: 'icinga2_master__table_exists_result'
     check_mode: false # run task even if `--check` is specified
     changed_when: false # just gathering info, no actual change
@@ -48,7 +66,7 @@
       login_user: "{{ icinga2_master__database_login.username }}"
       login_password: "{{ icinga2_master__database_login.password }}"
       login_host: "{{ icinga2_master__database_host }}"
-      login_unix_socket: '{{ (icinga2_master__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      login_unix_socket: '{{ (icinga2_master__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/pymysql/pymysql/issues/509#issuecomment-244072354
       name: '{{ icinga2_master__database_name }}'
       state: 'import'
       target: '/usr/share/icinga2-ido-mysql/schema/mysql.sql'
