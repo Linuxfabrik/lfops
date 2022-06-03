@@ -110,7 +110,7 @@
         (name, active, password_hash)
         VALUES ('{{ item.username }}', 1, '$(php -r 'echo password_hash("{{ item.password }}", PASSWORD_DEFAULT);')')
       ;"
-    loop: "{{ icingaweb2__users }}"
+    loop: "{{ icingaweb2__combined_users }}"
     register: 'icingaweb2__mysql_user_insert_result'
     changed_when: "'error 1062 (23000)' not in icingaweb2__mysql_user_insert_result.stderr | lower"
     failed_when: "icingaweb2__mysql_user_insert_result.rc != 0 and 'error 1062 (23000)' not in icingaweb2__mysql_user_insert_result.stderr | lower"

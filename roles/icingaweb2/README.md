@@ -56,7 +56,7 @@ icingaweb2__api_user_login:
 
 The user account for accessing the SQL database. Currently, only MySQL is supported.
 
-Default:
+Example:
 ```yaml
 icingaweb2__database_login:
   username: 'icingaweb2_user'
@@ -96,7 +96,9 @@ icingaweb2__default_theme: 'Icinga'
 ```
 
 
-#### icingaweb2__users
+#### icingaweb2__host_users / icingaweb2__group_users
+
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
 A list of dictionaries containing the IcingaWeb2 users.
 Note that they are only created once, and not updated.
@@ -108,7 +110,11 @@ Subkeys:
 
 Default:
 ```yaml
-icingaweb2__users: []
+icingaweb2__group_users: []
+icingaweb2__host_users: []
+icingaweb2__role_users:
+  - username: '{{ icingaweb2__enrolment_user_login["username"] }}'
+    password: '{{ icingaweb2__enrolment_user_login["password"] }}'
 ```
 
 Example:

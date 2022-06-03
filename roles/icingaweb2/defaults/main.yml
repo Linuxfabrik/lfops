@@ -62,11 +62,25 @@ icingaweb2__combined_resources: '{{ icingaweb2__role_resources +
 icingaweb2__dependent_roles: []
 icingaweb2__group_roles: []
 icingaweb2__host_roles: []
-icingaweb2__role_roles: []
+icingaweb2__role_roles:
+  - name: 'enrolment'
+    users: 'enrolment-user'
+    permissions: 'module/director,director/api,director/hosts'
 icingaweb2__combined_roles: '{{ icingaweb2__role_roles +
   icingaweb2__group_roles +
   icingaweb2__host_roles +
   icingaweb2__dependent_roles
+  | flatten
+ }}'
+
+icingaweb2__dependent_users: []
+icingaweb2__group_users: []
+icingaweb2__host_users: []
+icingaweb2__role_users: []
+icingaweb2__combined_users: '{{ icingaweb2__role_users +
+  icingaweb2__group_users +
+  icingaweb2__host_users +
+  icingaweb2__dependent_users
   | flatten
  }}'
 
