@@ -75,6 +75,19 @@ icingaweb2_module_director__database_login:
 ```
 
 
+#### icingaweb2_module_director__enrolment_user_login
+
+A IcingaWeb2 account with the `module/director,director/api,director/hosts` permissions, allowing it to enrol new users in the Icinga Director.
+Note that the username has to be `enrolment-user` so that the account has the correct permissions.
+
+Example:
+```yaml
+icingaweb2__enrolment_user_login:
+  username: 'enrolment-user'
+  password: 'my-secret-password'
+```
+
+
 ### Optional
 
 #### icingaweb2_module_director__api_endpoint
