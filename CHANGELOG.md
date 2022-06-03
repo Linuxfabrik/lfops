@@ -38,6 +38,11 @@ New features:
 * Role: hostname
 * Role: icinga2_master
 * Role: icingaweb2
+* Role: icingaweb2_module_company
+* Role: icingaweb2_module_director
+* Role: icingaweb2_module_doc
+* Role: icingaweb2_module_incubator
+* Role: icingaweb2_module_monitoring
 * Role: icingaweb2_module_vspheredb
 * Role: influxdb
 * Role: infomaniak_vm
