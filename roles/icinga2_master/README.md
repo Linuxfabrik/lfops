@@ -63,6 +63,18 @@ icinga2_master__influxdb_login:
 ```
 
 
+#### icinga2_master__enrolment_api_user
+
+The API account for generating tickets. This can be used to enrol new hosts.
+
+Example:
+```yaml
+icinga2_master__enrolment_api_user:
+  username: 'enrolment-user'
+  password: 'password'
+```
+
+
 ### Optional
 
 #### icinga2_master__host_api_users / icinga2_master__group_api_users

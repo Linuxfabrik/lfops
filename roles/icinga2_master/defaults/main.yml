@@ -3,7 +3,11 @@ icinga2_master__additional_master_endpoints: []
 icinga2_master__dependent_api_users: []
 icinga2_master__group_api_users: []
 icinga2_master__host_api_users: []
-icinga2_master__role_api_users: []
+icinga2_master__role_api_users:
+  - username: '{{ icinga2_master__enrolment_api_user["username"] }}'
+    password: '{{ icinga2_master__enrolment_api_user["password"] }}'
+    permissions:
+      - 'actions/generate-ticket'
 icinga2_master__combined_api_users: '{{ icinga2_master__role_api_users +
   icinga2_master__group_api_users +
   icinga2_master__host_api_users +
