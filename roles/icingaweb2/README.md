@@ -112,9 +112,7 @@ Default:
 ```yaml
 icingaweb2__group_users: []
 icingaweb2__host_users: []
-icingaweb2__role_users:
-  - username: '{{ icingaweb2__enrolment_user_login["username"] }}'
-    password: '{{ icingaweb2__enrolment_user_login["password"] }}'
+icingaweb2__role_users: []
 ```
 
 Example:
