@@ -22,6 +22,8 @@
     ansible.builtin.package:
       name: 'icinga2'
       state: 'present'
+
+  when: 'ansible_facts["os_family"] != "Windows"'
   tags:
     - 'icinga2_agent'
 
@@ -34,6 +36,7 @@
       enabled: '{{ icinga2_agent__service_enabled }}'
       state: '{{ icinga2_agent__service_enabled | bool | ternary("started", "stopped") }}'
 
+  when: 'ansible_facts["os_family"] != "Windows"'
   tags:
     - 'icinga2_agent'
     - 'icinga2_agent:state'

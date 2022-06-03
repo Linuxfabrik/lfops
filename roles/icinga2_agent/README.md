@@ -111,6 +111,7 @@ icinga2_agent__cn: '{{ ansible_facts["nodename"] }}'
 #### icinga2_agent__director_host_object_address
 
 The host address of the Icinga Director host object. Tries to default to the IPv4 address of the server.
+One can try setting this to `{{ ansible_facts["ip_addresses"][0] }}` for Windows servers.
 
 Default:
 ```yaml
