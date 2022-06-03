@@ -82,7 +82,7 @@ Note that the username has to be `enrolment-user` so that the account has the co
 
 Example:
 ```yaml
-icingaweb2__enrolment_user_login:
+icingaweb2_module_director__enrolment_user_login:
   username: 'enrolment-user'
   password: 'my-secret-password'
 ```
