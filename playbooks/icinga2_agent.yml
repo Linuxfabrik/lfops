@@ -1,0 +1,12 @@
+- name: 'Install and configure Icinga2 as a agent'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_icinga2_agent'
+
+  roles:
+
+    - role: 'repo_icinga'
+      when:
+        - 'not icinga2_agent__skip_repo_icinga | d(false)'
+
+    - role: 'icinga2_agent'

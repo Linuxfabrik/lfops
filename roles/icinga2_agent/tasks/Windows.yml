@@ -1,0 +1,111 @@
+- block:
+
+  - name: 'curl https://packages.icinga.com/windows/Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi -O /tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+    ansible.builtin.get_url:
+      url: 'https://packages.icinga.com/windows/Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+      dest: '/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy msi file from "/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi" to "C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi"'
+    ansible.windows.win_copy:
+      src: '/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+      dest: 'C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+
+  - name: 'install Icinga2 packages'
+    ansible.windows.win_package:
+      path: 'C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+      creates_service: 'Icinga 2'
+
+  - name: 'remove C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+    ansible.windows.win_file:
+      path: 'C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+      state: 'absent'
+
+  # '&' -> https://ss64.com/ps/call.html
+  - name: 'icinga2 PKI save cert against {{ icinga2_agent__icinga2_master_host }}'
+    ansible.windows.win_shell: >
+      &'C:\\Program Files\\ICINGA2\\sbin\\icinga2.exe' pki save-cert
+      --host {{ icinga2_agent__icinga2_master_host }}
+      --port {{ icinga2_agent__icinga2_master_port }}
+      --key local.key
+      --cert local.crt
+      --trustedcert C:\\ProgramData\\icinga2\\var\\lib\\icinga2\\certs\\master.crt
+    args:
+      creates: 'C:\ProgramData\icinga2\var\lib\icinga2\certs\master.crt'
+
+  - name: 'Get PKI ticket from the icinga2 master'
+    ansible.windows.win_uri:
+      url: 'https://{{ icinga2_agent__icinga2_master_host }}:{{ icinga2_agent__icinga2_master_port }}/v1/actions/generate-ticket'
+      validate_certs: false
+      url_username: '{{ icinga2_agent__icinga2_api_user_login["username"] }}'
+      url_password: '{{ icinga2_agent__icinga2_api_user_login["password"] }}'
+      force_basic_auth: true
+      method: 'POST'
+      body: >
+        {
+          "cn": "{{ icinga2_agent__cn }}"
+        }
+      status_code: 200
+      return_content: true
+      headers:
+        Accept: 'application/json'
+    ignore_errors: true
+    register: 'icinga2_agent__icinga2_ticket'
+    when:
+      - 'icinga2_agent__icinga2_api_user_login is defined and icinga2_agent__icinga2_api_user_login | length'
+
+  - name: 'execute icinga2 node setup as {{ icinga2_agent__cn }} against {{ icinga2_agent__icinga2_master_host }}'
+    ansible.windows.win_shell: >-
+      &'C:\\Program Files\\ICINGA2\\sbin\\icinga2.exe' node setup
+      --zone {{ icinga2_agent__cn }}
+      --endpoint {{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_port }}
+      {% for item in icinga2_agent__additional_icinga2_master_endpoints %}
+      --endpoint {{ item.host }},{{ item.host }},{{ item.port }}
+      {% endfor %}
+      --parent_host {{ icinga2_agent__icinga2_master_host }}
+      --parent_zone master
+      --cn {{ icinga2_agent__cn }}
+      --accept-config
+      --accept-commands
+      --disable-confd
+      {% if icinga2_agent__bind_host is defined and icinga2_agent__bind_host | length %}
+      --listen {{ icinga2_agent__bind_host }},5665
+      {% endif %}
+      --trustedcert C:\\ProgramData\\icinga2\\var\\lib\\icinga2\\certs\\master.crt
+      {% if icinga2_agent__icinga2_ticket.json is defined and icinga2_agent__icinga2_ticket.json | length %}
+      --ticket '{{ icinga2_agent__icinga2_ticket.json.results[0].ticket }}'
+      {% endif %}
+
+  - name: 'restart icinga2 service as NT AUTHORITY\SYSTEM'
+    ansible.windows.win_service:
+      name: 'Icinga 2'
+      state: 'restarted'
+      username: 'NT AUTHORITY\SYSTEM'
+
+  - name: 'add host to icinga director'
+    ansible.windows.win_uri:
+      url: '{{ icinga2_agent__icingaweb2_url }}/director/host'
+      url_username: '{{ icinga2_agent__icingaweb2_user_login["username"] }}'
+      url_password: '{{ icinga2_agent__icingaweb2_user_login["password"] }}'
+      force_basic_auth: true
+      method: 'POST'
+      body: >
+        {
+          "object_name": "{{ icinga2_agent__cn }}",
+          "object_type": "object",
+          "address": "{{ icinga2_agent__director_host_object_address }}",
+          "display_name": "{{ icinga2_agent__director_host_object_display_name }}",
+          "imports": {{ icinga2_agent__director_host_object_import | to_json }},
+        }
+      status_code: 201
+      headers:
+        Accept: 'application/json'
+    ignore_errors: true
+    when:
+      - 'icinga2_agent__icingaweb2_url is defined and icinga2_agent__icingaweb2_url | length'
+      - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length'
+
+  tags:
+    - 'icinga2_agent'

@@ -36,6 +36,7 @@ New features:
 * Role: glances
 * Role: hetzner_vm
 * Role: hostname
+* Role: icinga2_agent
 * Role: icinga2_master
 * Role: icingaweb2
 * Role: icingaweb2_module_company

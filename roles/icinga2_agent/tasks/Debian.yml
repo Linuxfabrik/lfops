@@ -1,0 +1,22 @@
+- block:
+
+    - name: 'make sure the directory /var/lib/icinga2/certs exists and has the correct permissions'
+      ansible.builtin.file:
+        path: '/var/lib/icinga2/certs'
+        state: 'directory'
+        owner: 'nagios'
+        group: 'nagios'
+        mode: 0o700
+
+    - name: 'make sure the directory /etc/icinga2 has the correct permissions'
+      ansible.builtin.file:
+        path: '/etc/icinga2'
+        state: 'directory'
+        owner: 'nagios'
+        group: 'nagios'
+        recurse: true
+      when:
+        - 'ansible_facts["distribution_release"] == "focal"'
+
+  tags:
+    - 'icinga2_agent'
