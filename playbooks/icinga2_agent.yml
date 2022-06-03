@@ -7,6 +7,7 @@
 
     - role: 'repo_icinga'
       when:
+        - 'ansible_facts["os_family"] != "Windows"'
         - 'not icinga2_agent__skip_repo_icinga | d(false)'
 
     - role: 'icinga2_agent'
