@@ -1,0 +1,39 @@
+icingaweb2_module_director__api_endpoint: '{{ icinga2_master__cn }}'
+icingaweb2_module_director__api_host: 'localhost'
+icingaweb2_module_director__api_port: 5665
+icingaweb2_module_director__database_host: 'localhost'
+icingaweb2_module_director__database_name: 'icinga_director'
+icingaweb2_module_director__monitoring_plugins_version: 'latest'
+icingaweb2_module_director__url: 'https://git.linuxfabrik.ch/api/v4/projects/133/repository/archive?sha={{ icingaweb2_module_director__version }}'
+
+
+icingaweb2_module_director__icinga2_master__dependent_api_users:
+  - username: '{{ icingaweb2_module_director__api_user_login.username }}'
+    password: '{{ icingaweb2_module_director__api_user_login.password }}'
+    permissions:
+      - '*'
+
+icingaweb2_module_director__icingaweb2_module_director__dependent_resources:
+  - name: '{{ icingaweb2_module_director__database_name }}'
+    type: 'db'
+    db: 'mysql'
+    host: '{{ icingaweb2_module_director__database_host }}'
+    port: 3306
+    dbname: '{{ icingaweb2_module_director__database_name }}'
+    username: '{{ icingaweb2_module_director__database_login.username }}'
+    password: '{{ icingaweb2_module_director__database_login.password }}'
+    charset: 'utf8mb4'
+
+icingaweb2_module_director__mariadb_server__dependent_databases:
+  - name: '{{ icingaweb2_module_director__database_name }}'
+    collation: 'utf8_general_ci'
+    encoding: 'utf8'
+    state: 'present'
+
+icingaweb2_module_director__mariadb_server__dependent_users:
+  - username: '{{ icingaweb2_module_director__database_login.username }}'
+    password: '{{ icingaweb2_module_director__database_login.password }}'
+    host: '{{ icingaweb2_module_director__database_host }}'
+    priv:
+      - '{{ icingaweb2_module_director__database_name }}.*:ALL'
+    state: 'present'
