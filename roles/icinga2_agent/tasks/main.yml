@@ -52,8 +52,6 @@
       --key local.key
       --cert local.crt
       --trustedcert /var/lib/icinga2/certs/master.crt
-    args:
-      creates: '/var/lib/icinga2/certs/master.crt'
 
   - name: 'Get PKI ticket from the icinga2 master'
     ansible.builtin.uri:

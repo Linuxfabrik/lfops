@@ -32,8 +32,6 @@
       --key local.key
       --cert local.crt
       --trustedcert C:\ProgramData\icinga2\var\lib\icinga2\certs\master.crt
-    args:
-      creates: 'C:\ProgramData\icinga2\var\lib\icinga2\certs\master.crt'
 
   - name: 'Get PKI ticket from the icinga2 master'
     ansible.windows.win_uri:
