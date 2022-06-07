@@ -21,14 +21,13 @@ name_format = NONE
 # The keep_logs option is similar to rotate except it does not use the num_logs setting. This prevents audit logs from being overwritten. The effect is that logs accumulate and are not deleted - which will trigger the space_left_action if the volume fills up.
 max_log_file_action = keep_logs
 
-space_left = 25%
-space_left_action = email
+space_left = 15%
+# rotate will rotate logs, losing the oldest to free up space.
+space_left_action = rotate
 verify_email = yes
 action_mail_acct = {{ audit__action_mail_account }}
 admin_space_left = 10%
-
-# rotate will rotate logs, losing the oldest to free up space.
-admin_space_left_action = rotate
+admin_space_left_action = email
 
 disk_full_action = SUSPEND
 disk_error_action = SUSPEND
