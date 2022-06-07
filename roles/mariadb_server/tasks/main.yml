@@ -47,6 +47,21 @@
       value: 10
       state: 'present'
 
+  - name: 'Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf.j2'
+      dest: '/etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'mariadb_server__socket_selinux_workaround_result'
+    notify: 'mariadb_server: restart mariadb'
+
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: 'mariadb_server__socket_selinux_workaround_result is changed'
+
   tags:
     - 'mariadb_server'
     - 'mariadb_server:configure'
@@ -200,6 +215,7 @@
       mode: '{{ item.mode }}'
     loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
     when: 'item.state == "directory"'
+    changed_when: false # no actual change to the application
 
   - name: 'deploy collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage'
     ansible.builtin.template:
@@ -208,6 +224,7 @@
       mode: '{{ item.mode }}'
     loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
     when: 'item.state == "file"'
+    changed_when: false # no actual change to the application
 
   - name: 'mysql --user "{{ mariadb_server__admin_login.username }}" --password="..." < mariadb_sys_install.sql'
     # do NOT do: --password "{{ mariadb_server__admin_login.password }}" - this way mysql expects the input from STDIN and treats the password as a database name
@@ -220,6 +237,7 @@
     ansible.builtin.file:
       path: '/tmp/mariadb_sys_schema'
       state: 'absent'
+    changed_when: false # no actual change to the application
 
   tags:
     - 'mariadb_server'
@@ -238,11 +256,8 @@
       collation: "{{ item.collation | default('utf8_general_ci') }}"
       encoding: "{{ item.encoding | default('utf8') }}"
       state: "{{ item.state | default('present') }}"
-    loop: "{{ mariadb_server__databases }}"
+    loop: "{{ mariadb_server__combined_databases }}"
 
-  when:
-    - 'mariadb_server__databases is defined'
-    - 'mariadb_server__databases | length'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:database'
@@ -260,12 +275,9 @@
       password: "{{ item.password | default(omit) }}"
       priv: "{{ item.priv | default(omit) }}"
       state: "{{ item.state | default('present') }}"
-    loop: '{{ mariadb_server__users }}'
-  no_log: true
+    loop: '{{ mariadb_server__combined_users }}'
+    no_log: true
 
-  when:
-    - 'mariadb_server__users is defined'
-    - 'mariadb_server__users | length'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:user'

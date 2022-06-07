@@ -1,0 +1,8 @@
+icinga2_agent__additional_icinga2_master_endpoints: []
+icinga2_agent__cn: '{{ ansible_facts["nodename"] }}'
+icinga2_agent__director_host_object_address: '{{ ansible_facts["default_ipv4"]["address"] }}'
+icinga2_agent__director_host_object_display_name: '{{ ansible_facts["hostname"] }}'
+icinga2_agent__director_host_object_import:
+  - 'tpl-host-linux'
+icinga2_agent__icinga2_master_port: 5665
+icinga2_agent__service_enabled: true

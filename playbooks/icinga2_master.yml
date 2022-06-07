@@ -1,0 +1,53 @@
+- name: 'Install and configure Icinga2 as a master'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_icinga2_master'
+
+  roles:
+
+    - role: 'repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+
+    - role: 'repo_mariadb'
+      repo_mariadb__version: '{{ mariadb_server__version }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not icinga2_master__skip_repo_mariadb | d(false)'
+
+    - role: 'python'
+      python__dependent_modules: '{{ mariadb_server__python__dependent_modules | d([]) }}'
+      when:
+        - 'not icinga2_master__skip_python | d(false)'
+
+    - role: 'mariadb_server'
+      mariadb_server__dependent_databases:
+        - '{{ icinga2_master__mariadb_server__dependent_databases | d({}) }}'
+      mariadb_server__dependent_users:
+        - '{{ icinga2_master__mariadb_server__dependent_users | d({}) }}'
+      when:
+        - 'not icinga2_master__skip_mariadb_server | d(false)'
+
+    - role: 'repo_influxdb'
+      when:
+        - 'not icinga2_master__skip_repo_influxdb | d(false)'
+
+    - role: 'python_venv'
+      python_venv__dependent_venvs:
+        - '{{ influxdb__python_venv__dependent_venvs | d({}) }}'
+      when:
+        - 'not icinga2_master__skip_python_venv | d(false)'
+
+    - role: 'influxdb'
+      influxdb__dependent_databases:
+        - '{{ icinga2_master__influxdb__dependent_databases | d({}) }}'
+      influxdb__dependent_users:
+        - '{{ icinga2_master__influxdb__dependent_users | d({}) }}'
+      when:
+        - 'not icinga2_master__skip_influxdb | d(false)'
+
+    - role: 'repo_icinga'
+      when:
+        - 'not icinga2_master__skip_repo_icinga | d(false)'
+
+    - role: 'icinga2_master'

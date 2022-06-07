@@ -1,0 +1,30 @@
+- block:
+
+  - name: 'mkdir -p /etc/icingaweb2/modules/monitoring'
+    ansible.builtin.file:
+      path: '/etc/icingaweb2/modules/monitoring'
+      state: 'directory'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o2770
+
+
+  - name: 'Generate monitoring config files'
+    ansible.builtin.template:
+      src: 'etc/icingaweb2/modules/monitoring/{{ item }}.j2'
+      dest: '/etc/icingaweb2/modules/monitoring/{{ item }}'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o660
+    loop:
+      - 'backends.ini'
+      - 'commandtransports.ini'
+      - 'config.ini'
+
+  - name: 'icingacli module enable monitoring'
+    ansible.builtin.command: 'icingacli module enable monitoring'
+    args:
+      creates: '/etc/icingaweb2/enabledModules/monitoring'
+
+  tags:
+    - 'icingaweb2_module_monitoring'

@@ -1,0 +1,131 @@
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  vars:
+    __task_file:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'dnf install icinga2 -y'
+    ansible.builtin.package:
+      name: 'icinga2'
+      state: 'present'
+
+  when: 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'icinga2_agent'
+
+
+- block:
+
+  - name: 'systemctl {{ icinga2_agent__service_enabled | bool | ternary("enable", "disable") }} --now icinga2.service'
+    ansible.builtin.systemd:
+      name: 'icinga2.service'
+      enabled: '{{ icinga2_agent__service_enabled }}'
+      state: '{{ icinga2_agent__service_enabled | bool | ternary("started", "stopped") }}'
+
+  when: 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'icinga2_agent'
+    - 'icinga2_agent:state'
+
+
+- block:
+
+  - name: 'save PKI cert from {{ icinga2_agent__icinga2_master_host }}'
+    ansible.builtin.command: >-
+      icinga2 pki save-cert
+      --host {{ icinga2_agent__icinga2_master_host }}
+      --port {{ icinga2_agent__icinga2_master_port }}
+      --key local.key
+      --cert local.crt
+      --trustedcert /var/lib/icinga2/certs/master.crt
+
+  - name: 'Get PKI ticket from the icinga2 master'
+    ansible.builtin.uri:
+      url: 'https://{{ icinga2_agent__icinga2_master_host }}:{{ icinga2_agent__icinga2_master_port }}/v1/actions/generate-ticket'
+      validate_certs: false
+      user: '{{ icinga2_agent__icinga2_api_user_login["username"] }}'
+      password: '{{ icinga2_agent__icinga2_api_user_login["password"] }}'
+      force_basic_auth: true
+      method: 'POST'
+      body: >
+        {
+          "cn": "{{ icinga2_agent__cn }}"
+        }
+      body_format: 'json'
+      status_code: 200
+      headers:
+        Accept: 'application/json'
+    ignore_errors: true
+    register: 'icinga2_agent__icinga2_ticket'
+    when:
+      - 'icinga2_agent__icinga2_api_user_login is defined and icinga2_agent__icinga2_api_user_login | length'
+
+  - name: 'execute icinga2 node setup as {{ icinga2_agent__cn }} against {{ icinga2_agent__icinga2_master_host }}'
+    ansible.builtin.command: >-
+      icinga2 node setup
+      --zone {{ icinga2_agent__cn }}
+      --endpoint {{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_port }}
+      {% for item in icinga2_agent__additional_icinga2_master_endpoints %}
+      --endpoint '{{ item.host }},{{ item.host }},{{ item.port }}'
+      {% endfor %}
+      --parent_host {{ icinga2_agent__icinga2_master_host }}
+      --parent_zone master
+      --cn {{ icinga2_agent__cn }}
+      --accept-config
+      --accept-commands
+      --disable-confd
+      {% if icinga2_agent__bind_host is defined and icinga2_agent__bind_host | length %}
+      --listen {{ icinga2_agent__bind_host }},5665
+      {% endif %}
+      --trustedcert /var/lib/icinga2/certs/master.crt
+      {% if icinga2_agent__icinga2_ticket.json is defined and icinga2_agent__icinga2_ticket.json | length %}
+      --ticket '{{ icinga2_agent__icinga2_ticket.json.results[0].ticket }}'
+      {% endif %}
+
+  - name: 'systemctl restart icinga2'
+    ansible.builtin.systemd:
+      name: 'icinga2'
+      state: 'restarted'
+
+  - name: 'add host to icinga director'
+    ansible.builtin.uri:
+      url: '{{ icinga2_agent__icingaweb2_url }}/director/host'
+      user: '{{ icinga2_agent__icingaweb2_user_login["username"] }}'
+      password: '{{ icinga2_agent__icingaweb2_user_login["password"] }}'
+      force_basic_auth: true
+      method: 'POST'
+      body: >
+        {
+          "object_name": "{{ icinga2_agent__cn }}",
+          "object_type": "object",
+          "address": "{{ icinga2_agent__director_host_object_address }}",
+          "display_name": "{{ icinga2_agent__director_host_object_display_name }}",
+          "imports": {{ icinga2_agent__director_host_object_import | to_json }},
+        }
+      status_code: 201
+      body_format: 'json'
+      headers:
+        Accept: 'application/json'
+    ignore_errors: true
+    when:
+      - 'icinga2_agent__icingaweb2_url is defined and icinga2_agent__icingaweb2_url | length'
+      - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length'
+
+  # block
+  when: 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'icinga2_agent'

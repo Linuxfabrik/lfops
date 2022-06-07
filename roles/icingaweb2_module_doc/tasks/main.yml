@@ -1,0 +1,9 @@
+- block:
+
+  - name: 'icingacli module enable doc'
+    ansible.builtin.command: 'icingacli module enable doc'
+    args:
+      creates: '/etc/icingaweb2/enabledModules/doc'
+
+  tags:
+    - 'icingaweb2_module_doc'

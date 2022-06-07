@@ -11,6 +11,7 @@
         - 'tmux'
         - 'vim'
         - 'wget'
+        - 'glibc-langpack-de' # this prevents "Failed to set locale, defaulting to C.UTF-8" errors when using a german LANG on the local admin machine
       state: 'present'
 
   - name: 'Enhance session profiles for all users in /etc/profile.d'

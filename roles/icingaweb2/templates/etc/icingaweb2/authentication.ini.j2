@@ -1,0 +1,9 @@
+{% for item in icingaweb2__combined_authentications %}
+[{{ item.name }}]
+{% for key, value in item.items() %}
+{% if key != 'name' %}
+{{ key }} = "{{ value }}"
+{% endif %}
+{% endfor %}
+
+{% endfor %}

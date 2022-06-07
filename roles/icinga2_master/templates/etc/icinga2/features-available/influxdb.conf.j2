@@ -1,0 +1,33 @@
+# {{ ansible_managed }}
+# 2022053101
+
+/**
+ * The InfluxdbWriter type writes check result metrics and
+ * performance data to an InfluxDB v1 HTTP API
+ */
+
+object InfluxdbWriter "influxdb" {
+  host = "{{ icinga2_master__influxdb_host }}"
+  port = 8086
+  database = "{{ icinga2_master__influxdb_database_name }}"
+  username = "{{ icinga2_master__influxdb_login.username }}"
+  password = "{{ icinga2_master__influxdb_login.password }}"
+  enable_send_thresholds = true
+  enable_send_metadata = true
+  enable_ha = {{ icinga2_master__influxdb_enable_ha | string | lower }}
+  flush_threshold = 1024
+  flush_interval = 10s
+  host_template = {
+    measurement = "$host.check_command$"
+    tags = {
+      hostname = "$host.name$"
+    }
+  }
+  service_template = {
+    measurement = "$service.check_command$"
+    tags = {
+      hostname = "$host.name$"
+      service = "$service.name$"
+    }
+  }
+}

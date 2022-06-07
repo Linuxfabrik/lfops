@@ -1,0 +1,230 @@
+- block:
+
+  - name: 'install icinga2 and dependent packages'
+    ansible.builtin.package:
+      name:
+        - 'icinga2'
+        - 'icinga2-ido-mysql'
+        - 'icinga2-selinux'
+        - 'nano-icinga2'
+        - 'vim-icinga2'
+      state: 'present'
+
+  - name: 'setsebool -P icinga2_can_connect_all on'
+    ansible.posix.seboolean:
+      name: 'icinga2_can_connect_all'
+      state: true
+      persistent: true
+
+  - name: 'setsebool -P icinga2_run_sudo on'
+    ansible.posix.seboolean:
+      name: 'icinga2_run_sudo'
+      state: true
+      persistent: true
+
+  - name: 'setsebool -P nagios_run_sudo on # this is for the plugins, not the icinga2 core itself'
+    ansible.posix.seboolean:
+      name: 'nagios_run_sudo'
+      state: true
+      persistent: true
+
+  tags:
+    - 'icinga2_master'
+
+
+- block:
+
+  - name: 'systemctl {{ icinga2_master__service_enabled | bool | ternary("enable", "disable") }} --now icinga2.service'
+    ansible.builtin.systemd:
+      name: 'icinga2.service'
+      enabled: '{{ icinga2_master__service_enabled }}'
+      state: '{{ icinga2_master__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'icinga2_master'
+    - 'icinga2_master:state'
+
+
+- block:
+
+  - name: 'check if the icinga2 tables exist'
+    ansible.builtin.command: >
+      mysql
+      --host={{ icinga2_master__database_host | quote }}
+      --user={{ icinga2_master__database_login.username | quote }}
+      --password={{ icinga2_master__database_login.password | quote }}
+      {{ icinga2_master__database_name | quote }}
+      --skip-column-names
+      --silent
+      --execute="show tables like 'icinga_dbversion'"
+    register: 'icinga2_master__table_exists_result'
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # just gathering info, no actual change
+
+  - name: 'import schema for icinga2 database'
+    community.mysql.mysql_db:
+      login_user: "{{ icinga2_master__database_login.username }}"
+      login_password: "{{ icinga2_master__database_login.password }}"
+      login_host: "{{ icinga2_master__database_host }}"
+      login_unix_socket: '{{ (icinga2_master__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/pymysql/pymysql/issues/509#issuecomment-244072354
+      name: '{{ icinga2_master__database_name }}'
+      state: 'import'
+      target: '/usr/share/icinga2-ido-mysql/schema/mysql.sql'
+    # this module is not idempotent when state is import, and will import the dump file each time if run more than once.
+    when: 'icinga2_master__table_exists_result.stdout == ""'
+
+  - name: 'deploy /etc/icinga2/features-available/ido-mysql.conf'
+    ansible.builtin.template:
+      src: 'etc/icinga2/features-available/ido-mysql.conf.j2'
+      dest: '/etc/icinga2/features-available/ido-mysql.conf'
+      owner: 'icinga'
+      group: 'icinga'
+      mode: 0o640
+    notify: 'icinga2_master: restart icinga2'
+
+  - name: 'icinga2 feature enable ido-mysql'
+    community.general.icinga2_feature:
+      name: 'ido-mysql'
+      state: 'present'
+    notify: 'icinga2_master: restart icinga2'
+
+  - name: 'deploy /etc/icinga2/conf.d/api-users.conf'
+    ansible.builtin.template:
+      src: 'etc/icinga2/conf.d/api-users.conf.j2'
+      dest: '/etc/icinga2/conf.d/api-users.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'icinga2_master: restart icinga2'
+    tags:
+      - 'icinga2_master:api_users'
+
+  - name: 'icinga2 feature enable notification'
+    community.general.icinga2_feature:
+      name: 'notification'
+      state: 'present'
+    notify: 'icinga2_master: restart icinga2'
+
+  - name: 'Deploy /etc/icinga2/features-available/influxdb.conf'
+    ansible.builtin.template:
+      src: 'etc/icinga2/features-available/influxdb.conf.j2'
+      dest: '/etc/icinga2/features-available/influxdb.conf'
+      owner: 'icinga'
+      group: 'icinga'
+      mode: 0o640
+    notify: 'icinga2_master: restart icinga2'
+
+  - name: 'icinga2 feature enable influxdb'
+    community.general.icinga2_feature:
+      name: 'influxdb'
+      state: 'present'
+    notify: 'icinga2_master: restart icinga2'
+
+  tags:
+    - 'icinga2_master'
+
+
+- block:
+  # icinga2 (primary) master setup
+
+  - name: 'Execute icinga2 node setup'
+    ansible.builtin.command: 'icinga2 node setup --master --disable-confd --cn {{ icinga2_master__cn }}'
+    args:
+      creates: '/var/lib/icinga2/certs/{{ icinga2_master__cn }}.crt'
+    register: 'icinga2_master__node_setup_result'
+    notify: 'icinga2_master: restart icinga2'
+
+  - name: 'Output of the node setup'
+    ansible.builtin.debug:
+      msg: "{{ icinga2_master__node_setup_result.stdout_lines }}"
+
+  when: 'icinga2_master__node_role is not defined or icinga2_master__node_role == "primary"'
+  tags:
+    - 'icinga2_master'
+
+
+- block:
+  # icinga2 secondary master setup
+
+  - name: 'save PKI cert from {{ icinga2_master__primary_host }}:{{ icinga2_master__primary_port }}'
+    ansible.builtin.command: >-
+      icinga2 pki save-cert
+      --host {{ icinga2_master__primary_host }}
+      --port {{ icinga2_master__primary_port }}
+      --key local.key
+      --cert local.crt
+      --trustedcert /var/lib/icinga2/certs/master.crt
+    args:
+      creates: '/var/lib/icinga2/certs/master.crt'
+
+  - name: 'get PKI ticket from the primary icinga2 master'
+    ansible.builtin.uri:
+      url: 'https://{{ icinga2_master__primary_host }}:{{ icinga2_master__primary_port }}/v1/actions/generate-ticket'
+      validate_certs: false
+      user: "{{ icinga2_master__api_ticket_login.username }}"
+      password: "{{ icinga2_master__api_ticket_login.password }}"
+      force_basic_auth: true
+      method: 'POST'
+      body: >
+        {
+          "cn": "{{ icinga2_master__cn }}"
+        }
+      body_format: 'json'
+      status_code: 200
+      headers:
+        Accept: 'application/json'
+    ignore_errors: true
+    register: 'icinga2_master__ticket_result'
+    when:
+      - 'icinga2_master__api_ticket_login.username is defined and icinga2_master__api_ticket_login.username | length'
+      - 'icinga2_master__api_ticket_login.password is defined and icinga2_master__api_ticket_login.password | length'
+
+  - name: 'execute icinga2 node setup as {{ icinga2_master__cn }} against {{ icinga2_master__primary_host }}:{{ icinga2_master__primary_port }}'
+    ansible.builtin.command: >-
+      icinga2 node setup
+      --zone {{ icinga2_master__cn }}
+      --endpoint {{ icinga2_master__primary_host }},{{ icinga2_master__primary_host }},{{ icinga2_master__primary_port }}
+      {% for item.host in icinga2_master__additional_master_endpoints %}
+      --endpoint {{ item.host }},{{ item.host }},{{ item.port }}
+      {% endfor %}
+      --parent_host {{ icinga2_master__primary_host }}
+      --parent_zone master
+      --cn {{ icinga2_master__cn }}
+      --accept-config
+      --accept-commands
+      --disable-confd
+      --trustedcert /var/lib/icinga2/certs/master.crt
+      {% if icinga2_master__ticket_result.json is defined and icinga2_master__ticket_result.json | length %}
+      --ticket {{ icinga2_master__ticket_result.json.results[0].ticket }}
+      {% endif %}
+    args:
+      creates: "/var/lib/icinga2/certs/{{ icinga2_master__cn }}.crt"
+    notify: 'icinga2_master: restart icinga2'
+
+  - name: 'Make sure that the api-users.conf is included in /etc/icinga2/icinga2.conf'
+    ansible.builtin.lineinfile:
+      path: '/etc/icinga2/icinga2.conf'
+      line: 'include "conf.d/api-users.conf"'
+      regexp: '^include "conf.d/api-users.conf"'
+      state: 'present'
+      insertbefore: 'BOF'
+
+  when: 'icinga2_master__node_role is defined and icinga2_master__node_role == "secondary"'
+  tags:
+    - 'icinga2_master'
+
+
+- block:
+
+  # do this after the node setup
+  - name: 'Deploy /etc/icinga2/zones.conf'
+    ansible.builtin.template:
+      src: 'etc/icinga2/zones.conf.j2'
+      dest: '/etc/icinga2/zones.conf'
+      owner: 'icinga'
+      group: 'icinga'
+      mode: 0o640
+    notify: 'icinga2_master: restart icinga2'
+
+  tags:
+    - 'icinga2_master'

@@ -1,0 +1,59 @@
+- block:
+
+  - name: 'mkdir -p /usr/share/icingaweb2/modules/company'
+    ansible.builtin.file:
+      path: '/usr/share/icingaweb2/modules/company'
+      state: 'directory'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o2770
+    register: 'icingaweb2_module_company__mkdir_result'
+
+  tags:
+    - 'icingaweb2_module_company'
+
+
+- block:
+
+  - name: 'curl https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz -O /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+
+  - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/company /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+      dest: '/usr/share/icingaweb2/modules/company'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'rm -f /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+    ansible.builtin.file:
+      path: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+      state: 'absent'
+
+  when:
+    # only install once, do not overwrite. whole purpose is to adjust files in this module.
+    - 'icingaweb2_module_company__mkdir_result is changed'
+  tags:
+    - 'icingaweb2_module_company'
+
+
+- block:
+
+  - name: 'icingacli module enable company'
+    ansible.builtin.command: 'icingacli module enable company'
+    args:
+      creates: '/etc/icingaweb2/enabledModules/company'
+
+  tags:
+    - 'icingaweb2_module_company'

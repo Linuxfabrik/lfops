@@ -1,6 +1,6 @@
 # Ansible Role libselinux_python
 
-This role installs the SELinux python bindings are installed.
+This role installs the SELinux python bindings.
 
 FQCN: linuxfabrik.lfops.libselinux_python
 
@@ -23,9 +23,6 @@ This role does not have any requirements.
 
 
 ## Role Variables
-
-Have a look libselinux_python the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/libselinux_python/defaults/main.yml) for the variable defaults.
-
 
 This role does not have any variables.
 

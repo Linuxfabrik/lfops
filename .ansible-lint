@@ -3,4 +3,4 @@
 skip_list:
   - yaml
 
-var_naming_pattern: '^([a-z][a-z_]*)?__[a-z0-9_]*$'
+var_naming_pattern: '^([a-z][a-z0-9_]*)?__[a-z0-9_]*$'

@@ -35,11 +35,11 @@ This role does not have any mandatory variables.
 
 #### hostname__hostname
 
-The hostname to set. This could be a fully qualified domain name (FQDN).
+The hostname to set. This could be a fully qualified domain name (FQDN). Defaults to using the Ansible inventory name and the `hostname__domain_name` as a suffix.
 
 Default:
 ```yaml
-hostname__hostname: '{{ inventory_hostname ~ hostname__domain_name | strip(".") }}'
+hostname__hostname: '{{ (inventory_hostname ~ "." ~ hostname__domain_name) | trim(".") }}'
 ```
 
 

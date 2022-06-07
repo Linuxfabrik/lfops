@@ -14,9 +14,8 @@
 
   - name: 'Install additional php modules'
     ansible.builtin.package:
-      name: "{{ php__modules }}"
+      name: "{{ php__combined_modules }}"
       state: 'present'
-    when: 'php__modules is defined'
 
   - name: 'Get the list of installed packages'
     ansible.builtin.package_facts: # yamllint disable-line rule:empty-values

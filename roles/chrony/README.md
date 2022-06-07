@@ -1,6 +1,5 @@
 # Ansible Role chrony
 
-This role creates and manages various [Python 3 virtual environments (venv)](https://docs.python.org/3/library/venv.html). These are placed below `/opt/python-venv/` on the target system.
 This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP daemon. It can either be configured as a client, or as a server, providing time syncing to other clients.
 
 FQCN: linuxfabrik.lfops.chrony

@@ -107,30 +107,43 @@ mariadb_server__monitoring_login:
 ```
 
 
-#### mariadb_server__databases
+#### mariadb_server__host_databases / mariadb_server__group_databases
+
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
 todo
 
-Default: unset
+Default:
+```yaml
+mariadb_server__group_databases: []
+mariadb_server__host_databases: []
+```
 
 Example:
 ```yaml
-mariadb_server__databases:
+mariadb_server__host_databases:
   - name: 'test-db'
     collation: 'utf8_general_ci' # default
     encoding: 'utf8' # default
     state: 'present' # default
 ```
 
-#### mariadb_server__users
+
+#### mariadb_server__host_users / mariadb_server__group_users
+
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
 todo
 
-Default: unset
+Default:
+```yaml
+mariadb_server__group_users: []
+mariadb_server__host_users: []
+```
 
 Example:
 ```yaml
-mariadb_server__users:
+mariadb_server__host_users:
   - username: 'user1'
     password: 'my-secret-password' # default omit
     host: 'localhost' # default

@@ -64,9 +64,6 @@
           or (ansible_facts["distribution"] == "Fedora")'
 
     - role: 'linuxfabrik.lfops.kdump'
-      # not running against fedora, because fedora has no kdump by default
-      when:
-        - 'ansible_facts["distribution"] != "Fedora"'
 
     - role: 'chrony'
 
@@ -74,6 +71,7 @@
     # === Various tools / dependencies ===
 
     - role: 'linuxfabrik.lfops.python'
+      python__dependent_modules: '{{ monitoring_plugins__python__dependent_modules | d([]) }}'
       when:
         - 'not basic_setup__skip_python | d(false)'
 

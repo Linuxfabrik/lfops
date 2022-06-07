@@ -1,0 +1,179 @@
+- block:
+
+  - name: 'mkdir -p /etc/icingaweb2/modules/director'
+    ansible.builtin.file:
+      path: '/etc/icingaweb2/modules/director'
+      state: 'directory'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o2770
+
+  - name: 'mkdir -p /usr/share/icingaweb2/modules/director'
+    ansible.builtin.file:
+      path: '/usr/share/icingaweb2/modules/director'
+      state: 'directory'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o2770
+
+  - name: 'curl {{ icingaweb2_module_director__url }} -O /tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+    ansible.builtin.get_url:
+      url: '{{ icingaweb2_module_director__url }}'
+      dest: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+
+  - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/director /tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+      dest: '/usr/share/icingaweb2/modules/director'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'rm -f /tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+    ansible.builtin.file:
+      path: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+      state: 'absent'
+
+  - name: 'icingacli module enable director'
+    ansible.builtin.command: 'icingacli module enable director'
+    args:
+      creates: '/etc/icingaweb2/enabledModules/director'
+
+  - name: 'useradd --system --gid icingaweb2 --home-dir /var/lib/icingadirector --shell /bin/false icingadirector'
+    ansible.builtin.user:
+      comment: 'IcingaWeb2 Director Module Service User'
+      name: 'icingadirector'
+      group: 'icingaweb2'
+      home: '/var/lib/icingadirector'
+      shell: '/bin/false'
+      state: 'present'
+      system: true
+
+  - name: 'install --directory --owner icingadirector --group icingaweb2 --mode 0750 /var/lib/icingadirector'
+    ansible.builtin.file:
+      path: '/var/lib/icingadirector'
+      state: 'directory'
+      owner: 'icingadirector'
+      group: 'icingaweb2'
+      mode: 0o750
+
+  - name: 'cp /usr/share/icingaweb2/modules/director/contrib/systemd/icinga-director.service /etc/systemd/system/'
+    ansible.builtin.copy:
+      src: '/usr/share/icingaweb2/modules/director/contrib/systemd/icinga-director.service'
+      dest: '/etc/systemd/system/icinga-director.service'
+      remote_src: true
+    register: 'icingaweb2_module_director__systemd_service_template_result'
+
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - 'icingaweb2_module_director__systemd_service_template_result is changed'
+
+  - name: 'Deploy director config files'
+    ansible.builtin.template:
+      src: 'etc/icingaweb2/modules/director/{{ item }}.j2'
+      dest: '/etc/icingaweb2/modules/director/{{ item }}'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o660
+    loop:
+      - 'config.ini'
+      - 'kickstart.ini'
+
+  - name: 'icingacli director migration run --verbose'
+    ansible.builtin.command: 'icingacli director migration run --verbose'
+    changed_when: true # sadly gives absolutely no output
+
+  # - name: Force all notified handlers to run at this point, not waiting for normal sync points
+  #   ansible.builtin.meta: flush_handlers
+
+  - name: 'check if icinga director kickstart is required'
+    ansible.builtin.command: 'icingacli director kickstart required'
+    check_mode: false # run task even if `--check` is specified
+    failed_when: 'icingaweb2_module_director__kickstart_required_result.rc not in [0, 1]'
+    register: 'icingaweb2_module_director__kickstart_required_result'
+    changed_when: false
+
+  - name: 'icingacli director kickstart run'
+    ansible.builtin.command: 'icingacli director kickstart run'
+    when:
+      - 'icingaweb2_module_director__kickstart_required_result.rc == 0'
+
+  - name: 'systemctl enable --now icinga-director.service'
+    ansible.builtin.systemd:
+      name: 'icinga-director.service'
+      enabled: true
+      state: 'started'
+
+  tags:
+    - 'icingaweb2_module_director'
+
+
+- block:
+
+  - name: 'Store the github release version'
+    ansible.builtin.set_fact:
+      icingaweb2_module_director__monitoring_plugins_github_version: '{{ icingaweb2_module_director__monitoring_plugins_version }}'
+    when: 'icingaweb2_module_director__monitoring_plugins_version != "latest"'
+
+
+  - block:
+
+    - name: 'Get latest release version'
+      ansible.builtin.uri:
+        url: 'https://api.github.com/repos/linuxfabrik/monitoring-plugins/releases/latest'
+      register: 'icingaweb2_module_director__monitoring_plugins_github_release'
+      check_mode: false # run task even if `--check` is specified
+      delegate_to: 'localhost'
+
+    - name: 'Store the latest release version'
+      ansible.builtin.set_fact:
+        icingaweb2_module_director__monitoring_plugins_github_version: '{{ icingaweb2_module_director__monitoring_plugins_github_release["json"]["tag_name"] }}'
+
+    # block
+    when: 'icingaweb2_module_director__monitoring_plugins_version == "latest"'
+
+
+  - name: 'Clone the monitoring plugins git repo to localhost (version: {{ icingaweb2_module_director__monitoring_plugins_github_version | d(icingaweb2_module_director__monitoring_plugins_version) }})'
+    ansible.builtin.git:
+      repo: 'https://github.com/Linuxfabrik/monitoring-plugins.git'
+      dest: '/tmp/ansible.monitoring-plugins-repo'
+      version: '{{ icingaweb2_module_director__monitoring_plugins_github_version | d(icingaweb2_module_director__monitoring_plugins_version) }}'
+      depth: 1
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Generate the joined basket from git'
+    ansible.builtin.command: './tools/basket-join'
+    args:
+      chdir: '/tmp/ansible.monitoring-plugins-repo/'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Copy the basket to the remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/icingaweb2-module-director-basket.json'
+      dest: '/tmp/icingaweb2-module-director-basket.json'
+
+  - name: 'Import the basket'
+    ansible.builtin.shell: 'icingacli director basket restore < /tmp/icingaweb2-module-director-basket.json'
+
+  - name: 'Delete the imported basket file'
+    ansible.builtin.file:
+      path: '/tmp/icingaweb2-module-director-basket.json'
+      state: 'absent'
+
+  tags:
+    - 'never'
+    - 'icingaweb2_module_director:basket'
