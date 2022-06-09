@@ -98,7 +98,7 @@ postfix__service_enabled: true
 ```
 
 
-#### postfix__service_state:
+#### postfix__service_state
 
 Changes the state of the postfix service, analogous to `systemctl start/stop/restart/reload`. Possible options:
 
@@ -113,7 +113,7 @@ postfix__service_state: 'started'
 ```
 
 
-#### postfix__debconf_selections:
+#### postfix__debconf_selections
 
 Default:
 ```yaml
