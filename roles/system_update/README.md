@@ -107,23 +107,15 @@ system_update__update_enabled: true
 ```
 
 
-#### system_update__icinga2_api_user
+#### system_update__icinga2_api_user_login
 
-The Icinga2 API User used to set the downtime for the corresponding host and all it's services.
-
-Example:
-```yaml
-system_update__icinga2_api_user: 'username'
-```
-
-
-#### system_update__icinga2_api_password
-
-The password for the Icinga2 API User used to set the downtime for the corresponding host and all it's services.
+The Icinga2 API User to set the downtime for the corresponding host and all it's services.
 
 Example:
 ```yaml
-system_update__icinga2_api_password: '1234abcd'
+system_update__icinga2_api_user_login:
+  username: 'downtime-user'
+  password: 'my-secret-password'
 ```
 
 

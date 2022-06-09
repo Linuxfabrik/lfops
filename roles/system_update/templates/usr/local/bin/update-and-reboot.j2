@@ -13,7 +13,7 @@ schedule_downtime_and_reboot () {
         START_TIME=$(date +%s)
         END_TIME=$(( START_TIME + 300 ))
         DATA="{ \"type\": \"Host\", \"filter\": \"match(\\\"{{ ansible_facts['fqdn'] }}\\\", host.name)\", \"start_time\": \"$START_TIME\", \"end_time\": \"$END_TIME\", \"author\": \"{{ ansible_facts['fqdn'] }}\", \"comment\": \"Automatic reboot due to updates.\" , \"all_services\": true }"
-        curl --connect-timeout 5 --insecure --silent --user {{ system_update__icinga2_api_user }}:{{ system_update__icinga2_api_password }} --header 'Accept: application/json' --request POST 'https://{{ system_update__icinga2_master }}:5665/v1/actions/schedule-downtime' --data "$DATA" 1> /dev/null
+        curl --connect-timeout 5 --insecure --silent --user {{ system_update__icinga2_api_user_login["username"] }}:{{ system_update__icinga2_api_user_login["password"] }} --header 'Accept: application/json' --request POST 'https://{{ system_update__icinga2_master }}:5665/v1/actions/schedule-downtime' --data "$DATA" 1> /dev/null
     {% endif %}
 
     echo "$REBOOT" | at now +1 minutes 2> /dev/null
