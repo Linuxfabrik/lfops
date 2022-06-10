@@ -141,9 +141,9 @@
       when:
         - 'not basic_setup__skip_repo_icinga | d(false)'
 
-    # - role: 'linuxfabrik.lfops.icinga2-agent' TODO
-    #   when:
-    #     - 'not basic_setup__skip_icinga2_agent | d(false)'
+    - role: 'linuxfabrik.lfops.icinga2_agent'
+      when:
+        - 'not basic_setup__skip_icinga2_agent | d(false)'
 
     # - role: 'linuxfabrik.lfops.icinga2-log-level' TODO
     #   when:
