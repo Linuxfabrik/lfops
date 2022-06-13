@@ -24,6 +24,14 @@ mkdir -p ~/.ansible/collections/ansible_collections/linuxfabrik/
 ln -s /path/to/lfops ~/.ansible/collections/ansible_collections/linuxfabrik/
 ```
 
+## Usage
+
+Example usage:
+
+```bash
+ansible-playbook --inventory path/to/environment linuxfabrik.lfops.php --limit hostname --tags php:state
+``` 
+
 
 ## Documentation
 
