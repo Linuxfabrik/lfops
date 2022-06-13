@@ -19,7 +19,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2022033102'
+__version__ = '2022061301'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -105,8 +105,8 @@ def do_backup(config):
     logger = logging.getLogger()
     logger.info('Starting backup...')
 
-    # count the number of logical processors to limit number of processes (taken from psutil)
-    cpu_count = os.sysconf('SC_NPROCESSORS_ONLN')
+    # count the number of logical processors to limit number of processes (code taken from psutil)
+    cpu_count = min(os.sysconf('SC_NPROCESSORS_ONLN'), 6)
     running_procs = []
     env = set_env(config.get('env', {}))
     global_retc = 0
