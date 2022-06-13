@@ -5,4 +5,8 @@
 
   roles:
 
+    - role: 'yum_utils'
+      when:
+        - 'not repo_epel__skip_yum_utils | d(false)'
+
     - role: 'repo_epel'

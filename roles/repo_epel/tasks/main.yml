@@ -8,6 +8,9 @@
 
 - block:
 
+  - name: 'dnf config-manager --set-enabled powertools'
+    ansible.builtin.command: 'dnf config-manager --set-enabled powertools'
+
   - name: 'dnf -y install epel-release'
     ansible.builtin.package:
       name: 'epel-release'
