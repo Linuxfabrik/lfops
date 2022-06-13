@@ -32,15 +32,13 @@ This role does not have any optional requirements.
 
 ## Role Variables
 
-This role does not have any variables.
-
 ### Mandatory
 
 #### icingaweb2_module_director__version
 
 The module version to install. Possible options from either:
 
-* https://github.com/Icinga/icingaweb2-module-incubator/releases
+* https://github.com/Icinga/icingaweb2-module-director/releases
 * https://git.linuxfabrik.ch/linuxfabrik/icingaweb2-module-director/-/releases
 
 Have a look at `icingaweb2_module_director__url`.
