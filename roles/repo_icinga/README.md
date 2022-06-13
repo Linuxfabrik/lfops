@@ -44,6 +44,20 @@ repo_icinga__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
 ```
 
 
+#### repo_icinga__subscription_login
+
+The [Icinga Repository Subscription](https://icinga.com/subscription/) account.
+
+Default: unset
+
+Example
+```yaml
+repo_icinga__subscription_login:
+  username: 'my-username'
+  password: 'my-secret-password'
+```
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)
