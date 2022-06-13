@@ -5,4 +5,10 @@
 
   roles:
 
+    - role: 'python'
+      python__dependent_modules:
+        - '{{ openvpn_server__python__dependent_modules }}'
+      when:
+        - 'not openvpn_server__skip_python | default(false)'
+
     - role: 'openvpn_server'

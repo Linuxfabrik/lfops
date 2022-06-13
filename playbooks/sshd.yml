@@ -5,4 +5,10 @@
 
   roles:
 
+    - role: 'python'
+      python__dependent_modules:
+        - '{{ sshd__python__dependent_modules }}'
+      when:
+        - 'not sshd__skip_python | default(false)'
+
     - role: 'sshd'

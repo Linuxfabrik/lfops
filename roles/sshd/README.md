@@ -14,7 +14,7 @@ Tested on
 
 ### Mandatory
 
-This role does not have any mandatory requirements.
+* Install Python 3, and the python3-policycoreutils module (required for the SELinux Ansible tasks).
 
 
 ### Optional
