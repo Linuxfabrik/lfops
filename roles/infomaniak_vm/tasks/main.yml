@@ -52,6 +52,7 @@
       network: '{{ item["name"] }}'
       fixed_ips:
         - ip_address: '{{ item["fixed_ip"] }}'
+      port_security_enabled: false # we disable port security, as this makes debugging connections in internal networks hard. it also prevents NAT if not configured properly
       state: 'present'
     delegate_to: 'localhost'
     loop: '{{ infomaniak_vm__networks }}'
