@@ -4,6 +4,13 @@ This role installs and configures PHP (and PHP-FPM) on the system, optionally wi
 
 Note that this role does NOT let you specify a particular PHP version. It simply installs the latest available PHP version from the repos configured in the system. If you want or need to install a specific PHP version, use the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) beforehand.
 
+Nevertheless, this role is only compatible with PHP versions
+
+* 7.2
+* 7.3
+* 7.4
+* 8.0
+
 FQCN: linuxfabrik.lfops.php
 
 Tested on
@@ -71,124 +78,35 @@ php__fpm_service_enabled: true
 ```
 
 
-#### php__ini_display_errors
+#### php__ini_* config directives
 
-The value for the [PHP `display_errors` setting](https://www.php.net/manual/en/errorfunc.configuration.php#ini.display-errors).
+Variables for `php.ini` directives and their default values, defined and supported by this role.
 
-Default:
-```yaml
-php__ini_display_errors: 'Off'
-```
-
-
-#### php__ini_display_startup_errors
-
-The value for the [PHP `display_startup_errors` setting](https://www.php.net/manual/en/errorfunc.configuration.php#ini.display-startup-errors).
-
-Default:
-```yaml
-php__ini_display_startup_errors: 'Off'
-```
-
-
-#### php__ini_error_reporting
-
-The value for the [PHP `error_reporting` setting](https://www.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting).
-
-Default:
-```yaml
-php__ini_error_reporting: 'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT'
-```
-
-
-#### php__ini_max_execution_time
-
-The value for the [PHP `max_execution_time` setting](https://www.php.net/manual/en/info.configuration.php#ini.max-execution-time).
-
-Default:
-```yaml
-php__ini_max_execution_time: 30
-```
-
-
-#### php__ini_max_file_uploads
-
-The value for the [PHP `max_file_uploads` setting](https://www.php.net/manual/en/ini.core.php#ini.max-file-uploads).
-
-Default:
-```yaml
-php__ini_max_file_uploads: 50
-```
-
-
-#### php__ini_max_input_time
-
-The value for the [PHP `max_input_time` setting](https://www.php.net/manual/en/info.configuration.php#ini.max-input-time).
-
-Default:
-```yaml
-php__ini_max_input_time: 300
-```
-
-
-#### php__ini_memory_limit
-
-The value for the [PHP `memory_limit` setting](https://www.php.net/manual/en/ini.core.php#ini.memory-limit).
-
-Default:
-```yaml
-php__ini_memory_limit: '64M'
-```
-
-
-#### php__ini_post_max_size
-
-The value for the [PHP `post_max_size` setting](https://www.php.net/manual/en/ini.core.php#ini.post-max-size).
-
-Default:
-```yaml
-php__ini_post_max_size: '50M'
-```
-
-
-#### php__ini_session_sid_length
-
-The value for the [PHP `session.sid_length` setting](https://www.php.net/manual/en/session.configuration.php#ini.session.sid-length).
-
-Default:
-```yaml
-php__ini_session_sid_length: 32
-```
-
-
-#### php__ini_session_trans_sid_tags
-
-The value for the [PHP `session.trans_sid_tags` setting](https://www.php.net/manual/en/session.configuration.php#ini.session.trans-sid-tags).
-
-Default:
-```yaml
-php__ini_session_trans_sid_tags: 'a=href,area=href,frame=src,input=src,form=fakeentry'
-```
-
-
-#### php__ini_smtp
-
-The value for the [PHP `SMTP` setting](https://www.php.net/manual/en/mail.configuration.php#ini.smtp).
-
-Default:
-```yaml
-php__ini_smtp: 'localhost'
-```
-
-
-#### php__ini_upload_max_filesize
-
-The value for the [PHP `upload_max_filesize` setting](https://www.php.net/manual/en/ini.core.php#ini.upload-max-filesize).
-
-Default:
-```yaml
-php__ini_upload_max_filesize: '20M'
-```
+| Role Variable                             | Default                               | Documentation                                                 |
+|---------------                            |---------                              |---------------                                                |
+| php__ini_date_timezone                    | 'Europe/Zurich'                       | [php.net](https://www.php.net/manual/en/datetime.configuration.php)      |
+| php__ini_default_socket_timeout           | 10                                    | [php.net](https://www.php.net/manual/en/filesystem.configuration.php)    |
+| php__ini_display_errors                   | 'Off'                                 | [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)     |
+| php__ini_display_startup_errors           | 'Off'                                 | [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)     |
+| php__ini_error_reporting                  | 'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT' | [php.net](https://www.php.net/manual/en/errorfunc.configuration.php) |
+| php__ini_max_execution_time               | 30                                    | [php.net](https://www.php.net/manual/en/info.configuration.php)          |
+| php__ini_max_file_uploads                 | 50                                    | [php.net](https://www.php.net/manual/en/ini.core.php)                    |
+| php__ini_max_input_time                   | -1                                    | [php.net](https://www.php.net/manual/en/info.configuration.php)          |
+| php__ini_memory_limit                     | '128M'                                | [php.net](https://www.php.net/manual/en/ini.core.php)                    |
+| php__ini_opcache_blacklist_filename       | '/etc/php-zts.d/opcache*.blacklist'   | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
+| php__ini_opcache_enable                   | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
+| php__ini_opcache_enable_cli               | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
+| php__ini_opcache_huge_code_pages          | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
+| php__ini_opcache_interned_strings_buffer  | 12                                    | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
+| php__ini_opcache_max_accelerated_files    | 7963                                  | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
+| php__ini_opcache_memory_consumption       | 128                                   | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
+| php__ini_opcache_revalidate_freq          | 60                                    | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
+| php__ini_opcache_save_comments            | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
+| php__ini_post_max_size                    | '16M'                                 | [php.net](https://www.php.net/manual/en/ini.core.php)                    |
+| php__ini_session_sid_length               | 32                                    | [php.net](https://www.php.net/manual/en/session.configuration.php)       |
+| php__ini_session_trans_sid_tags           | 'a=href,area=href,frame=src,input=src,form=fakeentry' | [php.net](https://www.php.net/manual/en/session.configuration.php) |
+| php__ini_smtp                             | 'localhost'                           | [php.net](https://www.php.net/manual/en/mail.configuration.php)          |
+| php__ini_upload_max_filesize              | '20M'                                 | [php.net](https://www.php.net/manual/en/ini.core.php)                    |
 
 
 ## License

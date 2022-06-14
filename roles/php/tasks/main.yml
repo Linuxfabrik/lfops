@@ -33,15 +33,6 @@
       mode: 0o644
     notify: 'php: restart php-fpm'
 
-  - name: 'Deploy opcache.ini'
-    ansible.builtin.template:
-      src: 'etc/php.d/{{ php__installed_version  }}-10-opcache.ini.j2'
-      dest: '/etc/php.d/10-opcache.ini'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-    notify: 'php: restart php-fpm'
-
   - name: 'flush handlers so that the mariadb can be used by other roles later'
     ansible.builtin.meta: 'flush_handlers'
 
