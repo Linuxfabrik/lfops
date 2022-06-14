@@ -47,6 +47,11 @@
       value: 10
       state: 'present'
 
+  - name: 'mkdir -p /etc/systemd/system/mariadb.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/mariadb.service.d/'
+      state: 'directory'
+
   - name: 'Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf'
     ansible.builtin.template:
       src: 'etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf.j2'
