@@ -1,0 +1,29 @@
+# {{ ansible_managed }}
+# 2022061401
+
+[remi-php81-test]
+name=Remi's RPM repository - Testing - PHP 8.1 - Fedora $releasever - $basearch
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/fedora/$releasever/test81/$basearch/
+{% else %}
+#baseurl=http://rpms.remirepo.net/fedora/$releasever/test81/$basearch/
+mirrorlist=http://cdn.remirepo.net/fedora/$releasever/test81/$basearch/mirror
+{% endif %}
+# WARNING: If you enable this repository, you must also enable "remi" and "remi-php81"
+enabled=0
+gpgcheck=1
+repo_gpgcheck=1
+fastestmirror=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi-$releasever
+
+[remi-php81-test-debuginfo]
+name=Remi's PHP 8.1 test RPM repository for Fedora $releasever - $basearch - debuginfo
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/fedora/$releasever/debug-test81/$basearch/
+{% else %}
+baseurl=http://rpms.remirepo.net/fedora/$releasever/debug-test81/$basearch/
+{% endif %}
+enabled=0
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi-$releasever
