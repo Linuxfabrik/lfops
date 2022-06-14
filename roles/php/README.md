@@ -71,7 +71,7 @@ php__fpm_service_enabled: true
 
 #### php__ini_display_errors
 
-The value for the php `display_errors` setting. Have a look at the [php documentation](https://www.php.net/manual/en/errorfunc.configuration.php#ini.display-errors).
+The value for the [PHP `display_errors` setting](https://www.php.net/manual/en/errorfunc.configuration.php#ini.display-errors).
 
 Default:
 ```yaml
@@ -81,7 +81,7 @@ php__ini_display_errors: 'Off'
 
 #### php__ini_display_startup_errors
 
-The value for the php `display_startup_errors` setting. Have a look at the [php documentation](https://www.php.net/manual/en/errorfunc.configuration.php#ini.display-startup-errors).
+The value for the [PHP `display_startup_errors` setting](https://www.php.net/manual/en/errorfunc.configuration.php#ini.display-startup-errors).
 
 Default:
 ```yaml
@@ -91,7 +91,7 @@ php__ini_display_startup_errors: 'Off'
 
 #### php__ini_error_reporting
 
-The value for the php `error_reporting` setting. Have a look at the [php documentation](https://www.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting).
+The value for the [PHP `error_reporting` setting](https://www.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting).
 
 Default:
 ```yaml
@@ -101,8 +101,7 @@ php__ini_error_reporting: 'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT'
 
 #### php__ini_max_execution_time
 
-todo
-The value for the PHP `max_execution_time` setting. Have a look at the [php documentation](https://www.php.net/manual/en/info.configuration.php#ini.max-execution-time).
+The value for the [PHP `max_execution_time` setting](https://www.php.net/manual/en/info.configuration.php#ini.max-execution-time).
 
 Default:
 ```yaml
@@ -112,7 +111,7 @@ php__ini_max_execution_time: 30
 
 #### php__ini_max_file_uploads
 
-The value for the PHP `max_file_uploads` setting. Have a look at the [php documentation](https://www.php.net/manual/en/ini.core.php#ini.max-file-uploads).
+The value for the [PHP `max_file_uploads` setting](https://www.php.net/manual/en/ini.core.php#ini.max-file-uploads).
 
 Default:
 ```yaml
@@ -122,7 +121,7 @@ php__ini_max_file_uploads: 50
 
 #### php__ini_max_input_time
 
-The value for the php `max_input_time` setting. Have a look at the [php documentation](https://www.php.net/manual/en/info.configuration.php#ini.max-input-time).
+The value for the [PHP `max_input_time` setting](https://www.php.net/manual/en/info.configuration.php#ini.max-input-time).
 
 Default:
 ```yaml
@@ -132,7 +131,7 @@ php__ini_max_input_time: 300
 
 #### php__ini_memory_limit
 
-The value for the PHP `memory_limit` setting. Have a look at the [php documentation](https://www.php.net/manual/en/ini.core.php#ini.memory-limit).
+The value for the [PHP `memory_limit` setting](https://www.php.net/manual/en/ini.core.php#ini.memory-limit).
 
 Default:
 ```yaml
@@ -142,7 +141,7 @@ php__ini_memory_limit: '64M'
 
 #### php__ini_post_max_size
 
-The value for the PHP `post_max_size` setting. Have a look at the [php documentation](https://www.php.net/manual/en/ini.core.php#ini.post-max-size).
+The value for the [PHP `post_max_size` setting](https://www.php.net/manual/en/ini.core.php#ini.post-max-size).
 
 Default:
 ```yaml
@@ -152,7 +151,7 @@ php__ini_post_max_size: '50M'
 
 #### php__ini_session_sid_length
 
-The value for the PHP `session.sid_length` setting. Have a look at the [php documentation](https://www.php.net/manual/en/session.configuration.php#ini.session.sid-length).
+The value for the [PHP `session.sid_length` setting](https://www.php.net/manual/en/session.configuration.php#ini.session.sid-length).
 
 Default:
 ```yaml
@@ -162,7 +161,7 @@ php__ini_session_sid_length: 32
 
 #### php__ini_session_trans_sid_tags
 
-The value for the PHP `session.trans_sid_tags` setting. Have a look at the [php documentation](https://www.php.net/manual/en/session.configuration.php#ini.session.trans-sid-tags).
+The value for the [PHP `session.trans_sid_tags` setting](https://www.php.net/manual/en/session.configuration.php#ini.session.trans-sid-tags).
 
 Default:
 ```yaml
@@ -172,7 +171,7 @@ php__ini_session_trans_sid_tags: 'a=href,area=href,frame=src,input=src,form=fake
 
 #### php__ini_smtp
 
-The value for the PHP `SMTP` setting. Have a look at the [php documentation](https://www.php.net/manual/en/mail.configuration.php#ini.smtp).
+The value for the [PHP `SMTP` setting](https://www.php.net/manual/en/mail.configuration.php#ini.smtp).
 
 Default:
 ```yaml
@@ -182,7 +181,7 @@ php__ini_smtp: 'localhost'
 
 #### php__ini_upload_max_filesize
 
-The value for the PHP `upload_max_filesize` setting. Have a look at the [php documentation](https://www.php.net/manual/en/ini.core.php#ini.upload-max-filesize).
+The value for the [PHP `upload_max_filesize` setting](https://www.php.net/manual/en/ini.core.php#ini.upload-max-filesize).
 
 Default:
 ```yaml
