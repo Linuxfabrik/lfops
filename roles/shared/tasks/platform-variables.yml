@@ -5,8 +5,8 @@
 # The files in the loop are in order from least specific to most specific:
 # * os_family covers a group of closely related platforms (e.g. RedHat covers RHEL, CentOS, Fedora)
 # * distribution (e.g. Fedora) is more specific than os_family
-# * distribution_distribution_major_version (e.g. RedHat8) is more specific than distribution
-# * distribution_distribution_version (e.g. RedHat8.3) is the most specific
+# * distribution+distribution_major_version (e.g. RedHat8) is more specific than distribution
+# * distribution+distribution_version (e.g. RedHat8.3) is the most specific
 
 - name: 'Set platform/version specific variables'
   ansible.builtin.include_vars: '{{ __vars_file }}'
