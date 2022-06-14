@@ -46,11 +46,13 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 
 #### mariadb_server__version
 
-The MariaDB version to install.
+The MariaDB version to install. [Have a look at the MariaDB Download Site for the list of available releases](https://mariadb.org/download/?t=mariadb&p=mariadb&os=Linux&cpu=x86_64). Also, have a look at the [MariaDB Server Releases page](https://mariadb.com/kb/en/mariadb-server-release-dates/) to check which version is a "long-term support MariaDB stable" or "short-term support MariaDB development" release.
+
+You also have to provide the same version number in ``repo_mariadb__version`` if using ``repo_mariadb`` and therefore installing from the official MariaDB repository.
 
 Example:
 ```yaml
-mariadb_server__version: 10.5
+mariadb_server__version: '10.6'
 ```
 
 #### mariadb_server__admin_login
