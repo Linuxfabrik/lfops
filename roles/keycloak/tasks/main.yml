@@ -25,14 +25,6 @@
     - 'keycloak'
 
 
-- name: 'Download and unpack archive'
-  ansible.builtin.unarchive:
-    src: 'https://github.com/keycloak/keycloak/releases/download/{{ keycloak__version }}/keycloak-{{ keycloak__version }}.tar.gz'
-    dest: '/opt'
-    remote_src: true
-  tags:
-    - 'keycloak'
-
 - name: 'chown -R keycloak:keycloak /opt/keycloak'
   ansible.builtin.file:
     path: '/opt/keycloak'
@@ -40,6 +32,16 @@
     recurse: true
     owner: 'keycloak'
     group: 'keycloak'
+  tags:
+    - 'keycloak'
+
+- name: 'Download and unpack archive'
+  ansible.builtin.unarchive:
+    src: 'https://github.com/keycloak/keycloak/releases/download/{{ keycloak__version }}/keycloak-{{ keycloak__version }}.tar.gz'
+    dest: '/opt/keycloak'
+    remote_src: true
+    extra_opts:
+      - '--strip-components=1'
   tags:
     - 'keycloak'
 
