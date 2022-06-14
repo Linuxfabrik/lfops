@@ -2,6 +2,8 @@
 
 This role installs and configures PHP (and PHP-FPM) on the system, optionally with additional modules.
 
+Note that this role does NOT let you specify a particular PHP version. It simply installs the latest available PHP version from the repos configured in the system. If you want or need to install a specific PHP version, use the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) beforehand.
+
 FQCN: linuxfabrik.lfops.php
 
 Tested on
