@@ -76,10 +76,9 @@
       owner: 'root'
       mode: 0o644
 
-  - name: 'Be sure fwb is started, enabled and not masked'
+  - name: 'Be sure fwb is enabled and not masked. Reboot the server manually later to start fwb.'
     ansible.builtin.systemd:
       name: 'fwb.service'
-      state: 'started'
       enabled: true
       masked: false
       daemon_reload: true
