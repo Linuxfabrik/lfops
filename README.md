@@ -24,11 +24,15 @@ mkdir -p ~/.ansible/collections/ansible_collections/linuxfabrik/
 ln -s /path/to/lfops ~/.ansible/collections/ansible_collections/linuxfabrik/
 ```
 
-## Example usage
+## How to use LFOps
+
+Example: If you want to run `playbooks/php.yml`, place your host `myhost` in the `lfops_php` group. After that, run:
 
 ```bash
-ansible-playbook --inventory path/to/environment linuxfabrik.lfops.php --limit hostname --tags php:state
-``` 
+ansible-playbook --inventory path/to/environment linuxfabrik.lfops.php --limit myhost
+```
+
+For more details on group names, Ansible tags, etc., see the playbooks and README files for the roles.
 
 
 ## Documentation
