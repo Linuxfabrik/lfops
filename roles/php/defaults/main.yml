@@ -31,6 +31,7 @@ php__ini_opcache_max_accelerated_files: 7963
 php__ini_opcache_memory_consumption: 128
 php__ini_opcache_revalidate_freq: 60
 php__ini_opcache_save_comments: 1
+php__ini_opcache_validate_timestamps: 1
 php__ini_post_max_size: '16M'
 php__ini_session_sid_length: 32
 php__ini_session_trans_sid_tags: 'a=href,area=href,frame=src,input=src,form=fakeentry'

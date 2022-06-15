@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2022061401
+; 2022061501
 ; php 7.4
 
 [PHP]
@@ -29,6 +29,7 @@ opcache.max_accelerated_files = {{ php__ini_opcache_max_accelerated_files | d('1
 opcache.memory_consumption = {{ php__ini_opcache_memory_consumption | d('128') }}
 opcache.revalidate_freq = {{ php__ini_opcache_revalidate_freq | d('2') }}
 opcache.save_comments = {{ php__ini_opcache_save_comments | d('1') }}
+opcache.validate_timestamps = {{ php__ini_opcache_validate_timestamps | d('1') }}
 zend_extension=opcache
 
 [mail function]

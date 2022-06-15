@@ -102,6 +102,7 @@ Variables for `php.ini` directives and their default values, defined and support
 | php__ini_opcache_memory_consumption       | 128                                   | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
 | php__ini_opcache_revalidate_freq          | 60                                    | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
 | php__ini_opcache_save_comments            | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
+| php__ini_opcache_validate_timestamps      | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
 | php__ini_post_max_size                    | '16M'                                 | [php.net](https://www.php.net/manual/en/ini.core.php)                    |
 | php__ini_session_sid_length               | 32                                    | [php.net](https://www.php.net/manual/en/session.configuration.php)       |
 | php__ini_session_trans_sid_tags           | 'a=href,area=href,frame=src,input=src,form=fakeentry' | [php.net](https://www.php.net/manual/en/session.configuration.php) |
