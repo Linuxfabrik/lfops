@@ -89,28 +89,28 @@ mariadb_server__admin_host:
 
 Variables for `z00-linuxfabrik.cnf` directives and their default values, defined and supported by this role.
 
-| Role Variable                                         | Default                           | Documentation                                                                                     |
-|---------------                                        |---------                          |---------------                                                                                    |
-| mariadb_server__cnf_character_set_server              | 'utf8mb4'                         | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#character_set_server)            |
-| mariadb_server__cnf_collation_server                  | 'utf8mb4_unicode_ci'              | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#collation_server)                |
-| mariadb_server__cnf_expire_logs_days                  | 0                                 | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#expire_logs_days)                |
-| mariadb_server__cnf_innodb_buffer_pool_size           | '128M'                            | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_size)         |
-| mariadb_server__cnf_innodb_file_per_table             | 'ON'                              | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table)           |
-| mariadb_server__cnf_innodb_flush_log_at_trx_commit    | 1                                 | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit)  |
-| mariadb_server__cnf_innodb_io_capacity                | 200                               | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_io_capacity)              |
-| mariadb_server__cnf_innodb_log_file_size              | '96M'                             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_log_file_size)            |
-| mariadb_server__cnf_join_buffer_size                  | '256K'                            | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#join_buffer_size)                |
-| mariadb_server__cnf_log_error                         | '/var/log/mariadb/mariadb.log'    | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#log_error)                       |
-| mariadb_server__cnf_lower_case_table_names            | 0                                 | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#lower_case_table_names)          |
-| mariadb_server__cnf_max_allowed_packet                | '16M'                             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#max_allowed_packet)              |
-| mariadb_server__cnf_max_connections                   | 64                                | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#max_connections)                 |
-| mariadb_server__cnf_max_heap_table_size               | '16M'                             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#max_heap_table_size)             |
-| mariadb_server__cnf_performance_schema                | 'ON'                              | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#performance_schema)              |
-| mariadb_server__cnf_query_cache_limit                 | '1M'                              | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#query_cache_limit)               |
-| mariadb_server__cnf_query_cache_size                  | 0                                 | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#query_cache_size)                |
-| mariadb_server__cnf_query_cache_type                  | 'OFF'                             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#query_cache_type)                |
-| mariadb_server__cnf_skip_name_resolve                 | 'ON'                              | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#skip_name_resolve)               |
-| mariadb_server__cnf_tmp_table_size                    | '16M'                             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#tmp_table_size)                  |
+| Role Variable                                         | Default                           | Documentation                                                                                         |
+|---------------                                        |---------                          |---------------                                                                                        |
+| mariadb_server__cnf_character_set_server              | 'utf8mb4'                         | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_collation_server                  | 'utf8mb4_unicode_ci'              | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_expire_logs_days                  | 0                                 | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_innodb_buffer_pool_size           | '128M'                            | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_innodb_file_per_table             | 'ON'                              | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_innodb_flush_log_at_trx_commit    | 1                                 | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_innodb_io_capacity                | 200                               | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_innodb_log_file_size              | '96M'                             | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_join_buffer_size                  | '256K'                            | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_log_error                         | '/var/log/mariadb/mariadb.log'    | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_lower_case_table_names            | 0                                 | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_max_allowed_packet                | '16M'                             | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_max_connections                   | 64                                | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_max_heap_table_size               | '16M'                             | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_performance_schema                | 'ON'                              | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_query_cache_limit                 | '1M'                              | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_query_cache_size                  | 0                                 | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_query_cache_type                  | 'OFF'                             | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_skip_name_resolve                 | 'ON'                              | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
+| mariadb_server__cnf_tmp_table_size                    | '16M'                             | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/)    |
 
 
 #### mariadb_server__dump_login
