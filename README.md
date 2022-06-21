@@ -35,6 +35,48 @@ ansible-playbook --inventory path/to/environment linuxfabrik.lfops.php --limit m
 For more details on group names, Ansible tags, etc., see the playbooks and README files for the roles.
 
 
+## A typical Workflow Example
+
+First, add `myhost` to the corresponding groups in your Ansible inventory.
+
+```yaml
+[lfops_hetzner_vm]
+myhost
+
+[lfops_basic_setup]
+myhost
+
+[lfops_monitoring_plugins]
+myhost
+
+[lfops_setup_nextcloud]
+myhost
+```
+
+Deploy a VM:
+
+```bash
+ansible-playbook --inventory path/to/environment linuxfabrik.lfops.mcm_vm --limit myhost
+``` 
+Run the basic setup:
+
+```bash
+ansible-playbook --inventory path/to/environment linuxfabrik.lfops.setup_basic --limit myhost
+```
+
+Deploy a component:
+
+```bash
+ansible-playbook --inventory path/to/environment linuxfabrik.lfops.monitoring_plugins --limit myhost
+```
+
+Deploy a full-fledged application (Playbooks for application setups are prefixed by `setup_`):
+
+```bash
+ansible-playbook --inventory path/to/environment linuxfabrik.lfops.setup_nextcloud --limit myhost
+```
+
+
 ## Documentation
 
 * Roles: Each role has its own README file.
@@ -43,4 +85,4 @@ For more details on group names, Ansible tags, etc., see the playbooks and READM
 
 ## Known Limitations
 
-Combined lists and dictionaries containing default values cannot be unset or overwritten, they can only be extended (for example `duplicity__combined_backup_sources`).
+Combined lists and dictionaries (`rolename__combined_varname`) containing default values cannot be unset or overwritten, they can only be extended. If you need to overwrite to delete a pre-defined value, use `rolename__role_varname` or `rolename__combined_varname` and assign all needed values.
