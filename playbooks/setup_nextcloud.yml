@@ -1,40 +1,32 @@
 - name: 'The Linuxfabrik Nextcloud setup'
+  become: true
   hosts:
     - 'lfops_setup_nextcloud'
 
   roles:
 
-#     - role: 'linuxfabrik.lfops.coturn'
-#       when:
-#         - 'not setup_nextcloud__skip_coturn | d(false)'
+      # === Prepare the system
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings_sysctl:
+        - name: 'vm.swappiness'
+          value: 10
+      when:
+        - 'not setup_nextcloud__skip_kernel_settings | d(false)'
 
-    - role: 'yum_utils'
+    - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_nextcloud__skip_yum_utils | default(false)'
 
-    - role: 'linuxfabrik.lfops.repo_remi'
-      when:
-        - 'not setup_nextcloud__skip_repo_remi | d(false)'
 
-    - role: 'linuxfabrik.lfops.repo_mydumper'
-      when:
-        - 'not setup_nextcloud__skip_repo_mydumper | d(false)'
-
-    - role: 'linuxfabrik.lfops.repo_mariadb'
-      when:
-        - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
-
-#     - role: 'linuxfabrik.lfops.repo_collabora_code'
+      # ====Apache Webserver
+#     - role: 'linuxfabrik.lfops.apache_httpd'
 #       when:
-#         - 'not setup_nextcloud__skip_repo_collabora_code | d(false)'
+#         - 'not setup_nextcloud__skip_apache_httpd | d(false)'
 
-    # TODO: how do we pass variables, ideally while still allowing overwrites via the inventory -> use host/group/dependent variables, combine them in the defaults/main.yml and then pass them to the role (+ document this in the README)
-    - role: 'linuxfabrik.lfops.kernel_settings'
-      when:
-        - 'not setup_nextcloud__skip_kernel_settings | d(false)'
 
-    - role: 'repo_remi'
+      # === PHP and PHP-FPM
+    - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not setup_nextcloud__skip_repo_remi | default(false)'
@@ -43,17 +35,48 @@
       when:
         - 'not setup_nextcloud__skip_php | d(false)'
 
-#     - role: 'linuxfabrik.lfops.apache_httpd'
-#       when:
-#         - 'not setup_nextcloud__skip_apache_httpd | d(false)'
-
 #     - role: 'linuxfabrik.lfops.redis'
 #       when:
 #         - 'not setup_nextcloud__skip_redis | d(false)'
 
+
+      # === MariaDB
+      # Attention: Using a fixed LTS version for Nextcloud.
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+
+    - role: 'linuxfabrik.lfops.repo_mydumper'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
+        - 'not setup_nextcloud__skip_repo_mydumper | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_mariadb'
+      repo_mariadb__version: '10.6'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
+
+    - role: 'linuxfabrik.lfops.python'
+      python__dependent_modules: '{{ mariadb_server__python__dependent_modules | d([]) }}'
+      when:
+        - 'not setup_nextcloud__skip_python | d(false)'
+
     - role: 'linuxfabrik.lfops.mariadb_server'
+      mariadb_server__version: '10.6'
       when:
         - 'not setup_nextcloud__skip_mariadb_server | d(false)'
+
+
+
+
+
+
+
+
+
+
+
 
 #     - role: 'linuxfabrik.lfops.collabora_code'
 #       when:
@@ -64,3 +87,13 @@
 #         - 'not setup_nextcloud__skip_fail2ban | d(false)'
 
 #     - role: 'linuxfabrik.lfops.nextcloud'
+
+
+
+#     - role: 'linuxfabrik.lfops.repo_collabora_code'
+#       when:
+#         - 'not setup_nextcloud__skip_repo_collabora_code | d(false)'
+
+#     - role: 'linuxfabrik.lfops.coturn'
+#       when:
+#         - 'not setup_nextcloud__skip_coturn | d(false)'
