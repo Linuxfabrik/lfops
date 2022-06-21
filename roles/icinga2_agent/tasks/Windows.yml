@@ -5,6 +5,7 @@
       url: 'https://packages.icinga.com/windows/Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
       dest: '/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 

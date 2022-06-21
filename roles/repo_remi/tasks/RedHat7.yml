@@ -6,6 +6,7 @@
       dest: '/tmp/ansible.RPM-GPG-KEY-remi'
       mode: 0o644
     delegate_to: 'localhost'
+    become: false
     changed_when: false # not an actual config change to the server
     check_mode: false # run task even if `--check` is specified
 

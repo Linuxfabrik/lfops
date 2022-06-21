@@ -1,5 +1,6 @@
 - name: 'Manage and configure the BaseOS repositories'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_repo_baseos'
 

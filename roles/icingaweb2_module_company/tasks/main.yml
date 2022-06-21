@@ -20,6 +20,7 @@
       url: 'https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz'
       dest: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 

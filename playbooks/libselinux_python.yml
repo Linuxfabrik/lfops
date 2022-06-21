@@ -1,5 +1,6 @@
 - name: 'Install SELinux python bindings'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_libselinux_python'
 

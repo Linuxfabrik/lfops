@@ -1,5 +1,6 @@
 - name: 'Manages the DNF-Makecache service'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_dnf_makecache'
 

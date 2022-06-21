@@ -1,5 +1,6 @@
 - name: 'Install perl'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_perl'
 

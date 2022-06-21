@@ -1,5 +1,6 @@
 - name: 'Manage and configure the Linuxfabrik monitoring-plugins'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_monitoring_plugins'
 

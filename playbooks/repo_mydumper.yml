@@ -1,5 +1,6 @@
 - name: 'Configure the mydumper repository'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_repo_mydumper'
 

@@ -13,6 +13,7 @@
       url: 'https://github.com/Icinga/icingaweb2-module-incubator/archive/{{ icingaweb2_module_incubator__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-incubator-{{ icingaweb2_module_incubator__version }}.tar.gz'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 

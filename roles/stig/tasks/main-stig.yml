@@ -16,6 +16,7 @@
         profile_name: '{{ s.profile_name }}'
       as_dict: false
     delegate_to: 'localhost'
+    become: false
     register: 'latest_version'
 
   - ansible.builtin.set_fact:
@@ -51,6 +52,7 @@
       control_name_exclude: '{{ s.control_name_exclude | default([]) | join("|") }}'
     as_dict: false
   delegate_to: 'localhost'
+  become: false
   connection: 'local'
   register: 'remediations'
 

@@ -1,5 +1,6 @@
 - name: 'Install and configure IcingaWeb2'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_icingaweb2'
 

@@ -1,5 +1,6 @@
 - name: 'Configure kernel settings'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_kernel_settings'
 

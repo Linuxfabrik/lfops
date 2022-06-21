@@ -1,5 +1,6 @@
 - name: 'Configure sshd'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_sshd'
 

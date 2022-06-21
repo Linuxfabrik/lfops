@@ -1,5 +1,6 @@
 - name: 'Setup and manage an Hetzner VM'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_hetzner_vm'
   gather_facts: false

@@ -1,5 +1,6 @@
 - name: 'Install and configure audit'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_audit'
 

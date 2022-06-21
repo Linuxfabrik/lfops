@@ -36,6 +36,7 @@
       url: 'https://packages.icinga.com/icinga.key'
       dest: '/tmp/ansible.RPM-GPG-KEY-ICINGA'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 

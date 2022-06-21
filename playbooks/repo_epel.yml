@@ -1,5 +1,6 @@
 - name: 'Manage and configure the EPEL Repository'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_repo_epel'
 

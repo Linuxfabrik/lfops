@@ -1,5 +1,6 @@
 - name: 'Install glances'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_glances'
 

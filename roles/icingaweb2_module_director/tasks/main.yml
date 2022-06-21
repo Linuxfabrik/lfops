@@ -21,6 +21,7 @@
       url: '{{ icingaweb2_module_director__url }}'
       dest: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
@@ -134,6 +135,7 @@
       register: 'icingaweb2_module_director__monitoring_plugins_github_release'
       check_mode: false # run task even if `--check` is specified
       delegate_to: 'localhost'
+      become: false
 
     - name: 'Store the latest release version'
       ansible.builtin.set_fact:
@@ -150,6 +152,7 @@
       version: '{{ icingaweb2_module_director__monitoring_plugins_github_version | d(icingaweb2_module_director__monitoring_plugins_version) }}'
       depth: 1
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
@@ -158,6 +161,7 @@
     args:
       chdir: '/tmp/ansible.monitoring-plugins-repo/'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 

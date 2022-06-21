@@ -5,6 +5,7 @@
       url: 'https://repos.influxdata.com/influxdb.key'
       dest: '/tmp/ansible.influxdb.key'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 

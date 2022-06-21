@@ -1,5 +1,6 @@
 - name: 'Manage logins'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_login'
 

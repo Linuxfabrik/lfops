@@ -1,5 +1,6 @@
 - name: 'Setup automatic update'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_system_update'
 
