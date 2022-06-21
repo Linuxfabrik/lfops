@@ -32,20 +32,30 @@
 
 - block:
 
-  - name: 'deploy /etc/my.cnf.d/z00-server.cnf'
+  - name: 'mkdir /var/log/mariadb'
+    ansible.builtin.file:
+      path: '/var/log/mariadb'
+      state: 'directory'
+      owner: 'mysql'
+      group: 'mysql'
+      mode: 0o755
+
+  - name: 'touch /var/log/mariadb/mariadb.log; chown mysql:mysql /var/log/mariadb/mariadb.log'
+    ansible.builtin.file:
+      path: '/var/log/mariadb/mariadb.log'
+      state: 'touch'
+      owner: 'mysql'
+      group: 'mysql'
+      mode: 0o660
+
+  - name: 'Deploy /etc/my.cnf.d/z00-linuxfabrik.cnf'
     ansible.builtin.template:
-      src: 'etc/my.cnf.d/{{ mariadb_server__version }}/z00-server.cnf.j2'
-      dest: '/etc/my.cnf.d/z00-server.cnf'
+      src: 'etc/my.cnf.d/{{ mariadb_server__version }}-z00-linuxfabrik.cnf.j2'
+      dest: '/etc/my.cnf.d/z00-linuxfabrik.cnf'
       owner: 'root'
       group: 'root'
       mode: 0o644
     notify: 'mariadb_server: restart mariadb'
-
-  - name: 'sysctl -w vm.swappiness=10; sysctl -p'
-    ansible.posix.sysctl:
-      name: 'vm.swappiness'
-      value: 10
-      state: 'present'
 
   - name: 'mkdir -p /etc/systemd/system/mariadb.service.d/'
     ansible.builtin.file:
@@ -66,6 +76,13 @@
     ansible.builtin.systemd:
       daemon_reload: true
     when: 'mariadb_server__socket_selinux_workaround_result is changed'
+
+  - name: 'Deploy /etc/logrotate.d/mariadb'
+    ansible.builtin.template:
+      src: 'etc/logrotate.d/mariadb.j2'
+      dest: '/etc/logrotate.d/mariadb'
+      owner: 'root'
+      mode: 0o644
 
   tags:
     - 'mariadb_server'
@@ -103,7 +120,7 @@
     changed_when: 'mariadb_server__admin_login_result.stderr is not match("ERROR \d+ \(28000\).*")'
     failed_when: 'mariadb_server__admin_login_result.rc != 0 and mariadb_server__admin_login_result.stderr is not match("ERROR \d+ \(28000\).*")'
 
-  - name: 'secure installation the same way mysql_secure_installation does'
+  - name: 'Secure installation the same way mysql_secure_installation does'
     ansible.builtin.command: "mysql --unbuffered --execute '{{ item }}'"
     loop:
       - 'delete from mysql.global_priv where user="";'
@@ -132,19 +149,19 @@
       state: 'present'
       disable_gpg_check: true
 
-  - name: 'deploy /usr/local/bin/mariadb-dump'
+  - name: 'Deploy /usr/local/bin/mariadb-dump'
     ansible.builtin.template:
       src: 'usr/local/bin/mariadb-dump.j2'
       dest: '/usr/local/bin/mariadb-dump'
       mode: 0o755
 
-  - name: 'deploy /etc/mariadb-dump.conf'
+  - name: 'Deploy /etc/mariadb-dump.conf'
     ansible.builtin.template:
       src: 'etc/mariadb-dump.conf.j2'
       dest: '/etc/mariadb-dump.conf'
       mode: 0o600
 
-  - name: 'grant backup privileges on dbs.tables to {{ mariadb_server__dump_login.username }}@{{ mariadb_server__dump_user_host }}'
+  - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_login.username }}@{{ mariadb_server__dump_user_host }}'
     linuxfabrik.lfops.mariadb_user:
       login_user: "{{ mariadb_server__admin_login.username }}"
       login_password: "{{ mariadb_server__admin_login.password }}"
@@ -154,7 +171,7 @@
       priv: "{{ mariadb_server__dump_user_priv }}"
       state: "{{ mariadb_server__dump_user_state }}"
 
-  - name: 'deploy /etc/systemd/system/mariadb-dump.service'
+  - name: 'Deploy /etc/systemd/system/mariadb-dump.service'
     ansible.builtin.template:
       src: 'etc/systemd/system/mariadb-dump.service.j2'
       dest: '/etc/systemd/system/mariadb-dump.service'
@@ -162,7 +179,7 @@
       group: 'root'
       mode: 0o644
 
-  - name: 'deploy /etc/systemd/system/mariadb-dump.timer'
+  - name: 'Deploy /etc/systemd/system/mariadb-dump.timer'
     ansible.builtin.template:
       src: 'etc/systemd/system/mariadb-dump.timer.j2'
       dest: '/etc/systemd/system/mariadb-dump.timer'
@@ -193,7 +210,7 @@
 # configure monitoring (mariadb-monitoring user)
 - block:
 
-  - name: 'grant backup privileges on dbs.tables to {{ mariadb_server__monitoring_login.username }}@{{ mariadb_server__monitoring_user_host }}'
+  - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__monitoring_login.username }}@{{ mariadb_server__monitoring_user_host }}'
     linuxfabrik.lfops.mariadb_user:
       login_user: "{{ mariadb_server__admin_login.username }}"
       login_password: "{{ mariadb_server__admin_login.password }}"
@@ -209,45 +226,6 @@
   tags:
     - 'mariadb_server'
     - 'mariadb_server:configure'
-
-
-- block:
-
-  - name: 'create directories for mariadb_sys_schema'
-    ansible.builtin.file:
-      path: '/tmp/mariadb_sys_schema/{{ item.path }}'
-      state: 'directory'
-      mode: '{{ item.mode }}'
-    loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
-    when: 'item.state == "directory"'
-    changed_when: false # no actual change to the application
-
-  - name: 'deploy collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage'
-    ansible.builtin.template:
-      src: '{{ item.src }}'
-      dest: '/tmp/mariadb_sys_schema/{{ item.path | trim(".j2") }}'
-      mode: '{{ item.mode }}'
-    loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
-    when: 'item.state == "file"'
-    changed_when: false # no actual change to the application
-
-  - name: 'mysql --user "{{ mariadb_server__admin_login.username }}" --password="..." < mariadb_sys_install.sql'
-    # do NOT do: --password "{{ mariadb_server__admin_login.password }}" - this way mysql expects the input from STDIN and treats the password as a database name
-    ansible.builtin.shell: 'mysql --user "{{ mariadb_server__admin_login.username }}" --password="{{ mariadb_server__admin_login.password }}" < mariadb_sys_install.sql'
-    args:
-      chdir: '/tmp/mariadb_sys_schema'
-    changed_when: false # TODO
-
-  - name: 'rm -rf /tmp/mariadb_sys_schema'
-    ansible.builtin.file:
-      path: '/tmp/mariadb_sys_schema'
-      state: 'absent'
-    changed_when: false # no actual change to the application
-
-  tags:
-    - 'mariadb_server'
-    - 'mariadb_server:configure'
-    - 'mariadb_server:sys_schema'
 
 
 # database management
@@ -288,7 +266,57 @@
     - 'mariadb_server:user'
 
 
-- name: 'flush handlers so that the mariadb can be used by other roles later'
+# sys schema
+- block:
+
+  - name: 'Create directories for mariadb_sys_schema'
+    ansible.builtin.file:
+      path: '/tmp/mariadb_sys_schema/{{ item.path }}'
+      state: 'directory'
+      mode: '{{ item.mode }}'
+    loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
+    when: 'item.state == "directory"'
+    changed_when: false # no actual change to the application
+
+  - name: 'Deploy collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage'
+    ansible.builtin.template:
+      src: '{{ item.src }}'
+      # we copied all files 1:1 from https://github.com/FromDual/mariadb-sys and did not change
+      # the file extension to .j2 (we did not even change the content of the files); however, for
+      # future-proofing purposes, we would like to treat all files as Jinja templates, and if they
+      # ever have a .j2 extension, remove it.
+      dest: '/tmp/mariadb_sys_schema/{{ item.path | trim(".j2") }}'
+      mode: '{{ item.mode }}'
+    loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
+    when: 'item.state == "file"'
+    changed_when: false # no actual change to the application
+
+  - name: 'Delete any existing "sys" schema'
+    community.mysql.mysql_db:
+      login_user: "{{ mariadb_server__admin_login.username }}"
+      login_password: "{{ mariadb_server__admin_login.password }}"
+      name: 'sys'
+      state: 'absent'
+
+  - name: 'mysql --user "{{ mariadb_server__admin_login.username }}" --password="..." < ./sys_10.sql'
+    # do NOT do: --password "{{ mariadb_server__admin_login.password }}" - this way mysql expects the input from STDIN and treats the password as a database name
+    ansible.builtin.shell: 'mysql --user "{{ mariadb_server__admin_login.username }}" --password="{{ mariadb_server__admin_login.password }}" < ./sys_10.sql'
+    args:
+      chdir: '/tmp/mariadb_sys_schema'
+    changed_when: false
+
+  - name: 'rm -rf /tmp/mariadb_sys_schema'
+    ansible.builtin.file:
+      path: '/tmp/mariadb_sys_schema'
+      state: 'absent'
+    changed_when: false # no actual change to the application
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:sys_schema'
+
+
+- name: 'Flush handlers so that the mariadb can be used by other roles later'
   ansible.builtin.meta: 'flush_handlers'
   tags:
     - 'mariadb_server'

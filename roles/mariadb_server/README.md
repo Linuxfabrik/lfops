@@ -1,6 +1,11 @@
 # Ansible Role mariadb_server
 
-This installs and configures a [MariaDB](https://mariadb.org/) server.
+This role installs and configures a [MariaDB](https://mariadb.org/) server.
+
+This role is only compatible with MariaDB versions
+
+* 10.5
+* 10.6
 
 FQCN: linuxfabrik.lfops.mariadb_server
 
@@ -14,9 +19,8 @@ Tested on
 ### Mandatory
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-* python3-PyMySQL
 * Enable the official [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/). This can be done using the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) role.
-* Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
+* Install the `python3-PyMySQL` library. Done by this role using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
 
 ### Optional
 
@@ -28,7 +32,7 @@ Tested on
 | Tag                                | What it does                                                                                                                    |
 | ---                                | ------------                                                                                                                    |
 | mariadb_server                     | Installs and configures the MariaDB server                                                                                      |
-| mariadb_server:configure           | Configures the MariaDB server                                                                                                   |
+| mariadb_server:configure           | Configures the MariaDB server (except sys_schema)                                                                               |
 | mariadb_server:database            | Create or delete mariadb databases                                                                                              |
 | mariadb_server:dump                | Configues dumps (backups) of the MariaDB server                                                                                 |
 | mariadb_server:secure_installation | Secures the installation the same way mysql_secure_installation does                                                            |
@@ -81,6 +85,34 @@ mariadb_server__admin_host:
   - 'localhost'
 ```
 
+#### mariadb_server__cnf_* config directives
+
+Variables for `z00-linuxfabrik.cnf` directives and their default values, defined and supported by this role.
+
+| Role Variable                                         | Default                           | Documentation                                                                                     |
+|---------------                                        |---------                          |---------------                                                                                    |
+| mariadb_server__cnf_character_set_server              | 'utf8mb4'                         | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#character_set_server)            |
+| mariadb_server__cnf_collation_server                  | 'utf8mb4_unicode_ci'              | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#collation_server)                |
+| mariadb_server__cnf_expire_logs_days                  | 0                                 | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#expire_logs_days)                |
+| mariadb_server__cnf_innodb_buffer_pool_size           | '128M'                            | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_size)         |
+| mariadb_server__cnf_innodb_file_per_table             | 'ON'                              | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table)           |
+| mariadb_server__cnf_innodb_flush_log_at_trx_commit    | 1                                 | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit)  |
+| mariadb_server__cnf_innodb_io_capacity                | 200                               | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_io_capacity)              |
+| mariadb_server__cnf_innodb_log_file_size              | '96M'                             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_log_file_size)            |
+| mariadb_server__cnf_join_buffer_size                  | '256K'                            | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#join_buffer_size)                |
+| mariadb_server__cnf_log_error                         | '/var/log/mariadb/mariadb.log'    | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#log_error)                       |
+| mariadb_server__cnf_lower_case_table_names            | 0                                 | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#lower_case_table_names)          |
+| mariadb_server__cnf_max_allowed_packet                | '16M'                             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#max_allowed_packet)              |
+| mariadb_server__cnf_max_connections                   | 64                                | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#max_connections)                 |
+| mariadb_server__cnf_max_heap_table_size               | '16M'                             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#max_heap_table_size)             |
+| mariadb_server__cnf_performance_schema                | 'ON'                              | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#performance_schema)              |
+| mariadb_server__cnf_query_cache_limit                 | '1M'                              | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#query_cache_limit)               |
+| mariadb_server__cnf_query_cache_size                  | 0                                 | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#query_cache_size)                |
+| mariadb_server__cnf_query_cache_type                  | 'OFF'                             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#query_cache_type)                |
+| mariadb_server__cnf_skip_name_resolve                 | 'ON'                              | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#skip_name_resolve)               |
+| mariadb_server__cnf_tmp_table_size                    | '16M'                             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#tmp_table_size)                  |
+
+
 #### mariadb_server__dump_login
 
 todo
@@ -92,6 +124,16 @@ Example:
 mariadb_server__dump_login:
   username: 'mariadb-backup'
   password: 'my-secret-password'
+```
+
+
+#### mariadb_server__logrotate
+
+Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space).
+
+Default:
+```yaml
+mariadb_server__logrotate: 14
 ```
 
 
@@ -153,8 +195,6 @@ mariadb_server__host_users:
       - todo
     state: 'present' # default
 ```
-
-
 
 
 ## License

@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2022062101
+
+/var/log/mariadb/*.log
+{
+    copytruncate
+    daily
+    dateext
+    missingok
+    rotate {{ mariadb_server__logrotate | d(14) }}
+}
