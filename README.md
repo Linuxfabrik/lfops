@@ -57,7 +57,8 @@ Deploy a VM:
 
 ```bash
 ansible-playbook --inventory path/to/environment linuxfabrik.lfops.mcm_vm --limit myhost
-``` 
+```
+
 Run the basic setup:
 
 ```bash
