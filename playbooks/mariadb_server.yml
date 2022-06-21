@@ -1,28 +1,36 @@
 - name: 'Install and configure MariaDB server'
   collections: ['linuxfabrik.lfops']
+  become: true
   hosts:
     - 'lfops_mariadb_server'
 
   roles:
 
-    - role: 'repo_epel'
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings_sysctl:
+        - name: 'vm.swappiness'
+          value: 10
+      when:
+        - 'not mariadb_server__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
 
-    - role: 'repo_mydumper'
+    - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
         - 'not mariadb_server__skip_repo_mydumper | d(false)'
 
-    - role: 'repo_mariadb'
+    - role: 'linuxfabrik.lfops.repo_mariadb'
       repo_mariadb__version: '{{ mariadb_server__version }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not mariadb_server__skip_repo_mariadb | d(false)'
 
-    - role: 'python'
+    - role: 'linuxfabrik.lfops.python'
       python__dependent_modules: '{{ mariadb_server__python__dependent_modules | d([]) }}'
       when:
         - 'not mariadb_server__skip_python | d(false)'
 
-    - role: 'mariadb_server'
+    - role: 'linuxfabrik.lfops.mariadb_server'
