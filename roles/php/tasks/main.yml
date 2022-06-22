@@ -12,6 +12,11 @@
 
 - block:
 
+  - ansible.builtin.debug:
+      msg:
+        - 'Combined Modules:'
+        - '{{ php__combined_modules }}'
+
   - name: 'Install additional php modules'
     ansible.builtin.package:
       name: "{{ php__combined_modules }}"
