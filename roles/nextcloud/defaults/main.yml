@@ -1,0 +1,36 @@
+nextcloud__apache_httpd__dependent_vhosts:
+  - by_role: 'nextcloud'
+    enabled: true
+    filename: '{{ nextcloud__fqdn }}'
+    state: 'present'
+    type: 'app'
+
+    authz_file_extensions: |-
+        Require all granted
+
+    authz_document_root: |-
+        Require all granted
+
+    virtualhost_port: 80
+
+    conf_custom_log_format: 'combined'
+    conf_directory_index: 'index.php index.html index.htm'
+    conf_document_root: '/var/www/html/nextcloud'
+    conf_server_admin: 'webmaster@linuxfabrik.ch'
+    conf_server_name: '{{ nextcloud__fqdn }}'
+
+nextcloud__php__dependent_modules:
+  - 'php-gd'
+  - 'php-imagick'
+  - 'php-intl'
+  - 'php-json'
+  - 'php-mbstring'
+  - 'php-mysqlnd'
+  - 'php-opcache'
+  - 'php-pecl-apcu'
+  - 'php-redis'
+  - 'php-smbclient'
+  - 'php-zip'
+
+# 'latest-XX' or 'nextcloud-XX.X.XX'
+nextcloud__version: 'latest-24'

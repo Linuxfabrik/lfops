@@ -1,0 +1,82 @@
+- block:
+
+  - name: 'semanage fcontext -a -t ...'
+    ansible.builtin.sefcontext:
+      setype: '{{ item.key }}'
+      target: '{{ item.value }}'
+      state: 'present'
+    with_dict:
+      - httpd_sys_rw_content_t: '/data(/.*)?'
+      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/.htaccess'
+      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/.user.ini'
+      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/3rdparty/aws/aws-sdk-php/src/data/logs(/.*)?'
+      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/apps(/.*)?'
+      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/config(/.*)?'
+      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/data(/.*)?'
+
+  tags:
+    - 'nextcloud'
+    - 'nextcloud:configure'
+    - 'nextcloud:selinux'
+
+
+- block:
+
+  - name: 'dnf -y install bzip2 samba-client'
+    ansible.builtin.package:
+      name:
+        - 'bzip2'
+        - 'samba-client'
+      state: 'present'
+
+  - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
+    ansible.builtin.get_url:
+      url: 'https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
+      dest: '/tmp/nextcloud.tar.bz2'
+
+  - name: 'bunzip /tmp/nextcloud.tar.bz2'
+    ansible.builtin.unarchive:
+      src: '/tmp/nextcloud.tar.bz2'
+      dest: '/var/www/html/'
+      creates: '/var/www/html/nextcloud'
+      remote_src: true
+
+  - name: 'mkdir /data'
+    ansible.builtin.file:
+      path: '/data'
+      state: 'directory'
+  
+  - name: 'mkdir /var/www/html/nextcloud/data'
+    ansible.builtin.file:
+      path: '/var/www/html/nextcloud/data'
+      state: 'directory'
+  
+  - name: 'chown -R apache:apache /var/www/html/nextcloud'
+    ansible.builtin.file:
+      path: '/var/www/html/nextcloud'
+      owner: 'apache'
+      group: 'apache'
+      recurse: true
+  
+  - name: 'restorecon -Fvr /var/www/html/nextcloud'
+    ansible.builtin.command: 'restorecon -Fvr /var/www/html/nextcloud'
+    changed_when: false
+
+  - name: 'chmod +x /var/www/html/nextcloud/occ'
+    ansible.builtin.file:
+      path: '/var/www/html/nextcloud/occ'
+      mode: 0o755
+  
+  - name: 'setsebool -P ...'
+    seboolean:
+      name: '{{ item.key }}'
+      state: '{{ item.value }}'
+      persistent: true
+    with_dict:
+      - httpd_unified: off
+
+  tags:
+    - 'nextcloud'
+    - 'nextcloud:configure'
+
+
