@@ -1,0 +1,126 @@
+# {{ ansible_managed }}
+# 2022062101
+
+# This is the main Apache server configuration file. It contains the
+# configuration directives that give the server its instructions.
+# See http://httpd.apache.org/docs/2.4/ for detailed information about
+# the directives and /usr/share/doc/httpd/README.Debian about Debian specific
+# hints.
+#
+#
+# Summary of how the Apache 2 configuration works configured by Linuxfabrik:
+# The Apache web server configuration configured by Linuxfabrik is quite different to
+# upstream's suggested way to configure the web server. This is because Linuxfabrik's
+# default Apache installation attempts to make adding and removing modules,
+# virtual hosts, and extra configuration directives as flexible as possible, in
+# order to make automating the changes and administering the server as easy as
+# possible.
+#
+# It is split into several files forming the configuration hierarchy outlined
+# below, all located in the /etc/httpd/ directory:
+#
+#   /etc/httpd/
+#   |-- httpd.conf
+#   |-- conf-enabled
+#   |   `-- *.conf
+#   |-- mods-enabled
+#   |   `-- *.conf
+#   `-- sites-enabled
+#       `-- *.conf
+
+
+ServerRoot "{{ apache_httpd__config_path }}"
+
+
+# Load Modules
+IncludeOptional mods-enabled/*.conf
+
+
+# core
+AddDefaultCharset {{ apache_httpd__conf_add_default_charset | d('Off') }}
+DocumentRoot "{{ apache_httpd__conf_document_root | d('/var/www/html') }}"
+EnableSendfile {{ apache_httpd__conf_enable_send_file | d('Off') }}
+ErrorLog "{{ apache_httpd__conf_error_log | d('logs/error_log')}}"
+HostnameLookups {{ apache_httpd__conf_hostname_lookups | d('Off') }}
+KeepAlive {{ apache_httpd__conf_keep_alive | d('On') }}
+KeepAliveTimeout {{ apache_httpd__conf_keep_alive_timeout | d(5) }}
+LimitRequestBody {{ apache_httpd__conf_limit_request_body | d(102400) }}
+LimitRequestFields {{ apache_httpd__conf_limit_request_fields | d(50) }}
+LimitRequestFieldSize {{ apache_httpd__conf_limit_request_field_size | d(1024) }}
+LimitRequestLine {{ apache_httpd__conf_limit_request_line | d(512) }}
+LogLevel {{ apache_httpd__conf_log_level | d('warn') }}
+MaxKeepAliveRequests {{ apache_httpd__conf_max_keep_alive_requests | d(100) }}
+ServerAdmin {{ apache_httpd__conf_server_admin | d('root@linuxfabrik.ch') }}
+{% if apache_httpd__conf_server_name | d('') %}
+ServerName {{ apache_httpd__conf_server_name }}
+{% endif %}
+ServerSignature Off
+ServerTokens Prod
+SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png)$ no-gzip dont-vary
+SetEnvIfNoCase Request_URI \.(?:exe|t?gz|zip|bz2|sit|rar)$ no-gzip dont-vary
+Timeout {{ apache_httpd__conf_timeout | d(60) }}
+TraceEnable {{ apache_httpd__conf_trace_enable | d('On') }}
+
+# multi modules
+{% for item in apache_httpd__conf_listen %}
+Listen {{ item }}
+{% endfor %}
+
+
+{% if apache_httpd__conf_custom_log is defined and apache_httpd__conf_custom_log %}
+# log_config_module
+# optional needed for debugging, fail2ban or similar
+CustomLog {{ apache_httpd__conf_custom_log }}
+{% endif %}
+
+
+<Directory />
+    AllowOverride None
+    Require all denied
+</Directory>
+
+<Directory "{{ apache_httpd__root_path | d('/var/www') }}">
+    AllowOverride None
+    Require all granted
+</Directory>
+
+<Directory "{{ apache_httpd__root_path | d('/var/www') }}/html">
+   Options None
+   AllowOverride None
+   Require all granted
+</Directory>
+
+<Files ".ht*">
+   Require all denied
+</Files>
+
+
+# Set environment variable if user agent is a bot
+# setenvif_module
+BrowserMatchNoCase (AhrefsBot|aiHitBot|AndersPinkBot) is_a_bot
+BrowserMatchNoCase (Baiduspider|BLEXBot) is_a_bot
+BrowserMatchNoCase (CCBot|Cliqzbot) is_a_bot
+BrowserMatchNoCase (DeuSu|DotBot) is_a_bot
+BrowserMatchNoCase (enolystBot|Exabot|Ezooms) is_a_bot
+BrowserMatchNoCase (FlipboardProxy) is_a_bot
+BrowserMatchNoCase (ia_archiver|ImplisenseBot) is_a_bot
+BrowserMatchNoCase (JobboerseBot) is_a_bot
+# BrowserMatchNoCase (KHTML) is_a_bot  # for testing against Chrome Browser
+BrowserMatchNoCase (libwww)-perl is_a_bot
+BrowserMatchNoCase (Mediatoolkitbot|MegaIndex|MetaURI|MJ12bot) is_a_bot
+BrowserMatchNoCase (Nimbostratus)-Bot is_a_bot
+BrowserMatchNoCase (oBot|OutclicksBot) is_a_bot
+BrowserMatchNoCase (PaperLiBot|pmoz\.info) is_a_bot
+BrowserMatchNoCase (Qwantify) is_a_bot
+BrowserMatchNoCase (SemrushBot|SEOkicks|SerendeputyBot|SeznamBot|spbot|spuhex) is_a_bot
+BrowserMatchNoCase (TigerBot|TMMBot|Twitterbot) is_a_bot
+BrowserMatchNoCase (Uptimebot) is_a_bot
+BrowserMatchNoCase (wiederfreibot) is_a_bot
+BrowserMatchNoCase (yacybot|Yandex) is_a_bot
+
+
+# Include generic snippets of statements
+IncludeOptional conf-enabled/*.conf
+
+# Include the virtual host configurations
+IncludeOptional sites-enabled/*.conf

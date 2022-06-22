@@ -1,0 +1,374 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  vars:
+    __task_file:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
+  tags:
+    - 'always'
+
+
+# Manage required system packages (Installation)
+- block:
+
+  - debug:
+      msg: '{{ apache_httpd__base_packages }}'
+
+  - name: 'Ensure base packages are in their desired state'
+    ansible.builtin.package:
+      name: '{{ item }}'
+      state: '{{ "present" if (apache_httpd__deploy_state == "present") else "absent" }}'
+    register: apache_httpd__register_base_packages
+    until: apache_httpd__register_base_packages is succeeded
+    with_flattened:
+      - '{{ apache_httpd__base_packages }}'
+
+  - ansible.builtin.debug:
+      msg:
+        - 'Combined Packages:'
+        - '{{ apache_httpd__combined_packages }}'
+
+  - name: 'Ensure additional Apache packages/modules are in their desired state'
+    ansible.builtin.package:
+      name: '{{ q("flattened", apache_httpd__combined_packages) }}'
+      state: '{{ "present" if (apache_httpd__deploy_state == "present") else "absent" }}'
+    register: apache_httpd__register_packages
+    until: apache_httpd__register_packages is succeeded
+
+  - name: 'mkdir -p {{ apache_httpd__config_path}}/{conf,mods,sites}-{available,enabled}'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+    loop:
+      - '{{ apache_httpd__config_path }}/conf-available'
+      - '{{ apache_httpd__config_path }}/conf-enabled'
+      - '{{ apache_httpd__config_path }}/mods-available'
+      - '{{ apache_httpd__config_path }}/mods-enabled'
+      - '{{ apache_httpd__config_path }}/sites-available'
+      - '{{ apache_httpd__config_path }}/sites-enabled'
+
+  tags:
+    - 'apache_httpd:modules'
+
+
+# Manage OWASP ModSecurity Core Rule Set (CRS), https://coreruleset.org/installation/
+- block:
+
+  - name: 'Download, verify and install OWASP ModSecurity Core Rule Set (CRS)'
+    ansible.builtin.get_url:
+      url: '{{ apache_httpd__coreruleset_url }}/v{{ apache_httpd__coreruleset_version }}.tar.gz'
+      dest: '/tmp/coreruleset-v{{ apache_httpd__coreruleset_version }}.tar.gz'
+      checksum: '{{ apache_httpd__coreruleset_checksum }}'
+
+  - name: 'dnf -y install tar'
+    package:
+      name: 'tar'
+      state: 'present'
+
+  - name: 'tar xzf coreruleset-v{{ apache_httpd__coreruleset_version }}.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/coreruleset-v{{ apache_httpd__coreruleset_version }}.tar.gz'
+      dest: '{{ apache_httpd__config_path }}/modsecurity.d/'
+      remote_src: true
+    ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
+
+  - name: 'ln -s /etc/httpd/modsecurity.d/coreruleset-{{ apache_httpd__coreruleset_version }} /etc/httpd/modsecurity.d/crs'
+    ansible.builtin.file:
+      src: '{{ apache_httpd__config_path }}/modsecurity.d/coreruleset-{{ apache_httpd__coreruleset_version }}'
+      dest: '{{ apache_httpd__config_path }}/modsecurity.d/crs'
+      state: 'link'
+    ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
+
+  - name: 'cp /etc/httpd/modsecurity.d/crs-setup.conf.example /etc/httpd/modsecurity.d/crs-setup.conf'
+    ansible.builtin.copy:
+      src: '{{ apache_httpd__config_path }}/modsecurity.d/crs/crs-setup.conf.example'
+      dest: '{{ apache_httpd__config_path }}/modsecurity.d/crs/crs-setup.conf'
+      remote_src: true
+    ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
+
+  tags:
+    - 'apache_httpd:crs'
+
+
+# Manage global Apache config
+- block:
+
+  - name: 'Create or update global Apache configuration'
+    ansible.builtin.template:
+      src: 'etc/httpd/conf/httpd.conf.j2'
+      dest: '{{ apache_httpd__config_file }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    notify:
+      - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+  tags:
+    - 'apache_httpd:global'
+
+
+# Manage Apache modules (files in ``mods-available``)
+- block:
+
+  # Create the dictionary which holds the actual Apache modules combined from all variables.
+  - ansible.builtin.set_fact:
+      apache_httpd__combined_modules: '{{ apache_httpd__role_modules
+        | combine(apache_httpd__role_proxy_modules)
+        | combine(apache_httpd__dependent_modules)
+        | combine(apache_httpd__group_modules)
+        | combine(apache_httpd__host_modules)
+       }}'
+    when:
+      - 'apache_httpd__server_type == "reverse-proxy"'
+  - ansible.builtin.set_fact:
+      apache_httpd__combined_modules: '{{ apache_httpd__role_modules
+        | combine(apache_httpd__role_app_modules)
+        | combine(apache_httpd__dependent_modules)
+        | combine(apache_httpd__group_modules)
+        | combine(apache_httpd__host_modules)
+       }}'
+    when:
+      - 'apache_httpd__server_type == "app"'
+
+  - ansible.builtin.debug:
+      msg:
+        - 'Combined Modules:'
+        - '{{ apache_httpd__combined_modules }}'
+
+  - name: 'Remove mods-available modules'
+    ansible.builtin.file:
+      path: '{{ apache_httpd__config_path + "/mods-available/" + item.key + ".conf" }}'
+      state: 'absent'
+    when:
+      - 'item.value.state | d("present") == "absent"'
+    with_dict: '{{ apache_httpd__combined_modules }}'
+
+  - name: 'Create mods-available config'
+    ansible.builtin.template:
+      src: 'etc/httpd/mods-available/{{ "raw"
+                                          if (item.value.type | d("conf") in ["raw"] and
+                                              item.value.raw | d())
+                                          else item.key }}.conf.j2'
+      dest: '{{ apache_httpd__config_path + "/mods-available/" + item.key + ".conf" }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    when:
+      - 'item.value.state | d("present") != "absent"'
+      - 'item.value.type | d("conf") not in ["dont-touch"] or item.value.raw | d()'
+    with_dict: '{{ apache_httpd__combined_modules }}'
+    notify:
+      - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+  - name: 'Enable/disable modules'
+    ansible.builtin.file:
+      path: '{{ apache_httpd__config_path + "/mods-enabled/" + item.key + ".conf" }}'
+      src: '{{ (((item.value.enabled | d(true)
+                    if (item.value is mapping)
+                    else item.value | d(true)))
+                   if (item.value.state | d("present") != "absent")
+                   else False) | bool
+                   | ternary("../mods-available/" + item.key + ".conf",
+                             omit) }}'
+      mode: '0644'
+      force: '{{ ansible_check_mode | d() | bool }}'
+      state: '{{ (((item.value.enabled | d(true)
+                    if (item.value is mapping)
+                    else item.value | d(true)))
+                   if (item.value.state | d("present") != "absent")
+                   else False) | bool | ternary("link", "absent") }}'
+    with_dict: '{{ apache_httpd__combined_modules }}'
+    notify:
+      - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+  tags:
+    - 'apache_httpd:mods'
+
+
+# Manage Apache configuration snippets (files in ``conf-available``)
+- block:
+
+  # The dictionaries which holds the actual Apache _snippets combined from all variables.
+  - ansible.builtin.set_fact:
+      apache_httpd__combined_snippets: '{{ apache_httpd__role_snippets
+        | combine(apache_httpd__role_proxy_snippets)
+        | combine(apache_httpd__dependent_snippets)
+        | combine(apache_httpd__group_snippets)
+        | combine(apache_httpd__host_snippets)
+      }}'
+    when:
+      - 'apache_httpd__server_type == "reverse-proxy"'
+
+  - ansible.builtin.set_fact:
+      apache_httpd__combined_snippets: '{{ apache_httpd__role_snippets
+        | combine(apache_httpd__role_app_snippets)
+        | combine(apache_httpd__dependent_snippets)
+        | combine(apache_httpd__group_snippets)
+        | combine(apache_httpd__host_snippets)
+      }}'
+    when:
+      - 'apache_httpd__server_type == "app"'
+
+  - ansible.builtin.debug:
+      msg:
+        - 'Combined Snippets:'
+        - '{{ apache_httpd__combined_snippets }}'
+
+  - name: 'Remove conf-available snippets'
+    ansible.builtin.file:
+      path: '{{ apache_httpd__config_path + "/conf-available/" + item.key + ".conf" }}'
+      state: 'absent'
+    when:
+      - 'item.value.state | d("present") == "absent"'
+    with_dict: '{{ apache_httpd__combined_snippets }}'
+
+  - name: 'Create conf-available snippets'
+    ansible.builtin.template:
+      src: 'etc/httpd/conf-available/{{ "raw"
+                                          if (item.value.type | d("conf") in ["raw"] and
+                                              item.value.raw | d())
+                                          else item.key }}.conf.j2'
+      dest: '{{ apache_httpd__config_path + "/conf-available/" + item.key + ".conf" }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    when:
+      - 'item.value.state | d("present") != "absent"'
+      - 'item.value.type | d("conf") not in ["dont-touch"] or item.value.raw | d()'
+    with_dict: '{{ apache_httpd__combined_snippets }}'
+    notify:
+      - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+  - name: 'Enable/disable configuration snippets'
+    ansible.builtin.file:
+      src: '{{ (((item.value.enabled | d(true)
+                    if (item.value is mapping)
+                    else item.value | d(true)))
+                   if (item.value.state | d("present") != "absent")
+                   else False) | bool
+                   | ternary("../conf-available/" + item.key + ".conf",
+                             omit) }}'
+      path: '{{ apache_httpd__config_path + "/conf-enabled/" + item.key + ".conf" }}'
+      mode: '0644'
+      force: '{{ ansible_check_mode | d() | bool }}'
+      state: '{{ (((item.value.enabled | d(true)
+                    if (item.value is mapping)
+                    else item.value | d(true)))
+                   if (item.value.state | d("present") != "absent")
+                   else False) | bool | ternary("link", "absent") }}'
+    with_dict: '{{ apache_httpd__combined_snippets }}'
+    notify:
+      - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+  tags:
+    - 'apache_httpd:snippets'
+
+
+# Manage Apache virtual hosts
+- block:
+
+  - ansible.builtin.debug:
+      msg:
+        - 'Combined vHosts:'
+        - '{{ apache_httpd__combined_vhosts }}'
+
+  - name: 'Remove sites-available configuration'
+    ansible.builtin.file:
+      path: '{{ apache_httpd__config_path }}/sites-available/{{ item.filename | d(item.conf_server_name
+                                                if (item.conf_server_name is string)
+                                                else item.conf_server_name[0] | d("app")) }}.{{ item.virtualhost_port | d("443") }}/.conf'
+      state: 'absent'
+    when:
+      - 'item.state | d("present") == "absent"'
+    with_flattened: '{{ apache_httpd__combined_vhosts }}'
+
+  - name: 'Create sites-available configuration'
+    ansible.builtin.template:
+      src: 'etc/httpd/sites-available/{{ item.type | d(apache_httpd__vhost_type) }}.conf.j2'
+      dest: '{{ apache_httpd__config_path }}/sites-available/{{ item.filename | d(item.conf_server_name
+                                                  if (item.conf_server_name is string)
+                                                  else item.conf_server_name[0] | d("app")) }}.{{ item.virtualhost_port | d("443") }}.conf'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    notify:
+      - 'apache_httpd: httpd -t; systemctl reload httpd'
+    when:
+      - 'item.state | d("present") != "absent"'
+      - 'item.type | d(apache_httpd__vhost_type) not in ["dont-touch"]'
+    with_flattened: '{{ apache_httpd__combined_vhosts }}'
+
+  - name: 'Create DocumentRoot for all vHosts'
+    ansible.builtin.file:
+      path: '{{ item.conf_document_root | d(apache_httpd__conf_document_root ~ "/" ~ item.conf_server_name) }}'
+      owner: '{{ apache_httpd__user }}'
+      group: '{{ apache_httpd__group }}'
+      state: '{{ "directory" if (item.state == "present") else "absent" }}'
+    when:
+      - 'item.type in ["app", "localhost"]'
+    with_flattened: '{{ apache_httpd__combined_vhosts }}'
+
+  - name: 'Enable/disable Apache virtual hosts'
+    ansible.builtin.file:
+      src: '{{ ("../sites-available/" + item.filename | d(item.conf_server_name
+                                            if (item.conf_server_name is string)
+                                            else item.conf_server_name[0] | d("app")) + "." + item.virtualhost_port | d("443") | string + ".conf")
+               if (item.enabled | d(true) | bool)
+               else omit }}'
+      path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item.filename | d(item.conf_server_name
+                                                  if (item.conf_server_name is string)
+                                                  else item.conf_server_name[0] | d("app")) }}.{{ item.virtualhost_port | d("443") | string }}.conf'
+      force: '{{ item.force | d(ansible_check_mode) | bool }}'
+      state: '{{ item.enabled | d(true) | bool | ternary("link", "absent")
+                 if (item.state | d("present") != "absent")
+                 else "absent" }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    notify:
+      - 'apache_httpd: httpd -t; systemctl reload httpd'
+    with_flattened: '{{ apache_httpd__combined_vhosts }}'
+
+  tags:
+    - 'apache_httpd:vhosts'
+
+
+- block:
+
+  - name: 'chmod -R g-w /etc/httpd # enhance security a little'
+    ansible.builtin.file:
+      path: '/etc/httpd'
+      mode: 'g-w'
+      recurse: true
+
+
+# Manage Systemd start and enable
+- block:
+
+  - name: 'Ensure that httpd service is in a desired state'
+    ansible.builtin.systemd:
+      name: '{{ apache_httpd__service_name }}'
+      enabled: '{{ apache_httpd__systemd_enabled | d(true) }}'
+      state: '{{ apache_httpd__systemd_state | d("started") }}'
+    ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
+
+  tags:
+    - 'apache_httpd:systemd'

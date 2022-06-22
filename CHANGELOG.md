@@ -22,6 +22,7 @@ New features:
 * Role network: Added functionality to configure network connections.
 
 * Role: acme_sh
+* Role: apache_httpd
 * Role: at
 * Role: audit
 * Role: bind
@@ -56,6 +57,7 @@ New features:
 * Role: mailto_root
 * Role: mariadb_server
 * Role: network
+* Role: nextcloud
 * Role: openssl
 * Role: openvpn_server
 * Role: perl
