@@ -96,10 +96,10 @@
       name: 'mariadb.service'
       enabled: "{{ mariadb_server__enabled }}"
 
-  - name: 'systemctl start mariadb = {{ maridb_server__state }}'
+  - name: 'systemctl start mariadb = {{ mariadb_server__state }}'
     ansible.builtin.service:
       name: 'mariadb.service'
-      state: "{{ maridb_server__state }}"
+      state: "{{ mariadb_server__state }}"
 
   tags:
     - 'mariadb_server'
@@ -312,7 +312,7 @@
     changed_when: false # no actual change to the application
 
   tags:
-    - 'mariadb_server'
+    - 'never'
     - 'mariadb_server:sys_schema'
 
 

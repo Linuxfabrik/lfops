@@ -1,5 +1,5 @@
 mariadb_server__enabled: true
-maridb_server__state: 'started'
+mariadb_server__state: 'started'
 
 mariadb_server__admin_host:
   - '127.0.0.1'
