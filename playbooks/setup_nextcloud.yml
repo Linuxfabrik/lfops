@@ -16,45 +16,49 @@
     - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_nextcloud__skip_yum_utils | default(false)'
+        - 'not setup_nextcloud__skip_yum_utils | d(false)'
 
 
       # ====Apache Webserver
-#     - role: 'linuxfabrik.lfops.apache_httpd'
-#       when:
-#         - 'not setup_nextcloud__skip_apache_httpd | d(false)'
+    - role: 'linuxfabrik.lfops.apache_httpd'
+      apache_httpd__dependent_vhosts:
+        - '{{ nextcloud__apache_httpd__dependent_vhosts | d([]) }}'
+      when:
+        - 'not setup_nextcloud__skip_apache_httpd | d(false)'
 
 
       # === PHP and PHP-FPM
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
-        - 'not setup_nextcloud__skip_repo_remi | default(false)'
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not setup_nextcloud__skip_repo_remi | d(false)'
 
     - role: 'linuxfabrik.lfops.php'
+      php__dependent_modules:
+        - '{{ nextcloud__php__dependent_modules }}'
       when:
         - 'not setup_nextcloud__skip_php | d(false)'
-
-#     - role: 'linuxfabrik.lfops.redis'
-#       when:
-#         - 'not setup_nextcloud__skip_redis | d(false)'
 
 
       # === MariaDB
       # Attention: Using a fixed LTS version for Nextcloud.
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
 
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
         - 'not setup_nextcloud__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       repo_mariadb__version: '10.6'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
@@ -64,10 +68,16 @@
 
     - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__version: '10.6'
+      # mariadb_server__dependent_databases:
+      #   - '{{ nextcloud__mariadb_server__dependent_databases }}'
+      # mariadb_server__dependent_users:
+      #   - '{{ nextcloud__mariadb_server__dependent_users }}'
       when:
         - 'not setup_nextcloud__skip_mariadb_server | d(false)'
 
 
+    # === Nextcloud Application
+    - role: 'linuxfabrik.lfops.nextcloud'
 
 
 
@@ -76,6 +86,12 @@
 
 
 
+
+
+      # === Redis Fact Cache
+#     - role: 'linuxfabrik.lfops.redis'
+#       when:
+#         - 'not setup_nextcloud__skip_redis | d(false)'
 
 
 #     - role: 'linuxfabrik.lfops.collabora_code'
