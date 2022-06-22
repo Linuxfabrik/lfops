@@ -27,7 +27,7 @@ This role does not have any optional requirements.
 | Tag                               | What it does                                                                                                                                                                |
 | ---                               | ------------                                                                                                                                                                |
 | icingaweb2_module_director        | Installs and configures the IcingaWeb2 Director Module                                                                                                                      |
-| icingaweb2_module_director:basket | Deploys the baskets from the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This does not run by default, only when explicitly called |
+| icingaweb2_module_director:basket | Deploys the baskets from the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This does not run by default, only when explicitly called. |
 
 
 ## Role Variables

@@ -20,7 +20,7 @@ Tested on
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 * Enable the official [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/). This can be done using the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) role.
-* Install the `python3-PyMySQL` library. Done by this role using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
+* Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
 
 ### Optional
 
@@ -37,7 +37,7 @@ Tested on
 | mariadb_server:dump                | Configues dumps (backups) of the MariaDB server                                                                                 |
 | mariadb_server:secure_installation | Secures the installation the same way mysql_secure_installation does                                                            |
 | mariadb_server:state               | Manages the state of the MariaDB service                                                                                        |
-| mariadb_server:sys_schema          | Deploys a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage |
+| mariadb_server:sys_schema          | Deploys a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage. This does not run by default, only when explicitly called. |
 | mariadb_server:user                | Create, update or delete MariaDB users                                                                                          |
 
 
@@ -192,7 +192,8 @@ mariadb_server__host_users:
     password: 'my-secret-password' # default omit
     host: 'localhost' # default
     priv: # default omit
-      - todo
+      - '{{ icingaweb2_db }}.*:SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
+      - 'wiki.*:ALL'
     state: 'present' # default
 ```
 
