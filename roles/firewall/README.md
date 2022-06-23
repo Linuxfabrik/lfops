@@ -13,12 +13,13 @@ Tested on
 
 ### Mandatory
 
-* When using `firewall__firewall == fwbuilder`, you need to deploy a Firewall Builder file to `/etc/fwb.sh` before running this role.
+IMPORTANT:
+* When using `firewall__firewall == fwbuilder`, you need to deploy a Firewall Builder file to `/etc/fwb.sh` **before** running this role.
 
 
 ### Optional
 
-* When using `firewall__firewall == iptables`, you can place a iptables file in your inventory, which will be deployed to the system. The file has to be placed as `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables`.
+* When using `firewall__firewall == iptables`, you can place an iptables config file in your inventory, which will be deployed to the system. The file has to be placed into `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables`.
 
 
 ## Tags
@@ -30,7 +31,7 @@ Tested on
 
 ## Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/firewall/defaults/main.yml) for the variable defaults.
+This role does not have any variable defaults.
 
 
 ### Mandatory
@@ -43,6 +44,7 @@ Which firewall should be activated and optionally configured. All other firewall
 * `firewalld`
 * `fwbuilder`
 * `iptables`
+* `nftables`
 * `ufw`
 
 
