@@ -13,6 +13,10 @@ Role: duplicity
 * Renamed `duplicity__public_master_key` variable to `duplicity__gpg_encrypt_master_key_block`.
 * Changed the format of `duplicity__host_backup_sources`.
 
+Role: login
+* Changed logic and renamed `login__users` to two combined variables `login__group_users` (define users in group vars) and `login__host_users` (define users in host vars).
+
+
 ### Added
 
 New features:

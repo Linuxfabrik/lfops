@@ -1,2 +1,12 @@
+login__dependent_users: []
+login__group_users: []
+login__host_users: []
+login__role_users: []
+
+login__combined_users: '{{ login__role_users +
+  login__group_users +
+  login__host_users +
+  login__dependent_users
+ }}'
+
 login__passwordless_sudo_group: ''
-login__users: []
