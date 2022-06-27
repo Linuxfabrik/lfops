@@ -1,5 +1,18 @@
 - block:
 
+  - ansible.builtin.debug:
+      msg:
+        - 'Combined sysctl:'
+        - '{{ kernel_settings__dependent_sysctl }}'
+        - 'Combined sysfs:'
+        - '{{ kernel_settings__dependent_sysfs }}'
+        - 'Combined systemd_cpu_affinity:'
+        - '{{ kernel_settings__combined_systemd_cpu_affinity }}'
+        - 'Combined transparent_hugepages:'
+        - '{{ kernel_settings__combined_transparent_hugepages }}'
+        - 'Combined transparent_hugepages_defrag:'
+        - '{{ kernel_settings__combined_transparent_hugepages_defrag }}'
+
   - name: 'Use fedora.linux_system_roles.kernel_settings role to configure the kernel settings'
     include_role:
       name: 'fedora.linux_system_roles.kernel_settings'

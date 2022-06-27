@@ -6,12 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
 ### Breaking Changes
 
 Role: duplicity
 * Renamed `duplicity__public_master_long_keyid` variable to `duplicity__gpg_encrypt_master_key`.
 * Renamed `duplicity__public_master_key` variable to `duplicity__gpg_encrypt_master_key_block`.
 * Changed the format of `duplicity__host_backup_sources`.
+
+Role: kernel_settings
+* Make `kernel_settings__` variables injection-capable via `kernel_settings__host_*`, `kernel_settings__group_*` and `kernel_settings__dependent_*`.
 
 Role: login
 * Changed logic and renamed `login__users` to two combined variables `login__group_users` (define users in group vars) and `login__host_users` (define users in host vars).
@@ -23,6 +27,7 @@ New features:
 
 * This CHANGELOG.
 
+* Module: mariadb_user
 * Role network: Added functionality to configure network connections.
 
 * Role: acme_sh
@@ -66,6 +71,7 @@ New features:
 * Role: openvpn_server
 * Role: perl
 * Role: php
+* Role: redis
 * Role: repo_baseos
 * Role: repo_icinga
 * Role: repo_influxdb
@@ -79,8 +85,6 @@ New features:
 * Role: timezone
 * Role: yum_utils
 
-* Module: mariadb_user
-
 ### Changed
 
 Changes in existing functionality:
@@ -90,12 +94,16 @@ Changes in existing functionality:
 
 
 ## [1.0.1] - 2022-03-17
+
 ### Changed
+
 * Adjust tags for Ansible Galaxy.
 
 
 ## [1.0.0] - 2022-03-17
+
 ### Added
+
 * Role: duplicity
 * Role: monitoring_plugins
 * Role: python_venv
