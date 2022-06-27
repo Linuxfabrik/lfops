@@ -118,7 +118,7 @@ redis__service_timeout_stop_sec: 5
 
 ## Known Issues
 
-Actually not an issue: The role configures Systemd correctly, even if you get `WARNING supervised by systemd - you MUST set appropriate values for TimeoutStartSec and TimeoutStopSec in your service unit` in `/var/log/redis/redis.log`. This can safely be ignored |according to this GitHub issue](https://github.com/redis/redis/issues/8024).
+Actually not an issue: The role configures Systemd correctly, even if you get `WARNING supervised by systemd - you MUST set appropriate values for TimeoutStartSec and TimeoutStopSec in your service unit` in `/var/log/redis/redis.log`. This can safely be ignored [according to this GitHub issue](https://github.com/redis/redis/issues/8024).
 
 
 
