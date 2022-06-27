@@ -78,7 +78,9 @@ redis__installed_version: 6
 
 #### redis__service_enabled
 
-Whether Redis should start on boot.
+Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. Possible options:
+* true
+* false
 
 Default:
 ```yaml
