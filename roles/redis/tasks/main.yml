@@ -1,0 +1,40 @@
+- block:
+
+  - name: 'dnf -y module enable redis:{{ redis__installed_version }}; dnf -y module install redis'
+    ansible.builtin.dnf:
+      name: '@redis:{{ redis__installed_version }}'
+      state: 'present'
+
+  - name: 'Deploy /etc/redis.conf'
+    ansible.builtin.template:
+      src: 'etc/{{ redis__installed_version }}-redis.conf.j2'
+      dest: '/etc/redis.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'redis: restart redis'
+
+  - name: 'Deploy /etc/systemd/system/redis.service.d/z00-linuxfabrik.conf.j2'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/redis.service.d/z00-linuxfabrik.conf.j2'
+      dest: '/etc/systemd/system/redis.service.d/z00-linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'redis'
+
+
+- block:
+
+  - name: 'systemctl {{ redis__service_enabled | bool | ternary("enable", "disable") }} --now redis.service'
+    ansible.builtin.systemd:
+      name: 'redis.service'
+      enabled: '{{ redis__service_enabled }}'
+      state: '{{ redis__service_enabled | bool | ternary("started", "stopped") }}'
+      daemon_reload: true
+
+  tags:
+    - 'redis'
+    - 'redis:state'

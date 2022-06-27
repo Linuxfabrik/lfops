@@ -1,0 +1,33 @@
+redis__conf_auto_aof_rewrite_min_size: '64mb'
+redis__conf_daemonize: 'no'
+redis__conf_databases: 16
+redis__conf_loglevel: 'notice'
+redis__conf_maxmemory: '50mb'
+redis__conf_maxmemory_policy: 'noeviction'
+redis__conf_port: 0  # If port 0 is specified Redis will not listen on a TCP socket.
+redis__conf_protected_mode: 'yes'
+redis__conf_replica_serve_stale_data: 'yes'
+redis__conf_supervised: 'auto'
+redis__conf_unixsocket: '/run/redis/redis.sock'
+redis__conf_unixsocketperm: '700'
+
+redis__installed_version: 6   # on RHEL 8+: choose between 5 or 6
+
+redis__service_enabled: true
+redis__service_limit_nofile: 10240
+redis__service_timeout_start_sec: '5s'
+redis__service_timeout_stop_sec: '5s'
+
+# -----------------------------------------------------------------------------
+
+redis__kernel_settings__dependent_sysctl:
+  # WARNING overcommit_memory is set to 0! Background save may fail under low memory condition.
+  # To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run
+  # the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+  - name: 'vm.overcommit_memory'
+    value: 1
+  # WARNING: The TCP backlog setting of 511 cannot be enforced because
+  # /proc/sys/net/core/somaxconn is set to the lower value of 128.
+  - name: 'net.core.somaxconn'
+    value: 1024
+redis__kernel_settings__dependent_transparent_hugepages: 'madvise'

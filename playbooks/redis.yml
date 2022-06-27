@@ -1,0 +1,20 @@
+- name: 'Manage and configure redis'
+  collections: ['linuxfabrik.lfops']
+  become: true
+  hosts:
+    - 'lfops_redis'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__dependent_sysctl:
+        - '{{ redis__kernel_settings__dependent_sysctl | d([]) }}'
+      kernel_settings__dependent_sysfs:
+        - '{{ redis__kernel_settings__dependent_sysfs | d([]) }}'
+      kernel_settings__dependent_systemd_cpu_affinity: "{{ redis__kernel_settings__dependent_systemd_cpu_affinity | d('') }}"
+      kernel_settings__dependent_transparent_hugepages: "{{ redis__kernel_settings__dependent_transparent_hugepages | d('') }}"
+      kernel_settings__dependent_transparent_hugepages_defrag: "{{ redis__kernel_settings__dependent_transparent_hugepages_defrag | d('') }}"
+      when:
+        - 'not redis__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.redis'
