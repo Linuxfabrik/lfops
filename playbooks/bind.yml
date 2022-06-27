@@ -1,6 +1,5 @@
 - name: 'Install and configure bind'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_bind'
 

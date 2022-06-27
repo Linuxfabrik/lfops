@@ -13,7 +13,6 @@
       zone: '{{ exoscale_vm__zone }}'
       root_disk_size: '{{ exoscale_vm__disk_size }}'
     delegate_to: 'localhost'
-    become: false
 
   - name: 'Create the networks required by the VM'
     ngine_io.cloudstack.cs_network:
@@ -27,7 +26,6 @@
     loop: '{{ exoscale_vm__private_networks }}'
     when: 'exoscale_vm__state == "present"'
     delegate_to: 'localhost'
-    become: false
 
   - name: "Manage the VM's networks"
     ngine_io.cloudstack.cs_instance_nic:
@@ -40,7 +38,6 @@
     loop: '{{ exoscale_vm__private_networks }}'
     when: 'exoscale_vm__state == "present"'
     delegate_to: 'localhost'
-    become: false
 
   tags:
     - 'exoscale_vm'

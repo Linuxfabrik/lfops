@@ -1,6 +1,5 @@
 - name: 'Install and configure Keycloak'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_keycloak'
 

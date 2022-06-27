@@ -38,7 +38,6 @@
       url: 'https://github.com/Icinga/icingaweb2-module-vspheredb/archive/v{{ icingaweb2_module_vspheredb__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-vspheredb-v{{ icingaweb2_module_vspheredb__version }}.tar.gz'
     delegate_to: 'localhost'
-    become: false
     run_once: true
     check_mode: false
 

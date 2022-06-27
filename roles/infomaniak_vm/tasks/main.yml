@@ -13,7 +13,6 @@
       name: '{{ item["name"] }}'
       state: 'present' # we only use state present, as other vms could use the network too
     delegate_to: 'localhost'
-    become: false
     loop: '{{ infomaniak_vm__networks }}'
     when: 'infomaniak_vm__state != "absent"'
 
@@ -34,7 +33,6 @@
       enable_dhcp: false
       state: 'present' # we only use state present, as other vms could use the network too
     delegate_to: 'localhost'
-    become: false
     loop: '{{ infomaniak_vm__networks }}'
     when:
       - 'infomaniak_vm__state != "absent"'
@@ -57,7 +55,6 @@
       port_security_enabled: false # we disable port security, as this makes debugging connections in internal networks hard. it also prevents NAT if not configured properly
       state: 'present'
     delegate_to: 'localhost'
-    become: false
     loop: '{{ infomaniak_vm__networks }}'
     when:
       - 'infomaniak_vm__state != "absent"'
@@ -76,7 +73,6 @@
       name: '{{ infomaniak_vm__name }}'
       state: 'present'
     delegate_to: 'localhost'
-    become: false
     when:
       - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length'
       - 'infomaniak_vm__state != "absent"'
@@ -100,7 +96,6 @@
       state: 'present'
     loop: '{{ infomaniak_vm__security_group_rules }}'
     delegate_to: 'localhost'
-    become: false
     when:
       - 'infomaniak_vm__security_group_rules is defined'
       - 'infomaniak_vm__state != "absent"'
@@ -139,7 +134,6 @@
       state: '{{ infomaniak_vm__state }}'
       auto_ip: false # not all VMs need to have a public ip
     delegate_to: 'localhost'
-    become: false
 
   # Cleanup
   - name: 'Cleanup ports when deleting VM'
@@ -155,7 +149,6 @@
       name: '{{ infomaniak_vm__name }}--{{ item["name"] }}--port'
       state: 'absent'
     delegate_to: 'localhost'
-    become: false
     loop: '{{ infomaniak_vm__networks }}'
     when:
       - 'infomaniak_vm__state == "absent"'
@@ -174,7 +167,6 @@
       name: '{{ infomaniak_vm__name }}'
       state: 'absent'
     delegate_to: 'localhost'
-    become: false
     when:
       - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length'
       - 'infomaniak_vm__state == "absent"'

@@ -1,6 +1,5 @@
 - name: 'Manage and configure the MariaDB Repository'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_repo_mariadb'
 

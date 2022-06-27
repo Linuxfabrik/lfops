@@ -1,6 +1,5 @@
 - name: 'Setup and manage an Exoscale VM'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_exoscale_vm'
   gather_facts: false

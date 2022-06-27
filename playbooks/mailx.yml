@@ -1,6 +1,5 @@
 - name: 'Installs mailx and deploys wrapper scripts'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_mailx'
 

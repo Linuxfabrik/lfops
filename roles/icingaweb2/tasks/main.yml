@@ -128,7 +128,6 @@
       url: 'https://download.linuxfabrik.ch/monitoring-plugins/assets/icons/icons.tar.gz'
       dest: '/tmp/ansible.assets-icons.tar.gz'
     delegate_to: 'localhost'
-    become: false
     check_mode: false # run task even if `--check` is specified
     changed_when: false # just gathering info, no actual change
 

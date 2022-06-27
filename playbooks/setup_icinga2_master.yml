@@ -1,6 +1,5 @@
 - name: 'Install and configure Icinga2 as a master'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_setup_icinga2_master'
 

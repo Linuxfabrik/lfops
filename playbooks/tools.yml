@@ -1,6 +1,5 @@
 - name: 'Ensures that some tools are installed'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_tools'
 

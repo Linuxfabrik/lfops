@@ -1,6 +1,5 @@
 - name: 'Installs the Icinga vSphereDB Module.'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_icingaweb2_module_vspheredb'
 

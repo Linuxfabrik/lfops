@@ -1,6 +1,5 @@
 - name: 'Remove the cockpit packages'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_cockpit'
 

@@ -13,7 +13,6 @@
       upgrade_disk: '{{ hetzner_vm__upgrade_disk }}'
       state: '{{ hetzner_vm__state }}'
     delegate_to: 'localhost'
-    become: false
 
   - name: 'Manage the Volumes at Hetzner'
     hetzner.hcloud.hcloud_volume:
@@ -26,7 +25,6 @@
       state: '{{ item.state | default("present") }}'
     loop: '{{ hetzner_vm__volumes }}'
     delegate_to: 'localhost'
-    become: false
 
   tags:
     - 'hetzner_vm'

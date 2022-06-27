@@ -1,6 +1,5 @@
 - name: 'Install at'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_at'
 

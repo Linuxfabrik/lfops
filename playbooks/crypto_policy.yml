@@ -1,6 +1,5 @@
 - name: 'Set the system-wide cryptographic policy'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_crypto_policy'
 

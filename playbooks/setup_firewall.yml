@@ -1,5 +1,4 @@
 - name: 'The Linuxfabrik firewall setup'
-  become: true
   hosts:
     - 'lfops_setup_firewall'
 

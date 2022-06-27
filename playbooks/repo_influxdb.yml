@@ -1,6 +1,5 @@
 - name: 'Manage and configure the InfluxDB repository'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_repo_influxdb'
 

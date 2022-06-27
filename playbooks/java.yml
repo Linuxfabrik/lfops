@@ -1,6 +1,5 @@
 - name: 'Installs Java - openSDK'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_java'
 

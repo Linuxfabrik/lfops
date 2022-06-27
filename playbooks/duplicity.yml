@@ -1,6 +1,5 @@
 - name: 'Manage and configure duplicity'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_duplicity'
 

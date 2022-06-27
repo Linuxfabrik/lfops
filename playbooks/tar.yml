@@ -1,6 +1,5 @@
 - name: 'Install tar'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_tar'
 

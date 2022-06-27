@@ -1,6 +1,5 @@
 - name: 'Install and configure Icinga2 as a agent'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_icinga2_agent'
 

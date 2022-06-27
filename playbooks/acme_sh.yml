@@ -1,6 +1,5 @@
 - name: 'Install and configure acme.sh'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_acme_sh'
 

@@ -1,6 +1,5 @@
 - name: 'Install and configure Postfix'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_postfix'
 
