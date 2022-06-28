@@ -10,7 +10,7 @@
 
 - name: 'apache_httpd: httpd -t; systemctl restart httpd'
   command: '{{ apache_httpd__config_test_command }}'
-  notify: 
+  notify:
     - 'apache_httpd: httpd -t; systemctl restart httpd'
 
 - name: 'apache_httpd: httpd -t; systemctl restart httpd'

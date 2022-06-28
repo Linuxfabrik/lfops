@@ -1,0 +1,8 @@
+- name: 'Install apache_httpd'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_apache_httpd'
+
+  roles:
+
+    - role: 'apache_httpd'

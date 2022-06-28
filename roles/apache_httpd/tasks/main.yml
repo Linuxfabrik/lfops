@@ -27,14 +27,16 @@
 - block:
 
   - debug:
-      msg: '{{ apache_httpd__base_packages }}'
+      msg:
+        - 'Combined Base Packages:'
+        - '{{ apache_httpd__base_packages }}'
 
   - name: 'Ensure base packages are in their desired state'
     ansible.builtin.package:
       name: '{{ item }}'
       state: '{{ "present" if (apache_httpd__deploy_state == "present") else "absent" }}'
-    register: apache_httpd__register_base_packages
-    until: apache_httpd__register_base_packages is succeeded
+    register: 'apache_httpd__register_base_packages'
+    until: 'apache_httpd__register_base_packages is succeeded'
     with_flattened:
       - '{{ apache_httpd__base_packages }}'
 
@@ -47,8 +49,8 @@
     ansible.builtin.package:
       name: '{{ q("flattened", apache_httpd__combined_packages) }}'
       state: '{{ "present" if (apache_httpd__deploy_state == "present") else "absent" }}'
-    register: apache_httpd__register_packages
-    until: apache_httpd__register_packages is succeeded
+    register: 'apache_httpd__register_packages'
+    until: 'apache_httpd__register_packages is succeeded'
 
   - name: 'mkdir -p {{ apache_httpd__config_path}}/{conf,mods,sites}-{available,enabled}'
     ansible.builtin.file:

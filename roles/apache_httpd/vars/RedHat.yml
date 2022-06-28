@@ -16,4 +16,3 @@ apache_httpd__roothtml_path: '/var/www/html'
 apache_httpd__openssl_certificate_path: '/etc/pki/tls/certs'
 apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
 apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'
-
