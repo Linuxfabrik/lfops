@@ -82,7 +82,7 @@ Tags
     | enable/disable configuration snippets"
     apache-httpd:crs,                   "Download, verify and install OWASP ModSecurity Core Rule Set (CRS)"
     apache-httpd:modules,               "Ensure base and additional packages are in their desired state"
-    apache-httpd:systemd,               "Ensure that the httpd service is in the desired state"
+    apache-httpd:state,                 "Ensure that the httpd service is in the desired state"
 
 
 Role Variables - Overview

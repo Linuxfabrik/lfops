@@ -68,6 +68,7 @@
       - '{{ apache_httpd__config_path }}/sites-enabled'
 
   tags:
+    - 'apache_httpd'
     - 'apache_httpd:modules'
 
 
@@ -107,6 +108,7 @@
     ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
 
   tags:
+    - 'apache_httpd'
     - 'apache_httpd:crs'
 
 
@@ -124,6 +126,7 @@
       - 'apache_httpd: httpd -t; systemctl reload httpd'
 
   tags:
+    - 'apache_httpd'
     - 'apache_httpd:global'
 
 
@@ -140,6 +143,7 @@
        }}'
     when:
       - 'apache_httpd__server_type == "reverse-proxy"'
+
   - ansible.builtin.set_fact:
       apache_httpd__combined_modules: '{{ apache_httpd__role_modules
         | combine(apache_httpd__role_app_modules)
@@ -202,6 +206,7 @@
       - 'apache_httpd: httpd -t; systemctl reload httpd'
 
   tags:
+    - 'apache_httpd'
     - 'apache_httpd:mods'
 
 
@@ -281,6 +286,7 @@
       - 'apache_httpd: httpd -t; systemctl reload httpd'
 
   tags:
+    - 'apache_httpd'
     - 'apache_httpd:snippets'
 
 
@@ -350,6 +356,7 @@
     with_flattened: '{{ apache_httpd__combined_vhosts }}'
 
   tags:
+    - 'apache_httpd'
     - 'apache_httpd:vhosts'
 
 
@@ -361,6 +368,8 @@
       mode: 'g-w'
       recurse: true
 
+  tags:
+    - 'apache_httpd'
 
 # Manage Systemd start and enable
 - block:
@@ -373,4 +382,5 @@
     ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
 
   tags:
-    - 'apache_httpd:systemd'
+    - 'apache_httpd'
+    - 'apache_httpd:state'
