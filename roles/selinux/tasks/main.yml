@@ -1,6 +1,24 @@
-- name: 'setenforce {{ selinux__state }}'
-  ansible.posix.selinux:
-    policy: 'targeted'
-    state: '{{ selinux__state }}'
+- block:
+
+  - name: 'setenforce {{ selinux__state }}'
+    ansible.posix.selinux:
+      policy: 'targeted'
+      state: '{{ selinux__state }}'
+
   tags:
     - 'selinux'
+    - 'selinux:state'
+
+
+- block:
+
+  - name: 'setsebool -P ...'
+    seboolean:
+      name: '{{ item.key }}'
+      state: '{{ item.value }}'
+      persistent: true
+    loop: '{{ selinux__combined_booleans }}'
+
+  tags:
+    - 'selinux'
+    - 'selinux:booleans'
