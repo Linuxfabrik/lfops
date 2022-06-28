@@ -1,24 +1,24 @@
 # {{ ansible_managed }}
 # 2022051901
 
-{% for item in chrony_server__ntp_pools %}
+{% for item in chrony__ntp_pools %}
 pool {{ item }} iburst
 {% endfor %}
 
-{% for item in chrony_server__ntp_servers %}
+{% for item in chrony__ntp_servers %}
 server {{ item }} iburst
 {% endfor %}
 
-{% for item in chrony_server__allow %}
+{% for item in chrony__allow %}
 allow {{ item }}
 {% endfor %}
 
-{% if chrony_server__bindaddress is defined %}
-bindaddress {{ chrony_server__bindaddress }}
+{% if chrony__bindaddress is defined %}
+bindaddress {{ chrony__bindaddress }}
 {% endif %}
 
-{% if chrony_server__binddevice is defined %}
-binddevice {{ chrony_server__binddevice }}
+{% if chrony__binddevice is defined %}
+binddevice {{ chrony__binddevice }}
 {% endif %}
 
 # Record the rate at which the system clock gains/losses time.

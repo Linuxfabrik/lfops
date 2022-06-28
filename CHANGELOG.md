@@ -20,6 +20,10 @@ Role: kernel_settings
 Role: login
 * Changed logic and renamed `login__users` to two combined variables `login__group_users` (define users in group vars) and `login__host_users` (define users in host vars).
 
+Role: chrony
+* Fixed wrong variable prefix: Adjusted `chrony_server__` to `chrony__`.
+
+
 
 ### Added
 

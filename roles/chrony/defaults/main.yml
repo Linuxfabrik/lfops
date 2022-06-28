@@ -1,4 +1,4 @@
 chrony__service_enabled: true
-chrony_server__allow: []
-chrony_server__ntp_pools: []
-chrony_server__ntp_servers: []
+chrony__allow: []
+chrony__ntp_pools: []
+chrony__ntp_servers: []

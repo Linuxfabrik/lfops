@@ -29,49 +29,49 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 
 ### Mandatory
 
-This role does not have any mandatory variables. However, either `chrony_server__ntp_pools` or `chrony_server__ntp_servers` should be set to enable time synchronisation.
+This role does not have any mandatory variables. However, either `chrony__ntp_pools` or `chrony__ntp_servers` should be set to enable time synchronisation.
 
 
 ### Optional
 
-#### chrony_server__ntp_servers
+#### chrony__ntp_servers
 
 A list of NTP servers which should be used as a time source. The `ibust` option is always used, meaning chronyd will start with a burst of 4-8 requests in order to make the first update of the clock sooner.
 
 Default:
 ```yaml
-chrony_server__ntp_servers: []
+chrony__ntp_servers: []
 ```
 
 
-#### chrony_server__ntp_pools
+#### chrony__ntp_pools
 
-A list of NTP server pools. Same as `chrony_server__ntp_servers`, except that it is used to specify a pool of NTP servers rather than a single NTP server.
+A list of NTP server pools. Same as `chrony__ntp_servers`, except that it is used to specify a pool of NTP servers rather than a single NTP server.
 
 Default:
 ```yaml
-chrony_server__ntp_pools: []
+chrony__ntp_pools: []
 ```
 
 
-#### chrony_server__allow
+#### chrony__allow
 
 A list of subnets which are allowed to access the server as a NTP server. Setting this effectively turns this server into a NTP server.
 
 Default:
 ```yaml
-chrony_server__allow: []
+chrony__allow: []
 ```
 
 Example:
 ```yaml
-chrony_server__allow:
+chrony__allow:
   - '198.51.100.8' # only this address
   - '192.0.2.0/24' # whole subnet
 ```
 
 
-#### chrony_server__bindaddress
+#### chrony__bindaddress
 
 On which address chrony should listen. Can be used to restrict access to a certain address.
 
@@ -79,19 +79,19 @@ Default: unset
 
 Example:
 ```yaml
-chrony_server__bindaddress: '192.0.2.1'
+chrony__bindaddress: '192.0.2.1'
 ```
 
 
-#### chrony_server__binddevice
+#### chrony__binddevice
 
-To which network interface chrony should bind. Can be used to restrict access to certain interfaces. Note that this does not work with enforcing SELinux. Try using `chrony_server__bindaddress`.
+To which network interface chrony should bind. Can be used to restrict access to certain interfaces. Note that this does not work with enforcing SELinux. Try using `chrony__bindaddress`.
 
 Default: unset
 
 Example:
 ```yaml
-chrony_server__binddevice: 'eth0'
+chrony__binddevice: 'eth0'
 ```
 
 
