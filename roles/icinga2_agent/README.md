@@ -83,7 +83,7 @@ The URL where the IcingaWeb2 is reachable. This will be used to register the hos
 
 Example:
 ```yaml
-icinga2_agent__icingaweb2_url:
+icinga2_agent__icingaweb2_url: 'https://monitoring.example.com/icingaweb2'
 ```
 
 
