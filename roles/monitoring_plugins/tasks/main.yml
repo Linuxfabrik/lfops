@@ -39,7 +39,6 @@
       version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
       depth: 1
     delegate_to: 'localhost'
-    run_once: true
     check_mode: false # run task even if `--check` is specified
 
   rescue:
@@ -57,7 +56,6 @@
         version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
         depth: 1
       delegate_to: 'localhost'
-      run_once: true
       check_mode: false # run task even if `--check` is specified
 
   tags:
@@ -73,7 +71,6 @@
       version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
       depth: 1
     delegate_to: 'localhost'
-    run_once: true
     check_mode: false # run task even if `--check` is specified
 
   rescue:
@@ -91,7 +88,6 @@
         version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
         depth: 1
       delegate_to: 'localhost'
-      run_once: true
       check_mode: false # run task even if `--check` is specified
 
   tags:

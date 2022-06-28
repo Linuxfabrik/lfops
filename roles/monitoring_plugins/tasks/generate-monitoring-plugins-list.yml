@@ -9,7 +9,6 @@
       depth: 2
       hidden: true
     register: 'find_result'
-    run_once: true
 
   - name: 'Set filter'
     ansible.builtin.set_fact:
