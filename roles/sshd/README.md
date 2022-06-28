@@ -98,6 +98,21 @@ sshd__password_authentication: false
 ```
 
 
+#### sshd__permit_root_login
+
+Specifies whether root can log in using ssh. Possible options:
+
+* yes
+* prohibit-password
+* forced-commands-only
+* no
+
+Default:
+```yaml
+sshd__permit_root_login: 'no'
+```
+
+
 #### sshd__port
 
 Which port the sshd server should use.
