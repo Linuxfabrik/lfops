@@ -92,6 +92,12 @@ Changes in existing functionality:
 * Role duplicity: Implemented massive-parallel backups.
 * Role mariadb_server: Changed `mariadb_server__admin_host` to a list.
 
+### Fixed
+
+Bug fixes:
+
+*  role:sshd: ModuleNotFoundError: No module named 'seobject' ([fix #53](https://github.com/Linuxfabrik/lfops/issues/53))
+
 
 ## [1.0.1] - 2022-03-17
 

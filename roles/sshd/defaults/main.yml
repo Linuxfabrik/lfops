@@ -7,5 +7,7 @@ sshd__service_enabled: true
 sshd__service_state: 'started'
 sshd__use_dns: false
 
+# -----------------------------------------------------------------------------
+
 sshd__python__dependent_modules:
   - 'python3-policycoreutils'
