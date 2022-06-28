@@ -2,3 +2,5 @@
   ansible.posix.selinux:
     policy: 'targeted'
     state: '{{ selinux__state }}'
+  tags:
+    - 'selinux'
