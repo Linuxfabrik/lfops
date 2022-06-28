@@ -1,0 +1,4 @@
+- name: 'setenforce {{ selinux__state }}'
+  ansible.posix.selinux:
+    policy: 'targeted'
+    state: '{{ selinux__state }}'
