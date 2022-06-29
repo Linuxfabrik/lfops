@@ -25,7 +25,7 @@ php__ini_memory_limit: '128M'
 php__ini_opcache_blacklist_filename: '/etc/php-zts.d/opcache*.blacklist'
 php__ini_opcache_enable: 1
 php__ini_opcache_enable_cli: 1
-php__ini_opcache_huge_code_pages: 1
+php__ini_opcache_huge_code_pages: 0
 php__ini_opcache_interned_strings_buffer: 12
 php__ini_opcache_max_accelerated_files: 7963
 php__ini_opcache_memory_consumption: 128

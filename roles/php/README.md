@@ -82,32 +82,34 @@ php__fpm_service_enabled: true
 
 Variables for `php.ini` directives and their default values, defined and supported by this role.
 
-| Role Variable                             | Default                               | Documentation                                                 |
-|---------------                            |---------                              |---------------                                                |
-| php__ini_date_timezone                    | 'Europe/Zurich'                       | [php.net](https://www.php.net/manual/en/datetime.configuration.php)      |
-| php__ini_default_socket_timeout           | 10                                    | [php.net](https://www.php.net/manual/en/filesystem.configuration.php)    |
-| php__ini_display_errors                   | 'Off'                                 | [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)     |
-| php__ini_display_startup_errors           | 'Off'                                 | [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)     |
-| php__ini_error_reporting                  | 'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT' | [php.net](https://www.php.net/manual/en/errorfunc.configuration.php) |
-| php__ini_max_execution_time               | 30                                    | [php.net](https://www.php.net/manual/en/info.configuration.php)          |
-| php__ini_max_file_uploads                 | 50                                    | [php.net](https://www.php.net/manual/en/ini.core.php)                    |
-| php__ini_max_input_time                   | -1                                    | [php.net](https://www.php.net/manual/en/info.configuration.php)          |
-| php__ini_memory_limit                     | '128M'                                | [php.net](https://www.php.net/manual/en/ini.core.php)                    |
-| php__ini_opcache_blacklist_filename       | '/etc/php-zts.d/opcache*.blacklist'   | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
-| php__ini_opcache_enable                   | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
-| php__ini_opcache_enable_cli               | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
-| php__ini_opcache_huge_code_pages          | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
-| php__ini_opcache_interned_strings_buffer  | 12                                    | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
-| php__ini_opcache_max_accelerated_files    | 7963                                  | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
-| php__ini_opcache_memory_consumption       | 128                                   | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
-| php__ini_opcache_revalidate_freq          | 60                                    | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
-| php__ini_opcache_save_comments            | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
-| php__ini_opcache_validate_timestamps      | 1                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)       |
-| php__ini_post_max_size                    | '16M'                                 | [php.net](https://www.php.net/manual/en/ini.core.php)                    |
-| php__ini_session_sid_length               | 32                                    | [php.net](https://www.php.net/manual/en/session.configuration.php)       |
-| php__ini_session_trans_sid_tags           | 'a=href,area=href,frame=src,input=src,form=fakeentry' | [php.net](https://www.php.net/manual/en/session.configuration.php) |
-| php__ini_smtp                             | 'localhost'                           | [php.net](https://www.php.net/manual/en/mail.configuration.php)          |
-| php__ini_upload_max_filesize              | '20M'                                 | [php.net](https://www.php.net/manual/en/ini.core.php)                    |
+| Role Variable                            | Default                                               | Documentation                                                         |
+| ---------------                          | ---------                                             | ---------------                                                       |
+| php__ini_date_timezone                   | 'Europe/Zurich'                                       | [php.net](https://www.php.net/manual/en/datetime.configuration.php)   |
+| php__ini_default_socket_timeout          | 10                                                    | [php.net](https://www.php.net/manual/en/filesystem.configuration.php) |
+| php__ini_display_errors                  | 'Off'                                                 | [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)  |
+| php__ini_display_startup_errors          | 'Off'                                                 | [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)  |
+| php__ini_error_reporting                 | 'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT'       | [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)  |
+| php__ini_max_execution_time              | 30                                                    | [php.net](https://www.php.net/manual/en/info.configuration.php)       |
+| php__ini_max_file_uploads                | 50                                                    | [php.net](https://www.php.net/manual/en/ini.core.php)                 |
+| php__ini_max_input_time                  | -1                                                    | [php.net](https://www.php.net/manual/en/info.configuration.php)       |
+| php__ini_memory_limit                    | '128M'                                                | [php.net](https://www.php.net/manual/en/ini.core.php)                 |
+| php__ini_opcache_blacklist_filename      | '/etc/php-zts.d/opcache*.blacklist'                   | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
+| php__ini_opcache_enable                  | 1                                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
+| php__ini_opcache_enable_cli              | 1                                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
+| php__ini_opcache_huge_code_pages         | 1                                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
+| php__ini_opcache_interned_strings_buffer | 12                                                    | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
+| php__ini_opcache_max_accelerated_files   | 7963                                                  | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
+| php__ini_opcache_memory_consumption      | 128                                                   | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
+| php__ini_opcache_revalidate_freq         | 60                                                    | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
+| php__ini_opcache_save_comments           | 1                                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
+| php__ini_opcache_validate_timestamps     | 1                                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
+| php__ini_post_max_size                   | '16M'                                                 | [php.net](https://www.php.net/manual/en/ini.core.php)                 |
+| php__ini_session_sid_length              | 32                                                    | [php.net](https://www.php.net/manual/en/session.configuration.php)    |
+| php__ini_session_trans_sid_tags          | 'a=href,area=href,frame=src,input=src,form=fakeentry' | [php.net](https://www.php.net/manual/en/session.configuration.php)    |
+| php__ini_smtp                            | 'localhost'                                           | [php.net](https://www.php.net/manual/en/mail.configuration.php)       |
+| php__ini_upload_max_filesize             | '20M'                                                 | [php.net](https://www.php.net/manual/en/ini.core.php)                 |
+
+Note that setting `php__ini_opcache_huge_code_pages` to 1 might require enabling the SELinux boolean `httpd_execmem`.
 
 
 ## License
