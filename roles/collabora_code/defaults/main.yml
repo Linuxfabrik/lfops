@@ -19,5 +19,15 @@ collabora_code__coolwsd_ssl_settings_ca_file_path: '/etc/loolwsd/ca-chain.cert.p
 collabora_code__coolwsd_ssl_settings_cert_file_path: '/etc/loolwsd/cert.pem'
 collabora_code__coolwsd_ssl_settings_key_file_path: '/etc/loolwsd/key.pem'
 collabora_code__coolwsd_ssl_termination: true
-collabora_code__coolwsd_storage_wopi: []
 collabora_code__service_enabled: true
+
+collabora_code__dependent_coolwsd_storage_wopi: []
+collabora_code__group_coolwsd_storage_wopi: []
+collabora_code__host_coolwsd_storage_wopi: []
+collabora_code__role_coolwsd_storage_wopi: []
+collabora_code__combined_coolwsd_storage_wopi: '{{ collabora_code__role_coolwsd_storage_wopi +
+  collabora_code__group_coolwsd_storage_wopi +
+  collabora_code__host_coolwsd_storage_wopi +
+  collabora_code__dependent_coolwsd_storage_wopi
+  | flatten
+ }}'
