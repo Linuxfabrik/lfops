@@ -26,6 +26,8 @@ icinga2_master__influxdb_retention: '216d'
 icinga2_master__node_role: 'primary'
 icinga2_master__service_enabled: true
 
+# -----------------------------------------------------------------------------
+
 icinga2_master__mariadb_server__dependent_databases:
   - name: '{{ icinga2_master__database_name }}'
     collation: 'utf8_general_ci'
