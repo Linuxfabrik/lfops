@@ -430,6 +430,7 @@ Variables
 * Every argument accepted from outside of the role should be given a default value in ``defaults/main.yml``. This allows a single place for users to look to see what inputs are expected. Avoid giving default values in vars/main.yml as such values are very high in the precedence order and are difficult for users and consumers of a role to override.
 * No need to invent new names, use the key-names from the config file (if possible), for example ``redis__conf_maxmemory``.
 * Avoid embedding large lists or "magic values" directly into the playbook. Such static lists should be placed into the ``vars/main.yml`` file and named appropriately.
+* If you need random but predictable/idempotent values, use the ``inventory_hostname`` as seed. Example for setting the minutes of an hour: ``{{ 59 | random(seed=inventory_hostname) }}``
 * Any secrets (passwords, tokens etc.) should not be provided with default values in the role. The tasks should be implemented in such a way that any secrets required, but not provided, should result in task execution failure. It is important for a secure-by-default implementation to ensure that an environment is not vulnerable due to the production use of default secrets. Deployers must be forced to properly provide their own secret variable values. Example:
 
     .. code-block:: yaml
