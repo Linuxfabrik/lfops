@@ -43,6 +43,7 @@ New features:
 * Role: cloud_init
 * Role: cockpit
 * Role: collabora_code
+* Role: coturn
 * Role: crypto_policy
 * Role: dnf_makecache
 * Role: exoscale_vm

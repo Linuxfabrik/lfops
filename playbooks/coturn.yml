@@ -1,0 +1,17 @@
+- name: 'Install coturn'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_coturn'
+
+  roles:
+
+    - role: 'yum_utils'
+      when:
+        - 'not coturn__skip_yum_utils | default(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not coturn__skip_repo_epel | default(false)'
+
+    - role: 'coturn'

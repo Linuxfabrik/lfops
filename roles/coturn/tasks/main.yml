@@ -1,0 +1,31 @@
+- block:
+
+  - name: 'dnf -y install coturn'
+    package:
+      name: 'coturn'
+      state: 'present'
+
+  - name: 'Deploy /etc/coturn/turnserver.conf'
+    template:
+      src: 'etc/coturn/turnserver.conf.j2'
+      dest: '/etc/coturn/turnserver.conf'
+      owner: 'root'
+      group: 'coturn'
+      mode: 0o0640
+    notify: 'coturn: restart coturn'
+
+  tags:
+    - 'coturn'
+
+
+- block:
+
+  - name: 'systemctl {{ coturn__service_enabled | bool | ternary("enable", "disable") }} --now coturn.service'
+    ansible.builtin.systemd:
+      name: 'coturn.service'
+      enabled: '{{ coturn__service_enabled }}'
+      state: '{{ coturn__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'coturn'
+    - 'coturn:state'

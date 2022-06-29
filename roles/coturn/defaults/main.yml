@@ -1,0 +1,8 @@
+coturn__allowed_peer_ip:
+  - '{{ ansible_facts["default_ipv4"]["address"] }}'
+
+coturn__listening_port: 3478
+coturn__max_port: 65535
+coturn__min_port: 49152
+coturn__service_enabled: true
+coturn__state_nonce: 0
