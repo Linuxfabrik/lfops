@@ -1,7 +1,7 @@
 - block:
 
   - name: 'dnf -y install influxdb'
-    ansible.builtin.dnf:
+    ansible.builtin.package:
       name:
         - 'influxdb'
       state: 'present'
