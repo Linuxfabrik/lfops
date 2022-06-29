@@ -350,7 +350,7 @@ Variables
 * ``./defaults``: Default variables for the role, might be overridden by the user using group_vars or host_vars
 * Naming scheme: ``<role name>__<optional: config file>_<setting name>``, for example ``apache_httpd__server_admin``.
 * Every argument accepted from outside of the role should be given a default value in ``defaults/main.yml``. This allows a single place for users to look to see what inputs are expected. Avoid giving default values in vars/main.yml as such values are very high in the precedence order and are difficult for users and consumers of a role to override.
-* No need to invent new names, use the key-names from the config file (if possible), for example ``redis__maxmemory``.
+* No need to invent new names, use the key-names from the config file (if possible), for example ``redis__conf_maxmemory``.
 * Avoid embedding large lists or "magic values" directly into the playbook. Such static lists should be placed into the ``vars/main.yml`` file and named appropriately.
 * Any secrets (passwords, tokens etc.) should not be provided with default values in the role. The tasks should be implemented in such a way that any secrets required, but not provided, should result in task execution failure. It is important for a secure-by-default implementation to ensure that an environment is not vulnerable due to the production use of default secrets. Deployers must be forced to properly provide their own secret variable values. Example:
 
@@ -363,24 +363,44 @@ Variables
           quiet: true
           fail_msg: Please define bootloader passwords for your hosts ("stig__grub2_password").
 
-* Your role might accept variable injection from another role. It depends on the context on how to implement that. Examples:
 
-    .. code-block:: yaml
+Injections
+----------
 
-        - ansible.builtin.set_fact:
-            apache_httpd__combined_modules: '{{ apache_httpd__role_modules
-              | combine(apache_httpd__role_proxy_modules)
-              | combine(apache_httpd__dependent_modules)
-              | combine(apache_httpd__group_modules)
-              | combine(apache_httpd__host_modules)
-             }}'
+Your role might accept variable injection from another role. It depends on the context on how to implement that. Examples:
 
-        - ansible.builtin.set_fact:
-            apache_httpd__combined_vhosts: '{{ apache_httpd__group_vhosts +
-              apache_httpd__host_vhosts +
-              apache_httpd__role_vhosts +
-              apache_httpd__dependent_vhosts
-            }}'
+.. code-block:: yaml
+
+    # for dictionaries
+    - ansible.builtin.set_fact:
+        apache_httpd__combined_modules: '{{ apache_httpd__role_modules
+          | combine(apache_httpd__role_proxy_modules)
+          | combine(apache_httpd__dependent_modules)
+          | combine(apache_httpd__group_modules)
+          | combine(apache_httpd__host_modules)
+         }}'
+
+    # for lists
+    - ansible.builtin.set_fact:
+        apache_httpd__combined_vhosts: '{{ apache_httpd__group_vhosts +
+          apache_httpd__host_vhosts +
+          apache_httpd__role_vhosts +
+          apache_httpd__dependent_vhosts
+        }}'
+
+    # this is for simple values like strings or numbers:
+    kernel_settings__dependent_transparent_hugepages_defrag: ''
+    kernel_settings__group_transparent_hugepages_defrag: ''
+    kernel_settings__host_transparent_hugepages_defrag: ''
+    kernel_settings__role_transparent_hugepages_defrag: ''
+    kernel_settings__combined_transparent_hugepages_defrag: '{{
+      kernel_settings__host_transparent_hugepages_defrag if kernel_settings__host_transparent_hugepages_defrag else
+      kernel_settings__group_transparent_hugepages_defrag if kernel_settings__group_transparent_hugepages_defrag else
+      kernel_settings__dependent_transparent_hugepages_defrag if kernel_settings__dependent_transparent_hugepages_defrag else
+      kernel_settings__role_transparent_hugepages_defrag if kernel_settings__role_transparent_hugepages_defrag
+    }}'
+
+Why? Let's assume an Ansible playbook with two roles. Role1 (tag1) sets a default value. Role2 (tag2) wants to override the default value. Ansible is not able to do this: Neither with tag-based ``ansible-playbook`` calls nor with a full playbook run, Role2 is able to override the default value of Role1. This is the reason for implementing injections.
 
 
 Ansible Facts / Magic Vars
