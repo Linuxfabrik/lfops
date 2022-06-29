@@ -4,5 +4,5 @@
       - 'compat-openssl10'
     state: 'present'
   tags:
-    - 'mariadb'
-    - 'mariadb:dump'
+    - 'mariadb_server'
+    - 'mariadb_server:dump'

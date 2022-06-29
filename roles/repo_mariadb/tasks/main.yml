@@ -3,7 +3,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'always'
+    - 'repo_mariadb'
 
 
 - name: 'Perform platform/version specific tasks'
@@ -21,7 +21,7 @@
         - '{{ role_path }}/tasks'
   ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
-    - 'always'
+    - 'repo_mariadb'
 
 
 - block:

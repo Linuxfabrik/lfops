@@ -1,12 +1,9 @@
-- name: 'Set platform/version specific variables'
-  ansible.builtin.import_role:
-    name: 'shared'
-    tasks_from: 'platform-variables.yml'
-  tags:
-    - 'always'
-
-
 - block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
 
   - name: 'Make sure SELinux python bindings are installed'
     ansible.builtin.package:

@@ -13,7 +13,7 @@
         - '{{ role_path }}/tasks'
   ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
-    - 'always'
+    - 'icinga2_agent'
 
 
 - block:

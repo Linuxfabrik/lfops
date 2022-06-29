@@ -1,12 +1,9 @@
-- name: 'Set platform/version specific variables'
-  ansible.builtin.import_role:
-    name: 'shared'
-    tasks_from: 'platform-variables.yml'
-  tags:
-    - 'always'
-
-
 - block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
 
   - name: 'dnf config-manager --set-enabled powertools'
     ansible.builtin.command: 'dnf config-manager --set-enabled powertools'

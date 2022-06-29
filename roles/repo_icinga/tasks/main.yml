@@ -3,7 +3,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'always'
+    - 'repo_icinga'
 
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
@@ -20,4 +20,4 @@
       paths:
         - '{{ role_path }}/tasks'
   tags:
-    - 'always'
+    - 'repo_icinga'

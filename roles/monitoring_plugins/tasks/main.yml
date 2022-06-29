@@ -1,14 +1,19 @@
-- name: 'Set platform/version specific variables'
-  ansible.builtin.import_role:
-    name: 'shared'
-    tasks_from: 'platform-variables.yml'
-  tags:
-    - 'always'
+- block:
 
-- name: 'Store the github release version'
-  ansible.builtin.set_fact:
-    monitoring_plugins__github_version: '{{ monitoring_plugins__repo_version }}'
-  when: 'monitoring_plugins__repo_version != "latest"'
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  - name: 'Store the github release version'
+    ansible.builtin.set_fact:
+      monitoring_plugins__github_version: '{{ monitoring_plugins__repo_version }}'
+    when: 'monitoring_plugins__repo_version != "latest"'
+
+  tags:
+    - 'monitoring_plugins'
+    - 'monitoring_plugins:custom'
+    - 'monitoring_plugins:nuitka_compile'
 
 
 - block:
@@ -118,7 +123,8 @@
         - '{{ role_path }}/tasks'
   ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
-    - 'always'
+    - 'monitoring_plugins'
+    - 'monitoring_plugins:nuitka_compile'
 
 
 - block:

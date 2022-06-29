@@ -267,7 +267,7 @@ Now, if you run Ansible against a *CentOS 7.9* host, for example, only these tas
 1. ``tasks/CentOS7.yml``
 2. ``tasks/main.yml``
 
-Include the OS-specific tasks in the ``tasks/main.yml`` like this:
+Include the OS-specific tasks in the ``tasks/main.yml`` like this, and set the tags appropriately (should contain all tags of the possibly included task files):
 
 .. code-block:: yaml
 
@@ -285,7 +285,82 @@ Include the OS-specific tasks in the ``tasks/main.yml`` like this:
           paths:
             - '{{ role_path }}/tasks'
       tags:
-        - 'always'
+        - 'role'
+        - 'role:tag1' # for example, this tag could only be present in RedHat.yml
+
+Make sure to set the tags directly on the `include_tasks` task, and not on a surrounding block. Setting it on a block causes the tag to be inherited to all tasks in that block, therefore also to included tasks. See the following example for details:
+
+.. code-block:: yaml
+
+    # RedHat.yml
+    - block:
+
+      - name: 'task 1'
+        ansible.builtin.debug:
+          msg: 'task 1 {{ test__var1 }}'
+
+      tags:
+        - 'test'
+        - 'test:one'
+
+
+    - block:
+
+      - name: 'task 2'
+        ansible.builtin.debug:
+          msg: 'task 2 {{ test__var2 }}'
+
+      tags:
+        - 'test'
+
+
+    # main.yml
+    # THIS WORKS:
+    - name: 'Perform platform/version specific tasks'
+      ansible.builtin.include_tasks: 'RedHat.yml'
+      tags:
+        - 'test'
+        - 'test:one'
+
+    # without tags, whole playbook:
+    # task 1 one
+    # task 2 two
+
+    # --tags test
+    # task 1 one
+    # task 2 two
+
+    # --tags test:one
+    # task 1 one
+
+    # --tags other
+    # no debug output, and include_tasks is not running
+
+
+    # THIS DOES NOT WORK:
+    - block:
+
+      - name: 'Perform platform/version specific tasks'
+        ansible.builtin.include_tasks: 'RedHat.yml'
+
+      tags:
+        - 'test'
+        - 'test:one'
+
+    # without tags, whole playbook:
+    # task 1 one
+    # task 2 two
+
+    # --tags test
+    # task 1 one
+    # task 2 two
+
+    # --tags test:one
+    # task 1 one
+    # task 2 two # we don't want this task to run
+
+    # --tags other
+    # no debug output, and include_tasks is not running
 
 
 OS-specific Variables
@@ -302,7 +377,7 @@ Variables with the same name are overridden by the files in ``vars/`` in order f
 
 As always be aware of the fact that dicts and lists are completely replaced, not merged.
 
-Include the ``platform-variables.yml`` in the ``tasks/main.yml`` like this:
+Include the ``platform-variables.yml`` in the ``tasks/main.yml`` like this, and set the tags appropriately (should contain all tags tasks that could require the variables):
 
 .. code-block:: yaml
 
@@ -311,7 +386,10 @@ Include the ``platform-variables.yml`` in the ``tasks/main.yml`` like this:
         name: 'shared'
         tasks_from: 'platform-variables.yml'
       tags:
-        - 'always'
+        - 'role'
+        - 'role:tag1' # for example, tag for a task which requires a platform specific varialbe
+
+For this task, it does not matter if the tags are set directly on the task itself or on a surrounding block.
 
 
 OS-specific Filenames
