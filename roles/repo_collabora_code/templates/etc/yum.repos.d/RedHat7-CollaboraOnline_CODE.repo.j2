@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022062901
+
+[CollaboraOnline_CODE]
+name = Collabora Office YUM repo
+{% if repo_collabora_code__mirror_url is defined and repo_collabora_code__mirror_url|length %}
+baseurl={{ repo_collabora_code__mirror_url }}/CollaboraOnline/CODE-centos7
+{% else %}
+baseurl = https://www.collaboraoffice.com/repos/CollaboraOnline/CODE-centos7
+{% endif %}
+enabled = 1
+gpgcheck = 0

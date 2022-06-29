@@ -77,6 +77,7 @@ New features:
 * Role: php
 * Role: redis
 * Role: repo_baseos
+* Role: repo_collabora_code
 * Role: repo_icinga
 * Role: repo_influxdb
 * Role: repo_mariadb

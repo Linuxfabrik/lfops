@@ -1,0 +1,8 @@
+- name: 'Deploys the Collabora CODE Repository'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_repo_collabora_code'
+
+  roles:
+
+    - role: 'repo_collabora_code'
