@@ -18,7 +18,7 @@
 
 - block:
 
-  - name: 'Copy notify-and-schedule script to /usr/local/bin'
+  - name: 'Deploy /usr/local/bin/notify-and-schedule'
     ansible.builtin.template:
       src: 'usr/local/bin/notify-and-schedule.j2'
       dest: '/usr/local/bin/notify-and-schedule'
@@ -26,7 +26,7 @@
       group: 'root'
       mode: 0o744
 
-  - name: 'Copy update-and-reboot script to /usr/local/bin'
+  - name: 'Deploy /usr/local/bin/update-and-reboot'
     ansible.builtin.template:
       src: 'usr/local/bin/update-and-reboot.j2'
       dest: '/usr/local/bin/update-and-reboot'
@@ -34,7 +34,7 @@
       group: 'root'
       mode: 0o744
 
-  - name: 'Copt notify-and-schedule.service to /etc/systemd/system/'
+  - name: 'Deploy /etc/systemd/system/notify-and-schedule.service'
     ansible.builtin.template:
       src: 'etc/systemd/system/notify-and-schedule.service.j2'
       dest: '/etc/systemd/system/notify-and-schedule.service'
@@ -42,7 +42,7 @@
       group: 'root'
       mode: 0o644
 
-  - name: 'Copy notify-and-schedule.timer to /etc/systemd/system/'
+  - name: 'Deploy /etc/systemd/system/notify-and-schedule.timer'
     ansible.builtin.template:
       src: 'etc/systemd/system/notify-and-schedule.timer.j2'
       dest: '/etc/systemd/system/notify-and-schedule.timer'
