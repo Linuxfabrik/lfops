@@ -1,15 +1,12 @@
 - name: 'Install and configure MariaDB server'
   collections: ['linuxfabrik.lfops']
-  become: true
   hosts:
     - 'lfops_mariadb_server'
 
   roles:
 
     - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings_sysctl:
-        - name: 'vm.swappiness'
-          value: 10
+      kernel_settings__dependent_sysctl: '{{ mariadb_server__kernel_settings__dependent_sysctl | d([]) }}'
       when:
         - 'not mariadb_server__skip_kernel_settings | d(false)'
 

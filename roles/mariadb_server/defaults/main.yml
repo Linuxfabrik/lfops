@@ -6,28 +6,6 @@ mariadb_server__admin_host:
   - '::1'
   - 'localhost'
 
-mariadb_server__dependent_databases: []
-mariadb_server__group_databases: []
-mariadb_server__host_databases: []
-mariadb_server__role_databases: []
-mariadb_server__combined_databases: '{{ mariadb_server__role_databases +
-  mariadb_server__group_databases +
-  mariadb_server__host_databases +
-  mariadb_server__dependent_databases
-  | flatten
- }}'
-
-mariadb_server__dependent_users: []
-mariadb_server__group_users: []
-mariadb_server__host_users: []
-mariadb_server__role_users: []
-mariadb_server__combined_users: '{{ mariadb_server__role_users +
-  mariadb_server__group_users +
-  mariadb_server__host_users +
-  mariadb_server__dependent_users
-  | flatten
- }}'
-
 mariadb_server__dump_directory: '/backup/mariadb-dump'
 mariadb_server__dump_mydumper_package: 'mydumper'
 mariadb_server__dump_threads: 4
@@ -67,3 +45,31 @@ mariadb_server__cnf_query_cache_size: 0
 mariadb_server__cnf_query_cache_type: 'OFF'
 mariadb_server__cnf_skip_name_resolve: 'ON'
 mariadb_server__cnf_tmp_table_size: '16M'
+
+# -----------------------------------------------------------------------------
+
+mariadb_server__dependent_databases: []
+mariadb_server__group_databases: []
+mariadb_server__host_databases: []
+mariadb_server__role_databases: []
+mariadb_server__combined_databases: '{{ mariadb_server__role_databases +
+  mariadb_server__group_databases +
+  mariadb_server__host_databases +
+  mariadb_server__dependent_databases
+  | flatten
+ }}'
+
+mariadb_server__dependent_users: []
+mariadb_server__group_users: []
+mariadb_server__host_users: []
+mariadb_server__role_users: []
+mariadb_server__combined_users: '{{ mariadb_server__role_users +
+  mariadb_server__group_users +
+  mariadb_server__host_users +
+  mariadb_server__dependent_users
+  | flatten
+ }}'
+
+mariadb_server__kernel_settings__dependent_sysctl:
+  - name: 'vm.swappiness'
+    value: 10
