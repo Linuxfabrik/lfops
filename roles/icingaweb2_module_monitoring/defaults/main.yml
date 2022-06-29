@@ -3,6 +3,8 @@ icingaweb2_module_monitoring__api_port: 5665
 icingaweb2_module_monitoring__api_user_login: '{{ icingaweb2__api_user_login }}'
 icingaweb2_module_monitoring__backend_database_name: '{{ icinga2_master__database_name }}'
 
+# -----------------------------------------------------------------------------
+
 icingaweb2_module_monitoring__icingaweb2__dependent_resources:
   - name: '{{ icingaweb2_module_monitoring__backend_database_name }}'
     type: 'db'
