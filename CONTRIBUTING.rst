@@ -4,6 +4,7 @@ Linuxfabrik's Ansible Development Guidelines
 Rules of Thumb
 --------------
 
+* Each playbook must contain all dependencies to run flawlessly against a newly installed machine.
 * To understand/use a role, reading the readme and the defaults/main.yml must be enough.
 * Idempotency: Roles should not perform changes when applied a second time to the same system with the same parameters, and it should not report that changes have been done if they have not been done. More importantly, it should not damage an existing installation when applied a second time (even without tags). Example:
 
@@ -24,6 +25,7 @@ Rules of Thumb
 * The role should support the installation and configuration of multiple major versions of the software. For example, PHP 7.1, 7.2, 7.3 etc. should all be supported by a single role. Upgrades are either done manually or using Ansible, depending on the software and the implementation effort.
 * Do not use role dependencies via meta/main.yml``. Dependencies make it harder to maintain a role, especially if it has many complex dependencies.
 * Document all changes in the `CHANGELOG.md <https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md>`_ file.
+* Do not support and remove software versions that are EOL.
 
 
 Pre-Commit
