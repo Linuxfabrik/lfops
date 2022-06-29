@@ -1,0 +1,4 @@
+- name: 'collabora_code: restart coolwsd'
+  ansible.builtin.service:
+    name: 'coolwsd'
+    state: 'restarted'

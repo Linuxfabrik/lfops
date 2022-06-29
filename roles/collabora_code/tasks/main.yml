@@ -1,0 +1,60 @@
+- block:
+
+  - name: 'install coolwsd and dependent packages'
+    ansible.builtin.package:
+      name:
+        - 'coolwsd'
+        - 'CODE-brand'
+        - 'hunspell'
+        - 'hunspell-*'
+        - 'mythes'
+        - 'mythes-*'
+        - 'collaboraoffice*-dict-*'
+        - 'collaboraofficebasis*-*'
+      state: 'present'
+
+  - name: 'touch /var/log/coolwsd.log & chmod 0660 /var/log/coolwsd.log'
+    ansible.builtin.file:
+      path: '/var/log/coolwsd.log'
+      state: 'touch'
+      owner: 'cool'
+      group: 'cool'
+      mode: 0o640
+
+  - name: 'deploy /etc/coolwsd/coolwsd.xml'
+    ansible.builtin.template:
+      src: 'etc/coolwsd/coolwsd.xml.j2'
+      dest: '/etc/coolwsd/coolwsd.xml'
+      owner: 'cool'
+      group: 'cool'
+      mode: 0o640
+    notify: 'collabora_code: restart coolwsd'
+
+  - name: 'Deploy /etc/logrotate.d/coolwsd'
+    ansible.builtin.template:
+      src: 'etc/logrotate.d/coolwsd.j2'
+      dest: '/etc/logrotate.d/coolwsd'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'chown -R cool:cool /etc/coolwsd'
+    ansible.builtin.command: 'chown -R cool:cool /etc/coolwsd'
+    args:
+      warn: false
+
+  tags:
+    - 'collabora_code'
+
+
+- block:
+
+  - name: 'systemctl {{ collabora_code__service_enabled | bool | ternary("enable", "disable") }} --now coolwsd.service'
+    ansible.builtin.systemd:
+      name: 'coolwsd.service'
+      enabled: '{{ collabora_code__service_enabled }}'
+      state: '{{ collabora_code__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'collabora_code'
+    - 'collabora_code:state'

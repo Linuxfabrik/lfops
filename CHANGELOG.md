@@ -42,6 +42,7 @@ New features:
 * Role: chrony
 * Role: cloud_init
 * Role: cockpit
+* Role: collabora_code
 * Role: crypto_policy
 * Role: dnf_makecache
 * Role: exoscale_vm
