@@ -1,4 +1,6 @@
-python__version: 3
+python__version: 3.9
+
+# -----------------------------------------------------------------------------
 
 python__dependent_modules: []
 python__group_modules: []
