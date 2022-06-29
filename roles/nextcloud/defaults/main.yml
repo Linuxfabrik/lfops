@@ -1,16 +1,96 @@
+nextcloud__appconfig:
+  - { key: 'core',              value: 'shareapi_default_expire_date --value=yes' }
+  - { key: 'core',              value: 'shareapi_enforce_expire_date --value=no' }
+  - { key: 'core',              value: 'shareapi_expire_after_n_days --value=90' }
+  - { key: 'dav',               value: 'buildCalendarSearchIndex --value=yes' }
+  - { key: 'password_policy',   value: 'enforceHaveIBeenPwned --value=1' }
+  - { key: 'password_policy',   value: 'minLength --value=12' }
+  - { key: 'privacy',           value: 'readableLocation --value="ch"' }
+  - { key: 'theming',           value: 'imprintUrl --value=https://www.linuxfabrik.ch/ueber-uns/agb/' }
+  - { key: 'theming',           value: 'name --value="Nextcloud for Teams"' }
+  - { key: 'theming',           value: 'privacyUrl --value=https://www.linuxfabrik.ch/ueber-uns/agb/datenschutzerklaerung/' }
+  - { key: 'theming',           value: 'slogan --value="powered by Linuxfabrik GmbH, Zürich"' }
+  - { key: 'theming',           value: 'url --value=https:\/\/ws.linuxfabrik.ch' }
+
+nextcloud__datadir: '/data'
+
+nextcloud__database: 'nextcloud'
+
+nextcloud__mariadb_login:
+  username: 'mariadb-admin'
+  password: 'password'
+
+nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
+nextcloud__on_calendar_jobs: '*:0/5'   # Background jobs: every 5 minutes
+
+# if running behind a reverse proxy, otherwise unset this
+# the ip addresses are those of the reverse proxy
+nextcloud__proxyconfig: []
+# nextcloud__proxyconfig:
+#   - { key: 'overwrite.cli.url', value: '--value=http://localhost' }
+#   - { key: 'overwritecondaddr', value: '--value=^10\\.117\\.17\\.7$' }
+#   - { key: 'overwritehost',     value: '--value=cloud.linuxfabrik.io' }
+#   - { key: 'overwriteprotocol', value: '--value=https' }
+#   - { key: 'overwritewebroot',  value: '--value=/' }
+#   - { key: 'trusted_proxies',   value: '0 --value=10.117.17.7' }
+
+# order matters here, so do not sort alphabetically
+nextcloud__sysconfig:
+  - { key: 'check_for_working_wellknown_setup',  value: '--value=false --type=boolean' }
+  - { key: 'datadirectory',                      value: '--value={{ nextcloud__datadir }}' }
+  - { key: 'default_language',                   value: '--value=en' }
+  - { key: 'default_phone_region',               value: '--value=CH' }
+  - { key: 'log_rotate_size',                    value: '--value=10485760 --type=integer' }
+  - { key: 'loglevel',                           value: '--value=2 --type=integer' }
+  - { key: 'logtimezone',                        value: '--value=Europe/Zurich' }
+  - { key: 'trusted_domains',                    value: "1 --value={{ ansible_facts['default_ipv4']['address'] }}" }
+  - { key: 'trusted_domains',                    value: "2 --value={{ nextcloud__fqdn }}" }
+  - { key: 'updatechecker',                      value: '--value=false --type=boolean' }
+  - { key: 'redis',                              value: 'dbindex --value=0 --type=integer' }
+  - { key: 'redis',                              value: 'host --value=/run/redis/redis.sock' }
+  - { key: 'redis',                              value: 'port --value=0 --type=integer' }
+  - { key: 'redis',                              value: 'timeout --value=0.5 --type=integer' }
+  - { key: 'memcache.local',                     value: '--value=\\OC\\Memcache\\Redis' }
+  - { key: 'memcache.distributed',               value: '--value=\\OC\\Memcache\\Redis' }
+  - { key: 'memcache.locking',                   value: '--value=\\OC\\Memcache\\Redis' }
+  - { key: 'filelocking.enabled',                value: '--value=true --type=boolean' }
+
+nextcloud__timer_jobs_enabled: true
+nextcloud__timer_app_update_enabled: true
+
+nextcloud__userconfig:
+  - { key: '{{ nextcloud__admin_login.user }}',   value: 'core lang en' }
+  - { key: '{{ nextcloud__admin_login.user }}',   value: 'core locale de_CH' }
+  - { key: '{{ nextcloud__admin_login.user }}',   value: 'core timezone Europe/Zurich' }
+  - { key: '{{ nextcloud__admin_login.user }}',   value: 'files quota "25 MB"' }
+  - { key: '{{ nextcloud__admin_login.user }}',   value: 'firstrunwizard show 0' }
+  - { key: '{{ nextcloud__admin_login.user }}',   value: 'settings email {{ nextcloud__admin_login.email }}' }
+
+# 'latest-XX' or 'nextcloud-XX.X.XX'
+nextcloud__version: 'latest-24'
+
+# -----------------------------------------------------------------------------
+
 nextcloud__apache_httpd__dependent_vhosts:
   - by_role: 'nextcloud'
     enabled: true
-    filename: '{{ nextcloud__fqdn }}'
+    filename: 'nextcloud'
     state: 'present'
     type: 'app'
 
+    allowed_file_extensions:
+      - '.*'
+    allowed_http_methods:
+      - 'DELETE'
+      - 'GET'
+      - 'OPTIONS'
+      - 'POST'
+      - 'PROPFIND'
+      - 'PUT'
     authz_file_extensions: |-
         Require all granted
-
     authz_document_root: |-
         Require all granted
-
     virtualhost_port: 80
 
     conf_custom_log_format: 'combined'
@@ -19,18 +99,50 @@ nextcloud__apache_httpd__dependent_vhosts:
     conf_server_admin: 'webmaster@linuxfabrik.ch'
     conf_server_name: '{{ nextcloud__fqdn }}'
 
+    raw: !unsafe |-
+      <IfModule mod_dav.c>
+          Dav off
+      </IfModule>
+
+nextcloud__kernel_settings__dependent_sysctl:
+  # for MariaDB
+  - name: 'vm.swappiness'
+    value: 10
+  # for Redis: WARNING overcommit_memory is set to 0! Background save may fail under low memory
+  # condition. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then
+  # reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+  - name: 'vm.overcommit_memory'
+    value: 1
+  # for Redis: WARNING: The TCP backlog setting of 511 cannot be enforced because
+  # /proc/sys/net/core/somaxconn is set to the lower value of 128.
+  - name: 'net.core.somaxconn'
+    value: 1024
+
+nextcloud__kernel_settings__dependent_transparent_hugepages: 'madvise'
+
 nextcloud__php__dependent_modules:
+  - 'php-bcmath'
   - 'php-gd'
+  - 'php-gmp'
+  - 'php-imap'
   - 'php-imagick'
   - 'php-intl'
   - 'php-json'
+  - 'php-ldap'
   - 'php-mbstring'
+  - 'php-memcached'
   - 'php-mysqlnd'
   - 'php-opcache'
   - 'php-pecl-apcu'
+  - 'php-process'   # posix module for occ
   - 'php-redis'
   - 'php-smbclient'
   - 'php-zip'
 
-# 'latest-XX' or 'nextcloud-XX.X.XX'
-nextcloud__version: 'latest-24'
+nextcloud__php__ini_memory_limit: '512M'
+
+nextcloud__python__dependent_modules:
+  - 'python3-policycoreutils'
+
+# Apache needs access to Redis' socket file
+nextcloud__redis__dependent_conf_unixsocketperm: 770

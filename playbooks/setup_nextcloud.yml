@@ -1,5 +1,4 @@
 - name: 'The Linuxfabrik Nextcloud setup'
-  become: true
   hosts:
     - 'lfops_setup_nextcloud'
 
@@ -7,9 +6,8 @@
 
       # === Prepare the system
     - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings_sysctl:
-        - name: 'vm.swappiness'
-          value: 10
+      kernel_settings__dependent_sysctl: '{{ nextcloud__kernel_settings__dependent_sysctl | d([]) }}'
+      kernel_settings__dependent_transparent_hugepages: '{{ nextcloud__kernel_settings__dependent_transparent_hugepages | d("madivse") }}'
       when:
         - 'not setup_nextcloud__skip_kernel_settings | d(false)'
 
@@ -18,11 +16,15 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_nextcloud__skip_yum_utils | d(false)'
 
+    - role: 'linuxfabrik.lfops.python'
+      python__dependent_modules: '{{ nextcloud__python__dependent_modules | d([]) }}'
+      when:
+        - 'not setup_nextcloud__skip_python | d(false)'
+
 
       # ====Apache Webserver
     - role: 'linuxfabrik.lfops.apache_httpd'
-      apache_httpd__dependent_vhosts:
-        - '{{ nextcloud__apache_httpd__dependent_vhosts | d([]) }}'
+      apache_httpd__dependent_vhosts: '{{ nextcloud__apache_httpd__dependent_vhosts | d([]) }}'
       when:
         - 'not setup_nextcloud__skip_apache_httpd | d(false)'
 
@@ -35,14 +37,13 @@
         - 'not setup_nextcloud__skip_repo_remi | d(false)'
 
     - role: 'linuxfabrik.lfops.php'
-      php__dependent_modules:
-        - '{{ nextcloud__php__dependent_modules }}'
+      php__dependent_modules: '{{ nextcloud__php__dependent_modules }}'
+      php__ini_memory_limit: '{{ nextcloud__php__ini_memory_limit }}'
       when:
         - 'not setup_nextcloud__skip_php | d(false)'
 
 
       # === MariaDB
-      # Attention: Using a fixed LTS version for Nextcloud.
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
@@ -51,48 +52,35 @@
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
+        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'   # currently doesn't work for fedora
         - 'not setup_nextcloud__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
+      # Attention: Using a fixed LTS version for Nextcloud.
       repo_mariadb__version: '10.6'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
 
-    - role: 'linuxfabrik.lfops.python'
-      python__dependent_modules: '{{ mariadb_server__python__dependent_modules | d([]) }}'
-      when:
-        - 'not setup_nextcloud__skip_python | d(false)'
-
     - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__version: '10.6'
-      # mariadb_server__dependent_databases:
-      #   - '{{ nextcloud__mariadb_server__dependent_databases }}'
-      # mariadb_server__dependent_users:
-      #   - '{{ nextcloud__mariadb_server__dependent_users }}'
       when:
         - 'not setup_nextcloud__skip_mariadb_server | d(false)'
 
 
-    # === Nextcloud Application
+      # === Redis
+    - role: 'linuxfabrik.lfops.redis'
+      redis__dependent_conf_unixsocketperm: '{{ nextcloud__redis__dependent_conf_unixsocketperm | d(770) }}'
+      when:
+        - 'not setup_nextcloud__skip_redis | d(false)'
+
+
+      # === Nextcloud Application
     - role: 'linuxfabrik.lfops.nextcloud'
-
-
-
-
-
-
-
-
-
-
-      # === Redis Fact Cache
-#     - role: 'linuxfabrik.lfops.redis'
-#       when:
-#         - 'not setup_nextcloud__skip_redis | d(false)'
-
+      nextcloud__mariadb_login:
+        username: '{{ mariadb_server__admin_login.username }}'
+        password: '{{ mariadb_server__admin_login.password }}'
 
 #     - role: 'linuxfabrik.lfops.collabora_code'
 #       when:
@@ -103,8 +91,6 @@
 #         - 'not setup_nextcloud__skip_fail2ban | d(false)'
 
 #     - role: 'linuxfabrik.lfops.nextcloud'
-
-
 
 #     - role: 'linuxfabrik.lfops.repo_collabora_code'
 #       when:

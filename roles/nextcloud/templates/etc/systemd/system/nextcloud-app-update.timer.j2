@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022032901
+
+[Unit]
+Description=nextcloud app update timer
+
+[Timer]
+OnCalendar={{ nextcloud__on_calendar_app_update }}
+Unit=nextcloud-jobs.service
+
+[Install]
+WantedBy=timers.target

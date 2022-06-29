@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2022062901
+
+[Unit]
+Description=nextcloud background jobs service
+
+[Service]
+ExecStart=/usr/bin/php -f /var/www/html/nextcloud/cron.php
+Type=oneshot
+User=apache

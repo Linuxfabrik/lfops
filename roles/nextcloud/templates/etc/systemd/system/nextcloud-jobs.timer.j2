@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022032901
+
+[Unit]
+Description=nextcloud background jobs timer
+
+[Timer]
+OnCalendar={{ nextcloud__on_calendar_jobs }}
+Unit=nextcloud-jobs.service
+
+[Install]
+WantedBy=timers.target

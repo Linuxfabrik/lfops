@@ -1,0 +1,7 @@
+# needed for semanage tasks
+- name: 'Install policycoreutils-python-utils'
+  ansible.builtin.package:
+    name: 'policycoreutils-python-utils'
+    state: 'present'
+  tags:
+    - 'nextcloud'

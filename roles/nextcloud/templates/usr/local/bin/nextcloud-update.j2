@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# 2022062901
+# This file is managed by Ansible - do not edit
+
+
+# TODO
+# echo 'set Icinga downtime'
+# comment='Running Nextcloud update'
+# START_TIME=$(date +%s)
+# END_TIME=$(( $START_TIME + 1800 ))
+# DATA="{ \"type\": \"Host\", \"filter\": \"match(\\\"{{ ansible_facts['fqdn'] }}\\\", host.name)\", \"start_time\": \"$START_TIME\", \"end_time\": \"$END_TIME\", \"author\": \"{{ ansible_facts['fqdn'] }}\", \"comment\": \"$comment\" , \"all_services\": true }"
+# curl --connect-timeout 5 --insecure --silent --user {* icinga2_api_user *}:{* icinga2_api_password *} --header 'Accept: application/json' --request POST 'https://{* icinga2_master *}:5665/v1/actions/schedule-downtime' --data "$DATA" 1> /dev/null
+# sleep 5s
+
+
+# Update Nextcloud
+sudo -u apache php /var/www/html/nextcloud/occ user:list > /tmp/nextcloud-user-list-before-update
+sudo -u apache php /var/www/html/nextcloud/occ config:list > /tmp/nextcloud-config-list-before-update
+sudo -u apache php /var/www/html/nextcloud/occ app:list > /tmp/nextcloud-app-list-before-update
+
+cd /var/www/html/nextcloud/updater/
+sudo -u apache php updater.phar -n
+
+cd ..
+sudo -u apache ./occ upgrade
+sudo -u apache ./occ db:add-missing-indices
+sudo -u apache ./occ db:add-missing-columns
+sudo -u apache ./occ db:convert-filecache-bigint --no-interaction
+
+chown -R apache:apache /var/www/html/nextcloud
+restorecon -Fvr /var/www/html/nextcloud
+
+sudo -u apache php /var/www/html/nextcloud/occ user:list > /tmp/nextcloud-user-list-after-update
+sudo -u apache php /var/www/html/nextcloud/occ config:list > /tmp/nextcloud-config-list-after-update
+sudo -u apache php /var/www/html/nextcloud/occ app:list > /tmp/nextcloud-app-list-after-update
+
+echo ' '
+echo ' '
+echo ' '
+echo 'Diff after update'
+echo '-----------------'
+echo ' '
+echo 'diff /tmp/nextcloud-user-list-before-update /tmp/nextcloud-user-list-after-update'
+diff /tmp/nextcloud-user-list-before-update /tmp/nextcloud-user-list-after-update
+echo ' '
+echo 'diff /tmp/nextcloud-config-list-before-update /tmp/nextcloud-config-list-after-update'
+diff /tmp/nextcloud-config-list-before-update /tmp/nextcloud-config-list-after-update
+echo ' '
+echo 'diff /tmp/nextcloud-app-list-before-update /tmp/nextcloud-app-list-after-update'
+diff /tmp/nextcloud-app-list-before-update /tmp/nextcloud-app-list-after-update
+
+systemctl restart php-fpm.service
+
+
+# echo 'remove Icinga downtime'
+# TODO
