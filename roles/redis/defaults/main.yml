@@ -9,7 +9,17 @@ redis__conf_protected_mode: 'yes'
 redis__conf_replica_serve_stale_data: 'yes'
 redis__conf_supervised: 'auto'
 redis__conf_unixsocket: '/run/redis/redis.sock'
-redis__conf_unixsocketperm: '700'
+
+redis__dependent_conf_unixsocketperm: ''
+redis__group_conf_unixsocketperm: ''
+redis__host_conf_unixsocketperm: ''
+redis__role_conf_unixsocketperm: 700
+redis__combined_conf_unixsocketperm: '{{
+  redis__host_conf_unixsocketperm if redis__host_conf_unixsocketperm else
+  redis__group_conf_unixsocketperm if redis__group_conf_unixsocketperm else
+  redis__dependent_conf_unixsocketperm if redis__dependent_conf_unixsocketperm else
+  redis__role_conf_unixsocketperm if redis__role_conf_unixsocketperm
+}}'
 
 redis__installed_version: 6   # on RHEL 8+: choose between 5 or 6
 

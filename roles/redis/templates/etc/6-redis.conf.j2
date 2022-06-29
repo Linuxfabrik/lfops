@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022062701
+# 2022062901
 
 # Redis v6 configuration file.
 #
@@ -109,7 +109,7 @@ tcp-backlog 511
 # on a unix socket when not specified.
 #
 unixsocket {{ redis__conf_unixsocket | d('/tmp/redis.sock') }}
-unixsocketperm {{ redis__conf_unixsocketperm | d('700') }}
+unixsocketperm {{ redis__combined_conf_unixsocketperm | d(700) }}
 
 # Close the connection after a client is idle for N seconds (0 to disable)
 timeout 0
