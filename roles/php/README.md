@@ -92,7 +92,7 @@ Variables for `php.ini` directives and their default values, defined and support
 | php__ini_max_execution_time              | 30                                                    | [php.net](https://www.php.net/manual/en/info.configuration.php)       |
 | php__ini_max_file_uploads                | 50                                                    | [php.net](https://www.php.net/manual/en/ini.core.php)                 |
 | php__ini_max_input_time                  | -1                                                    | [php.net](https://www.php.net/manual/en/info.configuration.php)       |
-| php__ini_memory_limit                    | '128M'                                                | [php.net](https://www.php.net/manual/en/ini.core.php)                 |
+| php__ini_role_memory_limit               | '128M'                                                | [php.net](https://www.php.net/manual/en/ini.core.php)                 |
 | php__ini_opcache_blacklist_filename      | '/etc/php-zts.d/opcache*.blacklist'                   | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
 | php__ini_opcache_enable                  | 1                                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |
 | php__ini_opcache_enable_cli              | 1                                                     | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    |

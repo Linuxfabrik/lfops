@@ -21,7 +21,18 @@ php__ini_error_reporting: 'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT'
 php__ini_max_execution_time: 30
 php__ini_max_file_uploads: 50
 php__ini_max_input_time: -1
-php__ini_memory_limit: '128M'
+
+php__dependent_ini_memory_limit: ''
+php__group_ini_memory_limit: ''
+php__host_ini_memory_limit: ''
+php__role_ini_memory_limit: '128M'
+php__combined_ini_memory_limit: '{{
+  php__host_ini_memory_limit if php__host_ini_memory_limit else
+  php__group_ini_memory_limit if php__group_ini_memory_limit else
+  php__dependent_ini_memory_limit if php__dependent_ini_memory_limit else
+  php__role_ini_memory_limit if php__role_ini_memory_limit
+}}'
+
 php__ini_opcache_blacklist_filename: '/etc/php-zts.d/opcache*.blacklist'
 php__ini_opcache_enable: 1
 php__ini_opcache_enable_cli: 1
