@@ -1,3 +1,6 @@
+# yamllint disable rule:braces
+# yamllint disable rule:commas
+
 nextcloud__appconfig:
   - { key: 'core',              value: 'shareapi_default_expire_date --value=yes' }
   - { key: 'core',              value: 'shareapi_enforce_expire_date --value=no' }
