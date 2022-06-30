@@ -16,9 +16,7 @@ nextcloud__datadir: '/data'
 
 nextcloud__database: 'nextcloud'
 
-nextcloud__mariadb_login:
-  username: 'mariadb-admin'
-  password: 'password'
+nextcloud__mariadb_login: '{{ mariadb_server__admin_login }}'
 
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'   # Background jobs: every 5 minutes
