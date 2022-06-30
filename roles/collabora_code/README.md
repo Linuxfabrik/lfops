@@ -152,7 +152,9 @@ collabora_code__coolwsd_ssl_settings_key_file_path: '/etc/loolwsd/key.pem'
 ```
 
 
-#### collabora_code__coolwsd_storage_wopi
+#### collabora_code__host_coolwsd_storage_wopi / collabora_code__group_coolwsd_storage_wopi
+
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
 List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud.
 
