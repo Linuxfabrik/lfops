@@ -1,6 +1,6 @@
 # Ansible Role redis
 
-This role installs and configures [Redis](https://redis.io/). Note that this role configures Systemd with unit file overrides for Redis.
+This role installs and configures [Redis](https://redis.io/), per default listening on TCP 127.0.0.1:6379. Note that this role configures Systemd with unit file overrides for Redis.
 
 This role is only compatible with Redis versions
 
@@ -53,18 +53,18 @@ Variables for `redis.conf` directives and their default values, defined and supp
 | Role Variable                             | Default                               | Documentation                                                         |
 |---------------                            |---------                              |---------------                                                        |
 | redis__conf_auto_aof_rewrite_min_size     | '64mb'                                | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
+| redis__conf_bind                          | '127.0.0.1'                           | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 | redis__conf_daemonize                     | 'no'                                  | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 | redis__conf_databases                     | 16                                    | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 | redis__conf_loglevel                      | 'notice'                              | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 | redis__conf_maxmemory                     | '50mb'                                | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 | redis__conf_maxmemory_policy              | 'noeviction'                          | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
-| redis__conf_port                          | 0                                     | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
+| redis__conf_port                          | 6379                                  | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 | redis__conf_protected_mode                | 'yes'                                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 | redis__conf_replica_serve_stale_data      | 'yes'                                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 | redis__conf_supervised                    | 'auto'                                | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
-| redis__conf_unixsocket                    | '/run/redis/redis.sock'               | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
-| redis__host_conf_unixsocketperm           | '700'                                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
-| redis__group_conf_unixsocketperm          | '700'                                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
+| redis__conf_unixsocket                    | '/run/redis/redis.sock', inactive     | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
+| redis__conf_unixsocketperm                | '700', inactive                       | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 
 
 #### redis__installed_version
