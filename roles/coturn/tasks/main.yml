@@ -1,12 +1,12 @@
 - block:
 
   - name: 'dnf -y install coturn'
-    package:
+    ansible.builtin.package:
       name: 'coturn'
       state: 'present'
 
   - name: 'Deploy /etc/coturn/turnserver.conf'
-    template:
+    ansible.builtin.template:
       src: 'etc/coturn/turnserver.conf.j2'
       dest: '/etc/coturn/turnserver.conf'
       owner: 'root'
