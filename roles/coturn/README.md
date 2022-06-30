@@ -43,8 +43,8 @@ Default: unset
 
 Example:
 ```yaml
-coturn_denied_peer_ip:
-  - '10.117.17.0-10.255.255.255'
+coturn__denied_peer_ip:
+  - '192.0.2.0-192.0.255.255'
 ```
 
 
