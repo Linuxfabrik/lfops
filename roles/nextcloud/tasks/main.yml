@@ -33,6 +33,7 @@
       - httpd_sys_rw_content_t: '/var/www/html/nextcloud/apps(/.*)?'
       - httpd_sys_rw_content_t: '/var/www/html/nextcloud/config(/.*)?'
       - httpd_sys_rw_content_t: '/var/www/html/nextcloud/data(/.*)?'
+
   - name: 'setsebool -P ...'
     vars:
       ansible_python_interpreter: '/usr/bin/python3.6'
@@ -41,8 +42,7 @@
       state: '{{ item.value }}'
       persistent: true
     with_dict:
-      - httpd_unified: true
-      - httpd_execmem: true
+      - httpd_can_network_connect: true
 
   tags:
     - 'nextcloud'
@@ -61,11 +61,11 @@
   - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
     ansible.builtin.get_url:
       url: 'https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
-      dest: '/tmp/nextcloud.tar.bz2'
+      dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
 
-  - name: 'bunzip /tmp/nextcloud.tar.bz2'
+  - name: 'bunzip /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
     ansible.builtin.unarchive:
-      src: '/tmp/nextcloud.tar.bz2'
+      src: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
       dest: '/var/www/html/'
       remote_src: true
 
@@ -101,7 +101,7 @@
       group: 'apache'
       recurse: true
 
-  - name: 'Append the user "apache" to the group "redis"'
+  - name: 'usermod --append redis apache'
     ansible.builtin.user:
       name: 'apache'
       groups: 'redis'
@@ -119,28 +119,24 @@
 - block:
 
   - name: 'Run nextcloud installer'
+    # installation hangs without "--admin-user" and "--admin-pass"
     ansible.builtin.shell: |
       sudo -u apache php occ maintenance:install \
-        --database 'mysql' --database-name '{{ nextcloud__database }}' \
+        --database 'mysql' \
+        --database-name '{{ nextcloud__database }}' \
         --database-user '{{ nextcloud__mariadb_login.username }}' \
         --database-pass '{{ nextcloud__mariadb_login.password }}' \
-        --admin-user '{{ nextcloud__admin_login.username }}' \
-        --admin-pass '{{ nextcloud__admin_login.password }}' \
+        --admin-user '{{ nextcloud__users.0.username }}' \
+        --admin-pass '{{ nextcloud__users.0.password }}' \
         --data-dir '{{ nextcloud__datadir }}'
     args:
       chdir: '/var/www/html/nextcloud/'
       creates: '/var/www/html/nextcloud/config/config.php'
-    register: retc
 
-  - debug: 
-      var: retc
-      verbosity: 2
-
-  - name: 'Set nextcloud system settings'
     # sudo -u apache php occ config:system:set 'redis' 'port --value=0'
+  - name: 'Set nextcloud system settings'
     ansible.builtin.shell: |
-      sudo -u apache php occ config:system:set \
-        {{ item.key }} {{ item.value }}
+      sudo -u apache php occ config:system:set {{ item.key }} {{ item.value }}
     with_items: '{{ nextcloud__sysconfig }}'
     args:
       chdir: '/var/www/html/nextcloud/'
@@ -148,19 +144,18 @@
 
   - name: 'Set nextcloud proxy settings'
     ansible.builtin.shell: |
-      sudo -u apache php occ config:system:set \
-        {{ item.key }} {{ item.value }}
+      sudo -u apache php occ config:system:set {{ item.key }} {{ item.value }}
     with_items: '{{ nextcloud__proxyconfig }}'
     when:
       - 'nextcloud__proxyconfig is defined'
+      - 'nextcloud__proxyconfig | length'
     args:
       chdir: '/var/www/html/nextcloud/'
     changed_when: false
 
   - name: 'Set nextcloud app settings'
     ansible.builtin.shell: |
-      sudo -u apache php occ config:app:set \
-        {{ item.key }} {{ item.value }}
+      sudo -u apache php occ config:app:set {{ item.key }} {{ item.value }}
     with_items: '{{ nextcloud__appconfig }}'
     args:
       chdir: '/var/www/html/nextcloud/'
@@ -168,8 +163,7 @@
 
   - name: 'Convert some database columns to big int'
     ansible.builtin.shell: |
-      sudo -u apache php occ db:convert-filecache-bigint \
-        --no-interaction
+      sudo -u apache php occ db:convert-filecache-bigint --no-interaction
     args:
       chdir: '/var/www/html/nextcloud/'
     changed_when: false
@@ -188,6 +182,36 @@
 
 - block:
 
+  - name: 'Create Nextcloud users'
+    # use "su -s /bin/sh apache -c" instead of "sudo -u apache" because of "export"
+    ansible.builtin.shell: |
+      export OC_PASS='{{ item.password }}'; \
+      su -s /bin/sh apache -c 'php occ user:add \
+        --password-from-env \
+        --group {{ item.group | d('""')}} \
+        {{ item.username }}'
+    register: 'nextcloud__shell_result'
+    failed_when:
+      - 'nextcloud__shell_result.rc != 0'
+      - '" already exists" not in nextcloud__shell_result.stdout | lower'
+    changed_when: false
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    loop: '{{ nextcloud__users | d([]) }}'
+
+  # nested loop construct (for user in users; for setting in user.settings; ...)
+  - ansible.builtin.include_tasks: 'configure-user.yml'
+    loop: '{{ nextcloud__users | d([]) }}'
+    loop_control:
+      loop_var: 'ncuser'
+
+  tags:
+    - 'nextcloud'
+    - 'nextcloud:user'
+
+
+- block:
+
   - name: 'Set background job to "cron"'
     ansible.builtin.shell: |
       sudo -u apache php occ background:cron
@@ -202,6 +226,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/nextcloud-jobs.timer'
     ansible.builtin.template:
@@ -210,6 +235,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/nextcloud-app-update.service'
     ansible.builtin.template:
@@ -218,6 +244,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/nextcloud-app-update.timer'
     ansible.builtin.template:
@@ -226,14 +253,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-
-  - name: 'Create nextcloud app update cronjob'
-    cron:
-      name: 'Nextcloud App Update'
-      job: 'cd /var/www/html/nextcloud; /usr/bin/php occ app:update --all --no-interaction --quiet'
-      minute: "{{ 59|random(seed=inventory_hostname) }}"
-      hour: '07,18'
-      user: 'apache'
+    notify: 'nextcloud: systemctl daemon-reload'
 
   tags:
     - 'nextcloud'

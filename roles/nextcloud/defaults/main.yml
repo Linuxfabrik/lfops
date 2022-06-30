@@ -47,8 +47,8 @@ nextcloud__sysconfig:
   - { key: 'trusted_domains',                    value: "2 --value={{ nextcloud__fqdn }}" }
   - { key: 'updatechecker',                      value: '--value=false --type=boolean' }
   - { key: 'redis',                              value: 'dbindex --value=0 --type=integer' }
-  - { key: 'redis',                              value: 'host --value=/run/redis/redis.sock' }
-  - { key: 'redis',                              value: 'port --value=0 --type=integer' }
+  - { key: 'redis',                              value: 'host --value=127.0.0.1' }
+  - { key: 'redis',                              value: 'port --value=6379 --type=integer' }
   - { key: 'redis',                              value: 'timeout --value=0.5 --type=integer' }
   - { key: 'memcache.local',                     value: '--value=\\OC\\Memcache\\Redis' }
   - { key: 'memcache.distributed',               value: '--value=\\OC\\Memcache\\Redis' }
@@ -57,14 +57,6 @@ nextcloud__sysconfig:
 
 nextcloud__timer_jobs_enabled: true
 nextcloud__timer_app_update_enabled: true
-
-nextcloud__userconfig:
-  - { key: '{{ nextcloud__admin_login.user }}',   value: 'core lang en' }
-  - { key: '{{ nextcloud__admin_login.user }}',   value: 'core locale de_CH' }
-  - { key: '{{ nextcloud__admin_login.user }}',   value: 'core timezone Europe/Zurich' }
-  - { key: '{{ nextcloud__admin_login.user }}',   value: 'files quota "25 MB"' }
-  - { key: '{{ nextcloud__admin_login.user }}',   value: 'firstrunwizard show 0' }
-  - { key: '{{ nextcloud__admin_login.user }}',   value: 'settings email {{ nextcloud__admin_login.email }}' }
 
 # 'latest-XX' or 'nextcloud-XX.X.XX'
 nextcloud__version: 'latest-24'
@@ -79,7 +71,21 @@ nextcloud__apache_httpd__dependent_vhosts:
     type: 'app'
 
     allowed_file_extensions:
-      - '.*'
+      # TODO: Test if any file upload is possible
+      - 'css'
+      - 'gif'
+      - 'html?'
+      - 'ico'
+      - 'jpe?g'
+      - 'js'
+      - 'mp4'
+      - 'pdf'
+      - 'php'
+      - 'png'
+      - 'svg'
+      - 'ttf'
+      - 'txt'
+      - 'woff2?'
     allowed_http_methods:
       - 'DELETE'
       - 'GET'
@@ -143,6 +149,3 @@ nextcloud__php__ini_memory_limit: '512M'
 
 nextcloud__python__dependent_modules:
   - 'python3-policycoreutils'
-
-# Apache needs access to Redis' socket file
-nextcloud__redis__dependent_conf_unixsocketperm: 770

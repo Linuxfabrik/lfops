@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 2022062901
+# 2022063002
 # This file is managed by Ansible - do not edit
 
 
@@ -18,17 +18,21 @@ sudo -u apache php /var/www/html/nextcloud/occ user:list > /tmp/nextcloud-user-l
 sudo -u apache php /var/www/html/nextcloud/occ config:list > /tmp/nextcloud-config-list-before-update
 sudo -u apache php /var/www/html/nextcloud/occ app:list > /tmp/nextcloud-app-list-before-update
 
-cd /var/www/html/nextcloud/updater/
-sudo -u apache php updater.phar -n
+systemctl restart php-fpm.service
+setsebool httpd_unified on
+sudo -u apache php /var/www/html/nextcloud/updater/updater.phar -n
+sudo -u apache php /var/www/html/nextcloud/occ upgrade
+setsebool httpd_unified off
+systemctl restart php-fpm.service
 
-cd ..
-sudo -u apache ./occ upgrade
-sudo -u apache ./occ db:add-missing-indices
-sudo -u apache ./occ db:add-missing-columns
-sudo -u apache ./occ db:convert-filecache-bigint --no-interaction
+sleep 5
+
+sudo -u apache php /var/www/html/nextcloud/occ db:add-missing-indices
+sudo -u apache php /var/www/html/nextcloud/occ db:add-missing-columns
+sudo -u apache php /var/www/html/nextcloud/occ db:convert-filecache-bigint --no-interaction
 
 chown -R apache:apache /var/www/html/nextcloud
-restorecon -Fvr /var/www/html/nextcloud
+restorecon -r /var/www/html/nextcloud
 
 sudo -u apache php /var/www/html/nextcloud/occ user:list > /tmp/nextcloud-user-list-after-update
 sudo -u apache php /var/www/html/nextcloud/occ config:list > /tmp/nextcloud-config-list-after-update
@@ -36,20 +40,17 @@ sudo -u apache php /var/www/html/nextcloud/occ app:list > /tmp/nextcloud-app-lis
 
 echo ' '
 echo ' '
+echo 'User List before and after'
+echo '--------------------------'
+diff --side-by-side /tmp/nextcloud-user-list-before-update /tmp/nextcloud-user-list-after-update
 echo ' '
-echo 'Diff after update'
-echo '-----------------'
+echo 'Config List before and after'
+echo '----------------------------'
+diff --side-by-side /tmp/nextcloud-config-list-before-update /tmp/nextcloud-config-list-after-update
 echo ' '
-echo 'diff /tmp/nextcloud-user-list-before-update /tmp/nextcloud-user-list-after-update'
-diff /tmp/nextcloud-user-list-before-update /tmp/nextcloud-user-list-after-update
-echo ' '
-echo 'diff /tmp/nextcloud-config-list-before-update /tmp/nextcloud-config-list-after-update'
-diff /tmp/nextcloud-config-list-before-update /tmp/nextcloud-config-list-after-update
-echo ' '
-echo 'diff /tmp/nextcloud-app-list-before-update /tmp/nextcloud-app-list-after-update'
-diff /tmp/nextcloud-app-list-before-update /tmp/nextcloud-app-list-after-update
-
-systemctl restart php-fpm.service
+echo 'App List before and after'
+echo '-------------------------'
+diff --side-by-side /tmp/nextcloud-app-list-before-update /tmp/nextcloud-app-list-after-update
 
 
 # echo 'remove Icinga downtime'

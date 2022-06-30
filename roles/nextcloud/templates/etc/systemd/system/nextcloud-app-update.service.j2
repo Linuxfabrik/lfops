@@ -1,10 +1,11 @@
 # {{ ansible_managed }}
-# 2022062901
+# 2022062902
 
 [Unit]
 Description=nextcloud app update service
 
 [Service]
-ExecStart=/usr/bin/php -f /var/www/html/nextcloud/cron.php
+ExecStart=/usr/bin/php occ app:update --all --no-interaction --quiet
+WorkingDirectory=/var/www/html/nextcloud
 Type=oneshot
 User=apache

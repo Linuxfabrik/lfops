@@ -1,0 +1,9 @@
+- name: 'Update Nextcloud settings for user {{ ncuser.username }}'
+  shell: |
+    sudo -u apache php occ user:setting {{ ncuser.username }} {{ item }}
+  args:
+    chdir: '/var/www/html/nextcloud/'
+  changed_when: false
+  ignore_errors: true
+  loop: '{{ ncuser.settings | d([]) }}'
+

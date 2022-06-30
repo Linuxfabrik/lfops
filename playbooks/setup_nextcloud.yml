@@ -76,7 +76,6 @@
 
       # === Redis
     - role: 'linuxfabrik.lfops.redis'
-      redis__dependent_conf_unixsocketperm: '{{ nextcloud__redis__dependent_conf_unixsocketperm | d(770) }}'
       when:
         - 'not setup_nextcloud__skip_redis | d(false)'
 
