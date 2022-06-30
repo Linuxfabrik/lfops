@@ -9,8 +9,6 @@ redis__conf_port: 6379  # If port 0 is specified Redis will not listen on a TCP 
 redis__conf_protected_mode: 'yes'
 redis__conf_replica_serve_stale_data: 'yes'
 redis__conf_supervised: 'auto'
-redis__conf_unixsocket: '/run/redis/redis.sock'
-redis__conf_unixsocketperm: 700
 
 redis__installed_version: 6  # on RHEL 8+: choose between 5 or 6
 

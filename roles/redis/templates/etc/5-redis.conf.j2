@@ -109,8 +109,8 @@ tcp-backlog 511
 # incoming connections. There is no default, so Redis will not listen
 # on a unix socket when not specified.
 #
-# unixsocket {{ redis__conf_unixsocket | d('/tmp/redis.sock') }}
-# unixsocketperm {{ redis__combined_conf_unixsocketperm | d(700) }}
+# unixsocket /tmp/redis.sock
+# unixsocketperm 700
 
 # Close the connection after a client is idle for N seconds (0 to disable)
 timeout 0
@@ -1378,4 +1378,3 @@ rdb-save-incremental-fsync yes
 # Maximum number of set/hash/zset/list fields that will be processed from
 # the main dictionary scan
 # active-defrag-max-scan-fields 1000
-

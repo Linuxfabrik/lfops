@@ -63,8 +63,6 @@ Variables for `redis.conf` directives and their default values, defined and supp
 | redis__conf_protected_mode                | 'yes'                                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 | redis__conf_replica_serve_stale_data      | 'yes'                                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 | redis__conf_supervised                    | 'auto'                                | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
-| redis__conf_unixsocket                    | '/run/redis/redis.sock', inactive     | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
-| redis__conf_unixsocketperm                | '700', inactive                       | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) |
 
 
 #### redis__installed_version
