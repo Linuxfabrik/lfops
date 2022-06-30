@@ -111,6 +111,11 @@ nextcloud__apache_httpd__dependent_vhosts:
           Dav off
       </IfModule>
 
+
+netcloud__collabora_code__dependent_coolwsd_storage_wopi:
+  - '{{ nextcloud__fqdn | regex_replace("\.", "\.") }}'
+
+
 nextcloud__kernel_settings__dependent_sysctl:
   # for MariaDB
   - name: 'vm.swappiness'
@@ -146,7 +151,9 @@ nextcloud__php__dependent_modules:
   - 'php-smbclient'
   - 'php-zip'
 
+
 nextcloud__php__ini_memory_limit: '512M'
+
 
 nextcloud__python__dependent_modules:
   - 'python3-policycoreutils'
