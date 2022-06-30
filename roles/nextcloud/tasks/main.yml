@@ -1,8 +1,6 @@
 - block:
 
   - name: 'semanage fcontext -a -t ...'
-    vars:
-      ansible_python_interpreter: '/usr/bin/python3.6'
     ansible.builtin.sefcontext:
       setype: '{{ item.key }}'
       target: '{{ item.value }}'
@@ -15,16 +13,18 @@
       - httpd_sys_rw_content_t: '/var/www/html/nextcloud/apps(/.*)?'
       - httpd_sys_rw_content_t: '/var/www/html/nextcloud/config(/.*)?'
       - httpd_sys_rw_content_t: '/var/www/html/nextcloud/data(/.*)?'
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   - name: 'setsebool -P ...'
-    vars:
-      ansible_python_interpreter: '/usr/bin/python3.6'
     ansible.posix.seboolean:
       name: '{{ item.key }}'
       state: '{{ item.value }}'
       persistent: true
     with_dict:
       - httpd_can_network_connect: true
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   tags:
     - 'nextcloud'
@@ -55,39 +55,43 @@
     ansible.builtin.file:
       path: '/data'
       state: 'directory'
-  
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o750
+
   - name: 'restorecon -Fvr /data'
     ansible.builtin.command: 'restorecon -Fvr /data'
-    changed_when: false
+    register: 'nextcloud__restorecon_data_result'
+    changed_when: 'nextcloud__restorecon_data_result["stdout"] | length'
 
-  - name: 'chown -R apache:apache /data'
+  - name: 'chown -R apache:apache /data; chmod 0700 -R /data'
     ansible.builtin.file:
       path: '/data'
       owner: 'apache'
       group: 'apache'
+      mode: 0o750
       recurse: true
 
   - name: 'mkdir /var/www/html/nextcloud/data'
     ansible.builtin.file:
       path: '/var/www/html/nextcloud/data'
       state: 'directory'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o750
 
   - name: 'restorecon -Fvr /var/www/html/nextcloud'
     ansible.builtin.command: 'restorecon -Fvr /var/www/html/nextcloud'
-    changed_when: false
+    register: 'nextcloud__restorecon_nextcloud_result'
+    changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length'
 
-  - name: 'chown -R apache:apache /var/www/html/nextcloud'
+  - name: 'chown -R apache:apache /var/www/html/nextcloud; chmod 0700 -R /var/www/html/nextcloud'
     ansible.builtin.file:
       path: '/var/www/html/nextcloud'
       owner: 'apache'
       group: 'apache'
       recurse: true
-
-  - name: 'usermod --append redis apache'
-    ansible.builtin.user:
-      name: 'apache'
-      groups: 'redis'
-      append: true
+      mode: 0o750
 
   - name: 'chmod +x /var/www/html/nextcloud/occ'
     ansible.builtin.file:
@@ -102,53 +106,53 @@
 
   - name: 'Run nextcloud installer'
     # installation hangs without "--admin-user" and "--admin-pass"
-    ansible.builtin.shell: |
-      sudo -u apache php occ maintenance:install \
-        --database 'mysql' \
-        --database-name '{{ nextcloud__database }}' \
-        --database-user '{{ nextcloud__mariadb_login.username }}' \
-        --database-pass '{{ nextcloud__mariadb_login.password }}' \
-        --admin-user '{{ nextcloud__users.0.username }}' \
-        --admin-pass '{{ nextcloud__users.0.password }}' \
-        --data-dir '{{ nextcloud__datadir }}'
+    ansible.builtin.command: >-
+      sudo -u apache php occ maintenance:install
+      --database 'mysql'
+      --database-name '{{ nextcloud__database }}'
+      --database-user '{{ nextcloud__mariadb_login.username }}'
+      --database-pass '{{ nextcloud__mariadb_login.password }}'
+      --admin-user '{{ nextcloud__users.0.username }}'
+      --admin-pass '{{ nextcloud__users.0.password }}'
+      --data-dir '{{ nextcloud__datadir }}'
     args:
       chdir: '/var/www/html/nextcloud/'
       creates: '/var/www/html/nextcloud/config/config.php'
 
-    # sudo -u apache php occ config:system:set 'redis' 'port --value=0'
   - name: 'Set nextcloud system settings'
-    ansible.builtin.shell: |
+    ansible.builtin.command: |
       sudo -u apache php occ config:system:set {{ item.key }} {{ item.value }}
-    with_items: '{{ nextcloud__sysconfig }}'
+    loop: '{{ nextcloud__sysconfig }}' # improve speed by using jinja loop?
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
+    # there is no easy way to check for changes
 
   - name: 'Set nextcloud proxy settings'
-    ansible.builtin.shell: |
+    ansible.builtin.command: |
       sudo -u apache php occ config:system:set {{ item.key }} {{ item.value }}
-    with_items: '{{ nextcloud__proxyconfig }}'
+    loop: '{{ nextcloud__proxyconfig }}'
     when:
       - 'nextcloud__proxyconfig is defined'
       - 'nextcloud__proxyconfig | length'
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
+    # there is no easy way to check for changes
 
   - name: 'Set nextcloud app settings'
-    ansible.builtin.shell: |
+    ansible.builtin.command: |
       sudo -u apache php occ config:app:set {{ item.key }} {{ item.value }}
-    with_items: '{{ nextcloud__appconfig }}'
+    loop: '{{ nextcloud__appconfig }}'
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
+    # there is no easy way to check for changes
 
   - name: 'Convert some database columns to big int'
-    ansible.builtin.shell: |
+    ansible.builtin.command: |
       sudo -u apache php occ db:convert-filecache-bigint --no-interaction
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
+    register: 'nextcloud__convert_filecache_bigint_result'
+    changed_when: '"All tables already up to date" not in nextcloud__convert_filecache_bigint_result["stdout"]'
 
   # TODO: here? or run via the php-role? or via handler?
   # needed to reflect all the changes to the aggressive php opcache settings
@@ -164,26 +168,9 @@
 
 - block:
 
-  - name: 'Create Nextcloud users'
-    # use "su -s /bin/sh apache -c" instead of "sudo -u apache" because of "export"
-    ansible.builtin.shell: |
-      export OC_PASS='{{ item.password }}'; \
-      su -s /bin/sh apache -c 'php occ user:add \
-        --password-from-env \
-        --group {{ item.group | d('""')}} \
-        {{ item.username }}'
-    register: 'nextcloud__shell_result'
-    failed_when:
-      - 'nextcloud__shell_result.rc != 0'
-      - '" already exists" not in nextcloud__shell_result.stdout | lower'
-    changed_when: false
-    args:
-      chdir: '/var/www/html/nextcloud/'
-    loop: '{{ nextcloud__users | d([]) }}'
-
   # nested loop construct (for user in users; for setting in user.settings; ...)
   - ansible.builtin.include_tasks: 'configure-user.yml'
-    loop: '{{ nextcloud__users | d([]) }}'
+    loop: '{{ nextcloud__users }}'
     loop_control:
       loop_var: 'ncuser'
 
@@ -195,11 +182,11 @@
 - block:
 
   - name: 'Set background job to "cron"'
-    ansible.builtin.shell: |
+    ansible.builtin.command: |
       sudo -u apache php occ background:cron
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
+    # there is no easy way to check for changes
 
   - name: 'Deploy /etc/systemd/system/nextcloud-jobs.service'
     ansible.builtin.template:
@@ -208,7 +195,6 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/nextcloud-jobs.timer'
     ansible.builtin.template:
@@ -226,7 +212,6 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/nextcloud-app-update.timer'
     ansible.builtin.template:
@@ -268,8 +253,9 @@
       src: 'usr/local/bin/nextcloud-update.j2'
       dest: '/usr/local/bin/nextcloud-update'
       owner: 'root'
+      group: 'root'
       mode: 0o755
 
   tags:
     - 'nextcloud'
-    - 'nextcloud:script'
+    - 'nextcloud:update_script'
