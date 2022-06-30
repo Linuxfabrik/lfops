@@ -437,10 +437,10 @@ Variables
 
         assert:
           that:
-            - stig__grub2_password is defined
-            - stig__grub2_password | length
+            - 'stig__grub2_password is defined'
+            - 'stig__grub2_password | length'
           quiet: true
-          fail_msg: Please define bootloader passwords for your hosts ("stig__grub2_password").
+          fail_msg: 'Please define bootloader passwords for your hosts ("stig__grub2_password").''
 
 
 Injections
