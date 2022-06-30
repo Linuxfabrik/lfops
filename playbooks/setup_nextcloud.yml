@@ -62,14 +62,12 @@
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       # Attention: Using a fixed LTS version for Nextcloud.
-      repo_mariadb__version: '10.6'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
-      mariadb_server__version: '10.6'
       when:
         - 'not setup_nextcloud__skip_mariadb_server | d(false)'
 
@@ -82,9 +80,6 @@
 
       # === Nextcloud Application
     - role: 'linuxfabrik.lfops.nextcloud'
-      nextcloud__mariadb_login:
-        username: '{{ mariadb_server__admin_login.username }}'
-        password: '{{ mariadb_server__admin_login.password }}'
 
 #     - role: 'linuxfabrik.lfops.collabora_code'
 #       when:
