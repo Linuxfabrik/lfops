@@ -43,7 +43,7 @@
 
     - role: 'linuxfabrik.lfops.php'
       php__dependent_modules: '{{ nextcloud__php__dependent_modules }}'
-      php__ini_memory_limit: '{{ nextcloud__php__ini_memory_limit }}'
+      php__dependent_ini_memory_limit: '{{ nextcloud__php__ini_memory_limit }}'
       when:
         - 'not setup_nextcloud__skip_php | d(false)'
 
