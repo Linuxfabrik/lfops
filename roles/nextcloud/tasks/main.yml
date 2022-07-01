@@ -51,26 +51,19 @@
       dest: '/var/www/html/'
       remote_src: true
 
-  - name: 'mkdir /data'
+  - name: 'mkdir /data; chown -R apache:apache /data; chmod 0750 -R /data'
     ansible.builtin.file:
       path: '/data'
       state: 'directory'
       owner: 'apache'
       group: 'apache'
       mode: 0o750
+      recurse: true
 
   - name: 'restorecon -Fvr /data'
     ansible.builtin.command: 'restorecon -Fvr /data'
     register: 'nextcloud__restorecon_data_result'
     changed_when: 'nextcloud__restorecon_data_result["stdout"] | length'
-
-  - name: 'chown -R apache:apache /data; chmod 0700 -R /data'
-    ansible.builtin.file:
-      path: '/data'
-      owner: 'apache'
-      group: 'apache'
-      mode: 0o750
-      recurse: true
 
   - name: 'mkdir /var/www/html/nextcloud/data'
     ansible.builtin.file:
@@ -85,7 +78,7 @@
     register: 'nextcloud__restorecon_nextcloud_result'
     changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length'
 
-  - name: 'chown -R apache:apache /var/www/html/nextcloud; chmod 0700 -R /var/www/html/nextcloud'
+  - name: 'chown -R apache:apache /var/www/html/nextcloud; chmod 0750 -R /var/www/html/nextcloud'
     ansible.builtin.file:
       path: '/var/www/html/nextcloud'
       owner: 'apache'
@@ -122,7 +115,7 @@
   - name: 'Set nextcloud system settings'
     ansible.builtin.command: |
       sudo -u apache php occ config:system:set {{ item.key }} {{ item.value }}
-    loop: '{{ nextcloud__sysconfig }}' # improve speed by using jinja loop?
+    loop: '{{ nextcloud__sysconfig }}'
     args:
       chdir: '/var/www/html/nextcloud/'
     # there is no easy way to check for changes
@@ -169,7 +162,7 @@
 - block:
 
   # nested loop construct (for user in users; for setting in user.settings; ...)
-  - ansible.builtin.include_tasks: 'configure-user.yml'
+  - ansible.builtin.include_tasks: 'create-user.yml'
     loop: '{{ nextcloud__users }}'
     loop_control:
       loop_var: 'ncuser'
