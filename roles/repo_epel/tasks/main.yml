@@ -4,6 +4,11 @@
     ansible.builtin.import_role:
       name: 'shared'
       tasks_from: 'platform-variables.yml'
+  tags:
+    - 'repo_epel'
+
+
+- block:
 
   - name: 'dnf config-manager --set-enabled powertools'
     ansible.builtin.command: 'dnf config-manager --set-enabled powertools'
