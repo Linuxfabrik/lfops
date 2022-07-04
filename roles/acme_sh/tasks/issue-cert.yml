@@ -4,6 +4,7 @@
     return_content: true
     timeout: 8
   register: 'acme_sh__curl_result'
+  delegate_to: 'localhost'
 
 - name: 'check if acme-challenge was reachable'
   ansible.builtin.assert:
