@@ -16,6 +16,8 @@
       ports: '{{ sshd__port }}'
       proto: 'tcp'
       setype: 'ssh_port_t'
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   - name: 'Change Ciphers in /etc/ssh/sshd_config to {{ sshd__ciphers }}'
     ansible.builtin.lineinfile:
