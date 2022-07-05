@@ -1,1 +1,1 @@
-repo_mydumper__baseurl: 'http://mirror.linuxfabrik.ch/mydumper/el/{{ ansible_facts["distribution_major_version"] }}'
+repo_mydumper__baseurl: 'https://mirror.linuxfabrik.ch/mydumper/el/{{ ansible_facts["distribution_major_version"] }}'
