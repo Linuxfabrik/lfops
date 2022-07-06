@@ -47,6 +47,7 @@ New features:
 * Role: crypto_policy
 * Role: dnf_makecache
 * Role: exoscale_vm
+* Role: fail2ban
 * Role: firewall
 * Role: git
 * Role: glances

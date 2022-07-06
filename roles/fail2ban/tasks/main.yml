@@ -1,0 +1,95 @@
+- block:
+  - name: 'dnf -y install fail2ban'
+    ansible.builtin.package:
+      name:
+        - 'fail2ban'
+      state: 'present'
+
+  - name: 'setsebool -P nis_enabled on'
+    ansible.posix.seboolean:
+      name: 'nis_enabled'
+      state: 'on'
+      persistent: true
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
+
+  tags:
+    - 'fail2ban'
+
+
+- block:
+
+  - name: 'systemctl {{ fail2ban__service_enabled | bool | ternary("enable", "disable") }} --now fail2ban.service'
+    ansible.builtin.systemd:
+      name: 'fail2ban.service'
+      enabled: '{{ fail2ban__service_enabled }}'
+      state: '{{ fail2ban__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'fail2ban'
+    - 'fail2ban:state'
+
+
+- block:
+
+  - name: 'Deploy actions'
+    ansible.builtin.template:
+      src: 'etc/fail2ban/action.d/{{ item }}.conf.j2'
+      dest: '/etc/fail2ban/action.d/{{ item }}.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    loop:
+      - 'rocketchat'
+    notify:
+      - 'fail2ban: restart fail2ban'
+
+  - name: 'Deploy filters'
+    ansible.builtin.template:
+      src: 'etc/fail2ban/filter.d/{{ item }}.conf.j2'
+      dest: '/etc/fail2ban/filter.d/{{ item }}.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    loop:
+      - 'apache-dos'
+      - 'portscan'
+    notify:
+      - 'fail2ban: restart fail2ban'
+
+  - name: 'Deploy /etc/fail2ban/jail.d/z00-defaults.conf'
+    ansible.builtin.template:
+      src: 'etc/fail2ban/jail.d/z00-defaults.conf.j2'
+      dest: '/etc/fail2ban/jail.d/z00-defaults.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o640
+    notify:
+      - 'fail2ban: restart fail2ban'
+
+  - name: 'Remove jails'
+    ansible.builtin.file:
+      path: '/etc/fail2ban/jail.d/z10-{{ item.name }}.conf'
+      state: 'absent'
+    when:
+      - 'item.state | d("present") == "absent"'
+    loop: '{{ fail2ban__combined_jails }}'
+    notify:
+      - 'fail2ban: restart fail2ban'
+
+  - name: 'Create jails'
+    ansible.builtin.template:
+      src: 'etc/fail2ban/jail.d/z10-{{ "raw" if (item.type | d("conf") == "raw")
+                                else item.name }}.conf.j2'
+      dest: '/etc/fail2ban/jail.d/z10-{{ item.name }}.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when:
+      - 'item.state | d("present") != "absent"'
+    loop: '{{ fail2ban__combined_jails }}'
+    notify:
+      - 'fail2ban: restart fail2ban'
+
+  tags:
+    - 'fail2ban'

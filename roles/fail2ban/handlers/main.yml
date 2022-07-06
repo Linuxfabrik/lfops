@@ -1,0 +1,4 @@
+- name: 'fail2ban: restart fail2ban'
+  ansible.builtin.service:
+    name: 'fail2ban'
+    state: 'restarted'

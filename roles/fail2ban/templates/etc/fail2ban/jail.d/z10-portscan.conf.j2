@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+# 2022070501
+
+
+[portscan]
+# overriding default action to prevent rocketchat action
+action        = %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+allowed-ports = {{ fail2ban__jail_portscan_allowed_ports | join ('|') }}
+backend       = systemd
+bantime       = 8h
+enabled       = true
+filter        = portscan[server-ips="%(server-ips)s", allowed-ports="%(allowed-ports)s"]
+findtime      = 1m
+maxretry      = 1
+# make sure to block on all ports
+port          = 0:65535
+server-ips    = {{ fail2ban__jail_portscan_server_ips | join ('|') | regex_replace('\.', '\.') }}

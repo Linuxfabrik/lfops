@@ -1,0 +1,26 @@
+# {{ ansible_managed }}
+# 2022070401
+
+# Fail2Ban filter to match access to unknown / not-served ports. This filter works with the default logging of fwbuilder.
+
+[INCLUDES]
+
+before = common.conf
+
+
+[Definition]
+_daemon = kernel
+
+failregex = ^%(__prefix_line)sRULE \d+ -- DENY IN=.*SRC=<HOST> DST=(<server-ips>) .*DPT=(?!<allowed-ports>)
+            ^%(__prefix_line)sREJECT IN=.*SRC=<HOST> DST=(<server-ips>) .*DPT=(?!<allowed-ports>)
+            ^%(__prefix_line)sDENY IN=.*SRC=<HOST> DST=(<server-ips>) .*DPT=(?!<allowed-ports>)
+
+journalmatch  = _TRANSPORT=kernel
+
+# DEV Notes:
+#
+# journalctl _TRANSPORT=kernel
+#
+# example log lines:
+# |  2022-07-05T09:55:45.531526myhostname kernel: [  777.149899] RULE 10 -- DENY IN=enp1s0 OUT= MAC=52:54:00:f1:1e:cf:52:54:00:ce:75:8f:08:00 SRC=192.168.122.1 DST=192.168.122.106 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=16105 DF PROTO=TCP SPT=34436 DPT=23 WINDOW=64240 RES=0x00 SYN URGP=0
+# |  2022-07-05T09:55:46.543422myhostname kernel: [  778.161797] RULE 10 -- DENY IN=enp1s0 OUT= MAC=52:54:00:f1:1e:cf:52:54:00:ce:75:8f:08:00 SRC=192.168.122.1 DST=192.168.122.106 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=16106 DF PROTO=TCP SPT=34436 DPT=23 WINDOW=64240 RES=0x00 SYN URGP=0

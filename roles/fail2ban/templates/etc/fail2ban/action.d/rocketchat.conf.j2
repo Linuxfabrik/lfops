@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# 2022070401
+
+[Init]
+rocketchat-hook =
+
+
+[Definition]
+actionstart =
+actionstop =
+actioncheck =
+
+actionban = curl --silent --output /dev/null --request POST --header 'Content-Type: application/json' --data '{"text":":fail2ban: banned <ip> for <bantime> seconds after <failures> attempts in jail *<name>* on `<fq-hostname>`\nTo unban use `fail2ban-client set <name> unbanip <ip>`"}' <rocketchat-hook>
+
+{# actionunban = curl --silent --output /dev/null --request POST --header 'Content-Type: application/json' --data '{"text":":fail2ban: unbanned <ip> from jail *<name>* on `<fq-hostname>`"}' <rocketchat-hook> #}
