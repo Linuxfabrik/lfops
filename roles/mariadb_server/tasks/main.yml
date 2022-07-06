@@ -143,10 +143,10 @@
 # configure backup (mariadb-dump user, scripts and timer)
 - block:
 
-  - name: 'dnf -y install {{ mariadb_server_dump_mydumper_package }}'
+  - name: 'dnf -y install {{ mariadb_server__dump_mydumper_package }}'
     ansible.builtin.dnf:
       name:
-        - '{{ mariadb_server_dump_mydumper_package }}'
+        - '{{ mariadb_server__dump_mydumper_package }}'
       state: 'present'
       disable_gpg_check: true
 
@@ -171,6 +171,8 @@
       password: "{{ mariadb_server__dump_login.password }}"
       priv: "{{ mariadb_server__dump_user_priv }}"
       state: "{{ mariadb_server__dump_user_state }}"
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   - name: 'Deploy /etc/systemd/system/mariadb-dump.service'
     ansible.builtin.template:
@@ -194,14 +196,8 @@
       name: 'mariadb-dump.timer'
       state: 'started'
       enabled: true
-      daemon_reload: 'mariadb_server__dump_systemd_timer_result is changed'
+      daemon_reload: '{{ mariadb_server__dump_systemd_timer_result is changed }}'
 
-  # only on a standalone server; or if on replica set, only on the primary
-  when:
-    - 'mariadb_server_dump_user is defined'
-    - 'mariadb_server_dump_user | length'
-    - 'mariadb_server_dump_options is defined'
-    - 'mariadb_server_dump_options | length'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:configure'
@@ -220,6 +216,8 @@
       password: "{{ mariadb_server__monitoring_login.password }}"
       priv: "{{ mariadb_server__monitoring_user_priv }}"
       state: "{{ mariadb_server__monitoring_user_state }}"
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   when:
     - 'mariadb_server__monitoring is defined'
@@ -261,6 +259,8 @@
       state: "{{ item.state | default('present') }}"
     loop: '{{ mariadb_server__combined_users }}'
     no_log: true
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   tags:
     - 'mariadb_server'

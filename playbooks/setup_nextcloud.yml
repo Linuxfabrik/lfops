@@ -22,7 +22,9 @@
         - 'not setup_nextcloud__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.python'
-      python__dependent_modules: '{{ nextcloud__python__dependent_modules | d([]) }}'
+      python__dependent_modules:
+        - '{{ mariadb_server__python__dependent_modules | d([]) }}'
+        - '{{ nextcloud__python__dependent_modules | d([]) }}'
       when:
         - 'not setup_nextcloud__skip_python | d(false)'
 
