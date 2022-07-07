@@ -79,6 +79,15 @@
       validate: '/usr/sbin/sshd -t -f %s'
     notify: 'sshd: reload sshd'
 
+  - name: 'Change LogLevel in /etc/ssh/sshd_config to {{ sshd__combined_log_level }}'
+    ansible.builtin.lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^#?LogLevel'
+      line: 'LogLevel {{ sshd__combined_log_level }}'
+      state: 'present'
+      validate: '/usr/sbin/sshd -t -f %s'
+    notify: 'sshd: reload sshd'
+
   tags:
     - 'sshd'
 
