@@ -198,6 +198,9 @@
       enabled: true
       daemon_reload: '{{ mariadb_server__dump_systemd_timer_result is changed }}'
 
+  when:
+    - 'mariadb_server__dump_login is defined'
+    - 'mariadb_server__dump_login | length'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:configure'
