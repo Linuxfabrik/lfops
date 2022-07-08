@@ -1,0 +1,13 @@
+- name: 'Install and configure a KVM host'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_kvm_host'
+
+  roles:
+
+    - role: 'python'
+      python__dependent_modules: '{{ kvm_host__python__dependent_modules | d([]) }}'
+      when:
+        - 'not kvm_host__skip_python | d(false)'
+
+    - role: 'kvm_host'

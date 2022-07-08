@@ -68,6 +68,7 @@ New features:
 * Role: kdump
 * Role: kernel_settings
 * Role: keycloak
+* Role: kvm_host
 * Role: libselinux_python
 * Role: login
 * Role: mailto_root

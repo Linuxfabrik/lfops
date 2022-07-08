@@ -1,0 +1,22 @@
+<network>
+  <name>{{ network.name }}</name>
+  <mac address='{{ network.mac | default("52:54:00" | community.general.random_mac(seed=inventory_hostname)) }}'/>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+
+  {% if network.bridge is defined and network.bridge | length %}
+  <bridge name="{{ network.bridge }}"/>
+  {% endif %}
+  {% if network.ip_address is defined and network.ip_address %}
+  <ip address='{{ network.ip_address }}' netmask='{{ network.subnet | default("255.255.255.0") }}'>
+    {% if network.dhcp_start is defined and network.dhcp_start | length and network.dhcp_end is defined and network.dhcp_end | length %}
+    <dhcp>
+      <range start='{{ network.dhcp_start }}' end='{{ network.dhcp_end }}'/>
+    </dhcp>
+    {% endif %}
+  </ip>
+  {% endif %}
+</network>
