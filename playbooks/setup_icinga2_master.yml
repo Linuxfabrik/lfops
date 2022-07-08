@@ -20,6 +20,10 @@
       when:
         - 'not setup_icinga2_master__skip_python | default(false)'
 
+    - role: 'repo_mydumper'
+      when:
+        - 'not setup_icinga2_master__skip_repo_mydumper | default(false)'
+
     - role: 'mariadb_server'
       mariadb_server__dependent_databases:
         - '{{ icinga2_master__mariadb_server__dependent_databases }}'

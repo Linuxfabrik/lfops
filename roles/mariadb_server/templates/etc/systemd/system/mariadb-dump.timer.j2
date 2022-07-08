@@ -1,11 +1,11 @@
 # {{ ansible_managed }}
-# 2020110601
+# 2022070601
 
 [Unit]
 Description=mariadb-dump Timer
 
 [Timer]
-OnCalendar={{ mariadb_dump_options.calendar }}
+OnCalendar={{ mariadb_server__dump_on_calendar }}
 Unit=mariadb-dump.service
 
 [Install]

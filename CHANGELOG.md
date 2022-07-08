@@ -47,6 +47,7 @@ New features:
 * Role: crypto_policy
 * Role: dnf_makecache
 * Role: exoscale_vm
+* Role: fail2ban
 * Role: firewall
 * Role: git
 * Role: glances
@@ -67,6 +68,7 @@ New features:
 * Role: kdump
 * Role: kernel_settings
 * Role: keycloak
+* Role: kvm_host
 * Role: libselinux_python
 * Role: login
 * Role: mailto_root

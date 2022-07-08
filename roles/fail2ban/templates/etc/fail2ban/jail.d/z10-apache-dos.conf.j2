@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2022070601
+
+[apache-dos]
+bantime  = 5m
+enabled  = true
+findtime = 10s
+logpath  = /var/log/httpd/*access?log
+maxretry = 600
+port     = http,https

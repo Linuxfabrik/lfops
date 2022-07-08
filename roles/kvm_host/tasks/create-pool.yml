@@ -1,0 +1,25 @@
+- name: 'define storage pool'
+  community.libvirt.virt_pool:
+    command: 'define'
+    name: '{{ pool.name }}'
+    xml: |-
+      <pool type='dir'>
+        <name>{{ pool.name }}</name>
+        <source>
+        </source>
+        <target>
+          <path>{{ pool.path }}</path>
+        </target>
+      </pool>
+  when:
+    - '"{{ pool.name }}" not in kvm_host__list_pools_result'
+
+- name: 'build storage pool if it does not exist'
+  community.libvirt.virt_pool:
+    command: 'build'
+    name: '{{ pool.name }}'
+
+- name: 'ensure storage pool is active'
+  community.libvirt.virt_pool:
+    state: 'active'
+    name: '{{ pool.name }}'

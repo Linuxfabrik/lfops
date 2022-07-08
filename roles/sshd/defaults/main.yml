@@ -8,6 +8,17 @@ sshd__service_enabled: true
 sshd__service_state: 'started'
 sshd__use_dns: false
 
+sshd__dependent_log_level: ''
+sshd__group_log_level: ''
+sshd__host_log_level: ''
+sshd__role_log_level: 'INFO'
+sshd__combined_log_level: '{{
+  sshd__host_log_level if sshd__host_log_level else
+  sshd__group_log_level if sshd__group_log_level else
+  sshd__dependent_log_level if sshd__dependent_log_level else
+  sshd__role_log_level if sshd__role_log_level
+}}'
+
 # -----------------------------------------------------------------------------
 
 sshd__python__dependent_modules:

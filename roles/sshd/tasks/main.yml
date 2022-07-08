@@ -16,6 +16,8 @@
       ports: '{{ sshd__port }}'
       proto: 'tcp'
       setype: 'ssh_port_t'
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   - name: 'Change Ciphers in /etc/ssh/sshd_config to {{ sshd__ciphers }}'
     ansible.builtin.lineinfile:
@@ -73,6 +75,15 @@
       path: '/etc/ssh/sshd_config'
       regexp: '^#?PermitRootLogin'
       line: 'PermitRootLogin {{ sshd__permit_root_login }}'
+      state: 'present'
+      validate: '/usr/sbin/sshd -t -f %s'
+    notify: 'sshd: reload sshd'
+
+  - name: 'Change LogLevel in /etc/ssh/sshd_config to {{ sshd__combined_log_level }}'
+    ansible.builtin.lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^#?LogLevel'
+      line: 'LogLevel {{ sshd__combined_log_level }}'
       state: 'present'
       validate: '/usr/sbin/sshd -t -f %s'
     notify: 'sshd: reload sshd'

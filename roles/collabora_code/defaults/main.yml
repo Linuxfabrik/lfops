@@ -2,12 +2,10 @@ collabora_code__coolwsd_allowed_languages:
   - 'de_AT'
   - 'de_CH'
   - 'de_DE'
-  - 'el_GR'
   - 'en_AU'
   - 'en_CA'
   - 'en_GB'
   - 'en_US'
-  - 'es_ANY'
   - 'fr'
   - 'it_IT'
 
@@ -29,5 +27,40 @@ collabora_code__combined_coolwsd_storage_wopi: '{{ collabora_code__role_coolwsd_
   collabora_code__group_coolwsd_storage_wopi +
   collabora_code__host_coolwsd_storage_wopi +
   collabora_code__dependent_coolwsd_storage_wopi
+  | flatten
+ }}'
+
+collabora_code__dependent_language_packages: []
+collabora_code__group_language_packages: []
+collabora_code__host_language_packages: []
+collabora_code__role_language_packages:
+  # de
+  - 'collaboraoffice-dict-de'
+  - 'collaboraofficebasis-de'
+  - 'mythes-de'
+  - 'hunspell-de'
+  # en
+  - 'collaboraoffice-dict-en'
+  - 'collaboraofficebasis-en-GB'
+  - 'collaboraofficebasis-en-US'
+  - 'mythes-en'
+  - 'hunspell-en'
+  - 'hunspell-en-GB'
+  - 'hunspell-en-US'
+  # fr
+  - 'collaboraoffice-dict-fr'
+  - 'collaboraofficebasis-fr'
+  - 'mythes-fr'
+  - 'hunspell-fr'
+  # it
+  - 'collaboraoffice-dict-it'
+  - 'collaboraofficebasis-it'
+  - 'mythes-it'
+  - 'hunspell-it'
+
+collabora_code__combined_language_packages: '{{ collabora_code__role_language_packages +
+  collabora_code__group_language_packages +
+  collabora_code__host_language_packages +
+  collabora_code__dependent_language_packages
   | flatten
  }}'

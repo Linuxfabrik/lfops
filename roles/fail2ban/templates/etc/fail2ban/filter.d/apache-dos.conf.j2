@@ -1,0 +1,33 @@
+# {{ ansible_managed }}
+# 2022070501
+
+# Fail2Ban filter that matches all requests (for any ressource) on Apache servers.
+#
+# Should be used with a low bantime and findtime, and high maxretry.
+# This effectively slows down the requests, for example a `ab -n 5000 http://ip-of-my-host/`.
+#
+# Tested with the following Apache LogFormats:
+# LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+# LogFormat "%h %l %u %t \"%r\" %>s %b" common
+
+[INCLUDES]
+
+# overwrite with apache-common.local if _apache_error_client is incorrect.
+before = apache-common.conf
+
+
+[Definition]
+
+failregex = ^<HOST>
+
+datepattern = ^[^\[]*\[({DATE})
+              {^LN-BEG}
+
+
+# DEV Notes:
+#
+# example log lines:
+# 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 252910 9921 www.xmpl.com -
+# 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 252910 8355 www.xmpl.com -
+# 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 252910 8961 www.xmpl.com -
+# 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 252910 8165 www.xmpl.com -

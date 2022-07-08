@@ -6,5 +6,12 @@
   roles:
 
     - role: 'openssl'
+
     - role: 'tar'
+
+    - role: 'linuxfabrik.lfops.apache_httpd'
+      apache_httpd__dependent_snippets: '{{ acme_sh__apache_httpd__dependent_snippets | d([]) }}'
+      when:
+        - 'not acme_sh__skip_apache_httpd | d(false)'
+
     - role: 'acme_sh'

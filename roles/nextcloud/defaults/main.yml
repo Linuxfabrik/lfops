@@ -28,12 +28,12 @@ nextcloud__on_calendar_jobs: '*:0/5'   # Background jobs: every 5 minutes
 # the ip addresses are those of the reverse proxy
 nextcloud__proxyconfig: []
 # nextcloud__proxyconfig:
-#   - { key: 'overwrite.cli.url', value: '--value=http://localhost' }
-#   - { key: 'overwritecondaddr', value: '--value=^10\\.117\\.17\\.7$' }
-#   - { key: 'overwritehost',     value: '--value=cloud.linuxfabrik.io' }
+#   - { key: 'overwrite.cli.url', value: '--value=https://cloud.example.com' }
+#   - { key: 'overwritecondaddr', value: '--value=^192\\.0\\.2\\.7$' }
+#   - { key: 'overwritehost',     value: '--value=cloud.example.com' }
 #   - { key: 'overwriteprotocol', value: '--value=https' }
 #   - { key: 'overwritewebroot',  value: '--value=/' }
-#   - { key: 'trusted_proxies',   value: '0 --value=10.117.17.7' }
+#   - { key: 'trusted_proxies',   value: '0 --value=192.0.2.7' }
 
 # order matters here, so do not sort alphabetically
 nextcloud__sysconfig:

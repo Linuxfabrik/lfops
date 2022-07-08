@@ -1,0 +1,25 @@
+- name: 'Installs and configures fail2ban'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_fail2ban'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.sshd'
+      sshd__dependent_log_level: 'VERBOSE'
+      when:
+        - 'not fail2ban__skip_sshd | d(false)'
+
+    - role: 'repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not fail2ban__skip_repo_epel | d(false)'
+
+    - role: 'linuxfabrik.lfops.python'
+      python__dependent_modules:
+        - '{{ fail2ban__python__dependent_modules | d([]) }}'
+      when:
+        - 'not fail2ban__skip_python | d(false)'
+
+    - role: 'fail2ban'

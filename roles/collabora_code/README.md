@@ -76,12 +76,10 @@ collabora_code__coolwsd_allowed_languages:
   - 'de_AT'
   - 'de_CH'
   - 'de_DE'
-  - 'el_GR'
   - 'en_AU'
   - 'en_CA'
   - 'en_GB'
   - 'en_US'
-  - 'es_ANY'
   - 'fr'
   - 'it_IT'
 ```
@@ -167,6 +165,43 @@ Example:
 ```yaml
 collabora_code__coolwsd_storage_wopi:
   - 'cloud\.example\.com'
+```
+
+
+#### collabora_code__host_language_packages / collabora_code__group_language_packages
+
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
+
+A list of additional packages will be installed for language support (spell checking, thesaurus, etc).
+
+Default:
+```yaml
+collabora_code__group_language_packages: []
+collabora_code__host_language_packages: []
+collabora_code__role_language_packages:
+  # de
+  - 'collaboraoffice-dict-de'
+  - 'collaboraofficebasis-de'
+  - 'mythes-de'
+  - 'hunspell-de'
+  # en
+  - 'collaboraoffice-dict-en'
+  - 'collaboraofficebasis-en-GB'
+  - 'collaboraofficebasis-en-US'
+  - 'mythes-en'
+  - 'hunspell-en'
+  - 'hunspell-en-GB'
+  - 'hunspell-en-US'
+  # fr
+  - 'collaboraoffice-dict-fr'
+  - 'collaboraofficebasis-fr'
+  - 'mythes-fr'
+  - 'hunspell-fr'
+  # it
+  - 'collaboraoffice-dict-it'
+  - 'collaboraofficebasis-it'
+  - 'mythes-it'
+  - 'hunspell-it'
 ```
 
 

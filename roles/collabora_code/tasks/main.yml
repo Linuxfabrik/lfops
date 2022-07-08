@@ -3,14 +3,28 @@
   - name: 'install coolwsd and dependent packages'
     ansible.builtin.package:
       name:
-        - 'coolwsd'
         - 'CODE-brand'
+        - 'collaboraofficebasis-calc'
+        - 'collaboraofficebasis-core'
+        - 'collaboraofficebasis-draw'
+        - 'collaboraofficebasis-extension-pdf-import'
+        - 'collaboraofficebasis-graphicfilter'
+        - 'collaboraofficebasis-images'
+        - 'collaboraofficebasis-impress'
+        - 'collaboraofficebasis-math'
+        - 'collaboraofficebasis-ooofonts'
+        - 'collaboraofficebasis-ooolinguistic'
+        - 'collaboraofficebasis-python-script-provider'
+        - 'collaboraofficebasis-pyuno'
+        - 'collaboraofficebasis-writer'
+        - 'coolwsd'
         - 'hunspell'
-        - 'hunspell-*'
         - 'mythes'
-        - 'mythes-*'
-        - 'collaboraoffice*-dict-*'
-        - 'collaboraofficebasis*-*'
+      state: 'present'
+
+  - name: 'install language packages'
+    ansible.builtin.package:
+      name: '{{ collabora_code__combined_language_packages }}'
       state: 'present'
 
   - name: 'touch /var/log/coolwsd.log & chmod 0660 /var/log/coolwsd.log'

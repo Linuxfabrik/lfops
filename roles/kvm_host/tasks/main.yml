@@ -1,0 +1,65 @@
+- block:
+
+  - name: "dnf install '@Virtualization Host' genisoimage libguestfs-tools-c libosinfo qemu-img virt-install"
+    ansible.builtin.dnf:
+      name:
+        - '@Virtualization Host'
+        - 'genisoimage'
+        - 'libguestfs-tools-c'
+        - 'libosinfo'
+        - 'libvirt-client'
+        - 'qemu-img'
+        - 'virt-install'
+      state: 'present'
+
+  - name: 'systemctl {{ kvm_host__libvirtd_service_enabled | bool | ternary("enable", "disable") }} --now libvirtd.service'
+    ansible.builtin.systemd:
+      name: 'libvirtd.service'
+      enabled: '{{ kvm_host__libvirtd_service_enabled }}'
+      state: '{{ kvm_host__libvirtd_service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'deploy /etc/sysconfig/libvirt-guests'
+    ansible.builtin.template:
+      src: 'etc/sysconfig/libvirt-guests.j2'
+      dest: '/etc/sysconfig/libvirt-guests'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'systemctl {{ kvm_host__libvirt_guests_service_enabled | bool | ternary("enable", "disable") }} --now libvirt-guests.service'
+    ansible.builtin.systemd:
+      name: 'libvirt-guests.service'
+      enabled: '{{ kvm_host__libvirt_guests_service_enabled }}'
+      state: '{{ kvm_host__libvirt_guests_service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'kvm_host'
+
+
+- block:
+
+  - ansible.builtin.include_tasks: 'create-network.yml'
+    loop: '{{ kvm_host__networks }}'
+    loop_control:
+      loop_var: 'network'
+
+  tags:
+    - 'kvm_host'
+    - 'kvm_host:networks'
+
+
+- block:
+
+  - name: 'list available pools'
+    community.libvirt.virt_pool:
+      command: 'list_pools'
+    register: 'kvm_host__list_pools_result'
+
+  - ansible.builtin.include_tasks: 'create-pool.yml'
+    loop: '{{ kvm_host__pools }}'
+    loop_control:
+      loop_var: 'pool'
+
+  tags:
+    - 'kvm_host'
+    - 'kvm_host:pools'
