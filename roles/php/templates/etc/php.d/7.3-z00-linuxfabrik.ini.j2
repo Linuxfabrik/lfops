@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2022062301
+; 2022071101
 ; php 7.3
 
 [PHP]
@@ -12,18 +12,18 @@ expose_php = Off
 html_errors = Off
 max_execution_time = {{ php__ini_max_execution_time | default('30') }}
 max_file_uploads = {{ php__ini_max_file_uploads | default('20') }}
-max_input_time = {{ php__ini_max_input_time | default('-1') }}
+max_input_time = {{ php__ini_max_input_time | default('60') }}
 memory_limit = {{ php__combined_ini_memory_limit | default('128M') }}
 post_max_size = {{ php__ini_post_max_size | default('8M') }}
-realpath_cache_size = 128K
-realpath_cache_ttl = 3600
-serialize_precision = 17
+realpath_cache_size = 4M
+realpath_cache_ttl = 120
+serialize_precision = -1
 upload_max_filesize = {{ php__ini_upload_max_filesize | default('2M') }}
 
-opcache.blacklist_filename = {{ php__ini_opcache_blacklist_filename | d('') }}
+opcache.blacklist_filename = {{ php__ini_opcache_blacklist_filename | d('/etc/php.d/opcache*.blacklist') }}
 opcache.enable = {{ php__ini_opcache_enable | d('1') }}
 opcache.enable_cli = {{ php__ini_opcache_enable_cli | d('0') }}
-opcache.huge_code_pages = {{ php__ini_opcache_huge_code_pages | d('0') }}
+opcache.huge_code_pages = {{ php__ini_opcache_huge_code_pages | d('1') }}
 opcache.interned_strings_buffer = {{ php__ini_opcache_interned_strings_buffer | d('8') }}
 opcache.max_accelerated_files = {{ php__ini_opcache_max_accelerated_files | d('10000') }}
 opcache.memory_consumption = {{ php__ini_opcache_memory_consumption | d('128') }}
@@ -37,6 +37,6 @@ SMTP = {{ php__ini_smtp | default('localhost') }}
 smtp_port = 25
 
 [Session]
-session.gc_maxlifetime = 86400
+session.gc_maxlifetime = 1440
 session.sid_length = {{ php__ini_session_sid_length | default(26) }}
 session.trans_sid_tags = "{{ php__ini_session_trans_sid_tags | default("a=href,area=href,frame=src,form=") }}"
