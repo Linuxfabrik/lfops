@@ -64,6 +64,29 @@ php__role_modules:
 ```
 
 
+#### php__host_fpm_pools / php__group_fpm_pools
+
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
+
+List of PHP-FPM pools.
+
+Subkeys:
+
+* `name`: Required, string. The name of the pool. Will also be used as the filename and for logfiles.
+* `state`: Required, boolean. State of the pool. Possible options: `absent`, `present`.
+* `user`: Optional, string. Defaults to `apache`. The Unix user running the pool processes.
+* `group`: Optional, string. Defaults to `apache`. The Unix group running the pool processes.
+* `raw`: Optional, string: Raw content which will be added to the end of the pool config.
+
+Default:
+```yaml
+php__group_fpm_pools: []
+php__host_fpm_pools: []
+php__role_fpm_pools: []
+```
+
+
+
 #### php__fpm_service_enabled
 
 Enables or disables the php-fpm service, analogous to `systemctl enable/disable --now`. Possible options:

@@ -48,3 +48,14 @@ php__ini_session_sid_length: 32
 php__ini_session_trans_sid_tags: 'a=href,area=href,frame=src,input=src,form=fakeentry'
 php__ini_smtp: 'localhost'
 php__ini_upload_max_filesize: '20M'
+
+php__dependent_fpm_pools: []
+php__group_fpm_pools: []
+php__host_fpm_pools: []
+php__role_fpm_pools: []
+php__combined_fpm_pools: '{{ php__role_fpm_pools +
+  php__group_fpm_pools +
+  php__host_fpm_pools +
+  php__dependent_fpm_pools
+  | flatten
+ }}'
