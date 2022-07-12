@@ -316,8 +316,6 @@
   - name: 'Create DocumentRoot for all vHosts'
     ansible.builtin.file:
       path: '{{ item.conf_document_root | d(apache_httpd__conf_document_root ~ "/" ~ item.conf_server_name) }}'
-      owner: '{{ apache_httpd__user }}'
-      group: '{{ apache_httpd__group }}'
       state: '{{ "directory" if (item.state == "present") else "absent" }}'
     when:
       - 'item.type in ["app", "localhost"]'
