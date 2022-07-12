@@ -45,7 +45,6 @@ Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob
 This role does not have any mandatory variables.
 
 
-
 ### Optional
 
 #### fail2ban__jail_default_action
