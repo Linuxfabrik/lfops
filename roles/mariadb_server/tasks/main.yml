@@ -242,6 +242,8 @@
       encoding: "{{ item.encoding | default('utf8') }}"
       state: "{{ item.state | default('present') }}"
     loop: "{{ mariadb_server__combined_databases }}"
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   tags:
     - 'mariadb_server'
