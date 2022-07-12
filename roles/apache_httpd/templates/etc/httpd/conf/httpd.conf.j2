@@ -46,7 +46,7 @@ KeepAlive {{ apache_httpd__conf_keep_alive | d('On') }}
 KeepAliveTimeout {{ apache_httpd__conf_keep_alive_timeout | d(5) }}
 LimitRequestBody {{ apache_httpd__conf_limit_request_body | d(102400) }}
 LimitRequestFields {{ apache_httpd__conf_limit_request_fields | d(50) }}
-LimitRequestFieldSize {{ apache_httpd__conf_limit_request_field_size | d(1024) }}
+LimitRequestFieldSize {{ apache_httpd__conf_limit_request_field_size | d(8190) }}
 LimitRequestLine {{ apache_httpd__conf_limit_request_line | d(512) }}
 LogLevel {{ apache_httpd__conf_log_level | d('warn') }}
 MaxKeepAliveRequests {{ apache_httpd__conf_max_keep_alive_requests | d(100) }}
