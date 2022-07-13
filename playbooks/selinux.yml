@@ -5,6 +5,6 @@
 
   roles:
 
-    - role: 'libselinux_python'
+    - role: 'policycoreutils'
 
     - role: 'selinux'

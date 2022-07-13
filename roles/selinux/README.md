@@ -13,7 +13,7 @@ Tested on
 
 ### Mandatory
 
-* Install the SELinux python bindings. This can be done using the [linuxfabrik.lfops.libselinux_python](https://github.com/Linuxfabrik/lfops/tree/main/roles/libselinux_python) role.
+* Install the SELinux python bindings. This can be done using the [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) role.
 
 
 ### Optional
