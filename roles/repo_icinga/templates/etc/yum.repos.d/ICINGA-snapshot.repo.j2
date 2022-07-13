@@ -1,8 +1,8 @@
 # {{ ansible_managed }}
-# 2022061301
+# 2022071301
 
 {% if repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length %}
-  {% set repo_icinga__baseurl = repo_icinga__mirror_url %}
+  {% set repo_icinga__baseurl = repo_icinga__mirror_url ~ '/icinga' %}
 {% else %}
   {% set repo_icinga__baseurl = 'https://packages.icinga.com' %}
 {% endif %}
@@ -14,7 +14,7 @@
   {% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
     {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/subscription/rhel' %}
   {% else %}
-    {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/epel' %}
+    {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/icinga/epel' %}
   {% endif %}
 {% endif %}
 
