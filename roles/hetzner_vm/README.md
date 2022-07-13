@@ -69,7 +69,7 @@ hetzner_vm__location: 'nbg1'
 
 #### hetzner_vm__server_type
 
-The Hetzner server type. The possible options can be obtained using `hcloud server-type list`. Note that you cannot upgrade a running instance. Either stop the instance using `hetzner_vm__state: 'stopped'` or set `hetzner_vm__force: true`.
+The Hetzner server type. This defines the number of CPU cores, the CPU type, the disk space and the memory size. The possible options can be obtained using `hcloud server-type list`. Note that you cannot upgrade a running instance. Either stop the instance using `hetzner_vm__state: 'stopped'` or set `hetzner_vm__force: true`.
 
 Example:
 ```yaml
