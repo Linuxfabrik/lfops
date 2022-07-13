@@ -18,8 +18,3 @@ sshd__combined_log_level: '{{
   sshd__dependent_log_level if sshd__dependent_log_level else
   sshd__role_log_level if sshd__role_log_level
 }}'
-
-# -----------------------------------------------------------------------------
-
-sshd__python__dependent_modules:
-  - 'python3-policycoreutils'

@@ -153,7 +153,3 @@ nextcloud__php__dependent_modules:
 
 
 nextcloud__php__ini_memory_limit: '512M'
-
-
-nextcloud__python__dependent_modules:
-  - 'python3-policycoreutils'

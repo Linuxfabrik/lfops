@@ -5,10 +5,8 @@
 
   roles:
 
-    - role: 'python'
-      python__dependent_modules:
-        - '{{ sshd__python__dependent_modules }}'
+    - role: 'linuxfabrik.lfops.policycoreutils'
       when:
-        - 'not sshd__skip_python | default(false)'
+        - 'ansible_facts["os_family"] == "RedHat"'
 
     - role: 'sshd'

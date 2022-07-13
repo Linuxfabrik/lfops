@@ -78,10 +78,13 @@
 
     # === Various tools / dependencies ===
 
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
     - role: 'linuxfabrik.lfops.python'
       python__dependent_modules:
         - '{{ monitoring_plugins__python__dependent_modules | d([]) }}'
-        - '{{ sshd__python__dependent_modules }}'
       when:
         - 'not basic_setup__skip_python | d(false)'
 

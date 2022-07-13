@@ -18,7 +18,7 @@ Tested on
 
 ### Mandatory
 
-* Install the `python3-policycoreutils` module (required for the SELinux Ansible tasks).
+* Install the `python3-policycoreutils` module (required for the SELinux Ansible tasks). This can be done using the [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) role.
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 
 

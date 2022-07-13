@@ -32,9 +32,3 @@ fail2ban__combined_jails: '{{ fail2ban__role_jails +
   fail2ban__dependent_jails
   | flatten
  }}'
-
-
-# -----------------------------------------------------------------------------
-
-fail2ban__python__dependent_modules:
-  - 'python3-policycoreutils'
