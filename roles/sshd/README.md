@@ -109,7 +109,7 @@ Specifies whether root can log in using ssh. Possible options:
 
 Default:
 ```yaml
-sshd__permit_root_login: 'no'
+sshd__permit_root_login: 'yes'
 ```
 
 
