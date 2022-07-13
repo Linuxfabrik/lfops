@@ -38,6 +38,25 @@
       mode: 0o644
     notify: 'php: restart php-fpm'
 
+  tags:
+    - 'php'
+
+
+- block:
+
+  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm'
+    ansible.builtin.service:
+      name: 'php-fpm'
+      enabled: '{{ php__fpm_service_enabled }}'
+      state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'php'
+    - 'php:state'
+
+
+- block:
+
   - name: 'Remove absent pools from /etc/php-fpm.d'
     ansible.builtin.file:
       path: '/etc/php-fpm.d/{{ item.name }}.conf'
@@ -59,21 +78,5 @@
     loop: '{{ php__combined_fpm_pools }}'
     notify: 'php: restart php-fpm'
 
-  - name: 'flush handlers so that the service can be used by other roles later'
-    ansible.builtin.meta: 'flush_handlers'
-
   tags:
     - 'php'
-
-
-- block:
-
-  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm'
-    ansible.builtin.service:
-      name: 'php-fpm'
-      enabled: '{{ php__fpm_service_enabled }}'
-      state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
-
-  tags:
-    - 'php'
-    - 'php:state'
