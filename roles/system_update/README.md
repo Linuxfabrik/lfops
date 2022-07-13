@@ -55,16 +55,6 @@ system_update__notification_sender: 'noreply@example.com'
 ```
 
 
-#### system_update__notification_hostname_prefix
-
-This will set a prefix that will be showed in front of the hostname. Can be used to separate servers by environment or customer.
-
-Example:
-```yaml
-system_update__notification_hostname_prefix: '1234-'
-```
-
-
 #### system_update__new_configfile_notification_recipients
 
 A list of email recipients to notify if there is a new version of a config file (`rpmnew` / `rpmsave` / `dpkg-dist` / `ucf-dist`).
@@ -77,11 +67,36 @@ system_update__new_configfile_notification_recipients:
 ```
 
 
+### Optional
+
+#### system_update__notification_hostname_prefix
+
+This will set a prefix that will be showed in front of the hostname. Can be used to separate servers by environment or customer.
+
+Defaul:
+```yaml
+system_update__notification_hostname_prefix: ''
+```
+
+Example:
+```yaml
+system_update__notification_hostname_prefix: '1234-'
+```
+
+
+#### system_update__update_enabled
+
+Default:
+```yaml
+system_update__update_enabled: true
+```
+
+
 #### system_update__update_on_calendar
 
 When the notification for the expected updates should be sent. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 
-Example:
+Default:
 ```yaml
 system_update__update_on_calendar: 'mon 10:00'
 ```
@@ -91,19 +106,9 @@ system_update__update_on_calendar: 'mon 10:00'
 
 The time when to actually execute the updates (and automatically reboot if necessary), relative to `system_update__update_on_calendar`.
 
-Example:
-```yaml
-system_update__update_time: '04:00 + 1 days'
-```
-
-
-### Optional
-
-#### system_update__update_enabled
-
 Default:
 ```yaml
-system_update__update_enabled: true
+system_update__update_time: '04:00 + 1 days'
 ```
 
 
