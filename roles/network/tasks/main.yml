@@ -9,6 +9,8 @@
   - name: 'Use fedora.linux_system_roles.network role to configure the network'
     include_role:
       name: 'fedora.linux_system_roles.network'
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   - name: 'dnf remove hc-utils # hetzner cloud utilities - they cause problems with NetworkManager'
     ansible.builtin.package:
