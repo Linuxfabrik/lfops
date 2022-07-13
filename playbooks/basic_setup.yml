@@ -26,6 +26,10 @@
     #   when:
     #     - 'not basic_setup__skip_freeipa_client | d(true)'
 
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
     - role: 'linuxfabrik.lfops.selinux'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
@@ -73,10 +77,6 @@
 
 
     # === Various tools / dependencies ===
-
-    - role: 'linuxfabrik.lfops.policycoreutils'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
 
     - role: 'linuxfabrik.lfops.python'
       python__dependent_modules:
