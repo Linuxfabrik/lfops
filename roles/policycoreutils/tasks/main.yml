@@ -5,10 +5,10 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
-  - name: 'Make sure SELinux python bindings are installed'
+  - name: 'Make sure SELinux policy core python utilities are installed'
     ansible.builtin.package:
-      name: '{{ libselinux_python__package }}'
+      name: '{{ policycoreutils__package }}'
       state: 'present'
 
   tags:
-    - 'libselinux_python'
+    - 'policycoreutils'

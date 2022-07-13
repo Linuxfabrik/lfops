@@ -23,6 +23,9 @@ Role: login
 Role: chrony
 * Fixed wrong variable prefix: Adjusted `chrony_server__` to `chrony__`.
 
+Role: libselinux_python:
+* Renamed the role to policycoreutils.
+
 
 
 ### Added
