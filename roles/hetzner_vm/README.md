@@ -19,7 +19,7 @@ Tested on
 
 ### Optional
 
-* Install the [hcloud command line tool](https://github.com/hetzner/cli/releases).
+* Install the [hcloud command line tool](https://github.com/hetznercloud/cli/releases).
 
 
 ## Tags
