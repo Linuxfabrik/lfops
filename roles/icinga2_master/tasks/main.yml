@@ -15,18 +15,24 @@
       name: 'icinga2_can_connect_all'
       state: true
       persistent: true
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   - name: 'setsebool -P icinga2_run_sudo on'
     ansible.posix.seboolean:
       name: 'icinga2_run_sudo'
       state: true
       persistent: true
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   - name: 'setsebool -P nagios_run_sudo on # this is for the plugins, not the icinga2 core itself'
     ansible.posix.seboolean:
       name: 'nagios_run_sudo'
       state: true
       persistent: true
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   tags:
     - 'icinga2_master'

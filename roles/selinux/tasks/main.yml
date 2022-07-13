@@ -18,6 +18,8 @@
       state: '{{ item.value }}'
       persistent: true
     loop: '{{ selinux__combined_booleans }}'
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   tags:
     - 'selinux'
