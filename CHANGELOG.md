@@ -73,7 +73,6 @@ New features:
 * Role: keycloak
 * Role: kvm_host
 * Role: librenms
-* Role: libselinux_python
 * Role: login
 * Role: mailto_root
 * Role: mariadb_server
@@ -83,6 +82,7 @@ New features:
 * Role: openvpn_server
 * Role: perl
 * Role: php
+* Role: policycoreutils
 * Role: redis
 * Role: repo_baseos
 * Role: repo_collabora_code
