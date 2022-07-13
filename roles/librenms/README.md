@@ -1,21 +1,22 @@
-# Ansible Role python_venv
+# Ansible Role librenms
 
-This role creates and manages various [Python 3 virtual environments (venv)](https://docs.python.org/3/library/venv.html). These are placed below `/opt/python-venv/` on the target system.
+This role installs and configures [LibreNMS](https://www.librenms.org/).
 
-FQCN: linuxfabrik.lfops.python_venv
+FQCN: linuxfabrik.lfops.librenms
 
 Tested on
 
-* RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
-* Fedora 35
 
 
 ## Requirements
 
 ### Mandatory
 
-* Install Python 3
+* Install Python 3, and the python3-policycoreutils module (required for the SELinux Ansible tasks). This can be done using the [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) role.
+* Install MariaDB, and create a database and a user for said database. This can be done using the [linuxfabrik.lfops.influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/influxdb) role.
+* Install a web server (for example Apache httpd), and configure a virtual host for LibreNMS. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
+* Install PHP version >= 7.3. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
 
 
 ### Optional
@@ -25,56 +26,92 @@ This role does not have any optional requirements.
 
 ## Tags
 
-| Tag         | What it does                                 |
-| ---         | ------------                                 |
-| python_venv | Creates and manages the virtual environments |
+| Tag      | What it does                     |
+| ---      | ------------                     |
+| librenms | Installs and configures LibreNMS |
 
 
 ## Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/python_venv/defaults/main.yml) for the variable defaults.
+Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/librenms/defaults/main.yml) for the variable defaults.
 
 
 ### Mandatory
 
-This role does not have any mandatory variables.
+
+#### librenms__database_login
+
+The user account for accessing the MySQL database.
+
+Example:
+```yaml
+librenms__database_login:
+  username: 'librenms'
+  password: 'my-secret-password'
+```
+
+
+#### librenms__fqdn
+
+The fully qualified domain name under which LibreNMS is accessible.
+
+Example:
+```yaml
+librenms__fqdn: 'librenms.example.com'
+```
 
 
 ### Optional
 
-#### python_venv__host_venvs / python_venv__group_venvs
+#### librenms__config_auth_mechanism
 
-These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
+Which authentication mechanism LibreNMS should use. Have a look at https://docs.librenms.org/Extensions/Authentication/.
+Note that only one mechanism can be active at the same time.
 
-A list of dictionaries containing definitions for the virtual environments.
-
-Subkeys:
-
-* `exposed_binaries`: Optional, list. List of binaries which should be linked to `/usr/local/bin` for easier access on the command line. The binaries are expected to exist below `/opt/python-venv/name/bin/`.
-* `name`: Mandatory, string. The name of the virtual environment. Will be used for the folder name below `/opt/python-venv`.
-* `package_requirements`: Optional, list. These packages will be installed before installing the pip `packages` using the default package manager (e.g. `dnf`).
-* `packages`: Mandatory, list. These packages will be installed in the virtual environment using `pip`.
-* `system_site_packages`:  Optional, boolean. Defaults to `true`. Allows the virtual environment to access the system site-packages dir.
+Possible options:
+* active_directory
+* http-auth
+* ldap
+* ldap-authorization
+* mysql
+* sso
 
 Default:
 ```yaml
-python_venv__host_venvs: []
-python_venv__group_venvs: []
+librenms__config_auth_mechanism: 'mysql'
 ```
 
-Example:
+
+#### librenms__config_update_channel
+
+Which update channel LibreNMS should use during automatic updates. Possible options:
+
+* master
+* release
+
+Default:
 ```yaml
-python_venv__host_venvs:
-  - name: 'duplicity'
-    packages:
-      - 'duplicity'
-      - 'python-swiftclient'
-      - 'python-keystoneclient'
-    package_requirements:
-      - 'gcc'
-      - 'librsync-devel'
-    exposed_binaries:
-      - 'duplicity'
+librenms__config_update_channel: 'release'
+```
+
+
+#### librenms__database_host
+
+The host on which the MySQL database is reachable.
+
+Default:
+```yaml
+librenms__database_host: 'localhost'
+```
+
+
+#### librenms__database_name
+
+The name of the SQL database.
+
+Default:
+```yaml
+librenms__database_name: 'librenms'
 ```
 
 

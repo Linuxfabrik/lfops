@@ -1,5 +1,5 @@
 librenms__config_auth_mechanism: 'mysql'
-librenms__config_update_channel: 'release' # or master
+librenms__config_update_channel: 'release'
 librenms__database_host: 'localhost'
 librenms__database_name: 'librenms'
 
