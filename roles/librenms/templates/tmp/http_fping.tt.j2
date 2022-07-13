@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+# 2022071201
+
+module http_fping 1.0;
+
+require {
+type httpd_t;
+class capability net_raw;
+class rawip_socket { getopt create setopt write read };
+}
+
+#============= httpd_t ==============
+allow httpd_t self:capability net_raw;
+allow httpd_t self:rawip_socket { getopt create setopt write read };

@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# 2022071201
+
+[Service]
+ExecStart=
+ExecStart=/usr/bin/rrdcached -g -w 1800 -z 1800 -f 3600 -s librenms -U librenms -G librenms -B -R -j /var/tmp -l unix:/tmp/rrdcached.sock -t 4 -F -b /opt/librenms/rrd/

@@ -1,0 +1,270 @@
+- block:
+
+  - name: 'dnf -y install cronie fping ImageMagick mtr net-snmp net-snmp-utils nmap rrdtool unzip'
+    ansible.builtin.package:
+      name:
+        - 'cronie'
+        - 'fping'
+        - 'ImageMagick'
+        - 'mtr'
+        - 'net-snmp'
+        - 'net-snmp-utils'
+        - 'nmap'
+        - 'rrdtool'
+        - 'unzip'
+      state: 'present'
+
+  - name: 'Get latest release version'
+    ansible.builtin.uri:
+      url: 'https://api.github.com/repos/librenms/librenms/releases/latest'
+    register: 'librenms__github_release'
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'git clone https://github.com/librenms/librenms.git /opt/librenms'
+    ansible.builtin.git:
+      repo: 'https://github.com/librenms/librenms.git'
+      dest: '/opt/librenms'
+      force: false
+      version: '{{ librenms__github_release["json"]["tag_name"] }}'
+
+  - name: 'groupadd librenms'
+    ansible.builtin.group:
+      name: 'librenms'
+      state: 'present'
+
+  - name: 'useradd librenms -d /opt/librenms -M -r -s /bin/bash'
+    ansible.builtin.user:
+      comment: 'LibreNMS Service User'
+      name: 'librenms'
+      group: 'librenms'
+      home: '/opt/librenms'
+      createhome: false
+      system: true
+      shell: '/bin/bash'
+      state: 'present'
+
+  - name: 'chown -R librenms:librenms /opt/librenms'
+    ansible.builtin.command: 'chown -R librenms:librenms /opt/librenms'
+    args:
+      warn: false # this is magnitudes faster than using the file module
+
+  - name: 'chmod 771 /opt/librenms'
+    ansible.builtin.file:
+      path: '/opt/librenms'
+      mode: 0o771
+
+  # using in preference to the acls from the docs: 'setfacl -R -m g::rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache/ /opt/librenms/storage/'
+  - name: 'chmod -R g=rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache /opt/librenms/storage'
+    ansible.builtin.command: 'chmod -R g=rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache /opt/librenms/storage'
+    args:
+      warn: false # this is magnitudes faster than using the file module
+
+  - name: 'ln -s /opt/librenms/lnms /usr/local/bin/lnms'
+    ansible.builtin.file:
+      src: '/opt/librenms/lnms'
+      dest: '/usr/local/bin/lnms'
+      state: 'link'
+
+  - name: 'cp /opt/librenms/misc/lnms-completion.bash /etc/bash_completion.d/'
+    ansible.builtin.copy:
+      src: '/opt/librenms/misc/lnms-completion.bash'
+      dest: '/etc/bash_completion.d/'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+      remote_src: true
+
+  - name: 'sudo -u librenms -i ./scripts/composer_wrapper.php install --no-dev'
+    ansible.builtin.command: './scripts/composer_wrapper.php install --no-dev'
+    args:
+      chdir: '/opt/librenms'
+    become: true
+    become_user: 'librenms'
+
+  - name: 'setsebool -P httpd_can_connect_ldap true'
+    ansible.posix.seboolean:
+      name: 'httpd_can_connect_ldap'
+      state: true
+      persistent: true
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
+
+  - name: 'setsebool -P httpd_setrlimit true'
+    ansible.posix.seboolean:
+      name: 'httpd_setrlimit'
+      state: true
+      persistent: true
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
+
+  - name: "semanage fcontext -a -t httpd_sys_content_t '/opt/librenms/html(/.*)?'"
+    community.general.sefcontext:
+      setype: 'httpd_sys_content_t'
+      target: '/opt/librenms/html(/.*)?'
+      state: 'present'
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
+
+  # httpd_log_t is required for the logrotate to work
+  - name: "semanage fcontext -a -t httpd_log_t '/opt/librenms/logs(/.*)?'"
+    community.general.sefcontext:
+      setype: 'httpd_log_t'
+      target: '/opt/librenms/logs(/.*)?'
+      state: 'present'
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
+
+  - name: "semanage fcontext -a -t httpd_sys_rw_content_t '/opt/librenms/(rrd|storage)(/.*)?'"
+    community.general.sefcontext:
+      setype: 'httpd_sys_rw_content_t'
+      target: '/opt/librenms/(rrd|storage)(/.*)?'
+      state: 'present'
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
+
+  - name: "semanage fcontext -a -t httpd_sys_rw_content_t '/opt/librenms/.env'"
+    community.general.sefcontext:
+      setype: 'httpd_sys_rw_content_t'
+      target: '/opt/librenms/.env'
+      state: 'present'
+    vars:
+      ansible_python_interpreter: '/usr/libexec/platform-python'
+
+  - name: 'restorecon -RFv /opt/librenms'
+    ansible.builtin.command: 'restorecon -RFv /opt/librenms'
+    register: 'librenms__restorecon_data_result'
+    changed_when: 'librenms__restorecon_data_result["stdout"] | length'
+
+  - name: 'semodule --list-modules | grep --quiet http_fping # check for http_fping'
+    ansible.builtin.shell: 'semodule --list-modules | grep --quiet http_fping'
+    register: 'librenms__http_fping_exists_result'
+    failed_when: 'librenms__http_fping_exists_result["rc"] >= 2'
+    changed_when: false # just gathering information
+
+  - block:
+
+    - name: 'Deploy /tmp/http_fping.tt'
+      ansible.builtin.template:
+        src: 'tmp/http_fping.tt.j2'
+        dest: '/tmp/http_fping.tt'
+
+    - name: 'checkmodule -M -m -o /tmp/http_fping.mod /tmp/http_fping.tt'
+      ansible.builtin.command: 'checkmodule -M -m -o /tmp/http_fping.mod /tmp/http_fping.tt'
+
+    - name: 'semodule_package -o /tmp/http_fping.pp -m /tmp/http_fping.mod'
+      ansible.builtin.command: 'semodule_package -o /tmp/http_fping.pp -m /tmp/http_fping.mod'
+
+    - name: 'semodule --install /tmp/http_fping.pp'
+      ansible.builtin.command: 'semodule --install /tmp/http_fping.pp'
+
+    - name: 'rm /tmp/http_fping.tt /tmp/http_fping.mod /tmp/http_fping.pp'
+      ansible.builtin.file:
+        path:
+          - '/tmp/http_fping.tt'
+          - '/tmp/http_fping.mod'
+          - '/tmp/http_fping.pp'
+        state: 'absent'
+
+    # block
+    when: 'librenms__http_fping_exists_result["rc"] != 0'
+
+  # TODO: currently librenms cannot find the rrdcached socket, skipping for now
+  # - name: 'semodule --list-modules | grep --quiet rrdcached_librenms # check for rrdcached_librenms'
+  #   ansible.builtin.shell: 'semodule --list-modules | grep --quiet rrdcached_librenms'
+  #   register: 'librenms__rrdcached_librenms_exists_result'
+  #   failed_when: 'librenms__rrdcached_librenms_exists_result["rc"] >= 2'
+  #   changed_when: false # just gathering information
+
+  # - block:
+
+  #   - name: 'Deploy /tmp/rrdcached_librenms.tt'
+  #     ansible.builtin.template:
+  #       src: 'tmp/rrdcached_librenms.tt.j2'
+  #       dest: '/tmp/rrdcached_librenms.tt'
+
+  #   - name: 'checkmodule -M -m -o /tmp/rrdcached_librenms.mod /tmp/rrdcached_librenms.tt'
+  #     ansible.builtin.command: 'checkmodule -M -m -o /tmp/rrdcached_librenms.mod /tmp/rrdcached_librenms.tt'
+
+  #   - name: 'semodule_package -o /tmp/rrdcached_librenms.pp -m /tmp/rrdcached_librenms.mod'
+  #     ansible.builtin.command: 'semodule_package -o /tmp/rrdcached_librenms.pp -m /tmp/rrdcached_librenms.mod'
+
+  #   - name: 'semodule --install /tmp/rrdcached_librenms.pp'
+  #     ansible.builtin.command: 'semodule --install /tmp/rrdcached_librenms.pp'
+
+  #   - name: 'rm /tmp/rrdcached_librenms.tt /tmp/rrdcached_librenms.mod /tmp/rrdcached_librenms.pp'
+  #     ansible.builtin.file:
+  #       path:
+  #         - '/tmp/rrdcached_librenms.tt'
+  #         - '/tmp/rrdcached_librenms.mod'
+  #         - '/tmp/rrdcached_librenms.pp'
+  #       state: 'absent'
+
+  #   # block
+  #   when: 'librenms__rrdcached_librenms_exists_result["rc"] != 0'
+
+  # - name: 'mkdir -p /etc/systemd/system/rrdcached.service.d/'
+  #   ansible.builtin.file:
+  #     path: '/etc/systemd/system/rrdcached.service.d/'
+  #     state: 'directory'
+
+  # - name: 'Deploy /etc/systemd/system/rrdcached.service.d/librenms.conf'
+  #   ansible.builtin.template:
+  #     src: 'etc/systemd/system/rrdcached.service.d/librenms.conf.j2'
+  #     dest: '/etc/systemd/system/rrdcached.service.d/librenms.conf'
+  #     owner: 'root'
+  #     group: 'root'
+  #     mode: 0o644
+  #   register: 'librenms__rrdcached_systemd_override_result'
+
+  # - name: 'systemctl daemon-reload; systemctl restart rrdcached'
+  #   ansible.builtin.systemd:
+  #     name: 'rrdcached.service'
+  #     state: 'started'
+  #     enabled: true
+  #     daemon_reload: '{{ librenms__rrdcached_systemd_override_result is changed }}'
+
+  - name: 'cp /opt/librenms/misc/librenms.logrotate /etc/logrotate.d/librenms'
+    ansible.builtin.copy:
+      src: '/opt/librenms/misc/librenms.logrotate'
+      dest: '/etc/logrotate.d/librenms'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+      remote_src: true
+
+  - name: 'cp /opt/librenms/librenms.nonroot.cron /etc/cron.d/librenms'
+    ansible.builtin.copy:
+      src: '/opt/librenms/librenms.nonroot.cron'
+      dest: '/etc/cron.d/librenms'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+      remote_src: true
+
+  - name: 'Deploy /opt/librenms/config.php'
+    ansible.builtin.template:
+      src: 'opt/librenms/config.php.j2'
+      dest: '/opt/librenms/config.php'
+      owner: 'librenms'
+      group: 'librenms'
+      mode: 0o644
+
+  - name: 'Set DB connection settings in /opt/librenms/.env'
+    ansible.builtin.lineinfile:
+      path: '/opt/librenms/.env'
+      regexp: '^#?{{ item.key }}'
+      line: '{{ item.key }}={{ item.value | quote }}'
+      mode: 0o600 # file contains secrets
+      state: 'present'
+    loop:
+      - key: 'DB_HOST'
+        value: '{{ librenms__database_host }}'
+      - key: 'DB_DATABASE'
+        value: '{{ librenms__database_name }}'
+      - key: 'DB_USERNAME'
+        value: '{{ librenms__database_login["username"] }}'
+      - key: 'DB_PASSWORD'
+        value: '{{ librenms__database_login["password"] }}'
+
+  tags:
+    - 'librenms'

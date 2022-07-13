@@ -1,0 +1,70 @@
+- name: 'Install and configure LibreNMS'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_librenms'
+
+  roles:
+
+    - role: 'yum_utils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not librenms__skip_yum_utils | default(false)'
+
+    - role: 'repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+
+    - role: 'repo_mydumper'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
+        - 'not librenms__skip_repo_mydumper | default(false)'
+
+    - role: 'repo_mariadb'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not librenms__skip_repo_mariadb | default(false)'
+
+    - role: 'policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - role: 'python'
+      python__dependent_modules:
+        - '{{ mariadb_server__python__dependent_modules | default([]) }}'
+      when:
+        - 'not librenms__skip_python | default(false)'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__dependent_sysctl: '{{ mariadb_server__kernel_settings__dependent_sysctl | d([]) }}'
+      when:
+        - 'not librenms__skip_kernel_settings | d(false)'
+
+    - role: 'mariadb_server'
+      mariadb_server__dependent_databases:
+        - '{{ librenms__mariadb_server__dependent_databases | default({}) }}'
+      mariadb_server__dependent_users:
+        - '{{ librenms__mariadb_server__dependent_users | default({}) }}'
+      when:
+        - 'not librenms__skip_mariadb_server | default(false)'
+
+    - role: 'repo_remi'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not librenms__skip_repo_remi | default(false)'
+
+    - role: 'php'
+      php__dependent_modules:
+        - '{{ librenms__php__dependent_modules | default([]) }}'
+      php__dependent_fpm_pools:
+        - '{{ librenms__php__dependent_fpm_pools | default({}) }}'
+      when:
+        - 'not librenms__skip_php | default(false)'
+
+    - role: 'git'
+
+    - role: 'librenms'
+
+    - role: 'apache_httpd'
+      apache_httpd__dependent_vhosts: '{{ librenms__apache_httpd__dependent_vhosts | d([]) }}'
+      when:
+        - 'not librenms__skip_apache_httpd | default(false)'
