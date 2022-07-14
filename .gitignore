@@ -4,3 +4,5 @@ venv/*
 tests/output/*
 **/__pycache__/*
 **/.cache/*
+playbook/test.yml
+roles/test
