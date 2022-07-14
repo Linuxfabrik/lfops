@@ -88,12 +88,7 @@ nextcloud__apache_httpd__dependent_vhosts:
       - 'txt'
       - 'woff2?'
     allowed_http_methods:
-      - 'DELETE'
-      - 'GET'
-      - 'OPTIONS'
-      - 'POST'
-      - 'PROPFIND'
-      - 'PUT'
+      - '.*'
     authz_file_extensions: |-
         Require all granted
     authz_document_root: |-
