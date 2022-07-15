@@ -1,10 +1,11 @@
 # {{ ansible_managed }}
-# 2022052701
+# 2022071501
 
 [Unit]
 Description=acme.sh Service
 
 [Service]
+ExecStartPre=/opt/acme.sh/acme.sh --upgrade --home /opt/acme.sh --config-home /etc/acme.sh
 ExecStart=/opt/acme.sh/acme.sh --cron --home /opt/acme.sh --config-home /etc/acme.sh
 Type=oneshot
 User=root

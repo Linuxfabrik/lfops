@@ -55,7 +55,13 @@
 
 - block:
 
-  - name: 'acme.sh --list'
+  - name: 'acme.sh --config-home /etc/acme.sh --upgrade'
+    ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --upgrade'
+    changed_when: '"Already uptodate" not in acme_sh__upgrade_result["stdout"]'
+    failed_when: '"Upgrade success" not in acme_sh__upgrade_result["stdout"]'
+    register: 'acme_sh__upgrade_result'
+
+  - name: 'acme.sh --config-home /etc/acme.sh --list'
     ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --list'
     changed_when: false # just gathering information
     register: 'acme_sh__list_result'
