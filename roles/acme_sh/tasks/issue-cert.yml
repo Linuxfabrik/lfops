@@ -11,16 +11,16 @@
     that: '"it works" in acme_sh__curl_result.content'
     fail_msg: 'could not reach http://{{ certificate }}/.well-known/acme-challenge/index.html. please make sure the url is reachable for acme.sh to work.'
 
-- name: '/opt/acme.sh/acme.sh --issue ...'
+- name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --issue ...'
   ansible.builtin.command: |-
-    /opt/acme.sh/acme.sh --issue \
+    /opt/acme.sh/acme.sh --config-home /etc/acme.sh --issue \
     --domain '{{ certificate }}' \
     --webroot /var/www/html/letsencrypt \
     --server https://acme-v02.api.letsencrypt.org/directory
 
-- name: '/opt/acme.sh/acme.sh --install-cert ...'
+- name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert ...'
   ansible.builtin.command: |-
-    /opt/acme.sh/acme.sh --install-cert \
+    /opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert \
     --domain '{{ certificate }}' \
     --cert-file "/etc/pki/tls/certs/{{ certificate }}.crt" \
     --key-file "/etc/pki/tls/private/{{ certificate }}.key" \
