@@ -347,7 +347,7 @@ apache_httpd__conf_keep_alive_timeout: 5
 apache_httpd__conf_limit_request_body: 102400
 apache_httpd__conf_limit_request_fields: 100
 apache_httpd__conf_limit_request_field_size: 8190 # deviating from CIS value (1024), as this is a problem with any modern application which sets cookies in its Header
-apache_httpd__conf_limit_request_line: 512
+apache_httpd__conf_limit_request_line: 8190 # deviating from CIS value (512)
 apache_httpd__conf_listen:
   - 80
 apache_httpd__conf_log_level: 'warn'
