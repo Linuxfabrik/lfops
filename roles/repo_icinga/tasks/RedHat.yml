@@ -1,7 +1,7 @@
 - block:
 
   - name: 'dnf -y install {{ repo_icinga__rpm_release_url }}'
-    ansible.builtin.dnf:
+    ansible.builtin.package:
       name: '{{ repo_icinga__rpm_release_url }}'
       state: 'present'
       disable_gpg_check: true
