@@ -78,6 +78,7 @@ New features:
 * Role: mariadb_server
 * Role: network
 * Role: nextcloud
+* Role: nfs_server
 * Role: openssl
 * Role: openvpn_server
 * Role: perl

@@ -1,0 +1,52 @@
+- block:
+
+  - name: 'dnf -y install nfs-utils'
+    ansible.builtin.package:
+      name: 'nfs-utils'
+      state: 'present'
+
+  tags:
+    - 'nfs_server'
+
+
+- block:
+
+  - name: 'systemctl {{ nfs_server__service_enabled | bool | ternary("enable", "disable") }} --now nfs-server.service'
+    ansible.builtin.systemd:
+      name: 'nfs-server.service'
+      enabled: '{{ nfs_server__service_enabled }}'
+      state: '{{ nfs_server__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'nfs_server'
+    - 'nfs_server:state'
+
+
+- block:
+
+  - name: 'Ensure directories to export exist'
+    ansible.builtin.file:
+      path: '{{ item.strip().split()[0] }}'
+      state: 'directory'
+      owner: 'nobody'
+      group: 'nobody'
+    loop: '{{ nfs_server__exports }}'
+
+  - name: 'Deploy /etc/exports'
+    ansible.builtin.template:
+      src: 'etc/exports.j2'
+      dest: '/etc/exports'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'nfs_server__etc_exports_result'
+
+  - name: 'systemctl reload nfs-server.service'
+    ansible.builtin.systemd:
+      name: 'nfs-server.service'
+      state: 'reloaded'
+    when: 'nfs_server__etc_exports_result is changed'
+
+  tags:
+    - 'nfs_server'
+    - 'nfs_server:exports'

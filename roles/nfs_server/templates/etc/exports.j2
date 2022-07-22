@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# 2022072201
+
+{% for item in nfs_server__exports %}
+{{ item }}
+{% endfor %}
