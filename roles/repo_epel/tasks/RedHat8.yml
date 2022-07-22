@@ -1,0 +1,8 @@
+- block:
+
+  - name: 'dnf config-manager --set-enabled powertools'
+    ansible.builtin.command: 'dnf config-manager --set-enabled powertools'
+
+  when: 'repo_epel__mirror_url is not defined or not repo_epel__mirror_url | length'
+  tags:
+    - 'repo_epel'
