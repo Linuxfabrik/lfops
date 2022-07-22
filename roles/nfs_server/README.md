@@ -44,7 +44,17 @@ nfs_server__exports:
 
 ### Optional
 
-This role does not have any optional variables.
+#### nfs_server__service_enabled
+
+Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. Possible options:
+
+* true
+* false
+
+Default:
+```yaml
+nfs_server__service_enabled: true
+```
 
 
 ## License
