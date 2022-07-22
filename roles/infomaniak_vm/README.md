@@ -14,7 +14,7 @@ Tested on
 ### Mandatory
 
 * Install the [openstack command line tool](https://docs.openstack.org/newton/user-guide/common/cli-install-openstack-command-line-clients.html).
-* Import your public SSH-key into Infomaniak ([here](https://portal.infomaniak.com/compute/keypairs)). Ideally, set the key name to your local username (replace `.` with ` `), then you can use the default value for `infomaniak_vm__key_name`.
+* Import your public SSH-key into Infomaniak ([here](https://api.pub1.infomaniak.cloud/horizon/project/key_pairs)). Ideally, set the key name to your local username (replace `.` with ` `), then you can use the default value for `infomaniak_vm__key_name`.
 
 
 ### Optional
