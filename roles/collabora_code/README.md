@@ -84,6 +84,16 @@ collabora_code__coolwsd_allowed_languages:
   - 'it_IT'
 ```
 
+#### collabora_code__coolwsd_experimental_features
+
+If experimental features should be enabled or not.
+
+Default:
+```yaml
+collabora_code__coolwsd_experimental_features: false
+```
+
+
 
 #### collabora_code__coolwsd_logging_file_enable
 

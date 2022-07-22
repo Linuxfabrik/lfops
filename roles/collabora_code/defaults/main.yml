@@ -9,6 +9,7 @@ collabora_code__coolwsd_allowed_languages:
   - 'fr'
   - 'it_IT'
 
+collabora_code__coolwsd_experimental_features: false
 collabora_code__coolwsd_logging_file_enable: true
 collabora_code__coolwsd_out_of_focus_timeout_secs: 120
 collabora_code__coolwsd_post_allow: []
