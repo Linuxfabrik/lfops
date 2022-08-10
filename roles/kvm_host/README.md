@@ -99,6 +99,47 @@ kvm_host__libvirtd_service_enabled: true
 ```
 
 
+#### kvm_host__networks
+
+A list of libvirt network definitions.
+
+Subkeys:
+
+* `name`: Mandatory, string. The name of the network.
+* `bridge`: Optional, string. If set, will be used as the network bridge.
+* `ip_address`: Optional, string. If set, will be used the IP address for the interface.
+* `subnet`: Optional, string. Subnet mask for the network. Defaults to `255.255.255.0` if the `ip_address` is set.
+* `dhcp_start`: Optional, string. Start of the DHCP range. Requires `dhcp_end` to be set as well.
+* `dhcp_end`: Optional, string. End of the DHCP range. Requires `dhcp_start` to be set as well.
+
+Example:
+```yaml
+kvm_host__networks:
+  - name: 'default'
+    bridge: 'virbr0'
+    ip_address: '192.0.2.0.1'
+    subnet: '255.255.255.0'
+    dhcp_start: '192.0.2.0.10'
+    dhcp_end: '192.0.2.0.254'
+```
+
+
+#### kvm_host__pools
+
+A list of libvirt storage pool definitions. Currently only supports directory pools.
+
+Subkeys:
+
+* `name`: Mandatory, string. The name of the pool. Use `default` to overwrite the default pool.
+* `path`: Mandatory, string. Path to the directory that should be used as the storage pool.
+
+Example:
+```yaml
+kvm_host__pools:
+  - name: 'default'
+    path: '/data/kvm/images'
+```
+
 
 ## License
 
