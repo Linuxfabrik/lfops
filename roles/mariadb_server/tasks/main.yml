@@ -227,6 +227,7 @@
     - 'mariadb_server__monitoring | length'
   tags:
     - 'mariadb_server'
+    - 'mariadb_server:user'
     - 'mariadb_server:configure'
 
 
