@@ -1,3 +1,15 @@
+- block:
+
+  - name: 'dnf install icinga2 -y'
+    ansible.builtin.package:
+      name: 'icinga2'
+      state: 'present'
+
+  when: 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'icinga2_agent'
+
+
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
   vars:
@@ -12,18 +24,6 @@
       paths:
         - '{{ role_path }}/tasks'
   ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
-  tags:
-    - 'icinga2_agent'
-
-
-- block:
-
-  - name: 'dnf install icinga2 -y'
-    ansible.builtin.package:
-      name: 'icinga2'
-      state: 'present'
-
-  when: 'ansible_facts["os_family"] != "Windows"'
   tags:
     - 'icinga2_agent'
 
