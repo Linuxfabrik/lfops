@@ -223,8 +223,8 @@
       ansible_python_interpreter: '/usr/libexec/platform-python'
 
   when:
-    - 'mariadb_server__monitoring is defined'
-    - 'mariadb_server__monitoring | length'
+    - 'mariadb_server__monitoring_login is defined'
+    - 'mariadb_server__monitoring_login | length'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:user'
