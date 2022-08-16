@@ -73,7 +73,7 @@ Subkeys:
 
 Example:
 ```yaml
-influxdb_databases:
+influxdb__host_databases:
   - name: 'database1'
     state: 'present'
     retention: '216d'
@@ -83,7 +83,6 @@ influxdb_databases:
 #### influxdb__host_users / influxdb__group_users
 
 These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
-
 
 List of InfluxDB users that should be created, updated or deleted.
 
@@ -97,7 +96,7 @@ Subkeys:
 
 Example:
 ```yaml
-influxdb_users:
+influxdb__host_users:
   - name: 'user1'
     password: 'some-secret-password'
     state: 'present'
