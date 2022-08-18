@@ -30,6 +30,12 @@ Tested on
 | --------             | -----------                                                                                                                                                                                               |
 | `firewall__firewall` | Which firewall should be activated and configured. All other firewalls will be disabled. Possible options:<br> * `None`<br> * `firewalld`<br> * `fwbuilder`<br> * `iptables`<br> * `nftables`<br> * `ufw` |
 
+Example:
+```yaml
+# mandatory
+firewall__firewall: 'fwbuilder'
+```
+
 
 ## License
 
