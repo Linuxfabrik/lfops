@@ -1,69 +1,31 @@
-# Ansible Role DNF-Makecache
+# Ansible Role linuxfabrik.lfops.dnf_makecache
 
-This role ensures that the Systemd-Service DNF-Makecache is disabled.
-
-FQCN: linuxfabrik.lfops.dnf_makecache
+This role ensures that the DNF-makecache Systemd service and timer are disabled.
 
 Tested on
 
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-### Mandatory
-
-This role does not have any mandatory requirements.
-
-
-### Optional
-
-This role does not have any optional requirements.
-
-
 ## Tags
 
-| Tag           | What it does                                |
-| ---           | ------------                                |
-| dnf_makecache | Manages the dnf-makecache service and timer |
+| Tag             | What it does                                |
+| ---             | ------------                                |
+| `dnf_makecache` | Manages the dnf-makecache service and timer |
 
 
-## Role Variables
+## Optional Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/dnf_makecache/defaults/main.yml) for the variable defaults.
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `dnf_makecache__service_enabled` | Enables or disables the DNF-makecache service, analogous to `systemctl enable/disable --now`. | `false` |
+| `dnf_makecache__timer_enabled` | Enables or disables the DNF-makecache timer, analogous to `systemctl enable/disable --now`. | `false` |
 
-
-### Mandatory
-
-This role does not have any mandatory variables.
-
-
-### Optional
-
-#### dnf_makecache__service_enabled
-
-Enables or disables the dnf-makecache service, analogous to `systemctl enable/disable`. Possible options:
-
-* true
-* false
-
-Default:
+Example:
 ```yaml
+# optional
 dnf_makecache__service_enabled: false
-```
-
-#### dnf_makecache__service_state
-
-Changes the state of the dnf-makecache service, analogous to `systemctl start/stop/restart/reload`. Possible options:
-
-* started
-* stopped
-* restarted
-* reloaded
-
-Default:
-```yaml
-dnf_makecache__service_state: 'stopped'
+dnf_makecache__timer_enabled: false
 ```
 
 

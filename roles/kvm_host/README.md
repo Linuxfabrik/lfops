@@ -1,119 +1,44 @@
-# Ansible Role kvm_host
+# Ansible Role linuxfabrik.lfops.kvm_host
 
 This role installs the required packages and configures the host as a KVM host.
-
-FQCN: linuxfabrik.lfops.kvm_host
 
 Tested on
 
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-### Mandatory
+## Mandatory Requirements
 
 * Install Python 3, and the python3-libvirt and python3-lxml modules.
 
 
-### Optional
-
-This role does not have any optional requirements.
-
-
 ## Tags
 
-| Tag      | What it does                                                       |
-| ---      | ------------                                                       |
-| kvm_host | Install the required packages and configure the host as a KVM host |
+| Tag        | What it does                                                       |
+| ---        | ------------                                                       |
+| `kvm_host` | Install the required packages and configure the host as a KVM host |
 
 
-## Role Variables
+## Optional Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/kvm_host/defaults/main.yml) for the variable defaults.
-
-
-### Mandatory
-
-This role does not have any mandatory variables.
-
-
-### Optional
-
-#### kvm_host__libvirt_guests_on_shutdown
-
-What should happen with the guests (VMs) when the host shuts down. Possible options:
-
-* shutdown
-* suspend
-
-Default:
-```yaml
-kvm_host__libvirt_guests_on_shutdown: 'shutdown'
-```
-
-
-#### kvm_host__libvirt_guests_parallel_shutdown
-
-Number of guests will be shutdown concurrently.
-
-Default:
-```yaml
-kvm_host__libvirt_guests_parallel_shutdown: 5
-```
-
-
-#### kvm_host__libvirt_guests_shutdown_timeout
-
-Number of seconds we're willing to wait for a guest to shut down.
-
-Default:
-```yaml
-kvm_host__libvirt_guests_shutdown_timeout: 300
-```
-
-
-#### kvm_host__libvirt_guests_service_enabled
-
-Enables or disables the libvirt-guests service, analogous to `systemctl enable/disable --now`. Possible options:
-
-* true
-* false
-
-Default:
-```yaml
-kvm_host__libvirt_guests_service_enabled: true
-```
-
-
-#### kvm_host__libvirtd_service_enabled
-
-Enables or disables the libvirtd service, analogous to `systemctl enable/disable --now`. Possible options:
-
-* true
-* false
-
-Default:
-```yaml
-kvm_host__libvirtd_service_enabled: true
-```
-
-
-#### kvm_host__networks
-
-A list of libvirt network definitions.
-
-Subkeys:
-
-* `name`: Mandatory, string. The name of the network.
-* `bridge`: Optional, string. If set, will be used as the network bridge.
-* `ip_address`: Optional, string. If set, will be used the IP address for the interface.
-* `subnet`: Optional, string. Subnet mask for the network. Defaults to `255.255.255.0` if the `ip_address` is set.
-* `dhcp_start`: Optional, string. Start of the DHCP range. Requires `dhcp_end` to be set as well.
-* `dhcp_end`: Optional, string. End of the DHCP range. Requires `dhcp_start` to be set as well.
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `kvm_host__libvirt_guests_on_shutdown` | What should happen with the guests (VMs) when the host shuts down. Possible options:<br> * `shutdown`<br> * `suspend` | `'shutdown'` |
+| `kvm_host__libvirt_guests_parallel_shutdown` | Number of guests will be shutdown concurrently. | `5` |
+| `kvm_host__libvirt_guests_service_enabled` | Enables or disables the libvirt-guests service, analogous to `systemctl enable/disable --now`. | `true` |
+| `kvm_host__libvirt_guests_shutdown_timeout` | Number of seconds we're willing to wait for a guest to shut down. | `300` |
+| `kvm_host__libvirtd_service_enabled` | Enables or disables the libvirtd service, analogous to `systemctl enable/disable --now`. | `true` |
+| `kvm_host__networks` | A list of libvirt network definitions. Subkeys:<br> * `name`: Mandatory, string. The name of the network.<br> * `bridge`: Optional, string. If set, will be used as the network bridge.<br> * `ip_address`: Optional, string. If set, will be used the IP address for the interface.<br> * `subnet`: Optional, string. Subnet mask for the network. Defaults to `255.255.255.0` if the `ip_address` is set.<br> * `dhcp_start`: Optional, string. Start of the DHCP range. Requires `dhcp_end` to be set as well.<br> * `dhcp_end`: Optional, string. End of the DHCP range. Requires `dhcp_start` to be set as well. | `[]` |
+| `kvm_host__pools` | A list of libvirt storage pool definitions. Currently only supports directory pools. Subkeys:<br> * `name`: Mandatory, string. The name of the pool. Use `default` to overwrite the default pool.<br> * `path`: Mandatory, string. Path to the directory that should be used as the storage pool. | `[]` |
 
 Example:
 ```yaml
+# optional
+kvm_host__libvirt_guests_on_shutdown: 'shutdown'
+kvm_host__libvirt_guests_parallel_shutdown: 5
+kvm_host__libvirt_guests_service_enabled: true
+kvm_host__libvirt_guests_shutdown_timeout: 300
+kvm_host__libvirtd_service_enabled: true
 kvm_host__networks:
   - name: 'default'
     bridge: 'virbr0'
@@ -121,20 +46,6 @@ kvm_host__networks:
     subnet: '255.255.255.0'
     dhcp_start: '192.0.2.0.10'
     dhcp_end: '192.0.2.0.254'
-```
-
-
-#### kvm_host__pools
-
-A list of libvirt storage pool definitions. Currently only supports directory pools.
-
-Subkeys:
-
-* `name`: Mandatory, string. The name of the pool. Use `default` to overwrite the default pool.
-* `path`: Mandatory, string. Path to the directory that should be used as the storage pool.
-
-Example:
-```yaml
 kvm_host__pools:
   - name: 'default'
     path: '/data/kvm/images'

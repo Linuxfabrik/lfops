@@ -3,6 +3,8 @@ kvm_host__libvirt_guests_parallel_shutdown: 5
 kvm_host__libvirt_guests_service_enabled: true
 kvm_host__libvirt_guests_shutdown_timeout: 300
 kvm_host__libvirtd_service_enabled: true
+kvm_host__networks: []
+kvm_host__pools: []
 
 # -----------------------------------------------------------------------------
 

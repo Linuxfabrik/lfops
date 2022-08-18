@@ -30,7 +30,6 @@ Tested on
 | `icinga2_master__enrolment_api_user` | The API account for generating tickets. This can be used to enrol new hosts.                 |
 | `icinga2_master__influxdb_login`     | The user account for accessing the Icinga2 InfluxDB database.                                |
 
-
 Example:
 ```yaml
 # mandatory
@@ -59,7 +58,6 @@ icinga2_master__influxdb_login:
 | `icinga2_master__influxdb_host` | The host on which the InfluxDB database is reachable. | `'localhost'` |
 | `icinga2_master__influxdb_retention` | Determines how long InfluxDB should keep the Icinga2 data. If specified, it should be `INF` or at least one hour. | `'216d'` |
 | `icinga2_master__service_enabled` | Enables or disables the Icinga2 service, analogous to `systemctl enable/disable --now`. | `true` |
-
 
 Example:
 ```yaml
@@ -109,8 +107,6 @@ Adjust the following variables for the secondary Icinga2 master.
 | `icinga2_master__node_role` | The role of this Icinga2 node. Possible options:<br> * `primary`<br> * `secondary` | `'primary'` |
 | `icinga2_master__primary_host` | The host on which the Icinga2 master is running. Needs to be reachable from the secondary node. | unset |
 | `icinga2_master__primary_port` | The port on which the Icinga2 master is running. Needs to be reachable from the secondary node. | unset |
-
-
 
 Example:
 ```yaml

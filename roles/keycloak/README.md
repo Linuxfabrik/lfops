@@ -1,54 +1,46 @@
-# Ansible Role keycloak
+# Ansible Role linuxfabrik.lfops.keycloak
 
 This role installs [keycloak](https://www.keycloak.org/guides#getting-started).
 
-FQCN: linuxfabrik.lfops.keycloak
-
 Tested on
 
-* RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
 
 
-## Requirements
+## Mandatory Requirements
 
-One of the following database servers with `keycloak` database:
+* Install one of the following database servers , and create a database and a user for said database. For MariaDB, this can be done using the [linuxfabrik.lfops.influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/influxdb) role.
 
-| Database  | Tested version |
-| --------  | -------------- |
-| mariadb 	| 10			 |
-| mssql		| 2016			 |
-| mysql		| 8				 |
-| oracle	| 12c			 |
-| postgres	| 10 			 |
+  * mariadb
+  * mssql
+  * mysql
+  * oracle
+  * postgres
 
-Default:
-```yaml
-keycloak__dbserver: 'mariadb'
-```
 
 ## Tags
 
-| Tag   	| What it does      |
-| ---   	| ------------      |
-| keycloak 	| Installs keycloak |
+| Tag        | What it does      |
+| ---        | ------------      |
+| `keycloak` | Installs keycloak |
 
 
-## Role Variables
+## Mandatory Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/keycloak/defaults/main.yml) for the variable defaults.
+| Variable | Description |
+| -------- | ----------- |
+| `keycloak__https_protocols` | The cipher suites Keycloak is supposed to be using. |
+| `keycloak__version` | The version of Keycloak that should be installed. |
+| `keycloak__db_password` | The Keycloak database user's password. |
+| `keycloak__db_user` | The database user for keycloak. |
+| `keycloak__db_name` | The database name for keycloak. |
+| `keycloak__db_host` | The host where the database for keycloak is running. |
+| `keycloak__dbserver` | Specifies the database server keycloak is supposed to use. Possible options:<br> * mariadb<br> * mssql<br> * mysql<br> * oracle<br> * postgres |
+| `keycloak__admin_pass` | The Keycloak admin user's password. |
+| `keycloak__admin_user` | The Keycloak admin user. |
+| `keycloak__hostname` | The hostname where keycloak is reachable. |
+| `keycloak__mode` | Specifies the mode keycloak is supposed to run in. Possible options:<br> * `production`<br> * `development` |
 
-
-### Mandatory
-
-#### keycloak__mode
-
-Specifies the mode keycloak is supposed to run in.
-
-Possible options:
-
-* production
-* development
 
 Default:
 ```yaml
@@ -56,10 +48,6 @@ keycloak__mode: 'production'
 ```
 
 
-#### keycloak__hostname
-
-The hostname where keycloak is reachable.
-Mandatory if in production mode.
 
 Example:
 ```yml
@@ -67,10 +55,6 @@ keycloak__hostname: 'keycloak.local'
 ```
 
 
-#### keycloak__admin_user
-
-The Keycloak admin user.
-Mandatory if in production mode.
 
 Example:
 ```yml
@@ -78,10 +62,6 @@ keycloak__admin_user: 'keycloak-admin'
 ```
 
 
-#### keycloak__admin_pass
-
-The Keycloak admin user's password.
-Mandatory if in production mode.
 
 Example:
 ```yml
@@ -89,18 +69,6 @@ keycloak__admin_password: '***'
 ```
 
 
-#### keycloak__dbserver
-
-Specifies the database server keycloak is supposed to use.
-Mandatory if in production mode.
-
-Possible options:
-
-* mariadb
-* mssql
-* mysql
-* oracle
-* postgres
 
 Default:
 ```yaml
@@ -108,10 +76,6 @@ keycloak__dbserver: 'mariadb'
 ```
 
 
-#### keycloak__db_host
-
-The host where the database for keycloak is running.
-Mandatory if in production mode.
 
 Default:
 ```yml
@@ -119,10 +83,6 @@ keycloak__db_host: 'localhost'
 ```
 
 
-#### keycloak__db_name
-
-The database name for keycloak.
-Mandatory if in production mode.
 
 Default:
 ```yml
@@ -130,10 +90,6 @@ keycloak__db_name: 'keycloak'
 ```
 
 
-#### keycloak__db_user
-
-The database user for keycloak.
-Mandatory if in production mode.
 
 Default:
 ```yml
@@ -141,10 +97,6 @@ keycloak__db_user: 'keycloak'
 ```
 
 
-#### keycloak__db_password
-
-The Keycloak database user's password.
-Mandatory if in production mode.
 
 Example:
 ```yml
@@ -152,18 +104,12 @@ keycloak__db_password: '***'
 ```
 
 
-#### keycloak__version
-
-The version of Keycloak that should be installed.
 
 Default:
 ```yml
 keycloak__version: '18.0.0'
 ```
 
-#### keycloak__https_protocols
-
-The cipher suites Keycloak is supposed to be using.
 
 Default:
 ```yml
@@ -171,7 +117,10 @@ keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
 ```
 
 
-### Optional
+## Optional Role Variables
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
 
 ### keycloak__proxy_mode
 
@@ -199,17 +148,17 @@ Take extra precautions to ensure that the X-Forwarded-For header is set by your 
 Exposed path recommendations
 When using a reverse proxy, Keycloak only requires certain paths need to be exposed. The following table shows the recommended paths to expose.
 
-| Keycloak Path | Reverse Proxy Path | Exposed				| Reason 																									|
-| ------------- | ------------------ | -------				| ------ 																									|
-| /			 	| -					 | No					| When exposing all paths, admin paths are exposed unnecessarily.											|
-| /admin/		| -					 | No 					| Exposed admin paths lead to an unnecessary attack vector.													|
-| /js/			| -					 | Yes (see note below) | Access to keycloak.js needed for "internal" clients, e.g. the account console. 							|
-| /welcome/		| -					 | No 					| No need exists to expose the welcome page after initial installation.										|
-| /realms/		| /realms/			 | Yes 					| This path is needed to work correctly, for example, for OIDC endpoints.									|
-| /resources/	| /resources/		 | Yes 					| This path is needed to serve assets correctly. It may be served from a CDN instead of the Keycloak path.	|
-| /robots.txt 	| /robots.txt 		 | Yes 					| Search engine rules.																						|
-| /metrics		| -					 | No 					| Exposed metrics lead to an unnecessary attack vector.														|
-| /health 		| - 				 | No 					| Exposed health checks lead to an unnecessary attack vector.												|
+| Keycloak Path | Reverse Proxy Path | Exposed        | Reason                                                  |
+| ------------- | ------------------ | -------        | ------                                                  |
+| /       | -          | No         | When exposing all paths, admin paths are exposed unnecessarily.                     |
+| /admin/   | -          | No           | Exposed admin paths lead to an unnecessary attack vector.                         |
+| /js/      | -          | Yes (see note below) | Access to keycloak.js needed for "internal" clients, e.g. the account console.              |
+| /welcome/   | -          | No           | No need exists to expose the welcome page after initial installation.                   |
+| /realms/    | /realms/       | Yes          | This path is needed to work correctly, for example, for OIDC endpoints.                 |
+| /resources/ | /resources/    | Yes          | This path is needed to serve assets correctly. It may be served from a CDN instead of the Keycloak path.  |
+| /robots.txt   | /robots.txt      | Yes          | Search engine rules.                                            |
+| /metrics    | -          | No           | Exposed metrics lead to an unnecessary attack vector.                           |
+| /health     | -          | No           | Exposed health checks lead to an unnecessary attack vector.                       |
 
 
 Note:

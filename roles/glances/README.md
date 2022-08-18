@@ -1,39 +1,25 @@
-# Ansible Role glances
+# Ansible Role linuxfabrik.lfops.glances
 
 This role installs [glances](https://nicolargo.github.io/glances/). It also aliases `top` to `glances -t 1`.
-
-FQCN: linuxfabrik.lfops.glances
 
 Tested on
 
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-### Mandatory
+## Mandatory Requirements
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 
 
-### Optional
-
-This role does not have any optional requirements.
-
-
 ## Tags
 
-| Tag     | What it does                              |
-| ---     | ------------                              |
-| glances | Installs glances and configures the alias |
+| Tag       | What it does                              |
+| ---       | ------------                              |
+| `glances` | Installs glances and configures the alias |
 
 
-## Role Variables
-
-This role does not have any role variables.
-
-
-## License
+# License Role Variables
 
 [The Unlicense](https://unlicense.org/)
 

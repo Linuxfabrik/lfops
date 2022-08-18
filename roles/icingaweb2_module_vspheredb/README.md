@@ -1,79 +1,51 @@
-# Ansible Role icingaweb2_module_vspheredb
+# Ansible Role linuxfabrik.lfops.icingaweb2_module_vspheredb
 
-This role installs the Icinga vSphereDB Module.
-
-FQCN: linuxfabrik.lfops.icingaweb2_module_vspheredb
+This role installs and configures the [IcingaWeb2 vSphereDB Module](https://github.com/Icinga/icingaweb2-module-vspheredb).
 
 Tested on
 
 * RHEL 7 (and compatible)
 
 
-## Requirements
+## Mandatory Requirements
 
-### Mandatory
-
-* Configured IcingaWeb2
-
-
-### Optional
-
-This role does not have any optional requirements.
+* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
 
 
 ## Tags
 
-| Tag                         | What it does                              |
-| ---                         | ------------                              |
-| icingaweb2_module_vspheredb | Installs the IcingaWeb2 vSphereDB Module  |
+| Tag                           | What it does                                            |
+| ---                           | ------------                                            |
+| `icingaweb2_module_vspheredb` | Installs and configures the IcingaWeb2 vSphereDB Module |
 
 
-## Role Variables
+## Mandatory Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/icingaweb2_module_vspheredb/defaults/main.yml) for the variable defaults.
-
-
-### Mandatory
-
-#### icingaweb2_module_vspheredb__version
-
-The Module version to install. Can be found [here](https://github.com/Icinga/icingaweb2-module-vspheredb/releases).
+| Variable                               | Description                                                                                                         |
+| --------                               | -----------                                                                                                         |
+| `icingaweb2_module_vspheredb__version` | The Module version to install. Can be found [here](https://github.com/Icinga/icingaweb2-module-vspheredb/releases). |
 
 Example:
 ```yaml
+# mandatory
 icingaweb2_module_vspheredb__version: '1.4.0'
 ```
 
 
-### Optional
+## Optional Role Variables
 
-#### icingaweb2_module_vspheredb_resource
+| Variable                                    | Description               | Default Value       |
+| --------                                    | -----------               | -------------       |
+| `icingaweb2_module_vspheredb__daemon_group` | The systemd daemon group. | `'icingaweb2'`      |
+| `icingaweb2_module_vspheredb__daemon_user`  | The systemd daemon user.  | `'icingavspheredb'` |
+| `icingaweb2_module_vspheredb_resource`      | The resource DB name.     | `'vSphereDB'`       |
 
-The resource DB name.
-
-Default:
+Example:
 ```yaml
-icingaweb2_module_vspheredb__resource: 'vSphereDB'
-```
-
-
-#### icingaweb2_module_vspheredb__daemon_user
-
-The systemd daemon user.
-
-Default:
-```yaml
-icingaweb2_module_vspheredb__daemon_user: 'icingavspheredb'
-```
-
-
-#### icingaweb2_module_vspheredb__daemon_group
-
-The systemd daemon group.
-
-Default:
-```yaml
+# optional
 icingaweb2_module_vspheredb__daemon_group: 'icingaweb2'
+icingaweb2_module_vspheredb__daemon_user: 'icingavspheredb'
+icingaweb2_module_vspheredb__resource: 'vSphereDB'
 ```
 
 

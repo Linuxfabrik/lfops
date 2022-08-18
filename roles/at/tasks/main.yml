@@ -8,15 +8,11 @@
 
 - block:
 
-  - name: 'systemctl: atd enabled = {{ at__service_enabled }}'
+  - name: 'systemctl {{ at__service_enabled | bool | ternary("enable", "disable") }} --now atd'
     ansible.builtin.service:
       name: 'atd'
       enabled: '{{ at__service_enabled }}'
-
-  - name: "systemctl: atd state = {{ at__service_state }}"
-    ansible.builtin.service:
-      name: 'atd'
-      state: "{{ at__service_state }}"
+      state: '{{ at__service_enabled | bool | ternary("started", "stopped") }}'
 
   tags:
     - 'at'

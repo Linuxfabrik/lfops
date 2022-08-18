@@ -1,29 +1,17 @@
-# Ansible Role java - openjdk
+# Ansible Role linuxfabrik.lfops.java
 
 This role installs [openjdk](https://openjdk.java.net).
-
-FQCN: linuxfabrik.lfops.java
 
 Tested on
 
 * RHEL 7 (and compatible)
 
 
-## Requirements
-
-This role does not have any requirements.
-
-
 ## Tags
 
-| Tag   | What it does            |
-| ---   | ------------            |
-| java  | Installs Java - openJDK |
-
-
-## Role Variables
-
-This role does not have any role variables.
+| Tag    | What it does            |
+| ---    | ------------            |
+| `java` | Installs Java - openJDK |
 
 
 ## License

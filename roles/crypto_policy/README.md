@@ -18,7 +18,7 @@ Tested on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `crypto_policy__policy` | The crypto policy to activate. Possible options:<br> * `FIPS:LINUXFABRIK-FIPS`<br> * `FUTURE:LINUXFABRIK-FUTURE`<br> * any listed in `man 7 crypto-policies` |
+| `crypto_policy__policy` | The crypto policy to activate. Possible options:<br> * `FIPS:LINUXFABRIK-FIPS`<br> * `FUTURE:LINUXFABRIK-FUTURE`<br> * any listed in `man 7 crypto-policies` | `'FUTURE:LINUXFABRIK-FUTURE'` |
 
 Example:
 ```yaml

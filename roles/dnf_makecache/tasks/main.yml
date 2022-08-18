@@ -1,24 +1,16 @@
 - block:
 
-  - name: 'systemctl: dnf-makecache.service enabled = {{ dnf_makecache__service_enabled }}'
+  - name: 'systemctl {{ dnf_makecache__service_enabled | bool | ternary("enable", "disable") }} --now dnf-makecache.service'
     ansible.builtin.systemd:
       name: 'dnf-makecache.service'
       enabled: '{{ dnf_makecache__service_enabled }}'
+      state: '{{ dnf_makecache__service_enabled | bool | ternary("started", "stopped") }}'
 
-  - name: 'systemctl: dnf-makecache.service state = {{ dnf_makecache__service_state }}'
-    ansible.builtin.systemd:
-      name: 'dnf-makecache.service'
-      state: '{{ dnf_makecache__service_state }}'
-
-  - name: 'systemctl: dnf-makecache.timer enabled = {{ dnf_makecache__service_enabled }}'
+  - name: 'systemctl {{ dnf_makecache__timer_enabled | bool | ternary("enable", "disable") }} --now dnf-makecache.timer'
     ansible.builtin.systemd:
       name: 'dnf-makecache.timer'
-      enabled: '{{ dnf_makecache__service_enabled }}'
-
-  - name: 'systemctl: dnf-makecache.timer state = {{ dnf_makecache__service_state }}'
-    ansible.builtin.systemd:
-      name: 'dnf-makecache.timer'
-      state: '{{ dnf_makecache__service_state }}'
+      enabled: '{{ dnf_makecache__timer_enabled }}'
+      state: '{{ dnf_makecache__timer_enabled | bool | ternary("started", "stopped") }}'
 
   tags:
     - 'dnf_makecache'
