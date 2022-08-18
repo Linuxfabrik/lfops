@@ -26,9 +26,9 @@ Tested on
 
 | Variable                             | Description                                                                                  |
 | --------                             | -----------                                                                                  |
-| `icinga2_master__database_login`     | The user account for accessing the icinga2 ido database. Currently, only MySQL is supported. |
+| `icinga2_master__database_login`     | The user account for accessing the Icinga2 ido database. Currently, only MySQL is supported. |
 | `icinga2_master__enrolment_api_user` | The API account for generating tickets. This can be used to enrol new hosts.                 |
-| `icinga2_master__influxdb_login`     | The user account for accessing the icinga2 InfluxDB database.                                |
+| `icinga2_master__influxdb_login`     | The user account for accessing the Icinga2 InfluxDB database.                                |
 
 
 Example:
@@ -53,8 +53,8 @@ icinga2_master__influxdb_login:
 | `icinga2_master__cn` | The common name of the Icinga2 master. Tries to default to the FQDN of the server. | `'{{ ansible_facts["nodename"] }}'` |
 | `icinga2_master__database_host` | The host on which the ido database is reachable. | `'localhost'` |
 | `icinga2_master__database_name` | The name of the ido database. | `'icinga2_ido'` |
-| `icinga2_master__group_api_users` | A list of dictionaries for the icinga2 API users. Subkeys:<br>* `username`: Required, string. The username of the API user.<br>* `password`: Required, string. The password of the API user.<br>* `permissions`: Required, list or raw string. The permissions for the API user. Have a look at the example and https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#icinga2-api-permissions.<br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
-| `icinga2_master__host_api_users` | A list of dictionaries for the icinga2 API users. Subkeys:<br>* `username`: Required, string. The username of the API user.<br>* `password`: Required, string. The password of the API user.<br>* `permissions`: Required, list or raw string. The permissions for the API user. Have a look at the example and https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#icinga2-api-permissions.<br>For the usage in `host_vars`. | `[]` |
+| `icinga2_master__group_api_users` | A list of dictionaries for the Icinga2 API users. Subkeys:<br>* `username`: Required, string. The username of the API user.<br>* `password`: Required, string. The password of the API user.<br>* `permissions`: Required, list or raw string. The permissions for the API user. Have a look at the example and https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#icinga2-api-permissions.<br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
+| `icinga2_master__host_api_users` | A list of dictionaries for the Icinga2 API users. Subkeys:<br>* `username`: Required, string. The username of the API user.<br>* `password`: Required, string. The password of the API user.<br>* `permissions`: Required, list or raw string. The permissions for the API user. Have a look at the example and https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#icinga2-api-permissions.<br>For the usage in `host_vars`. | `[]` |
 | `icinga2_master__influxdb_database_name` | The name of the InfluxDB database. | `'icinga2'` |
 | `icinga2_master__influxdb_host` | The host on which the InfluxDB database is reachable. | `'localhost'` |
 | `icinga2_master__influxdb_retention` | Determines how long InfluxDB should keep the Icinga2 data. If specified, it should be `INF` or at least one hour. | `'216d'` |
