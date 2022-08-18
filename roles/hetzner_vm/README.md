@@ -64,7 +64,9 @@ hetzner_vm__backups: false
 hetzner_vm__firewalls: []
 hetzner_vm__force: false
 hetzner_vm__name: '{{ inventory_hostname }}'
-hetzner_vm__ssh_keys: []
+hetzner_vm__ssh_keys:
+  - 'alice'
+  - 'bob'
 hetzner_vm__state: 'started'
 hetzner_vm__upgrade_disk: false
 hetzner_vm__volumes: []
