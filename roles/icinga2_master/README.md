@@ -114,7 +114,7 @@ Adjust the following variables for the secondary Icinga2 master.
 
 Example:
 ```yaml
-# optional
+# primary-secondary
 icinga2_master__additional_master_endpoints:
   - 'master1.example.com'
 icinga2_master__api_ticket_login:
