@@ -3,9 +3,3 @@ postfix__relayhost_password: ''
 postfix__service_enabled: true
 postfix__service_state: 'started'
 postfix__smtp_sasl_auth_enable: true
-
-postfix__debconf_selections:
-  - name: 'postfix'
-    question: 'postfix/main_mailer_type'
-    value: 'No configuration'
-    vtype: 'select'
