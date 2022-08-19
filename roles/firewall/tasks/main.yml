@@ -121,13 +121,6 @@
       name: 'iptables-services'
       state: 'present'
 
-  - name: 'Be sure iptables is started, enabled and not masked'
-    ansible.builtin.systemd:
-      name: 'iptables'
-      state: 'started'
-      enabled: true
-      masked: false
-
   - name: 'Copy iptables definition to /etc/sysconfig/iptables'
     ansible.builtin.copy:
       src: "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables"
@@ -141,8 +134,10 @@
   - name: 'systemctl restart iptables.service'
     ansible.builtin.systemd:
       name: 'iptables.service'
-      state: 'restarted'
-    when: 'firewall__iptables_definition_result is changed'
+      state: 'firewall__iptables_definition_result is changed | bool | ternary("restarted", "started")'
+      enabled: true
+      masked: false
+    # when: 'firewall__iptables_definition_result is changed'
 
   when: 'firewall__firewall == "iptables"'
   tags:
