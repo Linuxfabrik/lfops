@@ -1,8 +1,6 @@
-# Ansible Role yum_utils
+# Ansible Role linuxfabrik.lfops.yum_utils
 
 This role simply installs `yum-utils` package.
-
-FQCN: linuxfabrik.lfops.yum_utils
 
 Tested on
 
@@ -11,21 +9,11 @@ Tested on
 * Fedora Server 35
 
 
-## Requirements
-
-This role does not have any requirements.
-
-
 ## Tags
 
-| Tag       | What it does                            |
-| ---       | ------------                            |
-| yum_utils | Installs yum-utils or dnf-utils package |
-
-
-## Role Variables
-
-This role does not have any role variables.
+| Tag         | What it does                            |
+| ---         | ------------                            |
+| `yum_utils` | Installs yum-utils or dnf-utils package |
 
 
 ## License

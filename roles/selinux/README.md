@@ -1,83 +1,43 @@
-# Ansible Role selinux
+# Ansible Role linuxfabrik.lfops.selinux
 
 This role sets the state of SELinux and optionally toggles SELinux booleans.
-
-FQCN: linuxfabrik.lfops.selinux
 
 Tested on
 
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-### Mandatory
+## Mandatory Requirements
 
 * Install the SELinux python bindings. This can be done using the [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) role.
 
 
-### Optional
-
-This role does not have any optional requirements.
-
-
 ## Tags
 
-| Tag              | What it does                                                   |
-| ---              | ------------                                                   |
-| selinux          | Sets the SELinux state and optionally toggles SELinux booleans |
-| selinux:state    | Sets the SELinux state                                         |
-| selinux:booleans | Toggles SELinux booleans                                       |
+| Tag                | What it does                                                   |
+| ---                | ------------                                                   |
+| `selinux`          | Sets the SELinux state and optionally toggles SELinux booleans |
+| `selinux:state`    | Sets the SELinux state                                         |
+| `selinux:booleans` | Toggles SELinux booleans                                       |
 
 
-## Role Variables
+## Optional Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/selinux/defaults/main.yml) for the variable defaults.
-
-
-### Mandatory
-
-This role does not have any mandatory variables.
-
-
-### Optional
-
-#### selinux__host_booleans / selinux__group_booleans
-
-These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
-
-A list of dictionaries containing SELinux booleans.
-
-Subkeys:
-
-* `key`: Mandatory, string. Key of the SELinux boolean.
-* `value`: Mandatory, string. Value of the SELinux boolean.
-
-Default:
-```yaml
-selinux__host_booleans: []
-selinux__group_booleans: []
-```
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `selinux__host_booleans` / selinux__group_booleans | A list of dictionaries containing SELinux booleans. Subkeys:<br> * `key`: Mandatory, string. Key of the SELinux boolean.<br> * `value`: Mandatory, string. Value of the SELinux boolean.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `selinux__state` | The SELinux state. Possible options:<br> * `disabled`<br> * `enforcing`<br> * `permissive` | `'enforcing'` |
 
 Example:
 ```yaml
+# optional
 selinux__host_booleans:
   - key: 'httpd_can_network_connect'
     value: 1
-```
-
-#### selinux__state
-
-The SELinux state. Possible options:
-
-* disabled
-* enforcing
-* permissive
-
-Default:
-```yaml
+selinux__group_booleans: []
 selinux__state: 'enforcing'
 ```
+
 
 ## License
 

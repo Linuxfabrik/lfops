@@ -1,17 +1,13 @@
-# Ansible Role librenms
+# Ansible Role linuxfabrik.lfops.librenms
 
 This role installs and configures [LibreNMS](https://www.librenms.org/).
-
-FQCN: linuxfabrik.lfops.librenms
 
 Tested on
 
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-### Mandatory
+## Mandatory Requirements
 
 * Install Python 3, and the python3-policycoreutils module (required for the SELinux Ansible tasks). This can be done using the [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) role.
 * Install MariaDB, and create a database and a user for said database. This can be done using the [linuxfabrik.lfops.influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/influxdb) role.
@@ -19,98 +15,45 @@ Tested on
 * Install PHP version >= 7.3. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
 
 
-### Optional
-
-This role does not have any optional requirements.
-
-
 ## Tags
 
-| Tag      | What it does                     |
-| ---      | ------------                     |
-| librenms | Installs and configures LibreNMS |
+| Tag        | What it does                     |
+| ---        | ------------                     |
+| `librenms` | Installs and configures LibreNMS |
 
 
-## Role Variables
+## Mandatory Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/librenms/defaults/main.yml) for the variable defaults.
-
-
-### Mandatory
-
-
-#### librenms__database_login
-
-The user account for accessing the MySQL database.
+| Variable                   | Description                                                         |
+| --------                   | -----------                                                         |
+| `librenms__database_login` | The user account for accessing the MySQL database.                  |
+| `librenms__fqdn`           | The fully qualified domain name under which LibreNMS is accessible. |
 
 Example:
 ```yaml
+# mandatory
 librenms__database_login:
   username: 'librenms'
   password: 'my-secret-password'
-```
-
-
-#### librenms__fqdn
-
-The fully qualified domain name under which LibreNMS is accessible.
-
-Example:
-```yaml
 librenms__fqdn: 'librenms.example.com'
 ```
 
 
-### Optional
+## Optional Role Variables
 
-#### librenms__config_auth_mechanism
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `librenms__config_auth_mechanism` | Which authentication mechanism LibreNMS should use. Have a look at https://docs.librenms.org/Extensions/Authentication/. Note that only one mechanism can be active at the same time. Possible options: * `active_directory`<br> * `http-auth`<br> * `ldap`<br> * `ldap-authorization`<br> * `mysql`<br> * `sso` | `'mysql'` |
+| `librenms__config_update_channel` | Which update channel LibreNMS should use during automatic updates. Possible options:<br> * `master`<br> * `release` | `'release'` |
+| `librenms__database_host` | The host on which the MySQL database is reachable. | `'localhost'` |
+| `librenms__database_name` | The name of the SQL database. | `'librenms'` |
 
-Which authentication mechanism LibreNMS should use. Have a look at https://docs.librenms.org/Extensions/Authentication/.
-Note that only one mechanism can be active at the same time.
-
-Possible options:
-* active_directory
-* http-auth
-* ldap
-* ldap-authorization
-* mysql
-* sso
-
-Default:
+Example:
 ```yaml
+# optional
 librenms__config_auth_mechanism: 'mysql'
-```
-
-
-#### librenms__config_update_channel
-
-Which update channel LibreNMS should use during automatic updates. Possible options:
-
-* master
-* release
-
-Default:
-```yaml
 librenms__config_update_channel: 'release'
-```
-
-
-#### librenms__database_host
-
-The host on which the MySQL database is reachable.
-
-Default:
-```yaml
 librenms__database_host: 'localhost'
-```
-
-
-#### librenms__database_name
-
-The name of the SQL database.
-
-Default:
-```yaml
 librenms__database_name: 'librenms'
 ```
 

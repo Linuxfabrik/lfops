@@ -1,4 +1,4 @@
-# Ansible Role tools
+# Ansible Role linuxfabrik.lfops.tools
 
 This role ensures that some additional tools are installed and the Bash environment is configured.
 
@@ -26,8 +26,6 @@ Bash:
 * HISTTIMEFORMAT="%Y-%m-%d %T $USER $SUDO_USER "
 * Colorizes the Bash prompt and sets it to something like `[19:54:24 user@server ~]$ `
 
-FQCN: linuxfabrik.lfops.tools
-
 Tested on
 
 * Fedora
@@ -35,56 +33,29 @@ Tested on
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-### Mandatory
+## Mandatory Requirements
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 
 
-### Optional
-
-This role does not have any optional requirements.
-
-
 ## Tags
 
-| Tag   | What it does                       |
-| ---   | ------------                       |
-| tools | Installs and configures some tools |
+| Tag     | What it does                       |
+| ---     | ------------                       |
+| `tools` | Installs and configures some tools |
 
 
-## Role Variables
+## Optional Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/tools/defaults/main.yml) for the variable defaults.
-
-
-### Mandatory
-
-This role does not have any mandatory variables.
-
-
-### Optional
-
-#### tools__editor
-
-Set the standard editor, for example for editing crontabs.
-
-Default:
-```yaml
-tools__editor: 'nano'
-```
-
-#### tools__prompt_ps1
-
-Set a custom primary prompt for bash. This is displayed before each command. Defaults to:
-
-* green, if the host is in an Ansible group called `test`
-* yellow, if the host is in an Ansible group called `stage`
-* red, if neither condition above applies
+| Variable            | Description                                                                  | Default Value                                                                                                                                                           |
+| --------            | -----------                                                                  | -------------                                                                                                                                                           |
+| `tools__editor`     | Set the standard editor, for example for editing crontabs.                   | `'nano'`                                                                                                                                                                |
+| `tools__prompt_ps1` | Set a custom primary prompt for bash. This is displayed before each command. | * green, if the host is in an Ansible group called `test`<br> * yellow, if the host is in an Ansible group called `stage`<br> * red, if neither condition above applies |
 
 Example:
 ```yaml
+# optional
+tools__editor: 'vim'
 tools__prompt_ps1: '[\[\033[0;34m\]\$(date +%H:%M:%S) \u@\h \w$NO_COLOR]\$ '
 ```
 

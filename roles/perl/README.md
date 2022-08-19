@@ -1,29 +1,17 @@
-# Ansible Role perl
+# Ansible Role linuxfabrik.lfops.perl
 
 This role installs [perl](https://www.perl.org/).
-
-FQCN: linuxfabrik.lfops.perl
 
 Tested on
 
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-This role does not have any requirements.
-
-
 ## Tags
 
-| Tag  | What it does  |
-| ---  | ------------  |
-| perl | Installs perl |
-
-
-## Role Variables
-
-This role does not have any role variables.
+| Tag    | What it does  |
+| ---    | ------------  |
+| `perl` | Installs perl |
 
 
 ## License

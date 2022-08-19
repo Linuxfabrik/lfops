@@ -1,8 +1,6 @@
-# Ansible Role Timezone
+# Ansible Role linuxfabrik.lfops.timezone
 
 This role sets the desired timezone.
-
-FQCN: linuxfabrik.lfops.timezone
 
 Tested on
 
@@ -11,33 +9,22 @@ Tested on
 * Fedora
 
 
-## Requirements
-
-This role does not have any requirements.
-
 ## Tags
 
-| Tag      | What it does      |
-| ---      | ------------      |
-| timezone | Sets the timezone |
+| Tag        | What it does      |
+| ---        | ------------      |
+| `timezone` | Sets the timezone |
 
 
-## Role Variables
+## Optional Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/timezone/defaults/main.yml) for the variable defaults.
+| Variable             | Description                                                                                                                      | Default Value     |
+| --------             | -----------                                                                                                                      | -------------     |
+| `timezone__timezone` | Set timezone. Have a look at the [Wikipedia List](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for the options. | `'Europe/Zurich'` |
 
-### Mandatory
-
-This role does not have any mandatory variables.
-
-### Optional
-
-#### timezone__timezone
-
-Set timezone. Have a look at the [Wikipedia List](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for the options.
-
-Default:
+Example:
 ```yaml
+# optional
 timezone__timezone: 'Europe/Zurich'
 ```
 

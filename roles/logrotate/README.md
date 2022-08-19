@@ -1,8 +1,6 @@
-# Ansible Role logrotate
+# Ansible Role linuxfabrik.lfops.logrotate
 
 This role ensures that logrotate is installed and configured.
-
-FQCN: linuxfabrik.lfops.logrotate
 
 Tested on
 
@@ -11,36 +9,22 @@ Tested on
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-This role does not have any requirements.
-
-
 ## Tags
 
-| Tag       | What it does                         |
-| ---       | ------------                         |
-| logrotate | Installs and configures log rotation |
+| Tag         | What it does                         |
+| ---         | ------------                         |
+| `logrotate` | Installs and configures log rotation |
 
 
-## Role Variables
+## Optional Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/logrotate/defaults/main.yml) for the variable defaults.
+| Variable                 | Description                                         | Default Value |
+| --------                 | -----------                                         | ------------- |
+| `logrotate__rotate_days` | For how many days the rotated files should be kept. | `14`          |
 
-
-### Mandatory
-
-This role does not have any mandatory variables.
-
-
-### Optional
-
-#### logrotate__rotate_days
-
-For how many days the rotated files should be kept.
-
-Default:
+Example:
 ```yaml
+# optional
 logrotate__rotate_days: 14
 ```
 

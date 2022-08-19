@@ -1,8 +1,6 @@
-# Ansible Role repo_mariadb
+# Ansible Role linuxfabrik.lfops.repo_mariadb
 
 This role deploys the [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/).
-
-FQCN: linuxfabrik.lfops.repo_mariadb
 
 Tested on
 
@@ -10,47 +8,36 @@ Tested on
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-This role does not have any requirements.
-
-
 ## Tags
 
-| Tag          | What it does                           |
-| ---          | ------------                           |
-| repo_mariadb | Deploys the MariaDB Package Repository |
+| Tag            | What it does                           |
+| ---            | ------------                           |
+| `repo_mariadb` | Deploys the MariaDB Package Repository |
 
 
-## Role Variables
+## Mandatory Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/repo_mariadb/defaults/main.yml) for the variable defaults.
-
-
-### Mandatory
-
-
-#### repo_mariadb__version
-
-The MariaDB repo version to install. [Have a look at the MariaDB Download Site for the list of available releases](https://mariadb.org/download/?t=mariadb&p=mariadb&os=Linux&cpu=x86_64). Also, have a look at the [MariaDB Server Releases page](https://mariadb.com/kb/en/mariadb-server-release-dates/) to check which version is a "long-term support MariaDB stable" or "short-term support MariaDB development" release.
-
-You also have to provide the same version number in ``mariadb_server__version`` if using ``mariadb_server`` to install the MariaDB server.
+| Variable | Description |
+| -------- | ----------- |
+| `repo_mariadb__version` | The MariaDB repo version to install. [Have a look at the MariaDB Download Site for the list of available releases](https://mariadb.org/download/?t=mariadb&p=mariadb&os=Linux&cpu=x86_64). Also, have a look at the [MariaDB Server Releases page](https://mariadb.com/kb/en/mariadb-server-release-dates/) to check which version is a "long-term support MariaDB stable" or "short-term support MariaDB development" release. You also have to provide the same version number in ``mariadb_server__version`` if using ``mariadb_server`` to install the MariaDB server. |
 
 Example:
 ```yaml
+# mandatory
 repo_mariadb__version: '10.6'
 ```
 
 
-### Optional
+## Optional Role Variables
 
-#### repo_mariadb__mirror_url
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `repo_mariadb__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles, or else to `''`. | `'{{ lfops__repo_mirror_url | default("") }}'` |
 
-Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles, or else to `''`.
-
-Default:
+Example:
 ```yaml
-repo_mariadb__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+# optional
+repo_mariadb__mirror_url: 'https://mirror.example.com'
 ```
 
 

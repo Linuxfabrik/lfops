@@ -1,8 +1,6 @@
-# Ansible Role sshd
+# Ansible Role linuxfabrik.lfops.sshd
 
 This role ensures that sshd is configured.
-
-FQCN: linuxfabrik.lfops.sshd
 
 Tested on
 
@@ -10,144 +8,45 @@ Tested on
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-### Mandatory
+## Mandatory Requirements
 
 * Install Python 3, and the python3-policycoreutils module (required for the SELinux Ansible tasks). This can be done using the [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) role.
 
 
-### Optional
-
-This role does not have any optional requirements.
-
-
 ## Tags
 
-| Tag           | What it does                                   |
-| ---           | ------------                                   |
-| ssh           | Configures sshd                                |
-| ssh:state     | Manages the state of the sshd systemd service  |
+| Tag         | What it does                                  |
+| ---         | ------------                                  |
+| `ssh`       | Configures sshd                               |
+| `ssh:state` | Manages the state of the sshd systemd service |
 
 
-## Role Variables
+## Optional Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/sshd/defaults/main.yml) for the variable defaults.
-
-
-### Mandatory
-
-This role does not have any mandatory variables.
-
-
-### Optional
-
-#### sshd__use_dns
-
-Specifies whether sshd should look up the remote hostname, and to check that the resolved host name for the remote IP address maps back to the very same IP address.
-
-Possible options:
-
-* true
-* false
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `sshd__ciphers` | Specifies the ciphers allowed. Multiple ciphers must be comma-separated. | `'yes'` |
+| `sshd__kex` | Specifies the available KEX (Key Exchange) algorithms. Multiple algorithms must be comma-separated. | `'yes'` |
+| `sshd__macs` | Specifies the available MAC (message authentication code) algorithms. The MAC algorithm is used for data integrity protection. Multiple algorithms must be comma-separated. | `'yes'` |
+| `sshd__password_authentication` | Specifies whether password authentication is allowed. | `'yes'` |
+| `sshd__permit_root_login` | Specifies whether root can log in using ssh. Possible options:<br> * `yes`<br> * `prohibit-password`<br> * `forced-commands-only`<br> * `no` | `'yes'` |
+| `sshd__port` | Which port the sshd server should use. | `22` |
+| `sshd__service_enabled` | Enables or disables the sshd service, analogous to `systemctl enable/disable`. | `true` |
+| `sshd__service_state` | Changes the state of the sshd service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+| `sshd__use_dns` | Specifies whether sshd should look up the remote hostname, and to check that the resolved host name for the remote IP address maps back to the very same IP address. | `'yes'` |
 
 Example:
 ```yaml
-sshd__use_dns: false
-```
-
-#### sshd__ciphers
-
-Specifies the ciphers allowed. Multiple ciphers must be comma-separated.
-
-Example:
-```yaml
+# optional
 sshd__ciphers: 'chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr'
-```
-
-#### sshd__kex
-
-Specifies the available KEX (Key Exchange) algorithms. Multiple algorithms must be comma-separated.
-
-Example:
-```yaml
 sshd__kex: 'curve25519-sha256@libssh.org'
-```
-
-#### sshd__macs
-
-Specifies the available MAC (message authentication code) algorithms. The MAC algorithm is used for data integrity protection. Multiple algorithms must be comma-separated.
-
-Example:
-```yaml
 sshd__macs: 'hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com'
-```
-
-#### sshd__password_authentication
-
-Specifies whether password authentication is allowed.
-
-Possible options:
-
-* true
-* false
-
-Example:
-```yaml
 sshd__password_authentication: false
-```
-
-
-#### sshd__permit_root_login
-
-Specifies whether root can log in using ssh. Possible options:
-
-* yes
-* prohibit-password
-* forced-commands-only
-* no
-
-Default:
-```yaml
 sshd__permit_root_login: 'yes'
-```
-
-
-#### sshd__port
-
-Which port the sshd server should use.
-
-Default:
-```yaml
 sshd__port: 22
-```
-
-
-#### sshd__service_enabled
-
-Enables or disables the sshd service, analogous to `systemctl enable/disable`. Possible options:
-
-* true
-* false
-
-Default:
-```yaml
 sshd__service_enabled: true
-```
-
-
-#### sshd__service_state:
-
-Changes the state of the sshd service, analogous to `systemctl start/stop/restart/reload`. Possible options:
-
-* started
-* stopped
-* restarted
-* reloaded
-
-Default:
-```yaml
 sshd__service_state: 'started'
+sshd__use_dns: false
 ```
 
 ## License

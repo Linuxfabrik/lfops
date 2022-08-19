@@ -1,8 +1,6 @@
-# Ansible Role policycoreutils
+# Ansible Role linuxfabrik.lfops.policycoreutils
 
 This role installs the SELinux policy core python utilities.
-
-FQCN: linuxfabrik.lfops.policycoreutils
 
 Tested on
 
@@ -10,21 +8,11 @@ Tested on
 * Fedora Server 35
 
 
-## Requirements
-
-This role does not have any requirements.
-
-
 ## Tags
 
-| Tag             | What it does                                  |
-| ---             | ------------                                  |
-| policycoreutils | Installs SELinux policy core python utilities |
-
-
-## Role Variables
-
-This role does not have any variables.
+| Tag               | What it does                                  |
+| ---               | ------------                                  |
+| `policycoreutils` | Installs SELinux policy core python utilities |
 
 
 ## License

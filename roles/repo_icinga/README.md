@@ -1,8 +1,6 @@
-# Ansible Role repo_icinga
+# Ansible Role linuxfabrik.lfops.repo_icinga
 
 This role deploys the [Icinga Package Repository](https://packages.icinga.com/).
-
-FQCN: linuxfabrik.lfops.repo_icinga
 
 Tested on
 
@@ -10,48 +8,24 @@ Tested on
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-This role does not have any requirements.
-
-
 ## Tags
 
-| Tag         | What it does                          |
-| ---         | ------------                          |
-| repo_icinga | Deploys the Icinga Package Repository |
+| Tag           | What it does                          |
+| ---           | ------------                          |
+| `repo_icinga` | Deploys the Icinga Package Repository |
 
 
-## Role Variables
+## Optional Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/repo_icinga/defaults/main.yml) for the variable defaults.
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `repo_icinga__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles, or else to `''`. | `'{{ lfops__repo_mirror_url | default("") }}'` |
+| `repo_icinga__subscription_login` | The [Icinga Repository Subscription](https://icinga.com/subscription/) account. | unset |
 
-
-### Mandatory
-
-This role does not have any mandatory variables.
-
-
-### Optional
-
-#### repo_icinga__mirror_url
-
-Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles, or else to `''`.
-
-Default:
+Example:
 ```yaml
-repo_icinga__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
-```
-
-
-#### repo_icinga__subscription_login
-
-The [Icinga Repository Subscription](https://icinga.com/subscription/) account.
-
-Default: unset
-
-Example
-```yaml
+# optional
+repo_icinga__mirror_url: 'https://mirror.example.com'
 repo_icinga__subscription_login:
   username: 'my-username'
   password: 'my-secret-password'

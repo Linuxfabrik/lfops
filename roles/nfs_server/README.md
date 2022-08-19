@@ -1,8 +1,6 @@
-# Ansible Role nfs_server
+# Ansible Role linuxfabrik.lfops.nfs_server
 
 This role installs and configures [NFS](http://linux-nfs.org/) as a server.
-
-FQCN: linuxfabrik.lfops.nfs_server
 
 Tested on
 
@@ -10,49 +8,39 @@ Tested on
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-This role does not have any requirements.
-
 ## Tags
 
-| Tag                | What it does                           |
-| ---                | ------------                           |
-| nfs_server         | Installs and configures NFS  as server |
-| nfs_server:state   | Manages the state of the NFS server    |
-| nfs_server:exports | Configures the NFS exports             |
+| Tag                  | What it does                           |
+| ---                  | ------------                           |
+| `nfs_server`         | Installs and configures NFS  as server |
+| `nfs_server:state`   | Manages the state of the NFS server    |
+| `nfs_server:exports` | Configures the NFS exports             |
 
 
-## Role Variables
+## Mandatory Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nfs_server/defaults/main.yml) for the variable defaults.
-
-
-### Mandatory
-
-#### nfs_server__exports
-
-A list of valid NFS server exports. Have a look at `man 5 exports`.
+| Variable              | Description                                                         |
+| --------              | -----------                                                         |
+| `nfs_server__exports` | A list of valid NFS server exports. Have a look at `man 5 exports`. |
 
 Example:
 ```yaml
+# mandatory
 nfs_server__exports:
   - '/data/appserver1 192.0.2.10(rw,sync,all_squash)'
   - '/data/appserver2 192.0.2.11(ro,sync,all_squash)'
 ```
 
 
-### Optional
+## Optional Role Variables
 
-#### nfs_server__service_enabled
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `nfs_server__service_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
 
-Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. Possible options:
-
-* true
-* false
-
-Default:
+Example:
 ```yaml
+# optional
 nfs_server__service_enabled: true
 ```
 

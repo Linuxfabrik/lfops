@@ -1,8 +1,6 @@
-# Ansible Role repo_influxdb
+# Ansible Role linuxfabrik.lfops.repo_influxdb
 
 This role deploys the InfluxDB repository.
-
-FQCN: linuxfabrik.lfops.repo_influxdb
 
 Tested on
 
@@ -10,37 +8,23 @@ Tested on
 * RHEL 8 (and compatible)
 
 
-## Requirements
-
-This role does not have any requirements.
-
-
 ## Tags
 
-| Tag           | What it does                    |
-| ---           | ------------                    |
-| repo_influxdb | Deploys the InfluxDB Repository |
+| Tag             | What it does                    |
+| ---             | ------------                    |
+| `repo_influxdb` | Deploys the InfluxDB Repository |
 
 
-## Role Variables
+## Optional Role Variables
 
-Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/repo_influxdb/defaults/main.yml) for the variable defaults.
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `repo_influxdb__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles, or else to `''`. | `'{{ lfops__repo_mirror_url | default("") }}'` |
 
-
-### Mandatory
-
-This role does not have any mandatory variables.
-
-
-### Optional
-
-#### repo_influxdb__mirror_url
-
-Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles, or else to `''`.
-
-Default:
+Example:
 ```yaml
-repo_influxdb__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+# optional
+repo_influxdb__mirror_url: 'https://mirror.example.com'
 ```
 
 
