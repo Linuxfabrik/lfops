@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2022071101
+; 2022082201
 ; php 7.2
 
 [PHP]
@@ -10,15 +10,15 @@ display_startup_errors = {{ php__ini_display_startup_errors | default('off') }}
 error_reporting = {{ php__ini_error_reporting | default('E_ALL & ~E_DEPRECATED & ~E_STRICT') }}
 expose_php = Off
 html_errors = Off
-max_execution_time = {{ php__ini_max_execution_time | default('30') }}
-max_file_uploads = {{ php__ini_max_file_uploads | default('20') }}
+max_execution_time = {{ php__combined_ini_max_execution_time | default('30') }}
+max_file_uploads = {{ php__combined_ini_max_file_uploads | default('20') }}
 max_input_time = {{ php__ini_max_input_time | default('60') }}
 memory_limit = {{ php__combined_ini_memory_limit | default('128M') }}
-post_max_size = {{ php__ini_post_max_size | default('8M') }}
+post_max_size = {{ php__combined_ini_post_max_size | default('8M') }}
 realpath_cache_size = 4M
 realpath_cache_ttl = 120
 serialize_precision = -1
-upload_max_filesize = {{ php__ini_upload_max_filesize | default('2M') }}
+upload_max_filesize = {{ php__combined_ini_upload_max_filesize | default('2M') }}
 
 opcache.blacklist_filename = {{ php__ini_opcache_blacklist_filename | d('/etc/php.d/opcache*.blacklist') }}
 opcache.enable = {{ php__ini_opcache_enable | d('1') }}

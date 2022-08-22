@@ -5,7 +5,6 @@ php__group_modules: []
 php__host_modules: []
 php__role_modules:
   - 'php-opcache'
-
 php__combined_modules: '{{ php__role_modules +
   php__group_modules +
   php__host_modules +
@@ -18,8 +17,29 @@ php__ini_default_socket_timeout: 10
 php__ini_display_errors: 'Off'
 php__ini_display_startup_errors: 'Off'
 php__ini_error_reporting: 'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT'
-php__ini_max_execution_time: 30
-php__ini_max_file_uploads: 50
+
+php__dependent_ini_max_execution_time: ''
+php__group_ini_max_execution_time: ''
+php__host_ini_max_execution_time: ''
+php__role_ini_max_execution_time: 30
+php__combined_ini_max_execution_time: '{{
+  php__host_ini_max_execution_time if php__host_ini_max_execution_time else
+  php__group_ini_max_execution_time if php__group_ini_max_execution_time else
+  php__dependent_ini_max_execution_time if php__dependent_ini_max_execution_time else
+  php__role_ini_max_execution_time if php__role_ini_max_execution_time
+}}'
+
+php__dependent_ini_max_file_uploads: ''
+php__group_ini_max_file_uploads: ''
+php__host_ini_max_file_uploads: ''
+php__role_ini_max_file_uploads: 50
+php__combined_ini_max_file_uploads: '{{
+  php__host_ini_max_file_uploads if php__host_ini_max_file_uploads else
+  php__group_ini_max_file_uploads if php__group_ini_max_file_uploads else
+  php__dependent_ini_max_file_uploads if php__dependent_ini_max_file_uploads else
+  php__role_ini_max_file_uploads if php__role_ini_max_file_uploads
+}}'
+
 php__ini_max_input_time: -1
 
 php__dependent_ini_memory_limit: ''
@@ -43,11 +63,32 @@ php__ini_opcache_memory_consumption: 128
 php__ini_opcache_revalidate_freq: 60
 php__ini_opcache_save_comments: 1
 php__ini_opcache_validate_timestamps: 1
-php__ini_post_max_size: '16M'
+
+php__dependent_ini_post_max_size: ''
+php__group_ini_post_max_size: ''
+php__host_ini_post_max_size: ''
+php__role_ini_post_max_size: '8M'
+php__combined_ini_post_max_size: '{{
+  php__host_ini_post_max_size if php__host_ini_post_max_size else
+  php__group_ini_post_max_size if php__group_ini_post_max_size else
+  php__dependent_ini_post_max_size if php__dependent_ini_post_max_size else
+  php__role_ini_post_max_size if php__role_ini_post_max_size
+}}'
+
 php__ini_session_sid_length: 32
 php__ini_session_trans_sid_tags: 'a=href,area=href,frame=src,input=src,form=fakeentry'
 php__ini_smtp: 'localhost'
-php__ini_upload_max_filesize: '20M'
+
+php__dependent_ini_upload_max_filesize: ''
+php__group_ini_upload_max_filesize: ''
+php__host_ini_upload_max_filesize: ''
+php__role_ini_upload_max_filesize: '20M'
+php__combined_ini_upload_max_filesize: '{{
+  php__host_ini_upload_max_filesize if php__host_ini_upload_max_filesize else
+  php__group_ini_upload_max_filesize if php__group_ini_upload_max_filesize else
+  php__dependent_ini_upload_max_filesize if php__dependent_ini_upload_max_filesize else
+  php__role_ini_upload_max_filesize if php__role_ini_upload_max_filesize
+}}'
 
 php__dependent_fpm_pools: []
 php__group_fpm_pools: []

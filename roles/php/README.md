@@ -10,6 +10,7 @@ Nevertheless, this role is only compatible with the following PHP versions:
 * 7.3
 * 7.4
 * 8.0
+* 8.1
 
 Tested on
 
