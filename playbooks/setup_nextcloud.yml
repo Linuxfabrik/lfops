@@ -52,7 +52,11 @@
 
     - role: 'linuxfabrik.lfops.php'
       php__dependent_modules: '{{ nextcloud__php__dependent_modules }}'
+      php__dependent_ini_max_execution_time: '{{ nextcloud__php__ini_max_execution_time }}'
+      php__dependent_ini_max_file_uploads: '{{ nextcloud__php__ini_max_file_uploads }}'
       php__dependent_ini_memory_limit: '{{ nextcloud__php__ini_memory_limit }}'
+      php__dependent_ini_post_max_size: '{{ nextcloud__php__ini_post_max_size }}'
+      php__dependent_ini_upload_max_filesize: '{{ nextcloud__php__ini_upload_max_filesize }}'
       when:
         - 'not setup_nextcloud__skip_php | d(false)'
 
