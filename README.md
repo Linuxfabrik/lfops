@@ -77,6 +77,12 @@ Deploy a full-fledged application (Playbooks for application setups are prefixed
 ansible-playbook --inventory path/to/environment linuxfabrik.lfops.setup_nextcloud --limit myhost
 ```
 
+Change some settings afterwards, for example in PHP:
+
+```bash
+ansible-playbook --inventory path/to/environment linuxfabrik.lfops.setup_nextcloud --limit myhost --tags php
+```
+
 
 ## Documentation
 
