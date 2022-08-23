@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'install icinga2 -y'
+  - name: 'install icinga2'
     ansible.builtin.package:
       name: 'icinga2'
       state: 'present'
