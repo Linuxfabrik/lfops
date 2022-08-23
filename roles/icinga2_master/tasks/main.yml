@@ -234,3 +234,9 @@
 
   tags:
     - 'icinga2_master'
+
+- name: 'Flush handlers so that the Icinga2 master can be used by other roles later'
+  ansible.builtin.meta: 'flush_handlers'
+  tags:
+    - 'icinga2_master'
+    - 'icinga2_master:api_users'
