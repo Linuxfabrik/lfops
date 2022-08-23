@@ -1,12 +1,11 @@
 # Ansible Role linuxfabrik.lfops.logrotate
 
-This role ensures that logrotate is installed and configured.
+This role ensures that logrotate is installed and configured for main classic system log files like `/var/log/cron`, `/var/log/maillog` or `/var/log/messages`.
 
 Tested on
 
 * Fedora
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
+* RHEL 7+ (and compatible)
 
 
 ## Tags
