@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.openssl
 
-This role installs [openssl](https://www.openssl.org/).
+This role just installs [openssl](https://www.openssl.org/).
 
 Tested on
 
