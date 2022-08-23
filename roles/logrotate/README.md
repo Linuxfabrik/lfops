@@ -5,7 +5,8 @@ This role ensures that logrotate is installed and configured for main classic sy
 Tested on
 
 * Fedora
-* RHEL 7+ (and compatible)
+* RHEL 7 (and compatible)
+* RHEL 8 (and compatible)
 
 
 ## Tags
