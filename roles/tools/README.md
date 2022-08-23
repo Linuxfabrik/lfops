@@ -24,7 +24,7 @@ Bash:
 * export EDITOR
 * HISTSIZE=100000
 * HISTTIMEFORMAT="%Y-%m-%d %T $USER $SUDO_USER "
-* Colorizes the Bash prompt and sets it to something like `[19:54:24 user@server ~]$ `
+* Colorizes the Bash prompt and sets it to something like `[17:30:19 user@server Rocky8 ~]$ `
 
 Tested on
 
@@ -50,7 +50,7 @@ Tested on
 | Variable            | Description                                                                  | Default Value                                                                                                                                                           |
 | --------            | -----------                                                                  | -------------                                                                                                                                                           |
 | `tools__editor`     | Set the standard editor, for example for editing crontabs.                   | `'nano'`                                                                                                                                                                |
-| `tools__prompt_ps1` | Set a custom primary prompt for bash. This is displayed before each command. | * green, if the host is in an Ansible group called `test`<br> * yellow, if the host is in an Ansible group called `stage`<br> * red, if neither condition above applies |
+| `tools__prompt_ps1` | Set a custom primary prompt for bash. This is displayed before each command. | * green, if the host is in an Ansible group called `test`<br> * yellow, if the host is in an Ansible group called `stage`<br> * red, if neither condition above applies, assuming a productive machine |
 
 Example:
 ```yaml
