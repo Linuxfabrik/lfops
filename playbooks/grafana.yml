@@ -5,4 +5,8 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.repo_grafana'
+      when:
+        - 'not grafana_server__skip_repo_grafana | d(false)'
+
     - role: 'grafana'
