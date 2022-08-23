@@ -213,6 +213,14 @@ apache_httpd__role_app_modules:
 
 
 apache_httpd__role_proxy_modules:
+  'deflate':
+    enabled: true
+    state: 'present'
+
+  'filter':
+    enabled: true
+    state: 'present'
+
   'maxminddb':
     enabled: false
     state: 'present'
@@ -228,7 +236,6 @@ apache_httpd__role_proxy_modules:
   'security2':
     enabled: true
     state: 'present'
-
 
 apache_httpd__group_modules: {}
 apache_httpd__host_modules: {}
@@ -324,6 +331,11 @@ apache_httpd__role_app_snippets: {}
 
 apache_httpd__role_proxy_snippets:
   'crs':
+    enabled: true
+    state: 'present'
+    type: 'conf'
+
+  'deflate':
     enabled: true
     state: 'present'
     type: 'conf'
