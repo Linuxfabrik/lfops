@@ -45,7 +45,7 @@ login__passwordless_sudo_group: ''
 ```
 
 
-### Combining group- and host vars
+## Combining Group and Host Vars
 
 Assume you have 'alice' defined like so:
 
