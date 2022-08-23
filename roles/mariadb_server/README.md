@@ -5,7 +5,7 @@ This role installs and configures a [MariaDB](https://mariadb.org/) server.
 This role is only compatible with the following MariaDB versions:
 
 * 10.5
-* 10.6
+* 10.6 (preferred - long-term support MariaDB stable)
 
 Tested on
 
