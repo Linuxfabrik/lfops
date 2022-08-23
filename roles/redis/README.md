@@ -52,12 +52,28 @@ Variables for `redis.conf` directives and their default values, defined and supp
 | `redis__conf_daemonize`                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'no'`         |
 | `redis__conf_databases`                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `16`           |
 | `redis__conf_loglevel`                  | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'notice'`     |
-| `redis__conf_maxmemory_policy`          | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'noeviction'` |
 | `redis__conf_maxmemory`                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'50mb'`       |
+| `redis__conf_maxmemory_policy`          | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'noeviction'` |
 | `redis__conf_port`                      | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `6379`         |
 | `redis__conf_protected_mode`            | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'yes'`        |
 | `redis__conf_replica_serve_stale_data`  | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'yes'`        |
 | `redis__conf_supervised`                | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'auto'`       |
+
+Example:
+
+```yaml
+redis__conf_auto_aof_rewrite_min_size: '64MB'
+redis__conf_bind: '127.0.0.1'
+redis__conf_daemonize: 'no'
+redis__conf_databases: 16
+redis__conf_loglevel: 'notice'
+redis__conf_maxmemory: '50MB'
+redis__conf_maxmemory_policy: 'noeviction'
+redis__conf_port: 6379  # If port 0 is specified Redis will not listen on a TCP socket.
+redis__conf_protected_mode: 'yes'
+redis__conf_replica_serve_stale_data: 'yes'
+redis__conf_supervised: 'auto'
+```
 
 
 ## Known Issues
