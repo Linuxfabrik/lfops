@@ -7,7 +7,7 @@ This role is only compatible with the following Redis versions:
 * 5
 * 6
 
-You can pre-enable Remi's repo with the [https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi](linuxfabrik.lfops.repo_remi) role to get an up-to-date Redis version.
+You can pre-enable Remi's repo with the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) role to get an up-to-date Redis version.
 
 Tested on
 
