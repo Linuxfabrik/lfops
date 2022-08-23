@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.sshd
 
-This role ensures that sshd is configured.
+This role ensures that sshd is configured. Do not apply this role if you want to configure Crypto Policies via [linuxfabrik.lfops.crypto_policy](https://github.com/Linuxfabrik/lfops/tree/main/roles/crypto_policy) (using Crypto Policies is recommended).
 
 Tested on
 
