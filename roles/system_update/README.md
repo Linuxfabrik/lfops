@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.system_update
 
-This role configures the server to do weekly system updates by deploying two shell scripts: The first script `notify-and-schedule` checks for available updates (normally during the day), and notifies the system administrators either via email or [Rocket.Chat](https://rocket.chat/). On update time (usually the next morning at round about 4 AM), the second script `update-and-reboot`
+This role configures the server to do (weekly) system updates by deploying two shell scripts: The first script `notify-and-schedule` checks for available updates (normally during the day), and notifies the system administrators either via email or [Rocket.Chat](https://rocket.chat/). On update time (usually the next morning at round about 4 AM), the second script `update-and-reboot`
 
 * sets a downtime for the host and all it's services in Icinga
 * applies all updates
