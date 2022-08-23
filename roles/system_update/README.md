@@ -72,7 +72,7 @@ system_update__post_update_code: |-
   VAR='hello world'
   echo $VAR
 system_update__rocketchat_msg_suffix: '@administrator'
-system_update__rocketchat_url: 'rocketchat.example.com'
+system_update__rocketchat_url: 'https://chat.example.com/hooks/abcd1234'
 system_update__update_enabled: true
 system_update__update_on_calendar: 'mon 10:00'
 system_update__update_time: '04:00 + 1 days'
