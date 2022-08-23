@@ -1,0 +1,8 @@
+- name: 'Manage and configure the Grafana OSS Repository'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_repo_grafana'
+
+  roles:
+
+    - role: 'repo_grafana'

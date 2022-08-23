@@ -1,0 +1,26 @@
+- block:
+
+  - name: 'curl https://packages.grafana.com/gpg.key -O /tmp/ansible.grafana.key'
+    ansible.builtin.get_url:
+      url: 'https://packages.grafana.com/gpg.key'
+      dest: '/tmp/ansible.grafana.key'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.grafana.key to /etc/pki/rpm-gpg/grafana.key'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.grafana.key'
+      dest: '/etc/pki/rpm-gpg/grafana.key'
+
+  # https://grafana.com/docs/installation/rpm/
+  - name: 'deploy the Grafana repo (mirror: {{ repo_grafana__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/grafana.repo.j2'
+      dest: '/etc/yum.repos.d/grafana.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'repo_grafana'
