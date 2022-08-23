@@ -1,0 +1,51 @@
+- block:
+
+  - name: 'install grafana'
+    ansible.builtin.package:
+      name:
+        - 'grafana'
+      state: 'present'
+
+  - name: 'deploy /etc/grafana/grafana.ini'
+    ansible.builtin.template:
+      src: 'etc/grafana/grafana.ini.j2'
+      dest: '/etc/grafana/grafana.ini'
+      owner: 'root'
+      group: 'grafana'
+      mode: 0o640
+    notify: 'grafana: restart grafana-server'
+
+  - name: 'deploy /etc/grafana/ldap.toml'
+    ansible.builtin.template:
+      src: 'etc/grafana/ldap.toml.j2'
+      dest: '/etc/grafana/ldap.toml'
+      owner: 'root'
+      group: 'grafana'
+      mode: 0o640
+    when: 'grafana__ldap_config is defined and grafana__ldap_config | length'
+    notify: 'grafana: restart grafana-server'
+
+  tags:
+    - 'grafana'
+
+
+- block:
+
+  - name: 'systemctl {{ grafana__service_enabled | bool | ternary("enable", "disable") }} --now grafana-server.service'
+    ansible.builtin.systemd:
+      name: 'grafana-server.service'
+      enabled: '{{ grafana__service_enabled }}'
+      state: '{{ grafana__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'grafana'
+    - 'grafana:state'
+
+
+- block:
+
+  - name: 'set the password for admin'
+    ansible.builtin.command: 'grafana-cli admin reset-admin-password {{ grafana__admin_login["password"] }}'
+
+  tags:
+    - 'grafana'

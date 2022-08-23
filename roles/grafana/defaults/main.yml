@@ -1,0 +1,6 @@
+grafana__allow_embedding: true
+grafana__auth_anonymous_enabled: false
+grafana__auth_anonymous_org_name: 'Main Org.'
+grafana__auth_anonymous_org_role: 'Viewer'
+grafana__cookie_samesite: 'lax'
+grafana__service_enabled: true

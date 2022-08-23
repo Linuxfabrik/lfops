@@ -54,6 +54,7 @@ New features:
 * Role: firewall
 * Role: git
 * Role: glances
+* Role: grafana
 * Role: hetzner_vm
 * Role: hostname
 * Role: icinga2_agent
