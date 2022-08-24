@@ -376,6 +376,32 @@ apache_httpd__conf_directory_index: 'index.html index.htm index.txt'
 apache_httpd__conf_custom_log: 'logs/access.log combined'
 
 
+# Apache Module Config
+# --------------------
+
+apache_httpd__conf_mpm_event_max_connections_per_child: 0
+apache_httpd__conf_mpm_event_max_request_workers: 400
+apache_httpd__conf_mpm_event_max_spare_threads: 250
+apache_httpd__conf_mpm_event_min_spare_threads: 75
+apache_httpd__conf_mpm_event_start_servers: 3
+apache_httpd__conf_mpm_event_thread_limit: 64
+apache_httpd__conf_mpm_event_threads_per_child: 25
+
+apache_httpd__conf_mpm_prefork_max_connections_per_child: 0
+apache_httpd__conf_mpm_prefork_max_request_workers: 256
+apache_httpd__conf_mpm_prefork_max_spare_servers: 10
+apache_httpd__conf_mpm_prefork_min_spare_servers: 5
+apache_httpd__conf_mpm_prefork_start_servers: 5
+
+apache_httpd__conf_mpm_worker_max_connections_per_child: 0
+apache_httpd__conf_mpm_worker_max_request_workers: 400
+apache_httpd__conf_mpm_worker_max_spare_threads: 250
+apache_httpd__conf_mpm_worker_min_spare_threads: 75
+apache_httpd__conf_mpm_worker_start_servers: 3
+apache_httpd__conf_mpm_worker_thread_limit: 64
+apache_httpd__conf_mpm_worker_threads_per_child: 25
+
+
 # Apache Virtual Host Configuration
 # ---------------------------------
 
