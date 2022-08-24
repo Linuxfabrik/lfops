@@ -134,7 +134,7 @@
   - name: 'systemctl restart iptables.service'
     ansible.builtin.systemd:
       name: 'iptables.service'
-      state: 'firewall__iptables_definition_result is changed | bool | ternary("restarted", "started")'
+      state: "{{ firewall__iptables_definition_result is changed | bool | ternary('restarted', 'started') }}"
       enabled: true
       masked: false
     # when: 'firewall__iptables_definition_result is changed'
