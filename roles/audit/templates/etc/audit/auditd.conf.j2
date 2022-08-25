@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022051901
+# 2022082501
 
 #
 # This file controls the configuration of the audit daemon
@@ -12,8 +12,8 @@ log_group = root
 log_format = ENRICHED
 flush = INCREMENTAL_ASYNC
 freq = 50
-max_log_file = 10
-num_logs = 2
+max_log_file = 8
+num_logs = 5
 priority_boost = 4
 name_format = NONE
 ##name = mydomain
@@ -21,7 +21,7 @@ name_format = NONE
 # The keep_logs option is similar to rotate except it does not use the num_logs setting. This prevents audit logs from being overwritten. The effect is that logs accumulate and are not deleted - which will trigger the space_left_action if the volume fills up.
 max_log_file_action = keep_logs
 
-space_left = 15%
+space_left = 20%
 # rotate will rotate logs, losing the oldest to free up space.
 space_left_action = rotate
 verify_email = yes
