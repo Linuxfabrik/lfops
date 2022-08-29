@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Playbook: basic_setup
+* Renamed to setup_basic to be consitent with the other setup playbooks
+
 All roles:
 * Renamed all injectable variables:
     * `rolename__combined_varname` to `rolename__varname__combined_var`
