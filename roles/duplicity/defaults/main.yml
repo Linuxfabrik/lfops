@@ -2,9 +2,9 @@ duplicity__backup_dest_container: '{{ ansible_nodename }}'
 duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | trim("/") }}'
 duplicity__backup_retention_time: '30D' # days
 
-duplicity__group_backup_sources: []
-duplicity__host_backup_sources: []
-duplicity__role_backup_sources:
+duplicity__backup_sources__group_var: []
+duplicity__backup_sources__host_var: []
+duplicity__backup_sources__role_var:
   - path: '/backup'
     divide: false
   - path: '/etc'
@@ -17,10 +17,10 @@ duplicity__role_backup_sources:
     divide: false
   - path: '/var/spool/cron'
     divide: false
-duplicity__combined_backup_sources: '{{
-    duplicity__role_backup_sources +
-    duplicity__group_backup_sources +
-    duplicity__host_backup_sources
+duplicity__backup_sources__combined_var: '{{
+    duplicity__backup_sources__role_var +
+    duplicity__backup_sources__group_var +
+    duplicity__backup_sources__host_var
     | flatten
  }}'
 

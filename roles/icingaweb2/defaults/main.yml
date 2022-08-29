@@ -29,14 +29,14 @@ icingaweb2__groups__combined_var: '{{ icingaweb2__groups__role_var +
   | flatten
  }}'
 
-icingaweb2__dependent_navigation_menu_entries: []
-icingaweb2__group_navigation_menu_entries: []
-icingaweb2__host_navigation_menu_entries: []
-icingaweb2__role_navigation_menu_entries: []
-icingaweb2__combined_navigation_menu_entries: '{{ icingaweb2__role_navigation_menu_entries +
-  icingaweb2__group_navigation_menu_entries +
-  icingaweb2__host_navigation_menu_entries +
-  icingaweb2__dependent_navigation_menu_entries
+icingaweb2__navigation_menu_entries__dependent_var: []
+icingaweb2__navigation_menu_entries__group_var: []
+icingaweb2__navigation_menu_entries__host_var: []
+icingaweb2__navigation_menu_entries__role_var: []
+icingaweb2__navigation_menu_entries__combined_var: '{{ icingaweb2__navigation_menu_entries__role_var +
+  icingaweb2__navigation_menu_entries__group_var +
+  icingaweb2__navigation_menu_entries__host_var +
+  icingaweb2__navigation_menu_entries__dependent_var
   | flatten
  }}'
 
@@ -85,7 +85,7 @@ icingaweb2__users__combined_var: '{{ icingaweb2__users__role_var +
   | flatten
  }}'
 
-icingaweb2__icinga2_master__dependent_api_users:
+icingaweb2__icinga2_master__api_users__dependent_var:
   - username: '{{ icingaweb2__api_user_login.username }}'
     password: '{{ icingaweb2__api_user_login.password }}'
     permissions:

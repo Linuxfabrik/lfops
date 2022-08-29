@@ -7,7 +7,7 @@ icingaweb2_module_director__monitoring_plugins_version: 'latest'
 icingaweb2_module_director__url: 'https://git.linuxfabrik.ch/api/v4/projects/133/repository/archive?sha={{ icingaweb2_module_director__version }}'
 
 
-icingaweb2_module_director__icinga2_master__dependent_api_users:
+icingaweb2_module_director__icinga2_master__api_users__dependent_var:
   - username: '{{ icingaweb2_module_director__api_user_login.username }}'
     password: '{{ icingaweb2_module_director__api_user_login.password }}'
     permissions:

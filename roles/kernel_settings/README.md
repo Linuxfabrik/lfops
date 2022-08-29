@@ -27,9 +27,9 @@ These variables are intended to be used in a host / group variable file in the A
 
 * `kernel_settings__sysctl__host_var`, `kernel_settings__sysctl__group_var`
 * `kernel_settings__sysfs__host_var`, `kernel_settings__sysfs__group_var`
-* `kernel_settings__host_systemd_cpu_affinity`, `kernel_settings__group_systemd_cpu_affinity`
-* `kernel_settings__host_transparent_hugepages_defrag`, `kernel_settings__group_transparent_hugepages_defrag`
-* `kernel_settings__host_transparent_hugepages`, `kernel_settings__group_transparent_hugepages`
+* `kernel_settings__systemd_cpu_affinity__host_var`, `kernel_settings__systemd_cpu_affinity__group_var`
+* `kernel_settings__transparent_hugepages_defrag__host_var`, `kernel_settings__transparent_hugepages_defrag__group_var`
+* `kernel_settings__transparent_hugepages__host_var`, `kernel_settings__transparent_hugepages__group_var`
 
 For details have a look at the available role variables from the [linux_system_roles.kernel_settings role](https://github.com/linux-system-roles/kernel_settings/blob/master/README.md).
 
@@ -46,9 +46,9 @@ kernel_settings__sysfs__group_var:
     value: 0
   - name: '/sys/kernel/debug/x86/retp_enabled'
     value: 0
-kernel_settings__group_systemd_cpu_affinity: '1,3,5,7'
-kernel_settings__group_transparent_hugepages: 'madvise'
-kernel_settings__group_transparent_hugepages_defrag: 'defer'
+kernel_settings__systemd_cpu_affinity__group_var: '1,3,5,7'
+kernel_settings__transparent_hugepages__group_var: 'madvise'
+kernel_settings__transparent_hugepages_defrag__group_var: 'defer'
 ```
 
 

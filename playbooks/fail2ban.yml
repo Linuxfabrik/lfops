@@ -10,7 +10,7 @@
         - 'ansible_facts["os_family"] == "RedHat"'
 
     - role: 'linuxfabrik.lfops.sshd'
-      sshd__dependent_log_level: 'VERBOSE'
+      sshd__log_level__dependent_var: 'VERBOSE'
       when:
         - 'not fail2ban__skip_sshd | d(false)'
 

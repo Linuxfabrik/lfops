@@ -59,9 +59,9 @@
         - 'not setup_icinga2_master__skip_repo_icinga | default(false)'
 
     - role: 'icinga2_master'
-      icinga2_master__dependent_api_users:
-        - '{{ icingaweb2__icinga2_master__dependent_api_users }}'
-        - '{{ icingaweb2_module_director__icinga2_master__dependent_api_users }}'
+      icinga2_master__api_users__dependent_var:
+        - '{{ icingaweb2__icinga2_master__api_users__dependent_var }}'
+        - '{{ icingaweb2_module_director__icinga2_master__api_users__dependent_var }}'
 
     - role: 'yum_utils'
       when:

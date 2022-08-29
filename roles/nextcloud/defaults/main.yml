@@ -108,7 +108,7 @@ nextcloud__apache_httpd__vhosts__dependent_var:
       </IfModule>
 
 
-netcloud__collabora_code__dependent_coolwsd_storage_wopi:
+netcloud__collabora_code__coolwsd_storage_wopi__dependent_var:
   - '{{ nextcloud__fqdn | regex_replace("\.", "\.") }}'
 
 
@@ -126,7 +126,7 @@ nextcloud__kernel_settings__sysctl__dependent_var:
   - name: 'net.core.somaxconn'
     value: 1024
 
-nextcloud__kernel_settings__dependent_transparent_hugepages: 'madvise'
+nextcloud__kernel_settings__transparent_hugepages__dependent_var: 'madvise'
 
 nextcloud__php__modules__dependent_var:
   - 'php-bcmath'

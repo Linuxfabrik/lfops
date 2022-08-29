@@ -71,7 +71,7 @@ librenms__mariadb_server__users__dependent_var:
     state: 'present'
 
 
-librenms__php__dependent_fpm_pools:
+librenms__php__fpm_pools__dependent_var:
   - name: 'librenms'
     by_role: 'librenms'
     user: 'librenms'

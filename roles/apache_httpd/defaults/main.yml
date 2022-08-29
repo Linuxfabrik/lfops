@@ -198,7 +198,7 @@ apache_httpd__modules__role_var:
     state: 'present'
 
 
-apache_httpd__role_app_modules:
+apache_httpd__app_modules__role_var:
   'cgi':
     enabled: true
     state: 'present'
@@ -212,7 +212,7 @@ apache_httpd__role_app_modules:
     state: 'present'
 
 
-apache_httpd__role_proxy_modules:
+apache_httpd__proxy_modules__role_var:
   'deflate':
     enabled: true
     state: 'present'
@@ -327,9 +327,9 @@ apache_httpd__snippets__role_var:
     state: 'present'
     type: 'conf'
 
-apache_httpd__role_app_snippets: {}
+apache_httpd__app_snippets__role_var: {}
 
-apache_httpd__role_proxy_snippets:
+apache_httpd__proxy_snippets__role_var:
   'crs':
     enabled: true
     state: 'present'

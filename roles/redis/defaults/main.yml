@@ -29,4 +29,4 @@ redis__kernel_settings__sysctl__dependent_var:
   # /proc/sys/net/core/somaxconn is set to the lower value of 128.
   - name: 'net.core.somaxconn'
     value: 1024
-redis__kernel_settings__dependent_transparent_hugepages: 'madvise'
+redis__kernel_settings__transparent_hugepages__dependent_var: 'madvise'

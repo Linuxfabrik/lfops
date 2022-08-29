@@ -236,7 +236,7 @@ apache_httpd__modules__host_var
 This variable is intended to be used in the inventory of hosts as needed.
 
 
-apache_httpd__role_app_modules
+apache_httpd__app_modules__role_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is used in the role internally. It contains the default set of modules that should be installed for an application server.
@@ -248,7 +248,7 @@ apache_httpd__modules__role_var
 This variable is used in the role internally. It contains the default set of modules that should be installed for any type of server.
 
 
-apache_httpd__role_proxy_modules
+apache_httpd__proxy_modules__role_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Modules for a Reverse Proxy server.

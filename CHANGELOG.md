@@ -23,7 +23,7 @@ Role: chrony
 Role: duplicity
 * Renamed `duplicity__public_master_long_keyid` variable to `duplicity__gpg_encrypt_master_key`.
 * Renamed `duplicity__public_master_key` variable to `duplicity__gpg_encrypt_master_key_block`.
-* Changed the format of `duplicity__host_backup_sources`.
+* Changed the format of `duplicity__backup_sources__host_var`.
 
 Role: kernel_settings
 * Make `kernel_settings__` variables injection-capable via `kernel_settings__host_*`, `kernel_settings__group_*` and `kernel_settings__dependent_*`.
@@ -32,7 +32,7 @@ Role: libselinux_python:
 * Renamed the role to policycoreutils.
 
 Role: login
-* Changed logic and renamed `login__users` to two combined variables `login__group_users` (define users in group vars) and `login__host_users` (define users in host vars).
+* Changed logic and renamed `login__users` to two combined variables `login__users__group_var` (define users in group vars) and `login__users__host_var` (define users in host vars).
 
 Role: stig
 * Moved to a new GitHub repo (temporarily)

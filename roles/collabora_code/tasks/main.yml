@@ -24,7 +24,7 @@
 
   - name: 'install language packages'
     ansible.builtin.package:
-      name: '{{ collabora_code__combined_language_packages }}'
+      name: '{{ collabora_code__language_packages__combined_var }}'
       state: 'present'
 
   - name: 'touch /var/log/coolwsd.log & chmod 0660 /var/log/coolwsd.log'

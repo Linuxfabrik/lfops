@@ -7,7 +7,7 @@
       # === Prepare the system
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{ nextcloud__kernel_settings__sysctl__dependent_var | d([]) }}'
-      kernel_settings__dependent_transparent_hugepages: '{{ nextcloud__kernel_settings__dependent_transparent_hugepages | d("madivse") }}'
+      kernel_settings__transparent_hugepages__dependent_var: '{{ nextcloud__kernel_settings__transparent_hugepages__dependent_var | d("madivse") }}'
       when:
         - 'not setup_nextcloud__skip_kernel_settings | d(false)'
 
@@ -52,11 +52,11 @@
 
     - role: 'linuxfabrik.lfops.php'
       php__modules__dependent_var: '{{ nextcloud__php__modules__dependent_var }}'
-      php__dependent_ini_max_execution_time: '{{ nextcloud__php__ini_max_execution_time }}'
-      php__dependent_ini_max_file_uploads: '{{ nextcloud__php__ini_max_file_uploads }}'
-      php__dependent_ini_memory_limit: '{{ nextcloud__php__ini_memory_limit }}'
-      php__dependent_ini_post_max_size: '{{ nextcloud__php__ini_post_max_size }}'
-      php__dependent_ini_upload_max_filesize: '{{ nextcloud__php__ini_upload_max_filesize }}'
+      php__ini_max_execution_time__dependent_var: '{{ nextcloud__php__ini_max_execution_time }}'
+      php__ini_max_file_uploads__dependent_var: '{{ nextcloud__php__ini_max_file_uploads }}'
+      php__ini_memory_limit__dependent_var: '{{ nextcloud__php__ini_memory_limit }}'
+      php__ini_post_max_size__dependent_var: '{{ nextcloud__php__ini_post_max_size }}'
+      php__ini_upload_max_filesize__dependent_var: '{{ nextcloud__php__ini_upload_max_filesize }}'
       when:
         - 'not setup_nextcloud__skip_php | d(false)'
 
@@ -101,7 +101,7 @@
         - 'not setup_nextcloud__skip_repo_collabora_code | d(false)'
 
     - role: 'linuxfabrik.lfops.collabora_code'
-      collabora_code__dependent_coolwsd_storage_wopi: '{{ netcloud__collabora_code__dependent_coolwsd_storage_wopi | d([]) }}'
+      collabora_code__coolwsd_storage_wopi__dependent_var: '{{ netcloud__collabora_code__coolwsd_storage_wopi__dependent_var | d([]) }}'
       when:
         - 'not setup_nextcloud__skip_collabora_code | d(false)'
 

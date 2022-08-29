@@ -20,21 +20,21 @@ collabora_code__coolwsd_ssl_settings_key_file_path: '/etc/loolwsd/key.pem'
 collabora_code__coolwsd_ssl_termination: true
 collabora_code__service_enabled: true
 
-collabora_code__dependent_coolwsd_storage_wopi: []
-collabora_code__group_coolwsd_storage_wopi: []
-collabora_code__host_coolwsd_storage_wopi: []
-collabora_code__role_coolwsd_storage_wopi: []
-collabora_code__combined_coolwsd_storage_wopi: '{{ collabora_code__role_coolwsd_storage_wopi +
-  collabora_code__group_coolwsd_storage_wopi +
-  collabora_code__host_coolwsd_storage_wopi +
-  collabora_code__dependent_coolwsd_storage_wopi
+collabora_code__coolwsd_storage_wopi__dependent_var: []
+collabora_code__coolwsd_storage_wopi__group_var: []
+collabora_code__coolwsd_storage_wopi__host_var: []
+collabora_code__coolwsd_storage_wopi__role_var: []
+collabora_code__coolwsd_storage_wopi__combined_var: '{{ collabora_code__coolwsd_storage_wopi__role_var +
+  collabora_code__coolwsd_storage_wopi__group_var +
+  collabora_code__coolwsd_storage_wopi__host_var +
+  collabora_code__coolwsd_storage_wopi__dependent_var
   | flatten
  }}'
 
-collabora_code__dependent_language_packages: []
-collabora_code__group_language_packages: []
-collabora_code__host_language_packages: []
-collabora_code__role_language_packages:
+collabora_code__language_packages__dependent_var: []
+collabora_code__language_packages__group_var: []
+collabora_code__language_packages__host_var: []
+collabora_code__language_packages__role_var:
   # de
   - 'collaboraoffice-dict-de'
   - 'collaboraofficebasis-de'
@@ -59,9 +59,9 @@ collabora_code__role_language_packages:
   - 'mythes-it'
   - 'hunspell-it'
 
-collabora_code__combined_language_packages: '{{ collabora_code__role_language_packages +
-  collabora_code__group_language_packages +
-  collabora_code__host_language_packages +
-  collabora_code__dependent_language_packages
+collabora_code__language_packages__combined_var: '{{ collabora_code__language_packages__role_var +
+  collabora_code__language_packages__group_var +
+  collabora_code__language_packages__host_var +
+  collabora_code__language_packages__dependent_var
   | flatten
  }}'

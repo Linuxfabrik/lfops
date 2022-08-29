@@ -1,7 +1,7 @@
 {
   "gpg_encrypt_local_key": "{{ duplicity__gpg_encrypt_local_key["key"]["fingerprint"] }}",
   "gpg_encrypt_master_key": "{{ duplicity__gpg_encrypt_master_key }}",
-  "backup_sources": {{ duplicity__combined_backup_sources | to_nice_json }},
+  "backup_sources": {{ duplicity__backup_sources__combined_var | to_nice_json }},
   "backup_excludes": {{ duplicity__excludes | to_nice_json }},
   "backup_dest": "{{ duplicity__backup_dest }}",
   "retention_time": "{{ duplicity__backup_retention_time }}",

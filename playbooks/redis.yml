@@ -7,7 +7,7 @@
 
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{ redis__kernel_settings__sysctl__dependent_var | d([]) }}'
-      kernel_settings__dependent_transparent_hugepages: "{{ redis__kernel_settings__dependent_transparent_hugepages | d('') }}"
+      kernel_settings__transparent_hugepages__dependent_var: "{{ redis__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
       when:
         - 'not redis__skip_kernel_settings | d(false)'
 

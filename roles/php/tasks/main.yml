@@ -64,7 +64,7 @@
       state: 'absent'
     when:
       - 'item.state | d("present") == "absent"'
-    loop: '{{ php__combined_fpm_pools }}'
+    loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
   - name: 'Deploy the pools to /etc/php-fpm.d/'
@@ -76,7 +76,7 @@
       mode: 0o644
     when:
       - 'item.state | d("present") != "absent"'
-    loop: '{{ php__combined_fpm_pools }}'
+    loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
   tags:

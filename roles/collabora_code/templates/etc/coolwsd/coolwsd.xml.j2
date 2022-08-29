@@ -198,7 +198,7 @@
     <storage desc="Backend storage">
         <filesystem allow="false" />
         <wopi desc="Allow/deny wopi storage." allow="true">
-            {% for item in collabora_code__combined_coolwsd_storage_wopi %}
+            {% for item in collabora_code__coolwsd_storage_wopi__combined_var %}
             <host desc="Regex pattern of hostname to allow or deny." allow="true">{{ item }}</host>
             {% endfor %}
             <host desc="Regex pattern of hostname to allow or deny." allow="true">localhost</host>

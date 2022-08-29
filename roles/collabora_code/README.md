@@ -33,10 +33,10 @@ Tested on
 | `collabora_code__coolwsd_ssl_settings_cert_file_path` | Path to the cert file. Set this when coolwsd is SSL-terminating. | `'/etc/loolwsd/cert.pem'` |
 | `collabora_code__coolwsd_ssl_settings_key_file_path` | Path to the key file. Set this when coolwsd is SSL-terminating. | `'/etc/loolwsd/key.pem'` |
 | `collabora_code__coolwsd_ssl_termination` | Enable if coolwsd is behind a SSL-terminating proxy and therefore should act as if its using https but actually receives http. Possible options: | `true` |
-| `collabora_code__group_coolwsd_storage_wopi` | List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. <br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
-| `collabora_code__host_coolwsd_storage_wopi` | List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. <br>For the usage in `host_vars`. | `[]` |
-| `collabora_code__group_language_packages` | A list of additional packages will be installed for language support (spell checking, thesaurus, etc). Defaults to de, en, fr, and it. <br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
-| `collabora_code__host_language_packages` | A list of additional packages will be installed for language support (spell checking, thesaurus, etc). Defaults to de, en, fr, and it. <br>For the usage in `host_vars`. | `[]` |
+| `collabora_code__coolwsd_storage_wopi__group_var` | List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. <br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
+| `collabora_code__coolwsd_storage_wopi__host_var` | List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. <br>For the usage in `host_vars`. | `[]` |
+| `collabora_code__language_packages__group_var` | A list of additional packages will be installed for language support (spell checking, thesaurus, etc). Defaults to de, en, fr, and it. <br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
+| `collabora_code__language_packages__host_var` | A list of additional packages will be installed for language support (spell checking, thesaurus, etc). Defaults to de, en, fr, and it. <br>For the usage in `host_vars`. | `[]` |
 | `collabora_code__service_enabled` | Enables or disables the coolwsd service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
 
 Example:
@@ -61,11 +61,11 @@ collabora_code__coolwsd_ssl_settings_ca_file_path: '/etc/loolwsd/ca-chain.cert.p
 collabora_code__coolwsd_ssl_settings_cert_file_path: '/etc/loolwsd/cert.pem'
 collabora_code__coolwsd_ssl_settings_key_file_path: '/etc/loolwsd/key.pem'
 collabora_code__coolwsd_ssl_termination: true
-collabora_code__group_coolwsd_storage_wopi: []
-collabora_code__host_coolwsd_storage_wopi:
+collabora_code__coolwsd_storage_wopi__group_var: []
+collabora_code__coolwsd_storage_wopi__host_var:
   - 'cloud\.example\.com'
-collabora_code__group_language_packages: []
-collabora_code__host_language_packages: []
+collabora_code__language_packages__group_var: []
+collabora_code__language_packages__host_var: []
 collabora_code__service_enabled: true
 ```
 
