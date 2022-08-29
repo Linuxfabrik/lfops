@@ -1,8 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'passwd-plus_entries-off.yml'
-
-- ansible.builtin.replace:
-    path: '/etc/passwd'
-    regexp: '^\+'
-    replace: ''

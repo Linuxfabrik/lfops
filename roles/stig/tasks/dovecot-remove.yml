@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'dovecot-remove.yml'
-
-- ansible.builtin.package:
-    name: 'dovecot'
-    state: 'absent'

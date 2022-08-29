@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'setroubleshoot-remove.yml'
-
-- ansible.builtin.package:
-    name: 'setroubleshoot'
-    state: 'absent'

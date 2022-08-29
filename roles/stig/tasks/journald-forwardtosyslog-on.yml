@@ -1,9 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'journald-forwardtosyslog-on.yml'
-
-- ansible.builtin.lineinfile:
-    path: '/etc/systemd/journald.conf'
-    regexp: '^#?ForwardToSyslog='
-    line: 'ForwardToSyslog=yes'
-    state: 'present'

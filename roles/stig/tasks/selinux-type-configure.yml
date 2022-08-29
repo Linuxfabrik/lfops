@@ -1,9 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'selinux-type-configure.yml'
-
-- ansible.builtin.lineinfile:
-    path: '/etc/sysconfig/selinux'
-    regexp: '^SELINUXTYPE\s*='
-    line: 'SELINUXTYPE={{ stig__selinux_type }}'
-    create: true

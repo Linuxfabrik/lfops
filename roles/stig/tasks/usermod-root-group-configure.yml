@@ -1,8 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'usermod-root-group-configure.yml'
-
-- ansible.builtin.user:
-    name: 'root'
-    uid: 0
-    group: 'root'

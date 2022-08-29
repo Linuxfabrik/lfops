@@ -1,9 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'sshd-cryptopolicy-on.yml'
-
-- ansible.builtin.lineinfile:
-    path: '/etc/ssh/sshd_config'
-    create: false
-    regexp: '(?i)^\s*CRYPTO_POLICY\s+'
-    state: 'absent'

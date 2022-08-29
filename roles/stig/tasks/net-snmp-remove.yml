@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'net-snmp-remove.yml'
-
-- ansible.builtin.package:
-    name: 'net-snmp'
-    state: 'absent'

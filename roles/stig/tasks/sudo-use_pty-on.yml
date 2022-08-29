@@ -1,9 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'sudo-use_pty-on.yml'
-
-- ansible.builtin.lineinfile:
-    path: '/etc/sudoers'
-    regexp: '^Defaults\s+use_pty'
-    line: 'Defaults    use_pty'
-    state: 'present'

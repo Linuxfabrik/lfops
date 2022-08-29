@@ -1,9 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'group-chmod.yml'
-
-- ansible.builtin.file:
-    path: '/etc/group'
-    owner: 'root'
-    group: 'root'
-    mode: 0o644

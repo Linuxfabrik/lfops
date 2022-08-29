@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'talk-remove.yml'
-
-- ansible.builtin.package:
-    name: 'talk'
-    state: 'absent'

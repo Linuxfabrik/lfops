@@ -1,8 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'httpd-group-chown.yml'
-
-- ansible.builtin.file:
-    path: '/etc/httpd'
-    group: 'root'
-    recurse: true

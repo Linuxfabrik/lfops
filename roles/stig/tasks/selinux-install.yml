@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'selinux-install.yml'
-
-- ansible.builtin.package:
-    name: 'libselinux'
-    state: 'present'

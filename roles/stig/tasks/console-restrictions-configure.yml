@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'console-restrictions-configure.yml'
-
-- ansible.builtin.template:
-    src: 'etc/securetty.j2'
-    dest: '/etc/securetty'

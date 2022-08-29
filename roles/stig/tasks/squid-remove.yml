@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'squid-remove.yml'
-
-- ansible.builtin.package:
-    name: 'squid'
-    state: 'absent'

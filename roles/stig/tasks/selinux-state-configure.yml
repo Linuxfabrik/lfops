@@ -1,9 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'selinux-state-configure.yml'
-
-- ansible.builtin.lineinfile:
-    path: '/etc/sysconfig/selinux'
-    regexp: '^SELINUX\s*='
-    line: 'SELINUX={{ stig__selinux_state }}'
-    create: true

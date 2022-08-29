@@ -1,8 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'shadow-plus_entries-off.yml'
-
-- ansible.builtin.replace:
-    path: '/etc/shadow'
-    regexp: '^\+'
-    replace: ''

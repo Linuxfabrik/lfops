@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'vsftpd-remove.yml'
-
-- ansible.builtin.package:
-    name: 'vsftpd'
-    state: 'absent'

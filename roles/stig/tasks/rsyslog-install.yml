@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'rsyslog-install.yml'
-
-- ansible.builtin.package:
-    name: 'rsyslog'
-    state: 'present'

@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'cups-remove.yml'
-
-- ansible.builtin.package:
-    name: 'cups'
-    state: 'absent'

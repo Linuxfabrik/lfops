@@ -1,7 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'samba-remove.yml'
-
-- ansible.builtin.package:
-    name: 'samba'
-    state: 'absent'

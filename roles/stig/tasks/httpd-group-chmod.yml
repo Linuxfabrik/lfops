@@ -1,8 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'httpd-group-chmod.yml'
-
-- ansible.builtin.file:
-    path: '/etc/httpd'
-    mode: 'g-w'
-    recurse: true

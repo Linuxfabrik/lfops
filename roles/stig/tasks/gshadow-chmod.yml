@@ -1,9 +1,0 @@
-- ansible.builtin.debug:
-    msg:
-      - 'gshadow-chmod.yml'
-
-- ansible.builtin.file:
-    path: '/etc/gshadow'
-    owner: 'root'
-    group: 'root'
-    mode: '0000'
