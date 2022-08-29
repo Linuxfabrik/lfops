@@ -1,0 +1,50 @@
+# Manage Apache configuration (files in `conf-available`)
+
+- name: 'Combined Configs:'
+  ansible.builtin.debug:
+    var: 'apache_httpd__conf__combined_var'
+
+- name: 'Remove conf-available configs'
+  ansible.builtin.file:
+    path: '{{ apache_httpd__config_path + "/conf-available/" + item["key"] + ".conf" }}'
+    state: 'absent'
+  when:
+    - 'item["value"]["state"] | d("present") == "absent"'
+  loop: '{{ apache_httpd__conf__combined_var | dict2items }}'
+
+- name: 'Create conf-available configs'
+  ansible.builtin.template:
+    src: 'etc/httpd/conf-available/{{ item["value"]["template"]}}.conf.j2'
+    dest: '{{ apache_httpd__config_path + "/conf-available/" + item["key"] + ".conf" }}'
+    owner: 'root'
+    group: 'root'
+    mode: 0o644
+  when:
+    - 'item["value"]["state"] | d("present") != "absent"'
+  loop: '{{ apache_httpd__conf__combined_var | dict2items }}'
+  notify:
+    - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+- name: 'Disable configs'
+  ansible.builtin.file:
+    path: '{{ apache_httpd__config_path + "/conf-enabled/" + item["key"] + ".conf" }}'
+    mode: 0o644
+    state: 'absent'
+  loop: '{{ apache_httpd__conf__combined_var | dict2items }}'
+  when: 'not item["value"]["enabled"] | d(true)
+        or item["value"]["state"] | d("present") == "absent"'
+  notify:
+    - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+- name: 'Enable configs'
+  ansible.builtin.file:
+    src: '../conf-available/{{ item["key"] }}.conf'
+    path: '{{ apache_httpd__config_path + "/conf-enabled/" + item["key"] + ".conf" }}'
+    mode: 0o644
+    state: 'link'
+  loop: '{{ apache_httpd__conf__combined_var | dict2items }}'
+  when:
+    - 'item["value"]["enabled"] | d(true)'
+    - 'item["value"]["state"] | d("present") != "absent"'
+  notify:
+    - 'apache_httpd: httpd -t; systemctl reload httpd'

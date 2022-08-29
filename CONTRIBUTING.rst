@@ -452,11 +452,10 @@ Your role might accept variable injection from another role. It depends on the c
 
     # for dictionaries
     - ansible.builtin.set_fact:
-        apache_httpd__modules__combined_var: '{{ apache_httpd__modules__role_var
-          | combine(apache_httpd__proxy_modules__role_var)
-          | combine(apache_httpd__modules__dependent_var)
-          | combine(apache_httpd__modules__group_var)
-          | combine(apache_httpd__modules__host_var)
+        apache_httpd__mods__combined_var: '{{ apache_httpd__mods__role_var
+          | combine(apache_httpd__mods__dependent_var)
+          | combine(apache_httpd__mods__group_var)
+          | combine(apache_httpd__mods__host_var)
          }}'
 
     # for lists

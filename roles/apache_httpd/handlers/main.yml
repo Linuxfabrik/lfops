@@ -1,19 +1,19 @@
 - name: 'apache_httpd: httpd -t; systemctl reload httpd'
-  command: '{{ apache_httpd__config_test_command }}'
+  ansible.builtin.command: '{{ apache_httpd__config_test_command }}'
   notify:
     - 'apache_httpd: systemctl reload httpd'
 
 - name: 'apache_httpd: systemctl reload httpd'
-  service:
+  ansible.builtin.service:
     name: '{{ apache_httpd__service_name }}'
     state: 'reloaded'
 
 - name: 'apache_httpd: httpd -t; systemctl restart httpd'
-  command: '{{ apache_httpd__config_test_command }}'
+  ansible.builtin.command: '{{ apache_httpd__config_test_command }}'
   notify:
-    - 'apache_httpd: httpd -t; systemctl restart httpd'
+    - 'apache_httpd: systemctl restart httpd'
 
-- name: 'apache_httpd: httpd -t; systemctl restart httpd'
-  service:
+- name: 'apache_httpd: systemctl restart httpd'
+  ansible.builtin.service:
     name: '{{ apache_httpd__service_name }}'
     state: 'restarted'

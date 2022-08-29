@@ -1,7 +1,5 @@
 apache_httpd__skip_php_fpm: false
 
-apache_httpd__deploy_state: 'present'
-apache_httpd__server_type: 'app'
 apache_httpd__systemd_enabled: true
 apache_httpd__systemd_state: 'started'
 
@@ -9,340 +7,361 @@ apache_httpd__systemd_state: 'started'
 # Apache Module Installation
 # --------------------------
 
-apache_httpd__base_packages:
-  # coming from /vars:
-  - '{{ apache_httpd__base_packages }}'
-
 apache_httpd__packages__role_var:
-  - 'mod_qos'
-  - 'mod_security'
-  - 'mod_ssl'
-apache_httpd__packages__group_var: []
-apache_httpd__packages__host_var: []
-apache_httpd__packages__dependent_var: []
+  mod_qos:
+    state: 'present'
 
-apache_httpd__packages__combined_var: '{{ apache_httpd__packages__role_var +
-  apache_httpd__packages__group_var +
-  apache_httpd__packages__host_var +
-  apache_httpd__packages__dependent_var
-}}'
+  mod_security:
+    state: 'present'
 
+  mod_ssl:
+    state: 'present'
+
+apache_httpd__packages__dependent_var: {}
+apache_httpd__packages__group_var: {}
+apache_httpd__packages__host_var: {}
+apache_httpd__packages__combined_var: '{{ apache_httpd__packages__role_var
+    | combine(apache_httpd__packages__dependent_var)
+    | combine(apache_httpd__packages__group_var)
+    | combine(apache_httpd__packages__host_var)
+  }}'
 
 # for mod_security - normally nothing that you have to change
 # get details from https://coreruleset.org/installation/
 # origin: https://github.com/coreruleset/coreruleset/archive/v3.3.2.tar.gz
-apache_httpd__coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__coreruleset_version: '3.3.2'
-apache_httpd__coreruleset_checksum: 'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'
+apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
+apache_httpd__mod_security_coreruleset_version: '3.3.2'
+apache_httpd__mod_security_coreruleset_checksum: 'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'
 
 
 # Apache Module Configuration
 # ---------------------------
 
-# Apache modules managed by this Ansible role.
-apache_httpd__modules__role_var:
-  'alias':
+# Apache mods managed by this Ansible role.
+apache_httpd__mods__role_var:
+  alias:
     enabled: true
     state: 'present'
+    template: 'alias'
 
-  'authn_core':
+  authn_core:
     enabled: true
     state: 'present'
+    template: 'authn_core'
 
-  'authn_file':
+  authn_file:
     enabled: true
     state: 'present'
+    template: 'authn_file'
 
-  'authz_core':
+  authz_core:
     enabled: true
     state: 'present'
+    template: 'authz_core'
 
-  'authz_host':
+  authz_host:
     enabled: true
     state: 'present'
+    template: 'authz_host'
 
-  'authz_user':
+  authz_user:
     enabled: true
     state: 'present'
+    template: 'authz_user'
 
-  'cgi':
+  cgi:
     enabled: false
     state: 'present'
+    template: 'cgi'
 
-  'cgid':
+  cgid:
     enabled: false
     state: 'present'
+    template: 'cgid'
 
-  'dir':
-    enabled: true
-    state: 'present'
-
-  'expires':
-    enabled: true
-    state: 'present'
-
-  'headers':
-    enabled: true
-    state: 'present'
-
-  'http2':
+  deflate:
     enabled: false
     state: 'present'
+    template: 'deflate'
 
-  'info':
+  dir:
     enabled: true
     state: 'present'
+    template: 'dir'
 
-  'log_config':
-    enabled: true
-    state: 'present'
-
-  'logio':
-    enabled: true
-    state: 'present'
-
-  'maxminddb':
+  filter:
     enabled: false
     state: 'present'
+    template: 'filter'
 
-  'mime':
+  expires:
     enabled: true
     state: 'present'
+    template: 'expires'
 
-  'mime_magic':
+  headers:
     enabled: true
     state: 'present'
+    template: 'headers'
 
-  'mpm_event':
-    enabled: true
-    state: 'present'
-
-  'mpm_prefork':
+  http2:
     enabled: false
     state: 'present'
+    template: 'http2'
 
-  'mpm_worker':
+  info:
+    enabled: true
+    state: 'present'
+    template: 'info'
+
+  log_config:
+    enabled: true
+    state: 'present'
+    template: 'log_config'
+
+  logio:
+    enabled: true
+    state: 'present'
+    template: 'logio'
+
+  maxminddb:
     enabled: false
     state: 'present'
+    template: 'maxminddb'
 
-  'php7':
+  mime:
+    enabled: true
+    state: 'present'
+    template: 'mime'
+
+  mime_magic:
+    enabled: true
+    state: 'present'
+    template: 'mime_magic'
+
+  mpm_event:
+    enabled: true
+    state: 'present'
+    template: 'mpm_event'
+
+  mpm_prefork:
     enabled: false
     state: 'present'
+    template: 'mpm_prefork'
 
-  'php8':
+  mpm_worker:
     enabled: false
     state: 'present'
+    template: 'mpm_worker'
 
-  'proxy':
-    enabled: true
-    state: 'present'
-
-  'proxy_fcgi':
+  php7:
     enabled: false
     state: 'present'
+    template: 'php7'
 
-  'proxy_http':
+  php8:
     enabled: false
     state: 'present'
+    template: 'php8'
 
-  'proxy_wstunnel':
+  proxy:
+    enabled: true
+    state: 'present'
+    template: 'proxy'
+
+  proxy_fcgi:
     enabled: false
     state: 'present'
+    template: 'proxy_fcgi'
 
-  'qos':
-    enabled: true
-    state: 'present'
-
-  'reqtimeout':
-    enabled: true
-    state: 'present'
-
-  'rewrite':
-    enabled: true
-    state: 'present'
-
-  'setenvif':
-    enabled: true
-    state: 'present'
-
-  'slotmem_shm':
-    enabled: true
-    state: 'present'
-
-  'socache_shmcb':
-    enabled: true
-    state: 'present'
-
-  'ssl':
-    enabled: true
-    state: 'present'
-
-  'status':
-    enabled: true
-    state: 'present'
-
-  'systemd':
-    enabled: true
-    state: 'present'
-
-  'unique_id':
-    enabled: true
-    state: 'present'
-
-  'unix':
-    enabled: true
-    state: 'present'
-
-  'wsgi_python3':
+  proxy_http:
     enabled: false
     state: 'present'
+    template: 'proxy_http'
 
-
-apache_httpd__app_modules__role_var:
-  'cgi':
-    enabled: true
-    state: 'present'
-
-  'cgid':
-    enabled: true
-    state: 'present'
-
-  'proxy_fcgi':
-    enabled: true
-    state: 'present'
-
-
-apache_httpd__proxy_modules__role_var:
-  'deflate':
-    enabled: true
-    state: 'present'
-
-  'filter':
-    enabled: true
-    state: 'present'
-
-  'maxminddb':
+  proxy_wstunnel:
     enabled: false
     state: 'present'
+    template: 'proxy_wstunnel'
 
-  'proxy_http':
+  qos:
     enabled: true
     state: 'present'
+    template: 'qos'
 
-  'proxy_wstunnel':
+  reqtimeout:
     enabled: true
     state: 'present'
+    template: 'reqtimeout'
 
-  'security2':
+  rewrite:
     enabled: true
     state: 'present'
+    template: 'rewrite'
 
-apache_httpd__modules__group_var: {}
-apache_httpd__modules__host_var: {}
-apache_httpd__modules__dependent_var: {}
+  security2:
+    enabled: false
+    state: 'present'
+    template: 'security2'
+
+  setenvif:
+    enabled: true
+    state: 'present'
+    template: 'setenvif'
+
+  slotmem_shm:
+    enabled: true
+    state: 'present'
+    template: 'slotmem_shm'
+
+  socache_shmcb:
+    enabled: true
+    state: 'present'
+    template: 'socache_shmcb'
+
+  ssl:
+    enabled: true
+    state: 'present'
+    template: 'ssl'
+
+  status:
+    enabled: true
+    state: 'present'
+    template: 'status'
+
+  systemd:
+    enabled: true
+    state: 'present'
+    template: 'systemd'
+
+  unique_id:
+    enabled: true
+    state: 'present'
+    template: 'unique_id'
+
+  unix:
+    enabled: true
+    state: 'present'
+    template: 'unix'
+
+  wsgi_python3:
+    enabled: false
+    state: 'present'
+    template: 'wsgi_python3'
+
+apache_httpd__mods__dependent_var: {}
+apache_httpd__mods__group_var: {}
+apache_httpd__mods__host_var: {}
+apache_httpd__mods__combined_var: '{{ apache_httpd__mods__role_var
+    | combine(apache_httpd__mods__dependent_var)
+    | combine(apache_httpd__mods__group_var)
+    | combine(apache_httpd__mods__host_var)
+  }}'
 
 
 # Apache "conf-available"
 # -----------------------
 
-# Apache snippets used internally by this role.
-apache_httpd__snippets__role_var:
-  'dir':
+# Apache conf used internally by this role.
+apache_httpd__conf__role_var:
+  deflate:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'deflate'
 
-  'expires':
+  dir:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'dir'
 
-  'headers':
+  expires:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'expires'
 
-  'http2':
+  headers:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'headers'
 
-  'log_config':
+  http2:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'http2'
 
-  'logio':
+  log_config:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'log_config'
 
-  'mime':
+  logio:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'logio'
 
-  'mime_magic':
+  mime:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'mime'
 
-  'mpm_event':
+  mime_magic:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'mime_magic'
 
-  'mpm_prefork':
+  mod_security:
+    enabled: true
+    state: 'present'
+    template: 'mod_security'
+
+  mpm_event:
+    enabled: true
+    state: 'present'
+    template: 'mpm_event'
+
+  mpm_prefork:
     enabled: false
     state: 'present'
-    type: 'conf'
+    template: 'mpm_prefork'
 
-  'mpm_worker':
+  mpm_worker:
     enabled: false
     state: 'present'
-    type: 'conf'
+    template: 'mpm_worker'
 
-  'php':
+  php:
     enabled: false
     state: 'present'
-    type: 'conf'
+    template: 'php'
 
-  'python':
+  python:
     enabled: false
     state: 'present'
-    type: 'conf'
+    template: 'python'
 
-  'ssl':
+  ssl:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'ssl'
 
-  'status':
+  status:
     enabled: false
     state: 'present'
-    type: 'conf'
+    template: 'status'
 
-  'unixd':
+  unixd:
     enabled: true
     state: 'present'
-    type: 'conf'
+    template: 'unixd'
 
-apache_httpd__app_snippets__role_var: {}
-
-apache_httpd__proxy_snippets__role_var:
-  'crs':
-    enabled: true
-    state: 'present'
-    type: 'conf'
-
-  'deflate':
-    enabled: true
-    state: 'present'
-    type: 'conf'
-
-apache_httpd__snippets__group_var: {}
-apache_httpd__snippets__host_var: {}
-apache_httpd__snippets__dependent_var: {}
+apache_httpd__conf__dependent_var: {}
+apache_httpd__conf__group_var: {}
+apache_httpd__conf__host_var: {}
+apache_httpd__conf__combined_var: '{{ apache_httpd__conf__role_var
+    | combine(apache_httpd__conf__dependent_var)
+    | combine(apache_httpd__conf__group_var)
+    | combine(apache_httpd__conf__host_var)
+  }}'
 
 
 # Apache Global Config
@@ -364,7 +383,6 @@ apache_httpd__conf_listen:
   - 80
 apache_httpd__conf_log_level: 'warn'
 apache_httpd__conf_max_keep_alive_requests: 500
-apache_httpd__conf_server_admin: 'webmaster@linuxfabrik.ch'
 apache_httpd__conf_server_name: 'localhost'
 apache_httpd__conf_timeout: 10
 apache_httpd__conf_trace_enable: 'Off'
@@ -405,17 +423,16 @@ apache_httpd__conf_mpm_worker_threads_per_child: 25
 # Apache Virtual Host Configuration
 # ---------------------------------
 
-apache_httpd__vhost_type: 'app'
-
 # Used internally by this role. Order is important.
 apache_httpd__vhosts__role_var:
 
-  - comment: |-
+  000-localhost_80: # the key is only used for overwriting earlier objects, nothing else
+    comment: |-
       Host for internal things like monitoring, just accessible from localhost.
     enabled: true
-    filename: '000-localhost'
+    filename: '000-localhost.80'
     state: 'present'
-    type: 'localhost'
+    template: 'localhost'
     virtualhost_ip: '*'
     virtualhost_port: 80
 
@@ -461,17 +478,12 @@ apache_httpd__vhosts__role_var:
       Header always set X-Content-Type-Options: "nosniff"
       Header always set X-XSS-Protection: "1; mode=block"
 
-      # ssl_module
-      # SSLEngine on
-      # SSLCertificateFile      {{ apache_httpd__openssl_certificate_path }}/localhost.pem
-      # SSLCertificateKeyFile   {{ apache_httpd__openssl_privatekey_path }}/localhost.key
 
-apache_httpd__vhosts__group_var: []
-apache_httpd__vhosts__host_var: []
-apache_httpd__vhosts__dependent_var: []
-
-apache_httpd__vhosts__combined_var: '{{ apache_httpd__vhosts__group_var +
-  apache_httpd__vhosts__host_var +
-  apache_httpd__vhosts__role_var +
-  apache_httpd__vhosts__dependent_var
-}}'
+apache_httpd__vhosts__dependent_var: {}
+apache_httpd__vhosts__group_var: {}
+apache_httpd__vhosts__host_var: {}
+apache_httpd__vhosts__combined_var: '{{ apache_httpd__vhosts__role_var
+    | combine(apache_httpd__vhosts__dependent_var)
+    | combine(apache_httpd__vhosts__group_var)
+    | combine(apache_httpd__vhosts__host_var)
+  }}'

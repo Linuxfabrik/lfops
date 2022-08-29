@@ -1,0 +1,32 @@
+# Manage OWASP ModSecurity Core Rule Set (CRS), https://coreruleset.org/installation/
+- name: 'Download, verify and install OWASP ModSecurity Core Rule Set (CRS)'
+  ansible.builtin.get_url:
+    url: '{{ apache_httpd__mod_security_coreruleset_url }}/v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
+    dest: '/tmp/coreruleset-v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
+    checksum: '{{ apache_httpd__mod_security_coreruleset_checksum }}'
+
+- name: 'install tar'
+  ansible.builtin.package:
+    name: 'tar'
+    state: 'present'
+
+- name: 'tar xzf coreruleset-v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
+  ansible.builtin.unarchive:
+    src: '/tmp/coreruleset-v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
+    dest: '{{ apache_httpd__config_path }}/modsecurity.d/'
+    remote_src: true
+  ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified
+
+- name: 'ln -s {{ apache_httpd__config_path }}/modsecurity.d/coreruleset-{{ apache_httpd__mod_security_coreruleset_version }} {{ apache_httpd__config_path }}/modsecurity.d/crs'
+  ansible.builtin.file:
+    src: '{{ apache_httpd__config_path }}/modsecurity.d/coreruleset-{{ apache_httpd__mod_security_coreruleset_version }}'
+    dest: '{{ apache_httpd__config_path }}/modsecurity.d/crs'
+    state: 'link'
+  ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified
+
+- name: 'cp {{ apache_httpd__config_path }}/modsecurity.d/crs-setup.conf.example {{ apache_httpd__config_path }}/modsecurity.d/crs-setup.conf'
+  ansible.builtin.copy:
+    src: '{{ apache_httpd__config_path }}/modsecurity.d/crs/crs-setup.conf.example'
+    dest: '{{ apache_httpd__config_path }}/modsecurity.d/crs/crs-setup.conf'
+    remote_src: true
+  ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified
