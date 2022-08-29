@@ -32,11 +32,11 @@
   - ansible.builtin.debug:
       msg:
         - 'Combined Packages:'
-        - '{{ apache_httpd__combined_packages }}'
+        - '{{ apache_httpd__packages__combined_var }}'
 
   - name: 'Ensure additional Apache packages/modules are in their desired state'
     ansible.builtin.package:
-      name: '{{ q("flattened", apache_httpd__combined_packages) }}'
+      name: '{{ q("flattened", apache_httpd__packages__combined_var) }}'
       state: '{{ "present" if (apache_httpd__deploy_state == "present") else "absent" }}'
     register: 'apache_httpd__register_packages'
     until: 'apache_httpd__register_packages is succeeded'
@@ -124,21 +124,21 @@
 
   # Create the dictionary which holds the actual Apache modules combined from all variables.
   - ansible.builtin.set_fact:
-      apache_httpd__combined_modules: '{{ apache_httpd__role_modules
+      apache_httpd__modules__combined_var: '{{ apache_httpd__modules__role_var
         | combine(apache_httpd__role_proxy_modules)
-        | combine(apache_httpd__dependent_modules)
-        | combine(apache_httpd__group_modules)
-        | combine(apache_httpd__host_modules)
+        | combine(apache_httpd__modules__dependent_var)
+        | combine(apache_httpd__modules__group_var)
+        | combine(apache_httpd__modules__host_var)
        }}'
     when:
       - 'apache_httpd__server_type == "reverse-proxy"'
 
   - ansible.builtin.set_fact:
-      apache_httpd__combined_modules: '{{ apache_httpd__role_modules
+      apache_httpd__modules__combined_var: '{{ apache_httpd__modules__role_var
         | combine(apache_httpd__role_app_modules)
-        | combine(apache_httpd__dependent_modules)
-        | combine(apache_httpd__group_modules)
-        | combine(apache_httpd__host_modules)
+        | combine(apache_httpd__modules__dependent_var)
+        | combine(apache_httpd__modules__group_var)
+        | combine(apache_httpd__modules__host_var)
        }}'
     when:
       - 'apache_httpd__server_type == "app"'
@@ -146,7 +146,7 @@
   - ansible.builtin.debug:
       msg:
         - 'Combined Modules:'
-        - '{{ apache_httpd__combined_modules }}'
+        - '{{ apache_httpd__modules__combined_var }}'
 
   - name: 'Remove mods-available modules'
     ansible.builtin.file:
@@ -154,7 +154,7 @@
       state: 'absent'
     when:
       - 'item.value.state | d("present") == "absent"'
-    with_dict: '{{ apache_httpd__combined_modules }}'
+    with_dict: '{{ apache_httpd__modules__combined_var }}'
 
   - name: 'Create mods-available config'
     ansible.builtin.template:
@@ -169,7 +169,7 @@
     when:
       - 'item.value.state | d("present") != "absent"'
       - 'item.value.type | d("conf") not in ["dont-touch"] or item.value.raw | d()'
-    with_dict: '{{ apache_httpd__combined_modules }}'
+    with_dict: '{{ apache_httpd__modules__combined_var }}'
     notify:
       - 'apache_httpd: httpd -t; systemctl reload httpd'
 
@@ -190,7 +190,7 @@
                     else item.value | d(true)))
                    if (item.value.state | d("present") != "absent")
                    else False) | bool | ternary("link", "absent") }}'
-    with_dict: '{{ apache_httpd__combined_modules }}'
+    with_dict: '{{ apache_httpd__modules__combined_var }}'
     notify:
       - 'apache_httpd: httpd -t; systemctl reload httpd'
 
@@ -204,21 +204,21 @@
 
   # The dictionaries which holds the actual Apache _snippets combined from all variables.
   - ansible.builtin.set_fact:
-      apache_httpd__combined_snippets: '{{ apache_httpd__role_snippets
+      apache_httpd__snippets__combined_var: '{{ apache_httpd__snippets__role_var
         | combine(apache_httpd__role_proxy_snippets)
-        | combine(apache_httpd__dependent_snippets)
-        | combine(apache_httpd__group_snippets)
-        | combine(apache_httpd__host_snippets)
+        | combine(apache_httpd__snippets__dependent_var)
+        | combine(apache_httpd__snippets__group_var)
+        | combine(apache_httpd__snippets__host_var)
       }}'
     when:
       - 'apache_httpd__server_type == "reverse-proxy"'
 
   - ansible.builtin.set_fact:
-      apache_httpd__combined_snippets: '{{ apache_httpd__role_snippets
+      apache_httpd__snippets__combined_var: '{{ apache_httpd__snippets__role_var
         | combine(apache_httpd__role_app_snippets)
-        | combine(apache_httpd__dependent_snippets)
-        | combine(apache_httpd__group_snippets)
-        | combine(apache_httpd__host_snippets)
+        | combine(apache_httpd__snippets__dependent_var)
+        | combine(apache_httpd__snippets__group_var)
+        | combine(apache_httpd__snippets__host_var)
       }}'
     when:
       - 'apache_httpd__server_type == "app"'
@@ -226,7 +226,7 @@
   - ansible.builtin.debug:
       msg:
         - 'Combined Snippets:'
-        - '{{ apache_httpd__combined_snippets }}'
+        - '{{ apache_httpd__snippets__combined_var }}'
 
   - name: 'Remove conf-available snippets'
     ansible.builtin.file:
@@ -234,7 +234,7 @@
       state: 'absent'
     when:
       - 'item.value.state | d("present") == "absent"'
-    with_dict: '{{ apache_httpd__combined_snippets }}'
+    with_dict: '{{ apache_httpd__snippets__combined_var }}'
 
   - name: 'Create conf-available snippets'
     ansible.builtin.template:
@@ -249,7 +249,7 @@
     when:
       - 'item.value.state | d("present") != "absent"'
       - 'item.value.type | d("conf") not in ["dont-touch"] or item.value.raw | d()'
-    with_dict: '{{ apache_httpd__combined_snippets }}'
+    with_dict: '{{ apache_httpd__snippets__combined_var }}'
     notify:
       - 'apache_httpd: httpd -t; systemctl reload httpd'
 
@@ -270,7 +270,7 @@
                     else item.value | d(true)))
                    if (item.value.state | d("present") != "absent")
                    else False) | bool | ternary("link", "absent") }}'
-    with_dict: '{{ apache_httpd__combined_snippets }}'
+    with_dict: '{{ apache_httpd__snippets__combined_var }}'
     notify:
       - 'apache_httpd: httpd -t; systemctl reload httpd'
 
@@ -285,7 +285,7 @@
   - ansible.builtin.debug:
       msg:
         - 'Combined vHosts:'
-        - '{{ apache_httpd__combined_vhosts }}'
+        - '{{ apache_httpd__vhosts__combined_var }}'
 
   - name: 'Remove sites-available configuration'
     ansible.builtin.file:
@@ -295,7 +295,7 @@
       state: 'absent'
     when:
       - 'item.state | d("present") == "absent"'
-    with_flattened: '{{ apache_httpd__combined_vhosts }}'
+    with_flattened: '{{ apache_httpd__vhosts__combined_var }}'
 
   - name: 'Create sites-available configuration'
     ansible.builtin.template:
@@ -311,7 +311,7 @@
     when:
       - 'item.state | d("present") != "absent"'
       - 'item.type | d(apache_httpd__vhost_type) not in ["dont-touch"]'
-    with_flattened: '{{ apache_httpd__combined_vhosts }}'
+    with_flattened: '{{ apache_httpd__vhosts__combined_var }}'
 
   - name: 'Create DocumentRoot for all vHosts'
     ansible.builtin.file:
@@ -319,7 +319,7 @@
       state: '{{ "directory" if (item.state == "present") else "absent" }}'
     when:
       - 'item.type in ["app", "localhost"]'
-    with_flattened: '{{ apache_httpd__combined_vhosts }}'
+    with_flattened: '{{ apache_httpd__vhosts__combined_var }}'
 
   - name: 'Enable/disable Apache virtual hosts'
     ansible.builtin.file:
@@ -340,7 +340,7 @@
       mode: '0644'
     notify:
       - 'apache_httpd: httpd -t; systemctl reload httpd'
-    with_flattened: '{{ apache_httpd__combined_vhosts }}'
+    with_flattened: '{{ apache_httpd__vhosts__combined_var }}'
 
   tags:
     - 'apache_httpd'

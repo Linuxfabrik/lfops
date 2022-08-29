@@ -5,7 +5,7 @@ librenms__database_name: 'librenms'
 
 # -----------------------------------------------------------------------------
 
-librenms__apache_httpd__dependent_vhosts:
+librenms__apache_httpd__vhosts__dependent_var:
   - by_role: 'librenms'
     enabled: true
     filename: 'librenms'
@@ -56,13 +56,13 @@ librenms__apache_httpd__dependent_vhosts:
       AllowEncodedSlashes NoDecode
 
 
-librenms__mariadb_server__dependent_databases:
+librenms__mariadb_server__databases__dependent_var:
   - name: '{{ librenms__database_name }}'
     collation: 'utf8mb4_unicode_ci'
     encoding: 'utf8mb4'
     state: 'present'
 
-librenms__mariadb_server__dependent_users:
+librenms__mariadb_server__users__dependent_var:
   - username: '{{ librenms__database_login.username }}'
     password: '{{ librenms__database_login.password }}'
     host: '{{ librenms__database_host }}'
@@ -79,7 +79,7 @@ librenms__php__dependent_fpm_pools:
     raw: |-
       env[PATH] = /usr/local/bin:/usr/bin:/bin
 
-librenms__php__dependent_modules:
+librenms__php__modules__dependent_var:
   - 'php-curl'
   - 'php-gd'
   - 'php-json'

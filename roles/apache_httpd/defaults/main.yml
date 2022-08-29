@@ -13,18 +13,18 @@ apache_httpd__base_packages:
   # coming from /vars:
   - '{{ apache_httpd__base_packages }}'
 
-apache_httpd__role_packages:
+apache_httpd__packages__role_var:
   - 'mod_qos'
   - 'mod_security'
   - 'mod_ssl'
-apache_httpd__group_packages: []
-apache_httpd__host_packages: []
-apache_httpd__dependent_packages: []
+apache_httpd__packages__group_var: []
+apache_httpd__packages__host_var: []
+apache_httpd__packages__dependent_var: []
 
-apache_httpd__combined_packages: '{{ apache_httpd__role_packages +
-  apache_httpd__group_packages +
-  apache_httpd__host_packages +
-  apache_httpd__dependent_packages
+apache_httpd__packages__combined_var: '{{ apache_httpd__packages__role_var +
+  apache_httpd__packages__group_var +
+  apache_httpd__packages__host_var +
+  apache_httpd__packages__dependent_var
 }}'
 
 
@@ -40,7 +40,7 @@ apache_httpd__coreruleset_checksum: 'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc642
 # ---------------------------
 
 # Apache modules managed by this Ansible role.
-apache_httpd__role_modules:
+apache_httpd__modules__role_var:
   'alias':
     enabled: true
     state: 'present'
@@ -237,16 +237,16 @@ apache_httpd__role_proxy_modules:
     enabled: true
     state: 'present'
 
-apache_httpd__group_modules: {}
-apache_httpd__host_modules: {}
-apache_httpd__dependent_modules: {}
+apache_httpd__modules__group_var: {}
+apache_httpd__modules__host_var: {}
+apache_httpd__modules__dependent_var: {}
 
 
 # Apache "conf-available"
 # -----------------------
 
 # Apache snippets used internally by this role.
-apache_httpd__role_snippets:
+apache_httpd__snippets__role_var:
   'dir':
     enabled: true
     state: 'present'
@@ -340,9 +340,9 @@ apache_httpd__role_proxy_snippets:
     state: 'present'
     type: 'conf'
 
-apache_httpd__group_snippets: {}
-apache_httpd__host_snippets: {}
-apache_httpd__dependent_snippets: {}
+apache_httpd__snippets__group_var: {}
+apache_httpd__snippets__host_var: {}
+apache_httpd__snippets__dependent_var: {}
 
 
 # Apache Global Config
@@ -408,7 +408,7 @@ apache_httpd__conf_mpm_worker_threads_per_child: 25
 apache_httpd__vhost_type: 'app'
 
 # Used internally by this role. Order is important.
-apache_httpd__role_vhosts:
+apache_httpd__vhosts__role_var:
 
   - comment: |-
       Host for internal things like monitoring, just accessible from localhost.
@@ -466,12 +466,12 @@ apache_httpd__role_vhosts:
       # SSLCertificateFile      {{ apache_httpd__openssl_certificate_path }}/localhost.pem
       # SSLCertificateKeyFile   {{ apache_httpd__openssl_privatekey_path }}/localhost.key
 
-apache_httpd__group_vhosts: []
-apache_httpd__host_vhosts: []
-apache_httpd__dependent_vhosts: []
+apache_httpd__vhosts__group_var: []
+apache_httpd__vhosts__host_var: []
+apache_httpd__vhosts__dependent_var: []
 
-apache_httpd__combined_vhosts: '{{ apache_httpd__group_vhosts +
-  apache_httpd__host_vhosts +
-  apache_httpd__role_vhosts +
-  apache_httpd__dependent_vhosts
+apache_httpd__vhosts__combined_var: '{{ apache_httpd__vhosts__group_var +
+  apache_httpd__vhosts__host_var +
+  apache_httpd__vhosts__role_var +
+  apache_httpd__vhosts__dependent_var
 }}'

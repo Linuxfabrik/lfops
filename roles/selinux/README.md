@@ -25,16 +25,16 @@ Tested on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `selinux__host_booleans` / `selinux__group_booleans` | A list of dictionaries containing SELinux booleans. Subkeys:<br> * `key`: Mandatory, string. Key of the SELinux boolean.<br> * `value`: Mandatory, string. Value of the SELinux boolean.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `selinux__booleans__host_var` / `selinux__booleans__group_var` | A list of dictionaries containing SELinux booleans. Subkeys:<br> * `key`: Mandatory, string. Key of the SELinux boolean.<br> * `value`: Mandatory, string. Value of the SELinux boolean.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `selinux__state` | The SELinux state. Possible options:<br> * `disabled`<br> * `enforcing`<br> * `permissive` | `'enforcing'` |
 
 Example:
 ```yaml
 # optional
-selinux__host_booleans:
+selinux__booleans__host_var:
   - key: 'httpd_can_network_connect'
     value: 'on'
-selinux__group_booleans: []
+selinux__booleans__group_var: []
 selinux__state: 'enforcing'
 ```
 

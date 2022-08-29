@@ -21,15 +21,15 @@
         - 'not icinga2_master__skip_repo_mydumper | d(false)'
 
     - role: 'python'
-      python__dependent_modules: '{{ mariadb_server__python__dependent_modules | d([]) }}'
+      python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var | d([]) }}'
       when:
         - 'not icinga2_master__skip_python | d(false)'
 
     - role: 'mariadb_server'
-      mariadb_server__dependent_databases:
-        - '{{ icinga2_master__mariadb_server__dependent_databases | d({}) }}'
-      mariadb_server__dependent_users:
-        - '{{ icinga2_master__mariadb_server__dependent_users | d({}) }}'
+      mariadb_server__databases__dependent_var:
+        - '{{ icinga2_master__mariadb_server__databases__dependent_var | d({}) }}'
+      mariadb_server__users__dependent_var:
+        - '{{ icinga2_master__mariadb_server__users__dependent_var | d({}) }}'
       when:
         - 'not icinga2_master__skip_mariadb_server | d(false)'
 
@@ -38,16 +38,16 @@
         - 'not icinga2_master__skip_repo_influxdb | d(false)'
 
     - role: 'python_venv'
-      python_venv__dependent_venvs:
-        - '{{ influxdb__python_venv__dependent_venvs | d({}) }}'
+      python_venv__venvs__dependent_var:
+        - '{{ influxdb__python_venv__venvs__dependent_var | d({}) }}'
       when:
         - 'not icinga2_master__skip_python_venv | d(false)'
 
     - role: 'influxdb'
-      influxdb__dependent_databases:
-        - '{{ icinga2_master__influxdb__dependent_databases | d({}) }}'
-      influxdb__dependent_users:
-        - '{{ icinga2_master__influxdb__dependent_users | d({}) }}'
+      influxdb__databases__dependent_var:
+        - '{{ icinga2_master__influxdb__databases__dependent_var | d({}) }}'
+      influxdb__users__dependent_var:
+        - '{{ icinga2_master__influxdb__users__dependent_var | d({}) }}'
       when:
         - 'not icinga2_master__skip_influxdb | d(false)'
 

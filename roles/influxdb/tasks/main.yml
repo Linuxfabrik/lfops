@@ -100,7 +100,7 @@
       password: '{{ influxdb__admin_login.password | default(omit) }}'
       username: '{{ influxdb__admin_login.username }}'
       state: '{{ item.state | default("present") }}'
-    loop: '{{ influxdb__combined_databases }}'
+    loop: '{{ influxdb__databases__combined_var }}'
     vars:
       ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
 
@@ -110,7 +110,7 @@
       password: '{{ influxdb__admin_login.password | default(omit) }}'
       username: '{{ influxdb__admin_login.username }}'
       query: 'DROP RETENTION POLICY lf_retention_policy ON icinga_influxdb'
-    loop: '{{ influxdb__combined_databases }}'
+    loop: '{{ influxdb__databases__combined_var }}'
     vars:
       ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
 
@@ -123,7 +123,7 @@
       duration: '{{ item.retention }}'
       replication: 1
       default: true
-    loop: '{{ influxdb__combined_databases }}'
+    loop: '{{ influxdb__databases__combined_var }}'
     vars:
       ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
 
@@ -141,7 +141,7 @@
     state: '{{ item.state | default("present") }}'
     grants: '{{ item.grants | default(omit) }}'
     admin: '{{ item.admin | default(false) }}'
-  loop: '{{ influxdb__combined_users }}'
+  loop: '{{ influxdb__users__combined_var }}'
   vars:
     ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
   tags:

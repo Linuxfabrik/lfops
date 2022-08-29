@@ -36,7 +36,7 @@ Tested on
 | -------- | ----------- | ------------- |
 | `php__fpm_service_enabled` | Enables or disables the php-fpm service, analogous to `systemctl enable/disable --now`. | `true` |
 | `php__host_fpm_pools` /<br> `php__group_fpm_pools` | List of PHP-FPM pools. Subkeys:<br> * `name`: Required, string. The name of the pool. Will also be used as the filename and for logfiles.<br> * `state`: Required, boolean. State of the pool. Possible options: `absent`, `present`.<br> * `user`: Optional, string. Defaults to `apache`. The Unix user running the pool processes.<br> * `group`: Optional, string. Defaults to `apache`. The Unix group running the pool processes.<br> * `raw`: Optional, string: Raw content which will be added to the end of the pool config.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `php__host_modules` /<br> `php__group_modules` | List of additional PHP modules that should be installed via the standard package manager.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `['php-opcache']` |
+| `php__modules__host_var` /<br> `php__modules__group_var` | List of additional PHP modules that should be installed via the standard package manager.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `['php-opcache']` |
 
 Example:
 ```yaml
@@ -49,7 +49,7 @@ php__host_fpm_pools: []
     raw: |-
       env[PATH] = /usr/local/bin:/usr/bin:/bin
 php__group_fpm_pools: []
-php__host_modules:
+php__modules__host_var:
   - 'php-opcache'
   - 'php-mysqlnd'
   - 'php-bcmath'
@@ -58,7 +58,7 @@ php__host_modules:
   - 'php-mbstring'
   - 'php-pdo'
   - 'php-xml'
-php__group_modules: []
+php__modules__group_var: []
 ```
 
 

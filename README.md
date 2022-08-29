@@ -114,7 +114,7 @@ Nice trick for variables that get combined. Imagine you just want to add a singl
 
 group var:
 ```yaml
-login__group_users:
+login__users__group_var:
   - name: 'linuxfabrikadmin'
     state: 'present'
     additional_groups:
@@ -127,9 +127,9 @@ login__group_users:
       - 'ssh-ed25519 ...'
 ```
 
-host_var - add some group definitions for the user, but get all ssh keys from group vars (which is the first entry in `login__group_users`, therefore get item `0` from the `login__group_users` list):
+host_var - add some group definitions for the user, but get all ssh keys from group vars (which is the first entry in `login__users__group_var`, therefore get item `0` from the `login__users__group_var` list):
 ```yaml
-login__host_users:
+login__users__host_var:
   - name: 'linuxfabrikadmin'
     state: 'present'
     additional_groups:
@@ -139,5 +139,5 @@ login__host_users:
       - 'lxd'
       - 'plugdev'
       - 'sudo'
-    sshd_authorized_keys: '{{ login__group_users.0.sshd_authorized_keys }}'
+    sshd_authorized_keys: '{{ login__users__group_var.0.sshd_authorized_keys }}'
 ```

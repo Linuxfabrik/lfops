@@ -7,5 +7,5 @@ monitoring_plugins__windows_variant: 'nuitka'
 
 monitoring_plugins__icinga2_cn: '{{ ansible_facts["nodename"] }}'
 
-monitoring_plugins__python__dependent_modules:
+monitoring_plugins__python__modules__dependent_var:
   - 'python3-psutil'

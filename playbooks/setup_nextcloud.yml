@@ -6,7 +6,7 @@
 
       # === Prepare the system
     - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings__dependent_sysctl: '{{ nextcloud__kernel_settings__dependent_sysctl | d([]) }}'
+      kernel_settings__sysctl__dependent_var: '{{ nextcloud__kernel_settings__sysctl__dependent_var | d([]) }}'
       kernel_settings__dependent_transparent_hugepages: '{{ nextcloud__kernel_settings__dependent_transparent_hugepages | d("madivse") }}'
       when:
         - 'not setup_nextcloud__skip_kernel_settings | d(false)'
@@ -26,8 +26,8 @@
         - 'ansible_facts["os_family"] == "RedHat"'
 
     - role: 'linuxfabrik.lfops.python'
-      python__dependent_modules:
-        - '{{ mariadb_server__python__dependent_modules | d([]) }}'
+      python__modules__dependent_var:
+        - '{{ mariadb_server__python__modules__dependent_var | d([]) }}'
       when:
         - 'not setup_nextcloud__skip_python | d(false)'
 
@@ -38,7 +38,7 @@
 
       # ====Apache Webserver
     - role: 'linuxfabrik.lfops.apache_httpd'
-      apache_httpd__dependent_vhosts: '{{ nextcloud__apache_httpd__dependent_vhosts | d([]) }}'
+      apache_httpd__vhosts__dependent_var: '{{ nextcloud__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
         - 'not setup_nextcloud__skip_apache_httpd | d(false)'
 
@@ -51,7 +51,7 @@
         - 'not setup_nextcloud__skip_repo_remi | d(false)'
 
     - role: 'linuxfabrik.lfops.php'
-      php__dependent_modules: '{{ nextcloud__php__dependent_modules }}'
+      php__modules__dependent_var: '{{ nextcloud__php__modules__dependent_var }}'
       php__dependent_ini_max_execution_time: '{{ nextcloud__php__ini_max_execution_time }}'
       php__dependent_ini_max_file_uploads: '{{ nextcloud__php__ini_max_file_uploads }}'
       php__dependent_ini_memory_limit: '{{ nextcloud__php__ini_memory_limit }}'

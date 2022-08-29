@@ -1,14 +1,14 @@
 php__fpm_service_enabled: true
 
-php__dependent_modules: []
-php__group_modules: []
-php__host_modules: []
-php__role_modules:
+php__modules__dependent_var: []
+php__modules__group_var: []
+php__modules__host_var: []
+php__modules__role_var:
   - 'php-opcache'
-php__combined_modules: '{{ php__role_modules +
-  php__group_modules +
-  php__host_modules +
-  php__dependent_modules
+php__modules__combined_var: '{{ php__modules__role_var +
+  php__modules__group_var +
+  php__modules__host_var +
+  php__modules__dependent_var
   | flatten
  }}'
 

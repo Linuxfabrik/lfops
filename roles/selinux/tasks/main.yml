@@ -19,7 +19,7 @@
       name: '{{ item.key }}'
       state: '{{ item.value }}'
       persistent: true
-    loop: '{{ selinux__combined_booleans }}'
+    loop: '{{ selinux__booleans__combined_var }}'
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
 

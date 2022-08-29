@@ -8,6 +8,6 @@ kvm_host__pools: []
 
 # -----------------------------------------------------------------------------
 
-kvm_host__python__dependent_modules:
+kvm_host__python__modules__dependent_var:
   - 'python3-libvirt'
   - 'python3-lxml'

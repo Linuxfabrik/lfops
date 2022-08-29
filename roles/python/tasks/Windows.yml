@@ -18,8 +18,8 @@
 
   - name: 'Install additional python modules (Windows)'
     ansible.windows.win_shell: "py -{{ python__version | regex_replace('\\.\\d$', '') }} -m pip install {{ item }}"
-    loop: "{{ python__combined_modules }}"
-    when: 'python__combined_modules is defined and python__combined_modules | length'
+    loop: "{{ python__modules__combined_var }}"
+    when: 'python__modules__combined_var is defined and python__modules__combined_var | length'
 
   tags:
     - 'python3'

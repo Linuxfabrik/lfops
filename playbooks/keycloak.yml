@@ -20,7 +20,7 @@
         - 'not mariadb_server__skip_repo_mariadb | d(false)'
 
     - role: 'python'
-      python__dependent_modules: '{{ mariadb_server__python__dependent_modules | d([]) }}'
+      python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var | d([]) }}'
       when:
         - 'not mariadb_server__skip_python | d(false)'
 

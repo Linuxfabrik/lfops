@@ -16,7 +16,7 @@
         - 'not setup_icinga2_master__skip_repo_mariadb | default(false)'
 
     - role: 'python'
-      python__dependent_modules: '{{ mariadb_server__python__dependent_modules }}'
+      python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_python | default(false)'
 
@@ -25,14 +25,14 @@
         - 'not setup_icinga2_master__skip_repo_mydumper | default(false)'
 
     - role: 'mariadb_server'
-      mariadb_server__dependent_databases:
-        - '{{ icinga2_master__mariadb_server__dependent_databases }}'
-        - '{{ icingaweb2__mariadb_server__dependent_databases }}'
-        - '{{ icingaweb2_module_director__mariadb_server__dependent_databases }}'
-      mariadb_server__dependent_users:
-        - '{{ icinga2_master__mariadb_server__dependent_users }}'
-        - '{{ icingaweb2__mariadb_server__dependent_users }}'
-        - '{{ icingaweb2_module_director__mariadb_server__dependent_users }}'
+      mariadb_server__databases__dependent_var:
+        - '{{ icinga2_master__mariadb_server__databases__dependent_var }}'
+        - '{{ icingaweb2__mariadb_server__databases__dependent_var }}'
+        - '{{ icingaweb2_module_director__mariadb_server__databases__dependent_var }}'
+      mariadb_server__users__dependent_var:
+        - '{{ icinga2_master__mariadb_server__users__dependent_var }}'
+        - '{{ icingaweb2__mariadb_server__users__dependent_var }}'
+        - '{{ icingaweb2_module_director__mariadb_server__users__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_mariadb_server | default(false)'
 
@@ -41,16 +41,16 @@
         - 'not setup_icinga2_master__skip_repo_influxdb | default(false)'
 
     - role: 'python_venv'
-      python_venv__dependent_venvs:
-        - '{{ influxdb__python_venv__dependent_venvs }}'
+      python_venv__venvs__dependent_var:
+        - '{{ influxdb__python_venv__venvs__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_python_venv | default(false)'
 
     - role: 'influxdb'
-      influxdb__dependent_databases:
-        - '{{ icinga2_master__influxdb__dependent_databases }}'
-      influxdb__dependent_users:
-        - '{{ icinga2_master__influxdb__dependent_users }}'
+      influxdb__databases__dependent_var:
+        - '{{ icinga2_master__influxdb__databases__dependent_var }}'
+      influxdb__users__dependent_var:
+        - '{{ icinga2_master__influxdb__users__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_influxdb | default(false)'
 
@@ -74,17 +74,17 @@
         - 'not setup_icinga2_master__skip_repo_remi | default(false)'
 
     - role: 'php'
-      php__dependent_modules:
-        - '{{ icingaweb2__php__dependent_modules }}'
+      php__modules__dependent_var:
+        - '{{ icingaweb2__php__modules__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_php | default(false)'
 
     - role: 'icingaweb2'
-      icingaweb2__dependent_resources:
-        - '{{ icingaweb2_module_monitoring__icingaweb2__dependent_resources }}'
-        - '{{ icingaweb2_module_director__icingaweb2_module_director__dependent_resources }}'
-      icingaweb2__dependent_users:
-        - '{{ icingaweb2_module_director__icingaweb2__dependent_users }}'
+      icingaweb2__resources__dependent_var:
+        - '{{ icingaweb2_module_monitoring__icingaweb2__resources__dependent_var }}'
+        - '{{ icingaweb2_module_director__icingaweb2_module_director__resources__dependent_var }}'
+      icingaweb2__users__dependent_var:
+        - '{{ icingaweb2_module_director__icingaweb2__users__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2 | default(false)'
 

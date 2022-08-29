@@ -19,7 +19,7 @@ redis__service_timeout_stop_sec: '5s'
 
 # -----------------------------------------------------------------------------
 
-redis__kernel_settings__dependent_sysctl:
+redis__kernel_settings__sysctl__dependent_var:
   # WARNING overcommit_memory is set to 0! Background save may fail under low memory condition.
   # To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run
   # the command 'sysctl vm.overcommit_memory=1' for this to take effect.

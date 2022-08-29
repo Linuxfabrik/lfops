@@ -2,14 +2,14 @@ python__version: 3.9
 
 # -----------------------------------------------------------------------------
 
-python__dependent_modules: []
-python__group_modules: []
-python__host_modules: []
-python__role_modules: []
+python__modules__dependent_var: []
+python__modules__group_var: []
+python__modules__host_var: []
+python__modules__role_var: []
 
-python__combined_modules: '{{ python__role_modules +
-  python__group_modules +
-  python__host_modules +
-  python__dependent_modules
+python__modules__combined_var: '{{ python__modules__role_var +
+  python__modules__group_var +
+  python__modules__host_var +
+  python__modules__dependent_var
   | flatten
  }}'

@@ -11,8 +11,8 @@
         - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
 
     - role: 'python_venv'
-      python_venv__dependent_venvs:
-        - '{{ duplicity__python_venv__dependent_venvs | d({}) }}'
+      python_venv__venvs__dependent_var:
+        - '{{ duplicity__python_venv__venvs__dependent_var | d({}) }}'
       when:
         - 'not duplicity__skip_python_venv | d(false)'
 

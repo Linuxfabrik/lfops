@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+All roles:
+* Renamed all injectable variables:
+    * `rolename__combined_varname` to `rolename__varname__combined_var`
+    * `rolename__dependent_varname` to `rolename__varname__dependent_var`
+    * `rolename__group_varname` to `rolename__varname__group_var`
+    * `rolename__host_varname` to `rolename__varname__host_var`
+    * `rolename__role_varname` to `rolename__varname__role_var`
+
 Role: duplicity
 * Renamed `duplicity__public_master_long_keyid` variable to `duplicity__gpg_encrypt_master_key`.
 * Renamed `duplicity__public_master_key` variable to `duplicity__gpg_encrypt_master_key_block`.

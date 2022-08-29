@@ -15,11 +15,11 @@
   - ansible.builtin.debug:
       msg:
         - 'Combined Modules:'
-        - '{{ php__combined_modules }}'
+        - '{{ php__modules__combined_var }}'
 
   - name: 'Install additional php modules'
     ansible.builtin.package:
-      name: "{{ php__combined_modules }}"
+      name: "{{ php__modules__combined_var }}"
       state: 'present'
 
   - name: 'Get the list of installed packages'

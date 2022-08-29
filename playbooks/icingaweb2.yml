@@ -21,15 +21,15 @@
         - 'not icingaweb2__skip_repo_mariadb | default(false)'
 
     - role: 'python'
-      python__dependent_modules: '{{ mariadb_server__python__dependent_modules | default([]) }}'
+      python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var | default([]) }}'
       when:
         - 'not icingaweb2__skip_python | default(false)'
 
     - role: 'mariadb_server'
-      mariadb_server__dependent_databases:
-        - '{{ icingaweb2__mariadb_server__dependent_databases | default({}) }}'
-      mariadb_server__dependent_users:
-        - '{{ icingaweb2__mariadb_server__dependent_users | default({}) }}'
+      mariadb_server__databases__dependent_var:
+        - '{{ icingaweb2__mariadb_server__databases__dependent_var | default({}) }}'
+      mariadb_server__users__dependent_var:
+        - '{{ icingaweb2__mariadb_server__users__dependent_var | default({}) }}'
       when:
         - 'not icingaweb2__skip_mariadb_server | default(false)'
 

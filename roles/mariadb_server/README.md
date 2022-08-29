@@ -60,8 +60,8 @@ mariadb_server__version: '10.6'
 | -------- | ----------- | ------------- |
 | `mariadb_server__admin_host` | todo | `['127.0.0.1', '::1', 'localhost']` |
 | `mariadb_server__dump_login` | todo | unset |
-| `mariadb_server__host_databases` /<br> `mariadb_server__group_databases` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `mariadb_server__host_users` /<br> `mariadb_server__group_users` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__databases__host_var` /<br> `mariadb_server__databases__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__users__host_var` /<br> `mariadb_server__users__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `mariadb_server__logrotate` | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14` |
 | `mariadb_server__monitoring_login` | todo | unset |
 
@@ -75,13 +75,13 @@ mariadb_server__admin_host:
 mariadb_server__dump_login:
   username: 'mariadb-backup'
   password: 'my-secret-password'
-mariadb_server__host_databases:
+mariadb_server__databases__host_var:
   - name: 'test-db'
     collation: 'utf8_general_ci' # default
     encoding: 'utf8' # default
     state: 'present' # default
-mariadb_server__group_databases: []
-mariadb_server__host_users:
+mariadb_server__databases__group_var: []
+mariadb_server__users__host_var:
   - username: 'user1'
     password: 'my-secret-password' # default omit
     host: 'localhost' # default
@@ -89,7 +89,7 @@ mariadb_server__host_users:
       - '{{ icingaweb2_db }}.*:SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
       - 'wiki.*:ALL'
     state: 'present' # default
-mariadb_server__group_users: []
+mariadb_server__users__group_var: []
 mariadb_server__logrotate: 14
 mariadb_server__monitoring_login:
   username: 'mariadb-monitoring'

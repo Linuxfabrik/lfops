@@ -185,26 +185,26 @@ Role Variables - Apache Module Installation
 
 Which Apache modules (the role refers to them as "packages" due to package management) need to be installed.
 
-apache_httpd__dependent_packages
+apache_httpd__packages__dependent_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable allows other Ansible roles to pass configuration to the ``lf-apache-httpd`` role.
 
 
 
-apache_httpd__group_packages
+apache_httpd__packages__group_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in a host inventory group of Ansible (can only be used in one host group at a time).
 
 
-apache_httpd__host_packages
+apache_httpd__packages__host_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in the inventory of hosts as needed.
 
 
-apache_httpd__role_packages
+apache_httpd__packages__role_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is used in the role internally. It contains the default set of packages that should be installed.
@@ -218,19 +218,19 @@ Role Variables - Apache Module Configuration
 Which Apache modules need to be configured.
 
 
-apache_httpd__dependent_modules
+apache_httpd__modules__dependent_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable allows other Ansible roles to pass configuration to the ``lf-apache-httpd`` role.
 
 
-apache_httpd__group_modules
+apache_httpd__modules__group_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in a host inventory group of Ansible (can only be used in one host group at a time).
 
 
-apache_httpd__host_modules
+apache_httpd__modules__host_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in the inventory of hosts as needed.
@@ -242,7 +242,7 @@ apache_httpd__role_app_modules
 This variable is used in the role internally. It contains the default set of modules that should be installed for an application server.
 
 
-apache_httpd__role_modules
+apache_httpd__modules__role_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is used in the role internally. It contains the default set of modules that should be installed for any type of server.
@@ -259,7 +259,7 @@ This variable is used in the role internally. It contains the default set of mod
 Role Variables - Apache "conf-available"
 ----------------------------------------
 
-apache_httpd__dependent_snippets
+apache_httpd__snippets__dependent_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable allows other Ansible roles to pass configuration to the ``lf-apache-httpd`` role.
@@ -276,19 +276,19 @@ Default:
     Have a look at defaults/main.yml
 
 
-apache_httpd__group_snippets
+apache_httpd__snippets__group_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in a host inventory group of Ansible (can only be used in one host group at a time).
 
 
-apache_httpd__host_snippets
+apache_httpd__snippets__host_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in the inventory of hosts as needed.
 
 
-apache_httpd__role_snippets
+apache_httpd__snippets__role_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is used in the role internally.
@@ -640,9 +640,9 @@ Variables used in a vHost definition.
 
 Where to define a vHost?
 
-* If defining a vHost for a host group (``group_vars``): ``apache_httpd__group_vhosts``
-* If defining a vHost for a single host (``host_vars``): ``apache_httpd__host_vhosts``
-* If writing a role (for example a "Wordpress" role): ``apache_httpd__dependent_vhosts``
+* If defining a vHost for a host group (``group_vars``): ``apache_httpd__vhosts__group_var``
+* If defining a vHost for a single host (``host_vars``): ``apache_httpd__vhosts__host_var``
+* If writing a role (for example a "Wordpress" role): ``apache_httpd__vhosts__dependent_var``
 
 The following variables are subkeys of one of the above variables.
 
@@ -733,7 +733,7 @@ Default:
     AllowOverride: 'None'
 
 
-apache_httpd__dependent_vhosts
+apache_httpd__vhosts__dependent_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable allows other Ansible roles to pass configuration to the ``lf-apache-httpd`` role.
@@ -742,10 +742,10 @@ Default:
 
 .. code-block:: yaml
 
-    apache_httpd__dependent_vhosts: []
+    apache_httpd__vhosts__dependent_var: []
 
 
-apache_httpd__group_vhosts
+apache_httpd__vhosts__group_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in a host inventory group of Ansible (can only be used in one host group at a time).
@@ -754,10 +754,10 @@ Default:
 
 .. code-block:: yaml
 
-    apache_httpd__group_vhosts: []
+    apache_httpd__vhosts__group_var: []
 
 
-apache_httpd__host_vhosts
+apache_httpd__vhosts__host_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in the inventory of hosts as needed.
@@ -766,10 +766,10 @@ Default:
 
 .. code-block:: yaml
 
-    apache_httpd__host_vhosts: []
+    apache_httpd__vhosts__host_var: []
 
 
-apache_httpd__role_vhosts
+apache_httpd__vhosts__role_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is used in the role internally.
@@ -1770,12 +1770,12 @@ A minimal playbook for "MyApp" could be:
       roles:
 
         - role: 'lf-apache-httpd'
-          apache_httpd__dependent_modules:
-            - '{{ myapp__apache_httpd__dependent_modules|d({}) }}'
-          apache_httpd__dependent_snippets:
-            - '{{ myapp__apache_httpd__dependent_snippets|d({}) }}'
-          apache_httpd__dependent_vhosts:
-            - '{{ myapp__apache_httpd__dependent_vhosts|d({}) }}'
+          apache_httpd__modules__dependent_var:
+            - '{{ myapp__apache_httpd__modules__dependent_var|d({}) }}'
+          apache_httpd__snippets__dependent_var:
+            - '{{ myapp__apache_httpd__snippets__dependent_var|d({}) }}'
+          apache_httpd__vhosts__dependent_var:
+            - '{{ myapp__apache_httpd__vhosts__dependent_var|d({}) }}'
 
         - role: 'myapp'
 
@@ -1783,7 +1783,7 @@ A nearly complete "app" vHost definition which is injected into the Apache role 
 
 .. code-block:: yaml
 
-    myapp__apache_httpd__dependent_vhosts:
+    myapp__apache_httpd__vhosts__dependent_var:
 
       - by_role: 'myapp'
         comment: 'Runs MyApp on Port 443. This vHost is hardened.'
@@ -1849,7 +1849,7 @@ A simple redirect vHost:
 
 .. code-block:: yaml
 
-    myapp__apache_httpd__dependent_vhosts:
+    myapp__apache_httpd__vhosts__dependent_var:
 
       - comment: |-
           Redirect to https://localhost.
@@ -1865,7 +1865,7 @@ A more sophisticated redirect vHost:
 
 .. code-block:: yaml
 
-    myapp__apache_httpd__dependent_vhosts:
+    myapp__apache_httpd__vhosts__dependent_var:
 
       - comment: |-
           Redirect to https://localhost.
@@ -1886,7 +1886,7 @@ For example, to configure a reverse proxy, set the following in the ``host_vars`
 .. code-block:: yaml
 
     apache_httpd__server_type: 'reverse-proxy'
-    apache_httpd__host_vhosts:
+    apache_httpd__vhosts__host_var:
 
       - enabled: true
         filename: 'hello.example.com'

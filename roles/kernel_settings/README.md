@@ -25,8 +25,8 @@ Tested on
 
 These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
 
-* `kernel_settings__host_sysctl`, `kernel_settings__group_sysctl`
-* `kernel_settings__host_sysfs`, `kernel_settings__group_sysfs`
+* `kernel_settings__sysctl__host_var`, `kernel_settings__sysctl__group_var`
+* `kernel_settings__sysfs__host_var`, `kernel_settings__sysfs__group_var`
 * `kernel_settings__host_systemd_cpu_affinity`, `kernel_settings__group_systemd_cpu_affinity`
 * `kernel_settings__host_transparent_hugepages_defrag`, `kernel_settings__group_transparent_hugepages_defrag`
 * `kernel_settings__host_transparent_hugepages`, `kernel_settings__group_transparent_hugepages`
@@ -36,12 +36,12 @@ For details have a look at the available role variables from the [linux_system_r
 Example:
 ```yaml
 # optional
-kernel_settings__group_sysctl:
+kernel_settings__sysctl__group_var:
   - name: 'vm.overcommit_memory'
     value: 1
   - name: 'net.core.somaxconn'
     value: 1024
-kernel_settings__group_sysfs:
+kernel_settings__sysfs__group_var:
   - name: '/sys/kernel/debug/x86/pti_enabled'
     value: 0
   - name: '/sys/kernel/debug/x86/retp_enabled'

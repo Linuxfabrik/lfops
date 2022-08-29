@@ -8,7 +8,7 @@
 
   - name: 'Install additional python modules'
     ansible.builtin.package:
-      name: "{{ python__combined_modules }}"
+      name: "{{ python__modules__combined_var }}"
       state: 'present'
 
   # block

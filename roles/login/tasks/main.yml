@@ -3,11 +3,11 @@
   - debug:
       msg:
         - 'Combined Users:'
-        - '{{ login__combined_users }}'
+        - '{{ login__users__combined_var }}'
 
   - name: 'Get list of required groups'
     ansible.builtin.set_fact:
-      login__required_groups: '{{ login__combined_users | map(attribute="additional_groups", default="None") | flatten | unique }}'
+      login__required_groups: '{{ login__users__combined_var | map(attribute="additional_groups", default="None") | flatten | unique }}'
 
   - name: 'Create the required groups'
     ansible.builtin.group:
@@ -23,7 +23,7 @@
       append: false
       state: '{{ item.state | d("present") }}'
       remove: true #  only affects `state=absent`
-    loop: '{{ login__combined_users }}'
+    loop: '{{ login__users__combined_var }}'
 
   - name: 'Set up authorized keys'
     ansible.posix.authorized_key:
@@ -32,7 +32,7 @@
       key: "{{ item.sshd_authorized_keys | d([]) | join('\n') }}" # do not swap quotes - else \n will be used literally
       exclusive: '{{ item.remove_other_sshd_authorized_keys | d(true) }}'
     when: 'item.state | d("present") == "present"'
-    loop: '{{ login__combined_users }}'
+    loop: '{{ login__users__combined_var }}'
 
   - name: 'Allow "{{ login__passwordless_sudo_group }}" group to have password-less sudo'
     community.general.sudoers:

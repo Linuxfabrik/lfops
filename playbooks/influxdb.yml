@@ -8,8 +8,8 @@
     - role: 'repo_influxdb'
 
     - role: 'python_venv'
-      python_venv__dependent_venvs:
-        - '{{ influxdb__python_venv__dependent_venvs | d({}) }}'
+      python_venv__venvs__dependent_var:
+        - '{{ influxdb__python_venv__venvs__dependent_var | d({}) }}'
       when:
         - 'not influxdb__skip_python_venv | d(false)'
 

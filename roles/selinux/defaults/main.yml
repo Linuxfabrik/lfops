@@ -1,11 +1,11 @@
 selinux__state: 'enforcing'
 
-selinux__dependent_booleans: []
-selinux__group_booleans: []
-selinux__host_booleans: []
-selinux__combined_booleans: '{{
-  selinux__group_booleans +
-  selinux__host_booleans +
-  selinux__dependent_booleans
+selinux__booleans__dependent_var: []
+selinux__booleans__group_var: []
+selinux__booleans__host_var: []
+selinux__booleans__combined_var: '{{
+  selinux__booleans__group_var +
+  selinux__booleans__host_var +
+  selinux__booleans__dependent_var
   | flatten
  }}'

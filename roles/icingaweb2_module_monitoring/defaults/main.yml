@@ -5,7 +5,7 @@ icingaweb2_module_monitoring__backend_database_name: '{{ icinga2_master__databas
 
 # -----------------------------------------------------------------------------
 
-icingaweb2_module_monitoring__icingaweb2__dependent_resources:
+icingaweb2_module_monitoring__icingaweb2__resources__dependent_var:
   - name: '{{ icingaweb2_module_monitoring__backend_database_name }}'
     type: 'db'
     db: 'mysql'

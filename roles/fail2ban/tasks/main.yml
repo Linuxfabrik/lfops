@@ -73,7 +73,7 @@
       state: 'absent'
     when:
       - 'item.state | d("present") == "absent"'
-    loop: '{{ fail2ban__combined_jails }}'
+    loop: '{{ fail2ban__jails__combined_var }}'
     notify:
       - 'fail2ban: restart fail2ban'
 
@@ -87,7 +87,7 @@
       mode: 0o644
     when:
       - 'item.state | d("present") != "absent"'
-    loop: '{{ fail2ban__combined_jails }}'
+    loop: '{{ fail2ban__jails__combined_var }}'
     notify:
       - 'fail2ban: restart fail2ban'
 

@@ -3,9 +3,9 @@
   - ansible.builtin.debug:
       msg:
         - 'Combined sysctl:'
-        - '{{ kernel_settings__combined_sysctl }}'
+        - '{{ kernel_settings__sysctl__combined_var }}'
         - 'Combined sysfs:'
-        - '{{ kernel_settings__combined_sysfs }}'
+        - '{{ kernel_settings__sysfs__combined_var }}'
         - 'Combined systemd_cpu_affinity: {{ kernel_settings__combined_systemd_cpu_affinity }}'
         - 'Combined transparent_hugepages: {{ kernel_settings__combined_transparent_hugepages }}'
         - 'Combined transparent_hugepages_defrag: {{ kernel_settings__combined_transparent_hugepages_defrag }}'
@@ -14,8 +14,8 @@
     include_role:
       name: 'fedora.linux_system_roles.kernel_settings'
     vars:
-      kernel_settings_sysctl: '{{ kernel_settings__combined_sysctl }}'
-      kernel_settings_sysfs: '{{ kernel_settings__combined_sysfs }}'
+      kernel_settings_sysctl: '{{ kernel_settings__sysctl__combined_var }}'
+      kernel_settings_sysfs: '{{ kernel_settings__sysfs__combined_var }}'
       kernel_settings_transparent_hugepages: '{{ kernel_settings__combined_transparent_hugepages }}'
       kernel_settings_transparent_hugepages_defrag: '{{ kernel_settings__combined_transparent_hugepages_defrag }}'
       ansible_python_interpreter: '/usr/libexec/platform-python'

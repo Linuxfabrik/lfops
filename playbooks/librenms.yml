@@ -29,21 +29,21 @@
         - 'ansible_facts["os_family"] == "RedHat"'
 
     - role: 'python'
-      python__dependent_modules:
-        - '{{ mariadb_server__python__dependent_modules | default([]) }}'
+      python__modules__dependent_var:
+        - '{{ mariadb_server__python__modules__dependent_var | default([]) }}'
       when:
         - 'not librenms__skip_python | default(false)'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings__dependent_sysctl: '{{ mariadb_server__kernel_settings__dependent_sysctl | d([]) }}'
+      kernel_settings__sysctl__dependent_var: '{{ mariadb_server__kernel_settings__sysctl__dependent_var | d([]) }}'
       when:
         - 'not librenms__skip_kernel_settings | d(false)'
 
     - role: 'mariadb_server'
-      mariadb_server__dependent_databases:
-        - '{{ librenms__mariadb_server__dependent_databases | default({}) }}'
-      mariadb_server__dependent_users:
-        - '{{ librenms__mariadb_server__dependent_users | default({}) }}'
+      mariadb_server__databases__dependent_var:
+        - '{{ librenms__mariadb_server__databases__dependent_var | default({}) }}'
+      mariadb_server__users__dependent_var:
+        - '{{ librenms__mariadb_server__users__dependent_var | default({}) }}'
       when:
         - 'not librenms__skip_mariadb_server | default(false)'
 
@@ -53,8 +53,8 @@
         - 'not librenms__skip_repo_remi | default(false)'
 
     - role: 'php'
-      php__dependent_modules:
-        - '{{ librenms__php__dependent_modules | default([]) }}'
+      php__modules__dependent_var:
+        - '{{ librenms__php__modules__dependent_var | default([]) }}'
       php__dependent_fpm_pools:
         - '{{ librenms__php__dependent_fpm_pools | default({}) }}'
       when:
@@ -65,6 +65,6 @@
     - role: 'librenms'
 
     - role: 'apache_httpd'
-      apache_httpd__dependent_vhosts: '{{ librenms__apache_httpd__dependent_vhosts | d([]) }}'
+      apache_httpd__vhosts__dependent_var: '{{ librenms__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
         - 'not librenms__skip_apache_httpd | default(false)'

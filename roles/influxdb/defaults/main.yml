@@ -1,7 +1,7 @@
 influxdb__dump_timer_enabled: true
 influxdb__service_enabled: true
 
-influxdb__python_venv__dependent_venvs:
+influxdb__python_venv__venvs__dependent_var:
   - name: 'influxdb'
     packages:
       - 'influxdb'
@@ -9,24 +9,24 @@ influxdb__python_venv__dependent_venvs:
 
 # -----------------------------------------------------------------------------
 
-influxdb__dependent_databases: []
-influxdb__group_databases: []
-influxdb__host_databases: []
-influxdb__role_databases: []
-influxdb__combined_databases: '{{ influxdb__role_databases +
-  influxdb__group_databases +
-  influxdb__host_databases +
-  influxdb__dependent_databases
+influxdb__databases__dependent_var: []
+influxdb__databases__group_var: []
+influxdb__databases__host_var: []
+influxdb__databases__role_var: []
+influxdb__databases__combined_var: '{{ influxdb__databases__role_var +
+  influxdb__databases__group_var +
+  influxdb__databases__host_var +
+  influxdb__databases__dependent_var
   | flatten
  }}'
 
-influxdb__dependent_users: []
-influxdb__group_users: []
-influxdb__host_users: []
-influxdb__role_users: []
-influxdb__combined_users: '{{ influxdb__role_users +
-  influxdb__group_users +
-  influxdb__host_users +
-  influxdb__dependent_users
+influxdb__users__dependent_var: []
+influxdb__users__group_var: []
+influxdb__users__host_var: []
+influxdb__users__role_var: []
+influxdb__users__combined_var: '{{ influxdb__users__role_var +
+  influxdb__users__group_var +
+  influxdb__users__host_var +
+  influxdb__users__dependent_var
   | flatten
  }}'

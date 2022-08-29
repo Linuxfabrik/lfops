@@ -6,7 +6,7 @@
   roles:
 
     - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings__dependent_sysctl: '{{ mariadb_server__kernel_settings__dependent_sysctl | d([]) }}'
+      kernel_settings__sysctl__dependent_var: '{{ mariadb_server__kernel_settings__sysctl__dependent_var | d([]) }}'
       when:
         - 'not mariadb_server__skip_kernel_settings | d(false)'
 
@@ -26,7 +26,7 @@
         - 'not mariadb_server__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
-      python__dependent_modules: '{{ mariadb_server__python__dependent_modules | d([]) }}'
+      python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var | d([]) }}'
       when:
         - 'not mariadb_server__skip_python | d(false)'
 

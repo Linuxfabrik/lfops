@@ -30,7 +30,7 @@
       mode: 0o755
 
   - ansible.builtin.include_tasks: 'create-venv.yml'
-    loop: '{{ python_venv__combined_venvs }}'
+    loop: '{{ python_venv__venvs__combined_var }}'
     loop_control:
       loop_var: 'venv'
 

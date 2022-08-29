@@ -64,7 +64,7 @@ nextcloud__version: 'latest-24'
 
 # -----------------------------------------------------------------------------
 
-nextcloud__apache_httpd__dependent_vhosts:
+nextcloud__apache_httpd__vhosts__dependent_var:
   - by_role: 'nextcloud'
     enabled: true
     filename: 'nextcloud'
@@ -112,7 +112,7 @@ netcloud__collabora_code__dependent_coolwsd_storage_wopi:
   - '{{ nextcloud__fqdn | regex_replace("\.", "\.") }}'
 
 
-nextcloud__kernel_settings__dependent_sysctl:
+nextcloud__kernel_settings__sysctl__dependent_var:
   # for MariaDB
   - name: 'vm.swappiness'
     value: 10
@@ -128,7 +128,7 @@ nextcloud__kernel_settings__dependent_sysctl:
 
 nextcloud__kernel_settings__dependent_transparent_hugepages: 'madvise'
 
-nextcloud__php__dependent_modules:
+nextcloud__php__modules__dependent_var:
   - 'php-bcmath'
   - 'php-gd'
   - 'php-gmp'

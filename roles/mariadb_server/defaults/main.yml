@@ -22,7 +22,7 @@ mariadb_server__monitoring_user_priv:
   - '*.*:usage'
 mariadb_server__monitoring_user_state: 'present'
 
-mariadb_server__python__dependent_modules:
+mariadb_server__python__modules__dependent_var:
   - 'python3-PyMySQL'
 
 # Defaults that Linuxfabrik finds useful
@@ -49,28 +49,28 @@ mariadb_server__cnf_tmp_table_size: '16M'
 
 # -----------------------------------------------------------------------------
 
-mariadb_server__dependent_databases: []
-mariadb_server__group_databases: []
-mariadb_server__host_databases: []
-mariadb_server__role_databases: []
-mariadb_server__combined_databases: '{{ mariadb_server__role_databases +
-  mariadb_server__group_databases +
-  mariadb_server__host_databases +
-  mariadb_server__dependent_databases
+mariadb_server__databases__dependent_var: []
+mariadb_server__databases__group_var: []
+mariadb_server__databases__host_var: []
+mariadb_server__databases__role_var: []
+mariadb_server__databases__combined_var: '{{ mariadb_server__databases__role_var +
+  mariadb_server__databases__group_var +
+  mariadb_server__databases__host_var +
+  mariadb_server__databases__dependent_var
   | flatten
  }}'
 
-mariadb_server__dependent_users: []
-mariadb_server__group_users: []
-mariadb_server__host_users: []
-mariadb_server__role_users: []
-mariadb_server__combined_users: '{{ mariadb_server__role_users +
-  mariadb_server__group_users +
-  mariadb_server__host_users +
-  mariadb_server__dependent_users
+mariadb_server__users__dependent_var: []
+mariadb_server__users__group_var: []
+mariadb_server__users__host_var: []
+mariadb_server__users__role_var: []
+mariadb_server__users__combined_var: '{{ mariadb_server__users__role_var +
+  mariadb_server__users__group_var +
+  mariadb_server__users__host_var +
+  mariadb_server__users__dependent_var
   | flatten
  }}'
 
-mariadb_server__kernel_settings__dependent_sysctl:
+mariadb_server__kernel_settings__sysctl__dependent_var:
   - name: 'vm.swappiness'
     value: 10

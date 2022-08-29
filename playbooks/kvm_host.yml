@@ -6,7 +6,7 @@
   roles:
 
     - role: 'python'
-      python__dependent_modules: '{{ kvm_host__python__dependent_modules | d([]) }}'
+      python__modules__dependent_var: '{{ kvm_host__python__modules__dependent_var | d([]) }}'
       when:
         - 'not kvm_host__skip_python | d(false)'
 

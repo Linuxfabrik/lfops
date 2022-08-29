@@ -4,7 +4,7 @@ acme_sh__timer_enabled: true
 
 # -----------------------------------------------------------------------------
 
-acme_sh__apache_httpd__dependent_snippets:
+acme_sh__apache_httpd__snippets__dependent_var:
 
   'letsencrypt-webroot':
     enabled: true

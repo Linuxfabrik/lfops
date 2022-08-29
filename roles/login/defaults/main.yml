@@ -1,12 +1,12 @@
-login__dependent_users: []
-login__group_users: []
-login__host_users: []
-login__role_users: []
+login__users__dependent_var: []
+login__users__group_var: []
+login__users__host_var: []
+login__users__role_var: []
 
-login__combined_users: '{{ login__role_users +
-  login__group_users +
-  login__host_users +
-  login__dependent_users
+login__users__combined_var: '{{ login__users__role_var +
+  login__users__group_var +
+  login__users__host_var +
+  login__users__dependent_var
  }}'
 
 login__passwordless_sudo_group: ''

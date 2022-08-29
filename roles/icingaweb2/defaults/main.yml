@@ -4,28 +4,28 @@ icingaweb2__default_theme: 'Icinga'
 
 # -----------------------------------------------------------------------------
 
-icingaweb2__dependent_authentications: []
-icingaweb2__group_authentications: []
-icingaweb2__host_authentications: []
-icingaweb2__role_authentications:
+icingaweb2__authentications__dependent_var: []
+icingaweb2__authentications__group_var: []
+icingaweb2__authentications__host_var: []
+icingaweb2__authentications__role_var:
   - name: '{{ icingaweb2__database_name }}'
     backend: 'db'
     resource: '{{ icingaweb2__database_name }}'
-icingaweb2__combined_authentications: '{{ icingaweb2__role_authentications +
-  icingaweb2__group_authentications +
-  icingaweb2__host_authentications +
-  icingaweb2__dependent_authentications
+icingaweb2__authentications__combined_var: '{{ icingaweb2__authentications__role_var +
+  icingaweb2__authentications__group_var +
+  icingaweb2__authentications__host_var +
+  icingaweb2__authentications__dependent_var
   | flatten
  }}'
 
-icingaweb2__dependent_groups: []
-icingaweb2__group_groups: []
-icingaweb2__host_groups: []
-icingaweb2__role_groups: []
-icingaweb2__combined_groups: '{{ icingaweb2__role_groups +
-  icingaweb2__group_groups +
-  icingaweb2__host_groups +
-  icingaweb2__dependent_groups
+icingaweb2__groups__dependent_var: []
+icingaweb2__groups__group_var: []
+icingaweb2__groups__host_var: []
+icingaweb2__groups__role_var: []
+icingaweb2__groups__combined_var: '{{ icingaweb2__groups__role_var +
+  icingaweb2__groups__group_var +
+  icingaweb2__groups__host_var +
+  icingaweb2__groups__dependent_var
   | flatten
  }}'
 
@@ -40,10 +40,10 @@ icingaweb2__combined_navigation_menu_entries: '{{ icingaweb2__role_navigation_me
   | flatten
  }}'
 
-icingaweb2__dependent_resources: []
-icingaweb2__group_resources: []
-icingaweb2__host_resources: []
-icingaweb2__role_resources:
+icingaweb2__resources__dependent_var: []
+icingaweb2__resources__group_var: []
+icingaweb2__resources__host_var: []
+icingaweb2__resources__role_var:
   - name: '{{ icingaweb2__database_name }}'
     type: 'db'
     db: 'mysql'
@@ -53,35 +53,35 @@ icingaweb2__role_resources:
     username: '{{ icingaweb2__database_login.username }}'
     password: '{{ icingaweb2__database_login.password }}'
     charset: 'utf8mb4'
-icingaweb2__combined_resources: '{{ icingaweb2__role_resources +
-  icingaweb2__group_resources +
-  icingaweb2__host_resources +
-  icingaweb2__dependent_resources
+icingaweb2__resources__combined_var: '{{ icingaweb2__resources__role_var +
+  icingaweb2__resources__group_var +
+  icingaweb2__resources__host_var +
+  icingaweb2__resources__dependent_var
   | flatten
  }}'
 
-icingaweb2__dependent_roles: []
-icingaweb2__group_roles: []
-icingaweb2__host_roles: []
-icingaweb2__role_roles:
+icingaweb2__roles__dependent_var: []
+icingaweb2__roles__group_var: []
+icingaweb2__roles__host_var: []
+icingaweb2__roles__role_var:
   - name: 'enrolment'
     users: 'enrolment-user'
     permissions: 'module/director,director/api,director/hosts'
-icingaweb2__combined_roles: '{{ icingaweb2__role_roles +
-  icingaweb2__group_roles +
-  icingaweb2__host_roles +
-  icingaweb2__dependent_roles
+icingaweb2__roles__combined_var: '{{ icingaweb2__roles__role_var +
+  icingaweb2__roles__group_var +
+  icingaweb2__roles__host_var +
+  icingaweb2__roles__dependent_var
   | flatten
  }}'
 
-icingaweb2__dependent_users: []
-icingaweb2__group_users: []
-icingaweb2__host_users: []
-icingaweb2__role_users: []
-icingaweb2__combined_users: '{{ icingaweb2__role_users +
-  icingaweb2__group_users +
-  icingaweb2__host_users +
-  icingaweb2__dependent_users
+icingaweb2__users__dependent_var: []
+icingaweb2__users__group_var: []
+icingaweb2__users__host_var: []
+icingaweb2__users__role_var: []
+icingaweb2__users__combined_var: '{{ icingaweb2__users__role_var +
+  icingaweb2__users__group_var +
+  icingaweb2__users__host_var +
+  icingaweb2__users__dependent_var
   | flatten
  }}'
 
@@ -94,7 +94,7 @@ icingaweb2__icinga2_master__dependent_api_users:
       - 'objects/query/*'
       - 'status/query'
 
-icingaweb2__php__dependent_modules:
+icingaweb2__php__modules__dependent_var:
   - 'php-curl'
   - 'php-intl'
   - 'php-mbstring'
@@ -102,13 +102,13 @@ icingaweb2__php__dependent_modules:
   - 'php-process'
   - 'php-xml'
 
-icingaweb2__mariadb_server__dependent_databases:
+icingaweb2__mariadb_server__databases__dependent_var:
   - name: '{{ icingaweb2__database_name }}'
     collation: 'utf8_general_ci'
     encoding: 'utf8'
     state: 'present'
 
-icingaweb2__mariadb_server__dependent_users:
+icingaweb2__mariadb_server__users__dependent_var:
   - username: '{{ icingaweb2__database_login.username }}'
     password: '{{ icingaweb2__database_login.password }}'
     host: '{{ icingaweb2__database_host }}'

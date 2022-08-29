@@ -13,7 +13,7 @@ icingaweb2_module_director__icinga2_master__dependent_api_users:
     permissions:
       - '*'
 
-icingaweb2_module_director__icingaweb2_module_director__dependent_resources:
+icingaweb2_module_director__icingaweb2_module_director__resources__dependent_var:
   - name: '{{ icingaweb2_module_director__database_name }}'
     type: 'db'
     db: 'mysql'
@@ -24,13 +24,13 @@ icingaweb2_module_director__icingaweb2_module_director__dependent_resources:
     password: '{{ icingaweb2_module_director__database_login.password }}'
     charset: 'utf8mb4'
 
-icingaweb2_module_director__mariadb_server__dependent_databases:
+icingaweb2_module_director__mariadb_server__databases__dependent_var:
   - name: '{{ icingaweb2_module_director__database_name }}'
     collation: 'utf8_general_ci'
     encoding: 'utf8'
     state: 'present'
 
-icingaweb2_module_director__mariadb_server__dependent_users:
+icingaweb2_module_director__mariadb_server__users__dependent_var:
   - username: '{{ icingaweb2_module_director__database_login.username }}'
     password: '{{ icingaweb2_module_director__database_login.password }}'
     host: '{{ icingaweb2_module_director__database_host }}'
@@ -38,6 +38,6 @@ icingaweb2_module_director__mariadb_server__dependent_users:
       - '{{ icingaweb2_module_director__database_name }}.*:ALL'
     state: 'present'
 
-icingaweb2_module_director__icingaweb2__dependent_users:
+icingaweb2_module_director__icingaweb2__users__dependent_var:
   - username: '{{ icingaweb2_module_director__enrolment_user_login["username"] }}'
     password: '{{ icingaweb2_module_director__enrolment_user_login["password"] }}'

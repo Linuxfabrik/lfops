@@ -79,8 +79,8 @@
     # === Various tools / dependencies ===
 
     - role: 'linuxfabrik.lfops.python'
-      python__dependent_modules:
-        - '{{ monitoring_plugins__python__dependent_modules | d([]) }}'
+      python__modules__dependent_var:
+        - '{{ monitoring_plugins__python__modules__dependent_var | d([]) }}'
       when:
         - 'not basic_setup__skip_python | d(false)'
 
@@ -127,8 +127,8 @@
     # === Backups ===
 
     - role: 'python_venv'
-      python_venv__dependent_venvs:
-        - '{{ duplicity__python_venv__dependent_venvs | d({}) }}'
+      python_venv__venvs__dependent_var:
+        - '{{ duplicity__python_venv__venvs__dependent_var | d({}) }}'
       when:
         - 'not basic_setup__skip_python_venv | d(false)'
 
