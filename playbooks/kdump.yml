@@ -1,8 +1,7 @@
 - name: 'Stop and disable kdump'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_kdump'
 
   roles:
 
-    - role: 'kdump'
+    - role: 'linuxfabrik.lfops.kdump'

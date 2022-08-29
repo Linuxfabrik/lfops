@@ -1,5 +1,4 @@
 - name: 'Manage and configure redis'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_redis'
 

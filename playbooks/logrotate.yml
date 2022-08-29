@@ -1,8 +1,7 @@
 - name: 'Stop and disable logrotate'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_logrotate'
 
   roles:
 
-    - role: 'logrotate'
+    - role: 'linuxfabrik.lfops.logrotate'

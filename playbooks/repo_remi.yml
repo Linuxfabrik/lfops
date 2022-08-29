@@ -1,17 +1,16 @@
 - name: 'Manage and configure the Remi Repository'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_repo_remi'
 
   roles:
 
-    - role: 'yum_utils'
+    - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
 
-    - role: 'repo_epel'
+    - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
 
-    - role: 'repo_remi'
+    - role: 'linuxfabrik.lfops.repo_remi'

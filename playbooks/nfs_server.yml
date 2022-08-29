@@ -1,8 +1,7 @@
 - name: 'Install and configure NFS as a server'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_nfs_server'
 
   roles:
 
-    - role: 'nfs_server'
+    - role: 'linuxfabrik.lfops.nfs_server'

@@ -1,8 +1,7 @@
 - name: 'Configures the network settings on the server.'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_network'
 
   roles:
 
-    - role: 'network'
+    - role: 'linuxfabrik.lfops.network'

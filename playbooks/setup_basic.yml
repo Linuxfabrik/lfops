@@ -73,7 +73,7 @@
 
     - role: 'linuxfabrik.lfops.kdump'
 
-    - role: 'chrony'
+    - role: 'linuxfabrik.lfops.chrony'
 
 
     # === Various tools / dependencies ===
@@ -126,7 +126,7 @@
 
     # === Backups ===
 
-    - role: 'python_venv'
+    - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var:
         - '{{ duplicity__python_venv__venvs__dependent_var | d({}) }}'
       when:

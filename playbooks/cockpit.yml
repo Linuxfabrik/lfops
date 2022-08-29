@@ -1,8 +1,7 @@
 - name: 'Remove the cockpit packages'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_cockpit'
 
   roles:
 
-    - role: 'cockpit'
+    - role: 'linuxfabrik.lfops.cockpit'

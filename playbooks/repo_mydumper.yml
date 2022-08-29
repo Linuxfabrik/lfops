@@ -1,8 +1,7 @@
 - name: 'Configure the mydumper repository'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_repo_mydumper'
 
   roles:
 
-    - role: 'repo_mydumper'
+    - role: 'linuxfabrik.lfops.repo_mydumper'

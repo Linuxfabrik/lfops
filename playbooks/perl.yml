@@ -1,8 +1,7 @@
 - name: 'Install perl'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_perl'
 
   roles:
 
-    - role: 'perl'
+    - role: 'linuxfabrik.lfops.perl'

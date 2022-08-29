@@ -1,8 +1,7 @@
 - name: 'Installs Java - openSDK'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_java'
 
   roles:
 
-    - role: 'java'
+    - role: 'linuxfabrik.lfops.java'

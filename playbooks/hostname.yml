@@ -1,8 +1,7 @@
 - name: 'Set the hostname of the server '
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_hostname'
 
   roles:
 
-    - role: 'hostname'
+    - role: 'linuxfabrik.lfops.hostname'

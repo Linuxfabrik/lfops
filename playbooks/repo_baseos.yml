@@ -1,8 +1,7 @@
 - name: 'Manage and configure the BaseOS repositories'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_repo_baseos'
 
   roles:
 
-    - role: 'repo_baseos'
+    - role: 'linuxfabrik.lfops.repo_baseos'

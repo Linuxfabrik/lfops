@@ -1,8 +1,7 @@
 - name: 'Creates and manages python venvs'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_python_venv'
 
   roles:
 
-    - role: 'python_venv'
+    - role: 'linuxfabrik.lfops.python_venv'

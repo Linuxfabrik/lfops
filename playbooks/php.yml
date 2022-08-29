@@ -1,18 +1,17 @@
 - name: 'Install PHP on the system, optionally with additional modules'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_php'
 
   roles:
 
-    - role: 'yum_utils'
+    - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not php__skip_yum_utils | default(false)'
 
-    - role: 'repo_remi'
+    - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not php__skip_repo_remi | default(false)'
 
-    - role: 'php'
+    - role: 'linuxfabrik.lfops.php'

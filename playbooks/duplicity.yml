@@ -1,19 +1,18 @@
 - name: 'Manage and configure duplicity'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_duplicity'
 
   roles:
 
-    - role: 'repo_epel'
+    - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
 
-    - role: 'python_venv'
+    - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var:
         - '{{ duplicity__python_venv__venvs__dependent_var | d({}) }}'
       when:
         - 'not duplicity__skip_python_venv | d(false)'
 
-    - role: 'duplicity'
+    - role: 'linuxfabrik.lfops.duplicity'

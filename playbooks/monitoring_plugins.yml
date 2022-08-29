@@ -1,17 +1,16 @@
 - name: 'Manage and configure the Linuxfabrik monitoring-plugins'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_monitoring_plugins'
 
   roles:
 
-    - role: 'repo_epel'
+    - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
 
-    - role: 'python'
+    - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{ monitoring_plugins__python__modules__dependent_var | d([]) }}'
       when:
         - 'not monitoring_plugins__skip_python | d(false)'
 
-    - role: 'monitoring_plugins'
+    - role: 'linuxfabrik.lfops.monitoring_plugins'

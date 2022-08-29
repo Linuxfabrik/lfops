@@ -1,8 +1,7 @@
 - name: 'Install and configure Postfix'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_postfix'
 
   roles:
 
-    - role: 'postfix'
+    - role: 'linuxfabrik.lfops.postfix'

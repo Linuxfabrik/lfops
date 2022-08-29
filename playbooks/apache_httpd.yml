@@ -1,11 +1,10 @@
 - name: 'Install apache_httpd'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_apache_httpd'
 
   roles:
 
-    - role: 'yum_utils'
+    - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'not apache_httpd__skip_yum_utils | default(false)'
 
@@ -14,4 +13,4 @@
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not apache_httpd__skip_repo_epel | default(false)'
 
-    - role: 'apache_httpd'
+    - role: 'linuxfabrik.lfops.apache_httpd'

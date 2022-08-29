@@ -1,8 +1,7 @@
 - name: 'Installs the Icinga Incubator Module'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_icingaweb2_module_incubator'
 
   roles:
 
-    - role: 'icingaweb2_module_incubator'
+    - role: 'linuxfabrik.lfops.icingaweb2_module_incubator'

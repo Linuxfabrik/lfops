@@ -1,10 +1,9 @@
 - name: 'Setup automatic update'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_system_update'
 
   roles:
 
-    - role: 'at'
-    - role: 'mailx'
-    - role: 'system_update'
+    - role: 'linuxfabrik.lfops.at'
+    - role: 'linuxfabrik.lfops.mailx'
+    - role: 'linuxfabrik.lfops.system_update'

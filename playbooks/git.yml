@@ -1,8 +1,7 @@
 - name: 'Install git'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_git'
 
   roles:
 
-    - role: 'git'
+    - role: 'linuxfabrik.lfops.git'

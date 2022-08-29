@@ -1,8 +1,7 @@
 - name: 'Set the system-wide cryptographic policy'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_crypto_policy'
 
   roles:
 
-    - role: 'crypto_policy'
+    - role: 'linuxfabrik.lfops.crypto_policy'

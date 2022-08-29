@@ -1,5 +1,4 @@
 - name: 'Install and configure MariaDB server'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_mariadb_server'
 

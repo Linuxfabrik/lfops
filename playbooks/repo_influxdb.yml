@@ -1,8 +1,7 @@
 - name: 'Manage and configure the InfluxDB repository'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_repo_influxdb'
 
   roles:
 
-    - role: 'repo_influxdb'
+    - role: 'linuxfabrik.lfops.repo_influxdb'

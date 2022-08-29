@@ -1,8 +1,7 @@
 - name: 'Manages the DNF-Makecache service'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_dnf_makecache'
 
   roles:
 
-    - role: 'dnf_makecache'
+    - role: 'linuxfabrik.lfops.dnf_makecache'

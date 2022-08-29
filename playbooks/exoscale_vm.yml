@@ -1,9 +1,8 @@
 - name: 'Setup and manage an Exoscale VM'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_exoscale_vm'
   gather_facts: false
 
   roles:
 
-    - role: 'exoscale_vm'
+    - role: 'linuxfabrik.lfops.exoscale_vm'

@@ -1,12 +1,11 @@
 - name: 'Manage and configure the EPEL Repository'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_repo_epel'
 
   roles:
 
-    - role: 'yum_utils'
+    - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'not repo_epel__skip_yum_utils | d(false)'
 
-    - role: 'repo_epel'
+    - role: 'linuxfabrik.lfops.repo_epel'

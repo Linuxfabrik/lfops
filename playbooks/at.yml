@@ -1,8 +1,7 @@
 - name: 'Install at'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_at'
 
   roles:
 
-    - role: 'at'
+    - role: 'linuxfabrik.lfops.at'

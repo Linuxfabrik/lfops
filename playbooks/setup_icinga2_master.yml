@@ -1,30 +1,29 @@
 - name: 'Install and configure Icinga2 as a master'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_setup_icinga2_master'
 
   roles:
 
-    - role: 'repo_epel'
+    - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
 
-    - role: 'repo_mariadb'
+    - role: 'linuxfabrik.lfops.repo_mariadb'
       repo_mariadb__version: '{{ mariadb_server__version }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not setup_icinga2_master__skip_repo_mariadb | default(false)'
 
-    - role: 'python'
+    - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_python | default(false)'
 
-    - role: 'repo_mydumper'
+    - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'not setup_icinga2_master__skip_repo_mydumper | default(false)'
 
-    - role: 'mariadb_server'
+    - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__databases__dependent_var:
         - '{{ icinga2_master__mariadb_server__databases__dependent_var }}'
         - '{{ icingaweb2__mariadb_server__databases__dependent_var }}'
@@ -36,17 +35,17 @@
       when:
         - 'not setup_icinga2_master__skip_mariadb_server | default(false)'
 
-    - role: 'repo_influxdb'
+    - role: 'linuxfabrik.lfops.repo_influxdb'
       when:
         - 'not setup_icinga2_master__skip_repo_influxdb | default(false)'
 
-    - role: 'python_venv'
+    - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var:
         - '{{ influxdb__python_venv__venvs__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_python_venv | default(false)'
 
-    - role: 'influxdb'
+    - role: 'linuxfabrik.lfops.influxdb'
       influxdb__databases__dependent_var:
         - '{{ icinga2_master__influxdb__databases__dependent_var }}'
       influxdb__users__dependent_var:
@@ -54,32 +53,32 @@
       when:
         - 'not setup_icinga2_master__skip_influxdb | default(false)'
 
-    - role: 'repo_icinga'
+    - role: 'linuxfabrik.lfops.repo_icinga'
       when:
         - 'not setup_icinga2_master__skip_repo_icinga | default(false)'
 
-    - role: 'icinga2_master'
+    - role: 'linuxfabrik.lfops.icinga2_master'
       icinga2_master__api_users__dependent_var:
         - '{{ icingaweb2__icinga2_master__api_users__dependent_var }}'
         - '{{ icingaweb2_module_director__icinga2_master__api_users__dependent_var }}'
 
-    - role: 'yum_utils'
+    - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_icinga2_master__skip_yum_utils | default(false)'
 
-    - role: 'repo_remi'
+    - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not setup_icinga2_master__skip_repo_remi | default(false)'
 
-    - role: 'php'
+    - role: 'linuxfabrik.lfops.php'
       php__modules__dependent_var:
         - '{{ icingaweb2__php__modules__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_php | default(false)'
 
-    - role: 'icingaweb2'
+    - role: 'linuxfabrik.lfops.icingaweb2'
       icingaweb2__resources__dependent_var:
         - '{{ icingaweb2_module_monitoring__icingaweb2__resources__dependent_var }}'
         - '{{ icingaweb2_module_director__icingaweb2_module_director__resources__dependent_var }}'
@@ -88,22 +87,22 @@
       when:
         - 'not setup_icinga2_master__skip_icingaweb2 | default(false)'
 
-    - role: 'icingaweb2_module_doc'
+    - role: 'linuxfabrik.lfops.icingaweb2_module_doc'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_doc | default(false)'
 
-    - role: 'icingaweb2_module_monitoring'
+    - role: 'linuxfabrik.lfops.icingaweb2_module_monitoring'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_monitoring | default(false)'
 
-    - role: 'icingaweb2_module_company'
+    - role: 'linuxfabrik.lfops.icingaweb2_module_company'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_company | default(false)'
 
-    - role: 'icingaweb2_module_incubator'
+    - role: 'linuxfabrik.lfops.icingaweb2_module_incubator'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_incubator | default(false)'
 
-    - role: 'icingaweb2_module_director'
+    - role: 'linuxfabrik.lfops.icingaweb2_module_director'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_director | default(false)'

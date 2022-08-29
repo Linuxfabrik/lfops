@@ -1,10 +1,9 @@
 - name: 'Set the SELinux state'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_selinux'
 
   roles:
 
-    - role: 'policycoreutils'
+    - role: 'linuxfabrik.lfops.policycoreutils'
 
-    - role: 'selinux'
+    - role: 'linuxfabrik.lfops.selinux'

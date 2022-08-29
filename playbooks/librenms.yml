@@ -1,34 +1,33 @@
 - name: 'Install and configure LibreNMS'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_librenms'
 
   roles:
 
-    - role: 'yum_utils'
+    - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not librenms__skip_yum_utils | default(false)'
 
-    - role: 'repo_epel'
+    - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
 
-    - role: 'repo_mydumper'
+    - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
         - 'not librenms__skip_repo_mydumper | default(false)'
 
-    - role: 'repo_mariadb'
+    - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not librenms__skip_repo_mariadb | default(false)'
 
-    - role: 'policycoreutils'
+    - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
 
-    - role: 'python'
+    - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var:
         - '{{ mariadb_server__python__modules__dependent_var | default([]) }}'
       when:
@@ -39,7 +38,7 @@
       when:
         - 'not librenms__skip_kernel_settings | d(false)'
 
-    - role: 'mariadb_server'
+    - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__databases__dependent_var:
         - '{{ librenms__mariadb_server__databases__dependent_var | default({}) }}'
       mariadb_server__users__dependent_var:
@@ -47,12 +46,12 @@
       when:
         - 'not librenms__skip_mariadb_server | default(false)'
 
-    - role: 'repo_remi'
+    - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not librenms__skip_repo_remi | default(false)'
 
-    - role: 'php'
+    - role: 'linuxfabrik.lfops.php'
       php__modules__dependent_var:
         - '{{ librenms__php__modules__dependent_var | default([]) }}'
       php__fpm_pools__dependent_var:
@@ -60,11 +59,11 @@
       when:
         - 'not librenms__skip_php | default(false)'
 
-    - role: 'git'
+    - role: 'linuxfabrik.lfops.git'
 
-    - role: 'librenms'
+    - role: 'linuxfabrik.lfops.librenms'
 
-    - role: 'apache_httpd'
+    - role: 'linuxfabrik.lfops.apache_httpd'
       apache_httpd__vhosts__dependent_var: '{{ librenms__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
         - 'not librenms__skip_apache_httpd | default(false)'

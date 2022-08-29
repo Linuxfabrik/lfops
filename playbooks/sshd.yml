@@ -1,5 +1,4 @@
 - name: 'Configure sshd'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_sshd'
 
@@ -9,4 +8,4 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
 
-    - role: 'sshd'
+    - role: 'linuxfabrik.lfops.sshd'

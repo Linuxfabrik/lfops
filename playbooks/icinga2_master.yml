@@ -1,15 +1,14 @@
 - name: 'Install and configure Icinga2 as a master'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_icinga2_master'
 
   roles:
 
-    - role: 'repo_epel'
+    - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
 
-    - role: 'repo_mariadb'
+    - role: 'linuxfabrik.lfops.repo_mariadb'
       repo_mariadb__version: '{{ mariadb_server__version }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
@@ -20,12 +19,12 @@
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
         - 'not icinga2_master__skip_repo_mydumper | d(false)'
 
-    - role: 'python'
+    - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var | d([]) }}'
       when:
         - 'not icinga2_master__skip_python | d(false)'
 
-    - role: 'mariadb_server'
+    - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__databases__dependent_var:
         - '{{ icinga2_master__mariadb_server__databases__dependent_var | d({}) }}'
       mariadb_server__users__dependent_var:
@@ -33,17 +32,17 @@
       when:
         - 'not icinga2_master__skip_mariadb_server | d(false)'
 
-    - role: 'repo_influxdb'
+    - role: 'linuxfabrik.lfops.repo_influxdb'
       when:
         - 'not icinga2_master__skip_repo_influxdb | d(false)'
 
-    - role: 'python_venv'
+    - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var:
         - '{{ influxdb__python_venv__venvs__dependent_var | d({}) }}'
       when:
         - 'not icinga2_master__skip_python_venv | d(false)'
 
-    - role: 'influxdb'
+    - role: 'linuxfabrik.lfops.influxdb'
       influxdb__databases__dependent_var:
         - '{{ icinga2_master__influxdb__databases__dependent_var | d({}) }}'
       influxdb__users__dependent_var:
@@ -51,8 +50,8 @@
       when:
         - 'not icinga2_master__skip_influxdb | d(false)'
 
-    - role: 'repo_icinga'
+    - role: 'linuxfabrik.lfops.repo_icinga'
       when:
         - 'not icinga2_master__skip_repo_icinga | d(false)'
 
-    - role: 'icinga2_master'
+    - role: 'linuxfabrik.lfops.icinga2_master'

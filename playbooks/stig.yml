@@ -1,8 +1,7 @@
 - name: 'Run one of the stig profiles'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_stig'
 
   roles:
 
-    - role: 'stig'
+    - role: 'linuxfabrik.lfops.stig'

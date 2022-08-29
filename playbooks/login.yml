@@ -1,8 +1,7 @@
 - name: 'Manage logins'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_login'
 
   roles:
 
-    - role: 'login'
+    - role: 'linuxfabrik.lfops.login'

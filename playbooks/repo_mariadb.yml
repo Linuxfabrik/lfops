@@ -1,8 +1,7 @@
 - name: 'Manage and configure the MariaDB Repository'
-  collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_repo_mariadb'
 
   roles:
 
-    - role: 'repo_mariadb'
+    - role: 'linuxfabrik.lfops.repo_mariadb'
