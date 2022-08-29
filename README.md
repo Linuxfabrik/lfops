@@ -1,5 +1,11 @@
 # LFOps - Ansible Collection of Roles, Playbooks and Plugins for managing Linux-based Cloud Infrastructures
 
+## The Purpose of LFOps
+
+LFOps is like [DebOps](https://docs.debops.org/) a collection of *Free and Open Source tools that allow users to bootstrap and manage an IT infrastructure based on* RHEL and other operating systems. *Ansible is used as the main configuration management platform.* LFOps *provides a collection of Ansible roles that manage various services, as well as a set of Ansible playbooks that tie them together in a highly integrated environment.*
+
+LFOps is designed to be used within the Linuxfabrik. Nevertheless, we try to keep its general-purpose as much as possible.
+
 
 ## Installation
 
