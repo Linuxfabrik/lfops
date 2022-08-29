@@ -1,6 +1,6 @@
 - name: 'The Linuxfabrik basic setup'
   hosts:
-    - 'lfops_basic_setup'
+    - 'lfops_setup_basic'
 
 
   pre_tasks:
@@ -24,7 +24,7 @@
     # === Security ===
     # - role: 'linuxfabrik.lfops.freeipa-client' TODO
     #   when:
-    #     - 'not basic_setup__skip_freeipa_client | d(true)'
+    #     - 'not setup_basic__skip_freeipa_client | d(true)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
@@ -36,12 +36,12 @@
 
     - role: 'linuxfabrik.lfops.audit'
       when:
-        - 'not basic_setup__skip_audit | d(false)'
+        - 'not setup_basic__skip_audit | d(false)'
 
     # lower the FUTURE policy to FUTURE:LINUXFABRIK first, otherwise linuxfabrik.lfops.repo_epel and other things won't work
     - role: 'linuxfabrik.lfops.crypto_policy'
       when:
-        - 'not basic_setup__skip_crypto_policy | d(false)'
+        - 'not setup_basic__skip_crypto_policy | d(false)'
 
 
     # === Basic repositories ===
@@ -82,7 +82,7 @@
       python__modules__dependent_var:
         - '{{ monitoring_plugins__python__modules__dependent_var | d([]) }}'
       when:
-        - 'not basic_setup__skip_python | d(false)'
+        - 'not setup_basic__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.glances'
 
@@ -101,13 +101,13 @@
 
     - role: 'linuxfabrik.lfops.login'
       when:
-        - 'not basic_setup__skip_login | d(false)'
+        - 'not setup_basic__skip_login | d(false)'
 
 
     # === Firewalling ===
     - role: 'linuxfabrik.lfops.firewall'
       when:
-        - 'not basic_setup__skip_firewall | d(false)'
+        - 'not setup_basic__skip_firewall | d(false)'
 
 
     # === Mailing ===
@@ -121,7 +121,7 @@
     # === Automatic updates ===
     - role: 'linuxfabrik.lfops.system_update'
       when:
-        - 'not basic_setup__skip_system_update | d(false)'
+        - 'not setup_basic__skip_system_update | d(false)'
 
 
     # === Backups ===
@@ -130,26 +130,26 @@
       python_venv__venvs__dependent_var:
         - '{{ duplicity__python_venv__venvs__dependent_var | d({}) }}'
       when:
-        - 'not basic_setup__skip_python_venv | d(false)'
+        - 'not setup_basic__skip_python_venv | d(false)'
 
     - role: 'linuxfabrik.lfops.duplicity'
       when:
-        - 'not basic_setup__skip_duplicity | d(false)'
+        - 'not setup_basic__skip_duplicity | d(false)'
 
 
     # === Monitoring ===
     - role: 'linuxfabrik.lfops.monitoring_plugins'
       when:
-        - 'not basic_setup__skip_monitoring_plugins | d(false)'
+        - 'not setup_basic__skip_monitoring_plugins | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_icinga'
       when:
-        - 'not basic_setup__skip_repo_icinga | d(false)'
+        - 'not setup_basic__skip_repo_icinga | d(false)'
 
     - role: 'linuxfabrik.lfops.icinga2_agent'
       when:
-        - 'not basic_setup__skip_icinga2_agent | d(false)'
+        - 'not setup_basic__skip_icinga2_agent | d(false)'
 
     # - role: 'linuxfabrik.lfops.icinga2-log-level' TODO
     #   when:
-    #     - 'not basic_setup__skip_icinga2_log_level | d(false)'
+    #     - 'not setup_basic__skip_icinga2_log_level | d(false)'

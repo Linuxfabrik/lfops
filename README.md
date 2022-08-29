@@ -49,7 +49,7 @@ First, add `myhost` to the corresponding groups in your Ansible inventory.
 [lfops_hetzner_vm]
 myhost
 
-[lfops_basic_setup]
+[lfops_setup_basic]
 myhost
 
 [lfops_monitoring_plugins]
