@@ -306,6 +306,24 @@
 # sys schema
 - block:
 
+  - name: 'check if the sys database exists'
+    community.mysql.mysql_info:
+      login_user: '{{ mariadb_server__admin_login["username"] }}'
+      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      filter:
+        - 'databases'
+      return_empty_dbs: false
+    register: 'mariadb_server__sys_schema_table_exists_result'
+
+  when:
+    - 'not mariadb_server__skip_sys_schema'
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:sys_schema'
+
+
+- block:
+
   - name: 'wget https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz'
     ansible.builtin.get_url:
       url: 'https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz'
@@ -321,13 +339,6 @@
       src: '/tmp/mariadb-sys-schema.tar.gz'
       dest: '/tmp/mariadb-sys-schema'
       remote_src: true
-
-  - name: 'Delete any existing "sys" schema'
-    community.mysql.mysql_db:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
-      name: 'sys'
-      state: 'absent'
 
   - name: 'mysql --user "{{ mariadb_server__admin_login["username"] }}" --password="..." < ./sys_10.sql'
     community.mysql.mysql_db:
@@ -345,6 +356,7 @@
 
   when:
     - 'not mariadb_server__skip_sys_schema'
+    - 'not "sys" in mariadb_server__sys_schema_table_exists_result["databases"]'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:sys_schema'
