@@ -131,19 +131,28 @@
     - 'mariadb_server:state'
 
 
-# mysql_secure_installation
 - block:
 
-  - name: 'Create new DBA "{{ mariadb_server__admin_login["username"] }}" after a fresh installation'
+  - name: 'Create DBA "{{ mariadb_server__admin_login["username"] }}"'
     community.mysql.mysql_user:
+      check_implicit_admin: true
       login_user: '{{ mariadb_server__admin_login["username"] }}'
       login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_unix_socket: '/var/lib/mysql/mysql.sock' # required instead of localhost
       name: '{{ mariadb_server__admin_login["username"] }}'
       password: '{{ mariadb_server__admin_login["password"] }}'
       host: '{{ item }}'
       priv: '*.*:ALL,GRANT'
       state: 'present'
     loop: '{{ mariadb_server__admin_host }}'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:user'
+
+
+# mysql_secure_installation
+- block:
 
   - name: 'Remove all "root" users'
     community.mysql.mysql_user:
