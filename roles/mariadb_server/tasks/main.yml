@@ -135,46 +135,50 @@
 - block:
 
   - name: 'Create new DBA "{{ mariadb_server__admin_login["username"] }}" after a fresh installation'
-    ansible.builtin.shell: |-
-      mysql --unbuffered --execute 'create user if not exists "{{ mariadb_server__admin_login['username'] }}"@"{{ item }}" identified by "{{ mariadb_server__admin_login['password'] }}";'
-      mysql --unbuffered --execute 'grant all privileges on *.* to "{{ mariadb_server__admin_login['username'] }}"@"{{ item }}" with grant option;'
-      mysql --unbuffered --execute 'flush privileges;'
+    community.mysql.mysql_user:
+      login_user: '{{ mariadb_server__admin_login["username"] }}'
+      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      name: '{{ mariadb_server__admin_login["username"] }}'
+      password: '{{ mariadb_server__admin_login["password"] }}'
+      host: '{{ item }}'
+      priv: '*.*:ALL,GRANT'
+      state: 'present'
     loop: '{{ mariadb_server__admin_host }}'
-    register: 'mariadb_server__admin_login_result'
-    changed_when: 'mariadb_server__admin_login_result["stderr"] is not match("ERROR \d+ \(28000\).*")'
-    failed_when: 'mariadb_server__admin_login_result["rc"] != 0 and mariadb_server__admin_login_result["stderr"] is not match("ERROR \d+ \(28000\).*")'
 
-  - name: 'Secure installation the same way mysql_secure_installation does (<= 10.3)'
-    ansible.builtin.command: "mysql --unbuffered --execute '{{ item }}'"
-    loop:
-      - 'delete from mysql.user where user="";'
-      - 'drop database if exists test;'
-      - 'delete from mysql.db where db="test" or db="test\\_%";'
-      - 'flush privileges;'
-      - 'drop user if exists "root"@"::1"'
-      - 'drop user if exists "root"@"localhost"'
-      - 'drop user if exists "root"@"localhost"'
-    register: 'mariadb_server__secure_installation_result'
-    changed_when: 'mariadb_server__secure_installation_result["stderr"] is not match("ERROR \d+ \(28000\).*")'
-    failed_when: 'mariadb_server__secure_installation_result["rc"] != 0 and mariadb_server__secure_installation_result["stderr"] is not match("ERROR \d+ \(28000\).*")'
-    when:
-      - 'mariadb_server__installed_version is version("10.3", "<=")'
+  - name: 'Remove all "root" users'
+    community.mysql.mysql_user:
+      login_user: '{{ mariadb_server__admin_login["username"] }}'
+      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      name: 'root'
+      host_all: true
+      state: 'absent'
 
-  - name: 'Secure installation the same way mysql_secure_installation does (>= 10.4)'
-    ansible.builtin.command: "mysql --unbuffered --execute '{{ item }}'"
-    loop:
-      - 'delete from mysql.global_priv where user="";'
-      - 'drop database if exists test;'
-      - 'delete from mysql.db where db="test" or db="test\\_%";'
-      - 'flush privileges;'
-      - 'drop user if exists "root"@"::1"'
-      - 'drop user if exists "root"@"localhost"'
-      - 'drop user if exists "root"@"localhost"'
-    register: 'mariadb_server__secure_installation_result'
-    changed_when: 'mariadb_server__secure_installation_result["stderr"] is not match("ERROR \d+ \(28000\).*")'
-    failed_when: 'mariadb_server__secure_installation_result["rc"] != 0 and mariadb_server__secure_installation_result["stderr"] is not match("ERROR \d+ \(28000\).*")'
-    when:
-      - 'mariadb_server__installed_version is version("10.4", ">=")'
+  - name: 'Secure installation: Remove anonymous users'
+    community.mysql.mysql_user:
+      login_user: '{{ mariadb_server__admin_login["username"] }}'
+      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      name: ''
+      host_all: true
+      state: 'absent'
+
+  - name: 'Secure installation: Remove test database'
+    community.mysql.mysql_db:
+      login_user: '{{ mariadb_server__admin_login["username"] }}'
+      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      name: 'test'
+      state: 'absent'
+
+  - name: 'Secure installation: Remove test database (privileges)'
+    community.mysql.mysql_query:
+      login_user: '{{ mariadb_server__admin_login["username"] }}'
+      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      query: 'delete from mysql.db where db="test" or db="test\\_%";'
+
+  - name: 'Secure installation: Reload privilege tables'
+    community.mysql.mysql_query:
+      login_user: '{{ mariadb_server__admin_login["username"] }}'
+      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      query: 'flush privileges;'
 
   tags:
     - 'mariadb_server'
