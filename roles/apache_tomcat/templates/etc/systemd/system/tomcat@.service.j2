@@ -1,0 +1,26 @@
+# {{ ansible_managed }}
+# 2022083001
+
+[Unit]
+Description=Apache Tomcat - instance %i
+After=network.target
+
+[Service]
+Type=forking
+
+User=tomcat
+Group=tomcat
+
+Environment="JAVA_HOME={{ apache_tomcat__java_home }}"
+Environment="JAVA_OPTS={{ apache_tomcat__java_opts }}"
+
+Environment="CATALINA_BASE={{ apache_tomcat__install_dir }}/%i"
+Environment="CATALINA_HOME={{ apache_tomcat__install_dir }}/%i"
+Environment="CATALINA_PID={{ apache_tomcat__install_dir }}/%i/temp/tomcat.pid"
+Environment="CATALINA_OPTS={{ apache_tomcat__catalina_opts }}"
+
+ExecStart={{ apache_tomcat__install_dir }}/%i/bin/startup.sh
+ExecStop={{ apache_tomcat__install_dir }}/%i/bin/shutdown.sh
+
+[Install]
+WantedBy=multi-user.target

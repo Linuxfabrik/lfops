@@ -1,0 +1,17 @@
+- name: 'Install and configure Apache Tomcat'
+  hosts:
+    - 'lfops_apache_tomcat'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+
+    - role: 'linuxfabrik.lfops.java'
+
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - role: 'linuxfabrik.lfops.apache_tomcat'

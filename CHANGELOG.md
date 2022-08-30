@@ -53,6 +53,7 @@ New features:
 
 * Role: acme_sh
 * Role: apache_httpd
+* Role: apache_tomcat
 * Role: at
 * Role: audit
 * Role: bind
