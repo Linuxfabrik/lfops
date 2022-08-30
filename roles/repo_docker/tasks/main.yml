@@ -1,0 +1,13 @@
+- block:
+
+  # https://docs.docker.com/engine/install/centos/
+  - name: 'deploy the Docker CE repo (mirror: {{ repo_docker__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/docker-ce.repo.j2'
+      dest: '/etc/yum.repos.d/docker-ce.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'repo_docker'

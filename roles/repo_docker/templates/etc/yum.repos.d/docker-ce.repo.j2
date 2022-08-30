@@ -1,0 +1,101 @@
+# {{ ansible_managed }}
+# 2021092901
+
+[docker-ce-stable]
+name=Docker CE Stable - $basearch
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length %}
+baseurl={{ repo_docker__mirror_url }}/docker-ce/linux/centos/$releasever/x86_64/stable
+{% else %}
+baseurl=https://download.docker.com/linux/centos/$releasever/$basearch/stable
+{% endif %}
+enabled=1
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+[docker-ce-stable-debuginfo]
+name=Docker CE Stable - Debuginfo $basearch
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length %}
+baseurl={{ repo_docker__mirror_url }}/docker-ce/linux/centos/$releasever/debug-x86_64/stable
+{% else %}
+baseurl=https://download.docker.com/linux/centos/$releasever/debug-$basearch/stable
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+[docker-ce-stable-source]
+name=Docker CE Stable - Sources
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length %}
+baseurl={{ repo_docker__mirror_url }}/docker-ce/linux/centos/$releasever/source/stable
+{% else %}
+baseurl=https://download.docker.com/linux/centos/$releasever/source/stable
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+[docker-ce-test]
+name=Docker CE Test - $basearch
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length %}
+baseurl={{ repo_docker__mirror_url }}/docker-ce/linux/centos/$releasever/x86_64/test
+{% else %}
+baseurl=https://download.docker.com/linux/centos/$releasever/$basearch/test
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+[docker-ce-test-debuginfo]
+name=Docker CE Test - Debuginfo $basearch
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length %}
+baseurl={{ repo_docker__mirror_url }}/docker-ce/linux/centos/$releasever/debug-x86_64/test
+{% else %}
+baseurl=https://download.docker.com/linux/centos/$releasever/debug-$basearch/test
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+[docker-ce-test-source]
+name=Docker CE Test - Sources
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length %}
+baseurl={{ repo_docker__mirror_url }}/docker-ce/linux/centos/$releasever/source/test
+{% else %}
+baseurl=https://download.docker.com/linux/centos/$releasever/source/test
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+[docker-ce-nightly]
+name=Docker CE Nightly - $basearch
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length %}
+baseurl={{ repo_docker__mirror_url }}/docker-ce/linux/centos/$releasever/x86_64/nightly
+{% else %}
+baseurl=https://download.docker.com/linux/centos/$releasever/$basearch/nightly
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+[docker-ce-nightly-debuginfo]
+name=Docker CE Nightly - Debuginfo $basearch
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length %}
+baseurl={{ repo_docker__mirror_url }}/docker-ce/linux/centos/$releasever/debug-x86_64/nightly
+{% else %}
+baseurl=https://download.docker.com/linux/centos/$releasever/debug-$basearch/nightly
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+
+[docker-ce-nightly-source]
+name=Docker CE Nightly - Sources
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length %}
+baseurl={{ repo_docker__mirror_url }}/docker-ce/linux/centos/$releasever/source/nightly
+{% else %}
+baseurl=https://download.docker.com/linux/centos/$releasever/source/nightly
+{% endif %}
+enabled=0
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg

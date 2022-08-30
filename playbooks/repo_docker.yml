@@ -1,0 +1,7 @@
+- name: 'Manage and configure the Docker CE Repository'
+  hosts:
+    - 'lfops_repo_docker'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_docker'

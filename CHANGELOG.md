@@ -104,6 +104,7 @@ New features:
 * Role: redis
 * Role: repo_baseos
 * Role: repo_collabora_code
+* Role: repo_docker
 * Role: repo_grafana
 * Role: repo_icinga
 * Role: repo_influxdb
