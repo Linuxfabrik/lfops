@@ -1,0 +1,18 @@
+- block:
+
+  - name: 'systemctl disable --now unattended-upgrades'
+    ansible.builtin.service:
+      name: 'unattended-upgrades'
+      state: 'stopped'
+      enabled: false
+    register: 'unattended_upgrades__service_result'
+    # ignore errors if the service does not exist
+    failed_when: 'unattended_upgrades__service_result["failed"] is defined and unattended_upgrades__service_result["failed"] and not "Could not find the requested service" in unattended_upgrades__service_result["msg"]'
+
+  - name: 'apt -y remove unattended-upgrades'
+    ansible.builtin.package:
+      name: 'unattended-upgrades'
+      state: 'absent'
+
+  tags:
+    - 'unattended_upgrades'

@@ -115,6 +115,7 @@ New features:
 * Role: system_update
 * Role: tar
 * Role: timezone
+* Role: unattended_upgrades
 * Role: yum_utils
 
 ### Changed

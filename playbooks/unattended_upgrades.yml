@@ -1,0 +1,7 @@
+- name: 'Remove the unattended-upgrades package'
+  hosts:
+    - 'lfops_unattended_upgrades'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.unattended_upgrades'
