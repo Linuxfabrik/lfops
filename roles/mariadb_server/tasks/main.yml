@@ -225,8 +225,6 @@
       password: '{{ mariadb_server__dump_login["password"] }}'
       priv: '{{ mariadb_server__dump_user_priv | join("/") }}'
       state: '{{ mariadb_server__dump_user_state }}'
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   - name: 'Deploy /etc/systemd/system/mariadb-dump.service'
     ansible.builtin.template:
