@@ -67,7 +67,6 @@ mariadb_server__admin_login:
 | `mariadb_server__databases__host_var` /<br> `mariadb_server__databases__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `mariadb_server__users__host_var` /<br> `mariadb_server__users__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `mariadb_server__logrotate` | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14` |
-| `mariadb_server__monitoring_login` | todo | unset |
 
 Example:
 ```yaml
@@ -95,9 +94,6 @@ mariadb_server__users__host_var:
     state: 'present' # default
 mariadb_server__users__group_var: []
 mariadb_server__logrotate: 14
-mariadb_server__monitoring_login:
-  username: 'mariadb-monitoring'
-  password: 'my-secret-password'
 ```
 
 
