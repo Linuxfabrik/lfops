@@ -29,13 +29,13 @@ icinga2_master__service_enabled: true
 # -----------------------------------------------------------------------------
 
 icinga2_master__mariadb_server__databases__dependent_var:
-  - name: '{{ icinga2_master__database_name }}'
+  '{{ icinga2_master__database_name }}':
     collation: 'utf8_general_ci'
     encoding: 'utf8'
     state: 'present'
 
 icinga2_master__mariadb_server__users__dependent_var:
-  - username: '{{ icinga2_master__database_login.username }}'
+  '{{ icinga2_master__database_login.username }}':
     password: '{{ icinga2_master__database_login.password }}'
     host: '{{ icinga2_master__database_host }}'
     priv:
