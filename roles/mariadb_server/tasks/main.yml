@@ -335,8 +335,10 @@
       state: 'absent'
     changed_when: false # no actual change to the application
 
+  when:
+    - 'not mariadb_server__skip_sys_schema'
   tags:
-    - 'never'
+    - 'mariadb_server'
     - 'mariadb_server:sys_schema'
 
 

@@ -31,16 +31,16 @@ Tested on
 
 ## Tags
 
-| Tag                                  | What it does                                                                                                                                                                                |
-| ---                                  | ------------                                                                                                                                                                                |
-| `mariadb_server`                     | Installs and configures the MariaDB server                                                                                                                                                  |
-| `mariadb_server:configure`           | Configures the MariaDB server (except sys_schema)                                                                                                                                           |
-| `mariadb_server:database`            | Create or delete mariadb databases                                                                                                                                                          |
-| `mariadb_server:dump`                | Configues dumps (backups) of the MariaDB server                                                                                                                                             |
-| `mariadb_server:secure_installation` | Secures the installation the same way mysql_secure_installation does                                                                                                                        |
-| `mariadb_server:state`               | Manages the state of the MariaDB service                                                                                                                                                    |
-| `mariadb_server:sys_schema`          | Deploys a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage. This does not run by default, only when explicitly called. |
-| `mariadb_server:user`                | Create, update or delete MariaDB users                                                                                                                                                      |
+| Tag                                  | What it does                                                                                                                     |
+| ---                                  | ------------                                                                                                                     |
+| `mariadb_server`                     | Installs and configures the MariaDB server                                                                                       |
+| `mariadb_server:configure`           | Configures the MariaDB server                                                                                                    |
+| `mariadb_server:database`            | Create or delete mariadb databases                                                                                               |
+| `mariadb_server:dump`                | Configues dumps (backups) of the MariaDB server                                                                                  |
+| `mariadb_server:secure_installation` | Secures the installation the same way mysql_secure_installation does                                                             |
+| `mariadb_server:state`               | Manages the state of the MariaDB service                                                                                         |
+| `mariadb_server:sys_schema`          | Deploys a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage. |
+| `mariadb_server:user`                | Create, update or delete MariaDB users                                                                                           |
 
 
 ## Mandatory Role Variables
@@ -63,10 +63,11 @@ mariadb_server__admin_login:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `mariadb_server__admin_host` | todo | `['127.0.0.1', '::1', 'localhost']` |
-| `mariadb_server__dump_login` | todo | unset |
 | `mariadb_server__databases__host_var` /<br> `mariadb_server__databases__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `mariadb_server__users__host_var` /<br> `mariadb_server__users__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__dump_login` | todo | unset |
 | `mariadb_server__logrotate` | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14` |
+| `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage).| `true` |
+| `mariadb_server__users__host_var` /<br> `mariadb_server__users__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 
 Example:
 ```yaml
@@ -94,6 +95,7 @@ mariadb_server__users__host_var:
     state: 'present' # default
 mariadb_server__users__group_var: []
 mariadb_server__logrotate: 14
+mariadb_server__skip_sys_schema: true
 ```
 
 

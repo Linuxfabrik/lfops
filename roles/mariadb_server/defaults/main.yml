@@ -1,6 +1,8 @@
 mariadb_server__enabled: true
 mariadb_server__state: 'started'
 
+mariadb_server__skip_sys_schema: true
+
 mariadb_server__admin_host:
   - '127.0.0.1'
   - '::1'
