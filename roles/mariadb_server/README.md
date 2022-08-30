@@ -23,6 +23,7 @@ Tested on
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 * Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
 
+
 ## Optional Requirements
 
 * Enable the official [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/). This can be done using the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) role.
@@ -58,33 +59,35 @@ mariadb_server__admin_login:
 ```
 
 
-## Optional Role Variables
+## Optional Role Variables - Specific to this role
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mariadb_server__admin_host` | todo | `['127.0.0.1', '::1', 'localhost']` |
-| `mariadb_server__databases__host_var` /<br> `mariadb_server__databases__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `mariadb_server__dump_login` | todo | unset |
+| `mariadb_server__admin_host` | Host-part(s) for creating the DBA user account after a fresh installation. | `['127.0.0.1', '::1', 'localhost']` |
+| `mariadb_server__dump_login` | User to whom backup privileges are granted to. | unset |
+| `mariadb_server__databases__host_var` /<br> `mariadb_server__databases__group_var` | List of databases to create. | `TODO` |
 | `mariadb_server__logrotate` | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14` |
-| `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage).| `false` |
-| `mariadb_server__users__host_var` /<br> `mariadb_server__users__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
+| `mariadb_server__users__host_var` /<br> `mariadb_server__users__group_var` | List of users to create. | `[]` |
 
 Example:
 ```yaml
-# optional
+# optional - role variables
 mariadb_server__admin_host:
   - '127.0.0.1'
   - '::1'
   - 'localhost'
-mariadb_server__dump_login:
-  username: 'mariadb-backup'
-  password: 'my-secret-password'
+mariadb_server__databases__group_var: []
 mariadb_server__databases__host_var:
   - name: 'test-db'
     collation: 'utf8_general_ci' # default
     encoding: 'utf8' # default
     state: 'present' # default
-mariadb_server__databases__group_var: []
+mariadb_server__dump_login:
+  username: 'mariadb-backup'
+  password: 'my-secret-password'
+mariadb_server__logrotate: 14
+mariadb_server__skip_sys_schema: false
 mariadb_server__users__host_var:
   - username: 'user1'
     password: 'my-secret-password' # default omit
@@ -94,20 +97,18 @@ mariadb_server__users__host_var:
       - 'wiki.*:ALL'
     state: 'present' # default
 mariadb_server__users__group_var: []
-mariadb_server__logrotate: 14
-mariadb_server__skip_sys_schema: false
 ```
 
 
-### `mariadb_server__cnf_*` config directives
+## Optional Role Variables - `mariadb_server__cnf_*` Config Directives
 
 Variables for `z00-linuxfabrik.cnf` directives and their default values, defined and supported by this role.
 
-| Role Variable                                        | Documentation                                                                                      | Default Value                    |
+| Role Variable                                        | Documentation                                                                                      | Default Value (v10.6)                    |
 | -------------                                        | -------------                                                                                      | -------------                    |
 | `mariadb_server__cnf_character_set_server`           | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'utf8mb4'`                      |
 | `mariadb_server__cnf_collation_server`               | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'utf8mb4_unicode_ci'`           |
-| `mariadb_server__cnf_expire_logs_days`               | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `0`                              |
+| `mariadb_server__cnf_expire_logs_days`               | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `0.000000`                              |
 | `mariadb_server__cnf_innodb_buffer_pool_size`        | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'128M'`                         |
 | `mariadb_server__cnf_innodb_file_per_table`          | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'ON'`                           |
 | `mariadb_server__cnf_innodb_flush_log_at_trx_commit` | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `1`                              |
@@ -125,6 +126,31 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_query_cache_type`               | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'OFF'`                          |
 | `mariadb_server__cnf_skip_name_resolve`              | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'ON'`                           |
 | `mariadb_server__cnf_tmp_table_size`                 | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'16M'`                          |
+
+Example:
+```yaml
+# optional - cnf directives
+mariadb_server__cnf_character_set_server: 'utf8mb4'
+mariadb_server__cnf_collation_server: 'utf8mb4_unicode_ci'
+mariadb_server__cnf_expire_logs_days: 0.000000
+mariadb_server__cnf_innodb_buffer_pool_size: '128M' 
+mariadb_server__cnf_innodb_file_per_table: 'ON'
+mariadb_server__cnf_innodb_flush_log_at_trx_commit: 1
+mariadb_server__cnf_innodb_io_capacity: 200
+mariadb_server__cnf_innodb_log_file_size: '96M'
+mariadb_server__cnf_join_buffer_size: '256K'
+mariadb_server__cnf_log_error: '/var/log/mariadb/mariadb.log''
+mariadb_server__cnf_lower_case_table_names: 0
+mariadb_server__cnf_max_allowed_packet: '16M'
+mariadb_server__cnf_max_connections: 64
+mariadb_server__cnf_max_heap_table_size: '16M'
+mariadb_server__cnf_performance_schema: 'ON'
+mariadb_server__cnf_query_cache_limit: '1M'
+mariadb_server__cnf_query_cache_size: 0
+mariadb_server__cnf_query_cache_type: 'OFF'
+mariadb_server__cnf_skip_name_resolve: 'ON'
+mariadb_server__cnf_tmp_table_size: '16M'
+```
 
 
 ## License

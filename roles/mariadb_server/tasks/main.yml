@@ -299,14 +299,14 @@
 # sys schema
 - block:
 
-  - name: 'check if the sys database exists'
+  - name: 'Show databases'
     community.mysql.mysql_info:
       login_user: '{{ mariadb_server__admin_login["username"] }}'
       login_password: '{{ mariadb_server__admin_login["password"] }}'
       filter:
         - 'databases'
       return_empty_dbs: false
-    register: 'mariadb_server__sys_schema_table_exists_result'
+    register: 'mariadb_server__info'
 
   when:
     - 'not mariadb_server__skip_sys_schema'
@@ -349,7 +349,7 @@
 
   when:
     - 'not mariadb_server__skip_sys_schema'
-    - 'not "sys" in mariadb_server__sys_schema_table_exists_result["databases"]'
+    - 'not "sys" in mariadb_server__info["databases"]'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:sys_schema'
