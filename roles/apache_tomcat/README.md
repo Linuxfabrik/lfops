@@ -48,8 +48,8 @@ apache_tomcat__version: '10.0.23'
 | `apache_tomcat__logrotate_rotate`| The number of days the logfiles should be kept by logrotate. | `14` |
 | `apache_tomcat__roles__group_var`| todo | `{}` |
 | `apache_tomcat__server_xml_use_remote_ip_valve`| todo | `false` |
-| `apache_tomcat__service_enabled`| Enables or disables the sshd service, analogous to `systemctl enable/disable`. | `true` |
-| `apache_tomcat__service_state`| Changes the state of the sshd service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+| `apache_tomcat__service_enabled`| Enables or disables all Tomcat services, analogous to `systemctl enable/disable`. | `true` |
+| `apache_tomcat__service_state`| Changes the state of all Tomcat services, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
 | `apache_tomcat__users__group_var`| todo | `{}` |
 
 Example:
