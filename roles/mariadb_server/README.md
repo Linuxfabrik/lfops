@@ -66,7 +66,7 @@ mariadb_server__admin_login:
 | `mariadb_server__databases__host_var` /<br> `mariadb_server__databases__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `mariadb_server__dump_login` | todo | unset |
 | `mariadb_server__logrotate` | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14` |
-| `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage).| `true` |
+| `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage).| `false` |
 | `mariadb_server__users__host_var` /<br> `mariadb_server__users__group_var` | todo<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 
 Example:
@@ -95,7 +95,7 @@ mariadb_server__users__host_var:
     state: 'present' # default
 mariadb_server__users__group_var: []
 mariadb_server__logrotate: 14
-mariadb_server__skip_sys_schema: true
+mariadb_server__skip_sys_schema: false
 ```
 
 

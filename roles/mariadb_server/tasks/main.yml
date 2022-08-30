@@ -297,27 +297,21 @@
 # sys schema
 - block:
 
-  - name: 'Create directories for mariadb_sys_schema'
-    ansible.builtin.file:
-      path: '/tmp/mariadb_sys_schema/{{ item["path"] }}'
-      state: 'directory'
-      mode: '{{ item["mode"] }}'
-    loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
-    when: 'item["state"] == "directory"'
-    changed_when: false # no actual change to the application
+  - name: 'wget https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz'
+      dest: '/tmp/mariadb-sys-schema.tar.gz'
 
-  - name: 'Deploy collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage'
-    ansible.builtin.template:
-      src: '{{ item["src"] }}'
-      # we copied all files 1:1 from https://github.com/FromDual/mariadb-sys and did not change
-      # the file extension to .j2 (we did not even change the content of the files); however, for
-      # future-proofing purposes, we would like to treat all files as Jinja templates, and if they
-      # ever have a .j2 extension, remove it.
-      dest: '/tmp/mariadb_sys_schema/{{ item["path"] | trim(".j2") }}'
-      mode: '{{ item["mode"] }}'
-    loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
-    when: 'item["state"] == "file"'
-    changed_when: false # no actual change to the application
+  - name: 'mkdir /tmp/mariadb-sys-schema'
+    ansible.builtin.file:
+      path: '/tmp/mariadb-sys-schema'
+      state: 'directory'
+
+  - name: 'tar xzvf /tmp/mariadb-sys-schema.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/mariadb-sys-schema.tar.gz'
+      dest: '/tmp/mariadb-sys-schema'
+      remote_src: true
 
   - name: 'Delete any existing "sys" schema'
     community.mysql.mysql_db:
@@ -327,17 +321,18 @@
       state: 'absent'
 
   - name: 'mysql --user "{{ mariadb_server__admin_login["username"] }}" --password="..." < ./sys_10.sql'
-    # do NOT do: --password "{{ mariadb_server__admin_login["password"] }}" - this way mysql expects the input from STDIN and treats the password as a database name
-    ansible.builtin.shell: 'mysql --user "{{ mariadb_server__admin_login["username"] }}" --password="{{ mariadb_server__admin_login["password"] }}" < ./sys_10.sql'
-    args:
-      chdir: '/tmp/mariadb_sys_schema'
-    changed_when: false
+    community.mysql.mysql_db:
+      login_user: '{{ mariadb_server__admin_login["username"] }}'
+      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      name: 'sys'
+      state: 'import'
+      target: './sys_10.sql'
+      chdir: '/tmp/mariadb-sys-schema/mariadb-sys-master/'
 
-  - name: 'rm -rf /tmp/mariadb_sys_schema'
+  - name: 'rm -rf /tmp/mariadb-sys-schema'
     ansible.builtin.file:
-      path: '/tmp/mariadb_sys_schema'
+      path: '/tmp/mariadb-sys-schema'
       state: 'absent'
-    changed_when: false # no actual change to the application
 
   when:
     - 'not mariadb_server__skip_sys_schema'
