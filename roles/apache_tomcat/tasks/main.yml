@@ -165,7 +165,7 @@
 
 - block:
 
-  - name: 'systemctl {{ apache_tomcat__enabled | bool | ternary("enable", "disable") }} tomcat@{{ item["key"] }}.service'
+  - name: 'systemctl {{ apache_tomcat__service_enabled | bool | ternary("enable", "disable") }} tomcat@{{ item["key"] }}.service'
     ansible.builtin.service:
       name: 'tomcat@{{ item["key"] }}.service'
       enabled: '{{ apache_tomcat__service_enabled }}'
