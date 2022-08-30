@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # {{ ansible_managed }}
-# 2022051001
+# 2022083001
 
 
 function exit_with_first_failed_retc() {
@@ -17,6 +17,9 @@ function exit_with_first_failed_retc() {
     done
 }
 
+# make sure the backup is not readable by others
+old_umask=$(umask)
+umask 027
 
 source /etc/mariadb-dump.conf
 
@@ -41,6 +44,8 @@ mydumper --host=$HOST --user=$USER --password=$PASSWORD \
     --use-savepoints \
     --verbose 3
 mydumper_retc=$?
+
+umask "$old_umask"
 
 mysql --host=$HOST --user=$USER --password=$PASSWORD \
     --execute='SET GLOBAL innodb_buffer_pool_load_now = ON;'
