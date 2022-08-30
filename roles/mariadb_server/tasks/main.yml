@@ -115,12 +115,12 @@
 
 - block:
 
-  - name: 'systemctl enable mariadb = {{ mariadb_server__enabled }}'
+  - name: 'systemctl {{ mariadb_server__enabled | bool | ternary("enable", "disable") }} mariadb.service'
     ansible.builtin.service:
       name: 'mariadb.service'
       enabled: "{{ mariadb_server__enabled }}"
 
-  - name: 'systemctl start mariadb = {{ mariadb_server__state }}'
+  - name: 'systemctl {{ mariadb_server__state[:-2] }} mariadb.service'
     ansible.builtin.service:
       name: 'mariadb.service'
       state: "{{ mariadb_server__state }}"
