@@ -7,7 +7,6 @@
     - 'apache_httpd:config'
     - 'apache_httpd:mod_security_coreruleset'
     - 'apache_httpd:mods'
-    - 'apache_httpd:modules'
     - 'apache_httpd:state'
     - 'apache_httpd:vhosts'
 
@@ -61,7 +60,6 @@
 
   tags:
     - 'apache_httpd'
-    - 'apache_httpd:modules'
 
 
 - block:

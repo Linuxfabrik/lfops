@@ -4,7 +4,7 @@
   ansible.builtin.debug:
     var: 'apache_httpd__mods__combined_var'
 
-- name: 'Remove mods-available mods'
+- name: 'Remove mods-available configs'
   ansible.builtin.file:
     path: '{{ apache_httpd__config_path + "/mods-available/" + item["key"] + ".conf" }}'
     state: 'absent'

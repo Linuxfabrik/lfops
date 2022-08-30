@@ -22,7 +22,7 @@ ThreadsPerChild         {{ apache_httpd__conf_mpm_event_threads_per_child | d(25
 MaxRequestWorkers       {{ apache_httpd__conf_mpm_event_max_request_workers | d(400) }}
 MaxConnectionsPerChild  {{ apache_httpd__conf_mpm_event_max_connections_per_child | d(0) }}
 
-{% if apache_httpd__conf_mpm_worker_max_request_workers / apache_httpd__conf_mpm_worker_threads_per_child | round > 16 %}
+{% if (apache_httpd__conf_mpm_worker_max_request_workers / apache_httpd__conf_mpm_worker_threads_per_child) | round > 16 %}
 # ServerLimit: Upper limit on configurable number of processes.
 # This directive in combination with ThreadLimit sets the maximum configured value for
 # MaxRequestWorkers for the lifetime of the Apache httpd process.
@@ -30,7 +30,7 @@ MaxConnectionsPerChild  {{ apache_httpd__conf_mpm_event_max_connections_per_chil
 # equal to the MaxRequestWorkers directive divided by the ThreadsPerChild directive.
 # Do not set the value of this directive any higher than the number of server processes required
 # by what you may want for MaxRequestWorkers and ThreadsPerChild.
-ServerLimit             {{ apache_httpd__conf_mpm_worker_max_request_workers / apache_httpd__conf_mpm_worker_threads_per_child | round }}
+ServerLimit             {{ (apache_httpd__conf_mpm_worker_max_request_workers / apache_httpd__conf_mpm_worker_threads_per_child) | round }}
 {% endif %}
 
 {{ item['value']['raw'] | d() }}
