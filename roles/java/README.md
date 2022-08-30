@@ -5,6 +5,12 @@ This role installs [openjdk](https://openjdk.java.net).
 Tested on
 
 * RHEL 7 (and compatible)
+* RHEL 8 (and compatible)
+
+
+## Mandatory Requirements
+
+* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 
 
 ## Tags
