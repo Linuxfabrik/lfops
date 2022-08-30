@@ -5,26 +5,26 @@
 # https://mariadb.com/kb/en/library/server-system-variables/
 
 [server]
-character_set_server           = {{ mariadb_server__cnf_character_set_server | d('latin1') }}
-collation_server               = {{ mariadb_server__cnf_collation_server | d('latin1_swedish_ci') }}
-expire_logs_days               = {{ mariadb_server__cnf_expire_logs_days | d(0) }}
-innodb_buffer_pool_size        = {{ mariadb_server__cnf_innodb_buffer_pool_size | d('128M') }}
-innodb_file_per_table          = {{ mariadb_server__cnf_innodb_file_per_table | d('ON') }}
-innodb_flush_log_at_trx_commit = {{ mariadb_server__cnf_innodb_flush_log_at_trx_commit | d(1) }}
-innodb_io_capacity             = {{ mariadb_server__cnf_innodb_io_capacity | d(200) }}
-innodb_log_file_size           = {{ mariadb_server__cnf_innodb_log_file_size | d('32M') }}
-join_buffer_size               = {{ mariadb_server__cnf_join_buffer_size | d('256K') }}
-log_error                      = {{ mariadb_server__cnf_log_error | d('') }}
-lower_case_table_names         = {{ mariadb_server__cnf_lower_case_table_names | d(0) }}
-max_allowed_packet             = {{ mariadb_server__cnf_max_allowed_packet | d('16M') }}
-max_connections                = {{ mariadb_server__cnf_max_connections | d(151) }}
-max_heap_table_size            = {{ mariadb_server__cnf_max_heap_table_size | d('16M') }}
-performance_schema             = {{ mariadb_server__cnf_performance_schema | d('OFF') }}
-query_cache_limit              = {{ mariadb_server__cnf_query_cache_limit | d('1M') }}
-query_cache_size               = {{ mariadb_server__cnf_query_cache_size | d('1M') }}
-query_cache_type               = {{ mariadb_server__cnf_query_cache_type | d('OFF') }}
-skip_name_resolve              = {{ mariadb_server__cnf_skip_name_resolve | d('OFF') }}
-tmp_table_size                 = {{ mariadb_server__cnf_tmp_table_size | d('16M') }}
+character_set_server           = {{ mariadb_server__cnf_character_set_server__combined_var | d('latin1') }}
+collation_server               = {{ mariadb_server__cnf_collation_server__combined_var | d('latin1_swedish_ci') }}
+expire_logs_days               = {{ mariadb_server__cnf_expire_logs_days__combined_var | d(0) }}
+innodb_buffer_pool_size        = {{ mariadb_server__cnf_innodb_buffer_pool_size__combined_var | d('128M') }}
+innodb_file_per_table          = {{ mariadb_server__cnf_innodb_file_per_table__combined_var | d('ON') }}
+innodb_flush_log_at_trx_commit = {{ mariadb_server__cnf_innodb_flush_log_at_trx_commit__combined_var | d(1) }}
+innodb_io_capacity             = {{ mariadb_server__cnf_innodb_io_capacity__combined_var | d(200) }}
+innodb_log_file_size           = {{ mariadb_server__cnf_innodb_log_file_size__combined_var | d('32M') }}
+join_buffer_size               = {{ mariadb_server__cnf_join_buffer_size__combined_var | d('256K') }}
+log_error                      = {{ mariadb_server__cnf_log_error__combined_var | d('') }}
+lower_case_table_names         = {{ mariadb_server__cnf_lower_case_table_names__combined_var | d(0) }}
+max_allowed_packet             = {{ mariadb_server__cnf_max_allowed_packet__combined_var | d('16M') }}
+max_connections                = {{ mariadb_server__cnf_max_connections__combined_var | d(151) }}
+max_heap_table_size            = {{ mariadb_server__cnf_max_heap_table_size__combined_var | d('16M') }}
+performance_schema             = {{ mariadb_server__cnf_performance_schema__combined_var | d('OFF') }}
+query_cache_limit              = {{ mariadb_server__cnf_query_cache_limit__combined_var | d('1M') }}
+query_cache_size               = {{ mariadb_server__cnf_query_cache_size__combined_var | d('1M') }}
+query_cache_type               = {{ mariadb_server__cnf_query_cache_type__combined_var | d('OFF') }}
+skip_name_resolve              = {{ mariadb_server__cnf_skip_name_resolve__combined_var | d('OFF') }}
+tmp_table_size                 = {{ mariadb_server__cnf_tmp_table_size__combined_var | d('16M') }}
 
 
 [mysqld]

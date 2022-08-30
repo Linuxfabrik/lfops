@@ -1,3 +1,19 @@
+- alock:
+
+  - name: 'Load default values for {{ mariadb_server__version }}'
+    ansible.builtin.include_vars: 'defaults/{{ mariadb_server__version }}.yml'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:configure'
+    - 'mariadb_server:database'
+    - 'mariadb_server:dump'
+    - 'mariadb_server:secure_installation'
+    - 'mariadb_server:state'
+    - 'mariadb_server:sys_schema'
+    - 'mariadb_server:user'
+
+
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
   vars:
