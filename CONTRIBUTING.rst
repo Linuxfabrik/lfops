@@ -444,28 +444,18 @@ Variables
 
 
 Injections
-----------
+~~~~~~~~~~
 
 Your role might accept variable injection from another role. It depends on the context on how to implement that. Examples:
 
 .. code-block:: yaml
 
     # for dictionaries
-    - ansible.builtin.set_fact:
-        apache_httpd__modules__combined_var: '{{ apache_httpd__modules__role_var
-          | combine(apache_httpd__proxy_modules__role_var)
-          | combine(apache_httpd__modules__dependent_var)
-          | combine(apache_httpd__modules__group_var)
-          | combine(apache_httpd__modules__host_var)
-         }}'
-
-    # for lists
-    - ansible.builtin.set_fact:
-        apache_httpd__vhosts__combined_var: '{{ apache_httpd__vhosts__group_var +
-          apache_httpd__vhosts__host_var +
-          apache_httpd__vhosts__role_var +
-          apache_httpd__vhosts__dependent_var
-        }}'
+    apache_httpd__mods__combined_var: '{{ apache_httpd__mods__role_var
+        | combine(apache_httpd__mods__dependent_var)
+        | combine(apache_httpd__mods__group_var)
+        | combine(apache_httpd__mods__host_var)
+      }}'
 
     # this is for simple values like strings or numbers:
     kernel_settings__transparent_hugepages_defrag__dependent_var: ''
@@ -473,13 +463,17 @@ Your role might accept variable injection from another role. It depends on the c
     kernel_settings__transparent_hugepages_defrag__host_var: ''
     kernel_settings__transparent_hugepages_defrag__role_var: ''
     kernel_settings__transparent_hugepages_defrag__combined_var: '{{
-      kernel_settings__transparent_hugepages_defrag__host_var if kernel_settings__transparent_hugepages_defrag__host_var else
-      kernel_settings__transparent_hugepages_defrag__group_var if kernel_settings__transparent_hugepages_defrag__group_var else
-      kernel_settings__transparent_hugepages_defrag__dependent_var if kernel_settings__transparent_hugepages_defrag__dependent_var else
-      kernel_settings__transparent_hugepages_defrag__role_var if kernel_settings__transparent_hugepages_defrag__role_var
-    }}'
+        kernel_settings__transparent_hugepages_defrag__host_var if (kernel_settings__transparent_hugepages_defrag__host_var | string | length) else
+        kernel_settings__transparent_hugepages_defrag__group_var if (kernel_settings__transparent_hugepages_defrag__group_var | string | length) else
+        kernel_settings__transparent_hugepages_defrag__dependent_var if (kernel_settings__transparent_hugepages_defrag__dependent_var | string | length) else
+        kernel_settings__transparent_hugepages_defrag__role_var
+      }}'
 
 Why? Let's assume an Ansible playbook with two roles. Role1 (tag1) sets a default value. Role2 (tag2) wants to override the default value. Ansible is not able to do this: Neither with tag-based ``ansible-playbook`` calls nor with a full playbook run, Role2 is able to override the default value of Role1. This is the reason for implementing injections.
+
+Do not use lists of any kind, since you cannot overwrite earlier values, for example the value defined in the ``__role_var`` (for details have a look at https://docs.linuxfabrik.ch/software/ansible.html).
+
+Note that single value ``__combined_var`` are always returned as strings. Convert them to integers when using maths.
 
 
 Ansible Facts / Magic Vars
