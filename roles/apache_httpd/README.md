@@ -577,7 +577,7 @@ apache_httpd__mpm_worker_threads_per_child: 25
 
 ## raw Examples for vHosts
 
-[Go to the list of code examples](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md).
+[Go to the list of code examples](https://github.com/Linuxfabrik/lfops/blob/coding-camp/roles/apache_httpd/EXAMPLES.md).
 
 
 ## License
