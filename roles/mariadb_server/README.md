@@ -139,7 +139,7 @@ mariadb_server__cnf_innodb_flush_log_at_trx_commit: 1
 mariadb_server__cnf_innodb_io_capacity: 200
 mariadb_server__cnf_innodb_log_file_size: '96M'
 mariadb_server__cnf_join_buffer_size: '256K'
-mariadb_server__cnf_log_error: '/var/log/mariadb/mariadb.log''
+mariadb_server__cnf_log_error: '/var/log/mariadb/mariadb.log'
 mariadb_server__cnf_lower_case_table_names: 0
 mariadb_server__cnf_max_allowed_packet: '16M'
 mariadb_server__cnf_max_connections: 64
