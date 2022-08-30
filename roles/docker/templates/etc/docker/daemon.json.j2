@@ -1,0 +1,10 @@
+{
+    "dns": {{ docker__daemon_json_dns | to_nice_json(indent=8) }},
+    "log-driver": "{{ docker__daemon_json_log_driver }}"
+{% if docker__daemon_json_insecure_registries is defined and docker__daemon_json_insecure_registries | length %}
+    ,"insecure-registries": {{ docker__daemon_json_insecure_registries | to_nice_json(indent=8) }}
+{% endif %}
+{% if docker__daemon_json_log_opts is defined and docker__daemon_json_log_opts | length %}
+    ,"log-opts": {{ docker__daemon_json_log_opts | to_nice_json(indent=8) }}
+{% endif %}
+}

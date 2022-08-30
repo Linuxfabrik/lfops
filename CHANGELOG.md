@@ -64,6 +64,7 @@ New features:
 * Role: coturn
 * Role: crypto_policy
 * Role: dnf_makecache
+* Role: docker
 * Role: exoscale_vm
 * Role: fail2ban
 * Role: firewall

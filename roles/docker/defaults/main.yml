@@ -1,0 +1,13 @@
+docker__daemon_json_dns:
+  - '{{ ansible_facts["dns"]["nameservers"][0] }}'
+docker__daemon_json_log_driver: 'syslog'
+docker__service_enabled: true
+docker__service_state: 'started'
+
+# -----------------------------------------------------------------------------
+
+docker__kernel_settings__sysctl__dependent_var:
+  - name: 'net.bridge.bridge-nf-call-iptables'
+    value: 1
+  - name: 'net.bridge.bridge-nf-call-ip6tables'
+    value: 1

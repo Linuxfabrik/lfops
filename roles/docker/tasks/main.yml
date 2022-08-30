@@ -1,0 +1,44 @@
+- block:
+
+  - name: 'install docker-ce docker-compose-plugin'
+    ansible.builtin.package:
+      name:
+        - 'docker-ce'
+        - 'docker-compose-plugin'
+      state: 'present'
+
+  - name: 'mkdir /etc/docker'
+    ansible.builtin.file:
+      path: '/etc/docker'
+      owner: 'root'
+      group: 'root'
+      state: 'directory'
+      mode: 0o600
+
+  - name: 'Deploy /etc/docker/daemon.json'
+    ansible.builtin.template:
+      src: 'etc/docker/daemon.json.j2'
+      dest: '/etc/docker/daemon.json'
+      mode: 0o640
+    notify: 'docker: restart docker'
+
+    tags:
+      - 'docker'
+
+
+- block:
+
+  - name: 'systemctl {{ docker__service_enabled | bool | ternary("enable", "disable") }} docker'
+    ansible.builtin.service:
+      name: 'docker'
+      enabled: '{{ docker__service_enabled }}'
+
+  - name: 'systemctl {{ docker__service_state[:-2] }} docker'
+    ansible.builtin.service:
+      name: 'docker'
+      state: '{{ docker__service_state }}'
+    register: 'docker__service_state_result'
+
+  tags:
+    - 'docker'
+    - 'docker:state'
