@@ -48,7 +48,6 @@ New features:
 
 * This CHANGELOG.
 
-* Module: mariadb_user
 * Role network: Added functionality to configure network connections.
 
 * Role: acme_sh
