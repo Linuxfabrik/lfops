@@ -301,20 +301,18 @@ apache_httpd__vhosts__host_var:
   # Redirect vHosts
   myapp_80:
 
+    - template: 'redirect'
+      filename: 'www.example.com.80'
+      state: 'present'
+      enabled: true
 
-      - template: 'redirect'
-        filename: 'www.example.com.80'
-        state: 'present'
-        enabled: true
+      comment: |-
+        Redirect to https://www.example.com.
 
-        comment: |-
-          Redirect to https://www.example.com.
-
-
-        conf_server_name: 'www.example.com'
-        
-        virtualhost_ip: '*'
-        virtualhost_port: 80
+      conf_server_name: 'www.example.com'
+      
+      virtualhost_ip: '*'
+      virtualhost_port: 80
 ```
 
 ## Optional Role Variables - Specific to this role
