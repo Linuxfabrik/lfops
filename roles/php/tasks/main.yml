@@ -6,21 +6,37 @@
         - 'php'
         - 'php-fpm'
       state: 'present'
+
   tags:
     - 'php'
 
 
 - block:
 
-  - ansible.builtin.debug:
-      msg:
-        - 'Combined Modules:'
-        - '{{ php__modules__combined_var }}'
+  - name: 'Combined Modules:'
+    ansible.builtin.debug:
+      var: 'php__modules__combined_var'
 
   - name: 'Install additional php modules'
     ansible.builtin.package:
       name: "{{ php__modules__combined_var }}"
       state: 'present'
+
+  - name: 'Ensure additional php modules are absent'
+    ansible.builtin.package:
+      name: '{{ item["key"] }}'
+      state: 'absent'
+    when:
+      - 'item["value"]["state"] | d("present") == "absent"'
+    loop: '{{ php__modules__combined_var | dict2items }}'
+
+  - name: 'Ensure additional php modules are present'
+    ansible.builtin.package:
+      name: '{{ item["key"] }}'
+      state: 'present'
+    when:
+      - 'item["value"]["state"] | d("present") != "absent"'
+    loop: '{{ php__modules__combined_var | dict2items }}'
 
   - name: 'Get the list of installed packages'
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
@@ -60,22 +76,22 @@
 
   - name: 'Remove absent pools from /etc/php-fpm.d'
     ansible.builtin.file:
-      path: '/etc/php-fpm.d/{{ item.name }}.conf'
+      path: '/etc/php-fpm.d/{{ item["key"] }}.conf'
       state: 'absent'
     when:
-      - 'item.state | d("present") == "absent"'
+      - 'item["value"]["state"] | d("present") == "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
   - name: 'Deploy the pools to /etc/php-fpm.d/'
     ansible.builtin.template:
       src: 'etc/php-fpm.d/pool.conf.j2'
-      dest: '/etc/php-fpm.d/{{ item.name }}.conf'
+      dest: '/etc/php-fpm.d/{{ item["key"] }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
     when:
-      - 'item.state | d("present") != "absent"'
+      - 'item["value"]["state"] | d("present") != "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 

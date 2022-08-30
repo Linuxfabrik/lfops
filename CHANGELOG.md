@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role php:
+* Changed `php__modules*` and `php__pools*` from lists to dictionaries.
+
 Playbook: basic_setup
 * Renamed to setup_basic to be consitent with the other setup playbooks
 

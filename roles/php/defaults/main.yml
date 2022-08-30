@@ -1,16 +1,16 @@
 php__fpm_service_enabled: true
 
-php__modules__dependent_var: []
-php__modules__group_var: []
-php__modules__host_var: []
+php__modules__dependent_var: {}
+php__modules__group_var: {}
+php__modules__host_var: {}
 php__modules__role_var:
-  - 'php-opcache'
-php__modules__combined_var: '{{ php__modules__role_var +
-  php__modules__group_var +
-  php__modules__host_var +
-  php__modules__dependent_var
-  | flatten
- }}'
+  php-opcache:
+    state: 'present'
+php__modules__combined_var: '{{ php__modules__role_var
+    | combine(php__modules__dependent_var)
+    | combine(php__modules__group_var)
+    | combine(php__modules__host_var)
+  }}'
 
 php__ini_date_timezone: 'Europe/Zurich'
 php__ini_default_socket_timeout: 10
@@ -90,13 +90,12 @@ php__ini_upload_max_filesize__combined_var: '{{
     php__ini_upload_max_filesize__role_var if php__ini_upload_max_filesize__role_var
   }}'
 
-php__fpm_pools__dependent_var: []
-php__fpm_pools__group_var: []
-php__fpm_pools__host_var: []
-php__fpm_pools__role_var: []
-php__fpm_pools__combined_var: '{{ php__fpm_pools__role_var +
-    php__fpm_pools__group_var +
-    php__fpm_pools__host_var +
-    php__fpm_pools__dependent_var
-    | flatten
- }}'
+php__fpm_pools__dependent_var: {}
+php__fpm_pools__group_var: {}
+php__fpm_pools__host_var: {}
+php__fpm_pools__role_var: {}
+php__fpm_pools__combined_var: '{{ php__fpm_pools__role_var
+    | combine(php__fpm_pools__dependent_var)
+    | combine(php__fpm_pools__group_var)
+    | combine(php__fpm_pools__host_var)
+  }}'
