@@ -63,7 +63,8 @@ librenms__mariadb_server__databases__dependent_var:
     state: 'present'
 
 librenms__mariadb_server__users__dependent_var:
-  '{{ librenms__database_login.username }}':
+  '{{ librenms__database_login.username }}@{{ librenms__database_host }}':
+    username: '{{ librenms__database_login.username }}'
     password: '{{ librenms__database_login.password }}'
     host: '{{ librenms__database_host }}'
     priv:

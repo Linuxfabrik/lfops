@@ -286,7 +286,7 @@
     community.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_login["username"] }}'
       login_password: '{{ mariadb_server__admin_login["password"] }}'
-      name: '{{ item["key"] }}'
+      name: '{{ item["value"]["username"] }}'
       host: '{{ item["value"]["host"] | default("localhost") }}'
       password: '{{ item["value"]["password"] | default(omit) }}'
       priv: '{{ (item["value"]["priv"] | join("/")) | default(omit) }}'

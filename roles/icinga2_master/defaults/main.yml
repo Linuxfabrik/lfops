@@ -35,7 +35,8 @@ icinga2_master__mariadb_server__databases__dependent_var:
     state: 'present'
 
 icinga2_master__mariadb_server__users__dependent_var:
-  '{{ icinga2_master__database_login.username }}':
+  '{{ icinga2_master__database_login.username }}@{{ icinga2_master__database_host }}':
+    username: '{{ icinga2_master__database_login.username }}'
     password: '{{ icinga2_master__database_login.password }}'
     host: '{{ icinga2_master__database_host }}'
     priv:
