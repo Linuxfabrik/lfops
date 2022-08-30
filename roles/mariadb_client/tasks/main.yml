@@ -1,0 +1,10 @@
+- block:
+
+  - name: 'install mariadb (the MySQL command-line tool)'
+    ansible.builtin.package:
+      name:
+        - 'mariadb'
+      state: 'present'
+
+  tags:
+    - 'mariadb_client'

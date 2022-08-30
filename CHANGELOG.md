@@ -90,6 +90,7 @@ New features:
 * Role: librenms
 * Role: login
 * Role: mailto_root
+* Role: mariadb_client
 * Role: mariadb_server
 * Role: network
 * Role: nextcloud

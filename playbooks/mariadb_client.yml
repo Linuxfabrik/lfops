@@ -1,0 +1,12 @@
+- name: 'Install the MariaDB client'
+  hosts:
+    - 'lfops_mariadb_client'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_mariadb'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not mariadb_client__skip_repo_mariadb | d(false)'
+
+    - role: 'linuxfabrik.lfops.mariadb_client'
