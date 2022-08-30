@@ -171,7 +171,7 @@
       enabled: '{{ apache_tomcat__service_enabled }}'
     loop: '{{ apache_tomcat__instances | dict2items }}'
 
-  - name: 'systemctl {{ apache_tomcat__state[:-2] }} tomcat@{{ item["key"] }}.service'
+  - name: 'systemctl {{ apache_tomcat__service_state[:-2] }} tomcat@{{ item["key"] }}.service'
     ansible.builtin.service:
       name: 'tomcat@{{ item["key"] }}.service'
       state: '{{ apache_tomcat__service_state }}'
