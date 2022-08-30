@@ -14,7 +14,6 @@
         - 'not keycloak__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
-      repo_mariadb__version: '{{ mariadb_server__version }}'
       when:
         - 'not mariadb_server__skip_repo_mariadb | d(false)'
 

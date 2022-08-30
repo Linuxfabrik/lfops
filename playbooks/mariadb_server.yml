@@ -19,7 +19,6 @@
         - 'not mariadb_server__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
-      repo_mariadb__version: '{{ mariadb_server__version }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not mariadb_server__skip_repo_mariadb | d(false)'

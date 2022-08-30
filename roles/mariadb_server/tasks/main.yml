@@ -1,19 +1,3 @@
-- alock:
-
-  - name: 'Load default values for {{ mariadb_server__version }}'
-    ansible.builtin.include_vars: 'defaults/{{ mariadb_server__version }}.yml'
-
-  tags:
-    - 'mariadb_server'
-    - 'mariadb_server:configure'
-    - 'mariadb_server:database'
-    - 'mariadb_server:dump'
-    - 'mariadb_server:secure_installation'
-    - 'mariadb_server:state'
-    - 'mariadb_server:sys_schema'
-    - 'mariadb_server:user'
-
-
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
   vars:
@@ -49,6 +33,30 @@
 
 - block:
 
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get mariadb-server version'
+    ansible.builtin.set_fact:
+      mariadb_server__installed_version: '{{ (ansible_facts["packages"]["MariaDB-server"][0]["version"] | d(ansible_facts["packages"]["mariadb-server"][0]["version"])) | regex_replace("\.\d+$", "") }}' # strip the patch version
+
+  - name: 'Load default values for {{ mariadb_server__installed_version }}'
+    ansible.builtin.include_vars: 'defaults/{{ mariadb_server__installed_version }}.yml'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:configure'
+    - 'mariadb_server:database'
+    - 'mariadb_server:dump'
+    - 'mariadb_server:secure_installation'
+    - 'mariadb_server:state'
+    - 'mariadb_server:sys_schema'
+    - 'mariadb_server:user'
+
+
+- block:
+
   - name: 'mkdir /var/log/mariadb'
     ansible.builtin.file:
       path: '/var/log/mariadb'
@@ -67,7 +75,7 @@
 
   - name: 'Deploy /etc/my.cnf.d/z00-linuxfabrik.cnf'
     ansible.builtin.template:
-      src: 'etc/my.cnf.d/{{ mariadb_server__version }}-z00-linuxfabrik.cnf.j2'
+      src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
       dest: '/etc/my.cnf.d/z00-linuxfabrik.cnf'
       owner: 'root'
       group: 'root'

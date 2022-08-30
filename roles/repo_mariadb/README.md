@@ -19,7 +19,7 @@ Tested on
 
 | Variable | Description |
 | -------- | ----------- |
-| `repo_mariadb__version` | The MariaDB repo version to install. [Have a look at the MariaDB Download Site for the list of available releases](https://mariadb.org/download/?t=mariadb&p=mariadb&os=Linux&cpu=x86_64). Also, have a look at the [MariaDB Server Releases page](https://mariadb.com/kb/en/mariadb-server-release-dates/) to check which version is a "long-term support MariaDB stable" or "short-term support MariaDB development" release. You also have to provide the same version number in ``mariadb_server__version`` if using ``mariadb_server`` to install the MariaDB server. |
+| `repo_mariadb__version` | The MariaDB repo version to install. [Have a look at the MariaDB Download Site for the list of available releases](https://mariadb.org/download/?t=mariadb&p=mariadb&os=Linux&cpu=x86_64). Also, have a look at the [MariaDB Server Releases page](https://mariadb.com/kb/en/mariadb-server-release-dates/) to check which version is a "long-term support MariaDB stable" or "short-term support MariaDB development" release. |
 
 Example:
 ```yaml

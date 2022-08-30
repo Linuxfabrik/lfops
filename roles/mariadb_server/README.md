@@ -2,10 +2,16 @@
 
 This role installs and configures a [MariaDB](https://mariadb.org/) server.
 
+Note that this role does NOT let you specify a particular MariaDB server version. It simply installs the latest available MariaDB server version from the repos configured in the system. If you want or need to install a specific MariaDB server version, use the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) beforehand.
+
 This role is only compatible with the following MariaDB versions:
 
+* 10.3
+* 10.4
 * 10.5
 * 10.6 (preferred - long-term support MariaDB stable)
+
+We will add the next long-term support release as soon as it's available (therefore currently not implementing 10.7+).
 
 Tested on
 
@@ -42,7 +48,6 @@ Tested on
 | Variable | Description |
 | -------- | ----------- |
 | `mariadb_server__admin_login` | The user account for the database administrator. Also have a look at `mariadb_server__admin_host`. |
-| `mariadb_server__version` | The MariaDB version to install. [Have a look at the MariaDB Download Site for the list of available releases](https://mariadb.org/download/?t=mariadb&p=mariadb&os=Linux&cpu=x86_64). Also, have a look at the [MariaDB Server Releases page](https://mariadb.com/kb/en/mariadb-server-release-dates/) to check which version is a "long-term support MariaDB stable" or "short-term support MariaDB development" release. You also have to provide the same version number in ``repo_mariadb__version`` if using ``repo_mariadb`` and therefore installing from the official MariaDB repository. |
 
 Example:
 ```yaml
@@ -50,7 +55,6 @@ Example:
 mariadb_server__admin_login:
   username: 'admin'
   password: 'my-secret-password'
-mariadb_server__version: '10.6'
 ```
 
 
