@@ -19,11 +19,10 @@
 
 - block:
 
-  - name: 'dnf -y install mariadb-server mysqltuner libzstd'
+  - name: 'dnf -y install mariadb-server libzstd'
     ansible.builtin.package:
       name:
         - 'mariadb-server'
-        - 'mysqltuner'
         - 'libzstd'
       state: 'present'
 
