@@ -4,7 +4,7 @@
   - name: 'Deploy the Elasticsearch repo (mirror: {{ repo_elasticsearch__mirror_url }})'
     ansible.builtin.template:
       src: 'etc/yum.repos.d/elasticsearch.repo.j2'
-      dest: '/etc/yum.repos.d/elasticsearch.repo'
+      dest: '/etc/yum.repos.d/elasticsearch-{{ repo_elasticsearch__version }}.repo'
       owner: 'root'
       group: 'root'
       mode: 0o644

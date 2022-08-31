@@ -9,7 +9,6 @@ baseurl={{ repo_elasticsearch__mirror_url }}/elasticsearch/yum
 {% else %}
 baseurl=https://artifacts.elastic.co/packages/{{ repo_elasticsearch__version }}/yum
 {% endif %}
-
 gpgcheck=1
 gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
 enabled=1
