@@ -4,7 +4,6 @@ This role [deploys the Elasticsearch Repository](https://www.elastic.co/guide/en
 
 **Warning**: Regarding **Graylog** we caution you not to install or upgrade Elasticsearch to 7.11 and later! It is not supported. If you do so, it will break your instance! Use Elasticsearch 6.x or 7.10.2-1 max.
 
-
 Tested on
 
 * RHEL 8 (and compatible)
@@ -12,15 +11,15 @@ Tested on
 
 ## Tags
 
-| Tag           | What it does                     |
-| ---           | ------------                     |
+| Tag                  | What it does                         |
+| ---                  | ------------                         |
 | `repo_elasticsearch` | Deploys the Elasticsearch Repository |
 
 
 ## Mandatory Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
+| Variable | Description |
+| -------- | ----------- |
 | `repo_elasticsearch__version` | The Elasticsearch repo version to install. One of `5.x`, `6.x`, `7.x` or `8.x`. [Have a look at the Elasticsearch repository for the list of available releases](https://www.elastic.co/downloads/past-releases#elasticsearch). |
 
 Example:
