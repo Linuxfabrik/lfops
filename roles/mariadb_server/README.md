@@ -147,26 +147,26 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 | Role Variable                                        | Documentation                                                                                      | Default Value (v10.6)                    |
 | -------------                                        | -------------                                                                                      | -------------                    |
-| `mariadb_server__cnf_character_set_server`           | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'utf8mb4'`                      |
-| `mariadb_server__cnf_collation_server`               | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'utf8mb4_unicode_ci'`           |
-| `mariadb_server__cnf_expire_logs_days`               | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `0.000000`                              |
-| `mariadb_server__cnf_innodb_buffer_pool_size`        | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'128M'`                         |
-| `mariadb_server__cnf_innodb_file_per_table`          | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'ON'`                           |
-| `mariadb_server__cnf_innodb_flush_log_at_trx_commit` | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `1`                              |
-| `mariadb_server__cnf_innodb_io_capacity`             | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `200`                            |
-| `mariadb_server__cnf_innodb_log_file_size`           | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'96M'`                          |
-| `mariadb_server__cnf_join_buffer_size`               | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'256K'`                         |
-| `mariadb_server__cnf_log_error`                      | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'/var/log/mariadb/mariadb.log'` |
-| `mariadb_server__cnf_lower_case_table_names`         | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `0`                              |
-| `mariadb_server__cnf_max_allowed_packet`             | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'16M'`                          |
-| `mariadb_server__cnf_max_connections`                | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `64`                             |
-| `mariadb_server__cnf_max_heap_table_size`            | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'16M'`                          |
-| `mariadb_server__cnf_performance_schema`             | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'ON'`                           |
-| `mariadb_server__cnf_query_cache_limit`              | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'1M'`                           |
-| `mariadb_server__cnf_query_cache_size`               | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `0`                              |
-| `mariadb_server__cnf_query_cache_type`               | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'OFF'`                          |
-| `mariadb_server__cnf_skip_name_resolve`              | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'ON'`                           |
-| `mariadb_server__cnf_tmp_table_size`                 | [mariadb.com](https://mariadb.com/kb/en/full-list-of-mariadb-options-system-and-status-variables/) | `'16M'`                          |
+| `mariadb_server__cnf_character_set_server`           | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#character_set_server) | `'utf8mb4'`                      |
+| `mariadb_server__cnf_collation_server`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#collation_server) | `'utf8mb4_unicode_ci'`           |
+| `mariadb_server__cnf_expire_logs_days`               | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#expire_logs_days) | `0.000000`                              |
+| `mariadb_server__cnf_innodb_buffer_pool_size`        | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_size) | `'128M'`                         |
+| `mariadb_server__cnf_innodb_file_per_table`          | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table) | `'ON'`                           |
+| `mariadb_server__cnf_innodb_flush_log_at_trx_commit` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit) | `1`                              |
+| `mariadb_server__cnf_innodb_io_capacity`             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_io_capacity) | `200`                            |
+| `mariadb_server__cnf_innodb_log_file_size`           | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_log_file_size) | `'96M'`                          |
+| `mariadb_server__cnf_join_buffer_size`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#join_buffer_size) | `'256K'`                         |
+| `mariadb_server__cnf_log_error`                      | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#log_error) | `'/var/log/mariadb/mariadb.log'` |
+| `mariadb_server__cnf_lower_case_table_names`         | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#lower_case_table_names) | `0`                              |
+| `mariadb_server__cnf_max_allowed_packet`             | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#max_allowed_packet) | `'16M'`                          |
+| `mariadb_server__cnf_max_connections`                | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#max_connections) | `64`                             |
+| `mariadb_server__cnf_max_heap_table_size`            | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#max_heap_table_size) | `'16M'`                          |
+| `mariadb_server__cnf_performance_schema`             | [mariadb.com](https://mariadb.com/kb/en/performance-schema-system-variables/#performance_schema) | `'ON'`                           |
+| `mariadb_server__cnf_query_cache_limit`              | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_limit) | `'1M'`                           |
+| `mariadb_server__cnf_query_cache_size`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_size) | `0`                              |
+| `mariadb_server__cnf_query_cache_type`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_type) | `'OFF'`                          |
+| `mariadb_server__cnf_skip_name_resolve`              | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#skip_name_resolve) | `'ON'`                           |
+| `mariadb_server__cnf_tmp_table_size`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#tmp_table_size) | `'16M'`                          |
 
 Example:
 ```yaml
