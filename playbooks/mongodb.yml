@@ -1,0 +1,16 @@
+- name: 'Manage and configure MongoDB'
+  hosts:
+    - 'lfops_mongodb'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__transparent_hugepages__dependent_var: "{{ mongodb__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      when:
+        - 'not mongodb__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_mongodb'
+      when:
+        - 'not mongodb__skip_repo_mongodb | default(false)'
+
+    - role: 'linuxfabrik.lfops.mongodb'

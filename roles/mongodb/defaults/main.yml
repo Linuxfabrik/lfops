@@ -1,0 +1,25 @@
+mongodb__conf_net_bind_ip: '127.0.0.1' # https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-net.bindIp
+mongodb__conf_net_port: 27017
+mongodb__conf_security_authorization: false
+mongodb__conf_storage_directory_per_db: true
+mongodb__conf_storage_journal_commit_interval_ms: 100
+mongodb__conf_storage_journal_enabled: true
+
+# mongodb__dump_host: 'localhost'
+# mongodb__dump_method_file_based: false
+# mongodb__dump_method_file_based_backup_dir: '/backup/var-lib-mongo'
+# mongodb__dump_method_mongodump: true
+# mongodb__dump_method_mongodump_backup_dir: '/backup/mongodb-dump'
+# mongodb__dump_on_calendar: ''
+# mongodb__dump_oplog: false
+# mongodb__dump_user:
+#   auth_database: # unset
+#   password: 'password'
+#   username: 'mariadb-dump'
+
+mongodb__service_enabled: true
+mongodb__service_state: 'started'
+
+# -----------------------------------------------------------------------------
+
+mongodb__kernel_settings__transparent_hugepages__dependent_var: 'never'

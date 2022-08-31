@@ -94,6 +94,7 @@ New features:
 * Role: mailto_root
 * Role: mariadb_client
 * Role: mariadb_server
+* Role: mongodb
 * Role: network
 * Role: nextcloud
 * Role: nfs_server

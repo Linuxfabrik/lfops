@@ -1,0 +1,19 @@
+# {{ ansible_managed }}
+# 2022083101
+
+HOST='{{ mongodb__dump_user["host"] | d("127.0.0.1") }}'
+PORT='{{ mongodb__net_port }}'
+USER='{{ mongodb__dump_user["username"] }}'
+PASSWORD='{{ mongodb__dump_user["password"] }}'
+
+{% if mongodb__dump_user["auth_database"] is defined and mongodb__dump_user["auth_database"] | length %}
+AUTH_DATABASE='{{ mongodb__dump_user["auth_database"] }}'
+{% endif %}
+
+{% if mongodb__dump_method_mongodump %}
+DUMP_BACKUP_DIR='{{ mongodb_dump_dir | default('/backup/mongodb-dump') }}{{ item.name }}'
+{% endif %}
+
+{% if mongodb__dump_method_file_based %}
+FILE_BACKUP_DIR='{{ mongodb_dump_dir | default('/backup/mongodb-dump') }}{{ item.name }}'
+{% endif %}

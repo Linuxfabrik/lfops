@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022083101
+
+[Unit]
+Description=MongoDB Dump Timer
+
+[Timer]
+OnCalendar={{ mongodb__dump_on_calendar }}
+Unit=mariadb-dump.service
+
+[Install]
+WantedBy=timers.target

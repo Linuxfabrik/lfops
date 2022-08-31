@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2022083101
+
+[Unit]
+Description=MongoDB Dump Service
+
+[Service]
+ExecStart=/usr/local/bin/mongodb-dump
+Type=oneshot
+User=root
+
+[Install]
+WantedBy=basic.target

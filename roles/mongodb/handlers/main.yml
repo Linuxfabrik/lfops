@@ -1,0 +1,15 @@
+- name: 'mongodb: systemctl restart mongod.service'
+  ansible.builtin.systemd:
+    name: 'mongod.service'
+    state: 'restarted'
+  when:
+    - 'mongodb__service_state_result is not changed'
+    - 'mongodb__repl_set_name is not defined'
+
+- name: 'mongodb: manually execute systemctl restart mongod.service'
+  ansible.builtin.debug:
+    msg: 'The variable "mongodb_replSetName" is set! Please restart your MongoDB instances manually...'
+  listen: 'mongodb: systemctl restart mongod.service'
+  when:
+    - 'mongodb__service_state_result is not changed'
+    - 'mongodb__repl_set_name is defined'

@@ -1,0 +1,95 @@
+- block:
+
+  - name: 'install mongodb-org'
+    ansible.builtin.package:
+      name: 'mongodb-org'
+      state: 'present'
+
+  - name: 'Generate MongoDB config'
+    ansible.builtin.template:
+      src: 'etc/mongod.conf.j2'
+      dest: '/etc/mongod.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'mongodb: systemctl restart mongod.service'
+
+  # TODO needed?
+  # - name: 'Generate MongoDB Logrotate config'
+  #   ansible.builtin.template:
+  #     src: 'etc/logrotate.d/mongod.j2'
+  #     dest: '/etc/logrotate.d/mongod'
+  #     owner: 'root'
+  #     group: 'root'
+  #     mode: 0o644
+
+  tags:
+    - 'mongodb'
+
+
+# - block:
+
+#   - name: 'Deploy /etc/mongodb-dump.conf'
+#     ansible.builtin.template:
+#       src: 'etc/mongodb-dump.conf.j2'
+#       dest: '/etc/mongodb-dump.conf'
+#       owner: 'root'
+#       group: 'root'
+#       mode: 0o600
+
+#   - name: 'Deploy /usr/local/bin/mongodb-dump (backups using mongodump)'
+#     ansible.builtin.template:
+#       src: 'usr/local/bin/mongodb-dump.j2'
+#       dest: '/usr/local/bin/mongodb-dump'
+#       owner: 'root'
+#       group: 'root'
+#       mode: 0o755
+
+#   - name: 'Deploy /etc/systemd/system/mongodb-dump.service'
+#     ansible.builtin.template:
+#       src: 'etc/systemd/system/mongodb-dump.service.j2'
+#       dest: '/etc/systemd/system/mongodb-dump.service'
+#       owner: 'root'
+#       group: 'root'
+#       mode: 0o644
+
+#   - name: 'Deploy /etc/systemd/system/mongodb-dump.timer'
+#     ansible.builtin.template:
+#       src: 'etc/systemd/system/mongodb-dump.timer.j2'
+#       dest: '/etc/systemd/system/mongodb-dump.timer'
+#       owner: 'root'
+#       group: 'root'
+#       mode: 0o644
+#     register: 'mongodb__dump_systemd_timer_result'
+
+#   - name: 'systemctl enable mongodb-dump.timer --now'
+#     ansible.builtin.systemd:
+#       name: 'mongodb-dump.timer'
+#       state: 'started'
+#       enabled: true
+#       daemon_reload: '{{ mongodb__dump_systemd_timer_result is changed }}'
+
+#   when:
+#     - 'mongodb__dump_user is defined'
+#     - 'mongodb__dump_user | length'
+#   tags:
+#     - 'mongodb'
+#     - 'mongodb:dump'
+
+
+- block:
+
+  - name: 'systemctl {{ mongodb__service_enabled | bool | ternary("enable", "disable") }} mongod.service'
+    ansible.builtin.systemd:
+      name: 'mongod.service'
+      enabled: '{{ mongodb__service_enabled }}'
+
+  - name: 'systemctl {{ mongodb__service_state[:-2] }} mongod.service'
+    ansible.builtin.systemd:
+      name: 'mongod.service'
+      state: '{{ mongodb__service_state }}'
+    register: 'mongodb__service_state_result'
+
+  tags:
+    - 'mongodb'
+    - 'mongodb:state'

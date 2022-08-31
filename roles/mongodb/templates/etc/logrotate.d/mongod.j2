@@ -1,0 +1,18 @@
+{{ ansible_managed }}
+# 2022083101
+
+{% for item in mongodb_instance %}
+/var/log/mongodb/mongod{{ item.name }}.log
+{% endfor %}
+{
+    daily
+    rotate 14
+    compress
+    dateext
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+        /bin/kill -SIGUSR1 `cat /var/lib/mongodb/mongod.lock 2> /dev/null` 2> /dev/null || true
+    endscript
+}
