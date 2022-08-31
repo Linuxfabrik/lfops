@@ -105,7 +105,7 @@ Combined lists and dictionaries (`rolename__combined_varname`) containing defaul
 
 ### ansible_become: true
 
-Don't use `become: true` or `ansible_become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars ONLY (not in `all.yml` - `localhost` must not be part of the group. Otherwise you'll get errors like sudo: a password is required`).
+Don't use `become: true` or `ansible_become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars ONLY (not in `all.yml` - `localhost` must not be part of the group. Otherwise you'll get errors like `sudo: a password is required`).
 
 
 ### Re-use values which are defined in `rolename__group_varname` in `rolename__host_varname` without duplicating them
