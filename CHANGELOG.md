@@ -98,6 +98,7 @@ New features:
 * Role: network
 * Role: nextcloud
 * Role: nfs_server
+* Role: nodejs
 * Role: openssl
 * Role: openvpn_server
 * Role: perl
