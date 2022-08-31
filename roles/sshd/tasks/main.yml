@@ -30,17 +30,6 @@
       - 'sshd__ciphers is defined'
     notify: 'sshd: reload sshd'
 
-  - name: 'Change MACs in /etc/ssh/sshd_config to {{ sshd__macs }}'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^#?MACS'
-      line: 'MACs {{ sshd__macs }}'
-      state: 'present'
-      validate: '/usr/sbin/sshd -t -f %s'
-    when:
-      - 'sshd__macs is defined'
-    notify: 'sshd: reload sshd'
-
   - name: 'Change KexAlgorithms in /etc/ssh/sshd_config to {{ sshd__kex }}'
     ansible.builtin.lineinfile:
       path: '/etc/ssh/sshd_config'
@@ -52,20 +41,31 @@
       - 'sshd__kex is defined'
     notify: 'sshd: reload sshd'
 
+  - name: 'Change LogLevel in /etc/ssh/sshd_config to {{ sshd__log_level__combined_var }}'
+    ansible.builtin.lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^#?LogLevel'
+      line: 'LogLevel {{ sshd__log_level__combined_var }}'
+      state: 'present'
+      validate: '/usr/sbin/sshd -t -f %s'
+    notify: 'sshd: reload sshd'
+
+  - name: 'Change MACs in /etc/ssh/sshd_config to {{ sshd__macs }}'
+    ansible.builtin.lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^#?MACS'
+      line: 'MACs {{ sshd__macs }}'
+      state: 'present'
+      validate: '/usr/sbin/sshd -t -f %s'
+    when:
+      - 'sshd__macs is defined'
+    notify: 'sshd: reload sshd'
+
   - name: 'Change PasswordAuthentication in /etc/ssh/sshd_config to {{ sshd__password_authentication | bool | ternary("yes", "no") }}'
     ansible.builtin.lineinfile:
       path: '/etc/ssh/sshd_config'
       regexp: '^PasswordAuthentication'
       line: 'PasswordAuthentication {{ sshd__password_authentication | bool | ternary("yes", "no") }}'
-      state: 'present'
-      validate: '/usr/sbin/sshd -t -f %s'
-    notify: 'sshd: reload sshd'
-
-  - name: 'Change UseDNS in /etc/ssh/sshd_config to {{ sshd__use_dns | bool | ternary("yes", "no") }}'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^#?UseDNS'
-      line: 'UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}'
       state: 'present'
       validate: '/usr/sbin/sshd -t -f %s'
     notify: 'sshd: reload sshd'
@@ -79,11 +79,11 @@
       validate: '/usr/sbin/sshd -t -f %s'
     notify: 'sshd: reload sshd'
 
-  - name: 'Change LogLevel in /etc/ssh/sshd_config to {{ sshd__log_level__combined_var }}'
+  - name: 'Change UseDNS in /etc/ssh/sshd_config to {{ sshd__use_dns | bool | ternary("yes", "no") }}'
     ansible.builtin.lineinfile:
       path: '/etc/ssh/sshd_config'
-      regexp: '^#?LogLevel'
-      line: 'LogLevel {{ sshd__log_level__combined_var }}'
+      regexp: '^#?UseDNS'
+      line: 'UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}'
       state: 'present'
       validate: '/usr/sbin/sshd -t -f %s'
     notify: 'sshd: reload sshd'
