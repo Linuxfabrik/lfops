@@ -119,6 +119,7 @@ New features:
 * Role: stig
 * Role: system_update
 * Role: tar
+* Role: telegraf
 * Role: timezone
 * Role: unattended_upgrades
 * Role: yum_utils
