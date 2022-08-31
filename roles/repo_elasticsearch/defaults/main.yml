@@ -1,0 +1,2 @@
+repo_elasticsearch__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+repo_elasticsearch__version: '8.x'

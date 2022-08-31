@@ -1,0 +1,13 @@
+- block:
+
+  # https://www.elastic.co/guide/en/elasticsearch/reference/current/rpm.html#rpm-repo
+  - name: 'Deploy the Elasticsearch repo (mirror: {{ repo_elasticsearch__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/elasticsearch.repo.j2'
+      dest: '/etc/yum.repos.d/elasticsearch.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'repo_elasticsearch'
