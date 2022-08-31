@@ -34,7 +34,7 @@ Tested on
 | `telegraf__inputs_vsphere_vcenters` | List of vCenter URLs to be monitored. | `[]` |
 | `telegraf__outputs_influxdb_database` | The target database for metrics; will be created as needed. For UDP url endpoint database needs to be configured on server side. | `''` |
 | `telegraf__outputs_influxdb_password` | HTTP Basic Auth | `''` |
-| `telegraf__outputs_influxdb_skip_database_creation` | We assume that the telegraf role creates the database. | `true` |
+| `telegraf__outputs_influxdb_skip_database_creation` | We assume that the InfluxDB role creates the database. | `true` |
 | `telegraf__outputs_influxdb_urls` | The full HTTP or UDP URL for your InfluxDB instance. Multiple URLs can be specified for a single cluster, only ONE of the urls will be written to each interval. | `['http://127.0.0.1:8086']` |
 | `telegraf__outputs_influxdb_username` | HTTP Basic Auth | `''` |
 | `telegraf__service_enabled` | Enables or disables the telegraf service, analogous to `systemctl enable/disable --now`. | `true` |
@@ -43,6 +43,7 @@ Tested on
 Example:
 ```yaml
 # optional
+telegraf__agent_interval: '10s'
 telegraf__inputs_cpu_enable: false
 telegraf__inputs_disk_enable: false
 telegraf__inputs_diskio_enable: false
@@ -58,8 +59,12 @@ telegraf__inputs_vsphere_vcenters:
   - 'https://vsphere/sdk'
 telegraf__outputs_influxdb_database: 'telegraf'
 telegraf__outputs_influxdb_password: 'password'
-telegraf__outputs_influxdb_user: 'telegraf'
+telegraf__outputs_influxdb_skip_database_creation: true
+telegraf__outputs_influxdb_urls:
+  - 'http://127.0.0.1:8086'
+telegraf__outputs_influxdb_username: 'telegraf'
 telegraf__service_enabled: true
+telegraf__service_state: 'started'
 ```
 
 
