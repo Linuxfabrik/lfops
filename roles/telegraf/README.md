@@ -1,0 +1,73 @@
+# Ansible Role linuxfabrik.lfops.telegraf
+
+This role installs and configures [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/).
+
+Tested on
+
+* RHEL 8 (and compatible)
+
+
+## Tags
+
+| Tag                  | What it does                           |
+| ---                  | ------------                           |
+| `telegraf`           | Installs and configures telegraf server |
+| `telegraf:state`     | Manages the state of the telegraf server    |
+
+
+## Optional Role Variables
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `telegraf__agent_interval` | Default data collection interval for all inputs | `'10s'` |
+| `telegraf__inputs_cpu_enable` | Read metrics about cpu usage | `true` |
+| `telegraf__inputs_disk_enable` | Read metrics about disk usage by mount point | `true` |
+| `telegraf__inputs_diskio_enable` | Read metrics about disk IO by device | `true` |
+| `telegraf__inputs_kernel_enable` | Get kernel statistics from /proc/stat | `true` |
+| `telegraf__inputs_mem_enable` | Read metrics about memory usage | `true` |
+| `telegraf__inputs_processes_enable` | Get the number of processes and group them by status | `true` |
+| `telegraf__inputs_swap_enable` | Read metrics about swap memory usage | `true` |
+| `telegraf__inputs_system_enable` | Read metrics about system load & uptime | `true` |
+| `telegraf__inputs_vsphere_enable` | Read metrics from one or many vCenters | `false` |
+| `telegraf__inputs_vsphere_password` |  | `''` |
+| `telegraf__inputs_vsphere_username` |  | `''` |
+| `telegraf__inputs_vsphere_vcenters` | List of vCenter URLs to be monitored. | `[]` |
+| `telegraf__outputs_influxdb_database` | The target database for metrics; will be created as needed. For UDP url endpoint database needs to be configured on server side. | `''` |
+| `telegraf__outputs_influxdb_password` | HTTP Basic Auth | `''` |
+| `telegraf__outputs_influxdb_skip_database_creation` | We assume that the telegraf role creates the database. | `true` |
+| `telegraf__outputs_influxdb_urls` | The full HTTP or UDP URL for your InfluxDB instance. Multiple URLs can be specified for a single cluster, only ONE of the urls will be written to each interval. | `['http://127.0.0.1:8086']` |
+| `telegraf__outputs_influxdb_username` | HTTP Basic Auth | `''` |
+| `telegraf__service_enabled` | Enables or disables the telegraf service, analogous to `systemctl enable/disable --now`. | `true` |
+| `telegraf__service_state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+
+Example:
+```yaml
+# optional
+telegraf__inputs_cpu_enable: false
+telegraf__inputs_disk_enable: false
+telegraf__inputs_diskio_enable: false
+telegraf__inputs_kernel_enable: false
+telegraf__inputs_mem_enable: false
+telegraf__inputs_processes_enable: false
+telegraf__inputs_swap_enable: false
+telegraf__inputs_system_enable: false
+telegraf__inputs_vsphere_enable: true
+telegraf__inputs_vsphere_password: 'password'
+telegraf__inputs_vsphere_username: 'username'
+telegraf__inputs_vsphere_vcenters:
+  - 'https://vsphere/sdk'
+telegraf__outputs_influxdb_database: 'telegraf'
+telegraf__outputs_influxdb_password: 'password'
+telegraf__outputs_influxdb_user: 'telegraf'
+telegraf__service_enabled: true
+```
+
+
+## License
+
+[The Unlicense](https://unlicense.org/)
+
+
+## Author Information
+
+[Linuxfabrik GmbH, Zurich](https://www.linuxfabrik.ch)

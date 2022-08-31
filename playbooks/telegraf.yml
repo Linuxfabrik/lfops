@@ -1,0 +1,9 @@
+- name: 'Manage and configure telegraf'
+  hosts:
+    - 'lfops_telegraf'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_influxdb'
+
+    - role: 'linuxfabrik.lfops.telegraf'

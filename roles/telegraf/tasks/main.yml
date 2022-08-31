@@ -1,0 +1,36 @@
+- block:
+
+  - name: 'install telegraf'
+    ansible.builtin.package:
+      name: 'telegraf'
+      state: 'present'
+
+  - name: 'Generate telegraf config'
+    ansible.builtin.template:
+      src: 'etc/telegraf/telegraf.conf.j2'
+      dest: '/etc/telegraf/telegraf.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'telegraf: systemctl restart telegraf.service'
+
+  tags:
+    - 'telegraf'
+
+
+- block:
+
+  - name: 'systemctl {{ telegraf__service_enabled | bool | ternary("enable", "disable") }} telegraf.service'
+    ansible.builtin.systemd:
+      name: 'telegraf.service'
+      enabled: '{{ telegraf__service_enabled }}'
+
+  - name: 'systemctl {{ telegraf__service_state[:-2] }} telegraf.service'
+    ansible.builtin.systemd:
+      name: 'telegraf.service'
+      state: '{{ telegraf__service_state }}'
+    register: 'telegraf__service_state_result'
+
+  tags:
+    - 'telegraf'
+    - 'telegraf:state'
