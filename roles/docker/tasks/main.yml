@@ -28,14 +28,14 @@
 
 - block:
 
-  - name: 'systemctl {{ docker__service_enabled | bool | ternary("enable", "disable") }} docker'
-    ansible.builtin.service:
-      name: 'docker'
+  - name: 'systemctl {{ docker__service_enabled | bool | ternary("enable", "disable") }} docker.service'
+    ansible.builtin.systemd:
+      name: 'docker.service'
       enabled: '{{ docker__service_enabled }}'
 
-  - name: 'systemctl {{ docker__service_state[:-2] }} docker'
-    ansible.builtin.service:
-      name: 'docker'
+  - name: 'systemctl {{ docker__service_state[:-2] }} docker.service'
+    ansible.builtin.systemd:
+      name: 'docker.service'
       state: '{{ docker__service_state }}'
     register: 'docker__service_state_result'
 
