@@ -1,0 +1,7 @@
+- name: 'Run ansible_init to manage ansinv on the control_node'
+  hosts:
+    - 'lfops_ansible_init'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.ansible_init'

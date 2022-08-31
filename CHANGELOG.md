@@ -52,6 +52,7 @@ New features:
 * Role network: Added functionality to configure network connections.
 
 * Role: acme_sh
+* Role: ansible_init
 * Role: apache_httpd
 * Role: apache_tomcat
 * Role: at

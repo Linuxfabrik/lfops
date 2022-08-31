@@ -1,0 +1,62 @@
+- block:
+
+  - name: 'Update ansible_init (ansinv) itself'
+    ansible.builtin.git:
+      repo: '{{ ansible_init__url }}'
+      dest: '{{ ansible_init__ansinv_path }}'
+      version: '{{ ansible_init__version }}'
+
+  tags:
+    - 'ansible_init'
+
+
+- block:
+
+  - name: 'Load repo list'
+    ansible.builtin.include_vars:
+      file: '{{ ansible_init__ansinv_path }}/control_node/group_vars/repos.yml'
+
+  tags:
+    - 'ansible_init'
+    - 'ansible_init:command'
+
+
+- block:
+
+  - name: 'Clone the inventories'
+    ansible.builtin.git:
+      repo: '{{ item["url"] }}'
+      dest: '{{ ansible_init__ansinv_path }}/{{ item["name"] }}'
+      version: '{{ item["version"] }}'
+    loop: '{{ ansible_init__inventories }}'
+    ignore_errors: true
+
+  - name: 'Install ansible collections'
+    community.general.ansible_galaxy_install:
+      name: '{{ item["name"] }}'
+      # no_deps: '{{ item["no_deps"] | d("False") }}'
+      type: '{{ item["type"] | d("collection") }}'
+    loop: "{{ ansible_init__ansible_collections }}"
+    ignore_errors: true
+
+  tags:
+    - 'ansible_init'
+
+
+- block:
+
+  - name: 'Execute custom command on all inventories repos: {{ ansible_init__custom_command }}'
+    ansible.builtin.shell:
+      cmd: '{{ ansible_init__custom_command }}'
+      chdir: '{{ ansible_init__ansinv_path }}/{{ item["name"] }}'
+    loop: '{{ ansible_init__inventories }}'
+    failed_when: false
+    register: 'ansible_init__custom_command_inventories_result'
+
+  - name: 'Stdout of {{ ansible_init__custom_command }} (environments)'
+    ansible.builtin.debug:
+      msg: '{{ ansible_init__custom_command_environments_result.results|map(attribute="item.name") | zip(ansible_init__custom_command_environments_result.results|map(attribute="stdout_lines") | list ) | list }}'
+
+  tags:
+    - 'never'
+    - 'ansible_init:command'
