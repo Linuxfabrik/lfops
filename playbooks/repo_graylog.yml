@@ -1,0 +1,7 @@
+- name: 'Manage and configure the Graylog Repository'
+  hosts:
+    - 'lfops_repo_graylog'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_graylog'

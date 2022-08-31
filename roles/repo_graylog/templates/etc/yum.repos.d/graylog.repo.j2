@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2022083101
+
+# https://docs.graylog.org/docs/operating-system-packages
+[graylog-{{ repo_graylog__version }}]
+name=graylog-{{ repo_graylog__version }}
+baseurl=https://packages.graylog2.org/repo/el/stable/{{ repo_graylog__version }}/$basearch/
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=https://raw.githubusercontent.com/Graylog2/fpm-recipes/{{ repo_graylog__version }}/recipes/graylog-repository/files/rpm/RPM-GPG-KEY-graylog
