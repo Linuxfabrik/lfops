@@ -1,0 +1,27 @@
+# {{ ansible_managed }}
+# 2022083101
+
+[Unit]
+Description=Rocket.Chat Server
+After=syslog.target
+After=network.target
+After=mongod.service
+
+[Service]
+ExecStart={{ rocketchat__node_path }} {{ rocketchat__application_path }}/bundle/main.js
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=RocketChat
+User=rocketchat
+Group=rocketchat
+
+Environment=MONGO_URL=mongodb://{{ rocketchat__mongodb_host }}:{{ rocketchat__mongodb_port }}/rocketchat{% if rocketchat__mongodb_repl_set_name is defined and rocketchat__mongodb_repl_set_name | length %}?replicaSet={{ rocketchat__mongodb_repl_set_name }}
+Environment=MONGO_OPLOG_URL=mongodb://{{ rocketchat__mongodb_host }}:{{ rocketchat__mongodb_port }}/local?replicaSet={{ rocketchat__mongodb_repl_set_name }}
+{% endif %}
+
+Environment=ROOT_URL={{ rocketchat__root_url }}
+Environment=PORT={{ rocketchat__port }}
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

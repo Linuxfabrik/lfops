@@ -1,0 +1,245 @@
+- block:
+
+  - name: 'groupadd --system rocketchat'
+    ansible.builtin.group:
+      name: 'rocketchat'
+      state: 'present'
+      system: true
+
+  - name: 'useradd --comment "Rocket.Chat Service User" --gid rocketchat --home-dir "{{ rocketchat__application_path }}" --create-home --shell "/bin/false" --system rocketchat'
+    ansible.builtin.user:
+      comment: 'Rocket.Chat Service User'
+      name: 'rocketchat'
+      group: 'rocketchat'
+      home: '{{ rocketchat__application_path }}'
+      createhome: true
+      shell: '/bin/false'
+      state: 'present'
+      system: true
+
+  - name: 'Ensure Rocket.Chat dependencies are installed'
+    ansible.builtin.package:
+      name:
+        - 'tar'
+        - 'GraphicsMagick'
+        - 'nodejs'
+        - 'npm'
+        - 'make'
+        - 'gcc-c++'
+        - 'wget'
+      state: 'present'
+
+  - name: 'ln -s /bin/node /bin/nodejs'
+    ansible.builtin.file:
+      src: '/bin/node'
+      dest: '/bin/nodejs'
+      state: 'link'
+
+  - name: 'npm --global inherits'
+    community.general.npm:
+      name: 'inherits'
+      global: true
+
+  tags:
+    - 'rocketchat'
+
+
+# this stays in this role, since the management of node versions with n is too specific to Rocket.Chat
+- block:
+
+  - name: 'get version dependencies from api'
+    ansible.builtin.uri:
+      url: 'https://releases.rocket.chat/{{ rocketchat__version }}/info'
+    register: 'rocketchat__api_version_dependencies_result'
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get the installed MongoDB version'
+    ansible.builtin.set_fact:
+      rocketchat__installed_mongodb_version: '{{ ansible_facts["packages"]["mongodb-org"][0]["version"] | regex_replace("\.\d+$", "") }}'
+    when:
+      - 'rocketchat__mongodb_on_localhost'
+
+  - name: 'Make sure the installed MongoDB version is compatible'
+    ansible.builtin.assert:
+      that: 'rocketchat__installed_mongodb_version in rocketchat__api_version_dependencies_result["json"]["compatibleMongoVersions"]'
+      fail_msg: 'MongoDB version {{ rocketchat__installed_mongodb_version }} is not supported by Rocket.Chat version {{ rocketchat__version }}'
+    when:
+      - 'rocketchat__mongodb_on_localhost'
+
+  - ansible.builtin.debug:
+      msg: 'Please manually check if MongoDB version {{ rocketchat__installed_mongodb_version }} is supported by Rocket.Chat version {{ rocketchat__version }} on https://github.com/RocketChat/Rocket.Chat/releases/{{ rocketchat__version }}'
+    when:
+      - 'not rocketchat__mongodb_on_localhost'
+
+  - name: 'set required node version to {{ rocketchat__api_version_dependencies_result["json"]["nodeVersion"] }}'
+    ansible.builtin.set_fact:
+      rocketchat__node_version: '{{ rocketchat__api_version_dependencies_result["json"]["nodeVersion"] }}'
+    when: 'rocketchat__node_version is not defined or not (rocketchat__node_version | length)'
+
+  - name: 'npm --global n'
+    community.general.npm:
+      name: 'n'
+      global: true
+
+  - name: 'Check to see if n has installed the required binaries in {{ rocketchat__node_prefix }}'
+    ansible.builtin.stat:
+      path: '{{ rocketchat__node_path }}'
+    register: 'rocketchat__stat_node_path_result'
+
+  - name: 'Install the supported NodeJS environment via n [Version: {{ rocketchat__node_version }}]'
+    ansible.builtin.command: 'n {{ rocketchat__node_version }}'
+    when: 'not rocketchat__stat_node_path_result.stat.exists'
+
+  - name: 'Check to see if the proper npm version has already been installed'
+    ansible.builtin.command: '{{ rocketchat__npm_path }} --version'
+    changed_when: false
+    register: 'rocketchat__npm_version_result'
+
+  - name: 'Install the supported NPM version via npm [Version: {{ rocketchat__npm_version }}]'
+    community.general.npm:
+      name: 'npm'
+      version: '{{ rocketchat__npm_version }}'
+      path: '{{ rocketchat__node_prefix }}/lib'
+      executable: '{{ rocketchat__npm_path }}'
+    environment:
+      PATH: '{{ rocketchat__node_prefix }}/bin:{{ ansible_facts["env"]["PATH"] }}'
+    when: 'rocketchat__npm_version_result != rocketchat__npm_version'
+
+  - name: 'Fetch the Rocket.Chat binary tarball'
+    ansible.builtin.get_url:
+      url: 'https://releases.rocket.chat/{{ rocketchat__version }}/download'
+      dest: '{{ rocketchat__application_path }}/rocket.chat-{{ rocketchat__version }}.tgz'
+      owner: 'rocketchat'
+      group: 'rocketchat'
+
+  tags:
+    - 'rocketchat'
+    - 'rocketchat:update'
+
+
+- block:
+
+  - name: 'systemctl stop rocketchat.service'
+    ansible.builtin.systemd:
+      name: 'rocketchat.service'
+      state: 'stopped'
+
+  - name: 'rm -rf {{ rocketchat__application_path }}/bundle # remove old version'
+    ansible.builtin.file:
+      path: '{{ rocketchat__application_path }}/bundle'
+      state: 'absent'
+
+  tags:
+    - 'never'
+    - 'rocketchat:update'
+
+
+- block:
+
+  - name: 'Unpack the Rocket.Chat binary tarball'
+    ansible.builtin.unarchive:
+      copy: false
+      src: '{{ rocketchat__application_path }}/rocket.chat-{{ rocketchat__version }}.tgz'
+      dest: '{{ rocketchat__application_path }}'
+      owner: 'rocketchat'
+      group: 'rocketchat'
+
+  - name: 'npm install # install Rocket.Chat via NPM'
+    community.general.npm:
+      path: '{{ rocketchat__application_path }}/bundle/programs/server'
+      executable: '{{ rocketchat__npm_path }}'
+      production: true
+      state: 'present'
+    become: true
+    become_method: 'sudo'
+    become_user: 'rocketchat'
+    environment:
+      PATH: '{{ rocketchat__node_prefix }}/bin:{{ ansible_facts["env"]["PATH"] }}'
+
+  - name: 'Ensure the Rocket.Chat application data permissions are correct'
+    command: 'chown rocketchat:rocketchat -R {{ rocketchat__application_path | quote }}'
+    args:
+      warn: false # magnitudes faster than using the ansible.builtin.file module
+
+  tags:
+    - 'rocketchat'
+    - 'rocketchat:update'
+
+
+- block:
+  # https://rocket.chat/docs/installation/manual-installation/mongo-replicas/
+  - name: 'Ensure the MongoDB replSets have been initiated'
+    ansible.builtin.shell: "mongo --eval \"rs.initiate({ _id: '{{ rocketchat__mongodb_repl_set_name }}', members: [ { _id: 0, host: 'localhost:27017' } ]})\" && touch .mongo_rs_initialised"
+    become: true
+    become_user: 'mongod'
+    args:
+      executable: '/bin/bash'
+      chdir: '/var/lib/mongo'
+      creates: '/var/lib/mongo/.mongo_rs_initialised'
+    when:
+      - 'rocketchat__mongodb_repl_set_name is defined and rocketchat__mongodb_repl_set_name | length'
+      - 'rocketchat__mongodb_on_localhost'
+
+  - ansible.builtin.debug:
+      msg: 'Please manually initiate the MongoDB replica set "{{ rocketchat__mongodb_repl_set_name }}" on host "{{ rocketchat__mongodb_host }}". Documentation: https://rocket.chat/docs/installation/manual-installation/mongo-replicas/'
+    when:
+      - 'not rocketchat__mongodb_on_localhost'
+
+  tags:
+    - 'rocketchat'
+
+
+- block:
+
+  - name: 'Deploy the Rocket.Chat service file'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/rocketchat.service.j2'
+      dest: '/etc/systemd/system/rocketchat.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'rocketchat__template_systemd_service_result'
+    notify: 'rocketchat: systemctl restart rocketchat.service'
+
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: 'rocketchat__template_systemd_service_result is changed'
+
+  tags:
+    - 'rocketchat'
+    - 'rocketchat:update'
+
+
+- block:
+
+  - name: 'systemctl {{ rocketchat__service_enabled | bool | ternary("enable", "disable") }} rocketchat.service'
+    ansible.builtin.systemd:
+      name: 'rocketchat.service'
+      enabled: '{{ rocketchat__service_enabled }}'
+
+  - name: 'systemctl {{ rocketchat__service_state[:-2] }} rocketchat.service'
+    ansible.builtin.systemd:
+      name: 'rocketchat.service'
+      state: '{{ rocketchat__service_state }}'
+    register: 'rocketchat__service_state_result'
+
+  tags:
+    - 'rocketchat'
+    - 'rocketchat:state'
+    - 'rocketchat:update'
+
+
+- block:
+
+  - name: 'rm {{ rocketchat__application_path }}/rocket.chat-{{ rocketchat__version }}.tgz'
+    ansible.builtin.file:
+      path: '{{ rocketchat__application_path }}/rocket.chat-{{ rocketchat__version }}.tgz'
+      state: 'absent'
+
+  tags:
+    - 'rocketchat'
+    - 'rocketchat:update'

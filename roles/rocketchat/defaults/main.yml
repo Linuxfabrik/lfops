@@ -1,0 +1,12 @@
+rocketchat__application_path: '/opt/Rocket.Chat'
+
+rocketchat__mongodb_host: 'localhost'
+rocketchat__mongodb_on_localhost: true
+rocketchat__mongodb_port: 27017
+rocketchat__mongodb_repl_set_name: 'rs01'
+
+rocketchat__port: 3000
+rocketchat__service_enabled: true
+rocketchat__service_state: 'started'
+
+rocketchat__version: 'latest'

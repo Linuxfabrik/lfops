@@ -116,6 +116,7 @@ New features:
 * Role: repo_mongodb
 * Role: repo_mydumper
 * Role: repo_remi
+* Role: rocketchat
 * Role: sshd
 * Role: stig
 * Role: system_update
