@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2022083101
+
+[mongodb-org-{{ repo_mongodb__version }}]
+name=MongoDB Repository for Version {{ repo_mongodb__version }}
+{% if mirror_url is defined and mirror_url|length %}
+baseurl={{ mirror_url }}/mongodb/yum/redhat/7/mongodb-org/{{ repo_mongodb__version }}/x86_64/
+{% else %}
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/{{ repo_mongodb__version }}/x86_64/
+{% endif %}
+enabled=1
+gpgcheck=1
+gpgkey=https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc

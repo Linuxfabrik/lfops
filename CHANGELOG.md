@@ -110,6 +110,7 @@ New features:
 * Role: repo_icinga
 * Role: repo_influxdb
 * Role: repo_mariadb
+* Role: repo_mongodb
 * Role: repo_mydumper
 * Role: repo_remi
 * Role: sshd

@@ -1,0 +1,7 @@
+- name: 'Manage and configure the MongoDB repository'
+  hosts:
+    - 'lfops_repo_mongodb'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_mongodb'

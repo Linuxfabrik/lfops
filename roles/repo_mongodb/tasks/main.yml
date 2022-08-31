@@ -1,0 +1,13 @@
+- block:
+
+  # https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-red-hat/#install-mongodb-community-edition
+  - name: 'deploy the Docker CE repo (mirror: {{ repo_mongodb__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/mongodb-org.repo.j2'
+      dest: '/etc/yum.repos.d/mongodb-org.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'repo_mongodb'
