@@ -95,6 +95,7 @@ New features:
 * Role: mariadb_client
 * Role: mariadb_server
 * Role: mongodb
+* Role: motd
 * Role: network
 * Role: nextcloud
 * Role: nfs_server

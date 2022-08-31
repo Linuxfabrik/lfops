@@ -1,0 +1,4 @@
+- name: 'motd: systemctl restart sshd.service'
+  ansible.builtin.systemd:
+    name: 'sshd.service'
+    state: 'restarted'

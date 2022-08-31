@@ -77,7 +77,6 @@
 
 
     # === Various tools / dependencies ===
-
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var:
         - '{{ monitoring_plugins__python__modules__dependent_var | d([]) }}'
@@ -153,3 +152,10 @@
     # - role: 'linuxfabrik.lfops.icinga2-log-level' TODO
     #   when:
     #     - 'not setup_basic__skip_icinga2_log_level | d(false)'
+
+
+    # === Misc. ===
+    - role: 'linuxfabrik.lfops.motd'
+      when:
+        - 'not setup_basic__skip_motd | d(false)'
+
