@@ -7,6 +7,11 @@ Tested on
 * RHEL 8 (and compatible)
 
 
+## Mandatory Requirements
+
+* Enable the official [InfluxDB repository](https://docs.influxdata.com/influxdb/v1.8/introduction/install/?t=Red+Hat+%26amp%3B+CentOS). This can be done using the [linuxfabrik.lfops.repo_influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_influxdb) role.
+
+
 ## Tags
 
 | Tag                  | What it does                           |
