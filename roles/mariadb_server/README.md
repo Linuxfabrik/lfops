@@ -1,36 +1,3 @@
-TODO umbauen:
-
-mariadb_server__admin_user:  # replaces mariadb_server__admin_host
-  username: 'mariadb-admin'
-  password: 'password'
-  host:
-    - 'localhost'
-    - '127.0.0.1'
-    - '::1'
-  priv:
-    - '*.*:all,grant'
-  state: 'present'
-
-mariadb_server__dump_user:  # replaces mariadb_server__dump_login, mariadb_server__dump_user_host, mariadb_server__dump_user_priv, mariadb_server__dump_user_state
-  username: 'mariadb-dump'
-  password: 'password'
-  host:
-    - 'localhost'
-    - '127.0.0.1'
-    - '::1'
-  priv:
-    - '*.*:event,lock tables,reload,select,show view,super,trigger'
-  state: 'present'
-
-
-Plus TODO: Alle Rollen sollten einen Systemd Start/Stop/Enable/Disable gleich behandeln. Generell mit den Variablen role__enabled und role__state arbeiten. Es gibt Unterschiede in
-* Apache Tomcat <= bevorzugt für alle? Kurz testen
-* Apache httpd
-* MariaDB
-
---------------------
-
-
 # Ansible Role linuxfabrik.lfops.mariadb_server
 
 This role installs and configures a [MariaDB](https://mariadb.org/) server.
@@ -81,12 +48,12 @@ Tested on
 
 | Variable | Description |
 | -------- | ----------- |
-| `mariadb_server__admin_login` | The user account for the database administrator. Subkeys:<br>* `username`: Username<br>* `password`: Password<br>Also have a look at `mariadb_server__admin_host`. |
+| `mariadb_server__admin_user` | The main user account for the database administrator. To create additional ones, use the `mariadb_server__users__*` variables. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `host`: Optional, list. Defaults to `["localhost", "127.0.0.1", "::1"]`. Host-part(s). |
 
 Example:
 ```yaml
 # mandatory
-mariadb_server__admin_login:
+mariadb_server__admin_user:
   username: 'admin'
   password: 'my-secret-password'
 ```
@@ -97,47 +64,41 @@ mariadb_server__admin_login:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mariadb_server__admin_host` | Host-part(s) for creating the DBA user account after a fresh installation. | `['127.0.0.1', '::1', 'localhost']` |
-| `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | Dict of databases to create. The item keyname is used for the name of the database schema. Subkeys:<br>* `collation`: DB collation<br>* `encoding`: DB encoding<br>* `state`: `present` or `absent` | unset |
+| `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | Dict of databases to create. The item keyname is used for the name of the database schema. Subkeys:<br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` | unset |
 | `mariadb_server__logrotate` | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14` |
-| `mariadb_server__dump_login` | User to whom backup privileges are granted to. Subkeys:<br>* `username`: Username<br>* `password`: Password | unset |
-| `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, for example `'https://github.com/mydumper/mydumper/releases/download/v0.12.6-1/mydumper-0.12.6-1.el8.x86_64.rpm'`. | `'mydumper'` |
-mariadb_server__dump_user_host
-mariadb_server__dump_user_priv
-mariadb_server__dump_user_state
+| `mariadb_server__dump_user` | User to whom backup privileges are granted to. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `['*.*:event,lock tables,reload,select,show view,super,trigger']`. User privileges.<br> * `state`: `present` or `absent` | unset |
+| `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
 mariadb_server__enabled
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
 mariadb_server__state
 | `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of users to create. | `[]` |
 
-Example: TODO siehe librenms
+Example: TODO
 ```yaml
 # optional - role variables
-mariadb_server__admin_host:
-  - '127.0.0.1'
-  - '::1'
-  - 'localhost'
-mariadb_server__dump_login:
-  username: 'mariadb-dump'
-  password: 'password'
 mariadb_server__databases__host_var:
   'mydb':
     collation: 'utf8mb4_unicode_ci'
     encoding: 'utf8mb4'
     state: 'present'
-mariadb_server__dump_login:
-  username: 'mariadb-backup'
-  password: 'my-secret-password'
+mariadb_server__dump_user:
+  username: 'mariadb-dump'
+  password: 'password'
+  priv:
+    - '*.*:event,lock tables,reload,select,show view,super,trigger'
+  state: 'present'
+mariadb_server__dump_mydumper_package: 'https://github.com/mydumper/mydumper/releases/download/v0.12.6-1/mydumper-0.12.6-1.el8.x86_64.rpm'
 mariadb_server__logrotate: 14
 mariadb_server__skip_sys_schema: false
 mariadb_server__users__host_var:
-  - username: 'user1'
-    password: 'my-secret-password' # default omit
-    host: 'localhost' # default
-    priv: # default omit
+  user1@localhost:
+    username: 'user1'
+    password: 'my-secret-password'
+    host: 'localhost'
+    priv:
       - '{{ icingaweb2_db }}.*:SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
       - 'wiki.*:ALL'
-    state: 'present' # default
+    state: 'present'
 ```
 
 

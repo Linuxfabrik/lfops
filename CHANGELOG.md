@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role: mariadb_server
+* Renamed `mariadb_server__admin_login` to `mariadb_server__admin_user`
+* Moved `mariadb_server__admin_host` to `mariadb_server__admin_user["host"]`
+* Renamed `mariadb_server__dump_login` to `mariadb_server__dump_user`
+* Moved `mariadb_server__dump_user_*` to subkeys in `mariadb_server__dump_user`
+
 Playbook: basic_setup
 * Renamed to setup_basic to be consitent with the other setup playbooks
 

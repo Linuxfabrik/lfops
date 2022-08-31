@@ -3,19 +3,10 @@ mariadb_server__state: 'started'
 
 mariadb_server__skip_sys_schema: false
 
-mariadb_server__admin_host:
-  - '127.0.0.1'
-  - '::1'
-  - 'localhost'
-
 mariadb_server__dump_directory: '/backup/mariadb-dump'
 mariadb_server__dump_mydumper_package: 'mydumper'
 mariadb_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00' # every 15 minutes: *:0/15'
 mariadb_server__dump_threads: 4
-mariadb_server__dump_user_host: 'localhost'
-mariadb_server__dump_user_priv:
-  - '*.*:event,lock tables,reload,select,show view,super,trigger'
-mariadb_server__dump_user_state: 'present'
 
 mariadb_server__logrotate: 14
 

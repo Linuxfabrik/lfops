@@ -133,18 +133,18 @@
 
 - block:
 
-  - name: 'Create DBA "{{ mariadb_server__admin_login["username"] }}"'
+  - name: 'Create DBA "{{ mariadb_server__admin_user["username"] }}"'
     community.mysql.mysql_user:
       check_implicit_admin: true
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '/var/lib/mysql/mysql.sock' # required instead of localhost
-      name: '{{ mariadb_server__admin_login["username"] }}'
-      password: '{{ mariadb_server__admin_login["password"] }}'
+      name: '{{ mariadb_server__admin_user["username"] }}'
+      password: '{{ mariadb_server__admin_user["password"] }}'
       host: '{{ item }}'
       priv: '*.*:ALL,GRANT'
       state: 'present'
-    loop: '{{ mariadb_server__admin_host }}'
+    loop: '{{ mariadb_server__admin_user["host"] | d(["localhost", "127.0.0.1", "::1"]) }}'
 
   tags:
     - 'mariadb_server'
@@ -156,37 +156,37 @@
 
   - name: 'Remove all "root" users'
     community.mysql.mysql_user:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       name: 'root'
       host_all: true
       state: 'absent'
 
   - name: 'Secure installation: Remove anonymous users'
     community.mysql.mysql_user:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       name: ''
       host_all: true
       state: 'absent'
 
   - name: 'Secure installation: Remove test database'
     community.mysql.mysql_db:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       name: 'test'
       state: 'absent'
 
   - name: 'Secure installation: Remove test database (privileges)'
     community.mysql.mysql_query:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       query: 'delete from mysql.db where db="test" or db="test\\_%";'
 
   - name: 'Secure installation: Reload privilege tables'
     community.mysql.mysql_query:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       query: 'flush privileges;'
 
   tags:
@@ -218,15 +218,15 @@
       group: 'root'
       mode: 0o600
 
-  - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_login["username"] }}@{{ mariadb_server__dump_user_host }}'
+  - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_login["username"] }}@localhost'
     community.mysql.mysql_user:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       name: '{{ mariadb_server__dump_login["username"] }}'
-      host: '{{ mariadb_server__dump_user_host }}'
+      host: 'localhost'
       password: '{{ mariadb_server__dump_login["password"] }}'
-      priv: '{{ mariadb_server__dump_user_priv | join("/") }}'
-      state: '{{ mariadb_server__dump_user_state }}'
+      priv: '{{ mariadb_server__dump_user["priv"] | join("/") }}'
+      state: '{{ mariadb_server__dump_user["state"] }}'
 
   - name: 'Deploy /etc/systemd/system/mariadb-dump.service'
     ansible.builtin.template:
@@ -266,8 +266,8 @@
 
   - name: 'Create or delete mariadb databases'
     community.mysql.mysql_db:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       name: '{{ item["key"] }}'
       collation: '{{ item["value"]["collation"] | default("utf8_general_ci") }}'
       encoding: '{{ item["value"]["encoding"] | default("utf8") }}'
@@ -284,8 +284,8 @@
 
   - name: 'Create, update or delete MariaDB users'
     community.mysql.mysql_user:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       name: '{{ item["value"]["username"] }}'
       host: '{{ item["value"]["host"] | default("localhost") }}'
       password: '{{ item["value"]["password"] | default(omit) }}'
@@ -303,8 +303,8 @@
 
   - name: 'Show databases'
     community.mysql.mysql_info:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       filter:
         - 'databases'
       return_empty_dbs: false
@@ -335,10 +335,10 @@
       dest: '/tmp/mariadb-sys-schema'
       remote_src: true
 
-  - name: 'mysql --user "{{ mariadb_server__admin_login["username"] }}" --password="..." < ./sys_10.sql'
+  - name: 'mysql --user "{{ mariadb_server__admin_user["username"] }}" --password="..." < ./sys_10.sql'
     community.mysql.mysql_db:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       name: 'sys'
       state: 'import'
       target: './sys_10.sql'
