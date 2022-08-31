@@ -21,7 +21,7 @@ Tested on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `repo_elasticsearch__version` | The Elasticsearch repo version to install. One of `5.x`, `6.x`, `7.x` or `8.x`. [Have a look at the Elasticsearch repository for the list of available releases](https://www.elastic.co/downloads/past-releases#elasticsearch). | `'8.x'`
+| `repo_elasticsearch__version` | The Elasticsearch repo version to install. One of `5.x`, `6.x`, `7.x` or `8.x`. [Have a look at the Elasticsearch repository for the list of available releases](https://www.elastic.co/downloads/past-releases#elasticsearch). |
 
 Example:
 ```yaml
