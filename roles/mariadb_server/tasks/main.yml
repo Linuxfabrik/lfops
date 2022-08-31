@@ -214,6 +214,8 @@
     ansible.builtin.template:
       src: 'etc/mariadb-dump.conf.j2'
       dest: '/etc/mariadb-dump.conf'
+      owner: 'root'
+      group: 'root'
       mode: 0o600
 
   - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_login["username"] }}@{{ mariadb_server__dump_user_host }}'
