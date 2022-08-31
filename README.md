@@ -101,11 +101,11 @@ ansible-playbook --inventory path/to/environment linuxfabrik.lfops.setup_nextclo
 Combined lists and dictionaries (`rolename__combined_varname`) containing default values cannot be unset or overwritten, they can only be extended. If you need to overwrite to delete a pre-defined value, use `rolename__role_varname` or `rolename__combined_varname` and assign all needed values.
 
 
-## Tips and Tricks
+## Tips, Tricks & Troubleshooting
 
 ### ansible_become: true
 
-Don't use `become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars (not in `all.yml` - `localhost` must not be part of the group).
+Don't use `become: true` or `ansible_become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars ONLY (not in `all.yml` - `localhost` must not be part of the group. Otherwise you'll get errors like sudo: a password is required`).
 
 
 ### Re-use values which are defined in `rolename__group_varname` in `rolename__host_varname` without duplicating them
