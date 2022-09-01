@@ -266,13 +266,13 @@
 
   - name: 'Create or delete mariadb databases'
     community.mysql.mysql_db:
-      login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
-      name: '{{ item["key"] }}'
-      collation: '{{ item["value"]["collation"] | default("utf8_general_ci") }}'
-      encoding: '{{ item["value"]["encoding"] | default("utf8") }}'
-      state: '{{ item["value"]["state"] | default("present") }}'
-    loop: '{{ mariadb_server__databases__combined_var | dict2items }}'
+      login_user: '{{ mariadb_server__admin_login["username"] }}'
+      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      name: '{{ item["name"] }}'
+      collation: '{{ item["collation"] | default("utf8_general_ci") }}'
+      encoding: '{{ item["encoding"] | default("utf8") }}'
+      state: '{{ item["state"] | default("present") }}'
+    loop: '{{ mariadb_server__databases__combined_var }}'
 
   tags:
     - 'mariadb_server'
@@ -284,14 +284,14 @@
 
   - name: 'Create, update or delete MariaDB users'
     community.mysql.mysql_user:
-      login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
-      name: '{{ item["value"]["username"] }}'
-      host: '{{ item["value"]["host"] | default("localhost") }}'
-      password: '{{ item["value"]["password"] | default(omit) }}'
-      priv: '{{ (item["value"]["priv"] | join("/")) | default(omit) }}'
-      state: '{{ item["value"]["state"] | default("present") }}'
-    loop: '{{ mariadb_server__users__combined_var | dict2items }}'
+      login_user: '{{ mariadb_server__admin_login["username"] }}'
+      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      name: '{{ item["username"] }}'
+      host: '{{ item["host"] | default("localhost") }}'
+      password: '{{ item["password"] | default(omit) }}'
+      priv: '{{ (item["priv"] | join("/")) | default(omit) }}'
+      state: '{{ item["state"] | default("present") }}'
+    loop: '{{ mariadb_server__users__combined_var }}'
 
   tags:
     - 'mariadb_server'

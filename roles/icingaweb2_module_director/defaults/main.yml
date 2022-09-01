@@ -25,14 +25,13 @@ icingaweb2_module_director__icingaweb2_module_director__resources__dependent_var
     charset: 'utf8mb4'
 
 icingaweb2_module_director__mariadb_server__databases__dependent_var:
-  '{{ icingaweb2_module_director__database_name }}':
+  - name: '{{ icingaweb2_module_director__database_name }}'
     collation: 'utf8_general_ci'
     encoding: 'utf8'
     state: 'present'
 
 icingaweb2_module_director__mariadb_server__users__dependent_var:
-  '{{ icingaweb2_module_director__database_login.username }}@{{ icingaweb2_module_director__database_host }}':
-    username: '{{ icingaweb2_module_director__database_login.username }}'
+  - username: '{{ icingaweb2_module_director__database_login.username }}'
     password: '{{ icingaweb2_module_director__database_login.password }}'
     host: '{{ icingaweb2_module_director__database_host }}'
     priv:
