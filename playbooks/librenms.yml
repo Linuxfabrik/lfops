@@ -55,7 +55,7 @@
       php__modules__dependent_var:
         - '{{ librenms__php__modules__dependent_var | default([]) }}'
       php__fpm_pools__dependent_var:
-        - '{{ librenms__php__fpm_pools__dependent_var | default({}) }}'
+        - '{{ librenms__php__fpm_pools__dependent_var | default([]) }}'
       when:
         - 'not librenms__skip_php | default(false)'
 

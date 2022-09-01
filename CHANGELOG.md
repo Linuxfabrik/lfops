@@ -16,7 +16,6 @@ Role: mariadb_server
 * Moved `mariadb_server__dump_user_*` to subkeys in `mariadb_server__dump_user`
 
 Role php:
-* Changed `php__modules*` and `php__pools*` from lists to dictionaries.
 * Made more variables injectable, therefore the variables have a new name.
 
 Playbook: basic_setup

@@ -36,25 +36,23 @@ Tested on
 | -------- | ----------- | ------------- |
 | `php__fpm_service_enabled` | Enables or disables the php-fpm service, analogous to `systemctl enable/disable --now`. | `true` |
 | `php__fpm_pools__host_var` /<br> `php__fpm_pools__group_var` | List of PHP-FPM pools. Subkeys:<br> * `name`: Required, string. The name of the pool. Will also be used as the filename and for logfiles.<br> * `state`: Required, boolean. State of the pool. Possible options: `absent`, `present`.<br> * `user`: Optional, string. Defaults to `apache`. The Unix user running the pool processes.<br> * `group`: Optional, string. Defaults to `apache`. The Unix group running the pool processes.<br> * `raw`: Optional, string: Raw content which will be added to the end of the pool config.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `{}` |
-| `php__modules__host_var` /<br> `php__modules__group_var` | List of additional PHP modules that should be installed via the standard package manager.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | * `php-opcache` |
+| `php__modules__host_var` /<br> `php__modules__group_var` | List of additional PHP modules that should be installed via the standard package manager. Subkeys:<br> * `name`: Required, string. Name of the module package.<br> * `state`: State of the module package. Possible options: `absent`, `present`.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | * `php-opcache` |
 
 Example:
 ```yaml
 # optional
 php__fpm_service_enabled: true
-php__fpm_pools__host_var: {}
-  librenms:
+php__fpm_pools__host_var:
+  - name: 'librenms'
     user: 'librenms'
     group: 'librenms'
     raw: |-
       env[PATH] = /usr/local/bin:/usr/bin:/bin
-php__fpm_pools__group_var: {}
+php__fpm_pools__group_var: []
 php__modules__host_var:
-  php-opcache:
-    state: 'absent' # overwrite the default
-  php-mysqlnd:
+  - name: 'php-mysqlnd'
     state: 'present'
-php__modules__group_var: {}
+php__modules__group_var: []
 ```
 
 

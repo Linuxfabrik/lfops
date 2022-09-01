@@ -95,17 +95,17 @@ icingaweb2__icinga2_master__api_users__dependent_var:
       - 'status/query'
 
 icingaweb2__php__modules__dependent_var:
-  php-curl:
+  - name: 'php-curl'
     state: 'present'
-  php-intl:
+  - name: 'php-intl'
     state: 'present'
-  php-mbstring:
+  - name: 'php-mbstring'
     state: 'present'
-  php-pecl-imagick:
+  - name: 'php-pecl-imagick'
     state: 'present'
-  php-process:
+  - name: 'php-process'
     state: 'present'
-  php-xml:
+  - name: 'php-xml'
     state: 'present'
 
 icingaweb2__mariadb_server__databases__dependent_var:

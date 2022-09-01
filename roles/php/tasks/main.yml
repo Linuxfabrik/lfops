@@ -28,25 +28,20 @@
     ansible.builtin.debug:
       var: 'php__modules__combined_var'
 
-  - name: 'Install additional php modules'
+  - name: 'Ensure additional php modules are present'
     ansible.builtin.package:
-      name: "{{ php__modules__combined_var }}"
+      name: '{{ item["name"] }}'
       state: 'present'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ php__modules__combined_var | dict2items }}'
 
   - name: 'Ensure additional php modules are absent'
     ansible.builtin.package:
-      name: '{{ item["key"] }}'
+      name: '{{ item["name"] }}'
       state: 'absent'
     when:
-      - 'item["value"]["state"] | d("present") == "absent"'
-    loop: '{{ php__modules__combined_var | dict2items }}'
-
-  - name: 'Ensure additional php modules are present'
-    ansible.builtin.package:
-      name: '{{ item["key"] }}'
-      state: 'present'
-    when:
-      - 'item["value"]["state"] | d("present") != "absent"'
+      - 'item["state"] | d("present") == "absent"'
     loop: '{{ php__modules__combined_var | dict2items }}'
 
   - name: 'Deploy the /etc/php.d/z00-linuxfabrik.ini'
@@ -79,22 +74,22 @@
 
   - name: 'Remove absent pools from /etc/php-fpm.d'
     ansible.builtin.file:
-      path: '/etc/php-fpm.d/{{ item["key"] }}.conf'
+      path: '/etc/php-fpm.d/{{ item["name"] }}.conf'
       state: 'absent'
     when:
-      - 'item["value"]["state"] | d("present") == "absent"'
+      - 'item["state"] | d("present") == "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
   - name: 'Deploy the pools to /etc/php-fpm.d/'
     ansible.builtin.template:
       src: 'etc/php-fpm.d/pool.conf.j2'
-      dest: '/etc/php-fpm.d/{{ item["key"] }}.conf'
+      dest: '/etc/php-fpm.d/{{ item["name"] }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
     when:
-      - 'item["value"]["state"] | d("present") != "absent"'
+      - 'item["state"] | d("present") != "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 

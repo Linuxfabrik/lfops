@@ -73,7 +73,7 @@ librenms__mariadb_server__users__dependent_var:
 
 
 librenms__php__fpm_pools__dependent_var:
-  librenms:
+  - name: 'librenms'
     by_role: 'librenms'
     user: 'librenms'
     group: 'librenms'
@@ -81,23 +81,23 @@ librenms__php__fpm_pools__dependent_var:
       env[PATH] = /usr/local/bin:/usr/bin:/bin
 
 librenms__php__modules__dependent_var:
-  php-curl:
+  - name: 'php-curl'
     state: 'present'
-  php-gd:
+  - name: 'php-gd'
     state: 'present'
-  php-json:
+  - name: 'php-json'
     state: 'present'
-  php-ldap:
+  - name: 'php-ldap'
     state: 'present'
-  php-mbstring:
+  - name: 'php-mbstring'
     state: 'present'
-  php-mysqlnd:
+  - name: 'php-mysqlnd'
     state: 'present'
-  php-process:
+  - name: 'php-process'
     state: 'present'
-  php-snmp:
+  - name: 'php-snmp'
     state: 'present'
-  php-xml:
+  - name: 'php-xml'
     state: 'present'
-  php-zip:
+  - name: 'php-zip'
     state: 'present'

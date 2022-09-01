@@ -129,39 +129,39 @@ nextcloud__kernel_settings__sysctl__dependent_var:
 nextcloud__kernel_settings__transparent_hugepages__dependent_var: 'madvise'
 
 nextcloud__php__modules__dependent_var:
-  php-bcmath:
+  - name: 'php-bcmath'
     state: 'present'
-  php-gd:
+  - name: 'php-gd'
     state: 'present'
-  php-gmp:
+  - name: 'php-gmp'
     state: 'present'
-  php-imap:
+  - name: 'php-imap'
     state: 'present'
-  php-imagick:
+  - name: 'php-imagick'
     state: 'present'
-  php-intl:
+  - name: 'php-intl'
     state: 'present'
-  php-json:
+  - name: 'php-json'
     state: 'present'
-  php-ldap:
+  - name: 'php-ldap'
     state: 'present'
-  php-mbstring:
+  - name: 'php-mbstring'
     state: 'present'
-  php-memcached:
+  - name: 'php-memcached'
     state: 'present'
-  php-mysqlnd:
+  - name: 'php-mysqlnd'
     state: 'present'
-  php-opcache:
+  - name: 'php-opcache'
     state: 'present'
-  php-pecl-apcu:
+  - name: 'php-pecl-apcu'
     state: 'present'
-  php-process: # posix module for occ
+  - name: 'php-process' # posix module for oc
     state: 'present'
-  php-redis:
+  - name: 'php-redis'
     state: 'present'
-  php-smbclient:
+  - name: 'php-smbclient'
     state: 'present'
-  php-zip:
+  - name: 'php-zip'
     state: 'present'
 
 nextcloud__php__ini_max_execution_time: 3600
