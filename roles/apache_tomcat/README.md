@@ -46,11 +46,11 @@ apache_tomcat__version: '10.0.23'
 | `apache_tomcat__install_dir`| The directory in which the Tomcat instances will be installed as subfolders. | `'/opt'` |
 | `apache_tomcat__instances`| A dictionary of todo | `todo` |
 | `apache_tomcat__logrotate_rotate`| The number of days the logfiles should be kept by logrotate. | `14` |
-| `apache_tomcat__roles__group_var`| todo | `{}` |
+| `apache_tomcat__roles__group_var`| todo | `[]` |
 | `apache_tomcat__server_xml_use_remote_ip_valve`| todo | `false` |
 | `apache_tomcat__service_enabled`| Enables or disables all Tomcat services, analogous to `systemctl enable/disable`. | `true` |
 | `apache_tomcat__service_state`| Changes the state of all Tomcat services, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
-| `apache_tomcat__users__group_var`| todo | `{}` |
+| `apache_tomcat__users__group_var`| todo | `[]` |
 
 Example:
 ```yaml
@@ -82,18 +82,16 @@ apache_tomcat__instances:
           <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.CsrfPreventionFilter\$LruCache(?:\$1)?|java\.util\.(?:Linked)?HashMap"/>
 
 apache_tomcat__logrotate_rotate: 14
-apache_tomcat__roles__group_var: {}
+apache_tomcat__roles__group_var: []
 apache_tomcat__roles__host_var:
-  admin-gui:
-    state: 'absent' # overwrite the default
-  my-role:
+  - name: 'my-role'
     state: 'present'
 apache_tomcat__server_xml_use_remote_ip_valve: false
 apache_tomcat__service_enabled: true
 apache_tomcat__service_state: 'started'
-apache_tomcat__users__group_var: {}
+apache_tomcat__users__group_var: []
 apache_tomcat__users__host_var:
-  admin:
+  - username: 'admin'
     password: 'password'
     roles:
       - 'admin-gui'

@@ -24,30 +24,32 @@ apache_tomcat__instances:
     #       <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.CsrfPreventionFilter\$LruCache(?:\$1)?|java\.util\.(?:Linked)?HashMap"/>
 #
 apache_tomcat__logrotate_rotate: 14
-apache_tomcat__roles__dependent_var: {}
-apache_tomcat__roles__group_var: {}
-apache_tomcat__roles__host_var: {}
+apache_tomcat__roles__dependent_var: []
+apache_tomcat__roles__group_var: []
+apache_tomcat__roles__host_var: []
 apache_tomcat__roles__role_var:
-  admin-gui:
+  - name: 'admin-gui'
     state: 'present'
-  manager-gui:
+  - name: 'manager-gui'
     state: 'present'
-apache_tomcat__roles__combined_var: '{{ apache_tomcat__roles__role_var
-    | combine(apache_tomcat__roles__dependent_var)
-    | combine(apache_tomcat__roles__group_var)
-    | combine(apache_tomcat__roles__host_var)
+apache_tomcat__roles__combined_var: '{{
+    apache_tomcat__roles__role_var +
+    apache_tomcat__roles__dependent_var +
+    apache_tomcat__roles__group_var +
+    apache_tomcat__roles__host_var
   }}'
 
 apache_tomcat__server_xml_use_remote_ip_valve: false
 apache_tomcat__service_enabled: true
 apache_tomcat__service_state: 'started'
 
-apache_tomcat__users__dependent_var: {}
-apache_tomcat__users__group_var: {}
-apache_tomcat__users__host_var: {}
-apache_tomcat__users__role_var: {}
-apache_tomcat__users__combined_var: '{{ apache_tomcat__users__role_var
-    | combine(apache_tomcat__users__dependent_var)
-    | combine(apache_tomcat__users__group_var)
-    | combine(apache_tomcat__users__host_var)
+apache_tomcat__users__dependent_var: []
+apache_tomcat__users__group_var: []
+apache_tomcat__users__host_var: []
+apache_tomcat__users__role_var: []
+apache_tomcat__users__combined_var: '{{
+    apache_tomcat__users__role_var +
+    apache_tomcat__users__dependent_var +
+    apache_tomcat__users__group_var +
+    apache_tomcat__users__host_var
   }}'

@@ -44,11 +44,11 @@
   <user username="both" password="<must-be-changed>" roles="tomcat,role1"/>
   <user username="role1" password="<must-be-changed>" roles="role1"/>
 -->
-{% for role in apache_tomcat__roles__combined_var.keys() %}
-<role rolename="{{ role }}"/>
+{% for role in apache_tomcat__roles__combined_var %}
+<role rolename="{{ role['name'] }}"/>
 {% endfor %}
 
-{% for username, value in apache_tomcat__users__combined_var.items() %}
-<user username="{{ username }}" password="{{ value['password'] }}" roles="{{ value['roles'] | join(',') }}"/>
+{% for user in apache_tomcat__users__combined_var.items() %}
+<user username="{{ user['username'] }}" password="{{ user['password'] }}" roles="{{ user['roles'] | join(',') }}"/>
 {% endfor %}
 </tomcat-users>
