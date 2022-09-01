@@ -8,12 +8,12 @@ This role installs and maintains
 * a CIS-compliant Apache
 * The global Apache config  (``httpd.conf``)
 * Apache Modules  (``mods-available``, ``mods-enabled``)
-* Apache configuration snippets (``conf-available``, ``conf-enabled``)
+* Apache configuration (``conf-available``, ``conf-enabled``)
 * Apache vHosts (``sites-available``, ``sites-enabled``)
 
 Tested on RHEL 8+ and compatible.
 
-This role configures Apache in the same way as is usual on Debian systems, so quite different to upstream's suggested way to configure the web server. This is because this role attempts to make adding and removing modules, virtual hosts, and extra configuration directives as flexible as possible, in order to make automating the changes and administering the server as easy as possible.
+This role configures Apache in the same way as is usual on Debian systems, so quite different to upstream's suggested way to configure the web server. This is because this role attempts to make adding and removing mods, virtual hosts, and extra configuration directives as flexible as possible, in order to make automating the changes and administering the server as easy as possible.
 
 The config is split into several files forming the configuration hierarchy outlined below, all located in the ``/etc/httpd/`` directory:
 
@@ -30,7 +30,7 @@ The config is split into several files forming the configuration hierarchy outli
 
 We try to avoid using ``<IfModule>`` in the global Apache configuration as well as in the configuration of the vhosts as much as possible in order to facilitate debugging. Otherwise, when using ``<IfModule>``, configuration options are silently dropped, and their absence is very difficult to notice.
 
-For flexibility, use the ``raw`` variable to configure the following topics (have a look at the "Apache vHost Config Snippets" section for some examples):
+For flexibility, use the ``raw`` variable to configure the following topics (have a look at the "Apache vHost Configs" section for some examples):
 
 * SSL/TLS Certificates.
 * Quality of Service (``mod_qos`` directives).
@@ -55,7 +55,7 @@ Requirements
 Mandatory:
 
 * On RHEL-compatible systems, enable the EPEL repository (e.g. use the ``lf-linuxfabrik.lfops.repo_epel`` role) since this role installs ``mod_qos`` from it.
-* The ``conf_server_name`` variable for each vHost definition.
+* The ``conf_server_name`` variable for each vHost definition. -> just best practise, we would never use a vhost without a ServerName
 
 Optional:
 
@@ -73,15 +73,14 @@ Tags
     | create/remove sites-available configuration
     | enable/disable apache virtual hosts
     | create documentroot for all vhosts"
-    apache-httpd:global,                "Create or update global Apache configuration"
     apache-httpd:mods,                  "
     | create/remove mods-available config
-    | enable/disable modules"
-    apache-httpd:snippets,              "
-    | create/remove conf-available snippets
-    | enable/disable configuration snippets"
-    apache-httpd:crs,                   "Download, verify and install OWASP ModSecurity Core Rule Set (CRS)"
-    apache-httpd:modules,               "Ensure base and additional packages are in their desired state"
+    | enable/disable mods"
+    apache-httpd:config,              "
+    | create/remove conf-available
+    | enable/disable configuration"
+    apache-httpd:mod_security,                   "Download, verify and install OWASP ModSecurity Core Rule Set (CRS)"
+    apache-httpd:mods,               "Ensure base and additional packages are in their desired state"
     apache-httpd:state,                 "Ensure that the httpd service is in the desired state"
 
 
@@ -97,34 +96,6 @@ Role Variables - Overview
 Role Variables - Global Behaviour
 ---------------------------------
 
-apache_httpd__deploy_state
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-What is the desired state which this role should achieve? Possible options:
-
-* ``present``: Ensure that Apache is installed and configured as requested.
-* ``absent``: Ensure that Apache is uninstalled and it's configuration is removed.
-
-Default:
-
-.. code-block:: yaml
-
-    apache_httpd__deploy_state: 'present'
-
-
-apache_httpd__server_type
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-What is the primary use case of this server?
-
-* ``app``: Application Server, for example with PHP.
-* ``reverse-proxy``: Reverse Proxy Server.
-
-Default:
-
-.. code-block:: yaml
-
-    apache_httpd__server_type: 'app'
 
 
 apache_httpd__skip_php
@@ -215,58 +186,46 @@ This variable is used in the role internally. It contains the default set of pac
 Role Variables - Apache Module Configuration
 --------------------------------------------
 
-Which Apache modules need to be configured.
+Which Apache mods need to be configured.
 
 
-apache_httpd__modules__dependent_var
+apache_httpd__mods__dependent_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable allows other Ansible roles to pass configuration to the ``lf-apache-httpd`` role.
 
 
-apache_httpd__modules__group_var
+apache_httpd__mods__group_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in a host inventory group of Ansible (can only be used in one host group at a time).
 
 
-apache_httpd__modules__host_var
+apache_httpd__mods__host_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in the inventory of hosts as needed.
 
 
-apache_httpd__app_modules__role_var
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This variable is used in the role internally. It contains the default set of modules that should be installed for an application server.
-
-
-apache_httpd__modules__role_var
+apache_httpd__mods__role_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This variable is used in the role internally. It contains the default set of modules that should be installed for any type of server.
+This variable is used in the role internally. It contains the default set of mods that should be installed for any type of server.
 
-
-apache_httpd__proxy_modules__role_var
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Modules for a Reverse Proxy server.
-
-This variable is used in the role internally. It contains the default set of modules that should be installed for a reverse proxy server.
 
 
 Role Variables - Apache "conf-available"
 ----------------------------------------
 
-apache_httpd__snippets__dependent_var
+apache_httpd__conf__dependent_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable allows other Ansible roles to pass configuration to the ``lf-apache-httpd`` role.
 
-type:
+template:
 
-* ``conf``
+* name of an existing template
 * ``raw``
 
 Default:
@@ -276,19 +235,19 @@ Default:
     Have a look at defaults/main.yml
 
 
-apache_httpd__snippets__group_var
+apache_httpd__conf__group_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in a host inventory group of Ansible (can only be used in one host group at a time).
 
 
-apache_httpd__snippets__host_var
+apache_httpd__conf__host_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is intended to be used in the inventory of hosts as needed.
 
 
-apache_httpd__snippets__role_var
+apache_httpd__conf__role_var
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This variable is used in the role internally.
@@ -313,7 +272,7 @@ Default:
     apache_httpd__conf_add_default_charset: 'UTF-8'
 
 
-apache_httpd__coreruleset_url
+apache_httpd__mod_security_coreruleset_url
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers.
@@ -322,10 +281,10 @@ Default:
 
 .. code-block:: yaml
 
-    apache_httpd__coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
+    apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
 
 
-apache_httpd__coreruleset_version
+apache_httpd__mod_security_coreruleset_version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The OWASP ModSecurity Core Rule Set (CRS) version number without "v".
@@ -334,10 +293,10 @@ Default:
 
 .. code-block:: yaml
 
-    apache_httpd__coreruleset_version: '3.3.2'
+    apache_httpd__mod_security_coreruleset_version: '3.3.2'
 
 
-apache_httpd__coreruleset_checksum
+apache_httpd__mod_security_coreruleset_checksum
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The OWASP ModSecurity Core Rule Set (CRS) SHA1 checksum according to your version.
@@ -346,7 +305,7 @@ Default:
 
 .. code-block:: yaml
 
-    apache_httpd__coreruleset_checksum: 'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'
+    apache_httpd__mod_security_coreruleset_checksum: 'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'
 
 
 apache_httpd__conf_custom_log
@@ -436,7 +395,7 @@ Default:
 apache_httpd__conf_limit_request_body
 ~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestbody
 
@@ -454,7 +413,7 @@ Default:
 apache_httpd__conf_limit_request_fields
 ~~~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestfields
 
@@ -472,7 +431,7 @@ Default:
 apache_httpd__conf_limit_request_field_size
 ~~~~~~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestfieldsize
 
@@ -490,7 +449,7 @@ Default:
 apache_httpd__conf_limit_request_line
 ~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestline
 
@@ -583,12 +542,8 @@ apache_httpd__conf_server_admin
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 https://httpd.apache.org/docs/2.4/mod/core.html#serveradmin
+TODO mandatory
 
-Default:
-
-.. code-block:: yaml
-
-    apache_httpd__conf_server_admin: 'webmaster@linuxfabrik.ch'
 
 
 conf_server_name
@@ -649,9 +604,9 @@ The following variables are subkeys of one of the above variables.
 allowed_file_extensions
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost
+vHost templates: app, localhost
 
-The above mentioned vHost types block ALL file extensions by default (including ``.gitignore``, ``.svn``, ``.htaccess``, ``.hg``, ``.bzr`` etc.), unless specifically allowed. Use ``find {{ apache_httpd__conf_document_root }} -type f -name '*.*' | awk -F. '{print $NF }' | sort --unique`` to compile a list of the file extensions that are currently present.
+The above mentioned vHost templates block ALL file extensions by default (including ``.gitignore``, ``.svn``, ``.htaccess``, ``.hg``, ``.bzr`` etc.), unless specifically allowed. Use ``find {{ apache_httpd__conf_document_root }} -type f -name '*.*' | awk -F. '{print $NF }' | sort --unique`` to compile a list of the file extensions that are currently present.
 
 Hint: The config ensures that filenames starting with a dot (".") are never matched.
 
@@ -677,7 +632,7 @@ Default:
 allowed_http_methods
 ~~~~~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 Should be used to disable unwanted `HTTP methods <https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods>`_. Only the explicity listed ones are allowed. Returns a `405 - Method Not Allowed <https://en.wikipedia.org/wiki/List_of_HTTP_status_codes>`_ if a forbidden HTTP method is used.
 
@@ -720,7 +675,7 @@ Default:
 AllowOverride
 ~~~~~~~~~~~~~
 
-vHost types: app, localhost
+vHost templates: app, localhost
 
 https://httpd.apache.org/docs/2.4/mod/core.html#allowoverride
 
@@ -775,22 +730,10 @@ apache_httpd__vhosts__role_var
 This variable is used in the role internally.
 
 
-apache_httpd__vhost_type
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-The default template type to use for virtual hosts.
-
-Default:
-
-.. code-block:: yaml
-
-    apache_httpd__vhost_type: 'app'
-
-
 authz_document_root
 ~~~~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost
+vHost templates: app, localhost
 
 Authorization statement for the ``DocumentRoot {{ apache_httpd__conf_document_root }}/{{ item.conf_server_name }}`` directive.
 
@@ -815,7 +758,7 @@ Example:
 authz_file_extensions
 ~~~~~~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost
+vHost templates: app, localhost
 
 Authorization statement for the https://httpd.apache.org/docs/2.4/mod/core.html#filesmatch directive which is based on ``allowed_file_extensions``.
 
@@ -840,7 +783,7 @@ Example:
 by_role
 ~~~~~~~
 
-vHost types: app, localhost, proxy, redirect, raw
+vHost templates: app, localhost, proxy, redirect, raw
 
 If defined it results in a comment ``# Generated by Ansible role: {{ item.by_role }}`` at the beginning of a vHost definition.
 
@@ -848,7 +791,7 @@ If defined it results in a comment ``# Generated by Ansible role: {{ item.by_rol
 comment
 ~~~~~~~
 
-vHost types: app, localhost, proxy, raw
+vHost templates: app, localhost, proxy, raw
 
 Describes the vHost and results in a comment right above the ``<VirtualHost>`` section.
 
@@ -868,7 +811,7 @@ Example:
 conf_custom_log
 ~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog
 
@@ -898,7 +841,7 @@ Example:
 DirectoryIndex
 ~~~~~~~~~~~~~~
 
-vHost types: app
+vHost templates: app
 
 https://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex
 
@@ -924,7 +867,7 @@ Default:
 conf_error_log
 ~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/core.html#errorlog
 
@@ -962,7 +905,7 @@ Example:
 conf_keep_alive_timeout
 ~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/core.html#keepalivetimeout
 
@@ -978,7 +921,7 @@ Default:
 conf_log_level
 ~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/core.html#loglevel
 
@@ -992,7 +935,7 @@ Default:
 Options
 ~~~~~~~
 
-vHost types: app, localhost
+vHost templates: app, localhost
 
 https://httpd.apache.org/docs/2.4/mod/core.html#options
 
@@ -1008,7 +951,7 @@ Default:
 php_set_handler
 ~~~~~~~~~~~~~~~
 
-vHost types: app, localhost
+vHost templates: app, localhost
 
 Set the handler for PHP
 
@@ -1027,7 +970,7 @@ ProxyErrorOverride
 
 https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride
 
-vHost types: proxy
+vHost templates: proxy
 
 If you want to have a common look and feel on the error pages seen by the end user, set this to "On" and define them on the reverse proxy server.
 
@@ -1041,7 +984,7 @@ Default:
 ProxyPreserveHost
 ~~~~~~~~~~~~~~~~~~
 
-vHost types: proxy
+vHost templates: proxy
 
 https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxypreservehost
 
@@ -1057,7 +1000,7 @@ Default:
 ProxyTimeout
 ~~~~~~~~~~~~
 
-vHost types: proxy
+vHost templates: proxy
 
 https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxytimeout
 
@@ -1071,7 +1014,7 @@ Default:
 raw
 ~~~
 
-vHost types: app, localhost, proxy, raw
+vHost templates: app, localhost, proxy, raw
 
 It is sometimes desirable to pass variable content that Jinja would handle as variables or blocks. Jinja's ``{% raw %}`` statement does not work in Ansible. The best and safest solution is to declare ``raw`` variables as ``!unsafe``, to prevent templating errors and information disclosure.
 
@@ -1086,7 +1029,7 @@ For example to pass ``{%Y-...``, use ``raw`` like this:
 conf_request_read_timeout
 ~~~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html#requestreadtimeout
 
@@ -1105,7 +1048,7 @@ Default:
 conf_server_admin
 ~~~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/core.html#serveradmin
 
@@ -1119,7 +1062,7 @@ Default:
 conf_server_alias
 ~~~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/core.html#serveralias
 
@@ -1129,7 +1072,7 @@ Set this only if you need more than one ``conf_server_name``.
 conf_server_name
 ~~~~~~~~~~
 
-vHost types: app, localhost, proxy
+vHost templates: app, localhost, proxy
 
 https://httpd.apache.org/docs/2.4/mod/core.html#servername
 
@@ -1155,15 +1098,13 @@ Default:
     state: 'present'
 
 
-type
+template
 ~~~~
 
-Define the vHost type to deploy (have a look at the templates for details). One of:
+Define the vHost template to deploy. One of:
 
 * | ``app``
   | A hardened vHost running an application like Nextcloud, Wordpress etc. with the most common options. Can be extended by using the ``raw`` variable.
-* | ``dont-touch``
-  |  Needed if you just want to enable/disable an existing vHost using Ansible, but the vHost definition file should not be touched at all.
 * | ``localhost``
   | A hardened, pre-defined VirtualHost just listening on https://localhost, and only accessible from localhost. Due to its naming, it is the first defined vHost. Useful for Apache status info etc. Can be extended by using the ``raw`` variable. The following URLs are pre-configured, accessible just from localhost: ``/fpm-ping``, ``/fpm-status``, ``/monitoring.php``, ``/server-info``, ``/server-status``.
 * | ``proxy``
@@ -1171,7 +1112,7 @@ Define the vHost type to deploy (have a look at the templates for details). One 
 * | ``redirect``
   | A vHost that redirects from one port (default "80") to another (default "443"). Custom redirect rules can be provided using the ``raw`` variable.
 * | ``raw``
-  | If none of the above vHost types fit, use the ``raw`` one and define everything except ``<VirtualHost>`` and ``</VirtualHost>`` completely from scratch.
+  | If none of the above vHost templates fit, use the ``raw`` one and define everything except ``<VirtualHost>`` and ``</VirtualHost>`` completely from scratch.
 
 "Hardened" means among other things:
 
@@ -1184,7 +1125,7 @@ Define the vHost type to deploy (have a look at the templates for details). One 
 virtualhost_ip
 ~~~~~~~~~~~~~~
 
-vHost types: app, localhost, proxy, raw, redirect
+vHost templates: app, localhost, proxy, raw, redirect
 
 Used within the ``<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>`` directive.
 
@@ -1198,7 +1139,7 @@ Default:
 virtualhost_port
 ~~~~~~~~~~~~~~~~
 
-vHost types: app, localhost, proxy, raw, redirect
+vHost templates: app, localhost, proxy, raw, redirect
 
 Used within the ``<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>`` directive.
 
@@ -1209,8 +1150,8 @@ Default:
     virtualhost_port: 443
 
 
-Apache vHost Config Snippets
-----------------------------
+Apache vHost Configs
+--------------------
 
 Config options at your free disposal for the ``raw`` variable (which is inserted just before the closing ``VirtualHost`` directive). Unsorted.
 
@@ -1221,7 +1162,7 @@ Usage:
     raw: !unsafe |-
       # my config here...
 
-A list of best practise Apache Config-Snippets. Use them as a starting point.
+A list of best practise Apache Configs. Use them as a starting point.
 
 
 Redirect from port 80 to port 443
@@ -1770,10 +1711,10 @@ A minimal playbook for "MyApp" could be:
       roles:
 
         - role: 'lf-apache-httpd'
-          apache_httpd__modules__dependent_var:
-            - '{{ myapp__apache_httpd__modules__dependent_var|d({}) }}'
-          apache_httpd__snippets__dependent_var:
-            - '{{ myapp__apache_httpd__snippets__dependent_var|d({}) }}'
+          apache_httpd__mods__dependent_var:
+            - '{{ myapp__apache_httpd__mods__dependent_var|d({}) }}'
+          apache_httpd__conf__dependent_var:
+            - '{{ myapp__apache_httpd__conf__dependent_var|d({}) }}'
           apache_httpd__vhosts__dependent_var:
             - '{{ myapp__apache_httpd__vhosts__dependent_var|d({}) }}'
 
@@ -1790,7 +1731,7 @@ A nearly complete "app" vHost definition which is injected into the Apache role 
         enabled: true
         filename: 'myapp.example.com'
         state: 'present'
-        type: 'app'
+        template: 'app'
 
         allowed_file_extensions:
           - 'css'
@@ -1856,7 +1797,7 @@ A simple redirect vHost:
         enabled: True
         filename: '000-localhost'
         state: 'present'
-        type: 'redirect'
+        template: 'redirect'
         virtualhost_ip: '*'
         virtualhost_port: 80
         conf_server_name: 'localhost'
@@ -1872,7 +1813,7 @@ A more sophisticated redirect vHost:
         enabled: True
         filename: '000-localhost'
         state: 'present'
-        type: 'redirect'
+        template: 'redirect'
         virtualhost_ip: '*'
         virtualhost_port: 80
         conf_server_name: 'localhost'
@@ -1885,13 +1826,12 @@ For example, to configure a reverse proxy, set the following in the ``host_vars`
 
 .. code-block:: yaml
 
-    apache_httpd__server_type: 'reverse-proxy'
     apache_httpd__vhosts__host_var:
 
       - enabled: true
         filename: 'hello.example.com'
         state: 'present'
-        type: 'proxy'
+        template: 'proxy'
 
         DirectoryIndex: 'index.php'
         conf_server_name: 'hello.example.com'
@@ -1926,3 +1866,46 @@ Author Information
 ------------------
 
 `Linuxfabrik GmbH, Zurich <https://www.linuxfabrik.ch>`_
+
+
+
+# use cases
+
+apache_httpd__app_mods__role_var:
+  'cgi':
+    enabled: true
+    state: 'present'
+
+  'cgid':
+    enabled: true
+    state: 'present'
+
+  'proxy_fcgi':
+    enabled: true
+    state: 'present'
+
+
+apache_httpd__proxy_mods__role_var:
+  'deflate':
+    enabled: true
+    state: 'present'
+
+  'filter':
+    enabled: true
+    state: 'present'
+
+  'maxminddb':
+    enabled: false
+    state: 'present'
+
+  'proxy_http':
+    enabled: true
+    state: 'present'
+
+  'proxy_wstunnel':
+    enabled: true
+    state: 'present'
+
+  'security2':
+    enabled: true
+    state: 'present'

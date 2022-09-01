@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022062101
+# 2022082901
 
 # This is the main Apache server configuration file. It contains the
 # configuration directives that give the server its instructions.
@@ -50,7 +50,7 @@ LimitRequestFieldSize {{ apache_httpd__conf_limit_request_field_size | d(8190) }
 LimitRequestLine {{ apache_httpd__conf_limit_request_line | d(512) }}
 LogLevel {{ apache_httpd__conf_log_level | d('warn') }}
 MaxKeepAliveRequests {{ apache_httpd__conf_max_keep_alive_requests | d(100) }}
-ServerAdmin {{ apache_httpd__conf_server_admin | d('root@linuxfabrik.ch') }}
+ServerAdmin {{ apache_httpd__conf_server_admin }}
 {% if apache_httpd__conf_server_name | d('') %}
 ServerName {{ apache_httpd__conf_server_name }}
 {% endif %}
@@ -119,8 +119,5 @@ BrowserMatchNoCase (wiederfreibot) is_a_bot
 BrowserMatchNoCase (yacybot|Yandex) is_a_bot
 
 
-# Include generic snippets of statements
 IncludeOptional conf-enabled/*.conf
-
-# Include the virtual host configurations
 IncludeOptional sites-enabled/*.conf

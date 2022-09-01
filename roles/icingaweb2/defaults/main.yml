@@ -103,13 +103,14 @@ icingaweb2__php__modules__dependent_var:
   - 'php-xml'
 
 icingaweb2__mariadb_server__databases__dependent_var:
-  - name: '{{ icingaweb2__database_name }}'
+  '{{ icingaweb2__database_name }}':
     collation: 'utf8_general_ci'
     encoding: 'utf8'
     state: 'present'
 
 icingaweb2__mariadb_server__users__dependent_var:
-  - username: '{{ icingaweb2__database_login.username }}'
+  '{{ icingaweb2__database_login.username }}@{{ icingaweb2__database_host }}':
+    username: '{{ icingaweb2__database_login.username }}'
     password: '{{ icingaweb2__database_login.password }}'
     host: '{{ icingaweb2__database_host }}'
     priv:

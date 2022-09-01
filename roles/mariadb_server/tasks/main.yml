@@ -19,16 +19,39 @@
 
 - block:
 
-  - name: 'dnf -y install mariadb-server mysqltuner libzstd'
+  - name: 'dnf -y install mariadb-server libzstd'
     ansible.builtin.package:
       name:
         - 'mariadb-server'
-        - 'mysqltuner'
         - 'libzstd'
       state: 'present'
 
   tags:
     - 'mariadb_server'
+
+
+- block:
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get mariadb-server version'
+    ansible.builtin.set_fact:
+      mariadb_server__installed_version: '{{ (ansible_facts["packages"]["MariaDB-server"][0]["version"] | d(ansible_facts["packages"]["mariadb-server"][0]["version"])) | regex_replace("\.\d+$", "") }}' # strip the patch version
+
+  - name: 'Load default values for {{ mariadb_server__installed_version }}'
+    ansible.builtin.include_vars: 'defaults/{{ mariadb_server__installed_version }}.yml'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:configure'
+    - 'mariadb_server:database'
+    - 'mariadb_server:dump'
+    - 'mariadb_server:secure_installation'
+    - 'mariadb_server:state'
+    - 'mariadb_server:sys_schema'
+    - 'mariadb_server:user'
 
 
 - block:
@@ -51,7 +74,7 @@
 
   - name: 'Deploy /etc/my.cnf.d/z00-linuxfabrik.cnf'
     ansible.builtin.template:
-      src: 'etc/my.cnf.d/{{ mariadb_server__version }}-z00-linuxfabrik.cnf.j2'
+      src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
       dest: '/etc/my.cnf.d/z00-linuxfabrik.cnf'
       owner: 'root'
       group: 'root'
@@ -92,15 +115,15 @@
 
 - block:
 
-  - name: 'systemctl enable mariadb = {{ mariadb_server__enabled }}'
+  - name: 'systemctl {{ mariadb_server__enabled | bool | ternary("enable", "disable") }} mariadb.service'
     ansible.builtin.service:
       name: 'mariadb.service'
-      enabled: "{{ mariadb_server__enabled }}"
+      enabled: '{{ mariadb_server__enabled }}'
 
-  - name: 'systemctl start mariadb = {{ mariadb_server__state }}'
+  - name: 'systemctl {{ mariadb_server__state[:-2] }} mariadb.service'
     ansible.builtin.service:
       name: 'mariadb.service'
-      state: "{{ mariadb_server__state }}"
+      state: '{{ mariadb_server__state }}'
 
   tags:
     - 'mariadb_server'
@@ -108,32 +131,63 @@
     - 'mariadb_server:state'
 
 
+- block:
+
+  - name: 'Create DBA "{{ mariadb_server__admin_user["username"] }}"'
+    community.mysql.mysql_user:
+      check_implicit_admin: true
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '/var/lib/mysql/mysql.sock' # required instead of localhost
+      name: '{{ mariadb_server__admin_user["username"] }}'
+      password: '{{ mariadb_server__admin_user["password"] }}'
+      host: '{{ item }}'
+      priv: '*.*:ALL,GRANT'
+      state: 'present'
+    loop: '{{ mariadb_server__admin_user["host"] | d(["localhost", "127.0.0.1", "::1"]) }}'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:user'
+
+
 # mysql_secure_installation
 - block:
 
-  - name: 'Create new DBA "{{ mariadb_server__admin_login.username }}" after a fresh installation'
-    ansible.builtin.shell: |-
-      mysql --unbuffered --execute 'create user if not exists "{{ mariadb_server__admin_login.username }}"@"{{ item }}" identified by "{{ mariadb_server__admin_login.password }}";'
-      mysql --unbuffered --execute 'grant all privileges on *.* to "{{ mariadb_server__admin_login.username }}"@"{{ item }}" with grant option;'
-      mysql --unbuffered --execute 'flush privileges;'
-    loop: '{{ mariadb_server__admin_host }}'
-    register: 'mariadb_server__admin_login_result'
-    changed_when: 'mariadb_server__admin_login_result.stderr is not match("ERROR \d+ \(28000\).*")'
-    failed_when: 'mariadb_server__admin_login_result.rc != 0 and mariadb_server__admin_login_result.stderr is not match("ERROR \d+ \(28000\).*")'
+  - name: 'Remove all "root" users'
+    community.mysql.mysql_user:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      name: 'root'
+      host_all: true
+      state: 'absent'
 
-  - name: 'Secure installation the same way mysql_secure_installation does'
-    ansible.builtin.command: "mysql --unbuffered --execute '{{ item }}'"
-    loop:
-      - 'delete from mysql.global_priv where user="";'
-      - 'drop database if exists test;'
-      - 'delete from mysql.db where db="test" or db="test\\_%";'
-      - 'flush privileges;'
-      - 'drop user if exists "root"@"::1"'
-      - 'drop user if exists "root"@"localhost"'
-      - 'drop user if exists "root"@"localhost"'
-    register: 'mariadb_server__secure_installation_result'
-    changed_when: 'mariadb_server__secure_installation_result.stderr is not match("ERROR \d+ \(28000\).*")'
-    failed_when: 'mariadb_server__secure_installation_result.rc != 0 and mariadb_server__secure_installation_result.stderr is not match("ERROR \d+ \(28000\).*")'
+  - name: 'Secure installation: Remove anonymous users'
+    community.mysql.mysql_user:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      name: ''
+      host_all: true
+      state: 'absent'
+
+  - name: 'Secure installation: Remove test database'
+    community.mysql.mysql_db:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      name: 'test'
+      state: 'absent'
+
+  - name: 'Secure installation: Remove test database (privileges)'
+    community.mysql.mysql_query:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      query: 'delete from mysql.db where db="test" or db="test\\_%";'
+
+  - name: 'Secure installation: Reload privilege tables'
+    community.mysql.mysql_query:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      query: 'flush privileges;'
 
   tags:
     - 'mariadb_server'
@@ -160,19 +214,19 @@
     ansible.builtin.template:
       src: 'etc/mariadb-dump.conf.j2'
       dest: '/etc/mariadb-dump.conf'
+      owner: 'root'
+      group: 'root'
       mode: 0o600
 
-  - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_login.username }}@{{ mariadb_server__dump_user_host }}'
-    linuxfabrik.lfops.mariadb_user:
-      login_user: "{{ mariadb_server__admin_login.username }}"
-      login_password: "{{ mariadb_server__admin_login.password }}"
-      user: "{{ mariadb_server__dump_login.username }}"
-      host: "{{ mariadb_server__dump_user_host }}"
-      password: "{{ mariadb_server__dump_login.password }}"
-      priv: "{{ mariadb_server__dump_user_priv }}"
-      state: "{{ mariadb_server__dump_user_state }}"
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
+  - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_login["username"] }}@localhost'
+    community.mysql.mysql_user:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      name: '{{ mariadb_server__dump_login["username"] }}'
+      host: 'localhost'
+      password: '{{ mariadb_server__dump_login["password"] }}'
+      priv: '{{ mariadb_server__dump_user["priv"] | join("/") }}'
+      state: '{{ mariadb_server__dump_user["state"] }}'
 
   - name: 'Deploy /etc/systemd/system/mariadb-dump.service'
     ansible.builtin.template:
@@ -207,44 +261,18 @@
     - 'mariadb_server:dump'
 
 
-# configure monitoring (mariadb-monitoring user)
-- block:
-
-  - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__monitoring_login.username }}@{{ mariadb_server__monitoring_user_host }}'
-    linuxfabrik.lfops.mariadb_user:
-      login_user: "{{ mariadb_server__admin_login.username }}"
-      login_password: "{{ mariadb_server__admin_login.password }}"
-      user: "{{ mariadb_server__monitoring_login.username }}"
-      host: "{{ mariadb_server__monitoring_user_host }}"
-      password: "{{ mariadb_server__monitoring_login.password }}"
-      priv: "{{ mariadb_server__monitoring_user_priv }}"
-      state: "{{ mariadb_server__monitoring_user_state }}"
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
-
-  when:
-    - 'mariadb_server__monitoring_login is defined'
-    - 'mariadb_server__monitoring_login | length'
-  tags:
-    - 'mariadb_server'
-    - 'mariadb_server:user'
-    - 'mariadb_server:configure'
-
-
 # database management
 - block:
 
   - name: 'Create or delete mariadb databases'
     community.mysql.mysql_db:
-      login_user: "{{ mariadb_server__admin_login.username }}"
-      login_password: "{{ mariadb_server__admin_login.password }}"
-      name: "{{ item.name }}"
-      collation: "{{ item.collation | default('utf8_general_ci') }}"
-      encoding: "{{ item.encoding | default('utf8') }}"
-      state: "{{ item.state | default('present') }}"
-    loop: "{{ mariadb_server__databases__combined_var }}"
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      name: '{{ item["key"] }}'
+      collation: '{{ item["value"]["collation"] | default("utf8_general_ci") }}'
+      encoding: '{{ item["value"]["encoding"] | default("utf8") }}'
+      state: '{{ item["value"]["state"] | default("present") }}'
+    loop: '{{ mariadb_server__databases__combined_var | dict2items }}'
 
   tags:
     - 'mariadb_server'
@@ -255,18 +283,15 @@
 - block:
 
   - name: 'Create, update or delete MariaDB users'
-    linuxfabrik.lfops.mariadb_user:
-      login_user: "{{ mariadb_server__admin_login.username }}"
-      login_password: "{{ mariadb_server__admin_login.password }}"
-      user: "{{ item.username }}"
-      host: "{{ item.host | default('localhost') }}"
-      password: "{{ item.password | default(omit) }}"
-      priv: "{{ item.priv | default(omit) }}"
-      state: "{{ item.state | default('present') }}"
-    loop: '{{ mariadb_server__users__combined_var }}'
-    no_log: true
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
+    community.mysql.mysql_user:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      name: '{{ item["value"]["username"] }}'
+      host: '{{ item["value"]["host"] | default("localhost") }}'
+      password: '{{ item["value"]["password"] | default(omit) }}'
+      priv: '{{ (item["value"]["priv"] | join("/")) | default(omit) }}'
+      state: '{{ item["value"]["state"] | default("present") }}'
+    loop: '{{ mariadb_server__users__combined_var | dict2items }}'
 
   tags:
     - 'mariadb_server'
@@ -276,50 +301,59 @@
 # sys schema
 - block:
 
-  - name: 'Create directories for mariadb_sys_schema'
-    ansible.builtin.file:
-      path: '/tmp/mariadb_sys_schema/{{ item.path }}'
-      state: 'directory'
-      mode: '{{ item.mode }}'
-    loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
-    when: 'item.state == "directory"'
-    changed_when: false # no actual change to the application
+  - name: 'Show databases'
+    community.mysql.mysql_info:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      filter:
+        - 'databases'
+      return_empty_dbs: false
+    register: 'mariadb_server__info'
 
-  - name: 'Deploy collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage'
-    ansible.builtin.template:
-      src: '{{ item.src }}'
-      # we copied all files 1:1 from https://github.com/FromDual/mariadb-sys and did not change
-      # the file extension to .j2 (we did not even change the content of the files); however, for
-      # future-proofing purposes, we would like to treat all files as Jinja templates, and if they
-      # ever have a .j2 extension, remove it.
-      dest: '/tmp/mariadb_sys_schema/{{ item.path | trim(".j2") }}'
-      mode: '{{ item.mode }}'
-    loop: '{{ query("filetree", "templates/tmp/mariadb_sys_schema") }}'
-    when: 'item.state == "file"'
-    changed_when: false # no actual change to the application
-
-  - name: 'Delete any existing "sys" schema'
-    community.mysql.mysql_db:
-      login_user: "{{ mariadb_server__admin_login.username }}"
-      login_password: "{{ mariadb_server__admin_login.password }}"
-      name: 'sys'
-      state: 'absent'
-
-  - name: 'mysql --user "{{ mariadb_server__admin_login.username }}" --password="..." < ./sys_10.sql'
-    # do NOT do: --password "{{ mariadb_server__admin_login.password }}" - this way mysql expects the input from STDIN and treats the password as a database name
-    ansible.builtin.shell: 'mysql --user "{{ mariadb_server__admin_login.username }}" --password="{{ mariadb_server__admin_login.password }}" < ./sys_10.sql'
-    args:
-      chdir: '/tmp/mariadb_sys_schema'
-    changed_when: false
-
-  - name: 'rm -rf /tmp/mariadb_sys_schema'
-    ansible.builtin.file:
-      path: '/tmp/mariadb_sys_schema'
-      state: 'absent'
-    changed_when: false # no actual change to the application
-
+  when:
+    - 'not mariadb_server__skip_sys_schema'
   tags:
-    - 'never'
+    - 'mariadb_server'
+    - 'mariadb_server:sys_schema'
+
+
+- block:
+
+  - name: 'wget https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz'
+      dest: '/tmp/mariadb-sys-schema.tar.gz'
+
+  - name: 'mkdir /tmp/mariadb-sys-schema'
+    ansible.builtin.file:
+      path: '/tmp/mariadb-sys-schema'
+      state: 'directory'
+
+  - name: 'tar xzvf /tmp/mariadb-sys-schema.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/mariadb-sys-schema.tar.gz'
+      dest: '/tmp/mariadb-sys-schema'
+      remote_src: true
+
+  - name: 'mysql --user "{{ mariadb_server__admin_user["username"] }}" --password="..." < ./sys_10.sql'
+    community.mysql.mysql_db:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      name: 'sys'
+      state: 'import'
+      target: './sys_10.sql'
+      chdir: '/tmp/mariadb-sys-schema/mariadb-sys-master/'
+
+  - name: 'rm -rf /tmp/mariadb-sys-schema'
+    ansible.builtin.file:
+      path: '/tmp/mariadb-sys-schema'
+      state: 'absent'
+
+  when:
+    - 'not mariadb_server__skip_sys_schema'
+    - 'not "sys" in mariadb_server__info["databases"]'
+  tags:
+    - 'mariadb_server'
     - 'mariadb_server:sys_schema'
 
 
