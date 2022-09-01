@@ -19,7 +19,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2022090101'
+__version__ = '2022090102'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -234,7 +234,7 @@ def do_backup(config):
     # instead of just listing them.
 
     # iterate over backup dirs and spawn processes
-    for path, src in config.get('backup_sources', []):
+    for path, src in config.get('backup_sources', {}).items():
         filelist = []
         if src.get('divide', False):
             # divide the source dir:
