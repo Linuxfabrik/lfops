@@ -1,9 +1,11 @@
-selinux__booleans__dependent_var: {}
-selinux__booleans__group_var: {}
-selinux__booleans__host_var: {}
-selinux__booleans__combined_var: '{{ selinux__booleans__role_var
-    | combine(selinux__booleans__dependent_var)
-    | combine(selinux__booleans__group_var)
-    | combine(selinux__booleans__host_var)
-  }}'
 selinux__state: 'enforcing'
+
+selinux__booleans__dependent_var: []
+selinux__booleans__group_var: []
+selinux__booleans__host_var: []
+selinux__booleans__combined_var: '{{
+  selinux__booleans__group_var +
+  selinux__booleans__host_var +
+  selinux__booleans__dependent_var
+  | flatten
+ }}'
