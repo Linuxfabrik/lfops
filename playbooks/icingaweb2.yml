@@ -25,7 +25,7 @@
 
     - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__databases__dependent_var:
-        - '{{ icingaweb2__mariadb_server__databases__dependent_var | default({}) }}'
+        - '{{ icingaweb2__mariadb_server__databases__dependent_var | default([]) }}'
       mariadb_server__users__dependent_var:
         - '{{ icingaweb2__mariadb_server__users__dependent_var | default({}) }}'
       when:
