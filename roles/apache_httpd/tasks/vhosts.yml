@@ -4,57 +4,57 @@
   ansible.builtin.debug:
     var: 'apache_httpd__vhosts__combined_var'
 
-- name: 'Remove sites-available vHosts'
-  ansible.builtin.file:
-    path: '{{ apache_httpd__config_path }}/sites-available/{{ item["value"]["filename"] | d(item["value"]["conf_server_name"] ~ "." ~ (item["value"]["virtualhost_port"] | d(443))) }}.conf'
-    state: 'absent'
-  when:
-    - 'item["value"]["state"] | d("present") == "absent"'
-  loop: '{{ apache_httpd__vhosts__combined_var | dict2items }}'
-
 - name: 'Create sites-available vHosts'
   ansible.builtin.template:
-    src: 'etc/httpd/sites-available/{{ item["value"]["template"] }}.conf.j2'
-    dest: '{{ apache_httpd__config_path }}/sites-available/{{ item["value"]["filename"] | d(item["value"]["conf_server_name"] ~ "." ~ (item["value"]["virtualhost_port"] | d(443))) }}.conf'
+    src: 'etc/httpd/sites-available/{{ item["template"] }}.conf.j2'
+    dest: '{{ apache_httpd__config_path }}/sites-available/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
     owner: 'root'
     group: 'root'
     mode: 0o644
   when:
-    - 'item["value"]["state"] | d("present") != "absent"'
+    - 'item["state"] | d("present") != "absent"'
   loop: '{{ apache_httpd__vhosts__combined_var | dict2items }}'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+- name: 'Remove sites-available vHosts'
+  ansible.builtin.file:
+    path: '{{ apache_httpd__config_path }}/sites-available/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
+    state: 'absent'
+  when:
+    - 'item["state"] | d("present") == "absent"'
+  loop: '{{ apache_httpd__vhosts__combined_var | dict2items }}'
 
 - name: 'Create DocumentRoot for all vHosts'
   ansible.builtin.file:
-    path: '{{ item["value"]["conf_document_root"] | d(apache_httpd__conf_document_root ~ "/" ~ item["value"]["conf_server_name"]) }}'
+    path: '{{ item["conf_document_root"] | d(apache_httpd__conf_document_root ~ "/" ~ item["conf_server_name"]) }}'
     state: 'directory'
     # do not set permissions, we might need special ones such as sticky bits
   when:
-    - 'item["value"]["template"] in ["app", "localhost"]'
-    - 'item["value"]["state"] | d("present") != "absent"'
+    - 'item["template"] in ["app", "localhost"]'
+    - 'item["state"] | d("present") != "absent"'
   loop: '{{ apache_httpd__vhosts__combined_var | dict2items }}'
-
-- name: 'Disable vHosts'
-  ansible.builtin.file:
-    path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item["value"]["filename"] | d(item["value"]["conf_server_name"] ~ "." ~ (item["value"]["virtualhost_port"] | d(443))) }}.conf'
-    mode: 0o644
-    state: 'absent'
-  loop: '{{ apache_httpd__vhosts__combined_var | dict2items }}'
-  when: 'not item["value"]["enabled"] | d(true)
-        or item["value"]["state"] | d("present") == "absent"'
-  notify:
-    - 'apache_httpd: httpd -t; systemctl reload httpd'
 
 - name: 'Enable vHosts'
   ansible.builtin.file:
-    src: '../sites-available/{{ item["value"]["filename"] | d(item["value"]["conf_server_name"] ~ "." ~ (item["value"]["virtualhost_port"] | d(443))) }}.conf'
-    path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item["value"]["filename"] | d(item["value"]["conf_server_name"] ~ "." ~ (item["value"]["virtualhost_port"] | d(443))) }}.conf'
+    src: '../sites-available/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
+    path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
     mode: 0o644
     state: 'link'
   loop: '{{ apache_httpd__vhosts__combined_var | dict2items }}'
   when:
-    - 'item["value"]["enabled"] | d(true)'
-    - 'item["value"]["state"] | d("present") != "absent"'
+    - 'item["enabled"] | d(true)'
+    - 'item["state"] | d("present") != "absent"'
+  notify:
+    - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+- name: 'Disable vHosts'
+  ansible.builtin.file:
+    path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
+    mode: 0o644
+    state: 'absent'
+  loop: '{{ apache_httpd__vhosts__combined_var | dict2items }}'
+  when: 'not item["enabled"] | d(true)
+        or item["state"] | d("present") == "absent"'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'

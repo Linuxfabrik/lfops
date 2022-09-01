@@ -4,47 +4,47 @@
   ansible.builtin.debug:
     var: 'apache_httpd__mods__combined_var'
 
-- name: 'Remove mods-available configs'
-  ansible.builtin.file:
-    path: '{{ apache_httpd__config_path + "/mods-available/" + item["key"] + ".conf" }}'
-    state: 'absent'
-  when:
-    - 'item["value"]["state"] | d("present") == "absent"'
-  loop: '{{ apache_httpd__mods__combined_var | dict2items }}'
-
 - name: 'Create mods-available configs'
   ansible.builtin.template:
-    src: 'etc/httpd/mods-available/{{ item["value"]["template"]}}.conf.j2'
-    dest: '{{ apache_httpd__config_path + "/mods-available/" + item["key"] + ".conf" }}'
+    src: 'etc/httpd/mods-available/{{ item["template"]}}.conf.j2'
+    dest: '{{ apache_httpd__config_path + "/mods-available/" + item["filename"] + ".conf" }}'
     owner: 'root'
     group: 'root'
     mode: 0o644
   when:
-    - 'item["value"]["state"] | d("present") != "absent"'
+    - 'item["state"] | d("present") != "absent"'
   loop: '{{ apache_httpd__mods__combined_var | dict2items }}'
+  notify:
+    - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+- name: 'Remove mods-available configs'
+  ansible.builtin.file:
+    path: '{{ apache_httpd__config_path + "/mods-available/" + item["filename"] + ".conf" }}'
+    state: 'absent'
+  when:
+    - 'item["state"] | d("present") == "absent"'
+  loop: '{{ apache_httpd__mods__combined_var | dict2items }}'
+
+- name: 'Enable mods'
+  ansible.builtin.file:
+    src: '../mods-available/{{ item["filename"] }}.conf'
+    path: '{{ apache_httpd__config_path + "/mods-enabled/" + item["filename"] + ".conf" }}'
+    mode: 0o644
+    state: 'link'
+  loop: '{{ apache_httpd__mods__combined_var | dict2items }}'
+  when:
+    - 'item["enabled"] | d(true)'
+    - 'item["state"] | d("present") != "absent"'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
 
 - name: 'Disable mods'
   ansible.builtin.file:
-    path: '{{ apache_httpd__config_path + "/mods-enabled/" + item["key"] + ".conf" }}'
+    path: '{{ apache_httpd__config_path + "/mods-enabled/" + item["filename"] + ".conf" }}'
     mode: 0o644
     state: 'absent'
   loop: '{{ apache_httpd__mods__combined_var | dict2items }}'
-  when: 'not item["value"]["enabled"] | d(true)
-        or item["value"]["state"] | d("present") == "absent"'
-  notify:
-    - 'apache_httpd: httpd -t; systemctl reload httpd'
-
-- name: 'Enable mods'
-  ansible.builtin.file:
-    src: '../mods-available/{{ item["key"] }}.conf'
-    path: '{{ apache_httpd__config_path + "/mods-enabled/" + item["key"] + ".conf" }}'
-    mode: 0o644
-    state: 'link'
-  loop: '{{ apache_httpd__mods__combined_var | dict2items }}'
-  when:
-    - 'item["value"]["enabled"] | d(true)'
-    - 'item["value"]["state"] | d("present") != "absent"'
+  when: 'not item["enabled"] | d(true)
+        or item["state"] | d("present") == "absent"'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'

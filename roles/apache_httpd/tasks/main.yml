@@ -27,20 +27,20 @@
     ansible.builtin.debug:
       var: 'apache_httpd__packages__combined_var'
 
-  - name: 'Ensure additional Apache packages/modules are absent'
-    ansible.builtin.package:
-      name: '{{ item["key"] }}'
-      state: 'absent'
-    when:
-      - 'item["value"]["state"] | d("present") == "absent"'
-    loop: '{{ apache_httpd__packages__combined_var | dict2items }}'
-
   - name: 'Ensure additional Apache packages/modules are present'
     ansible.builtin.package:
-      name: '{{ item["key"] }}'
+      name: '{{ item["name"] }}'
       state: 'present'
     when:
-      - 'item["value"]["state"] | d("present") != "absent"'
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ apache_httpd__packages__combined_var | dict2items }}'
+
+  - name: 'Ensure additional Apache packages/modules are absent'
+    ansible.builtin.package:
+      name: '{{ item["name"] }}'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("present") == "absent"'
     loop: '{{ apache_httpd__packages__combined_var | dict2items }}'
 
   - name: 'mkdir -p {{ apache_httpd__config_path}}/{conf,mods,sites}-{available,enabled}'
