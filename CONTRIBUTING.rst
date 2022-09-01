@@ -450,11 +450,12 @@ Your role might accept variable injection from another role. It depends on the c
 
 .. code-block:: yaml
 
-    # for dictionaries
-    apache_httpd__mods__combined_var: '{{ apache_httpd__mods__role_var
-        | combine(apache_httpd__mods__dependent_var)
-        | combine(apache_httpd__mods__group_var)
-        | combine(apache_httpd__mods__host_var)
+    # for lists
+    apache_httpd__vhosts__combined_var: '{{
+        apache_httpd__vhosts__role_var +
+        apache_httpd__vhosts__dependent_var +
+        apache_httpd__vhosts__group_var +
+        apache_httpd__vhosts__host_var
       }}'
 
     # this is for simple values like strings or numbers:
@@ -471,7 +472,7 @@ Your role might accept variable injection from another role. It depends on the c
 
 Why? Let's assume an Ansible playbook with two roles. Role1 (tag1) sets a default value. Role2 (tag2) wants to override the default value. Ansible is not able to do this: Neither with tag-based ``ansible-playbook`` calls nor with a full playbook run, Role2 is able to override the default value of Role1. This is the reason for implementing injections.
 
-Do not use lists of any kind, since you cannot overwrite earlier values, for example the value defined in the ``__role_var`` (for details have a look at https://docs.linuxfabrik.ch/software/ansible.html).
+Do not use dictionaries, even though they allow overwriting of earlier elemens, since one cannot template the keyname using Jinja2. This would prevent passing on of variables, especially in `__dependent_var`` (for details have a look at https://docs.linuxfabrik.ch/software/ansible.html).
 
 Note that single value ``__combined_var`` are always returned as strings. Convert them to integers when using maths.
 
