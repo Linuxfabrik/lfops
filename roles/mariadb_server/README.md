@@ -1,35 +1,3 @@
-<<<<<<< HEAD
-=======
-TODO umbauen:
-
-mariadb_server__admin_user:  # replaces mariadb_server__admin_host
-  username: 'mariadb-admin'
-  password: 'password'
-  host:
-    - 'localhost'
-    - '127.0.0.1'
-    - '::1'
-  priv:
-    - '*.*:all,grant'
-  state: 'present'
-
-mariadb_server__dump_user:  # replaces mariadb_server__dump_login, mariadb_server__dump_user_host, mariadb_server__dump_user_priv, mariadb_server__dump_user_state
-  username: 'mariadb-dump'
-  password: 'password'
-  host:
-    - 'localhost'
-    - '127.0.0.1'
-    - '::1'
-  priv:
-    - '*.*:event,lock tables,reload,select,show view,super,trigger'
-  state: 'present'
-
-
-
---------------------
-
-
->>>>>>> ea1ccbc (role:mariadb_server: Update README)
 # Ansible Role linuxfabrik.lfops.mariadb_server
 
 This role installs and configures a [MariaDB](https://mariadb.org/) server.
@@ -138,10 +106,21 @@ mariadb_server__users__host_var:
   user1@localhost:
     username: 'user1'
     password: 'my-secret-password'
-    host: 'localhost'
+    host:
+      - 'localhost'
     priv:
       - '{{ icingaweb2_db }}.*:SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
       - 'wiki.*:ALL'
+    state: 'present'
+  mariadb-dump@localhost:
+    username: 'mariadb-dump'
+    password: 'password'
+    host:
+      - 'localhost'
+      - '127.0.0.1'
+      - '::1'
+    priv:
+      - '*.*:event,lock tables,reload,select,show view,super,trigger'
     state: 'present'
 ```
 
