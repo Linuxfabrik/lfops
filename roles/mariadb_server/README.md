@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.mariadb_server
 
-This role installs and configures a [MariaDB](https://mariadb.org/) server.
+This role installs and configures a [MariaDB](https://mariadb.org/) server. It also sets the Kernel `vm.swapiness` setting to `10`.
 
 Note that this role does NOT let you specify a particular MariaDB server version. It simply installs the latest available MariaDB server version from the repos configured in the system. If you want or need to install a specific MariaDB server version, use the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) beforehand.
 
