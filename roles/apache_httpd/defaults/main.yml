@@ -1,5 +1,4 @@
 apache_httpd__skip_php_fpm: false
-
 apache_httpd__systemd_enabled: true
 apache_httpd__systemd_state: 'started'
 
@@ -25,13 +24,6 @@ apache_httpd__packages__combined_var: '{{ apache_httpd__packages__role_var
     | combine(apache_httpd__packages__group_var)
     | combine(apache_httpd__packages__host_var)
   }}'
-
-# for mod_security - normally nothing that you have to change
-# get details from https://coreruleset.org/installation/
-# origin: https://github.com/coreruleset/coreruleset/archive/v3.3.2.tar.gz
-apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '3.3.2'
-apache_httpd__mod_security_coreruleset_checksum: 'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'
 
 
 # Apache Module Configuration
@@ -364,7 +356,7 @@ apache_httpd__conf__combined_var: '{{ apache_httpd__conf__role_var
   }}'
 
 
-# Apache Global Config
+# Apache Module Config
 # --------------------
 
 # core
@@ -376,11 +368,9 @@ apache_httpd__conf_hostname_lookups: 'Off'
 apache_httpd__conf_keep_alive: 'On'
 apache_httpd__conf_keep_alive_timeout: 5
 apache_httpd__conf_limit_request_body: 102400
-apache_httpd__conf_limit_request_fields: 100
 apache_httpd__conf_limit_request_field_size: 8190 # deviating from CIS value (1024), as this is a problem with any modern application which sets cookies in its Header
+apache_httpd__conf_limit_request_fields: 100
 apache_httpd__conf_limit_request_line: 8190 # deviating from CIS value (512)
-apache_httpd__conf_listen:
-  - 80
 apache_httpd__conf_log_level: 'warn'
 apache_httpd__conf_max_keep_alive_requests: 500
 apache_httpd__conf_server_name: 'localhost'
@@ -388,36 +378,47 @@ apache_httpd__conf_timeout: 10
 apache_httpd__conf_trace_enable: 'Off'
 
 # mod_dir
-apache_httpd__conf_directory_index: 'index.html index.htm index.txt'
+apache_httpd__mod_dir_directory_index: 'index.html index.htm index.txt'
 
 # mod_log_config
-apache_httpd__conf_custom_log: 'logs/access.log combined'
+apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 
+# mod_common_listen
+apache_httpd__mpm_common_listen:
+  - 80
 
-# Apache Module Config
-# --------------------
+# mod_mpm_event
+apache_httpd__mpm_event_max_connections_per_child: 0
+apache_httpd__mpm_event_max_request_workers: 400
+apache_httpd__mpm_event_max_spare_threads: 250
+apache_httpd__mpm_event_min_spare_threads: 75
+apache_httpd__mpm_event_start_servers: 3
+apache_httpd__mpm_event_thread_limit: 64
+apache_httpd__mpm_event_threads_per_child: 25
 
-apache_httpd__conf_mpm_event_max_connections_per_child: 0
-apache_httpd__conf_mpm_event_max_request_workers: 400
-apache_httpd__conf_mpm_event_max_spare_threads: 250
-apache_httpd__conf_mpm_event_min_spare_threads: 75
-apache_httpd__conf_mpm_event_start_servers: 3
-apache_httpd__conf_mpm_event_thread_limit: 64
-apache_httpd__conf_mpm_event_threads_per_child: 25
+# mod_mpm_prefork
+apache_httpd__mpm_prefork_max_connections_per_child: 0
+apache_httpd__mpm_prefork_max_request_workers: 256
+apache_httpd__mpm_prefork_max_spare_servers: 10
+apache_httpd__mpm_prefork_min_spare_servers: 5
+apache_httpd__mpm_prefork_start_servers: 5
 
-apache_httpd__conf_mpm_prefork_max_connections_per_child: 0
-apache_httpd__conf_mpm_prefork_max_request_workers: 256
-apache_httpd__conf_mpm_prefork_max_spare_servers: 10
-apache_httpd__conf_mpm_prefork_min_spare_servers: 5
-apache_httpd__conf_mpm_prefork_start_servers: 5
+# mod_mpm_worker
+apache_httpd__mpm_worker_max_connections_per_child: 0
+apache_httpd__mpm_worker_max_request_workers: 400
+apache_httpd__mpm_worker_max_spare_threads: 250
+apache_httpd__mpm_worker_min_spare_threads: 75
+apache_httpd__mpm_worker_start_servers: 3
+apache_httpd__mpm_worker_thread_limit: 64
+apache_httpd__mpm_worker_threads_per_child: 25
 
-apache_httpd__conf_mpm_worker_max_connections_per_child: 0
-apache_httpd__conf_mpm_worker_max_request_workers: 400
-apache_httpd__conf_mpm_worker_max_spare_threads: 250
-apache_httpd__conf_mpm_worker_min_spare_threads: 75
-apache_httpd__conf_mpm_worker_start_servers: 3
-apache_httpd__conf_mpm_worker_thread_limit: 64
-apache_httpd__conf_mpm_worker_threads_per_child: 25
+# mod_security
+# normally nothing that you have to change
+# get details from https://coreruleset.org/installation/
+# origin: https://github.com/coreruleset/coreruleset/archive/v3.3.2.tar.gz
+apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
+apache_httpd__mod_security_coreruleset_version: '3.3.2'
+apache_httpd__mod_security_coreruleset_checksum: 'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'
 
 
 # Apache Virtual Host Configuration
@@ -477,7 +478,6 @@ apache_httpd__vhosts__role_var:
       Header always set Referrer-Policy: "strict-origin-when-cross-origin"
       Header always set X-Content-Type-Options: "nosniff"
       Header always set X-XSS-Protection: "1; mode=block"
-
 
 apache_httpd__vhosts__dependent_var: {}
 apache_httpd__vhosts__group_var: {}

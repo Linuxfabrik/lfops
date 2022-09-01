@@ -4,7 +4,7 @@
   ansible.builtin.debug:
     var: 'apache_httpd__vhosts__combined_var'
 
-- name: 'Remove sites-available vhosts'
+- name: 'Remove sites-available vHosts'
   ansible.builtin.file:
     path: '{{ apache_httpd__config_path }}/sites-available/{{ item["value"]["filename"] | d(item["value"]["conf_server_name"] ~ "." ~ (item["value"]["virtualhost_port"] | d(443))) }}.conf'
     state: 'absent'
@@ -12,7 +12,7 @@
     - 'item["value"]["state"] | d("present") == "absent"'
   loop: '{{ apache_httpd__vhosts__combined_var | dict2items }}'
 
-- name: 'Create sites-available configuration'
+- name: 'Create sites-available vHosts'
   ansible.builtin.template:
     src: 'etc/httpd/sites-available/{{ item["value"]["template"] }}.conf.j2'
     dest: '{{ apache_httpd__config_path }}/sites-available/{{ item["value"]["filename"] | d(item["value"]["conf_server_name"] ~ "." ~ (item["value"]["virtualhost_port"] | d(443))) }}.conf'
@@ -35,7 +35,7 @@
     - 'item["value"]["state"] | d("present") != "absent"'
   loop: '{{ apache_httpd__vhosts__combined_var | dict2items }}'
 
-- name: 'Disable vhosts'
+- name: 'Disable vHosts'
   ansible.builtin.file:
     path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item["value"]["filename"] | d(item["value"]["conf_server_name"] ~ "." ~ (item["value"]["virtualhost_port"] | d(443))) }}.conf'
     mode: 0o644
@@ -46,7 +46,7 @@
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
 
-- name: 'Enable vhosts'
+- name: 'Enable vHosts'
   ansible.builtin.file:
     src: '../sites-available/{{ item["value"]["filename"] | d(item["value"]["conf_server_name"] ~ "." ~ (item["value"]["virtualhost_port"] | d(443))) }}.conf'
     path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item["value"]["filename"] | d(item["value"]["conf_server_name"] ~ "." ~ (item["value"]["virtualhost_port"] | d(443))) }}.conf'

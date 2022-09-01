@@ -5,6 +5,6 @@
 {% endif %}
 
 # dir_module
-DirectoryIndex {{ apache_httpd__conf_directory_index | d('index.html') }}
+DirectoryIndex {{ apache_httpd__mod_dir_directory_index | d('index.html') }}
 
 {{ item['value']['raw'] | d() }}

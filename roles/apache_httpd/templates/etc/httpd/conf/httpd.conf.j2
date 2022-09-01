@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022082901
+# 2022083001
 
 # This is the main Apache server configuration file. It contains the
 # configuration directives that give the server its instructions.
@@ -62,15 +62,15 @@ Timeout {{ apache_httpd__conf_timeout | d(60) }}
 TraceEnable {{ apache_httpd__conf_trace_enable | d('On') }}
 
 # multi modules
-{% for item in apache_httpd__conf_listen %}
+{% for item in apache_httpd__mpm_common_listen %}
 Listen {{ item }}
 {% endfor %}
 
 
-{% if apache_httpd__conf_custom_log is defined and apache_httpd__conf_custom_log %}
+{% if apache_httpd__mod_log_config_custom_log is defined and apache_httpd__mod_log_config_custom_log %}
 # log_config_module
 # optional needed for debugging, fail2ban or similar
-CustomLog {{ apache_httpd__conf_custom_log }}
+CustomLog {{ apache_httpd__mod_log_config_custom_log }}
 {% endif %}
 
 
