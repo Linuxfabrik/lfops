@@ -11,18 +11,24 @@ fail2ban__jail_portscan_allowed_ports:
   - 22
 fail2ban__jail_portscan_server_ips: '{{ ansible_facts["all_ipv4_addresses"] }}'
 
-fail2ban__jails__dependent_var: {}
-fail2ban__jails__group_var: {}
-fail2ban__jails__host_var: {}
+
 fail2ban__jails__role_var:
-  portscan:
+
+  - name: 'portscan'
     state: 'present'
     type: 'conf'
-  sshd:
+
+  - name: 'sshd'
     state: 'present'
     type: 'conf'
-fail2ban__jails__combined_var: '{{ fail2ban__jails__role_var
-    | combine(fail2ban__jails__dependent_var)
-    | combine(fail2ban__jails__group_var)
-    | combine(fail2ban__jails__host_var)
-  }}'
+
+fail2ban__jails__dependent_var: []
+fail2ban__jails__group_var: []
+fail2ban__jails__host_var: []
+
+fail2ban__jails__combined_var: '{{ fail2ban__jails__role_var +
+  fail2ban__jails__group_var +
+  fail2ban__jails__host_var +
+  fail2ban__jails__dependent_var
+  | flatten
+ }}'

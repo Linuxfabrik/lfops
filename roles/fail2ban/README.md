@@ -30,7 +30,8 @@ Tested on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `fail2ban__jails__host_var` /<br> `fail2ban__jails__group_var` | A dictionary containing definitions for the virtual environments. The item keyname is the name of the jail. Subkeys:<br> * `state`: Required, boolean. State of the jail. Possible options: `absent`, `present`.<br> * `type`: Optional, boolean. Type of the jail. Either `conf` to use one of the pre-defined ones, or `raw` to deploy a custom jail. Defaults to `conf`.<br> * `raw`: Optional, string: Raw content for the custom jail. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `portscan` and `sshd` jails. |
+| `fail2ban__jails__group_var` | A list of dictionaries containing definitions for the virtual environments. Subkeys:<br> * `name`: Required, string. The name of the jail. Can either be one of the pre-defined ones (`type: conf`), or a custom one (`type: raw`): `apache-badbots`, `apache-botsearch`, `apache-dos`, `apache-fakegooglebot`, `apache-nohome`, `apache-noscript`, `apache-overflows`, `portscan`, `sshd`.<br> * `state`: Required, boolean. State of the jail. Possible options: `absent`, `present`.<br> * `type`: Optional, boolean. Type of the jail. Either `conf` to use one of the pre-defined ones, or `raw` to deploy a custom jail. Defaults to `conf`.<br> * `raw`: Optional, string: Raw content for the custom jail. <br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
+| `fail2ban__jails__host_var` | A list of dictionaries containing definitions for the virtual environments. Subkeys:<br> * `name`: Required, string. The name of the jail. Can either be one of the pre-defined ones (`type: conf`), or a custom one (`type: raw`): `apache-badbots`, `apache-botsearch`, `apache-dos`, `apache-fakegooglebot`, `apache-nohome`, `apache-noscript`, `apache-overflows`, `portscan`, `sshd`.<br> * `state`: Required, boolean. State of the jail. Possible options: `absent`, `present`.<br> * `type`: Optional, boolean. Type of the jail. Either `conf` to use one of the pre-defined ones, or `raw` to deploy a custom jail. Defaults to `conf`.<br> * `raw`: Optional, string: Raw content for the custom jail. <br>For the usage in `host_vars`. | `[]` |
 | `fail2ban__jail_default_action` | The default action. This will be used in all jails which do not overwrite it. Defaults to `fail2ban__jail_default_banaction` and notifying via Rocket.Chat. | `|-` |
 | `fail2ban__jail_default_banaction` | The default banaction, which will be executed as defined in `fail2ban__jail_default_action` (assuming the jail does not overwrite it). | `'iptables-multiport'` |
 | `fail2ban__jail_default_ignoreip` | List of IP addresses (in CIDR notation) that will be ignored from all jails (assuming the jail does not overwrite it). | `[]` |
@@ -42,12 +43,12 @@ Tested on
 Example:
 ```yaml
 # optional
-fail2ban__jails__group_var: {}
+fail2ban__jails__group_var: []
 fail2ban__jails__host_var:
-  apache-dos:
+  - name: 'apache-dos'
     state: 'absent'
     type: 'conf'
-  custom-apache-dos:
+  - name: 'custom-apache-dos'
     state: 'present'
     type: 'raw'
     raw: |-
