@@ -1,5 +1,7 @@
 # Ansible Role linuxfabrik.lfops.keycloak
 
+**BETA, do not use in production.**
+
 This role installs [keycloak](https://www.keycloak.org/guides#getting-started).
 
 Tested on
