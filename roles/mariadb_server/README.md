@@ -1,3 +1,35 @@
+<<<<<<< HEAD
+=======
+TODO umbauen:
+
+mariadb_server__admin_user:  # replaces mariadb_server__admin_host
+  username: 'mariadb-admin'
+  password: 'password'
+  host:
+    - 'localhost'
+    - '127.0.0.1'
+    - '::1'
+  priv:
+    - '*.*:all,grant'
+  state: 'present'
+
+mariadb_server__dump_user:  # replaces mariadb_server__dump_login, mariadb_server__dump_user_host, mariadb_server__dump_user_priv, mariadb_server__dump_user_state
+  username: 'mariadb-dump'
+  password: 'password'
+  host:
+    - 'localhost'
+    - '127.0.0.1'
+    - '::1'
+  priv:
+    - '*.*:event,lock tables,reload,select,show view,super,trigger'
+  state: 'present'
+
+
+
+--------------------
+
+
+>>>>>>> ea1ccbc (role:mariadb_server: Update README)
 # Ansible Role linuxfabrik.lfops.mariadb_server
 
 This role installs and configures a [MariaDB](https://mariadb.org/) server.
@@ -64,23 +96,49 @@ mariadb_server__admin_user:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+<<<<<<< HEAD
 | `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | Dict of databases to create. The item keyname is used for the name of the database schema. Subkeys:<br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` | unset |
 | `mariadb_server__logrotate` | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14` |
 | `mariadb_server__dump_user` | User to whom backup privileges are granted to. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `['*.*:event,lock tables,reload,select,show view,super,trigger']`. User privileges.<br> * `state`: `present` or `absent` | unset |
 | `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
 mariadb_server__enabled
+=======
+| `mariadb_server__admin_host` | Host-part(s) for creating the DBA user account after a fresh installation. | `['127.0.0.1', '::1', 'localhost']` |
+| `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | Dict of databases to create. The item keyname is used for the name of the database schema. Subkeys:<br>* `collation`: DB collation<br>* `encoding`: DB encoding<br>* `state`: `present` or `absent` | unset |
+| `mariadb_server__dump_directory` | descr | `default`|
+| `mariadb_server__dump_login` | User to whom backup privileges are granted to. Subkeys:<br>* `username`: Username<br>* `password`: Password | unset |
+| `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, for example `'https://github.com/mydumper/mydumper/releases/download/v0.12.6-1/mydumper-0.12.6-1.el8.x86_64.rpm'`. | `'mydumper'` |
+| `mariadb_server__dump_on_calendar` | descr | `default`|
+| `mariadb_server__dump_threads` | descr | `default`|
+| `mariadb_server__dump_user_host`| descr | `'localhost'` |
+| `mariadb_server__dump_user_priv`| descr | `['*.*:event,lock tables,reload,select,show view,super,trigger']` |
+| `mariadb_server__dump_user_state`| descr | `'present'` |
+| `mariadb_server__enabled`| descr | `true` |
+| `mariadb_server__logrotate` | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14` |
+>>>>>>> ea1ccbc (role:mariadb_server: Update README)
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
-mariadb_server__state
-| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of users to create. | `[]` |
+| `mariadb_server__state`| descr | `'started'` |
+| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | Dict of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_login`). The item keyname is used for the username. Subkeys:<br>* `host`<br>* `password`<br>* `priv`<br>* `state`<br>* `username` | `{}` |
 
+
+<<<<<<< HEAD
 Example: TODO
 ```yaml
 # optional - role variables
+=======
+```yaml
+# optional - role variables
+mariadb_server__admin_host:
+  - '127.0.0.1'
+  - '::1'
+  - 'localhost'
+>>>>>>> ea1ccbc (role:mariadb_server: Update README)
 mariadb_server__databases__host_var:
   'mydb':
     collation: 'utf8mb4_unicode_ci'
     encoding: 'utf8mb4'
     state: 'present'
+<<<<<<< HEAD
 mariadb_server__dump_user:
   username: 'mariadb-dump'
   password: 'password'
@@ -88,8 +146,23 @@ mariadb_server__dump_user:
     - '*.*:event,lock tables,reload,select,show view,super,trigger'
   state: 'present'
 mariadb_server__dump_mydumper_package: 'https://github.com/mydumper/mydumper/releases/download/v0.12.6-1/mydumper-0.12.6-1.el8.x86_64.rpm'
+=======
+mariadb_server__dump_directory: '/backup/mariadb-dump'
+mariadb_server__dump_login:
+  username: 'mariadb-backup'
+  password: 'password'
+mariadb_server__dump_mydumper_package: 'mydumper'
+mariadb_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
+mariadb_server__dump_threads: 4
+mariadb_server__dump_user_host: 'localhost'
+mariadb_server__dump_user_priv:
+  - '*.*:event,lock tables,reload,select,show view,super,trigger'
+mariadb_server__dump_user_state: 'present'
+mariadb_server__enabled: true
+>>>>>>> ea1ccbc (role:mariadb_server: Update README)
 mariadb_server__logrotate: 14
 mariadb_server__skip_sys_schema: false
+mariadb_server__state: 'started'
 mariadb_server__users__host_var:
   user1@localhost:
     username: 'user1'
