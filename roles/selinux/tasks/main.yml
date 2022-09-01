@@ -16,10 +16,10 @@
 
   - name: 'setsebool -P ...'
     seboolean:
-      name: '{{ item.key }}'
-      state: '{{ item.value }}'
+      name: '{{ item["key"] }}'
+      state: '{{ item["value"] }}'
       persistent: true
-    loop: '{{ selinux__booleans__combined_var }}'
+    loop: '{{ selinux__booleans__combined_var | dict2items }}'
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
 
