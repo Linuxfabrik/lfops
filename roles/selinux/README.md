@@ -25,7 +25,7 @@ Tested on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `selinux__booleans__host_var` / `selinux__booleans__group_var` | A dictionary containing SELinux booleans. The item key is the key of the SELinux boolean, the item value is the value of the SELinux boolean.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `{}` |
+| `selinux__booleans__host_var` /<br> `selinux__booleans__group_var` | A dictionary containing SELinux booleans. The item keyname is the key of the SELinux boolean, the item value is the value of the SELinux boolean.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `{}` |
 | `selinux__state` | The SELinux state. Possible options:<br> * `disabled`<br> * `enforcing`<br> * `permissive` | `'enforcing'` |
 
 Example:
