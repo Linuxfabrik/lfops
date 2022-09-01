@@ -34,7 +34,7 @@
       state: 'present'
     when:
       - 'item["state"] | d("present") != "absent"'
-    loop: '{{ php__modules__combined_var | dict2items }}'
+    loop: '{{ php__modules__combined_var }}'
 
   - name: 'Ensure additional php modules are absent'
     ansible.builtin.package:
@@ -42,7 +42,7 @@
       state: 'absent'
     when:
       - 'item["state"] | d("present") == "absent"'
-    loop: '{{ php__modules__combined_var | dict2items }}'
+    loop: '{{ php__modules__combined_var }}'
 
   - name: 'Deploy the /etc/php.d/z00-linuxfabrik.ini'
     ansible.builtin.template:

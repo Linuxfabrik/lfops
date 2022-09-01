@@ -33,7 +33,7 @@
       state: 'present'
     when:
       - 'item["state"] | d("present") != "absent"'
-    loop: '{{ apache_httpd__packages__combined_var | dict2items }}'
+    loop: '{{ apache_httpd__packages__combined_var }}'
 
   - name: 'Ensure additional Apache packages/modules are absent'
     ansible.builtin.package:
@@ -41,7 +41,7 @@
       state: 'absent'
     when:
       - 'item["state"] | d("present") == "absent"'
-    loop: '{{ apache_httpd__packages__combined_var | dict2items }}'
+    loop: '{{ apache_httpd__packages__combined_var }}'
 
   - name: 'mkdir -p {{ apache_httpd__config_path}}/{conf,mods,sites}-{available,enabled}'
     ansible.builtin.file:
