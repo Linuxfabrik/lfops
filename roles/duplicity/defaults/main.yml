@@ -2,27 +2,27 @@ duplicity__backup_dest_container: '{{ ansible_nodename }}'
 duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | trim("/") }}'
 duplicity__backup_retention_time: '30D' # days
 
-duplicity__backup_sources__group_var: []
-duplicity__backup_sources__host_var: []
+duplicity__backup_sources__dependent_var: {}
+duplicity__backup_sources__group_var: {}
+duplicity__backup_sources__host_var: {}
 duplicity__backup_sources__role_var:
-  - path: '/backup'
+  /backup:
     divide: false
-  - path: '/etc'
+  /etc:
     divide: false
-  - path: '/home'
+  /home:
     divide: false
-  - path: '/opt'
+  /opt:
     divide: false
-  - path: '/root'
+  /root:
     divide: false
-  - path: '/var/spool/cron'
+  /var/spool/cron:
     divide: false
-duplicity__backup_sources__combined_var: '{{
-    duplicity__backup_sources__role_var +
-    duplicity__backup_sources__group_var +
-    duplicity__backup_sources__host_var
-    | flatten
- }}'
+duplicity__backup_sources__combined_var: '{{ duplicity__backup_sources__role_var
+    | combine(duplicity__backup_sources__dependent_var)
+    | combine(duplicity__backup_sources__group_var)
+    | combine(duplicity__backup_sources__host_var)
+  }}'
 
 duplicity__excludes:
   - '**/*.git*'

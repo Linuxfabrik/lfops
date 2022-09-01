@@ -76,8 +76,7 @@ duplicity__swift_tenantname: 'sb_project_SBI-MF827483'
 | `duplicity__backup_dest` | The backup destination. This will be used in combination with the backup source path to create the target URL for `duplicity`. | `duplicity__backup_dest_container | trim("/") }}'` |
 | `duplicity__backup_retention_time` | The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`. | `'30D' # days` |
 | `duplicity__excludes` | List of *global* exclude shell patterns for `duplicity`. Have a look at `man duplicity` for details. | `['**/*.git*', '**/*.svn*', '**/*.temp', '**/*.tmp', '**/.cache', '**/cache', '**/log']` |
-| `duplicity__backup_sources__group_var` | A list of directories with additional directories to backup.<br> By default, the following directories are always backed up: `/backup`, `/etc`, `/home`, `/opt`, `/root` and `/var/spool/cron`.<br> Subkeys:<br> * `path`: Mandatory, string. Path to the folder to be backed up.<br> * `divide`: Optional, boolean. Defaults to `false`. Whether to split a large directory at its first level to perform parallel backups. Imagine a computer with 4 processor cores and the folder `data` containing 100 files and folders. If `divide` is set to `true`, `duba` will start and control 5 duplicate processes at once to speed up the backup process by almost a factor of 5.<br> * `excludes`: Optional, list. Defaults to `[]`. List of patterns that should not be included in the backup for this `path`. <br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
-| `duplicity__backup_sources__host_var` | A list of directories with additional directories to backup.<br> By default, the following directories are always backed up: `/backup`, `/etc`, `/home`, `/opt`, `/root` and `/var/spool/cron`.<br> Subkeys:<br> * `path`: Mandatory, string. Path to the folder to be backed up.<br> * `divide`: Optional, boolean. Defaults to `false`. Whether to split a large directory at its first level to perform parallel backups. Imagine a computer with 4 processor cores and the folder `data` containing 100 files and folders. If `divide` is set to `true`, `duba` will start and control 5 duplicate processes at once to speed up the backup process by almost a factor of 5.<br> * `excludes`: Optional, list. Defaults to `[]`. List of patterns that should not be included in the backup for this `path`. <br>For the usage in `host_vars`. | `/backup`, `/etc/`, `/home`, `/opt`, `/root` and `/var/spool/cron`, all with `divide: false` |
+| `duplicity__backup_sources__host_var` /<br> `duplicity__backup_sources__group_var` | A dictionary with additional directories to backup. The item keyname is the path to the folder which is to be backed up. Subkeys:<br> * `divide`: Optional, boolean. Defaults to `false`. Whether to split a large directory at its first level to perform parallel backups. Imagine a computer with 4 processor cores and a folder containing 100 files and folders. If `divide` is set to `true`, `duba` will start and control 5 duplicate processes at once to speed up the backup process by almost a factor of 5.<br> * `excludes`: Optional, list. Defaults to `[]`. List of patterns that should not be included in the backup for this `path`.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `/backup`, `/etc/`, `/home`, `/opt`, `/root` and `/var/spool/cron`, all with `divide: false` |
 | `duplicity__loglevel` | Set the loglevel. Possible options: * error<br> * warning<br> * notice<br> * info<br> * debug | `'notice'` |
 | `duplicity__logrotate` | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14` |
 | `duplicity__on_calendar_hour` | A shorthand to set the hour of `duplicity__on_calendar`. | `'23'` |
@@ -100,13 +99,13 @@ duplicity__excludes:
   - '**/.cache'
   - '**/cache'
   - '**/log'
-duplicity__backup_sources__group_var: []
+duplicity__backup_sources__group_var: {}
 duplicity__backup_sources__host_var:
-  - path: '/var/www/html'
+  /var/www/html:
     divide: false
     excludes:
       - '/var/www/html/nextcloud/data'
-  - path: '/var/www/html/nextcloud/data'
+  /var/www/html/nextcloud/data:
     divide: true
 duplicity__loglevel: 'notice'
 duplicity__logrotate: 14

@@ -19,7 +19,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2022061301'
+__version__ = '2022090101'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -112,13 +112,13 @@ def do_backup(config):
     global_retc = 0
 
     # iterate over backup dirs and spawn processes
-    for src in config.get('backup_sources', []):
+    for path, src in config.get('backup_sources', {}).items():
         filelist = []
         if src.get('divide', False):
             # divide the source dir:
             # do not backup the whole dir, but every item on the first level individually
-            logger.debug(f"Dividing the source dir {src.get('path')}")
-            for root, dirs, files in os.walk(src.get('path')):
+            logger.debug(f"Dividing the source dir {path}")
+            for root, dirs, files in os.walk(path):
                 for f in files:
                     filelist.append(os.path.join(root, f))
                 for f in dirs:
@@ -126,7 +126,7 @@ def do_backup(config):
                 # break at first directory level
                 break
         else:
-            filelist.append(src.get('path'))
+            filelist.append(path)
 
         for f in filelist:
             # build the duplicity backup command line
@@ -234,13 +234,13 @@ def do_backup(config):
     # instead of just listing them.
 
     # iterate over backup dirs and spawn processes
-    for src in config.get('backup_sources', []):
+    for path, src in config.get('backup_sources', []):
         filelist = []
         if src.get('divide', False):
             # divide the source dir:
             # do not backup the whole dir, but every item on the first level individually
-            logger.debug(f"Dividing the source dir {src.get('path')}")
-            for root, dirs, files in os.walk(src.get('path')):
+            logger.debug(f"Dividing the source dir {path}")
+            for root, dirs, files in os.walk(path):
                 for f in files:
                     filelist.append(os.path.join(root, f))
                 for f in dirs:
@@ -248,7 +248,7 @@ def do_backup(config):
                 # break at first directory level
                 break
         else:
-            filelist.append(src.get('path'))
+            filelist.append(path)
 
         for f in filelist:
             # build the duplicity command line
