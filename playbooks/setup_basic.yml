@@ -74,6 +74,8 @@
     - role: 'linuxfabrik.lfops.kdump'
 
     - role: 'linuxfabrik.lfops.chrony'
+      when:
+        - 'not setup_basic__skip_chrony | d(false)'
 
 
     # === Various tools / dependencies ===
@@ -124,7 +126,6 @@
 
 
     # === Backups ===
-
     - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var:
         - '{{ duplicity__python_venv__venvs__dependent_var | d({}) }}'
@@ -149,13 +150,8 @@
       when:
         - 'not setup_basic__skip_icinga2_agent | d(false)'
 
-    # - role: 'linuxfabrik.lfops.icinga2-log-level' TODO
-    #   when:
-    #     - 'not setup_basic__skip_icinga2_log_level | d(false)'
-
 
     # === Misc. ===
     - role: 'linuxfabrik.lfops.motd'
       when:
         - 'not setup_basic__skip_motd | d(false)'
-
