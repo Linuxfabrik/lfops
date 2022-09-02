@@ -34,15 +34,6 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
 
-    - role: 'linuxfabrik.lfops.audit'
-      when:
-        - 'not setup_basic__skip_audit | d(false)'
-
-    # lower the FUTURE policy to FUTURE:LINUXFABRIK first, otherwise linuxfabrik.lfops.repo_epel and other things won't work
-    - role: 'linuxfabrik.lfops.crypto_policy'
-      when:
-        - 'not setup_basic__skip_crypto_policy | d(false)'
-
 
     # === Basic repositories ===
     - role: 'linuxfabrik.lfops.repo_baseos'

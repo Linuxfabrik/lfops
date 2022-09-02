@@ -20,6 +20,7 @@ Role php:
 
 Playbook: basic_setup
 * Renamed to setup_basic to be consitent with the other setup playbooks
+* Removed `audit` and `crypto_policy` roles for now
 
 All roles:
 * Renamed all injectable variables:
