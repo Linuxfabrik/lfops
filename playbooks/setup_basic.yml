@@ -40,14 +40,18 @@
       when:
         - '(ansible_facts["distribution"] == "CentOS" and ansible_facts["distribution_major_version"] in ["7", "8"])
           or (ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] in ["8"])'
+        - 'not setup_basic__skip_repo_baseos | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not setup_basic__skip_repo_epel | d(false)'
 
 
     # === Sensible defaults ===
     - role: 'linuxfabrik.lfops.hostname'
+      when:
+        - 'not setup_basic__skip_hostname | d(false)'
 
     - role: 'linuxfabrik.lfops.timezone'
 
@@ -93,6 +97,7 @@
     - role: 'linuxfabrik.lfops.sshd'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not setup_basic__skip_sshd | d(false)'
 
     - role: 'linuxfabrik.lfops.login'
       when:

@@ -7,6 +7,7 @@
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not monitoring_plugins__skip_repo_epel | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{ monitoring_plugins__python__modules__dependent_var | d([]) }}'
