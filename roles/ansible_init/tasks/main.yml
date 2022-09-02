@@ -7,6 +7,13 @@
       version: '{{ ansible_init__version }}'
     ignore_errors: true
 
+  - name: 'Update ../lfops'
+    ansible.builtin.git:
+      repo: 'https://github.com/Linuxfabrik/lfops.git'
+      dest: '{{ ansible_init__ansinv_path }}../lfops'
+      version: 'main'
+    ignore_errors: true
+
   tags:
     - 'ansible_init'
 
