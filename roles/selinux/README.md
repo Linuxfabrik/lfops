@@ -32,7 +32,13 @@ Example:
 ```yaml
 # optional
 selinux__booleans__host_var:
-  - key: 'httpd_can_network_connect'
+  - key: 'httpd_can_network_connect_db'
+    value: 'on'
+  - key: 'httpd_can_sendmail'
+    value: 'on'
+  - key: 'httpd_execmem'
+    value: 'on'
+  - key: 'httpd_use_nfs'
     value: 'on'
 selinux__booleans__group_var: []
 selinux__state: 'enforcing'

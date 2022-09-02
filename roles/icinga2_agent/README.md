@@ -27,7 +27,7 @@ Tested on
 
 | Variable                                | Description                                                                                                                                                         |
 | --------                                | -----------                                                                                                                                                         |
-| `icinga2_agent__icinga2_api_user_login` | The account for generating a ticket for this agent using the Icinga2 API. The account needs to have the `actions/generate-ticket` permission on the Icinga2 Master. |
+| `icinga2_agent__icinga2_api_user_login` | The account for generating a ticket for this agent using the Icinga2 API (API of Icinga Core). The account needs to have the `actions/generate-ticket` permission on the Icinga2 Master. |
 | `icinga2_agent__icinga2_master_host`    | The host where the Icinga2 Master is running. Has to be reachable from the Agent.                                                                                   |
 | `icinga2_agent__windows_version`        | Mandatory for Windows. The version of the Icinga2 Agent to install. Possible options: https://packages.icinga.com/windows/.                                         |
 
@@ -51,7 +51,7 @@ icinga2_agent__windows_version: 'v2.12.8'
 | `icinga2_agent__director_host_object_display_name` | The host display name of the Icinga Director host object. Tries to default to the hostname. | `'{{ ansible_facts["hostname"] }}'` |
 | `icinga2_agent__director_host_object_import` | A list of Icinga Director host templates which should be imported for this server. | `['tpl-host-linux']` |
 | `icinga2_agent__icinga2_master_port` | The port on which the Icinga2 master is reachable. | `5665` |
-| `icinga2_agent__icingaweb2_url` | The URL where the IcingaWeb2 is reachable. This will be used to register the host in the Icinga Director. | unset |
+| `icinga2_agent__icingaweb2_url` | The URL where the IcingaWeb2 (the API) is reachable. This will be used to register the host in the Icinga Director (otherwise the host is registered in Icinga Core, but not visible in Icinga Director). | unset |
 | `icinga2_agent__icingaweb2_user_login` | A IcingaWeb2 user with `module/director,director/api,director/hosts` permissions. This will be used to register the host in the Icinga Director. | unset |
 | `icinga2_agent__service_enabled` | Enables or disables the Icinga2 service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
 
@@ -67,8 +67,8 @@ icinga2_agent__director_host_object_import:
 icinga2_agent__icinga2_master_port: 5665
 icinga2_agent__icingaweb2_url: 'https://monitoring.example.com/icingaweb2'
 icinga2_agent__icingaweb2_user_login:
-  username: 'enrolment-user'
   password: 'password'
+  username: 'enrolment-user'
 icinga2_agent__service_enabled: true
 ```
 
