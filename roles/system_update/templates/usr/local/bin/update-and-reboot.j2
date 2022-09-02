@@ -46,9 +46,9 @@ post_update_code () {
 }
 {% endif %}
 
-SUBJECT_PREFIX="{{ system_update__notification_hostname_prefix }}$(hostname --short)"
-SENDER="{{ system_update__notification_hostname_prefix }}$(hostname --short) <{{ system_update__notification_sender }}>"
-RECIPIENTS="{{ system_update__notification_recipients | join(' ' ) }}"
+SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}$(hostname --short)"
+SENDER="{{ system_update__mail_subject_prefix }}$(hostname --short) <{{ system_update__mail_from }}>"
+RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ' ) }}"
 
 # do the update, and print only critical errors about which we must be told
 {% if ansible_facts['os_family'] == 'RedHat' %}
@@ -70,15 +70,15 @@ yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--f
 {% if ansible_facts['os_family'] == 'RedHat' %}
 # after any update, notify root user about new rpmsave or rpmnew files
 # ignore messages like 'find: ‘/proc/26144’: No such file or directory'
-find / -mount -name '*.rpmnew' -exec /root/send-mail "{{ system_update__notification_hostname_prefix }}$(hostname --short) - rpmnew File found" "{}"  {{ system_update__new_configfile_notification_recipients | join(' ' ) }} \; 2> /dev/null
-find / -mount -name '*.rpmsave' -exec /root/send-mail "{{ system_update__notification_hostname_prefix }}$(hostname --short) - rpmsave File found" "{}" {{ system_update__new_configfile_notification_recipients | join(' ' ) }} \; 2> /dev/null
+find / -mount -name '*.rpmnew' -exec /root/send-mail "{{ system_update__mail_subject_prefix }}$(hostname --short) - rpmnew File found" "{}"  {{ system_update__mail_recipients_new_configfiles | join(' ' ) }} \; 2> /dev/null
+find / -mount -name '*.rpmsave' -exec /root/send-mail "{{ system_update__mail_subject_prefix }}$(hostname --short) - rpmsave File found" "{}" {{ system_update__mail_recipients_new_configfiles | join(' ' ) }} \; 2> /dev/null
 {% endif %}
 
 {% if ansible_facts['os_family'] == 'Debian' %}
 # after any update, notify root user about new rpmsave or rpmnew files
 # ignore messages like 'find: ‘/proc/26144’: No such file or directory'
-find / -mount -name '*.dpkg-dist' -exec /root/send-mail "{{ system_update__notification_hostname_prefix }}$(hostname --short) - dpkg-dist File found" "{}"  {{ system_update__new_configfile_notification_recipients | join(' ' ) }} \; 2> /dev/null
-find / -mount -name '*.ucf-dist' -exec /root/send-mail "{{ system_update__notification_hostname_prefix }}$(hostname --short) - ucf-dist File found" "{}"  {{ system_update__new_configfile_notification_recipients | join(' ' )}} \; 2> /dev/null
+find / -mount -name '*.dpkg-dist' -exec /root/send-mail "{{ system_update__mail_subject_prefix }}$(hostname --short) - dpkg-dist File found" "{}"  {{ system_update__mail_recipients_new_configfiles | join(' ' ) }} \; 2> /dev/null
+find / -mount -name '*.ucf-dist' -exec /root/send-mail "{{ system_update__mail_subject_prefix }}$(hostname --short) - ucf-dist File found" "{}"  {{ system_update__mail_recipients_new_configfiles | join(' ' )}} \; 2> /dev/null
 {% endif %}
 
 # any restarts needed?

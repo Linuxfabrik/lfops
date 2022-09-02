@@ -50,6 +50,14 @@ Role: login
 Role: stig
 * Moved to a new GitHub repo (temporarily)
 
+Role: system_update
+* Renamed variables:
+
+    * system_update__mail_recipients_new_configfiles => system_update__mail_recipients_new_configfiles
+    * system_update__mail_recipients_updates => system_update__mail_recipients_updates
+    * system_update__mail_from => system_update__mail_from
+    * system_update__mail_subject_prefix => system_update__mail_subject_prefix
+    * system_update__notify_and_schedule_on_calendar => system_update__notify_and_schedule_on_calendar
 
 
 ### Added
