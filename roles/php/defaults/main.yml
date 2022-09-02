@@ -61,7 +61,6 @@ php__ini_error_reporting__combined_var: '{{
     php__ini_error_reporting__role_var
   }}'
 
-
 php__ini_max_execution_time__dependent_var: ''
 php__ini_max_execution_time__group_var: ''
 php__ini_max_execution_time__host_var: ''
