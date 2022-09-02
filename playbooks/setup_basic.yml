@@ -68,6 +68,9 @@
       when:
         - 'not setup_basic__skip_chrony | d(false)'
 
+    - role: 'linuxfabrik.lfops.motd'
+      when:
+        - 'not setup_basic__skip_motd | d(false)'
 
     # === Various tools / dependencies ===
     - role: 'linuxfabrik.lfops.python'
@@ -140,9 +143,3 @@
     - role: 'linuxfabrik.lfops.icinga2_agent'
       when:
         - 'not setup_basic__skip_icinga2_agent | d(false)'
-
-
-    # === Misc. ===
-    - role: 'linuxfabrik.lfops.motd'
-      when:
-        - 'not setup_basic__skip_motd | d(false)'
