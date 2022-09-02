@@ -5,6 +5,7 @@
       repo: '{{ ansible_init__url }}'
       dest: '{{ ansible_init__ansinv_path }}'
       version: '{{ ansible_init__version }}'
+    ignore_errors: true
 
   tags:
     - 'ansible_init'
