@@ -22,7 +22,7 @@
 
 
     # === Security ===
-    # - role: 'linuxfabrik.lfops.freeipa-client' TODO
+    # - role: 'linuxfabrik.lfops.freeipa_client' TODO
     #   when:
     #     - 'not setup_basic__skip_freeipa_client | d(true)'
 
