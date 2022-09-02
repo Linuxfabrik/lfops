@@ -279,9 +279,7 @@ apache_httpd__vhosts__host_var:
       SSLCACertificateFile    /etc/pki/tls/certs/rootCA.pem
 ```
 
-
 Example - A simple redirect vHost:
-
 
 ```yaml
 
