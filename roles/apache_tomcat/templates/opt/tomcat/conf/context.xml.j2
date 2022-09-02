@@ -31,7 +31,7 @@
     <!--
     <Manager pathname="" />
     -->
-    {% if item['value']['tomcat_context_xml_cache_max_size'] is defined and item['value']['tomcat_context_xml_cache_max_size'] | string | length %}
-    <Resources cacheMaxSize="{{ item['value']['tomcat_context_xml_cache_max_size'] }}" />
+    {% if item['tomcat_context_xml_cache_max_size'] is defined and item['tomcat_context_xml_cache_max_size'] | string | length %}
+    <Resources cacheMaxSize="{{ item['tomcat_context_xml_cache_max_size'] }}" />
     {% endif %}
 </Context>
