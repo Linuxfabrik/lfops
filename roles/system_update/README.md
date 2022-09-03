@@ -61,7 +61,7 @@ system_update__mail_recipients_updates:
 | `system_update__rocketchat_msg_suffix` | A suffix to the Rocket.Chat notifications. This can be used to mention other users. | unset |
 | `system_update__rocketchat_url` | The URL to a potential Rocket.Chat server to send notifications about the updates to. | unset |
 | `system_update__update_enabled` | Enables or disables the system-update service, analogous to `systemctl enable/disable --now`.  | `true` |
-| `system_update__update_time` | The time when to actually execute the updates (and automatically reboot if necessary), relative to `system_update__update_on_calendar`. | `00 + 1 days'` |
+| `system_update__update_time` | The time when to actually execute the updates (and automatically reboot if necessary), relative to `system_update__notify_and_schedule_on_calendar`. | `04:00 + 1 days'` |
 
 Example:
 ```yaml
