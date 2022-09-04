@@ -4,16 +4,14 @@
   ansible.builtin.debug:
     var: 'apache_httpd__vhosts__combined_var'
 
-- name: 'Create sites-available vHosts'
-  ansible.builtin.template:
-    src: 'etc/httpd/sites-available/{{ item["template"] }}.conf.j2'
-    dest: '{{ apache_httpd__config_path }}/sites-available/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
-    owner: 'root'
-    group: 'root'
+- name: 'Disable vHosts'
+  ansible.builtin.file:
+    path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
     mode: 0o644
-  when:
-    - 'item["state"] | d("present") != "absent"'
+    state: 'absent'
   loop: '{{ apache_httpd__vhosts__combined_var }}'
+  when: 'not item["enabled"] | d(true)
+        or item["state"] | d("present") == "absent"'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
 
@@ -35,6 +33,19 @@
     - 'item["state"] | d("present") != "absent"'
   loop: '{{ apache_httpd__vhosts__combined_var }}'
 
+- name: 'Create sites-available vHosts'
+  ansible.builtin.template:
+    src: 'etc/httpd/sites-available/{{ item["template"] }}.conf.j2'
+    dest: '{{ apache_httpd__config_path }}/sites-available/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
+    owner: 'root'
+    group: 'root'
+    mode: 0o644
+  when:
+    - 'item["state"] | d("present") != "absent"'
+  loop: '{{ apache_httpd__vhosts__combined_var }}'
+  notify:
+    - 'apache_httpd: httpd -t; systemctl reload httpd'
+
 - name: 'Enable vHosts'
   ansible.builtin.file:
     src: '../sites-available/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
@@ -48,13 +59,3 @@
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
 
-- name: 'Disable vHosts'
-  ansible.builtin.file:
-    path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
-    mode: 0o644
-    state: 'absent'
-  loop: '{{ apache_httpd__vhosts__combined_var }}'
-  when: 'not item["enabled"] | d(true)
-        or item["state"] | d("present") == "absent"'
-  notify:
-    - 'apache_httpd: httpd -t; systemctl reload httpd'

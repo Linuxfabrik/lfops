@@ -1,6 +1,73 @@
-# Ansible Role linuxfabrik.lfops.apache_httpd - raw Examples for vHosts
+# Ansible Role linuxfabrik.lfops.apache_httpd - vHost Config Examples
 
-A list of best practise Apache Configs and config options at your free disposal for the `raw` variable (which is inserted just before the closing `VirtualHost` directive). Unsorted. Use them as a starting point.
+## vHosts
+
+### Minimal App vHost with PHP-FPM
+
+A minimal working "app" vHost definition for a PHP-FPM application, located under http://test:
+```yaml
+apache_httpd__conf_server_admin: 'webmaster@example.com'
+apache_httpd__mods__host_var:
+  - filename: 'cgi'
+    enabled: true
+    state: 'present'
+  - filename: 'proxy_fcgi'
+    enabled: true
+    state: 'present'
+apache_httpd__vhosts__host_var:
+  - template: 'app'
+    virtualhost_port: 80
+    authz_document_root: |-
+        Require all granted
+    authz_file_extensions: |-
+        Require all granted
+    conf_server_name: 'test'
+    conf_directory_index: 'index.php'
+```
+
+### Reverse Proxy
+
+```yaml
+apache_httpd__vhosts__host_var:
+  - template: 'proxy'
+    allowed_http_methods:
+      - 'GET'
+      - 'OPTIONS'
+      - 'POST'
+      - 'PUT'
+    conf_directory_index: 'index.php'
+    conf_proxy_error_override: 'Off'
+    conf_proxy_preserve_host: 'On'
+    conf_server_name: 'www.example.com'
+    raw: !unsafe |-
+      RequestHeader set X-Forwarded-Proto "https"
+      # ssl_module
+      SSLEngine on
+      SSLCertificateFile      /etc/pki/tls/certs/www.example.com.crt
+      SSLCertificateKeyFile   /etc/pki/tls/private/www.example.com.key
+      SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-fullchain.crt
+      # proxy_module and other
+      <Proxy *>
+          Require all granted
+      </Proxy>
+      RewriteRule ^/(.*) http://192.0.2.5/$1 [proxy,last]
+      ProxyPassReverse / http://192.0.2.5/
+      ProxyPassReverse / http://www.example.com/
+```
+
+### Redirect vHost
+
+```yaml
+apache_httpd__vhosts__host_var:
+  - template: 'redirect'
+    virtualhost_port: 80
+    conf_server_name: 'www.example.com'
+```
+
+
+## `raw` Variable
+
+A list of best practise Apache Configs and config snippets at your free disposal for the `raw` variable (which is inserted just before the closing `VirtualHost` directive). Unsorted. Use them as a starting point.
 
 To implement a multiline `raw` statement, do this:
 
@@ -17,7 +84,7 @@ raw: !unsafe |-
 
 
 
-## Redirect from port 80 to port 443
+### Redirect from port 80 to port 443
 
 Including one exception:
 
@@ -28,7 +95,7 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
 ```
 
 
-## HTTP Basic Authentication
+### HTTP Basic Authentication
 
 CIS: You do not want to use this - it does not meet current security standards for protecting the login credentials and protecting the authenticated session.
 
@@ -43,7 +110,7 @@ CIS: You do not want to use this - it does not meet current security standards f
 ```
 
 
-## Require directive examples
+### Require directive examples
 
 ```
 Require all denied
@@ -59,7 +126,7 @@ Require user linuxfabrik-user
 ```
 
 
-## Security related HTTP headers
+### Security related HTTP headers
 
 ```
 # Headers sorted by Category and Header Name
@@ -182,7 +249,7 @@ RequestHeader set X-Forwarded-Proto "https"
 ```
 
 
-## SSL/TLS settings
+### SSL/TLS settings
 
 ```
 SSLEngine on
@@ -192,7 +259,7 @@ SSLCertificateChainFile {{ apache_httpd__openssl_chain_path }}/chain.pem
 ```
 
 
-## mod_qos / Quality of Service
+### mod_qos / Quality of Service
 
 [mod_qos](http://mod-qos.sourceforge.net/index.html): If you decide to use HTTP/2, you should only use the request level control directives ("QS_Loc\*") as mod_qos works for the hypertext transfer protocol version 1.0 and 1.1 (RFC1945/RFC2616) only. If not using HTTP/2, you can use the full feature set of mod_qos, like this:
 
@@ -227,7 +294,7 @@ SSLCertificateChainFile {{ apache_httpd__openssl_chain_path }}/chain.pem
 ```
 
 
-## Proxy Passing Rules
+### Proxy Passing Rules
 
 BTW, using mod_rewrite is much more flexible than ProxyPass. This is an example of a reverse proxy passing incoming requests to a backend server.
 
@@ -244,7 +311,7 @@ ProxyPassReverse / https://backend/
 ```
 
 
-## mod_maxminddb, GeoIP-Blocking
+### mod_maxminddb, GeoIP-Blocking
 
 As a starting point. Have a look at https://docs.linuxfabrik.ch for details.
 
@@ -269,7 +336,7 @@ SetEnvIf MM_COUNTRY_CODE DE AllowCountry
 ```
 
 
-## mod_security + OWASP CRS Rule Set
+### mod_security + OWASP CRS Rule Set
 
 Will be installed on reverse proxy servers only.
 

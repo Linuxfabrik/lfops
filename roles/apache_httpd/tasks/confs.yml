@@ -4,6 +4,25 @@
   ansible.builtin.debug:
     var: 'apache_httpd__conf__combined_var'
 
+- name: 'Disable configs'
+  ansible.builtin.file:
+    path: '{{ apache_httpd__config_path + "/conf-enabled/" + item["filename"] + ".conf" }}'
+    mode: 0o644
+    state: 'absent'
+  loop: '{{ apache_httpd__conf__combined_var }}'
+  when: 'not item["enabled"] | d(true)
+        or item["state"] | d("present") == "absent"'
+  notify:
+    - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+- name: 'Remove conf-available configs'
+  ansible.builtin.file:
+    path: '{{ apache_httpd__config_path + "/conf-available/" + item["filename"] + ".conf" }}'
+    state: 'absent'
+  when:
+    - 'item["state"] | d("present") == "absent"'
+  loop: '{{ apache_httpd__conf__combined_var }}'
+
 - name: 'Create conf-available configs'
   ansible.builtin.template:
     src: 'etc/httpd/conf-available/{{ item["template"]}}.conf.j2'
@@ -16,14 +35,6 @@
   loop: '{{ apache_httpd__conf__combined_var }}'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
-
-- name: 'Remove conf-available configs'
-  ansible.builtin.file:
-    path: '{{ apache_httpd__config_path + "/conf-available/" + item["filename"] + ".conf" }}'
-    state: 'absent'
-  when:
-    - 'item["state"] | d("present") == "absent"'
-  loop: '{{ apache_httpd__conf__combined_var }}'
 
 - name: 'Enable configs'
   ansible.builtin.file:
@@ -38,13 +49,3 @@
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
 
-- name: 'Disable configs'
-  ansible.builtin.file:
-    path: '{{ apache_httpd__config_path + "/conf-enabled/" + item["filename"] + ".conf" }}'
-    mode: 0o644
-    state: 'absent'
-  loop: '{{ apache_httpd__conf__combined_var }}'
-  when: 'not item["enabled"] | d(true)
-        or item["state"] | d("present") == "absent"'
-  notify:
-    - 'apache_httpd: httpd -t; systemctl reload httpd'

@@ -45,6 +45,12 @@ If you want to check Apache with [our STIG audit script](https://github.com/Linu
 * SELinux: Use specialized roles to set specific SELinux Booleans, Policies etc.
 
 
+## Config Examples for vHosts
+
+[Have a look here](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md).
+
+
+
 ## Mandatory Requirements
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
@@ -72,8 +78,7 @@ If you want to check Apache with [our STIG audit script](https://github.com/Linu
 
 | Variable | Description |
 | -------- | ----------- |
-| `apache_httpd__conf_server_admin` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#serveradmin) |
-| `conf_server_name` | Set this variable for each vHost definition. Although this is just best practise, we would never use a vHost without a ServerName. |
+| `apache_httpd__conf_server_admin` | Mandatory, string. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#serveradmin) |
 
 
 Example:
@@ -82,234 +87,60 @@ Example:
 apache_httpd__conf_server_admin: 'webmaster@example.com'
 ```
 
-## Optional Role Variables - vHosts
-
-Using `apache_httpd__vhosts__group_var` or `apache_httpd__vhosts__host_var` (which are dictionaries), you define vHosts for Apache. The example below shows a complete example, use this as a starting point.
-
-Types of vHosts:
-
-* **app**<br>
-  A hardened vHost running an application like Nextcloud, Wordpress etc. with the most common options. Can be extended by using the `raw` variable.<br>
-* **localhost**<br>
-  A hardened, pre-defined VirtualHost just listening on https://localhost, and only accessible from localhost. Due to its naming, it is the first defined vHost. Useful for <br>Apache status info etc. Can be extended by using the `raw` variable. The following URLs are pre-configured, accessible just from localhost: `/fpm-ping`, `/fpm-status`, `/monitoring.php`, `/server-info`, `/server-status`.
-* **proxy**<br>
-  A typical hardened reverse proxy vHost. Can be extended by using the `raw` variable. This proxy vHost definition prevents Apache from functioning as a forward proxy <br>server (inside > out).
-* **redirect**<br>
-  A vHost that redirects from one port (default "80") to another (default "443"). Custom redirect rules can be provided using the `raw` variable.<br>
-* **raw**<br>
-  If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>` and `</VirtualHost>` completely from scratch.<br>
-
-"Hardened" means among other things:
-
-* Old HTTP protocol (< HTTP/1.1) versions are disallowed.
-* IP address based requests are disallowed.
-* Number of bytes that are allowed in a request are limited.
-* etc.
-
-This role creates a vHost named `localhost` by default. Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
-
-TODO: optional, mandatory?
+## Optional Role Variables - Global Apache Config (core)
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `allowed_file_extensions` | app- and proxy-vHosts block ALL file extensions by default (including `.gitignore`, `.svn`, `.htaccess`, `.hg`, `.bzr` etc.), unless specifically allowed. Use `find {{ apache_httpd__conf_document_root }} -type f -name '*.*' PIPE awk -F. '{print $NF }' PIPE sort --unique` to compile a list of the file extensions that are currently present in your application. Hint: The vHost templates already ensure that filenames starting with a dot (".") are never matched. | * app: `['css', 'gif', 'html?', 'ico', 'jpe?g', 'js', 'pdf', 'php', 'png', 'svg', 'ttf', 'txt', 'woff2?']`<br> * localhost: `['css', 'gif', 'html?', 'ico', 'jpe?g', 'js', 'pdf', 'php', 'png', 'svg', 'ttf', 'txt', 'woff2?']`<br> |
-| `allowed_http_methods` | * Should be used to disable unwanted [HTTP methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods). Only the explicity listed ones are allowed. Returns a [405 - Method Not Allowed](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) if a forbidden HTTP method is used.<br> * This does not disable TRACE.<br> * Always enable GET and OPTIONS at least. For an OPTIONS request, Apache always returns `Allow: GET,POST,OPTIONS,HEAD`, no matter what.<br> * We are NOT using [LimitExcept](https://httpd.apache.org/docs/2.4/mod/core.html#limitexcept), because this directive is not allowed in a VirtualHost context.<br><br>Available HTTP methods:<br> * CONNECT<br> * DELETE<br> * GET<br> * HEAD<br> * OPTIONS<br> * PATCH<br> * POST<br> * PUT<br><br>Available WebDAV methods:<br> * COPY<br> * LOCK<br> * MKCOL<br> * MOVE<br> * PROPFIND<br> * PROPPATCH<br> * UNLOCK | * app: `['GET', 'OPTIONS']`<br> * localhost: `['GET', 'OPTIONS']`<br> * proxy: `['GET', 'OPTIONS']` |
-| `authz_document_root` | Authorization statement for the ``DocumentRoot {{ apache_httpd__conf_document_root }}/{{ conf_server_name }}`` directive. | * app: `'Require local'`<br> * localhost: `'Require local'` |
-| `authz_file_extensions` | Authorization statement for the [FilesMatch](https://httpd.apache.org/docs/2.4/mod/core.html#filesmatch) directive which is based on `allowed_file_extensions`. | * app: `'Require local'`<br> * localhost: `'Require local'` |
-| `by_role` | If defined it results in a comment `# Generated by Ansible role: {{ by_role }}` at the beginning of a vHost definition. | * app: unset<br> * localhost: unset<br> * proxy: unset<br> * raw: unset<br> * redirect: unset |
-| `comment` | Describes the vHost and results in a comment right above the `<VirtualHost>` section. | * app: `'no description available'`<br> * localhost: `'no description available'`<br> * proxy: `'no description available'`<br> * raw: `'no description available'` |
-| `conf_allow_override` | Will be set in the ``<Directory>`` directive of the vHost.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#allowoverride) | * app: `None`<br> * localhost: `None` |
-| `conf_custom_log` | If unset, no access logs are written. You might want to configure it for debugging reasons or software like fail2ban.<br>One of<br> * ``agent``<br> * ``combined``<br> * ``common``<br> * ``debug``<br> * ``fail2ban``<br> * ``referer``<br> * ``vhost_combined``<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog) | * app: unset<br> * localhost: unset<br> * proxy: unset |
-| `conf_directory_index` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex) | * app: `{{ apache_httpd__mod_dir_directory_index }}` |
-| `conf_document_root` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#documentroot) | * app: `{{ apache_httpd__conf_document_root}}/{{ conf_server_name }}`<br> * localhost: `{{ apache_httpd__conf_document_root}}/{{ conf_server_name }}` |
-| `conf_error_log` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog) | * app: `logs/{{ conf_server_name }}-error.log`<br> * localhost: `logs/{{ conf_server_name }}-error.log`<br> * proxy: `logs/{{ conf_server_name }}-error.log` |
-| `conf_keep_alive_timeout` | CIS: Do not set it above '15' seconds.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#keepalivetimeout) | * app: `5`<br> * localhost: `5`<br> * proxy: `5` |
-| `conf_log_level` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel) | * app: `'notice core:info'`<br> * localhost: `'notice core:info'`<br> * proxy: `'notice core:info'` |
-| `conf_options` | Sets the ``Options`` for the `<Directory>` directive.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#options) | * app: `None`<br> * localhost: `None` |
-| `conf_proxy_error_override` | If you want to have a common look and feel on the error pages seen by the end user, set this to "On" and define them on the reverse proxy server.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) | * proxy: `On` |
-| `conf_proxy_preserve_host` | When enabled, this option will pass the ``Host:`` line from the incoming request to the proxied host, instead of the hostname specified in the ``ProxyPass`` line.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxypreservehost) | `Off` |
-| `conf_proxy_timeout` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxytimeout) | `5` |
-| `conf_request_read_timeout` | CIS:<br> * Do not set the Timeout Limits for Request Headers above 40.<br> * Do not set the Timeout Limits for the Request Body above 20.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html#requestreadtimeout) | * app: `'header=20-40,MinRate=500 body=20,MinRate=500'`<br> * localhost: `'header=20-40,MinRate=500 body=20,MinRate=500'`<br> * proxy: `'header=20-40,MinRate=500 body=20,MinRate=500'` |
-| `conf_server_admin` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#serveradmin) | * app: `{{ apache_httpd__conf_server_admin }}`<br> * localhost: `{{ apache_httpd__conf_server_admin }}`<br> * proxy: `{{ apache_httpd__conf_server_admin }}` |
-| `conf_server_alias` | Set this only if you need more than one `conf_server_name`.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#serveralias) | * app: unset<br> * localhost: unset<br> * proxy: unset |
-| `conf_server_name` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#servername) | * app: unset<br> * localhost: unset<br> * proxy: unset<br> * redirect: unset |
-| `conf_timeout` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#timeout) | * app: `{{ apache_httpd__conf_timeout }}`<br> * localhost: `{{ apache_httpd__conf_timeout }}`<br> * proxy: `{{ apache_httpd__conf_timeout }}` |
-| `enabled` | Enable this vHost. | `true` |
-| `filename` | The filename of the vHost definition. If not set it defaults to the `conf_server_name` variable. If not set, the filename is automatically suffixed by `.virtualhost_port.conf`. | conf_server_name.virtualhost_port.conf |
-| `php_set_handler` | Set the handler for PHP<br> * socket-based: `SetHandler "proxy:unix:/run/php-fpm/www.sockPIPEfcgi://localhost"`<br> * network-based: `SetHandler "proxy:fcgi://127.0.0.1:9000/"` | * app: `'SetHandler "proxy:unix:/run/php-fpm/www.sockPIPEfcgi://localhost"'`<br> * localhost: `'SetHandler "proxy:unix:/run/php-fpm/www.sockPIPEfcgi://localhost"'` |
-| `raw` | It is sometimes desirable to pass variable content that Jinja would handle as variables or blocks. Jinja's `{% raw %}` statement does not work in Ansible. The best and safest solution is to declare `raw` variables as `!unsafe`, to prevent templating errors and information disclosure.  | * app: unset<br> * localhost: unset<br> * proxy: unset<br> * raw: unset<br> * redirect: unset |
-| `state` | Should the vhost definition file be created (`present`) or deleted (`absent`). | * app: unset<br> * localhost: `'present'`<br> * proxy: unset<br> * raw: unset<br> * redirect: unset |
-| `template` | Have a look at the intro of this paragraph. | unset |
-| `virtualhost_ip` | Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | * app: `'*'`<br> * localhost: `'*'`<br> * proxy: `'*'`<br> * raw: `'*'`<br> * redirect: `'*'` |
-| `virtualhost_port` | Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | * app: `443`<br> * localhost: `443`<br> * proxy: `443`<br> * raw: `443`<br> * redirect: `80` |
+| `apache_httpd__conf_add_default_charset` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#adddefaultcharset) | `'UTF-8'` |
+| `apache_httpd__conf_document_root` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#documentroot) | `'/var/www/html'` |
+| `apache_httpd__conf_enable_send_file` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#enablesendfile) | `'On'` |
+| `apache_httpd__conf_error_log` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog) | `'syslog:local1'` |
+| `apache_httpd__conf_hostname_lookups` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#hostnamelookups) | `'Off'` |
+| `apache_httpd__conf_keep_alive` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#keepalive) | `'On'` |
+| `apache_httpd__conf_keep_alive_timeout` | Optional, todo. CIS: Do not set it above `15` seconds.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#keepalivetimeout) | `5` |
+| `apache_httpd__conf_limit_request_body` | Optional, todo. CIS: Do not set it above `102400`.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestbody) | `102400` |
+| `apache_httpd__conf_limit_request_field_size` | Optional, todo. CIS: Do not set it above `1024` - but this might be too small for any modern application which sets cookies in its Header.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestfieldsize) | `8190` |
+| `apache_httpd__conf_limit_request_fields` | Optional, todo. CIS: Do not set it above `100`.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestfields) | `100` |
+| `apache_httpd__conf_limit_request_line` | Optional, todo. CIS: Do not set it above `512` - but this might be too small for any modern application which sets cookies in its Header.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestline) | `8190` |
+| `apache_httpd__conf_log_level` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel) | `'warn'` |
+| `apache_httpd__conf_max_keep_alive_requests` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#maxkeepaliverequests) | `500` |
+| `apache_httpd__conf_server_name` | Optional, todo. Mandatory, string. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#servername) | `'localhost'` |
+| `apache_httpd__conf_timeout` | Optional, todo. CIS: Do not set it above `10` seconds.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#timeout) | `10` |
+| `apache_httpd__conf_trace_enable` | Optional, todo. CIS: Do not set it to ``On``.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#traceenable) | `'Off'` |
 
 
-Example - A nearly complete "app" vHost definition which is injected into the Apache role by the `myapp` role could look like this:
+Example:
 ```yaml
-apache_httpd__mods__host_var:
-  - filename: 'cgi'
-    enabled: true
-    state: 'present'
-
-  - filename: 'proxy_fcgi'
-    enabled: true
-    state: 'present'
-
-apache_httpd__vhosts__host_var:
-
-  # Application vHosts
-  - template: 'app'
-    filename: 'myapp.example.com.80'
-    state: 'present'
-    enabled: true
-
-    by_role: 'myapp'
-    comment: |-
-      Runs MyApp on Port 443. This vHost is hardened.
-
-    allowed_file_extensions:
-      - 'css'
-      - 'gif'
-      - 'html?'
-      - 'ico'
-      - 'jpe?g'
-      - 'js'
-      - 'pdf'
-      - 'php'
-      - 'png'
-      - 'ttf'
-      - 'txt'
-      - 'woff2?'
-    allowed_http_methods:
-      - 'GET'
-      - 'OPTIONS'
-      - 'POST'
-    authz_document_root: |-
-        Require local
-    authz_file_extensions: |-
-        Require local
-    php_set_handler: 'SetHandler "proxy:unix:/run/php-fpm/myapp.sock|fcgi://localhost"'
-
-    conf_allow_override: 'None'
-    conf_custom_log: 'logs/myapp.example.com-access.log fail2ban'
-    conf_directory_index: 'index.php'
-    conf_document_root: '/var/www/html/myapp'
-    conf_keep_alive_timeout: 5
-    conf_log_level: 'warn'
-    conf_options: 'None'
-    conf_request_read_timeout: 30
-    conf_server_admin: '{{ myapp__serveradmin }}'
-    conf_server_alias: 'othername.myapp.com'
-    conf_server_name: 'myapp.example.com'
-    conf_timeout: 30
-
-    raw: !unsafe |-
-      <Directory "{{ myapp__app_home }}/data/">
-          # Just in case the .htaccess gets disabled.
-          Require all denied
-      </Directory>
-      {% if myapp__data_path != (myapp__app_home + "/data") %}
-      <Directory {{ myapp__data_path|quote }}>
-          # Just in case someone changes the global Apache defaults and messed
-          # with the "Alias" directive ;)
-          Require all denied
-      </Directory>
-      {% endif %}
-
-      # ssl_module
-      SSLEngine On
-      SSLCertificateFile      /etc/pki/tls/certs/localhost.pem
-      SSLCertificateKeyFile   /etc/pki/tls/private/localhost.key
+# optional - core
+apache_httpd__conf_add_default_charset: 'UTF-8'
+apache_httpd__conf_document_root: '/var/www/html'
+apache_httpd__conf_enable_send_file: 'On'
+apache_httpd__conf_error_log: 'syslog:local1'
+apache_httpd__conf_hostname_lookups: 'Off'
+apache_httpd__conf_keep_alive: 'On'
+apache_httpd__conf_keep_alive_timeout: 5
+apache_httpd__conf_limit_request_body: 102400
+apache_httpd__conf_limit_request_field_size: 8190
+apache_httpd__conf_limit_request_fields: 100
+apache_httpd__conf_limit_request_line: 8190
+apache_httpd__conf_log_level: 'warn'
+apache_httpd__conf_max_keep_alive_requests: 500
+apache_httpd__conf_server_name: 'localhost'
+apache_httpd__conf_timeout: 10
+apache_httpd__conf_trace_enable: 'Off'
 ```
 
-Example - A reverse proxy:
-```yaml
-apache_httpd__mods__host_var:
-  - filename: 'deflate'
-    enabled: true
-    state: 'present'
-
-  - filename: 'filter'
-    enabled: true
-    state: 'present'
-
-  - filename: 'proxy_http'
-    enabled: true
-    state: 'present'
-
-  - filename: 'proxy_wstunnel'
-    enabled: true
-    state: 'present'
-
-  - filename: 'security2'
-    enabled: true
-    state: 'present'
-
-
-apache_httpd__vhosts__host_var:
-
-  # Proxy vHosts
-  - template: 'proxy'
-    filename: 'hello.example.com.443'
-    state: 'present'
-    enabled: true
-
-    conf_directory_index: 'index.php'
-    conf_proxy_error_override: 'On'
-    conf_proxy_preserve_host: 'On'
-    conf_proxy_timeout: 10
-    conf_server_name: 'hello.example.com'
-
-    raw: !unsafe |-
-      # proxy_module and other
-      <Proxy *>
-          Require all granted
-      </Proxy>
-      RewriteRule ^/(.*) https://192.0.2.157/$1 [proxy,last]
-      ProxyPassReverse / https://192.0.2.157/
-
-      # ssl_module
-      SSLEngine On
-      SSLProxyEngine On
-      SSLProxyCheckPeerCN Off
-      SSLProxyCheckPeerExpire On
-
-      SSLCertificateFile      /etc/pki/tls/certs/hello.example.com.pem
-      SSLCertificateKeyFile   /etc/pki/tls/private/hello.example.com.key
-      SSLCACertificateFile    /etc/pki/tls/certs/rootCA.pem
-```
-
-Example - A simple redirect vHost:
-
-```yaml
-
-apache_httpd__vhosts__host_var:
-
-  # Redirect vHosts
-  - template: 'redirect'
-    filename: 'www.example.com.80'
-    state: 'present'
-    enabled: true
-
-    comment: |-
-      Redirect to https://www.example.com.
-
-    conf_server_name: 'www.example.com'
-
-    virtualhost_ip: '*'
-    virtualhost_port: 80
-```
 
 ## Optional Role Variables - Specific to this role
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__conf__group_var` /<br> `apache_httpd__conf__host_var` | List of dictionaries of `conf-available`/`conf-enabled` files. <br> Subkeys:<br> * `filename`: Required, string. Destination filename in `conf-available/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.<br> * `enabled`: Optional, boolean. Defaults to `true`. Creates a symlink to `conf-available/<keyname>.conf` in `conf-enabled/` (`true`), otherwise the link is removed (`false`).<br> * `state`: Optional, string. `conf-available/<keyname>.conf` is created (`present`), otherwise file is removed (`absent`).<br> * `template`: Mandatory, string. Name of the Jinja template source file to use.<br>See example below. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
-| `apache_httpd__mods__group_var` / `apache_httpd__mods__host_var` | List of dictionaries of `mods-available`/`mods-enabled` files. <br>Subkeys:<br> * `filename`: Required, string. Destination filename in `mods-available/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.<br> * `enabled`: Optional, boolean. Defaults to `true`. Creates a symlink to `mods-available/<keyname>.mods` in `mods-enabled/` (`true`), otherwise the link is removed (`false`).<br> * `state`: Optional, string. `mods-available/<keyname>.conf` is created (`present`), otherwise file is removed (`absent`).<br> * `template`: Mandatory, string. Name of the Jinja template source file to use.<br>See example below. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
-| `apache_httpd__packages__group_var` / `apache_httpd__packages__host_var` | List of dictionaries of packages to install, related to Apache, using the OS package manager. Subkeys:<br> * `name`: Required, string. The package name.<br> * `state`: Required, string. State of the package. Possible options: `present`, `absent`. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
-| `apache_httpd__skip_php_fpm` | Skip PHP configuration globally and in each vHost within Apache. | `false` |
-| `apache_httpd__systemd_enabled` | Whether the Apache webserver service should start on boot (`true`) or not (`false`). | `true` |
-| `apache_httpd__systemd_state` | Make sure Apache webserver service is in a specific state. Possible options:<br> * `reloaded`<br> * `restarted`<br> * `started`<br> * `stopped` | `'started'` |
+| `apache_httpd__conf__group_var` /<br> `apache_httpd__conf__host_var` | Optional, todo. List of dictionaries of `conf-available`/`conf-enabled` files. <br> Subkeys:<br> * `filename`: Mandatory, string. Destination filename in `conf-available/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.<br> * `enabled`: Optional, boolean. Defaults to `true`. Creates a symlink to `conf-available/<keyname>.conf` in `conf-enabled/` (`true`), otherwise the link is removed (`false`).<br> * `state`: Optional, string. `conf-available/<keyname>.conf` is created (`present`), otherwise file is removed (`absent`).<br> * `template`: Mandatory, string. Name of the Jinja template source file to use.<br>See example below. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
+| `apache_httpd__mods__group_var` / `apache_httpd__mods__host_var` | Optional, todo. List of dictionaries of `mods-available`/`mods-enabled` files. <br>Subkeys:<br> * `filename`: Mandatory, string. Destination filename in `mods-available/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.<br> * `enabled`: Optional, boolean. Defaults to `true`. Creates a symlink to `mods-available/<keyname>.mods` in `mods-enabled/` (`true`), otherwise the link is removed (`false`).<br> * `state`: Optional, string. `mods-available/<keyname>.conf` is created (`present`), otherwise file is removed (`absent`).<br> * `template`: Optional, string. Name of the Ansible Jinja template source file to use. If ommited, `filename` is used.<br>See example below. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
+| `apache_httpd__packages__group_var` / `apache_httpd__packages__host_var` | Optional, todo. List of dictionaries of packages to install, related to Apache, using the OS package manager. Subkeys:<br> * `name`: Mandatory, string. The package name.<br> * `state`: Mandatory, string. State of the package. Possible options: `present`, `absent`. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
+| `apache_httpd__skip_php_fpm` | Optional, todo. Skip PHP configuration globally and in each vHost within Apache. | `false` |
+| `apache_httpd__systemd_enabled` | Optional, todo. Whether the Apache webserver service should start on boot (`true`) or not (`false`). | `true` |
+| `apache_httpd__systemd_state` | Optional, todo. Make sure Apache webserver service is in a specific state. Possible options:<br> * `reloaded`<br> * `restarted`<br> * `started`<br> * `stopped` | `'started'` |
 
 Example:
 ```yaml
@@ -337,55 +168,93 @@ apache_httpd__systemd_state: 'started'
 ```
 
 
-## Optional Role Variables - Global Apache Config (core)
+## Mandatory Role Variables - vHosts
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `apache_httpd__conf_add_default_charset` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#adddefaultcharset) | `'UTF-8'` |
-| `apache_httpd__conf_document_root` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#documentroot) | `'/var/www/html'` |
-| `apache_httpd__conf_enable_send_file` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#enablesendfile) | `'On'` |
-| `apache_httpd__conf_error_log` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog) | `'syslog:local1'` |
-| `apache_httpd__conf_hostname_lookups` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#hostnamelookups) | `'Off'` |
-| `apache_httpd__conf_keep_alive` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#keepalive) | `'On'` |
-| `apache_httpd__conf_keep_alive_timeout` | CIS: Do not set it above `15` seconds.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#keepalivetimeout) | `5` |
-| `apache_httpd__conf_limit_request_body` | CIS: Do not set it above `102400`.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestbody) | `102400` |
-| `apache_httpd__conf_limit_request_field_size` | CIS: Do not set it above `1024` - but this might be too small for any modern application which sets cookies in its Header.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestfieldsize) | `8190` |
-| `apache_httpd__conf_limit_request_fields` | CIS: Do not set it above `100`.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestfields) | `100` |
-| `apache_httpd__conf_limit_request_line` | CIS: Do not set it above `512` - but this might be too small for any modern application which sets cookies in its Header.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestline) | `8190` |
-| `apache_httpd__conf_log_level` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel) | `'warn'` |
-| `apache_httpd__conf_max_keep_alive_requests` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#maxkeepaliverequests) | `500` |
-| `apache_httpd__conf_server_name` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#servername) | `'localhost'` |
-| `apache_httpd__conf_timeout` | CIS: Do not set it above `10` seconds.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#timeout) | `10` |
-| `apache_httpd__conf_trace_enable` | CIS: Do not set it to ``On``.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#traceenable) | `'Off'` |
+`apache_httpd__vhosts__group_var` / `apache_httpd__vhosts__host_var`:
+
+| Variable | Description |
+| -------- | ----------- |
+| `conf_server_name` | Mandatory, string. Set this variable for each vHost definition. Although this is just best practise, we would never use a vHost without a ServerName. |
 
 
 Example:
 ```yaml
-# optional - core
-apache_httpd__conf_add_default_charset: 'UTF-8'
-apache_httpd__conf_document_root: '/var/www/html'
-apache_httpd__conf_enable_send_file: 'On'
-apache_httpd__conf_error_log: 'syslog:local1'
-apache_httpd__conf_hostname_lookups: 'Off'
-apache_httpd__conf_keep_alive: 'On'
-apache_httpd__conf_keep_alive_timeout: 5
-apache_httpd__conf_limit_request_body: 102400
-apache_httpd__conf_limit_request_field_size: 8190
-apache_httpd__conf_limit_request_fields: 100
-apache_httpd__conf_limit_request_line: 8190
-apache_httpd__conf_log_level: 'warn'
-apache_httpd__conf_max_keep_alive_requests: 500
-apache_httpd__conf_server_name: 'localhost'
-apache_httpd__conf_timeout: 10
-apache_httpd__conf_trace_enable: 'Off'
+# mandatory
+apache_httpd__vhosts__host_var:
+  # Application vHosts
+  - template: 'app'
+    conf_server_name: 'myapp.example.com'
 ```
+
+
+## Optional Role Variables - vHosts
+
+Using `apache_httpd__vhosts__group_var` or `apache_httpd__vhosts__host_var` (which are dictionaries), you define vHosts for Apache. The example below shows a complete example, use this as a starting point.
+
+Types of vHosts:
+
+* **app**<br>
+  A hardened vHost running an application like Nextcloud, Wordpress etc. with the most common options. Can be extended by using the `raw` variable.<br>
+* **localhost**<br>
+  A hardened, pre-defined VirtualHost just listening on https://localhost, and only accessible from localhost. Due to its naming, it is the first defined vHost. Useful for <br>Apache status info etc. Can be extended by using the `raw` variable. The following URLs are pre-configured, accessible just from localhost: `/fpm-ping`, `/fpm-status`, `/monitoring.php`, `/server-info`, `/server-status`.
+* **proxy**<br>
+  A typical hardened reverse proxy vHost. Can be extended by using the `raw` variable. This proxy vHost definition prevents Apache from functioning as a forward proxy <br>server (inside > out).
+* **redirect**<br>
+  A vHost that redirects from one port (default "80") to another (default "443"). Custom redirect rules can be provided using the `raw` variable.<br>
+* **raw**<br>
+  If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>` and `</VirtualHost>` completely from scratch.<br>
+
+"Hardened" means among other things:
+
+* Old HTTP protocol (< HTTP/1.1) versions are disallowed.
+* IP address based requests are disallowed.
+* Number of bytes that are allowed in a request are limited.
+* etc.
+
+This role creates a vHost named `localhost` by default. Have a look at the [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `allowed_file_extensions` | Optional, todo. app- and proxy-vHosts block ALL file extensions by default (including `.gitignore`, `.svn`, `.htaccess`, `.hg`, `.bzr` etc.), unless specifically allowed. Use `find {{ apache_httpd__conf_document_root }} -type f -name '*.*' PIPE awk -F. '{print $NF }' PIPE sort --unique` to compile a list of the file extensions that are currently present in your application. Hint: The vHost templates already ensure that filenames starting with a dot (".") are never matched. | * app: `['css', 'gif', 'html?', 'ico', 'jpe?g', 'js', 'pdf', 'php', 'png', 'svg', 'ttf', 'txt', 'woff2?']`<br> * localhost: `['css', 'gif', 'html?', 'ico', 'jpe?g', 'js', 'pdf', 'php', 'png', 'svg', 'ttf', 'txt', 'woff2?']`<br> |
+| `allowed_http_methods` | Optional, todo. * Should be used to disable unwanted [HTTP methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods). Only the explicity listed ones are allowed. Returns a [405 - Method Not Allowed](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) if a forbidden HTTP method is used.<br> * This does not disable TRACE.<br> * Always enable GET and OPTIONS at least. For an OPTIONS request, Apache always returns `Allow: GET,POST,OPTIONS,HEAD`, no matter what.<br> * We are NOT using [LimitExcept](https://httpd.apache.org/docs/2.4/mod/core.html#limitexcept), because this directive is not allowed in a VirtualHost context.<br><br>Available HTTP methods:<br> * CONNECT<br> * DELETE<br> * GET<br> * HEAD<br> * OPTIONS<br> * PATCH<br> * POST<br> * PUT<br><br>Available WebDAV methods:<br> * COPY<br> * LOCK<br> * MKCOL<br> * MOVE<br> * PROPFIND<br> * PROPPATCH<br> * UNLOCK | * app: `['GET', 'OPTIONS']`<br> * localhost: `['GET', 'OPTIONS']`<br> * proxy: `['GET', 'OPTIONS']` |
+| `authz_document_root` | Optional, todo. Authorization statement for the ``DocumentRoot {{ apache_httpd__conf_document_root }}/{{ conf_server_name }}`` directive. | * app: `'Require local'`<br> * localhost: `'Require local'` |
+| `authz_file_extensions` | Optional, todo. Authorization statement for the [FilesMatch](https://httpd.apache.org/docs/2.4/mod/core.html#filesmatch) directive which is based on `allowed_file_extensions`. | * app: `'Require local'`<br> * localhost: `'Require local'` |
+| `by_role` | Optional, todo. If defined it results in a comment `# Generated by Ansible role: {{ by_role }}` at the beginning of a vHost definition. | * app: unset<br> * localhost: unset<br> * proxy: unset<br> * raw: unset<br> * redirect: unset |
+| `comment` | Optional, todo. Describes the vHost and results in a comment right above the `<VirtualHost>` section. | * app: `'no description available'`<br> * localhost: `'no description available'`<br> * proxy: `'no description available'`<br> * raw: `'no description available'` |
+| `conf_allow_override` | Optional, todo. Will be set in the ``<Directory>`` directive of the vHost.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#allowoverride) | * app: `None`<br> * localhost: `None` |
+| `conf_custom_log` | Optional, todo. If unset, no access logs are written. You might want to configure it for statistical or debugging reasons or software like fail2ban.<br>One of<br> * ``agent``<br> * ``combined``<br> * ``common``<br> * ``debug``<br> * ``fail2ban``<br> * ``referer``<br> * ``vhost_combined``<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog) | * app: unset<br> * localhost: unset<br> * proxy: unset |
+| `conf_directory_index` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex) | * app: `{{ apache_httpd__mod_dir_directory_index }}` |
+| `conf_document_root` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#documentroot) | * app: `{{ apache_httpd__conf_document_root}}/{{ conf_server_name }}`<br> * localhost: `{{ apache_httpd__conf_document_root}}/{{ conf_server_name }}` |
+| `conf_error_log` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog) | * app: `logs/{{ conf_server_name }}-error.log`<br> * localhost: `logs/{{ conf_server_name }}-error.log`<br> * proxy: `logs/{{ conf_server_name }}-error.log` |
+| `conf_keep_alive_timeout` | Optional, todo. CIS: Do not set it above '15' seconds.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#keepalivetimeout) | * app: `5`<br> * localhost: `5`<br> * proxy: `5` |
+| `conf_log_level` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel) | * app: `'notice core:info'`<br> * localhost: `'notice core:info'`<br> * proxy: `'notice core:info'` |
+| `conf_options` | Optional, todo. Sets the ``Options`` for the `<Directory>` directive.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#options) | * app: `None`<br> * localhost: `None` |
+| `conf_proxy_error_override` | Optional, todo. If you want to have a common look and feel on the error pages seen by the end user, set this to "On" and define them on the reverse proxy server.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) | * proxy: `On` |
+| `conf_proxy_preserve_host` | Optional, todo. When enabled, this option will pass the ``Host:`` line from the incoming request to the proxied host, instead of the hostname specified in the ``ProxyPass`` line.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxypreservehost) | `Off` |
+| `conf_proxy_timeout` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxytimeout) | `5` |
+| `conf_request_read_timeout` | Optional, todo. CIS:<br> * Do not set the Timeout Limits for Request Headers above 40.<br> * Do not set the Timeout Limits for the Request Body above 20.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html#requestreadtimeout) | * app: `'header=20-40,MinRate=500 body=20,MinRate=500'`<br> * localhost: `'header=20-40,MinRate=500 body=20,MinRate=500'`<br> * proxy: `'header=20-40,MinRate=500 body=20,MinRate=500'` |
+| `conf_server_admin` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#serveradmin) | * app: `{{ apache_httpd__conf_server_admin }}`<br> * localhost: `{{ apache_httpd__conf_server_admin }}`<br> * proxy: `{{ apache_httpd__conf_server_admin }}` |
+| `conf_server_alias` | Optional, todo. Set this only if you need more than one `conf_server_name`.<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#serveralias) | * app: unset<br> * localhost: unset<br> * proxy: unset |
+| `conf_server_name` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#servername) | * app: unset<br> * localhost: unset<br> * proxy: unset<br> * redirect: unset |
+| `conf_timeout` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/core.html#timeout) | * app: `{{ apache_httpd__conf_timeout }}`<br> * localhost: `{{ apache_httpd__conf_timeout }}`<br> * proxy: `{{ apache_httpd__conf_timeout }}` |
+| `enabled` | Optional, todo. Enable this vHost. | `true` |
+| `filename` | Optional, todo. The filename of the vHost definition. If not set it defaults to the `conf_server_name` variable. If not set, the filename is automatically suffixed by `.virtualhost_port.conf`. | conf_server_name.virtualhost_port.conf |
+| `php_set_handler` | Optional, todo. Set the handler for PHP<br> * socket-based: `SetHandler "proxy:unix:/run/php-fpm/www.sockPIPEfcgi://localhost"`<br> * network-based: `SetHandler "proxy:fcgi://127.0.0.1:9000/"` | Optional, todo. * app: `'SetHandler "proxy:unix:/run/php-fpm/www.sockPIPEfcgi://localhost"'`<br> * localhost: `'SetHandler "proxy:unix:/run/php-fpm/www.sockPIPEfcgi://localhost"'` |
+| `raw` | Optional, todo. It is sometimes desirable to pass variable content that Jinja would handle as variables or blocks. Jinja's `{% raw %}` statement does not work in Ansible. The best and safest solution is to declare `raw` variables as `!unsafe`, to prevent templating errors and information disclosure.  | * app: unset<br> * localhost: unset<br> * proxy: unset<br> * raw: unset<br> * redirect: unset |
+| `state` | Optional, todo. Should the vhost definition file be created (`present`) or deleted (`absent`). | * app: unset<br> * localhost: `'present'`<br> * proxy: unset<br> * raw: unset<br> * redirect: unset |
+| `template` | Optional, todo. Have a look at the intro of this paragraph. | unset |
+| `virtualhost_ip` | Optional, todo. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | * app: `'*'`<br> * localhost: `'*'`<br> * proxy: `'*'`<br> * raw: `'*'`<br> * redirect: `'*'` |
+| `virtualhost_port` | Optional, number. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | * app: `443`<br> * localhost: `443`<br> * proxy: `443`<br> * raw: `443`<br> * redirect: `80` |
+
+Example: [Have a look here](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md). 
+
 
 
 ## Optional Role Variables - mod_dir
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__mod_dir_directory_index` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex) | `'index.html index.htm index.txt'` |
+| `apache_httpd__mod_dir_directory_index` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex) | `'index.html index.htm index.txt'` |
 
 
 Example:
@@ -401,7 +270,7 @@ This module is for flexible logging of client requests. Logs are written in a cu
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__mod_log_config_custom_log` | One of<br> * ``agent``<br> * ``combined``<br> * ``common``<br> * ``debug``<br> * ``fail2ban``<br> * ``referer``<br> * ``vhost_combined``<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog) | `'logs/access.log combined'` |
+| `apache_httpd__mod_log_config_custom_log` | Optional, todo. One of<br> * ``agent``<br> * ``combined``<br> * ``common``<br> * ``debug``<br> * ``fail2ban``<br> * ``referer``<br> * ``vhost_combined``<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog) | `'logs/access.log combined'` |
 
 Example:
 ```yaml
@@ -414,9 +283,9 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__mod_security_coreruleset_checksum` | The OWASP ModSecurity Core Rule Set (CRS) SHA1 checksum according to your version. | `'https://github.com/coreruleset/coreruleset/archive'` |
-| `apache_httpd__mod_security_coreruleset_url` | The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers. | `'3.3.2'` |
-| `apache_httpd__mod_security_coreruleset_version` | The OWASP ModSecurity Core Rule Set (CRS) version number without "v". | `'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'` |
+| `apache_httpd__mod_security_coreruleset_checksum` | Optional, todo. The OWASP ModSecurity Core Rule Set (CRS) SHA1 checksum according to your version. | `'https://github.com/coreruleset/coreruleset/archive'` |
+| `apache_httpd__mod_security_coreruleset_url` | Optional, todo. The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers. | `'3.3.2'` |
+| `apache_httpd__mod_security_coreruleset_version` | Optional, todo. The OWASP ModSecurity Core Rule Set (CRS) version number without "v". | `'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'` |
 
 Example:
 ```yaml
@@ -431,7 +300,7 @@ apache_httpd__mod_security_coreruleset_checksum: 'sha1:63aa8ee3f3c9cb23f5639dd23
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__mpm_common_listen` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#listen) | `[80]` |
+| `apache_httpd__mpm_common_listen` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#listen) | `[80]` |
 
 
 Example:
@@ -459,13 +328,13 @@ Best for PHP-FPM. Default.
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__mpm_event_max_connections_per_child` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxconnectionsperchild) | `0` |
-| `apache_httpd__mpm_event_max_request_workers` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxrequestworkers) | `400` |
-| `apache_httpd__mpm_event_max_spare_threads` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxsparethreads) | `250` |
-| `apache_httpd__mpm_event_min_spare_threads` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#minsparethreads) | `75` |
-| `apache_httpd__mpm_event_start_servers` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#startservers) | `3` |
-| `apache_httpd__mpm_event_thread_limit` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#threadlimit) | `64` |
-| `apache_httpd__mpm_event_threads_per_child` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#threadsperchild) | `25` |
+| `apache_httpd__mpm_event_max_connections_per_child` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxconnectionsperchild) | `0` |
+| `apache_httpd__mpm_event_max_request_workers` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxrequestworkers) | `400` |
+| `apache_httpd__mpm_event_max_spare_threads` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxsparethreads) | `250` |
+| `apache_httpd__mpm_event_min_spare_threads` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#minsparethreads) | `75` |
+| `apache_httpd__mpm_event_start_servers` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#startservers) | `3` |
+| `apache_httpd__mpm_event_thread_limit` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#threadlimit) | `64` |
+| `apache_httpd__mpm_event_threads_per_child` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#threadsperchild) | `25` |
 
 
 Example:
@@ -498,11 +367,11 @@ Best for Standard PHP running any version of `mod_php`. Does not work with http2
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__mpm_prefork_max_connections_per_child` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxconnectionsperchild) | `0` |
-| `apache_httpd__mpm_prefork_max_request_workers` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxrequestworkers) | `256` |
-| `apache_httpd__mpm_prefork_max_spare_threads` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxsparethreads) | `10` |
-| `apache_httpd__mpm_prefork_min_spare_threads` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#minsparethreads) | `5` |
-| `apache_httpd__mpm_prefork_start_servers` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#startservers) | `5` |
+| `apache_httpd__mpm_prefork_max_connections_per_child` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxconnectionsperchild) | `0` |
+| `apache_httpd__mpm_prefork_max_request_workers` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxrequestworkers) | `256` |
+| `apache_httpd__mpm_prefork_max_spare_threads` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxsparethreads) | `10` |
+| `apache_httpd__mpm_prefork_min_spare_threads` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#minsparethreads) | `5` |
+| `apache_httpd__mpm_prefork_start_servers` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#startservers) | `5` |
 
 Example:
 ```yaml
@@ -532,13 +401,13 @@ Best for mod_qos if you intend to use any connection level control directive ("Q
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__mpm_worker_max_connections_per_child` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxconnectionsperchild) | `0` |
-| `apache_httpd__mpm_worker_max_request_workers` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxrequestworkers) | `400` |
-| `apache_httpd__mpm_worker_max_spare_threads` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxsparethreads) | `250` |
-| `apache_httpd__mpm_worker_min_spare_threads` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#minsparethreads) | `75` |
-| `apache_httpd__mpm_worker_start_servers` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#startservers) | `3` |
-| `apache_httpd__mpm_worker_thread_limit` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#threadlimit) | `64` |
-| `apache_httpd__mpm_worker_threads_per_child` | [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#threadsperchild) | `25` |
+| `apache_httpd__mpm_worker_max_connections_per_child` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxconnectionsperchild) | `0` |
+| `apache_httpd__mpm_worker_max_request_workers` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxrequestworkers) | `400` |
+| `apache_httpd__mpm_worker_max_spare_threads` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#maxsparethreads) | `250` |
+| `apache_httpd__mpm_worker_min_spare_threads` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#minsparethreads) | `75` |
+| `apache_httpd__mpm_worker_start_servers` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#startservers) | `3` |
+| `apache_httpd__mpm_worker_thread_limit` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#threadlimit) | `64` |
+| `apache_httpd__mpm_worker_threads_per_child` | Optional, todo. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#threadsperchild) | `25` |
 
 
 Example:
@@ -552,11 +421,6 @@ apache_httpd__mpm_worker_start_servers: 3
 apache_httpd__mpm_worker_thread_limit: 64
 apache_httpd__mpm_worker_threads_per_child: 25
 ```
-
-
-## raw Examples for vHosts
-
-[Go to the list of code examples](https://github.com/Linuxfabrik/lfops/blob/coding-camp/roles/apache_httpd/EXAMPLES.md).
 
 
 ## License

@@ -4,16 +4,14 @@
   ansible.builtin.debug:
     var: 'apache_httpd__mods__combined_var'
 
-- name: 'Create mods-available configs'
-  ansible.builtin.template:
-    src: 'etc/httpd/mods-available/{{ item["template"]}}.conf.j2'
-    dest: '{{ apache_httpd__config_path + "/mods-available/" + item["filename"] + ".conf" }}'
-    owner: 'root'
-    group: 'root'
+- name: 'Disable mods'
+  ansible.builtin.file:
+    path: '{{ apache_httpd__config_path + "/mods-enabled/" + item["filename"] + ".conf" }}'
     mode: 0o644
-  when:
-    - 'item["state"] | d("present") != "absent"'
+    state: 'absent'
   loop: '{{ apache_httpd__mods__combined_var }}'
+  when: 'not item["enabled"] | d(true)
+        or item["state"] | d("present") == "absent"'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
 
@@ -24,6 +22,19 @@
   when:
     - 'item["state"] | d("present") == "absent"'
   loop: '{{ apache_httpd__mods__combined_var }}'
+
+- name: 'Create mods-available configs'
+  ansible.builtin.template:
+    src: 'etc/httpd/mods-available/{{ item["template"] | d(item["filename"]) }}.conf.j2'
+    dest: '{{ apache_httpd__config_path + "/mods-available/" + item["filename"] + ".conf" }}'
+    owner: 'root'
+    group: 'root'
+    mode: 0o644
+  when:
+    - 'item["state"] | d("present") != "absent"'
+  loop: '{{ apache_httpd__mods__combined_var }}'
+  notify:
+    - 'apache_httpd: httpd -t; systemctl reload httpd'
 
 - name: 'Enable mods'
   ansible.builtin.file:
@@ -38,13 +49,3 @@
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
 
-- name: 'Disable mods'
-  ansible.builtin.file:
-    path: '{{ apache_httpd__config_path + "/mods-enabled/" + item["filename"] + ".conf" }}'
-    mode: 0o644
-    state: 'absent'
-  loop: '{{ apache_httpd__mods__combined_var }}'
-  when: 'not item["enabled"] | d(true)
-        or item["state"] | d("present") == "absent"'
-  notify:
-    - 'apache_httpd: httpd -t; systemctl reload httpd'

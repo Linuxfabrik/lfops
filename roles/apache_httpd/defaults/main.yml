@@ -245,11 +245,11 @@ apache_httpd__mods__role_var:
 apache_httpd__mods__dependent_var: []
 apache_httpd__mods__group_var: []
 apache_httpd__mods__host_var: []
-apache_httpd__modss__combined_var: '{{
-    apache_httpd__modss__role_var +
-    apache_httpd__modss__dependent_var +
-    apache_httpd__modss__group_var +
-    apache_httpd__modss__host_var
+apache_httpd__mods__combined_var: '{{
+    apache_httpd__mods__role_var +
+    apache_httpd__mods__dependent_var +
+    apache_httpd__mods__group_var +
+    apache_httpd__mods__host_var
   }}'
 
 
