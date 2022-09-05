@@ -59,41 +59,41 @@ myhost
 myhost
 ```
 
-Deploy a VM:
+After that run the corresponding playbooks (optionally append parameters like `--diff` and/or `--check`):
 
 ```bash
-ansible-playbook --inventory path/to/environment linuxfabrik.lfops.mcm_vm --limit myhost
+ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.hetzner_vm --limit myhost
 ```
 
 Run the basic setup:
 
 ```bash
-ansible-playbook --inventory path/to/environment linuxfabrik.lfops.setup_basic --limit myhost
+ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.setup_basic --limit myhost
 ```
 
 Deploy a component:
 
 ```bash
-ansible-playbook --inventory path/to/environment linuxfabrik.lfops.monitoring_plugins --limit myhost
+ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.monitoring_plugins --limit myhost
 ```
 
-Deploy a full-fledged application (Playbooks for application setups are prefixed by `setup_`):
+Deploy a full-fledged application (playbooks for complex application setups are prefixed by `setup_`):
 
 ```bash
-ansible-playbook --inventory path/to/environment linuxfabrik.lfops.setup_nextcloud --limit myhost
+ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.setup_nextcloud --limit myhost
 ```
 
 Change some settings afterwards, for example in PHP:
 
 ```bash
-ansible-playbook --inventory path/to/environment linuxfabrik.lfops.setup_nextcloud --limit myhost --tags php
+ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.setup_nextcloud --limit myhost --tags php
 ```
 
 
 ## Documentation
 
-* Roles: Each role has its own README file.
-* Plugins: The documentation for all plugins is available through `ansible-doc`. For example, `ansible-doc linuxfabrik.lfops.gpg_key` shows the documentation for the GPG key managing module.
+* Ansible Roles: Each role has its own README file.
+* Ansible Plugins: The documentation for all plugins is available through `ansible-doc`. For example, `ansible-doc linuxfabrik.lfops.gpg_key` shows the documentation for the GPG key managing module.
 
 
 ## Known Limitations
