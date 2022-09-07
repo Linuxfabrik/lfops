@@ -18,12 +18,14 @@
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not setup_nextcloud__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_nextcloud__skip_policycoreutils | default(false)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var:
@@ -62,11 +64,6 @@
 
 
       # === MariaDB
-    - role: 'linuxfabrik.lfops.repo_epel'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
-
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
