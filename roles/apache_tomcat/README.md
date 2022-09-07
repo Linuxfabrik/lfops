@@ -92,7 +92,7 @@ apache_tomcat__service_state: 'started'
 apache_tomcat__users__group_var: []
 apache_tomcat__users__host_var:
   - username: 'admin'
-    password: 'password'
+    password: 'linuxfabrik'
     roles:
       - 'admin-gui'
       - 'manager-gui'

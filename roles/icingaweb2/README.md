@@ -102,7 +102,7 @@ icingaweb2__roles__host_var:
 icingaweb2__roles__group_var: []
 icingaweb2__users__host_var:
   - username: 'admin-user'
-    password: 'my-secret-password'
+    password: 'linuxfabrik'
 icingaweb2__users__group_var: []
 ```
 

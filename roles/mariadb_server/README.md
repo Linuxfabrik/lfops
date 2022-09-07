@@ -104,14 +104,14 @@ mariadb_server__skip_sys_schema: false
 mariadb_server__state: 'started'
 mariadb_server__users__host_var:
   - username: 'user1'
-    password: 'my-secret-password'
+    password: 'linuxfabrik'
     host: 'localhost'
     priv:
       - '{{ icingaweb2_db }}.*:SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
       - 'wiki.*:ALL'
     state: 'present'
   - username: 'mariadb-dump'
-    password: 'password'
+    password: 'linuxfabrik'
     host: '127.0.0.1'
     priv:
       - '*.*:event,lock tables,reload,select,show view,super,trigger'

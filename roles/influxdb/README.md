@@ -58,7 +58,7 @@ influxdb__databases__host_var:
     retention: '216d'
 influxdb__users__host_var:
   - name: 'user1'
-    password: 'some-secret-password'
+    password: 'linuxfabrik'
     state: 'present'
     admin: false
     grants:

@@ -68,17 +68,17 @@ icinga2_master__database_name: 'icinga2_ido'
 icinga2_master__api_users__group_var: []
 icinga2_master__api_users__host_var:
   - username: 'ticket-user'
-    password: 'password'
+    password: 'linuxfabrik'
     permissions:
       - 'actions/generate-ticket'
   - username: 'downtime-user'
-    password: 'password'
+    password: 'linuxfabrik'
     permissions:
       - 'actions/schedule-downtime'
       - 'actions/remove-downtime'
       - 'actions/reschedule-check'
   - username: 'check-logfile-windows-api-user'
-    password: 'password'
+    password: 'linuxfabrik'
     permissions: |-
       [
       {% raw %}
