@@ -164,8 +164,8 @@ nextcloud__php__modules__dependent_var:
   - name: 'php-zip'
     state: 'present'
 
-nextcloud__php__ini_max_execution_time: 3600
-nextcloud__php__ini_max_file_uploads: 100
-nextcloud__php__ini_memory_limit: '1024M'
-nextcloud__php__ini_post_max_size: '16M'
-nextcloud__php__ini_upload_max_filesize: '10000M'
+nextcloud__php__ini_max_execution_time__dependent_var: 3600
+nextcloud__php__ini_max_file_uploads__dependent_var: 100
+nextcloud__php__ini_memory_limit__dependent_var: '1024M'
+nextcloud__php__ini_post_max_size__dependent_var: '16M'
+nextcloud__php__ini_upload_max_filesize__dependent_var: '10000M'
