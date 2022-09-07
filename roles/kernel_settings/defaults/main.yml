@@ -23,30 +23,30 @@ kernel_settings__systemd_cpu_affinity__group_var: ''
 kernel_settings__systemd_cpu_affinity__host_var: ''
 kernel_settings__systemd_cpu_affinity__role_var: ''
 kernel_settings__systemd_cpu_affinity__combined_var: '{{
-  kernel_settings__systemd_cpu_affinity__host_var if kernel_settings__systemd_cpu_affinity__host_var else
-  kernel_settings__systemd_cpu_affinity__group_var if kernel_settings__systemd_cpu_affinity__group_var else
-  kernel_settings__systemd_cpu_affinity__dependent_var if kernel_settings__systemd_cpu_affinity__dependent_var else
-  kernel_settings__systemd_cpu_affinity__role_var if kernel_settings__systemd_cpu_affinity__role_var
-}}'
+    kernel_settings__systemd_cpu_affinity__host_var if (kernel_settings__systemd_cpu_affinity__host_var | string | length) else
+    kernel_settings__systemd_cpu_affinity__group_var if (kernel_settings__systemd_cpu_affinity__group_var | string | length) else
+    kernel_settings__systemd_cpu_affinity__dependent_var if (kernel_settings__systemd_cpu_affinity__dependent_var | string | length) else
+    kernel_settings__systemd_cpu_affinity__role_var
+  }}'
 
 kernel_settings__transparent_hugepages__dependent_var: ''
 kernel_settings__transparent_hugepages__group_var: ''
 kernel_settings__transparent_hugepages__host_var: ''
 kernel_settings__transparent_hugepages__role_var: ''
 kernel_settings__transparent_hugepages__combined_var: '{{
-  kernel_settings__transparent_hugepages__host_var if kernel_settings__transparent_hugepages__host_var else
-  kernel_settings__transparent_hugepages__group_var if kernel_settings__transparent_hugepages__group_var else
-  kernel_settings__transparent_hugepages__dependent_var if kernel_settings__transparent_hugepages__dependent_var else
-  kernel_settings__transparent_hugepages__role_var if kernel_settings__transparent_hugepages__role_var
-}}'
+    kernel_settings__transparent_hugepages__host_var if (kernel_settings__transparent_hugepages__host_var | string | length) else
+    kernel_settings__transparent_hugepages__group_var if (kernel_settings__transparent_hugepages__group_var | string | length) else
+    kernel_settings__transparent_hugepages__dependent_var if (kernel_settings__transparent_hugepages__dependent_var | string | length) else
+    kernel_settings__transparent_hugepages__role_var
+  }}'
 
 kernel_settings__transparent_hugepages_defrag__dependent_var: ''
 kernel_settings__transparent_hugepages_defrag__group_var: ''
 kernel_settings__transparent_hugepages_defrag__host_var: ''
 kernel_settings__transparent_hugepages_defrag__role_var: ''
 kernel_settings__transparent_hugepages_defrag__combined_var: '{{
-  kernel_settings__transparent_hugepages_defrag__host_var if kernel_settings__transparent_hugepages_defrag__host_var else
-  kernel_settings__transparent_hugepages_defrag__group_var if kernel_settings__transparent_hugepages_defrag__group_var else
-  kernel_settings__transparent_hugepages_defrag__dependent_var if kernel_settings__transparent_hugepages_defrag__dependent_var else
-  kernel_settings__transparent_hugepages_defrag__role_var if kernel_settings__transparent_hugepages_defrag__role_var
-}}'
+    kernel_settings__transparent_hugepages_defrag__host_var if (kernel_settings__transparent_hugepages_defrag__host_var | string | length) else
+    kernel_settings__transparent_hugepages_defrag__group_var if (kernel_settings__transparent_hugepages_defrag__group_var | string | length) else
+    kernel_settings__transparent_hugepages_defrag__dependent_var if (kernel_settings__transparent_hugepages_defrag__dependent_var | string | length) else
+    kernel_settings__transparent_hugepages_defrag__role_var
+  }}'
