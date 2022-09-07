@@ -28,7 +28,7 @@ Tested on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `firewall__firewall` | Which firewall should be activated and configured. All other firewalls will be disabled. Possible options:<br> * `None`<br> * `firewalld`<br> * `fwbuilder`<br> * `iptables`<br> * `nftables`<br> * `ufw` | `'fwbuilder'` |
+| `firewall__firewall` | Which firewall should be activated and configured. All other firewalls will be disabled. Possible options:<br> * `'None'`<br> * `'firewalld'`<br> * `'fwbuilder'`<br> * `'iptables'`<br> * `'nftables'`<br> * `'ufw'` | `'fwbuilder'` |
 
 Example:
 ```yaml
