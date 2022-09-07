@@ -110,7 +110,7 @@ EXAMPLES = r'''
     hostname: 'appsrv11'
     purpose: 'MariaDB'
     username: 'mariadb-admin'
-    password: 'secret'
+    password: 'linuxfabrik'
   register: creds
 
 - debug:
@@ -132,7 +132,7 @@ EXAMPLES = r'''
     notes: 'please note'
     purpose: 'MariaDB'
     username: 'mariadb-admin'
-    password: 'supersecretsecret'
+    password: 'linuxfabrik'
     uris:
      - 'https://www.example.com'
      - 'https://www.example.org'
