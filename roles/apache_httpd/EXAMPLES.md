@@ -21,8 +21,8 @@ apache_httpd__vhosts__host_var:
         Require all granted
     authz_file_extensions: |-
         Require all granted
-    conf_server_name: 'test'
     conf_directory_index: 'index.php'
+    conf_server_name: 'test'
 ```
 
 ### Reverse Proxy
