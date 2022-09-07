@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 2022050901
+# 2022090701
 
 BACKUP_DIR='/backup/influxdb-dump'
 
@@ -8,6 +8,10 @@ mkdir -p "$BACKUP_DIR"
 # detect paths
 INFLUXD="$(which influxd)"
 
+# make sure the backup is not readable by others
+old_umask=$(umask)
+umask 027
+
 # Delete the former dump
 echo "Delete former dump files."
 rm -f "$BACKUP_DIR/*"
@@ -15,3 +19,5 @@ rm -f "$BACKUP_DIR/*"
 # full dump
 "$INFLUXD" backup -portable "$BACKUP_DIR"
 echo "Fulldump finished."
+
+umask "$old_umask"
