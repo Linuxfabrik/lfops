@@ -57,19 +57,30 @@
         - 'not setup_basic__skip_hostname | d(false)'
 
     - role: 'linuxfabrik.lfops.timezone'
+      when:
+        - 'not setup_basic__skip_timezone | d(false)'
 
     - role: 'linuxfabrik.lfops.logrotate'
+      when:
+        - 'not setup_basic__skip_logrotate | d(false)'
 
     - role: 'linuxfabrik.lfops.cloud_init'
+      when:
+        - 'not setup_basic__skip_cloud_init | d(false)'
 
     - role: 'linuxfabrik.lfops.cockpit'
+      when:
+        - 'not setup_basic__skip_cockpit | d(false)'
 
     - role: 'linuxfabrik.lfops.dnf_makecache'
       when:
         - '(ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["8"])
           or (ansible_facts["distribution"] == "Fedora")'
+        - 'not setup_basic__skip_dnf_makecache | d(false)'
 
     - role: 'linuxfabrik.lfops.kdump'
+      when:
+        - 'not setup_basic__skip_kdump | d(false)'
 
     - role: 'linuxfabrik.lfops.chrony'
       when:
@@ -87,12 +98,20 @@
         - 'not setup_basic__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.glances'
+      when:
+        - 'not setup_basic__skip_glances | d(false)'
 
     - role: 'linuxfabrik.lfops.tools'
+      when:
+        - 'not setup_basic__skip_tools | d(false)'
 
     - role: 'linuxfabrik.lfops.at'
+      when:
+        - 'not setup_basic__skip_at | d(false)'
 
     - role: 'linuxfabrik.lfops.yum_utils'
+      when:
+        - 'not setup_basic__skip_yum_utils | d(false)'
 
 
     # === SSH ===
@@ -115,10 +134,16 @@
 
     # === Mailing ===
     - role: 'linuxfabrik.lfops.mailx'
+      when:
+        - 'not setup_basic__skip_mailx | d(false)'
 
     - role: 'linuxfabrik.lfops.postfix'
+      when:
+        - 'not setup_basic__skip_postfix | d(false)'
 
     - role: 'linuxfabrik.lfops.mailto_root'
+      when:
+        - 'not setup_basic__skip_mailto_root | d(false)'
 
 
     # === Automatic updates ===
