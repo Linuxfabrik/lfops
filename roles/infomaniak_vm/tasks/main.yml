@@ -112,7 +112,50 @@
     loop: '{{ infomaniak_vm__networks }}'
     when: 'item["fixed_ip"] is defined'
 
-  - name: 'Manage the VM at Infomaniak'
+  - name: 'Manage the boot volume for the VM'
+    openstack.cloud.volume:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
+        user_domain_name: 'default'
+      region_name: 'dc3-a'
+      display_name: '{{ infomaniak_vm__name }}--boot'
+      image: '{{ infomaniak_vm__image }}'
+      bootable: true
+      size: '{{ infomaniak_vm__separate_boot_volume_size }}'
+      state: 'present'
+      volume_type: 'CEPH_1_{{ infomaniak_vm__separate_boot_volume_type }}'
+    delegate_to: 'localhost'
+    when:
+      - 'infomaniak_vm__separate_boot_volume_size is defined and infomaniak_vm__separate_boot_volume_size | string | length'
+
+  - name: 'Manage the VM at Infomaniak (with separate boot volume)'
+    openstack.cloud.server:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
+        user_domain_name: 'default'
+      region_name: 'dc3-a'
+      name: '{{ infomaniak_vm__name }}'
+      key_name: '{{ infomaniak_vm__key_name }}'
+      flavor: '{{ infomaniak_vm__flavor }}'
+      nics: '{{ infomaniak_vm__nics }}'
+      boot_volume: '{{ infomaniak_vm__name }}--boot'
+      terminate_volume: true # delete volume when deleting VM
+      security_groups: '{{ (infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length) | ternary(["default", infomaniak_vm__name], ["default"]) }}'
+      state: '{{ infomaniak_vm__state }}'
+      auto_ip: false # not all VMs need to have a public ip
+    delegate_to: 'localhost'
+    when:
+      - 'infomaniak_vm__separate_boot_volume_size is defined and infomaniak_vm__separate_boot_volume_size | string | length'
+
+  - name: 'Manage the VM at Infomaniak (without separate boot volume)'
     openstack.cloud.server:
       auth:
         auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
@@ -127,13 +170,13 @@
       image: '{{ infomaniak_vm__image }}'
       flavor: '{{ infomaniak_vm__flavor }}'
       nics: '{{ infomaniak_vm__nics }}'
-      volume_size: '{{ infomaniak_vm__volume_size | default(omit) }}'
-      boot_from_volume: '{{ infomaniak_vm__volume_size is defined | bool }}'
       terminate_volume: true # delete volume when deleting VM
       security_groups: '{{ (infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length) | ternary(["default", infomaniak_vm__name], ["default"]) }}'
       state: '{{ infomaniak_vm__state }}'
       auto_ip: false # not all VMs need to have a public ip
     delegate_to: 'localhost'
+    when:
+      - 'infomaniak_vm__separate_boot_volume_size is not defined or not infomaniak_vm__separate_boot_volume_size | string | length'
 
   # Cleanup
   - name: 'Cleanup ports when deleting VM'

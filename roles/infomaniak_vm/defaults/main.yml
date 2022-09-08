@@ -1,3 +1,4 @@
-infomaniak_vm__name: '{{ inventory_hostname }}'
 infomaniak_vm__key_name: '{{ lookup("env", "USER") | regex_replace("\.", " ") }}'
+infomaniak_vm__name: '{{ inventory_hostname }}'
+infomaniak_vm__separate_boot_volume_type: 'perf2'
 infomaniak_vm__state: 'present'
