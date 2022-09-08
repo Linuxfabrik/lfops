@@ -4,10 +4,10 @@
     openstack.cloud.network:
       auth:
         auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
-        username: '{{ infomaniak_vm__username }}'
-        password: '{{ infomaniak_vm__password }}'
-        project_id: '{{ infomaniak_vm__project_id }}'
-        project_name: '{{ infomaniak_vm__username }}'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: 'dc3-a'
       name: '{{ item["name"] }}'
@@ -20,10 +20,10 @@
     openstack.cloud.subnet:
       auth:
         auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
-        username: '{{ infomaniak_vm__username }}'
-        password: '{{ infomaniak_vm__password }}'
-        project_id: '{{ infomaniak_vm__project_id }}'
-        project_name: '{{ infomaniak_vm__username }}'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: 'dc3-a'
       name: '{{ item["name"] }}--subnet'
@@ -42,10 +42,10 @@
     openstack.cloud.port:
       auth:
         auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
-        username: '{{ infomaniak_vm__username }}'
-        password: '{{ infomaniak_vm__password }}'
-        project_id: '{{ infomaniak_vm__project_id }}'
-        project_name: '{{ infomaniak_vm__username }}'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: 'dc3-a'
       name: '{{ infomaniak_vm__name }}--{{ item["name"] }}--port'
@@ -64,10 +64,10 @@
     openstack.cloud.security_group:
       auth:
         auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
-        username: '{{ infomaniak_vm__username }}'
-        password: '{{ infomaniak_vm__password }}'
-        project_id: '{{ infomaniak_vm__project_id }}'
-        project_name: '{{ infomaniak_vm__username }}'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: 'dc3-a'
       name: '{{ infomaniak_vm__name }}'
@@ -81,10 +81,10 @@
     openstack.cloud.security_group_rule:
       auth:
         auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
-        username: '{{ infomaniak_vm__username }}'
-        password: '{{ infomaniak_vm__password }}'
-        project_id: '{{ infomaniak_vm__project_id }}'
-        project_name: '{{ infomaniak_vm__username }}'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: 'dc3-a'
       security_group: '{{ infomaniak_vm__name }}'
@@ -116,10 +116,10 @@
     openstack.cloud.server:
       auth:
         auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
-        username: '{{ infomaniak_vm__username }}'
-        password: '{{ infomaniak_vm__password }}'
-        project_id: '{{ infomaniak_vm__project_id }}'
-        project_name: '{{ infomaniak_vm__username }}'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: 'dc3-a'
       name: '{{ infomaniak_vm__name }}'
@@ -140,10 +140,10 @@
     openstack.cloud.port:
       auth:
         auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
-        username: '{{ infomaniak_vm__username }}'
-        password: '{{ infomaniak_vm__password }}'
-        project_id: '{{ infomaniak_vm__project_id }}'
-        project_name: '{{ infomaniak_vm__username }}'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: 'dc3-a'
       name: '{{ infomaniak_vm__name }}--{{ item["name"] }}--port'
@@ -158,10 +158,10 @@
     openstack.cloud.security_group:
       auth:
         auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
-        username: '{{ infomaniak_vm__username }}'
-        password: '{{ infomaniak_vm__password }}'
-        project_id: '{{ infomaniak_vm__project_id }}'
-        project_name: '{{ infomaniak_vm__username }}'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: 'dc3-a'
       name: '{{ infomaniak_vm__name }}'

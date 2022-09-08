@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role: infomaniak_vm
+
+* Renamed `infomaniak_vm__password` to `infomaniak_vm__api_password`
+* Renamed `infomaniak_vm__project_id` to `infomaniak_vm__api_project_id`
+* Renamed `infomaniak_vm__username` to `infomaniak_vm__api_username`
+
 Role: mariadb_server
 * Renamed `mariadb_server__admin_login` to `mariadb_server__admin_user`
 * Moved `mariadb_server__admin_host` to `mariadb_server__admin_user["host"]`

@@ -22,22 +22,22 @@ Tested on
 
 ## Mandatory Role Variables
 
-| Variable                    | Description                                                                                                                                                |
-| --------                    | -----------                                                                                                                                                |
-| `infomaniak_vm__flavor`     | The flavor for the instance. This defines the amount of CPU cores, RAM and disk space. The possible options can be obtained using `openstack flavor list`. |
-| `infomaniak_vm__image`      | The image to use for this instance. The possible options can be obtained using `openstack image list`.                                                     |
-| `infomaniak_vm__password`   | The password for the API. Can be obtained by downloading the OpenStack RC file.                                                                            |
-| `infomaniak_vm__project_id` | The project ID for the API. Can be obtained by downloading the OpenStack RC file.                                                                          |
-| `infomaniak_vm__username`   | The username for the API. Can be obtained by downloading the OpenStack RC file.                                                                            |
+| Variable                        | Description                                                                                                                                                |
+| --------                        | -----------                                                                                                                                                |
+| `infomaniak_vm__flavor`         | The flavor for the instance. This defines the amount of CPU cores, RAM and disk space. The possible options can be obtained using `openstack flavor list`. |
+| `infomaniak_vm__image`          | The image to use for this instance. The possible options can be obtained using `openstack image list`.                                                     |
+| `infomaniak_vm__api_password`   | The password for the OpenStack API. Normally this is the same as your admin user login.                                                                    |
+| `infomaniak_vm__api_project_id` | The project ID for the OpenStack API. Can be obtained by running `openstack project list` after downloading and sourcing the OpenStack RC file.            |
+| `infomaniak_vm__api_username`   | The username for the OpenStack API. Normally this is the same as your admin user login.                                                                    |
 
 Example:
 ```yaml
 # mandatory
 infomaniak_vm__flavor: 'a1-ram2-disk50-perf1'
 infomaniak_vm__image: 'Rocky 8 Generic Cloud'
-infomaniak_vm__password: 'my-secret-password'
-infomaniak_vm__project_id: 'oitexaeTeivaoRo7einuighRiegh4iexah'
-infomaniak_vm__username: 'PCU-123456'
+infomaniak_vm__api_password: 'linuxfabrik'
+infomaniak_vm__api_project_id: 'oitexaeTeivaoRo7einuighRiegh4iexah'
+infomaniak_vm__api_username: 'PCU-123456'
 ```
 
 
@@ -45,7 +45,7 @@ infomaniak_vm__username: 'PCU-123456'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `infomaniak_vm__key_name` | The name of the depoited SSH-key. Defaults to using the local username of the Ansible control node, but replaces all `.` with ` `, since periods are not allowed in the key name. | `'{{ lookup("env", "USER") \| regex_replace(".", " ") }}'` |
+| `infomaniak_vm__key_name` | The name of the deposited SSH-key. Defaults to using the local username of the Ansible control node, but replaces all `.` with ` `, since periods are not allowed in the key name. | `'{{ lookup("env", "USER") \| regex_replace(".", " ") }}'` |
 | `infomaniak_vm__name` | The name of the instance. By default, it uses the Ansible inventory name. | `'{{ inventory_hostname }}'` |
 | `infomaniak_vm__networks` | A list of dictionaries defining which networks should be attached to this instance. It also allows the creation of new internal networks, or setting a fixed IP for the instance. Subkeys:<br> * `name`: Required, string. The name of an existing network, or the network which should be created.<br> * `cidr`: Optional, string. The CIDR of the network which should be created.<br> * `fixed_ip`: Optional, string. The fixed IP of this instance. | unset |
 | `infomaniak_vm__security_group_rules` | A list of dictionaries containing rules for the security group (basically OpenStack firewall rules). Subkeys:<br> * `direction`: Required, string. For which direction the rule should apply. Possible options: `ingress`, `egress`.<br> * `protocol`: Required, string. To which IP protocol the rule is applied. Possible options: `any`, `tcp`, `udp`, `icmp`.<br> * `port_range_min`: Required, int. The starting port.<br> * `port_range_max`: Required, int. The ending port. | unset |
