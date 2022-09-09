@@ -1,0 +1,30 @@
+- block:
+
+  - name: 'Use freeipa.ansible_freeipa.ipaserver role to install and configure FreeIPA as a server'
+    ansible.builtin.include_role:
+      name: 'freeipa.ansible_freeipa.ipaserver'
+    vars:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipadm_password: '{{ freeipa_server__directory_manager_password }}'
+      ipaserver_domain: '{{ freeipa_server__domain }}'
+      ipaserver_realm: '{{ freeipa_server__realm }}'
+      ipaserver_setup_firewalld: false
+
+  # we need to use shell instead of command for the kerberos ticket to work
+  - name: 'kinit'
+    ansible.builtin.shell: "echo '{{ freeipa_server__directory_manager_password }}' | kinit"
+
+  - name: "ipa config-mod --defaultshell='/bin/bash' --pwdexpnotify=10"
+    ansible.builtin.shell: "ipa config-mod --defaultshell='/bin/bash' --pwdexpnotify=10"
+    register: 'freeipa_server__ipa_config_mod_result'
+    changed_when: '"no modifications" not in freeipa_server__ipa_config_mod_result["stderr"]'
+    failed_when:
+      - 'freeipa_server__ipa_config_mod_result["failed"] is defined'
+      - 'freeipa_server__ipa_config_mod_result["failed"]'
+      - '"no modifications" not in freeipa_server__ipa_config_mod_result["stderr"]'
+
+  - name: 'kdestroy'
+    ansible.builtin.shell: 'kdestroy'
+
+  tags:
+    - 'freeipa_server'

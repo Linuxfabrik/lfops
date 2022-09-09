@@ -1,0 +1,4 @@
+freeipa_server__config_default_shell: '/bin/bash'
+freeipa_server__config_password_expiration_notification: 10
+freeipa_server__domain: '{{ ansible_facts["domain"] | lower }}'
+freeipa_server__realm: '{{ ansible_facts["domain"] | upper }}'

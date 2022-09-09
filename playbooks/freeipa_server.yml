@@ -1,0 +1,7 @@
+- name: 'Install and configure FreeIPA Server'
+  hosts:
+    - 'lfops_freeipa_server'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.freeipa_server'
