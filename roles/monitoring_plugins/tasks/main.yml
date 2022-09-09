@@ -153,7 +153,8 @@
       owner: 'root'
       mode: 0o755
     with_fileglob:
-      - '/tmp/ansible.lib-repo/*.py'
+      - '/tmp/ansible.lib-repo/*{{ monitoring_plugins__python_version }}.py'
+      - '/tmp/ansible.lib-repo/__init__.py'
 
   - name: 'Make sure the linuxfabrik plugin cache is removed'
     ansible.builtin.file:
