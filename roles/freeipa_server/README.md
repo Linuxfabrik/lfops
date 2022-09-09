@@ -16,8 +16,7 @@ Tested on
 
 | Tag              | What it does                    |
 | ---              | ------------                    |
-| `freeipa_server` | Installs and configures freeipa |
-
+| `freeipa_server` | Installs and configures FreeIPA as a server |
 
 
 ## Mandatory Role Variables
