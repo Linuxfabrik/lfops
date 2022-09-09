@@ -6,6 +6,8 @@ Tested on
 
 * RHEL 8 (and compatible)
 
+Ideally, the FreeIPA should be installed on a separate server. If that is not possible, you could group it with DNS and NTP on an infrastructure server. As a last resort you can install it on the central firewall / gateway server.
+
 
 ## Mandatory Requirements
 
@@ -24,7 +26,7 @@ Tested on
 | Variable                     | Description                                                                          |
 | --------                     | -----------                                                                          |
 | `freeipa_server__directory_manager_password` | The password for the Directory Manager. This is the superuser that needs to be used to perform rare low level tasks. |
-| `freeipa_server__ipa_admin_password` | The password for the FreeIPA admin. This user is a regular system account used for IPA server administration. |
+| `freeipa_server__ipa_admin_password` | The password for the FreeIPA admin. This user is a regular system account used for IPA server administration. Set this in the `group_vars` so that the `linuxfabrik.lfops.freeipa_client` role can use it. |
 
 Example:
 ```yaml
