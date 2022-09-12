@@ -69,7 +69,7 @@ nextcloud__apache_httpd__vhosts__dependent_var:
     enabled: true
     filename: 'nextcloud'
     state: 'present'
-    type: 'app'
+    template: 'app'
 
     allowed_file_extensions:
       # TODO: Test if any file upload is possible
