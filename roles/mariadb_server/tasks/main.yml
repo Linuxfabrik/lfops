@@ -266,8 +266,8 @@
 
   - name: 'Create or delete mariadb databases'
     community.mysql.mysql_db:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       name: '{{ item["name"] }}'
       collation: '{{ item["collation"] | default("utf8_general_ci") }}'
       encoding: '{{ item["encoding"] | default("utf8") }}'
@@ -284,8 +284,8 @@
 
   - name: 'Create, update or delete MariaDB users'
     community.mysql.mysql_user:
-      login_user: '{{ mariadb_server__admin_login["username"] }}'
-      login_password: '{{ mariadb_server__admin_login["password"] }}'
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
       name: '{{ item["username"] }}'
       host: '{{ item["host"] | default("localhost") }}'
       password: '{{ item["password"] | default(omit) }}'
