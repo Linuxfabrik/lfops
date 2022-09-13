@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.nextcloud
 
-This role installs Nextcloud.
+This role installs Nextcloud including the tools needed by the most popular business plugins.
 
 Tested on
 
@@ -9,17 +9,20 @@ Tested on
 
 ## Mandatory Requirements
 
-* Install Apache and a vHost for Nextcloud. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
-* Install MariaDB. This can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
-* Install PHP. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
+* Install Apache and provide a vHost for Nextcloud. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
+* Install MariaDB 10+. This can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
+* Install PHP 7+. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
+
+If you use [setup_nextcloud](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you.
 
 
 ## Optional Requirements
 
 * Install Redis. This can be done using the [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) role.
 * Install Collabora. This can be done using the [linuxfabrik.lfops.collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora) role.
-* Install Coturn (for Nextcloud Talk). This can be done using the [linuxfabrik.lfops.coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn) role.
+* Install Coturn for Nextcloud Talk. This can be done using the [linuxfabrik.lfops.coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn) role.
 
+If you use [setup_nextcloud](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you.
 
 
 ## Tags
@@ -27,44 +30,26 @@ Tested on
 | Tag                       | What it does |
 | ---                       | ------------ |
 | `nextcloud`               | Installs Nextcloud. |
-| `nextcloud:cron`          | todo |
-| `nextcloud:occ`           | todo |
-| `nextcloud:selinux`       | todo |
-| `nextcloud:state`         | todo |
-| `nextcloud:update_script` | todo |
-| `nextcloud:user`          | todo |
+| `nextcloud:cron`          | * Set background job to "cron"<br>* Deploy /etc/systemd/system/nextcloud-jobs.service<br>* Deploy /etc/systemd/system/nextcloud-jobs.timer<br>* Deploy /etc/systemd/system/nextcloud-app-update.service<br>* Deploy /etc/systemd/system/nextcloud-app-update.timer |
+| `nextcloud:occ`           | * Run nextcloud installer<br>* Set nextcloud system settings<br>* Set nextcloud proxy settings<br>* Set nextcloud app settings<br>* Convert some database columns to big int<br>* nextcloud: restart php-fpm |
+| `nextcloud:selinux`       | * semanage fcontext -a -t ...<br>* setsebool -P ... |
+| `nextcloud:state`         | * systemctl enable/disable nextcloud-jobs.timer --now<br>* systemctl enable/disable nextcloud-app-update.timer --now |
+| `nextcloud:update_script` | Deploy /usr/local/bin/nextcloud-update |
+| `nextcloud:user`          | * Create Nextcloud user<br>* Update Nextcloud settings for user |
 
 
+## Mandatory Role Variables
 
-## Optional Role Variables
+| Variable | Description |
+| -------- | ----------- |
+| `nextcloud__users` | List of user accounts to create. Attention: The first user has to be the primary administrator account. |
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `nextcloud__apache_httpd__vhosts__group_var` / `nextcloud__apache_httpd__vhosts__host_var` | descr | `'default` |
-| `nextcloud__appconfig` | descr | `''` |
-| `nextcloud__database` | descr | `'nextcloud'` |
-| `nextcloud__datadir` | descr | `'/data'` |
-| `nextcloud__kernel_settings__sysctl__group_var` / `nextcloud__kernel_settings__sysctl__host_var` | descr | `'default` |
-| `nextcloud__kernel_settings__transparent_hugepages__group_var` / `nextcloud__kernel_settings__transparent_hugepages__host_var` | descr | `'default` | 'madvise'
-| `nextcloud__mariadb_login` | descr | `'{{ mariadb_server__admin_user }}'` |
-| `nextcloud__on_calendar_app_update` | descr | `'06,18,23:{{ 59 | random(seed=inventory_hostname) }}'` |
-| `nextcloud__on_calendar_jobs`| Run interval of OCC background jobs. | `'*:0/5'` |
-| `nextcloud__php__ini_max_execution_time__group_var` / `nextcloud__php__ini_max_execution_time__host_var` | descr | `'3600` |
-| `nextcloud__php__ini_max_file_uploads__group_var` / `nextcloud__php__ini_max_file_uploads__host_var` | descr | `'100` |
-| `nextcloud__php__ini_memory_limit__group_var` / `nextcloud__php__ini_memory_limit__host_var` | descr | `'1024M'` |
-| `nextcloud__php__ini_post_max_size__group_var` / `nextcloud__php__ini_post_max_size__host_var` | descr | `'16M'` |
-| `nextcloud__php__ini_upload_max_filesize__group_var` / `nextcloud__php__ini_upload_max_filesize__host_var` | descr | `'10000M'` |
-| `nextcloud__php__modules__group_var` / `nextcloud__php__modules__host_var` | descr | `'default` |
-| `nextcloud__proxyconfig` | descr | `[]` |
-| `nextcloud__sysconfig` | descr | `''` |
-| `nextcloud__timer_app_update_enabled` | descr | `true` |
-| `nextcloud__timer_jobs_enabled` | descr | `true` |
-| `nextcloud__version` | descr | `'latest-24'` |
-
-Creating an Admin and a user:
-
+Example:
+```yaml
+# mandatory
 nextcloud__users:
-  - username: 'thefirstadmin'
+  # first user has to be the admin account
+  - username: 'nextcloud-admin'
     password: 'linuxfabrik'
     group: 'admin'
     settings:
@@ -74,9 +59,47 @@ nextcloud__users:
       - 'files quota "50 MB"'
       - 'firstrunwizard show 0'
       - 'settings email info@example.org'
-  - username: 'john.doe'
-    password: 'linuxfabrik'
+```
 
+
+## Optional Role Variables
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `nextcloud__apache_httpd__vhosts__group_var` / `nextcloud__apache_httpd__vhosts__host_var` | The Apache vHost definition for the Nextcloud instance. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__appconfig` | List of Key/Value pairs for configuring Apps in Nextcloud via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__database_host` | Host where MariaDB is located. | `'localhost'` |
+| `nextcloud__database_name` | Name of the Nextcloud database in MariaDB. | `'nextcloud'` |
+| `nextcloud__datadir` | Where to store the user files. | `'/data'` |
+| `nextcloud__kernel_settings__sysctl__group_var` / `nextcloud__kernel_settings__sysctl__host_var` | List of Key/Value pair Kernel parameters. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__kernel_settings__transparent_hugepages__group_var` / `nextcloud__kernel_settings__transparent_hugepages__host_var` | Kernel setting for THP. | `'madvise'`
+| `nextcloud__mariadb_login` | The user account for the database administrator. | `'{{ mariadb_server__admin_user }}'` |
+| `nextcloud__on_calendar_app_update` | Time to update Nextcloud Apps (Systemd-Timer notation). | `'06,18,23:{{ 59 \| random(seed=inventory_hostname) }}'` |
+| `nextcloud__on_calendar_jobs`| Run interval of OCC background jobs. | `'*:0/5'` |
+| `nextcloud__php__ini_max_execution_time__group_var` / `nextcloud__php__ini_max_execution_time__host_var` | [php.net](https://www.php.net/manual/en/info.configuration.php) | `'3600` |
+| `nextcloud__php__ini_max_file_uploads__group_var` / `nextcloud__php__ini_max_file_uploads__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'100` |
+| `nextcloud__php__ini_memory_limit__group_var` / `nextcloud__php__ini_memory_limit__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'1024M'` |
+| `nextcloud__php__ini_post_max_size__group_var` / `nextcloud__php__ini_post_max_size__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'16M'` |
+| `nextcloud__php__ini_upload_max_filesize__group_var` / `nextcloud__php__ini_upload_max_filesize__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'10000M'` |
+| `nextcloud__php__modules__group_var` / `nextcloud__php__modules__host_var` | List of PHP modules that need to be installed via the standard package manager. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__proxyconfig` | List of Key/Value pairs for configuring Nextcloud behind a reverse proxy via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__sysconfig` | List of Key/Value pairs for configuring Nextcloud itself via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__timer_app_update_enabled` | Enables/disables Systemd-Timer for updating Apps. | `true` |
+| `nextcloud__timer_jobs_enabled` | Enables/disables Systemd-Timer for running OCC background jobs. | `true` |
+| nextcloud__users | List of user accounts to create. Attention: The first user has to be the primary administrator account. | 
+| `nextcloud__version` | Which version to install. Some of `'latest-XX'` or `'nextcloud-XX.X.XX'`. | `'latest-24'` |
+
+Example:
+```yaml
+# optional
+nextcloud__proxyconfig:
+  - { key: 'overwrite.cli.url', value: '--value=https://cloud.example.com' }
+  - { key: 'overwritecondaddr', value: '--value=^192\\.0\\.2\\.4$' }
+  - { key: 'overwritehost',     value: '--value=cloud.example.com' }
+  - { key: 'overwriteprotocol', value: '--value=https' }
+  - { key: 'overwritewebroot',  value: '--value=/' }
+  - { key: 'trusted_proxies',   value: '0 --value=192.0.2.4' }
+```
 
 ## License
 

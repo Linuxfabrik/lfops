@@ -101,13 +101,14 @@
     # installation hangs without "--admin-user" and "--admin-pass"
     ansible.builtin.command: >-
       sudo -u apache php occ maintenance:install
+      --admin-pass '{{ nextcloud__users.0.password }}'
+      --admin-user '{{ nextcloud__users.0.username }}'
+      --data-dir '{{ nextcloud__datadir }}'
       --database 'mysql'
-      --database-name '{{ nextcloud__database }}'
+      --database-host '{{ nextcloud__database_host }}'
+      --database-name '{{ nextcloud__database_name }}'
       --database-user '{{ nextcloud__mariadb_login.username }}'
       --database-pass '{{ nextcloud__mariadb_login.password }}'
-      --admin-user '{{ nextcloud__users.0.username }}'
-      --admin-pass '{{ nextcloud__users.0.password }}'
-      --data-dir '{{ nextcloud__datadir }}'
     args:
       chdir: '/var/www/html/nextcloud/'
       creates: '/var/www/html/nextcloud/config/config.php'

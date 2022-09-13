@@ -17,7 +17,8 @@ nextcloud__appconfig:
 
 nextcloud__datadir: '/data'
 
-nextcloud__database: 'nextcloud'
+nextcloud__database_host: 'localhost'
+nextcloud__database_name: 'nextcloud'
 
 nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 
