@@ -42,6 +42,7 @@ duplicity__logrotate: 14
 
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
 duplicity__swift_authversion: '3'
+duplicity__swift_tenantname: 'sb_project_{{ duplicity__swift_login["username"] }}'
 
 duplicity__python_venv__venvs__dependent_var:
   - name: 'duplicity'

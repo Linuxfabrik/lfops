@@ -49,7 +49,6 @@ To start a backup, simply call `duba` (or `duba --config=/etc/duba/duba.json --c
 | `duplicity__gpg_encrypt_master_key_block` | The ASCII-armored public master GPG key. Obtain it using `gpg --armor --export $GPG_KEY`. This key is imported on the server and is used in addition to the server's own local GPG key to encrypt the backups. This means that the backups can be restored using either the master or the server's local private key (which is pretty cool in case of a desaster recovery). Be aware of the empty line between `-----BEGIN PGP PUBLIC KEY BLOCK-----` and your public key block. |
 | `duplicity__gpg_encrypt_master_key` | The long key ID of the master GPG key. Obtain it using `gpg --list-secret-keys --keyid-format=long`. |
 | `duplicity__swift_login` | The Swift username and password. Usually, this is given by the provider of the Swift Storage. Subkeys:<br> * `username`: Mandatory, string. The Swift username.<br> * `password`: Mandatory, string. The Swift password. |
-| `duplicity__swift_tenantname` | The Swift Tenantname. Usually, this is given by the provider of the Swift Storage. |
 
 Example:
 ```yaml
@@ -64,7 +63,6 @@ duplicity__gpg_encrypt_master_key: 'LLZGH2BITI2LRLJCLFWEAJQ93N6MWTKBARQDMYX5'
 duplicity__swift_login:
   username: 'SBI-MF827483'
   password: 'some-secret-password'
-duplicity__swift_tenantname: 'sb_project_SBI-MF827483'
 ```
 
 
@@ -84,6 +82,7 @@ duplicity__swift_tenantname: 'sb_project_SBI-MF827483'
 | `duplicity__on_calendar` | The `OnCalendar` definition for the daily systemd timer. Have a look at `man systemd.time(7)` for the format. | `45 | random(seed=inventory_hostname) }}'` |
 | `duplicity__swift_authurl` | The Authentication URL for Swift. Usually, this is given by the provider of the Swift Storage. | `swiss-backup02.infomaniak.com/identity/v3'` |
 | `duplicity__swift_authversion` | The Authentication Version for Swift. Usually, this is given by the provider of the Swift Storage. | `'3'` |
+| `duplicity__swift_tenantname` | The Swift Tenantname. Usually, this is given by the provider of the Swift Storage. | `'sb_project_{{ duplicity__swift_login["username"] }}'` |
 | `duplicity__timer_enabled` | The state of the daily systemd timer. | `true` |
 
 Example:
@@ -114,6 +113,7 @@ duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45 | random(
 duplicity__on_calendar_hour: '23'
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
 duplicity__swift_authversion: '3'
+duplicity__swift_tenantname: 'sb_project_SBI-MF827483'
 duplicity__timer_enabled: true
 ```
 
