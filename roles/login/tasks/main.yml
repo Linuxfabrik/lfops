@@ -13,6 +13,7 @@
     ansible.builtin.group:
       name: '{{ item }}'
       state: 'present'
+      local: true # this is required for servers which are using FreeIPA, for example
     loop: '{{ login__required_groups }}'
 
   - name: 'Create the user with the given groups and a home directory'
