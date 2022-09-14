@@ -20,7 +20,7 @@ Tested on
 
 ## Mandatory Requirements
 
-* Install the python `hcloud` library on the Ansible control node (`dnf -y install hcloud`, `pip install --user hcloud` etc.).
+* Install the Python library `hcloud` on the Ansible control node (use `pip install --user hcloud`).
 * Import your public SSH-key into Hetzner (your project > Security > SSH Keys).
 
 
