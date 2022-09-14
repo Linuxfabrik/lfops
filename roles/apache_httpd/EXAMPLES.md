@@ -28,6 +28,11 @@ apache_httpd__vhosts__host_var:
 ### Reverse Proxy
 
 ```yaml
+apache_httpd__mods__host_var:
+  - filename: 'proxy_http'
+    enabled: true
+    state: 'present'
+    template: 'proxy_http'
 apache_httpd__vhosts__host_var:
   - template: 'proxy'
     allowed_http_methods:
@@ -517,4 +522,3 @@ As a starting point. Replace ``<MYVHOST>`` with your ``conf_server_name`` or FQD
       setenv:ModSecAnomalyScoreOut=%{TX.outbound_anomaly_score}"
 </IfModule>
 ```
-
