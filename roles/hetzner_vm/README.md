@@ -1,15 +1,26 @@
 # Ansible Role linuxfabrik.lfops.hetzner_vm
 
-This role creates and manages servers (virtual machines) and volumes on [Hetzner](https://www.hetzner.com/).
+This role creates and manages servers (virtual machines) and volumes on [Hetzner](https://www.hetzner.com/)
+
+* Installs the VM with the provided t-shirt-size / flavor / server-type (or removes it)
+* Turns Hetzner backups on/off
+* Selects the image to install
+* Selects the location
+* Deploys the SSH keys from the Hetzner portal
+* Upgrades disks
+* Manages additional volumes
+
+This role does not configure the VM's network interfaces.
 
 Tested on
 
 * Fedora 35
+* Fedora 36
 
 
 ## Mandatory Requirements
 
-* Install the python `hcloud` library on the Ansible control node (`pip install --user hcloud`).
+* Install the python `hcloud` library on the Ansible control node (`dnf -y install hcloud`, `pip install --user hcloud` etc.).
 * Import your public SSH-key into Hetzner (your project > Security > SSH Keys).
 
 
