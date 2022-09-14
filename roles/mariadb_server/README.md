@@ -55,7 +55,7 @@ Example:
 # mandatory
 mariadb_server__admin_user:
   username: 'admin'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 ```
 
 
