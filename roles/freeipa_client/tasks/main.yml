@@ -1,0 +1,13 @@
+- block:
+
+  - name: 'Use freeipa.ansible_freeipa.ipaclient role to install and configure FreeIPA as a client'
+    ansible.builtin.include_role:
+      name: 'freeipa.ansible_freeipa.ipaclient'
+    vars:
+      ipaadmin_password: '{{ freeipa_client__ipa_admin_user["password"] }}'
+      ipaadmin_principal: '{{ freeipa_client__ipa_admin_user["username"] }}'
+      ipaclient_mkhomedir: '{{ freeipa_client__create_home_dir }}'
+      ipaclient_no_ntp: true
+
+  tags:
+    - 'freeipa_client'

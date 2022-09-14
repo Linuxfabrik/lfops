@@ -1,0 +1,7 @@
+- name: 'Install and configure FreeIPA Client'
+  hosts:
+    - 'lfops_freeipa_client'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.freeipa_client'
