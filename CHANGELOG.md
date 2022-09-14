@@ -93,6 +93,7 @@ New features:
 * Role: exoscale_vm
 * Role: fail2ban
 * Role: firewall
+* Role: freeipa_client
 * Role: freeipa_server
 * Role: git
 * Role: glances
