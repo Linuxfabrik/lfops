@@ -8,9 +8,4 @@
 
     - role: 'linuxfabrik.lfops.tar'
 
-    - role: 'linuxfabrik.lfops.apache_httpd'
-      apache_httpd__snippets__dependent_var: '{{ acme_sh__apache_httpd__snippets__dependent_var | d([]) }}'
-      when:
-        - 'not acme_sh__skip_apache_httpd | d(false)'
-
     - role: 'linuxfabrik.lfops.acme_sh'

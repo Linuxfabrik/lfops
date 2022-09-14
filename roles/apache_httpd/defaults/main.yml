@@ -283,6 +283,18 @@ apache_httpd__conf__role_var:
     state: 'present'
     template: 'http2'
 
+  - filename: 'letsencrypt-webroot'
+    enabled: true
+    state: 'present'
+    template: 'raw'
+    raw: !unsafe |-
+      Alias /.well-known/acme-challenge/ /var/www/html/letsencrypt/.well-known/acme-challenge/
+      <Directory "/var/www/html/letsencrypt/">
+          AllowOverride None
+          Options None
+          Require method GET POST OPTIONS
+      </Directory>
+
   - filename: 'log_config'
     enabled: true
     state: 'present'

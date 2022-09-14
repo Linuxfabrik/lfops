@@ -1,21 +1,3 @@
 acme_sh__certificates: []
 acme_sh__reload_cmd: 'systemctl reload httpd'
 acme_sh__timer_enabled: true
-
-# -----------------------------------------------------------------------------
-
-acme_sh__apache_httpd__snippets__dependent_var:
-
-  'letsencrypt-webroot':
-    enabled: true
-    by_role: 'acme_sh'
-    state: 'present'
-    type: 'raw'
-
-    raw: !unsafe |-
-      Alias /.well-known/acme-challenge/ /var/www/html/letsencrypt/.well-known/acme-challenge/
-      <Directory "/var/www/html/letsencrypt/">
-          AllowOverride None
-          Options None
-          Require method GET POST OPTIONS
-      </Directory>
