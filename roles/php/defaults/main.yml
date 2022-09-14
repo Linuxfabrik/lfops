@@ -257,9 +257,9 @@ php__modules__host_var: []
 php__modules__role_var:
   - name: 'php-opcache'
     state: 'present'
-php__modules__combined_var: '{{
+php__modules__combined_var: '{{ (
     php__modules__role_var +
     php__modules__dependent_var +
     php__modules__group_var +
-    php__modules__host_var
+    php__modules__host_var) | flatten
   }}'
