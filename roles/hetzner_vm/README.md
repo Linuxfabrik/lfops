@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.hetzner_vm
 
-This role creates and manages servers (virtual machines) and volumes on [Hetzner](https://www.hetzner.com/)
+This role creates and manages servers (virtual machines) and volumes at the [Hetzner console](https://console.hetzner.cloud)
 
 * Installs the VM with the provided t-shirt-size / flavor / server-type (or removes it)
 * Turns Hetzner backups on/off
