@@ -1,6 +1,9 @@
 # Ansible Role linuxfabrik.lfops.chrony
 
-This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP daemon. It can either be configured as a client, or as a server, providing time syncing to other clients.
+This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP daemon. This role configures Chrony
+
+* to act like a client
+* by specifying `chrony__allow` to act like a NTP-server providing time syncing to other clients
 
 Tested on
 
