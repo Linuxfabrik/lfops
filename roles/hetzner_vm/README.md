@@ -3,12 +3,13 @@
 This role creates and manages servers (virtual machines) and volumes at the [Hetzner console](https://console.hetzner.cloud)
 
 * Installs the VM with the provided t-shirt-size / flavor / server-type (or removes it)
+* Rescales the VM (for this the VM must be stopped before changing type)
 * Turns Hetzner backups on/off
 * Selects the image to install
 * Selects the location
 * Deploys the SSH keys from the Hetzner portal
 * Upgrades disks
-* Manages additional volumes
+* Manages additional volumes (just attaches/removes them to/from the VM, but does not mount/unmount them in any way)
 
 This role does not configure the VM's network interfaces.
 
@@ -80,7 +81,9 @@ hetzner_vm__ssh_keys:
   - 'bob'
 hetzner_vm__state: 'started'
 hetzner_vm__upgrade_disk: false
-hetzner_vm__volumes: []
+hetzner_vm__volumes:
+  - name: 'data'
+    size: '100'
 ```
 
 
