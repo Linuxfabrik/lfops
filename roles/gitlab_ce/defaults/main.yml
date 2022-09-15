@@ -1,0 +1,16 @@
+gitlab_ce__kernel_settings__sysctl__dependent_var:
+  - name: 'vm.swappiness'
+    value: 10
+gitlab_ce__on_calendar: '*-*-* 23:{{ 59 | random(seed=inventory_hostname) }}'
+
+gitlab_ce__rb_gitlab_rails_backup_keep_time: 86400
+gitlab_ce__rb_gitlab_rails_backup_path: '/backup/gitlab'
+
+gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_bantime: 3600
+gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled: true
+gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_findtime: 60
+gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_ip_whitelist:
+  - '127.0.0.1'
+gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_maxretry: 10
+
+gitlab_ce__rb_gitlab_rails_time_zone: 'Europe/Zurich'

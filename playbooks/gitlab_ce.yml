@@ -1,0 +1,16 @@
+- name: 'Install and configure GitLab CE'
+  hosts:
+    - 'lfops_gitlab_ce'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ gitlab_ce__kernel_settings__sysctl__dependent_var | d([]) }}'
+      when:
+        - 'not gitlab_ce__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.gitlab_ce'

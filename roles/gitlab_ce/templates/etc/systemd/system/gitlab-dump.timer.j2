@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022091501
+
+[Unit]
+Description=gitlab-dump Timer
+
+[Timer]
+OnCalendar={{ gitlab_ce__on_calendar }}
+Unit=gitlab-dump.service
+
+[Install]
+WantedBy=timers.target

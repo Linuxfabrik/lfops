@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022091501
+
+[Unit]
+Description=Dumps (Backups) for GitLab
+
+[Service]
+# ignore "Warning: Your gitlab.rb and gitlab-secrets.json files contain sensitive data and are not included in this backup"
+# by prefixing the path with a minus sign (we backup /etc using other tools, so its safe to ignore the warning)
+ExecStart=-/usr/bin/gitlab-backup create
+Type=oneshot
+User=root
