@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.kernel_settings
 
-This role configures kernel settings.
+This role configures kernel settings. The settings are made permanently and activated simultaneously at runtime.
 
 The role does nothing on its own and relies on the [linux_system_roles.kernel_settings role](https://github.com/linux-system-roles/kernel_settings).
 
