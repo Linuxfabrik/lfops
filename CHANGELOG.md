@@ -136,6 +136,7 @@ New features:
 * Role: repo_baseos
 * Role: repo_collabora_code
 * Role: repo_docker
+* Role: repo_gitlab_ce
 * Role: repo_grafana
 * Role: repo_icinga
 * Role: repo_influxdb

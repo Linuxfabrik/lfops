@@ -1,0 +1,1 @@
+repo_gitlab_ce__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'

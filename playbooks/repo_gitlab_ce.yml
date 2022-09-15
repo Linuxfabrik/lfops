@@ -1,0 +1,7 @@
+- name: 'Manage and configure the GitLab CE Repository'
+  hosts:
+    - 'lfops_repo_gitlab_ce'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_gitlab_ce'

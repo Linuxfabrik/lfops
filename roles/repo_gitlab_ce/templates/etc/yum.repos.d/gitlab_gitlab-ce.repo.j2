@@ -1,0 +1,34 @@
+# {{ ansible_managed }}
+# 2022091501
+
+[gitlab_gitlab-ce]
+name=gitlab_gitlab-ce
+{% if repo_gitlab_ce__mirror_url is defined and repo_gitlab_ce__mirror_url | length %}
+baseurl={{ repo_gitlab_ce__mirror_url }}/gitlab-ce/el/8/$basearch
+{% else %}
+baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/8/$basearch
+{% endif %}
+gpgkey=https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey
+       https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey/gitlab-gitlab-ce-3D645A26AB9FBD22.pub.gpg
+repo_gpgcheck=1
+gpgcheck=1
+enabled=1
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+metadata_expire=300
+
+[gitlab_gitlab-ce-source]
+name=gitlab_gitlab-ce-source
+{% if repo_gitlab_ce__mirror_url is defined and repo_gitlab_ce__mirror_url | length %}
+baseurl={{ repo_gitlab_ce__mirror_url }}/gitlab-ce/el/8/SRPMS
+{% else %}
+baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/8/SRPMS
+{% endif %}
+gpgkey=https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey
+       https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey/gitlab-gitlab-ce-3D645A26AB9FBD22.pub.gpg
+repo_gpgcheck=1
+gpgcheck=1
+enabled=1
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+metadata_expire=300
