@@ -42,8 +42,8 @@ freeipa_server__ipa_admin_password: 'linuxfabrik'
 | -------- | ----------- | ------------- |
 | `freeipa_server__config_default_shell` | The default shell for the users in FreeIPA. | `'/bin/bash'` |
 | `freeipa_server__config_password_expiration_notification` | When the password expiration notification for FreeIPA users should be sent, in days. | `10` |
-| `freeipa_server__domain` | The primary DNS domain. Typically this should be the domain part of FQDN of the server. | `'{{ ansible_facts["domain"] | lower }}'` |
-| `freeipa_server__realm` | The kerberos protocol requires a Realm name to be defined. This is typically the domain name converted to uppercase. | `'{{ ansible_facts["domain"] | upper }}'` |
+| `freeipa_server__domain` | The primary DNS domain. Typically this should be the domain part of FQDN of the server. | `'{{ ansible_facts["domain"] \| lower }}'` |
+| `freeipa_server__realm` | The kerberos protocol requires a Realm name to be defined. This is typically the domain name converted to uppercase. | `'{{ ansible_facts["domain"] \| upper }}'` |
 
 Example:
 ```yaml
