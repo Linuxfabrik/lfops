@@ -1,17 +1,16 @@
 # Ansible Role linuxfabrik.lfops.apache_tomcat
 
-TODO: finish this README
-
-This role installs and configures [Apache Tomcat](https://tomcat.apache.org/).
+This role installs and configures [Apache Tomcat](https://tomcat.apache.org/) - not via the operating system's package manager, but by downloading the specified version directly from [https://tomcat.apache.org](https://tomcat.apache.org).
 
 Tested on
 
 * RHEL 7 (and compatible)
+* RHEL 8 (and compatible)
 
 
 ## Mandatory Requirements
 
-* Install `java.` This can be done using the [linuxfabrik.lfops.java](https://github.com/Linuxfabrik/lfops/tree/main/roles/java) role.
+* Install `java.` This can be done using the [linuxfabrik.lfops.java](https://github.com/Linuxfabrik/lfops/tree/main/roles/java) role. If you use the  [Apache Tomcat Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apache_tomcat.yml), this is automatically done for you.
 
 
 ## Tags
