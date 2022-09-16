@@ -13,7 +13,7 @@ DirectoryIndex index.php
 # Allow php to handle Multiviews
 AddType text/html .php
 
-<FilesMatch ".+\.ph(ar | p | tml)$">
+<FilesMatch ".+\.ph(ar|p|tml)$">
     SetHandler application/x-httpd-php
 </FilesMatch>
 <FilesMatch ".+\.phps$">
@@ -24,7 +24,7 @@ AddType text/html .php
     Require all denied
 </FilesMatch>
 # Deny access to files without filename (e.g. '.php')
-<FilesMatch "^\.ph(ar | p | ps | tml)$">
+<FilesMatch "^\.ph(ar|p|ps|tml)$">
     Require all denied
 </FilesMatch>
 
