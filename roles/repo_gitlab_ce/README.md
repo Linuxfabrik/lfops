@@ -23,7 +23,7 @@ Tested on
 Example:
 ```yaml
 # optional
-repo_gitlab__mirror_url: 'https://mirror.example.com'
+repo_gitlab_ce__mirror_url: 'https://mirror.example.com'
 ```
 
 
