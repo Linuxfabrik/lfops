@@ -39,7 +39,7 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `gitlab_ce__on_calendar` | The `OnCalendar` definition for the GitLab Backup. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 23:{{ 59 | random(seed=inventory_hostname) }}'` |
+| `gitlab_ce__on_calendar` | The `OnCalendar` definition for the GitLab Backup. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 23:{{ 59 \| random(seed=inventory_hostname) }}'` |
 | `gitlab_ce__rb_git_data_dirs_default_path` | For setting up different data storing directory. If missing, the directory will be created by GitLab. If you want to use a single non-default directory to store git data use a path that doesn't contain symlinks. [Docs](https://docs.gitlab.com/omnibus/settings/configuration.html#store-git-data-in-an-alternative-directory) | unset |
 | `gitlab_ce__rb_gitlab_rails_backup_keep_time` | The duration in seconds to keep backups before they are allowed to be deleted | `86400` |
 | `gitlab_ce__rb_gitlab_rails_backup_path` | Backup Settings. [Docs](https://docs.gitlab.com/omnibus/settings/backups.html) | `'/backup/gitlab'` |
