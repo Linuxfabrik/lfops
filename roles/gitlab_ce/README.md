@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.gitlab_ce
 
-This role installs and configures [GitLab CE](https://about.gitlab.com/).
+This role installs and configures [GitLab CE](https://about.gitlab.com/), including regular backups. After installation, the password for the first user "root" can be found in `/etc/gitlab/initial_root_password`.
 
 Tested on
 
