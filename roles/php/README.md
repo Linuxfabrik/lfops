@@ -12,6 +12,14 @@ Nevertheless, this role is only compatible with the following PHP versions:
 * 8.0
 * 8.1
 
+Rules of thumb:
+
+* specify memory values in MB (M)
+* memory_limit should be larger than post_max_size
+* post_max_size can stay at 16M, even if you have upload_max_filesize > 10000M etc.
+* if disabling opcache.validate_timestamps, opcache.revalidate_freq is ignored
+
+
 Tested on
 
 * RHEL 8 (and compatible)
