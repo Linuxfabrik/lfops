@@ -7,24 +7,26 @@ Tested on
 * RHEL 8 (and compatible)
 
 
+## Mandatory Requirements
+
+* Enable the official GitLab CE Repository. This can be done using the [linuxfabrik.lfops.repo_gitlab_ce](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_gitlab_ce) role.
+
+If you use [gitlab_ce](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/gitlab_ce.yml), this is automatically done for you.
+
+
 ## Tags
 
 | Tag                   | What it does                           |
 | ---                   | ------------                           |
-| `gitlab_ce`           | * dnf -y install gitlab-ce<br>* mkdir -p /backup/gitlab<br>* Deploy /etc/systemd/system/gitlab-dump.service<br>* Deploy /etc/systemd/system/gitlab-dump.timer<br>* systemctl enable gitlab-dump.timer --now<br>* Deploy /etc/gitlab/gitlab.rb<br>* gitlab-ctl reconfigure<br>* gitlab-ctl restart
+| `gitlab_ce`           | * `dnf -y install gitlab-ce`<br> * `mkdir -p /backup/gitlab`<br> * Deploy `/etc/systemd/system/gitlab-dump.service`<br> * Deploy `/etc/systemd/system/gitlab-dump.timer`<br> * `systemctl enable gitlab-dump.timer --now`<br> * Deploy `/etc/gitlab/gitlab.rb`<br> * `gitlab-ctl reconfigure`<br> * `gitlab-ctl restart`
 | `gitlab_ce:configure` | Same as above, but without install. |
-
-
-## Mandatory Requirements
-
-* Enable the official GitLab CE Repository. This can be done using the [linuxfabrik.lfops.repo_gitlab_ce](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_gitlab_ce) role.
 
 
 ## Mandatory Role Variables
 
 | Variable              | Description                                                         |
 | --------              | -----------                                                         |
-| `gitlab_ce__rb_external_url` | The URL of your GitLab instance. If running behind a reverse proxy or on a trusted network, using "http://" is good enough. |
+| `gitlab_ce__rb_external_url` | The URL of your GitLab instance. Currently, only `http://` is supported by this role. If running behind a reverse proxy or on a trusted network, this is good enough. |
 
 Example:
 ```yaml
@@ -37,7 +39,6 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `gitlab_ce__kernel_settings__sysctl__host_var` | Kernel settings | `[{ name: 'vm.swappiness', value: 10 }]` |
 | `gitlab_ce__on_calendar` | The `OnCalendar` definition for the GitLab Backup. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 23:{{ 59 | random(seed=inventory_hostname) }}'` |
 | `gitlab_ce__rb_git_data_dirs_default_path` | For setting up different data storing directory. If missing, the directory will be created by GitLab. If you want to use a single non-default directory to store git data use a path that doesn't contain symlinks. [Docs](https://docs.gitlab.com/omnibus/settings/configuration.html#store-git-data-in-an-alternative-directory) | unset |
 | `gitlab_ce__rb_gitlab_rails_backup_keep_time` | The duration in seconds to keep backups before they are allowed to be deleted | `86400` |
@@ -65,10 +66,6 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 Example (GitLab running on port 80 behind a reverse proxy, offering Google Authentication, with Matomo integration, plus running a registry):
 ```yaml
 # optional
-gitlab_ce__kernel_settings__sysctl__host_var:
-  - name: 'vm.swappiness'
-    value: 10
-
 gitlab_ce__on_calendar: '*:0/15'  # every 15 minutes
 
 gitlab_ce__rb_git_data_dirs_default_path: '/data/gitlab/git-data'

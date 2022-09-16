@@ -13,4 +13,8 @@
       when:
         - 'not gitlab_ce__skip_kernel_settings | d(false)'
 
+    - role: 'linuxfabrik.lfops.repo_gitlab_ce'
+      when:
+        - 'not gitlab_ce__skip_repo_gitlab_ce | d(false)'
+
     - role: 'linuxfabrik.lfops.gitlab_ce'
