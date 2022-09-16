@@ -42,10 +42,10 @@
     path: '{{ apache_httpd__config_path + "/mods-enabled/" + item["filename"] + ".conf" }}'
     mode: 0o644
     state: 'link'
+    force: '{{ ansible_check_mode|d() | bool }}' # prevent errors with --check
   loop: '{{ apache_httpd__mods__combined_var }}'
   when:
     - 'item["enabled"] | d(true)'
     - 'item["state"] | d("present") != "absent"'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
-

@@ -41,6 +41,7 @@
     src: '../conf-available/{{ item["filename"] }}.conf'
     path: '{{ apache_httpd__config_path + "/conf-enabled/" + item["filename"] + ".conf" }}'
     mode: 0o644
+    force: '{{ ansible_check_mode|d() | bool }}' # prevent errors with --check
     state: 'link'
   loop: '{{ apache_httpd__conf__combined_var }}'
   when:
@@ -48,4 +49,3 @@
     - 'item["state"] | d("present") != "absent"'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
-
