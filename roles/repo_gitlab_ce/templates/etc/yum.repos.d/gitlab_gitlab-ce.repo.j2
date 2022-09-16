@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2022091501
+# 2022091601
 
 [gitlab_gitlab-ce]
 name=gitlab_gitlab-ce
 {% if repo_gitlab_ce__mirror_url is defined and repo_gitlab_ce__mirror_url | length %}
-baseurl={{ repo_gitlab_ce__mirror_url }}/gitlab-ce/el/8/$basearch
+baseurl={{ repo_gitlab_ce__mirror_url }}/gitlab-ce/el/$releasever/$basearch
 {% else %}
-baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/8/$basearch
+baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/$releasever/$basearch
 {% endif %}
 gpgkey=https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey
        https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey/gitlab-gitlab-ce-3D645A26AB9FBD22.pub.gpg
@@ -20,9 +20,9 @@ metadata_expire=300
 [gitlab_gitlab-ce-source]
 name=gitlab_gitlab-ce-source
 {% if repo_gitlab_ce__mirror_url is defined and repo_gitlab_ce__mirror_url | length %}
-baseurl={{ repo_gitlab_ce__mirror_url }}/gitlab-ce/el/8/SRPMS
+baseurl={{ repo_gitlab_ce__mirror_url }}/gitlab-ce/el/$releasever/SRPMS
 {% else %}
-baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/8/SRPMS
+baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/$releasever/SRPMS
 {% endif %}
 gpgkey=https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey
        https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey/gitlab-gitlab-ce-3D645A26AB9FBD22.pub.gpg
