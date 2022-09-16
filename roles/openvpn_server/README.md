@@ -2,6 +2,8 @@
 
 This role installs and configures [OpenVPN](https://openvpn.net/) as a server. Currently, the only supported configuration is a multi-client server. A corresponding client config will be generated to `/tmp/` on the ansible control node.
 
+Attention: We did not implement log-append /var/log/openvpn.log` or similar. This role configures OpenVPN to use Journald, because there we get log entries including timestamps etc.
+
 Tested on
 
 * RHEL 8 (and compatible)
