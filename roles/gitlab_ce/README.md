@@ -45,6 +45,8 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 | `gitlab_ce__rb_gitlab_rails_backup_path` | Backup Settings. [Docs](https://docs.gitlab.com/omnibus/settings/backups.html) | `'/backup/gitlab'` |
 | `gitlab_ce__rb_gitlab_rails_extra_matomo_site_id` | Extra customization for Matomo | unset |
 | `gitlab_ce__rb_gitlab_rails_extra_matomo_url` | Extra customization for Matomo | unset |
+| `gitlab_ce__rb_gitlab_rails_gitlab_email_display_name` | | `'GitLab@{{ inventory_hostname }}'` |
+| `gitlab_ce__rb_gitlab_rails_gitlab_email_from` | If your SMTP server does not like the default 'From: gitlab@gitlab.example.com', you can change the 'From' with this setting. | `'{{ mailto_root__from | d("") }}'` |
 | `gitlab_ce__rb_gitlab_rails_omniauth_allow_single_sign_on` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
 | `gitlab_ce__rb_gitlab_rails_omniauth_auto_link_ldap_user` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
 | `gitlab_ce__rb_gitlab_rails_omniauth_block_auto_created_users` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
@@ -72,6 +74,9 @@ gitlab_ce__rb_git_data_dirs_default_path: '/data/gitlab/git-data'
 
 gitlab_ce__rb_gitlab_rails_backup_keep_time: 86400
 gitlab_ce__rb_gitlab_rails_backup_path: '/backup/gitlab'
+
+gitlab_ce__rb_gitlab_rails_gitlab_email_display_name: 'My GitLab'
+gitlab_ce__rb_gitlab_rails_gitlab_email_from: 'noreply@example.com'
 
 gitlab_ce__rb_gitlab_rails_extra_matomo_site_id: '4711'
 gitlab_ce__rb_gitlab_rails_extra_matomo_url: 'analytics.example.com/'

@@ -109,14 +109,16 @@ gitlab_rails['time_zone'] = '{{ gitlab_ce__rb_gitlab_rails_time_zone | d("UTC") 
 
 ##! If your SMTP server does not like the default 'From: gitlab@gitlab.example.com'
 ##! can change the 'From' with this setting.
-# gitlab_rails['gitlab_email_from'] = 'example@example.com'
-# gitlab_rails['gitlab_email_display_name'] = 'Example'
+{% if gitlab_ce__rb_gitlab_rails_gitlab_email_from is defined and gitlab_ce__rb_gitlab_rails_gitlab_email_from | length %}
+gitlab_rails['gitlab_email_from'] = '{{ gitlab_ce__rb_gitlab_rails_gitlab_email_from }}'
+gitlab_rails['gitlab_email_display_name'] = '{{ gitlab_ce__rb_gitlab_rails_gitlab_email_display_name }}'
 # gitlab_rails['gitlab_email_reply_to'] = 'noreply@example.com'
 # gitlab_rails['gitlab_email_subject_suffix'] = ''
 # gitlab_rails['gitlab_email_smime_enabled'] = false
 # gitlab_rails['gitlab_email_smime_key_file'] = '/etc/gitlab/ssl/gitlab_smime.key'
 # gitlab_rails['gitlab_email_smime_cert_file'] = '/etc/gitlab/ssl/gitlab_smime.crt'
 # gitlab_rails['gitlab_email_smime_ca_certs_file'] = '/etc/gitlab/ssl/gitlab_smime_cas.crt'
+{% endif %}
 
 ### GitLab user privileges
 # gitlab_rails['gitlab_default_can_create_group'] = true
