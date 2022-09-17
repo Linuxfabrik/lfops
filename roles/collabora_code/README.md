@@ -37,7 +37,7 @@ Tested on
 | `collabora_code__coolwsd_storage_wopi__host_var` | List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. <br>For the usage in `host_vars`. | `[]` |
 | `collabora_code__language_packages__group_var` | A list of additional packages will be installed for language support (spell checking, thesaurus, etc). Defaults to de, en, fr, and it. <br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
 | `collabora_code__language_packages__host_var` | A list of additional packages will be installed for language support (spell checking, thesaurus, etc). Defaults to de, en, fr, and it. <br>For the usage in `host_vars`. | `[]` |
-| `collabora_code__logrotate` | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate | d(14) }}` |
+| `collabora_code__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate | d(14) }}` |
 | `collabora_code__service_enabled` | Enables or disables the coolwsd service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
 
 Example:
