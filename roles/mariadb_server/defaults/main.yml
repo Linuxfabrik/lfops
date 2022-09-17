@@ -8,8 +8,6 @@ mariadb_server__dump_mydumper_package: 'mydumper'
 mariadb_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
 mariadb_server__dump_threads: 4
 
-mariadb_server__logrotate: 14
-
 mariadb_server__cnf_character_set_server__dependent_var: ''
 mariadb_server__cnf_character_set_server__group_var: ''
 mariadb_server__cnf_character_set_server__host_var: ''

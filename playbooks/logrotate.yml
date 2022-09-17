@@ -1,4 +1,4 @@
-- name: 'Stop and disable logrotate'
+- name: 'Install and start logrotate'
   hosts:
     - 'lfops_logrotate'
 

@@ -7,5 +7,5 @@
     daily
     dateext
     missingok
-    rotate {{ duplicity__logrotate | d(14) }}
+    rotate {{ duplicity__logrotate | d(logrotate__rotate) | d(14) }}
 }

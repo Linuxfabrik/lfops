@@ -1,11 +1,11 @@
 - block:
 
-  - name: 'dnf -y install tar'
+  - name: 'install tar'
     ansible.builtin.package:
       name: 'tar'
       state: 'present'
 
-  - name: 'dnf -y install gitlab-ce'
+  - name: 'install gitlab-ce'
     ansible.builtin.package:
       name: 'gitlab-ce'
       state: 'present'

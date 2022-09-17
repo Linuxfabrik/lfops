@@ -20,12 +20,12 @@ Tested on
 
 | Variable                 | Description                                         | Default Value |
 | --------                 | -----------                                         | ------------- |
-| `logrotate__rotate_days` | For how many days the rotated files should be kept. | `14`          |
+| `logrotate__rotate`      | Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14`          |
 
 Example:
 ```yaml
 # optional
-logrotate__rotate_days: 14
+logrotate__rotate: 7
 ```
 
 

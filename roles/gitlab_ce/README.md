@@ -18,7 +18,7 @@ If you use [gitlab_ce](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/
 
 | Tag                   | What it does                           |
 | ---                   | ------------                           |
-| `gitlab_ce`           | * `dnf -y install gitlab-ce`<br> * `mkdir -p /backup/gitlab`<br> * Deploy `/etc/systemd/system/gitlab-dump.service`<br> * Deploy `/etc/systemd/system/gitlab-dump.timer`<br> * `systemctl enable gitlab-dump.timer --now`<br> * Deploy `/etc/gitlab/gitlab.rb`<br> * `gitlab-ctl reconfigure`<br> * `gitlab-ctl restart`
+| `gitlab_ce`           | * `install tar gitlab-ce`<br> * `mkdir -p /backup/gitlab`<br> * Deploy `/etc/systemd/system/gitlab-dump.service`<br> * Deploy `/etc/systemd/system/gitlab-dump.timer`<br> * `systemctl enable gitlab-dump.timer --now`<br> * Deploy `/etc/gitlab/gitlab.rb`<br> * `gitlab-ctl reconfigure`<br> * `gitlab-ctl restart`
 | `gitlab_ce:configure` | Same as above, but without install. |
 
 

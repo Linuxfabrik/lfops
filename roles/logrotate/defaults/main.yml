@@ -1,1 +1,1 @@
-logrotate__rotate_days: 14
+logrotate__rotate: 14

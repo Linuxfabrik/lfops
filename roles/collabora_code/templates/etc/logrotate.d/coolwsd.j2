@@ -1,14 +1,13 @@
 # {{ ansible_managed }}
-# 2022062901
+# 2022091701
 
 /var/log/coolwsd.log {
-    rotate 7
+    create 644 cool cool
     daily
+    delaycompress
     missingok
     notifempty
-    delaycompress
-    compress
-    create 644 cool cool
+    rotate {{ collabora_code__logrotate | d(logrotate__rotate) | d(14) }}
     postrotate
         /usr/bin/systemctl restart coolwsd.service > /dev/null 2>/dev/null
     endscript
