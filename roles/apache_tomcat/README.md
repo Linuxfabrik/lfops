@@ -2,7 +2,7 @@
 
 This role installs and configures one [Apache Tomcat](https://tomcat.apache.org/) instance.
 
-It is possible to configure whether the Manager Web GUI should be installed (it is installed by default). When installed, the Manager Web GUI is accessible via http://tomcat:8080/manager/. The GUI is protected against CSRF, but the text and JMX interfaces are not. To maintain CSRF protection, users with the `manager-gui` role should not be given the `manager-script` or `manager-jmx` roles. The role uses the operating system's package manager, so EPEL is a must on RHEL. Logrotation in Tomcat is disabled and is done by logrotated.
+It is possible to configure whether the Manager Web GUI should be installed (it is installed by default). When installed, the Manager Web GUI is accessible via http://tomcat:8080/manager/. The role uses the operating system's package manager, so EPEL is a must on RHEL. Logrotation in Tomcat is disabled and is done by logrotated.
 
 Tested on
 
@@ -18,85 +18,79 @@ Tested on
 
 | Tag                       | What it does                                   |
 | ---                       | ------------                                   |
-| `apache_tomcat`           | Installs and configures Apache Tomcat          |
-| `apache_tomcat:configure` | Configures Apache Tomcat                       |
-| `apache_tomcat:state`     | Manages the state of the Apache Tomcat service |
+| `apache_tomcat`           | * Install tomcat-admin-webapps, or install tomcat only<br> * Copy tomcat logrotate template to `/etc/logrotate.d`<br> * Deploy `/etc/tomcat/context.xml`<br> * Deploy `/etc/tomcat/logging.properties`<br> * Deploy `/etc/tomcat/server.xml`<br> * Deploy `/var/lib/tomcat/webapps/manager/META-INF/context.xml`<br> * Deploy `/etc/tomcat/tomcat-users.xml`<br> * `systemctl enable/disable --now tomcat.service`          |
+| `apache_tomcat:configure` | * Deploy `/etc/tomcat/context.xml`<br> * Deploy `/etc/tomcat/logging.properties`<br> * Deploy `/etc/tomcat/server.xml`<br> * Deploy `/var/lib/tomcat/webapps/manager/META-INF/context.xml`                       |
+| `apache_tomcat:users` | * Deploy `/etc/tomcat/tomcat-users.xml` |
+| `apache_tomcat:state`     | * `systemctl enable/disable --now tomcat.service` |
 
 
 ## Mandatory Role Variables
 
+Only mandatory if installing the Manager Web GUI.
+
+Note that for Tomcat 7 onwards, the roles required to use the manager application were changed from the single `manager` role to the following four roles. You will need to assign the role(s) required for the functionality you wish to access:
+
+* `manager-gui`: Allows access to the HTML GUI and the status pages.
+* `manager-script`: Allows access to the text interface and the status pages.
+* `manager-jmx`: Allows access to the JMX proxy and the status pages.
+* `manager-status`: Allows access to the status pages only.
+
+The GUI is protected against CSRF, but the text and JMX interfaces are not. To maintain CSRF protection, users with the `manager-gui` role should not be given the `manager-script` or `manager-jmx` roles.
+
 | Variable | Description |
 | -------- | ----------- |
-| `apache_tomcat__manager_context_allow` | A regex that regulates which IP addresses are allowed to access the manager and host-manager webapps. Use `'|.*'` to allow any. |
-| `apache_tomcat__version` | The version of Apache Tomcat to install. Possible options: <https://tomcat.apache.org/whichversion.html> |
+| `apache_tomcat__webapps_manager_context_xml_allow` | String. A regex that describes which IP addresses are allowed to access the manager and host-manager webapps. |
+| `apache_tomcat__users__host_var` | List. List of users allowed to access the Manager Web GUI. Possible options:<br> * `username`: Mandatory, string.<br> * `password`: Mandatory, string.<br> * `roles`: Mandatory, list. Any of `admin`, `admin-gui`, `admin-script`, `manager`, `manager-gui`, `manager-script`, `manager-jmx`, `manager-status` |
 
 Example:
 ```yaml
-# mandatory
-apache_tomcat__manager_context_allow: '|192\.0\.2\.\d+'
-apache_tomcat__version: '10.0.23'
+# only mandatory if installing the Manager Web GUI
+apache_tomcat__users__host_var:
+  - username: 'tomcat-admin'
+    password: 'linuxfabrik'
+    roles:
+      - 'admin-gui'
+      - 'manager-gui'
+apache_tomcat__webapps_manager_context_xml_allow: '|192\.168\.122\.\d+|10\.80\.32\.\d+'
 ```
 
 
 ## Optional Role Variables
 
-https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
-
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_tomcat__catalina_opts`| todo | `'-Xms512M -Xmx1024M -server -XX:+UseParallelGC'` |
-| `apache_tomcat__install_dir`| The directory in which the Tomcat instances will be installed as subfolders. | `'/opt'` |
-| `apache_tomcat__instances`| A dictionary of todo | `todo` |
-| `apache_tomcat__logrotate`| Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate | d(14) }}` |
-| `apache_tomcat__roles__group_var` / `apache_tomcat__roles__host_var`| todo | `[]` |
-| `apache_tomcat__server_xml_use_remote_ip_valve`| todo | `false` |
-| `apache_tomcat__service_enabled`| Enables or disables all Tomcat services, analogous to `systemctl enable/disable`. | `true` |
-| `apache_tomcat__service_state`| Changes the state of all Tomcat services, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
-| `apache_tomcat__users__group_var` / `apache_tomcat__users__host_var| Currently, this role can't delete users. | `[]` |
+| `apache_tomcat__context_xml_cache_max_size` | Number. The maximum size of the static resource cache in kilobytes. If not specified, the default value is `10240` (10 megabytes). This value may be changed while the web application is running (e.g. via JMX). If the cache is using more memory than the new limit the cache will attempt to reduce in size over time to meet the new limit. If necessary, cacheObjectMaxSize will be reduced to ensure that it is no larger than `cacheMaxSize/20`. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/resources.html) | `102400` |
+| `apache_tomcat__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
+| `apache_tomcat__roles__group_var` / `apache_tomcat__roles__host_var` | List. List of Tomcat roles to deploy. Built-in Tomcat manager roles are:<br> * `manager-gui`: Allows access to the HTML GUI and the status pages.<br> * `manager-script`: Allows access to the HTTP API and the status pages.<br> * `manager-jmx`: Allows access to the JMX proxy and the status pages.<br> * `manager-status`: Allows access to the status pages only. | `['admin-gui', 'manager-gui']` |
+| `apache_tomcat__server_xml_ajp_port` | Number. The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of 0 (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/ajp.html) | unset (not listening on AJP) |
+| `apache_tomcat__server_xml_connector_compressable_mime_types` | String. The value is a comma separated list of MIME types for which HTTP compression may be used. If you specify a type explicitly, the default is over-ridden. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `'text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml'` |
+| `apache_tomcat__server_xml_connector_compression` | String. The Connector may use HTTP/1.1 GZIP compression in an attempt to save server bandwidth. The acceptable values for the parameter is "off" (disable compression), "on" (allow compression, which causes text data to be compressed), "force" (forces compression in all cases), or a numerical integer value (which is equivalent to "on", but specifies the minimum amount of data before the output is compressed). If the content-length is not known and compression is set to "on" or more aggressive, the output will also be compressed. If not specified, this attribute is set to "off".<br>Note: There is a tradeoff between using compression (saving your bandwidth) and using the sendfile feature (saving your CPU cycles). If the connector supports the sendfile feature, e.g. the NIO connector, using sendfile will take precedence over compression. The symptoms will be that static files greater that 48 Kb will be sent uncompressed. You can turn off sendfile by setting useSendfile attribute of the connector, as documented below, or change the sendfile usage threshold in the configuration of the DefaultServlet in the default conf/web.xml or in the web.xml of your web application. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `'on'` |
+| `apache_tomcat__server_xml_connector_max_threads` | Number. The maximum number of request processing threads to be created by this Connector, which therefore determines the maximum number of simultaneous requests that can be handled. If not specified, this attribute is set to 200. If an executor is associated with this connector, this attribute is ignored as the connector will execute tasks using the executor rather than an internal thread pool. Note that if an executor is configured any value set for this attribute will be recorded correctly but it will be reported (e.g. via JMX) as `-1` to make clear that it is not used. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `200` |
+| `apache_tomcat__server_xml_connector_min_spare_threads` | Number. The minimum number of threads always kept running. This includes both active and idle threads. If an executor is associated with this connector, this attribute is ignored as the connector will execute tasks using the executor rather than an internal thread pool. Note that if an executor is configured any value set for this attribute will be recorded correctly but it will be reported (e.g. via JMX) as `-1` to make clear that it is not used. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `10` |
+| `apache_tomcat__server_xml_connector_port` | The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of 0 (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `8080` |
+| `apache_tomcat__server_xml_shutdown_port` | | `8005` |
+| `apache_tomcat__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
+| `apache_tomcat__service_state` | String. Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `reloaded`<br> * `restarted`<br> * `started`<br> * `stopped` | `'started'` |
+| `apache_tomcat__skip_manager` | Bool. If set to `true`, installation of the Manager Web GUI will be skipped. | `false` |
 
 Example:
 ```yaml
 # optional
-apache_tomcat__catalina_opts: '-Xms512M -Xmx1024M -server -XX:+UseParallelGC'
-apache_tomcat__install_dir: '/opt'
-apache_tomcat__instances:
-  tomcat:
-    connector_port: 8080 # default
-    shutdown_port: 8005 # default
-    ajp_port: 8009 # default
-    tomcat_context_xml_cache_max_size: 10240 # default unset
-    tomcat_server_xml_max_threads: '{{ ansible_facts["processor_vcpus"] * 250 }}' # default
-    tomcat_server_xml_auto_deploy: true # default TODO
-    tomcat_server_xml_deploy_on_startup: true # default TODO
-    tomcat_server_xml_unpack_wars: true # default TODO
-    tomcat_server_xml_context: # default unset
-      - path: '/jolokia' # A context path must either be an empty string or start with a '/' and not end with a '/'. required
-        doc_base: 'jolokia' # required
-        additional_properties: '' # default ''
-        raw: '' # default ''
-
-      - path: '/manager'
-        doc_base: 'manager'
-        additional_properties: 'antiResourceLocking="false" privileged="true"'
-        raw: |-
-          <Valve className="org.apache.catalina.valves.RemoteAddrValve"
-                allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1{{ apache_tomcat__manager_context_allow }}"/>
-          <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.CsrfPreventionFilter\$LruCache(?:\$1)?|java\.util\.(?:Linked)?HashMap"/>
+apache_tomcat__context_xml_cache_max_size: 102400
 apache_tomcat__logrotate: 7
-apache_tomcat__roles__group_var: []
 apache_tomcat__roles__host_var:
-  - name: 'my-role'
-    state: 'present'
-apache_tomcat__server_xml_use_remote_ip_valve: false
+  - 'admin-gui'
+  - 'manager-gui'
+apache_tomcat__server_xml_ajp_port: 8009
+apache_tomcat__server_xml_connector_compressable_mime_types: 'text/html,text/xml,text/plain'
+apache_tomcat__server_xml_connector_compression: 'on'
+apache_tomcat__server_xml_connector_max_threads: 200
+apache_tomcat__server_xml_connector_min_spare_threads: 10
+apache_tomcat__server_xml_connector_port: 8080
+apache_tomcat__server_xml_shutdown_port: 8005
 apache_tomcat__service_enabled: true
 apache_tomcat__service_state: 'started'
-apache_tomcat__users__group_var: []
-apache_tomcat__users__host_var:
-  - username: 'admin'
-    password: 'linuxfabrik'
-    roles:
-      - 'admin-gui'
-      - 'manager-gui'
+apache_tomcat__skip_manager: false
 ```
 
 

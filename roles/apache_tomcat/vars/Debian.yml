@@ -1,2 +1,0 @@
-apache_tomcat__java_home: '/usr/lib/jvm/default-java'
-apache_tomcat__java_opts: '-Djava.security.egd=file:///dev/urandom -Djava.awt.headless=true'
