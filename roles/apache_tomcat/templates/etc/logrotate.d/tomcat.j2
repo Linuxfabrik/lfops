@@ -1,20 +1,12 @@
 # {{ ansible_managed }}
-# 2020062501
-{% for key in apache_tomcat__instances.keys() %}
-{# Leave the next line empty, it is required for whitespace control #}
+# 2022091601
 
-/opt/{{ key }}/logs/catalina.log
-/opt/{{ key }}/logs/host-manager.log
-/opt/{{ key }}/logs/localhost.log
-/opt/{{ key }}/logs/manager.log
-/opt/{{ key }}/logs/localhost_access.log
-/opt/{{ key }}/logs/catalina.out
-{%- endfor %} {
-    rotate {{ apache_tomcat__logrotate_rotate }}
+/var/log/tomcat/*.log {
+    copytruncate
+    create 0644 tomcat tomcat
     daily
     dateext
     missingok
-    compress
-    copytruncate
+    rotate {{ apache_tomcat__logrotate | d(logrotate__rotate) | d(14) }}
     su tomcat tomcat
 }

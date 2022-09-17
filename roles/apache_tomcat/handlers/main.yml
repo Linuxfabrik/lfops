@@ -1,6 +1,4 @@
-- name: 'apache_tomcat: restart tomcat'
+- name: 'apache_tomcat: restart tomcat.service'
   ansible.builtin.service:
-    name: 'tomcat@{{ item["key"] }}.service'
+    name: 'tomcat.service'
     state: 'restarted'
-  when: 'apache_tomcat__service_state_result is not changed'
-  loop: '{{ apache_tomcat__instances | dict2items }}'

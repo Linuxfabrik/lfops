@@ -1,16 +1,17 @@
 # Ansible Role linuxfabrik.lfops.apache_tomcat
 
-This role installs and configures [Apache Tomcat](https://tomcat.apache.org/) - not via the operating system's package manager, but by downloading the specified version directly from [https://tomcat.apache.org](https://tomcat.apache.org).
+This role installs and configures one [Apache Tomcat](https://tomcat.apache.org/) instance.
+
+It is possible to configure whether the Manager Web GUI should be installed (it is installed by default). When installed, the Manager Web GUI is accessible via http://tomcat:8080/manager/. The GUI is protected against CSRF, but the text and JMX interfaces are not. To maintain CSRF protection, users with the `manager-gui` role should not be given the `manager-script` or `manager-jmx` roles. The role uses the operating system's package manager, so EPEL is a must on RHEL. Logrotation in Tomcat is disabled and is done by logrotated.
 
 Tested on
 
-* RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
 
 
 ## Mandatory Requirements
 
-* Install `java.` This can be done using the [linuxfabrik.lfops.java](https://github.com/Linuxfabrik/lfops/tree/main/roles/java) role. If you use the  [Apache Tomcat Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apache_tomcat.yml), this is automatically done for you.
+* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 
 
 ## Tags
@@ -39,17 +40,19 @@ apache_tomcat__version: '10.0.23'
 
 ## Optional Role Variables
 
+https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `apache_tomcat__catalina_opts`| todo | `'-Xms512M -Xmx1024M -server -XX:+UseParallelGC'` |
 | `apache_tomcat__install_dir`| The directory in which the Tomcat instances will be installed as subfolders. | `'/opt'` |
 | `apache_tomcat__instances`| A dictionary of todo | `todo` |
-| `apache_tomcat__logrotate_rotate`| The number of days the logfiles should be kept by logrotate. | `14` |
+| `apache_tomcat__logrotate`| Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate | d(14) }}` |
 | `apache_tomcat__roles__group_var` / `apache_tomcat__roles__host_var`| todo | `[]` |
 | `apache_tomcat__server_xml_use_remote_ip_valve`| todo | `false` |
 | `apache_tomcat__service_enabled`| Enables or disables all Tomcat services, analogous to `systemctl enable/disable`. | `true` |
 | `apache_tomcat__service_state`| Changes the state of all Tomcat services, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
-| `apache_tomcat__users__group_var` / `apache_tomcat__users__host_var| todo | `[]` |
+| `apache_tomcat__users__group_var` / `apache_tomcat__users__host_var| Currently, this role can't delete users. | `[]` |
 
 Example:
 ```yaml
@@ -79,8 +82,7 @@ apache_tomcat__instances:
           <Valve className="org.apache.catalina.valves.RemoteAddrValve"
                 allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1{{ apache_tomcat__manager_context_allow }}"/>
           <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.CsrfPreventionFilter\$LruCache(?:\$1)?|java\.util\.(?:Linked)?HashMap"/>
-
-apache_tomcat__logrotate_rotate: 14
+apache_tomcat__logrotate: 7
 apache_tomcat__roles__group_var: []
 apache_tomcat__roles__host_var:
   - name: 'my-role'

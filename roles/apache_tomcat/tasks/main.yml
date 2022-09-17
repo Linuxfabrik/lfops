@@ -1,182 +1,104 @@
 - block:
 
-  - name: 'Set platform/version specific variables'
-    ansible.builtin.import_role:
-      name: 'shared'
-      tasks_from: 'platform-variables.yml'
-
-  tags:
-    - 'apache_tomcat'
-    - 'apache_tomcat:configure'
-
-
-- block:
-
-  - name: 'install haveged tar'
+  - name: 'Install tomcat-admin-webapps'
     ansible.builtin.package:
-      name:
-        - 'haveged'
-        - 'tar'
+      name: 'tomcat-admin-webapps'  # installs java and tomcat, too
       state: 'present'
+    when:
+      - 'not apache_tomcat__skip_manager | d(false)'
 
-  - name: 'systemctl enable haveged --now'
-    ansible.builtin.service:
-      state: 'started'
-      enabled: true
-      name: 'haveged.service'
-
-  - name: 'groupadd tomcat'
-    ansible.builtin.group:
-      name: 'tomcat'
+  - name: 'Install tomcat'
+    ansible.builtin.package:
+      name: 'tomcat'  # installs java, too
       state: 'present'
-      system: true
+    when:
+      - 'apache_tomcat__skip_manager | d(false)'
 
-  - name: 'useradd --shell /bin/false tomcat'
-    ansible.builtin.user:
-      comment: 'Tomcat Service User'
-      name: 'tomcat'
-      group: 'tomcat'
-      createhome: true
-      shell: '/bin/false'
-      state: 'present'
-      system: true
-
-  - name: 'wget https://archive.apache.org/dist/tomcat/tomcat-{{ apache_tomcat__version.split(".")[0] }}/v{{ apache_tomcat__version }}/bin/apache-tomcat-{{ apache_tomcat__version }}.tar.gz'
-    ansible.builtin.get_url:
-      url: 'https://archive.apache.org/dist/tomcat/tomcat-{{ apache_tomcat__version.split(".")[0] }}/v{{ apache_tomcat__version }}/bin/apache-tomcat-{{ apache_tomcat__version }}.tar.gz'
-      dest: '/tmp/apache-tomcat-{{ apache_tomcat__version }}.tar.gz'
-      owner: 'tomcat'
-      group: 'tomcat'
-
-  - name: 'tar xzvf apache-tomcat-{{ apache_tomcat__version }}.tar.gz'
-    ansible.builtin.unarchive:
-      copy: false
-      src: '/tmp/apache-tomcat-{{ apache_tomcat__version }}.tar.gz'
-      owner: 'tomcat'
-      group: 'tomcat'
-      dest: '/tmp/'
-    ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified
-
-  # remote recursive copy does not work, https://github.com/ansible/ansible/issues/14131
-  # - name: cp copy file and set permissions
-  #   ansible.builtin.copy:
-  #     remote_src: yes
-  #     src: '/tmp/apache-tomcat-{{ apache_tomcat__version }}'
-  #     dest: '{{ apache_tomcat__install_dir }}/{{ item["key"] }}-{{ apache_tomcat__version }}'
-  #   loop: '{{ apache_tomcat__instances | dict2items }}'
-  - name: 'cp -a /tmp/apache-tomcat-{{ apache_tomcat__version }}/ {{ apache_tomcat__install_dir }}/{{ item["key"] }}-{{ apache_tomcat__version }}'
-    ansible.builtin.command: 'cp -a /tmp/apache-tomcat-{{ apache_tomcat__version }}/ {{ apache_tomcat__install_dir }}/{{ item["key"] }}-{{ apache_tomcat__version }}'
-    loop: '{{ apache_tomcat__instances | dict2items }}'
-
-  - name: 'ln -s {{ apache_tomcat__install_dir }}-{{ apache_tomcat__version }} {{ apache_tomcat__install_dir }}/latest'
-    ansible.builtin.file:
-      src: '{{ apache_tomcat__install_dir }}/{{ item["key"] }}-{{ apache_tomcat__version }}'
-      dest: '{{ apache_tomcat__install_dir }}/{{ item["key"] }}'
-      state: 'link'
-    loop: '{{ apache_tomcat__instances | dict2items }}'
-
-  tags:
-    - 'apache_tomcat'
-
-
-- block:
-
-  - name: 'deploy /etc/systemd/system/tomcat@.service'
-    ansible.builtin.template:
-      src: 'etc/systemd/system/tomcat@.service.j2'
-      dest: '/etc/systemd/system/tomcat@.service'
-    register: 'apache_tomcat___systemd_service_template_result'
-    notify: 'apache_tomcat: restart tomcat'
-
-  - name: 'systemctl daemon-reload'
-    ansible.builtin.systemd:
-      daemon_reload: true
-    when: 'apache_tomcat___systemd_service_template_result is changed'
-
-  - name: 'deploy /opt/tomcat/conf/server.xml'
-    ansible.builtin.template:
-      src: 'opt/tomcat/conf/server.xml.j2'
-      dest: '{{ apache_tomcat__install_dir }}/{{ item["key"] }}/conf/server.xml'
-    notify: 'apache_tomcat: restart tomcat'
-    loop: '{{ apache_tomcat__instances | dict2items }}'
-
-  - name: 'deploy /opt/tomcat/conf/logging.properties'
-    ansible.builtin.template:
-      src: 'opt/tomcat/conf/logging.properties.j2'
-      dest: '{{ apache_tomcat__install_dir }}/{{ item["key"] }}/conf/logging.properties'
-    notify: 'apache_tomcat: restart tomcat'
-    loop: '{{ apache_tomcat__instances | dict2items }}'
-
-  - name: 'deploy /opt/tomcat/conf/tomcat-users.xml'
-    ansible.builtin.template:
-      src: 'opt/tomcat/conf/tomcat-users.xml.j2'
-      dest: '{{ apache_tomcat__install_dir }}/{{ item["key"] }}/conf/tomcat-users.xml'
-    notify: 'apache_tomcat: restart tomcat'
-    loop: '{{ apache_tomcat__instances | dict2items }}'
-
-  - name: 'deploy /opt/tomcat/webapps/manager/META-INF/context.xml'
-    ansible.builtin.template:
-      src: 'opt/tomcat/webapps/appname/META-INF/context.xml.j2'
-      dest: '{{ apache_tomcat__install_dir }}/{{ item["key"] }}/webapps/manager/META-INF/context.xml'
-    notify: 'apache_tomcat: restart tomcat'
-    loop: '{{ apache_tomcat__instances | dict2items }}'
-
-  - name: 'deploy /opt/tomcat/webapps/host-manager/META-INF/context.xml'
-    ansible.builtin.template:
-      src: 'opt/tomcat/webapps/appname/META-INF/context.xml.j2'
-      dest: '{{ apache_tomcat__install_dir }}/{{ item["key"] }}/webapps/host-manager/META-INF/context.xml'
-    notify: 'apache_tomcat: restart tomcat'
-    loop: '{{ apache_tomcat__instances | dict2items }}'
-
-  - name: 'deploy /opt/tomcat/conf/context.xml'
-    ansible.builtin.template:
-      src: 'opt/tomcat/conf/context.xml.j2'
-      dest: '{{ apache_tomcat__install_dir }}/{{ item["key"] }}/conf/context.xml'
-    notify: 'apache_tomcat: restart tomcat'
-    loop: '{{ apache_tomcat__instances | dict2items }}'
-
-  - name: 'deploy /etc/logrotate.d/tomcat'
+  - name: 'Copy tomcat logrotate template to /etc/logrotate.d'
     ansible.builtin.template:
       src: 'etc/logrotate.d/tomcat.j2'
       dest: '/etc/logrotate.d/tomcat'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
 
-  tags:
-    - 'apache_tomcat'
-    - 'apache_tomcat:configure'
-
-
-- name: 'Perform platform/version specific tasks'
-  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
-  vars:
-    __task_file:
-      files:
-        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
-        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
-        - '{{ ansible_facts["distribution"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}.yml'
-      paths:
-        - '{{ role_path }}/tasks'
-  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
     - 'apache_tomcat'
 
 
 - block:
 
-  - name: 'systemctl {{ apache_tomcat__service_enabled | bool | ternary("enable", "disable") }} tomcat@{{ item["key"] }}.service'
-    ansible.builtin.service:
-      name: 'tomcat@{{ item["key"] }}.service'
-      enabled: '{{ apache_tomcat__service_enabled }}'
-    loop: '{{ apache_tomcat__instances | dict2items }}'
+  - name: 'Deploy /etc/tomcat/context.xml'
+    ansible.builtin.template:
+      src: 'etc/tomcat/context.xml.j2'
+      dest: '/etc/tomcat/context.xml'
+      owner: 'root'
+      group: 'tomcat'
+      mode: 0o644
+    notify: 'apache_tomcat: restart tomcat.service'
 
-  - name: 'systemctl {{ apache_tomcat__service_state[:-2] }} tomcat@{{ item["key"] }}.service'
-    ansible.builtin.service:
-      name: 'tomcat@{{ item["key"] }}.service'
-      state: '{{ apache_tomcat__service_state }}'
-    register: 'apache_tomcat__service_state_result'
-    loop: '{{ apache_tomcat__instances | dict2items }}'
+  - name: 'Deploy /etc/tomcat/logging.properties'
+    ansible.builtin.template:
+      src: 'etc/tomcat/logging.properties.j2'
+      dest: '/etc/tomcat/logging.properties'
+      owner: 'root'
+      group: 'tomcat'
+      mode: 0o644
+    notify: 'apache_tomcat: restart tomcat.service'
+
+  - name: 'Deploy /etc/tomcat/server.xml'
+    ansible.builtin.template:
+      src: 'etc/tomcat/server.xml.j2'
+      dest: '/etc/tomcat/server.xml'
+      owner: 'root'
+      group: 'tomcat'
+      mode: 0o644
+    notify: 'apache_tomcat: restart tomcat.service'
+
+  - name: 'Deploy /var/lib/tomcat/webapps/manager/META-INF/context.xml'
+    ansible.builtin.template:
+      src: 'var/lib/tomcat/webapps/manager/META-INF/context.xml.j2'
+      dest: '/var/lib/tomcat/webapps/manager/META-INF/context.xml'
+      owner: 'root'
+      group: 'tomcat'
+      mode: 0o664
+    notify: 'apache_tomcat: restart tomcat.service'
+    when:
+      - 'not apache_tomcat__skip_manager | d(false)'
+
+  tags:
+    - 'apache_tomcat'
+    - 'apache_tomcat:configure'
+
+
+- block:
+
+  - name: 'Combined Users:'
+    ansible.builtin.debug:
+      var: 'apache_tomcat__users__combined_var'
+
+  - name: 'Deploy /etc/tomcat/tomcat-users.xml'
+    ansible.builtin.template:
+      src: 'etc/tomcat/tomcat-users.xml.j2'
+      dest: '/etc/tomcat/tomcat-users.xml'
+      owner: 'root'
+      group: 'tomcat'
+      mode: 0o640
+    notify: 'apache_tomcat: restart tomcat.service'
+
+  tags:
+    - 'apache_tomcat'
+    - 'apache_tomcat:configure'
+    - 'apache_tomcat:users'
+
+
+- block:
+
+  - name: 'systemctl {{ apache_tomcat__service_enabled | bool | ternary("enable", "disable") }} --now tomcat.service'
+    ansible.builtin.systemd:
+      name: 'tomcat.service'
+      enabled: '{{ apache_tomcat__service_enabled }}'
+      state: '{{ apache_tomcat__service_enabled | bool | ternary("started", "stopped") }}'
 
   tags:
     - 'apache_tomcat'

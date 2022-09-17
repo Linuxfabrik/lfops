@@ -1,29 +1,23 @@
-apache_tomcat__catalina_opts: '-Xms512M -Xmx1024M -server -XX:+UseParallelGC'
-apache_tomcat__install_dir: '/opt'
-apache_tomcat__instances:
-  tomcat:
-    connector_port: 8080
-    shutdown_port: 8005
-    ajp_port: 8009
-    tomcat_context_xml_cache_max_size: 10240
-    # tomcat_server_xml_max_threads: '{{ ansible_facts['processor_vcpus'] * 250 }}'
-    tomcat_server_xml_auto_deploy: 'true'
-    tomcat_server_xml_deploy_on_startup: 'true'
-    tomcat_server_xml_unpack_wars: 'true'
-    # tomcat_server_xml_context:
-    #   - path: '/jolokia' # A context path must either be an empty string or start with a '/' and do not end with a '/'.
-    #     doc_base: 'jolokia'
-    #     additional_properties: ''
-    #     raw: ''
-    #   - path: '/manager' # A context path must either be an empty string or start with a '/' and do not end with a '/'.
-    #     doc_base: 'manager'
-    #     additional_properties: 'antiResourceLocking="false" privileged="true"'
-    #     raw: |-
-    #       <Valve className="org.apache.catalina.valves.RemoteAddrValve"
-    #             allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1{{ apache_tomcat__manager_context_allow }}"/>
-    #       <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.CsrfPreventionFilter\$LruCache(?:\$1)?|java\.util\.(?:Linked)?HashMap"/>
-#
-apache_tomcat__logrotate_rotate: 14
+apache_tomcat__context_xml_cache_max_size: 102400 # unset
+#apache_tomcat__server_xml_ajp_port: 8009 # unset
+apache_tomcat__server_xml_connector_compressable_mime_types: 'text/html,text/xml,text/plain'
+apache_tomcat__server_xml_connector_compression: 'on'
+apache_tomcat__server_xml_connector_max_threads: 200
+apache_tomcat__server_xml_connector_min_spare_threads: 10
+apache_tomcat__server_xml_connector_port: 8080
+apache_tomcat__server_xml_shutdown_port: 8005
+apache_tomcat__service_enabled: true
+apache_tomcat__service_state: 'started'
+apache_tomcat__skip_manager: false
+# apache_tomcat__webapps_manager_context_xml_allow: '|192\.0\.2\.\d+'  madatory
+
+# apache_tomcat__users__host_var:   mandatory, not in defaults
+#   - username: 'tomcat-admin'
+#     password: 'password'
+#     roles:
+#       - 'admin-gui'
+#       - 'manager-gui'
+
 apache_tomcat__roles__dependent_var: []
 apache_tomcat__roles__group_var: []
 apache_tomcat__roles__host_var: []
@@ -39,10 +33,6 @@ apache_tomcat__roles__combined_var: '{{
     apache_tomcat__roles__host_var
   }}'
 
-apache_tomcat__server_xml_use_remote_ip_valve: false
-apache_tomcat__service_enabled: true
-apache_tomcat__service_state: 'started'
-
 apache_tomcat__users__dependent_var: []
 apache_tomcat__users__group_var: []
 apache_tomcat__users__host_var: []
@@ -53,3 +43,72 @@ apache_tomcat__users__combined_var: '{{
     apache_tomcat__users__group_var +
     apache_tomcat__users__host_var
   }}'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# apache_tomcat__catalina_opts: '-Xms512M -Xmx1024M -server -XX:+UseParallelGC'
+# apache_tomcat__install_dir: '/opt'
+# apache_tomcat__instances:
+#   tomcat:
+#     connector_port: 8080
+#     shutdown_port: 8005
+#     ajp_port: 8009
+#     tomcat_context_xml_cache_max_size: 10240
+#     tomcat_server_xml_max_threads: '{{ ansible_facts["processor_vcpus"] * 250 }}'
+#     tomcat_server_xml_auto_deploy: true
+#     tomcat_server_xml_deploy_on_startup: true
+#     tomcat_server_xml_unpack_wars: true
+#     # tomcat_server_xml_context:
+#     #   - path: '/jolokia' # A context path must either be an empty string or start with a '/' and do not end with a '/'.
+#     #     doc_base: 'jolokia'
+#     #     additional_properties: ''
+#     #     raw: ''
+#     #   - path: '/manager' # A context path must either be an empty string or start with a '/' and do not end with a '/'.
+#     #     doc_base: 'manager'
+#     #     additional_properties: 'antiResourceLocking="false" privileged="true"'
+#     #     raw: |-
+#     #       <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+#     #             allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1{{ apache_tomcat__manager_context_allow }}"/>
+#     #       <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.CsrfPreventionFilter\$LruCache(?:\$1)?|java\.util\.(?:Linked)?HashMap"/>
+# #
+
+# apache_tomcat__roles__dependent_var: []
+# apache_tomcat__roles__group_var: []
+# apache_tomcat__roles__host_var: []
+# apache_tomcat__roles__role_var:
+#   - name: 'admin-gui'
+#     state: 'present'
+#   - name: 'manager-gui'
+#     state: 'present'
+# apache_tomcat__roles__combined_var: '{{
+#     apache_tomcat__roles__role_var +
+#     apache_tomcat__roles__dependent_var +
+#     apache_tomcat__roles__group_var +
+#     apache_tomcat__roles__host_var
+#   }}'
+
+# apache_tomcat__server_xml_use_remote_ip_valve: false
+# apache_tomcat__service_enabled: true
+# apache_tomcat__service_state: 'started'
+
+# apache_tomcat__users__dependent_var: []
+# apache_tomcat__users__group_var: []
+# apache_tomcat__users__host_var: []
+# apache_tomcat__users__role_var: []
+# apache_tomcat__users__combined_var: '{{
+#     apache_tomcat__users__role_var +
+#     apache_tomcat__users__dependent_var +
+#     apache_tomcat__users__group_var +
+#     apache_tomcat__users__host_var
+#   }}'
