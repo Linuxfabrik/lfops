@@ -20,6 +20,7 @@ Tested on
 
 ## Mandatory Requirements
 
+* For some machines you might need to set `ansible_python_interpreter: '/usr/bin/python3'` to prevent the error message `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`.
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 * Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
 
@@ -34,14 +35,14 @@ Tested on
 
 | Tag                                  | What it does                                                                                                                     |
 | ---                                  | ------------                                                                                                                     |
-| `mariadb_server`                     | Installs and configures the MariaDB server                                                                                       |
-| `mariadb_server:configure`           | Configures the MariaDB server                                                                                                    |
-| `mariadb_server:database`            | Create or delete mariadb databases                                                                                               |
-| `mariadb_server:dump`                | Configues dumps (backups) of the MariaDB server                                                                                  |
-| `mariadb_server:secure_installation` | Secures the installation the same way mysql_secure_installation does                                                             |
-| `mariadb_server:state`               | Manages the state of the MariaDB service                                                                                         |
-| `mariadb_server:sys_schema`          | Deploys a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage. |
-| `mariadb_server:user`                | Create, update or delete MariaDB users                                                                                           |
+| `mariadb_server`                     | * `dnf -y install mariadb-server libzstd`<br> * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `mkdir /var/log/mariadb`<br> * `touch /var/log/mariadb/mariadb.log; chown mysql:mysql /var/log/mariadb/mariadb.log`<br> * Deploy /etc/my.cnf.d/z00-linuxfabrik.cnf<br> * `mkdir -p /etc/systemd/system/mariadb.service.d/`<br> * Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf<br> * `systemctl daemon-reload`<br> * Deploy /etc/logrotate.d/mariadb<br> * `systemctl {{ mariadb_server__enabled | bool | ternary("enable", "disable") }} mariadb.service`<br> * `systemctl {{ mariadb_server__state[:-2] }} mariadb.service`<br> * Create DBA "{{ mariadb_server__admin_user["username"] }}"<br> * Remove all "root" users<br> * Secure installation: Remove anonymous users<br> * Secure installation: Remove test database<br> * Secure installation: Remove test database (privileges)<br> * Secure installation: Reload privilege tables<br> * `dnf -y install {{ mariadb_server__dump_mydumper_package }}`<br> * Deploy /usr/local/bin/mariadb-dump<br> * Deploy /etc/mariadb-dump.conf<br> * Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost<br> * Deploy /etc/systemd/system/mariadb-dump.service<br> * Deploy /etc/systemd/system/mariadb-dump.timer<br> * `systemctl enable mariadb-dump.timer --now`<br> * Create or delete mariadb databases<br> * Create, update or delete MariaDB users<br> * Show databases<br> * `wget https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz`<br> * `mkdir /tmp/mariadb-sys-schema`<br> * `tar xzvf /tmp/mariadb-sys-schema.tar.gz`<br> * `mysql --user "{{ mariadb_server__admin_user["username"] }}" --password="..." < ./sys_10.sql`<br> * `rm -rf /tmp/mariadb-sys-schema` |
+| `mariadb_server:configure`           | * `dnf -y install mariadb-server libzstd`<br> * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `mkdir /var/log/mariadb`<br> * `touch /var/log/mariadb/mariadb.log; chown mysql:mysql /var/log/mariadb/mariadb.log`<br> * Deploy /etc/my.cnf.d/z00-linuxfabrik.cnf<br> * `mkdir -p /etc/systemd/system/mariadb.service.d/<br> * Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf<br> * `systemctl daemon-reload`<br> * Deploy /etc/logrotate.d/mariadb`<br> * `systemctl {{ mariadb_server__enabled | bool | ternary("enable", "disable") }} mariadb.service`<br> * `systemctl {{ mariadb_server__state[:-2] }} mariadb.service`<br> * `dnf -y install {{ mariadb_server__dump_mydumper_package }}`<br> * Deploy /usr/local/bin/mariadb-dump<br> * Deploy /etc/mariadb-dump.conf<br> * Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost<br> * Deploy /etc/systemd/system/mariadb-dump.service<br> * Deploy /etc/systemd/system/mariadb-dump.timer<br> * `systemctl enable mariadb-dump.timer --now` |
+| `mariadb_server:database`            | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Create or delete mariadb databases |
+| `mariadb_server:dump`                | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `dnf -y install {{ mariadb_server__dump_mydumper_package }}`<br> * Deploy /usr/local/bin/mariadb-dump<br> * Deploy /etc/mariadb-dump.conf<br> * Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost<br> * Deploy /etc/systemd/system/mariadb-dump.service<br> * Deploy /etc/systemd/system/mariadb-dump.timer<br> * `systemctl enable mariadb-dump.timer --now` |
+| `mariadb_server:secure_installation` | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Remove all "root" users<br> * Secure installation: Remove anonymous users<br> * Secure installation: Remove test database<br> * Secure installation: Remove test database (privileges)<br> * Secure installation: Reload privilege tables |
+| `mariadb_server:state`               | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `systemctl {{ mariadb_server__enabled | bool | ternary("enable", "disable") }} mariadb.service`<br> * `systemctl {{ mariadb_server__state[:-2] }} mariadb.service` |
+| `mariadb_server:sys_schema`          | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Show databases<br> * `wget https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz`<br> * `mkdir /tmp/mariadb-sys-schema`<br> * `tar xzvf /tmp/mariadb-sys-schema.tar.gz`<br> * `mysql --user "{{ mariadb_server__admin_user["username"] }}" --password="..." < ./sys_10.sql`<br> * `rm -rf /tmp/mariadb-sys-schema` |
+| `mariadb_server:user`                | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `mkdir /var/log/mariadb`<br> * `touch /var/log/mariadb/mariadb.log; chown mysql:mysql /var/log/mariadb/mariadb.log`<br> * Create DBA "{{ mariadb_server__admin_user["username"] }}"<br> * Create, update or delete MariaDB users |
 
 
 ## Mandatory Role Variables
@@ -75,7 +76,7 @@ mariadb_server__admin_user:
 | `mariadb_server__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate | d(14) }}` |
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
 | `mariadb_server__state`| Controls the Systemd service. One of<br> * `started`<br> * `stopped`<br> * `reloaded` | `'started'` |
-| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_user`). Subkeys:<br> * `username`: Required, string. Username. <br> * `host`<br> * `password`<br> * `priv`<br> * `state`<br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_user`). Subkeys:<br> * `username`: Required, String. Username. <br> * `host`: Required, String. Host. <br> * `password`<br> * `priv`<br> * `state`<br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 
 ```yaml
 # optional - role variables
@@ -104,15 +105,15 @@ mariadb_server__skip_sys_schema: false
 mariadb_server__state: 'started'
 mariadb_server__users__host_var:
   - username: 'user1'
-    password: 'linuxfabrik'
     host: 'localhost'
+    password: 'linuxfabrik'
     priv:
       - '{{ icingaweb2_db }}.*:SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
       - 'wiki.*:ALL'
     state: 'present'
   - username: 'mariadb-dump'
-    password: 'linuxfabrik'
     host: '127.0.0.1'
+    password: 'linuxfabrik'
     priv:
       - '*.*:event,lock tables,reload,select,show view,super,trigger'
     state: 'present'
