@@ -11,6 +11,7 @@ Ideally, the FreeIPA should be installed on a separate server. If that is not po
 
 ## Mandatory Requirements
 
+* At least 2 GB RAM required.
 * Install the [ansible-freeipa Ansible Collection](https://github.com/freeipa/ansible-freeipa) on the Ansible control node. This can be done by calling `ansible-galaxy collection install freeipa.ansible_freeipa`.
 
 
