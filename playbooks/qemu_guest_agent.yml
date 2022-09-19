@@ -1,0 +1,7 @@
+- name: 'Install and configure qemu-guest-agent'
+  hosts:
+    - 'lfops_qemu_guest_agent'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.qemu_guest_agent'

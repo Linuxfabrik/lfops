@@ -1,0 +1,23 @@
+- block:
+
+  - name: 'Install qemu-guest-agent'
+    ansible.builtin.package:
+      name:
+        - 'qemu-guest-agent'
+      state: 'present'
+
+  tags:
+    - 'qemu-guest-agent'
+
+
+- block:
+
+  - name: 'systemctl {{ qemu_guest_agent__service_enabled | bool | ternary("enable", "disable") }} --now qemu-guest-agent.service'
+    ansible.builtin.systemd:
+      name: 'qemu-guest-agent.service'
+      enabled: '{{ qemu_guest_agent__service_enabled }}'
+      state: '{{ qemu_guest_agent__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'qemu-guest-agent'
+    - 'qemu-guest-agent:state'
