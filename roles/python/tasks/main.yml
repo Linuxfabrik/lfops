@@ -6,6 +6,10 @@
         - 'python{{ python__version }}'
       state: 'present'
 
+  - name: 'Combined Modules:'
+    ansible.builtin.debug:
+      var: 'python__modules__combined_var'
+
   - name: 'Install additional python modules'
     ansible.builtin.package:
       name: "{{ python__modules__combined_var }}"
