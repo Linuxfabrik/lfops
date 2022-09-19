@@ -12,6 +12,8 @@ Ideally, the FreeIPA should be installed on a separate server. If that is not po
 ## Mandatory Requirements
 
 * At least 2 GB RAM required.
+* Configure DNS: The reverse lookup of the FreeIPA IP server address must match the hostname of the FreeIPA server. Otherwise you'll get error messages like `The host name "ipa.example" does not match the value "myipa" obtained by reverse lookup on IP address 192.102.0.106`.
+* Configure DNS: Use two-level domain names. Otherwise you'll get error messages like `Invalid realm name: single label realms are not supported`.
 * Install the [ansible-freeipa Ansible Collection](https://github.com/freeipa/ansible-freeipa) on the Ansible control node. This can be done by calling `ansible-galaxy collection install freeipa.ansible_freeipa`.
 
 
