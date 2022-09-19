@@ -1,0 +1,7 @@
+- name: 'Install and configure open-vm-tools'
+  hosts:
+    - 'lfops_open_vm_tools'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.open_vm_tools'

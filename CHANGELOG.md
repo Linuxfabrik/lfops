@@ -127,11 +127,13 @@ New features:
 * Role: nextcloud
 * Role: nfs_server
 * Role: nodejs
+* Role: open_vm_tools
 * Role: openssl
 * Role: openvpn_server
 * Role: perl
 * Role: php
 * Role: policycoreutils
+* Role: qemu_guest_agent
 * Role: redis
 * Role: repo_baseos
 * Role: repo_collabora_code

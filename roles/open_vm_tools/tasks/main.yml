@@ -1,0 +1,10 @@
+- block:
+
+  - name: 'Install open-vm-tools'
+    ansible.builtin.package:
+      name:
+        - 'open-vm-tools'
+      state: 'present'
+
+  tags:
+    - 'open_vm_tools'
