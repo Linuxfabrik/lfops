@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2022091901
+
+[Unit]
+Description=Wordpress Cron Service for
+
+[Service]
+ExecStart=/usr/bin/curl http://localhost/wp-cron.php --header 'Host: {{ wordpress__url }}' --header 'X-Forwarded-Proto: https'
+Type=oneshot
+User=root
+
+[Install]
+WantedBy=basic.target

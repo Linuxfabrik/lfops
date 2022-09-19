@@ -152,6 +152,7 @@ New features:
 * Role: telegraf
 * Role: timezone
 * Role: unattended_upgrades
+* Role: wordpress
 * Role: yum_utils
 
 ### Changed

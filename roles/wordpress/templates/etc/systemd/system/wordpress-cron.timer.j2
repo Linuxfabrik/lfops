@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2022091901
+
+[Unit]
+Description=Wordpress Cron Timer for
+
+[Timer]
+OnCalendar=*:0/15
+
+[Install]
+WantedBy=timers.target
