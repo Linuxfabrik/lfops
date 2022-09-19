@@ -64,6 +64,25 @@
       group: 'apache'
       mode: 0o755
 
+  - name: 'wp plugin uninstall --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --deactivate'
+    ansible.builtin.command: 'wp plugin uninstall --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --deactivate'
+    args:
+      chdir: '{{ wordpress__install_dir }}'
+    become_user: 'apache'
+    register: 'wordpress__plugin_uninstall_result'
+    # ignore errors if the plugin is not installed
+    failed_when: 'wordpress__plugin_uninstall_result["failed"] is defined and wordpress__plugin_uninstall_result["failed"] and not "plugin could not be found" in wordpress__plugin_uninstall_result["stderr"]'
+    when: 'item["state"] | d("present") == "absent"'
+    loop: '{{ wordpress__plugins }}'
+
+  - name: 'wp plugin install --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --activate'
+    ansible.builtin.command: 'wp plugin install --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --activate'
+    args:
+      chdir: '{{ wordpress__install_dir }}'
+    become_user: 'apache'
+    when: 'item["state"] | d("present") != "absent"'
+    loop: '{{ wordpress__plugins }}'
+
   - name: 'mkdir {{ wordpress__install_dir }}/wp-content/themes'
     ansible.builtin.file:
       path: '{{ wordpress__install_dir }}/wp-content/themes'
@@ -71,6 +90,13 @@
       owner: 'apache'
       group: 'apache'
       mode: 0o755
+
+  - name: 'wp theme install --url={{ wordpress__url | quote }} {{ wordpress__theme | quote }} --activate'
+    ansible.builtin.command: 'wp theme install --url={{ wordpress__url | quote }} {{ wordpress__theme | quote }} --activate'
+    args:
+      chdir: '{{ wordpress__install_dir }}'
+    become_user: 'apache'
+    when: 'wordpress__theme is defined and wordpress__theme | length'
 
   - name: 'restorecon -Fvr {{ wordpress__install_dir | quote }}'
     ansible.builtin.command: 'restorecon -Fvr {{ wordpress__install_dir | quote }}'

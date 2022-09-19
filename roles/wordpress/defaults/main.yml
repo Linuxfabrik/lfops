@@ -2,6 +2,7 @@ wordpress__database_host: 'localhost'
 wordpress__database_name: 'wordpress'
 wordpress__disallow_file_edit: true
 wordpress__install_dir: '/var/www/html/{{ wordpress__url }}'
+wordpress__plugins: []
 wordpress__version: 'latest'
 
 
