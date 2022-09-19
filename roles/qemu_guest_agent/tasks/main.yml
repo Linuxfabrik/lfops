@@ -7,7 +7,7 @@
       state: 'present'
 
   tags:
-    - 'qemu-guest-agent'
+    - 'qemu_guest_agent'
 
 
 - block:
@@ -19,5 +19,5 @@
       state: '{{ qemu_guest_agent__service_enabled | bool | ternary("started", "stopped") }}'
 
   tags:
-    - 'qemu-guest-agent'
-    - 'qemu-guest-agent:state'
+    - 'qemu_guest_agent'
+    - 'qemu_guest_agent:state'
