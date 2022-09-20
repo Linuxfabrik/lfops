@@ -56,9 +56,15 @@ wordpress__mariadb_server__users__dependent_var:
     state: 'present'
 
 wordpress__php__modules__dependent_var:
-  - name: 'php-zip'
+  - name: 'php-gd'
+    state: 'present'
+  - name: 'php-imagick'
+    state: 'present'
+  - name: 'php-intl'
     state: 'present'
   - name: 'php-mysql'
+    state: 'present'
+  - name: 'php-zip'
     state: 'present'
 
 wordpress__selinux__booleans__dependent_var:
