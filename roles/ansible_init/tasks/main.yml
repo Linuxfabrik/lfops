@@ -44,6 +44,7 @@
       name: '{{ item["name"] }}'
       # no_deps: '{{ item["no_deps"] | d("False") }}'
       type: '{{ item["type"] | d("collection") }}'
+      force: true # from the doc: *Ansible 2.9 and 2.10*: Must be `true' to upgrade roles and collections.
     loop: "{{ ansible_init__ansible_collections }}"
     ignore_errors: true
 
