@@ -10,10 +10,10 @@
 
     - role: 'linuxfabrik.lfops.postfix'
       when:
-        - 'not mailto_root__skip_postrix | d(false)'
+        - 'not mailto_root__skip_postfix | d(false)'
 
     - role: 'linuxfabrik.lfops.mailx'
       when:
-        - 'not mailto_root__skip_postrix | d(false)'
+        - 'not mailto_root__skip_mailx | d(false)'
 
     - role: 'linuxfabrik.lfops.mailto_root'
