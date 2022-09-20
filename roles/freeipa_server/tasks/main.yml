@@ -1,5 +1,16 @@
 - block:
 
+  - name: 'check that the hostname has two-levels'
+    ansible.builtin.assert:
+      that: 'ansible_facts["nodename"].split(".") | length >= 3'
+      fail_msg: '"{{ ansible_facts["nodename"] }} has less than two levels. This is required for FreeIPA to work.'
+
+  - name: 'check that the DNS reverse lookup config is working'
+    ansible.builtin.assert:
+      # ansible determines the domain by using socket.gethostbyaddr() which is a DNS reverse lookup (see module_utils/facts/system/platform.py)
+      that: 'ansible_facts["domain"] is defined and ansible_facts["domain"] | length'
+      fail_msg: 'DNS reverse lookup for "{{ ansible_facts["fqdn"] }}" failed. This is required for FreeIPA to work.'
+
   - name: 'Use freeipa.ansible_freeipa.ipaserver role to install and configure FreeIPA as a server'
     ansible.builtin.include_role:
       name: 'freeipa.ansible_freeipa.ipaserver'
