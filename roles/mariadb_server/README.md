@@ -55,7 +55,7 @@ Example:
 ```yaml
 # mandatory
 mariadb_server__admin_user:
-  username: 'admin'
+  username: 'mariadb-admin'
   password: 'linuxfabrik'
 ```
 
