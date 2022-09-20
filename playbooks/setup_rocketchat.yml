@@ -1,0 +1,33 @@
+- name: 'Install and configure Rocket.Chat'
+  hosts:
+    - 'lfops_rocketchat'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not rocketchat__skip_repo_epel | default(false)'
+
+    - role: 'linuxfabrik.lfops.git'
+      when:
+        - 'not rocketchat__skip_git | default(false)'
+
+    - role: 'linuxfabrik.lfops.nodejs'
+      when:
+        - 'not rocketchat__skip_nodejs | default(false)'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__transparent_hugepages__dependent_var: "{{ mongodb__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      when:
+        - 'not rocketchat__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_mongodb'
+      when:
+        - 'not rocketchat__skip_repo_mongodb | default(false)'
+
+    - role: 'linuxfabrik.lfops.mongodb'
+      when:
+        - 'not rocketchat__skip_mongodb | default(false)'
+
+    - role: 'linuxfabrik.lfops.rocketchat'
