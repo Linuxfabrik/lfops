@@ -15,7 +15,7 @@ Tested on
 * Install MariaDB 10+. This can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
 * Install PHP 7+. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
 
-If you use the [WordPress Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/wordpress.yml), this is automatically done for you.
+If you use the [WordPress Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_wordpress.yml), this is automatically done for you.
 
 
 ## Tags
