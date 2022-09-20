@@ -31,10 +31,8 @@ wordpress__apache_httpd__vhosts__dependent_var:
     authz_document_root: |-
         Require all granted
     virtualhost_port: 80
-    conf_custom_log_format: 'combined'
-    conf_directory_index: 'index.php index.html index.htm'
+    conf_directory_index: 'index.php'
     conf_document_root: '{{ wordpress__install_dir }}'
-    conf_timeout: 600
     raw: !unsafe |-
       <Files wp-config.php>
           Require all denied

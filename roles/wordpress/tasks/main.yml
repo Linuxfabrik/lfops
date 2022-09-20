@@ -35,22 +35,30 @@
       path: '{{ wordpress__install_dir }}/index.php'
     register: 'wordpress__stat_result'
 
+  - name: 'Create $HOME/.ansible/tmp with a mode of 0700 for module remote_tmp manually'
+    ansible.builtin.file:
+      path: '/usr/share/httpd/.ansible/tmp  '
+      state: 'directory'
+      mode: '0700'
+      owner: 'apache'
+      group: 'apache'
+
   - name: 'wp core download --skip-content --version={{ wordpress__version | quote }}'
-    ansible.builtin.command: 'wp core download --skip-content --version={{ wordpress__version | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp core download --skip-content --version={{ wordpress__version | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
     when: 'not wordpress__stat_result["stat"].exists'
 
   - name: 'wp config create --path={{ wordpress__install_dir | quote }} --dbhost={{ wordpress__database_host | quote }} --dbname={{ wordpress__database_name | quote }} --dbuser={{ wordpress__database_user["username"] | quote }} --dbpass={{ wordpress__database_user["password"] | quote }} --force'
-    ansible.builtin.command: 'wp config create --path={{ wordpress__install_dir | quote }} --dbhost={{ wordpress__database_host | quote }} --dbname={{ wordpress__database_name | quote }} --dbuser={{ wordpress__database_user["username"] | quote }} --dbpass={{ wordpress__database_user["password"] | quote }} --force'
+    ansible.builtin.command: '/usr/local/bin/wp config create --path={{ wordpress__install_dir | quote }} --dbhost={{ wordpress__database_host | quote }} --dbname={{ wordpress__database_name | quote }} --dbuser={{ wordpress__database_user["username"] | quote }} --dbpass={{ wordpress__database_user["password"] | quote }} --force'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
     when: 'not wordpress__stat_result["stat"].exists'
 
   - name: 'wp core install --url={{ wordpress__url | quote }} --title={{ wordpress__site_title | quote }} --admin_user={{ wordpress__admin_user["username"] | quote }} --admin_password={{ wordpress__admin_user["password"] | quote }} --admin_email={{ wordpress__admin_email | quote }}'
-    ansible.builtin.command: 'wp core install --url={{ wordpress__url | quote }} --title={{ wordpress__site_title | quote }} --admin_user={{ wordpress__admin_user["username"] | quote }} --admin_password={{ wordpress__admin_user["password"] | quote }} --admin_email={{ wordpress__admin_email | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp core install --url={{ wordpress__url | quote }} --title={{ wordpress__site_title | quote }} --admin_user={{ wordpress__admin_user["username"] | quote }} --admin_password={{ wordpress__admin_user["password"] | quote }} --admin_email={{ wordpress__admin_email | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
@@ -65,7 +73,7 @@
       mode: 0o755
 
   - name: 'wp plugin uninstall --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --deactivate'
-    ansible.builtin.command: 'wp plugin uninstall --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --deactivate'
+    ansible.builtin.command: '/usr/local/bin/wp plugin uninstall --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --deactivate'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
@@ -76,7 +84,7 @@
     loop: '{{ wordpress__plugins }}'
 
   - name: 'wp plugin install --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --activate'
-    ansible.builtin.command: 'wp plugin install --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --activate'
+    ansible.builtin.command: '/usr/local/bin/wp plugin install --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --activate'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
@@ -92,7 +100,7 @@
       mode: 0o755
 
   - name: 'wp theme install --url={{ wordpress__url | quote }} {{ wordpress__theme | quote }} --activate'
-    ansible.builtin.command: 'wp theme install --url={{ wordpress__url | quote }} {{ wordpress__theme | quote }} --activate'
+    ansible.builtin.command: '/usr/local/bin/wp theme install --url={{ wordpress__url | quote }} {{ wordpress__theme | quote }} --activate'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
@@ -110,13 +118,13 @@
 - block:
 
   - name: 'wp config set WP_DEBUG false --raw --path={{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: 'wp config set WP_DEBUG false --raw --path={{ wordpress__install_dir | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp config set WP_DEBUG false --raw --path={{ wordpress__install_dir | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
 
   - name: 'wp config set DISALLOW_FILE_EDIT {{ wordpress__disallow_file_edit | string | lower }} --raw --path={{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: 'wp config set DISALLOW_FILE_EDIT {{ wordpress__disallow_file_edit | string | lower }} --raw --path={{ wordpress__install_dir | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp config set DISALLOW_FILE_EDIT {{ wordpress__disallow_file_edit | string | lower }} --raw --path={{ wordpress__install_dir | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
@@ -132,13 +140,13 @@
     changed_when: 'wordpress__chmod_files_result["stdout"] | length'
 
   - name: "wp plugin install 'disable-json-api' --path={{ wordpress__install_dir | quote }} --activate"
-    ansible.builtin.command: "wp plugin install 'disable-json-api' --path={{ wordpress__install_dir | quote }} --activate"
+    ansible.builtin.command: "/usr/local/bin/wp plugin install 'disable-json-api' --path={{ wordpress__install_dir | quote }} --activate"
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
 
   - name: 'wp config set DISABLE_WP_CRON true --raw --path={{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: 'wp config set DISABLE_WP_CRON true --raw --path={{ wordpress__install_dir | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp config set DISABLE_WP_CRON true --raw --path={{ wordpress__install_dir | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
@@ -190,14 +198,14 @@
         }
 
   - name: 'wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
-    ansible.builtin.command: 'wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
+    ansible.builtin.command: '/usr/local/bin/wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
     when: 'item["wxr_export"] is defined and item["wxr_export"] | length'
 
   - name: 'wp import --path={{ wordpress__install_dir | quote }} --authors="create" {{ item["wxr_export"] }}'
-    ansible.builtin.command: 'wp import --path={{ wordpress__install_dir | quote }} --authors="create" {{ item["wxr_export"] }}'
+    ansible.builtin.command: '/usr/local/bin/wp import --path={{ wordpress__install_dir | quote }} --authors="create" {{ item["wxr_export"] }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
@@ -225,29 +233,29 @@
 - block:
 
   - name: 'wp cli update --yes # update wp-cli itself'
-    ansible.builtin.command: 'wp cli update --yes'
+    ansible.builtin.command: '/usr/local/bin/wp cli update --yes'
     register: 'wordpress__wp_cli_update_result'
 
   - name: 'wp core update --path={{ wordpress__install_dir | quote }} --version={{ wordpress__version | quote }}'
-    ansible.builtin.command: 'wp core update --path={{ wordpress__install_dir | quote }} --version={{ wordpress__version | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp core update --path={{ wordpress__install_dir | quote }} --version={{ wordpress__version | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
 
   - name: 'wp core update-db --path={{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: 'wp core update-db --path={{ wordpress__install_dir | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp core update-db --path={{ wordpress__install_dir | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
 
   - name: 'wp plugin update --path={{ wordpress__install_dir | quote }} --all'
-    ansible.builtin.command: 'wp plugin update --path={{ wordpress__install_dir | quote }} --all'
+    ansible.builtin.command: '/usr/local/bin/wp plugin update --path={{ wordpress__install_dir | quote }} --all'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
 
   - name: 'wp theme update --path={{ wordpress__install_dir | quote }} --all'
-    ansible.builtin.command: 'wp theme update --path={{ wordpress__install_dir | quote }} --all'
+    ansible.builtin.command: '/usr/local/bin/wp theme update --path={{ wordpress__install_dir | quote }} --all'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
@@ -267,7 +275,7 @@
 - block:
 
   - name: 'wp export --path={{ wordpress__install_dir | quote }} --dir=/tmp/ --max_file_size=-1'
-    ansible.builtin.command: 'wp export --path={{ wordpress__install_dir | quote }} --dir=/tmp/ --max_file_size=-1'
+    ansible.builtin.command: '/usr/local/bin/wp export --path={{ wordpress__install_dir | quote }} --dir=/tmp/ --max_file_size=-1'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'

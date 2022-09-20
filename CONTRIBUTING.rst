@@ -5,6 +5,7 @@ Rules of Thumb
 --------------
 
 * Each playbook must contain all dependencies to run flawlessly against a newly installed machine.
+* Playbooks installing complex software packages as a dependency are prefixed by ``setup_``. Example: ``setup_nextcloud`` because Nextcloud also needs Apache httpd, MariaDB server etc.
 * To understand/use a role, reading the readme and the defaults/main.yml must be enough.
 * Idempotency: Roles should not perform changes when applied a second time to the same system with the same parameters, and it should not report that changes have been done if they have not been done. More importantly, it should not damage an existing installation when applied a second time (even without tags). Example:
 
