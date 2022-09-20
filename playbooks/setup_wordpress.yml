@@ -1,6 +1,6 @@
 - name: 'Install and configure Wordpress'
   hosts:
-    - 'lfops_wordpress'
+    - 'lfops_setup_wordpress'
 
   roles:
 

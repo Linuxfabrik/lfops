@@ -1,6 +1,6 @@
 - name: 'Install and configure LibreNMS'
   hosts:
-    - 'lfops_librenms'
+    - 'lfops_setup_librenms'
 
   roles:
 

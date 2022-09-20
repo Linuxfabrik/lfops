@@ -1,6 +1,6 @@
 - name: 'Install and configure Rocket.Chat'
   hosts:
-    - 'lfops_rocketchat'
+    - 'lfops_setup_rocketchat'
 
   roles:
 

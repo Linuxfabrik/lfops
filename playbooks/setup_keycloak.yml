@@ -1,6 +1,6 @@
 - name: 'Install and configure Keycloak'
   hosts:
-    - 'lfops_keycloak'
+    - 'lfops_setup_keycloak'
 
   roles:
 
