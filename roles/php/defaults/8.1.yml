@@ -21,4 +21,4 @@ php__ini_post_max_size__role_var: '8M'
 php__ini_session_sid_length__role_var: 32
 php__ini_session_trans_sid_tags__role_var: 'a=href,area=href,frame=src,input=src,form=fakeentry'
 php__ini_smtp__role_var: 'localhost'
-php__ini_upload_max_filesize__role_var: '20M'
+php__ini_upload_max_filesize__role_var: '2M'
