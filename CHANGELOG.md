@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role: hostname
+
+* Renamed `hostname__domain_name` to `hostname__domain_part`
+* Renamed `hostname__hostname` to `hostname__full_hostname`
+
 Role: infomaniak_vm
 
 * Renamed `infomaniak_vm__password` to `infomaniak_vm__api_password`

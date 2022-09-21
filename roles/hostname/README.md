@@ -16,16 +16,18 @@ Tested on
 
 ## Optional Role Variables
 
-| Variable                | Description                                                                                                                                                        | Default Value                                                            |
-| --------                | -----------                                                                                                                                                        | -------------                                                            |
-| `hostname__domain_name` | This variable allows to set the same domain name for multiple servers. Only sensible if `hostname__hostname` is not modified.                                      | `''`                                                                     |
-| `hostname__hostname`    | The hostname to set. This could be a fully qualified domain name (FQDN). Setting this overwrites `hostname__domain_name`. Defaults to using the Ansible inventory name and the `hostname__domain_name` as a suffix. | `'{{ (inventory_hostname ~ "." ~ hostname__domain_name) | trim(".") }}'` |
+| -------- | ----------- | ------------- |
+| Variable | Description | Default Value |
+| `hostname__domain_part` | The domain (name) part of the hostname. Allows easily setting the same domain name for multiple servers. | `''` |
+| `hostname__full_hostname` | The full hostname to set. This could be a fully qualified domain name (FQDN). Setting this overwrites `hostname__host_part` and `hostname__domain_part`. | `'{{ (hostname__host_part ~ "." ~ hostname__domain_part) \| trim(".") }}'` |
+| `hostname__host_part` | The host part of the hostname. | `'{{ inventory_hostname }}'` |
 
 Example:
 ```yaml
 # optional
-hostname__domain_name: 'example.com'
-hostname__hostname: '{{ (inventory_hostname ~ "." ~ hostname__domain_name) | trim(".") }}'
+hostname__domain_part: 'example.com'
+hostname__full_hostname: 'server.example.com'
+hostname__host_part: 'server'
 ```
 
 

@@ -1,2 +1,3 @@
-hostname__domain_name: ''
-hostname__hostname: '{{ (inventory_hostname ~ "." ~ hostname__domain_name) | trim(".") }}'
+hostname__domain_part: ''
+hostname__full_hostname: '{{ (hostname__host_part ~ "." ~ hostname__domain_part) | trim(".") }}'
+hostname__host_part: '{{ inventory_hostname }}'
