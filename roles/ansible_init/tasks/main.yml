@@ -9,7 +9,7 @@
 
   - name: 'Update ../lfops'
     ansible.builtin.git:
-      repo: 'git@github.com:Linuxfabrik/lfops.git'
+      repo: '{{ ansible_init__lfops_url }}'
       dest: '{{ ansible_init__ansinv_path }}../lfops'
       version: 'main'
     ignore_errors: true
@@ -35,8 +35,22 @@
     ansible.builtin.git:
       repo: '{{ item["url"] }}'
       dest: '{{ ansible_init__ansinv_path }}/{{ item["name"] }}'
-      version: '{{ item["version"] }}'
+      version: '{{ item["version"] |d("main") }}'
     loop: '{{ ansible_init__inventories }}'
+    ignore_errors: true
+
+  - name: 'mkdir -p ../roles'
+    ansible.builtin.file:
+      path: '{{ ansible_init__ansinv_path }}../roles/'
+      state: 'directory'
+    when: 'ansible_init__roles is defined and ansible_init__roles | length'
+
+  - name: 'Clone the roles to ../roles/'
+    ansible.builtin.git:
+      repo: '{{ item["url"] }}'
+      dest: '{{ ansible_init__ansinv_path }}../roles/{{ item["name"] }}'
+      version: '{{ item["version"] |d("main") }}'
+    loop: '{{ ansible_init__roles }}'
     ignore_errors: true
 
   - name: 'Install ansible collections'

@@ -1,12 +1,10 @@
-ansible_init__version: 'main'
-ansible_init__ansinv_path: '{{ inventory_dir }}/../'
-
 ansible_init__ansible_collections:
   - name: 'community.mysql'
   - name: 'fedora.linux_system_roles'
   - name: 'freeipa.ansible_freeipa'
   - name: 'ngine_io.cloudstack'
-
-# ansible_init__url: 'git@git.linuxfabrik.ch:linuxfabrik-ansible/customers/1-linuxfabrik/ansible.git'
+ansible_init__ansinv_path: '{{ inventory_dir }}/../'
 ansible_init__inventories: []
-  # - { url: 'git@git.linuxfabrik.ch:linuxfabrik-ansible/inventories/000.git', name: '000', version: 'main'}
+ansible_init__lfops_url: 'https://github.com/Linuxfabrik/lfops.git'
+ansible_init__roles: []
+ansible_init__version: 'main'
