@@ -75,7 +75,6 @@
                maxThreads="{{ apache_tomcat__server_xml_connector_max_threads | d(200) }}"
                minSpareThreads="{{ apache_tomcat__server_xml_connector_min_spare_threads | d(10) }}"
                compression="{{ apache_tomcat__server_xml_connector_compression | d('on') }}"
-               compressableMimeType="{{ apache_tomcat__server_xml_connector_compressable_mime_types | d('text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml') }}"
     />
     <!-- A "Connector" using the shared thread pool-->
     <!--
