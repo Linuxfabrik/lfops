@@ -14,10 +14,11 @@
     when:
       - 'apache_tomcat__skip_manager | d(false)'
 
-  # - name: 'Install java-1.8.0-openjdk-devel (we also need `jar`)'
-  #   ansible.builtin.package:
-  #     name: 'java-1.8.0-openjdk-devel'
-  #     state: 'present'
+  tags:
+    - 'apache_tomcat'
+
+
+- block:
 
   - name: 'Copy tomcat logrotate template to /etc/logrotate.d'
     ansible.builtin.template:
@@ -27,11 +28,29 @@
       group: 'root'
       mode: 0o644
 
-  tags:
-    - 'apache_tomcat'
+  - name: 'mkdir -p /etc/systemd/system/tomcat.service.d'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/tomcat.service.d'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
 
+  - name: 'Deploy /etc/systemd/system/tomcat.service.d/override.conf'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/tomcat.service.d/override.conf.j2'
+      dest: '/etc/systemd/system/tomcat.service.d/override.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'apache_tomcat: restart tomcat.service'
+    register: 'apache_tomcat__systemd_service_override_result'
 
-- block:
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - 'apache_tomcat__systemd_service_override_result is changed'
 
   - name: 'Deploy /etc/tomcat/context.xml'
     ansible.builtin.template:

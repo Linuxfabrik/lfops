@@ -70,7 +70,7 @@
          Define a non-SSL/TLS HTTP/1.1 Connector on port 8080
     -->
     <Connector port="{{ apache_tomcat__server_xml_connector_port | d(8080) }}" protocol="HTTP/1.1"
-               connectionTimeout="20000"
+               connectionTimeout="{{ apache_tomcat__server_xml_connector_connection_timeout | d(20000) }}"
                redirectPort="8443"
                maxThreads="{{ apache_tomcat__server_xml_connector_max_threads | d(200) }}"
                minSpareThreads="{{ apache_tomcat__server_xml_connector_min_spare_threads | d(10) }}"
