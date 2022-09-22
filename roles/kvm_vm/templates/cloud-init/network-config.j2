@@ -1,0 +1,31 @@
+# {{ ansible_managed }}
+# 2022092201
+# Reference: https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html
+
+version: 2
+ethernets:
+
+{% for item in kvm_vm__network_connections %}
+  {{ item["name"] }}:
+    match:
+      macaddress: '{{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=inventory_hostname)) }}'
+
+{% if item["addresses"] is defined and item["addresses"] | length %}
+    addresses:
+{% for address in item["addresses"] %}
+      - {{ address }}
+{% endfor %}
+{% endif %}
+
+    dhcp4: {{ item["dhcp4"] | default(false) }}
+    dhcp6: {{ item["dhcp6"] | default(false) }}
+
+{% if item["gateway4"] is defined and item["gateway4"] | length %}
+    gateway4: {{ item["gateway4"] }}
+{% endif %}
+
+{% if item["gateway6"] is defined and item["gateway6"] | length %}
+    gateway6: {{ item["gateway6"] }}
+{% endif %}
+
+{% endfor %}

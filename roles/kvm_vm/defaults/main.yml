@@ -1,0 +1,13 @@
+kvm_vm__additional_disks: []
+kvm_vm__autostart: true
+kvm_vm__existing_additional_disks: []
+kvm_vm__connect_url: 'qemu:///system'
+kvm_vm__max_memory: '{{ kvm_vm__memory }}'
+kvm_vm__name: '{{ inventory_hostname }}'
+kvm_vm__network_connections: []
+kvm_vm__packages:
+  - 'cloud-init'
+  - 'qemu-guest-agent'
+kvm_vm__pool: 'default'
+kvm_vm__ssh_authorized_keys: []
+kvm_vm__state: 'running'

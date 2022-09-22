@@ -121,6 +121,7 @@ New features:
 * Role: kernel_settings
 * Role: keycloak
 * Role: kvm_host
+* Role: kvm_vm
 * Role: librenms
 * Role: login
 * Role: mailto_root

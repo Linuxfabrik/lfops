@@ -1,0 +1,24 @@
+#cloud-config
+# {{ ansible_managed }}
+# 2022061001
+
+resize_rootfs: true
+ssh_pwauth: false
+
+{% if kvm_vm__ssh_authorized_keys is defined and kvm_vm__ssh_authorized_keys | length %}
+ssh_authorized_keys:
+{% for item in kvm_vm__ssh_authorized_keys %}
+  - {{ item }}
+{% endfor %}
+{% endif %}
+
+disable_root: {{ not (kvm_vm__ssh_authorized_keys is defined and kvm_vm__ssh_authorized_keys | length) | string | lower }}
+
+bootcmd:
+ - [ sh, -c, echo "========= bootcmd =========" ]
+
+runcmd:
+ - [ sh, -c, echo "========= runcmd =========" ]
+ - touch /etc/cloud/cloud-init.disabled
+
+final_message: "========= SYSTEM READY TO LOG IN ========="

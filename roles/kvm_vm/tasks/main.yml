@@ -1,0 +1,233 @@
+- block:
+
+  - name: 'get info on storage pools'
+    community.libvirt.virt_pool:
+      command: 'info'
+    register: 'kvm_vm__pool_info_result'
+
+  delegate_to: '{{ kvm_vm__host }}'
+  tags:
+    - 'kvm_vm'
+
+
+- block:
+
+  - name: 'qemu-img create -f qcow2 -F qcow2 -b ... # create boot disk'
+    ansible.builtin.command: >
+      qemu-img create -f qcow2 -F qcow2 -b
+      {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__base_image) | quote }}
+      {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
+    args:
+      creates: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-boot.qcow2" }}'
+    register: 'kvm_vm__boot_disk_create_result'
+    when:
+      - 'kvm_vm__existing_boot_disk is not defined or not kvm_vm__existing_boot_disk | length'
+
+  - name: 'qemu-img resize ... # required since we are using a base image'
+    ansible.builtin.command: >
+      qemu-img resize
+      {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
+      {{ kvm_vm__boot_disk_size }}
+    when:
+      - 'kvm_vm__boot_disk_create_result is changed'
+
+  - name: 'qemu-img create -f qcow2 ... # additional disks'
+    ansible.builtin.command: >
+      qemu-img create -f qcow2
+      {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-' ~ item["name"] ~ '.qcow2') | quote }}
+      {{ item["size"] }}
+    args:
+      creates: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ item["name"] ~ ".qcow2" }}'
+    loop: '{{ kvm_vm__additional_disks }}'
+
+
+  # cloud-init
+  - block:
+
+    - name: 'mkdtemp --directory --suffix=cloud-init'
+      ansible.builtin.tempfile:
+        state: 'directory'
+        suffix: 'cloud-init'
+      register: 'kvm_vm__cloud_init_tempdir_result'
+
+    - name: 'deploy {{ kvm_vm__cloud_init_tempdir_result["path"] }}/meta-data'
+      ansible.builtin.template:
+        src: 'cloud-init/meta-data.j2'
+        dest: '{{ kvm_vm__cloud_init_tempdir_result["path"] }}/meta-data'
+
+    - name: 'deploy {{ kvm_vm__cloud_init_tempdir_result["path"] }}/network-config'
+      ansible.builtin.template:
+        src: 'cloud-init/network-config.j2'
+        dest: '{{ kvm_vm__cloud_init_tempdir_result["path"] }}/network-config'
+
+    - name: 'deploy {{ kvm_vm__cloud_init_tempdir_result["path"] }}/user-data'
+      ansible.builtin.template:
+        src: 'cloud-init/user-data.j2'
+        dest: '{{ kvm_vm__cloud_init_tempdir_result["path"] }}/user-data'
+
+    - name: 'Make cloud-init iso for guest'
+      ansible.builtin.command: >
+        genisoimage -volid 'cidata' -joliet -rock
+        -output {{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] }}/{{ kvm_vm__name }}-cloud-init.iso
+        {{ kvm_vm__cloud_init_tempdir_result["path"] }}/meta-data
+        {{ kvm_vm__cloud_init_tempdir_result["path"] }}/network-config
+        {{ kvm_vm__cloud_init_tempdir_result["path"] }}/user-data
+      args:
+        creates: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] }}/{{ kvm_vm__name }}-cloud-init.iso'
+
+    - name: 'rm -rf {{ kvm_vm__cloud_init_tempdir_result["path"] }}'
+      ansible.builtin.file:
+        path: '{{ kvm_vm__cloud_init_tempdir_result["path"] }}'
+        state: 'absent'
+
+    # block (cloud-init)
+    when:
+      - 'kvm_vm__boot_disk_create_result is changed'
+
+
+  - name: 'virt-customize --add .../{{ kvm_vm__name }}-boot.qcow2 --install {{ kvm_vm__packages | join(",") }}'
+    ansible.builtin.command: >
+      virt-customize
+      --add {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
+      --install {{ kvm_vm__packages | join(',') }}
+    when:
+      - 'kvm_vm__packages is defined and kvm_vm__packages | length'
+      - 'kvm_vm__boot_disk_create_result is changed'
+
+  - name: 'virt-sysprep --selinux-relabel # and optionally set root password'
+    ansible.builtin.command: >
+      virt-sysprep
+      --selinux-relabel
+      {% if kvm_vm__root_password is defined and kvm_vm__root_password | length %}
+      --root-password password:{{ kvm_vm__root_password | quote }}
+      {% endif %}
+      --add {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
+    when:
+      - 'kvm_vm__boot_disk_create_result is changed'
+
+  - name: 'get vm list'
+    community.libvirt.virt:
+      command: 'list_vms'
+    register: 'kvm_vm__virt_info_result'
+
+  - name: 'virt-install ...'
+    ansible.builtin.command: >
+      virt-install
+      --import
+      --connect {{ kvm_vm__connect_url }}
+      --name {{ kvm_vm__name }}
+      --cpu host
+      --vcpus {{ kvm_vm__vcpus }}
+      --memory {{ kvm_vm__memory }},maxmemory={{ kvm_vm__max_memory }}
+
+      {% if kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length %}
+      --disk {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__existing_boot_disk ~ ',bus=virtio') | quote }}
+      {% else %}
+      --disk {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2,bus=virtio') | quote }}
+      {% endif %}
+
+      {% for item in kvm_vm__additional_disks %}
+      --disk {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ item["name"] ~ ".qcow2,bus=virtio") | quote }}
+      {% endfor %}
+
+      {% for item in kvm_vm__existing_additional_disks %}
+      --disk {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ item ~ ",bus=virtio") | quote }}
+      {% endfor %}
+
+      {% if kvm_vm__boot_disk_create_result is changed %}
+      --disk {{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] }}/{{ kvm_vm__name }}-cloud-init.iso,device=cdrom,bus=scsi,format=iso
+      {% endif %}
+
+      {% for item in kvm_vm__network_connections %}
+      --network network=default,model=virtio,mac={{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=inventory_hostname)) }}
+      {% endfor %}
+      --noautoconsole
+      --nographics
+      --noreboot
+      --os-type linux
+      --rng /dev/urandom
+      --serial pty
+      --sound none
+      --virt-type kvm
+    when: 'kvm_vm__name not in kvm_vm__virt_info_result["list_vms"]'
+
+  when: 'kvm_vm__state != "absent"'
+  delegate_to: '{{ kvm_vm__host }}'
+  tags:
+    - 'kvm_vm'
+
+
+- block:
+
+  - name: 'set vm state to {{ kvm_vm__state }}'
+    community.libvirt.virt:
+      name: '{{ kvm_vm__name }}'
+      state: '{{ kvm_vm__state }}'
+      autostart: '{{ kvm_vm__autostart }}'
+      uri: '{{ kvm_vm__connect_url }}'
+
+  when: 'kvm_vm__state != "absent"'
+  delegate_to: '{{ kvm_vm__host }}'
+  tags:
+    - 'kvm_vm'
+    - 'kvm_vm:state'
+
+
+# cleanup
+- block:
+
+  - name: 'virsh destroy --domain {{ kvm_vm__name }}'
+    community.libvirt.virt:
+      command: 'destroy'
+      name: '{{ kvm_vm__name }}'
+    register: 'kvm_vm__destroy_result'
+    # ignore errors if vm is already destroyed or undefined
+    failed_when:
+      - 'kvm_vm__destroy_result["failed"] is defined'
+      - 'kvm_vm__destroy_result["failed"]'
+      - 'not ("not found" in kvm_vm__destroy_result["msg"] or "domain is not running" in kvm_vm__destroy_result["msg"])'
+
+  - name: 'virsh undefine --domain {{ kvm_vm__name }}'
+    community.libvirt.virt:
+      command: 'undefine'
+      name: '{{ kvm_vm__name }}'
+    register: 'kvm_vm__undefine_result'
+    # ignore errors if vm is already undefined
+    failed_when:
+      - 'kvm_vm__undefine_result["failed"] is defined'
+      - 'kvm_vm__undefine_result["failed"]'
+      - 'not "not found" in kvm_vm__undefine_result["msg"]'
+
+  - name: 'rm -f ... # boot disk'
+    ansible.builtin.file:
+      path: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-boot.qcow2" }}'
+      state: 'absent'
+    when: 'not (kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length)'
+
+  - name: 'rm -f ... # additional disks'
+    ansible.builtin.file:
+      path: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-" }}{{ item["name"] }}".qcow2"'
+      state: 'absent'
+    loop: '{{ kvm_vm__additional_disks }}'
+
+  - name: 'rm -f ... # existing boot disk'
+    ansible.builtin.file:
+      path: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__existing_boot_disk }}'
+      state: 'absent'
+    when: 'kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length'
+
+  - name: 'rm -f ... # existing additional disks'
+    ansible.builtin.file:
+      path: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ item }}'
+      state: 'absent'
+    loop: '{{ kvm_vm__existing_additional_disks }}'
+
+  - name: 'rm -f ... # cloud init iso'
+    ansible.builtin.file:
+      path: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] }}/{{ kvm_vm__name }}-cloud-init.iso'
+      state: 'absent'
+
+  when: 'kvm_vm__state == "absent"'
+  delegate_to: '{{ kvm_vm__host }}'
+  tags:
+    - 'kvm_vm'

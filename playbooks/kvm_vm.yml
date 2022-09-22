@@ -1,0 +1,9 @@
+- name: 'Setup and manage an KVM VM'
+  collections: ['linuxfabrik.lfops']
+  hosts:
+    - 'lfops_kvm_vm'
+  gather_facts: false
+
+  roles:
+
+    - role: 'kvm_vm'
