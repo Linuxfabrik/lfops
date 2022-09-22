@@ -5,7 +5,7 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
-  - name: 'Make sure SELinux policy core python utilities are installed'
+  - name: 'Make sure SELinux {{ policycoreutils__package }} are installed'
     ansible.builtin.package:
       name: '{{ policycoreutils__package }}'
       state: 'present'

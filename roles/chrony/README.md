@@ -7,6 +7,7 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 
 Tested on
 
+* RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
 
 

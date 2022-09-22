@@ -4,6 +4,7 @@ This role configures a firewall on the system. For the currently supported firew
 
 Tested on
 
+* RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
 
 

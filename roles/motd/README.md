@@ -4,6 +4,7 @@ This role ensures that login warning banners are configured properly (according 
 
 Tested on
 
+* RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
 
 
