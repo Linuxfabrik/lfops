@@ -25,6 +25,7 @@ icinga2_master__influxdb_enable_ha: false
 icinga2_master__influxdb_host: 'localhost'
 icinga2_master__influxdb_retention: '216d'
 icinga2_master__node_role: 'primary'
+icinga2_master__primary_port: 5665
 icinga2_master__service_enabled: true
 
 # -----------------------------------------------------------------------------

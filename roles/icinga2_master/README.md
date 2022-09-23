@@ -106,7 +106,7 @@ Adjust the following variables for the secondary Icinga2 master.
 | `icinga2_master__influxdb_enable_ha` | If high availability should be enabled for the ido database or not. Have a look at https://icinga.com/docs/icinga-2/latest/doc/14-features/#influxdb-in-cluster-ha-zones. | `false` |
 | `icinga2_master__node_role` | The role of this Icinga2 node. Possible options:<br> * `primary`<br> * `secondary` | `'primary'` |
 | `icinga2_master__primary_host` | The host on which the Icinga2 master is running. Needs to be reachable from the secondary node. | unset |
-| `icinga2_master__primary_port` | The port on which the Icinga2 master is running. Needs to be reachable from the secondary node. | unset |
+| `icinga2_master__primary_port` | The port on which the Icinga2 master is running. Needs to be reachable from the secondary node. | `5665` |
 
 Example:
 ```yaml
