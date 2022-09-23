@@ -1,4 +1,5 @@
 icinga2_master__additional_master_endpoints: []
+icinga2_master__api_ticket_login: '{{ icinga2_master__enrolment_api_user }}'
 
 icinga2_master__api_users__dependent_var: []
 icinga2_master__api_users__group_var: []

@@ -101,7 +101,7 @@ Adjust the following variables for the secondary Icinga2 master.
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `icinga2_master__additional_master_endpoints` | A list of endpoints which should be in the Icinga2 master zone. For example, the primary Icinga2 master endpoint. | `[]` |
-| `icinga2_master__api_ticket_login` | The Icinga2 API user which should be used to create a ticket for CSR (certificate signing request) [auto-signing](https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#generate-ticket). The user needs to have the `actions/generate-ticket` permission. | unset |
+| `icinga2_master__api_ticket_login` | The Icinga2 API user which should be used to create a ticket for CSR (certificate signing request) [auto-signing](https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#generate-ticket). The user needs to have the `actions/generate-ticket` permission. | `'{{ icinga2_master__enrolment_api_user }}'` |
 | `icinga2_master__database_enable_ha` | If high availability should be enabled for the ido database or not. Have a look at https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#high-availability-with-db-ido. | `false` |
 | `icinga2_master__influxdb_enable_ha` | If high availability should be enabled for the ido database or not. Have a look at https://icinga.com/docs/icinga-2/latest/doc/14-features/#influxdb-in-cluster-ha-zones. | `false` |
 | `icinga2_master__node_role` | The role of this Icinga2 node. Possible options:<br> * `primary`<br> * `secondary` | `'primary'` |
@@ -115,7 +115,7 @@ icinga2_master__additional_master_endpoints:
   - 'master1.example.com'
 icinga2_master__api_ticket_login:
   username: 'ticket-user'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 icinga2_master__database_enable_ha: false
 icinga2_master__influxdb_enable_ha: false
 icinga2_master__node_role: 'primary'
