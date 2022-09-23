@@ -16,8 +16,12 @@
       ports: '{{ sshd__port }}'
       proto: 'tcp'
       setype: 'ssh_port_t'
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
+    register: 'sshd__seport_result'
+    # ignore errors if vm is already destroyed or undefined
+    failed_when:
+      - 'sshd__seport_result["failed"] is defined'
+      - 'sshd__seport_result["failed"]'
+      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   - name: 'Change Ciphers in /etc/ssh/sshd_config to {{ sshd__ciphers }}'
     ansible.builtin.lineinfile:
