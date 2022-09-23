@@ -50,7 +50,7 @@ Example:
 # optional
 system_update__icinga2_api_user_login:
   username: 'downtime-user'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 system_update__icinga2_master: 'icinga.example.com'
 system_update__mail_from: 'noreply@example.com'
 system_update__mail_recipients_new_configfiles:

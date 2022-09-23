@@ -41,10 +41,10 @@ Example:
 # mandatory
 icingaweb2__api_user_login:
   username: 'icingaweb2-api-user'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 icingaweb2__database_login:
   username: 'icingaweb2_user'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 ```
 
 
@@ -75,14 +75,14 @@ icingaweb2__authentications__host_var: []
   - name: 'autologin'
     backend: 'external'
 icingaweb2__authentications__group_var: []
-icingaweb2__groups__host_var: []
+icingaweb2__groups__host_var:
   - name: 'AD_groups'
     backend: 'msldap'
     resource: 'ldap'
     nested_group_search: '1'
     base_dn: 'DC=ad,DC=example,DC=com'
 icingaweb2__groups__group_var: []
-icingaweb2__navigation_menu_entries__host_var: []
+icingaweb2__navigation_menu_entries__host_var:
   - name: 'New link'
     users: '*'
     groups: '*'
@@ -93,7 +93,14 @@ icingaweb2__navigation_menu_entries__host_var: []
     owner: 'admin-user'
 icingaweb2__navigation_menu_entries__group_var: []
 icingaweb2__resources__host_var: []
-icingaweb2__resources__group_var: []
+icingaweb2__resources__group_var:
+  - name: 'ldap'
+    type: 'ldap'
+    hostname: 'ad.example.com'
+    port: '389'
+    base_dn: 'DC=ad,DC=example,DC=com'
+    bind_dn: 'ldap-user'
+    bind_pw: 'linuxfabrik'
 icingaweb2__roles__host_var:
   - name:        'Administrators'
     users:       'admin-user'

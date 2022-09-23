@@ -34,14 +34,14 @@ Example:
 ```yaml
 # mandatory
 icinga2_master__database_login:
-  username: ''
-  password: ''
+  username: 'icinga2'
+  password: 'linuxfabrik'
 icinga2_master__enrolment_api_user:
   username: 'enrolment-user'
-  password: 'password'
+  password: 'linuxfabrik'
 icinga2_master__influxdb_login:
-  username: ''
-  password: ''
+  username: 'icinga2'
+  password: 'linuxfabrik'
 ```
 
 
