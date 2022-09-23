@@ -236,6 +236,8 @@ mariadb_server__users__combined_var: '{{
 # -----------------------------------------------------------------------------
 
 mariadb_server__kernel_settings__sysctl__dependent_var:
+  - name: 'fs.aio-max-nr'
+    value: 1048576
   - name: 'vm.swappiness'
     value: 10
 
