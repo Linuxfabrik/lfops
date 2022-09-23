@@ -88,6 +88,11 @@
       persistent: true
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
+    # ignore errors if selinux is disabled
+    failed_when:
+      - 'sshd__seport_result["failed"] is defined'
+      - 'sshd__seport_result["failed"]'
+      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   - name: 'setsebool -P httpd_setrlimit true'
     ansible.posix.seboolean:
@@ -96,6 +101,11 @@
       persistent: true
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
+    # ignore errors if selinux is disabled
+    failed_when:
+      - 'sshd__seport_result["failed"] is defined'
+      - 'sshd__seport_result["failed"]'
+      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   - name: "semanage fcontext -a -t httpd_sys_content_t '/opt/librenms/html(/.*)?'"
     community.general.sefcontext:
@@ -104,6 +114,11 @@
       state: 'present'
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
+    # ignore errors if selinux is disabled
+    failed_when:
+      - 'sshd__seport_result["failed"] is defined'
+      - 'sshd__seport_result["failed"]'
+      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   # httpd_log_t is required for the logrotate to work
   - name: "semanage fcontext -a -t httpd_log_t '/opt/librenms/logs(/.*)?'"
@@ -113,6 +128,11 @@
       state: 'present'
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
+    # ignore errors if selinux is disabled
+    failed_when:
+      - 'sshd__seport_result["failed"] is defined'
+      - 'sshd__seport_result["failed"]'
+      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   - name: "semanage fcontext -a -t httpd_sys_rw_content_t '/opt/librenms/(rrd|storage)(/.*)?'"
     community.general.sefcontext:
@@ -121,6 +141,11 @@
       state: 'present'
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
+    # ignore errors if selinux is disabled
+    failed_when:
+      - 'sshd__seport_result["failed"] is defined'
+      - 'sshd__seport_result["failed"]'
+      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   - name: "semanage fcontext -a -t httpd_sys_rw_content_t '/opt/librenms/.env'"
     community.general.sefcontext:
@@ -129,6 +154,11 @@
       state: 'present'
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
+    # ignore errors if selinux is disabled
+    failed_when:
+      - 'sshd__seport_result["failed"] is defined'
+      - 'sshd__seport_result["failed"]'
+      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   - name: 'restorecon -RFv /opt/librenms'
     ansible.builtin.command: 'restorecon -RFv /opt/librenms'

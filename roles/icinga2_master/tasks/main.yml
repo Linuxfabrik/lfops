@@ -17,6 +17,11 @@
       persistent: true
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
+    # ignore errors if selinux is disabled
+    failed_when:
+      - 'sshd__seport_result["failed"] is defined'
+      - 'sshd__seport_result["failed"]'
+      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   - name: 'setsebool -P icinga2_run_sudo on'
     ansible.posix.seboolean:
@@ -25,6 +30,11 @@
       persistent: true
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
+    # ignore errors if selinux is disabled
+    failed_when:
+      - 'sshd__seport_result["failed"] is defined'
+      - 'sshd__seport_result["failed"]'
+      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   - name: 'setsebool -P nagios_run_sudo on # this is for the plugins, not the icinga2 core itself'
     ansible.posix.seboolean:
@@ -33,6 +43,11 @@
       persistent: true
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
+    # ignore errors if selinux is disabled
+    failed_when:
+      - 'sshd__seport_result["failed"] is defined'
+      - 'sshd__seport_result["failed"]'
+      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   tags:
     - 'icinga2_master'

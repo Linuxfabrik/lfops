@@ -17,7 +17,7 @@
       proto: 'tcp'
       setype: 'ssh_port_t'
     register: 'sshd__seport_result'
-    # ignore errors if vm is already destroyed or undefined
+    # ignore errors if selinux is disabled
     failed_when:
       - 'sshd__seport_result["failed"] is defined'
       - 'sshd__seport_result["failed"]'
