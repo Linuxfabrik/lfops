@@ -2,7 +2,7 @@
 
 This role creates and manages instances (virtual machines) on [Exoscale](https://www.exoscale.com/).
 
-Tested on
+Runs on
 
 * Fedora 35
 

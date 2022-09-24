@@ -1,10 +1,11 @@
 # Ansible Role linuxfabrik.lfops.python
 
-This role installs Python on the system, optionally with additional modules.
+This role installs Python 2 or Python 3 on the system, optionally with additional modules.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
+* Ubuntu 16
 
 
 ## Tags

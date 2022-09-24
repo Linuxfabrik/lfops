@@ -2,7 +2,7 @@
 
 This role installs the required packages and configures the host as a KVM host.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

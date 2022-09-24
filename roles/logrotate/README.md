@@ -2,11 +2,12 @@
 
 This role ensures that logrotate is installed and configured for main classic system log files like `/var/log/cron`, `/var/log/maillog` or `/var/log/messages`.
 
-Tested on
+Runs on
 
 * Fedora
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
+* Ubuntu 16
 
 
 ## Tags

@@ -2,15 +2,16 @@
 
 This role deploys the [Linuxfabik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) to `/usr/lib64/nagios/plugins/`, allowing them to be easily executed by a monitoring system.
 
-Tested on
+Runs on
 
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
 * Debian 9
 * Debian 10
 * Fedora
-* Windows
+* RHEL 7 (and compatible)
+* RHEL 8 (and compatible)
 * Suse
+* Ubuntu 16
+* Windows
 
 It also installs the [Linuxfabrik Plugin Library](https://github.com/Linuxfabrik/monitoring-plugins) to `/usr/lib64/nagios/plugins/lib`, which are a requirement of the Monitoring Plugins.
 

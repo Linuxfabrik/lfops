@@ -2,7 +2,7 @@
 
 This role deploys the [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/).
 
-Tested on
+Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)

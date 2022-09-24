@@ -7,7 +7,7 @@ This role provides two additional filters:
 * apache-dos: Matches all incoming requests to Apache. Can be used to limit the number of allowed requests per client.
 * portscan: Instantly blocks an IP if it accesses a non-permitted port. Note that this requires an iptables firewall with logging (for example, fwbuilder).
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

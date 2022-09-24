@@ -2,9 +2,10 @@
 
 This role installs [git](https://git-scm.com/).
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
+* Ubuntu 16
 
 
 ## Tags

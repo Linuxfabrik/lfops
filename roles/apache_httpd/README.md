@@ -2,7 +2,7 @@
 
 This role installs and configures a CIS-compliant [Apache httpd](https://httpd.apache.org/).
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

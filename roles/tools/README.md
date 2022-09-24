@@ -26,7 +26,7 @@ Bash:
 * HISTTIMEFORMAT="%Y-%m-%d %T $USER $SUDO_USER "
 * Colorizes the Bash prompt and sets it to something like `[17:30:19 user@server Rocky8 ~]$ `
 
-Tested on
+Runs on
 
 * Fedora
 * RHEL 7 (and compatible)

@@ -2,7 +2,7 @@
 
 This role sets the state of SELinux and optionally toggles SELinux booleans.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

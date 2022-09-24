@@ -4,7 +4,7 @@ This role simply installs the command line client for MariaDB `mysql`.
 
 Note that this role does NOT let you specify a particular MariaDB client version. It simply installs the latest available MariaDB client version from the repos configured in the system. If you want or need to install a specific MariaDB client version, use the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) beforehand.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

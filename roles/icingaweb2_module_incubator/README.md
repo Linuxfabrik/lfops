@@ -2,7 +2,7 @@
 
 This role installs and enables the [IcingaWeb2 Incubator Module](https://github.com/Icinga/icingaweb2-module-incubator).
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

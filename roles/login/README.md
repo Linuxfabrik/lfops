@@ -7,10 +7,11 @@ IMPORTANT:
 
 * The default behavior of this role is that it distributes SSH keys that it knows from the host/group variables and deletes any other keys that already exist on the target system in `.authorized_keys`. This might break things. Set `remove_other_sshd_authorized_keys` accordingly.
 
-Tested on
+Runs on
 
-* RHEL 8 (and compatible)
 * Fedora Server 35+
+* RHEL 8 (and compatible)
+* Ubuntu 16
 
 
 ## Tags

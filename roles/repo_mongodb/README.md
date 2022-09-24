@@ -2,7 +2,7 @@
 
 This role deploys the MongoDB repository.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

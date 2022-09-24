@@ -5,7 +5,7 @@ This role installs [Icinga2](https://icinga.com/), configues it to act as an age
 Currently, this role only works if the host can reach the Icinga2 master API.
 
 
-Tested on
+Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)

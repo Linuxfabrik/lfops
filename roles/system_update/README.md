@@ -6,7 +6,7 @@ This role configures the server to do (weekly) system updates by deploying two s
 * applies all updates
 * and, if necessary, automatically reboots the host after the updates.
 
-Tested on
+Runs on
 
 * Debian
 * RHEL 7 (and compatible)

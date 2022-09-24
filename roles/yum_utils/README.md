@@ -2,7 +2,7 @@
 
 This role simply installs `yum-utils` package.
 
-Tested on
+Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)

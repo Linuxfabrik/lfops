@@ -2,7 +2,7 @@
 
 This role installs and configures [Collabora Online Development Edition](https://www.collaboraoffice.com/code/).
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

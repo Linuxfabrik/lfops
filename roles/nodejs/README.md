@@ -4,7 +4,7 @@ This role installs Node.js.
 
 By default, the role just installs the latest available `nodejs` package. One can use `nodejs__dnf_module_stream` to install `nodejs` from a DNF module stream.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

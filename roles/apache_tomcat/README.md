@@ -4,7 +4,7 @@ This role installs and configures one [Apache Tomcat](https://tomcat.apache.org/
 
 It is possible to configure whether the Manager Web GUI should be installed (it is installed by default). When installed, the Manager Web GUI is accessible via http://tomcat:8080/manager/. The role uses the operating system's package manager, so EPEL is a must on RHEL. Logrotation in Tomcat is disabled and is done by logrotated.
 
-Tested on
+Runs on
 
 * RHEL 7 (and compatible) - Installs Tomcat 7.0.76+ and Java 1.8.0
 * RHEL 8 (and compatible) - Installs Tomcat 9.0.65+ and Java 1.8.0

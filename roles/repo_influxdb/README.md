@@ -2,7 +2,7 @@
 
 This role deploys the InfluxDB repository.
 
-Tested on
+Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)

@@ -2,7 +2,7 @@
 
 This role creates and manages various [Python 3 virtual environments (venv)](https://docs.python.org/3/library/venv.html). These are placed below `/opt/python-venv/` on the target system.
 
-Tested on
+Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)

@@ -2,7 +2,7 @@
 
 This role installs and configures the [IcingaWeb2 Director Module](https://icinga.com/docs/icinga-director/latest/doc/01-Introduction/).
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

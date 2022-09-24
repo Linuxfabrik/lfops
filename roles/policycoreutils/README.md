@@ -2,7 +2,7 @@
 
 This role installs the SELinux policy core python utilities.
 
-Tested on
+Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)

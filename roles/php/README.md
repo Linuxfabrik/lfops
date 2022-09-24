@@ -21,7 +21,7 @@ Rules of thumb:
 
 This role never exposes to the world that PHP is installed on the server.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

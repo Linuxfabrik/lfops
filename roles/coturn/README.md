@@ -2,7 +2,7 @@
 
 This role installs and configures [coturn](https://github.com/coturn/coturn).
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

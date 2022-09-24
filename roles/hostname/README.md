@@ -2,9 +2,10 @@
 
 This role simply sets the hostname of the server.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
+* Ubuntu 16
 
 
 ## Tags

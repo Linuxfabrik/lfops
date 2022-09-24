@@ -2,7 +2,7 @@
 
 This role installs and configures a [MongoDB](https://www.mongodb.com/) server.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

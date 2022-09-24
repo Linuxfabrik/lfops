@@ -2,11 +2,11 @@
 
 This role configures a firewall on the system. For the currently supported firewalls, see the options for the `firewall__firewall` variable below.
 
-Tested on
+Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
-
+* Ubuntu 16
 
 ## Mandatory Requirements
 

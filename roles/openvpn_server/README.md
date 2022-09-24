@@ -4,7 +4,7 @@ This role installs and configures [OpenVPN](https://openvpn.net/) as a server. C
 
 This role does not configure OpenVPN logging via `log-append /var/log/openvpn.log`. Instead it configures OpenVPN to use Journald, because there we get log entries including timestamps etc. To inspect the logs, use `journalctl --unit=openvpn-server@server -f` for example.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

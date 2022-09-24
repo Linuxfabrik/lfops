@@ -2,7 +2,7 @@
 
 This role installs Nextcloud including the tools needed by the most popular business plugins.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

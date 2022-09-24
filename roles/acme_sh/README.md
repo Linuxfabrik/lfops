@@ -2,7 +2,7 @@
 
 This role installs [acme.sh](https://github.com/acmesh-official/acme.sh), and allows to issue certificates using [Let's encrypt](https://letsencrypt.org).
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

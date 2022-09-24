@@ -2,7 +2,7 @@
 
 This role installs and configures [Grafana](https://grafana.com/).
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

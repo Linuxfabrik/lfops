@@ -2,7 +2,7 @@
 
 This role installs and configures [bind](https://www.isc.org/bind/) as a DNS server. Currently, it only supports standalone configurations, no primary-replica configuration.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 

@@ -2,9 +2,10 @@
 
 This role stops and disables the `kdump` service. Since most of the time, kdump is not required, but permanently reserves space in the memory for the capture kernel, we usually disable it.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
+* Ubuntu 16
 
 
 ## Tags

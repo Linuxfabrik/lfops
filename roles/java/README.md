@@ -2,10 +2,11 @@
 
 This role installs [openjdk](https://openjdk.java.net).
 
-Tested on
+Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
+* Ubuntu 16
 
 
 ## Mandatory Requirements

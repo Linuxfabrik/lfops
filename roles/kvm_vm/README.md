@@ -10,7 +10,7 @@ If you want to create a VM with an existing disk, have a look at the `kvm_vm__ex
 
 The role currently does not support resizing the VM.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
 
