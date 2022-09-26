@@ -73,7 +73,6 @@ nextcloud__apache_httpd__vhosts__dependent_var:
     template: 'app'
 
     allowed_file_extensions:
-      # TODO: Test if any file upload is possible
       - 'css'
       - 'gif'
       - 'html?'
@@ -108,24 +107,8 @@ nextcloud__apache_httpd__vhosts__dependent_var:
           Dav off
       </IfModule>
 
-
 netcloud__collabora_code__coolwsd_storage_wopi__dependent_var:
   - '{{ nextcloud__fqdn | regex_replace("\.", "\.") }}'
-
-
-nextcloud__kernel_settings__sysctl__dependent_var:
-  # for MariaDB
-  - name: 'vm.swappiness'
-    value: 10
-  # for Redis: WARNING overcommit_memory is set to 0! Background save may fail under low memory
-  # condition. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then
-  # reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
-  - name: 'vm.overcommit_memory'
-    value: 1
-  # for Redis: WARNING: The TCP backlog setting of 511 cannot be enforced because
-  # /proc/sys/net/core/somaxconn is set to the lower value of 128.
-  - name: 'net.core.somaxconn'
-    value: 1024
 
 nextcloud__kernel_settings__transparent_hugepages__dependent_var: 'madvise'
 

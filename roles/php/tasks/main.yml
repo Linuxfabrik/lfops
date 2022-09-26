@@ -28,21 +28,18 @@
     ansible.builtin.debug:
       var: 'php__modules__combined_var'
 
-  - name: 'Ensure additional php modules are present'
+  - name: 'Ensure php modules are absent'
+    # providing the packages as a list is much more faster than looping for each
     ansible.builtin.package:
-      name: '{{ item["name"] }}'
-      state: 'present'
-    when:
-      - 'item["state"] | d("present") != "absent"'
-    loop: '{{ php__modules__combined_var }}'
-
-  - name: 'Ensure additional php modules are absent'
-    ansible.builtin.package:
-      name: '{{ item["name"] }}'
+      name: '{{ php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
       state: 'absent'
-    when:
-      - 'item["state"] | d("present") == "absent"'
-    loop: '{{ php__modules__combined_var }}'
+
+  - name: 'Ensure php modules are present'
+    # providing the packages as a list is much more faster than looping for each
+    ansible.builtin.package:
+      name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+          + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
+      state: 'present'
 
   - name: 'Deploy the /etc/php.d/z00-linuxfabrik.ini'
     ansible.builtin.template:

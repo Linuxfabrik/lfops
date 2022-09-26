@@ -12,6 +12,7 @@ Runs on
 * Install a web server (for example Apache httpd), and configure a virtual host for Nextcloud. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
 * Install MariaDB 10+. This can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
 * Install PHP 7+. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
+* Set the size of your `/tmp` partition to 50 GB+, if you want to allow 5x simultaenous uploads with files each 10 GB in size.
 
 If you use [setup_nextcloud](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you.
 
@@ -42,11 +43,13 @@ If you use [setup_nextcloud](https://github.com/Linuxfabrik/lfops/blob/main/play
 
 | Variable | Description |
 | -------- | ----------- |
+| `nextcloud__fqdn` | The FQDN for the Nextcloud instance. |
 | `nextcloud__users` | List of user accounts to create. Attention: The first user has to be the primary administrator account. |
 
 Example:
 ```yaml
 # mandatory
+nextcloud__fqdn: 'cloud.example.com'
 nextcloud__users:
   # first user has to be the admin account
   - username: 'nextcloud-admin'
@@ -71,8 +74,6 @@ nextcloud__users:
 | `nextcloud__database_host` | Host where MariaDB is located. | `'localhost'` |
 | `nextcloud__database_name` | Name of the Nextcloud database in MariaDB. | `'nextcloud'` |
 | `nextcloud__datadir` | Where to store the user files. | `'/data'` |
-| `nextcloud__kernel_settings__sysctl__group_var` / `nextcloud__kernel_settings__sysctl__host_var` | List of Key/Value pair Kernel parameters. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__kernel_settings__transparent_hugepages__group_var` / `nextcloud__kernel_settings__transparent_hugepages__host_var` | Kernel setting for THP. | `'madvise'`
 | `nextcloud__mariadb_login` | The user account for the database administrator. | `'{{ mariadb_server__admin_user }}'` |
 | `nextcloud__on_calendar_app_update` | Time to update Nextcloud Apps (Systemd-Timer notation). | `'06,18,23:{{ 59 \| random(seed=inventory_hostname) }}'` |
 | `nextcloud__on_calendar_jobs`| Run interval of OCC background jobs. | `'*:0/5'` |
