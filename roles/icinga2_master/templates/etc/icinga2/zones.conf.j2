@@ -5,8 +5,8 @@ object Endpoint "{{ icinga2_master__cn }}" {
 }
 
 {% for item in icinga2_master__additional_master_endpoints %}
-object Endpoint "{{ item.cn }}" {
-        host = "{{ item.host }}"
+object Endpoint "{{ item['cn'] }}" {
+        host = "{{ item['host'] }}"
 }
 {% endfor %}
 
@@ -14,7 +14,7 @@ object Zone "master" {
         endpoints = [
         "{{ icinga2_master__cn }}",
 {% for item in icinga2_master__additional_master_endpoints %}
-        "{{ item.cn }}",
+        "{{ item['cn'] }}",
 {% endfor %}
         ]
 }
