@@ -31,10 +31,11 @@ If you use [setup_nextcloud](https://github.com/Linuxfabrik/lfops/blob/main/play
 | Tag                       | What it does |
 | ---                       | ------------ |
 | `nextcloud`               | Installs Nextcloud. |
+| `nextcloud:apps`          | TODO |
 | `nextcloud:cron`          | * Set background job to "cron"<br>* Deploy /etc/systemd/system/nextcloud-jobs.service<br>* Deploy /etc/systemd/system/nextcloud-jobs.timer<br>* Deploy /etc/systemd/system/nextcloud-app-update.service<br>* Deploy /etc/systemd/system/nextcloud-app-update.timer |
-| `nextcloud:occ`           | * Run nextcloud installer<br>* Set nextcloud system settings<br>* Set nextcloud proxy settings<br>* Set nextcloud app settings<br>* Convert some database columns to big int<br>* nextcloud: restart php-fpm |
 | `nextcloud:selinux`       | * semanage fcontext -a -t ...<br>* setsebool -P ... |
 | `nextcloud:state`         | * systemctl enable/disable nextcloud-jobs.timer --now<br>* systemctl enable/disable nextcloud-app-update.timer --now |
+| `nextcloud:sysconfig`     | * Set nextcloud system settings<br>* Set nextcloud proxy settings<br>* Convert some database columns to big int<br>* nextcloud: restart php-fpm |
 | `nextcloud:update_script` | Deploy /usr/local/bin/nextcloud-update |
 | `nextcloud:user`          | * Create Nextcloud user<br>* Update Nextcloud settings for user |
 
@@ -70,11 +71,14 @@ nextcloud__users:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `nextcloud__apache_httpd__vhosts__group_var` / `nextcloud__apache_httpd__vhosts__host_var` | The Apache vHost definition for the Nextcloud instance. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__appconfig` | List of Key/Value pairs for configuring Apps in Nextcloud via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__apps` | List of Nextcloud Apps to install. Possible options:<br> * `name`: Mandatory, string. The app name.<br> * `state`: Mandatory, string. State of the app, one of `present`, `absent`. | `[]` |
+| `nextcloud__apps_config` | List of Key/Value pairs for configuring Apps in Nextcloud via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
 | `nextcloud__database_host` | Host where MariaDB is located. | `'localhost'` |
 | `nextcloud__database_name` | Name of the Nextcloud database in MariaDB. | `'nextcloud'` |
 | `nextcloud__datadir` | Where to store the user files. | `'/data'` |
 | `nextcloud__mariadb_login` | The user account for the database administrator. | `'{{ mariadb_server__admin_user }}'` |
+| `nextcloud__objectstore_s3` | S3 Storage Backend. Have a look at the example below on how to configure. | unset |
+| `nextcloud__objectstore_swift` | Swift Storage Backend. Have a look at the example below on how to configure. | unset |
 | `nextcloud__on_calendar_app_update` | Time to update Nextcloud Apps (Systemd-Timer notation). | `'06,18,23:{{ 59 \| random(seed=inventory_hostname) }}'` |
 | `nextcloud__on_calendar_jobs`| Run interval of OCC background jobs. | `'*:0/5'` |
 | `nextcloud__php__ini_max_execution_time__group_var` / `nextcloud__php__ini_max_execution_time__host_var` | [php.net](https://www.php.net/manual/en/info.configuration.php) | `'3600` |
@@ -83,7 +87,7 @@ nextcloud__users:
 | `nextcloud__php__ini_post_max_size__group_var` / `nextcloud__php__ini_post_max_size__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'16M'` |
 | `nextcloud__php__ini_upload_max_filesize__group_var` / `nextcloud__php__ini_upload_max_filesize__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'10000M'` |
 | `nextcloud__php__modules__group_var` / `nextcloud__php__modules__host_var` | List of PHP modules that need to be installed via the standard package manager. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__proxyconfig` | List of Key/Value pairs for configuring Nextcloud behind a reverse proxy via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__proxyconfig` | List of Key/Value pairs for configuring Nextcloud behind a reverse proxy via OCC. Have a look at the example below on how to configure. The IP addresses are those of the reverse proxy. | unset |
 | `nextcloud__sysconfig` | List of Key/Value pairs for configuring Nextcloud itself via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
 | `nextcloud__timer_app_update_enabled` | Enables/disables Systemd-Timer for updating Apps. | `true` |
 | `nextcloud__timer_jobs_enabled` | Enables/disables Systemd-Timer for running OCC background jobs. | `true` |
@@ -93,6 +97,38 @@ nextcloud__users:
 Example:
 ```yaml
 # optional
+nextcloud__apps:
+  - name: 'bruteforcesettings'
+    state: 'present'
+  - name: 'weather'
+    state: 'absent'
+nextcloud__datadir: '/data'
+nextcloud__database_host: 'localhost'
+nextcloud__database_name: 'nextcloud'
+nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
+nextcloud__objectstore_s3:
+  autocreate: true
+  bucket: 'mybucket'
+  hostname: 's3.example.com'
+  key: 'a58387f0-76c3-43f0-bbfc-53428d5b9bfa'
+  region: 'us-east-1'
+  secret: 'linuxfabrik'
+  use_path_style: true
+  use_ssl: true
+nextcloud__objectstore_swift:
+  autocreate: true
+  bucket: 'mybucket'
+  region_name: 'us-east-1'
+  scope_project_domain_name: 'scope_project_domain_name'
+  scope_project_name: 'scope_project_name'
+  service_name: 'service_name'
+  tenant_name: 'tenant_name'
+  url: 'https://swift.example.com:5000/v3'
+  user_domain_name: 'default'
+  user_name: 'swift'
+  user_password: 'linuxfabrik'
+nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
+nextcloud__on_calendar_jobs: '*:0/5'
 nextcloud__proxyconfig:
   - { key: 'overwrite.cli.url', value: '--value=https://cloud.example.com' }
   - { key: 'overwritecondaddr', value: '--value=^192\\.0\\.2\\.4$' }
@@ -100,6 +136,9 @@ nextcloud__proxyconfig:
   - { key: 'overwriteprotocol', value: '--value=https' }
   - { key: 'overwritewebroot',  value: '--value=/' }
   - { key: 'trusted_proxies',   value: '0 --value=192.0.2.4' }
+nextcloud__timer_jobs_enabled: true
+nextcloud__timer_app_update_enabled: true
+nextcloud__version: 'latest-24'
 ```
 
 ## License
