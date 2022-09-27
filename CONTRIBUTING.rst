@@ -517,7 +517,14 @@ Special Roles
 
 Roles with special technical implementations and capabilities:
 
-* [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud): The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs.
+* `nextcloud <https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud>`_: The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs.
+
+* `php <https://github.com/Linuxfabrik/lfops/tree/main/roles/php>`_:
+
+    * Build list for ansible.builtin.packages based on state ``present`` and ``absent``.
+    * Some Jinja templates use non-default strings marking the beginning/end of a block.
+
+* `telegraf <https://github.com/Linuxfabrik/lfops/tree/main/roles/telegraf>`_: Jinja templates use non-default strings marking the beginning/end of a print statement.
 
 
 Credits
