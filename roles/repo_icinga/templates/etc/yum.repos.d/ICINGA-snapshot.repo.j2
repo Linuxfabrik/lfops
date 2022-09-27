@@ -16,6 +16,13 @@
   {% else %}
     {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/epel' %}
   {% endif %}
+
+{% elif ansible_facts["os_family"] == "Suse" %}
+  {% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
+    {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/subscription/sles' %}
+  {% else %}
+    {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/openSUSE' %}
+  {% endif %}
 {% endif %}
 
 {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/$releasever/snapshot/' %}

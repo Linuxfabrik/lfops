@@ -11,7 +11,6 @@
     - 'repo_icinga__subscription_login is not defined or not repo_icinga__subscription_login | length'
   tags:
     - 'repo_icinga'
-    - 'repo_icinga:special'
 
 
 - block:
