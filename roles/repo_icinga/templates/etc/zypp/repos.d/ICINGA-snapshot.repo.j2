@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022092301
+# 2022092701
 
 {% if repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length %}
   {% set repo_icinga__baseurl = repo_icinga__mirror_url ~ '/icinga' %}
@@ -7,15 +7,10 @@
   {% set repo_icinga__baseurl = 'https://packages.icinga.com' %}
 {% endif %}
 
-{% if ansible_facts["distribution"] == "Fedora" %}
-  {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/fedora' %}
-
-{% elif ansible_facts["os_family"] == "RedHat" %}
-  {% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
-    {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/subscription/rhel' %}
-  {% else %}
-    {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/epel' %}
-  {% endif %}
+{% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
+  {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/subscription/sles' %}
+{% else %}
+  {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/openSUSE' %}
 {% endif %}
 
 {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/$releasever/snapshot/' %}
@@ -25,7 +20,7 @@ name=ICINGA (snapshot builds for epel)
 baseurl={{ repo_icinga__baseurl }}
 enabled=0
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ICINGA
+gpgkey=https://packages.icinga.com/icinga.key
 metadata_expire=1d
 {% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
 username={{ repo_icinga__subscription_login["username"] }}
