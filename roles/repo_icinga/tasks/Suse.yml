@@ -1,3 +1,4 @@
+# https://icinga.com/docs/icinga-2/latest/doc/02-installation/08-SLES/
 - block:
 
   - name: 'add icinga repository'
@@ -46,5 +47,16 @@
 
   when:
     - '(repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length) or (repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length)'
+  tags:
+    - 'repo_icinga'
+
+
+- block:
+
+  - name: 'source /etc/os-release && SUSEConnect -p PackageHub/$VERSION_ID/x86_64'
+    ansible.builtin.shell: |-
+      source /etc/os-release
+      SUSEConnect -p PackageHub/$VERSION_ID/x86_64
+
   tags:
     - 'repo_icinga'
