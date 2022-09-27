@@ -78,6 +78,15 @@
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
+  - name: 'Deploy the default "www" pool to /etc/php-fpm.d/'
+    ansible.builtin.template:
+      src: 'etc/php-fpm.d/www.conf.j2'
+      dest: '/etc/php-fpm.d/www.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'php: restart php-fpm'
+
   - name: 'Deploy the pools to /etc/php-fpm.d/'
     ansible.builtin.template:
       src: 'etc/php-fpm.d/pool.conf.j2'

@@ -57,11 +57,9 @@ php__fpm_pools__host_var:
     group: 'librenms'
     raw: |-
       env[PATH] = /usr/local/bin:/usr/bin:/bin
-php__fpm_pools__group_var: []
 php__modules__host_var:
   - name: 'php-mysqlnd'
     state: 'present'
-php__modules__group_var: []
 ```
 
 
