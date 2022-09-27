@@ -6,3 +6,4 @@ icinga2_agent__director_host_object_import:
   - 'tpl-host-linux'
 icinga2_agent__icinga2_master_port: 5665
 icinga2_agent__service_enabled: true
+icinga2_agent__icingaweb2_url: 'https://{{ icinga2_agent__icinga2_master_host }}/icingaweb2'

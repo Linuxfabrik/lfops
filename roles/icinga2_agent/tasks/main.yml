@@ -122,7 +122,6 @@
         Accept: 'application/json'
     ignore_errors: true
     when:
-      - 'icinga2_agent__icingaweb2_url is defined and icinga2_agent__icingaweb2_url | length'
       - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length'
 
   # block
