@@ -512,6 +512,14 @@ Releases
 Releases are available on Ansible Galaxy. Changelogs have to be written according to https://keepachangelog.com/en/1.0.0/.
 
 
+Special Roles
+-------------
+
+Roles with special technical implementations and capabilities:
+
+* [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud): The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs.
+
+
 Credits
 -------
 
