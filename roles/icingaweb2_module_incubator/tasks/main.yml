@@ -6,7 +6,7 @@
       state: 'directory'
       owner: 'apache'
       group: 'icingaweb2'
-      mode: 0o2770
+      mode: 0o755
 
   - name: 'curl https://github.com/Icinga/icingaweb2-module-incubator/archive/{{ icingaweb2_module_incubator__version }}.tar.gz -O /tmp/ansible.icingaweb2-module-incubator-{{ icingaweb2_module_incubator__version }}.tar.gz'
     ansible.builtin.get_url:

@@ -14,7 +14,7 @@
       state: 'directory'
       owner: 'apache'
       group: 'icingaweb2'
-      mode: 0o2770
+      mode: 0o755
 
   - name: 'curl {{ icingaweb2_module_director__url }} -O /tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
     ansible.builtin.get_url:

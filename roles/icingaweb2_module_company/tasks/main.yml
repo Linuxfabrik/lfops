@@ -6,7 +6,7 @@
       state: 'directory'
       owner: 'apache'
       group: 'icingaweb2'
-      mode: 0o2770
+      mode: 0o755
     register: 'icingaweb2_module_company__mkdir_result'
 
   tags:
