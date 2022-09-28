@@ -28,21 +28,6 @@
 
 - block:
 
-  - name: 'add icinga repository'
-    community.general.zypper_repository:
-      name: 'icinga-stable-release'
-      repo: 'https://packages.icinga.com/SUSE/$releasever/release/'
-      state: 'present'
-
-  when:
-    - 'repo_icinga__mirror_url is not defined or not repo_icinga__mirror_url | length'
-    - 'repo_icinga__subscription_login is not defined or not repo_icinga__subscription_login | length'
-  tags:
-    - 'repo_icinga'
-
-
-- block:
-
   - name: 'deploy the icinga-release repo (mirror: {{ repo_icinga__mirror_url }})'
     ansible.builtin.template:
       src: 'etc/zypp/repos.d/ICINGA-release.repo.j2'
@@ -59,7 +44,5 @@
       group: 'root'
       mode: 0o644
 
-  when:
-    - '(repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length) or (repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length)'
   tags:
     - 'repo_icinga'
