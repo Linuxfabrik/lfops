@@ -70,7 +70,7 @@ mariadb_server__admin_user:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `mariadb_server__admin_host` | Host-part(s) for creating the DBA user account after a fresh installation. | `['127.0.0.1', '::1', 'localhost']` |
-| `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | List of dictionaries of databases to create. Subkeys:<br> * `name`: Required, string. Name of the databse schema. <br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | List of dictionaries of databases to create. Subkeys:<br> * `name`: Mandatory, string. Name of the databse schema. <br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `mariadb_server__dump_directory` | Dump output directory name. | `'/backup/mariadb-dump'`|
 | `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
 | `mariadb_server__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'`|
@@ -80,7 +80,7 @@ mariadb_server__admin_user:
 | `mariadb_server__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
 | `mariadb_server__state`| Controls the Systemd service. One of<br> * `started`<br> * `stopped`<br> * `reloaded` | `'started'` |
-| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_user`). Subkeys:<br> * `username`: Required, String. Username. <br> * `host`: Required, String. Host. <br> * `password`<br> * `priv`<br> * `state`<br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_user`). Subkeys:<br> * `username`: Mandatory, String. Username. <br> * `host`: Mandatory, String. Host. <br> * `password`<br> * `priv`<br> * `state`<br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 
 ```yaml
 # optional - role variables

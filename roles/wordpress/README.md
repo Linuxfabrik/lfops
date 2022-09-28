@@ -32,8 +32,8 @@ If you use the [WordPress Playbook](https://github.com/Linuxfabrik/lfops/blob/ma
 | Variable | Description |
 | -------- | ----------- |
 | `wordpress__admin_email` | The Email of the WordPress admin user. |
-| `wordpress__admin_user` | The WordPress admin user account. Subkeys:<br> * `username`: Required, string. Username<br> * `password`: Required, string. Password |
-| `wordpress__database_user` | The database user account with permissions on the `wordpress__database_name` database. Subkeys:<br> * `username`: Required, string. Username<br> * `password`: Required, string. Password |
+| `wordpress__admin_user` | The WordPress admin user account. Subkeys:<br> * `username`: Mandatory, string. Username<br> * `password`: Mandatory, string. Password |
+| `wordpress__database_user` | The database user account with permissions on the `wordpress__database_name` database. Subkeys:<br> * `username`: Mandatory, string. Username<br> * `password`: Mandatory, string. Password |
 | `wordpress__site_title` | The WordPress site title. |
 | `wordpress__url` | The WordPress URL, without `http://` or `https://`.  |
 
@@ -60,7 +60,7 @@ wordpress__url: 'wordpress.example.com'
 | `wordpress__database_name` | The name of the database. | `'wordpress'` |
 | `wordpress__disallow_file_edit` | Prevent editing of plugin / theme files from the admin WebGUI. Strongly recommended to set this to `true` for security reasons. | `true` |
 | `wordpress__install_dir` | The installation directory for WordPress. | `'/var/www/html/{{ wordpress__url }}'` |
-| `wordpress__plugins` | List of WordPress plugins. Subkeys: <br> * name: Required, string. Plugin slug, path to a local zip file, or URL to a remote zip file. <br> * state: Optional, string. Either `'present'` or `'absent`' | `[]` |
+| `wordpress__plugins` | List of WordPress plugins. Subkeys: <br> * name: Mandatory, string. Plugin slug, path to a local zip file, or URL to a remote zip file. <br> * state: Optional, string. Either `'present'` or `'absent`' | `[]` |
 | `wordpress__theme` | The WordPress theme to install. Accepts a theme slug, the path to a local zip file, or a URL to a remote zip file. | unset |
 | `wordpress__version` | The WordPress version to install. Possible options: <br> * Version number <br> * `'latest'` <br> * `'nightly'` | `'latest'` |
 | `wordpress__wxr_export` | Path to a WXR export file which will be imported after installing WordPress. The file includes posts, pages, comments, custom fields, categories and tags, and can be created using the [wp-cli export function](https://developer.wordpress.org/cli/commands/export/) or the `wordpress:export` tag. | unset |

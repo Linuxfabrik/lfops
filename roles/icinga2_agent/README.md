@@ -45,7 +45,7 @@ icinga2_agent__windows_version: 'v2.12.8'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `icinga2_agent__additional_icinga2_master_endpoints` | A list of dictionaries with additional Icinga2 master endpoints. Subkeys: <br> * `host`: Required, string. Host of the master endpoint. <br> * `port`: Optional, string. Defaults to 5665. The Icinga2 port of the endpoint. | `[]` |
+| `icinga2_agent__additional_icinga2_master_endpoints` | A list of dictionaries with additional Icinga2 master endpoints. Subkeys: <br> * `host`: Mandatory, string. Host of the master endpoint. <br> * `port`: Optional, string. Defaults to 5665. The Icinga2 port of the endpoint. | `[]` |
 | `icinga2_agent__bind_host` | The bind host. This allows restricting on which IP addresses the Agent is listening. | unset |
 | `icinga2_agent__cn` | The common name of the Icinga2 Agent. Tries to default to the FQDN of the server. | `'{{ ansible_facts["nodename"] }}'` |
 | `icinga2_agent__director_host_object_address` | The host address of the Icinga Director host object. Tries to default to the IPv4 address of the server. One can try setting this to `{{ ansible_facts["ip_addresses"][0] }}` for Windows servers. | `'{{ ansible_facts["default_ipv4"]["address"] }}'` |
