@@ -14,44 +14,6 @@
 
 - block:
 
-  - name: 'semanage fcontext -a -t ...'
-    ansible.builtin.sefcontext:
-      setype: '{{ item["key"] }}'
-      target: '{{ item["value"] }}'
-      state: 'present'
-    with_dict:
-      - httpd_sys_rw_content_t: '/data(/.*)?'
-      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/.htaccess'
-      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/.user.ini'
-      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/3rdparty/aws/aws-sdk-php/src/data/logs(/.*)?'
-      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/apps(/.*)?'
-      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/config(/.*)?'
-      - httpd_sys_rw_content_t: '/var/www/html/nextcloud/data(/.*)?'
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
-
-  - name: 'setsebool -P ...'
-    ansible.posix.seboolean:
-      name: '{{ item["key"] }}'
-      state: '{{ item["value"] }}'
-      persistent: true
-    with_dict:
-      - httpd_can_network_connect: true
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
-    # ignore errors if selinux is disabled
-    failed_when:
-      - 'sshd__seport_result["failed"] is defined'
-      - 'sshd__seport_result["failed"]'
-      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
-
-  tags:
-    - 'nextcloud'
-    - 'nextcloud:selinux'
-
-
-- block:
-
   - name: 'dnf -y install bzip2 samba-client'
     ansible.builtin.package:
       name:
