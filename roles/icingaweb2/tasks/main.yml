@@ -1,9 +1,8 @@
 - block:
 
-  - name: 'install icinga2, icingaweb2 and dependent packages'
+  - name: 'install icingaweb2 icingaweb2-selinux'
     ansible.builtin.package:
       name:
-        - 'icingacli'
         - 'icingaweb2'
         - 'icingaweb2-selinux'
       state: 'present'
@@ -75,7 +74,7 @@
       dest: '/etc/icingaweb2/navigation/menu.ini'
       owner: 'apache'
       group: 'icingaweb2'
-      mode: 0o664
+      mode: 0o660
 
   - name: 'chmod g+rws /etc/icingaweb2/enabledModules'
     ansible.builtin.file:
