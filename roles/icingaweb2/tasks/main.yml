@@ -15,13 +15,6 @@
         - 'icingaweb2'
       append: true
 
-  - name: 'usermod -a -G apache icingaweb2'
-    ansible.builtin.user:
-      name: 'icingaweb2'
-      groups:
-        - 'apache'
-      append: true
-
   tags:
     - 'icingaweb2'
 
