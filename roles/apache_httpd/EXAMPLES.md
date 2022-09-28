@@ -522,3 +522,15 @@ As a starting point. Replace ``<MYVHOST>`` with your ``conf_server_name`` or FQD
       setenv:ModSecAnomalyScoreOut=%{TX.outbound_anomaly_score}"
 </IfModule>
 ```
+
+### Matomo Realtime Tracking
+
+```
+# Matomo Realtime Logging
+LogFormat "%v %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" matomo
+CustomLog "||/usr/local/bin/import_logs.py \
+--debug --enable-http-errors --enable-http-redirects --enable-bots \
+--url=https://analytics.example.com --output=/var/log/matomo.log --recorders=1 \
+--recorder-max-payload-size=1 --log-format-name=common_complete --token-auth=2ac48e93-2ca7-4df3-9e7c-c81b36d0a474 \
+-" matomo
+```
