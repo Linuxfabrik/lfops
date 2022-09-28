@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022092701
+# 2022092801
 
 {% if repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length %}
   {% set repo_icinga__baseurl = repo_icinga__mirror_url ~ '/icinga' %}
@@ -17,12 +17,12 @@
 
 [icinga-snapshot-builds]
 name=ICINGA (snapshot builds for epel)
+{% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
+baseurl={{ repo_icinga__baseurl.split('://')[0] }}://{{ repo_icinga__subscription_login['username'] }}:{{ repo_icinga__subscription_login['password'] }}@{{ repo_icinga__baseurl.split('://')[1] }}
+{% else %}
 baseurl={{ repo_icinga__baseurl }}
+{% endif %}
 enabled=0
 gpgcheck=1
 gpgkey=https://packages.icinga.com/icinga.key
 metadata_expire=1d
-{% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
-username={{ repo_icinga__subscription_login["username"] }}
-password={{ repo_icinga__subscription_login["password"] }}
-{% endif %}
