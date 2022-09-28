@@ -10,4 +10,9 @@
       when:
         - 'not redis__skip_kernel_settings | d(false)'
 
+    - role: 'linuxfabrik.lfops.repo_remi'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not redis__skip_repo_remi | default(false)'
+
     - role: 'linuxfabrik.lfops.redis'

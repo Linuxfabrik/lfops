@@ -1,11 +1,19 @@
 - block:
 
-  - name: 'dnf -y module enable redis:{{ redis__installed_version }}; dnf -y module install redis'
-    ansible.builtin.dnf:
-      name: '@redis:{{ redis__installed_version }}'
+  - name: 'Install redis'
+    ansible.builtin.package:
+      name: 'redis'
       state: 'present'
 
-  - name: 'Deploy /etc/redis.conf'
+  - name: 'Gather the package facts'
+    ansible.builtin.package_facts:
+      manager: 'auto'
+
+  - name: 'Store the Redis version'
+    ansible.builtin.set_fact:
+      redis__installed_version: '{{ ansible_facts.packages["redis"][0]["version"][:1] }}'
+
+  - name: 'Deploy /etc/redis.conf (v{{ redis__installed_version }})'
     ansible.builtin.template:
       src: 'etc/{{ redis__installed_version }}-redis.conf.j2'
       dest: '/etc/redis.conf'

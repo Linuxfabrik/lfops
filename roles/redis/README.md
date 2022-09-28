@@ -6,8 +6,9 @@ This role is only compatible with the following Redis versions:
 
 * 5
 * 6
+* 7
 
-You can pre-enable Remi's repo with the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) role to get an up-to-date Redis version.
+You can pre-enable Remi's repo with the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) role to get an up-to-date Redis version. If you use the [Redis Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/redis.yml), this is automatically done for you.
 
 Runs on
 
@@ -26,7 +27,6 @@ Runs on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `redis__installed_version` | Installs the specified Redis version. | `6` |
 | `redis__service_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
 | `redis__service_limit_nofile` | Systemd: Resource limit directive for the number of file descriptors. | `10240` |
 | `redis__service_timeout_start_sec` | Systemd: Configures the time to wait for start-up. If Redis does not signal start-up completion within the configured time, the service will be considered failed and will be shut down again. | `5` |
@@ -35,7 +35,6 @@ Runs on
 Example:
 ```yaml
 # optional
-redis__installed_version: 6
 redis__service_enabled: true
 redis__service_limit_nofile: 10240
 redis__service_timeout_start_sec: 5
@@ -50,13 +49,13 @@ Variables for `redis.conf` directives and their default values, defined and supp
 | Role Variable                           | Documentation                                                    | Default Value  |
 | -------------                           | -------------                                                    | -------------  |
 | `redis__conf_auto_aof_rewrite_min_size` | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'64mb'`       |
-| `redis__conf_bind`                      | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'127.0.0.1'`  |
+| `redis__conf_bind`                      | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | v5, v6: `'127.0.0.1'`; v7: `'127.0.0.1 -::1'`  |
 | `redis__conf_daemonize`                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'no'`         |
 | `redis__conf_databases`                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `16`           |
 | `redis__conf_loglevel`                  | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'notice'`     |
 | `redis__conf_maxmemory`                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'50mb'`       |
 | `redis__conf_maxmemory_policy`          | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'noeviction'` |
-| `redis__conf_port`                      | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `6379`         |
+| `redis__conf_port`                      | If port `0` is specified Redis will not listen on a TCP socket. [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `6379`         |
 | `redis__conf_protected_mode`            | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'yes'`        |
 | `redis__conf_replica_serve_stale_data`  | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'yes'`        |
 | `redis__conf_supervised`                | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'auto'`       |
@@ -78,7 +77,7 @@ redis__conf_supervised: 'auto'
 ```
 
 
-## Known Issues
+## Troubleshooting
 
 Actually not an issue: The role configures Systemd correctly, even if you get `WARNING supervised by systemd - you MUST set appropriate values for TimeoutStartSec and TimeoutStopSec in your service unit` in `/var/log/redis/redis.log`. This can safely be ignored [according to this GitHub issue](https://github.com/redis/redis/issues/8024).
 
