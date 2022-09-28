@@ -524,6 +524,11 @@ Roles with special technical implementations and capabilities:
     * Build list for ansible.builtin.packages based on state ``present`` and ``absent``.
     * Some Jinja templates use non-default strings marking the beginning/end of a block.
 
+* `redis <https://github.com/Linuxfabrik/lfops/tree/main/roles/redis>`_:
+
+    * Gathers the installed version and deploys the corresponding config file.
+    * Configures Systemd with Unit File overrides.
+
 * `telegraf <https://github.com/Linuxfabrik/lfops/tree/main/roles/telegraf>`_: Jinja templates use non-default strings marking the beginning/end of a print statement.
 
 
