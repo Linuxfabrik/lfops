@@ -16,7 +16,7 @@
 {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/$releasever/release/' %}
 
 [icinga-stable-release]
-name=ICINGA (stable release for epel)
+name=ICINGA (stable release)
 {% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
 baseurl={{ repo_icinga__baseurl.split('://')[0] }}://{{ repo_icinga__subscription_login['username'] }}:{{ repo_icinga__subscription_login['password'] }}@{{ repo_icinga__baseurl.split('://')[1] }}
 {% else %}
