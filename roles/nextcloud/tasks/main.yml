@@ -16,8 +16,8 @@
 
   - name: 'semanage fcontext -a -t ...'
     ansible.builtin.sefcontext:
-      setype: '{{ item.key }}'
-      target: '{{ item.value }}'
+      setype: '{{ item["key"] }}'
+      target: '{{ item["value"] }}'
       state: 'present'
     with_dict:
       - httpd_sys_rw_content_t: '/data(/.*)?'
@@ -32,8 +32,8 @@
 
   - name: 'setsebool -P ...'
     ansible.posix.seboolean:
-      name: '{{ item.key }}'
-      state: '{{ item.value }}'
+      name: '{{ item["key"] }}'
+      state: '{{ item["value"] }}'
       persistent: true
     with_dict:
       - httpd_can_network_connect: true
@@ -129,7 +129,7 @@
       group: 'apache'
       mode: 0o640
     when:
-      - '(nextcloud__objectstore_s3 is defined and nextcloud__objectstore_s3 | length) or 
+      - '(nextcloud__objectstore_s3 is defined and nextcloud__objectstore_s3 | length) or
          (nextcloud__objectstore_swift is defined and nextcloud__objectstore_swift | length)'
 
   - name: 'chown -R apache:apache /var/www/html/nextcloud'
@@ -199,7 +199,6 @@
       # - 'workflowengine'
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
     ignore_errors: true
 
   - name: 'Install and enable Nextcloud Apps on initial setup, do this only once'
@@ -209,7 +208,6 @@
       - 'bruteforcesettings'
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
     ignore_errors: true
 
   - name: 'Enable a subset of pre-installed Nextcloud Apps on initial setup, do this only once'
@@ -229,7 +227,6 @@
       - 'theming'
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
     ignore_errors: true
 
   - name: 'Create a role state file'
@@ -250,20 +247,22 @@
 
   - name: 'Set Nextcloud system settings'
     ansible.builtin.command: |
-      sudo -u apache php occ config:system:set {{ item.key }} {{ item.value }}
+      sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["value"] }}
     loop: '{{ nextcloud__sysconfig }}'
     args:
       chdir: '/var/www/html/nextcloud/'
+    # changed_when: there is no easy way to check for changes
 
   - name: 'Set Nextcloud proxy settings'
     ansible.builtin.command: |
-      sudo -u apache php occ config:system:set {{ item.key }} {{ item.value }}
+      sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["value"] }}
     loop: '{{ nextcloud__proxyconfig }}'
     when:
       - 'nextcloud__proxyconfig is defined'
       - 'nextcloud__proxyconfig | length'
     args:
       chdir: '/var/www/html/nextcloud/'
+    # changed_when: there is no easy way to check for changes
 
   - name: 'Convert some database columns to big int'
     ansible.builtin.command: |
@@ -272,6 +271,7 @@
       chdir: '/var/www/html/nextcloud/'
     register: 'nextcloud__convert_filecache_bigint_result'
     changed_when: '"All tables already up to date" not in nextcloud__convert_filecache_bigint_result["stdout"]'
+    # changed_when: there is no easy way to check for changes
 
   - name: 'Nextcloud: Restart php-fpm to reflect all changes'
     ansible.builtin.service:
@@ -291,7 +291,6 @@
     loop: '{{ nextcloud__apps | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
     ignore_errors: true
 
   - name: 'Install Nextcloud Apps'
@@ -301,7 +300,6 @@
           + (nextcloud__apps | selectattr("state", "undefined") | map(attribute="name")) }}'
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
     ignore_errors: true
 
   - name: 'Enable Nextcloud Apps'
@@ -311,16 +309,14 @@
           + (nextcloud__apps | selectattr("state", "undefined") | map(attribute="name")) }}'
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
     ignore_errors: true
 
   - name: 'Set Nextcloud App Settings'
     ansible.builtin.command: |
-      sudo -u apache php occ config:app:set {{ item.key }} {{ item.value }}
+      sudo -u apache php occ config:app:set {{ item["key"] }} {{ item["value"] }}
     loop: '{{ nextcloud__apps_config }}'
     args:
       chdir: '/var/www/html/nextcloud/'
-    changed_when: false
     ignore_errors: true
 
   tags:
@@ -348,6 +344,7 @@
       sudo -u apache php occ background:cron
     args:
       chdir: '/var/www/html/nextcloud/'
+    # changed_when: there is no easy way to check for changes
 
   - name: 'Deploy /etc/systemd/system/nextcloud-jobs.service'
     ansible.builtin.template:
