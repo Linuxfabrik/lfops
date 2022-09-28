@@ -25,7 +25,8 @@ Runs on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `selinux__booleans__host_var` /<br> `selinux__booleans__group_var` | A list of dictionaries containing SELinux booleans. Subkeys:<br> * `key`: Mandatory, string. Key of the SELinux boolean.<br> * `value`: Mandatory, string. Value of the SELinux boolean.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `selinux__booleans__host_var` /<br> `selinux__booleans__group_var` | A list of dictionaries containing SELinux booleans to set persistently. Subkeys:<br> * `key`: Mandatory, string. Key of the SELinux boolean.<br> * `value`: Mandatory, string. Value of the SELinux boolean.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `selinux__fcontexts__host_var` /<br> `selinux__fcontexts__group_var` | A list of dictionaries containing SELinux file contexts. Subkeys:<br> * `setype`: Mandatory, string. SELinux file type.<br> * `target`: Mandatory, string. Either a fully qualified path, or a Perl compatible regular expression (PCRE).<br> * `state`: Optional, string. Either `'present'` or `'absent'`. Defaults to `'present'`. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `selinux__state` | The SELinux state. Possible options:<br> * `disabled`<br> * `enforcing`<br> * `permissive` | `'enforcing'` |
 
 Example:
@@ -41,6 +42,13 @@ selinux__booleans__host_var:
   - key: 'httpd_use_nfs'
     value: 'on'
 selinux__booleans__group_var: []
+selinux__fcontexts__host_var:
+  - setype: 'httpd_sys_rw_content_t'
+    target: '/data(/.*)?'
+    state: 'present'
+  - setype: 'httpd_sys_rw_content_t'
+    target: '/var/www/html/nextcloud/.htaccess'
+    state: 'present'
 selinux__state: 'enforcing'
 ```
 

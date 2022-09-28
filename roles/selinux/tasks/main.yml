@@ -4,8 +4,6 @@
     ansible.posix.selinux:
       policy: 'targeted'
       state: '{{ selinux__state }}'
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   tags:
     - 'selinux'
@@ -19,15 +17,24 @@
       name: '{{ item.key }}'
       state: '{{ item.value }}'
       persistent: true
+      ignore_selinux_state: true
     loop: '{{ selinux__booleans__combined_var }}'
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
-    # ignore errors if selinux is disabled
-    failed_when:
-      - 'sshd__seport_result["failed"] is defined'
-      - 'sshd__seport_result["failed"]'
-      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
 
   tags:
     - 'selinux'
     - 'selinux:booleans'
+
+
+- block:
+
+  - name: 'semanage fcontext -a -t ...'
+    community.general.sefcontext:
+      setype: '{{ item["setype"] }}'
+      target: '{{ item["target"] }}'
+      state: '{{ item["state"] | d("present") }}'
+      ignore_selinux_state: true
+    loop: '{{ selinux__fcontexts__combined_var }}'
+
+  tags:
+    - 'selinux'
+    - 'selinux:fcontexts'

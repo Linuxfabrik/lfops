@@ -9,3 +9,13 @@ selinux__booleans__combined_var: '{{
   selinux__booleans__dependent_var
   | flatten
  }}'
+
+selinux__fcontexts__dependent_var: []
+selinux__fcontexts__group_var: []
+selinux__fcontexts__host_var: []
+selinux__fcontexts__combined_var: '{{
+  selinux__fcontexts__group_var +
+  selinux__fcontexts__host_var +
+  selinux__fcontexts__dependent_var
+  | flatten
+ }}'
