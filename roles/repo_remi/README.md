@@ -26,8 +26,8 @@ Runs on
 Example:
 ```yaml
 # optional
-repo_remi__enabled_php_version: 7.4
-repo_remi__enabled_redis_version: 6.0
+repo_remi__enabled_php_version: '8.1'
+repo_remi__enabled_redis_version: '7.0'
 repo_remi__mirror_url: 'https://mirror.example.com'
 ```
 

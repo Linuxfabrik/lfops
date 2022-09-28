@@ -11,7 +11,7 @@ Runs on
 
 * Enable the official GitLab CE Repository. This can be done using the [linuxfabrik.lfops.repo_gitlab_ce](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_gitlab_ce) role.
 
-If you use [gitlab_ce](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/gitlab_ce.yml), this is automatically done for you.
+If you use the [gitlab_ce Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/gitlab_ce.yml), this is automatically done for you.
 
 
 ## Tags

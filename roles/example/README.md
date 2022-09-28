@@ -20,6 +20,8 @@ Runs on
 
 > Make sure that this condition is met.
 
+If you use the [Example Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/example.yml), this is automatically done for you.
+
 
 ## Optional Requirements
 

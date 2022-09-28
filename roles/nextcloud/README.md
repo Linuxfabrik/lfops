@@ -14,7 +14,7 @@ Runs on
 * Install PHP 7+. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
 * Set the size of your `/tmp` partition to 50 GB+, if you want to allow 5x simultaenous uploads with files each 10 GB in size.
 
-If you use [setup_nextcloud](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you.
+If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you.
 
 
 ## Optional Requirements
@@ -23,7 +23,7 @@ If you use [setup_nextcloud](https://github.com/Linuxfabrik/lfops/blob/main/play
 * Install Collabora. This can be done using the [linuxfabrik.lfops.collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora) role.
 * Install Coturn for Nextcloud Talk. This can be done using the [linuxfabrik.lfops.coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn) role.
 
-If you use [setup_nextcloud](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you.
+If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you.
 
 
 ## Tags
@@ -77,7 +77,7 @@ nextcloud__users:
 | `nextcloud__database_name` | Name of the Nextcloud database in MariaDB. | `'nextcloud'` |
 | `nextcloud__datadir` | Where to store the user files. | `'/data'` |
 | `nextcloud__mariadb_login` | The user account for the database administrator. | `'{{ mariadb_server__admin_user }}'` |
-| `nextcloud__objectstore_s3` | S3 Storage Backend. Have a look at the example below on how to configure. | unset |
+| `nextcloud__config_php_objectstore_s3` | S3 Storage Backend. Have a look at the example below on how to configure. | unset |
 | `nextcloud__objectstore_swift` | Swift Storage Backend. Have a look at the example below on how to configure. | unset |
 | `nextcloud__on_calendar_app_update` | Time to update Nextcloud Apps (Systemd-Timer notation). | `'06,18,23:{{ 59 \| random(seed=inventory_hostname) }}'` |
 | `nextcloud__on_calendar_jobs`| Run interval of OCC background jobs. | `'*:0/5'` |
@@ -87,7 +87,7 @@ nextcloud__users:
 | `nextcloud__php__ini_post_max_size__group_var` / `nextcloud__php__ini_post_max_size__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'16M'` |
 | `nextcloud__php__ini_upload_max_filesize__group_var` / `nextcloud__php__ini_upload_max_filesize__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'10000M'` |
 | `nextcloud__php__modules__group_var` / `nextcloud__php__modules__host_var` | List of PHP modules that need to be installed via the standard package manager. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__proxyconfig` | List of Key/Value pairs for configuring Nextcloud behind a reverse proxy via OCC. Have a look at the example below on how to configure. The IP addresses are those of the reverse proxy. | unset |
+| `nextcloud__config_php_proxy` | List of Key/Value pairs for configuring Nextcloud behind a reverse proxy via OCC. Have a look at the example below on how to configure. The IP addresses are those of the reverse proxy. | unset |
 | `nextcloud__sysconfig` | List of Key/Value pairs for configuring Nextcloud itself via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
 | `nextcloud__timer_app_update_enabled` | Enables/disables Systemd-Timer for updating Apps. | `true` |
 | `nextcloud__timer_jobs_enabled` | Enables/disables Systemd-Timer for running OCC background jobs. | `true` |
@@ -102,42 +102,43 @@ nextcloud__apps:
     state: 'present'
   - name: 'weather'
     state: 'absent'
-nextcloud__datadir: '/data'
+nextcloud__config_php_objectstore_s3_autocreate: true
+nextcloud__config_php_objectstore_s3_bucket: 'mybucket'
+nextcloud__config_php_objectstore_s3_hostname: 's3.example.com'
+nextcloud__config_php_objectstore_s3_key: 'a58387f0-76c3-43f0-bbfc-53428d5b9bfa'
+nextcloud__config_php_objectstore_s3_region: 'us-east-1'
+nextcloud__config_php_objectstore_s3_secret: 'linuxfabrik'
+nextcloud__config_php_objectstore_s3_use_path_style: true
+nextcloud__config_php_objectstore_s3_use_ssl: true
+nextcloud__config_php_objectstore_swift_autocreate: true
+nextcloud__config_php_objectstore_swift_bucket: 'mybucket'
+nextcloud__config_php_objectstore_swift_region_name: 'us-east-1'
+nextcloud__config_php_objectstore_swift_scope_project_domain_name: 'scope_project_domain_name'
+nextcloud__config_php_objectstore_swift_scope_project_name: 'scope_project_name'
+nextcloud__config_php_objectstore_swift_service_name: 'service_name'
+nextcloud__config_php_objectstore_swift_tenant_name: 'tenant_name'
+nextcloud__config_php_objectstore_swift_url: 'https://swift.example.com:5000/v3'
+nextcloud__config_php_objectstore_swift_user_domain_name: 'default'
+nextcloud__config_php_objectstore_swift_user_name: 'swift'
+nextcloud__config_php_objectstore_swift_user_password: 'linuxfabrik'
+nextcloud__config_php_proxy_overwrite_cond_addr: '^192\\.0\\.2\\.4$'
+nextcloud__config_php_proxy_overwritehost: 'cloud.example.com'
+nextcloud__config_php_proxy_overwriteprotocol: 'https'
+nextcloud__config_php_proxy_overwritewebroot: '/'
+nextcloud__config_php_proxy_trusted_proxies:
+  - '192.0.2.4'
+nextcloud__config_php_redis_dbindex: 0
+nextcloud__config_php_redis_host: '127.0.0.1'
+nextcloud__config_php_redis_port: 6379
+nextcloud__config_php_redis_timeout: 0.75
 nextcloud__database_host: 'localhost'
 nextcloud__database_name: 'nextcloud'
+nextcloud__datadir: '/data'
 nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
-nextcloud__objectstore_s3:
-  autocreate: true
-  bucket: 'mybucket'
-  hostname: 's3.example.com'
-  key: 'a58387f0-76c3-43f0-bbfc-53428d5b9bfa'
-  region: 'us-east-1'
-  secret: 'linuxfabrik'
-  use_path_style: true
-  use_ssl: true
-nextcloud__objectstore_swift:
-  autocreate: true
-  bucket: 'mybucket'
-  region_name: 'us-east-1'
-  scope_project_domain_name: 'scope_project_domain_name'
-  scope_project_name: 'scope_project_name'
-  service_name: 'service_name'
-  tenant_name: 'tenant_name'
-  url: 'https://swift.example.com:5000/v3'
-  user_domain_name: 'default'
-  user_name: 'swift'
-  user_password: 'linuxfabrik'
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'
-nextcloud__proxyconfig:
-  - { key: 'overwrite.cli.url', value: '--value=https://cloud.example.com' }
-  - { key: 'overwritecondaddr', value: '--value=^192\\.0\\.2\\.4$' }
-  - { key: 'overwritehost',     value: '--value=cloud.example.com' }
-  - { key: 'overwriteprotocol', value: '--value=https' }
-  - { key: 'overwritewebroot',  value: '--value=/' }
-  - { key: 'trusted_proxies',   value: '0 --value=192.0.2.4' }
-nextcloud__timer_jobs_enabled: true
 nextcloud__timer_app_update_enabled: true
+nextcloud__timer_jobs_enabled: true
 nextcloud__version: 'latest-24'
 ```
 

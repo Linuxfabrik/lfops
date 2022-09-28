@@ -17,7 +17,7 @@ Runs on
 
 ## Mandatory Requirements
 
-* Install Python 3, and the python3-libvirt and python3-lxml modules on the KVM host. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role. If you used [kvm_host](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/kvm_host.yml) to setup the KVM host, this is automatically done for you.
+* Install Python 3, and the python3-libvirt and python3-lxml modules on the KVM host. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role. If you use the [kvm_host Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/kvm_host.yml) to setup the KVM host, this is automatically done for you.
 * Place the base image in the `kvm_vm__pool` on the KVM host.
 
 
