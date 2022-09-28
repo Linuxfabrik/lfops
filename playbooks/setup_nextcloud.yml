@@ -38,6 +38,14 @@
 #       when:
 #         - 'not setup_nextcloud__skip_fail2ban | d(false)'
 
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var:
+        - '{{ mariadb_server__kernel_settings__sysctl__dependent_var | d([]) }}'
+        - '{{ redis__kernel_settings__sysctl__dependent_var | d([]) }}'
+      kernel_settings__transparent_hugepages__dependent_var: "{{ redis__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      when:
+        - 'not setup_nextcloud__skip_kernel_settings | d(false)'
+
 
       # ====Apache Webserver
     - role: 'linuxfabrik.lfops.apache_httpd'
