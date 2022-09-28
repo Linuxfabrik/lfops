@@ -1,11 +1,6 @@
 # https://icinga.com/docs/icinga-2/latest/doc/02-installation/08-SLES/
 - block:
 
-  - name: 'add RPM signing key for icinga repository'
-    ansible.builtin.rpm_key:
-      state: 'present'
-      key: 'https://packages.icinga.com/icinga.key'
-
   - name: 'install module SUSE Linux Enterprise Software Development Kit 12 SP3 x86_64'
     command:
       cmd: 'SUSEConnect -p sle-sdk/12.3/x86_64'
@@ -22,11 +17,10 @@
       - 'ansible_facts["distribution_major_version"] in ["15"]'
       - 'ansible_facts["distribution_release"] in ["1"]'
 
-  tags:
-    - 'repo_icinga'
-
-
-- block:
+  - name: 'add RPM signing key for icinga repository'
+    ansible.builtin.rpm_key:
+      state: 'present'
+      key: 'https://packages.icinga.com/icinga.key'
 
   - name: 'deploy the icinga-release repo (mirror: {{ repo_icinga__mirror_url }})'
     ansible.builtin.template:
