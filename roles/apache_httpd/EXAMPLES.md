@@ -29,10 +29,18 @@ apache_httpd__vhosts__host_var:
 
 ```yaml
 apache_httpd__mods__host_var:
+  - filename: 'deflate'
+    enabled: true
+    state: 'present'
+    template: 'deflate'
   - filename: 'proxy_http'
     enabled: true
     state: 'present'
     template: 'proxy_http'
+  - filename: 'filter'
+    enabled: true
+    state: 'present'
+    template: 'filter'
 apache_httpd__vhosts__host_var:
   - template: 'proxy'
     allowed_http_methods:
