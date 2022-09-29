@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.icingaweb2_module_director
 
-This role installs and configures the [IcingaWeb2 Director Module](https://icinga.com/docs/icinga-director/latest/doc/01-Introduction/).
+This role installs and configures the [IcingaWeb2 Director Module](https://icinga.com/docs/icinga-director/latest/doc/01-Introduction/), and deploys the baskets from the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins).
 
 Runs on
 
@@ -15,10 +15,10 @@ Runs on
 
 ## Tags
 
-| Tag                                 | What it does                                                                                                                                                                   |
-| ---                                 | ------------                                                                                                                                                                   |
-| `icingaweb2_module_director`        | Installs and configures the IcingaWeb2 Director Module                                                                                                                         |
-| `icingaweb2_module_director:basket` | Deploys the baskets from the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This does not run by default, only when explicitly called. |
+| Tag                                 | What it does                                                                                                      |
+| ---                                 | ------------                                                                                                      |
+| `icingaweb2_module_director`        | Installs and configures the IcingaWeb2 Director Module                                                            |
+| `icingaweb2_module_director:basket` | Deploys the baskets from the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). |
 
 
 ## Mandatory Role Variables
