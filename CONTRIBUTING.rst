@@ -517,6 +517,10 @@ Special Roles
 
 Roles with special technical implementations and capabilities:
 
+* `librenms <https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms>`_:
+
+    * Compiles and loads an SELinux module.
+
 * `nextcloud <https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud>`_:
 
     * The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs.
@@ -538,8 +542,6 @@ Roles with special technical implementations and capabilities:
 * `wordpress <https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress>`_:
 
     * chmod: Sets file and folder permissions separately using ``find``.
-
-* `librenms <https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms>`_: Compiles and loads an SELinux module.
 
 
 Credits
