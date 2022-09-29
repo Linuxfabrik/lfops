@@ -19,7 +19,7 @@ Runs on
 | `icingaweb2_module_doc` | Enables the IcingaWeb2 Doc Module |
 
 
-# License Role Variables
+# License
 
 [The Unlicense](https://unlicense.org/)
 

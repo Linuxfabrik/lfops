@@ -35,7 +35,7 @@ grav__url: 'grav.example.com'
 ```
 
 
-# License Role Variables
+# License
 
 [The Unlicense](https://unlicense.org/)
 

@@ -19,7 +19,7 @@ Runs on
 | `icingaweb2_module_company` | Installs and configures the IcingaWeb2 Company Module |
 
 
-# License Role Variables
+# License
 
 [The Unlicense](https://unlicense.org/)
 

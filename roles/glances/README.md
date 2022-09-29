@@ -20,7 +20,7 @@ Runs on
 | `glances` | Installs glances and configures the alias |
 
 
-# License Role Variables
+# License
 
 [The Unlicense](https://unlicense.org/)
 
