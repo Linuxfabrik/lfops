@@ -100,3 +100,23 @@ librenms__php__modules__dependent_var:
     state: 'present'
   - name: 'php-zip'
     state: 'present'
+
+librenms__selinux__booleans__dependent_var:
+  - key: 'httpd_can_connect_ldap'
+    value: 'on'
+  - key: 'httpd_setrlimit'
+    value: 'on'
+librenms__selinux__fcontexcts__dependent_var:
+  - setype: 'httpd_sys_content_t'
+    target: '/opt/librenms/html(/.*)?'
+    state: 'present'
+  # httpd_log_t is required for the logrotate to work
+  - setype: 'httpd_log_t'
+    target: '/opt/librenms/logs(/.*)?'
+    state: 'present'
+  - setype: 'httpd_sys_rw_content_t'
+    target: '/opt/librenms/(rrd|storage)(/.*)?'
+    state: 'present'
+  - setype: 'httpd_sys_rw_content_t'
+    target: '/opt/librenms/.env'
+    state: 'present'

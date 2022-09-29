@@ -531,6 +531,8 @@ Roles with special technical implementations and capabilities:
 
 * `telegraf <https://github.com/Linuxfabrik/lfops/tree/main/roles/telegraf>`_: Jinja templates use non-default strings marking the beginning/end of a print statement.
 
+* `librenms <https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms>`_: Compiles and loads an SELinux module.
+
 
 Credits
 -------
