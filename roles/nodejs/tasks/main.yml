@@ -1,13 +1,13 @@
 - block:
 
-  - name: 'install nodejs'
+  - name: 'Install nodejs'
     ansible.builtin.package:
       name:
         - 'nodejs'
       state: 'present'
     when: 'nodejs__dnf_module_stream is not defined or not (nodejs__dnf_module_stream | string | length)'
 
-  - name: 'dnf install @nodejs:{{ nodejs__dnf_module_stream }} -y'
+  - name: 'Install @nodejs:{{ nodejs__dnf_module_stream }} -y'
     ansible.builtin.package:
       name:
         - '@nodejs:{{ nodejs__dnf_module_stream }}'

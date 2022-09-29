@@ -1,4 +1,4 @@
-- name: 'dnf install git -y'
+- name: 'Install git'
   ansible.builtin.package:
     name: 'git'
     state: 'present'

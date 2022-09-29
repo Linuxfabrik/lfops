@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'dnf -y install nfs-utils'
+  - name: 'Install nfs-utils'
     ansible.builtin.package:
       name: 'nfs-utils'
       state: 'present'

@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'dnf -y install cronie fping ImageMagick mtr net-snmp net-snmp-utils nmap rrdtool unzip'
+  - name: 'Install cronie fping ImageMagick mtr net-snmp net-snmp-utils nmap rrdtool unzip'
     ansible.builtin.package:
       name:
         - 'cronie'

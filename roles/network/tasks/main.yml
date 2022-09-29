@@ -12,7 +12,7 @@
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
 
-  - name: 'dnf remove hc-utils # hetzner cloud utilities - they cause problems with NetworkManager'
+  - name: 'Remove hc-utils # hetzner cloud utilities - they cause problems with NetworkManager'
     ansible.builtin.package:
       name:
         - 'hc-utils'

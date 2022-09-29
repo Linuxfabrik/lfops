@@ -1,10 +1,11 @@
 - block:
 
-  - name: 'dnf install php php-fpm -y'
+  - name: 'Install php php-fpm composer'
     ansible.builtin.package:
       name:
         - 'php'
         - 'php-fpm'
+        - 'composer'
       state: 'present'
 
   tags:
@@ -17,7 +18,7 @@
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'Get php version'
+  - name: 'Get PHP version'
     ansible.builtin.set_fact:
       php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_replace("\.\d+$", "") }}'
 
@@ -28,13 +29,13 @@
     ansible.builtin.debug:
       var: 'php__modules__combined_var'
 
-  - name: 'Ensure php modules are absent'
+  - name: 'Ensure PHP modules are absent'
     # providing the packages as a list is much more faster than looping for each
     ansible.builtin.package:
       name: '{{ php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
       state: 'absent'
 
-  - name: 'Ensure php modules are present'
+  - name: 'Ensure PHP modules are present'
     # providing the packages as a list is much more faster than looping for each
     ansible.builtin.package:
       name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))

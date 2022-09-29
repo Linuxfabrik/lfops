@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'dnf -y install python3-virtualenv python3-devel'
+  - name: 'Install python3-virtualenv python3-devel'
     ansible.builtin.package:
       name:
         - 'python3-virtualenv'

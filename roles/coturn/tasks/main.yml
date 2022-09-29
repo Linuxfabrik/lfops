@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'dnf -y install coturn'
+  - name: 'Install coturn'
     ansible.builtin.package:
       name: 'coturn'
       state: 'present'

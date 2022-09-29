@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'dnf -y install {{ repo_icinga__rpm_release_url }}'
+  - name: 'Install {{ repo_icinga__rpm_release_url }}'
     ansible.builtin.package:
       name: '{{ repo_icinga__rpm_release_url }}'
       state: 'present'
@@ -15,7 +15,7 @@
 
 - block:
 
-  - name: 'deploy the icinga-release repo (mirror: {{ repo_icinga__mirror_url }})'
+  - name: 'Deploy the icinga-release repo (mirror: {{ repo_icinga__mirror_url }})'
     ansible.builtin.template:
       src: 'etc/yum.repos.d/ICINGA-release.repo.j2'
       dest: '/etc/yum.repos.d/ICINGA-release.repo'
@@ -23,7 +23,7 @@
       group: 'root'
       mode: 0o644
 
-  - name: 'deploy the icinga-snapshot repo (mirror: {{ repo_icinga__mirror_url }})'
+  - name: 'Deploy the icinga-snapshot repo (mirror: {{ repo_icinga__mirror_url }})'
     ansible.builtin.template:
       src: 'etc/yum.repos.d/ICINGA-snapshot.repo.j2'
       dest: '/etc/yum.repos.d/ICINGA-snapshot.repo'

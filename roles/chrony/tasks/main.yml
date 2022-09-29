@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'dnf install chrony -y'
+  - name: 'Install chrony'
     ansible.builtin.package:
       name: 'chrony'
       state: 'present'

@@ -1,5 +1,5 @@
 - block:
-  - name: 'dnf -y install fail2ban'
+  - name: 'Install fail2ban'
     ansible.builtin.package:
       name:
         - 'fail2ban'

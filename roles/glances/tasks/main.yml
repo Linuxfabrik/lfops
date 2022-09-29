@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'dnf -y install glances'
+  - name: 'Install glances'
     ansible.builtin.package:
       name:
         - 'glances'

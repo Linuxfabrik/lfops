@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'dnf -y remove cloud-init'
+  - name: 'Remove cloud-init'
     ansible.builtin.package:
       name: 'cloud-init'
       state: 'absent'

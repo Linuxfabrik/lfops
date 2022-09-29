@@ -1,4 +1,4 @@
-- name: 'dnf install tar -y'
+- name: 'Install tar'
   ansible.builtin.package:
     name: 'tar'
     state: 'present'

@@ -1,4 +1,4 @@
-- name: 'dnf -y install compat-openssl10'
+- name: 'Install compat-openssl10'
   ansible.builtin.package:
     name:
       - 'compat-openssl10'

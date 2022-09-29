@@ -113,10 +113,17 @@
 
 - block:
 
-  - name: 'chmod -R g-w {{ apache_httpd__config_path }} # enhance security a little'
+  - name: 'chmod -R g-w {{ apache_httpd__config_path }} # enhance security a little bit'
     ansible.builtin.file:
       path: '{{ apache_httpd__config_path }}'
       mode: 'g-w'
+      recurse: true
+
+  - name: 'chown -R apache:apache {{ apache_httpd__conf_document_root }}'
+    ansible.builtin.file:
+      path: '{{ apache_httpd__conf_document_root }}'
+      owner: 'apache'
+      group: 'apache'
       recurse: true
 
   tags:

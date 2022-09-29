@@ -1,13 +1,13 @@
 - block:
 
-  - name: 'dnf install audit audit-libs -y'
+  - name: 'Install audit audit-libs'
     ansible.builtin.package:
       name:
         - 'audit'
         - 'audit-libs'
       state: 'present'
 
-  - name: 'deploy /etc/audit/auditd.conf'
+  - name: 'Deploy /etc/audit/auditd.conf'
     ansible.builtin.template:
       src: 'etc/audit/auditd.conf.j2'
       dest: '/etc/audit/auditd.conf'

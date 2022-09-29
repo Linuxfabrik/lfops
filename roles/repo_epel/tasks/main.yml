@@ -28,7 +28,7 @@
 
 - block:
 
-  - name: 'dnf -y install epel-release'
+  - name: 'Install epel-release'
     ansible.builtin.package:
       name: 'epel-release'
       state: 'present'
@@ -40,7 +40,7 @@
 
 - block:
 
-  - name: 'deploy the repo files (mirror: {{ repo_epel__mirror_url }})'
+  - name: 'Deploy the repo files (mirror: {{ repo_epel__mirror_url }})'
     ansible.builtin.template:
       src: '{{ item }}.j2'
       dest: '/etc/yum.repos.d/{{ item | basename }}'

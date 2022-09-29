@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'dnf install openvpn -y'
+  - name: 'Install openvpn'
     ansible.builtin.package:
       name: 'openvpn'
       state: 'present'
@@ -18,7 +18,7 @@
       state: 'directory'
       group: 'openvpn'
 
-  - name: 'deploy /etc/openvpn/server/server.conf'
+  - name: 'Deploy /etc/openvpn/server/server.conf'
     ansible.builtin.template:
       src: 'etc/openvpn/server/server.conf.j2'
       dest: '/etc/openvpn/server/server.conf'
@@ -60,7 +60,7 @@
     vars:
       ansible_python_interpreter: '/usr/libexec/platform-python'
 
-  - name: 'deploy example client config to /tmp/{{ inventory_hostname }}.conf (on ansible control node)'
+  - name: 'Deploy example client config to /tmp/{{ inventory_hostname }}.conf (on ansible control node)'
     ansible.builtin.template:
       src: 'tmp/client.conf.j2'
       dest: '/tmp/{{ inventory_hostname }}.conf'
