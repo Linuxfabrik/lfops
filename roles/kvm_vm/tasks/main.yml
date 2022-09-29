@@ -139,7 +139,7 @@
       {% endif %}
 
       {% for item in kvm_vm__network_connections %}
-      --network network=default,model=virtio,mac={{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=inventory_hostname)) }}
+      --network {{ item["network_type"] | d("network") }}={{ item["network_name"] | d("default") }},model=virtio,mac={{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=inventory_hostname)) }}
       {% endfor %}
       --noautoconsole
       --nographics
