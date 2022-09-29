@@ -35,13 +35,13 @@ Example:
 # mandatory
 icingaweb2_module_director__api_user_login:
   username: 'icinga-director-api'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 icingaweb2_module_director__database_login:
   username: 'icinga_director_user'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 icingaweb2_module_director__enrolment_user_login:
   username: 'enrolment-user'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 icingaweb2_module_director__version: 'v1.8.1.2021090901'
 ```
 

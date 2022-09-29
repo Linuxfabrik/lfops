@@ -35,7 +35,7 @@ icingaweb2_module_monitoring__api_host: 'localhost'
 icingaweb2_module_monitoring__api_port: 5665
 icingaweb2_module_monitoring__api_user_login:
   username: 'icingaweb2-api-user'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 icingaweb2_module_monitoring__backend_database_name: '{{ icinga2_master__database_name }}'
 ```
 

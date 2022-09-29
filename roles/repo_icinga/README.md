@@ -28,7 +28,7 @@ Example:
 repo_icinga__mirror_url: 'https://mirror.example.com'
 repo_icinga__subscription_login:
   username: 'my-username'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 ```
 
 

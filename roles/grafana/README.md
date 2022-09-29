@@ -32,7 +32,7 @@ Example:
 # mandatory
 grafana__admin_login:
   username: 'grafana-admin-user'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 grafana__root_url: 'https://monitoring.example.com/grafana'
 ```
 
@@ -61,7 +61,7 @@ grafana__ldap_config:
   host: 'ldap.example.com'
   port: 389
   bind_dn: 'uid=freeipa-reader,cn=sysaccounts,cn=etc,dc=example,dc=com'
-  bind_password: 'my-secret-password'
+  bind_password: 'linuxfabrik'
   search_filter: '(uid=%s)' # or for example: '(cn=%s)' or '(sAMAccountName=%s)'
   search_base_dns:
     - 'cn=users,cn=accounts,dc=example,dc=com'

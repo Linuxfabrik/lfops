@@ -62,7 +62,7 @@ duplicity__gpg_encrypt_master_key_block: |-
 duplicity__gpg_encrypt_master_key: 'LLZGH2BITI2LRLJCLFWEAJQ93N6MWTKBARQDMYX5'
 duplicity__swift_login:
   username: 'SBI-MF827483'
-  password: 'some-secret-password'
+  password: 'linuxfabrik'
 ```
 
 

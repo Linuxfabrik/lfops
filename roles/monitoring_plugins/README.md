@@ -56,7 +56,7 @@ Windows only: Since you cannot change files that are currently used by a process
 Example:
 ```yaml
 # optional
-monitoring_plugins__icinga2_api_password: 'my-secret-password'
+monitoring_plugins__icinga2_api_password: 'linuxfabrik'
 monitoring_plugins__icinga2_api_url: 'https://192.0.2.3:5665/v1'
 monitoring_plugins__icinga2_api_user: 'downtime-api-user'
 monitoring_plugins__plugin_list:

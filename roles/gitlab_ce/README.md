@@ -89,9 +89,9 @@ gitlab_ce__rb_gitlab_rails_omniauth_enabled: true
 gitlab_ce__rb_gitlab_rails_omniauth_external_providers:
   - 'google_oauth2'
 gitlab_ce__rb_gitlab_rails_omniauth_providers:
-  - name: "google_oauth2"
-    app_id: "1095d5c3-8428-44df-89fb-cb0a77ec363f.apps.googleusercontent.com"
-    app_secret: "45d85464-bc66-4236-9931-c42394f5d08e"
+  - name: 'google_oauth2'
+    app_id: '1095d5c3-8428-44df-89fb-cb0a77ec363f.apps.googleusercontent.com'
+    app_secret: '45d85464-bc66-4236-9931-c42394f5d08e'
 
 gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_bantime: 3600
 gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled: true

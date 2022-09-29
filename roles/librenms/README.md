@@ -34,7 +34,7 @@ Example:
 # mandatory
 librenms__database_login:
   username: 'librenms'
-  password: 'my-secret-password'
+  password: 'linuxfabrik'
 librenms__fqdn: 'librenms.example.com'
 ```
 

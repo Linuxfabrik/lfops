@@ -100,7 +100,7 @@ kvm_vm__packages:
   - 'cloud-init'
   - 'qemu-guest-agent'
 kvm_vm__pool: 'default'
-kvm_vm__root_password: 'my-secret-password'
+kvm_vm__root_password: 'linuxfabrik'
 kvm_vm__ssh_authorized_keys: []
 kvm_vm__state: 'running'
 ```

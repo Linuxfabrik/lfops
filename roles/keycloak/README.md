@@ -174,7 +174,7 @@ If you try to configure the administrative user via the web console on a remote 
 As a consequence, you have to set the following environment variables first before executing the start command:
 
 1. export KEYCLOAK_ADMIN=admin
-2. export KEYCLOAK_ADMIN_PASSWORD=secret
+2. export KEYCLOAK_ADMIN_PASSWORD=linuxfabrik
 
 
 ## License

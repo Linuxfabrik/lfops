@@ -35,7 +35,7 @@ Example:
 # mandatory
 influxdb__admin_login:
   username: 'influxdb-admin'
-  password: 'some-secret-password'
+  password: 'linuxfabrik'
 ```
 
 
