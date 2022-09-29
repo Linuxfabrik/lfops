@@ -7,7 +7,7 @@
 
   tags:
     - 'selinux'
-    - 'selinux:state'
+    - 'selinux:setenforce'
 
 
 - block:
@@ -22,7 +22,7 @@
 
   tags:
     - 'selinux'
-    - 'selinux:booleans'
+    - 'selinux:setsebool'
 
 
 - block:
@@ -44,4 +44,4 @@
 
   tags:
     - 'selinux'
-    - 'selinux:fcontexts'
+    - 'selinux:fcontext'

@@ -18,12 +18,12 @@ Runs on
 
 ## Tags
 
-| Tag                 | What it does                                                   |
-| ---                 | ------------                                                   |
-| `selinux`           | * `setenforce ...`<br> * `setsebool -P ...`<br> * `semanage fcontext --add --type ...`<br> * `restorecon -îvr ...` |
-| `selinux:state`     | * `setenforce ...` |
-| `selinux:booleans`  | * `setsebool -P ...` |
-| `selinux:fcontexts` | * `semanage fcontext --add --type ...`<br> * `restorecon -îvr ...` |
+| Tag                  | What it does                                                   |
+| ---                  | ------------                                                   |
+| `selinux`            | * `setenforce ...`<br> * `setsebool -P ...`<br> * `semanage fcontext --add --type ...`<br> * `restorecon -îvr ...` |
+| `selinux:setenforce` | * `setenforce ...` |
+| `selinux:setsebool`  | * `setsebool -P ...` |
+| `selinux:fcontext`   | * `semanage fcontext --add --type ...`<br> * `restorecon -îvr ...` |
 
 
 ## Optional Role Variables
