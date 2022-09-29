@@ -13,7 +13,10 @@ Runs on
 * Install MariaDB, and create a database and a user for said database. This can be done using the [linuxfabrik.lfops.mariadb-server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb-server) role.
 * Install a web server (for example Apache httpd), and configure a virtual host for LibreNMS. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
 * Install PHP version >= 7.3. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
+* On RHEL-compatible systems, enable the `httpd_can_connect_ldap` and `httpd_setrlimit` SELinux booleans. This can be done using the [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux) role.
+* On RHEL-compatible systems, set the appropriate SELinux file contexts (have a look at `librenms__selinux__fcontexcts__dependent_var` in the `defaults/main.yml`). This can be done using the [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux) role.
 
+If you use the ["Setup LibreNMS" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_librenms.yml), this is automatically done for you.
 
 ## Tags
 
