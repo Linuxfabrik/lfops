@@ -28,11 +28,15 @@ Runs on
 | Variable                 | Description                                                                           |
 | --------                 | -----------                                                                           |
 | `acme_sh__account_email` | Email address for the Let's encrypt account. This address will receive expiry emails. |
+| `acme_sh__certificates`  | List of certificates that should be issued.                                           |
 
 Example:
 ```yaml
 # mandatory
 acme_sh__account_email: 'info@example.com'
+acme_sh__certificates:
+  - 'other.example.com'
+  - 'test.example.com'
 ```
 
 
@@ -40,17 +44,12 @@ acme_sh__account_email: 'info@example.com'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `acme_sh__certificates` | List of certificates that should be issued. | `[]` |
 | `acme_sh__reload_cmd` | Command to execute after issue/renew to reload the server. | `'systemctl reload httpd'` |
 | `acme_sh__timer_enabled` | Enables or disables the weekly acme.sh timer, analogous to `systemctl enable/disable --now`. | `true` |
-
 
 Example:
 ```yaml
 # optional
-acme_sh__certificates:
-  - 'other.example.com'
-  - 'test.example.com'
 acme_sh__reload_cmd: 'systemctl reload httpd'
 acme_sh__timer_enabled: true
 ```

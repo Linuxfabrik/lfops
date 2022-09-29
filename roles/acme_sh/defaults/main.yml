@@ -1,3 +1,2 @@
-acme_sh__certificates: []
 acme_sh__reload_cmd: 'systemctl reload httpd'
 acme_sh__timer_enabled: true
