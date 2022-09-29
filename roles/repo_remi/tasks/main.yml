@@ -8,24 +8,7 @@
 
 - block:
 
-  - name: 'Install {{ repo_remi__package }}'
-    ansible.builtin.package:
-      name: '{{ repo_remi__package }}'
-      state: 'present'
-      disable_gpg_check: true
-
-  - name: 'yum-config-manager --enable remi'
-    command: 'yum-config-manager --enable remi'
-    changed_when: false
-
-  when: 'repo_remi__mirror_url is not defined or not repo_remi__mirror_url | length'
-  tags:
-    - 'repo_remi'
-
-
-- block:
-
-  - name: 'Deploy the repo files (mirror: {{ repo_remi__mirror_url }})'
+  - name: 'Deploy the repo files (mirror: {{ repo_remi__mirror_url | d("public mirrors") }})'
     ansible.builtin.template:
       src: '{{ item }}.j2'
       dest: '/etc/yum.repos.d/{{ item | basename }}'
@@ -34,7 +17,6 @@
       mode: 0o644
     loop: '{{ repo_remi__repo_files }}'
 
-  when: 'repo_remi__mirror_url is defined and repo_remi__mirror_url | length'
   tags:
     - 'repo_remi'
 

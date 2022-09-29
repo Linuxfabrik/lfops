@@ -1,1 +1,0 @@
-repo_remi__package: 'https://rpms.remirepo.net/enterprise/remi-release-{{ ansible_facts["distribution_major_version"] }}.rpm'
