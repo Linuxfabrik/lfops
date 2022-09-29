@@ -5,19 +5,6 @@
         - 'fail2ban'
       state: 'present'
 
-  - name: 'setsebool -P nis_enabled on'
-    ansible.posix.seboolean:
-      name: 'nis_enabled'
-      state: 'on'
-      persistent: true
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
-    # ignore errors if selinux is disabled
-    failed_when:
-      - 'sshd__seport_result["failed"] is defined'
-      - 'sshd__seport_result["failed"]'
-      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
-
   tags:
     - 'fail2ban'
 

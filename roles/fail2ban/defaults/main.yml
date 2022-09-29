@@ -32,3 +32,9 @@ fail2ban__jails__combined_var: '{{ fail2ban__jails__role_var +
   fail2ban__jails__dependent_var
   | flatten
  }}'
+
+# -----------------------------------------------------------------------------
+
+fail2ban__selinux__booleans__dependent_var:
+  - key: 'nis_enabled'
+    value: 'on'
