@@ -8,7 +8,7 @@ wordpress__version: 'latest'
 
 # -----------------------------------------------------------------------------
 
-wordpress_apache_httpd__mods__dependent_var:
+wordpress__apache_httpd__mods__dependent_var:
   - filename: 'cgi'
     enabled: true
     state: 'present'
