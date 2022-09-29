@@ -517,7 +517,9 @@ Special Roles
 
 Roles with special technical implementations and capabilities:
 
-* `nextcloud <https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud>`_: The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs.
+* `nextcloud <https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud>`_:
+
+    * The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs.
 
 * `php <https://github.com/Linuxfabrik/lfops/tree/main/roles/php>`_:
 
@@ -529,7 +531,13 @@ Roles with special technical implementations and capabilities:
     * Gathers the installed version and deploys the corresponding config file.
     * Configures Systemd with Unit File overrides.
 
-* `telegraf <https://github.com/Linuxfabrik/lfops/tree/main/roles/telegraf>`_: Jinja templates use non-default strings marking the beginning/end of a print statement.
+* `telegraf <https://github.com/Linuxfabrik/lfops/tree/main/roles/telegraf>`_:
+
+    * Jinja templates use non-default strings marking the beginning/end of a print statement.
+
+* `wordpress <https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress>`_:
+
+    * chmod: Sets file and folder permissions separately using ``find``.
 
 * `librenms <https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms>`_: Compiles and loads an SELinux module.
 
