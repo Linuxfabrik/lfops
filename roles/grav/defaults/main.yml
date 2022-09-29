@@ -1,0 +1,39 @@
+grav__install_dir: '/var/www/html/{{ grav__url }}'
+
+# -----------------------------------------------------------------------------
+
+grav__apache_httpd__mods__dependent_var:
+  - filename: 'cgi'
+    enabled: true
+    state: 'present'
+  - filename: 'proxy_fcgi'
+    enabled: true
+    state: 'present'
+grav__apache_httpd__vhosts__dependent_var:
+  - conf_server_name: '{{ grav__url }}'
+    by_role: 'grav'
+    comment: 'vHost for Grav (a simple file-based flat-file CMS platform)'
+    enabled: true
+    filename: 'grav'
+    state: 'present'
+    template: 'app'
+    allowed_http_methods:
+      - 'GET'
+      - 'OPTIONS'
+    authz_file_extensions: |-
+        Require all granted
+    authz_document_root: |-
+        Require all granted
+    virtualhost_port: 80
+    conf_directory_index: 'index.php'
+    conf_document_root: '{{ grav__install_dir }}'
+
+grav__php__modules__dependent_var:
+  - name: 'php-gd'
+    state: 'present'
+
+grav__selinux__fcontexts__dependent_var:
+  - setype: 'httpd_sys_rw_content_t'
+    target: '{{ grav__install_dir }}(/.*)?'
+    path: '{{ grav__install_dir }}'
+    state: 'present'

@@ -1,0 +1,56 @@
+- block:
+
+  - name: 'Install unzip'
+    ansible.builtin.package:
+      name: 'unzip'
+      state: 'present'
+
+  - name: 'Test if Grav is already installed'
+    stat:
+      path: '{{ grav__install_dir }}/index.php'
+    register: 'grav__installed'
+
+  - name: 'composer create-project getgrav/grav {{ grav__install_dir }}'
+    community.general.composer:
+      command: 'create-project'
+      arguments: 'getgrav/grav {{ grav__install_dir }}'
+      working_dir: '{{ grav__install_dir }}'
+      prefer_dist: true
+    environment:
+      # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
+      COMPOSER_ALLOW_SUPERUSER: '1'
+      COMPOSER_NO_INTERACTION: '1'
+    when:
+      - 'not grav__installed.stat.exists'
+
+    # https://learn.getgrav.org/17/troubleshooting/permissions
+
+  - name: 'chown -R apache:apache {{ grav__install_dir }}'
+    ansible.builtin.file:
+      path: '{{ grav__install_dir }}'
+      owner: 'apache'
+      group: 'apache'
+      recurse: true
+
+  - name: 'find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;'
+    ansible.builtin.command: 'find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;'
+    register: 'grav__chmod_dirs_result'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+
+  - name: 'find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;'
+    ansible.builtin.command: 'find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;'
+    register: 'grav__chmod_dirs_result'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+
+  - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;'
+    ansible.builtin.command: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;'
+    register: 'grav__chmod_dirs_result'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+
+  - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;'
+    ansible.builtin.command: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;'
+    register: 'grav__chmod_dirs_result'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+
+  tags:
+    - 'grav'

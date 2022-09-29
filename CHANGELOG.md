@@ -103,6 +103,7 @@ New features:
 * Role: git
 * Role: glances
 * Role: grafana
+* Role: grav
 * Role: hetzner_vm
 * Role: hostname
 * Role: icinga2_agent
