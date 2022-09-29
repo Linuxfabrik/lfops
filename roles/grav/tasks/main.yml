@@ -32,6 +32,8 @@
       group: 'apache'
       recurse: true
 
+    # todo: "rw" just necessary if using the Grav admin plugin, otherwise "r" would be sufficient
+
   - name: 'find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;'
     ansible.builtin.command: 'find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;'
     register: 'grav__chmod_dirs_result'

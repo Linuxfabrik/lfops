@@ -32,6 +32,7 @@ grav__php__modules__dependent_var:
   - name: 'php-gd'
     state: 'present'
 
+# todo: "rw" just necessary if using the Grav admin plugin, otherwise "r" would be sufficient
 grav__selinux__fcontexts__dependent_var:
   - setype: 'httpd_sys_rw_content_t'
     target: '{{ grav__install_dir }}(/.*)?'
