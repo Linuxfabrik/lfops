@@ -31,7 +31,7 @@ repo_mongodb__version: 6.0
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `repo_mongodb__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles, or else to `''`. | `'{{ lfops__repo_mirror_url | default("") }}'` |
+| `repo_mongodb__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used. | `'{{ lfops__repo_mirror_url | default("") }}'` |
 
 Example:
 ```yaml
