@@ -11,7 +11,9 @@ Runs on
 
 * Install InfluxDB, and create a database and a user for said database. This can be done using the [linuxfabrik.lfops.influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/influxdb) role.
 * Install MariaDB, and create a database and a user for said database. This can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
+* On RHEL-compatible systems, enable the `icinga2_can_connect_all`, `icinga2_run_sudo` and `nagios_run_sudo` SELinux booleans. This can be done using the [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux) role.
 
+If you use the ["Setup Icinga2 Master" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_icinga2_master.yml), this is automatically done for you.
 
 ## Tags
 

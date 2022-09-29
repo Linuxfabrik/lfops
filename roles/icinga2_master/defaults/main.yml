@@ -57,3 +57,11 @@ icinga2_master__influxdb__users__dependent_var:
     grants:
       - database: '{{ icinga2_master__influxdb_database_name }}'
         privilege: 'ALL'
+
+icinga2_master__selinux__booleans__dependent_var:
+  - key: 'icinga2_can_connect_all'
+    value: 'on'
+  - key: 'icinga2_run_sudo'
+    value: 'on'
+  - key: 'nagios_run_sudo'
+    value: 'on'
