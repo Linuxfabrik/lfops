@@ -64,6 +64,21 @@ mariadb_server__admin_user:
 ```
 
 
+## Recommended Role Variables
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `mariadb_server__dump_user` | User to whom backup privileges are granted to. Setting this user automatically enables daily MariaDB-Dumps. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `["*.*:event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options:<br> * `'present'`<br> * `'absent'` | unset |
+
+```yaml
+# recommended
+mariadb_server__dump_user:
+  username: 'mariadb-dump'
+  password: 'linuxfabrik'
+  state: 'present'
+```
+
+
 ## Optional Role Variables - Specific to this role
 
 
@@ -75,7 +90,6 @@ mariadb_server__admin_user:
 | `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
 | `mariadb_server__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'`|
 | `mariadb_server__dump_threads` | The number of threads to use for dumping data. | `4`|
-| `mariadb_server__dump_user` | User to whom backup privileges are granted to. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `["*.*:event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options:<br> * `'present'`<br> * `'absent'` | unset |
 | `mariadb_server__enabled`| Enables or disables the Systemd unit. | `true` |
 | `mariadb_server__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
@@ -97,12 +111,6 @@ mariadb_server__dump_directory: '/backup/mariadb-dump'
 mariadb_server__dump_mydumper_package: 'https://github.com/mydumper/mydumper/releases/download/v0.12.6-1/mydumper-0.12.6-1.el8.x86_64.rpm'
 mariadb_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
 mariadb_server__dump_threads: 4
-mariadb_server__dump_user:
-  username: 'mariadb-dump'
-  password: 'password'
-  priv:
-    - '*.*:event,lock tables,reload,select,show view,super,trigger'
-  state: 'present'
 mariadb_server__enabled: true
 mariadb_server__logrotate: 7
 mariadb_server__skip_sys_schema: false
