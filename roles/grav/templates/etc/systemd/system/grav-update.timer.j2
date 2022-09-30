@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022093001
+
+[Unit]
+Description=Grav CMS Plugin and Theme Update Timer
+
+[Timer]
+OnCalendar={{ grav__on_calendar_update }}
+Unit=grav-update.service
+
+[Install]
+WantedBy=timers.target

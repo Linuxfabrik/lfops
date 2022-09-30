@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2022093001
+
+[Unit]
+Description=Grav CMS Plugin and Theme Update Service
+
+[Service]
+ExecStart=/usr/bin/php --file bin/gpm update --all-yes
+WorkingDirectory={{ grav__install_dir }}
+Type=oneshot
+User=apache

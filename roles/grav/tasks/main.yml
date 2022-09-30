@@ -56,3 +56,66 @@
 
   tags:
     - 'grav'
+
+
+- block:
+
+  - name: 'Deploy /etc/systemd/system/grav-selfupgrade.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/grav-selfupgrade.service.j2'
+      dest: '/etc/systemd/system/grav-selfupgrade.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'grav: systemctl daemon-reload'
+
+  - name: 'Deploy /etc/systemd/system/grav-selfupgrade.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/grav-selfupgrade.timer.j2'
+      dest: '/etc/systemd/system/grav-selfupgrade.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'grav: systemctl daemon-reload'
+
+  - name: 'Deploy /etc/systemd/system/grav-update.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/grav-update.service.j2'
+      dest: '/etc/systemd/system/grav-update.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'grav: systemctl daemon-reload'
+
+  - name: 'Deploy /etc/systemd/system/grav-update.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/grav-update.timer.j2'
+      dest: '/etc/systemd/system/grav-update.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'grav: systemctl daemon-reload'
+
+  tags:
+    - 'grav'
+    - 'grav:cron'
+
+
+- block:
+
+  - name: 'systemctl {{ grav__timer_selfupgrade_enabled | bool | ternary("enable", "disable") }} grav-selfupgrade.timer --now'
+    ansible.builtin.systemd:
+      name: 'grav-selfupgrade.timer'
+      state: '{{ grav__timer_selfupgrade_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ grav__timer_selfupgrade_enabled }}'
+
+  - name: 'systemctl {{ grav__timer_update_enabled | bool | ternary("enable", "disable") }} grav-update.timer --now'
+    ansible.builtin.systemd:
+      name: 'grav-update.timer'
+      state: '{{ grav__timer_update_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ grav__timer_update_enabled }}'
+
+  tags:
+    - 'grav'
+    - 'grav:cron'
+    - 'grav:state'
