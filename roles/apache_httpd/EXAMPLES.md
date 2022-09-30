@@ -1,4 +1,12 @@
-# Ansible Role linuxfabrik.lfops.apache_httpd - vHost Config Examples
+# Ansible Role linuxfabrik.lfops.apache_httpd - Config Examples, Tips & Tricks
+
+## HTTP/2
+
+HTTP/2 is supported only over an encrypted connection. The website must be served over a secure TLS connection and accessed through https:// in the browser. Therefore, all Apache servers in the chain must be enabled for TLS before HTTP/2 is used.
+
+* For Proxy servers, use Let's Encrypt certificates.
+* For App servers, use self-signed certificates.
+
 
 ## vHosts
 
