@@ -7,14 +7,14 @@
 
   - name: 'Test if Grav is already installed'
     stat:
-      path: '{{ grav__install_dir }}/index.php'
+      path: '{{ grav__install_dir | quote }}/index.php'
     register: 'grav__installed'
 
-  - name: 'composer create-project getgrav/grav {{ grav__install_dir }}'
+  - name: 'composer create-project getgrav/grav {{ grav__install_dir | quote }}'
     community.general.composer:
       command: 'create-project'
-      arguments: 'getgrav/grav {{ grav__install_dir }}'
-      working_dir: '{{ grav__install_dir }}'
+      arguments: 'getgrav/grav {{ grav__install_dir | quote }}'
+      working_dir: '{{ grav__install_dir | quote }}'
       prefer_dist: true
     environment:
       # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
@@ -25,9 +25,9 @@
 
     # https://learn.getgrav.org/17/troubleshooting/permissions
 
-  - name: 'chown -R apache:apache {{ grav__install_dir }}'
+  - name: 'chown -R apache:apache {{ grav__install_dir | quote }}'
     ansible.builtin.file:
-      path: '{{ grav__install_dir }}'
+      path: '{{ grav__install_dir | quote }}'
       owner: 'apache'
       group: 'apache'
       recurse: true
@@ -35,22 +35,26 @@
     # todo: "rw" just necessary if using the Grav admin plugin, otherwise "r" would be sufficient
 
   - name: 'find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;'
-    ansible.builtin.command: 'find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;'
+    ansible.builtin.command: |
+      find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;
     register: 'grav__chmod_dirs_result'
     changed_when: 'grav__chmod_dirs_result["stdout"] | length'
 
   - name: 'find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;'
-    ansible.builtin.command: 'find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;'
+    ansible.builtin.command: |
+      find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;
     register: 'grav__chmod_dirs_result'
     changed_when: 'grav__chmod_dirs_result["stdout"] | length'
 
   - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;'
-    ansible.builtin.command: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;'
+    ansible.builtin.command: |
+      find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;
     register: 'grav__chmod_dirs_result'
     changed_when: 'grav__chmod_dirs_result["stdout"] | length'
 
   - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;'
-    ansible.builtin.command: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;'
+    ansible.builtin.command: |
+      find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;
     register: 'grav__chmod_dirs_result'
     changed_when: 'grav__chmod_dirs_result["stdout"] | length'
 
@@ -119,3 +123,31 @@
     - 'grav'
     - 'grav:cron'
     - 'grav:state'
+
+
+- block:
+
+  - name: 'Install the Administration Panel plugin for Grav'
+    ansible.builtin.command: |
+      bin/gpm install admin --all-yes
+    args:
+      chdir: '{{ grav__install_dir | quote }}'
+
+  - name: 'Create Grav User Accounts'
+    ansible.builtin.command: >-
+      bin/plugin login new-user
+        --user='{{ item['user'] }}'
+        --fullname='{{ item['fullname'] }}'
+        --password='{{ item['password'] }}'
+        --email='{{ item['email'] }}'
+        --permissions={{ item['permissions'] }}
+        --no-interaction
+    args:
+      chdir: '{{ grav__install_dir | quote }}'
+    loop: '{{ grav__users }}'
+
+  when:
+    - 'not grav__skip_admin | d(false)'
+  tags:
+    - 'grav'
+    - 'grav:user'

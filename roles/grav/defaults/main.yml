@@ -14,19 +14,21 @@ grav__apache_httpd__vhosts__dependent_var:
     by_role: 'grav'
     comment: 'vHost for Grav (a simple file-based flat-file CMS platform)'
     enabled: true
-    filename: 'grav'
     state: 'present'
     template: 'app'
     allowed_http_methods:
       - 'GET'
       - 'OPTIONS'
+      - 'POST'  # todo: just necessary if using the Grav admin plugin
     authz_file_extensions: |-
         Require all granted
     authz_document_root: |-
         Require all granted
     virtualhost_port: 80
-    conf_directory_index: 'index.php'
+    conf_allow_override: 'All'
+    conf_directory_index: 'index.php index.html index.htm'
     conf_document_root: '{{ grav__install_dir }}'
+    conf_options: 'FollowSymLinks'
 
 grav__on_calendar_selfupgrade: '22:{{ 59 | random(seed=inventory_hostname) }}'
 grav__on_calendar_update: '23:{{ 59 | random(seed=inventory_hostname) }}'
@@ -42,5 +44,13 @@ grav__selinux__fcontexts__dependent_var:
     path: '{{ grav__install_dir }}'
     state: 'present'
 
+# todo: just necessary if using the Grav admin plugin
+grav__selinux__booleans__dependent_var:
+  - key: 'httpd_can_network_connect'
+    value: 'on'
+
+grav__skip_admin: false
+
 grav__timer_selfupgrade_enabled: true
 grav__timer_update_enabled: true
+

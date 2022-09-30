@@ -6,6 +6,6 @@ Description=Grav CMS Plugin and Theme Update Service
 
 [Service]
 ExecStart=/usr/bin/php --file bin/gpm update --all-yes
-WorkingDirectory={{ grav__install_dir }}
+WorkingDirectory={{ grav__install_dir | quote }}
 Type=oneshot
 User=apache

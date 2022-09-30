@@ -6,6 +6,6 @@ Description=Grav CMS Self Upgrade Service
 
 [Service]
 ExecStart=/usr/bin/php --file bin/gpm selfupgrade --force --all-yes
-WorkingDirectory={{ grav__install_dir }}
+WorkingDirectory={{ grav__install_dir | quote }}
 Type=oneshot
 User=apache
