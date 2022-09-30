@@ -24,10 +24,6 @@
 
 
     # === Security ===
-    # - role: 'linuxfabrik.lfops.freeipa_client' TODO
-    #   when:
-    #     - 'not setup_basic__skip_freeipa_client | d(true)'
-
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
