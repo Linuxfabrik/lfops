@@ -37,7 +37,7 @@ Runs on
 | `system_update__mail_from` | The email sender account. This will be used as the "from"-address for all notifications. | `'{{ mailto_root__from }}'` |
 | `system_update__mail_recipients_new_configfiles` | A list of email recipients to notify if there is a new version of a config file (`rpmnew` / `rpmsave` / `dpkg-dist` / `ucf-dist`). | `'{{ mailto_root__to }}'` |
 | `system_update__mail_recipients_updates` | A list of email recipients to notify about the expected updates and the report of the installed updates. | `'{{ mailto_root__to }}'` |
-| `system_update__mail_subject_prefix` | This will set a prefix that will be showed in front of the hostname. Can be used to separate servers by environment or customer. | `true` |
+| `system_update__mail_subject_prefix` | This will set a prefix that will be showed in front of the hostname. Can be used to separate servers by environment or customer. | `''` |
 | `system_update__notify_and_schedule_on_calendar` | When the notification for the expected updates should be sent. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `00'` |
 | `system_update__post_update_code` | This codeblock will be executed after the updates have been installed and before a potential reboot. | unset |
 | `system_update__rocketchat_msg_suffix` | A suffix to the Rocket.Chat notifications. This can be used to mention other users. | unset |
