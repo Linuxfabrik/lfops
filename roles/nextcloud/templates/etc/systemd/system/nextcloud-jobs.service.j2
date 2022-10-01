@@ -5,6 +5,6 @@
 Description=nextcloud background jobs service
 
 [Service]
-ExecStart=/usr/bin/php -f /var/www/html/nextcloud/cron.php
+ExecStart=/usr/bin/php --file /var/www/html/nextcloud/cron.php
 Type=oneshot
 User=apache

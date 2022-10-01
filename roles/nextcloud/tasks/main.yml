@@ -14,7 +14,7 @@
 
 - block:
 
-  - name: 'dnf -y install bzip2 samba-client'
+  - name: 'Install bzip2 samba-client'
     ansible.builtin.package:
       name:
         - 'bzip2'
@@ -26,73 +26,11 @@
       url: 'https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
       dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
 
-  - name: 'bunzip /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
+  - name: 'bunzip /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2 /var/www/html/'
     ansible.builtin.unarchive:
       src: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
       dest: '/var/www/html/'
       remote_src: true
-
-  - name: 'mkdir /data; chown -R apache:apache /data; chmod 0750 -R /data'
-    ansible.builtin.file:
-      path: '/data'
-      state: 'directory'
-      owner: 'apache'
-      group: 'apache'
-      mode: 0o750
-      recurse: true
-
-  - name: 'restorecon -Fvr /data'
-    ansible.builtin.command: 'restorecon -Fvr /data'
-    register: 'nextcloud__restorecon_data_result'
-    changed_when: 'nextcloud__restorecon_data_result["stdout"] | length'
-
-  - name: 'mkdir /var/www/html/nextcloud/data'
-    ansible.builtin.file:
-      path: '/var/www/html/nextcloud/data'
-      state: 'directory'
-      owner: 'apache'
-      group: 'apache'
-      mode: 0o750
-
-  - name: 'restorecon -Fvr /var/www/html/nextcloud'
-    ansible.builtin.command: 'restorecon -Fvr /var/www/html/nextcloud'
-    register: 'nextcloud__restorecon_nextcloud_result'
-    changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length'
-
-  - name: 'chmod +x /var/www/html/nextcloud/occ'
-    ansible.builtin.file:
-      path: '/var/www/html/nextcloud/occ'
-      mode: 0o755
-
-  - name: 'Run nextcloud installer'
-    # installation hangs without "--admin-user" and "--admin-pass"
-    ansible.builtin.command: >-
-      sudo -u apache php occ maintenance:install
-      --admin-pass '{{ nextcloud__users.0.password }}'
-      --admin-user '{{ nextcloud__users.0.username }}'
-      --data-dir '{{ nextcloud__datadir }}'
-      --database 'mysql'
-      --database-host '{{ nextcloud__database_host }}'
-      --database-name '{{ nextcloud__database_name }}'
-      --database-user '{{ nextcloud__mariadb_login.username }}'
-      --database-pass '{{ nextcloud__mariadb_login.password }}'
-    args:
-      chdir: '/var/www/html/nextcloud/'
-      creates: '/var/www/html/nextcloud/config/config.php'
-
-  # You can't setup S3 after your installation. S3 as primary has to be setup before you install,
-  # but modifying the system configuration via occ is not available until Nextcloud is installed.
-  # Therefore deploying Object Storage settings as a template into a separate configuration file.
-  - name: 'Deploy /var/www/html/nextcloud/config/objectstore.config.php'
-    ansible.builtin.template:
-      src: 'var/www/html/nextcloud/config/objectstore.config.php.j2'
-      dest: '/var/www/html/nextcloud/config/objectstore.config.php'
-      owner: 'apache'
-      group: 'apache'
-      mode: 0o640
-    when:
-      - '(nextcloud__objectstore_s3 is defined and nextcloud__objectstore_s3 | length) or
-         (nextcloud__objectstore_swift is defined and nextcloud__objectstore_swift | length)'
 
   - name: 'chown -R apache:apache /var/www/html/nextcloud'
     ansible.builtin.file:
@@ -101,10 +39,91 @@
       group: 'apache'
       recurse: true
 
-  - name: 'Check if role state file exists'
+  - name: 'mkdir path/to/data; chown -R apache:apache path/to/data; chmod 0750 -R path/to/data'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o750
+    loop:
+      - '/data'
+      - '/var/www/html/nextcloud/data'
+
+  - name: 'chmod +x /var/www/html/nextcloud/occ'
+    ansible.builtin.file:
+      path: '/var/www/html/nextcloud/occ'
+      mode: 0o755
+
+  - name: 'restorecon -Fvr ...'
+    ansible.builtin.command: 'restorecon -Fvr {{ item }}'
+    register: 'nextcloud__restorecon_nextcloud_result'
+    changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length'
+    loop:
+      - '/data'
+      - '/var/www/html/nextcloud'
+
+  - name: 'Run nextcloud installer'
+    # installation hangs without "--admin-user" and "--admin-pass"
+    ansible.builtin.command: >-
+      sudo -u apache php occ maintenance:install
+        --admin-pass '{{ nextcloud__users.0.password }}'
+        --admin-user '{{ nextcloud__users.0.username }}'
+        --data-dir '{{ nextcloud__datadir }}'
+        --database 'mysql'
+        --database-host '{{ nextcloud__database_host }}'
+        --database-name '{{ nextcloud__database_name }}'
+        --database-user '{{ nextcloud__mariadb_login.username }}'
+        --database-pass '{{ nextcloud__mariadb_login.password }}'
+    args:
+      chdir: '/var/www/html/nextcloud/'
+      creates: '/var/www/html/nextcloud/config/config.php'
+
+  - name: 'Convert some database columns to big int'
+    ansible.builtin.command: |
+      sudo -u apache php occ db:convert-filecache-bigint --no-interaction
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    register: 'nextcloud__convert_filecache_bigint_result'
+    changed_when: '"All tables already up to date" not in nextcloud__convert_filecache_bigint_result["stdout"]'
+    # changed_when: there is no easy way to check for changes
+
+  - name: 'Set Nextcloud system settings'
+    ansible.builtin.command: |
+      sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["value"] }}
+    loop: '{{ nextcloud__sysconfig }}'
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    # changed_when: there is no easy way to check for changes
+
+  - name: 'Set Nextcloud proxy settings'
+    ansible.builtin.command: |
+      sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["val"]ue }}
+    loop: '{{ nextcloud__proxyconfig }}'
+    when:
+      - 'nextcloud__proxyconfig is defined'
+      - 'nextcloud__proxyconfig | length'
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    # changed_when: there is no easy way to check for changes
+
+  # do this straight after the installation to get NC up and running
+  # otherwise subsequent occ commands might fail
+  - name: 'nextcloud: restart php-fpm'
+    ansible.builtin.service:
+      name: 'php-fpm'
+      state: 'restarted'
+
+  tags:
+    - 'nextcloud'
+
+
+- block:
+
+  - name: 'Register if role state file exists'
     stat:
-      path: '/etc/ansible/facts.d/nextcloud.fact'
-    register: 'nextcloud_fact'
+      path: '/etc/ansible/facts.d/nextcloud.state'
+    register: 'nextcloud__state'
 
   tags:
     - 'nextcloud'
@@ -163,7 +182,7 @@
       chdir: '/var/www/html/nextcloud/'
     ignore_errors: true
 
-  - name: 'Install and enable Nextcloud Apps on initial setup, do this only once'
+  - name: 'Install and enable Nextcloud Apps on initial setup, but do this only once'
     ansible.builtin.command: |
       sudo -u apache php occ app:install {{ item }}
     loop:
@@ -172,7 +191,7 @@
       chdir: '/var/www/html/nextcloud/'
     ignore_errors: true
 
-  - name: 'Enable a subset of pre-installed Nextcloud Apps on initial setup, do this only once'
+  - name: 'Enable a subset of pre-installed Nextcloud Apps on initial setup, but do this only once'
     ansible.builtin.command: |
       sudo -u apache php occ app:enable {{ item }}
     loop:
@@ -193,56 +212,16 @@
 
   - name: 'Create a role state file'
     ansible.builtin.file:
-      dest: '/etc/ansible/facts.d/nextcloud.fact'
+      dest: '/etc/ansible/facts.d/nextcloud.state'
       owner: 'root'
       group: 'root'
       mode: '0600'
       state: 'touch'
 
   when:
-    - 'not nextcloud_fact.stat.exists'
+    - 'not nextcloud__state.stat.exists'
   tags:
     - 'nextcloud'
-
-
-- block:
-
-  - name: 'Set Nextcloud system settings'
-    ansible.builtin.command: |
-      sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["value"] }}
-    loop: '{{ nextcloud__sysconfig }}'
-    args:
-      chdir: '/var/www/html/nextcloud/'
-    # changed_when: there is no easy way to check for changes
-
-  - name: 'Set Nextcloud proxy settings'
-    ansible.builtin.command: |
-      sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["value"] }}
-    loop: '{{ nextcloud__proxyconfig }}'
-    when:
-      - 'nextcloud__proxyconfig is defined'
-      - 'nextcloud__proxyconfig | length'
-    args:
-      chdir: '/var/www/html/nextcloud/'
-    # changed_when: there is no easy way to check for changes
-
-  - name: 'Convert some database columns to big int'
-    ansible.builtin.command: |
-      sudo -u apache php occ db:convert-filecache-bigint --no-interaction
-    args:
-      chdir: '/var/www/html/nextcloud/'
-    register: 'nextcloud__convert_filecache_bigint_result'
-    changed_when: '"All tables already up to date" not in nextcloud__convert_filecache_bigint_result["stdout"]'
-    # changed_when: there is no easy way to check for changes
-
-  - name: 'Nextcloud: Restart php-fpm to reflect all changes'
-    ansible.builtin.service:
-      name: 'php-fpm'
-      state: 'restarted'
-
-  tags:
-    - 'nextcloud'
-    - 'nextcloud:sysconfig'
 
 
 - block:
@@ -301,12 +280,18 @@
 
 - block:
 
-  - name: 'Set background job to "cron"'
-    ansible.builtin.command: |
-      sudo -u apache php occ background:cron
-    args:
-      chdir: '/var/www/html/nextcloud/'
-    # changed_when: there is no easy way to check for changes
+  - name: 'chown -R apache:apache /var/www/html/nextcloud'
+    ansible.builtin.file:
+      path: '/var/www/html/nextcloud'
+      owner: 'apache'
+      group: 'apache'
+      recurse: true
+
+  tags:
+    - 'nextcloud'
+
+
+- block:
 
   - name: 'Deploy /etc/systemd/system/nextcloud-jobs.service'
     ansible.builtin.template:
@@ -315,6 +300,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/nextcloud-jobs.timer'
     ansible.builtin.template:
@@ -325,6 +311,13 @@
       mode: 0o644
     notify: 'nextcloud: systemctl daemon-reload'
 
+  - name: 'Set background job to "cron"'
+    ansible.builtin.command: |
+      sudo -u apache php occ background:cron
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    # changed_when: there is no easy way to check for changes
+
   - name: 'Deploy /etc/systemd/system/nextcloud-app-update.service'
     ansible.builtin.template:
       src: 'etc/systemd/system/nextcloud-app-update.service.j2'
@@ -332,6 +325,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/nextcloud-app-update.timer'
     ansible.builtin.template:
@@ -363,6 +357,7 @@
 
   tags:
     - 'nextcloud'
+    - 'nextcloud:cron'
     - 'nextcloud:state'
 
 

@@ -27,6 +27,19 @@ nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'   # Background jobs: every 5 minutes
 
+# if running behind a reverse proxy, otherwise unset this
+# the ip addresses are those of the reverse proxy
+nextcloud__proxyconfig: []
+# nextcloud__proxyconfig:
+#   - { key: 'overwrite.cli.url', value: '--value=https://cloud.example.com' }
+#   - { key: 'overwritecondaddr', value: '--value=^192\\.0\\.2\\.7$' }
+#   - { key: 'overwritehost',     value: '--value=cloud.example.com' }
+#   - { key: 'overwriteprotocol', value: '--value=https' }
+#   - { key: 'overwritewebroot',  value: '--value=/' }
+#   - { key: 'trusted_proxies',   value: '0 --value=192.0.2.7' }
+
+nextcloud__storage_backend: 'block_storage'   # 'block_storage', 'object_storage_s3', 'object_storage_swift'
+
 # order matters here, so do not sort alphabetically
 nextcloud__sysconfig:
   - { key: 'check_for_working_wellknown_setup',  value: '--value=false --type=boolean' }
@@ -48,11 +61,12 @@ nextcloud__sysconfig:
   - { key: 'memcache.locking',                   value: '--value=\\OC\\Memcache\\Redis' }
   - { key: 'filelocking.enabled',                value: '--value=true --type=boolean' }
 
-nextcloud__timer_jobs_enabled: true
 nextcloud__timer_app_update_enabled: true
 
-# 'latest-XX' or 'nextcloud-XX.X.XX'
-nextcloud__version: 'latest-24'
+nextcloud__timer_jobs_enabled: true
+
+# 'latest', 'latest-XX' or 'nextcloud-XX.X.XX'
+nextcloud__version: 'latest'
 
 # -----------------------------------------------------------------------------
 
@@ -101,7 +115,11 @@ nextcloud__apache_httpd__vhosts__dependent_var:
 netcloud__collabora_code__coolwsd_storage_wopi__dependent_var:
   - '{{ nextcloud__fqdn | regex_replace("\.", "\.") }}'
 
-nextcloud__kernel_settings__transparent_hugepages__dependent_var: 'madvise'
+nextcloud__php__ini_max_execution_time__dependent_var: 3600
+nextcloud__php__ini_max_file_uploads__dependent_var: 100
+nextcloud__php__ini_memory_limit__dependent_var: '1024M'
+nextcloud__php__ini_post_max_size__dependent_var: '16M'
+nextcloud__php__ini_upload_max_filesize__dependent_var: '10000M'
 
 nextcloud__php__modules__dependent_var:
   - name: 'php-bcmath'
@@ -139,34 +157,37 @@ nextcloud__php__modules__dependent_var:
   - name: 'php-zip'
     state: 'present'
 
-nextcloud__php__ini_max_execution_time__dependent_var: 3600
-nextcloud__php__ini_max_file_uploads__dependent_var: 100
-nextcloud__php__ini_memory_limit__dependent_var: '1024M'
-nextcloud__php__ini_post_max_size__dependent_var: '16M'
-nextcloud__php__ini_upload_max_filesize__dependent_var: '10000M'
+nextcloud__repo_remi__enabled_redis_version__dependent_var: '7.0'
 
 nextcloud__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
     value: 'on'
-nextcloud__selinux__fcontexcts__dependent_var:
+nextcloud__selinux__fcontexts__dependent_var:
   - setype: 'httpd_sys_rw_content_t'
     target: '/data(/.*)?'
     state: 'present'
+    path: '/data'
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/.htaccess'
     state: 'present'
+    path: '/var/www/html/nextcloud/.htaccess'
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/.user.ini'
     state: 'present'
+    path: '/var/www/html/nextcloud/.user.ini'
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/3rdparty/aws/aws-sdk-php/src/data/logs(/.*)?'
     state: 'present'
+    path: '/var/www/html/nextcloud/3rdparty/aws/aws-sdk-php/src/data/logs'
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/apps(/.*)?'
     state: 'present'
+    path: '/var/www/html/nextcloud/apps'
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/config(/.*)?'
     state: 'present'
+    path: '/var/www/html/nextcloud/config'
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/data(/.*)?'
     state: 'present'
+    path: '/var/www/html/nextcloud/data'

@@ -21,13 +21,6 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_nextcloud__skip_policycoreutils | default(false)'
 
-    - role: 'linuxfabrik.lfops.selinux'
-      selinux__fcontexts__dependent_var:
-        - '{{ nextcloud__selinux__fcontexcts__dependent_var }}'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_nextcloud__skip_selinux | default(false)'
-
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var:
         - '{{ mariadb_server__python__modules__dependent_var | d([]) }}'
@@ -39,9 +32,10 @@
 #         - 'not setup_nextcloud__skip_fail2ban | d(false)'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings__sysctl__dependent_var:
-        - '{{ mariadb_server__kernel_settings__sysctl__dependent_var | d([]) }}'
-        - '{{ redis__kernel_settings__sysctl__dependent_var | d([]) }}'
+      kernel_settings__sysctl__dependent_var: '{{
+          mariadb_server__kernel_settings__sysctl__dependent_var | d([]) +
+          redis__kernel_settings__sysctl__dependent_var | d([])
+        }}'
       kernel_settings__transparent_hugepages__dependent_var: "{{ redis__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
       when:
         - 'not setup_nextcloud__skip_kernel_settings | d(false)'
@@ -54,7 +48,7 @@
         - 'not setup_nextcloud__skip_apache_httpd | d(false)'
 
 
-      # === PHP and PHP-FPM
+      # === Redis, PHP and PHP-FPM from Remi Repo
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
@@ -98,6 +92,15 @@
 
 
       # === Nextcloud Application
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var:
+        - '{{ nextcloud__selinux__booleans__dependent_var }}'
+      selinux__fcontexts__dependent_var:
+        - '{{ nextcloud__selinux__fcontexts__dependent_var }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_nextcloud__skip_selinux | default(false)'
+
     - role: 'linuxfabrik.lfops.nextcloud'
 
 

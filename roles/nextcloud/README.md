@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.nextcloud
 
-This role installs Nextcloud including the tools needed by the most popular business plugins.
+This role installs Nextcloud including the tools needed by the most popular business plugins. By default, the latest available version is installed.
 
 Runs on
 
@@ -13,7 +13,7 @@ Runs on
 * Install MariaDB 10+ (**MariaDB 10.6 recommended** (20220930)). This can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
 * Install PHP 7+ (**PHP 8.1 recommended** (20220930)). This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
 * Install Redis (**Redis 7 recommended** (20220930)). This can be done using the [linuxfabrik.lfops.repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) role.
-* Set the size of your `/tmp` partition to 50 GB+, if you want to allow 5x simultaenous uploads with files each 10 GB in size.
+* Set the size of your `/tmp` partition accordingly. For example: If you want to allow 5x simultaenous uploads with files each 10 GB in size, set it to 50 GB+.
 
 If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you.
 
@@ -33,9 +33,9 @@ If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops
 | ---                       | ------------ |
 | `nextcloud`               | Installs Nextcloud. |
 | `nextcloud:apps`          | TODO |
-| `nextcloud:cron`          | * Set background job to "cron"<br>* Deploy /etc/systemd/system/nextcloud-jobs.service<br>* Deploy /etc/systemd/system/nextcloud-jobs.timer<br>* Deploy /etc/systemd/system/nextcloud-app-update.service<br>* Deploy /etc/systemd/system/nextcloud-app-update.timer |
+| `nextcloud:cron`          | * Set background job to "cron"<br>* Deploy /etc/systemd/system/nextcloud-jobs.service<br>* Deploy /etc/systemd/system/nextcloud-jobs.timer<br>* Deploy /etc/systemd/system/nextcloud-app-update.service<br>* Deploy /etc/systemd/system/nextcloud-app-update.timer<br> * `systemctl enable/disable nextcloud-jobs.timer --now`<br>* `systemctl enable/disable nextcloud-app-update.timer --now` |
 | `nextcloud:selinux`       | * semanage fcontext -a -t ...<br>* setsebool -P ... |
-| `nextcloud:state`         | * systemctl enable/disable nextcloud-jobs.timer --now<br>* systemctl enable/disable nextcloud-app-update.timer --now |
+| `nextcloud:state`         | * `systemctl enable/disable nextcloud-jobs.timer --now`<br>* `systemctl enable/disable nextcloud-app-update.timer --now` |
 | `nextcloud:sysconfig`     | * Set nextcloud system settings<br>* Set nextcloud proxy settings<br>* Convert some database columns to big int<br>* nextcloud: restart php-fpm |
 | `nextcloud:update_script` | Deploy /usr/local/bin/nextcloud-update |
 | `nextcloud:user`          | * Create Nextcloud user<br>* Update Nextcloud settings for user |
@@ -93,7 +93,7 @@ nextcloud__users:
 | `nextcloud__timer_app_update_enabled` | Enables/disables Systemd-Timer for updating Apps. | `true` |
 | `nextcloud__timer_jobs_enabled` | Enables/disables Systemd-Timer for running OCC background jobs. | `true` |
 | nextcloud__users | List of user accounts to create. Attention: The first user has to be the primary administrator account. | 
-| `nextcloud__version` | Which version to install. Some of `'latest-XX'` or `'nextcloud-XX.X.XX'`. | `'latest-24'` |
+| `nextcloud__version` | Which version to install. Some of `'latest'`, `'latest-XX'` or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/. | `'latest'` |
 
 Example:
 ```yaml
