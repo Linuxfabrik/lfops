@@ -35,13 +35,6 @@
       ignore_selinux_state: true
     loop: '{{ selinux__fcontexts__combined_var }}'
 
-  - name: 'restorecon -ivr ...'
-    ansible.builtin.command: |
-      restorecon -ivr {{ item['path'] }}
-    loop: '{{ selinux__fcontexts__combined_var }}'
-    register: 'selinux__restorecon_result'
-    changed_when: 'selinux__restorecon_result["stdout"] | length'
-
   tags:
     - 'selinux'
     - 'selinux:fcontext'
