@@ -12,8 +12,8 @@ Runs on
 
 | Tag       | What it does                    |
 | ---       | ------------                    |
-| `qemu_guest_agent` | * Install qemu-guest-agent<br> * `systemctl {{ qemu_guest_agent__service_enabled \| bool \| ternary("enable", "disable") }} --now qemu-guest-agent.service` |
-| `qemu_guest_agent:state`       | * `systemctl {{ qemu_guest_agent__service_enabled \| bool \| ternary("enable", "disable") }} --now qemu-guest-agent.service` |
+| `qemu_guest_agent` | * Install qemu-guest-agent<br> * `systemctl enable/disable --now qemu-guest-agent.service` |
+| `qemu_guest_agent:state`       | * `systemctl enable/disable --now qemu-guest-agent.service` |
 
 
 
