@@ -1,7 +1,7 @@
 <?php
 
 // {{ ansible_managed }}
-// 2022092701
+// 2022100302
 
 // Nextcloud supports loading configuration parameters from multiple files. You can add arbitrary
 // files ending with .config.php in the config/ directory, for example you could place your email
@@ -12,7 +12,7 @@
 
 // https://docs.nextcloud.com/server/stable/admin_manual/configuration_server/config_sample_php_parameters.html#multiple-config-php-file
 
-{% if nextcloud__config_php_objectstore_s3_hostname is defined and nextcloud__config_php_objectstore_s3_hostname | length %}
+{% if nextcloud__storage_backend_s3['bucket'] is defined and nextcloud__storage_backend_s3['bucket'] | length %}
 /**
  * S3
  */
@@ -20,18 +20,18 @@ $CONFIG = array (
     'objectstore' => [
         'class' => 'OC\\Files\\ObjectStore\\S3',
         'arguments' => [
-            'autocreate' => {{ nextcloud__config_php_objectstore_s3_autocreate | lower }},
-            'bucket' => '{{ nextcloud__config_php_objectstore_s3_bucket }}',
-            'hostname' => '{{ nextcloud__config_php_objectstore_s3_hostname }}',
-            'key' => '{{ nextcloud__config_php_objectstore_s3_key }}',
-            'region' => '{{ nextcloud__config_php_objectstore_s3_region }}',
-            'secret' => '{{ nextcloud__config_php_objectstore_s3_secret }}',
-            'use_ssl' => '{{ nextcloud__config_php_objectstore_s3_use_ssl | lower }}',
-            'use_path_style' => '{{ nextcloud__config_php_objectstore_s3_use_path_style | lower }}'
+            'autocreate' => {{ nextcloud__storage_backend_s3['autocreate'] | lower }},
+            'bucket' => '{{ nextcloud__storage_backend_s3['bucket'] }}',
+            'hostname' => '{{ nextcloud__storage_backend_s3['hostname'] }}',
+            'key' => '{{ nextcloud__storage_backend_s3['key'] }}',
+            'region' => '{{ nextcloud__storage_backend_s3['region'] }}',
+            'secret' => '{{ nextcloud__storage_backend_s3['secret'] }}',
+            'use_ssl' => {{ nextcloud__storage_backend_s3['use_ssl'] | lower }},
+            'use_path_style' => {{ nextcloud__storage_backend_s3['use_path_style'] | lower }},
         ],
     ],
 );
-{% elif nextcloud__config_php_objectstore_swift_url is defined and nextcloud__config_php_objectstore_swift_url | length %}
+{% elif nextcloud__storage_backend_swift['bucket'] is defined and nextcloud__storage_backend_swift['bucket'] | length %}
 /**
  * Swift V3
  */
@@ -39,25 +39,25 @@ $CONFIG = array (
     'objectstore' => [
         'class' => 'OC\\Files\\ObjectStore\\Swift',
         'arguments' => [
-            'autocreate' => {{ nextcloud__config_php_objectstore_swift_autocreate | lower }},
-            'bucket' => '{{ nextcloud__config_php_objectstore_swift_bucket }}',
+            'autocreate' => {{ nextcloud__storage_backend_swift['autocreate'] | lower }},
+            'bucket' => '{{ nextcloud__storage_backend_swift['bucket'] }}',
             'scope' => [
                 'project' => [
-                    'name' => '{{ nextcloud__config_php_objectstore_swift_scope_project_name }}',
+                    'name' => '{{ nextcloud__storage_backend_swift['scope_project_name'] }}',
                     'domain' => [
-                        'name' => '{{ nextcloud__config_php_objectstore_swift_scope_project_domain_name }}',
+                        'name' => '{{ nextcloud__storage_backend_swift['scope_project_domain_name'] }}',
                     ],
                 ],
             ],
-            'serviceName' => '{{ nextcloud__config_php_objectstore_swift_service_name }}',
-            'tenantName' => '{{ nextcloud__config_php_objectstore_swift_tenant_name }}',
-            'region' => '{{ nextcloud__config_php_objectstore_swift_region_name }}',
-            'url' => '{{ nextcloud__config_php_objectstore_swift_url }}',
+            'serviceName' => '{{ nextcloud__storage_backend_swift['service_name'] }}',
+            'tenantName' => '{{ nextcloud__storage_backend_swift['tenant_name'] }}',
+            'region' => '{{ nextcloud__storage_backend_swift['region_name'] }}',
+            'url' => '{{ nextcloud__storage_backend_swift['url'] }}',
             'user' => [
-                'name' => '{{ nextcloud__config_php_objectstore_swift_user_name }}',
-                'password' => '{{ nextcloud__config_php_objectstore_swift_user_password }}',
+                'name' => '{{ nextcloud__storage_backend_swift['user_name'] }}',
+                'password' => '{{ nextcloud__storage_backend_swift['user_password'] }}',
                 'domain' => [
-                    'name' => '{{ nextcloud__config_php_objectstore_swift_user_domain_name }}',
+                    'name' => '{{ nextcloud__storage_backend_swift['user_domain_name'] }}',
                 ],
             ],
         ],

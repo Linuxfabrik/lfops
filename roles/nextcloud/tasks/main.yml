@@ -31,6 +31,17 @@
       src: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
       dest: '/var/www/html/'
       remote_src: true
+      creates: '/var/www/html/nextcloud/config'
+
+  - name: 'Storage Backend: Deploy /var/www/html/nextcloud/config/objectstore.config.php'
+    ansible.builtin.template:
+      src: 'var/www/html/nextcloud/config/objectstore.config.php.j2'
+      dest: '/var/www/html/nextcloud/config/objectstore.config.php'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o644
+    when: '(nextcloud__storage_backend_s3["bucket"] is defined and nextcloud__storage_backend_s3["bucket"] | length)
+          or (nextcloud__storage_backend_swift["bucket"] is defined and nextcloud__storage_backend_swift["bucket"] | length)'
 
   - name: 'chown -R apache:apache /var/www/html/nextcloud'
     ansible.builtin.file:
@@ -122,8 +133,8 @@
 
   - name: 'Register if role state file exists'
     stat:
-      path: '/etc/ansible/facts.d/nextcloud.state'
-    register: 'nextcloud__state'
+      path: '/etc/ansible/facts.d/nextcloud__app_install.state'
+    register: 'nextcloud__app_install_state'
 
   tags:
     - 'nextcloud'
@@ -135,7 +146,7 @@
     ansible.builtin.command: |
       sudo -u apache php occ app:disable {{ item }}
     loop:
-      # commented modules can't be disabled
+      # commented modules are default, and can't be disabled
       - 'accessibility'
       - 'activity'
       - 'circles'
@@ -219,7 +230,7 @@
       state: 'touch'
 
   when:
-    - 'not nextcloud__state.stat.exists'
+    - 'not nextcloud__app_install_state.stat.exists'
   tags:
     - 'nextcloud'
 
