@@ -1,10 +1,11 @@
 - block:
 
-  - name: 'Install additional tools like nano etc.'
+  - name: 'Install additional tools like bash-completion, jq, nano and other'
     ansible.builtin.package:
       name:
         - 'bash-completion'
         - 'iftop'
+        - 'jq'
         - 'lsof'
         - 'nano'
         - 'rsync'
