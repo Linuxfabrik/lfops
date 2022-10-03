@@ -1,0 +1,54 @@
+- block:
+
+  - name: "Install Graylog Server"
+    ansible.builtin.package:
+      name:
+        - 'graylog-server'
+      state: 'present'
+
+  - name: "Install Graylog Server Plugins"
+    ansible.builtin.package:
+      name:
+        - 'graylog-enterprise-plugins'
+        - 'graylog-integrations-plugins'
+        - 'graylog-enterprise-integrations-plugins'
+      state: 'present'
+    when: 'graylog_server__install_plugins|bool'
+
+  - name: 'Set httpd_can_network_connect flag on and keep it persistent across reboots'
+    ansible.posix.seboolean:
+      name: 'httpd_can_network_connect'
+      state: yes
+      persistent: yes
+
+  tags:
+    - 'graylog-server'
+
+
+- block:
+
+  - name: "Deploy Graylog Configuration file"
+    ansible.builtin.template:
+      src: 'server-{{ repo_graylog__version }}.conf.j2'
+      dest: '/etc/graylog/server/server.conf'
+      owner: 'graylog'
+      group: 'graylog'
+      mode: 0o644
+    notify: 'graylog: restart graylog-server'
+
+  tags:
+    - 'graylog-server'
+    - 'graylog-server:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ graylog_server__service_enabled | bool | ternary("enable", "disable") }} --now graylog-server.service'
+    ansible.builtin.systemd:
+      name: 'graylog-server.service'
+      enabled: '{{ graylog_server__service_enabled }}'
+      state: '{{ graylog_server__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'graylog-server'
+    - 'graylog-server:state'

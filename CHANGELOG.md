@@ -104,6 +104,7 @@ New features:
 * Role: glances
 * Role: grafana
 * Role: grav
+* Role: graylog_server
 * Role: hetzner_vm
 * Role: hostname
 * Role: icinga2_agent

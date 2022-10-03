@@ -1,0 +1,7 @@
+graylog_server__search_engine: 'opensearch'
+graylog_server__install_plugins: false
+graylog_server__root_username: 'graylog-admin'
+graylog_server__root_email: "root@example.com"
+graylog_server__timezone: 'Europe/Zurich'
+graylog_server__http_bind_port: '9000'
+graylog_server__service_enabled: true

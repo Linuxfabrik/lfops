@@ -1,0 +1,37 @@
+- name: 'Install and configure Graylog'
+  hosts:
+    - 'lfops_setup_graylog'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_mongodb'
+      when:
+        - 'not mongodb__skip_repo_mongodb | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_elasticsearch'
+      when:
+        - 'not elasticsearch__skip_repo_elasticsearch | d(false)'
+        - 'graylog_server__search_engine == "elasticsearch"'
+
+    - role: 'linuxfabrik.lfops.repo_opensearch'
+      when:
+        - 'not opensearch__skip_repo_opensearch | d(false)'
+        - 'graylog_server__search_engine == "opensearch"'
+
+    - role: 'linuxfabrik.lfops.repo_graylog'
+      when:
+        - 'not graylog__skip_repo_graylog | d(false)'
+
+    - role: 'linuxfabrik.lfops.java'
+
+    - role: 'linuxfabrik.lfops.mongodb'
+
+    - role: 'linuxfabrik.lfops.elasticsearch'
+      when:
+        - 'graylog_server__search_engine == "elasticsearch"'
+
+    - role: 'linuxfabrik.lfops.opensearch'
+      when:
+        - 'graylog_server__search_engine == "opensearch"'
+
+    - role: 'linuxfabrik.lfops.graylog_server'

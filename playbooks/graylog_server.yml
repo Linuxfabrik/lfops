@@ -1,0 +1,11 @@
+- name: 'Install and configure Graylog Server'
+  hosts:
+    - 'lfops_graylog_server'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_graylog'
+      when:
+        - 'not graylog_server__skip_repo_graylog | d(false)'
+
+    - role: 'linuxfabrik.lfops.graylog_server'
