@@ -53,8 +53,8 @@ nextcloud__sysconfig:
   - { key: 'filelocking.enabled',                value: '--value=true --type=boolean' }
 
 nextcloud__timer_app_update_enabled: true
-
 nextcloud__timer_jobs_enabled: true
+nextcloud__timer_ldap_show_remnants_enabled: true
 
 # 'latest', 'latest-XX' or 'nextcloud-XX.X.XX'
 nextcloud__version: 'latest'

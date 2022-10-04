@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# 2022100401
+# This file is managed by Ansible - do not edit
+
+cd /var/www/html/nextcloud
+/usr/bin/php occ ldap:show-remnants | /usr/bin/mail -s "$(hostname --short) - Users not available on LDAP anymore, but have remnants in Nextcloud" {{ mailto_root__to | join(',') }}
+exit 0

@@ -2,10 +2,10 @@
 # 2022100401
 
 [Unit]
-Description=Nextcloud App Update Timer
+Description=Nextcloud LDAP Show Remnants Service
 
 [Timer]
-OnCalendar={{ nextcloud__on_calendar_app_update }}
+OnCalendar=monthly
 Unit=nextcloud-app-update.service
 
 [Install]

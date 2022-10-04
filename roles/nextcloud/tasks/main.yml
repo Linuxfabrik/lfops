@@ -352,6 +352,38 @@
       mode: 0o644
     notify: 'nextcloud: systemctl daemon-reload'
 
+  - name: 'Deploy /etc/systemd/system/nextcloud-ldap-show-remnants.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/nextcloud-ldap-show-remnants.service.j2'
+      dest: '/etc/systemd/system/nextcloud-ldap-show-remnants.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when:
+      - 'nextcloud__apps is defined'
+      - 'nextcloud__apps | selectattr("name", "defined") | selectattr("name", "eq", "user_ldap") | selectattr("state", "eq", "present") | map(attribute="name") | length'
+    notify: 'nextcloud: systemctl daemon-reload'
+
+  - name: 'Deploy /etc/systemd/system/nextcloud-ldap-show-remnants.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/nextcloud-ldap-show-remnants.timer.j2'
+      dest: '/etc/systemd/system/nextcloud-ldap-show-remnants.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when:
+      - 'nextcloud__apps is defined'
+      - 'nextcloud__apps | selectattr("name", "defined") | selectattr("name", "eq", "user_ldap") | selectattr("state", "eq", "present") | map(attribute="name") | length'
+    notify: 'nextcloud: systemctl daemon-reload'
+
+  - name: 'Deploy /usr/local/bin/nextcloud-ldap-show-remnants'
+    ansible.builtin.template:
+      src: 'usr/local/bin/nextcloud-ldap-show-remnants.j2'
+      dest: '/usr/local/bin/nextcloud-ldap-show-remnants'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
   tags:
     - 'nextcloud'
     - 'nextcloud:cron'
@@ -371,6 +403,15 @@
       state: '{{ nextcloud__timer_app_update_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ nextcloud__timer_app_update_enabled }}'
 
+  - name: 'systemctl {{ nextcloud__timer_ldap_show_remnants_enabled | bool | ternary("enable", "disable") }} nextcloud-ldap-show-remnants.timer --now'
+    ansible.builtin.systemd:
+      name: 'nextcloud-ldap-show-remnants.timer'
+      state: '{{ nextcloud__timer_ldap_show_remnants_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ nextcloud__timer_ldap_show_remnants_enabled }}'
+    when:
+      - 'nextcloud__apps is defined'
+      - 'nextcloud__apps | selectattr("name", "defined") | selectattr("name", "eq", "user_ldap") | selectattr("state", "eq", "present") | map(attribute="name") | length'
+
   tags:
     - 'nextcloud'
     - 'nextcloud:cron'
@@ -389,4 +430,4 @@
 
   tags:
     - 'nextcloud'
-    - 'nextcloud:update_script'
+    - 'nextcloud:scripts'
