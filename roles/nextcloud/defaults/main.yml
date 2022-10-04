@@ -61,6 +61,11 @@ nextcloud__version: 'latest'
 
 # -----------------------------------------------------------------------------
 
+nextcloud__apache_httpd__mods__dependent_var:
+  - filename: 'proxy_fcgi'
+    enabled: true
+    state: 'present'
+
 nextcloud__apache_httpd__vhosts__dependent_var:
   - by_role: 'nextcloud'
     enabled: true
@@ -81,7 +86,6 @@ nextcloud__apache_httpd__vhosts__dependent_var:
     conf_custom_log_format: 'combined'
     conf_directory_index: 'index.php index.html index.htm'
     conf_document_root: '/var/www/html/nextcloud'
-    conf_log_level: 'debug'
     conf_server_admin: 'webmaster@linuxfabrik.ch'
     conf_server_name: '{{ nextcloud__fqdn }}'
     conf_timeout: 600

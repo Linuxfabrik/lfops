@@ -43,6 +43,7 @@
 
       # ====Apache Webserver
     - role: 'linuxfabrik.lfops.apache_httpd'
+      apache_httpd__mods__dependent_var: '{{ nextcloud__apache_httpd__mods__dependent_var | d([]) }}'
       apache_httpd__vhosts__dependent_var: '{{ nextcloud__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
         - 'not setup_nextcloud__skip_apache_httpd | d(false)'

@@ -271,6 +271,11 @@
       chdir: '/var/www/html/nextcloud/'
     ignore_errors: true
 
+  - name: 'nextcloud: restart php-fpm'
+    ansible.builtin.service:
+      name: 'php-fpm'
+      state: 'restarted'
+
   tags:
     - 'nextcloud'
     - 'nextcloud:apps'
