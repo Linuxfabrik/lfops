@@ -3,9 +3,6 @@ grav__install_dir: '/var/www/html/{{ grav__url }}'
 # -----------------------------------------------------------------------------
 
 grav__apache_httpd__mods__dependent_var:
-  - filename: 'cgi'
-    enabled: true
-    state: 'present'
   - filename: 'proxy_fcgi'
     enabled: true
     state: 'present'
