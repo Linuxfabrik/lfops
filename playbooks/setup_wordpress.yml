@@ -60,7 +60,7 @@
         - 'not wordpress__skip_php | default(false)'
 
     - role: 'linuxfabrik.lfops.apache_httpd'
-      apache_httpd__mods__dependent_var: '{{ wordpress__apache_httpd__mods__dependent_var }}'
+      apache_httpd__mods__dependent_var: '{{ wordpress__apache_httpd__mods__dependent_var | d([]) }}'
       apache_httpd__vhosts__dependent_var: '{{ wordpress__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
         - 'not wordpress__skip_apache_httpd | default(false)'
