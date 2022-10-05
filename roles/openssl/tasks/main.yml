@@ -1,4 +1,4 @@
-- name: 'Install openssl -y'
+- name: 'Install OpenSSL'
   ansible.builtin.package:
     name: 'openssl'
     state: 'present'
