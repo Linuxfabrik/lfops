@@ -6,7 +6,7 @@ The role heavily relies on the [linux_system_roles.network Role](https://github.
 
 Runs on
 
-* RHEL 7 (and compatible) restriction: ip.ipv6_disabled is not supported by initscripts
+* RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
 
 
@@ -25,6 +25,8 @@ Runs on
 ## Role Variables
 
 Have a look at the available role variables from the [linux_system_roles.network Role](https://github.com/linux-system-roles/network/blob/main/README.md).
+
+On RHEL 7 `ipv6_disabled` is not supported.
 
 Example:
 
