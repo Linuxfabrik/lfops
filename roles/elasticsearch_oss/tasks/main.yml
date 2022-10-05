@@ -6,4 +6,17 @@
       state: 'present'
 
   tags:
-    - 'elasticsearch-oss'
+    - 'elasticsearch_oss'
+
+
+- block:
+
+  - name: 'systemctl {{ elasticsearch_oss__service_enabled | bool | ternary("enable", "disable") }} --now elasticsearch.service'
+    ansible.builtin.systemd:
+      name: 'elasticsearch.service'
+      enabled: '{{ elasticsearch_oss__service_enabled }}'
+      state: '{{ elasticsearch_oss__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'elasticsearch_oss'
+    - 'elasticsearch_oss:state'
