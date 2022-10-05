@@ -1,0 +1,7 @@
+- name: 'Manage and configure the Elasticsearch OSS Repository'
+  hosts:
+    - 'lfops_repo_elasticsearch_oss'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_elasticsearch_oss'

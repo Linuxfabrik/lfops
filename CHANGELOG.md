@@ -95,6 +95,7 @@ New features:
 * Role: crypto_policy
 * Role: dnf_makecache
 * Role: docker
+* Role: elasticsearch_oss
 * Role: exoscale_vm
 * Role: fail2ban
 * Role: firewall
@@ -145,6 +146,7 @@ New features:
 * Role: repo_baseos
 * Role: repo_collabora_code
 * Role: repo_docker
+* Role: repo_elasticsearch_oss
 * Role: repo_gitlab_ce
 * Role: repo_grafana
 * Role: repo_icinga

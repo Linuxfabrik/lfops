@@ -1,0 +1,9 @@
+- block:
+
+  - name: 'Install elasticsearch-oss'
+    ansible.builtin.package:
+      name: 'elasticsearch-oss'
+      state: 'present'
+
+  tags:
+    - 'elasticsearch-oss'
