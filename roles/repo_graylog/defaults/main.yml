@@ -1,1 +1,2 @@
 repo_graylog__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+repo_graylog__version: '4.3'
