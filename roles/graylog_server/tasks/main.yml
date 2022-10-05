@@ -22,7 +22,7 @@
       persistent: yes
 
   tags:
-    - 'graylog-server'
+    - 'graylog_server'
 
 
 - block:
@@ -36,9 +36,24 @@
       mode: 0o644
     notify: 'graylog: restart graylog-server'
 
+  - name: 'Set "cluster.name" setting for Elasticsearch'
+    ansible.builtin.lineinfile:
+      path: '/etc/elasticsearch/elasticsearch.yml'
+      regexp: 'cluster.name:'
+      line: 'cluster.name: graylog'
+    when:
+      - 'graylog_server__search_engine == "elasticsearch"'
+
+  - name: 'Set "action.auto_create_index" setting for Elasticsearch'
+    ansible.builtin.lineinfile:
+      path: '/etc/elasticsearch/elasticsearch.yml'
+      line: 'action.auto_create_index: false'
+    when:
+      - 'graylog_server__search_engine == "elasticsearch"'
+
   tags:
-    - 'graylog-server'
-    - 'graylog-server:configure'
+    - 'graylog_server'
+    - 'graylog_server:configure'
 
 
 - block:
@@ -50,5 +65,5 @@
       state: '{{ graylog_server__service_enabled | bool | ternary("started", "stopped") }}'
 
   tags:
-    - 'graylog-server'
-    - 'graylog-server:state'
+    - 'graylog_server'
+    - 'graylog_server:state'
