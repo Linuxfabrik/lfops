@@ -4,6 +4,7 @@ This role installs and configures [FreeIPA](https://www.freeipa.org/) as a clien
 
 Runs on
 
+* RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
 
 
