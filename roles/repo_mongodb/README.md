@@ -23,7 +23,7 @@ Runs on
 Example:
 ```yaml
 # mandatory
-repo_mongodb__version: 6.0
+repo_mongodb__version: '6.0'
 ```
 
 

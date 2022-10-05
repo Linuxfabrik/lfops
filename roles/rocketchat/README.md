@@ -36,7 +36,7 @@ Example:
 ```yaml
 # mandatory
 rocketchat__npm_version: '6.14.17'
-rocketchat__root_url: 'http://rocketchat.example.com:3000'
+rocketchat__root_url: 'https://rocketchat.example.com'
 ```
 
 
