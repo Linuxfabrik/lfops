@@ -72,6 +72,17 @@
       loop_var: 'certificate'
     when: 'certificate is not in acme_sh__list_result.stdout'
 
+  - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert ...'
+    ansible.builtin.command: |-
+      /opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert \
+      --domain '{{ item }}' \
+      --ca-file '/etc/pki/tls/certs/{{ item }}-chain.crt' \
+      --cert-file '/etc/pki/tls/certs/{{ item }}.crt' \
+      --fullchain-file '/etc/pki/tls/certs/{{ item }}-fullchain.crt' \
+      --key-file '/etc/pki/tls/private/{{ item }}.key' \
+      --reloadcmd '{{ acme_sh__reload_cmd }}'
+    loop: '{{ acme_sh__certificates }}'
+
   tags:
     - 'acme_sh'
     - 'acme_sh:certificates'
