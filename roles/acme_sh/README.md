@@ -44,12 +44,14 @@ acme_sh__certificates:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `acme_sh__key_length` | Key length in bits of the certificates to issue. | `4096` |
 | `acme_sh__reload_cmd` | Command to execute after issue/renew to reload the server. | `'systemctl reload httpd'` |
 | `acme_sh__timer_enabled` | Enables or disables the weekly acme.sh timer, analogous to `systemctl enable/disable --now`. | `true` |
 
 Example:
 ```yaml
 # optional
+acme_sh__key_length: 4096
 acme_sh__reload_cmd: 'systemctl reload httpd'
 acme_sh__timer_enabled: true
 ```

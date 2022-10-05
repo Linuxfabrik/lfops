@@ -16,4 +16,5 @@
     /opt/acme.sh/acme.sh --config-home /etc/acme.sh --issue \
     --domain '{{ certificate }}' \
     --webroot /var/www/html/letsencrypt \
+    --keylength '{{ acme_sh__key_length }}'
     --server https://acme-v02.api.letsencrypt.org/directory
