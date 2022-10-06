@@ -137,11 +137,11 @@ nextcloud__apache_httpd__vhosts__dependent_var:
         </IfModule>
 
         # Add cache control for static resources
-        <FilesMatch "\.(css|js|svg|gif|png|jpg|ico|wasm|tflite)$">
+        <FilesMatch "\.(css|gif|ico|jpg|js|png|svg|tflite|wasm)$">
           Header set Cache-Control "max-age=15778463"
         </FilesMatch>
 
-        <FilesMatch "\.(css|js|svg|gif|png|jpg|ico|wasm|tflite)(\?v=.*)?$">
+        <FilesMatch "\.(css|gif|ico|jpg|js|png|svg|tflite|wasm)(\?v=.*)?$">
           Header set Cache-Control "max-age=15778463, immutable"
         </FilesMatch>
 

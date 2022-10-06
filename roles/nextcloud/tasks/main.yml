@@ -14,10 +14,12 @@
 
 - block:
 
-  - name: 'Install bzip2 samba-client'
+  - name: 'Install bzip2 jq openldap-clients samba-client'
     ansible.builtin.package:
       name:
         - 'bzip2'
+        - 'jq'
+        - 'openldap-clients'
         - 'samba-client'
       state: 'present'
 

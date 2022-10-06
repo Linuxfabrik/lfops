@@ -1,6 +1,9 @@
 # Ansible Role linuxfabrik.lfops.nextcloud
 
-This role installs Nextcloud including the tools needed by the most popular business plugins. By default, the latest available version is installed.
+This role installs Nextcloud including the tools needed by the most popular business plugins. By default, the latest available version is installed. You can choose wether to use
+* local block storage (default)
+* S3 object storage backend (by providing `nextcloud__storage_backend_s3`)
+* Swift object storage backend (by providing `nextcloud__storage_backend_swift`)
 
 After installing Nextcloud, head over to your http(s)://nextcloud/index.php/settings/admin to set or verify your email server configuration. Afterwards, use the "Send email" button below the form to verify your settings.
 
@@ -87,8 +90,8 @@ nextcloud__users:
 | `nextcloud__php__ini_upload_max_filesize__group_var` / `nextcloud__php__ini_upload_max_filesize__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'10000M'` |
 | `nextcloud__php__modules__group_var` / `nextcloud__php__modules__host_var` | List of PHP modules that need to be installed via the standard package manager. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
 | `nextcloud__proxyconfig` | List of Key/Value pairs for configuring Nextcloud behind a reverse proxy via OCC. The IP addresses are those of the reverse proxy. | unset. Have a look at the example below on how to configure. |
-| `nextcloud__storage_backend_s3` | S3 Storage Backend. If ommitted, local storage is used. | unset. Have a look at the example below on how to configure. |
-| `nextcloud__storage_backend_swift` | Swift Storage Backend. If ommitted, local storage is used. | unset. Have a look at the example below on how to configure. |
+| `nextcloud__storage_backend_s3` | S3 Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. | unset. Have a look at the example below on how to configure. |
+| `nextcloud__storage_backend_swift` | Swift Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. | unset. Have a look at the example below on how to configure. |
 | `nextcloud__sysconfig` | List of Key/Value pairs for configuring Nextcloud itself via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
 | `nextcloud__timer_app_update_enabled` | Enables/disables Systemd-Timer for updating Apps. | `true` |
 | `nextcloud__timer_jobs_enabled` | Enables/disables Systemd-Timer for running OCC background jobs. | `true` |
@@ -122,29 +125,28 @@ nextcloud__proxyconfig:
   - { key: 'overwritewebroot',  value: '--value=/' }
   - { key: 'trusted_proxies',   value: '0 --value=192.0.2.7' }
 
-# if not local storage, then one of s3 ...
+# if not local storage, then either one of s3 ...
 nextcloud__storage_backend_s3:
   autocreate: true
-  bucket: 'walle'
+  bucket: 'mybucket'
   hostname: 's3.pub1.infomaniak.cloud'
   key: '428fc7e2-b532-4704-9df0-a764c7253a15'
   region: 'us-east-1'
-  secret: '466fdd16-6a6c-4b15-a5d2-9e6c1dd602ee'
+  secret: 'linuxfabrik'
   use_ssl: true
   use_path_style: true
 
 # ... or swift
 nextcloud__storage_backend_swift:
   autocreate: true
+  url: 'https://api.pub1.infomaniak.cloud/identity/v3'
   bucket: 'mybucket'
-  region_name: 'us-east-1'
-  scope_project_domain_name: 'scope_project_domain_name'
-  scope_project_name: 'scope_project_name'
-  service_name: 'service_name'
-  tenant_name: 'tenant_name'
-  url: 'https://swift.example.com:5000/v3'
-  user_domain_name: 'default'
-  user_name: 'swift'
+  region: 'dc3-a'
+  scope_project_domain_name: 'Default'
+  scope_project_name: 'PCP-XXXXXX'
+  service_name: 'swift'
+  user_domain_name: 'Default'
+  user_name: 'PCU-XXXXXX'
   user_password: 'linuxfabrik'
 
 nextcloud__timer_app_update_enabled: true

@@ -20,14 +20,30 @@ $CONFIG = array (
     'objectstore' => [
         'class' => 'OC\\Files\\ObjectStore\\S3',
         'arguments' => [
+{% if nextcloud__storage_backend_s3['autocreate'] is defined %}
             'autocreate' => {{ nextcloud__storage_backend_s3['autocreate'] | lower }},
+{% endif %}
+{% if nextcloud__storage_backend_s3['bucket'] is defined %}
             'bucket' => '{{ nextcloud__storage_backend_s3['bucket'] }}',
+{% endif %}
+{% if nextcloud__storage_backend_s3['hostname'] is defined %}
             'hostname' => '{{ nextcloud__storage_backend_s3['hostname'] }}',
+{% endif %}
+{% if nextcloud__storage_backend_s3['key'] is defined %}
             'key' => '{{ nextcloud__storage_backend_s3['key'] }}',
+{% endif %}
+{% if nextcloud__storage_backend_s3['region'] is defined %}
             'region' => '{{ nextcloud__storage_backend_s3['region'] }}',
+{% endif %}
+{% if nextcloud__storage_backend_s3['secret'] is defined %}
             'secret' => '{{ nextcloud__storage_backend_s3['secret'] }}',
+{% endif %}
+{% if nextcloud__storage_backend_s3['use_ssl'] is defined %}
             'use_ssl' => {{ nextcloud__storage_backend_s3['use_ssl'] | lower }},
+{% endif %}
+{% if nextcloud__storage_backend_s3['use_path_style'] is defined %}
             'use_path_style' => {{ nextcloud__storage_backend_s3['use_path_style'] | lower }},
+{% endif %}
         ],
     ],
 );
@@ -39,25 +55,47 @@ $CONFIG = array (
     'objectstore' => [
         'class' => 'OC\\Files\\ObjectStore\\Swift',
         'arguments' => [
+{% if nextcloud__storage_backend_swift['autocreate'] is defined %}
             'autocreate' => {{ nextcloud__storage_backend_swift['autocreate'] | lower }},
+{% endif %}
+{% if nextcloud__storage_backend_swift['bucket'] is defined %}
             'bucket' => '{{ nextcloud__storage_backend_swift['bucket'] }}',
+{% endif %}
             'scope' => [
                 'project' => [
+{% if nextcloud__storage_backend_swift['scope_project_name'] is defined %}
                     'name' => '{{ nextcloud__storage_backend_swift['scope_project_name'] }}',
+{% endif %}
                     'domain' => [
+{% if nextcloud__storage_backend_swift['scope_project_domain_name'] is defined %}
                         'name' => '{{ nextcloud__storage_backend_swift['scope_project_domain_name'] }}',
+{% endif %}
                     ],
                 ],
             ],
+{% if nextcloud__storage_backend_swift['service_name'] is defined %}
             'serviceName' => '{{ nextcloud__storage_backend_swift['service_name'] }}',
+{% endif %}
+{% if nextcloud__storage_backend_swift['tenant_name'] is defined %}
             'tenantName' => '{{ nextcloud__storage_backend_swift['tenant_name'] }}',
-            'region' => '{{ nextcloud__storage_backend_swift['region_name'] }}',
+{% endif %}
+{% if nextcloud__storage_backend_swift['region'] is defined %}
+            'region' => '{{ nextcloud__storage_backend_swift['region'] }}',
+{% endif %}
+{% if nextcloud__storage_backend_swift['url'] is defined %}
             'url' => '{{ nextcloud__storage_backend_swift['url'] }}',
+{% endif %}
             'user' => [
+{% if nextcloud__storage_backend_swift['user_name'] is defined %}
                 'name' => '{{ nextcloud__storage_backend_swift['user_name'] }}',
+{% endif %}
+{% if nextcloud__storage_backend_swift['user_password'] is defined %}
                 'password' => '{{ nextcloud__storage_backend_swift['user_password'] }}',
+{% endif %}
                 'domain' => [
+{% if nextcloud__storage_backend_swift['user_domain_name'] is defined %}
                     'name' => '{{ nextcloud__storage_backend_swift['user_domain_name'] }}',
+{% endif %}
                 ],
             ],
         ],
