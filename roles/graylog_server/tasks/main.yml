@@ -51,6 +51,21 @@
     when:
       - 'graylog_server__search_engine == "elasticsearch"'
 
+  - name: 'Set "cluster.name" setting for Opensearch'
+    ansible.builtin.lineinfile:
+      path: '/etc/opensearch/opensearch.yml'
+      regexp: 'cluster.name:'
+      line: 'cluster.name: graylog'
+    when:
+      - 'graylog_server__search_engine == "opensearch"'
+
+  - name: 'Set "action.auto_create_index" setting for Opensearch'
+    ansible.builtin.lineinfile:
+      path: '/etc/opensearch/opensearch.yml'
+      line: 'action.auto_create_index: false'
+    when:
+      - 'graylog_server__search_engine == "opensearch"'
+
   tags:
     - 'graylog_server'
     - 'graylog_server:configure'
