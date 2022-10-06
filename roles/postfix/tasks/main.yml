@@ -51,6 +51,16 @@
       - regexp: '(?i)^#?smtp_sasl_password_maps ='
         line: 'smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd'
 
+      - regexp: '(?i)^#?smtp_tls_wrappermode ='
+        line: 'smtp_tls_wrappermode = {{ postfix__smtp_tls_wrappermode | bool | ternary("yes", "no") }}'
+        when:
+          - 'postfix__smtp_tls_wrappermode'
+
+      - regexp: '(?i)^#?smtp_tls_security_level ='
+        line: 'smtp_tls_security_level = {{ postfix__smtp_tls_security_level }}'
+        when:
+          - 'postfix__smtp_tls_security_level is defined and postfix__smtp_tls_security_level | length'
+
   - name: 'Create plain sasl_passwd file'
     ansible.builtin.template:
       src: 'etc/postfix/sasl_passwd.j2'

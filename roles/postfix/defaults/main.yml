@@ -3,3 +3,4 @@ postfix__relayhost_password: ''
 postfix__service_enabled: true
 postfix__service_state: 'started'
 postfix__smtp_sasl_auth_enable: true
+postfix__smtp_tls_wrappermode: false
