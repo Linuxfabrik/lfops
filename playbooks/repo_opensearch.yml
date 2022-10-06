@@ -1,0 +1,7 @@
+- name: 'Manage and configure the Opensearch repository'
+  hosts:
+    - 'lfops_repo_opensearch'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_opensearch'

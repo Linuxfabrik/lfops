@@ -1,0 +1,23 @@
+- block:
+
+  - name: 'Install opensearch {{ opensearch__version }}'
+    ansible.builtin.package:
+      name:
+        - 'opensearch-{{ opensearch__version }}'
+      state: 'present'
+
+  tags:
+    - 'opensearch'
+
+
+- block:
+
+  - name: 'systemctl {{ opensearch__service_enabled | bool | ternary("enable", "disable") }} --now opensearch.service'
+    ansible.builtin.service:
+      name: 'opensearch.service'
+      enabled: '{{ opensearch__service_enabled }}'
+      state: '{{ opensearch__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'opensearch'
+    - 'opensearch:state'

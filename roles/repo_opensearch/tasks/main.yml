@@ -1,0 +1,10 @@
+- block:
+
+  - name: 'Download Opensearch {{ repo_opensearch__version }} Repository'
+    ansible.builtin.get_url:
+      url: 'https://artifacts.opensearch.org/releases/bundle/opensearch/{{ repo_opensearch__version }}/opensearch-{{ repo_opensearch__version }}.repo'
+      dest: '/etc/yum.repos.d/opensearch-1.x.repo'
+      mode: 0o644
+
+  tags:
+    - 'repo_opensearch'
