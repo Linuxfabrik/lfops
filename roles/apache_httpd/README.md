@@ -246,7 +246,7 @@ This role creates a vHost named `localhost` by default. Have a look at the [defa
 | `virtualhost_ip` | String. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | * app: `'*'`<br> * localhost: `'*'`<br> * proxy: `'*'`<br> * raw: `'*'`<br> * redirect: `'*'` |
 | `virtualhost_port` | number. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | * app: `443`<br> * localhost: `443`<br> * proxy: `443`<br> * raw: `443`<br> * redirect: `80` |
 
-Example: [Have a look here](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md). 
+Example: [Have a look here](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md).
 
 
 
@@ -270,7 +270,7 @@ This module is for flexible logging of client requests. Logs are written in a cu
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__mod_log_config_custom_log` | String. One of<br> * ``agent``<br> * ``combined``<br> * ``common``<br> * ``debug``<br> * ``fail2ban``<br> * ``referer``<br> * ``vhost_combined``<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog) | `'logs/access.log combined'` |
+| `apache_httpd__mod_log_config_custom_log` | String. One of<br> * ``agent``<br> * ``combined``<br> * ``common``<br> * ``debug``<br> * ``fail2ban``<br> * ``referer``<br> * ``vhost_combined``<br>[Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog) | unset |
 
 Example:
 ```yaml

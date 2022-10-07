@@ -395,9 +395,6 @@ apache_httpd__conf_trace_enable: 'Off'
 # mod_dir
 apache_httpd__mod_dir_directory_index: 'index.html index.htm index.txt'
 
-# mod_log_config
-apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
-
 # mod_common_listen
 apache_httpd__mpm_common_listen:
   - 80
