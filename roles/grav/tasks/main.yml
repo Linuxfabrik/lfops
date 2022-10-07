@@ -23,41 +23,6 @@
     when:
       - 'not grav__installed.stat.exists'
 
-    # https://learn.getgrav.org/17/troubleshooting/permissions
-
-  - name: 'chown -R apache:apache {{ grav__install_dir | quote }}'
-    ansible.builtin.file:
-      path: '{{ grav__install_dir | quote }}'
-      owner: 'apache'
-      group: 'apache'
-      recurse: true
-
-    # todo: "rw" just necessary if using the Grav admin plugin, otherwise "r" would be sufficient
-
-  - name: 'find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;'
-    ansible.builtin.command: |
-      find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;
-    register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
-
-  - name: 'find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;'
-    ansible.builtin.command: |
-      find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;
-    register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
-
-  - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;'
-    ansible.builtin.command: |
-      find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;
-    register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
-
-  - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;'
-    ansible.builtin.command: |
-      find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;
-    register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
-
   tags:
     - 'grav'
 
@@ -151,3 +116,51 @@
   tags:
     - 'grav'
     - 'grav:user'
+
+
+- block:
+
+    # https://learn.getgrav.org/17/troubleshooting/permissions
+
+  - name: 'chown -R apache:apache {{ grav__install_dir | quote }}'
+    ansible.builtin.file:
+      path: '{{ grav__install_dir | quote }}'
+      owner: 'apache'
+      group: 'apache'
+      recurse: true
+
+  - name: 'restorecon -Fvr ...'
+    ansible.builtin.command: 'restorecon -Fvr {{ item }}'
+    register: 'grav__restorecon_grav_result'
+    changed_when: 'grav__restorecon_grav_result["stdout"] | length'
+    loop:
+      - '{{ grav__install_dir }}'
+
+    # todo: "rw" just necessary if using the Grav admin plugin, otherwise "r" would be sufficient
+
+  - name: 'find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;'
+    ansible.builtin.command: |
+      find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;
+    register: 'grav__chmod_dirs_result'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+
+  - name: 'find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;'
+    ansible.builtin.command: |
+      find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;
+    register: 'grav__chmod_dirs_result'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+
+  - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;'
+    ansible.builtin.command: |
+      find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;
+    register: 'grav__chmod_dirs_result'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+
+  - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;'
+    ansible.builtin.command: |
+      find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;
+    register: 'grav__chmod_dirs_result'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+
+  tags:
+    - 'grav'

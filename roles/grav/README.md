@@ -43,7 +43,7 @@ grav__users:
     fullname: 'Firstname Lastname'
     password: 'linuxfabrik'
     email: 'firstname.lastname@example.com'
-    permissions: 'b'`
+    permissions: 'b'
 ```
 
 

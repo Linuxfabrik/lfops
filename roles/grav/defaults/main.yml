@@ -1,5 +1,13 @@
 grav__install_dir: '/var/www/html/{{ grav__url }}'
 
+grav__on_calendar_selfupgrade: '22:{{ 59 | random(seed=inventory_hostname) }}'
+grav__on_calendar_update: '23:{{ 59 | random(seed=inventory_hostname) }}'
+
+grav__skip_admin: false
+
+grav__timer_selfupgrade_enabled: true
+grav__timer_update_enabled: true
+
 # -----------------------------------------------------------------------------
 
 grav__apache_httpd__mods__dependent_var:
@@ -27,27 +35,18 @@ grav__apache_httpd__vhosts__dependent_var:
     conf_document_root: '{{ grav__install_dir }}'
     conf_options: 'FollowSymLinks'
 
-grav__on_calendar_selfupgrade: '22:{{ 59 | random(seed=inventory_hostname) }}'
-grav__on_calendar_update: '23:{{ 59 | random(seed=inventory_hostname) }}'
 
 grav__php__modules__dependent_var:
   - name: 'php-gd'
     state: 'present'
 
-# todo: "rw" just necessary if using the Grav admin plugin, otherwise "r" would be sufficient
-grav__selinux__fcontexts__dependent_var:
-  - setype: 'httpd_sys_rw_content_t'
-    target: '{{ grav__install_dir }}(/.*)?'
-    path: '{{ grav__install_dir }}'
-    state: 'present'
 
 # todo: just necessary if using the Grav admin plugin
 grav__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
     value: 'on'
-
-grav__skip_admin: false
-
-grav__timer_selfupgrade_enabled: true
-grav__timer_update_enabled: true
-
+# todo: "rw" just necessary if using the Grav admin plugin, otherwise "r" would be sufficient
+grav__selinux__fcontexts__dependent_var:
+  - setype: 'httpd_sys_rw_content_t'
+    target: '{{ grav__install_dir }}(/.*)?'
+    state: 'present'

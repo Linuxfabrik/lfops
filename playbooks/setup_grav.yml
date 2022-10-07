@@ -36,8 +36,6 @@
       when:
         - 'not grav__skip_apache_httpd | default(false)'
 
-    - role: 'linuxfabrik.lfops.grav'
-
     - role: 'linuxfabrik.lfops.selinux'
       selinux__booleans__dependent_var:
         - '{{ grav__selinux__booleans__dependent_var }}'
@@ -46,3 +44,6 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_grav__skip_selinux | default(false)'
+
+    - role: 'linuxfabrik.lfops.grav'
+
