@@ -1,0 +1,17 @@
+- block:
+
+  - name: 'rpm --import https://repo.linuxfabrik.ch/linuxfabrik.key'
+    ansible.builtin.rpm_key:
+      state: 'present'
+      key: 'https://repo.linuxfabrik.ch/linuxfabrik.key'
+
+  - name: 'Deploy /etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo.j2'
+      dest: '/etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'repo_monitoring_plugins'

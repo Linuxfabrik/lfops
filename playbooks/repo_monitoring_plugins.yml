@@ -1,0 +1,7 @@
+- name: 'Configure the Linuxfabrik Monitoring Plugins repository'
+  hosts:
+    - 'lfops_repo_monitoring_plugins'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_monitoring_plugins'

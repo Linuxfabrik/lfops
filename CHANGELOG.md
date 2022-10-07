@@ -151,6 +151,7 @@ New features:
 * Role: repo_influxdb
 * Role: repo_mariadb
 * Role: repo_mongodb
+* Role: repo_monitoring_plugins
 * Role: repo_mydumper
 * Role: repo_remi
 * Role: rocketchat

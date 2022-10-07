@@ -1,0 +1,4 @@
+# {{ ansible_managed }}
+# 2022100601
+
+deb [signed-by=/etc/apt/trusted.gpg.d/linuxfabrik.asc] https://repo.linuxfabrik.ch/monitoring-plugins/{{ ansible_facts["distribution"] | lower }}/ {{ ansible_facts["distribution_release"] }}-release main

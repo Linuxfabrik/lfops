@@ -1,0 +1,18 @@
+- block:
+
+  - name: 'Add Linuxfabrik apt repository key'
+    ansible.builtin.get_url:
+      url: 'https://repo.linuxfabrik.ch/linuxfabrik.key'
+      dest: '/etc/apt/trusted.gpg.d/linuxfabrik.asc'
+      mode: 0o644
+
+  - name: 'Deploy /etc/apt/sources.list.d/linuxfabrik-monitoring-plugins.list'
+    ansible.builtin.template:
+      src: 'etc/apt/sources.list.d/linuxfabrik-monitoring-plugins.list.j2'
+      dest: '/etc/apt/sources.list.d/linuxfabrik-monitoring-plugins.list'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'repo_monitoring_plugins'
