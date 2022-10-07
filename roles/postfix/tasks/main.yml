@@ -53,13 +53,15 @@
 
       - regexp: '(?i)^#?smtp_tls_wrappermode ='
         line: 'smtp_tls_wrappermode = {{ postfix__smtp_tls_wrappermode | bool | ternary("yes", "no") }}'
-        when:
-          - 'postfix__smtp_tls_wrappermode'
 
-      - regexp: '(?i)^#?smtp_tls_security_level ='
-        line: 'smtp_tls_security_level = {{ postfix__smtp_tls_security_level }}'
-        when:
-          - 'postfix__smtp_tls_security_level is defined and postfix__smtp_tls_security_level | length'
+  - name: 'Ensure smtp_tls_security_level is present in /etc/postfix/main.cf'
+    ansible.builtin.lineinfile:
+      path: '/etc/postfix/main.cf'
+      regexp: '(?i)^#?smtp_tls_security_level ='
+      line: 'smtp_tls_security_level = {{ postfix__smtp_tls_security_level }}'
+    notify: 'postfix: restart postfix'
+    when:
+      - 'postfix__smtp_tls_security_level is defined and postfix__smtp_tls_security_level | length'
 
   - name: 'Create plain sasl_passwd file'
     ansible.builtin.template:
