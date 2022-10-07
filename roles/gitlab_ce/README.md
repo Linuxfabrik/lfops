@@ -41,7 +41,7 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 | -------- | ----------- | ------------- |
 | `gitlab_ce__on_calendar` | The `OnCalendar` definition for the GitLab Backup. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 23:{{ 59 \| random(seed=inventory_hostname) }}'` |
 | `gitlab_ce__rb_git_data_dirs_default_path` | For setting up different data storing directory. If missing, the directory will be created by GitLab. If you want to use a single non-default directory to store git data use a path that doesn't contain symlinks. [Docs](https://docs.gitlab.com/omnibus/settings/configuration.html#store-git-data-in-an-alternative-directory) | unset |
-| `gitlab_ce__rb_gitlab_rails_backup_keep_time` | The duration in seconds to keep backups before they are allowed to be deleted | `86400` |
+| `gitlab_ce__rb_gitlab_rails_backup_keep_time` | The duration in seconds to keep backups before they are allowed to be deleted | `86400` (24h) |
 | `gitlab_ce__rb_gitlab_rails_backup_path` | Backup Settings. [Docs](https://docs.gitlab.com/omnibus/settings/backups.html) | `'/backup/gitlab'` |
 | `gitlab_ce__rb_gitlab_rails_extra_matomo_site_id` | Extra customization for Matomo | unset |
 | `gitlab_ce__rb_gitlab_rails_extra_matomo_url` | Extra customization for Matomo | unset |
@@ -53,13 +53,13 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 | `gitlab_ce__rb_gitlab_rails_omniauth_enabled` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
 | `gitlab_ce__rb_gitlab_rails_omniauth_external_providers` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
 | `gitlab_ce__rb_gitlab_rails_omniauth_providers` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
-| `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_bantime` | Ban an IP for x seconds after too many auth attempts | `3600` |
+| `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_bantime` | Ban an IP for x seconds after too many auth attempts | `3600` (1h) |
 | `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled` |  | `true` |
 | `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_findtime` | Reset the auth attempt counter per IP after x seconds | `60` |
 | `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_ip_whitelist` |  | `['127.0.0.1']` |
 | `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_maxretry` | Limit the number of Git HTTP authentication attempts per IP | `10` |
 | `gitlab_ce__rb_gitlab_rails_time_zone` | [Docs](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/gitlab.yml.md) | `'Europe/Zurich'` |
-| `gitlab_ce__rb_nginx_listen_https` | Override only if your reverse proxy internally communicates over HTTP. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl) | unset |
+| `gitlab_ce__rb_nginx_listen_https` | Set this to `false` only if your reverse proxy internally communicates over HTTP. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl) | unset |
 | `gitlab_ce__rb_nginx_listen_port` | Override only if you use a reverse proxy. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#setting-the-nginx-listen-port) | unset |
 | `gitlab_ce__rb_registry_nginx_enable` | Registry NGINX | unset |
 | `gitlab_ce__rb_registry_nginx_listen_port` | Registry NGINX | unset |
