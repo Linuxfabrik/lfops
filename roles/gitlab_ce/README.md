@@ -59,6 +59,7 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 | `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_ip_whitelist` |  | `['127.0.0.1']` |
 | `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_maxretry` | Limit the number of Git HTTP authentication attempts per IP | `10` |
 | `gitlab_ce__rb_gitlab_rails_time_zone` | [Docs](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/gitlab.yml.md) | `'Europe/Zurich'` |
+| `gitlab_ce__rb_letsencrypt_enable` | If GitLab should manage Let's Encrypt certificates itself | `false` |
 | `gitlab_ce__rb_nginx_listen_https` | Set this to `false` only if your reverse proxy internally communicates over HTTP. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl) | unset |
 | `gitlab_ce__rb_nginx_listen_port` | Override only if you use a reverse proxy. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#setting-the-nginx-listen-port) | unset |
 | `gitlab_ce__rb_registry_external_url` | The URL of the GitLab Container registry. | unset |
@@ -105,9 +106,10 @@ gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_maxretry: 10
 
 gitlab_ce__rb_gitlab_rails_time_zone: 'Europe/Zurich'
 
+gitlab_ce__rb_letsencrypt_enable: false
+
 gitlab_ce__rb_nginx_listen_port: '80'
 gitlab_ce__rb_nginx_listen_port: false
-
 gitlab_ce__rb_registry_external_url: 'https://registry.example.com'
 gitlab_ce__rb_registry_nginx_enable: true
 gitlab_ce__rb_registry_nginx_listen_https: false

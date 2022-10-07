@@ -2525,7 +2525,7 @@ registry_nginx['listen_https'] = {{ gitlab_ce__rb_registry_nginx_listen_https }}
 ################################################################################
 # Let's Encrypt integration
 ################################################################################
-# letsencrypt['enable'] = nil
+letsencrypt['enable'] = '{{ gitlab_ce__rb_letsencrypt_enable }}'
 # letsencrypt['contact_emails'] = [] # This should be an array of email addresses to add as contacts
 # letsencrypt['group'] = 'root'
 # letsencrypt['key_size'] = 2048
