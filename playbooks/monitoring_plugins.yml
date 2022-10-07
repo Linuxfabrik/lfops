@@ -7,12 +7,16 @@
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
-        - 'not monitoring_plugins__skip_repo_epel | d(false)'
+        - 'not monitoring_plugins__skip_repo_epel | d(true)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{ monitoring_plugins__python__modules__dependent_var | d([]) }}'
       when:
         - 'ansible_facts["os_family"] != "Windows"'
-        - 'not monitoring_plugins__skip_python | d(false)'
+        - 'not monitoring_plugins__skip_python | d(true)'
+
+    - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
+      when:
+        - 'not monitoring_plugins__skip_repo_monitoring_plugins | d(false)'
 
     - role: 'linuxfabrik.lfops.monitoring_plugins'

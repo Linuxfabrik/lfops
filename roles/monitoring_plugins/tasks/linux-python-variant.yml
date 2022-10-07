@@ -1,0 +1,62 @@
+- block:
+
+  - name: 'Clone the lib git repo to localhost (version: {{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }})'
+    ansible.builtin.git:
+      repo: '{{ monitoring_plugins__lib_repo_url }}'
+      dest: '/tmp/ansible.lib-repo'
+      version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
+      depth: 1
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  rescue:
+
+    - name: 'Remove the old repo and clone again'
+      ansible.builtin.file:
+        path: '/tmp/ansible.lib-repo'
+        state: 'absent'
+      delegate_to: 'localhost'
+
+    - name: 'Clone the lib git repo to localhost (version: {{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }})'
+      ansible.builtin.git:
+        repo: '{{ monitoring_plugins__lib_repo_url }}'
+        dest: '/tmp/ansible.lib-repo'
+        version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
+        depth: 1
+      delegate_to: 'localhost'
+      run_once: true
+      check_mode: false # run task even if `--check` is specified
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Ensure the lib folder exists (Linux)'
+    ansible.builtin.file:
+      path: '/usr/lib64/nagios/plugins/lib'
+      state: 'directory'
+      mode: 0o755
+
+  - name: 'Copy lib for the Linuxfabrik monitoring plugins (Linux)'
+    ansible.builtin.copy:
+      src: '{{ item }}'
+      dest: '/usr/lib64/nagios/plugins/lib'
+      owner: 'root'
+      mode: 0o755
+    with_fileglob:
+      - '/tmp/ansible.lib-repo/*{{ monitoring_plugins__python_version }}.py'
+      - '/tmp/ansible.lib-repo/__init__.py'
+
+  - name: 'Copy the Linuxfabrik monitoring plugins (Linux)'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}{{ monitoring_plugins__python_version }}'
+      dest: '/usr/lib64/nagios/plugins/{{ item }}'
+      owner: 'root'
+      mode: 0o755
+    loop: '{{ monitoring_plugins__plugin_list }}'
+
+  tags:
+    - 'monitoring_plugins'

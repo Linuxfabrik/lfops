@@ -161,6 +161,10 @@
 
 
     # === Monitoring ===
+    - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
+      when:
+        - 'not setup_basic__skip_repo_monitoring_plugins | d(false)'
+
     - role: 'linuxfabrik.lfops.monitoring_plugins'
       when:
         - 'not setup_basic__skip_monitoring_plugins | d(false)'

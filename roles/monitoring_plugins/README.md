@@ -48,6 +48,7 @@ Windows only: Since you cannot change files that are currently used by a process
 | `monitoring_plugins__icinga2_api_password` | The password of the `monitoring_plugins__icinga2_api_user`. This is required to schedule a downtime for Windows hosts. | unset |
 | `monitoring_plugins__icinga2_api_url` | The address of the Icinga2 master API. This is required to schedule a downtime for Windows hosts. | unset |
 | `monitoring_plugins__icinga2_api_user` | The Icinga2 API user. This is required to schedule a downtime for Windows hosts. Therefore, it needs to have the following permissions: `permissions = [ "actions/schedule-downtime", "actions/remove-downtime" ]` | unset |
+| `monitoring_plugins__linux_variant` | Linux only. Which variant of the monitoring plugins should be deployed? Possible options:<br> * `package`: Deploy the packages with the checks compiled by pyinstaller. This does not require Python on the system.<br> * `python`: Deploy the plain Python plugins. This requires Python to be installed. | `'package'` |
 | `monitoring_plugins__plugin_list` | Overwrite the automatically generated list of monitoring plugins that should be deployed. Note: This does not work for the compiled Nuitka plugins, as they are all packaged in a single zip-file. | unset |
 | `monitoring_plugins__python_version` | For which Python version should the monitoring plugins be deployed? Possible options:<br> * `3`: For Python 3<br> * `2`: For Python 2 | `3` |
 | `monitoring_plugins__repo_version` | Which version of the monitoring plugins should be deployed? Possible options:<br> * `latest`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).<br> * `main`: The development version. Use with care.<br> * A specific release, for example `2022030201`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases). | `'latest'` |
@@ -59,6 +60,7 @@ Example:
 monitoring_plugins__icinga2_api_password: 'linuxfabrik'
 monitoring_plugins__icinga2_api_url: 'https://192.0.2.3:5665/v1'
 monitoring_plugins__icinga2_api_user: 'downtime-api-user'
+monitoring_plugins__linux_variant: 'python'
 monitoring_plugins__plugin_list:
   - 'about-me'
   - 'cpu-usage'
