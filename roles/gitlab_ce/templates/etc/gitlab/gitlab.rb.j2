@@ -542,7 +542,7 @@ gitlab_rails['gitlab_email_display_name'] = '{{ gitlab_ce__rb_gitlab_rails_gitla
 
 ### OmniAuth Settings
 ###! Docs: https://docs.gitlab.com/ee/integration/omniauth.html
-{% if gitlab_ce__rb_gitlab_rails_omniauth_enabled is defined and gitlab_ce__rb_gitlab_rails_omniauth_enabled %}
+{% if gitlab_ce__rb_gitlab_rails_omniauth_enabled is defined and gitlab_ce__rb_gitlab_rails_omniauth_enabled | length %}
 gitlab_rails['omniauth_enabled'] = {{ gitlab_ce__rb_gitlab_rails_omniauth_enabled | string | lower }}
 gitlab_rails['omniauth_allow_single_sign_on'] = ['{{ gitlab_ce__rb_gitlab_rails_omniauth_allow_single_sign_on | join("', '") }}']
 # gitlab_rails['omniauth_sync_email_from_provider'] = 'saml'
@@ -671,7 +671,7 @@ git_data_dirs({
 # gitlab_rails['extra_one_trust_id'] = '_your_one_trust_id'
 # gitlab_rails['extra_google_tag_manager_nonce_id'] = '_your_google_tag_manager_id'
 # gitlab_rails['extra_bizible'] = false
-{% if gitlab_ce__rb_gitlab_rails_extra_matomo_url is defined and gitlab_ce__rb_gitlab_rails_extra_matomo_url %}
+{% if gitlab_ce__rb_gitlab_rails_extra_matomo_url is defined and gitlab_ce__rb_gitlab_rails_extra_matomo_url | length %}
 gitlab_rails['extra_matomo_url'] = '{{ gitlab_ce__rb_gitlab_rails_extra_matomo_url }}'
 gitlab_rails['extra_matomo_site_id'] = '{{ gitlab_ce__rb_gitlab_rails_extra_matomo_site_id }}'
 {% endif %}
@@ -683,7 +683,7 @@ gitlab_rails['extra_matomo_site_id'] = '{{ gitlab_ce__rb_gitlab_rails_extra_mato
 #   'PATH' => "/opt/gitlab/bin:/opt/gitlab/embedded/bin:/bin:/usr/bin"
 # }
 
-{% if gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled is defined and gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled %}
+{% if gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled is defined and gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled | length %}
 gitlab_rails['rack_attack_git_basic_auth'] = {
     'enabled' => {{ gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled | string | lower }},
     'ip_whitelist' => ["{{ gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_ip_whitelist | join('", "') }}"],
@@ -1471,13 +1471,13 @@ registry_external_url '{{ gitlab_ce__rb_registry_external_url }}'
 
 ##! **Override only if you use a reverse proxy**
 ##! Docs: https://docs.gitlab.com/omnibus/settings/nginx.html#setting-the-nginx-listen-port
-{% if gitlab_ce__rb_nginx_listen_port is defined and gitlab_ce__rb_nginx_listen_port %}
+{% if gitlab_ce__rb_nginx_listen_port is defined and gitlab_ce__rb_nginx_listen_port | length %}
 nginx['listen_port'] = {{ gitlab_ce__rb_nginx_listen_port }}
 {% endif %}
 
 ##! **Override only if your reverse proxy internally communicates over HTTP**
 ##! Docs: https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl
-{% if gitlab_ce__rb_nginx_listen_https is defined and gitlab_ce__rb_nginx_listen_https %}
+{% if gitlab_ce__rb_nginx_listen_https is defined and gitlab_ce__rb_nginx_listen_https | length %}
 nginx['listen_https'] = {{ gitlab_ce__rb_nginx_listen_https | string | lower }}
 {% endif %}
 
@@ -1992,7 +1992,7 @@ nginx['listen_https'] = {{ gitlab_ce__rb_nginx_listen_https | string | lower }}
 # `registry_nginx['some_setting']` and should be set separately.
 
 # Below you can find settings that are exclusive to "Registry NGINX"
-{% if gitlab_ce__rb_registry_nginx_enable is defined and gitlab_ce__rb_registry_nginx_enable %}
+{% if gitlab_ce__rb_registry_nginx_enable is defined and gitlab_ce__rb_registry_nginx_enable | length %}
 registry_nginx['enable'] = {{ gitlab_ce__rb_registry_nginx_enable | string | lower }}
 {% endif %}
 
@@ -2012,8 +2012,11 @@ registry_nginx['proxy_set_headers'] = {
 
 # When the registry is automatically enabled using the same domain as `external_url`,
 # it listens on this port
-{% if gitlab_ce__rb_registry_nginx_listen_port is defined and gitlab_ce__rb_registry_nginx_listen_port %}
-registry_nginx['listen_port'] = 5050
+{% if gitlab_ce__rb_registry_nginx_listen_port is defined and gitlab_ce__rb_registry_nginx_listen_port | length %}
+registry_nginx['listen_port'] = {{ gitlab_ce__rb_registry_nginx_listen_port }}
+{% endif %}
+{% if gitlab_ce__rb_registry_nginx_listen_https is defined and gitlab_ce__rb_registry_nginx_listen_https | length %}
+registry_nginx['listen_https'] = {{ gitlab_ce__rb_registry_nginx_listen_https }}
 {% endif %}
 
 ################################################################################
