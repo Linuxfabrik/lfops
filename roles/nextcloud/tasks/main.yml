@@ -111,7 +111,7 @@
 
   - name: 'Set Nextcloud proxy settings'
     ansible.builtin.command: |
-      sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["val"]ue }}
+      sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["value"] }}
     loop: '{{ nextcloud__proxyconfig }}'
     when:
       - 'nextcloud__proxyconfig is defined'
@@ -225,7 +225,7 @@
 
   - name: 'Create a role state file'
     ansible.builtin.file:
-      dest: '/etc/ansible/facts.d/nextcloud.state'
+      dest: '/etc/ansible/facts.d/nextcloud__app_install.state'
       owner: 'root'
       group: 'root'
       mode: '0600'
