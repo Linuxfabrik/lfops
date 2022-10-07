@@ -14,3 +14,10 @@ gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_ip_whitelist:
 gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_maxretry: 10
 gitlab_ce__rb_gitlab_rails_time_zone: 'Europe/Zurich'
 gitlab_ce__rb_letsencrypt_enable: false
+gitlab_ce__rb_nginx_listen_https: false
+gitlab_ce__rb_nginx_listen_port: 80
+gitlab_ce__rb_registry_nginx_listen_https: false
+gitlab_ce__rb_registry_nginx_listen_port: 5050
+gitlab_ce__rb_registry_nginx_proxy_set_headers:
+  'X-Forwarded-Proto': 'https'
+  'X-Forwarded-Ssl': 'on'

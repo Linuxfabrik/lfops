@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022091501
+# 2022100701
 
 ## GitLab configuration settings
 ##! This file is generated during initial installation and **is not** modified
@@ -1471,15 +1471,11 @@ registry_external_url '{{ gitlab_ce__rb_registry_external_url }}'
 
 ##! **Override only if you use a reverse proxy**
 ##! Docs: https://docs.gitlab.com/omnibus/settings/nginx.html#setting-the-nginx-listen-port
-{% if gitlab_ce__rb_nginx_listen_port is defined and gitlab_ce__rb_nginx_listen_port %}
 nginx['listen_port'] = {{ gitlab_ce__rb_nginx_listen_port }}
-{% endif %}
 
 ##! **Override only if your reverse proxy internally communicates over HTTP**
 ##! Docs: https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl
-{% if gitlab_ce__rb_nginx_listen_https is defined %}
 nginx['listen_https'] = {{ gitlab_ce__rb_nginx_listen_https | string | lower }}
-{% endif %}
 
 ##! **Override only if you use a reverse proxy with proxy protocol enabled**
 ##! Docs: https://docs.gitlab.com/omnibus/settings/nginx.html#configuring-proxy-protocol
@@ -2012,12 +2008,8 @@ registry_nginx['proxy_set_headers'] = {
 
 # When the registry is automatically enabled using the same domain as `external_url`,
 # it listens on this port
-{% if gitlab_ce__rb_registry_nginx_listen_port is defined and gitlab_ce__rb_registry_nginx_listen_port %}
 registry_nginx['listen_port'] = {{ gitlab_ce__rb_registry_nginx_listen_port }}
-{% endif %}
-{% if gitlab_ce__rb_registry_nginx_listen_https is defined and gitlab_ce__rb_registry_nginx_listen_https %}
-registry_nginx['listen_https'] = {{ gitlab_ce__rb_registry_nginx_listen_https }}
-{% endif %}
+registry_nginx['listen_https'] = {{ gitlab_ce__rb_registry_nginx_listen_https | string | lower }}
 
 ################################################################################
 ## Prometheus
@@ -2525,7 +2517,7 @@ registry_nginx['listen_https'] = {{ gitlab_ce__rb_registry_nginx_listen_https }}
 ################################################################################
 # Let's Encrypt integration
 ################################################################################
-letsencrypt['enable'] = '{{ gitlab_ce__rb_letsencrypt_enable }}'
+letsencrypt['enable'] = {{ gitlab_ce__rb_letsencrypt_enable | string | lower }}
 # letsencrypt['contact_emails'] = [] # This should be an array of email addresses to add as contacts
 # letsencrypt['group'] = 'root'
 # letsencrypt['key_size'] = 2048
