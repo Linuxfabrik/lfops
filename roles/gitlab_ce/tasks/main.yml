@@ -6,6 +6,15 @@
       state: 'present'
     environment:
       EXTERNAL_URL: '{{ gitlab_ce__rb_external_url }}'
+    when: 'not (gitlab_ce__version is defined and gitlab_ce__version | length)'
+
+  - name: 'install gitlab-ce-{{ gitlab_ce__version }}'
+    ansible.builtin.package:
+      name: 'gitlab-ce-{{ gitlab_ce__version }}'
+      state: 'present'
+    environment:
+      EXTERNAL_URL: '{{ gitlab_ce__rb_external_url }}'
+    when: 'gitlab_ce__version is defined and gitlab_ce__version | length'
 
   tags:
     - 'gitlab_ce'

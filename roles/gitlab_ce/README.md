@@ -64,6 +64,7 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 | `gitlab_ce__rb_registry_nginx_enable` | Registry NGINX | unset |
 | `gitlab_ce__rb_registry_nginx_listen_port` | Registry NGINX | unset |
 | `gitlab_ce__rb_registry_nginx_proxy_set_headers` | Registry NGINX | unset |
+| `gitlab_ce__version` | The GitLab version to install. This is useful when restoring from a backup. When unset, the latest available version is used. | unset |
 
 Example (GitLab running on port 80 behind a reverse proxy, offering Google Authentication, with Matomo integration, plus running a registry):
 ```yaml
@@ -111,6 +112,8 @@ gitlab_ce__rb_registry_nginx_listen_port: 5050
 gitlab_ce__rb_registry_nginx_proxy_set_headers:
   'X-Forwarded-Proto': 'https'
   'X-Forwarded-Ssl': 'on'
+
+gitlab_ce__version: '14.8.2'
 ```
 
 
