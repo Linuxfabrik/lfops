@@ -68,7 +68,6 @@
 
   tags:
     - 'graylog_server'
-    - 'graylog_server:configure'
 
 
 - block:
