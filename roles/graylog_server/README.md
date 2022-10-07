@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.graylog_server
 
-This role installs and configures a [Graylog](https://www.graylog.org) server.
+This role installs and configures a [Graylog](https://www.graylog.org) server. Currently supported versions: `4.0`, `4.1`, `4.2` and `4.3`.
 
 Runs on
 
@@ -25,14 +25,14 @@ Runs on
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `graylog_server__root_password` | The password which sould be set for the admin user. | unset |
-| `graylog_server__password_secret` | You MUST set a secret to secure/pepper the stored user passwords here. Use at least 64 characters. Generate one by using for example: pwgen -N 1 -s 96. ATTENTION: This value must be the same on all Graylog nodes in the cluster. Changing this value after installation will render all user sessions and encrypted values in the database invalid. (e.g. encrypted access tokens) | unset |
+| `graylog_server__password_secret` | You MUST set a secret to secure/pepper the stored user passwords here. Use at least 64 characters. Generate one by using for example: `pwgen -N 1 -s 96`. ATTENTION: This value must be the same on all Graylog nodes in the cluster. Changing this value after installation will render all user sessions and encrypted values in the database invalid. (e.g. encrypted access tokens) | unset |
 
 
 ## Optional Role Variables
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `graylog_server__search_engine` | The search engine which Graylog Server should use under the hood. Possibilities are `'opensearch'` or `'elasticsearch'`. | `'opensearch'` |
+| `graylog_server__search_engine` | The search engine which Graylog Server should use under the hood. Possibilities are `'opensearch'` or `'elasticsearch'`. ATTENTION: If you choose to use `opensearch`, Graylog Server 4.3 is required! | `'opensearch'` |
 | `graylog_server__install_plugins` | Whether following plugins sould be installed additionally: `graylog-enterprise-plugins`, `graylog-integrations-plugins` and `graylog-enterprise-integrations-plugins`. | `false` |
 | `graylog_server__root_username` | The admin username which should be used. | `'admin'` |
 | `graylog_server__root_email` | The email address of the root user. | `''` |
