@@ -113,6 +113,15 @@
 
 - block:
 
+  - ansible.builtin.include_tasks: 'matomo.yml'
+
+  tags:
+    - 'apache_httpd'
+    - 'apache_httpd:matomo'
+
+
+- block:
+
   - name: 'chmod -R g-w {{ apache_httpd__config_path }} # enhance security a little bit'
     ansible.builtin.file:
       path: '{{ apache_httpd__config_path }}'

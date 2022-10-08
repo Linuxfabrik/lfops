@@ -464,7 +464,7 @@ apache_httpd__vhosts__role_var:
 
     raw: |-
       # headers_module
-      Header always set Content-Security-Policy: "\
+      Header set Content-Security-Policy: "\
           default-src 'none'; \
           base-uri 'none'; \
           block-all-mixed-content; \
@@ -485,10 +485,10 @@ apache_httpd__vhosts__role_var:
           style-src 'none'; \
           worker-src 'none'; \
           "
-      Header always set Permissions-Policy: "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
-      Header always set Referrer-Policy: "strict-origin-when-cross-origin"
-      Header always set X-Content-Type-Options: "nosniff"
-      Header always set X-XSS-Protection: "1; mode=block"
+      Header set Permissions-Policy: "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+      Header set Referrer-Policy: "strict-origin-when-cross-origin"
+      Header set X-Content-Type-Options: "nosniff"
+      Header set X-XSS-Protection: "1; mode=block"
 
 apache_httpd__vhosts__dependent_var: []
 apache_httpd__vhosts__group_var: []
@@ -499,3 +499,8 @@ apache_httpd__vhosts__combined_var: '{{
     apache_httpd__vhosts__group_var +
     apache_httpd__vhosts__host_var
   }}'
+
+
+apache_httpd__selinux__booleans__dependent_var:
+  - key: 'httpd_can_network_connect'
+    value: 'on'

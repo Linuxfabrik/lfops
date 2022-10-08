@@ -19,5 +19,7 @@ Header set Strict-Transport-Security: "max-age=63072000; includeSubDomains; prel
 Header always unset Feature-Policy
 
 # Security Header: Permissions Policy is a new header that allows a site to control which features and APIs can be used in the browser.
-Header always set Permissions-Policy: "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+# Do not use "always" here, because otherwise you migth get "There was a duplicate Permissions-Policy header."
+# with some applications.
+Header set Permissions-Policy: "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
 

@@ -165,7 +165,7 @@ Require user linuxfabrik-user
 #Header set Cache-Control: "max-age=0, no-cache, no-store, must-revalidate"
 # the .+ at the start of the regex ensures that files named ".png", or ".gif", for example, are not matched
 <FilesMatch ".+\.(css|flv|gif|html?|ico|jpe?g|js|png|svg|swf|ttf|txt|woff2?)$">
-   Header always set Cache-Control "max-age=864000, public"
+   Header set Cache-Control "max-age=864000, public"
 </FilesMatch>
 
 # Security related Header: CSP allows to control resources the user agent is allowed to
@@ -174,7 +174,7 @@ Require user linuxfabrik-user
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
 
 # Sample Safe Policy - start using this:
-Header always set Content-Security-Policy: "\
+Header set Content-Security-Policy: "\
     default-src 'none'; \
     base-uri 'none'; \
     block-all-mixed-content; \
@@ -197,7 +197,7 @@ Header always set Content-Security-Policy: "\
     "
 
 # A Report-Only Policy (for Browser Console)
-#Header always set Content-Security-Policy-Report-Only: "\
+#Header set Content-Security-Policy-Report-Only: "\
 #    default-src 'none'; \
 #    base-uri 'none'; \
 #    block-all-mixed-content; \
@@ -220,7 +220,7 @@ Header always set Content-Security-Policy: "\
 #    "
 
 # A real-life example for docs.linuxfabrik.ch
-#Header always set Content-Security-Policy: " \
+#Header set Content-Security-Policy: " \
 #    default-src 'self'; \
 #    base-uri 'none'; \
 #    child-src 'none'; \
@@ -240,24 +240,24 @@ Header always set Content-Security-Policy: "\
 #    worker-src 'none'; \
 #    "
 # Also set this if CSP directives uses any "unsafe" values.
-#Header always set X-XSS-Protection: "1; mode=block"
+#Header set X-XSS-Protection: "1; mode=block"
 
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
 # Security Header: indicates whether the response can be shared with requesting code from the given origin
-Header always set Access-Control-Allow-Origin "https://test.linuxfabrik.ch"
+Header set Access-Control-Allow-Origin "https://test.linuxfabrik.ch"
 #  the response should also include a Vary response header with the value Origin — to indicate to browsers that server responses can differ based on the value of the Origin request header.
-Header always set Vary "Origin"
+Header set Vary "Origin"
 
 # Security Header: lets sites opt in to reporting and/or enforcement of Certificate Transparency requirements, to prevent the use of misissued certificates from going unnoticed
-Header always set Expect-CT: "max-age=86400, enforce"
+Header set Expect-CT: "max-age=86400, enforce"
 # Security Header: allows a site to control which features and APIs can be used in the browser
-Header always set Permissions-Policy: "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+Header set Permissions-Policy: "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
 # Security Header: controls how much referrer information (sent via the Referer header) should be included with requests
-Header always set Referrer-Policy: "strict-origin-when-cross-origin"
+Header set Referrer-Policy: "strict-origin-when-cross-origin"
 # Security Header: stops a browser from trying to MIME-sniff the content type and forces it to stick with the declared content-type
-Header always set X-Content-Type-Options: "nosniff"
+Header set X-Content-Type-Options: "nosniff"
 # Security Header: tells the browser whether you want to allow your site to be framed or not. "frame-ancestors" in CSP is used instead.
-#Header always set X-Frame-Options: "SAMEORIGIN"
+#Header set X-Frame-Options: "SAMEORIGIN"
 # Security Header: feature of Internet Explorer, Chrome and Safari that stops pages from loading when they detect reflected cross-site scripting (XSS) attacks
 # Note: Most major browsers have dropped / deprecated support for this header in 2020.
 
@@ -544,7 +544,7 @@ As a starting point. Replace ``<MYVHOST>`` with your ``conf_server_name`` or FQD
 ```
 # Matomo Realtime Logging
 LogFormat "%v %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" matomo
-CustomLog "||/usr/local/bin/import_logs.py \
+CustomLog "||/usr/local/sbin/import_logs.py \
 --debug --enable-http-errors --enable-http-redirects --enable-bots \
 --url=https://analytics.example.com --output=/var/log/matomo.log --recorders=1 \
 --recorder-max-payload-size=1 --log-format-name=common_complete --token-auth=2ac48e93-2ca7-4df3-9e7c-c81b36d0a474 \

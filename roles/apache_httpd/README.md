@@ -68,6 +68,7 @@ If you want to check Apache with [our STIG audit script](https://github.com/Linu
 | ---      | ------------                   |
 | `apache_httpd` | * Installs and configures apache_httpd |
 | `apache_httpd:config` | * Creates or updates global Apache configuration<br> * Removes conf-available configs<br> * Creates conf-available configs<br> * Disables configs<br> * Enables configs |
+| `apache_httpd:matomo` | * Deploys Matomo Log Analytics Python Script |
 | `apache_httpd:mod_security_coreruleset` | * Downloads, verifies and installs OWASP ModSecurity Core Rule Set (CRS)<br> * Installs tar<br> * Unarchives the CRS<br> * Links the CRS |
 | `apache_httpd:mods` | * Removes mods-available configs<br> * Create mods-available configs<br> * Disable mods<br> * Enable mods |
 | `apache_httpd:state` | * Ensures that httpd service is in a desired state |
