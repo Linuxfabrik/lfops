@@ -112,7 +112,7 @@ Including one exception:
 ```
 RewriteCond %{SERVER_PORT} 80
 RewriteCond %{REQUEST_URI} !^/\.well\-known/acme\-challenge/
-RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [redirect=301,L]
 ```
 
 
