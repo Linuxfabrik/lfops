@@ -1,6 +1,7 @@
 # List of base packages to install
 apache_httpd__base_packages:
   - 'httpd'
+  - 'bind-utils'  # for dig etc.
 
 apache_httpd__group: 'apache'
 apache_httpd__service_name: 'httpd'
