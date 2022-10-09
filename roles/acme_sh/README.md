@@ -1,6 +1,14 @@
 # Ansible Role linuxfabrik.lfops.acme_sh
 
-This role installs [acme.sh](https://github.com/acmesh-official/acme.sh), and allows to issue certificates using [Let's encrypt](https://letsencrypt.org).
+This role installs [acme.sh](https://github.com/acmesh-official/acme.sh) and enables issuing certificates with [Let's Encrypt](https://letsencrypt.org). Issued certificates are copied from `/etc/acme.sh` to the appropriate subfolders of `/etc/pki/`.
+
+After running this role, configure Apache like so:
+```
+SSLEngine on
+SSLCertificateFile      /etc/pki/tls/certs/www.example.com.crt
+SSLCertificateKeyFile   /etc/pki/tls/private/www.example.com.key
+SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-chain.crt
+```
 
 Runs on
 
@@ -12,6 +20,8 @@ Runs on
 * Install `openssl`. This can be done using the [linuxfabrik.lfops.openssl](https://github.com/Linuxfabrik/lfops/tree/main/roles/openssl) role.
 * Install `tar`. This can be done using the [linuxfabrik.lfops.tar](https://github.com/Linuxfabrik/lfops/tree/main/roles/tar) role.
 * Have a configured webserver.
+
+If you use the [acme.sh Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/acme_sh.yml), this is automatically done for you.
 
 
 ## Tags
@@ -44,8 +54,8 @@ acme_sh__certificates:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `acme_sh__key_length` | Key length in bits of the certificates to issue. | `4096` |
-| `acme_sh__reload_cmd` | Command to execute after issue/renew to reload the server. | `'systemctl reload httpd'` |
+| `acme_sh__key_length`  | Key length in bits of the certificates to issue. | `4096` |
+| `acme_sh__reload_cmd`  | Command to execute after issue/renew to reload the server. | `'systemctl reload httpd'` |
 | `acme_sh__timer_enabled` | Enables or disables the weekly acme.sh timer, analogous to `systemctl enable/disable --now`. | `true` |
 
 Example:
@@ -54,6 +64,22 @@ Example:
 acme_sh__key_length: 4096
 acme_sh__reload_cmd: 'systemctl reload httpd'
 acme_sh__timer_enabled: true
+```
+
+
+## Troubleshooting
+
+Replace an issued certificate:
+
+```bash
+# on the remote host:
+acme.sh --remove --domain www.example.com
+rm -rf /etc/acme.sh/certs/www.example.com/
+```
+
+```bash
+# on the control node:
+ansible-playbook --inventory $INV linuxfabrik.lfops.acme_sh
 ```
 
 
