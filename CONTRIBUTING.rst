@@ -4,8 +4,13 @@ Linuxfabrik's Ansible Development Guidelines
 Rules of Thumb
 --------------
 
+Playbooks:
+
 * Each playbook must contain all dependencies to run flawlessly against a newly installed machine.
-* Playbooks installing complex software packages as a dependency are prefixed by ``setup_``. Example: ``setup_nextcloud`` because Nextcloud also needs Apache httpd, MariaDB server etc.
+* Playbooks installing an application together with software packages that are complex to configure (``apache_httpd``, ``mariadb_server`` and/or ``php``) as a dependency are prefixed by ``setup_``. Example: ``setup_nextcloud`` because Nextcloud also needs Apache httpd, MariaDB Server etc.
+
+Roles:
+
 * To understand/use a role, reading the readme and the defaults/main.yml must be enough.
 * Idempotency: Roles should not perform changes when applied a second time to the same system with the same parameters, and it should not report that changes have been done if they have not been done. More importantly, it should not damage an existing installation when applied a second time (even without tags). Example:
 
@@ -24,7 +29,10 @@ Rules of Thumb
 * If a role was run without tags, it should deliver a completely installed application (assuming it installs an application).
 * Do not over-engineer the role during the development - it should fulfill its use case, but can grow and be improved on later.
 * The role should support the installation and configuration of multiple major versions of the software. For example, PHP 7.1, 7.2, 7.3 etc. should all be supported by a single role. Upgrades are either done manually or using Ansible, depending on the software and the implementation effort.
-* Do not use role dependencies via meta/main.yml``. Dependencies make it harder to maintain a role, especially if it has many complex dependencies.
+* Do not use role dependencies via ``meta/main.yml``. Dependencies make it harder to maintain a role, especially if it has many complex dependencies.
+
+Common:
+
 * Document all changes in the `CHANGELOG.md <https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md>`_ file.
 * Do not support and remove software versions that are EOL.
 
@@ -171,7 +179,6 @@ So called "Block Scalar Styles":
 Any indention remains only for the first line of a multiline variable content.
 
 Insert whitespaces around Jinja filters like so: ``{{ my_var | d("my_default") }}``.
-
 
 See also:
 
@@ -452,23 +459,26 @@ Your role might accept variable injection from another role. It depends on the c
 .. code-block:: yaml
 
     # for lists
-    apache_httpd__vhosts__combined_var: '{{
-        apache_httpd__vhosts__role_var +
-        apache_httpd__vhosts__dependent_var +
-        apache_httpd__vhosts__group_var +
-        apache_httpd__vhosts__host_var
-      }}'
+    my_role__my_var__dependent_var: []
+    my_role__my_var__group_var: []
+    my_role__my_var__host_var: []
+    my_role__my_var__role_var: []
+    my_role__my_var__combined_var: '{{ my_role__my_var__role_var +
+      my_role__my_var__group_var +
+      my_role__my_var__host_var +
+      my_role__my_var__dependent_var
+     }}'
 
     # this is for simple values like strings or numbers:
-    kernel_settings__transparent_hugepages_defrag__dependent_var: ''
-    kernel_settings__transparent_hugepages_defrag__group_var: ''
-    kernel_settings__transparent_hugepages_defrag__host_var: ''
-    kernel_settings__transparent_hugepages_defrag__role_var: ''
-    kernel_settings__transparent_hugepages_defrag__combined_var: '{{
-        kernel_settings__transparent_hugepages_defrag__host_var if (kernel_settings__transparent_hugepages_defrag__host_var | string | length) else
-        kernel_settings__transparent_hugepages_defrag__group_var if (kernel_settings__transparent_hugepages_defrag__group_var | string | length) else
-        kernel_settings__transparent_hugepages_defrag__dependent_var if (kernel_settings__transparent_hugepages_defrag__dependent_var | string | length) else
-        kernel_settings__transparent_hugepages_defrag__role_var
+    my_role__my_var__dependent_var: ''
+    my_role__my_var__group_var: ''
+    my_role__my_var__host_var: ''
+    my_role__my_var__role_var: ''
+    my_role__my_var__combined_var: '{{
+        my_role__my_var__host_var if (my_role__my_var__host_var | string | length) else
+        my_role__my_var__group_var if (my_role__my_var__group_var | string | length) else
+        my_role__my_var__dependent_var if (my_role__my_var__dependent_var | string | length) else
+        my_role__my_var__role_var
       }}'
 
 Why? Let's assume an Ansible playbook with two roles. Role1 (tag1) sets a default value. Role2 (tag2) wants to override the default value. Ansible is not able to do this: Neither with tag-based ``ansible-playbook`` calls nor with a full playbook run, Role2 is able to override the default value of Role1. This is the reason for implementing injections.
