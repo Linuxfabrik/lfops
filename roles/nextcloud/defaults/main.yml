@@ -211,6 +211,7 @@ netcloud__collabora_code__coolwsd_storage_wopi__dependent_var:
 nextcloud__php__ini_max_execution_time__dependent_var: 3600
 nextcloud__php__ini_max_file_uploads__dependent_var: 100
 nextcloud__php__ini_memory_limit__dependent_var: '1024M'
+nextcloud__php__ini_opcache_interned_strings_buffer__dependent_var: '20'
 nextcloud__php__ini_post_max_size__dependent_var: '16M'
 nextcloud__php__ini_upload_max_filesize__dependent_var: '10000M'
 
