@@ -1,6 +1,7 @@
 # Ansible Role linuxfabrik.lfops.graylog_server
 
 This role installs and configures a [Graylog](https://www.graylog.org) server. Currently supported versions: `4.0`, `4.1`, `4.2` and `4.3`.
+You can choose between `opensearch` (default) and `elasticsearch` as searchengine. If you choose to use `opensearch`, Graylog Server 4.3 is required!
 
 Runs on
 
@@ -32,7 +33,6 @@ Runs on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `graylog_server__search_engine` | The search engine which Graylog Server should use under the hood. Possibilities are `'opensearch'` or `'elasticsearch'`. ATTENTION: If you choose to use `opensearch`, Graylog Server 4.3 is required! | `'opensearch'` |
 | `graylog_server__install_plugins` | Whether following plugins sould be installed additionally: `graylog-enterprise-plugins`, `graylog-integrations-plugins` and `graylog-enterprise-integrations-plugins`. | `false` |
 | `graylog_server__root_username` | The admin username which should be used. | `'admin'` |
 | `graylog_server__root_email` | The email address of the root user. | `''` |
@@ -49,7 +49,6 @@ graylog_server__root_password: 'password'
 graylog_server__password_secret: '9395pKmkuxSFU623AJpQNA3iyB7R82NuxZRzw19C3m3YXnE62Ky8me7eg9Z1TzwC'
 
 # optional
-graylog_server__search_engine: 'elasticsearch'
 graylog_server__root_username: 'graylog-admin'
 graylog_server__install_plugins: true
 graylog_server__root_email: 'webmaster@example.com'

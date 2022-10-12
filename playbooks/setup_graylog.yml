@@ -23,15 +23,20 @@
         - 'not graylog__skip_repo_graylog | d(false)'
 
     - role: 'linuxfabrik.lfops.java'
+      when:
+        - 'not setup_graylog__skip_java | default(false)'
 
     - role: 'linuxfabrik.lfops.mongodb'
+      when:
+        - 'not setup_graylog__skip_mongodb | default(false)'
 
     - role: 'linuxfabrik.lfops.elasticsearch'
       when:
-        - 'graylog_server__search_engine == "elasticsearch"'
+        - 'not setup_graylog__skip_elasticsearch | default(true)'
+        - 'setup_graylog__skip_opensearch | default(false)'
 
     - role: 'linuxfabrik.lfops.opensearch'
       when:
-        - 'graylog_server__search_engine == "opensearch"'
+        - 'not setup_graylog__skip_opensearch | default(false)'
 
     - role: 'linuxfabrik.lfops.graylog_server'
