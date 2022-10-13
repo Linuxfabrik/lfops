@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.mongodb
 
-This role installs and configures a [MongoDB](https://www.mongodb.com/) server.
+This role installs and configures a [MongoDB](https://www.mongodb.com/) server, and configures daily database dumps.
 
 Runs on
 
@@ -17,6 +17,7 @@ Runs on
 | Tag             | What it does                            |
 | ---             | ------------                            |
 | `mongodb`       | Installs and configures MongoDB         |
+| `mongodb:dump`  | Configures the database dumping         |
 | `mongodb:state` | Manages the state of the mongod service |
 
 
@@ -33,6 +34,14 @@ Runs on
 | `mongodb__conf_storage_engine_raw` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.engine) | unset |
 | `mongodb__conf_storage_journal_commit_interval_ms` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.journal.commitIntervalMs) | `100` |
 | `mongodb__conf_storage_journal_enabled` | Enable or disable the durability journal to ensure data files remain valid and recoverable. | `true` |
+| `mongodb__dump_method_file_based` | Use this to create file based backups by locking the instance and copying `/var/lib/mongo`. This is recommended when using `mongodb__dump_method_mongodump` is too slow. | `false` |
+| `mongodb__dump_method_file_based_backup_dir` | Where to store the file-based backup. | `'/backup/var-lib-mongo'` |
+| `mongodb__dump_method_mongodump` | Use `mongodump` to create database dumps. This is recommended since it allows the most flexible restores. | `true` |
+| `mongodb__dump_method_mongodump_backup_dir` | Where to store the `mongodump`-based backup. | `'/backup/mongodb-dump'` |
+| `mongodb__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'` |
+| `mongodb__dump_only_if_hidden` | Use this to only run the backup if the instance is hidden. This is useful in a MongoDB cluster setupp. | `false` |
+| `mongodb__dump_use_oplog` | Use this to capture incoming write operations during the dump operation to ensure that the backups reflect a consistent data state. Note that this only works on cluster setups or with replica sets. | `false` |
+| `mongodb__dump_user` | The MongoDB user for dumping the database when Role-Based Access Control is enabled (`mongodb__conf_security_authorization`). | unset |
 
 Example:
 ```yaml
@@ -56,6 +65,17 @@ mongodb__conf_storage_engine_raw: |-
         prefixCompression: false
 mongodb__conf_storage_journal_commit_interval_ms: 100
 mongodb__conf_storage_journal_enabled: true
+mongodb__dump_method_file_based: false
+mongodb__dump_method_file_based_backup_dir: '/backup/var-lib-mongo'
+mongodb__dump_method_mongodump: true
+mongodb__dump_method_mongodump_backup_dir: '/backup/mongodb-dump'
+mongodb__dump_on_calendar: ''
+mongodb__dump_only_if_hidden: false
+mongodb__dump_use_oplog: true
+mongodb__dump_user:
+  auth_database: 'admin' # default
+  password: 'password'
+  username: 'mariadb-dump'
 ```
 
 

@@ -27,54 +27,51 @@
     - 'mongodb'
 
 
-# - block:
+- block:
 
-#   - name: 'Deploy /etc/mongodb-dump.conf'
-#     ansible.builtin.template:
-#       src: 'etc/mongodb-dump.conf.j2'
-#       dest: '/etc/mongodb-dump.conf'
-#       owner: 'root'
-#       group: 'root'
-#       mode: 0o600
+  - name: 'Deploy /etc/mongodb-dump.conf'
+    ansible.builtin.template:
+      src: 'etc/mongodb-dump.conf.j2'
+      dest: '/etc/mongodb-dump.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
 
-#   - name: 'Deploy /usr/local/bin/mongodb-dump (backups using mongodump)'
-#     ansible.builtin.template:
-#       src: 'usr/local/bin/mongodb-dump.j2'
-#       dest: '/usr/local/bin/mongodb-dump'
-#       owner: 'root'
-#       group: 'root'
-#       mode: 0o755
+  - name: 'Deploy /usr/local/sbin/mongodb-dump'
+    ansible.builtin.template:
+      src: 'usr/local/sbin/mongodb-dump.j2'
+      dest: '/usr/local/sbin/mongodb-dump'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
 
-#   - name: 'Deploy /etc/systemd/system/mongodb-dump.service'
-#     ansible.builtin.template:
-#       src: 'etc/systemd/system/mongodb-dump.service.j2'
-#       dest: '/etc/systemd/system/mongodb-dump.service'
-#       owner: 'root'
-#       group: 'root'
-#       mode: 0o644
+  - name: 'Deploy /etc/systemd/system/mongodb-dump.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/mongodb-dump.service.j2'
+      dest: '/etc/systemd/system/mongodb-dump.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
 
-#   - name: 'Deploy /etc/systemd/system/mongodb-dump.timer'
-#     ansible.builtin.template:
-#       src: 'etc/systemd/system/mongodb-dump.timer.j2'
-#       dest: '/etc/systemd/system/mongodb-dump.timer'
-#       owner: 'root'
-#       group: 'root'
-#       mode: 0o644
-#     register: 'mongodb__dump_systemd_timer_result'
+  - name: 'Deploy /etc/systemd/system/mongodb-dump.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/mongodb-dump.timer.j2'
+      dest: '/etc/systemd/system/mongodb-dump.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'mongodb__dump_systemd_timer_result'
 
-#   - name: 'systemctl enable mongodb-dump.timer --now'
-#     ansible.builtin.systemd:
-#       name: 'mongodb-dump.timer'
-#       state: 'started'
-#       enabled: true
-#       daemon_reload: '{{ mongodb__dump_systemd_timer_result is changed }}'
+  - name: 'systemctl enable mongodb-dump.timer --now'
+    ansible.builtin.systemd:
+      name: 'mongodb-dump.timer'
+      state: 'started'
+      enabled: true
+      daemon_reload: '{{ mongodb__dump_systemd_timer_result is changed }}'
 
-#   when:
-#     - 'mongodb__dump_user is defined'
-#     - 'mongodb__dump_user | length'
-#   tags:
-#     - 'mongodb'
-#     - 'mongodb:dump'
+  tags:
+    - 'mongodb'
+    - 'mongodb:dump'
 
 
 - block:

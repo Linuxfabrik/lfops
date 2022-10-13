@@ -1,19 +1,14 @@
 # {{ ansible_managed }}
-# 2022083101
+# 2022101301
 
-HOST='{{ mongodb__dump_user["host"] | d("127.0.0.1") }}'
-PORT='{{ mongodb__net_port }}'
-USER='{{ mongodb__dump_user["username"] }}'
+HOST='127.0.0.1'
+PORT='{{ mongodb__conf_net_port }}'
+
+{% if mongodb__dump_user is defined and mongodb__dump_user | length %}
+USERNAME='{{ mongodb__dump_user["username"] }}'
 PASSWORD='{{ mongodb__dump_user["password"] }}'
-
-{% if mongodb__dump_user["auth_database"] is defined and mongodb__dump_user["auth_database"] | length %}
-AUTH_DATABASE='{{ mongodb__dump_user["auth_database"] }}'
+AUTH_DATABASE='{{ mongodb__dump_user["auth_database"] | default("admin") }}'
 {% endif %}
 
-{% if mongodb__dump_method_mongodump %}
-DUMP_BACKUP_DIR='{{ mongodb_dump_dir | default('/backup/mongodb-dump') }}{{ item.name }}'
-{% endif %}
-
-{% if mongodb__dump_method_file_based %}
-FILE_BACKUP_DIR='{{ mongodb_dump_dir | default('/backup/mongodb-dump') }}{{ item.name }}'
-{% endif %}
+DUMP_BACKUP_DIR='{{ mongodb__dump_method_mongodump_backup_dir }}'
+FILE_BACKUP_DIR='{{ mongodb__dump_method_file_based_backup_dir }}'

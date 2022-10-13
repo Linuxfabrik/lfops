@@ -9,6 +9,8 @@
       when:
         - 'not mongodb__skip_kernel_settings | d(false)'
 
+    - role: 'linuxfabrik.lfops.tar'
+
     - role: 'linuxfabrik.lfops.repo_mongodb'
       when:
         - 'not mongodb__skip_repo_mongodb | default(false)'

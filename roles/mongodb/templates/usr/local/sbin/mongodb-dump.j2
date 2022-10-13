@@ -1,0 +1,86 @@
+#jinja2:lstrip_blocks: True
+#!/usr/bin/env bash
+
+# {{ ansible_managed }}
+# 2022101301
+
+set -e
+
+# make sure the backup is not readable by others
+old_umask=$(umask)
+umask 027
+
+source /etc/mongodb-dump.conf
+
+if command -v mongosh 1> /dev/null; then
+    MONGOSH="$(command -v mongosh)"
+elif command -v mongo 1> /dev/null; then
+    MONGOSH="$(command -v mongo)"
+else
+    echo 'could not find "mongosh" nor "mongo" cli. aborting...'
+    exit 2
+fi
+
+connection_string="--host $HOST --port $PORT"
+if [[ -n "$AUTH_DATABASE$USERNAME$PASSWORD" ]]; then
+    connection_string="$connection_string --authenticationDatabase $AUTH_DATABASE --username $USERNAME --password $PASSWORD"
+fi
+
+# make sure we can connect to server
+if ! $MONGOSH $connection_string --eval 'db.getUsers()' &>/dev/null; then
+    echo "Cannot connect to '$HOST:$PORT'" >&2
+    exit 1
+fi
+
+{% if mongodb__dump_only_if_hidden %}
+# check if the instance is hidden
+if $MONGOSH $connection_string --eval 'db.isMaster()' | grep '"hidden" : true' &>/dev/null; then
+    echo "Skipping, the instance is not hidden"
+    exit 0
+fi
+{% endif %}
+
+{% if mongodb__dump_method_mongodump %}
+#
+# Backup using mongodump
+#
+
+LOGFILE="$DUMP_BACKUP_DIR/mongodb-dump.log"
+
+# remove old backups
+rm -rf "$DUMP_BACKUP_DIR"
+mkdir -p "$DUMP_BACKUP_DIR"
+
+if ! mongodump $connection_string {% if mongodb__dump_use_oplog %}--oplog {% endif %}--out "$DUMP_BACKUP_DIR/temp" > "$LOGFILE" 2>&1; then
+    echo "Error during mongodump. Have a look at $LOGFILE for details." >&2
+fi
+
+cd "$DUMP_BACKUP_DIR" 1> /dev/null
+tar -cvzf "mongodb-dump.tar.gz" -C "$DUMP_BACKUP_DIR/temp/" . 1> /dev/null
+rm -rf "$DUMP_BACKUP_DIR/temp/" 1> /dev/null
+
+umask "$old_umask"
+{% endif %}
+
+{% if mongodb__dump_method_file_based %}
+#
+# File based backup (copies /var/lib/mongo to the backup directory)
+#
+
+# remove old backups
+rm -rf "$FILE_BACKUP_DIR"
+mkdir -p "$FILE_BACKUP_DIR"
+
+# lock the instance
+if ! $MONGOSH $connection_string --eval 'db.fsyncLock()' &>/dev/null; then
+    echo 'failed to lock the instance. the backup will still be created, but might not be consistent.' >&2
+fi
+
+cp --archive --recursive /var/lib/mongo $FILE_BACKUP_DIR
+
+# unlock the instance
+if ! $MONGOSH $connection_string --eval 'db.fsyncUnlock()' &>/dev/null; then
+    echo 'failed to unlock the instance' >&2
+    exit 3
+fi
+{% endif %}

@@ -5,15 +5,15 @@ mongodb__conf_storage_directory_per_db: true
 mongodb__conf_storage_journal_commit_interval_ms: 100
 mongodb__conf_storage_journal_enabled: true
 
-# mongodb__dump_host: 'localhost'
-# mongodb__dump_method_file_based: false
-# mongodb__dump_method_file_based_backup_dir: '/backup/var-lib-mongo'
-# mongodb__dump_method_mongodump: true
-# mongodb__dump_method_mongodump_backup_dir: '/backup/mongodb-dump'
-# mongodb__dump_on_calendar: ''
-# mongodb__dump_oplog: false
+mongodb__dump_method_file_based: false
+mongodb__dump_method_file_based_backup_dir: '/backup/var-lib-mongo'
+mongodb__dump_method_mongodump: true
+mongodb__dump_method_mongodump_backup_dir: '/backup/mongodb-dump'
+mongodb__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
+mongodb__dump_only_if_hidden: false
+mongodb__dump_use_oplog: false
 # mongodb__dump_user:
-#   auth_database: # unset
+#   auth_database: 'admin' # default
 #   password: 'password'
 #   username: 'mariadb-dump'
 
