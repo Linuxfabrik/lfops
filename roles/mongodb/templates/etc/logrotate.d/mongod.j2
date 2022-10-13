@@ -1,9 +1,7 @@
 {{ ansible_managed }}
 # 2022091601
 
-{% for item in mongodb_instance %}
-/var/log/mongodb/mongod{{ item.name }}.log
-{% endfor %}
+/var/log/mongodb/mongod.log
 {
     compress
     daily
