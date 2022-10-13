@@ -48,9 +48,9 @@ icinga2_agent__windows_version: 'v2.12.8'
 | `icinga2_agent__additional_icinga2_master_endpoints` | A list of dictionaries with additional Icinga2 master endpoints. Subkeys: <br> * `host`: Mandatory, string. Host of the master endpoint. <br> * `port`: Optional, string. Defaults to 5665. The Icinga2 port of the endpoint. | `[]` |
 | `icinga2_agent__bind_host` | The bind host. This allows restricting on which IP addresses the Agent is listening. | unset |
 | `icinga2_agent__cn` | The common name of the Icinga2 Agent. Tries to default to the FQDN of the server. | `'{{ ansible_facts["nodename"] }}'` |
-| `icinga2_agent__director_host_object_address` | The host address of the Icinga Director host object. Tries to default to the IPv4 address of the server. One can try setting this to `{{ ansible_facts["ip_addresses"][0] }}` for Windows servers. | `'{{ ansible_facts["default_ipv4"]["address"] }}'` |
+| `icinga2_agent__director_host_object_address` | The host address of the Icinga Director host object. Tries to default to the IPv4 address of the server. | `'{{ ansible_facts["ip_addresses"][0] }}'` for Windows, else `{{ ansible_facts["default_ipv4"]["address"] }}` |
 | `icinga2_agent__director_host_object_display_name` | The host display name of the Icinga Director host object. Tries to default to the hostname. | `'{{ ansible_facts["hostname"] }}'` |
-| `icinga2_agent__director_host_object_import` | A list of Icinga Director host templates which should be imported for this server. | `['tpl-host-linux']` |
+| `icinga2_agent__director_host_object_import` | A list of Icinga Director host templates which should be imported for this server. | `['tpl-host-windows']` for Windows, else `['tpl-host-linux']` |
 | `icinga2_agent__icinga2_master_port` | The port on which the Icinga2 master is reachable. | `5665` |
 | `icinga2_agent__icingaweb2_url` | The URL where the IcingaWeb2 (the API) is reachable. This will be used to register the host in the Icinga Director (otherwise the host is registered in Icinga Core, but not visible in Icinga Director). | `'https://{{ icinga2_agent__icinga2_master_host }}/icingaweb2'` |
 | `icinga2_agent__icingaweb2_user_login` | A IcingaWeb2 user with `module/director,director/api,director/hosts` permissions. This will be used to register the host in the Icinga Director. | unset |
