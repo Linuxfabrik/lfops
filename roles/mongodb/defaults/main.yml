@@ -22,4 +22,8 @@ mongodb__service_state: 'started'
 
 # -----------------------------------------------------------------------------
 
+# https://docs.mongodb.com/manual/administration/production-notes/
+mongodb__kernel_settings__sysctl__dependent_var:
+  - name: 'vm.swappiness'
+    value: 1
 mongodb__kernel_settings__transparent_hugepages__dependent_var: 'never'

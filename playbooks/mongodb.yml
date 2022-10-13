@@ -5,6 +5,7 @@
   roles:
 
     - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ mongodb__kernel_settings__sysctl__dependent_var | d([]) }}'
       kernel_settings__transparent_hugepages__dependent_var: "{{ mongodb__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
       when:
         - 'not mongodb__skip_kernel_settings | d(false)'
