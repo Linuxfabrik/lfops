@@ -48,12 +48,11 @@ rocketchat__root_url: 'https://rocketchat.example.com'
 | `rocketchat__mongodb_host`| The host on which MongoDB is reachable. | `'localhost'` |
 | `rocketchat__mongodb_on_localhost`| Whether the MongoDB is running on the same host as Rocket.Chat. If this is not the case, you need to manually check the version compability and manually initiate the replica set. | `true` |
 | `rocketchat__mongodb_port`| The port on which MongoDB is reachable. | `27017` |
-| `rocketchat__mongodb_repl_set_name`| todo | `'rs01'` |
-| `rocketchat__node_version`| todo | `8.17.0` |
-| `rocketchat__port`| todo | `3000` |
-| `rocketchat__service_enabled`| todo | `true` |
-| `rocketchat__service_state`| todo | `'started'` |
-| `rocketchat__version`| todo | `'latest'` |
+| `rocketchat__mongodb_repl_set_name`| The name of the MongoDB replica set for Rocket.Chat. Will be initiated if MongoDB is running on localhost (`rocketchat__mongodb_on_localhost`). | `'rs01'` |
+| `rocketchat__port`| The port on which Rocket.Chat server will be available. | `3000` |
+| `rocketchat__service_enabled`| Enables or disables the service, analogous to `systemctl enable/disable`. | `true` |
+| `rocketchat__service_state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+| `rocketchat__version`| Which Rocket.Chat version to install. Have a at the available [releases](https://github.com/RocketChat/Rocket.Chat/releases). | `'latest'` |
 
 Example:
 ```yaml
@@ -68,7 +67,6 @@ rocketchat__service_enabled: true
 rocketchat__service_state: 'started'
 # Versions according to https://github.com/RocketChat/Rocket.Chat/releases
 rocketchat__version: 'latest'
-rocketchat__node_version: '8.17.0'
 ```
 
 

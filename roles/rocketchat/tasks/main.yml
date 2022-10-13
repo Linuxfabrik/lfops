@@ -77,7 +77,6 @@
   - name: 'set required node version to {{ rocketchat__api_version_dependencies_result["json"]["nodeVersion"] }}'
     ansible.builtin.set_fact:
       rocketchat__node_version: '{{ rocketchat__api_version_dependencies_result["json"]["nodeVersion"] }}'
-    when: 'rocketchat__node_version is not defined or not (rocketchat__node_version | length)'
 
   - name: 'npm --global n'
     community.general.npm:
@@ -170,6 +169,7 @@
 
 
 - block:
+
   # https://rocket.chat/docs/installation/manual-installation/mongo-replicas/
   - name: 'Ensure the MongoDB replSets have been initiated'
     ansible.builtin.shell: "mongo --eval \"rs.initiate({ _id: '{{ rocketchat__mongodb_repl_set_name }}', members: [ { _id: 0, host: 'localhost:27017' } ]})\" && touch .mongo_rs_initialised"
@@ -180,7 +180,6 @@
       chdir: '/var/lib/mongo'
       creates: '/var/lib/mongo/.mongo_rs_initialised'
     when:
-      - 'rocketchat__mongodb_repl_set_name is defined and rocketchat__mongodb_repl_set_name | length'
       - 'rocketchat__mongodb_on_localhost'
 
   - ansible.builtin.debug:
@@ -188,6 +187,8 @@
     when:
       - 'not rocketchat__mongodb_on_localhost'
 
+  when:
+    - 'rocketchat__mongodb_repl_set_name is defined and rocketchat__mongodb_repl_set_name | length'
   tags:
     - 'rocketchat'
 
