@@ -42,7 +42,7 @@ Runs on
 | `telegraf__outputs_influxdb_skip_database_creation` | We assume that the InfluxDB role creates the database. | `true` |
 | `telegraf__outputs_influxdb_urls` | The full HTTP or UDP URL for your InfluxDB instance. Multiple URLs can be specified for a single cluster, only ONE of the urls will be written to each interval. | `['http://127.0.0.1:8086']` |
 | `telegraf__outputs_influxdb_username` | HTTP Basic Auth | `''` |
-| `telegraf__service_enabled` | Enables or disables the telegraf service, analogous to `systemctl enable/disable --now`. | `true` |
+| `telegraf__service_enabled` | Enables or disables the telegraf service, analogous to `systemctl enable/disable`. | `true` |
 | `telegraf__service_state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
 
 Example:
