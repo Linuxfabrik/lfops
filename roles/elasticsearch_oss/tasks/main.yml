@@ -13,7 +13,7 @@
 
   - name: 'deploy /etc/elasticsearch/elasticsearch.yml'
     ansible.builtin.template:
-      src: 'etc/icinga2/features-available/ido-mysql.conf.j2'
+      src: 'etc/elasticsearch/elasticsearch.yml.j2'
       dest: '/etc/elasticsearch/elasticsearch.yml'
       owner: 'root'
       group: 'elasticsearch'
