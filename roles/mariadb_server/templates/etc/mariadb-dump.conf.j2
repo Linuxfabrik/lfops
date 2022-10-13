@@ -4,10 +4,10 @@
 # License: The Unlicense, see LICENSE file.
 
 # {{ ansible_managed }}
-# 2022042101
+# 2022101301
 
 HOST='localhost'
-USER='{{ mariadb_server__dump_user["username"] }}'
+USERNAME='{{ mariadb_server__dump_user["username"] }}'
 PASSWORD='{{ mariadb_server__dump_user["password"] }}'
 BACKUP_DIR='{{ mariadb_server__dump_directory }}'
 THREADS='{{ mariadb_server__dump_threads }}'

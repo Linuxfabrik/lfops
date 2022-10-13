@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # {{ ansible_managed }}
-# 2022083001
+# 2022101301
 
 
 function exit_with_first_failed_retc() {
@@ -25,12 +25,12 @@ source /etc/mariadb-dump.conf
 
 mkdir -p $BACKUP_DIR
 
-mysql --host=$HOST --user=$USER --password=$PASSWORD \
+mysql --host=$HOST --user=$USERNAME --password=$PASSWORD \
     --execute='SET GLOBAL innodb_buffer_pool_dump_now = ON;'
 mysql_table_lock_retc=$?
 
 # https://github.com/maxbube/mydumper
-mydumper --host=$HOST --user=$USER --password=$PASSWORD \
+mydumper --host=$HOST --user=$USERNAME --password=$PASSWORD \
     --build-empty-files \
     --compress \
     --events \
@@ -47,7 +47,7 @@ mydumper_retc=$?
 
 umask "$old_umask"
 
-mysql --host=$HOST --user=$USER --password=$PASSWORD \
+mysql --host=$HOST --user=$USERNAME --password=$PASSWORD \
     --execute='SET GLOBAL innodb_buffer_pool_load_now = ON;'
 mysql_table_unlock_retc=$?
 
