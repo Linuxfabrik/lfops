@@ -1,1 +1,23 @@
 elasticsearch_oss__service_enabled: true
+
+# -----------------------------------------------
+
+elasicsearch_oss__cluster_name__dependent_var: ''
+elasicsearch_oss__cluster_name__group_var: ''
+elasicsearch_oss__cluster_name__host_var: ''
+elasicsearch_oss__cluster_name__combined_var: '{{
+    elasicsearch_oss__cluster_name__host_var if (elasicsearch_oss__cluster_name__host_var | string | length) else
+    elasicsearch_oss__cluster_name__group_var if (elasicsearch_oss__cluster_name__group_var | string | length) else
+    elasicsearch_oss__cluster_name__dependent_var if (elasicsearch_oss__cluster_name__dependent_var | string | length) else
+    elasicsearch_oss__cluster_name__role_var
+  }}'
+
+elasicsearch_oss__action_auto_create_index__dependent_var: ''
+elasicsearch_oss__action_auto_create_index__group_var: ''
+elasicsearch_oss__action_auto_create_index__host_var: ''
+elasicsearch_oss__action_auto_create_index__combined_var: '{{
+    elasicsearch_oss__action_auto_create_index__host_var if (elasicsearch_oss__action_auto_create_index__host_var | string | length) else
+    elasicsearch_oss__action_auto_create_index__group_var if (elasicsearch_oss__action_auto_create_index__group_var | string | length) else
+    elasicsearch_oss__action_auto_create_index__dependent_var if (elasicsearch_oss__action_auto_create_index__dependent_var | string | length) else
+    elasicsearch_oss__action_auto_create_index__role_var
+  }}'
