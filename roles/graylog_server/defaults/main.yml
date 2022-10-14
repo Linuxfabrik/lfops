@@ -1,2 +1,16 @@
 graylog_server__install_plugins: false
 graylog_server__service_enabled: true
+
+# ---------------------------------------------------
+
+repo_elasticsearch_oss__version__dependent_var: '7.x'
+
+elasticsearch_oss__cluster_name__dependent_var: 'graylog'
+elasticsearch_oss__action_auto_create_index__dependent_var: 'false'
+
+
+repo_opensearch__version__dependent_var: '1.x'
+
+opensearch__version__dependent_var: '1.3.4'
+opensearch__cluster_name__dependent_var: 'graylog'
+opensearch__action_auto_create_index__dependent_var: 'false'
