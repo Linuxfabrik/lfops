@@ -28,7 +28,7 @@ Runs on
 | `mongodb__conf_net_bind_ip` | The IP on which MongoDB should be available. Have a look at [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-net.bindIp). | `'127.0.0.1'` |
 | `mongodb__conf_net_port` | The port on which MongoDB should be available. | `27017` |
 | `mongodb__conf_replication_oplog_size_mb` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.oplogSizeMB) | unset |
-| `mongodb__conf_replication_repl_set_name` | Set this to enable replication. Have a look at <https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.replSetName>. Will be initiated automatically (have a look at `mongodb__repl_set_skip_init`). | unset |
+| `mongodb__conf_replication_repl_set_name__host_var` /<br> `mongodb__conf_replication_repl_set_name__group_var` | Set this to enable replication. Have a look at <https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.replSetName>. Will be initiated automatically (have a look at `mongodb__repl_set_skip_init`). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | unset |
 | `mongodb__conf_security_authorization` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-security.authorization) | `false` |
 | `mongodb__conf_storage_directory_per_db` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.directoryPerDB) | `true` |
 | `mongodb__conf_storage_engine_raw` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.engine) | unset |
@@ -53,7 +53,7 @@ Example:
 mongodb__conf_net_bind_ip: '127.0.0.1' # https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-net.bindIp
 mongodb__conf_net_port: 27017
 mongodb__conf_replication_oplog_size_mb: 50
-mongodb__conf_replication_repl_set_name: 'replSet1'
+mongodb__conf_replication_repl_set_name__host_var: 'replSet1'
 mongodb__conf_security_authorization: false
 mongodb__conf_storage_directory_per_db: true
 mongodb__conf_storage_engine_raw: |-
