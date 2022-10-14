@@ -25,13 +25,13 @@ Runs on
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `elasticsearch_oss__cluster_name` | A descriptive name for your cluster. | `'my-application'` |
-| `elasicsearch_oss__action_auto_create_index` | Automatic index creation allows any index to be created automatically. | `true` |
+| `elasticsearch_oss__action_auto_create_index` | Automatic index creation allows any index to be created automatically. | `true` |
 
 Example:
 ```yaml
 # optional
 elasticsearch_oss__cluster_name: 'my-cluster'
-elasicsearch_oss__action_auto_create_index: false
+elasticsearch_oss__action_auto_create_index: false
 ```
 
 
