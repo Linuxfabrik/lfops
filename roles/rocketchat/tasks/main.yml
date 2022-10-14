@@ -56,23 +56,21 @@
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'Get the installed MongoDB version'
-    ansible.builtin.set_fact:
-      rocketchat__installed_mongodb_version: '{{ ansible_facts["packages"]["mongodb-org"][0]["version"] | regex_replace("\.\d+$", "") }}'
-    when:
-      - 'rocketchat__mongodb_on_localhost'
+  - block:
 
-  - name: 'Make sure the installed MongoDB version is compatible'
-    ansible.builtin.assert:
-      that: 'rocketchat__installed_mongodb_version in rocketchat__api_version_dependencies_result["json"]["compatibleMongoVersions"]'
-      fail_msg: 'MongoDB version {{ rocketchat__installed_mongodb_version }} is not supported by Rocket.Chat version {{ rocketchat__version }}'
-    when:
-      - 'rocketchat__mongodb_on_localhost'
+    - name: 'Get the installed MongoDB version'
+      ansible.builtin.set_fact:
+        rocketchat__installed_mongodb_version: '{{ ansible_facts["packages"]["mongodb-org"][0]["version"] | regex_replace("\.\d+$", "") }}'
 
-  - ansible.builtin.debug:
-      msg: 'Please manually check if MongoDB version {{ rocketchat__installed_mongodb_version }} is supported by Rocket.Chat version {{ rocketchat__version }} on https://github.com/RocketChat/Rocket.Chat/releases/{{ rocketchat__version }}'
-    when:
-      - 'not rocketchat__mongodb_on_localhost'
+    - name: 'Make sure the installed MongoDB version is compatible'
+      ansible.builtin.assert:
+        that: 'rocketchat__installed_mongodb_version in rocketchat__api_version_dependencies_result["json"]["compatibleMongoVersions"]'
+        fail_msg: 'MongoDB version {{ rocketchat__installed_mongodb_version }} is not supported by Rocket.Chat version {{ rocketchat__version }}'
+
+    rescue:
+
+    - ansible.builtin.debug:
+        msg: 'Please manually check if MongoDB version {{ rocketchat__installed_mongodb_version }} is supported by Rocket.Chat version {{ rocketchat__version }} on https://github.com/RocketChat/Rocket.Chat/releases/{{ rocketchat__version }}'
 
   - name: 'set required node version to {{ rocketchat__api_version_dependencies_result["json"]["nodeVersion"] }}'
     ansible.builtin.set_fact:
@@ -89,7 +87,7 @@
     register: 'rocketchat__stat_node_path_result'
 
   - name: 'Install the supported NodeJS environment via n [Version: {{ rocketchat__node_version }}]'
-    ansible.builtin.command: 'n {{ rocketchat__node_version }}'
+    ansible.builtin.command: '/usr/local/bin/n {{ rocketchat__node_version }}'
     when: 'not rocketchat__stat_node_path_result.stat.exists'
 
   - name: 'Check to see if the proper npm version has already been installed'
@@ -170,31 +168,6 @@
 
 - block:
 
-  # https://rocket.chat/docs/installation/manual-installation/mongo-replicas/
-  - name: 'Ensure the MongoDB replSets have been initiated'
-    ansible.builtin.shell: "mongo --eval \"rs.initiate({ _id: '{{ rocketchat__mongodb_repl_set_name }}', members: [ { _id: 0, host: 'localhost:27017' } ]})\" && touch .mongo_rs_initialised"
-    become: true
-    become_user: 'mongod'
-    args:
-      executable: '/bin/bash'
-      chdir: '/var/lib/mongo'
-      creates: '/var/lib/mongo/.mongo_rs_initialised'
-    when:
-      - 'rocketchat__mongodb_on_localhost'
-
-  - ansible.builtin.debug:
-      msg: 'Please manually initiate the MongoDB replica set "{{ rocketchat__mongodb_repl_set_name }}" on host "{{ rocketchat__mongodb_host }}". Documentation: https://rocket.chat/docs/installation/manual-installation/mongo-replicas/'
-    when:
-      - 'not rocketchat__mongodb_on_localhost'
-
-  when:
-    - 'rocketchat__mongodb_repl_set_name is defined and rocketchat__mongodb_repl_set_name | length'
-  tags:
-    - 'rocketchat'
-
-
-- block:
-
   - name: 'Deploy the Rocket.Chat service file'
     ansible.builtin.template:
       src: 'etc/systemd/system/rocketchat.service.j2'
@@ -203,7 +176,7 @@
       group: 'root'
       mode: 0o644
     register: 'rocketchat__template_systemd_service_result'
-    notify: 'rocketchat: systemctl restart rocketchat.service'
+    notify: 'rocketchat: restart rocketchat'
 
   - name: 'systemctl daemon-reload'
     ansible.builtin.systemd:

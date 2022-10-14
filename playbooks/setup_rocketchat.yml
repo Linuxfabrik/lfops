@@ -7,27 +7,34 @@
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
-        - 'not rocketchat__skip_repo_epel | default(false)'
+        - 'not setup_rocketchat__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.git'
       when:
-        - 'not rocketchat__skip_git | default(false)'
+        - 'not setup_rocketchat__skip_git | default(false)'
 
     - role: 'linuxfabrik.lfops.nodejs'
       when:
-        - 'not rocketchat__skip_nodejs | default(false)'
+        - 'not setup_rocketchat__skip_nodejs | default(false)'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__transparent_hugepages__dependent_var: "{{ mongodb__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
       when:
-        - 'not rocketchat__skip_kernel_settings | d(false)'
+        - 'not setup_rocketchat__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.python_venv'
+      python_venv__venvs__dependent_var:
+        - '{{ mongodb__python_venv__venvs__dependent_var | d({}) }}'
+      when:
+        - 'not setup_rocketchat__skip_python_venv | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mongodb'
       when:
-        - 'not rocketchat__skip_repo_mongodb | default(false)'
+        - 'not setup_rocketchat__skip_repo_mongodb | default(false)'
 
     - role: 'linuxfabrik.lfops.mongodb'
+      mongodb__conf_replication_repl_set_name__dependent_var: '{{ rocketchat__mongodb__conf_replication_repl_set_name__dependent_var }}'
       when:
-        - 'not rocketchat__skip_mongodb | default(false)'
+        - 'not setup_rocketchat__skip_mongodb | default(false)'
 
     - role: 'linuxfabrik.lfops.rocketchat'

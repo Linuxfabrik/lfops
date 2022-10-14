@@ -11,11 +11,13 @@ Runs on
 
 ## Mandatory Requirements
 
-* linuxfabrik.lfops.repo_epel
-* git
-* nodejs
-* repo-mongodb
-* mongodb
+* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
+* Install git. This can be done using the [linuxfabrik.lfops.git](https://github.com/Linuxfabrik/lfops/tree/main/roles/git) role.
+* Install nodejs. This can be done using the [linuxfabrik.lfops.nodejs](https://github.com/Linuxfabrik/lfops/tree/main/roles/nodejs) role.
+* Enable the MongoDB repository. This can be done using the [linuxfabrik.lfops.repo_mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mongodb) role.
+* Install MongoDB and configure a replica set. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
+
+If you use the ["Setup Rocket.Chat" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_rocketchat.yml), thinstallation is automatically done for you (you still have to take care of providing the required versions).
 
 
 ## Tags
@@ -46,9 +48,8 @@ rocketchat__root_url: 'https://rocketchat.example.com'
 | -------- | ----------- | ------------- |
 | `rocketchat__application_path`| The directory in which Rocket.Chat should be installed. | `/opt/Rocket.Chat` |
 | `rocketchat__mongodb_host`| The host on which MongoDB is reachable. | `'localhost'` |
-| `rocketchat__mongodb_on_localhost`| Whether the MongoDB is running on the same host as Rocket.Chat. If this is not the case, you need to manually check the version compability and manually initiate the replica set. | `true` |
 | `rocketchat__mongodb_port`| The port on which MongoDB is reachable. | `27017` |
-| `rocketchat__mongodb_repl_set_name`| The name of the MongoDB replica set for Rocket.Chat. Will be initiated if MongoDB is running on localhost (`rocketchat__mongodb_on_localhost`). | `'rs01'` |
+| `rocketchat__mongodb_repl_set_name`| The name of the MongoDB replica set for Rocket.Chat. | `'rs01'` |
 | `rocketchat__port`| The port on which Rocket.Chat server will be available. | `3000` |
 | `rocketchat__service_enabled`| Enables or disables the service, analogous to `systemctl enable/disable`. | `true` |
 | `rocketchat__service_state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
@@ -59,7 +60,6 @@ Example:
 # optional
 rocketchat__application_path: /opt/Rocket.Chat
 rocketchat__mongodb_host: 'localhost'
-rocketchat__mongodb_on_localhost: true
 rocketchat__mongodb_port: 27017
 rocketchat__mongodb_repl_set_name: 'rs01'
 rocketchat__port: 3000

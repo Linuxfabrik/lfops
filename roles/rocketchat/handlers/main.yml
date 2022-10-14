@@ -1,4 +1,4 @@
-- name: 'rocketchat: systemctl restart rocketchat'
+- name: 'rocketchat: restart rocketchat'
   ansible.builtin.service:
     name: 'rocketchat'
     state: 'restarted'
