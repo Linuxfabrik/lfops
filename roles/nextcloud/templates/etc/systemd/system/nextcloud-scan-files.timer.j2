@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022101201
+
+[Unit]
+Description=Nextcloud Scan Files Timer
+
+[Timer]
+OnCalendar={{ nextcloud__on_calendar_scan_files }}
+Unit=nextcloud-scan-files.service
+
+[Install]
+WantedBy=timers.target

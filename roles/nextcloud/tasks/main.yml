@@ -354,6 +354,24 @@
       mode: 0o644
     notify: 'nextcloud: systemctl daemon-reload'
 
+  - name: 'Deploy /etc/systemd/system/nextcloud-scan-files.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/nextcloud-scan-files.service.j2'
+      dest: '/etc/systemd/system/nextcloud-scan-files.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'nextcloud: systemctl daemon-reload'
+
+  - name: 'Deploy /etc/systemd/system/nextcloud-scan-files.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/nextcloud-scan-files.timer.j2'
+      dest: '/etc/systemd/system/nextcloud-scan-files.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'nextcloud: systemctl daemon-reload'
+
   - name: 'Deploy /etc/systemd/system/nextcloud-ldap-show-remnants.service'
     ansible.builtin.template:
       src: 'etc/systemd/system/nextcloud-ldap-show-remnants.service.j2'
@@ -404,6 +422,12 @@
       name: 'nextcloud-app-update.timer'
       state: '{{ nextcloud__timer_app_update_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ nextcloud__timer_app_update_enabled }}'
+
+  - name: 'systemctl {{ nextcloud__timer_scan_files_enabled | bool | ternary("enable", "disable") }} nextcloud-scan-files.timer --now'
+    ansible.builtin.systemd:
+      name: 'nextcloud-scan-files.timer'
+      state: '{{ nextcloud__timer_scan_files_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ nextcloud__timer_scan_files_enabled }}'
 
   - name: 'systemctl {{ nextcloud__timer_ldap_show_remnants_enabled | bool | ternary("enable", "disable") }} nextcloud-ldap-show-remnants.timer --now'
     ansible.builtin.systemd:

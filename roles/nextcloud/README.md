@@ -36,9 +36,9 @@ If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops
 
 | Tag                       | What it does |
 | ---                       | ------------ |
-| `nextcloud`               | * Install bzip2 samba-client<br> * `wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2`<br> * `bunzip /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2 /var/www/html/`<br> * Storage Backend: Deploy `/var/www/html/nextcloud/config/objectstore.config.php`<br> * `chown -R apache:apache /var/www/html/nextcloud`<br> * `mkdir path/to/data; chown -R apache:apache path/to/data; chmod 0750 -R path/to/data`<br> * `chmod +x /var/www/html/nextcloud/occ`<br> * `restorecon -Fvr ...`<br> * Run nextcloud installer<br> * Convert some database columns to big int<br> * Set Nextcloud system settings<br> * Set Nextcloud proxy settings<br> * nextcloud: restart php-fpm<br> * Register if role state file exists<br> * Disable every possible Nextcloud App on initial setup, but do this only once<br> * Install and enable Nextcloud Apps on initial setup, but do this only once<br> * Enable a subset of pre-installed Nextcloud Apps on initial setup, but do this only once<br> * Create a role state file<br> * Disable Nextcloud Apps<br> * Install Nextcloud Apps<br> * Enable Nextcloud Apps<br> * Set Nextcloud App Settings<br> * `chown -R apache:apache /var/www/html/nextcloud`<br> * Deploy `/etc/systemd/system/nextcloud-jobs.service`<br> * Deploy `/etc/systemd/system/nextcloud-jobs.timer`<br> * Set background job to "cron"<br> * Deploy `/etc/systemd/system/nextcloud-app-update.service`<br> * Deploy `/etc/systemd/system/nextcloud-app-update.timer`<br> * Deploy `/etc/systemd/system/nextcloud-ldap-show-remnants.service`<br> * Deploy `/etc/systemd/system/nextcloud-ldap-show-remnants.timer`<br> * Deploy `/usr/local/bin/nextcloud-ldap-show-remnants`<br> * `systemctl enable/disable nextcloud-jobs.timer --now`<br> * `systemctl enable/disable nextcloud-app-update.timer --now`<br>  * `systemctl enable/disable nextcloud-ldap-show-remnants.timer --now`<br> * Deploy `/usr/local/bin/nextcloud-update` |
+| `nextcloud`               | * Install bzip2 samba-client<br> * `wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2`<br> * `bunzip /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2 /var/www/html/`<br> * Storage Backend: Deploy `/var/www/html/nextcloud/config/objectstore.config.php`<br> * `chown -R apache:apache /var/www/html/nextcloud`<br> * `mkdir path/to/data; chown -R apache:apache path/to/data; chmod 0750 -R path/to/data`<br> * `chmod +x /var/www/html/nextcloud/occ`<br> * `restorecon -Fvr ...`<br> * Run nextcloud installer<br> * Convert some database columns to big int<br> * Set Nextcloud system settings<br> * Set Nextcloud proxy settings<br> * nextcloud: restart php-fpm<br> * Register if role state file exists<br> * Disable every possible Nextcloud App on initial setup, but do this only once<br> * Install and enable Nextcloud Apps on initial setup, but do this only once<br> * Enable a subset of pre-installed Nextcloud Apps on initial setup, but do this only once<br> * Create a role state file<br> * Disable Nextcloud Apps<br> * Install Nextcloud Apps<br> * Enable Nextcloud Apps<br> * Set Nextcloud App Settings<br> * `chown -R apache:apache /var/www/html/nextcloud`<br> * Deploy `/etc/systemd/system/nextcloud-jobs.service`<br> * Deploy `/etc/systemd/system/nextcloud-jobs.timer`<br> * Set background job to "cron"<br> * Deploy `/etc/systemd/system/nextcloud-app-update.service`<br> * Deploy `/etc/systemd/system/nextcloud-app-update.timer`<br> * Deploy /etc/systemd/system/nextcloud-scan-files.service<br> * Deploy /etc/systemd/system/nextcloud-scan-files.timer<br> * Deploy `/etc/systemd/system/nextcloud-ldap-show-remnants.service`<br> * Deploy `/etc/systemd/system/nextcloud-ldap-show-remnants.timer`<br> * Deploy `/usr/local/bin/nextcloud-ldap-show-remnants`<br> * `systemctl enable/disable nextcloud-jobs.timer --now`<br> * `systemctl enable/disable nextcloud-app-update.timer --now`<br> * `systemctl enable/disable nextcloud-scan-files.timer --now`<br> * `systemctl enable/disable nextcloud-ldap-show-remnants.timer --now`<br> * Deploy `/usr/local/bin/nextcloud-update` |
 | `nextcloud:apps`          | * Disable Nextcloud Apps<br> * Install Nextcloud Apps<br> * Enable Nextcloud Apps<br> * Set Nextcloud App Settings |
-| `nextcloud:cron`          | * Deploy `/etc/systemd/system/nextcloud-jobs.service`<br> * Deploy `/etc/systemd/system/nextcloud-jobs.timer`<br> * Set background job to "cron"<br> * Deploy `/etc/systemd/system/nextcloud-app-update.service`<br> * Deploy `/etc/systemd/system/nextcloud-app-update.timer`<br> * Deploy `/etc/systemd/system/nextcloud-ldap-show-remnants.service`<br> * Deploy `/etc/systemd/system/nextcloud-ldap-show-remnants.timer`<br> * Deploy `/usr/local/bin/nextcloud-ldap-show-remnants`<br> * `systemctl enable/disable nextcloud-jobs.timer --now`<br> * `systemctl enable/disable nextcloud-app-update.timer --now`<br>  * `systemctl enable/disable nextcloud-ldap-show-remnants.timer --now`<br> * Deploy `/usr/local/bin/nextcloud-update` |
+| `nextcloud:cron`          | * Deploy `/etc/systemd/system/nextcloud-jobs.service`<br> * Deploy `/etc/systemd/system/nextcloud-jobs.timer`<br> * Set background job to "cron"<br> * Deploy `/etc/systemd/system/nextcloud-app-update.service`<br> * Deploy `/etc/systemd/system/nextcloud-app-update.timer`<br> * Deploy /etc/systemd/system/nextcloud-scan-files.service<br> * Deploy /etc/systemd/system/nextcloud-scan-files.timer<br> * Deploy `/etc/systemd/system/nextcloud-ldap-show-remnants.service`<br> * Deploy `/etc/systemd/system/nextcloud-ldap-show-remnants.timer`<br> * Deploy `/usr/local/bin/nextcloud-ldap-show-remnants`<br> * `systemctl enable/disable nextcloud-jobs.timer --now`<br> * `systemctl enable/disable nextcloud-app-update.timer --now`<br> * `systemctl enable/disable nextcloud-scan-files.timer --now`<br> * `systemctl enable/disable nextcloud-ldap-show-remnants.timer --now`<br> * Deploy `/usr/local/bin/nextcloud-update` |
 | `nextcloud:state`         | * `systemctl enable/disable nextcloud-jobs.timer --now`<br> * `systemctl enable/disable nextcloud-app-update.timer --now` |
 | `nextcloud:scripts` | * Deploy `/usr/local/bin/nextcloud-update` |
 | `nextcloud:user`          | * Create Nextcloud user<br>* Update Nextcloud settings for user |
@@ -83,6 +83,7 @@ nextcloud__users:
 | `nextcloud__mariadb_login` | The user account for the database administrator. | `'{{ mariadb_server__admin_user }}'` |
 | `nextcloud__on_calendar_app_update` | Time to update Nextcloud Apps (Systemd-Timer notation). | `'06,18,23:{{ 59 \| random(seed=inventory_hostname) }}'` |
 | `nextcloud__on_calendar_jobs`| Run interval of OCC background jobs. | `'*:0/5'` |
+| `nextcloud__on_calendar_scan_files`| Run interval of rescanning filesystem. | `'*:50:15'` |
 | `nextcloud__php__ini_max_execution_time__group_var` / `nextcloud__php__ini_max_execution_time__host_var` | [php.net](https://www.php.net/manual/en/info.configuration.php) | `'3600` |
 | `nextcloud__php__ini_max_file_uploads__group_var` / `nextcloud__php__ini_max_file_uploads__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'100` |
 | `nextcloud__php__ini_memory_limit__group_var` / `nextcloud__php__ini_memory_limit__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'1024M'` |
@@ -116,6 +117,7 @@ nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'
+nextcloud__on_calendar_scan_files: '*:50:15'
 
 nextcloud__proxyconfig:
   - { key: 'overwrite.cli.url', value: '--value=https://cloud.example.com' }
@@ -139,12 +141,12 @@ nextcloud__storage_backend_s3:
 # ... or swift
 nextcloud__storage_backend_swift:
   autocreate: true
-  url: 'https://api.pub1.infomaniak.cloud/identity/v3'
   bucket: 'mybucket'
   region: 'dc3-a'
   scope_project_domain_name: 'Default'
   scope_project_name: 'PCP-XXXXXX'
   service_name: 'swift'
+  url: 'https://api.pub1.infomaniak.cloud/identity/v3'
   user_domain_name: 'Default'
   user_name: 'PCU-XXXXXX'
   user_password: 'linuxfabrik'
