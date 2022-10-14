@@ -1,1 +1,33 @@
 opensearch__service_enabled: true
+
+# ---------------------------------------------------------------------
+
+opensearch__version__dependent_var: ''
+opensearch__version__group_var: ''
+opensearch__version__host_var: ''
+opensearch__version__combined_var: '{{
+    opensearch__version__host_var if (opensearch__version__host_var | string | length) else
+    opensearch__version__group_var if (opensearch__version__group_var | string | length) else
+    opensearch__version__dependent_var if (opensearch__version__dependent_var | string | length) else
+    opensearch__version__role_var
+  }}'
+
+opensearch__cluster_name__dependent_var: ''
+opensearch__cluster_name__group_var: ''
+opensearch__cluster_name__host_var: ''
+opensearch__cluster_name__combined_var: '{{
+    opensearch__cluster_name__host_var if (opensearch__cluster_name__host_var | string | length) else
+    opensearch__cluster_name__group_var if (opensearch__cluster_name__group_var | string | length) else
+    opensearch__cluster_name__dependent_var if (opensearch__cluster_name__dependent_var | string | length) else
+    opensearch__cluster_name__role_var
+  }}'
+
+opensearch__action_auto_create_index__dependent_var: ''
+opensearch__action_auto_create_index__group_var: ''
+opensearch__action_auto_create_index__host_var: ''
+opensearch__action_auto_create_index__combined_var: '{{
+    opensearch__action_auto_create_index__host_var if (opensearch__action_auto_create_index__host_var | string | length) else
+    opensearch__action_auto_create_index__group_var if (opensearch__action_auto_create_index__group_var | string | length) else
+    opensearch__action_auto_create_index__dependent_var if (opensearch__action_auto_create_index__dependent_var | string | length) else
+    opensearch__action_auto_create_index__role_var
+  }}'

@@ -12,6 +12,21 @@
 
 - block:
 
+  - name: 'deploy /etc/opensearch/opensearch.yml'
+    ansible.builtin.template:
+      src: 'etc/opensearch/opensearch.yml.j2'
+      dest: '/etc/opensearch/opensearch.yml'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o644
+    notify: 'opensearch: restart opensearch'
+
+  tags:
+    - 'opensearch'
+
+
+- block:
+
   - name: 'systemctl {{ opensearch__service_enabled | bool | ternary("enable", "disable") }} --now opensearch.service'
     ansible.builtin.service:
       name: 'opensearch.service'
