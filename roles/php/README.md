@@ -63,13 +63,13 @@ php__modules__host_var:
 ```
 
 
-### `php__ini_*` config directives
+### `php__ini_*` Config Directives
 
 Variables for `php.ini` directives and their default values, defined and supported by this role.
 
 | Role Variable                              | Documentation                                                         | Default Value                                           |
 | -------------                              | -------------                                                         | -------------                                           |
-| `php__ini_date_timezone__group_var` / `php__ini_date_timezone__host_var`                   | [php.net](https://www.php.net/manual/en/datetime.configuration.php)   | `'Europe/Zurich'`                                       |
+| `php__ini_date_timezone__group_var` / `php__ini_date_timezone__host_var`                   | The default timezone used by all date/time functions. [php.net](https://www.php.net/manual/en/datetime.configuration.php)   | `'Europe/Zurich'`                                       |
 | `php__ini_default_socket_timeout__group_var` / `php__ini_default_socket_timeout__host_var`          | [php.net](https://www.php.net/manual/en/filesystem.configuration.php) | `10`                                                    |
 | `php__ini_display_errors__group_var` / `php__ini_display_errors__host_var`                 | This determines whether errors should be printed to the screen as part of the output or if they should be hidden from the user. This is a feature to support your development and should never be used on production systems (e.g. systems connected to the internet). [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)  | `'Off'`                                                 |
 | `php__ini_display_startup_errors__group_var` / `php__ini_display_startup_errors__host_var`          | Even when display_errors is on, errors that occur during PHP's startup sequence are not displayed. It's strongly recommended to keep  [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)  | `'Off'`                                                 |
@@ -104,6 +104,15 @@ php__ini_max_file_uploads__host_var: 100
 php__ini_memory_limit__host_var: '1024M'
 php__ini_upload_max_filesize__host_var: '10000M'
 ```
+
+
+### Pool Config Directives
+
+php__fpm_pool_conf_pm__combined_var
+php__fpm_pool_conf_pm_max_children__combined_var
+php__fpm_pool_conf_pm_start_servers__combined_var
+php__fpm_pool_conf_pm_min_spare_servers__combined_var
+php__fpm_pool_conf_pm_max_spare_servers__combined_var
 
 
 ## License
