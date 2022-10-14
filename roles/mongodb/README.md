@@ -28,7 +28,7 @@ Runs on
 | `mongodb__conf_net_bind_ip` | The IP on which MongoDB should be available. Have a look at [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-net.bindIp). | `'127.0.0.1'` |
 | `mongodb__conf_net_port` | The port on which MongoDB should be available. | `27017` |
 | `mongodb__conf_replication_oplog_size_mb` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.oplogSizeMB) | unset |
-| `mongodb__conf_replication_repl_set_name` | Set this to enable replication. Have a look at <https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.replSetName>. | unset |
+| `mongodb__conf_replication_repl_set_name` | Set this to enable replication. Have a look at <https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.replSetName>. Will be initiated automatically (have a look at `mongodb__repl_set_skip_init`). | unset |
 | `mongodb__conf_security_authorization` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-security.authorization) | `false` |
 | `mongodb__conf_storage_directory_per_db` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.directoryPerDB) | `true` |
 | `mongodb__conf_storage_engine_raw` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.engine) | unset |
@@ -41,7 +41,11 @@ Runs on
 | `mongodb__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'` |
 | `mongodb__dump_only_if_hidden` | Use this to only run the backup if the instance is hidden. This is useful in a MongoDB cluster setupp. | `false` |
 | `mongodb__dump_use_oplog` | Use this to capture incoming write operations during the dump operation to ensure that the backups reflect a consistent data state. Note that this only works on cluster setups or with replica sets. | `false` |
-| `mongodb__dump_user` | The MongoDB user for dumping the database when Role-Based Access Control is enabled (`mongodb__conf_security_authorization`). | unset |
+| `mongodb__dump_user` | The MongoDB user for dumping the database when Role-Based Access Control is enabled (`mongodb__conf_security_authorization`). Subkeys: <br> * `auth_database`: Optional, string. Database to authenticate against. Defaults to `'admin'`. <br> * `username`: Required, string. <br> * `password`: Required, string. | unset |
+| `mongodb__service_enabled`| Enables or disables the service, analogous to `systemctl enable/disable`. | `true` |
+| `mongodb__service_state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+| `mongodb__repl_set_members` | A list of the members for initiating the replica set | `['localhost:27017']` |
+| `mongodb__repl_set_skip_init` | Set this to skip the initiation of the replica set. | `false` |
 
 Example:
 ```yaml
@@ -73,9 +77,12 @@ mongodb__dump_on_calendar: ''
 mongodb__dump_only_if_hidden: false
 mongodb__dump_use_oplog: true
 mongodb__dump_user:
-  auth_database: 'admin' # default
+  auth_database: 'admin'
   password: 'password'
   username: 'mariadb-dump'
+mongodb__service_enabled: true
+mongodb__service_state: 'started'
+mongodb__repl_set_skip_init: false
 ```
 
 

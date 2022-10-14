@@ -1,10 +1,19 @@
 mongodb__conf_net_bind_ip: '127.0.0.1' # https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-net.bindIp
 mongodb__conf_net_port: 27017
+mongodb__conf_replication_repl_set_name__dependent_var: ''
+mongodb__conf_replication_repl_set_name__group_var: ''
+mongodb__conf_replication_repl_set_name__host_var: ''
+mongodb__conf_replication_repl_set_name__role_var: ''
+mongodb__conf_replication_repl_set_name__combined_var: '{{
+    mongodb__conf_replication_repl_set_name__host_var if (mongodb__conf_replication_repl_set_name__host_var | string | length) else
+    mongodb__conf_replication_repl_set_name__group_var if (mongodb__conf_replication_repl_set_name__group_var | string | length) else
+    mongodb__conf_replication_repl_set_name__dependent_var if (mongodb__conf_replication_repl_set_name__dependent_var | string | length) else
+    mongodb__conf_replication_repl_set_name__role_var
+  }}'
 mongodb__conf_security_authorization: false
 mongodb__conf_storage_directory_per_db: true
 mongodb__conf_storage_journal_commit_interval_ms: 100
 mongodb__conf_storage_journal_enabled: true
-
 mongodb__dump_method_file_based: false
 mongodb__dump_method_file_based_backup_dir: '/backup/var-lib-mongo'
 mongodb__dump_method_mongodump: true
@@ -12,13 +21,11 @@ mongodb__dump_method_mongodump_backup_dir: '/backup/mongodb-dump'
 mongodb__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
 mongodb__dump_only_if_hidden: false
 mongodb__dump_use_oplog: false
-# mongodb__dump_user:
-#   auth_database: 'admin' # default
-#   password: 'password'
-#   username: 'mariadb-dump'
-
 mongodb__service_enabled: true
 mongodb__service_state: 'started'
+mongodb__repl_set_members:
+  - 'localhost:27017'
+mongodb__repl_set_skip_init: false
 
 # -----------------------------------------------------------------------------
 
@@ -27,3 +34,8 @@ mongodb__kernel_settings__sysctl__dependent_var:
   - name: 'vm.swappiness'
     value: 1
 mongodb__kernel_settings__transparent_hugepages__dependent_var: 'never'
+
+mongodb__python_venv__venvs__dependent_var:
+  - name: 'pymongo'
+    packages:
+      - 'pymongo'

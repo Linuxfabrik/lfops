@@ -5,7 +5,7 @@
       name: 'mongodb-org'
       state: 'present'
 
-  - name: 'Generate MongoDB config'
+  - name: 'Deploy /etc/mongod.conf'
     ansible.builtin.template:
       src: 'etc/mongod.conf.j2'
       dest: '/etc/mongod.conf'
@@ -14,14 +14,13 @@
       mode: 0o644
     notify: 'mongodb: systemctl restart mongod.service'
 
-  # TODO needed?
-  # - name: 'Generate MongoDB Logrotate config'
-  #   ansible.builtin.template:
-  #     src: 'etc/logrotate.d/mongod.j2'
-  #     dest: '/etc/logrotate.d/mongod'
-  #     owner: 'root'
-  #     group: 'root'
-  #     mode: 0o644
+  - name: 'Deploy /etc/logrotate.d/mongod'
+    ansible.builtin.template:
+      src: 'etc/logrotate.d/mongod.j2'
+      dest: '/etc/logrotate.d/mongod'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
 
   tags:
     - 'mongodb'
@@ -90,3 +89,24 @@
   tags:
     - 'mongodb'
     - 'mongodb:state'
+
+
+- block:
+
+  - name: 'Ensure replicaset "{{ mongodb__conf_replication_repl_set_name__combined_var }}" exists'
+    community.mongodb.mongodb_replicaset:
+      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_port: '{{ mongodb__conf_net_port }}'
+      replica_set: '{{ mongodb__conf_replication_repl_set_name__combined_var }}'
+      members: '{{ mongodb__repl_set_members }}'
+      validate: false # prevent error with only one member
+      debug: true
+    vars:
+      ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
+
+  when:
+    - 'not mongodb__repl_set_skip_init'
+    - 'mongodb__conf_replication_repl_set_name__combined_var | length'
+  tags:
+    - 'mongodb'
+    - 'test'

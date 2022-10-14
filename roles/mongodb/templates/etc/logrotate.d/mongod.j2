@@ -1,5 +1,5 @@
 {{ ansible_managed }}
-# 2022091601
+# 2022101401
 
 /var/log/mongodb/mongod.log
 {
@@ -8,7 +8,7 @@
     dateext
     missingok
     notifempty
-    rotate {{ mongodb__logrotate | logrotate__rotate | d(14) }}
+    rotate 14d
     sharedscripts
     postrotate
         /bin/kill -SIGUSR1 `cat /var/lib/mongodb/mongod.lock 2> /dev/null` 2> /dev/null || true
