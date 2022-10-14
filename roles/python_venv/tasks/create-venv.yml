@@ -12,11 +12,12 @@
     group: 'root'
     mode: 0o644
 
-- name: 'pip install -U pip wheel'
+- name: 'pip install -U pip wheel setuptools'
   ansible.builtin.pip:
     name:
       - 'pip'
       - 'wheel'
+      - 'setuptools'
     state: 'latest'
     virtualenv: '/opt/python-venv/{{ venv.name }}'
 
