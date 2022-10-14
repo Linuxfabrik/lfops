@@ -1,4 +1,6 @@
 opensearch__service_enabled: true
+opensearch__cluster_name__role_var: 'my-application'
+opensearch__action_auto_create_index__role_var: 'true'
 
 # ---------------------------------------------------------------------
 
