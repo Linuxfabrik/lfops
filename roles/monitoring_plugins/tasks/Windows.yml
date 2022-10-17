@@ -1,9 +1,5 @@
 - block:
 
-  - ansible.builtin.import_tasks: 'generate-monitoring-plugins-list.yml'
-    tags:
-      - 'monitoring_plugins'
-
   - name: 'Make sure the plugin directory exists (Windows)'
     ansible.windows.win_file:
       path: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\'
