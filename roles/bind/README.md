@@ -48,7 +48,7 @@ bind__zones:
     raw: |-
       $TTL 1H
 
-      @ IN SOA dns-server.example.com. root@example.com. (
+      @ IN SOA dns-server.example.com. info@example.com. (
           2022042501 ; <SERNO>
           1H         ; <TIME-TO-REFRESH>
           1H         ; <TIME-TO-RETRY>
@@ -58,6 +58,22 @@ bind__zones:
       @ IN NS dns-server.example.com.
 
       2    IN PTR dns-server.example.com.
+
+  - name: '{{ bind__rpz_zone }}'
+    file: '{{ bind__rpz_zone }}.zone'
+    raw: |-
+      $TTL 1H
+
+      @ IN SOA 001-p-infra01.example.com. info@example.com. (
+          2022101801 ; <SERNO>
+          1H         ; <TIME-TO-REFRESH>
+          1H         ; <TIME-TO-RETRY>
+          1W         ; <TIME-TO-EXPIRE>
+          1D )       ; <minimum-TTL>
+
+      @ IN NS 001-p-infra01.example.com.
+
+      internal-website.example.com     A     192.0.2.3
 ```
 
 
@@ -68,6 +84,7 @@ bind__zones:
 | `bind__forwarders` | List of DNS servers to which DNS queries to unknown domain names should be forwarded. | `['1.0.0.1', '1.1.1.1']` |
 | `bind__listen_on_addresses` | List of addresses on which the server will listen. This indirectly sets the listening interface(s). | `['any']` |
 | `bind__named_service_enabled` | Enables or disables the named service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
+| `bind__rpz_zone` | This enables the usage of a reverse-policy zone (have a look at https://dnsrpz.info/, basically acts as a `/etc/hosts` file for all clients). To use this, also create a zone with `name: '{{ bind__rpz_zone }}'` in `bind__zones`. | unset |
 
 Example:
 ```yaml
@@ -78,6 +95,7 @@ bind__forwarders:
 bind__listen_on_addresses:
   - '192.0.2.2/32'
 bind__named_service_enabled: true
+bind__rpz_zone: 'rpz'
 ```
 
 

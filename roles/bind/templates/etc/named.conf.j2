@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022051001
+# 2022101801
 
 acl "trusted" {
     localhost;
@@ -36,6 +36,9 @@ options {
     memstatistics-file "/var/named/data/named_mem_stats.txt";
     pid-file "/run/named/named.pid";
     recursion yes;
+    {% if bind__rpz_zone is defined and bind__rpz_zone | length %}
+    response-policy { zone "{{ bind__rpz_zone }}"; };
+    {% endif %}
     session-keyfile "/run/named/session.key";
     statistics-file "/var/named/data/named_stats.txt";
     version "Linuxfabrik";
