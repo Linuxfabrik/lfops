@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'Install snmp'
+  - name: 'Install net-snmp net-snmp-libs net-snmp-utils'
     ansible.builtin.package:
       name:
         - 'net-snmp'

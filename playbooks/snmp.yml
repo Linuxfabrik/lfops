@@ -5,6 +5,3 @@
   roles:
 
     - role: 'linuxfabrik.lfops.snmp'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not snmp__skip_snmp | default(false)'

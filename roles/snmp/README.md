@@ -22,16 +22,16 @@ Runs on
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `snmp__rocommunity` | Sets the SNMPv1 + SNMPv2 readonly community. | `'mypublic'` |
-| `snmp__syslocation` | Sets the location of the system. | `'unknown'` |
 | `snmp__syscontact` | Sets the systemcontact information. | `'Root <root@localhost>'` |
+| `snmp__syslocation` | Sets the location of the system. | `'unknown'` |
 
 
 Example:
 ```yaml
 # optional
 snmp__rocommunity: 'myreadonlycommunity'
-snmp__syslocation: 'Datacenter Zurich'
 snmp__syscontact: 'webmaster@example.com'
+snmp__syslocation: 'Datacenter Zurich'
 ```
 
 
