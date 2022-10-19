@@ -1,0 +1,7 @@
+- name: 'Manage and configure SNMP'
+  hosts:
+    - 'lfops_snmp'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.snmp'

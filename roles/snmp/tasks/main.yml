@@ -1,0 +1,34 @@
+- block:
+
+  - name: 'Install net-snmp net-snmp-libs net-snmp-utils'
+    ansible.builtin.package:
+      name:
+        - 'net-snmp'
+        - 'net-snmp-libs'
+        - 'net-snmp-utils'
+      state: 'present'
+
+  - name: 'Deploy /etc/snmp/snmpd.conf'
+    ansible.builtin.template:
+      src: 'etc/snmp/snmpd.conf.j2'
+      dest: '/etc/snmp/snmpd.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+    notify: 'snmp: restart snmpd'
+
+  tags:
+    - 'snmp'
+
+
+- block:
+
+  - name: 'systemctl {{ snmp__snmpd_service_enabled | bool | ternary("enable", "disable") }} --now snmpd'
+    ansible.builtin.service:
+      name: 'snmpd'
+      enabled: '{{ snmp__snmpd_service_enabled }}'
+      state: '{{ snmp__snmpd_service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'snmp'
+    - 'snmp:state'

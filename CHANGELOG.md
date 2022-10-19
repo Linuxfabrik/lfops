@@ -155,6 +155,7 @@ New features:
 * Role: repo_mydumper
 * Role: repo_remi
 * Role: rocketchat
+* Role: snmp
 * Role: sshd
 * Role: stig
 * Role: system_update
