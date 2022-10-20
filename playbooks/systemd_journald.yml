@@ -1,0 +1,7 @@
+- name: 'Configure systemd-journald'
+  hosts:
+    - 'lfops_systemd_journald'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.systemd_journald'

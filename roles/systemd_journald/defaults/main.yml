@@ -1,0 +1,3 @@
+systemd_journald__conf_storage: 'persistent'
+systemd_journald__service_enabled: true
+systemd_journald__service_state: 'started'

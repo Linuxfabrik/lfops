@@ -159,6 +159,7 @@ New features:
 * Role: sshd
 * Role: stig
 * Role: system_update
+* Role: systemd_journald
 * Role: tar
 * Role: telegraf
 * Role: timezone
