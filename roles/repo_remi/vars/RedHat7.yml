@@ -11,4 +11,7 @@ repo_remi__repo_files:
   - 'RedHat7/etc/yum.repos.d/remi-php72.repo'
   - 'RedHat7/etc/yum.repos.d/remi-php73.repo'
   - 'RedHat7/etc/yum.repos.d/remi-php74.repo'
+  - 'RedHat7/etc/yum.repos.d/remi-php80.repo'
+  - 'RedHat7/etc/yum.repos.d/remi-php81.repo'
+  - 'RedHat7/etc/yum.repos.d/remi-php82.repo'
   - 'RedHat7/etc/yum.repos.d/remi-safe.repo'
