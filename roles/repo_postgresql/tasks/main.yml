@@ -1,0 +1,27 @@
+- block:
+
+  - name: 'deploy /etc/pki/RPM-GPG-KEY-PGDG'
+    ansible.builtin.copy:
+      src: 'etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'deploy the repo files (mirror: {{ repo_postgresql__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/pgdg-redhat-all.repo.j2'
+      dest: '/etc/yum.repos.d/pgdg-redhat-all.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'dnf module disable -y postgresql # prevent the default module stream from being used'
+    ansible.builtin.command: 'dnf module disable -y postgresql'
+    args:
+      warn: false
+    register: 'repo_postgresql__module_disable_result'
+    changed_when: "'Nothing to do' not in repo_postgresql__module_disable_result['stdout']"
+
+  tags:
+    - 'repo_postgresql'

@@ -1,0 +1,7 @@
+- name: 'Manage and configure the official PostgreSQL'
+  hosts:
+    - 'lfops_repo_postgresql'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_postgresql'
