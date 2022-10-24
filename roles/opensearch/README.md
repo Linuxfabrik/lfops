@@ -30,7 +30,7 @@ Runs on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `opensearch__cluster_name` | A descriptive name for your cluster. | `'my-application'` |
+| `opensearch__version__host_var` / <br> `opensearch__cluster_name__group_var` | A descriptive name for your cluster.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
 | `opensearch__action_auto_create_index` | Automatic index creation allows any index to be created automatically. | `true` |
 
 Example:
