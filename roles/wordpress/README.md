@@ -60,7 +60,7 @@ wordpress__url: 'wordpress.example.com'
 | `wordpress__database_name` | The name of the database. | `'wordpress'` |
 | `wordpress__disallow_file_edit` | Prevent editing of plugin / theme files from the admin WebGUI. Strongly recommended to set this to `true` for security reasons. | `true` |
 | `wordpress__install_dir` | The installation directory for WordPress. | `'/var/www/html/{{ wordpress__url }}'` |
-| `wordpress__plugins` | List of WordPress plugins. Subkeys: <br> * name: Mandatory, string. Plugin slug, path to a local zip file, or URL to a remote zip file. <br> * state: Optional, string. Either `'present'` or `'absent`' | `[]` |
+| `wordpress__plugins` | List of WordPress plugin slugs. To get a list of already installed plugins, use the WordPress CLI `sudo -u apache /usr/local/bin/wp plugin list --status=active`. Subkeys: <br> * name: Mandatory, string. Plugin slug, path to a local zip file, or URL to a remote zip file. <br> * state: Optional, string. Either `'present'` or `'absent`' | `[]` |
 | `wordpress__theme` | The WordPress theme to install. Accepts a theme slug, the path to a local zip file, or a URL to a remote zip file. | unset |
 | `wordpress__version` | The WordPress version to install. Possible options: <br> * Version number <br> * `'latest'` <br> * `'nightly'` | `'latest'` |
 | `wordpress__wxr_export` | Path to a WXR export file which will be imported after installing WordPress. The file includes posts, pages, comments, custom fields, categories and tags, and can be created using the [wp-cli export function](https://developer.wordpress.org/cli/commands/export/) or the `wordpress:export` tag. | unset |
