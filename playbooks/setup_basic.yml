@@ -48,6 +48,10 @@
 
 
     # === Sensible defaults ===
+    - role: 'linuxfabrik.lfops.systemd_journald'
+      when:
+        - 'not setup_basic__skip_systemd_journald | d(false)'
+
     - role: 'linuxfabrik.lfops.hostname'
       when:
         - 'not setup_basic__skip_hostname | d(false)'
