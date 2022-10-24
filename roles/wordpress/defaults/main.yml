@@ -28,13 +28,14 @@ wordpress__apache_httpd__vhosts__dependent_var:
     authz_document_root: |-
         Require all granted
     virtualhost_port: 80
+    conf_allow_override: 'All'
     conf_directory_index: 'index.php'
     conf_document_root: '{{ wordpress__install_dir }}'
+    onf_options: 'FollowSymLinks'
     raw: !unsafe |-
       <Files wp-config.php>
           Require all denied
       </Files>
-
       <Files xmlrpc.php>
           Require all denied
       </Files>
