@@ -4,6 +4,10 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.yum_utils'
+      when:
+        - 'not system_update__skip_yum_utils | d(false)'
+
     - role: 'linuxfabrik.lfops.at'
     - role: 'linuxfabrik.lfops.mailx'
     - role: 'linuxfabrik.lfops.system_update'
