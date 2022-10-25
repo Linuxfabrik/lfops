@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2022102501
+# 2022102502
 
 export LC_ALL=C
 
@@ -50,7 +50,7 @@ SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}$(hostname --short)"
 SENDER="{{ system_update__mail_subject_prefix }}$(hostname --short) <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ' ) }}"
 
-if systemctl is-active --quiet aide-check.timer && systemctl is-failed --quiet aide-check.service; then
+if command -v aide  1> /dev/null && systemctl is-failed --quiet aide-check.service; then
     cp /var/log/aide/aide.log /var/log/aide/aide.log-pre-system-update
     SUBJECT="$SUBJECT_PREFIX - aide-check.service state was failed before System Update"
     MSGBODY="Please check the logfile at /var/log/aide/aide.log-pre-system-update (saved before the update ran)."
@@ -68,7 +68,7 @@ if [ $? -ne 0 ]; then
 fi
 {% endif %}
 
-if systemctl is-active --quiet aide-check.timer; then
+if command -v aide 1> /dev/null; then
     aide --update
     \mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
     systemctl restart aide-check.service
