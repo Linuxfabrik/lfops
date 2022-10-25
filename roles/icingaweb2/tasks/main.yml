@@ -117,7 +117,7 @@
 
   - name: 'download the linuxfabrik icon assets'
     ansible.builtin.get_url:
-      url: 'https://download.linuxfabrik.ch/monitoring-plugins/assets/icons/icons.tar.gz'
+      url: 'https://download.linuxfabrik.ch/monitoring-plugins/icons/icons.tar.gz'
       dest: '/tmp/ansible.assets-icons.tar.gz'
     delegate_to: 'localhost'
     check_mode: false # run task even if `--check` is specified
