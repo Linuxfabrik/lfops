@@ -1,16 +1,10 @@
 - block:
 
-  - name: 'Install opensearch {{ opensearch__version }}'
+  - name: 'Install opensearch {{ opensearch__version__combined_var }}'
     ansible.builtin.package:
       name:
-        - 'opensearch-{{ opensearch__version }}'
+        - 'opensearch-{{ opensearch__version__combined_var }}'
       state: 'present'
-
-  tags:
-    - 'opensearch'
-
-
-- block:
 
   - name: 'deploy /etc/opensearch/opensearch.yml'
     ansible.builtin.template:

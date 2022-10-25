@@ -1,9 +1,16 @@
 - block:
 
-  - name: 'Download Opensearch {{ repo_opensearch__version }} Repository'
-    ansible.builtin.get_url:
-      url: 'https://artifacts.opensearch.org/releases/bundle/opensearch/{{ repo_opensearch__version }}/opensearch-{{ repo_opensearch__version }}.repo'
-      dest: '/etc/yum.repos.d/opensearch-1.x.repo'
+  - name: 'import Opensearch gpg key'
+    ansible.builtin.rpm_key:
+      state: 'present'
+      key: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
+
+  - name: 'deploy the Opensearch repo files (mirror: {{ repo_opensearch__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/opensearch.repo.j2'
+      dest: '/etc/yum.repos.d/opensearch.repo'
+      owner: 'root'
+      group: 'root'
       mode: 0o644
 
   tags:

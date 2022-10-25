@@ -88,7 +88,7 @@ path.logs: /var/log/opensearch
 # Require explicit names when deleting indices:
 #
 #action.destructive_requires_name: true
-action.auto_create_index: {{ opensearch__action_auto_create_index__combined_var | default('true') }}
+action.auto_create_index: {{ opensearch__action_auto_create_index__combined_var | default(true) | string | lower }}
 
 ######## Start OpenSearch Security Demo Configuration ########
 # WARNING: revise all the lines below before you go into production

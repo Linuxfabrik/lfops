@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# 2022102401
+
+[opensearch-{{ repo_opensearch__version__combined_var }}]
+name=OpenSearch {{ repo_opensearch__version__combined_var }}
+{% if repo_opensearch__mirror_url is defined and repo_opensearch__mirror_url | length %}
+baseurl={{ repo_influxdb__mirror_url }}/opensearch/releases/bundle/opensearch/{{ repo_opensearch__version__combined_var }}/yum
+{% else %}
+baseurl=https://artifacts.opensearch.org/releases/bundle/opensearch/{{ repo_opensearch__version__combined_var }}/yum
+{% endif %}
+enabled=1
+repo_gpgcheck=1
+gpgcheck=1
+gpgkey=https://artifacts.opensearch.org/publickeys/opensearch.pgp
+autorefresh=1
+type=rpm-md

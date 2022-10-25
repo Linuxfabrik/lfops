@@ -22,24 +22,27 @@ Runs on
 
 ## Mandatory Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `opensearch__version` | The version of OpenSearch which should be installed. | unset |
+| Variable | Description |
+| -------- | ----------- |
+| `opensearch__version__host_var` / <br> `opensearch__version__group_var` | The version of OpenSearch which should be installed.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). |
 
 ## Optional Role Variables
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `opensearch__version__host_var` / <br> `opensearch__cluster_name__group_var` | A descriptive name for your cluster.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
-| `opensearch__action_auto_create_index` | Automatic index creation allows any index to be created automatically. | `true` |
+| `opensearch__service_enabled` | Enables or disables the opensearch service, analogous to `systemctl enable/disable --now`. | `true` |
+| `opensearch__cluster_name__host_var` / <br> `opensearch__cluster_name__group_var` | A descriptive name for your cluster.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
+| `opensearch__action_auto_create_index__host_var` / <br> `opensearch__action_auto_create_index__group_var` | Automatic index creation allows any index to be created automatically.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `true` |
+
 
 Example:
 ```yaml
 # mandatory
-opensearch__version: '1.3.4'
+opensearch__version__host_var: '1.3.4'
 # optional
-opensearch__cluster_name: 'my-cluster'
-opensearch_oss__action_auto_create_index: false
+opensearch__service_enabled: false
+opensearch__cluster_name__host_var: 'my-cluster'
+opensearch__action_auto_create_index_host_var: false
 ```
 
 
