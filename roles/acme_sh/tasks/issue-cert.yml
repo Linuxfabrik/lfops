@@ -3,6 +3,7 @@
     url: 'http://{{ certificate }}/.well-known/acme-challenge/index.html'
     return_content: true
     timeout: 8
+  check_mode: false # run task even if `--check` is specified
   register: 'acme_sh__curl_result'
   delegate_to: 'localhost'
 

@@ -61,16 +61,17 @@
     failed_when: '"Upgrade success" not in acme_sh__upgrade_result["stdout"]'
     register: 'acme_sh__upgrade_result'
 
-  - name: 'acme.sh --config-home /etc/acme.sh --list'
-    ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --list'
+  - name: 'acme.sh --config-home /etc/acme.sh --list --listraw'
+    ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --list --listraw'
     changed_when: false # just gathering information
+    check_mode: false # run task even if `--check` is specified
     register: 'acme_sh__list_result'
 
   - ansible.builtin.include_tasks: 'issue-cert.yml'
     loop: '{{ acme_sh__certificates }}'
     loop_control:
       loop_var: 'certificate'
-    when: 'certificate is not in acme_sh__list_result.stdout'
+    when: 'certificate is not in (acme_sh__list_result["stdout_lines"] | map("regex_replace", "\|.*", "") | list)'
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert ...'
     ansible.builtin.command: |-
