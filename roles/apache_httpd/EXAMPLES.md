@@ -105,14 +105,45 @@ raw: !unsafe |-
 
 
 
-### Redirect from port 80 to port 443
+### mod_rewrite
 
-Including one exception:
+Redirect from port 80 to port 443, including one exception:
 
 ```
 RewriteCond %{SERVER_PORT} 80
 RewriteCond %{REQUEST_URI} !^/\.well\-known/acme\-challenge/
-RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [redirect=301,L]
+RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [redirect=301,last]
+```
+
+Block IP addresses and ranges:
+
+```
+RewriteCond %{REMOTE_ADDR} ^10\.0\.0\.1 [OR]
+RewriteCond %{REMOTE_ADDR} ^10\.32\.64\.250
+RewriteRule ^ - [nocase,forbidden,last]
+```
+
+Block referrer links:
+
+```
+RewriteCond %{HTTP_REFERER} ^http(?:s)?://(?:.*)?\.(?:cc|eu|ru)(?:/.*)?$ [nocase,OR]
+RewriteCond %{HTTP_REFERER} ^http(?:s)?://(?:.*\.)?(?:example1.com|example2.com)(?:/.*)?$ [nocase]
+RewriteRule ^ - [nocase,forbidden,last]
+```
+
+Block requests with empty HTTP_USER_AGENT String:
+
+```
+RewriteCond %{HTTP_USER_AGENT} ^(?:\s|-)*$
+RewriteRule ^ - [nocase,forbidden,last]
+```
+
+Block hotlinking to files:
+
+```
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^http(?:s)?://(?:.*\.)?example\.net(?:/.*)?$ [nocase]
+RewriteRule \.(?:jpe?g|gif|png|svg|webp|zip|rar|pdf)$ - [nocase,forbidden,last]
 ```
 
 
@@ -144,6 +175,7 @@ Require ip 10.80
 Require ip 192.168.109.7
 Require local
 Require user linuxfabrik-user
+Require forward-dns host.example.com
 ```
 
 

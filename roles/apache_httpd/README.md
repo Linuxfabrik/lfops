@@ -204,6 +204,8 @@ Types of vHosts:
   A vHost that redirects from one port (default "80") to another (default "443"). Custom redirect rules can be provided using the `raw` variable.<br>
 * **raw**<br>
   If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>` and `</VirtualHost>` completely from scratch.<br>
+* **wordpress**<br>
+  A special vHost just for deploying WordPress instances.
 
 "Hardened" means among other things:
 

@@ -18,7 +18,7 @@ wordpress__apache_httpd__vhosts__dependent_var:
     enabled: true
     filename: 'wordpress'
     state: 'present'
-    template: 'app'
+    template: 'wordpress'
     allowed_http_methods:
       - 'GET'
       - 'OPTIONS'
@@ -31,7 +31,7 @@ wordpress__apache_httpd__vhosts__dependent_var:
     conf_allow_override: 'All'
     conf_directory_index: 'index.php'
     conf_document_root: '{{ wordpress__install_dir }}'
-    onf_options: 'FollowSymLinks'
+    conf_options: 'FollowSymLinks'
     raw: !unsafe |-
       <Files wp-config.php>
           Require all denied
