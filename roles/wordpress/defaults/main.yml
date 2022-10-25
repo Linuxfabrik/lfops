@@ -33,13 +33,6 @@ wordpress__apache_httpd__vhosts__dependent_var:
     conf_document_root: '{{ wordpress__install_dir }}'
     conf_options: 'FollowSymLinks'
     conf_timeout: 30
-    raw: !unsafe |-
-      <Files wp-config.php>
-          Require all denied
-      </Files>
-      <Files xmlrpc.php>
-          Require all denied
-      </Files>
 
 wordpress__mariadb_server__databases__dependent_var:
   - name: '{{ wordpress__database_name }}'
