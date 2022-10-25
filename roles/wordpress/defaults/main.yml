@@ -32,6 +32,7 @@ wordpress__apache_httpd__vhosts__dependent_var:
     conf_directory_index: 'index.php'
     conf_document_root: '{{ wordpress__install_dir }}'
     conf_options: 'FollowSymLinks'
+    conf_timeout: 30
     raw: !unsafe |-
       <Files wp-config.php>
           Require all denied
