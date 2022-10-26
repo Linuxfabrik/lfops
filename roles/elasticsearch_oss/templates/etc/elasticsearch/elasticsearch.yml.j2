@@ -88,4 +88,4 @@ path.logs: /var/log/elasticsearch
 # Require explicit names when deleting indices:
 #
 #action.destructive_requires_name: true
-action.auto_create_index: {{ elasticsearch_oss__action_auto_create_index__combined_var | default('true') }}
+action.auto_create_index: {{ elasticsearch_oss__action_auto_create_index__combined_var | default(true) | string | lower }}

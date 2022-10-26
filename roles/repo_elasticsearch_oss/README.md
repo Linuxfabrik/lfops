@@ -21,12 +21,12 @@ Runs on
 
 | Variable | Description |
 | -------- | ----------- |
-| `repo_elasticsearch_oss__version` | The Elasticsearch OSS repo version to install. One of `6.x` or `7.x`. [Have a look at the Elasticsearch OSS repository for the list of available releases](https://www.elastic.co/downloads/past-releases#elasticsearch-oss). |
+| `repo_elasticsearch_oss__version__host_var` / <br> `repo_elasticsearch_oss__version__group_var` | The Elasticsearch OSS repo version to install. One of `6.x` or `7.x`. [Have a look at the Elasticsearch OSS repository for the list of available releases](https://www.elastic.co/downloads/past-releases#elasticsearch-oss).  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). |
 
 Example:
 ```yaml
 # mandatory
-repo_elasticsearch_oss__version: '7.x'
+repo_elasticsearch_oss__version__host_var: '7.x'
 ```
 
 ## Optional Role Variables

@@ -1,1 +1,11 @@
 repo_elasticsearch_oss__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+
+repo_elasticsearch_oss__version__dependent_var: ''
+repo_elasticsearch_oss__version__group_var: ''
+repo_elasticsearch_oss__version__host_var: ''
+repo_elasticsearch_oss__version__combined_var: '{{
+    repo_elasticsearch_oss__version__host_var if (repo_elasticsearch_oss__version__host_var | string | length) else
+    repo_elasticsearch_oss__version__group_var if (repo_elasticsearch_oss__version__group_var | string | length) else
+    repo_elasticsearch_oss__version__dependent_var if (repo_elasticsearch_oss__version__dependent_var | string | length) else
+    repo_elasticsearch_oss__version__role_var
+  }}'

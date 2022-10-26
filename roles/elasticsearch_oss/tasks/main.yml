@@ -5,12 +5,6 @@
       name: 'elasticsearch-oss'
       state: 'present'
 
-  tags:
-    - 'elasticsearch_oss'
-
-
-- block:
-
   - name: 'deploy /etc/elasticsearch/elasticsearch.yml'
     ansible.builtin.template:
       src: 'etc/elasticsearch/elasticsearch.yml.j2'
