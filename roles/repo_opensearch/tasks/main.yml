@@ -5,7 +5,7 @@
       state: 'present'
       key: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
 
-  - name: 'deploy the Opensearch repo files (mirror: {{ repo_opensearch__mirror_url | default("") }})'
+  - name: 'deploy the opensearch repository "/etc/yum.repos.d/opensearch.repo"'
     ansible.builtin.template:
       src: 'etc/yum.repos.d/opensearch.repo.j2'
       dest: '/etc/yum.repos.d/opensearch.repo'

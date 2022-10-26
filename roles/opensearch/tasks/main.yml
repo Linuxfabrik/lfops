@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'Install opensearch {{ opensearch__version__combined_var }}'
+  - name: 'Install opensearch-{{ opensearch__version__combined_var }}'
     ansible.builtin.package:
       name:
         - 'opensearch-{{ opensearch__version__combined_var }}'
