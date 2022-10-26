@@ -18,7 +18,7 @@ Runs on
 
 | Variable | Description |
 | -------- | ----------- |
-| `repo_opensearch__version__host_var` / <br> `opensearch__cluster_name__group_var` | The version of the Opensearch repository which should be installed.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). |
+| `repo_opensearch__version__host_var` / <br> `repo_opensearch__version__group_var` | The version of the Opensearch repository which should be installed.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). |
 
 Example:
 ```yaml
