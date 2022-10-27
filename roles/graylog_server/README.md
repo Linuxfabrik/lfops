@@ -3,6 +3,9 @@
 This role installs and configures a [Graylog](https://www.graylog.org) server. Currently supported versions: `4.0`, `4.1`, `4.2` and `4.3`.
 You can choose between `opensearch` (default) and `elasticsearch` as searchengine. If you choose to use `opensearch`, Graylog Server 4.3 is required!
 
+Note that this role does NOT let you specify a particular Graylog Server version. It simply installs the latest available Graylog Server version from the repos configured in the system. If you want or need to install a specific Graylog Server version, use the [linuxfabrik.lfops.repo_graylog_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog_server) beforehand.
+
+
 Runs on
 
 * RHEL 8 (and compatible)
@@ -28,6 +31,13 @@ Runs on
 | `graylog_server__root_password` | The password which sould be set for the admin user. | unset |
 | `graylog_server__password_secret` | You MUST set a secret to secure/pepper the stored user passwords here. Use at least 64 characters. Generate one by using for example: `pwgen -N 1 -s 96`. ATTENTION: This value must be the same on all Graylog nodes in the cluster. Changing this value after installation will render all user sessions and encrypted values in the database invalid. (e.g. encrypted access tokens) | unset |
 
+Example:
+```yaml
+# mandatory
+graylog_server__root_password: 'password'
+graylog_server__password_secret: '9395pKmkuxSFU623AJpQNA3iyB7R82NuxZRzw19C3m3YXnE62Ky8me7eg9Z1TzwC'
+```
+
 
 ## Optional Role Variables
 
@@ -44,10 +54,6 @@ Runs on
 
 Example:
 ```yaml
-# mandatory
-graylog_server__root_password: 'password'
-graylog_server__password_secret: '9395pKmkuxSFU623AJpQNA3iyB7R82NuxZRzw19C3m3YXnE62Ky8me7eg9Z1TzwC'
-
 # optional
 graylog_server__root_username: 'graylog-admin'
 graylog_server__install_plugins: true

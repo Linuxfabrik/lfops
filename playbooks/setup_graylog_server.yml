@@ -1,0 +1,48 @@
+- name: 'Install and configure Graylog'
+  hosts:
+    - 'lfops_setup_graylog_server'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_mongodb'
+      when:
+        - 'not mongodb__skip_repo_mongodb | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_elasticsearch_oss'
+      repo_elasticsearch_oss__version__dependent_var: '{{ graylog_server__repo_elasticsearch_oss__version__dependent_var }}'
+      when:
+        - 'not setup_graylog__skip_elasticsearch_oss | default(true)'
+        - 'setup_graylog__skip_opensearch | default(false)'
+
+    - role: 'linuxfabrik.lfops.repo_opensearch'
+      repo_opensearch__version__dependent_var: '{{ graylog_server__repo_opensearch__version__dependent_var }}'
+      when:
+        - 'not setup_graylog__skip_opensearch | default(false)'
+
+    - role: 'linuxfabrik.lfops.repo_graylog'
+      when:
+        - 'not graylog__skip_repo_graylog | d(false)'
+
+    - role: 'linuxfabrik.lfops.java'
+      when:
+        - 'not setup_graylog__skip_java | default(false)'
+
+    - role: 'linuxfabrik.lfops.mongodb'
+      when:
+        - 'not setup_graylog__skip_mongodb | default(false)'
+
+    - role: 'linuxfabrik.lfops.elasticsearch_oss'
+      elasticsearch_oss__cluster_name__dependent_var: '{{ graylog_server__elasticsearch_oss__cluster_name__dependent_var }}'
+      elasticsearch_oss__action_auto_create_index__dependent_var: '{{ graylog_server__elasticsearch_oss__action_auto_create_index__dependent_var }}'
+      when:
+        - 'not setup_graylog__skip_elasticsearch_oss | default(true)'
+        - 'setup_graylog__skip_opensearch | default(false)'
+
+    - role: 'linuxfabrik.lfops.opensearch'
+      opensearch__version__dependent_var: '{{ graylog_server__opensearch__version__dependent_var }}'
+      opensearch__cluster_name__dependent_var: '{{ graylog_server__opensearch__cluster_name__dependent_var }}'
+      opensearch__action_auto_create_index__dependent_var: '{{ graylog_server__opensearch__action_auto_create_index__dependent_var }}'
+      when:
+        - 'not setup_graylog__skip_opensearch | default(false)'
+
+    - role: 'linuxfabrik.lfops.graylog_server'

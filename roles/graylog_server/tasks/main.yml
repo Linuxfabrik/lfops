@@ -1,12 +1,12 @@
 - block:
 
-  - name: "Install Graylog Server"
+  - name: "install graylog server"
     ansible.builtin.package:
       name:
         - 'graylog-server'
       state: 'present'
 
-  - name: "Install Graylog Server Plugins"
+  - name: "install graylog server plugins"
     ansible.builtin.package:
       name:
         - 'graylog-enterprise-plugins'
@@ -15,56 +15,20 @@
       state: 'present'
     when: 'graylog_server__install_plugins|bool'
 
-  - name: 'Set httpd_can_network_connect flag on and keep it persistent across reboots'
+  - name: 'set httpd_can_network_connect flag on and keep it persistent across reboots'
     ansible.posix.seboolean:
       name: 'httpd_can_network_connect'
       state: yes
       persistent: yes
 
-  tags:
-    - 'graylog_server'
-
-
-- block:
-
-  - name: "Deploy Graylog Configuration file"
+  - name: 'deploy /etc/graylog/server/server.conf'
     ansible.builtin.template:
-      src: 'server-{{ repo_graylog__version }}.conf.j2'
+      src: 'etc/graylog/server/server-{{ repo_graylog__version }}.conf.j2'
       dest: '/etc/graylog/server/server.conf'
       owner: 'graylog'
       group: 'graylog'
       mode: 0o644
     notify: 'graylog: restart graylog-server'
-
-  - name: 'Set "cluster.name" setting for Elasticsearch'
-    ansible.builtin.lineinfile:
-      path: '/etc/elasticsearch/elasticsearch.yml'
-      regexp: 'cluster.name:'
-      line: 'cluster.name: graylog'
-    when:
-      - 'graylog_server__search_engine == "elasticsearch"'
-
-  - name: 'Set "action.auto_create_index" setting for Elasticsearch'
-    ansible.builtin.lineinfile:
-      path: '/etc/elasticsearch/elasticsearch.yml'
-      line: 'action.auto_create_index: false'
-    when:
-      - 'graylog_server__search_engine == "elasticsearch"'
-
-  - name: 'Set "cluster.name" setting for Opensearch'
-    ansible.builtin.lineinfile:
-      path: '/etc/opensearch/opensearch.yml'
-      regexp: 'cluster.name:'
-      line: 'cluster.name: graylog'
-    when:
-      - 'graylog_server__search_engine == "opensearch"'
-
-  - name: 'Set "action.auto_create_index" setting for Opensearch'
-    ansible.builtin.lineinfile:
-      path: '/etc/opensearch/opensearch.yml'
-      line: 'action.auto_create_index: false'
-    when:
-      - 'graylog_server__search_engine == "opensearch"'
 
   tags:
     - 'graylog_server'
