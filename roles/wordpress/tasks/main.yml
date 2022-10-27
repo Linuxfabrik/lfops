@@ -184,17 +184,18 @@
         // in some setups HTTP_X_FORWARDED_PROTO might contain
         // a comma-separated list e.g. http,https
         // so check for https existence
+        define('FORCE_SSL_ADMIN', true);
+        define('FORCE_SSL_LOGIN', true);
         if (array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER) && strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false) {
             $_SERVER['HTTPS']='on';
             $_SERVER['REQUEST_SCHEME'] = 'https';
         }
-
         if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) and !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
         }
 
         if (isset($_SERVER['HTTP_X_FORWARDED_HOST']) and !empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
-                $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
+            $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
         }
 
   - name: 'wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
