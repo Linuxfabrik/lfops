@@ -198,11 +198,10 @@
 - block:
 
   - name: 'Install {{ mariadb_server__dump_mydumper_package }}'
-    ansible.builtin.dnf:
+    ansible.builtin.package:
       name:
         - '{{ mariadb_server__dump_mydumper_package }}'
       state: 'present'
-      disable_gpg_check: true
 
   - name: 'Deploy /usr/local/bin/mariadb-dump'
     ansible.builtin.template:
