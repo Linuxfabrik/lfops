@@ -94,7 +94,6 @@
 - import_playbook: 'systemd_journald.yml'
 - import_playbook: 'tar.yml'
 - import_playbook: 'telegraf.yml'
-- import_playbook: 'test.yml'
 - import_playbook: 'timezone.yml'
 - import_playbook: 'tools.yml'
 - import_playbook: 'unattended_upgrades.yml'
