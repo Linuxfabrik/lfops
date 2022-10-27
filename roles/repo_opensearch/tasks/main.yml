@@ -1,11 +1,11 @@
 - block:
 
-  - name: 'import Opensearch gpg key'
+  - name: 'import opensearch gpg key'
     ansible.builtin.rpm_key:
       state: 'present'
       key: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
 
-  - name: 'deploy the opensearch repository "/etc/yum.repos.d/opensearch.repo"'
+  - name: 'deploy /etc/yum.repos.d/opensearch.repo (mirror: {{ repo_opensearch__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/yum.repos.d/opensearch.repo.j2'
       dest: '/etc/yum.repos.d/opensearch.repo'

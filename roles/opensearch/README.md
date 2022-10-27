@@ -10,7 +10,8 @@ Runs on
 ## Mandatory Requirements
 
 * Enable the official OpenSearch repository. This can be done using the [linuxfabrik.lfops.repo_opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_opensearch) role.
-* If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/opensearch.yml), this is automatically done for you.
+
+If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/opensearch.yml), this is automatically done for you.
 
 ## Tags
 
@@ -26,6 +27,12 @@ Runs on
 | -------- | ----------- |
 | `opensearch__version__host_var` / <br> `opensearch__version__group_var` | The version of OpenSearch which should be installed.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). |
 
+Example:
+```yaml
+# mandatory
+opensearch__version__host_var: '1.3.4'
+```
+
 ## Optional Role Variables
 
 | Variable | Description | Default Value |
@@ -34,11 +41,8 @@ Runs on
 | `opensearch__cluster_name__host_var` / <br> `opensearch__cluster_name__group_var` | A descriptive name for your cluster.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
 | `opensearch__service_enabled` | Enables or disables the opensearch service, analogous to `systemctl enable/disable --now`. | `true` |
 
-
 Example:
 ```yaml
-# mandatory
-opensearch__version__host_var: '1.3.4'
 # optional
 opensearch__action_auto_create_index_host_var: false
 opensearch__cluster_name__host_var: 'my-cluster'
