@@ -12,7 +12,8 @@ Runs on
 ## Mandatory Requirements
 
 * Enable the official elasticsearch oss repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch_oss](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch_oss) role.
-* If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml), this is automatically done for you.
+
+If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml), this is automatically done for you.
 
 
 ## Tags
@@ -27,9 +28,10 @@ Runs on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `elasticsearch_oss__action_auto_create_index__host_var` | Automatic index creation allows any index to be created automatically. | `true` |
-| `elasticsearch_oss__cluster_name__host_var` | A descriptive name for your cluster. | `'my-application'` |
+| `elasticsearch_oss__action_auto_create_index__host_var` / <br> `elasticsearch_oss__action_auto_create_index__group_var` | Automatic index creation allows any index to be created automatically. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `true` |
+| `elasticsearch_oss__cluster_name__host_var` / <br> `elasticsearch_oss__cluster_name__group_var` | A descriptive name for your cluster. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
 | `elasticsearch_oss__service_enabled` | Enables or disables the elasticsearch oss service, analogous to `systemctl enable/disable --now`. | `true` |
+
 
 Example:
 ```yaml
