@@ -96,9 +96,9 @@ ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.setup_nextcloud
 * Ansible Plugins: The documentation for all plugins is available through `ansible-doc`. For example, `ansible-doc linuxfabrik.lfops.gpg_key` shows the documentation for the GPG key managing module.
 
 
-## Known Limitations
+## The "all" Playbook
 
-Combined lists and dictionaries (`rolename__combined_varname`) containing default values cannot be unset or overwritten, they can only be extended. If you need to overwrite to delete a pre-defined value, use `rolename__role_varname` or `rolename__combined_varname` and assign all needed values.
+Imagine that you want to deploy an updated MariaDB dump script to all hosts that have a MariaDB server. This would mean that you would need to run not only the `linuxfabrik.lfops.mariadb_server` playbook, but also all playbooks that include MariaDB Server, e.g. `linuxfabrik.lfops.wordpress`, etc. To simplify this, you can simply use the `linuxfabrik.lfops.all` playbook, which imports all other playbooks. Make sure you use it with `--tags` and `--limit` to get the desired effect.
 
 
 ## Tips, Tricks & Troubleshooting
@@ -142,6 +142,6 @@ login__users__host_var:
     sshd_authorized_keys: '{{ login__users__group_var.0.sshd_authorized_keys }}'
 ```
 
-### The "all" playbook
+## Known Limitations
 
-Imagine you want to deploy an updated MariaDB dump script to all hosts which have a MariaDB Server. This would mean that you would have to run the `linuxfabrik.lfops.mariadb_server` playbook, but also all playbooks that include MariaDB Server, for example `linuxfabrik.lfops.wordpress`, etc. To make this easier, you can just use the `linuxfabrik.lfops.all` playbook, which imports all other playbooks. Make sure to use it with `--tags` and `--limit` to achieve the desired effect.
+Combined lists and dictionaries (`rolename__combined_varname`) containing default values cannot be unset or overwritten, they can only be extended. If you need to overwrite to delete a pre-defined value, use `rolename__role_varname` or `rolename__combined_varname` and assign all needed values.
