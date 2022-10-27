@@ -8,6 +8,7 @@ Playbooks:
 
 * Each playbook must contain all dependencies to run flawlessly against a newly installed machine.
 * Playbooks installing an application together with software packages that are complex to configure (``apache_httpd``, ``mariadb_server`` and/or ``php``) as a dependency are prefixed by ``setup_``. Example: ``setup_nextcloud`` because Nextcloud also needs Apache httpd, MariaDB Server etc.
+* After creating a new playbook, add it in the ``playbooks/all.yml``.
 
 Roles:
 

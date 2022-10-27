@@ -141,3 +141,7 @@ login__users__host_var:
       - 'sudo'
     sshd_authorized_keys: '{{ login__users__group_var.0.sshd_authorized_keys }}'
 ```
+
+### The "all" playbook
+
+Imagine you want to deploy an updated MariaDB dump script to all hosts which have a MariaDB Server. This would mean that you would have to run the `linuxfabrik.lfops.mariadb_server` playbook, but also all playbooks that include MariaDB Server, for example `linuxfabrik.lfops.wordpress`, etc. To make this easier, you can just use the `linuxfabrik.lfops.all` playbook, which imports all other playbooks. Make sure to use it with `--tags` and `--limit` to achieve the desired effect.
