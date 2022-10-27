@@ -1,0 +1,11 @@
+repo_opensearch__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+
+repo_opensearch__version__dependent_var: ''
+repo_opensearch__version__group_var: ''
+repo_opensearch__version__host_var: ''
+repo_opensearch__version__combined_var: '{{
+    repo_opensearch__version__host_var if (repo_opensearch__version__host_var | string | length) else
+    repo_opensearch__version__group_var if (repo_opensearch__version__group_var | string | length) else
+    repo_opensearch__version__dependent_var if (repo_opensearch__version__dependent_var | string | length) else
+    repo_opensearch__version__role_var
+  }}'

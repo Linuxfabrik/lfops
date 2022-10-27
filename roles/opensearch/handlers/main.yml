@@ -1,0 +1,4 @@
+- name: 'opensearch: restart opensearch'
+  ansible.builtin.service:
+    name: 'opensearch'
+    state: 'restarted'
