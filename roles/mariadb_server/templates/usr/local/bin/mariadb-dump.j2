@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # {{ ansible_managed }}
-# 2022101301
+# 2022102701
 
 
 function exit_with_first_failed_retc() {
@@ -23,6 +23,7 @@ umask 027
 
 source /etc/mariadb-dump.conf
 
+rm -rf "$BACKUP_DIR"
 mkdir -p $BACKUP_DIR
 
 mysql --host=$HOST --user=$USERNAME --password=$PASSWORD \
@@ -40,7 +41,6 @@ mydumper --host=$HOST --user=$USERNAME --password=$PASSWORD \
     --routines \
     --threads $THREADS \
     --triggers \
-    --updated-since 1 \
     --use-savepoints \
     --verbose 3
 mydumper_retc=$?
