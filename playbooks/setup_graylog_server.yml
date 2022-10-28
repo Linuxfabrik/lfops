@@ -4,45 +4,59 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var:
+        - '{{ graylog_server__selinux__booleans__dependent_var }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_graylog_server__skip_selinux | default(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+
+    - role: 'linuxfabrik.lfops.java'
+      when:
+        - 'not setup_graylog_server__skip_java | default(false)'
+
     - role: 'linuxfabrik.lfops.repo_mongodb'
       when:
-        - 'not mongodb__skip_repo_mongodb | d(false)'
+        - 'not setup_graylog_server__skip_repo_mongodb | d(false)'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__transparent_hugepages__dependent_var: "{{ mongodb__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      when:
+        - 'not setup_graylog_server__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.mongodb'
+      when:
+        - 'not setup_graylog_server__skip_mongodb | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_elasticsearch_oss'
       repo_elasticsearch_oss__version__dependent_var: '{{ graylog_server__repo_elasticsearch_oss__version__dependent_var }}'
       when:
-        - 'not setup_graylog__skip_elasticsearch_oss | default(true)'
-        - 'setup_graylog__skip_opensearch | default(false)'
-
-    - role: 'linuxfabrik.lfops.repo_opensearch'
-      repo_opensearch__version__dependent_var: '{{ graylog_server__repo_opensearch__version__dependent_var }}'
-      when:
-        - 'not setup_graylog__skip_opensearch | default(false)'
-
-    - role: 'linuxfabrik.lfops.repo_graylog'
-      when:
-        - 'not graylog__skip_repo_graylog | d(false)'
-
-    - role: 'linuxfabrik.lfops.java'
-      when:
-        - 'not setup_graylog__skip_java | default(false)'
-
-    - role: 'linuxfabrik.lfops.mongodb'
-      when:
-        - 'not setup_graylog__skip_mongodb | default(false)'
+        - 'not setup_graylog_server__skip_repo_elasticsearch_oss | default(true)'
 
     - role: 'linuxfabrik.lfops.elasticsearch_oss'
       elasticsearch_oss__cluster_name__dependent_var: '{{ graylog_server__elasticsearch_oss__cluster_name__dependent_var }}'
       elasticsearch_oss__action_auto_create_index__dependent_var: '{{ graylog_server__elasticsearch_oss__action_auto_create_index__dependent_var }}'
       when:
-        - 'not setup_graylog__skip_elasticsearch_oss | default(true)'
-        - 'setup_graylog__skip_opensearch | default(false)'
+        - 'not setup_graylog_server__skip_elasticsearch_oss | default(true)'
+
+    - role: 'linuxfabrik.lfops.repo_opensearch'
+      repo_opensearch__version__dependent_var: '{{ graylog_server__repo_opensearch__version__dependent_var }}'
+      when:
+        - 'not setup_graylog_server__skip_repo_opensearch | default(false)'
 
     - role: 'linuxfabrik.lfops.opensearch'
       opensearch__version__dependent_var: '{{ graylog_server__opensearch__version__dependent_var }}'
       opensearch__cluster_name__dependent_var: '{{ graylog_server__opensearch__cluster_name__dependent_var }}'
       opensearch__action_auto_create_index__dependent_var: '{{ graylog_server__opensearch__action_auto_create_index__dependent_var }}'
       when:
-        - 'not setup_graylog__skip_opensearch | default(false)'
+        - 'not setup_graylog_server__skip_opensearch | default(false)'
+
+    - role: 'linuxfabrik.lfops.repo_graylog'
+      when:
+        - 'not setup_graylog_server__skip_repo_graylog | d(false)'
 
     - role: 'linuxfabrik.lfops.graylog_server'

@@ -1,6 +1,6 @@
 - block:
 
-  - name: "install graylog server"
+  - name: "install graylog-server"
     ansible.builtin.package:
       name:
         - 'graylog-server'
@@ -8,22 +8,21 @@
 
   - name: "install graylog server plugins"
     ansible.builtin.package:
-      name:
-        - 'graylog-enterprise-plugins'
-        - 'graylog-integrations-plugins'
-        - 'graylog-enterprise-integrations-plugins'
+      name: '{{ item }}'
       state: 'present'
-    when: 'graylog_server__install_plugins|bool'
+    loop: '{{ graylog_server__plugins }}'
 
-  - name: 'set httpd_can_network_connect flag on and keep it persistent across reboots'
-    ansible.posix.seboolean:
-      name: 'httpd_can_network_connect'
-      state: yes
-      persistent: yes
+  - name: 'get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'get graylog version'
+    ansible.builtin.set_fact:
+      graylog__installed_version: '{{ ansible_facts["packages"]["graylog-server"][0]["version"] | regex_replace("\.\d+$", "") }}'
 
   - name: 'deploy /etc/graylog/server/server.conf'
     ansible.builtin.template:
-      src: 'etc/graylog/server/server-{{ repo_graylog__version }}.conf.j2'
+      src: 'etc/graylog/server/server-{{ graylog__installed_version }}.conf.j2'
       dest: '/etc/graylog/server/server.conf'
       owner: 'graylog'
       group: 'graylog'
