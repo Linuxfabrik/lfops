@@ -1,12 +1,12 @@
 - block:
 
-  - name: "install graylog-server"
+  - name: 'install graylog-server'
     ansible.builtin.package:
       name:
         - 'graylog-server'
       state: 'present'
 
-  - name: "install graylog server plugins"
+  - name: 'install graylog server plugins'
     ansible.builtin.package:
       name: '{{ item }}'
       state: 'present'
@@ -18,11 +18,11 @@
 
   - name: 'get graylog version'
     ansible.builtin.set_fact:
-      graylog__installed_version: '{{ ansible_facts["packages"]["graylog-server"][0]["version"] | regex_replace("\.\d+$", "") }}'
+      graylog_server__installed_version: '{{ ansible_facts["packages"]["graylog-server"][0]["version"] | regex_replace("\.\d+$", "") }}'
 
   - name: 'deploy /etc/graylog/server/server.conf'
     ansible.builtin.template:
-      src: 'etc/graylog/server/server-{{ graylog__installed_version }}.conf.j2'
+      src: 'etc/graylog/server/server-{{ graylog_server__installed_version }}.conf.j2'
       dest: '/etc/graylog/server/server.conf'
       owner: 'graylog'
       group: 'graylog'

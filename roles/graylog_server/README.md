@@ -32,7 +32,7 @@ If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/
 
 | Variable | Description |
 | -------- | ----------- |
-| `graylog_server__admin_user` | The main user account for the graylog administrator. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `email`: Email<br> |
+| `graylog_server__admin_user` | The main user account for the graylog administrator. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `email`: Email (optional, defaults to `''`) |
 | `graylog_server__password_secret` | You MUST set a secret to secure/pepper the stored user passwords here. Use at least 64 characters. Generate one by using for example: `pwgen -N 1 -s 96`. ATTENTION: This value must be the same on all Graylog nodes in the cluster. Changing this value after installation will render all user sessions and encrypted values in the database invalid. (e.g. encrypted access tokens) |
 
 Example:
@@ -50,7 +50,7 @@ graylog_server__password_secret: '9395pKmkuxSFU623AJpQNA3iyB7R82NuxZRzw19C3m3YXn
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `graylog_server__plugins` | A list of available plugins which can be installed additionally: </br> * `graylog-enterprise-plugins`<br/> * `graylog-integrations-plugins`<br/> *  `graylog-enterprise-integrations-plugins` | `[]` |
+| `graylog_server__plugins` | A list of available plugins which can be installed additionally. Possible options: </br> * `graylog-enterprise-plugins`<br/> * `graylog-integrations-plugins`<br/> *  `graylog-enterprise-integrations-plugins` | `[]` |
 | `graylog_server__timezone` | The time zone setting of the root user. See [joda.org](http://www.joda.org/joda-time/timezones.html) for a list of valid time zones. | `'Europe/Zurich'` |
 | `graylog_server__http_bind_address` | The network interface used by the Graylog HTTP interface. | `'127.0.0.1'` |
 | `graylog_server__http_bind_port` | The port used by the Graylog HTTP interface. | `9000` |
@@ -60,12 +60,10 @@ graylog_server__password_secret: '9395pKmkuxSFU623AJpQNA3iyB7R82NuxZRzw19C3m3YXn
 Example:
 ```yaml
 # optional
-graylog_server__root_username: 'graylog-admin'
 graylog_server__plugins:
 	- 'graylog-enterprise-plugins'
 	- 'graylog-integrations-plugins'
 	- 'graylog-enterprise-integrations-plugins'
-graylog_server__root_email: 'webmaster@example.com'
 graylog_server__timezone: 'Europe/Zurich'
 graylog_server__http_bind_address: '192.0.2.1'
 graylog_server__http_bind_port: 8080

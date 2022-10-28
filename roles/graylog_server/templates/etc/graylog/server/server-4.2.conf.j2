@@ -59,7 +59,7 @@ node_id_file = /etc/graylog/server/node-id
 password_secret = {{ graylog_server__password_secret }}
 
 # The default root user is named 'admin'
-root_username = {{ graylog_server__admin_user["username"] | default('admin') }}
+root_username = {{ graylog_server__admin_user["username"] }}
 
 # You MUST specify a hash password for the root user (which you only need to initially set up the
 # system and in case you lose connectivity to your authentication backend)
