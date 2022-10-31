@@ -1,0 +1,46 @@
+- block:
+
+  - name: 'install graylog-server'
+    ansible.builtin.package:
+      name:
+        - 'graylog-server'
+      state: 'present'
+
+  - name: 'install graylog server plugins'
+    ansible.builtin.package:
+      name: '{{ item }}'
+      state: 'present'
+    loop: '{{ graylog_server__plugins }}'
+
+  - name: 'get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'get graylog version'
+    ansible.builtin.set_fact:
+      graylog_server__installed_version: '{{ ansible_facts["packages"]["graylog-server"][0]["version"] | regex_replace("\.\d+$", "") }}'
+
+  - name: 'deploy /etc/graylog/server/server.conf'
+    ansible.builtin.template:
+      src: 'etc/graylog/server/server-{{ graylog_server__installed_version }}.conf.j2'
+      dest: '/etc/graylog/server/server.conf'
+      owner: 'graylog'
+      group: 'graylog'
+      mode: 0o644
+    notify: 'graylog: restart graylog-server'
+
+  tags:
+    - 'graylog_server'
+
+
+- block:
+
+  - name: 'systemctl {{ graylog_server__service_enabled | bool | ternary("enable", "disable") }} --now graylog-server.service'
+    ansible.builtin.systemd:
+      name: 'graylog-server.service'
+      enabled: '{{ graylog_server__service_enabled }}'
+      state: '{{ graylog_server__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'graylog_server'
+    - 'graylog_server:state'

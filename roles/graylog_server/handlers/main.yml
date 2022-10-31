@@ -1,0 +1,4 @@
+- name: 'graylog: restart graylog-server'
+  ansible.builtin.systemd:
+    name: 'graylog-server.service'
+    state: 'restarted'
