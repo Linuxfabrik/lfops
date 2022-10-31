@@ -61,9 +61,9 @@ Example:
 ```yaml
 # optional
 graylog_server__plugins:
-	- 'graylog-enterprise-plugins'
-	- 'graylog-integrations-plugins'
-	- 'graylog-enterprise-integrations-plugins'
+  - 'graylog-enterprise-plugins'
+  - 'graylog-integrations-plugins'
+  - 'graylog-enterprise-integrations-plugins'
 graylog_server__timezone: 'Europe/Zurich'
 graylog_server__http_bind_address: '192.0.2.1'
 graylog_server__http_bind_port: 8080
