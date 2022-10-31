@@ -4,6 +4,11 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_graylog_server__skip_policycoreutils | default(false)'
+
     - role: 'linuxfabrik.lfops.selinux'
       selinux__booleans__dependent_var:
         - '{{ graylog_server__selinux__booleans__dependent_var }}'
