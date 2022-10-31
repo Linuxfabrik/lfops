@@ -32,7 +32,7 @@ If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/
 
 | Variable | Description |
 | -------- | ----------- |
-| `graylog_server__admin_user` | The main user account for the graylog administrator. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `email`: Email (optional, defaults to `''`) |
+| `graylog_server__admin_user` | The main user account for the graylog administrator. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `email`: Optional, string. Email. Defaults to `''`. |
 | `graylog_server__password_secret` | You MUST set a secret to secure/pepper the stored user passwords here. Use at least 64 characters. Generate one by using for example: `pwgen -N 1 -s 96`. ATTENTION: This value must be the same on all Graylog nodes in the cluster. Changing this value after installation will render all user sessions and encrypted values in the database invalid. (e.g. encrypted access tokens) |
 
 Example:
