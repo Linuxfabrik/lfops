@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# 2022102601
+
+[elasticsearch-{{ repo_elasticsearch_oss__version__combined_var }}]
+name=Elasticsearch repository for {{ repo_elasticsearch_oss__version__combined_var }} packages
+{% if repo_elasticsearch_oss__mirror_url is defined and repo_elasticsearch_oss__mirror_url | length %}
+baseurl={{ repo_elasticsearch_oss__mirror_url }}/elasticsearch-oss-{{ repo_elasticsearch_oss__version__combined_var }}/yum
+{% else %}
+baseurl=https://artifacts.elastic.co/packages/oss-{{ repo_elasticsearch_oss__version__combined_var }}/yum
+{% endif %}
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
