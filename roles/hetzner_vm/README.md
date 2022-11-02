@@ -44,7 +44,7 @@ Runs on
 | `hetzner_vm__api_token` | Set the Hetzner API token. API tokens can be managed in your project > Security > API Tokens. The API token requires read and write permissions. |
 | `hetzner_vm__image` | The Hetzner image to use for the server. The possible options can be obtained using `hcloud image list`. |
 | `hetzner_vm__location` | The Hetzner location the instance should run in. The possible options can be obtained using `hcloud location list`. |
-| `hetzner_vm__server_type` | The Hetzner server type. This defines the number of CPU cores, the CPU type, the disk space and the memory size. The possible options can be obtained using `hcloud server-type list`. Note that you cannot upgrade a running instance (otherwise you'll get `server must be stopped before changing type). Either stop the instance using `hetzner_vm__state: 'stopped'` or set `hetzner_vm__force: true`. Also have a look at `hetzner_vm__upgrade_disk`. |
+| `hetzner_vm__server_type` | The Hetzner server type. This defines the number of CPU cores, the CPU type, the disk space and the memory size. The possible options can be obtained using `hcloud server-type list`. Note that you cannot upgrade a running instance (otherwise you'll get `server must be stopped before changing type`). Either stop the instance using `hetzner_vm__state: 'stopped'` or set `hetzner_vm__force: true`. Also have a look at `hetzner_vm__upgrade_disk`. |
 
 Example:
 ```yaml
