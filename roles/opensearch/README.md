@@ -39,6 +39,7 @@ opensearch__version__host_var: '1.3.4'
 | -------- | ----------- | ------------- |
 | `opensearch__action_auto_create_index__host_var` / <br> `opensearch__action_auto_create_index__group_var` | Automatic index creation allows any index to be created automatically.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `true` |
 | `opensearch__cluster_name__host_var` / <br> `opensearch__cluster_name__group_var` | A descriptive name for your cluster.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
+| `opensearch__plugins_security_disabled` | Enables or disables the opensearch [security plugin](https://opensearch.org/docs/1.3/security-plugin/index/), which offers `encryption`, `authentication`, `access control` and `audit logging and compliance`. <br/>Note: If you want to use this feature, there is more configuration needed, which is currently not supported by this role. You will need to do the additional configuration of the security plugin manually. | `true` |
 | `opensearch__service_enabled` | Enables or disables the opensearch service, analogous to `systemctl enable/disable --now`. | `true` |
 
 Example:
@@ -46,6 +47,7 @@ Example:
 # optional
 opensearch__action_auto_create_index_host_var: false
 opensearch__cluster_name__host_var: 'my-cluster'
+opensearch__plugins_security_disabled: false
 opensearch__service_enabled: false
 ```
 

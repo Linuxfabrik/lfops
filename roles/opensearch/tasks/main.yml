@@ -15,6 +15,15 @@
       mode: 0o644
     notify: 'opensearch: restart opensearch'
 
+  - name: 'deploy /etc/sysconfig/opensearch'
+    ansible.builtin.template:
+      src: 'etc/sysconfig/opensearch.j2'
+      dest: '/etc/sysconfig/opensearch'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o644
+    notify: 'opensearch: restart opensearch'
+
   tags:
     - 'opensearch'
 

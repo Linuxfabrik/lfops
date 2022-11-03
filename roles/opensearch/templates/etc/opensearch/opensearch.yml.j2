@@ -89,6 +89,7 @@ path.logs: /var/log/opensearch
 #
 #action.destructive_requires_name: true
 action.auto_create_index: {{ opensearch__action_auto_create_index__combined_var | default(true) | string | lower }}
+plugins.security.disabled: {{ opensearch__plugins_security_disabled | default(true) | string | lower }}
 
 ######## Start OpenSearch Security Demo Configuration ########
 # WARNING: revise all the lines below before you go into production
