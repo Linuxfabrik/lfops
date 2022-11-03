@@ -14,6 +14,15 @@
       mode: 0o660
     notify: 'elasticsearch_oss: restart elasticsearch'
 
+  - name: 'deploy /etc/sysconfig/elasticsearch'
+    ansible.builtin.template:
+      src: 'etc/sysconfig/elasticsearch.j2'
+      dest: '/etc/sysconfig/elasticsearch'
+      owner: 'root'
+      group: 'elasticsearch'
+      mode: 0o664
+    notify: 'elasticsearch_oss: restart elasticsearch'
+
   tags:
     - 'elasticsearch_oss'
 
