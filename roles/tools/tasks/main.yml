@@ -4,6 +4,7 @@
     ansible.builtin.package:
       name:
         - 'bash-completion'
+        - 'cloud-utils-growpart'
         - 'iftop'
         - 'jq'
         - 'lsof'
