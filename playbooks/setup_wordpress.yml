@@ -7,38 +7,38 @@
     - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not wordpress__skip_yum_utils | default(false)'
+        - 'not setup_wordpress__skip_yum_utils | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
-        - 'not wordpress__skip_repo_epel | default(false)'
+        - 'not setup_wordpress__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
-        - 'not wordpress__skip_repo_mydumper | default(false)'
+        - 'not setup_wordpress__skip_repo_mydumper | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
-        - 'not wordpress__skip_repo_mariadb | default(false)'
+        - 'not setup_wordpress__skip_repo_mariadb | default(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not wordpress__skip_policycoreutils | default(false)'
+        - 'not setup_wordpress__skip_policycoreutils | default(false)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var:
         - '{{ mariadb_server__python__modules__dependent_var | default([]) }}'
       when:
-        - 'not wordpress__skip_python | default(false)'
+        - 'not setup_wordpress__skip_python | default(false)'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{ mariadb_server__kernel_settings__sysctl__dependent_var | d([]) }}'
       when:
-        - 'not wordpress__skip_kernel_settings | d(false)'
+        - 'not setup_wordpress__skip_kernel_settings | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__databases__dependent_var:
@@ -46,28 +46,28 @@
       mariadb_server__users__dependent_var:
         - '{{ wordpress__mariadb_server__users__dependent_var | default({}) }}'
       when:
-        - 'not wordpress__skip_mariadb_server | default(false)'
+        - 'not setup_wordpress__skip_mariadb_server | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
-        - 'not wordpress__skip_repo_remi | default(false)'
+        - 'not setup_wordpress__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
       php__modules__dependent_var:
         - '{{ wordpress__php__modules__dependent_var | default([]) }}'
       when:
-        - 'not wordpress__skip_php | default(false)'
+        - 'not setup_wordpress__skip_php | default(false)'
 
     - role: 'linuxfabrik.lfops.apache_httpd'
       apache_httpd__mods__dependent_var: '{{ wordpress__apache_httpd__mods__dependent_var | d([]) }}'
       apache_httpd__vhosts__dependent_var: '{{ wordpress__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
-        - 'not wordpress__skip_apache_httpd | default(false)'
+        - 'not setup_wordpress__skip_apache_httpd | default(false)'
 
     - role: 'linuxfabrik.lfops.selinux'
       selinux__booleans__dependent_var: '{{ wordpress__selinux__booleans__dependent_var }}'
       when:
-        - 'not wordpress__skip_selinux | default(false)'
+        - 'not setup_wordpress__skip_selinux | default(false)'
 
     - role: 'linuxfabrik.lfops.wordpress'
