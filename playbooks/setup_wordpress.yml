@@ -67,6 +67,7 @@
 
     - role: 'linuxfabrik.lfops.selinux'
       selinux__booleans__dependent_var: '{{ wordpress__selinux__booleans__dependent_var }}'
+      selinux__fcontexts__dependent_var: '{{ wordpress__selinux__fcontexts__dependent_var }}'
       when:
         - 'not setup_wordpress__skip_selinux | default(false)'
 

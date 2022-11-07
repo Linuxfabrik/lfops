@@ -62,3 +62,20 @@ wordpress__php__modules__dependent_var:
 wordpress__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
     value: 'on'
+
+wordpress__selinux__fcontexts__dependent_var:
+  - setype: 'httpd_sys_rw_content_t'
+    target: '/var/www/html(/.*)?/wp-content(/.*)?'
+    state: 'present'
+  - setype: 'httpd_sys_rw_content_t'
+    target: '/var/www/html(/.*)?/wp-content/upgrade(/.*)?'
+    state: 'present'
+  - setype: 'httpd_sys_rw_content_t'
+    target: '/var/www/html(/.*)?/wp-content/uploads(/.*)?'
+    state: 'present'
+  - setype: 'httpd_sys_script_exec_t'
+    target: '/var/www/html(/.*)?/wp-config\.php'
+    state: 'present'
+  - setype: 'httpd_sys_script_exec_t'
+    target: '/var/www/html(/.*)?/wp-includes/.*\.php'
+    state: 'present'

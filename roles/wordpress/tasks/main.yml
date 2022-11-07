@@ -220,6 +220,12 @@
       var: 'wordpress__import_result["stdout"]'
     when: 'item["wxr_export"] is defined and item["wxr_export"] | length'
 
+  tags:
+    - 'wordpress'
+
+
+- block:
+
   - name: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
     ansible.builtin.command: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
     register: 'wordpress__chown_result'
@@ -227,8 +233,16 @@
     args:
       warn: false
 
+  - name: 'restorecon -Fvr {{ wordpress__install_dir | quote }}'
+    ansible.builtin.command: 'restorecon -Fvr {{ item }}'
+    register: 'wordpress__restorecon_wordpress_result'
+    changed_when: 'wordpress__restorecon_wordpress_result["stdout"] | length'
+    loop:
+      - '{{ wordpress__install_dir }}'
+
   tags:
     - 'wordpress'
+    - 'wordpress:file_policy'
 
 
 - block:

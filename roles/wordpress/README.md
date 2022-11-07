@@ -24,6 +24,7 @@ If you use the [WordPress Playbook](https://github.com/Linuxfabrik/lfops/blob/ma
 | ---                | ------------                                                                                                            |
 | `wordpress`        | Installs and configures wordpress                                                                                       |
 | `wordpress:export` | Exports the site content (posts, pages, comments, custom fields, categories and tags) as a wxr file.                    |
+| `wordpress:file_policy` | * `chown -R --changes apache:apache {{ wordpress__install_dir  }}`<br> * `restorecon -Fvr {{ wordpress__install_dir }}` |
 | `wordpress:update` | Updates the WordPress core to `wordpress__version`. Also applies all DB migrations, and updates all plugins and themes. |
 
 
