@@ -52,25 +52,23 @@ graylog_server__password_secret: '9395pKmkuxSFU623AJpQNA3iyB7R82NuxZRzw19C3m3YXn
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `graylog_server__plugins` | A list of available plugins which can be installed additionally. Possible options: </br> * `graylog-enterprise-plugins`<br/> * `graylog-integrations-plugins`<br/> *  `graylog-enterprise-integrations-plugins` | `[]` |
-| `graylog_server__timezone` | The time zone setting of the root user. See [joda.org](http://www.joda.org/joda-time/timezones.html) for a list of valid time zones. | `'Europe/Zurich'` |
 | `graylog_server__http_bind_address` | The network interface used by the Graylog HTTP interface. | `'127.0.0.1'` |
 | `graylog_server__http_bind_port` | The port used by the Graylog HTTP interface. | `9000` |
+| `graylog_server__plugins` | A list of available plugins which can be installed additionally. Possible options: </br> * `graylog-enterprise-plugins`<br/> * `graylog-integrations-plugins`<br/> *  `graylog-enterprise-integrations-plugins` | `[]` |
 | `graylog_server__service_enabled` | Enables or disables the Systemd unit. | `true` |
-| `graylog_server__system_inputs` | Creates system inputs. | `Gelf (12201/TCP)`, `Gelf (12201/UDP)` |
-| `graylog_server__system_default_index_set` | Creates a default index set. ATTENTION: The `index_prefix` must be `role-default`, because the role is looking for this exact value. | `One index per day; 365 indices max` |
-
+| `graylog_server__system_default_index_set` | Creates a default index set. ATTENTION: The `index_prefix` must be `role-default`, because the role is looking for this exact value. | One index per day; 365 indices max |
+| `graylog_server__system_inputs` | Creates system inputs. | Gelf (12201/TCP), Gelf (12201/UDP) |
+| `graylog_server__timezone` | The time zone setting of the root user. See [joda.org](http://www.joda.org/joda-time/timezones.html) for a list of valid time zones. | `'Europe/Zurich'` |
 
 Example:
 ```yaml
 # optional
+graylog_server__http_bind_address: '192.0.2.1'
+graylog_server__http_bind_port: 8080
 graylog_server__plugins:
   - 'graylog-enterprise-plugins'
   - 'graylog-integrations-plugins'
   - 'graylog-enterprise-integrations-plugins'
-graylog_server__timezone: 'Europe/Zurich'
-graylog_server__http_bind_address: '192.0.2.1'
-graylog_server__http_bind_port: 8080
 graylog_server__service_enabled: false
 graylog_server__system_inputs:
   - title: 'Gelf (12201/TCP)'
@@ -125,6 +123,7 @@ graylog_server__system_default_index_set:
     writable: true
     index_analyzer: 'standard'
     index_prefix: 'role-default'
+graylog_server__timezone: 'Europe/Zurich'
 ```
 
 
