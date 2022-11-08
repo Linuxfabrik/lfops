@@ -48,7 +48,7 @@
 
 - block:
 
-  - name: "Wait for port 9000 to become open on the host"
+  - name: 'Wait for port 9000 to become open on the host'
     ansible.builtin.wait_for:
       host: '{{ graylog_server__http_bind_address }}'
       port: 9000
@@ -62,7 +62,7 @@
       method: 'GET'
       force_basic_auth: true
       status_code: 200
-    register: 'input_result'
+    register: 'graylog_server__input_result'
 
   - name: 'delete inputs'
     ansible.builtin.uri:
@@ -74,8 +74,8 @@
       status_code: 204
       headers:
         X-Requested-By: 'cli'
-    loop: '{{ input_result | community.general.json_query("json.inputs[*].id") }}'
-    when: 'input_result.json.inputs is defined and input_result.json.inputs | length'
+    loop: '{{ graylog_server__input_result | community.general.json_query("json.inputs[*].id") }}'
+    when: 'graylog_server__input_result.json.inputs is defined and graylog_server__input_result.json.inputs | length'
 
   - name: 'create inputs'
     ansible.builtin.uri:
