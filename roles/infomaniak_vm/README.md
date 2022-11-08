@@ -73,6 +73,10 @@ infomaniak_vm__separate_boot_volume_type: 'perf2'
 infomaniak_vm__state: 'present'
 ```
 
+## Troubleshooting
+
+`BadRequestException: 400: Client Error for url: https://api.pub1.infomaniak.cloud/compute/v2.1/os-volumes_boot, Invalid key_name provided.`: Provide the correct display name of a SSH Key Pair.
+
 
 ## License
 
