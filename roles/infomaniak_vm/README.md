@@ -5,6 +5,7 @@ This role creates and manages instances (virtual machines) on [Infomaniak](https
 Runs on
 
 * Fedora 35
+* Fedora 36
 
 
 ## Mandatory Requirements
