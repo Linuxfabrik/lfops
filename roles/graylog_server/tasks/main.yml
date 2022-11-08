@@ -44,3 +44,103 @@
   tags:
     - 'graylog_server'
     - 'graylog_server:state'
+
+
+- block:
+
+  - name: "Wait for port 9000 to become open on the host"
+    ansible.builtin.wait_for:
+      host: '{{ graylog_server__http_bind_address }}'
+      port: 9000
+      delay: 5
+
+  - name: 'get inputs'
+    ansible.builtin.uri:
+      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/inputs'
+      user: '{{ graylog_server__admin_user["username"] }}'
+      password: '{{ graylog_server__admin_user["password"] }}'
+      method: 'GET'
+      force_basic_auth: true
+      status_code: 200
+    register: 'input_result'
+
+  - name: 'delete inputs'
+    ansible.builtin.uri:
+      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/inputs/{{ item }}'
+      user: '{{ graylog_server__admin_user["username"] }}'
+      password: '{{ graylog_server__admin_user["password"] }}'
+      method: 'DELETE'
+      force_basic_auth: true
+      status_code: 204
+      headers:
+        X-Requested-By: 'cli'
+    loop: '{{ input_result | community.general.json_query("json.inputs[*].id") }}'
+    when: 'input_result.json.inputs is defined and input_result.json.inputs | length'
+
+  - name: 'create inputs'
+    ansible.builtin.uri:
+      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/inputs'
+      user: '{{ graylog_server__admin_user["username"] }}'
+      password: '{{ graylog_server__admin_user["password"] }}'
+      method: 'POST'
+      body: '{{ item | to_json }}'
+      force_basic_auth: true
+      status_code: 201
+      body_format: 'json'
+      headers:
+        Accept: 'application/json'
+        X-Requested-By: 'cli'
+    loop: '{{ graylog_server__system_inputs }}'
+
+  - name: 'get index sets'
+    ansible.builtin.uri:
+      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets'
+      user: '{{ graylog_server__admin_user["username"] }}'
+      password: '{{ graylog_server__admin_user["password"] }}'
+      method: 'GET'
+      force_basic_auth: true
+      status_code: 200
+    register: 'index_sets_result'
+
+  - name: 'create default index set'
+    ansible.builtin.uri:
+      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets'
+      user: '{{ graylog_server__admin_user["username"] }}'
+      password: '{{ graylog_server__admin_user["password"] }}'
+      method: 'POST'
+      body: '{{ graylog_server__system_default_index_set | to_json }}'
+      force_basic_auth: true
+      status_code: 200
+      body_format: 'json'
+      headers:
+        Accept: 'application/json'
+        X-Requested-By: 'cli'
+    when: 'index_sets_result | community.general.json_query("json.index_sets[?index_prefix==`role-default`].id") | length == 0'
+
+  - name: 'get index sets'
+    ansible.builtin.uri:
+      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets'
+      user: '{{ graylog_server__admin_user["username"] }}'
+      password: '{{ graylog_server__admin_user["password"] }}'
+      method: 'GET'
+      force_basic_auth: true
+      status_code: 200
+    register: 'index_sets_result'
+
+  - name: 'make lf index set default'
+    ansible.builtin.uri:
+      # url: http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets/{{ index_sets_result | community.general.json_query("json.index_sets[?index_prefix==`role-default`].id") | regex_replace("\[\'|\'\]", "") }}/default
+      url: "http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets/{{ index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`role-default`].id\") | regex_replace(\"\\[\\'|\\'\\]\", \"\") }}/default"
+      # url: http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets/{{ index_sets_result | community.general.json_query("json.index_sets[?index_prefix=='{{ graylog_server__index_set[`index_prefix`] }}'].id") | regex_replace("\[\'|\'\]", "") }}/default
+      user: '{{ graylog_server__admin_user["username"] }}'
+      password: '{{ graylog_server__admin_user["password"] }}'
+      method: 'PUT'
+      force_basic_auth: true
+      status_code: 200
+      headers:
+        X-Requested-By: 'cli'
+    when: 'index_sets_result | community.general.json_query("json.index_sets[?index_prefix==`role-default`].id") | length > 0'
+
+  tags:
+    - 'graylog_server'
+    - 'graylog_server:configure'
