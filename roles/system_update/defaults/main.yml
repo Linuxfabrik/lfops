@@ -1,4 +1,4 @@
-system_update__mail_from: '{{ mailto_root__from }}'
+system_update__mail_from: '{{ postfix__relayhost_username }}'
 system_update__mail_recipients_new_configfiles: '{{ mailto_root__to }}'
 system_update__mail_recipients_updates: '{{ mailto_root__to }}'
 system_update__mail_subject_prefix: ''

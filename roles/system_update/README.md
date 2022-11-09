@@ -34,7 +34,7 @@ Runs on
 | -------- | ----------- | ------------- |
 | `system_update__icinga2_api_user_login` | The Icinga2 API User to set the downtime for the corresponding host and all it's services. | unset |
 | `system_update__icinga2_master` | The hostname or ip address of the Icinga2 master instance where to set the downtime for the corresponding host and all it's services. | unset |
-| `system_update__mail_from` | The email sender account. This will be used as the "from"-address for all notifications. | `'{{ mailto_root__from }}'` |
+| `system_update__mail_from` | The email sender account. This will be used as the "from"-address for all notifications. | `'{{ postfix__relayhost_username }}'` |
 | `system_update__mail_recipients_new_configfiles` | A list of email recipients to notify if there is a new version of a config file (`rpmnew` / `rpmsave` / `dpkg-dist` / `ucf-dist`). | `'{{ mailto_root__to }}'` |
 | `system_update__mail_recipients_updates` | A list of email recipients to notify about the expected updates and the report of the installed updates. | `'{{ mailto_root__to }}'` |
 | `system_update__mail_subject_prefix` | This will set a prefix that will be showed in front of the hostname. Can be used to separate servers by environment or customer. | `''` |

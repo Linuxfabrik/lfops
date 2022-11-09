@@ -10,4 +10,5 @@
 
     - role: 'linuxfabrik.lfops.at'
     - role: 'linuxfabrik.lfops.mailx'
+    - role: 'linuxfabrik.lfops.postfix'
     - role: 'linuxfabrik.lfops.system_update'
