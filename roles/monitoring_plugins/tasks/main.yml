@@ -101,6 +101,13 @@
         - 'linuxfabrik-monitoring-plugins'
       state: 'present'
 
+  - name: 'install linuxfabrik-notification-plugins'
+    ansible.builtin.package:
+      name:
+        - 'linuxfabrik-notification-plugins'
+      state: 'present'
+    when: 'monitoring_plugins__deploy_notification_plugins__combined_var | bool'
+
   - name: 'Copy the /etc/sudoers.d/icinga2-plugins file to the server (Linux)'
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["distribution"] ~ ansible_facts["distribution_major_version"] }}.sudoers'

@@ -45,6 +45,7 @@ Windows only: Since you cannot change files that are currently used by a process
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `monitoring_plugins__deploy_notification_plugins__host_var` /<br>`monitoring_plugins__deploy_notification_plugins__group_var` | Enables the deployment of the notification-plugins (in addition to the check-plugins). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `false` |
 | `monitoring_plugins__icinga2_api_password` | The password of the `monitoring_plugins__icinga2_api_user`. This is required to schedule a downtime for Windows hosts. | unset |
 | `monitoring_plugins__icinga2_api_url` | The address of the Icinga2 master API. This is required to schedule a downtime for Windows hosts. | unset |
 | `monitoring_plugins__icinga2_api_user` | The Icinga2 API user. This is required to schedule a downtime for Windows hosts. Therefore, it needs to have the following permissions: `permissions = [ "actions/schedule-downtime", "actions/remove-downtime" ]` | unset |
@@ -57,6 +58,7 @@ Windows only: Since you cannot change files that are currently used by a process
 Example:
 ```yaml
 # optional
+monitoring_plugins__deploy_notification_plugins__host_var: true
 monitoring_plugins__icinga2_api_password: 'linuxfabrik'
 monitoring_plugins__icinga2_api_url: 'https://192.0.2.3:5665/v1'
 monitoring_plugins__icinga2_api_user: 'downtime-api-user'
