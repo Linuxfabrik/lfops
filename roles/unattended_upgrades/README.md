@@ -12,7 +12,7 @@ Runs on
 
 | Tag                   | What it does                              |
 | ---                   | ------------                              |
-| `unattended_upgrades` | Removes the `unattended-upgrades` package |
+| `unattended_upgrades` | Deactivates Unattended Upgrades |
 
 
 ## License
