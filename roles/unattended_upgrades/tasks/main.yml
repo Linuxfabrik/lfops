@@ -3,8 +3,8 @@
   - name: 'disable unattended upgrades'
     lineinfile:
       dest: '/etc/apt/apt.conf.d/20auto-upgrades'
-      regexp: "{{ item.regexp }}"
-      line: "{{ item.line }}"
+      regexp: '{{ item.regexp }}'
+      line: '{{ item.line }}'
     loop:
       - {regexp: '^APT::Periodic::Update-Package-Lists', line: 'APT::Periodic::Update-Package-Lists "0";'}
       - {regexp: '^APT::Periodic::Unattended-Upgrade', line: 'APT::Periodic::Unattended-Upgrade "0";'}
