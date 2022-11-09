@@ -57,7 +57,7 @@ graylog_server__system_default_index_set:
     type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
   writable: true
   index_analyzer: 'standard'
-  index_prefix: 'role-default'
+  index_prefix: 'lfops-default'
 
 
 # ---------------------------------------------------

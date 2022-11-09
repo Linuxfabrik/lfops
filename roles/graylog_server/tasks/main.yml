@@ -48,15 +48,15 @@
 
 - block:
 
-  - name: 'Wait for port 9000 to become open on the host'
+  - name: 'Wait for port {{ graylog_server__http_bind_port }} to become open on the host'
     ansible.builtin.wait_for:
       host: '{{ graylog_server__http_bind_address }}'
-      port: 9000
+      port: '{{ graylog_server__http_bind_port }}'
       delay: 5
 
   - name: 'get inputs'
     ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/inputs'
+      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs'
       user: '{{ graylog_server__admin_user["username"] }}'
       password: '{{ graylog_server__admin_user["password"] }}'
       method: 'GET'
@@ -66,7 +66,7 @@
 
   - name: 'delete inputs'
     ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/inputs/{{ item }}'
+      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs/{{ item }}'
       user: '{{ graylog_server__admin_user["username"] }}'
       password: '{{ graylog_server__admin_user["password"] }}'
       method: 'DELETE'
@@ -79,7 +79,7 @@
 
   - name: 'create inputs'
     ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/inputs'
+      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs'
       user: '{{ graylog_server__admin_user["username"] }}'
       password: '{{ graylog_server__admin_user["password"] }}'
       method: 'POST'
@@ -94,7 +94,7 @@
 
   - name: 'get index sets'
     ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets'
+      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
       user: '{{ graylog_server__admin_user["username"] }}'
       password: '{{ graylog_server__admin_user["password"] }}'
       method: 'GET'
@@ -104,7 +104,7 @@
 
   - name: 'create default index set'
     ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets'
+      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
       user: '{{ graylog_server__admin_user["username"] }}'
       password: '{{ graylog_server__admin_user["password"] }}'
       method: 'POST'
@@ -115,11 +115,11 @@
       headers:
         Accept: 'application/json'
         X-Requested-By: 'cli'
-    when: 'index_sets_result | community.general.json_query("json.index_sets[?index_prefix==`role-default`].id") | length == 0'
+    when: "index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length == 0"
 
   - name: 'get index sets'
     ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets'
+      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
       user: '{{ graylog_server__admin_user["username"] }}'
       password: '{{ graylog_server__admin_user["password"] }}'
       method: 'GET'
@@ -129,9 +129,7 @@
 
   - name: 'make lf index set default'
     ansible.builtin.uri:
-      # url: http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets/{{ index_sets_result | community.general.json_query("json.index_sets[?index_prefix==`role-default`].id") | regex_replace("\[\'|\'\]", "") }}/default
-      url: "http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets/{{ index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`role-default`].id\") | regex_replace(\"\\[\\'|\\'\\]\", \"\") }}/default"
-      # url: http://{{ graylog_server__http_bind_address }}:9000/api/system/indices/index_sets/{{ index_sets_result | community.general.json_query("json.index_sets[?index_prefix=='{{ graylog_server__index_set[`index_prefix`] }}'].id") | regex_replace("\[\'|\'\]", "") }}/default
+      url: "http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets/{{ index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | regex_replace(\"\\[\\'|\\'\\]\", \"\") }}/default"
       user: '{{ graylog_server__admin_user["username"] }}'
       password: '{{ graylog_server__admin_user["password"] }}'
       method: 'PUT'
@@ -139,7 +137,7 @@
       status_code: 200
       headers:
         X-Requested-By: 'cli'
-    when: 'index_sets_result | community.general.json_query("json.index_sets[?index_prefix==`role-default`].id") | length > 0'
+    when: "index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length > 0"
 
   tags:
     - 'graylog_server'
