@@ -54,10 +54,10 @@ graylog_server__password_secret: '9395pKmkuxSFU623AJpQNA3iyB7R82NuxZRzw19C3m3YXn
 | -------- | ----------- | ------------- |
 | `graylog_server__http_bind_address` | The network interface used by the Graylog HTTP interface. | `'127.0.0.1'` |
 | `graylog_server__http_bind_port` | The port used by the Graylog HTTP interface. | `9000` |
-| `graylog_server__plugins` | A list of available plugins which can be installed additionally. Possible options: </br> * `graylog-enterprise-plugins`<br/> * `graylog-integrations-plugins`<br/> *  `graylog-enterprise-integrations-plugins` | `[]` |
+| `graylog_server__plugins` | A list of available plugins which can be installed additionally. Possible options: </br> * `graylog-enterprise-plugins`<br/> * `graylog-integrations-plugins`<br/> * `graylog-enterprise-integrations-plugins` | `[]` |
 | `graylog_server__service_enabled` | Enables or disables the Systemd unit. | `true` |
-| `graylog_server__system_default_index_set` | Creates a default index set. ATTENTION: The `index_prefix` must be `role-default`, because the role is looking for this exact value. | One index per day; 365 indices max |
-| `graylog_server__system_inputs` | Creates system inputs. | Gelf (12201/TCP), Gelf (12201/UDP) |
+| `graylog_server__system_default_index_set` | Creates a default index set. Subkeys: <ul><li>`can_be_default`: Mandatory, boolean. Whether this index set can be default.</li><li>`creation_date`: Mandatory, date. Date in iso8601 format.</li><li>`description`: Mandatory, string. Description of index set.</li><li>`field_type_refresh_interval`: Mandatory, integer. Refresh interval in milliseconds.</li><li>`index_analyzer`: Mandatory, string. Elasticsearch/Opensearch analyzer for this index set.</li><li>`index_optimization_max_num_segments`: Mandatory, integer. Maximum number of segments per Elasticsearch/Opensearch index after optimization (force merge).</li><li>`index_optimization_disabled`: Mandatory, boolean. Whether Elasticsearch/Opensearch index optimization (force merge) after rotation is disabled.</li><li>`index_prefix`: Mandatory, string. A unique prefix used in Elasticsearch/Opensearch indices belonging to this index set. The prefix must start with a letter or number, and can only contain letters, numbers, '_', '-' and '+'.</li><li>`replicas`: Mandatory, integer. Number of Elasticsearch/Opensearch replicas used per index in this index set.</li><li>`retention_strategy_class`: Mandatory, string. Retention strategy class to clean up old indices.</li><li>`retention_strategy`<ul><li>`max_number_of_indices`: Mandatory, integer. Maximum number of indices to keep before retention strategy gets triggered.</li><li>`type`: Mandatory, string. Retention strategy type to clean up old indices.</li></ul><li>`rotation_strategy_class`: Mandatory, string. Graylog uses multiple indices to store documents in. You can configure the strategy it uses to determine when to rotate the currently active write index.</li><li>`rotation_strategy`<ul><li>`rotation_period`: Mandatory, string. How long an index gets written to before it is rotated. (i.e. "P1D" for 1 day, "PT6H" for 6 hours).</li><li>`rotate_empty_index_set`: Mandatory, boolean. Apply the rotation strategy even when the index set is empty (not recommended).</li><li>`type`: Mandatory, string. The type of the Rotation Strategy.</li></ul><li>`shards`: Mandatory, integer. Number of Elasticsearch/Opensearch shards used per index in this index set.</li><li>`title`: Mandatory, string. Descriptive name of the index set.</li><li>`writable`: Mandatory, boolean. Whether this Index Set is writable.</li></ul> | One index per day; 365 indices max |
+| `graylog_server__system_inputs` | Creates system inputs. Subkeys: <ul><li>`configuration`: Mandatory, dictionay. Specific configuration of corresponding input. Please refer to above API documentation.</li><li>`global`: Mandatory, boolean. Whether this input should start on all nodes.</li><li>`title`: Mandatory, string. A title for this input.</li><li>`type`: Mandatory, string. The type of the input.</li></ul> | Gelf (12201/TCP), Gelf (12201/UDP), Syslog (1514/UDP) |
 | `graylog_server__timezone` | The time zone setting of the root user. See [joda.org](http://www.joda.org/joda-time/timezones.html) for a list of valid time zones. | `'Europe/Zurich'` |
 
 Example:
@@ -71,58 +71,71 @@ graylog_server__plugins:
   - 'graylog-enterprise-integrations-plugins'
 graylog_server__service_enabled: false
 graylog_server__system_inputs:
-  - title: 'Gelf (12201/TCP)'
+  - configuration:
+      bind_address: '0.0.0.0'
+      decompress_size_limit: 8388608
+      max_message_size: 2097152
+      number_worker_threads: 2
+      override_source: ''
+      port: 12201
+      recv_buffer_size: 1048576
+      tcp_keepalive: true
+      tls_cert_file: ''
+      tls_client_auth: 'disabled'
+      tls_client_auth_cert_file: ''
+      tls_enable: false
+      tls_key_file: ''
+      tls_key_password: ''
+      use_null_delimiter: true
     global: true
+    title: 'Gelf (12201/TCP)'
     type: 'org.graylog2.inputs.gelf.tcp.GELFTCPInput'
-    configuration:
-        bind_address: '0.0.0.0'
-        port: 12201
-        decompress_size_limit: 8388608
-        max_message_size: 2097152
-        number_worker_threads: 2
-        override_source: ''
-        recv_buffer_size: 1048576
-        tcp_keepalive: true
-        tls_cert_file: ''
-        tls_client_auth: 'disabled'
-        tls_client_auth_cert_file: ''
-        tls_enable: false
-        tls_key_file: ''
-        tls_key_password: ''
-        use_null_delimiter: true
-  - title: 'Gelf (12201/UDP)'
+  - configuration:
+      bind_address: '0.0.0.0'
+      decompress_size_limit: 8388608
+      number_worker_threads: 2
+      override_source: ''
+      port: 12201
+      recv_buffer_size: 1048576
     global: true
+    title: 'Gelf (12201/UDP)'
     type: 'org.graylog2.inputs.gelf.udp.GELFUDPInput'
-    configuration:
-        bind_address: '0.0.0.0'
-        port: 12201
-        decompress_size_limit: 8388608
-        number_worker_threads: 2
-        override_source: ''
-        recv_buffer_size: 1048576
+  - configuration:
+      allow_override_date: true
+      bind_address: '0.0.0.0'
+      decompress_size_limit: 8388608
+      expand_structured_data: false
+      force_rdns: false
+      number_worker_threads: 2
+      override_source: ''
+      port: 1514
+      recv_buffer_size: 1048576
+      store_full_message: false
+    global: true
+    title: 'Syslog (1514/UDP)'
+    type: 'org.graylog2.inputs.syslog.udp.SyslogUDPInput'
 graylog_server__system_default_index_set:
-    title: 'Linuxfabrik Index Set'
-    description: 'One index per day; 365 indices max'
-    default: true
-    can_be_default: true
-    creation_date: '{{ ansible_date_time.iso8601 }}'
-    shards: 4
-    replicas: 0
-    index_optimization_max_num_segments: 1
-    index_optimization_disabled: false
-    field_type_refresh_interval: 5000
-    retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
-    retention_strategy:
-        max_number_of_indices: 365
-        type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
-    rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
-    rotation_strategy:
-        rotation_period: 'P1D'
-        rotate_empty_index_set: false
-        type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
-    writable: true
-    index_analyzer: 'standard'
-    index_prefix: 'role-default'
+  can_be_default: true
+  creation_date: '{{ ansible_date_time.iso8601 }}'
+  description: 'One index per day; 365 indices max'
+  field_type_refresh_interval: 5000
+  index_analyzer: 'standard'
+  index_optimization_max_num_segments: 1
+  index_optimization_disabled: false
+  index_prefix: 'lfops-default'
+  replicas: 0
+  retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
+  retention_strategy:
+    max_number_of_indices: 365
+    type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
+  rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
+  rotation_strategy:
+    rotation_period: 'P1D'
+    rotate_empty_index_set: false
+    type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
+  shards: 4
+  title: 'Linuxfabrik Index Set'
+  writable: true
 graylog_server__timezone: 'Europe/Zurich'
 ```
 
