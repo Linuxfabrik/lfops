@@ -247,7 +247,7 @@ This role creates a vHost named `localhost` by default. Have a look at the [defa
 | `state` | String. Should the vhost definition file be created (`present`) or deleted (`absent`). | * app: unset<br> * localhost: `'present'`<br> * proxy: unset<br> * raw: unset<br> * redirect: unset |
 | `template` | String. Have a look at the intro of this paragraph. | unset |
 | `virtualhost_ip` | String. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | * app: `'*'`<br> * localhost: `'*'`<br> * proxy: `'*'`<br> * raw: `'*'`<br> * redirect: `'*'` |
-| `virtualhost_port` | number. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | * app: `443`<br> * localhost: `443`<br> * proxy: `443`<br> * raw: `443`<br> * redirect: `80` |
+| `virtualhost_port` | Number. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | * app: `443`<br> * localhost: `443`<br> * proxy: `443`<br> * raw: `443`<br> * redirect: `80` |
 
 Example: [Have a look here](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md).
 
