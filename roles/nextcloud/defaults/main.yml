@@ -14,7 +14,7 @@ nextcloud__apps_config:
   - { key: 'privacy',           value: 'readableLocation --value="ch"' }
   - { key: 'text',              value: 'workspace_available --value=0' }
   - { key: 'theming',           value: 'imprintUrl --value=https://www.linuxfabrik.ch/ueber-uns/agb/' }
-  - { key: 'theming',           value: 'name --value="Nextcloud for Teams"' }
+  - { key: 'theming',           value: 'name --value="Nextcloud für Teams / Nextcloud for Business"' }
   - { key: 'theming',           value: 'privacyUrl --value=https://www.linuxfabrik.ch/ueber-uns/agb/datenschutzerklaerung/' }
   - { key: 'theming',           value: 'slogan --value="powered by Linuxfabrik GmbH, Zürich"' }
   - { key: 'theming',           value: 'url --value=https:\/\/ws.linuxfabrik.ch' }
@@ -85,7 +85,8 @@ nextcloud__apache_httpd__vhosts__dependent_var:
         Require all granted
     authz_document_root: |-
         Require all granted
-    virtualhost_port: 80
+    virtualhost_ip: '{{ nextcloud__apache_httpd__vhosts_virtualhost_ip | d("*") }}'
+    virtualhost_port: '{{ nextcloud__apache_httpd__vhosts_virtualhost_port | d(80) }}'
 
     conf_custom_log_format: 'combined'
     conf_directory_index: 'index.php index.html index.htm'

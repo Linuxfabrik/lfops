@@ -76,6 +76,8 @@ nextcloud__users:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `nextcloud__apache_httpd__vhosts__group_var` / `nextcloud__apache_httpd__vhosts__host_var` | The Apache vHost definition for the Nextcloud instance. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__apache_httpd__vhosts_virtualhost_ip` | String. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `*` |
+| `nextcloud__apache_httpd__vhosts_virtualhost_port` | Number. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `80` |
 | `nextcloud__apps` | List of Nextcloud Apps to install. Possible options:<br> * `name`: Mandatory, string. The app name.<br> * `state`: Mandatory, string. State of the app, one of `present`, `absent`. | `[]` |
 | `nextcloud__apps_config` | List of Key/Value pairs for configuring Apps in Nextcloud via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
 | `nextcloud__database_host` | Host where MariaDB is located. | `'localhost'` |
@@ -91,7 +93,7 @@ nextcloud__users:
 | `nextcloud__php__ini_post_max_size__group_var` / `nextcloud__php__ini_post_max_size__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'16M'` |
 | `nextcloud__php__ini_upload_max_filesize__group_var` / `nextcloud__php__ini_upload_max_filesize__host_var` | [php.net](https://www.php.net/manual/en/ini.core.php) | `'10000M'` |
 | `nextcloud__php__modules__group_var` / `nextcloud__php__modules__host_var` | List of PHP modules that need to be installed via the standard package manager. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__proxyconfig` | List of Key/Value pairs for configuring Nextcloud behind a reverse proxy via OCC. The IP addresses are those of the reverse proxy. | unset. Have a look at the example below on how to configure. |
+| `nextcloud__proxyconfig` | List of Key/Value pairs for [configuring Nextcloud behind a reverse proxy](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/reverse_proxy_configuration.html) via OCC. The IP addresses are those of the reverse proxy. | unset. Have a look at the example below on how to configure. |
 | `nextcloud__storage_backend_s3` | S3 Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. | unset. Have a look at the example below on how to configure. |
 | `nextcloud__storage_backend_swift` | Swift Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. | unset. Have a look at the example below on how to configure. |
 | `nextcloud__sysconfig` | List of Key/Value pairs for configuring Nextcloud itself via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
