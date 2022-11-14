@@ -53,18 +53,6 @@
       when:
         - 'not setup_icinga2_master__skip_influxdb | default(false)'
 
-    - role: 'linuxfabrik.lfops.policycoreutils'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_icinga2_master__skip_policycoreutils | default(false)'
-
-    - role: 'linuxfabrik.lfops.selinux'
-      selinux__booleans__dependent_var:
-        - '{{ icinga2_master__selinux__booleans__dependent_var }}'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_icinga2_master__skip_selinux | default(false)'
-
     - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
       when:
         - 'not setup_icinga2_master__skip_repo_monitoring_plugins | d(false)'
@@ -82,6 +70,18 @@
       icinga2_master__api_users__dependent_var:
         - '{{ icingaweb2__icinga2_master__api_users__dependent_var }}'
         - '{{ icingaweb2_module_director__icinga2_master__api_users__dependent_var }}'
+
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_icinga2_master__skip_policycoreutils | default(false)'
+
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var:
+        - '{{ icinga2_master__selinux__booleans__dependent_var }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_icinga2_master__skip_selinux | default(false)'
 
     - role: 'linuxfabrik.lfops.yum_utils'
       when:
