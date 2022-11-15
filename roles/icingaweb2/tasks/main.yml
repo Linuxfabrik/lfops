@@ -1,10 +1,11 @@
 - block:
 
-  - name: 'install icingaweb2 icingaweb2-selinux'
+  - name: 'install icingaweb2 icingaweb2-selinux icingacli'
     ansible.builtin.package:
       name:
         - 'icingaweb2'
         - 'icingaweb2-selinux'
+        - 'icingacli'
       state: 'present'
 
   - name: 'usermod -a -G icingaweb2 icinga'
