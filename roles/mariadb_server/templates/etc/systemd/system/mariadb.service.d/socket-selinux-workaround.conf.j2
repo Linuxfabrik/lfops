@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022060101
+# 2022111501
 
 # This is a workaround for https://jira.mariadb.org/browse/MDEV-24941. This only occurs when using the official MariaDB Repository.
 # After restarting the mariadb service, the socket /var/lib/mysql/mysql.sock has the mysqld_db_t SELinux file type, instead of mysqld_var_run_t
@@ -13,5 +13,7 @@
 # restorecon -Fv /var/lib/mysql/mysql.sock
 # Relabeled /var/lib/mysql/mysql.sock from system_u:object_r:mysqld_db_t:s0 to system_u:object_r:mysqld_var_run_t:s0
 
+# We use the `-` special executable prefix to ignore the exit status of chcon, as it fails if SELinux is disabled.
+
 [Service]
-ExecStartPost=/bin/chcon -t mysqld_var_run_t /var/lib/mysql/mysql.sock
+ExecStartPost=-/bin/chcon -t mysqld_var_run_t /var/lib/mysql/mysql.sock
