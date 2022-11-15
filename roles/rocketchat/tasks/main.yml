@@ -29,7 +29,7 @@
         - 'wget'
       state: 'present'
 
-  - name: 'npm --global inherits'
+  - name: 'npm --global install inherits'
     community.general.npm:
       name: 'inherits'
       global: true
@@ -70,7 +70,7 @@
     ansible.builtin.set_fact:
       rocketchat__node_version: '{{ rocketchat__api_version_dependencies_result["json"]["nodeVersion"] }}'
 
-  - name: 'npm --global n'
+  - name: 'npm --global install n'
     community.general.npm:
       name: 'n'
       global: true
