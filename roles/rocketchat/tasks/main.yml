@@ -29,12 +29,6 @@
         - 'wget'
       state: 'present'
 
-  - name: 'ln -s /bin/node /bin/nodejs'
-    ansible.builtin.file:
-      src: '/bin/node'
-      dest: '/bin/nodejs'
-      state: 'link'
-
   - name: 'npm --global inherits'
     community.general.npm:
       name: 'inherits'
