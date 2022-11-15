@@ -19,7 +19,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2022090103'
+__version__ = '2022111501'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -136,7 +136,6 @@ def do_backup(config):
             cmd += ['--asynchronous-upload']
             cmd += ['--backend-retry-delay', '60']
             cmd += ['--cf-backend', f"{config.get('backend', 'swift')}"]
-            cmd += ['--copy-links']
             cmd += ['--encrypt-key', f"{config.get('gpg_encrypt_local_key', '')}"]
             cmd += ['--encrypt-key', f"{config.get('gpg_encrypt_master_key', '')}"]
             # global excludes
