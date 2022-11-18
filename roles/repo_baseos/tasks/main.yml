@@ -14,6 +14,5 @@
       mode: 0o644
     loop: '{{ repo_baseos__repo_files }}'
 
-  when: 'repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length'
   tags:
     - 'repo_baseos'
