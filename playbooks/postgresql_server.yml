@@ -1,0 +1,16 @@
+- name: 'Install and configure PostgreSQL server'
+  hosts:
+    - 'lfops_postgresql_server'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.python'
+      python__modules__dependent_var: '{{ postgresql_server__python__modules__dependent_var | d([]) }}'
+      when:
+        - 'not postgresql_server__skip_python | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_postgresql'
+      when:
+        - 'not postgresql_server__skip_repo_postgresql | d(false)'
+
+    - role: 'linuxfabrik.lfops.postgresql_server'

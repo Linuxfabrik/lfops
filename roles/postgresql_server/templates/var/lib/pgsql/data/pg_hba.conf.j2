@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+# 2022111701
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+{% for item in postgresql_server__pg_hba_entries %}
+{{ item['type'] }} {{ item['database'] }} {{ item['user'] }} {{ item['address'] | d('') }}  {{ item['auth_method'] | d('scram-sha-256') }} {{ item['auth_options'] | d('') }}
+{% endfor %}

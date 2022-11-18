@@ -142,6 +142,7 @@ New features:
 * Role: perl
 * Role: php
 * Role: policycoreutils
+* Role: postgresql_server
 * Role: qemu_guest_agent
 * Role: redis
 * Role: repo_baseos

@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2022111701
+
+[Unit]
+Description=PostgreSQL Dump Timer
+
+[Timer]
+OnCalendar={{ postgresql_server__dump_on_calendar }}
+Unit=postgresql-dump.service
+
+[Install]
+WantedBy=timers.target

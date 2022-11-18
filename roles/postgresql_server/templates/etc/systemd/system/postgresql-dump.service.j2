@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2022111801
+
+[Unit]
+Description=PostgreSQL Dump Service
+
+[Service]
+ExecStart=/usr/local/sbin/postgresql-dump
+Type=oneshot
+User=root
+
+[Install]
+WantedBy=basic.target

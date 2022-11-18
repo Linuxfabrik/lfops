@@ -1,0 +1,222 @@
+- block:
+
+  - name: 'Install postgresql{{ postgresql_server__version }}-server'
+    ansible.builtin.package:
+      name:
+        - 'postgresql{{ postgresql_server__version }}-server'
+      state: 'present'
+
+  tags:
+    - 'postgresql_server'
+
+
+- block:
+
+  - name: 'set internal vars for role'
+    ansible.builtin.set_fact:
+      postgresql_server__installed_version: '{{ postgresql_server__version }}'
+      postgresql_server__service_name: 'postgresql-{{ postgresql_server__version }}'
+      postgres_server__data_dir: '/var/lib/pgsql/{{ postgresql_server__version }}/data'
+      postgres_server__bin_dir: '/usr/pgsql-{{ postgresql_server__version }}/bin'
+
+  when:
+    - 'postgresql_server__version | string | length'
+  tags:
+    - 'postgresql_server'
+    - 'postgresql_server:state'
+
+
+- block:
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get postgresql-server version'
+    ansible.builtin.set_fact:
+      postgresql_server__installed_version: '{{ (ansible_facts["packages"]["postgresql-server"][0]["version"] | d(ansible_facts["packages"]["postgresql-server"][0]["version"])) | regex_replace("\.\d+$", "") }}' # strip the patch version
+
+  - name: 'set internal vars for role'
+    ansible.builtin.set_fact:
+      postgresql_server__service_name: 'postgresql'
+      postgres_server__data_dir: '/var/lib/pgsql/data'
+      postgres_server__bin_dir: '/usr/pgsql/bin'
+
+  when:
+    - 'not postgresql_server__version | string | length'
+  tags:
+    - 'postgresql_server'
+    - 'postgresql_server:state'
+
+
+- block:
+
+  - name: 'Include conf.d in {{ postgres_server__data_dir }}/postgresql.conf'
+    ansible.builtin.lineinfile:
+      line: "include_dir = 'conf.d'"
+      regexp: '^include_dir(\s+|\s*=\s*)?''conf.d''\s*(#.*)?$'
+      path: '{{ postgres_server__data_dir }}/postgresql.conf'
+    notify: 'postgresql_server: restart posgresql'
+
+  - name: 'mkdir -p {{ postgres_server__data_dir }}/conf.d'
+    ansible.builtin.file:
+      path: '{{ postgres_server__data_dir }}/conf.d'
+      owner: 'postgres'
+      group: 'postgres'
+      mode: 0o700
+      state: 'directory'
+
+  - name: 'Deploy {{ postgres_server__data_dir }}/conf.d/z00-linuxfabrik.conf'
+    ansible.builtin.template:
+      src: 'var/lib/pgsql/data/conf.d/z00-linuxfabrik.conf.j2'
+      dest: '{{ postgres_server__data_dir }}/conf.d/z00-linuxfabrik.conf'
+      owner: 'postgres'
+      group: 'postgres'
+      mode: 0o600
+    notify: 'postgresql_server: restart posgresql'
+
+  - name: 'Deploy {{ postgres_server__data_dir }}/pg_hba.conf'
+    ansible.builtin.template:
+      src: 'var/lib/pgsql/data/pg_hba.conf.j2'
+      dest: '{{ postgres_server__data_dir }}/pg_hba.conf'
+      owner: 'postgres'
+      group: 'postgres'
+      mode: 0o600
+    notify: 'postgresql_server: restart posgresql'
+
+  tags:
+    - 'postgresql_server'
+
+
+- block:
+
+  - name: 'systemctl {{ postgresql_server__enabled | bool | ternary("enable", "disable") }} {{ postgresql_server__service_name }}'
+    ansible.builtin.service:
+      name: '{{ postgresql_server__service_name }}'
+      enabled: '{{ postgresql_server__enabled }}'
+
+  - name: 'systemctl {{ postgresql_server__state[:-2] }} {{ postgresql_server__service_name }}'
+    ansible.builtin.service:
+      name: '{{ postgresql_server__service_name }}'
+      state: '{{ postgresql_server__state }}'
+
+  tags:
+    - 'postgresql_server'
+    - 'postgresql_server:state'
+
+
+- block:
+
+  - name: '{{ postgres_server__bin_dir }}/postgresql-setup initdb'
+    ansible.builtin.command:
+      cmd: '{{ postgres_server__bin_dir }}/postgresql-setup initdb'
+      creates: '{{ postgres_server__data_dir }}/PG_VERSION'
+
+  tags:
+    - 'postgresql_server'
+
+- block:
+
+  - name: 'Create, update or delete PostgreSQL users'
+    community.postgresql.postgresql_user:
+      port: '{{ postgresql_server__conf_port }}'
+      name: '{{ item["name"] }}'
+      password: '{{ item["password"] | default(omit) }}'
+      role_attr_flags: '{{ item["role_attr_flags"] | join(",") | default(omit) }}'
+      state: '{{ item["state"] | default("present") }}'
+    loop: '{{ postgresql_server__users__combined_var }}'
+    become: true
+    become_user: 'postgres'
+    environment:
+      PGOPTIONS: '{{ (postgresql_server__conf_password_encryption == "scram-sha-256") | ternary("-c password_encryption=scram-sha-256", "") }}'
+
+  tags:
+    - 'postgresql_server'
+    - 'postgresql_server:users'
+
+
+- block:
+
+  - name: 'Create or delete PostgreSQL databases'
+    community.postgresql.postgresql_db:
+      port: '{{ postgresql_server__conf_port }}'
+      name: '{{ item["name"] }}'
+      lc_collate: '{{ item["lc_collate"] | default("en_US.UTF-8") }}'
+      lc_ctype: '{{ item["lc_ctype"] | default("en_US.UTF-8") }}'
+      encoding: '{{ item["encoding"] | default("UTF-8") }}'
+      template: '{{ item["template"] | default("template0") }}'
+      owner: '{{ item["owner"] | default("postgres") }}'
+      state: '{{ item["state"] | default("present") }}'
+    loop: '{{ postgresql_server__databases__combined_var }}'
+    become: true
+    become_user: 'postgres'
+
+  tags:
+    - 'postgresql_server'
+    - 'postgresql_server:databases'
+
+
+- block:
+
+  - name: 'Grant or revoke privileges'
+    community.postgresql.postgresql_privs:
+      login_db: 'postgres'
+      port: '{{ postgresql_server__conf_port }}'
+      roles: '{{ item["roles"] | join(",") }}'
+      privs: '{{ item["privs"] | join(",") | default(omit) }}'
+      type: '{{ item["type"] | d("database") }}'
+      objs: '{{ item["objs"] | join(",") }}'
+      grant_option: '{{ item["priv"] | default(false) }}'
+      state: '{{ item["state"] | default("present") }}'
+    loop: '{{ postgresql_server__privs__combined_var }}'
+    become: true
+    become_user: 'postgres'
+
+  tags:
+    - 'postgresql_server'
+    - 'postgresql_server:privs'
+
+
+- block:
+
+  - name: 'Deploy /usr/local/sbin/postgresql-dump'
+    ansible.builtin.template:
+      src: 'usr/local/sbin/postgresql-dump.j2'
+      dest: '/usr/local/sbin/postgresql-dump'
+      mode: 0o755
+
+  - name: 'Deploy /etc/postgresql-dump.conf'
+    ansible.builtin.template:
+      src: 'etc/postgresql-dump.conf.j2'
+      dest: '/etc/postgresql-dump.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+
+  - name: 'Deploy /etc/systemd/system/postgresql-dump.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/postgresql-dump.service.j2'
+      dest: '/etc/systemd/system/postgresql-dump.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy /etc/systemd/system/postgresql-dump.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/postgresql-dump.timer.j2'
+      dest: '/etc/systemd/system/postgresql-dump.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'postgresql_server__dump_systemd_timer_result'
+
+  - name: 'systemctl enable postgresql-dump.timer --now'
+    ansible.builtin.systemd:
+      name: 'postgresql-dump.timer'
+      state: 'started'
+      enabled: true
+      daemon_reload: '{{ postgresql_server__dump_systemd_timer_result is changed }}'
+
+  tags:
+    - 'postgresql_server'
+    - 'postgresql_server:dump'

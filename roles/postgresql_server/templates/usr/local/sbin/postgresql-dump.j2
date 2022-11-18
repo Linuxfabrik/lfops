@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
+
+# {{ ansible_managed }}
+# 2022111701
+
+# make sure the backup is not readable by others
+old_umask=$(umask)
+umask 027
+
+source /etc/postgresql-dump.conf
+
+rm -rf "$BACKUP_DIR"
+mkdir -p "$BACKUP_DIR"
+
+DBS=$(sudo --user "$USERNAME" --login psql --tuples-only --command='SELECT datname FROM pg_database;')
+if [ $? -ne 0 ]; then
+    echo "Cannot connect to PostgreSQL with user '$USERNAME'."
+    exit 1
+fi
+
+if [ "$DBS" == '' ]; then
+    echo 'No databases found.'
+    exit 0
+fi
+
+final_rc=0
+for DB in $DBS; do
+    case $DB in
+    template* )
+        # do nothing
+        ;;
+    postgres )
+        # do nothing
+        ;;
+    *)
+        sudo --user "$USERNAME" --login pg_dump --clean "$DB" > "$BACKUP_DIR/dump-$DB.sql"
+        rc=$?
+        if [ $rc -ne 0 ]; then
+            echo "Failed to dump $DB (Return Code $rc)."
+            final_rc=$rc
+        else
+            echo "Database $DB dumped."
+        fi
+        gzip -9fn "$BACKUP_DIR/dump-$DB.sql"
+    esac
+done
+
+umask "$old_umask"
+
+exit $final_rc

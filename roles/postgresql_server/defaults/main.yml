@@ -1,0 +1,62 @@
+postgresql_server__conf_listen_addresses:
+  - 'localhost'
+postgresql_server__conf_max_connections: 100
+postgresql_server__conf_password_encryption: 'scram-sha-256'
+postgresql_server__conf_port: 5432
+postgresql_server__dump_directory: '/backup/postgresql-dump'
+postgresql_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
+postgresql_server__enabled: true
+postgresql_server__pg_hba_entries:
+  - type: 'local'
+    database: 'all'
+    user: 'postgres'
+    auth_method: 'peer'
+  - type: 'local'
+    database: 'all'
+    user: 'all'
+  - type: 'host'
+    database: 'all'
+    user: 'all'
+    address: '127.0.0.1/32'
+postgresql_server__state: 'started'
+postgresql_server__version: ''
+postgresql_server__databases__dependent_var: []
+postgresql_server__databases__group_var: []
+postgresql_server__databases__host_var: []
+postgresql_server__databases__role_var: []
+postgresql_server__databases__combined_var: '{{
+  postgresql_server__databases__role_var +
+  postgresql_server__databases__group_var +
+  postgresql_server__databases__host_var +
+  postgresql_server__databases__dependent_var
+  | flatten
+ }}'
+
+postgresql_server__privs__dependent_var: []
+postgresql_server__privs__group_var: []
+postgresql_server__privs__host_var: []
+postgresql_server__privs__role_var: []
+postgresql_server__privs__combined_var: '{{
+  postgresql_server__privs__role_var +
+  postgresql_server__privs__group_var +
+  postgresql_server__privs__host_var +
+  postgresql_server__privs__dependent_var
+  | flatten
+ }}'
+
+postgresql_server__users__dependent_var: []
+postgresql_server__users__group_var: []
+postgresql_server__users__host_var: []
+postgresql_server__users__role_var: []
+postgresql_server__users__combined_var: '{{
+  postgresql_server__users__role_var +
+  postgresql_server__users__group_var +
+  postgresql_server__users__host_var +
+  postgresql_server__users__dependent_var
+  | flatten
+ }}'
+
+# -----------------------------------------------------------------------------
+
+postgresql_server__python__modules__dependent_var:
+  - 'python3-psycopg2'
