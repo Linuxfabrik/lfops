@@ -14,11 +14,11 @@ Runs on
 
 ## Tags
 
-| Tag             | What it does                            |
-| ---             | ------------                            |
-| `mongodb`       | Installs and configures MongoDB         |
-| `mongodb:dump`  | Configures the database dumping         |
-| `mongodb:state` | Manages the state of the mongod service |
+| Tag             | What it does                              |
+| ---             | ------------                              |
+| `mongodb`       | Installs and configures MongoDB           |
+| `mongodb:dump`  | Configures the database dumping (backups) |
+| `mongodb:state` | Manages the state of the mongod service   |
 
 
 ## Optional Role Variables
