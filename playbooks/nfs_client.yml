@@ -1,0 +1,7 @@
+- name: 'Install NFS client and configure NFS mounts'
+  hosts:
+    - 'lfops_nfs_client'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.nfs_client'

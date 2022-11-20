@@ -1,0 +1,37 @@
+- block:
+
+  - name: 'Install nfs-utils'
+    ansible.builtin.package:
+      name: 'nfs-utils'
+      state: 'present'
+
+  tags:
+    - 'nfs_client'
+
+
+- block:
+
+  - name: 'mkdir -p nfs-mount-point'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    loop: '{{ nfs_client__mounts }}'
+
+  - name: 'Mount NFS volumes'
+    ansible.posix.mount:
+      src: '{{ item["src"] }}'
+      path: '{{ item["path"] }}'
+      opts: '{{ item["opts"] }}'
+      state: '{{ item["state"] }}'
+      fstype: 'nfs'
+    loop: '{{ nfs_client__mounts }}'
+
+  when:
+    - 'nfs_client__mounts is defined'
+    - 'nfs_client__mounts | length'
+  tags:
+    - 'nfs_client'
+

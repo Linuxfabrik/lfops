@@ -134,6 +134,7 @@ New features:
 * Role: motd
 * Role: network
 * Role: nextcloud
+* Role: nfs_client
 * Role: nfs_server
 * Role: nodejs
 * Role: open_vm_tools
