@@ -1,5 +1,5 @@
 duplicity__backup_dest_container: '{{ ansible_nodename }}'
-duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | trim("/") }}'
+duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | regex_replace("/$", "") }}'
 duplicity__backup_retention_time: '30D' # days
 
 duplicity__backup_sources__group_var: []
