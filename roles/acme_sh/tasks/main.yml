@@ -71,17 +71,17 @@
     loop: '{{ acme_sh__certificates }}'
     loop_control:
       loop_var: 'certificate'
-    when: 'certificate is not in (acme_sh__list_result["stdout_lines"] | map("regex_replace", "\|.*", "") | list)'
+    when: 'certificate["name"] is not in (acme_sh__list_result["stdout_lines"] | map("regex_replace", "\|.*", "") | list)'
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert ...'
     ansible.builtin.command: |-
       /opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert \
-      --domain '{{ item }}' \
-      --ca-file '/etc/pki/tls/certs/{{ item }}-chain.crt' \
-      --cert-file '/etc/pki/tls/certs/{{ item }}.crt' \
-      --fullchain-file '/etc/pki/tls/certs/{{ item }}-fullchain.crt' \
-      --key-file '/etc/pki/tls/private/{{ item }}.key' \
-      --reloadcmd '{{ acme_sh__reload_cmd }}'
+      --domain '{{ item["name"] }}' \
+      --ca-file '/etc/pki/tls/certs/{{ item["name"] }}-chain.crt' \
+      --cert-file '/etc/pki/tls/certs/{{ item["name"] }}.crt' \
+      --fullchain-file '/etc/pki/tls/certs/{{ item["name"] }}-fullchain.crt' \
+      --key-file '/etc/pki/tls/private/{{ item["name"] }}.key' \
+      --reloadcmd '{{ item["reload_cmd"] | d("systemctl reload httpd") }}'
     loop: '{{ acme_sh__certificates }}'
 
   tags:

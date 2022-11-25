@@ -1,6 +1,6 @@
-- name: 'curl http://{{ certificate }}/.well-known/acme-challenge/index.html'
+- name: 'curl http://{{ certificate["name"] }}/.well-known/acme-challenge/index.html'
   ansible.builtin.uri:
-    url: 'http://{{ certificate }}/.well-known/acme-challenge/index.html'
+    url: 'http://{{ certificate["name"] }}/.well-known/acme-challenge/index.html'
     return_content: true
     timeout: 8
   check_mode: false # run task even if `--check` is specified
@@ -10,12 +10,12 @@
 - name: 'check if acme-challenge was reachable'
   ansible.builtin.assert:
     that: '"it works" in acme_sh__curl_result.content'
-    fail_msg: 'could not reach http://{{ certificate }}/.well-known/acme-challenge/index.html. please make sure the url is reachable for acme.sh to work.'
+    fail_msg: 'could not reach http://{{ certificate["name"] }}/.well-known/acme-challenge/index.html. please make sure the url is reachable for acme.sh to work.'
 
 - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --issue ...'
   ansible.builtin.command: |-
     /opt/acme.sh/acme.sh --config-home /etc/acme.sh --issue \
-    --domain '{{ certificate }}' \
+    --domain '{{ certificate["name"] }}' \
     --webroot /var/www/html/letsencrypt \
     --keylength '{{ acme_sh__key_length }}'
     --server https://acme-v02.api.letsencrypt.org/directory

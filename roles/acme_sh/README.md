@@ -38,15 +38,16 @@ If you use the [acme.sh Playbook](https://github.com/Linuxfabrik/lfops/blob/main
 | Variable                 | Description                                                                           |
 | --------                 | -----------                                                                           |
 | `acme_sh__account_email` | Email address for the Let's encrypt account. This address will receive expiry emails. |
-| `acme_sh__certificates`  | List of certificates that should be issued.                                           |
+| `acme_sh__certificates`  | List of certificates that should be issued. Subkeys: <ul><li>`name`: Mandatory, string. Domain of the certificate.</li><li>`reload_cmd`: Optional, string. Command to execute after issue/renew to reload the server. Defaults to `systemctl reload httpd`.</li></ul> |
 
 Example:
 ```yaml
 # mandatory
 acme_sh__account_email: 'info@example.com'
 acme_sh__certificates:
-  - 'other.example.com'
-  - 'test.example.com'
+  - name: 'other.example.com'
+  - name: 'test.example.com'
+    reload_cmd: '/usr/local/sbin/custom_reload_script'
 ```
 
 
@@ -55,14 +56,12 @@ acme_sh__certificates:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `acme_sh__key_length`  | Key length in bits of the certificates to issue. | `4096` |
-| `acme_sh__reload_cmd`  | Command to execute after issue/renew to reload the server. | `'systemctl reload httpd'` |
 | `acme_sh__timer_enabled` | Enables or disables the weekly acme.sh timer, analogous to `systemctl enable/disable --now`. | `true` |
 
 Example:
 ```yaml
 # optional
 acme_sh__key_length: 4096
-acme_sh__reload_cmd: 'systemctl reload httpd'
 acme_sh__timer_enabled: true
 ```
 

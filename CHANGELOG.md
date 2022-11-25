@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role: acme_sh
+
+* Added `name` subkey to `acme_sh__certificates`
+* Moved `acme_sh__reload_cmd` to a subkey of `acme_sh__certificates`
+
 Role: hostname
 
 * Renamed `hostname__domain_name` to `hostname__domain_part`
