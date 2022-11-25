@@ -62,6 +62,8 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 | `gitlab_ce__rb_letsencrypt_enable` | If GitLab should manage Let's Encrypt certificates itself | `false` |
 | `gitlab_ce__rb_nginx_listen_https` | Set this to `false` only if your reverse proxy internally communicates over HTTP. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl) | `false` |
 | `gitlab_ce__rb_nginx_listen_port` | Override only if you use a reverse proxy. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#setting-the-nginx-listen-port) | `80` |
+| `gitlab_ce__rb_nginx_ssl_certificate_key`` | Path to the SSL certificate key. | unset |
+| `gitlab_ce__rb_nginx_ssl_certificate`` | Path to the SSL certificate. | unset |
 | `gitlab_ce__rb_registry_external_url` | The URL of the GitLab Container registry. | unset |
 | `gitlab_ce__rb_registry_nginx_enable` | Set this to `true` to enable the GitLab Container Registry. | unset |
 | `gitlab_ce__rb_registry_nginx_listen_https` | Set this to `false` only if your reverse proxy internally communicates over HTTP. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl) | `false` |
@@ -109,7 +111,8 @@ gitlab_ce__rb_gitlab_rails_time_zone: 'Europe/Zurich'
 gitlab_ce__rb_letsencrypt_enable: false
 
 gitlab_ce__rb_nginx_listen_port: '80'
-gitlab_ce__rb_nginx_listen_port: false
+gitlab_ce__rb_nginx_ssl_certificate: '/etc/pki/tls/certs/git.example.com.crt'
+gitlab_ce__rb_nginx_ssl_certificate_key: '/etc/pki/tls/private/git.example.com.key'
 gitlab_ce__rb_registry_external_url: 'https://registry.example.com'
 gitlab_ce__rb_registry_nginx_enable: true
 gitlab_ce__rb_registry_nginx_listen_https: false
