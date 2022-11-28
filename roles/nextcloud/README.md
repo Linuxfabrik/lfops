@@ -21,7 +21,7 @@ Runs on
 * Install Redis 7+. This can be done using the [linuxfabrik.lfops.repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) role.
 * Set the size of your `/tmp` partition accordingly. For example: If you want to allow 5x simultaenous uploads with files each 10 GB in size, set it to 50 GB+.
 
-If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), thinstallation is automatically done for you (you still have to take care of providing the required versions).
+If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this installation is automatically done for you (you still have to take care of providing the required versions).
 
 
 ## Optional Requirements
