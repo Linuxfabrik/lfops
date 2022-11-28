@@ -15,4 +15,8 @@
       when:
         - 'not duplicity__skip_python_venv | d(false)'
 
+    - role: 'linuxfabrik.lfops.haveged'
+      when:
+        - 'not duplicity__skip_haveged | d(false)'
+
     - role: 'linuxfabrik.lfops.duplicity'
