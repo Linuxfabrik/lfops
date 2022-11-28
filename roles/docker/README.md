@@ -11,6 +11,8 @@ Runs on
 
 * Enable the official [docker repository](https://docs.docker.com/engine/install/centos/#install-using-the-repository). This can be done using the [linuxfabrik.lfops.repo_docker](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_docker) role.
 
+If you use the docker playbook, this is automatically done for you.
+
 
 ## Tags
 
