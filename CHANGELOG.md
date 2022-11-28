@@ -95,6 +95,7 @@ New features:
 * Role: chrony
 * Role: cloud_init
 * Role: cockpit
+* Role: haveged
 * Role: collabora_code
 * Role: coturn
 * Role: crypto_policy

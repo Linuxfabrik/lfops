@@ -1,0 +1,9 @@
+- block:
+
+  - name: 'Install haveged'
+    ansible.builtin.package:
+      name: 'haveged'
+      state: 'present'
+
+  tags:
+    - 'haveged'
