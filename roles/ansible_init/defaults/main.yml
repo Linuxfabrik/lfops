@@ -2,6 +2,7 @@ ansible_init__ansible_collections:
   - name: 'community.mysql'
   - name: 'fedora.linux_system_roles'
   - name: 'freeipa.ansible_freeipa'
+  - name: 'hetzner.hcloud'
   - name: 'ngine_io.cloudstack'
 ansible_init__ansinv_path: '{{ inventory_dir }}/../'
 ansible_init__inventories: []
