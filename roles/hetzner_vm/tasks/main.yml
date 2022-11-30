@@ -1,5 +1,38 @@
 - block:
 
+  - name: 'Manage the networks for the VM'
+    hetzner.hcloud.hcloud_network:
+      api_token: '{{ hetzner_vm__api_token }}'
+      name: '{{ item["name"] }}'
+      ip_range: '{{ item["cidr"] }}'
+      state: 'present' # we only use state present, as other vms could use the network too
+    loop: '{{ hetzner_vm__networks }}'
+    delegate_to: 'localhost'
+    when: 'hetzner_vm__state != "absent"'
+
+  - name: 'Manage the subnet for the VM'
+    hetzner.hcloud.hcloud_subnetwork:
+      api_token: '{{ hetzner_vm__api_token }}'
+      network: '{{ item["name"] }}'
+      ip_range: '{{ item["cidr"] }}'
+      network_zone: 'eu-central'
+      type: 'cloud'
+      state: 'present' # we only use state present, as other vms could use the network too
+    loop: '{{ hetzner_vm__networks }}'
+    delegate_to: 'localhost'
+    when: 'hetzner_vm__state != "absent"'
+
+  - name: 'Manage the routes for the network'
+    hetzner.hcloud.hcloud_route:
+      api_token: '{{ hetzner_vm__api_token }}'
+      network: '{{ item[0]["name"] }}'
+      destination: '{{ item[1]["destination"] }}'
+      gateway: '{{ item[1]["gateway"] }}'
+      state: 'present' # we only use state present, as other vms could use the network too
+    loop: '{{ hetzner_vm__networks | subelements("routes", skip_missing=True) }}'
+    delegate_to: 'localhost'
+    when: 'hetzner_vm__state != "absent"'
+
   - name: 'Manage the VMs at Hetzner'
     hetzner.hcloud.hcloud_server:
       api_token: '{{ hetzner_vm__api_token }}'
@@ -16,6 +49,17 @@
       state: '{{ hetzner_vm__state }}'
     delegate_to: 'localhost'
 
+  - name: 'Attach the networks to the VM'
+    hetzner.hcloud.hcloud_server_network:
+      api_token: '{{ hetzner_vm__api_token }}'
+      server: '{{ hetzner_vm__name }}'
+      network: '{{ item["name"] }}'
+      ip: '{{ item["fixed_ip"] }}'
+      state: '{{ item["state"] | default("present") }}'
+    loop: '{{ hetzner_vm__networks }}'
+    delegate_to: 'localhost'
+    when: 'hetzner_vm__state != "absent"'
+
   - name: 'Manage the Volumes at Hetzner'
     hetzner.hcloud.hcloud_volume:
       api_token: '{{ hetzner_vm__api_token }}'
@@ -24,7 +68,7 @@
       size: '{{ item["size"] }}'
       format: '{{ item["format"] | default("xfs") }}'
       server: '{{ hetzner_vm__name }}'
-      state: '{{ item.state | default("present") }}'
+      state: '{{ item["state"] | default("present") }}'
     loop: '{{ hetzner_vm__volumes }}'
     delegate_to: 'localhost'
 
