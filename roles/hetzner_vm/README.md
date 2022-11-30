@@ -61,6 +61,8 @@ hetzner_vm__server_type: 'cx11'
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `hetzner_vm__backups` | Choose if Hetzner itself should make backups of the volumes. Note that backups cost an additional 20% of the server price. Volumes are not included in backups. Possible options: | `false` |
+| `hetzner_vm__enable_public_ipv4` | Choose if the VM should have a public IPv6 address. | `false` |
+| `hetzner_vm__enable_public_ipv6` | Choose if the VM should have a public IPv6 address. | `false` |
 | `hetzner_vm__firewalls` | List of Hetzner firewalls that should be applied to the server. | `[]` |
 | `hetzner_vm__force` | Force the update of the server. This may power off the server. The rescaling process will usually take just a few minutes. Also have a look at `hetzner_vm__upgrade_disk`. | `false` |
 | `hetzner_vm__name` | The name of the server. By default, it uses the Ansible inventory name. | `'{{ inventory_hostname }}'` |
@@ -73,6 +75,8 @@ Example:
 ```yaml
 # optional
 hetzner_vm__backups: false
+hetzner_vm__enable_public_ipv4: false
+hetzner_vm__enable_public_ipv6: false
 hetzner_vm__firewalls: []
 hetzner_vm__force: false
 hetzner_vm__name: '{{ inventory_hostname }}'

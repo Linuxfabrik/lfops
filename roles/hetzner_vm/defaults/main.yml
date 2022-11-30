@@ -1,4 +1,6 @@
 hetzner_vm__backups: false
+hetzner_vm__enable_public_ipv4: false
+hetzner_vm__enable_public_ipv6: false
 hetzner_vm__firewalls: []
 hetzner_vm__force: false
 hetzner_vm__name: '{{ inventory_hostname }}'
