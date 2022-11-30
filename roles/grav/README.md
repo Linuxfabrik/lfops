@@ -59,14 +59,14 @@ grav__users:
 | `grav__timer_update_enabled` | Enables/disables Systemd-Timer for updating Grav Plugins and Themes. | `true` |
 
 
-# Known Limitations
+## Known Limitations
 
 There might be more to implement:
 
 * https://learn.getgrav.org/17/security/configuration
 
 
-# License
+## License
 
 [The Unlicense](https://unlicense.org/)
 
