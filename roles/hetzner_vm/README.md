@@ -65,7 +65,7 @@ hetzner_vm__server_type: 'cx11'
 | `hetzner_vm__backups` | Choose if Hetzner itself should make backups of the volumes. Note that backups cost an additional 20% of the server price. Volumes are not included in backups. Possible options: | `false` |
 | `hetzner_vm__enable_public_ipv4` | Choose if the VM should have a public IPv6 address. | `false` |
 | `hetzner_vm__enable_public_ipv6` | Choose if the VM should have a public IPv6 address. | `false` |
-| `hetzner_vm__firewalls` | List of Hetzner firewalls that should be applied to the server. | `[]` |
+| `hetzner_vm__firewall_rules` | List of firewall rules that should be applied to the server. Subkeys:<br> * `direction`: Mandatory, string. Either `in` or `out`.<br> * `port`: Mandatory, int. Port.<br> * `protocol`: Mandatory, string. Either `tcp`, `udp`, `icmp`.<br> * `source_ips: Mandatory, list. List of allowed CIDR source addresses. | `[]` |
 | `hetzner_vm__force` | Force the update of the server. This may power off the server. The rescaling process will usually take just a few minutes. Also have a look at `hetzner_vm__upgrade_disk`. | `false` |
 | `hetzner_vm__name` | The name of the server. By default, it uses the Ansible inventory name. | `'{{ inventory_hostname }}'` |
 | `hetzner_vm__networks` | A list of dictionaries defining which networks should be attached to this instance. It also allows the creation of new internal networks, or setting a fixed IP for the instance. Subkeys:<br> * `name`: Mandatory, string. The name of an existing network, or the network which should be created.<br> * `cidr`: Optional, string. If this is given, a new network with this cidr is created.<br> * `fixed_ip`: Optional, string. The fixed IP of this instance. This can be used for attach to an existing network, or when creating a new one.<br> * `state`: String, optional. State (`absent` / `present`). Defaults to `present`. <br> * `routes`: List, optional. Routes for this network, with `destination` and `gateway` subkeys. Defaults to `[]`.| unset |
@@ -80,7 +80,13 @@ Example:
 hetzner_vm__backups: false
 hetzner_vm__enable_public_ipv4: false
 hetzner_vm__enable_public_ipv6: false
-hetzner_vm__firewalls: []
+hetzner_vm__firewall_rules:
+  - direction: 'in'
+    port: 22
+    protocol: 'tcp'
+    source_ips:
+      - 0.0.0.0/0
+      - ::/0
 hetzner_vm__force: false
 hetzner_vm__name: '{{ inventory_hostname }}'
 hetzner_vm__networks:
