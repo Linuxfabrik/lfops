@@ -10,6 +10,8 @@ This role creates and manages servers (virtual machines) and volumes at the [Het
 * Deploys the SSH keys from the Hetzner portal
 * Upgrades disks
 * Manages additional volumes (just attaches/removes them to/from the VM, but does not mount/unmount them in any way)
+* Manages networks, subnets and routes
+* Manages firewall rules
 
 This role does not configure the VM's network interfaces.
 
@@ -98,6 +100,11 @@ hetzner_vm__volumes:
   - name: 'data'
     size: '100'
 ```
+
+
+## Known Limitations
+
+Creating a server with only an internal network *and* a fixed IP is currently not possible. See https://github.com/ansible-collections/hetzner.hcloud/issues/172.
 
 
 ## License
