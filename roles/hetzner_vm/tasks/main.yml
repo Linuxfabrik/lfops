@@ -31,17 +31,17 @@
       state: 'present' # we only use state present, as other vms could use the network too
     loop: '{{ hetzner_vm__networks | subelements("routes", skip_missing=True) }}'
     delegate_to: 'localhost'
-    when:
-      - 'hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length'
-      - 'hetzner_vm__state != "absent"'
+    when: 'hetzner_vm__state != "absent"'
 
   - name: 'Manage the firewall for the VM'
     hetzner.hcloud.hcloud_firewall:
       api_token: '{{ hetzner_vm__api_token }}'
       name: '{{ hetzner_vm__name }}' # name of the firewall. we use the name of the vm for this
       rules: '{{ hetzner_vm__firewall_rules }}'
+      state: '{{ hetzner_vm__state }}'
     delegate_to: 'localhost'
-    when: 'hetzner_vm__state != "absent"'
+    when:
+      - 'hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length'
 
   - name: 'Manage the VMs at Hetzner'
     hetzner.hcloud.hcloud_server:
