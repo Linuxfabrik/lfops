@@ -20,9 +20,9 @@
     hetzner.hcloud.hcloud_volume:
       api_token: '{{ hetzner_vm__api_token }}'
       automount: false
-      name: '{{ item.name }}'
-      size: '{{ item.size }}'
-      format: '{{ item.format | default("xfs") }}'
+      name: '{{ item["name"] }}'
+      size: '{{ item["size"] }}'
+      format: '{{ item["format"] | default("xfs") }}'
       server: '{{ hetzner_vm__name }}'
       state: '{{ item.state | default("present") }}'
     loop: '{{ hetzner_vm__volumes }}'
