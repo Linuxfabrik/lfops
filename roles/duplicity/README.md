@@ -79,7 +79,7 @@ duplicity__swift_login:
 | `duplicity__loglevel` | Set the loglevel. Possible options: * error<br> * warning<br> * notice<br> * info<br> * debug | `'notice'` |
 | `duplicity__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `'{{ logrotate__rotate \| d(14) }}'` |
 | `duplicity__on_calendar_hour` | A shorthand to set the hour of `duplicity__on_calendar`. | `'23'` |
-| `duplicity__on_calendar` | The `OnCalendar` definition for the daily systemd timer. Have a look at `man systemd.time(7)` for the format. | `'45 \| random(seed=inventory_hostname) }}'` |
+| `duplicity__on_calendar` | The `OnCalendar` definition for the daily systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* {{ duplicity__on_calendar_hour }}:{{ 59 \| random(seed=inventory_hostname) }}'` |
 | `duplicity__swift_authurl` | The Authentication URL for Swift. Usually, this is given by the provider of the Swift Storage. | `'swiss-backup02.infomaniak.com/identity/v3'` |
 | `duplicity__swift_authversion` | The Authentication Version for Swift. Usually, this is given by the provider of the Swift Storage. | `'3'` |
 | `duplicity__swift_tenantname` | The Swift Tenantname. Usually, this is given by the provider of the Swift Storage. | `'sb_project_{{ duplicity__swift_login["username"] }}'` |
