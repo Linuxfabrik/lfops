@@ -13,12 +13,12 @@
 
   - name: 'systemctl {{ haveged__service_enabled | bool | ternary("enable", "disable") }} haveged.service'
     ansible.builtin.systemd:
-      name: 'mongod.service'
+      name: 'haveged.service'
       enabled: '{{ haveged__service_enabled }}'
 
   - name: 'systemctl {{ haveged__service_state[:-2] }} haveged.service'
     ansible.builtin.systemd:
-      name: 'mongod.service'
+      name: 'haveged.service'
       state: '{{ haveged__service_state }}'
 
   tags:
