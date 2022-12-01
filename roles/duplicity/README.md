@@ -47,7 +47,7 @@ To start a backup, simply call `duba` (or `duba --config=/etc/duba/duba.json --c
 | Variable | Description |
 | -------- | ----------- |
 | `duplicity__gpg_encrypt_master_key_block` | The ASCII-armored public master GPG key. Obtain it using `gpg --armor --export $GPG_KEY`. This key is imported on the server and is used in addition to the server's own local GPG key to encrypt the backups. This means that the backups can be restored using either the master or the server's local private key (which is pretty cool in case of a desaster recovery). Be aware of the empty line between `-----BEGIN PGP PUBLIC KEY BLOCK-----` and your public key block. |
-| `duplicity__gpg_encrypt_master_key` | The long key ID of the master GPG key. Obtain it using `gpg --list-secret-keys --keyid-format=long`. |
+| `duplicity__gpg_encrypt_master_key` | The long key ID of the master GPG key. Obtain it using `gpg --list-secret-keys --keyid-format=long` (after importing the key) or `gpg /path/to/keyfile`. |
 | `duplicity__swift_login` | The Swift username and password. Usually, this is given by the provider of the Swift Storage. Subkeys:<br> * `username`: Mandatory, string. The Swift username.<br> * `password`: Mandatory, string. The Swift password. |
 
 Example:
