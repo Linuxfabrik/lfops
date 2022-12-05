@@ -16,7 +16,6 @@
   - name: 'install Icinga2 packages'
     ansible.windows.win_package:
       path: 'C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
-      creates_service: 'Icinga 2'
 
   - name: 'remove C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
     ansible.windows.win_file:
