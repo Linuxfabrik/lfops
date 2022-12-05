@@ -1,7 +1,7 @@
 icinga2_agent__additional_icinga2_master_endpoints: []
 icinga2_agent__cn: '{{ ansible_facts["nodename"] }}'
 icinga2_agent__director_host_object_address: '{{
-    ansible_facts["ip_addresses"][0] if ansible_facts["os_family"] == "Windows" else
+    ansible_facts["ip_addresses"] | ansible.utils.ipv4 | first if ansible_facts["os_family"] == "Windows" else
     ansible_facts["default_ipv4"]["address"]
   }}'
 icinga2_agent__director_host_object_display_name: '{{ ansible_facts["hostname"] }}'
