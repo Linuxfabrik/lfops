@@ -1,0 +1,7 @@
+- name: 'Installs the Icingaweb2 Company Module'
+  hosts:
+    - 'lfops_icingaweb2_module_company'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.icingaweb2_module_company'

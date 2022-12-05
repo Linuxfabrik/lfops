@@ -1,0 +1,7 @@
+- name: 'Installs the Icingaweb2 Monitoring Module'
+  hosts:
+    - 'lfops_icingaweb2_module_monitoring'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.icingaweb2_module_monitoring'
