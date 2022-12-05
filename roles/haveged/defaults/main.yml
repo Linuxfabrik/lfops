@@ -1,0 +1,2 @@
+haveged__service_enabled: true
+haveged__service_state: 'started'
