@@ -65,10 +65,10 @@ hetzner_vm__server_type: 'cx11'
 | `hetzner_vm__backups` | Choose if Hetzner itself should make backups of the volumes. Note that backups cost an additional 20% of the server price. Volumes are not included in backups. Possible options: | `false` |
 | `hetzner_vm__enable_public_ipv4` | Choose if the VM should have a public IPv6 address. | `false` |
 | `hetzner_vm__enable_public_ipv6` | Choose if the VM should have a public IPv6 address. | `false` |
-| `hetzner_vm__firewall_rules` | List of firewall rules that should be applied to the server. Subkeys:<br> * `direction`: Mandatory, string. Either `in` or `out`.<br> * `port`: Mandatory, int. Port.<br> * `protocol`: Mandatory, string. Either `tcp`, `udp`, `icmp`.<br> * `source_ips: Mandatory, list. List of allowed CIDR source addresses. | `[]` |
+| `hetzner_vm__firewall_rules` | List of firewall rules that should be applied to the server. Subkeys:<br> * `direction`: Mandatory, string. Either `in` or `out`.<br> * `port`: Mandatory, int. Port.<br> * `protocol`: Mandatory, string. Either `tcp`, `udp`, `icmp`.<br> * `source_ips`: Mandatory, list. List of allowed CIDR source addresses. | `[]` |
 | `hetzner_vm__force` | Force the update of the server. This may power off the server. The rescaling process will usually take just a few minutes. Also have a look at `hetzner_vm__upgrade_disk`. | `false` |
 | `hetzner_vm__name` | The name of the server. By default, it uses the Ansible inventory name. | `'{{ inventory_hostname }}'` |
-| `hetzner_vm__networks` | A list of dictionaries defining which networks should be attached to this instance. It also allows the creation of new internal networks, or setting a fixed IP for the instance. Subkeys:<br> * `name`: Mandatory, string. The name of an existing network, or the network which should be created.<br> * `cidr`: Optional, string. If this is given, a new network with this cidr is created.<br> * `fixed_ip`: Optional, string. The fixed IP of this instance. This can be used for attach to an existing network, or when creating a new one.<br> * `state`: String, optional. State (`absent` / `present`). Defaults to `present`. <br> * `routes`: List, optional. Routes for this network, with `destination` and `gateway` subkeys. Defaults to `[]`.| `[]` |
+| `hetzner_vm__networks` | A list of dictionaries defining which networks should be attached to this instance. It also allows the creation of new internal networks, or setting a fixed IP for the instance. Subkeys:<br> * `name`: Mandatory, string. The name of an existing network, or the network which should be created.<br> * `cidr`: Optional, string. If this is given, a new network with this cidr is created.<br> * `fixed_ip`: Optional, string. The fixed IP of this instance. This can be used for attach to an existing network, or when creating a new one.<br> * `state`: Optional, string. State (`absent` / `present`). Defaults to `present`. <br> * `routes`: Optional, list. Routes for this network, with `destination` and `gateway` subkeys. Defaults to `[]`.| `[]` |
 | `hetzner_vm__ssh_keys` | List of SSH-key names that should be placed on the server. The names have to match the SSH-keys depoisted in Hetzner. | `[]` |
 | `hetzner_vm__state` | The state of the server. Possible options:<br> * absent<br> * present<br> * rebuild<br> * restarted<br> * started<br> * stopped | `'started'` |
 | `hetzner_vm__upgrade_disk` | Resize the disk when resizing the server. This will prevent downgrades to a `hetzner_vm__server_type` with a smaller disk later on, as the disk cannot be shrunk. | `false` |
@@ -93,7 +93,7 @@ hetzner_vm__networks:
   - name: 'net-test01'
     cidr: '10.126.219.0/24'
     fixed_ip: '10.126.219.12'
-    state: 'present' # default present
+    state: 'present'
     routes:
       - destination: '0.0.0.0/0'
         gateway: '10.126.219.12'

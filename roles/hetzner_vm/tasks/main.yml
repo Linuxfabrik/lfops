@@ -8,7 +8,9 @@
       state: 'present' # we only use state present, as other vms could use the network too
     loop: '{{ hetzner_vm__networks }}'
     delegate_to: 'localhost'
-    when: 'hetzner_vm__state != "absent"'
+    when:
+      - 'hetzner_vm__state != "absent"'
+      - 'item["cidr"] is defined'
 
   - name: 'Manage the subnet for the VM'
     hetzner.hcloud.hcloud_subnetwork:
@@ -20,7 +22,9 @@
       state: 'present' # we only use state present, as other vms could use the network too
     loop: '{{ hetzner_vm__networks }}'
     delegate_to: 'localhost'
-    when: 'hetzner_vm__state != "absent"'
+    when:
+      - 'hetzner_vm__state != "absent"'
+      - 'item["cidr"] is defined'
 
   - name: 'Manage the routes for the network'
     hetzner.hcloud.hcloud_route:
@@ -31,7 +35,9 @@
       state: 'present' # we only use state present, as other vms could use the network too
     loop: '{{ hetzner_vm__networks | subelements("routes", skip_missing=True) }}'
     delegate_to: 'localhost'
-    when: 'hetzner_vm__state != "absent"'
+    when:
+      - 'hetzner_vm__state != "absent"'
+      - 'item["routes"] is defined'
 
   - name: 'Manage the firewall for the VM'
     hetzner.hcloud.hcloud_firewall:
@@ -69,7 +75,9 @@
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ hetzner_vm__networks }}'
     delegate_to: 'localhost'
-    when: 'hetzner_vm__state != "absent"'
+    when:
+      - 'hetzner_vm__state != "absent"'
+      - 'item["fixed_ip"] is defined'
 
   - name: 'Manage the Volumes at Hetzner'
     hetzner.hcloud.hcloud_volume:
