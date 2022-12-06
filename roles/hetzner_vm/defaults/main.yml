@@ -3,6 +3,7 @@ hetzner_vm__enable_public_ipv4: false
 hetzner_vm__enable_public_ipv6: false
 hetzner_vm__force: false
 hetzner_vm__name: '{{ inventory_hostname }}'
+hetzner_vm__networks: []
 hetzner_vm__ssh_keys: []
 hetzner_vm__state: 'started'
 hetzner_vm__upgrade_disk: false

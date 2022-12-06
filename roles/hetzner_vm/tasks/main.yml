@@ -38,7 +38,7 @@
       api_token: '{{ hetzner_vm__api_token }}'
       name: '{{ hetzner_vm__name }}' # name of the firewall. we use the name of the vm for this
       rules: '{{ hetzner_vm__firewall_rules }}'
-      state: '{{ hetzner_vm__state }}'
+      state: '{{ (hetzner_vm__state == "absent") | ternary("absent", "present") }}'
     delegate_to: 'localhost'
     when:
       - 'hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length'
