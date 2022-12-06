@@ -110,7 +110,7 @@ hetzner_vm__volumes:
 
 ## Known Limitations
 
-Creating a server with only an internal network *and* a fixed IP is currently not possible. See https://github.com/ansible-collections/hetzner.hcloud/issues/172. As a workaround, you need to assign a public IP as well, preferabably `hetzner_vm__enable_public_ipv6: true` as these are free.
+Creating a server with only an internal network *and* a fixed IP is currently not possible. See https://github.com/ansible-collections/hetzner.hcloud/issues/172. As a workaround, you need to assign a public IP as well, preferabably `hetzner_vm__enable_public_ipv6: true` as these are free. After running ansible, you can shutdown the VM via the WebGUI, go to Networking and Disable public network.
 
 
 ## License
