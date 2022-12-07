@@ -37,6 +37,11 @@ apache_httpd__mods__role_var:
     state: 'present'
     template: 'alias'
 
+  - filename: 'auth_basic'
+    enabled: true
+    state: 'present'
+    template: 'auth_basic'
+
   - filename: 'authn_core'
     enabled: true
     state: 'present'
