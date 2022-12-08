@@ -75,7 +75,7 @@ hetzner_vm__networks:
     state: 'present'
     routes:
       - destination: '0.0.0.0/0'
-        gateway: '10.126.219.12'
+        gateway: '10.126.219.2'
 ```
 
 
