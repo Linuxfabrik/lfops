@@ -60,6 +60,25 @@
       - 'infomaniak_vm__state != "absent"'
       - 'item["fixed_ip"] is defined'
 
+  - name: 'Create the list of nics for the VM (1/2)'
+    ansible.builtin.set_fact:
+      infomaniak_vm__nics: '{{ infomaniak_vm__nics | default([]) + [{ "net-name": item["name"] }] }}'
+    loop: '{{ infomaniak_vm__networks }}'
+    when: 'item["fixed_ip"] is not defined'
+
+  - name: 'Create the list of nics for the VM (2/2)'
+    ansible.builtin.set_fact:
+      infomaniak_vm__nics: '{{ infomaniak_vm__nics | default([]) + [{ "port-name": infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port" }] }}'
+    loop: '{{ infomaniak_vm__networks }}'
+    when: 'item["fixed_ip"] is defined'
+
+  tags:
+    - 'infomaniak_vm'
+    - 'infomaniak_vm:networks'
+
+
+- block:
+
   - name: 'Manage the security group for the VM'
     openstack.cloud.security_group:
       auth:
@@ -101,17 +120,12 @@
       - 'infomaniak_vm__security_group_rules is defined'
       - 'infomaniak_vm__state != "absent"'
 
-  - name: 'Create the list of nics for the VM (1/2)'
-    ansible.builtin.set_fact:
-      infomaniak_vm__nics: '{{ infomaniak_vm__nics | default([]) + [{ "net-name": item["name"] }] }}'
-    loop: '{{ infomaniak_vm__networks }}'
-    when: 'item["fixed_ip"] is not defined'
+  tags:
+    - 'infomaniak_vm'
+    - 'infomaniak_vm:firewalls'
 
-  - name: 'Create the list of nics for the VM (2/2)'
-    ansible.builtin.set_fact:
-      infomaniak_vm__nics: '{{ infomaniak_vm__nics | default([]) + [{ "port-name": infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port" }] }}'
-    loop: '{{ infomaniak_vm__networks }}'
-    when: 'item["fixed_ip"] is defined'
+
+- block:
 
   - name: 'Manage the boot volume for the VM'
     openstack.cloud.volume:

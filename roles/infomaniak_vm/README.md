@@ -16,9 +16,11 @@ Runs on
 
 ## Tags
 
-| Tag             | What it does                     |
-| ---             | ------------                     |
-| `infomaniak_vm` | Creates and manages the instance |
+| Tag                       | What it does                               |
+| ---                       | ------------                               |
+| `infomaniak_vm`           | Creates and manages the instance           |
+| `infomaniak_vm:networks`  | Manage the networks of the host.           |
+| `infomaniak_vm:firewalls` | Manage the provider firewalls of the host. |
 
 
 ## Mandatory Role Variables
