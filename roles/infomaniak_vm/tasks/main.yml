@@ -93,7 +93,8 @@
       port_range_min: '{{ item["port_range_min"] | default(omit) }}'
       port_range_max: '{{ item["port_range_max"] | default(omit) }}'
       remote_ip_prefix: '{{ item["remote_ip_prefix"] | default(omit) }}'
-      state: 'present'
+      ethertype: '{{ item["ethertype"] | default("IPv4") }}'
+      state: '{{ item["state"] | d("present") }}'
     loop: '{{ infomaniak_vm__security_group_rules }}'
     delegate_to: 'localhost'
     when:
