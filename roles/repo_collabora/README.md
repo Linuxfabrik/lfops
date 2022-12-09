@@ -23,7 +23,7 @@ Runs on
 
 Example:
 ```yaml
-# optional
+# mandatory
 repo_collabora__customer_token: 'Example-Company-eragf35eb18692b7c0ufd3f03199a39i2233h5k8'
 ```
 
@@ -32,7 +32,7 @@ repo_collabora__customer_token: 'Example-Company-eragf35eb18692b7c0ufd3f03199a39
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `repo_collabora__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used. | `'{{ lfops__repo_mirror_url | default("") }}'` |
+| `repo_collabora__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used. | `'{{ lfops__repo_mirror_url \| default("") }}'` |
 | `repo_collabora__version` | The version of Collabora Enterprise to be installed. | `'22.05'` |
 
 Example:
