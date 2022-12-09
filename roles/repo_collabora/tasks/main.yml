@@ -6,10 +6,10 @@
       key: 'https://www.collaboraoffice.com/repos/CollaboraOnline/{{ repo_collabora__version }}/customer-centos8-{{ repo_collabora__customer_token }}/repodata/repomd.xml.key'
       state: 'present'
 
-  - name: 'deploy /etc/yum.repos.d/CollaboraOnline.repo (mirror: {{ repo_collabora__mirror_url | default(default) }})'
+  - name: 'deploy /etc/yum.repos.d/Collabora.repo (mirror: {{ repo_collabora__mirror_url | default(default) }})'
     ansible.builtin.template:
       src: 'etc/yum.repos.d/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-CollaboraOnline.repo.j2'
-      dest: '/etc/yum.repos.d/CollaboraOnline.repo'
+      dest: '/etc/yum.repos.d/Collabora.repo'
       owner: 'root'
       group: 'root'
       mode: 0o644
