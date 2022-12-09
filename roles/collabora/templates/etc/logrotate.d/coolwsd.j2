@@ -7,7 +7,7 @@
     delaycompress
     missingok
     notifempty
-    rotate {{ collabora_code__logrotate | d(logrotate__rotate) | d(14) }}
+    rotate {{ collabora__logrotate | d(logrotate__rotate) | d(14) }}
     postrotate
         /usr/bin/systemctl restart coolwsd.service > /dev/null 2>/dev/null
     endscript

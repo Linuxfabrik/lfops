@@ -14,6 +14,10 @@ Role: acme_sh
 * Added `name` subkey to `acme_sh__certificates`
 * Moved `acme_sh__reload_cmd` to a subkey of `acme_sh__certificates`
 
+Role: collabora_code
+
+* Renamed rolename and vars from `collabora_code` to `collabora`
+
 Role: hostname
 
 * Renamed `hostname__domain_name` to `hostname__domain_part`
@@ -96,7 +100,7 @@ New features:
 * Role: cloud_init
 * Role: cockpit
 * Role: haveged
-* Role: collabora_code
+* Role: collabora
 * Role: coturn
 * Role: crypto_policy
 * Role: dnf_makecache
@@ -153,6 +157,7 @@ New features:
 * Role: qemu_guest_agent
 * Role: redis
 * Role: repo_baseos
+* Role: repo_collabora
 * Role: repo_collabora_code
 * Role: repo_docker
 * Role: repo_elasticsearch_oss

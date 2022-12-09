@@ -1,9 +1,9 @@
 - block:
 
-  - name: 'install coolwsd and dependent packages'
+  - name: 'install collabora and dependent packages'
     ansible.builtin.package:
       name:
-        - 'CODE-brand'
+        - '{{ collabora__use_code | bool | ternary("CODE-brand", "collabora-online-brand") }}'
         - 'collaboraofficebasis-calc'
         - 'collaboraofficebasis-core'
         - 'collaboraofficebasis-draw'
@@ -18,13 +18,6 @@
         - 'collaboraofficebasis-pyuno'
         - 'collaboraofficebasis-writer'
         - 'coolwsd'
-        - 'hunspell'
-        - 'mythes'
-      state: 'present'
-
-  - name: 'install language packages'
-    ansible.builtin.package:
-      name: '{{ collabora_code__language_packages__combined_var }}'
       state: 'present'
 
   - name: 'touch /var/log/coolwsd.log & chmod 0660 /var/log/coolwsd.log'
@@ -37,12 +30,12 @@
 
   - name: 'deploy /etc/coolwsd/coolwsd.xml'
     ansible.builtin.template:
-      src: 'etc/coolwsd/coolwsd.xml.j2'
+      src: '{{ collabora__use_code | bool | ternary("etc/coolwsd/coolwsd-code.xml.j2", "etc/coolwsd/coolwsd.xml.j2") }}'
       dest: '/etc/coolwsd/coolwsd.xml'
       owner: 'cool'
       group: 'cool'
       mode: 0o640
-    notify: 'collabora_code: restart coolwsd'
+    notify: 'collabora: restart coolwsd'
 
   - name: 'Deploy /etc/logrotate.d/coolwsd'
     ansible.builtin.template:
@@ -58,17 +51,36 @@
       warn: false
 
   tags:
-    - 'collabora_code'
+    - 'collabora'
 
 
 - block:
 
-  - name: 'systemctl {{ collabora_code__service_enabled | bool | ternary("enable", "disable") }} --now coolwsd.service'
-    ansible.builtin.systemd:
-      name: 'coolwsd.service'
-      enabled: '{{ collabora_code__service_enabled }}'
-      state: '{{ collabora_code__service_enabled | bool | ternary("started", "stopped") }}'
+  - name: 'install spell checker'
+    ansible.builtin.package:
+      name:
+        - 'hunspell'
+        - 'mythes'
+      state: 'present'
+
+  - name: 'install language packages'
+    ansible.builtin.package:
+      name: '{{ collabora__language_packages__combined_var }}'
+      state: 'present'
 
   tags:
-    - 'collabora_code'
-    - 'collabora_code:state'
+    - 'collabora'
+    - 'collabora:spell_check'
+
+
+- block:
+
+  - name: 'systemctl {{ collabora__service_enabled | bool | ternary("enable", "disable") }} --now coolwsd.service'
+    ansible.builtin.systemd:
+      name: 'coolwsd.service'
+      enabled: '{{ collabora__service_enabled }}'
+      state: '{{ collabora__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'collabora'
+    - 'collabora:state'

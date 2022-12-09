@@ -1,0 +1,69 @@
+collabora__coolwsd_allowed_languages:
+  - 'de_AT'
+  - 'de_CH'
+  - 'de_DE'
+  - 'en_AU'
+  - 'en_CA'
+  - 'en_GB'
+  - 'en_US'
+  - 'fr'
+  - 'it_IT'
+
+collabora__coolwsd_experimental_features: false
+collabora__coolwsd_logging_file_enable: true
+collabora__coolwsd_out_of_focus_timeout_secs: 120
+collabora__coolwsd_post_allow: []
+collabora__coolwsd_ssl_enable: false
+collabora__coolwsd_ssl_settings_ca_file_path: '/etc/loolwsd/ca-chain.cert.pem'
+collabora__coolwsd_ssl_settings_cert_file_path: '/etc/loolwsd/cert.pem'
+collabora__coolwsd_ssl_settings_key_file_path: '/etc/loolwsd/key.pem'
+collabora__coolwsd_ssl_termination: true
+collabora__service_enabled: true
+
+collabora__coolwsd_storage_wopi__dependent_var: []
+collabora__coolwsd_storage_wopi__group_var: []
+collabora__coolwsd_storage_wopi__host_var: []
+collabora__coolwsd_storage_wopi__role_var: []
+collabora__coolwsd_storage_wopi__combined_var: '{{ collabora__coolwsd_storage_wopi__role_var +
+  collabora__coolwsd_storage_wopi__group_var +
+  collabora__coolwsd_storage_wopi__host_var +
+  collabora__coolwsd_storage_wopi__dependent_var
+  | flatten
+ }}'
+
+collabora__language_packages__dependent_var: []
+collabora__language_packages__group_var: []
+collabora__language_packages__host_var: []
+collabora__language_packages__role_var:
+  # de
+  - 'collaboraoffice-dict-de'
+  - 'collaboraofficebasis-de'
+  - 'mythes-de'
+  - 'hunspell-de'
+  # en
+  - 'collaboraoffice-dict-en'
+  - 'collaboraofficebasis-en-GB'
+  - 'collaboraofficebasis-en-US'
+  - 'mythes-en'
+  - 'hunspell-en'
+  - 'hunspell-en-GB'
+  - 'hunspell-en-US'
+  # fr
+  - 'collaboraoffice-dict-fr'
+  - 'collaboraofficebasis-fr'
+  - 'mythes-fr'
+  - 'hunspell-fr'
+  # it
+  - 'collaboraoffice-dict-it'
+  - 'collaboraofficebasis-it'
+  - 'mythes-it'
+  - 'hunspell-it'
+
+collabora__language_packages__combined_var: '{{ collabora__language_packages__role_var +
+  collabora__language_packages__group_var +
+  collabora__language_packages__host_var +
+  collabora__language_packages__dependent_var
+  | flatten
+ }}'
+
+collabora__use_code: true
