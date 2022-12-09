@@ -363,6 +363,31 @@ RewriteRule ^/(.*) https://backend/$1 [proxy,last]
 ProxyPassReverse / https://backend/
 ```
 
+Load Balancing:
+
+```yaml
+apache_httpd__mods__host_var:
+  - filename: 'lbmethod_byrequests'
+    enabled: true
+    state: 'present'
+    template: 'lbmethod_byrequests'
+  - filename: 'proxy_balancer'
+    enabled: true
+    state: 'present'
+    template: 'proxy_balancer'
+apache_httpd__vhosts__host_var:
+  - template: 'proxy'
+    raw: !unsafe |-
+      <Proxy "balancer://mycluster">
+          BalancerMember "http://srv10.example.com:80" route=1
+          BalancerMember "http://srv11.example.com:80" route=2
+          ProxySet lbmethod=byrequests
+          ProxySet stickysession=ROUTEID
+      </Proxy>
+      RewriteRule      ^/(.*) balancer://mycluster/$1 [proxy,last]
+      ProxyPassReverse / balancer://mycluster
+```
+
 
 ### mod_maxminddb, GeoIP-Blocking
 
@@ -582,3 +607,5 @@ CustomLog "||/usr/local/sbin/import_logs.py \
 --recorder-max-payload-size=1 --log-format-name=common_complete --token-auth=2ac48e93-2ca7-4df3-9e7c-c81b36d0a474 \
 -" matomo
 ```
+
+
