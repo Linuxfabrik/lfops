@@ -10,6 +10,6 @@
 
     - role: 'linuxfabrik.lfops.repo_collabora'
       when:
-        - 'not collabora__skip_repo_collabora | default(false)'
+        - 'not collabora__skip_repo_collabora | default(true)'
 
     - role: 'linuxfabrik.lfops.collabora'
