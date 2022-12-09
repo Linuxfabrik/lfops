@@ -111,10 +111,10 @@
       when:
         - 'not setup_nextcloud__skip_repo_collabora_code | d(false)'
 
-    - role: 'linuxfabrik.lfops.collabora_code'
-      collabora_code__coolwsd_storage_wopi__dependent_var: '{{ netcloud__collabora_code__coolwsd_storage_wopi__dependent_var | d([]) }}'
+    - role: 'linuxfabrik.lfops.collabora'
+      collabora__coolwsd_storage_wopi__dependent_var: '{{ netcloud__collabora__coolwsd_storage_wopi__dependent_var | d([]) }}'
       when:
-        - 'not setup_nextcloud__skip_collabora_code | d(false)'
+        - 'not setup_nextcloud__skip_collabora | d(false)'
 
 
       # === Nextcloud Talk
