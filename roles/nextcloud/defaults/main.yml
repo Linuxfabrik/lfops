@@ -211,7 +211,7 @@ nextcloud__apache_httpd__vhosts__dependent_var:
       ErrorDocument 403 /
       ErrorDocument 404 /
 
-netcloud__collabora__coolwsd_storage_wopi__dependent_var:
+nextcloud__collabora__coolwsd_storage_wopi__dependent_var:
   - '{{ nextcloud__fqdn | regex_replace("\.", "\.") }}'
 
 nextcloud__php__ini_max_execution_time__dependent_var: 3600
