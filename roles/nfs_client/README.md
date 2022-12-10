@@ -33,6 +33,11 @@ nfs_client__mounts:
 ```
 
 
+## Troubleshooting
+
+`mount.nfs: access denied by server while mounting`: Run `exportfs -rv` on the NFS server and try again.
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)
