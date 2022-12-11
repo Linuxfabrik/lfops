@@ -38,26 +38,26 @@ collabora__language_packages__role_var:
   # de
   - 'collaboraoffice-dict-de'
   - 'collaboraofficebasis-de'
-  - 'mythes-de'
   - 'hunspell-de'
+  - 'mythes-de'
   # en
   - 'collaboraoffice-dict-en'
   - 'collaboraofficebasis-en-GB'
   - 'collaboraofficebasis-en-US'
-  - 'mythes-en'
   - 'hunspell-en'
   - 'hunspell-en-GB'
   - 'hunspell-en-US'
+  - 'mythes-en'
   # fr
   - 'collaboraoffice-dict-fr'
   - 'collaboraofficebasis-fr'
-  - 'mythes-fr'
   - 'hunspell-fr'
+  - 'mythes-fr'
   # it
   - 'collaboraoffice-dict-it'
   - 'collaboraofficebasis-it'
-  - 'mythes-it'
   - 'hunspell-it'
+  - 'mythes-it'
 
 collabora__language_packages__combined_var: '{{ collabora__language_packages__role_var +
   collabora__language_packages__group_var +
@@ -65,5 +65,3 @@ collabora__language_packages__combined_var: '{{ collabora__language_packages__ro
   collabora__language_packages__dependent_var
   | flatten
  }}'
-
-collabora__use_code: true
