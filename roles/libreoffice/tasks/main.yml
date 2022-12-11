@@ -23,6 +23,7 @@
       owner: 'apache'
       group: 'apache'
       mode: 0o755
+      recurse: true
 
   - name: 'mkdir -p /usr/share/httpd/.cache'
     ansible.builtin.file:
@@ -41,12 +42,6 @@
     become_method: 'su'
     become_user: 'apache'
     become_flags: '-s /bin/bash'  # do something as the apache user when the shell is nologin
-    ignore_errors: true
-
-  # - name: 'restorecon -Fvr /var/www/html/matomo'
-  #   ansible.builtin.command: 'restorecon -Fvr /var/www/html/matomo'
-  #   register: 'matomo__restorecon_result'
-  #   changed_when: 'matomo__restorecon_result["stdout"] | length'
 
   when:
     - 'libreoffice__client_apache is defined'
