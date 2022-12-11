@@ -1,0 +1,12 @@
+libreoffice__selinux__booleans__dependent_var:
+  - key: 'httpd_can_network_connect'
+    value: 'on'
+  - key: 'httpd_execmem'
+    value: 'on'
+libreoffice__selinux__fcontexts__dependent_var:
+  - setype: 'httpd_sys_rw_content_t'
+    target: '/usr/share/httpd/\.cache(/.*)?'
+    state: 'present'
+  - setype: 'httpd_sys_rw_content_t'
+    target: '/usr/share/httpd/\.config(/.*)?'
+    state: 'present'
