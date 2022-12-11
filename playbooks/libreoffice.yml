@@ -1,0 +1,7 @@
+- name: 'Install and configure a server-based/headless LibreOffice'
+  hosts:
+    - 'lfops_libreoffice'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.libreoffice'
