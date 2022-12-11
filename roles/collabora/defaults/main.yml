@@ -14,9 +14,9 @@ collabora__coolwsd_logging_file_enable: true
 collabora__coolwsd_out_of_focus_timeout_secs: 120
 collabora__coolwsd_post_allow: []
 collabora__coolwsd_ssl_enable: false
-collabora__coolwsd_ssl_settings_ca_file_path: '/etc/loolwsd/ca-chain.cert.pem'
-collabora__coolwsd_ssl_settings_cert_file_path: '/etc/loolwsd/cert.pem'
-collabora__coolwsd_ssl_settings_key_file_path: '/etc/loolwsd/key.pem'
+collabora__coolwsd_ssl_settings_ca_file_path: '/etc/coolwsd/ca-chain.cert.pem'
+collabora__coolwsd_ssl_settings_cert_file_path: '/etc/coolwsd/cert.pem'
+collabora__coolwsd_ssl_settings_key_file_path: '/etc/coolwsd/key.pem'
 collabora__coolwsd_ssl_termination: true
 collabora__service_enabled: true
 

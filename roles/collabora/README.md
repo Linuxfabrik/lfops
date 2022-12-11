@@ -32,9 +32,9 @@ If you use the ["Collabora" Playbook](https://github.com/Linuxfabrik/lfops/blob/
 | `collabora__coolwsd_out_of_focus_timeout_secs` | The maximum number of seconds before dimming and stopping updates when the browser tab is no longer in focus. | `120` |
 | `collabora__coolwsd_post_allow` | List of client IP addresses to allow for POST(REST). | `[]` |
 | `collabora__coolwsd_ssl_enable` | Controls whether SSL encryption between coolwsd and the network is enabled (do not disable for production deployment). Possible options: | `false` |
-| `collabora__coolwsd_ssl_settings_ca_file_path` | Path to the ca file. Set this when coolwsd is SSL-terminating. | `'/etc/loolwsd/ca-chain.cert.pem'` |
-| `collabora__coolwsd_ssl_settings_cert_file_path` | Path to the cert file. Set this when coolwsd is SSL-terminating. | `'/etc/loolwsd/cert.pem'` |
-| `collabora__coolwsd_ssl_settings_key_file_path` | Path to the key file. Set this when coolwsd is SSL-terminating. | `'/etc/loolwsd/key.pem'` |
+| `collabora__coolwsd_ssl_settings_ca_file_path` | Path to the ca file. Set this when coolwsd is SSL-terminating. | `'/etc/coolwsd/ca-chain.cert.pem'` |
+| `collabora__coolwsd_ssl_settings_cert_file_path` | Path to the cert file. Set this when coolwsd is SSL-terminating. | `'/etc/coolwsd/cert.pem'` |
+| `collabora__coolwsd_ssl_settings_key_file_path` | Path to the key file. Set this when coolwsd is SSL-terminating. | `'/etc/coolwsd/key.pem'` |
 | `collabora__coolwsd_ssl_termination` | Enable if coolwsd is behind a SSL-terminating proxy and therefore should act as if its using https but actually receives http. Possible options: | `true` |
 | `collabora__coolwsd_storage_wopi__group_var` | List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. <br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
 | `collabora__coolwsd_storage_wopi__host_var` | List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. <br>For the usage in `host_vars`. | `[]` |
@@ -61,9 +61,9 @@ collabora__coolwsd_logging_file_enable: true
 collabora__coolwsd_out_of_focus_timeout_secs: 120
 collabora__coolwsd_post_allow: []
 collabora__coolwsd_ssl_enable: false
-collabora__coolwsd_ssl_settings_ca_file_path: '/etc/loolwsd/ca-chain.cert.pem'
-collabora__coolwsd_ssl_settings_cert_file_path: '/etc/loolwsd/cert.pem'
-collabora__coolwsd_ssl_settings_key_file_path: '/etc/loolwsd/key.pem'
+collabora__coolwsd_ssl_settings_ca_file_path: '/etc/coolwsd/ca-chain.cert.pem'
+collabora__coolwsd_ssl_settings_cert_file_path: '/etc/coolwsd/cert.pem'
+collabora__coolwsd_ssl_settings_key_file_path: '/etc/coolwsd/key.pem'
 collabora__coolwsd_ssl_termination: true
 collabora__coolwsd_storage_wopi__group_var: []
 collabora__coolwsd_storage_wopi__host_var:
