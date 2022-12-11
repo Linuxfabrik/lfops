@@ -4,6 +4,11 @@
     ansible.builtin.package:
       name:
         - 'libreoffice-core'
+        - 'libreoffice-writer'    # convert text documents
+        - 'libreoffice-calc'      # convert spreadsheets
+        - 'libreoffice-impress'   # convert presentations
+        - 'libreoffice-draw'      # convert drawings
+        - 'libreoffice-math'      # convert formulas
       state: 'present'
 
   tags:

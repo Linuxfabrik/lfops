@@ -136,6 +136,7 @@ New features:
 * Role: kvm_host
 * Role: kvm_vm
 * Role: librenms
+* Role: libreoffice
 * Role: login
 * Role: mailto_root
 * Role: mariadb_client
