@@ -1,41 +1,64 @@
 # Ansible Role linuxfabrik.lfops.systemd_unit
 
-This role creates and manages various [Python 3 virtual environments (venv)](https://docs.python.org/3/library/venv.html). These are placed below `/opt/python-venv/` on the target system.
+This role installs and manages systemd unit files. A unit file is a plain text ini-style file that encodes information about a service, a socket, a device, a mount point, an automount point, a swap file or partition, a start-up target, a watched file system path, a timer controlled and supervised by systemd, a resource management slice or a group of externally created processes. See `systemd.unit` for unit configuration, `systemd.syntax(7)` for a general description of the syntax, and [load-fragment-gperf.gperf.in](https://github.com/systemd/systemd/blob/main/src/core/load-fragment-gperf.gperf.in) for a list of all directives and their context.
 
 Runs on
 
-* RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
-* Fedora 35
-
-
-## Mandatory Requirements
-
-* Install Python 3
 
 
 ## Tags
 
 | Tag           | What it does                                 |
 | ---           | ------------                                 |
-| `systemd_unit` | Creates and manages the virtual environments |
+| `systemd_unit` | <ul><li>Remove service units from `/etc/systemd/system`</li><li>Deploy the service units to `/etc/systemd/system`</li><li>Remove timer units from `/etc/systemd/system`</li><li>Deploy the timer units to `/etc/systemd/system`</li></ul> |
+| `systemd_unit:services` | <ul><li>Remove service units from `/etc/systemd/system`</li><li>Deploy the service units to `/etc/systemd/system`</li></ul> |
+| `systemd_unit:timers` | <ul><li>Remove timer units from `/etc/systemd/system`</li><li>Deploy the timer units to `/etc/systemd/system`</li></ul> |
+| `systemd_unit:state` | Manages the state of the unit file |
 
 
 ## Optional Role Variables
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `systemd_unit__service_host_var` /<br> `systemd_unit__service_group_var` | List of Systemd Units. Subkeys:<ul><li>`name`: Mandatory, string. Name of the systemd service. Will be used as the filename.</li><li>`description`: Mandatory, string. The description for the unit.</li><li>`wanted_by`: Optional, string. Value for `WantedBy`. Defaults to `'default.target'`.</li><li>`unit_raw`: Optional, string. Raw block in the `[Unit]` section. Defaults to unset.</li><li>`service_raw`: Optional, string. Raw block in the `[Service]` section. Defaults to unset.</li><li>`install_raw`: Optional, string. Raw block in the `[Install]` section. Defaults to unset.</li><li>`state`: Optinal, string. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`. Defaults to `started`.</li><li>`enabled`: Optional, boolean. If the unit should start at boot or not. Defaults to `true`.</li></ul> <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `systemd_unit__timer_host_var` /<br> `systemd_unit__timer_group_var` | List of Systemd Timers. Subkeys:<ul> <li>`name`: Mandatory, string. Name of the systemd timer. Will be used as the filename.</li> <li>`description`: Mandatory, string. The description for the unit.</li> <li>`wanted_by`: Optional, string. Value for `WantedBy`. Defaults to `'default.target'`.</li> <li>`unit_raw`: Optional, string. Raw block in the `[Unit]` section. Defaults to unset.</li> <li>`timer_raw`: Optional, string. Raw block in the `[Service]` section. Defaults to unset.</li> <li>`install_raw`: Optional, string. Raw block in the `[Install]` section. Defaults to unset.</li> <li>`state`: Optinal, string. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`. Defaults to `started`.</li> <li>`enabled`: Optional, boolean. If the unit should start at boot or not. Defaults to `true`.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `systemd_unit__services_host_var` /<br> `systemd_unit__services_group_var` | List of Systemd Units. Subkeys:<ul><li>`name`: Mandatory, string. Name of the systemd service. Will be used as the filename.</li><li>`description`: Optional, string. The description for the unit. If ommitted, the name will be used, suffixed by `Service`.</li><li>`wanted_by`: Optional, string. Value for `WantedBy`. Defaults to `'default.target'`.</li><li>`raw_unit`: Optional, string. Raw block in the `[Unit]` section. Defaults to unset.</li><li>`raw_service`: Optional, string. Raw block in the `[Service]` section. Defaults to unset.</li><li>`raw_install`: Optional, string. Raw block in the `[Install]` section. Defaults to unset.</li><li>`state`: Optinal, string. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`. Defaults to `started`.</li><li>`enabled`: Optional, boolean. If the unit should start at boot or not. Defaults to `true`.</li></ul> | `[]` |
+| `systemd_unit__timers_host_var` /<br> `systemd_unit__timers_group_var` | List of Systemd Timers. Subkeys:<ul> <li>`name`: Mandatory, string. Name of the systemd timer. Will be used as the filename.</li> <li>`description`: Optional, string. The description for the unit. If ommitted, the name will be used, suffixed by `Timer`.</li> <li>`wanted_by`: Optional, string. Value for `WantedBy`. Defaults to `'default.target'`.</li> <li>`raw_unit`: Optional, string. Raw block in the `[Unit]` section. Defaults to unset.</li> <li>`raw_timer`: Optional, string. Raw block in the `[Service]` section. Defaults to unset.</li> <li>`raw_install`: Optional, string. Raw block in the `[Install]` section. Defaults to unset.</li> <li>`state`: Optinal, string. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`. Defaults to `started`.</li> <li>`enabled`: Optional, boolean. If the unit should start at boot or not. Defaults to `true`.</li></ul> | `[]` |
 
 Example:
 ```yaml
-# optional
+# optional - two services, one with more options, one minimal
 systemd_unit__services__host_var:
-  - name: 'mirror-update'
-    description: 'Update the mirror'
+  - name: 'fwb'
+    description: 'Firewall Builder'
+    raw_unit: |-
+      After=default.target openvpn-server@server.service fail2ban.service
     raw_service: |-
-      ExecStart=/opt/mirror/mirror-update
+      ExecReload=/etc/fwb.sh start
+      ExecStart=/etc/fwb.sh start
+      ExecStop=/etc/fwb.sh stop
+      RemainAfterExit=yes
+      Type=oneshot
+    wanted_by: 'basic.target'
+    state: 'present'
+    enabled: true
+  - name: 'duba'
+    raw_service: |-
+      ExecStart=/usr/local/bin/duba
+      Type=oneshot
+
+# two timers, one with more options, one minimal
+systemd_unit__timers__host_var:
+  - name: 'python-venv-update@'
+    description: 'python-venv update timer for /opt/python-venv/%i'
+    raw_timer: |-
+      OnCalendar=daily
+      Unit=python-venv@%i.service
+    wanted_by: 'timers.target'
+    state: 'present'
+    enabled: true
+  - name: 'duba'
+    raw_timer: |-
+      OnCalendar=daily
 ```
 
 

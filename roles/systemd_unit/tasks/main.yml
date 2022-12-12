@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'Remote absent service units from /etc/systemd/system'
+  - name: 'Remove service units from /etc/systemd/system'
     ansible.builtin.file:
       path: '/etc/systemd/system/{{ item["name"] }}.service'
       state: 'absent'
@@ -28,7 +28,7 @@
 
 - block:
 
-  - name: 'Remote absent timer units from /etc/systemd/system'
+  - name: 'Remove timer units from /etc/systemd/system'
     ansible.builtin.file:
       path: '/etc/systemd/system/{{ item["name"] }}.timer'
       state: 'absent'

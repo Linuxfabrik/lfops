@@ -1,12 +1,13 @@
 # {{ ansible_managed }}
-# 2022121202
+# 2022121203
 
 [Unit]
-Description={{ item['description'] }}
+Description={% if item['description'] is defined and item['description'] %}{{ item['description'] }}{% else %}{{ item['name'] }} Service{% endif %}
 {% if 'raw_unit' in item %}
 # raw
 {{ item['raw_unit'] }}
 {% endif %}
+
 
 [Service]
 {% if 'raw_service' in item %}
