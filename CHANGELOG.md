@@ -99,7 +99,6 @@ New features:
 * Role: chrony
 * Role: cloud_init
 * Role: cockpit
-* Role: haveged
 * Role: collabora
 * Role: coturn
 * Role: crypto_policy
@@ -116,6 +115,7 @@ New features:
 * Role: grafana
 * Role: grav
 * Role: graylog_server
+* Role: haveged
 * Role: hetzner_vm
 * Role: hostname
 * Role: icinga2_agent
@@ -178,6 +178,7 @@ New features:
 * Role: stig
 * Role: system_update
 * Role: systemd_journald
+* Role: systemd_unit
 * Role: tar
 * Role: telegraf
 * Role: timezone

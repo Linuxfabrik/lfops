@@ -1,0 +1,69 @@
+- block:
+
+  - name: 'Remote absent service units from /etc/systemd/system'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/{{ item["name"] }}.service'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ systemd_unit__services__combined_var }}'
+    notify: 'systemd_unit: systemctl daemon-reload'
+
+  - name: 'Deploy the service units to /etc/systemd/system'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/service.j2'
+      dest: '/etc/systemd/system/{{ item["name"] }}.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ systemd_unit__services__combined_var }}'
+    notify: 'systemd_unit: systemctl daemon-reload'
+
+  tags:
+    - 'systemd_unit'
+    - 'systemd_unit:services'
+
+
+- block:
+
+  - name: 'Remote absent timer units from /etc/systemd/system'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/{{ item["name"] }}.timer'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ systemd_unit__timers__combined_var }}'
+    notify: 'systemd_unit: systemctl daemon-reload'
+
+  - name: 'Deploy the timer units to /etc/systemd/system'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/timer.j2'
+      dest: '/etc/systemd/system/{{ item["name"] }}.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ systemd_unit__timers__combined_var }}'
+    notify: 'systemd_unit: systemctl daemon-reload'
+
+  tags:
+    - 'systemd_unit'
+    - 'systemd_unit:timers'
+
+
+- block:
+
+  - meta: 'flush_handlers' # we want a `systemctl daemon-reload` before managing unit states
+
+  - ansible.builtin.include_tasks: 'manage-state.yml'
+    loop: '{{ systemd_unit__services__combined_var }}'
+
+  - ansible.builtin.include_tasks: 'manage-state.yml'
+    loop: '{{ systemd_unit__timers__combined_var }}'
+
+  tags:
+    - 'systemd_unit'
+    - 'systemd_unit:state'

@@ -1,0 +1,22 @@
+# {{ ansible_managed }}
+# 2022121202
+
+[Unit]
+Description={{ item['description'] }}
+{% if 'raw_unit' in item %}
+# raw
+{{ item['raw_unit'] }}
+{% endif %}
+
+[Timer]
+{% if 'raw_service' in item %}
+# raw
+{{ item['raw_service'] }}
+{% endif %}
+
+[Install]
+WantedBy={{ item['wanted_by'] | d('timers.target') }}
+{% if 'raw_install' in item %}
+# raw
+{{ item['raw_install'] }}
+{% endif %}

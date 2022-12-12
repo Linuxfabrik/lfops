@@ -1,0 +1,7 @@
+- name: 'Manage systemd units'
+  hosts:
+    - 'lfops_systemd_unit'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.systemd_unit'
