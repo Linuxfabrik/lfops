@@ -9,3 +9,15 @@
     state: '{{ item["state"] | d("started") }}'
   when:
     - 'item["state"] | d("started") not in ["present", "absent"]'
+
+- name: 'systemctl {{ item["enabled"] | d(true) | bool | ternary("enable", "disable") }} {{ item["name"] }}.timer'
+  ansible.builtin.systemd:
+    name: '{{ item["name"] }}.timer'
+    enabled: '{{ item["enabled"] | d(true) }}'
+
+- name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}.timer'
+  ansible.builtin.systemd:
+    name: '{{ item["name"] }}.timer'
+    state: '{{ item["state"] | d("started") }}'
+  when:
+    - 'item["state"] | d("started") not in ["present", "absent"]'
