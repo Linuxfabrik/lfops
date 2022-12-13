@@ -18,6 +18,11 @@ Role: collabora_code
 
 * Renamed rolename and vars from `collabora_code` to `collabora`
 
+Role: git
+
+* Added ...
+* ... and later removed in favor of a more general `app` role
+
 Role: hostname
 
 * Renamed `hostname__domain_name` to `hostname__domain_part`
@@ -93,6 +98,7 @@ New features:
 * Role: ansible_init
 * Role: apache_httpd
 * Role: apache_tomcat
+* Role: apps
 * Role: at
 * Role: audit
 * Role: bind
@@ -110,7 +116,6 @@ New features:
 * Role: firewall
 * Role: freeipa_client
 * Role: freeipa_server
-* Role: git
 * Role: glances
 * Role: grafana
 * Role: grav
