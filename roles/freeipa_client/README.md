@@ -40,7 +40,7 @@ freeipa_client__ipa_admin_user:
 
 `msg: Unable to discover domain, not provided on command line`: Check your DNS server configuration - `IN SOA` and `IN NS` options, as well as a correct `_ldap._tcp IN SRV 10 10 389 freeipa-server.example.com.` in your forward zone.
 
-Joining realm failed: JSON-RPC call failed: Couldn't connect to server`: Check firewall settings, perhaps a port like LDAP or HTTPS is blocked.
+`Joining realm failed: JSON-RPC call failed: Couldn't connect to server`: Check firewall settings, perhaps a port like LDAP or HTTPS is blocked.
 
 
 ## License
