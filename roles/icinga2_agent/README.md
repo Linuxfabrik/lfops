@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.icinga2_agent
 
-This role installs [Icinga2](https://icinga.com/), configues it to act as an agent, and tries to registers the host in the Icinga Director.
+This role installs [Icinga2](https://icinga.com/), configures it to act as an agent, and tries to registers the host in the Icinga Director.
 
 Currently, this role only works if the host can reach the Icinga2 master API.
 
