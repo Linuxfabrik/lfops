@@ -147,6 +147,8 @@ New features:
 * Role: mailto_root
 * Role: mariadb_client
 * Role: mariadb_server
+* Role: maxmind_geoip
+* Role: mod_maxminddb
 * Role: mongodb
 * Role: motd
 * Role: network

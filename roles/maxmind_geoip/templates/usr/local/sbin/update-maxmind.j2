@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# 2022121301
+
+MM_LIC={{ maxmind_geoip__lic }}
+
+cd /tmp || exit
+
+MM_DB=GeoLite2-ASN
+wget --quiet "https://download.maxmind.com/app/geoip_download?edition_id=$MM_DB&suffix=tar.gz&license_key=$MM_LIC" -O $MM_DB.tar.gz
+tar xzf $MM_DB.tar.gz
+\cp "$MM_DB"_*/$MM_DB.mmdb /usr/share/GeoIP/
+
+MM_DB=GeoLite2-City
+wget --quiet "https://download.maxmind.com/app/geoip_download?edition_id=$MM_DB&suffix=tar.gz&license_key=$MM_LIC" -O $MM_DB.tar.gz
+tar xzf $MM_DB.tar.gz
+\cp "$MM_DB"_*/$MM_DB.mmdb /usr/share/GeoIP/
+
+MM_DB=GeoLite2-Country
+wget --quiet "https://download.maxmind.com/app/geoip_download?edition_id=$MM_DB&suffix=tar.gz&license_key=$MM_LIC" -O $MM_DB.tar.gz
+tar xzf $MM_DB.tar.gz
+\cp "$MM_DB"_*/$MM_DB.mmdb /usr/share/GeoIP/
+
+rm -rf /tmp/GeoLite2-*

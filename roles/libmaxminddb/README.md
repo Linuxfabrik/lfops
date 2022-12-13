@@ -2,6 +2,12 @@
 
 This role downloads, compiles and installs [libmaxminddb](https://github.com/maxmind/libmaxminddb/).
 
+For Maxmind, depending on your needs, you normally run three playbooks in this particular order:
+
+1. libmaxminddb (this role)
+2. mod_maxminddb
+3. maxmind_geoip
+
 Runs on
 
 * RHEL 8 (and compatible)

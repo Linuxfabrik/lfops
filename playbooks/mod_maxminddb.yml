@@ -1,0 +1,7 @@
+- name: 'Get and compile mod_maxminddb'
+  hosts:
+    - 'lfops_mod_maxminddb'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.mod_maxminddb'

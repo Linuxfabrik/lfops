@@ -1,0 +1,12 @@
+- block:
+
+  - name: 'Deploy /usr/local/sbin/update-maxmind'
+    ansible.builtin.template:
+      src: 'usr/local/sbin/update-maxmind.j2'
+      dest: '/usr/local/sbin/update-maxmind'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  tags:
+    - 'maxmind_geoip'

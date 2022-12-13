@@ -1,0 +1,14 @@
+# -----------------------------------------------------------------------------
+# no need to document the variables in the README below this line, as they
+# are internally for this role
+
+maxmind_geoip__systemd_unit__services__dependent_var:
+  - name: 'update-maxmind'
+    raw_service: |-
+      ExecStart=/usr/local/sbin/update-maxmind
+      Type=oneshot
+
+maxmind_geoip__systemd_unit__timers__dependent_var:
+  - name: 'update-maxmind'
+    raw_timer: |-
+      OnCalendar=weekly

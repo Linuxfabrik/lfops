@@ -1,0 +1,14 @@
+- name: 'Get Maxmind GeoIP databases'
+  hosts:
+    - 'lfops_maxmind_geoip'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.maxmind_geoip'
+
+    - role: 'linuxfabrik.lfops.systemd_unit'
+      systemd_unit__services__dependent_var: '{{ maxmind_geoip__systemd_unit__services__dependent_var | d([]) }}'
+      systemd_unit__timers__dependent_var: '{{ maxmind_geoip__systemd_unit__timers__dependent_var | d([]) }}'
+      when:
+        - 'not maxmind_geoip__skip_systemd_unit | d(false)'
+

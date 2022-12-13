@@ -1,0 +1,59 @@
+- block:
+
+  - name: 'install gcc httpd-devel redhat-rpm-config'
+    ansible.builtin.package:
+      name:
+        - 'gcc'
+        - 'httpd-devel'
+        - 'redhat-rpm-config'
+      state: 'present'
+
+  - name: 'curl https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz -O /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+      dest: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz to the server'
+    ansible.builtin.copy:
+      src: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+      dest: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+
+  - name: 'mkdir -p /tmp/mod_maxminddb-{{ mod_maxminddb__version }}'
+    ansible.builtin.file:
+      path: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}'
+      state: 'directory'
+
+  - name: 'tar xfz --strip-components 1 -C /tmp/mod_maxminddb-{{ mod_maxminddb__version }} /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+      dest: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'rm -f /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+    ansible.builtin.file:
+      path: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+      state: 'absent'
+
+  - name: './configure'
+    ansible.builtin.command: './configure'
+    args:
+      chdir: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}'
+
+  - name: 'Create Apache `LoadModule` directive in {{ mod_maxminddb__apache_conf_modules_d }} '
+    ansible.builtin.copy:
+      dest: '{{ mod_maxminddb__apache_conf_modules_d }}'
+      content: 'LoadModule maxminddb_module /usr/lib64/httpd/modules/mod_maxminddb.so'
+
+  - name: 'make install'
+    ansible.builtin.make:
+      chdir: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}'
+      target: 'install'
+    ignore_errors: true
+
+  tags:
+    - 'mod_maxminddb'
