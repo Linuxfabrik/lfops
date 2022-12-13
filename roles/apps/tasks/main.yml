@@ -1,0 +1,20 @@
+- block:
+
+  - name: 'Remove apps using the package manager'
+    ansible.builtin.package:
+      name: '{{ item["name"] }}'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ apps__apps__combined_var }}'
+
+  - name: 'Deploy apps using the package manager'
+    ansible.builtin.package:
+      name: '{{ item["name"] }}'
+      state: 'present'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ apps__apps__combined_var }}'
+
+  tags:
+    - 'apps'

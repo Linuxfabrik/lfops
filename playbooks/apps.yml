@@ -1,0 +1,7 @@
+- name: 'Manage applications'
+  hosts:
+    - 'lfops_apps'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.apps'
