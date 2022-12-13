@@ -58,10 +58,32 @@
 
   - meta: 'flush_handlers' # we want a `systemctl daemon-reload` before managing unit states
 
-  - ansible.builtin.include_tasks: 'manage-state.yml'
+  - name: 'systemctl {{ item["enabled"] | d(true) | bool | ternary("enable", "disable") }} {{ item["name"] }}.service'
+    ansible.builtin.systemd:
+      name: '{{ item["name"] }}.service'
+      enabled: '{{ item["enabled"] | d(true) }}'
     loop: '{{ systemd_unit__services__combined_var }}'
 
-  - ansible.builtin.include_tasks: 'manage-state.yml'
+  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}.service'
+    ansible.builtin.systemd:
+      name: '{{ item["name"] }}.service'
+      state: '{{ item["state"] | d("started") }}'
+    when:
+      - 'item["state"] | d("started") not in ["present", "absent"]'
+    loop: '{{ systemd_unit__services__combined_var }}'
+
+  - name: 'systemctl {{ item["enabled"] | d(true) | bool | ternary("enable", "disable") }} {{ item["name"] }}.timer'
+    ansible.builtin.systemd:
+      name: '{{ item["name"] }}.timer'
+      enabled: '{{ item["enabled"] | d(true) }}'
+    loop: '{{ systemd_unit__timers__combined_var }}'
+
+  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}.timer'
+    ansible.builtin.systemd:
+      name: '{{ item["name"] }}.timer'
+      state: '{{ item["state"] | d("started") }}'
+    when:
+      - 'item["state"] | d("started") not in ["present", "absent"]'
     loop: '{{ systemd_unit__timers__combined_var }}'
 
   tags:
