@@ -19,7 +19,7 @@ Runs on
 
 | Tag                   | What it does                               |
 | ---                   | ------------                               |
-| `icinga2_agent`       | Installs and configues icinga2 as an agent |
+| `icinga2_agent`       | Installs and configures icinga2 as an agent |
 | `icinga2_agent:state` | Manages the state of the Icinga2 service   |
 
 
