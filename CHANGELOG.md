@@ -140,6 +140,7 @@ New features:
 * Role: keycloak
 * Role: kvm_host
 * Role: kvm_vm
+* Role: libmaxminddb
 * Role: librenms
 * Role: libreoffice
 * Role: login
