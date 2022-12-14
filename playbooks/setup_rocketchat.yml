@@ -9,9 +9,11 @@
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not setup_rocketchat__skip_repo_epel | default(false)'
 
-    - role: 'linuxfabrik.lfops.git'
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var:
+        - '{{ rocketchat__apps__apps__dependent_var }}'
       when:
-        - 'not setup_rocketchat__skip_git | default(false)'
+        - 'not rocketchat__skip_apps | default(false)'
 
     - role: 'linuxfabrik.lfops.nodejs'
       when:

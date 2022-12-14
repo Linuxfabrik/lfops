@@ -12,4 +12,8 @@ rocketchat__version: 'latest'
 
 # -----------------------------------------------------------------------------
 
+rocketchat__apps__apps__dependent_var:
+  - name: 'git'
+    state: 'present'
+
 rocketchat__mongodb__conf_replication_repl_set_name__dependent_var: '{{ rocketchat__mongodb_repl_set_name }}'

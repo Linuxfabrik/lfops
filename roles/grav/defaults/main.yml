@@ -36,6 +36,11 @@ grav__apache_httpd__vhosts__dependent_var:
     conf_options: 'FollowSymLinks'
 
 
+grav__apps__apps__dependent_var:
+  - name: 'git'
+    state: 'present'
+
+
 grav__php__modules__dependent_var:
   - name: 'php-gd'
     state: 'present'

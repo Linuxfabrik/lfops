@@ -70,7 +70,11 @@
       when:
         - 'not librenms__skip_php | default(false)'
 
-    - role: 'linuxfabrik.lfops.git'
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var:
+        - '{{ librenms__apps__apps__dependent_var }}'
+      when:
+        - 'not librenms__skip_apps | default(false)'
 
     - role: 'linuxfabrik.lfops.librenms'
 

@@ -56,6 +56,11 @@ librenms__apache_httpd__vhosts__dependent_var:
       AllowEncodedSlashes NoDecode
 
 
+librenms__apps__apps__dependent_var:
+  - name: 'git'
+    state: 'present'
+
+
 librenms__mariadb_server__databases__dependent_var:
   - name: '{{ librenms__database_name }}'
     collation: 'utf8mb4_unicode_ci'

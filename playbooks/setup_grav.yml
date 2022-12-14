@@ -14,10 +14,11 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not grav__skip_policycoreutils | default(false)'
 
-    - role: 'linuxfabrik.lfops.git'
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var:
+        - '{{ grav__apps__apps__dependent_var }}'
       when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not grav__skip_git | default(false)'
+        - 'not grav__skip_apps | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
