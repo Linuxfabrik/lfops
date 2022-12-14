@@ -99,7 +99,6 @@
 - import_playbook: 'setup_icinga2_master.yml'
 - import_playbook: 'setup_keycloak.yml'
 - import_playbook: 'setup_librenms.yml'
-- import_playbook: 'setup_matomo.yml'
 - import_playbook: 'setup_nextcloud.yml'
 - import_playbook: 'setup_rocketchat.yml'
 - import_playbook: 'setup_wordpress.yml'
