@@ -1,3 +1,4 @@
+openvpn_server__client_configs: []
 openvpn_server__client_netmask: '255.255.255.0'
 openvpn_server__port: 1194
 openvpn_server__pushs: []

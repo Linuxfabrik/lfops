@@ -18,6 +18,22 @@
       state: 'directory'
       group: 'openvpn'
 
+  - name: 'Remove client-configs from /etc/openvpn/ccd'
+    ansible.builtin.file:
+      path: '/etc/openvpn/ccd/{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ openvpn_server__client_configs }}'
+
+  - name: 'Deploy client-configs to /etc/openvpn/ccd'
+    ansible.builtin.template:
+      src: 'etc/openvpn/ccd/raw.j2'
+      dest: '/etc/openvpn/ccd/{{ item["name"] }}'
+      group: 'openvpn'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ openvpn_server__client_configs }}'
+
   - name: 'Deploy /etc/openvpn/server/server.conf'
     ansible.builtin.template:
       src: 'etc/openvpn/server/server.conf.j2'

@@ -42,6 +42,7 @@ openvpn_server__client_network: '192.0.2.0'
 
 | Variable                          | Description                                                                                             | Default Value     |
 | --------                          | -----------                                                                                             | -------------     |
+| `openvpn_server__client_configs` | List of client configs. Can be used to limit a client to a certain IP, which then can be used during firewalling. Subkeys <ul><li>`name`: Mandatory, string. Name of hte client's X509 common name.</li><li>`raw`: Mandatory, string. Raw config for this client.</li><li>`state`: Optional, string. If the config should be `present` or `absent`. Defaults to `present`.</li></ul> | `[]`|
 | `openvpn_server__client_netmask`  | The netmask that will be used with `openvpn_server__client_network` to allocate client addresses.       | `'255.255.255.0'` |
 | `openvpn_server__port`            | Which port the OpenVPN server should use.                                                               | `1194`            |
 | `openvpn_server__pushs`           | A list of options that will be pushed to the connected clients. Can be used to set routes.              | `[]`              |
@@ -50,6 +51,11 @@ openvpn_server__client_network: '192.0.2.0'
 Example:
 ```yaml
 # optional
+openvpn_server__client_configs:
+  - name: 'user1@example.com'
+    raw: |-
+      ifconfig-push 192.0.2.250 255.255.255.0
+    state: 'present'
 openvpn_server__client_netmask: '255.255.255.0'
 openvpn_server__port: 1194
 openvpn_server__pushs:
