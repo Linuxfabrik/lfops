@@ -2,8 +2,6 @@
 
 This role installs and configures either [Collabora Online Development Edition](https://www.collaboraoffice.com/code/) or [Collabora Online Enterprise Edition](https://www.collaboraoffice.com/collabora-online-3/). Note: To use Collabora Enterprise, you need an active [Collabora Subscription](https://www.collaboraoffice.com/subscriptions-2/).
 
-If you skip the repo for Collabora (`collabora__skip_repo_collabora: true`), Collabora CODE is used. If you skip the repo for Collabora CODE (`collabora__skip_repo_collabora_code: true`), Collabora Enterprise Edition is used.
-
 Runs on
 
 * RHEL 8 (and compatible)
@@ -42,6 +40,7 @@ If you use the ["Collabora" Playbook](https://github.com/Linuxfabrik/lfops/blob/
 | `collabora__language_packages__host_var` | A list of additional packages will be installed for language support (spell checking, thesaurus, etc). Defaults to de, en, fr, and it. <br>For the usage in `host_vars`. | `[]` |
 | `collabora__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate | d(14) }}` |
 | `collabora__service_enabled` | Enables or disables the coolwsd service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
+| `collabora__use_code` | Use Collabora CODE Edition instead of Collabora Enterprise Edition. | `true` |
 
 Example:
 ```yaml
@@ -72,6 +71,7 @@ collabora__language_packages__group_var: []
 collabora__language_packages__host_var: []
 collabora__logrotate: 7
 collabora__service_enabled: true
+collabora__use_code: false
 ```
 
 

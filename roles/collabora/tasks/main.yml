@@ -3,7 +3,7 @@
   - name: 'install collabora and dependent packages'
     ansible.builtin.package:
       name:
-        - '{{ collabora__skip_repo_collabora | bool | ternary("CODE-brand", "collabora-online-brand") }}'
+        - '{{ collabora__use_code | bool | ternary("CODE-brand", "collabora-online-brand") }}'
         - 'collaboraofficebasis-calc'
         - 'collaboraofficebasis-core'
         - 'collaboraofficebasis-draw'
@@ -30,7 +30,7 @@
 
   - name: 'deploy /etc/coolwsd/coolwsd.xml'
     ansible.builtin.template:
-      src: '{{ collabora__skip_repo_collabora | bool | ternary("etc/coolwsd/coolwsd-code.xml.j2", "etc/coolwsd/coolwsd.xml.j2") }}'
+      src: '{{ collabora__use_code | bool | ternary("etc/coolwsd/coolwsd-code.xml.j2", "etc/coolwsd/coolwsd.xml.j2") }}'
       dest: '/etc/coolwsd/coolwsd.xml'
       owner: 'cool'
       group: 'cool'
