@@ -17,6 +17,14 @@ Ideally, the FreeIPA should be installed on a separate server. If that is not po
 * Again, configure DNS: Use two-level domain names. Otherwise you'll get error messages like `Invalid realm name: single label realms are not supported`.
 * Install the [ansible-freeipa Ansible Collection](https://github.com/freeipa/ansible-freeipa) on the Ansible control node. This can be done by calling `ansible-galaxy collection install freeipa.ansible_freeipa`.
 
+After running this role (and for now until implemented), do this:
+
+```
+authselect current
+authselect select sssd with-sudo with-mkhomedir
+authselect current
+```
+
 
 ## Tags
 
