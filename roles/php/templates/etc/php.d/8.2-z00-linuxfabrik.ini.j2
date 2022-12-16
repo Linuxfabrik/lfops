@@ -1,0 +1,42 @@
+; {{ ansible_managed }}
+; 2022121601
+; php 8.2
+
+[PHP]
+date.timezone = {{ php__ini_date_timezone__combined_var | default('Europe/Zurich') }}
+default_socket_timeout = {{ php__ini_default_socket_timeout__combined_var | default('60') }}
+display_errors = {{ php__ini_display_errors__combined_var | default('off') }}
+display_startup_errors = {{ php__ini_display_startup_errors__combined_var | default('off') }}
+error_reporting = {{ php__ini_error_reporting__combined_var | default('E_ALL & ~E_DEPRECATED & ~E_STRICT') }}
+expose_php = Off
+html_errors = Off
+max_execution_time = {{ php__ini_max_execution_time__combined_var | default('30') }}
+max_file_uploads = {{ php__ini_max_file_uploads__combined_var | default('20') }}
+max_input_time = {{ php__ini_max_input_time__combined_var | default('60') }}
+memory_limit = {{ php__ini_memory_limit__combined_var | default('128M') }}
+post_max_size = {{ php__ini_post_max_size__combined_var | default('8M') }}
+realpath_cache_size = 4M
+realpath_cache_ttl = 120
+serialize_precision = -1
+upload_max_filesize = {{ php__ini_upload_max_filesize__combined_var | default('2M') }}
+
+opcache.blacklist_filename = {{ php__ini_opcache_blacklist_filename__combined_var | d('/etc/php.d/opcache*.blacklist') }}
+opcache.enable = {{ php__ini_opcache_enable__combined_var | d('1') }}
+opcache.enable_cli = {{ php__ini_opcache_enable_cli__combined_var | d('0') }}
+opcache.huge_code_pages = {{ php__ini_opcache_huge_code_pages__combined_var | d('1') }}
+opcache.interned_strings_buffer = {{ php__ini_opcache_interned_strings_buffer__combined_var | d('8') }}
+opcache.max_accelerated_files = {{ php__ini_opcache_max_accelerated_files__combined_var | d('10000') }}
+opcache.memory_consumption = {{ php__ini_opcache_memory_consumption__combined_var | d('128') }}
+opcache.revalidate_freq = {{ php__ini_opcache_revalidate_freq__combined_var | d('2') }}
+opcache.save_comments = {{ php__ini_opcache_save_comments__combined_var | d('1') }}
+opcache.validate_timestamps = {{ php__ini_opcache_validate_timestamps__combined_var | d('1') }}
+
+[mail function]
+mail.add_x_header = On
+SMTP = {{ php__ini_smtp__combined_var | default('localhost') }}
+smtp_port = 25
+
+[Session]
+session.gc_maxlifetime = 1440
+session.sid_length = {{ php__ini_session_sid_length__combined_var | default(26) }}
+session.trans_sid_tags = "{{ php__ini_session_trans_sid_tags__combined_var | default("a=href,area=href,frame=src,form=") }}"

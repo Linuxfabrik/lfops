@@ -11,6 +11,7 @@ Nevertheless, this role is only compatible with the following PHP versions:
 * 7.4
 * 8.0
 * 8.1
+* 8.2
 
 Rules of thumb:
 
