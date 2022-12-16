@@ -34,10 +34,8 @@ If you use the ["Collabora" Playbook](https://github.com/Linuxfabrik/lfops/blob/
 | `collabora__coolwsd_ssl_settings_cert_file_path` | Path to the cert file. Set this when coolwsd is SSL-terminating. | `'/etc/coolwsd/cert.pem'` |
 | `collabora__coolwsd_ssl_settings_key_file_path` | Path to the key file. Set this when coolwsd is SSL-terminating. | `'/etc/coolwsd/key.pem'` |
 | `collabora__coolwsd_ssl_termination` | Enable if coolwsd is behind a SSL-terminating proxy and therefore should act as if its using https but actually receives http. Possible options: | `true` |
-| `collabora__coolwsd_storage_wopi__group_var` | List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. <br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
-| `collabora__coolwsd_storage_wopi__host_var` | List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. <br>For the usage in `host_vars`. | `[]` |
-| `collabora__language_packages__group_var` | A list of additional packages will be installed for language support (spell checking, thesaurus, etc). Defaults to de, en, fr, and it. <br>For the usage in `group_vars` (can only be used in one group at a time). | `[]` |
-| `collabora__language_packages__host_var` | A list of additional packages will be installed for language support (spell checking, thesaurus, etc). Defaults to de, en, fr, and it. <br>For the usage in `host_vars`. | `[]` |
+| `collabora__coolwsd_storage_wopi__host_var` / <br> `collabora__coolwsd_storage_wopi__group_var` | List of regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. <br>Note: Can only be used in one group at a time. | `[]` |
+| `collabora__language_packages__host_var` / <br> `collabora__language_packages__group_var` | A list of additional packages will be installed for language support (spell checking, thesaurus, etc). <br>Note: Can only be used in one group at a time. | `[de, en, fr, it]` |
 | `collabora__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate | d(14) }}` |
 | `collabora__service_enabled` | Enables or disables the coolwsd service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
 | `collabora__use_code` | Use Collabora CODE Edition instead of Collabora Enterprise Edition. | `true` |
@@ -68,7 +66,17 @@ collabora__coolwsd_storage_wopi__group_var: []
 collabora__coolwsd_storage_wopi__host_var:
   - 'cloud\.example\.com'
 collabora__language_packages__group_var: []
-collabora__language_packages__host_var: []
+collabora__language_packages__host_var:
+  # el
+  - 'collaboraoffice-dict-el'
+  - 'collaboraofficebasis-el'
+  - 'hunspell-el'
+  - 'mythes-el'
+  # es
+  - 'collaboraoffice-dict-es'
+  - 'collaboraofficebasis-es'
+  - 'hunspell-es-*'
+  - 'mythes-es'
 collabora__logrotate: 7
 collabora__service_enabled: true
 collabora__use_code: false
