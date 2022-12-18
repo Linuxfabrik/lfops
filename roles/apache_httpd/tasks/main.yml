@@ -134,6 +134,7 @@
       owner: 'apache'
       group: 'apache'
       recurse: true
+    ignore_errors: true
 
   tags:
     - 'apache_httpd'
