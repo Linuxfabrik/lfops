@@ -289,6 +289,17 @@ php__ini_post_max_size__combined_var: '{{
     php__ini_post_max_size__role_var
   }}'
 
+php__ini_session_gc_maxlifetime__dependent_var: ''
+php__ini_session_gc_maxlifetime__group_var: ''
+php__ini_session_gc_maxlifetime__host_var: ''
+php__ini_session_gc_maxlifetime__role_var: ''
+php__ini_session_gc_maxlifetime__combined_var: '{{
+    php__ini_session_gc_maxlifetime__host_var if (php__ini_session_gc_maxlifetime__host_var | string | length) else
+    php__ini_session_gc_maxlifetime__group_var if (php__ini_session_gc_maxlifetime__group_var | string | length) else
+    php__ini_session_gc_maxlifetime__dependent_var if (php__ini_session_gc_maxlifetime__dependent_var | string | length) else
+    php__ini_session_gc_maxlifetime__role_var
+  }}'
+
 php__ini_session_sid_length__dependent_var: ''
 php__ini_session_sid_length__group_var: ''
 php__ini_session_sid_length__host_var: ''

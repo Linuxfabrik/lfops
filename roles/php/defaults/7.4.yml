@@ -18,6 +18,7 @@ php__ini_opcache_revalidate_freq__role_var: 60
 php__ini_opcache_save_comments__role_var: 1
 php__ini_opcache_validate_timestamps__role_var: 1
 php__ini_post_max_size__role_var: '8M'
+php__ini_session_gc_maxlifetime__role_var: 1440
 php__ini_session_sid_length__role_var: 32
 php__ini_session_trans_sid_tags__role_var: 'a=href,area=href,frame=src,input=src,form=fakeentry'
 php__ini_smtp__role_var: 'localhost'

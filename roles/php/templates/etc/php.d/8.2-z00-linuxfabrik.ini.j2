@@ -37,6 +37,6 @@ SMTP = {{ php__ini_smtp__combined_var | default('localhost') }}
 smtp_port = 25
 
 [Session]
-session.gc_maxlifetime = 1440
+session.gc_maxlifetime = {{ php__ini_session_gc_maxlifetime__combined_var | default(1440) }}
 session.sid_length = {{ php__ini_session_sid_length__combined_var | default(26) }}
 session.trans_sid_tags = "{{ php__ini_session_trans_sid_tags__combined_var | default("a=href,area=href,frame=src,form=") }}"
