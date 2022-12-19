@@ -108,13 +108,17 @@ php__ini_upload_max_filesize__host_var: '10000M'
 ```
 
 
-### Pool Config Directives
+### PHP-FPM Pool Config Directives
 
+Example:
+```yaml
+# optional
 php__fpm_pool_conf_pm__combined_var
 php__fpm_pool_conf_pm_max_children__combined_var
 php__fpm_pool_conf_pm_start_servers__combined_var
 php__fpm_pool_conf_pm_min_spare_servers__combined_var
 php__fpm_pool_conf_pm_max_spare_servers__combined_var
+```
 
 
 ## License
