@@ -26,5 +26,21 @@
       group: 'root'
       mode: 0o644
 
+  - name: 'Check if custom logrotate configs for {{ inventory_hostname }} exist'
+    ansible.builtin.stat:
+      path: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/logrotate.d'
+    delegate_to: 'localhost'
+    changed_when: false
+    register: 'logrotate__custom_configs'
+
+  - name: 'Copy the custom logrotate configs to /etc/logrotate.d'
+    ansible.builtin.copy:
+      src: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/logrotate.d/'
+      dest: '/etc/logrotate.d/'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when: 'logrotate__custom_configs.stat.exists'
+
   tags:
     - 'logrotate'

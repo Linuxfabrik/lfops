@@ -2,6 +2,8 @@
 
 This role ensures that logrotate is installed and configured for main classic system log files like `/var/log/cron`, `/var/log/maillog` or `/var/log/messages`.
 
+Additionally, this role allows you to deploy custom logrotate configs which are placed under `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/logrotate.d` on the Ansible control node. Keep in mind that later config files may override the options given in earlier files, so the order in which the logrotate config files are listed is important.
+
 Runs on
 
 * Fedora
@@ -14,7 +16,7 @@ Runs on
 
 | Tag         | What it does                         |
 | ---         | ------------                         |
-| `logrotate` | Installs and configures log rotation |
+| `logrotate` | <ul><li>Set platform/version specific variables</li><li>Install logrotate</li><li>Copy logrotate.conf template to /etc</li><li>Copy system logrotate templates to /etc/logrotate.d</li><li>Check if custom logrotate configs for {{ inventory_hostname }} exist</li><li>Copy the custom logrotate configs to /etc/logrotate.d</li></ul> |
 
 
 ## Optional Role Variables
