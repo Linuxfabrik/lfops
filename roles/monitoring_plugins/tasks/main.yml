@@ -158,14 +158,14 @@
 
   - name: 'Check if custom plugins exist'
     ansible.builtin.stat:
-      path: '../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
+      path: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
     delegate_to: 'localhost'
     changed_when: false
     register: 'monitoring_plugins__custom_plugins'
 
   - name: 'Copy the custom plugins to /usr/lib64/nagios/plugins'
     ansible.builtin.copy:
-      src: '../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
+      src: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
       dest: '/usr/lib64/nagios/'
       mode: 'preserve'
       backup: true

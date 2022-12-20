@@ -15,7 +15,7 @@ Runs on
 
 It also installs the [Linuxfabrik Plugin Library](https://github.com/Linuxfabrik/monitoring-plugins) to `/usr/lib64/nagios/plugins/lib`, which are a requirement of the Monitoring Plugins.
 
-Additionally, this role allows you to deploy custom plugins which are placed under `../host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins` on the Ansible control node.
+Additionally, this role allows you to deploy custom plugins which are placed under `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins` on the Ansible control node.
 
 Windows only: Since you cannot change files that are currently used by a process in Windows, when running against a Windows host, this role first stops the Icinga2 service, deploys the plugins and starts the service again. Optionally, it sets a downtime for each host. Have a look at the optional role variables below for this.
 
