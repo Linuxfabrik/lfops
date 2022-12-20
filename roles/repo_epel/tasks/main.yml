@@ -28,18 +28,6 @@
 
 - block:
 
-  - name: 'Install epel-release'
-    ansible.builtin.package:
-      name: 'epel-release'
-      state: 'present'
-
-  when: 'repo_epel__mirror_url is not defined or not repo_epel__mirror_url | length'
-  tags:
-    - 'repo_epel'
-
-
-- block:
-
   - name: 'Deploy the repo files (mirror: {{ repo_epel__mirror_url }})'
     ansible.builtin.template:
       src: '{{ item }}.j2'
@@ -64,6 +52,5 @@
       dest: '{{ repo_epel__gpg_key_dest }}'
       mode: 0o644
 
-  when: 'repo_epel__mirror_url is defined and repo_epel__mirror_url | length'
   tags:
     - 'repo_epel'
