@@ -1,5 +1,9 @@
 - block:
 
+  - name: 'Combined Apps:'
+    ansible.builtin.debug:
+      var: 'apps__apps__combined_var'
+
   - name: 'Remove apps using the package manager'
     ansible.builtin.package:
       name: '{{ item["name"] }}'
