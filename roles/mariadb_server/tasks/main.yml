@@ -263,6 +263,10 @@
 # database management
 - block:
 
+  - name: 'Combined Databases:'
+    ansible.builtin.debug:
+      var: 'mariadb_server__databases__combined_var'
+
   - name: 'Create or delete mariadb databases'
     community.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
@@ -280,6 +284,10 @@
 
 # user management
 - block:
+
+  - name: 'Combined Users:'
+    ansible.builtin.debug:
+      var: 'mariadb_server__users__combined_var'
 
   - name: 'Create, update or delete MariaDB users'
     community.mysql.mysql_user:
