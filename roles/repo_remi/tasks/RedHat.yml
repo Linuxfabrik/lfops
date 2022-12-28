@@ -12,15 +12,11 @@
 
   - name: 'dnf -y module reset php'
     command: 'dnf -y module reset php'
-    args:
-      warn: false # https://github.com/ansible/ansible/issues/64852
     register: 'repo_remi__dnf_module_reset_php_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_reset_php_result.stdout'
 
   - name: "dnf -y module enable php:remi-{{ repo_remi__enabled_php_version }}"
     command: "dnf -y module enable php:remi-{{ repo_remi__enabled_php_version }}"
-    args:
-      warn: false # https://github.com/ansible/ansible/issues/64852
     register: 'repo_remi__dnf_module_enable_php_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_php_result.stdout'
 
@@ -33,15 +29,11 @@
 
   - name: 'dnf -y module reset redis'
     command: 'dnf -y module reset redis'
-    args:
-      warn: false # https://github.com/ansible/ansible/issues/64852
     register: 'repo_remi__dnf_module_enable_redis_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_redis_result.stdout'
 
   - name: 'dnf -y module enable redis:remi-{{ repo_remi__enabled_redis_version }}'
     command: 'dnf -y module enable redis:remi-{{ repo_remi__enabled_redis_version }}'
-    args:
-      warn: false # https://github.com/ansible/ansible/issues/64852
     register: 'repo_remi__dnf_module_enable_redis_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_redis_result.stdout'
 
