@@ -9,6 +9,7 @@ icinga2_agent__director_host_object_import: '{{
     ["tpl-host-windows"] if ansible_facts["os_family"] == "Windows" else
     ["tpl-host-linux"]
   }}'
+icinga2_agent__icinga2_master_host: '{{ icinga2_agent__icinga2_master_cn }}'
 icinga2_agent__icinga2_master_port: 5665
-icinga2_agent__service_enabled: true
 icinga2_agent__icingaweb2_url: 'https://{{ icinga2_agent__icinga2_master_host }}/icingaweb2'
+icinga2_agent__service_enabled: true

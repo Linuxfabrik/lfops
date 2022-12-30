@@ -25,20 +25,21 @@ Runs on
 
 ## Mandatory Role Variables
 
-| Variable                                | Description                                                                                                                                                         |
-| --------                                | -----------                                                                                                                                                         |
+| Variable                                | Description                                                                                                                                                                              |
+| --------                                | -----------                                                                                                                                                                              |
 | `icinga2_agent__icinga2_api_user_login` | The account for generating a ticket for this agent using the Icinga2 API (API of Icinga Core). The account needs to have the `actions/generate-ticket` permission on the Icinga2 Master. |
-| `icinga2_agent__icinga2_master_host`    | The host where the Icinga2 Master is running. Has to be reachable from the Agent.                                                                                   |
-| `icinga2_agent__windows_version`        | Mandatory for Windows. The version of the Icinga2 Agent to install. Possible options: https://packages.icinga.com/windows/.                                         |
+| `icinga2_agent__icinga2_master_cn`      | The common name of the Icinga2 Master.                                                                                                                                                   |
+| `icinga2_agent__windows_version`        | Mandatory for Windows. The version of the Icinga2 Agent to install. Possible options: https://packages.icinga.com/windows/.                                                              |
 
 Example:
 ```yaml
 icinga2_agent__icinga2_api_user_login:
   password: 'password'
   username: 'enrolment-user'
-icinga2_agent__icinga2_master_host: 'master.example.com'
+icinga2_agent__icinga2_master_cn: 'master.example.com'
 icinga2_agent__windows_version: 'v2.12.8'
 ```
+
 
 
 ## Optional Role Variables
@@ -51,6 +52,7 @@ icinga2_agent__windows_version: 'v2.12.8'
 | `icinga2_agent__director_host_object_address` | The host address of the Icinga Director host object. Tries to default to the IPv4 address of the server. | `'{{ ansible_facts["ip_addresses"][0] }}'` for Windows, else `{{ ansible_facts["default_ipv4"]["address"] }}` |
 | `icinga2_agent__director_host_object_display_name` | The host display name of the Icinga Director host object. Tries to default to the hostname. | `'{{ ansible_facts["hostname"] }}'` |
 | `icinga2_agent__director_host_object_import` | A list of Icinga Director host templates which should be imported for this server. | `['tpl-host-windows']` for Windows, else `['tpl-host-linux']` |
+| `icinga2_agent__icinga2_master_host`    | The host where the Icinga2 Master is running. Has to be reachable from the Agent. | `'{{ icinga2_agent__icinga2_master_cn }}'` |
 | `icinga2_agent__icinga2_master_port` | The port on which the Icinga2 master is reachable. | `5665` |
 | `icinga2_agent__icingaweb2_url` | The URL where the IcingaWeb2 (the API) is reachable. This will be used to register the host in the Icinga Director (otherwise the host is registered in Icinga Core, but not visible in Icinga Director). | `'https://{{ icinga2_agent__icinga2_master_host }}/icingaweb2'` |
 | `icinga2_agent__icingaweb2_user_login` | A IcingaWeb2 user with `module/director,director/api,director/hosts` permissions. This will be used to register the host in the Icinga Director. | unset |
@@ -69,6 +71,7 @@ icinga2_agent__director_host_object_address: '{{ ansible_facts["default_ipv4"]["
 icinga2_agent__director_host_object_display_name: '{{ ansible_facts["hostname"] }}'
 icinga2_agent__director_host_object_import:
   - 'tpl-host-linux'
+icinga2_agent__icinga2_master_host: '192.0.2.10'
 icinga2_agent__icinga2_master_port: 5665
 icinga2_agent__icingaweb2_url: 'https://monitoring.example.com/icingaweb2'
 icinga2_agent__icingaweb2_user_login:

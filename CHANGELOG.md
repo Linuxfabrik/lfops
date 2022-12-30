@@ -28,6 +28,12 @@ Role: hostname
 * Renamed `hostname__domain_name` to `hostname__domain_part`
 * Renamed `hostname__hostname` to `hostname__full_hostname`
 
+Role: icinga2_agent
+
+* Added new mandatory variable `icinga2_agent__icinga2_master_cn`
+* Made `icinga2_agent__icinga2_master_host` optional
+* Most users can replace all instances of `icinga2_agent__icinga2_master_host` to `icinga2_agent__icinga2_master_cn`
+
 Role: infomaniak_vm
 
 * Renamed `infomaniak_vm__password` to `infomaniak_vm__api_password`
