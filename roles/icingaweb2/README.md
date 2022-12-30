@@ -68,7 +68,7 @@ Example:
 icingaweb2__database_host: 'localhost'
 icingaweb2__database_name: 'icingaweb2'
 icingaweb2__default_theme: 'Icinga'
-icingaweb2__authentications__host_var: []
+icingaweb2__authentications__host_var:
   - name: 'AD'
     resource: 'ldap'
     backend: 'msldap'
@@ -116,7 +116,7 @@ icingaweb2__users__group_var: []
 
 ## License
 
-[The Unlicense]()
+[The Unlicense](https://unlicense.org/)
 
 
 ## Author Information
