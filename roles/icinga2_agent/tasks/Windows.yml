@@ -53,11 +53,11 @@
     when:
       - 'icinga2_agent__icinga2_api_user_login is defined and icinga2_agent__icinga2_api_user_login | length'
 
-  - name: 'execute icinga2 node setup as {{ icinga2_agent__cn }} against {{ icinga2_agent__icinga2_master_host }}'
+  - name: 'execute icinga2 node setup as {{ icinga2_agent__cn }} against {{ icinga2_agent__icinga2_master_cn }}'
     ansible.windows.win_shell: >-
       &'C:\Program Files\ICINGA2\sbin\icinga2.exe' node setup
       --zone {{ icinga2_agent__cn }}
-      --endpoint '{{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_port }}'
+      --endpoint '{{ icinga2_agent__icinga2_master_cn }},{{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_port }}'
       {% for item in icinga2_agent__additional_icinga2_master_endpoints %}
       --endpoint '{{ item["host"] }},{{ item["host"] }},{{ item["port"] | d(5665) }}'
       {% endfor %}
