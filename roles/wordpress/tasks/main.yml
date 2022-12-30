@@ -230,8 +230,6 @@
     ansible.builtin.command: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
     register: 'wordpress__chown_result'
     changed_when: 'wordpress__chown_result["stdout"] | length'
-    args:
-      warn: false
 
   - name: 'restorecon -Fvr {{ wordpress__install_dir | quote }}'
     ansible.builtin.command: 'restorecon -Fvr {{ item }}'
@@ -279,8 +277,6 @@
     ansible.builtin.command: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
     register: 'wordpress__chown_result'
     changed_when: 'wordpress__chown_result["stdout"] | length'
-    args:
-      warn: false
 
   tags:
     - 'never'

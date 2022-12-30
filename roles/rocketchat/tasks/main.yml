@@ -150,10 +150,9 @@
     environment:
       PATH: '{{ rocketchat__node_prefix }}/bin:{{ ansible_facts["env"]["PATH"] }}'
 
+  # magnitudes faster than using the ansible.builtin.file module
   - name: 'Ensure the Rocket.Chat application data permissions are correct'
     command: 'chown rocketchat:rocketchat -R {{ rocketchat__application_path | quote }}'
-    args:
-      warn: false # magnitudes faster than using the ansible.builtin.file module
 
   tags:
     - 'rocketchat'

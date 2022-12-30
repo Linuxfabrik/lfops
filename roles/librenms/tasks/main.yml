@@ -43,10 +43,9 @@
       shell: '/bin/bash'
       state: 'present'
 
+  # this is magnitudes faster than using the file module
   - name: 'chown -R librenms:librenms /opt/librenms'
     ansible.builtin.command: 'chown -R librenms:librenms /opt/librenms'
-    args:
-      warn: false # this is magnitudes faster than using the file module
 
   - name: 'chmod 771 /opt/librenms'
     ansible.builtin.file:
@@ -56,8 +55,6 @@
   # using in preference to the acls from the docs: 'setfacl -R -m g::rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache/ /opt/librenms/storage/'
   - name: 'chmod -R g=rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache /opt/librenms/storage'
     ansible.builtin.command: 'chmod -R g=rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache /opt/librenms/storage'
-    args:
-      warn: false # this is magnitudes faster than using the file module
 
   - name: 'ln -s /opt/librenms/lnms /usr/local/bin/lnms'
     ansible.builtin.file:

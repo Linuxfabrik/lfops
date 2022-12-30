@@ -47,8 +47,6 @@
 
   - name: 'chown -R cool:cool /etc/coolwsd'
     ansible.builtin.command: 'chown -R cool:cool /etc/coolwsd'
-    args:
-      warn: false
 
   tags:
     - 'collabora'

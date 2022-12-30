@@ -145,8 +145,6 @@
   - name: 'Make sure the database of the check plugin is removed'
     ansible.builtin.command: 'rm -f --{% for item in monitoring_plugins__plugin_list %} /tmp/{{ item }}.db{% endfor %}'
     # this is much faster than using the file module and looping over monitoring_plugins__plugin_list
-    args:
-      warn: false
 
   # block
   when: 'ansible_facts["os_family"] != "Windows"'

@@ -18,8 +18,6 @@
 
   - name: 'dnf module disable -y postgresql # prevent the default module stream from being used'
     ansible.builtin.command: 'dnf module disable -y postgresql'
-    args:
-      warn: false
     register: 'repo_postgresql__module_disable_result'
     changed_when: "'Nothing to do' not in repo_postgresql__module_disable_result['stdout']"
 
