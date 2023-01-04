@@ -42,6 +42,8 @@ freeipa_client__ipa_admin_user:
 
 `Joining realm failed: JSON-RPC call failed: Couldn't connect to server`: Check firewall settings, perhaps a port like LDAP or HTTPS is blocked.
 
+Re-join an unprovisioned host: `ansible-playbook ... --extra-vars='ipaclient_force_join=true'`
+
 
 ## License
 
