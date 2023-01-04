@@ -428,6 +428,16 @@ apache_httpd__mpm_worker_threads_per_child: 25
 ```
 
 
+## Optional Role Variables - wsgi_python3_module
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `apache_httpd__wsgi_python_home` | String. [Apache Directive](https://modwsgi.readthedocs.io/en/develop/configuration-directives/WSGIPythonHome.html) | `/opt/python` |
+| `apache_httpd__wsgi_python_path` | String. [Apache Directive](https://modwsgi.readthedocs.io/en/develop/configuration-directives/WSGIPythonPath.html) | `/var/www/html/python/` |
+| `apache_httpd__wsgi_script_alias` | String. [Apache Directive](https://modwsgi.readthedocs.io/en/develop/configuration-directives/WSGIScriptAlias.html) | `/ /var/www/html/python/index.py` |
+
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)
