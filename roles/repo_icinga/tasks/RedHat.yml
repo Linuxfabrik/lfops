@@ -37,6 +37,7 @@
       dest: '/tmp/ansible.RPM-GPG-KEY-ICINGA'
     delegate_to: 'localhost'
     run_once: true
+    changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.RPM-GPG-KEY-ICINGA to /etc/pki/rpm-gpg/RPM-GPG-KEY-ICINGA'
