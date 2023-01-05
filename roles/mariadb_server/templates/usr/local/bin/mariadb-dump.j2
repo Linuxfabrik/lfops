@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # {{ ansible_managed }}
-# 2022102701
+# 2023010501
 
 
 function exit_with_first_failed_retc() {
@@ -35,7 +35,6 @@ mydumper --host=$HOST --user=$USERNAME --password=$PASSWORD \
     --build-empty-files \
     --compress \
     --events \
-    --less-locking \
     --logfile $BACKUP_DIR/mydumper.log \
     --outputdir $BACKUP_DIR \
     --routines \
