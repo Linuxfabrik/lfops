@@ -1,4 +1,4 @@
-- name: 'Create virtualenv in /opt/python-venv/{{ venv.name }}'
+- name: 'python3 -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %} {{ venv.name }}'
   ansible.builtin.command:
     cmd: 'python3 -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %} {{ venv.name }}'
     chdir: '/opt/python-venv'
