@@ -27,8 +27,8 @@ Runs on
 | -------- | ----------- |
 | `icingaweb2_module_director__api_user_login` | The account for accessing the Icinga2 API. |
 | `icingaweb2_module_director__database_login` | The user account for accessing the Director SQL database. Currently, only MySQL is supported. |
-| `icingaweb2_module_director__enrolment_user_login` | A IcingaWeb2 account with the `module/director,director/api,director/hosts` permissions, allowing it to enrol new users in the Icinga Director. Note that the username has to be `enrolment-user` for the account to have the correct permissions. |
-| `icingaweb2_module_director__version` | The module version to install. Possible options from either:<br> * https://github.com/Icinga/icingaweb2-module-director/releases<br> * https://git.linuxfabrik.ch/linuxfabrik/icingaweb2-module-director/-/releases<br> Have a look at `icingaweb2_module_director__url`. |
+| `icingaweb2_module_director__enrolment_user_login` | A IcingaWeb2 account with the `module/director,director/api,director/hosts` permissions, allowing it to enrol new hosts in the Icinga Director. Note that the username has to be `enrolment-user` for the account to have the correct permissions. |
+| `icingaweb2_module_director__version` | The module version to install. Possible options from either:<ul><li>https://github.com/Icinga/icingaweb2-module-director/releases</li><li>https://git.linuxfabrik.ch/linuxfabrik/icingaweb2-module-director/-/releases</li></ul>Have a look at `icingaweb2_module_director__url`. |
 
 Example:
 ```yaml
@@ -55,7 +55,7 @@ icingaweb2_module_director__version: 'v1.8.1.2021090901'
 | `icingaweb2_module_director__api_port` | The port for accessing the Icinga2 API. | `5665` |
 | `icingaweb2_module_director__database_host` | The host of the SQL database server. | `'localhost'` |
 | `icingaweb2_module_director__database_name` | The name of the Director SQL database. | `'icinga_director'` |
-| `icingaweb2_module_director__monitoring_plugins_version` | Which version of the monitoring plugins should be used for generating the Director baskets? Possible options:<br> * `latest`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).<br> * `main`: The development version. Use with care.<br> * A specific release, for example `2022030201`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases). | `'latest'` |
+| `icingaweb2_module_director__monitoring_plugins_version` | Which version of the monitoring plugins should be used for generating the Director baskets? Possible options:<ul><li>`latest`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`main`: The development version. Use with care.</li><li>A specific release, for example `2022030201`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li></ul> | `'latest'` |
 | `icingaweb2_module_director__url` | The URL from where to download the Director. Defaults to the Linuxfabrik Fork of the Icinga Director. | `git.linuxfabrik.ch/api/v4/projects/133/repository/archive?sha={{ icingaweb2_module_director__version }}'` |
 
 Example:
