@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role: fail2ban
+
+* Adjusted subkeys of `fail2ban__jails__group_var` / `fail2ban__jails__host_var`
+
 Role: acme_sh
 
 * Added `name` subkey to `acme_sh__certificates`
