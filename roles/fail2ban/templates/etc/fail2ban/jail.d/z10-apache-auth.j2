@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# 2023010901
+
+[apache-auth]
+bantime  = 10m
+enabled  = true
+logpath  = /var/log/httpd/*error?log
+maxretry = 3
+port     = http,https
