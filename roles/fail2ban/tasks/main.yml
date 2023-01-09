@@ -61,24 +61,23 @@
 
   - name: 'Remove jails'
     ansible.builtin.file:
-      path: '/etc/fail2ban/jail.d/z10-{{ item.name }}.conf'
+      path: '/etc/fail2ban/jail.d/z10-{{ item["filename"] }}.conf'
       state: 'absent'
     when:
-      - 'item.state | d("present") == "absent"'
+      - 'item["state"] | d("present") == "absent"'
     loop: '{{ fail2ban__jails__combined_var }}'
     notify:
       - 'fail2ban: restart fail2ban'
 
   - name: 'Create jails'
     ansible.builtin.template:
-      src: 'etc/fail2ban/jail.d/z10-{{ "raw" if (item.type | d("conf") == "raw")
-                                else item.name }}.conf.j2'
-      dest: '/etc/fail2ban/jail.d/z10-{{ item.name }}.conf'
+      src: 'etc/fail2ban/jail.d/z10-{{ item["template"] }}.conf.j2'
+      dest: '/etc/fail2ban/jail.d/{{ item["filename"] }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
     when:
-      - 'item.state | d("present") != "absent"'
+      - 'item["state"] | d("present") != "absent"'
     loop: '{{ fail2ban__jails__combined_var }}'
     notify:
       - 'fail2ban: restart fail2ban'

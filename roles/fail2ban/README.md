@@ -38,7 +38,7 @@ If you use the ["Fail2Ban" Playbook](https://github.com/Linuxfabrik/lfops/blob/m
 | `fail2ban__jail_default_rocketchat_hook` | The incoming Rocket.Chat hook which will be used to send a notification on bans. For this to work `rocketchat` has to be in the action, have a look at `fail2ban__jail_default_action`. | `''` |
 | `fail2ban__jail_portscan_allowed_ports` | A list of ports which are allowed to be accessed. IPs accessing these ports will not be blocked. Note: This setting is for the portscan jail. | `[22]` |
 | `fail2ban__jail_portscan_server_ips` | A list of IP addresses of the server. Only traffic destined for these IPs will be considered. This prevents accidental banning due to traffic which is passing by the server, but not destined for it. Note: This setting is for the portscan jail. | `'{{ ansible_facts["all_ipv4_addresses"] }}'` |
-| `fail2ban__jails__group_var` / `fail2ban__jails__host_var` | The fail2ban jail definition. Subkeys:<br> * `name`: Mandatory, string. The name of the jail. Can either be one of the pre-defined ones (`type: conf`: `apache-auth`, `apache-badbots`, `apache-botsearch`, `apache-dos`, `apache-fakegooglebot`, `apache-nohome`, `apache-noscript`, `apache-overflows`, `portscan`, `sshd`), or a custom one (`type: raw`).<br> * `state`: Mandatory, string. State of the jail. Possible options: `absent`, `present`.<br> * `type`: Optional, string. Type of the jail. Either `conf` to use one of the pre-defined ones, or `raw` to deploy a custom jail. Defaults to `conf`.<br> * `raw`: Optional, string: Raw content for the custom jail. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `fail2ban__jails__group_var` / `fail2ban__jails__host_var` | The fail2ban jail definition. Subkeys: <ul><li>`template`: Mandatory, string. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban/templates/etc/fail2ban/jail.d), or `raw`.</li> <li>`filename`: Mandatory, string. Destination filename in `jail.d/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.</li> <li>`state`: Mandatory, string. State of the jail. Possible options: `absent`, `present`.</li> <li>`raw`: Optional, string: Raw content for the jail.</li></ul> <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | <ul><li>portscan</li><li>sshd</li></ul> |
 | `fail2ban__service_enabled` | Enables or disables the fail2ban service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
 
 Example:
@@ -57,12 +57,12 @@ fail2ban__jail_portscan_server_ips:
   - '192.0.2.5'
   - '198.51.100.100'
 fail2ban__jails__host_var:
-  - name: 'apache-dos'
+  - name: 'z10-apache-dos'
     state: 'absent'
-    type: 'conf'
-  - name: 'custom-apache-dos'
+    template: 'apache-dos'
+  - name: 'z20-custom-apache-dos'
     state: 'present'
-    type: 'raw'
+    template: 'raw'
     raw: |-
       [apache-dos]
       bantime  = 5m
