@@ -11,4 +11,9 @@
     - role: 'linuxfabrik.lfops.at'
     - role: 'linuxfabrik.lfops.mailx'
     - role: 'linuxfabrik.lfops.postfix'
+
+    - role: 'linuxfabrik.lfops.mailto_root'
+      when:
+        - 'not system_update__skip_mailto_root | d(false)'
+
     - role: 'linuxfabrik.lfops.system_update'
