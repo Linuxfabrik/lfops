@@ -43,7 +43,7 @@ if [ "$retc" -eq 100 ]; then
     # updates are available, so inform and schedule
     MSGBODY=$(cat /tmp/check-update)
     send_msg
-    echo "/usr/local/bin/update-and-reboot" | at {{ system_update__update_time }} 2> /dev/null
+		systemd-run --unit=update-and-reboot --property=TimeoutSec=0 --on-calendar="$(date -d '{{ system_update__update_time }}' +%F\ %T)" /usr/local/bin/update-and-reboot
 elif [ "$retc" -eq 1 ]; then
     SUBJECT="$SUBJECT_PREFIX - System update check failed"
     MSGBODY=$(</tmp/system-update-check-stderr)
@@ -62,6 +62,6 @@ if [ $(grep upgradable /tmp/check-update | wc -l) -gt 0 ]; then
     # updates are available, so inform and schedule
     MSGBODY=$(cat /tmp/check-update)
     send_msg
-    echo "/usr/local/bin/update-and-reboot" | at {{ system_update__update_time }} 2> /dev/null
+		systemd-run --unit=update-and-reboot --property=TimeoutSec=0 --on-calendar="$(date -d '{{ system_update__update_time }}' +%F\ %T)" /usr/local/bin/update-and-reboot
 fi
 {% endif %}
