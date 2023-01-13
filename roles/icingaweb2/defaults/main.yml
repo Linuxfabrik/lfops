@@ -94,6 +94,7 @@ icingaweb2__icinga2_master__api_users__dependent_var:
       - 'objects/query/*'
       - 'status/query'
 
+icingaweb2__php__ini_upload_max_filesize__dependent_var: '10M'
 icingaweb2__php__modules__dependent_var:
   - name: 'php-curl'
     state: 'present'

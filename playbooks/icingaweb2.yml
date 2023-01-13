@@ -24,8 +24,7 @@
         - 'not icingaweb2__skip_python | default(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
-      mariadb_server__databases__dependent_var:
-        - '{{ icingaweb2__mariadb_server__databases__dependent_var | default([]) }}'
+      mariadb_server__databases__dependent_var: '{{ icingaweb2__mariadb_server__databases__dependent_var | default([]) }}'
       mariadb_server__users__dependent_var:
         - '{{ icingaweb2__mariadb_server__users__dependent_var | default({}) }}'
       when:
@@ -42,6 +41,10 @@
         - 'not icingaweb2__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
+      php__ini_upload_max_filesize__dependent_var:
+        - '{{ icingaweb2__php__ini_upload_max_filesize__dependent_var }}'
+      php__modules__dependent_var:
+        - '{{ icingaweb2__php__modules__dependent_var }}'
       when:
         - 'not icingaweb2__skip_php | default(false)'
 

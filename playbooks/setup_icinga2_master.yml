@@ -94,6 +94,7 @@
         - 'not setup_icinga2_master__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
+      php__ini_upload_max_filesize__dependent_var: '{{ icingaweb2__php__ini_upload_max_filesize__dependent_var }}'
       php__modules__dependent_var:
         - '{{ icingaweb2__php__modules__dependent_var }}'
       when:
