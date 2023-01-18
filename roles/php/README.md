@@ -4,7 +4,7 @@ This role installs and configures PHP (and PHP-FPM) on the system, optionally wi
 
 Note that this role does NOT let you specify a particular PHP version. It simply installs the latest available PHP version from the repos configured in the system. If you want or need to install a specific or the latest PHP version available, use the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) beforehand.
 
-Nevertheless, this role is only compatible with the following PHP versions:
+This role is compatible with the following PHP versions:
 
 * 7.2
 * 7.3
@@ -20,7 +20,7 @@ Rules of thumb:
 * `post_max_size` can stay at `16M`, even if you have `upload_max_filesize` > `10000M` for example.
 * If disabling `opcache.validate_timestamps`, `opcache.revalidate_freq` is ignored.
 
-This role never exposes to the world that PHP is installed on the server.
+This role never exposes to the world that PHP is installed on the server, no matter what.
 
 Runs on
 
@@ -36,8 +36,9 @@ Runs on
 
 | Tag         | What it does                                                                   |
 | ---         | ------------                                                                   |
-| `php`       | Installs and configures PHP on the system, optionally with additional modules. |
-| `php:state` | Manages the state of the php-fpm service                                       |
+| `php`       | <ul><li>Install php php-fpm composer</li><li>Get the list of installed packages</li><li>Ensure PHP modules are absent</li><li>Ensure PHP modules are present</li><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the /etc/php.d/z00-linuxfabrik.ini</li><li>`systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> |
+| `php:ini` | <ul><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the /etc/php.d/z00-linuxfabrik.ini</li></ul> |
+| `php:state` | Only affects PHP-FPM: <ul><li>`systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> |
 
 
 ## Optional Role Variables
@@ -110,14 +111,22 @@ php__ini_upload_max_filesize__host_var: '10000M'
 
 ### PHP-FPM Pool Config Directives
 
+TODO
+
 Example:
 ```yaml
 # optional
-php__fpm_pool_conf_pm__combined_var
-php__fpm_pool_conf_pm_max_children__combined_var
-php__fpm_pool_conf_pm_start_servers__combined_var
-php__fpm_pool_conf_pm_min_spare_servers__combined_var
-php__fpm_pool_conf_pm_max_spare_servers__combined_var
+php__fpm_pool_conf_pm__host_var: 'dynamic'
+php__fpm_pool_conf_pm_max_children__host_var: 50
+php__fpm_pool_conf_pm_max_spare_servers__host_var: 35
+php__fpm_pool_conf_pm_min_spare_servers__host_var: 5
+php__fpm_pool_conf_pm_start_servers__host_var: 5
+php__fpm_pools__host_var:
+  - name: 'librenms'
+    user: 'librenms'
+    group: 'librenms'
+    raw: |-
+      env[PATH] = /usr/local/bin:/usr/bin:/bin
 ```
 
 
