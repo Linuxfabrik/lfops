@@ -36,9 +36,9 @@ Runs on
 
 | Tag         | What it does                                                                   |
 | ---         | ------------                                                                   |
-| `php`       | <ul><li>Install php php-fpm composer</li><li>Get the list of installed packages</li><li>Ensure PHP modules are absent</li><li>Ensure PHP modules are present</li><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the /etc/php.d/z00-linuxfabrik.ini</li><li>`systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> |
-| `php:ini` | <ul><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the /etc/php.d/z00-linuxfabrik.ini</li></ul> |
-| `php:state` | Only affects PHP-FPM: <ul><li>`systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> |
+| `php`       | <ul><li>Install php php-fpm composer</li><li>Get the list of installed packages</li><li>Ensure PHP modules are absent</li><li>Ensure PHP modules are present</li><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the /etc/php.d/z00-linuxfabrik.ini</li><li>`systemctl {{ php__fpm_service_enabled \| bool \| ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> |
+| `php:ini` | <ul><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the `/etc/php.d/z00-linuxfabrik.ini`</li></ul> |
+| `php:state` | Only affects PHP-FPM: <ul><li>`systemctl {{ php__fpm_service_enabled \| bool \| ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> |
 
 
 ## Optional Role Variables
