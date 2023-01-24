@@ -1,8 +1,16 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'nfs_client'
+
+
 - block:
 
-  - name: 'Install nfs-utils'
+  - name: 'Install {{ nfs_client__nfs_client_package }}'
     ansible.builtin.package:
-      name: 'nfs-utils'
+      name: '{{ nfs_client__nfs_client_package }}'
       state: 'present'
 
   tags:
@@ -34,4 +42,3 @@
     - 'nfs_client__mounts | length'
   tags:
     - 'nfs_client'
-

@@ -7,13 +7,14 @@ Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
+* Debian 11 (and compatible)
 
 
 ## Tags
 
 | Tag                  | What it does                           |
 | ---                  | ------------                           |
-| `nfs_client`         | <ul><li>Install nfs-utils</li><li>`mkdir -p nfs-mount-point`</li><li>Mount NFS volumes</li></ul> |
+| `nfs_client`         | <ul><li>Install nfs-utils on RedHat-Based systems or nfs-common on Debian-Based systems</li><li>`mkdir -p nfs-mount-point`</li><li>Mount NFS volumes</li></ul> |
 
 
 ## Optional Role Variables
