@@ -1,13 +1,19 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'nfs_server'
+
 - block:
 
-  - name: 'Install nfs-utils'
+  - name: 'Install {{ nfs_server__nfs_server_package }}'
     ansible.builtin.package:
-      name: 'nfs-utils'
+      name: '{{ nfs_server__nfs_server_package }}'
       state: 'present'
 
   tags:
     - 'nfs_server'
-
 
 - block:
 
@@ -28,8 +34,8 @@
     ansible.builtin.file:
       path: '{{ item.strip().split()[0] }}'
       state: 'directory'
-      owner: 'nobody'
-      group: 'nobody'
+      owner: '{{ nfs_server__owner }}'
+      group: '{{ nfs_server__group }}'
     loop: '{{ nfs_server__exports }}'
 
   - name: 'Deploy /etc/exports'

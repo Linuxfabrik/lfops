@@ -6,6 +6,7 @@ Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
+* Debian 11 (and compatible)
 
 
 ## Tags
@@ -36,7 +37,7 @@ nfs_server__exports:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `nfs_server__service_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
+| `nfs_server__service_enabled` | Enables or disables the nfs-server service, analogous to `systemctl enable/disable --now`. | `true` |
 
 Example:
 ```yaml
