@@ -84,7 +84,6 @@ mariadb_server__dump_user:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mariadb_server__admin_host` | Host-part(s) for creating the DBA user account after a fresh installation. | `['127.0.0.1', '::1', 'localhost']` |
 | `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | List of dictionaries of databases to create. Subkeys:<br> * `name`: Mandatory, string. Name of the databse schema. <br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `mariadb_server__dump_directory` | Dump output directory name. | `'/backup/mariadb-dump'`|
 | `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
@@ -98,10 +97,6 @@ mariadb_server__dump_user:
 
 ```yaml
 # optional - role variables
-mariadb_server__admin_host:
-  - '127.0.0.1'
-  - '::1'
-  - 'localhost'
 mariadb_server__databases__host_var:
   - name: 'mydb'
     collation: 'utf8mb4_unicode_ci'
