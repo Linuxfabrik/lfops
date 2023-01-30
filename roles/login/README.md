@@ -63,7 +63,7 @@ login__users__group_var:
 
 host vars:
 ```yaml
-login__users__group_var:
+login__users__host_var:
   - name: 'alice'
     additional_groups:
       -  'common'
