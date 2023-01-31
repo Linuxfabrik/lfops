@@ -1,11 +1,11 @@
 # {{ ansible_managed }}
-# 2022083101
+# 2023013101
 
 # This package contains both free and subscription features
 [elasticsearch-{{ repo_elasticsearch__version }}]
 name=Elasticsearch repository for {{ repo_elasticsearch__version }} packages
 {% if repo_elasticsearch__mirror_url is defined and repo_elasticsearch__mirror_url | length %}
-baseurl={{ repo_elasticsearch__mirror_url }}/elasticsearch/yum
+baseurl={{ repo_elasticsearch__mirror_url }}/elasticsearch/packages/{{ repo_elasticsearch__version }}/yum
 {% else %}
 baseurl=https://artifacts.elastic.co/packages/{{ repo_elasticsearch__version }}/yum
 {% endif %}
