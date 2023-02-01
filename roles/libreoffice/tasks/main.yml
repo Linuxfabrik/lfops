@@ -51,10 +51,7 @@
       /usr/bin/soffice --headless --convert-to pdf myfile
     args:
       creates: '/usr/share/httpd/.config/libreoffice/4'
-    become: true
-    become_method: 'su'
     become_user: 'apache'
-    become_flags: '-s /bin/bash'  # do something as the apache user when the shell is nologin
 
   - name: 'restorecon -Fvr ...'
     ansible.builtin.command: 'restorecon -Fvr {{ item }}'
