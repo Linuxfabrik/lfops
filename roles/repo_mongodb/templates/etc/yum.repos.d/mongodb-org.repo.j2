@@ -1,10 +1,10 @@
 # {{ ansible_managed }}
-# 2022083101
+# 2023020101
 
 [mongodb-org-{{ repo_mongodb__version }}]
 name=MongoDB Repository for Version {{ repo_mongodb__version }}
 {% if repo_mongodb__mirror_url is defined and repo_mongodb__mirror_url | length %}
-baseurl={{ repo_mongodb__mirror_url }}/mongodb/yum/redhat/7/mongodb-org/{{ repo_mongodb__version }}/x86_64/
+baseurl={{ repo_mongodb__mirror_url }}/mongodb/yum/redhat/$releasever/mongodb-org/{{ repo_mongodb__version }}/x86_64/
 {% else %}
 baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/{{ repo_mongodb__version }}/x86_64/
 {% endif %}
