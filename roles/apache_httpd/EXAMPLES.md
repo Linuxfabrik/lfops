@@ -56,6 +56,7 @@ apache_httpd__vhosts__host_var:
       - 'OPTIONS'
       - 'POST'
       - 'PUT'
+    conf_custom_log: 'logs/www.example.com-access.log linuxfabrikio'
     conf_directory_index: 'index.php'
     conf_proxy_error_override: 'Off'
     conf_proxy_preserve_host: 'On'
@@ -608,4 +609,10 @@ CustomLog "||/usr/local/sbin/import_logs.py \
 -" matomo
 ```
 
+### GELF Realtime Tracking
+
+```
+# GELF Realtime Logging
+CustomLog "|/usr/bin/nc --udp graylog.example.com 12201" gelf
+```
 
