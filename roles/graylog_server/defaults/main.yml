@@ -7,6 +7,14 @@ graylog_server__timezone: 'Europe/Zurich'
 graylog_server__system_inputs:
   - configuration:
       bind_address: '0.0.0.0'
+      number_worker_threads: 4
+      port: 5044
+      recv_buffer_size: 1048576
+    global: true
+    title: 'Beats (5044/UDP - managed by Ansible - do not edit)'
+    type: 'org.graylog2.inputs.gelf.udp.GELFUDPInput'
+  - configuration:
+      bind_address: '0.0.0.0'
       decompress_size_limit: 8388608
       max_message_size: 2097152
       number_worker_threads: 2
