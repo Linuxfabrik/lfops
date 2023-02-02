@@ -26,6 +26,6 @@
 
     - role: 'linuxfabrik.lfops.python'
 
-    - role: 'linuxfabrik.lfops.java'
+    - role: 'linuxfabrik.lfops.apps'
 
     - role: 'linuxfabrik.lfops.keycloak'
