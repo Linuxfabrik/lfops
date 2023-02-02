@@ -81,6 +81,12 @@
     tags:
       - 'icinga2_master:api_users'
 
+  - name: 'icinga2 feature enable api'
+    community.general.icinga2_feature:
+      name: 'api'
+      state: 'present'
+    notify: 'icinga2_master: restart icinga2'
+
   - name: 'icinga2 feature enable notification'
     community.general.icinga2_feature:
       name: 'notification'
