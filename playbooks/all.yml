@@ -37,7 +37,6 @@
 - import_playbook: 'icingaweb2.yml'
 - import_playbook: 'influxdb.yml'
 - import_playbook: 'infomaniak_vm.yml'
-- import_playbook: 'java.yml'
 - import_playbook: 'kdump.yml'
 - import_playbook: 'kernel_settings.yml'
 - import_playbook: 'kvm_host.yml'

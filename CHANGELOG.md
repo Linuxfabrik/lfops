@@ -9,10 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
-Role: fail2ban
-
-* Adjusted subkeys of `fail2ban__jails__group_var` / `fail2ban__jails__host_var`
-
 Role: acme_sh
 
 * Added `name` subkey to `acme_sh__certificates`
@@ -21,6 +17,10 @@ Role: acme_sh
 Role: collabora_code
 
 * Renamed rolename and vars from `collabora_code` to `collabora`
+
+Role: fail2ban
+
+* Adjusted subkeys of `fail2ban__jails__group_var` / `fail2ban__jails__host_var`
 
 Role: git
 
@@ -44,6 +44,10 @@ Role: infomaniak_vm
 * Renamed `infomaniak_vm__project_id` to `infomaniak_vm__api_project_id`
 * Renamed `infomaniak_vm__username` to `infomaniak_vm__api_username`
 * Renamed `infomaniak_vm__volume_size` to `infomaniak_vm__separate_boot_volume_size`
+
+Role: java
+
+* Removed, better substituted by `apps` role.
 
 Role: mariadb_server
 * Renamed `mariadb_server__admin_login` to `mariadb_server__admin_user`
@@ -144,7 +148,6 @@ New features:
 * Role: icingaweb2_module_vspheredb
 * Role: influxdb
 * Role: infomaniak_vm
-* Role: java
 * Role: kdump
 * Role: kernel_settings
 * Role: keycloak
