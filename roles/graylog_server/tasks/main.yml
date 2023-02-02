@@ -1,18 +1,18 @@
 - block:
 
-  - name: 'install graylog-server'
+  - name: 'Install graylog-server'
     ansible.builtin.package:
       name:
         - 'graylog-server'
       state: 'present'
 
-  - name: 'install graylog server plugins'
+  - name: 'Install graylog server plugins'
     ansible.builtin.package:
       name: '{{ item }}'
       state: 'present'
     loop: '{{ graylog_server__plugins }}'
 
-  - name: 'get the list of installed packages'
+  - name: 'Get the list of installed packages'
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
 
@@ -20,9 +20,9 @@
     ansible.builtin.set_fact:
       graylog_server__installed_version: '{{ ansible_facts["packages"]["graylog-server"][0]["version"] | regex_replace("\.\d+$", "") }}'
 
-  - name: 'deploy /etc/graylog/server/server.conf'
+  - name: 'Deploy /etc/graylog/server/server.conf'
     ansible.builtin.template:
-      src: 'etc/graylog/server/server-{{ graylog_server__installed_version }}.conf.j2'
+      src: 'etc/graylog/server/{{ graylog_server__installed_version }}-server.conf.j2'
       dest: '/etc/graylog/server/server.conf'
       owner: 'graylog'
       group: 'graylog'
@@ -54,7 +54,13 @@
       port: '{{ graylog_server__http_bind_port }}'
       delay: 5
 
-  - name: 'get inputs'
+  tags:
+    - 'graylog_server'
+
+
+- block:
+
+  - name: 'Get all inputs'
     ansible.builtin.uri:
       url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs'
       user: '{{ graylog_server__admin_user["username"] }}'
@@ -64,7 +70,7 @@
       status_code: 200
     register: 'graylog_server__input_result'
 
-  - name: 'delete inputs'
+  - name: 'Terminate input on this node'
     ansible.builtin.uri:
       url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs/{{ item }}'
       user: '{{ graylog_server__admin_user["username"] }}'
@@ -77,7 +83,7 @@
     loop: '{{ graylog_server__input_result | community.general.json_query("json.inputs[*].id") }}'
     when: 'graylog_server__input_result.json.inputs is defined and graylog_server__input_result.json.inputs | length'
 
-  - name: 'create inputs'
+  - name: 'Launch input on this node'
     ansible.builtin.uri:
       url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs'
       user: '{{ graylog_server__admin_user["username"] }}'
@@ -92,7 +98,7 @@
         X-Requested-By: 'cli'
     loop: '{{ graylog_server__system_inputs }}'
 
-  - name: 'get index sets'
+  - name: 'Get a list of all index sets'
     ansible.builtin.uri:
       url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
       user: '{{ graylog_server__admin_user["username"] }}'
@@ -102,7 +108,7 @@
       status_code: 200
     register: 'index_sets_result'
 
-  - name: 'create default index set'
+  - name: 'Create index set'
     ansible.builtin.uri:
       url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
       user: '{{ graylog_server__admin_user["username"] }}'
@@ -117,7 +123,7 @@
         X-Requested-By: 'cli'
     when: "index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length == 0"
 
-  - name: 'get index sets'
+  - name: 'Get a list of all index sets'
     ansible.builtin.uri:
       url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
       user: '{{ graylog_server__admin_user["username"] }}'
@@ -127,7 +133,7 @@
       status_code: 200
     register: 'index_sets_result'
 
-  - name: 'make lf index set default'
+  - name: 'Set default index set'
     ansible.builtin.uri:
       url: "http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets/{{ index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | regex_replace(\"\\[\\'|\\'\\]\", \"\") }}/default"
       user: '{{ graylog_server__admin_user["username"] }}'

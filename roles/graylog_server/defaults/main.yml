@@ -22,7 +22,7 @@ graylog_server__system_inputs:
       tls_key_password: ''
       use_null_delimiter: true
     global: true
-    title: 'Gelf (12201/TCP)'
+    title: 'Gelf (12201/TCP - managed by Ansible - do not edit)'
     type: 'org.graylog2.inputs.gelf.tcp.GELFTCPInput'
   - configuration:
       bind_address: '0.0.0.0'
@@ -32,7 +32,7 @@ graylog_server__system_inputs:
       port: 12201
       recv_buffer_size: 1048576
     global: true
-    title: 'Gelf (12201/UDP)'
+    title: 'Gelf (12201/UDP - managed by Ansible - do not edit)'
     type: 'org.graylog2.inputs.gelf.udp.GELFUDPInput'
   - configuration:
       allow_override_date: true
@@ -46,7 +46,7 @@ graylog_server__system_inputs:
       recv_buffer_size: 1048576
       store_full_message: false
     global: true
-    title: 'Syslog (1514/UDP)'
+    title: 'Syslog (1514/UDP - managed by Ansible - do not edit)'
     type: 'org.graylog2.inputs.syslog.udp.SyslogUDPInput'
 
 graylog_server__system_default_index_set:
@@ -55,104 +55,39 @@ graylog_server__system_default_index_set:
   description: 'One index per day; 365 indices max'
   field_type_refresh_interval: 5000
   index_analyzer: 'standard'
-  index_optimization_max_num_segments: 1
   index_optimization_disabled: false
+  index_optimization_max_num_segments: 1
   index_prefix: 'lfops-default'
   replicas: 0
   retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
   retention_strategy:
     max_number_of_indices: 365
     type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
-  rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
   rotation_strategy:
     rotation_period: 'P1D'
     rotate_empty_index_set: false
     type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
+  rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
   shards: 4
-  title: 'Linuxfabrik Index Set'
+  title: 'Linuxfabrik Index Set (managed by Ansible - do not edit)'
   writable: true
-
-# graylog_server__system_inputs:
-#   - title: 'Gelf (12201/TCP)'
-#     global: true
-#     type: 'org.graylog2.inputs.gelf.tcp.GELFTCPInput'
-#     configuration:
-#       bind_address: '0.0.0.0'
-#       port: 12201
-#       decompress_size_limit: 8388608
-#       max_message_size: 2097152
-#       number_worker_threads: 2
-#       override_source: ''
-#       recv_buffer_size: 1048576
-#       tcp_keepalive: true
-#       tls_cert_file: ''
-#       tls_client_auth: 'disabled'
-#       tls_client_auth_cert_file: ''
-#       tls_enable: false
-#       tls_key_file: ''
-#       tls_key_password: ''
-#       use_null_delimiter: true
-#   - title: 'Gelf (12201/UDP)'
-#     global: true
-#     type: 'org.graylog2.inputs.gelf.udp.GELFUDPInput'
-#     configuration:
-#       bind_address: '0.0.0.0'
-#       port: 12201
-#       decompress_size_limit: 8388608
-#       number_worker_threads: 2
-#       override_source: ''
-#       recv_buffer_size: 1048576
-#   - title: 'Syslog (1514/UDP)'
-#     global: true
-#     type: 'org.graylog2.inputs.syslog.udp.SyslogUDPInput'
-#     configuration:
-#       bind_address: '0.0.0.0'
-#       port: 1514
-#       decompress_size_limit: 8388608
-#       number_worker_threads: 2
-#       override_source: ''
-#       recv_buffer_size: 1048576
-#       allow_override_date: true
-#       expand_structured_data: false
-#       force_rdns: false
-#       store_full_message: false
-
-# graylog_server__system_default_index_set:
-#   title: 'Linuxfabrik Index Set'
-#   description: 'One index per day; 365 indices max'
-#   default: true
-#   can_be_default: true
-#   creation_date: '{{ ansible_date_time.iso8601 }}'
-#   shards: 4
-#   replicas: 0
-#   index_optimization_max_num_segments: 1
-#   index_optimization_disabled: false
-#   field_type_refresh_interval: 5000
-#   retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
-#   retention_strategy:
-#     max_number_of_indices: 365
-#     type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
-#   rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
-#   rotation_strategy:
-#     rotation_period: 'P1D'
-#     rotate_empty_index_set: false
-#     type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
-#   writable: true
-#   index_analyzer: 'standard'
-#   index_prefix: 'lfops-default'
-
 
 # ---------------------------------------------------
 
+graylog_server__apps__apps__dependent_var:
+  - name: 'java-17-openjdk'
+  - name: 'tar'
+
+graylog_server__kernel_settings__transparent_hugepages__dependent_var: 'never'
+
 graylog_server__repo_elasticsearch_oss__version__dependent_var: '7.x'
-graylog_server__elasticsearch_oss__cluster_name__dependent_var: 'graylog'
 graylog_server__elasticsearch_oss__action_auto_create_index__dependent_var: false
+graylog_server__elasticsearch_oss__cluster_name__dependent_var: 'graylog'
 
-
-graylog_server__repo_opensearch__version__dependent_var: '1.x'
-graylog_server__opensearch__version__dependent_var: '1.3.6'
-graylog_server__opensearch__cluster_name__dependent_var: 'graylog'
+graylog_server__repo_opensearch__version__dependent_var: '2.x'
 graylog_server__opensearch__action_auto_create_index__dependent_var: false
+graylog_server__opensearch__cluster_name__dependent_var: 'graylog'
+graylog_server__opensearch__version__dependent_var: '2.5.0'
 
 graylog_server__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'

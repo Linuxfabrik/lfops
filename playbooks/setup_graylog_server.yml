@@ -20,7 +20,8 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
 
-    - role: 'linuxfabrik.lfops.java'
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: "{{ graylog_server__apps__apps__dependent_var }}"
       when:
         - 'not setup_graylog_server__skip_java | default(false)'
 
@@ -29,7 +30,7 @@
         - 'not setup_graylog_server__skip_repo_mongodb | d(false)'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings__transparent_hugepages__dependent_var: "{{ mongodb__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      kernel_settings__transparent_hugepages__dependent_var: "{{ graylog_server__kernel_settings__transparent_hugepages__dependent_var | d('never') }}"
       when:
         - 'not setup_graylog_server__skip_kernel_settings | d(false)'
 

@@ -1,11 +1,19 @@
 # Ansible Role linuxfabrik.lfops.graylog_server
 
-This role installs and configures a [Graylog](https://www.graylog.org) server. Currently supported versions: `4.0`, `4.1`, `4.2` and `4.3`.
-You can choose between `opensearch` (default) and `elasticsearch` as the searchengine. If you choose to use `opensearch`, Graylog Server 4.3 is required!
-Additionally this role creates default `system inputs` and a Linuxfabrik default `index set`. Please check [Graylog API Reference](https://docs.graylog.org/docs/rest-api).
+This role installs and configures a [Graylog](https://www.graylog.org) server.
+
+Currently supported versions:
+* 4.0
+* 4.1
+* 4.2
+* 4.3
+* 5.0
+
+You can choose between `opensearch` (default) and `elasticsearch` for the searchengine. If you choose to use `opensearch`, Graylog Server 4.3+ is required.
+
+Additionally this role creates default "System Inputs" and a Linuxfabrik default "index set".
 
 Note that this role does NOT let you specify a particular Graylog Server version. It simply installs the latest available Graylog Server version from the repos configured in the system. If you want or need to install a specific Graylog Server version, use the [linuxfabrik.lfops.repo_graylog_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog_server) beforehand.
-
 
 Runs on
 
@@ -14,12 +22,13 @@ Runs on
 
 ## Mandatory Requirements
 
-* Install Java. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/java) role.
+* Install Java. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
 * Install MongoDB. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
-* Install Opensearch (preferred) or Elasticsearch as a search engine. This can be done using the [linuxfabrik.lfops.opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/opensearch) or [linuxfabrik.lfops.elasticsearch_oss](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch_oss) role.
+* Install Opensearch (recommended) or Elasticsearch as a search engine. This can be done using the [linuxfabrik.lfops.opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/opensearch) or [linuxfabrik.lfops.elasticsearch_oss](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch_oss) role.
 * Enable the official [Graylog repository](https://docs.graylog.org/docs/centos). This can be done using the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) role.
 
 If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_graylog_server.yml), this is automatically done for you.
+
 
 ## Tags
 
@@ -35,7 +44,7 @@ If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/
 | Variable | Description |
 | -------- | ----------- |
 | `graylog_server__admin_user` | The main user account for the graylog administrator. Subkeys:<ul><li>`username`: Mandatory, string. Username</li><li>`password`: Mandatory, string. Password</li><li>`email`: Optional, string. Email. Defaults to `''`.</li></ul> |
-| `graylog_server__password_secret` | You MUST set a secret to secure/pepper the stored user passwords here. Use at least 64 characters. Generate one by using for example: `pwgen -N 1 -s 96`. ATTENTION: This value must be the same on all Graylog nodes in the cluster. Changing this value after installation will render all user sessions and encrypted values in the database invalid. (e.g. encrypted access tokens) |
+| `graylog_server__password_secret` | You MUST set a secret that is used for password encryption and salting. The server refuses to start if this value is not set. The minimum length for `password_secret` is 16 characters. Use at least 64 characters. If you run multiple graylog-server nodes, make sure you use the same password_secret for all of them. |
 
 Example:
 ```yaml
@@ -44,7 +53,7 @@ graylog_server__admin_user:
   username: 'graylog-admin'
   password: 'linuxfabrik'
   email: 'webmaster@example.com'
-graylog_server__password_secret: '9395pKmkuxSFU623AJpQNA3iyB7R82NuxZRzw19C3m3YXnE62Ky8me7eg9Z1TzwC'
+graylog_server__password_secret: 'linuxfabrik'
 ```
 
 
@@ -70,6 +79,28 @@ graylog_server__plugins:
   - 'graylog-integrations-plugins'
   - 'graylog-enterprise-integrations-plugins'
 graylog_server__service_enabled: false
+graylog_server__system_default_index_set:
+  can_be_default: true
+  creation_date: '{{ ansible_date_time.iso8601 }}'
+  description: 'One index per day; 365 indices max'
+  field_type_refresh_interval: 5000
+  index_analyzer: 'standard'
+  index_optimization_max_num_segments: 1
+  index_optimization_disabled: false
+  index_prefix: 'lfops-default'
+  replicas: 0
+  retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
+  retention_strategy:
+    max_number_of_indices: 365
+    type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
+  rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
+  rotation_strategy:
+    rotation_period: 'P1D'
+    rotate_empty_index_set: false
+    type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
+  shards: 4
+  title: 'Linuxfabrik Index Set'
+  writable: true
 graylog_server__system_inputs:
   - configuration:
       bind_address: '0.0.0.0'
@@ -114,28 +145,6 @@ graylog_server__system_inputs:
     global: true
     title: 'Syslog (1514/UDP)'
     type: 'org.graylog2.inputs.syslog.udp.SyslogUDPInput'
-graylog_server__system_default_index_set:
-  can_be_default: true
-  creation_date: '{{ ansible_date_time.iso8601 }}'
-  description: 'One index per day; 365 indices max'
-  field_type_refresh_interval: 5000
-  index_analyzer: 'standard'
-  index_optimization_max_num_segments: 1
-  index_optimization_disabled: false
-  index_prefix: 'lfops-default'
-  replicas: 0
-  retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
-  retention_strategy:
-    max_number_of_indices: 365
-    type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
-  rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
-  rotation_strategy:
-    rotation_period: 'P1D'
-    rotate_empty_index_set: false
-    type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
-  shards: 4
-  title: 'Linuxfabrik Index Set'
-  writable: true
 graylog_server__timezone: 'Europe/Zurich'
 ```
 
