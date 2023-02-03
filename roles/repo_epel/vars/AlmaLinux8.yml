@@ -5,4 +5,4 @@ repo_epel__repo_files:
   - 'RedHat8/etc/yum.repos.d/epel-testing-modular.repo'
   - 'RedHat8/etc/yum.repos.d/epel-testing.repo'
   - 'RedHat8/etc/yum.repos.d/epel.repo'
-  - 'Alma8/etc/yum.repos.d/almalinux-powertools.repo'
+  - 'AlmaLinux8/etc/yum.repos.d/almalinux-powertools.repo'
