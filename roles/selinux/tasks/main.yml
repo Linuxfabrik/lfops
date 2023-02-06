@@ -19,6 +19,7 @@
       persistent: true
       ignore_selinux_state: true
     loop: '{{ selinux__booleans__combined_var }}'
+    when: 'selinux__state != "disabled"'
 
   tags:
     - 'selinux'
@@ -34,6 +35,7 @@
       state: '{{ item["state"] | d("present") }}'
       ignore_selinux_state: true
     loop: '{{ selinux__fcontexts__combined_var }}'
+    when: 'selinux__state != "disabled"'
 
   tags:
     - 'selinux'
