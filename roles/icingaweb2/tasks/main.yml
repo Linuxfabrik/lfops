@@ -43,7 +43,7 @@
       login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
       name: '{{ icingaweb2__database_name }}'
       state: 'import'
-      target: '/usr/share/doc/icingaweb2/schema/mysql.schema.sql'
+      target: '/usr/share/icingaweb2/schema/mysql.schema.sql'
     # this module is not idempotent when state is import, and will import the dump file each time if run more than once.
     when: 'icingaweb2__table_exists_result.stdout == ""'
 
