@@ -103,7 +103,7 @@
     - role: 'linuxfabrik.lfops.icingaweb2'
       icingaweb2__resources__dependent_var:
         - '{{ icingaweb2_module_monitoring__icingaweb2__resources__dependent_var }}'
-        - '{{ icingaweb2_module_director__icingaweb2_module_director__resources__dependent_var }}'
+        - '{{ icingaweb2_module_director__icingaweb2__resources__dependent_var }}'
       icingaweb2__users__dependent_var:
         - '{{ icingaweb2_module_director__icingaweb2__users__dependent_var }}'
       when:

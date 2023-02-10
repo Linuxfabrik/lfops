@@ -13,7 +13,7 @@ icingaweb2_module_director__icinga2_master__api_users__dependent_var:
     permissions:
       - '*'
 
-icingaweb2_module_director__icingaweb2_module_director__resources__dependent_var:
+icingaweb2_module_director__icingaweb2__resources__dependent_var:
   - name: '{{ icingaweb2_module_director__database_name }}'
     type: 'db'
     db: 'mysql'
