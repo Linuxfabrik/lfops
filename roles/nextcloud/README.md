@@ -136,10 +136,11 @@ nextcloud__storage_backend_s3:
   bucket: 'mybucket'
   hostname: 's3.pub1.infomaniak.cloud'
   key: '428fc7e2-b532-4704-9df0-a764c7253a15'
+  port: 9000
   region: 'us-east-1'
   secret: 'linuxfabrik'
-  use_ssl: true
   use_path_style: true
+  use_ssl: true
 
 # ... or swift
 nextcloud__storage_backend_swift:

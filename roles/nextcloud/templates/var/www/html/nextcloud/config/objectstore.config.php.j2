@@ -1,7 +1,7 @@
 <?php
 
 // {{ ansible_managed }}
-// 2022100302
+// 2023011101
 
 // Nextcloud supports loading configuration parameters from multiple files. You can add arbitrary
 // files ending with .config.php in the config/ directory, for example you could place your email
@@ -31,6 +31,9 @@ $CONFIG = array (
 {% endif %}
 {% if nextcloud__storage_backend_s3['key'] is defined %}
             'key' => '{{ nextcloud__storage_backend_s3['key'] }}',
+{% endif %}
+{% if nextcloud__storage_backend_s3['port'] is defined %}
+            'port' => '{{ nextcloud__storage_backend_s3['port'] }}',
 {% endif %}
 {% if nextcloud__storage_backend_s3['region'] is defined %}
             'region' => '{{ nextcloud__storage_backend_s3['region'] }}',
