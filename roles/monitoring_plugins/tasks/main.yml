@@ -108,12 +108,6 @@
       state: 'present'
     when: 'monitoring_plugins__deploy_notification_plugins__combined_var | bool'
 
-  - name: 'Copy the /etc/sudoers.d/icinga2-plugins file to the server (Linux)'
-    ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["distribution"] ~ ansible_facts["distribution_major_version"] }}.sudoers'
-      dest: '/etc/sudoers.d/monitoring-plugins'
-      mode: 0o640
-
   # block
   when:
     - 'ansible_facts["os_family"] != "Windows"'
@@ -131,6 +125,12 @@
 
 
 - block:
+
+  - name: 'Copy the /etc/sudoers.d/icinga2-plugins file to the server (Linux)'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["distribution"] ~ ansible_facts["distribution_major_version"] }}.sudoers'
+      dest: '/etc/sudoers.d/monitoring-plugins'
+      mode: 0o640
 
   - name: 'Make sure to remove the legacy sudoers file'
     ansible.builtin.file:
