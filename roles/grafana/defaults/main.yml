@@ -3,4 +3,23 @@ grafana__auth_anonymous_enabled: false
 grafana__auth_anonymous_org_name: 'Main Org.'
 grafana__auth_anonymous_org_role: 'Viewer'
 grafana__cookie_samesite: 'lax'
+grafana__monitoring_plugins_version: '{{ monitoring_plugins__repo_version }}'
+grafana__provisioning_dashboards__combined_var: '{{ grafana__provisioning_dashboards__role_var +
+  grafana__provisioning_dashboards__group_var +
+  grafana__provisioning_dashboards__host_var +
+  grafana__provisioning_dashboards__dependent_var
+ }}'
+grafana__provisioning_dashboards__dependent_var: []
+grafana__provisioning_dashboards__group_var: []
+grafana__provisioning_dashboards__host_var: []
+grafana__provisioning_dashboards__role_var: []
+grafana__provisioning_datasources__combined_var: '{{ grafana__provisioning_datasources__role_var +
+  grafana__provisioning_datasources__group_var +
+  grafana__provisioning_datasources__host_var +
+  grafana__provisioning_datasources__dependent_var
+ }}'
+grafana__provisioning_datasources__dependent_var: []
+grafana__provisioning_datasources__group_var: []
+grafana__provisioning_datasources__host_var: []
+grafana__provisioning_datasources__role_var: []
 grafana__service_enabled: true

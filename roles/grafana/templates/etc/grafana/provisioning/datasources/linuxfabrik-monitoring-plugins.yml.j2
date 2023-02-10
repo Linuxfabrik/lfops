@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2023021001
+
+apiVersion: 1
+
+deleteDatasources: []
+
+{% if grafana__provisioning_datasources__combined_var | length %}
+datasources:
+{{ grafana__provisioning_datasources__combined_var | to_nice_yaml }}
+{% else %}
+datasources: []
+{% endif %}

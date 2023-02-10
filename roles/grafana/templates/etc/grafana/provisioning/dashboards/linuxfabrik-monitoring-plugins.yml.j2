@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2023021001
+
+apiVersion: 1
+
+{% if grafana__provisioning_dashboards__combined_var | length %}
+providers:
+{{ grafana__provisioning_dashboards__combined_var | to_nice_yaml }}
+{% else %}
+providers: []
+{% endif %}
