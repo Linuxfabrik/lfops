@@ -56,7 +56,7 @@ icingaweb2_module_director__version: 'v1.8.1.2021090901'
 | `icingaweb2_module_director__database_host` | The host of the SQL database server. | `'localhost'` |
 | `icingaweb2_module_director__database_name` | The name of the Director SQL database. | `'icinga_director'` |
 | `icingaweb2_module_director__monitoring_plugins_version` | Which version of the monitoring plugins should be used for generating the Director baskets? Possible options:<ul><li>`latest`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`main`: The development version. Use with care.</li><li>A specific release, for example `2022030201`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li></ul> | `'latest'` |
-| `icingaweb2_module_director__url` | The URL from where to download the Director. Defaults to the Linuxfabrik Fork of the Icinga Director. If using the official Icinga Director, the link is `'https://codeload.github.com/Icinga/icingaweb2-module-director/tar.gz/refs/tags/{{ icingaweb2_module_director__version }}'` | `'https.//git.linuxfabrik.ch/api/v4/projects/133/repository/archive?sha={{ icingaweb2_module_director__version }}'` |
+| `icingaweb2_module_director__url` | The URL from where to download the Director. Defaults to the Linuxfabrik Fork of the Icinga Director. If using the official Icinga Director, the link is `'https://codeload.github.com/Icinga/icingaweb2-module-director/tar.gz/refs/tags/{{ icingaweb2_module_director__version }}'` | `https://github.com/Linuxfabrik/icingaweb2-module-director/archive/{{ icingaweb2_module_director__version }}.tar.gz` |
 
 Example:
 ```yaml
