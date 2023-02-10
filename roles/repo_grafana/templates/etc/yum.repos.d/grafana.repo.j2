@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2022061301
+# 2023021001
 
 [grafana]
 name=grafana
 {% if repo_grafana__mirror_url is defined and repo_grafana__mirror_url | length %}
 baseurl={{ repo_grafana__mirror_url }}/grafana/oss/rpm
 {% else %}
-baseurl=https://packages.grafana.com/oss/rpm
+baseurl=https://rpm.grafana.com
 {% endif %}
 repo_gpgcheck=1
 enabled=1
