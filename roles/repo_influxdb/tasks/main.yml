@@ -1,18 +1,18 @@
 - block:
 
-  - name: 'curl https://repos.influxdata.com/influxdb.key -O /tmp/ansible.influxdb.key'
+  - name: 'curl https://repos.influxdata.com/influxdata-archive_compat.key -O /tmp/ansible.influxdata-archive_compat.key'
     ansible.builtin.get_url:
-      url: 'https://repos.influxdata.com/influxdb.key'
-      dest: '/tmp/ansible.influxdb.key'
+      url: 'https://repos.influxdata.com/influxdata-archive_compat.key'
+      dest: '/tmp/ansible.influxdata-archive_compat.key'
     delegate_to: 'localhost'
     run_once: true
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.influxdb.key to /etc/pki/rpm-gpg/influxdb.key'
+  - name: 'copy /tmp/ansible.influxdata-archive_compat.key to /etc/pki/rpm-gpg/influxdata-archive_compat.key'
     ansible.builtin.copy:
-      src: '/tmp/ansible.influxdb.key'
-      dest: '/etc/pki/rpm-gpg/influxdb.key'
+      src: '/tmp/ansible.influxdata-archive_compat.key'
+      dest: '/etc/pki/rpm-gpg/influxdata-archive_compat.key'
 
   - name: 'deploy the InfluxDB repo files (mirror: {{ repo_influxdb__mirror_url | default("") }})'
     ansible.builtin.template:
