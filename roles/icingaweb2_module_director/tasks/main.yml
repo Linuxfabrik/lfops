@@ -154,7 +154,7 @@
     check_mode: false # run task even if `--check` is specified
 
   - name: 'Generate the joined basket from git'
-    ansible.builtin.command: './tools/basket-join'
+    ansible.builtin.command: 'python3 ./tools/basket-join' # use python3 instead of directly calling the file so that it works on a noexec partition
     args:
       chdir: '/tmp/ansible.monitoring-plugins-repo/'
     delegate_to: 'localhost'
