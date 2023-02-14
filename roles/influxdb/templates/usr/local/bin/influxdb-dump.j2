@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 2022090701
+# 2023021401
 
 BACKUP_DIR='/backup/influxdb-dump'
 
@@ -12,8 +12,7 @@ INFLUXD="$(which influxd)"
 old_umask=$(umask)
 umask 027
 
-# Delete the former dump
-echo "Delete former dump files."
+echo "Deleting former dump files."
 rm -f "$BACKUP_DIR/*"
 
 # full dump
