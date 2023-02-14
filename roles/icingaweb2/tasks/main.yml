@@ -35,7 +35,21 @@
     check_mode: false # run task even if `--check` is specified
     changed_when: false # just gathering info, no actual change
 
-  - name: 'import schema for icingaweb2 database'
+  - name: 'import schema for icingaweb2 database (icingaweb2 < 2.11.4)'
+    community.mysql.mysql_db:
+      login_user: "{{ icingaweb2__database_login.username }}"
+      login_password: "{{ icingaweb2__database_login.password }}"
+      login_host: "{{ icingaweb2__database_host }}"
+      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      name: '{{ icingaweb2__database_name }}'
+      state: 'import'
+      target: '/usr/share/doc/icingaweb2/schema/mysql.schema.sql'
+    # this module is not idempotent when state is import, and will import the dump file each time if run more than once.
+    when:
+      - 'icingaweb2__table_exists_result.stdout == ""'
+      - '"/usr/share/doc/icingaweb2/schema/mysql.schema.sql" is file'
+
+  - name: 'import schema for icingaweb2 database (icingaweb2 >= 2.11.4)'
     community.mysql.mysql_db:
       login_user: "{{ icingaweb2__database_login.username }}"
       login_password: "{{ icingaweb2__database_login.password }}"
@@ -45,7 +59,9 @@
       state: 'import'
       target: '/usr/share/icingaweb2/schema/mysql.schema.sql'
     # this module is not idempotent when state is import, and will import the dump file each time if run more than once.
-    when: 'icingaweb2__table_exists_result.stdout == ""'
+    when:
+      - 'icingaweb2__table_exists_result.stdout == ""'
+      - '"/usr/share/icingaweb2/schema/mysql.schema.sql" is file'
 
   - name: 'Create directory/etc/icingaweb2/navigation'
     ansible.builtin.file:
