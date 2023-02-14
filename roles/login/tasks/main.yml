@@ -40,6 +40,7 @@
       name: 'lfops_login'
       group: '{{ login__passwordless_sudo_group }}'
       commands: 'ALL'
+      runas: 'ALL' # allow switching to any other user
       nopassword: true
       state: 'present'
     when: 'login__passwordless_sudo_group is defined and login__passwordless_sudo_group | length'
