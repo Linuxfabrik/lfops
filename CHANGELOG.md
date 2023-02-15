@@ -143,6 +143,7 @@ New features:
 * Role: icingaweb2_module_company
 * Role: icingaweb2_module_director
 * Role: icingaweb2_module_doc
+* Role: icingaweb2_module_grafana
 * Role: icingaweb2_module_incubator
 * Role: icingaweb2_module_monitoring
 * Role: icingaweb2_module_vspheredb
