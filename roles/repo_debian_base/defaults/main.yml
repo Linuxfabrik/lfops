@@ -1,0 +1,1 @@
+repo_debian_base__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
