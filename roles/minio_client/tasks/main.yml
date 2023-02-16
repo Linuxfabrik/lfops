@@ -38,3 +38,6 @@
       mode: '0o640'
     loop:
       - 'etc/mc/config.json'
+
+  tags:
+    - 'minio_client'
