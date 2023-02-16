@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2023021501
+
+[Unit]
+Description=Minio ObjectStore Backup Timer
+
+[Timer]
+OnCalendar={{ minio_client__oncalendar }}
+
+[Install]
+WantedBy=timers.target

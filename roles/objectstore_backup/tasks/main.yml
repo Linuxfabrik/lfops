@@ -1,0 +1,39 @@
+---
+- block:
+  - name: 'mkdir -p /etc/mc'
+    ansible.builtin.file:
+      path: '/etc/mc'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o750
+
+  - name: 'Check destination bucket'
+    ansible.builtin.command: 'mc stat {{minio_client__destination_name}}/{{minio_client__destination_bucket}}'
+    register: objectstore_backup__destiniation_bucket_stat_result
+    failed_when: 'objectstore_backup__destiniation_bucket_stat_result["rc"] >= 2'
+    changed_when: false # just gathering information
+
+  - name: 'Create destination bucket'
+    ansible.builtin.command: 'mc mb {{minio_client__destination_name}}/{{minio_client__destination_bucket}}'
+    when:
+      - objectstore_backup__destiniation_bucket_stat_result["rc"]!=0
+
+  - name: 'Install systemd templates'
+    ansible.builtin.template:
+      src: '{{ item }}.j2'
+      dest: '/{{ item }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0o644'
+    notify: 'minio_client: systemctl daemon-reload'
+    loop:
+      - 'etc/systemd/system/objectstore-backup.service'
+      - 'etc/systemd/system/objectstore-backup.timer'
+
+  - name: 'systemctl enable objectstore-backup.timer --now'
+    ansible.builtin.systemd:
+      name: 'objectstore-backup.timer'
+      state: 'started'
+      enabled: true
+
