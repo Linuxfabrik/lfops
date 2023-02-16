@@ -48,45 +48,7 @@ login__passwordless_sudo_group: ''
 
 ## Combining Group and Host Vars
 
-Assume you have 'alice' defined like so:
-
-group vars:
-```yaml
-login__users__group_var:
-  - name: 'alice'
-    additional_groups:
-      -  'common'
-      -  'groupgroup'
-    sshd_authorized_keys:
-      - 'ssh-rsa GROUPKEY'
-```
-
-host vars:
-```yaml
-login__users__host_var:
-  - name: 'alice'
-    additional_groups:
-      -  'common'
-      -  'hostgroup'
-    sshd_authorized_keys:
-      - 'ssh-rsa HOSTKEY'
-```
-
-The role will fully combine the account. First, 'alice' will be configured with all settings from group vars. After that, the host vars for 'alice' will apply. In the end 'alice' gets these settings:
-```
-{
-    "name": "alice",
-    "additional_groups": [
-        "common",
-        "groupgroup",
-        "hostgroup"
-    ],
-    "sshd_authorized_keys": [
-        "ssh-rsa GROUPKEY"
-        "ssh-rsa HOSTKEY"
-    ],
-},
-```
+Have a look [here](../../README.md#re-use-values-which-are-defined-in-rolename__group_varname-in-rolename__host_varname-without-duplicating-them).
 
 
 ## License
