@@ -1,0 +1,7 @@
+{% for item in repo_sury__enabled_repos %}
+{% if repo_sury__mirror_url is defined and repo_sury__mirror_url | length %}
+deb https://{{ repo_sury__mirror_url }}/{{ item }}/ {{ repo_sury__dist }} main
+{% else %}
+deb https://packages.sury.org/{{ item }}/ {{ repo_sury__dist }} main
+{% endif %}
+{% endfor %}
