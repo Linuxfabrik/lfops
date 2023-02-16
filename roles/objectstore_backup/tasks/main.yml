@@ -37,3 +37,4 @@
       state: 'started'
       enabled: true
 
+  tags: 'objectstore_backup'
