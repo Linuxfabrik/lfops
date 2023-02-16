@@ -125,3 +125,7 @@
     - role: 'linuxfabrik.lfops.coturn'
       when:
         - 'not setup_nextcloud__skip_coturn | d(false)'
+
+    - role: 'linuxfabrik.lfops.objectstore_backup'
+      when:
+        - 'not setup_nextcloud__skip_objectstore_backup | d(false)'
