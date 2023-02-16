@@ -1,0 +1,21 @@
+{
+    "version": "10",
+    "aliases": {
+        "{{ minio_client__source_name }}": {
+            "url": "{{ minio_client__source_url }}",
+                    "accessKey": "{{ minio_client__source_access_key }}",
+                    "secretKey": "{{ minio_client__source_secret_key }}",
+                    "api": "S3v4",
+                    "path": "auto"
+            },
+            "{{ minio_client__destination_name }}": {
+                    "url": "{{ minio_client__destination_url }}",
+                    "accessKey": "{{ minio_client__destination_access_key }}",
+                    "secretKey": "{{ minio_client__destination_secret_key }}",
+                    "api": "S3v4",
+                    "path": "auto"
+            }
+    }
+}
+
+                

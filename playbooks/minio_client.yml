@@ -1,0 +1,7 @@
+- name: 'Ensures that minio cli and ObjectStore backup service/timer are installed'
+  hosts:
+    - 'lfops_minio_client'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.minio_client'

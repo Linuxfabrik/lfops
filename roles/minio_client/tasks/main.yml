@@ -1,0 +1,40 @@
+---
+- block:
+  - name: 'Download and install mc from {{ minio_client__mc_binary_url }}'
+    ansible.builtin.get_url:
+      url: '{{ minio_client__mc_binary_url }}'
+      dest: '/usr/local/bin/mc'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+      #Forced otherwise download fails always http 304
+      force: true
+
+  - name: 'mkdir -p /etc/mc'
+    ansible.builtin.file:
+      path: '/etc/mc'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o750
+
+  - name: 'Install templates'
+    ansible.builtin.template:
+      src: '{{ item }}.j2'
+      dest: '/{{ item }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0o644'
+    loop:
+      - 'etc/bash_completion.d/minio'
+      - 'etc/profile.d/mc.sh'
+
+  - name: 'Install mc templates'
+    ansible.builtin.template:
+      src: '{{ item }}.j2'
+      dest: '/{{ item }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0o640'
+    loop:
+      - 'etc/mc/config.json'
