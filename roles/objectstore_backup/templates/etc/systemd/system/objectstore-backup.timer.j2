@@ -1,11 +1,11 @@
 # {{ ansible_managed }}
-# 2023021501
+# 2023021701
 
 [Unit]
 Description=Minio ObjectStore Backup Timer
 
 [Timer]
-OnCalendar={{ objectstore_backup__oncalendar }}
+OnCalendar={{ objectstore_backup__on_calendar }}
 
 [Install]
 WantedBy=timers.target

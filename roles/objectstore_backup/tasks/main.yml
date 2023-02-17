@@ -1,32 +1,24 @@
----
 - block:
-  - name: 'mkdir -p /etc/mc'
-    ansible.builtin.file:
-      path: '/etc/mc'
-      state: 'directory'
-      owner: 'root'
-      group: 'root'
-      mode: 0o750
 
   - name: 'mc stat {{ objectstore_backup__destination_name }}/{{ objectstore_backup__destination_bucket }}'
-    ansible.builtin.command: 'mc stat {{objectstore_backup__destination_name}}/{{objectstore_backup__destination_bucket}}'
+    ansible.builtin.command: 'mc stat {{ objectstore_backup__destination_name }}/{{ objectstore_backup__destination_bucket }}'
     register: 'objectstore_backup__destiniation_bucket_stat_result'
     failed_when: 'objectstore_backup__destiniation_bucket_stat_result["rc"] >= 2'
     changed_when: false # just gathering information
 
   - name: 'mc mb "{{ objectstore_backup__destination_name }}"/{{ objectstore_backup__destination_bucket }} # create destination bucket'
-    ansible.builtin.command: 'mc mb "{{objectstore_backup__destination_name}}"/{{objectstore_backup__destination_bucket}}'
+    ansible.builtin.command: 'mc mb "{{ objectstore_backup__destination_name }}"/{{ objectstore_backup__destination_bucket }}'
     when:
       - 'objectstore_backup__destiniation_bucket_stat_result["rc"] != 0'
 
-  - name: 'Install systemd templates'
+  - name: 'Deploy systemd service and timer'
     ansible.builtin.template:
       src: '{{ item }}.j2'
       dest: '/{{ item }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify: 'minio_client: systemctl daemon-reload'
+    notify: 'objectstore_backup: systemctl daemon-reload'
     loop:
       - 'etc/systemd/system/objectstore-backup.service'
       - 'etc/systemd/system/objectstore-backup.timer'
@@ -37,4 +29,5 @@
       state: 'started'
       enabled: true
 
-  tags: 'objectstore_backup'
+  tags:
+    - 'objectstore_backup'
