@@ -58,7 +58,7 @@
         - 'not setup_icinga2_master__skip_repo_monitoring_plugins | d(false)'
 
     - role: 'linuxfabrik.lfops.monitoring_plugins'
-      monitoring_plugins__deploy_notification_plugins__dependent_var: '{{ icinga2_master__monitoring_plugins__deploy_notification_plugins__dependent_var }}'
+      monitoring_plugins__skip_notification_plugins__dependent_var: '{{ icinga2_master__monitoring_plugins__skip_notification_plugins__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_monitoring_plugins | d(false)'
 

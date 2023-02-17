@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role: monitoring_plugins
+
+* Renamed `monitoring_plugins__deploy_notification_plugins` to `monitoring_plugins__skip_notification_plugins` and flipped the logic.
+
 Role: acme_sh
 
 * Added `name` subkey to `acme_sh__certificates`
