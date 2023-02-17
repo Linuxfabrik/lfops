@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.minio_client
 
-This role installs the minio client binary, including bash completion and sets config location to `/etc/mc/`.
+This role installs the MinIO client binary, including bash completion and sets config location to `/etc/mc/`.
 
 Runs on
 
@@ -15,7 +15,7 @@ Runs on
 
 | Tag                   | What it does                                 |
 | ---                   | ------------                                 |
-| `minio_client`        | * Installs minio client                      |
+| `minio_client`        |  Installs MinIO client                      |
 
 
 ## Optional Role Variables
