@@ -14,7 +14,7 @@
     failed_when: 'objectstore_backup__destiniation_bucket_stat_result["rc"] >= 2'
     changed_when: false # just gathering information
 
-  - name: 'Create destination bucket'
+  - name: 'mc mb {{ minio_client__destination_name }}/{{ minio_client__destination_bucket }} # create destination bucket'
     ansible.builtin.command: 'mc mb {{minio_client__destination_name}}/{{minio_client__destination_bucket}}'
     when:
       - objectstore_backup__destiniation_bucket_stat_result["rc"]!=0
