@@ -5,7 +5,7 @@
 Description=Minio ObjectStore Backup Timer
 
 [Timer]
-OnCalendar={{ minio_client__oncalendar }}
+OnCalendar={{ objectstore_backup__oncalendar }}
 
 [Install]
 WantedBy=timers.target
