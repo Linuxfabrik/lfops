@@ -7,8 +7,6 @@
       owner: 'root'
       group: 'root'
       mode: 0o755
-      # forced, otherwise download always fails with http 304
-      force: true
 
   - name: 'mkdir -p /etc/mc'
     ansible.builtin.file:
@@ -39,6 +37,10 @@
 
 
 - block:
+
+  - name: 'Combined Aliases:'
+    ansible.builtin.debug:
+      var: 'minio_client__aliases__combined_var'
 
   - name: 'Deploy /etc/mc/config.json'
     ansible.builtin.template:

@@ -1,19 +1,16 @@
 {
     "version": "10",
     "aliases": {
-        "{{ minio_client__source_name }}": {
-            "url": "{{ minio_client__source_url }}",
-                    "accessKey": "{{ minio_client__source_access_key }}",
-                    "secretKey": "{{ minio_client__source_secret_key }}",
-                    "api": "S3v4",
-                    "path": "auto"
-            },
-            "{{ objectstore_backup__destination_name }}": {
-                    "url": "{{ minio_client__destination_url }}",
-                    "accessKey": "{{ minio_client__destination_access_key }}",
-                    "secretKey": "{{ minio_client__destination_secret_key }}",
-                    "api": "S3v4",
-                    "path": "auto"
-            }
+{% for item in minio_client__aliases__combined_var %}
+
+        "{{ item['name'] }}": {
+            "url": "{{ item['url'] }}",
+                "accessKey": "{{ item['access_key'] }}",
+                "secretKey": "{{ item['secret_key'] }}",
+                "api": "{{ item['api'] | d('S3v4') }}",
+                "path": "{{ item['path'] | d('auto') }}"
+        }{% if not loop.last %},{% endif %}
+
+{% endfor %}
     }
 }
