@@ -4,7 +4,7 @@ This role installs the MinIO client binary, including bash completion and sets c
 
 Runs on
 
-* Rocky Linux release 8.7
+* Rocky 8
 
 
 ## Mandatory Requirements
