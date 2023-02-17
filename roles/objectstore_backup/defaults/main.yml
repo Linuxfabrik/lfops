@@ -5,3 +5,15 @@ objectstore_backup__on_calendar: 'Sun *-*-* 19:00:00'
 objectstore_backup__source_bucket: '{{ ansible_nodename }}'
 objectstore_backup__source_name: 'swisscloud'
 objectstore_backup__source_url: 'https://s3.pub1.infomaniak.cloud'
+
+# -----------------------------------------------------------------------------
+
+objectstore_backup__minio_client__aliases__dependent_var:
+  - name: '{{ objectstore_backup__source_name }}'
+    url: '{{ objectstore_backup__source_url }}'
+    access_key: '{{ objectstore_backup__source_access_key }}'
+    secret_key: '{{ objectstore_backup__source_secret_key }}'
+  - name: '{{ objectstore_backup__destination_name }}'
+    url: '{{ objectstore_backup__destination_url }}'
+    access_key: '{{ objectstore_backup__destination_access_key }}'
+    secret_key: '{{ objectstore_backup__destination_secret_key }}'

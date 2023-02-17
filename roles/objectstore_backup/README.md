@@ -25,10 +25,10 @@ If you use the [Objectstore Backup Playbook](https://github.com/Linuxfabrik/lfop
 
 | Variable | Description |
 | -------- | ----------- |
-| `objectstore_backup__destination_access_key` | S3 and Elastic Compute Cloud (EC2) Access Key for the destination objectstore |
-| `objectstore_backup__destination_secret_key` | S3 and Elastic Compute Cloud (EC2) Access Secret for the destination objectstore |
-| `objectstore_backup__source_access_key` | S3 and Elastic Compute Cloud (EC2) Access Key for the source objectstore |
-| `objectstore_backup__source_secret_key` | S3 and Elastic Compute Cloud (EC2) Access Secret for the source objectstore |
+| `objectstore_backup__destination_access_key` | S3 and Elastic Compute Cloud (EC2) Access Key for the destination objectstore. |
+| `objectstore_backup__destination_secret_key` | S3 and Elastic Compute Cloud (EC2) Access Secret for the destination objectstore. |
+| `objectstore_backup__source_access_key` | S3 and Elastic Compute Cloud (EC2) Access Key for the source objectstore. |
+| `objectstore_backup__source_secret_key` | S3 and Elastic Compute Cloud (EC2) Access Secret for the source objectstore. |
 
 Example:
 ```yaml
