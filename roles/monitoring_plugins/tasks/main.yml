@@ -106,7 +106,7 @@
       name:
         - 'linuxfabrik-notification-plugins'
       state: 'present'
-    when: 'monitoring_plugins__deploy_notification_plugins__combined_var | bool'
+    when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
 
   # block
   when:

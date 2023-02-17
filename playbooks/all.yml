@@ -93,6 +93,7 @@
 - import_playbook: 'repo_opensearch.yml'
 - import_playbook: 'repo_postgresql.yml'
 - import_playbook: 'repo_remi.yml'
+- import_playbook: 'rsyslog.yml'
 - import_playbook: 'selinux.yml'
 - import_playbook: 'setup_basic.yml'
 - import_playbook: 'setup_grav.yml'

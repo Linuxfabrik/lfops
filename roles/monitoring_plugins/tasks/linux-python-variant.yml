@@ -96,7 +96,7 @@
       loop: '{{ monitoring_plugins__notification_plugin_list }}'
 
     # block
-    when: 'monitoring_plugins__deploy_notification_plugins__combined_var | bool'
+    when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
 
   tags:
     - 'monitoring_plugins'

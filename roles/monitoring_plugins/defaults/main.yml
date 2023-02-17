@@ -1,12 +1,12 @@
-monitoring_plugins__deploy_notification_plugins__dependent_var: ''
-monitoring_plugins__deploy_notification_plugins__group_var: ''
-monitoring_plugins__deploy_notification_plugins__host_var: ''
-monitoring_plugins__deploy_notification_plugins__role_var: false
-monitoring_plugins__deploy_notification_plugins__combined_var: '{{
-    monitoring_plugins__deploy_notification_plugins__host_var if (monitoring_plugins__deploy_notification_plugins__host_var | string | length) else
-    monitoring_plugins__deploy_notification_plugins__group_var if (monitoring_plugins__deploy_notification_plugins__group_var | string | length) else
-    monitoring_plugins__deploy_notification_plugins__dependent_var if (monitoring_plugins__deploy_notification_plugins__dependent_var | string | length) else
-    monitoring_plugins__deploy_notification_plugins__role_var
+monitoring_plugins__skip_notification_plugins__dependent_var: ''
+monitoring_plugins__skip_notification_plugins__group_var: ''
+monitoring_plugins__skip_notification_plugins__host_var: ''
+monitoring_plugins__skip_notification_plugins__role_var: true
+monitoring_plugins__skip_notification_plugins__combined_var: '{{
+    monitoring_plugins__skip_notification_plugins__host_var if (monitoring_plugins__skip_notification_plugins__host_var | string | length) else
+    monitoring_plugins__skip_notification_plugins__group_var if (monitoring_plugins__skip_notification_plugins__group_var | string | length) else
+    monitoring_plugins__skip_notification_plugins__dependent_var if (monitoring_plugins__skip_notification_plugins__dependent_var | string | length) else
+    monitoring_plugins__skip_notification_plugins__role_var
   }}'
 monitoring_plugins__icinga2_cn: '{{ ansible_facts["nodename"] }}'
 monitoring_plugins__linux_variant: 'package'
