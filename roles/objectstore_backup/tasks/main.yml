@@ -8,7 +8,7 @@
       group: 'root'
       mode: 0o750
 
-  - name: 'Check destination bucket'
+  - name: 'mc stat {{ minio_client__destination_name }}/{{ minio_client__destination_bucket }}'
     ansible.builtin.command: 'mc stat {{minio_client__destination_name}}/{{minio_client__destination_bucket}}'
     register: objectstore_backup__destiniation_bucket_stat_result
     failed_when: 'objectstore_backup__destiniation_bucket_stat_result["rc"] >= 2'
