@@ -9,6 +9,7 @@ Runs on
 ## Mandatory Requirements
 
 * Install the `MinIO` binary. This can be done using the [linuxfabrik.lfops.minio_client](https://github.com/Linuxfabrik/lfops/tree/main/roles/minio_client) role.
+If you use the [Objectstore Backup Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/objectstore_backup.yml), this is automatically done for you.
 
 ## Optional Requirements
 
