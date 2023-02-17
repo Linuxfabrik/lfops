@@ -1,5 +1,5 @@
----
 - block:
+
   - name: 'Download and install mc from {{ minio_client__mc_binary_url }}'
     ansible.builtin.get_url:
       url: '{{ minio_client__mc_binary_url }}'

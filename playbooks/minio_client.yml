@@ -1,4 +1,4 @@
-- name: 'Ensures that minio cli and ObjectStore backup service/timer are installed'
+- name: 'Ensures that MinIO client is installed'
   hosts:
     - 'lfops_minio_client'
 
