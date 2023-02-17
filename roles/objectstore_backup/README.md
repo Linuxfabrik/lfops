@@ -20,7 +20,7 @@ If you use the [Objectstore Backup Playbook](https://github.com/Linuxfabrik/lfop
 
 | Tag                   | What it does                                 |
 | ---                   | ------------                                 |
-| `objectstore_backup`  | Install objectstore_backup                 |
+| `objectstore_backup`  | Installs and configures the objectstore backup                 |
 
 
 ## Mandatory Role Variables
