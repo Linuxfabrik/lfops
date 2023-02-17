@@ -166,6 +166,7 @@ New features:
 * Role: mariadb_client
 * Role: mariadb_server
 * Role: maxmind_geoip
+* Role: minio_client
 * Role: mod_maxminddb
 * Role: mongodb
 * Role: motd
@@ -174,6 +175,7 @@ New features:
 * Role: nfs_client
 * Role: nfs_server
 * Role: nodejs
+* Role: objectstore_backup
 * Role: open_vm_tools
 * Role: openssl
 * Role: openvpn_server

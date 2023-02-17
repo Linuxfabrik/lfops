@@ -1,0 +1,7 @@
+- name: 'Ensures that MinIO client is installed'
+  hosts:
+    - 'lfops_minio_client'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.minio_client'
