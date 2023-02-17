@@ -4,7 +4,7 @@ This role configures a backup service/timer for an objectstore to objectstore ba
 
 Runs on
 
-* Rocky Linux release 8.7
+* Rocky 8
 
 ## Mandatory Requirements
 
