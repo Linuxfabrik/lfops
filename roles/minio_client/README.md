@@ -7,15 +7,12 @@ Runs on
 * Rocky 8
 
 
-## Mandatory Requirements
-
-## Optional Requirements
-
 ## Tags
 
-| Tag                   | What it does                                 |
-| ---                   | ------------                                 |
-| `minio_client`        |  Installs MinIO client                      |
+| Tag            | What it does                         |
+| ---            | ------------                         |
+| `minio_client` | Installs and configures MinIO client |
+| `minio_client` | Configures MinIO client              |
 
 
 ## Optional Role Variables

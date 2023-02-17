@@ -7,7 +7,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o755
-      #Forced otherwise download fails always http 304
+      # forced, otherwise download always fails with http 304
       force: true
 
   - name: 'mkdir -p /etc/mc'
@@ -18,26 +18,36 @@
       group: 'root'
       mode: 0o750
 
-  - name: 'Install templates'
+  - name: 'Deploy /etc/bash_completion.d/minio'
     ansible.builtin.template:
-      src: '{{ item }}.j2'
-      dest: '/{{ item }}'
+      src: 'etc/bash_completion.d/minio.j2'
+      dest: '/etc/bash_completion.d/minio'
       owner: 'root'
       group: 'root'
-      mode: '0o644'
-    loop:
-      - 'etc/bash_completion.d/minio'
-      - 'etc/profile.d/mc.sh'
+      mode: 0o644
 
-  - name: 'Install mc templates'
+  - name: 'Deploy /etc/profile.d/mc.sh'
     ansible.builtin.template:
-      src: '{{ item }}.j2'
-      dest: '/{{ item }}'
+      src: 'etc/profile.d/mc.sh.j2'
+      dest: '/etc/profile.d/mc.sh'
       owner: 'root'
       group: 'root'
-      mode: '0o640'
-    loop:
-      - 'etc/mc/config.json'
+      mode: 0o644
 
   tags:
     - 'minio_client'
+
+
+- block:
+
+  - name: 'Deploy /etc/mc/config.json'
+    ansible.builtin.template:
+      src: 'etc/mc/config.json.j2'
+      dest: '/etc/mc/config.json'
+      owner: 'root'
+      group: 'root'
+      mode: 0o640
+
+  tags:
+    - 'minio_client'
+    - 'minio_client:configure'
