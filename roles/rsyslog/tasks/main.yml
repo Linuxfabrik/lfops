@@ -1,0 +1,58 @@
+- block:
+
+  - name: 'Install rsyslog'
+    ansible.builtin.package:
+      name: 'rsyslog'
+      state: 'present'
+
+  tags:
+    - 'rsyslog'
+
+
+- block:
+
+  - name: 'systemctl {{ rsyslog__service_enabled | bool | ternary("enable", "disable") }} rsyslog.service'
+    ansible.builtin.systemd:
+      name: 'rsyslog.service'
+      enabled: '{{ rsyslog__service_enabled }}'
+
+  - name: 'systemctl {{ rsyslog__service_state[:-2] }} rsyslog.service'
+    ansible.builtin.systemd:
+      name: 'rsyslog.service'
+      state: '{{ rsyslog__service_state }}'
+    register: 'rsyslog__service_state_result'
+
+  tags:
+    - 'rsyslog'
+    - 'rsyslog:state'
+
+
+- block:
+
+  - name: 'Combined Configs:'
+    ansible.builtin.debug:
+      var: 'rsyslog__conf__combined_var'
+
+  - name: 'Remove conf files from /etc/rsyslog.d/'
+    ansible.builtin.file:
+      path: '/etc/rsyslog.d/{{ item["filename"] }}.conf'
+      mode: 0o644
+      state: 'absent'
+    loop: '{{ rsyslog__conf__combined_var }}'
+    when: 'item["state"] | d("present") == "absent"'
+    notify: 'rsyslog: restart rsyslog'
+
+  - name: 'Create conf files in /etc/rsyslog.d/'
+    ansible.builtin.template:
+      src: 'etc/rsyslog.d/{{ item["template"]}}.conf.j2'
+      dest: '/etc/rsyslog.d/{{ item["filename"] }}.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when: 'item["state"] | d("present") != "absent"'
+    loop: '{{ rsyslog__conf__combined_var }}'
+    notify: 'rsyslog: restart rsyslog'
+
+  tags:
+    - 'rsyslog'
+    - 'rsyslog:configure'

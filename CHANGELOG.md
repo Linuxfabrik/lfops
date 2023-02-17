@@ -195,6 +195,7 @@ New features:
 * Role: repo_postgresql
 * Role: repo_remi
 * Role: rocketchat
+* Role: rsyslog
 * Role: snmp
 * Role: sshd
 * Role: stig

@@ -64,6 +64,10 @@
       when:
         - 'not setup_basic__skip_logrotate | d(false)'
 
+    - role: 'linuxfabrik.lfops.rsyslog'
+      when:
+        - 'not setup_basic__skip_rsyslog | d(false)'
+
     - role: 'linuxfabrik.lfops.cloud_init'
       when:
         - 'not setup_basic__skip_cloud_init | d(false)'
