@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.objectstore_backup
 
-This role configures a backup service/timer for an objectstore to objectstore backup using the  'MinIO' client `mc`.
+This role configures a backup service/timer for an objectstore to objectstore backup using the 'MinIO' client `mc`.
 
 Runs on
 
