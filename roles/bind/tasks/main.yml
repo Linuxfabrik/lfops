@@ -6,11 +6,24 @@
         - 'bind'
       state: 'present'
 
+  tags:
+    - 'bind'
+
+
+- block:
+
   - name: 'systemctl {{ bind__named_service_enabled | bool | ternary("enable", "disable") }} --now named.service'
     ansible.builtin.systemd:
       name: 'named.service'
       enabled: '{{ bind__named_service_enabled }}'
       state: '{{ bind__named_service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'bind'
+    - 'bind:state'
+
+
+- block:
 
   - name: 'Deploy /etc/sysconfig/named'
     ansible.builtin.template:
@@ -42,3 +55,4 @@
 
   tags:
     - 'bind'
+    - 'bind:configure'

@@ -9,9 +9,11 @@ Runs on
 
 ## Tags
 
-| Tag    | What it does                 |
-| ---    | ------------                 |
-| `bind` | Installs and configures bind |
+| Tag              | What it does                                   |
+| ---              | ------------                                   |
+| `bind`           | Installs and configures bind                   |
+| `bind:configure` | Manages the main named config and the zones    |
+| `bind:state`     | Manages the state of the named systemd service |
 
 
 ## Mandatory Role Variables
