@@ -1,2 +1,1 @@
 repo_sury__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
-repo_sury__enabled_repos: []

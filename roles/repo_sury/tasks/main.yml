@@ -13,6 +13,5 @@
       group: 'root'
       mode: 0o644
 
-  when: 'repo_sury__enabled_repos | length'
   tags:
     - 'repo_sury'
