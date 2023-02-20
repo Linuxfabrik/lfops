@@ -1,0 +1,7 @@
+- name: 'Manage and configure the Sury repository'
+  hosts:
+    - 'lfops_repo_sury'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_sury'
