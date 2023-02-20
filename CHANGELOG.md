@@ -201,6 +201,7 @@ New features:
 * Role: repo_mydumper
 * Role: repo_postgresql
 * Role: repo_remi
+* Role: repo_sury
 * Role: rocketchat
 * Role: rsyslog
 * Role: snmp
