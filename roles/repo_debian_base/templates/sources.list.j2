@@ -2,18 +2,18 @@
 deb https://{{ repo_debian_base__mirror_url }}/debian/ {{ repo_debian_base__dist }} main
 deb-src https://{{ repo_debian_base__mirror_url }}/debian/ {{ repo_debian_base__dist }} main
 
-deb https://{{ repo_debian_base__mirror_url }}/debian-security {{ repo_debian_base__dist }}-security main
-deb-src https://{{ repo_debian_base__mirror_url }}/debian-security {{ repo_debian_base__dist }}-security main
+deb https://{{ repo_debian_base__mirror_url }}/debian-security {{ repo_debian_base__dist_security }} main
+deb-src https://{{ repo_debian_base__mirror_url }}/debian-security {{ repo_debian_base__dist_security }} main
 
-deb https://{{ repo_debian_base__mirror_url }}/debian/ {{ repo_debian_base__dist }}-updates main
-deb-src https://{{ repo_debian_base__mirror_url }}/debian/ {{ repo_debian_base__dist }}-updates main
+deb https://{{ repo_debian_base__mirror_url }}/debian/ {{ repo_debian_base__dist_updates }} main
+deb-src https://{{ repo_debian_base__mirror_url }}/debian/ {{ repo_debian_base__dist_updates }} main
 {% else %}
 deb http://deb.debian.org/debian/ {{ repo_debian_base__dist }} main
 deb-src http://deb.debian.org/debian/ {{ repo_debian_base__dist }} main
 
-deb http://security.debian.org/debian-security {{ repo_debian_base__dist }}-security main
-deb-src http://security.debian.org/debian-security {{ repo_debian_base__dist }}-security main
+deb http://security.debian.org/debian-security {{ repo_debian_base__dist_security }} main
+deb-src http://security.debian.org/debian-security {{ repo_debian_base__dist_security }} main
 
-deb http://deb.debian.org/debian/ {{ repo_debian_base__dist }}-updates main
-deb-src http://deb.debian.org/debian/ {{ repo_debian_base__dist }}-updates main
+deb http://deb.debian.org/debian/ {{ repo_debian_base__dist_updates }} main
+deb-src http://deb.debian.org/debian/ {{ repo_debian_base__dist_updates }} main
 {% endif %}

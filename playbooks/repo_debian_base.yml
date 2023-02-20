@@ -1,0 +1,7 @@
+- name: 'Manage and configure the basic debian repositories'
+  hosts:
+    - 'lfops_repo_debian_base'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_debian_base'

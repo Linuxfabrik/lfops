@@ -1,1 +1,3 @@
 repo_debian_base__dist: 'buster'
+repo_debian_base__dist_security: '{{ repo_debian_base__dist }}/updates'
+repo_debian_base__dist_updates: '{{ repo_debian_base__dist }}-updates'
