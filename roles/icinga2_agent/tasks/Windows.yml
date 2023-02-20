@@ -75,11 +75,11 @@
       --ticket '{{ icinga2_agent__icinga2_ticket.json.results[0].ticket }}'
       {% endif %}
 
-  - name: 'restart icinga2 service as NT AUTHORITY\SYSTEM'
+  - name: 'restart icinga2 service as {{ icinga2_agent__windows_service_user }}'
     ansible.windows.win_service:
       name: 'Icinga 2'
       state: 'restarted'
-      username: 'NT AUTHORITY\SYSTEM'
+      username: '{{ icinga2_agent__windows_service_user }}'
 
   - name: 'add host to icinga director'
     ansible.windows.win_uri:

@@ -57,6 +57,7 @@ icinga2_agent__windows_version: 'v2.12.8'
 | `icinga2_agent__icingaweb2_url` | The URL where the IcingaWeb2 (the API) is reachable. This will be used to register the host in the Icinga Director (otherwise the host is registered in Icinga Core, but not visible in Icinga Director). | `'https://{{ icinga2_agent__icinga2_master_host }}/icingaweb2'` |
 | `icinga2_agent__icingaweb2_user_login` | A IcingaWeb2 user with `module/director,director/api,director/hosts` permissions. This will be used to register the host in the Icinga Director. | unset |
 | `icinga2_agent__service_enabled` | Enables or disables the Icinga2 service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
+| `icinga2_agent__windows_service_user` | The Windows user account under which the Icinga2 service will be run. | `'NT AUTHORITY\SYSTEM'` |
 
 Example:
 ```yaml
@@ -78,6 +79,7 @@ icinga2_agent__icingaweb2_user_login:
   password: 'password'
   username: 'enrolment-user'
 icinga2_agent__service_enabled: true
+icinga2_agent__windows_service_user: 'Icinga Service User'
 ```
 
 
