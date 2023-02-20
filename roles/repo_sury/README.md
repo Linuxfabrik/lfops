@@ -14,7 +14,7 @@ Runs on
 | ---         | ------------                |
 | `repo_sury` | Deploys the Sury Repository |
 
-## mandatory Role Variables
+## Mandatory Role Variables
 
 | Variable | Description |
 | -------- | ----------- |
