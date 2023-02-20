@@ -1,0 +1,3 @@
+repo_debian_base__dist: 'bullseye'
+repo_debian_base__dist_security: '{{ repo_debian_base__dist }}-security'
+repo_debian_base__dist_updates: '{{ repo_debian_base__dist }}-updates'

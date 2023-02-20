@@ -188,6 +188,7 @@ New features:
 * Role: repo_baseos
 * Role: repo_collabora
 * Role: repo_collabora_code
+* Role: repo_debian_base
 * Role: repo_docker
 * Role: repo_elasticsearch_oss
 * Role: repo_gitlab_ce
