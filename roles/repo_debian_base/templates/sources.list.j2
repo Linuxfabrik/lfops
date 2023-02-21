@@ -1,3 +1,6 @@
+# {{ ansible_managed }}
+# 2023022001
+
 {% if repo_debian_base__mirror_url is defined and repo_debian_base__mirror_url | length %}
 deb https://{{ repo_debian_base__mirror_url }}/debian/ {{ repo_debian_base__dist }} main
 deb-src https://{{ repo_debian_base__mirror_url }}/debian/ {{ repo_debian_base__dist }} main
