@@ -1,4 +1,4 @@
-objectstore_backup__destination_bucket: 'objectstore-{{ ansible_nodename }}'
+objectstore_backup__destination_bucket: 'objstore-{{ ansible_nodename }}'
 objectstore_backup__destination_name: 'swissbackup'
 objectstore_backup__destination_url: 'https://s3.swiss-backup03.infomaniak.com'
 objectstore_backup__on_calendar: 'Fri *-*-* 20:00:00'
