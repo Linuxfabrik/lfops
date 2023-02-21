@@ -50,6 +50,11 @@
       group: 'root'
       mode: 0o640
 
+  - name: '/usr/local/bin/mc --config-dir /etc/mc stat {{ item["name"] }}'
+    ansible.builtin.command: '/usr/local/bin/mc --config-dir /etc/mc stat {{ item["name"] }}'
+    changed_when: false # just gathering information
+    loop: '{{ minio_client__aliases__combined_var }}'
+
   tags:
     - 'minio_client'
     - 'minio_client:configure'
