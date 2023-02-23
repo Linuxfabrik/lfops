@@ -10,7 +10,15 @@
       url: 'https://packages.icinga.com/icinga.key'
       state: 'present'
 
-  - name: 'Add Icinga repositories for Debian'
+  - name: 'Deploy the icinga repo (mirror: {{ repo_icinga__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/apt/sources.list.d/packages_icinga_com_debian.list.j2'
+      dest: '/etc/apt/sources.list.d/packages_icinga_com_debian.list'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Add additional repositories needed by Icinga on Debian'
     ansible.builtin.apt_repository:
       repo: '{{ item }}'
       validate_certs: false
