@@ -7,7 +7,7 @@
 
   - name: 'deploy the repo files (mirror: {{ repo_debian_base__mirror_url | default("") }})'
     ansible.builtin.template:
-      src: 'sources.list.j2'
+      src: 'etc/apt/sources.list.j2'
       dest: '/etc/apt/sources.list'
       owner: 'root'
       group: 'root'
