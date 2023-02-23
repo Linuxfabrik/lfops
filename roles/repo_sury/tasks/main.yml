@@ -7,7 +7,7 @@
 
   - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
     ansible.builtin.template:
-      src: 'sury.list.j2'
+      src: 'etc/apt/sources.list.d/sury.list.j2'
       dest: '/etc/apt/sources.list.d/sury.list'
       owner: 'root'
       group: 'root'
