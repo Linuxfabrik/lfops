@@ -224,6 +224,8 @@ Changes in existing functionality:
 * Role duplicity: Implemented massive-parallel backups.
 * Role mariadb_server: Changed `mariadb_server__admin_host` to a list.
 
+* Module Util bitwarden: Switched to the bitwarden client API, as it is more reliable than using the command line tool directly
+
 ### Fixed
 
 Bug fixes:

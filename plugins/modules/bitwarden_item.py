@@ -4,7 +4,7 @@
 # Copyright: (c) 2022, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 # The Unlicense (see LICENSE or https://unlicense.org/)
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
@@ -256,12 +256,11 @@ username:
     sample: 'root'
 '''
 
-import json
 import os
-import traceback
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.linuxfabrik.lfops.plugins.module_utils.bitwarden import Bitwarden
+from ansible_collections.linuxfabrik.lfops.plugins.module_utils.bitwarden import \
+    Bitwarden
 
 
 def diff_and_update(current, target):
@@ -343,7 +342,7 @@ def run_module():
 
     bw = Bitwarden(executable)
 
-    if not bw.unlocked:
+    if not bw.is_unlocked:
         module.fail_json('Not logged into Bitwarden, or Bitwarden Vault is locked. Please run `bw login` and `bw unlock` first.')
 
     # to be sure we are up to date
@@ -378,24 +377,14 @@ def run_module():
         # check if changed, adjust if necessary
         changed, updated_item = diff_and_update(current_item, target_item)
         if changed:
-            encoded_item = bw.encode(updated_item)
-            out = bw.edit_item(encoded_item, updated_item['id'])
-            try:
-                result = json.loads(out)
-            except json.decoder.JSONDecodeError:
-                module.fail_json('Unable to load JSON result.', exception=traceback.format_exc())
+            out = bw.edit_item(updated_item, updated_item['id'])
         else:
             result = current_item
 
     else:
         # generate a new one
         changed = True
-        encoded_item = bw.encode(target_item)
-        out = bw.create_item(encoded_item)
-        try:
-            result = json.loads(out)
-        except json.decoder.JSONDecodeError:
-            module.fail_json('Unable to load JSON result.', exception=traceback.format_exc())
+        result = bw.create_item(target_item)
 
     if attachments:
         current_attachments = set(current_attachment['fileName'] for current_attachment in result.get('attachments', []))
