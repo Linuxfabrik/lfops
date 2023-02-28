@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+### Added
+
+New features:
+
+### Changed
+
+Changes in existing functionality:
+
+
+## [2.0.0] - 2023-02-28
+
 All roles:
 * Renamed all injectable variables:
     * `rolename__combined_varname` to `rolename__varname__combined_var`
@@ -271,6 +282,7 @@ Bug fixes:
 * Module Util: gnupg
 
 
-[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/Linuxfabrik/lfops/compare/v1.0.1...v2.0.0
 [1.0.1]: https://github.com/Linuxfabrik/lfops/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Linuxfabrik/lfops/releases/tag/v1.0.0
