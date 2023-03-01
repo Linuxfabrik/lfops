@@ -23,7 +23,7 @@
       repo: '{{ item }}'
       validate_certs: false
       state: 'present'
-    loop: '{{ repo_icinga__repo_urls }}'
+    loop: '{{ repo_icinga__additional_repo_urls }}'
 
   tags:
     - 'repo_icinga'

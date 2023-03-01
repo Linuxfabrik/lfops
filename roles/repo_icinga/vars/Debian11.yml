@@ -1,4 +1,4 @@
 repo_icinga__required_packages:
   - 'apt-transport-https'
   - 'python3-apt'
-repo_icinga__repo_urls: []
+repo_icinga__additional_repo_urls: []

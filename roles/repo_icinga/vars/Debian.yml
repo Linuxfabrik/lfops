@@ -2,6 +2,4 @@ repo_icinga__required_packages:
   - 'apt-transport-https'
   - 'python-apt'
   - 'gpg'
-repo_icinga__repo_urls: []
-#   - 'deb http://packages.icinga.com/{{ ansible_facts["distribution"] | lower }} icinga-{{ ansible_facts["distribution_release"] }} main'
-#   - 'deb-src http://packages.icinga.com/{{ ansible_facts["distribution"] | lower }} icinga-{{ ansible_facts["distribution_release"] }} main'
+repo_icinga__additional_repo_urls: []

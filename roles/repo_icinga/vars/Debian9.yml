@@ -1,4 +1,2 @@
-repo_icinga__repo_urls:
+repo_icinga__additional_repo_urls:
   - 'deb https://deb.debian.org/debian {{ ansible_facts["distribution_release"] }}-backports main'
-  # - 'deb http://packages.icinga.com/{{ ansible_facts["distribution"] | lower }} icinga-{{ ansible_facts["distribution_release"] }} main'
-  # - 'deb-src http://packages.icinga.com/{{ ansible_facts["distribution"] | lower }} icinga-{{ ansible_facts["distribution_release"] }} main'
