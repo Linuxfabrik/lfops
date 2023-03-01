@@ -1,5 +1,13 @@
 - block:
 
+  - name: 'Make sure that Ansible local facts directory exists'
+    ansible.builtin.file:
+      path: '/etc/ansible/facts.d'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
   - name: 'install mongodb-org'
     ansible.builtin.package:
       name: 'mongodb-org'
@@ -24,6 +32,95 @@
 
   tags:
     - 'mongodb'
+
+
+- block:
+
+  - name: 'systemctl {{ mongodb__service_enabled | bool | ternary("enable", "disable") }} mongod.service'
+    ansible.builtin.systemd:
+      name: 'mongod.service'
+      enabled: '{{ mongodb__service_enabled }}'
+
+  - name: 'systemctl {{ mongodb__service_state[:-2] }} mongod.service'
+    ansible.builtin.systemd:
+      name: 'mongod.service'
+      state: '{{ mongodb__service_state }}'
+    register: 'mongodb__service_state_result'
+
+  tags:
+    - 'mongodb'
+    - 'mongodb:state'
+
+
+- block:
+
+  - name: 'make sure we restarted mongodb if the config changed'
+    ansible.builtin.meta: 'flush_handlers'
+
+  - name: 'Create DBA "{{ mongodb__admin_user["username"] }}" (if first user, using localhost exception)' # https://www.mongodb.com/docs/manual/core/localhost-exception/
+    community.mongodb.mongodb_user:
+      name: '{{ mongodb__admin_user["username"] }}'
+      password: '{{ mongodb__admin_user["password"] }}'
+      database: 'admin'
+      roles: 'root'
+      state: 'present'
+      update_password: 'always'
+      login_host: 'localhost'
+      login_port: '{{ mongodb__conf_net_port }}'
+      create_for_localhost_exception: '/etc/ansible/facts.d/mongodb__dba_created.state'
+    when:
+      - 'mongodb__dump_user is defined'
+      - 'mongodb__dump_user | length'
+    vars:
+      ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
+
+  - name: 'Create, update or delete MongoDB users'
+    community.mongodb.mongodb_user:
+      name: '{{ item["username"] }}'
+      password: '{{ item["password"] }}'
+      database: '{{ item["database"] }}'
+      roles: '{{ item["roles"] | default(omit) }}'
+      state: '{{ item["state"] | default("present") }}'
+      update_password: 'always' # note: sadly 'always' is not idempotent
+      login_host: 'localhost'
+      login_port: '{{ mongodb__conf_net_port }}'
+      login_user: '{{ mongodb__admin_user["username"] }}'
+      login_password: '{{ mongodb__admin_user["password"] }}'
+      login_database: 'admin'
+    loop: '{{ mongodb__users__combined_var }}'
+    vars:
+      ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
+
+  tags:
+    - 'mongodb'
+    - 'mongodb:user'
+
+
+- block:
+
+  - name: 'Create MongoDB Dump user'
+    community.mongodb.mongodb_user:
+      name: '{{ mongodb__dump_user["username"] }}'
+      password: '{{ mongodb__dump_user["password"] }}'
+      database: '{{ mongodb__dump_user["auth_database"] | d("admin") }}'
+      roles: 'backup' # https://www.mongodb.com/docs/manual/reference/built-in-roles/#mongodb-authrole-backup
+      state: '{{ mongodb__dump_user["state"] | default("present") }}'
+      update_password: 'always' # note: sadly 'always' is not idempotent
+      login_host: 'localhost'
+      login_port: '{{ mongodb__conf_net_port }}'
+      login_user: '{{ mongodb__admin_user["username"] }}'
+      login_password: '{{ mongodb__admin_user["password"] }}'
+      login_database: 'admin'
+    when:
+      - 'mongodb__dump_user is defined'
+      - 'mongodb__dump_user | length'
+    vars:
+      ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
+
+  tags:
+    - 'mongodb'
+    - 'mongodb:dump'
+    - 'mongodb:user'
 
 
 - block:
@@ -71,24 +168,6 @@
   tags:
     - 'mongodb'
     - 'mongodb:dump'
-
-
-- block:
-
-  - name: 'systemctl {{ mongodb__service_enabled | bool | ternary("enable", "disable") }} mongod.service'
-    ansible.builtin.systemd:
-      name: 'mongod.service'
-      enabled: '{{ mongodb__service_enabled }}'
-
-  - name: 'systemctl {{ mongodb__service_state[:-2] }} mongod.service'
-    ansible.builtin.systemd:
-      name: 'mongod.service'
-      state: '{{ mongodb__service_state }}'
-    register: 'mongodb__service_state_result'
-
-  tags:
-    - 'mongodb'
-    - 'mongodb:state'
 
 
 - block:

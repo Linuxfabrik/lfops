@@ -26,6 +26,17 @@ mongodb__service_state: 'started'
 mongodb__repl_set_members:
   - 'localhost:27017'
 mongodb__repl_set_skip_init: false
+mongodb__users__dependent_var: []
+mongodb__users__group_var: []
+mongodb__users__host_var: []
+mongodb__users__role_var: []
+mongodb__users__combined_var: '{{
+  mongodb__users__role_var +
+  mongodb__users__group_var +
+  mongodb__users__host_var +
+  mongodb__users__dependent_var
+  | flatten
+ }}'
 
 # -----------------------------------------------------------------------------
 

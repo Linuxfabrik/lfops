@@ -2,7 +2,7 @@
 #!/usr/bin/env bash
 
 # {{ ansible_managed }}
-# 2022101301
+# 202303010
 
 set -e
 
@@ -27,7 +27,7 @@ if [[ -n "$AUTH_DATABASE$USERNAME$PASSWORD" ]]; then
 fi
 
 # make sure we can connect to server
-if ! $MONGOSH $connection_string --eval 'db.getUsers()' &>/dev/null; then
+if ! $MONGOSH $connection_string --eval 'db.getName()' &>/dev/null; then
     echo "Cannot connect to '$HOST:$PORT'" >&2
     exit 1
 fi
