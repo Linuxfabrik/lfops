@@ -25,6 +25,12 @@
       when:
         - 'not setup_graylog_server__skip_java | default(false)'
 
+    - role: 'linuxfabrik.lfops.python_venv'
+      python_venv__venvs__dependent_var:
+        - '{{ mongodb__python_venv__venvs__dependent_var | d({}) }}'
+      when:
+        - 'not mongodb__skip_python_venv | d(false)'
+
     - role: 'linuxfabrik.lfops.repo_mongodb'
       when:
         - 'not setup_graylog_server__skip_repo_mongodb | d(false)'
