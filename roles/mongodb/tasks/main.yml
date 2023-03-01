@@ -77,8 +77,8 @@
       login_port: '{{ mongodb__conf_net_port }}'
       create_for_localhost_exception: '/etc/ansible/facts.d/mongodb__dba_created.state'
     when:
-      - 'mongodb__dump_user is defined'
-      - 'mongodb__dump_user | length'
+      - 'mongodb__admin_user is defined'
+      - 'mongodb__admin_user | length'
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
 
