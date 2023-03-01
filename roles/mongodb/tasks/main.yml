@@ -13,9 +13,17 @@
       name: 'mongodb-org'
       state: 'present'
 
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get mongodb-org-server version'
+    ansible.builtin.set_fact:
+      mongodb__installed_version: '{{ (ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_replace("\.\d+$", "") }}' # strip the patch version
+
   - name: 'Deploy /etc/mongod.conf'
     ansible.builtin.template:
-      src: 'etc/mongod.conf.j2'
+      src: 'etc/{{ mongodb__installed_version }}-mongod.conf.j2'
       dest: '/etc/mongod.conf'
       owner: 'root'
       group: 'root'

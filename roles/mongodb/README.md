@@ -6,6 +6,11 @@ Runs on
 
 * RHEL 8 (and compatible)
 
+This role is only compatible with the following MongoDB versions:
+
+* 4.4
+* 6.0
+
 
 ## Mandatory Requirements
 
