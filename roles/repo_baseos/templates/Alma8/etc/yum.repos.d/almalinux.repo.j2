@@ -1,0 +1,41 @@
+# {{ ansible_managed }}
+# 2023022801
+
+[baseos]
+name=AlmaLinux 8 - BaseOS
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/almalinux/8/BaseOS/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.almalinux.org/mirrorlist/8/baseos
+# baseurl=https://repo.almalinux.org/almalinux/8/BaseOS/x86_64/os/
+{% endif %}
+enabled=1
+gpgcheck=1
+countme=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
+
+[appstream]
+name=AlmaLinux 8 - AppStream
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/almalinux/8/AppStream/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.almalinux.org/mirrorlist/8/appstream
+# baseurl=https://repo.almalinux.org/almalinux/8/AppStream/x86_64/os/
+{% endif %}
+enabled=1
+gpgcheck=1
+countme=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
+
+[extras]
+name=AlmaLinux 8 - Extras
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/almalinux/8/extras/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.almalinux.org/mirrorlist/8/extras
+# baseurl=https://repo.almalinux.org/almalinux/8/extras/x86_64/os/
+{% endif %}
+enabled=1
+gpgcheck=1
+countme=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
