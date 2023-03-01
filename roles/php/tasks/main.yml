@@ -17,7 +17,6 @@
   - name: 'Combined Modules:'
     ansible.builtin.debug:
       var: 'php__modules__combined_var'
-
   - name: 'Ensure PHP modules are absent'
     # providing the packages as a list is much more faster than looping for each
     ansible.builtin.package:
@@ -72,8 +71,8 @@
       state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
 
   tags:
-    - 'php'
     - 'php:state'
+    - 'php'
 
 
 - block:
@@ -100,4 +99,5 @@
     notify: 'php: restart php-fpm'
 
   tags:
+    - 'php:fpm'
     - 'php'

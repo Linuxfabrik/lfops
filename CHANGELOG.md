@@ -9,13 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+
 ### Added
 
-New features:
+Role: php
+* Add tag `php:fpm`
+
 
 ### Changed
 
-Changes in existing functionality:
+
+
+
+
 
 
 ## [2.0.1] - 2023-02-28
