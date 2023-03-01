@@ -188,4 +188,3 @@
     - 'mongodb__conf_replication_repl_set_name__combined_var | length'
   tags:
     - 'mongodb'
-    - 'test'
