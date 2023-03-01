@@ -19,7 +19,7 @@
 
   - name: 'Get mongodb-org-server version'
     ansible.builtin.set_fact:
-      mongodb__installed_version: '{{ (ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_replace("\.\d+$", "") }}' # strip the patch version
+      mongodb__installed_version: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_replace("\.\d+$", "") }}' # strip the patch version
 
   - name: 'Deploy /etc/mongod.conf'
     ansible.builtin.template:
