@@ -1,9 +1,9 @@
 opensearch__action_auto_create_index__role_var: true
 opensearch__cluster_name__role_var: 'my-application'
+opensearch__node_name: '{{ ansible_facts["nodename"] }}'
 opensearch__path_data__role_var: '/var/lib/opensearch'
 opensearch__plugins_security_disabled: true
 opensearch__service_enabled: true
-
 
 # ---------------------------------------------------------------------
 

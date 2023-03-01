@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023013001
+# 2023030101
 # 2.x
 # ======================== OpenSearch Configuration =========================
 #
@@ -24,6 +24,7 @@ cluster.name: {{ opensearch__cluster_name__combined_var | default('my-applicatio
 # Use a descriptive name for the node:
 #
 #node.name: node-1
+node.name: {{ opensearch__node_name }}
 #
 # Add custom attributes to the node:
 #
@@ -69,10 +70,16 @@ path.logs: /var/log/opensearch
 # The default list of hosts is ["127.0.0.1", "[::1]"]
 #
 #discovery.seed_hosts: ["host1", "host2"]
+{% if opensearch__discovery_seed_hosts is defined and opensearch__discovery_seed_hosts | length %}
+discovery.seed_hosts: {{ opensearch__discovery_seed_hosts | to_yaml }}
+{% endif %}
 #
 # Bootstrap the cluster using an initial set of cluster-manager-eligible nodes:
 #
 #cluster.initial_cluster_manager_nodes: ["node-1", "node-2"]
+{% if opensearch__cluster_initial_cluster_manager_nodes is defined and opensearch__cluster_initial_cluster_manager_nodes | length %}
+cluster.initial_cluster_manager_nodes: {{ opensearch__cluster_initial_cluster_manager_nodes | to_yaml }}
+{% endif %}
 #
 # For more information, consult the discovery and cluster formation module documentation.
 #
