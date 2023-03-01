@@ -1,3 +1,2 @@
-repo_debian_base__dist: 'bullseye'
-repo_debian_base__dist_security: '{{ repo_debian_base__dist }}-security'
-repo_debian_base__dist_updates: '{{ repo_debian_base__dist }}-updates'
+repo_debian_base__dist_security: '{{ ansible_facts["distribution_release"] }}-security'
+repo_debian_base__dist_updates: '{{ ansible_facts["distribution_release"] }}-updates'
