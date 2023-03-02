@@ -18,12 +18,12 @@ Runs on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `repo_graylog__version` | The Graylog repo version to install. One of `'2.0'`, `'2.1'`, `'2.2'`, `'2.3'`, `'2.4'`, `'3.0'`, `'3.1'`, `'3.2'`, `'3.3'`, `'4.0'`, `'4.1'`, `'4.2'` or `'4.3'`. [Have a look at the graylog repository for the list of available releases](https://www.graylog.org/releases). |
+| `repo_graylog__version` | The Graylog repo version to install. One of `'2.0'`, `'2.1'`, `'2.2'`, `'2.3'`, `'2.4'`, `'3.0'`, `'3.1'`, `'3.2'`, `'3.3'`, `'4.0'`, `'4.1'`, `'4.2'`, `'4.3'` or `5.0`. [Have a look at the graylog repository for the list of available releases](https://www.graylog.org/releases). |
 
 Example:
 ```yaml
 # mandatory
-repo_graylog__version: '4.3'
+repo_graylog__version: '5.0'
 ```
 
 ## Optional Role Variables
