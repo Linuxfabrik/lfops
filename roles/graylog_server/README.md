@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.graylog_server
 
-This role installs and configures a [Graylog](https://www.graylog.org) server.
+This role installs and configures a [Graylog](https://www.graylog.org) server. Optionally, it allows the creation of a cluster setup.
 
 Currently supported versions:
 * 4.0
