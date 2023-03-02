@@ -1,5 +1,9 @@
+graylog_server__elasticsearch_hosts:
+  - 'http://127.0.0.1:9200'
 graylog_server__http_bind_address: '127.0.0.1'
 graylog_server__http_bind_port: 9000
+graylog_server__is_leader: true
+graylog_server__mongodb_uri: 'mongodb://localhost/graylog'
 graylog_server__plugins: []
 graylog_server__service_enabled: true
 graylog_server__timezone: 'Europe/Zurich'

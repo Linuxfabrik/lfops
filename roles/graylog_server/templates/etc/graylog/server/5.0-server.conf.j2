@@ -47,7 +47,7 @@
 
 # If you are running more than one instances of Graylog server you have to select one of these
 # instances as leader. The leader will perform some periodical tasks that non-leaders won't perform.
-is_leader = true
+is_leader = {{ graylog_server__is_leader | lower }}
 
 # The auto-generated node ID will be stored in this file and read after restarts. It is a good idea
 # to use an absolute file path here if you are starting Graylog server from init scripts or similar.
@@ -196,6 +196,7 @@ stream_aware_field_types=false
 #
 # Default: http://127.0.0.1:9200
 #elasticsearch_hosts = http://node1:9200,http://user:password@node2:19200
+elasticsearch_hosts = {{ graylog_server__elasticsearch_hosts | join(',') }}
 
 # Maximum number of attempts to connect to elasticsearch on boot for the version probe.
 #
@@ -555,9 +556,8 @@ lb_recognition_period_seconds = 3
 # Time in milliseconds which Graylog is waiting for all threads to stop on shutdown.
 #shutdown_timeout = 30000
 
-# MongoDB connection string
-# See https://docs.mongodb.com/manual/reference/connection-string/ for details
-mongodb_uri = mongodb://localhost/graylog
+# MongoDB connection string. See https://docs.mongodb.com/manual/reference/connection-string/ for details
+mongodb_uri = {{ graylog_server__mongodb_uri }}
 
 # Authenticate against the MongoDB server
 # '+'-signs in the username or password need to be replaced by '%2B'
