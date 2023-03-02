@@ -56,7 +56,7 @@ path.logs: /var/log/opensearch
 #
 # Set the bind address to a specific IP (IPv4 or IPv6):
 #
-#network.host: 192.168.0.1
+network.host: {{ opensearch__network_host }}
 #
 # Set a custom port for HTTP:
 #
@@ -71,14 +71,14 @@ path.logs: /var/log/opensearch
 #
 #discovery.seed_hosts: ["host1", "host2"]
 {% if opensearch__discovery_seed_hosts is defined and opensearch__discovery_seed_hosts | length %}
-discovery.seed_hosts: {{ opensearch__discovery_seed_hosts | to_yaml }}
+discovery.seed_hosts: {{ opensearch__discovery_seed_hosts | ansible.builtin.to_yaml }}
 {% endif %}
 #
 # Bootstrap the cluster using an initial set of cluster-manager-eligible nodes:
 #
 #cluster.initial_cluster_manager_nodes: ["node-1", "node-2"]
 {% if opensearch__cluster_initial_cluster_manager_nodes is defined and opensearch__cluster_initial_cluster_manager_nodes | length %}
-cluster.initial_cluster_manager_nodes: {{ opensearch__cluster_initial_cluster_manager_nodes | to_yaml }}
+cluster.initial_cluster_manager_nodes: {{ opensearch__cluster_initial_cluster_manager_nodes | ansible.builtin.to_yaml }}
 {% endif %}
 #
 # For more information, consult the discovery and cluster formation module documentation.
