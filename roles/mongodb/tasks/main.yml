@@ -186,10 +186,16 @@
       login_port: '{{ mongodb__conf_net_port }}'
       replica_set: '{{ mongodb__conf_replication_repl_set_name__combined_var }}'
       members: '{{ mongodb__repl_set_members }}'
-      validate: false # prevent error with only one member
+      validate: '{{ (mongodb__repl_set_members | length > 1) | bool }}' # prevent error with only one member
       debug: true
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
+
+  - name: 'Wait for the replicaset to stabilise'
+    community.mongodb.mongodb_status:
+      replica_set: '{{ mongodb__conf_replication_repl_set_name__combined_var }}'
+      poll: 5
+      interval: 10
 
   when:
     - 'not mongodb__repl_set_skip_init'

@@ -1,6 +1,8 @@
 # Ansible Role linuxfabrik.lfops.mongodb
 
-This role installs and configures a [MongoDB](https://www.mongodb.com/) server, and configures daily database dumps.
+This role installs and configures a [MongoDB](https://www.mongodb.com/) server, and configures daily database dumps. Optionally, it allows setting up a replica set across multiple members.
+
+Important: When setting up a replica set across members, make sure that there is no data being written on any member until all members have joined the replica set. Else you need to [manually prepare the data files](https://www.mongodb.com/docs/manual/tutorial/expand-replica-set/#data-files) on the to-be-added secondary before joining.
 
 Runs on
 
@@ -67,7 +69,7 @@ mongodb__dump_user:
 | `mongodb__dump_only_if_hidden` | Use this to only run the backup if the instance is hidden. This is useful in a MongoDB cluster setupp. | `false` |
 | `mongodb__dump_use_oplog` | Use this to capture incoming write operations during the dump operation to ensure that the backups reflect a consistent data state. Note that this only works on cluster setups or with replica sets. | `false` |
 | `mongodb__repl_set_members` | A list of the members for initiating the replica set | `['localhost:27017']` |
-| `mongodb__repl_set_skip_init` | Set this to skip the initiation of the replica set. | `false` |
+| `mongodb__repl_set_skip_init` | Set this to skip the initiation of the replica set. Note: Set this on all secondaries when setting up a replica set across members. | `false` |
 | `mongodb__service_enabled`| Enables or disables the service, analogous to `systemctl enable/disable`. | `true` |
 | `mongodb__service_state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
 | `mongodb__users__group_var` /<br> `mongodb__users__host_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mongodb__admin_user`). Subkeys:<ul><li>`username`: Mandatory, string. Username.<li>`password`: Mandatory, string. Password.<li>`database`: Mandatory, string. Database in which the user should be.<li>`roles`: Optional, string or list. Either name of one of the [built-in roles](https://www.mongodb.com/docs/manual/reference/built-in-roles), or list of dictionaries with `db` and `role`.</li><li>`state`: Optional, string. State of the user. Possible options: `present`, `absent`. Defaults to `present`.</ul><br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
@@ -75,7 +77,7 @@ mongodb__dump_user:
 Example:
 ```yaml
 # optional
-mongodb__conf_net_bind_ip: '127.0.0.1' # https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-net.bindIp
+mongodb__conf_net_bind_ip: '127.0.0.1'
 mongodb__conf_net_port: 27017
 mongodb__conf_replication_oplog_size_mb: 50
 mongodb__conf_replication_repl_set_name__host_var: 'replSet1'
@@ -103,6 +105,34 @@ mongodb__dump_use_oplog: true
 mongodb__service_enabled: true
 mongodb__service_state: 'started'
 mongodb__repl_set_skip_init: false
+```
+
+
+### Replica Set across with multiple Members
+
+Important: When setting up a replica set across members, make sure that there is no data being written on any member until all members have joined the replica set. Else you need to [manually prepare the data files](https://www.mongodb.com/docs/manual/tutorial/expand-replica-set/#data-files) on the to-be-added secondary before joining.
+
+To setup a replica set from scratch:
+* Choose a name via the `mongodb__conf_replication_repl_set_name__*_var` (needs to be the same for all members).
+* Make sure that the cluster members can reach each other by setting `mongodb__conf_net_bind_ip` accordingly.
+* For production use, also make sure that `mongodb__conf_security_authorization` is enabled.
+* Set `mongodb__repl_set_skip_init` for all the secondaries.
+* Rollout against the secondaries.
+* Set `mongodb__repl_set_members` on the primary (see below).
+* Rollout against the primary to initiate the replica set with the given members.
+* Check the state of the cluster by using `mongosh --username mongodb-admin --password linuxfabrik --eval 'rs.status()'` on any member.
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `mongodb__repl_set_members` | List of dictionaries of all the members (including the primary) which should be part of the replica set. Subkeys: <ul><li>`host`: Mandatory, string. Hostname and optionally, the port number, of the set member.</li><li>Any other [Replica Set Configuration Field](https://www.mongodb.com/docs/manual/reference/replica-configuration/#replica-set-configuration-fields).</li></ul> | unset |
+
+Example:
+```yaml
+# replica set
+mongodb__repl_set_members:
+  - host: 'node1.example.com'
+  - host: 'node2.example.com:27018'
+  - host: 'node3.example.com'
 ```
 
 
