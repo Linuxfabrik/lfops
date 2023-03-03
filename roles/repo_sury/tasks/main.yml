@@ -1,10 +1,5 @@
 - block:
 
-  - name: 'Set platform/version specific variables'
-    ansible.builtin.import_role:
-      name: 'shared'
-      tasks_from: 'platform-variables.yml'
-
   - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/apt/sources.list.d/sury.list.j2'
