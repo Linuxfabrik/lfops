@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023030101
+# 2023030301
 
 # mongod.conf
 
@@ -36,6 +36,9 @@ net:
 
 security:
   authorization: {{ mongodb__conf_security_authorization | ternary('enabled', 'disabled') }}
+{% if mongodb__keyfile_content is defined and mongodb__keyfile_content | length %}
+  keyFile: /etc/mongod.key
+{% endif %}
 
 #operationProfiling:
 

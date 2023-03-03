@@ -33,7 +33,7 @@ This role is only compatible with the following MongoDB versions:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mongodb__admin_user` | The main user account for the database administrator. Make sure to also enabled authorization using `mongodb__conf_security_authorization`. To create additional ones, use the `mongodb__users__*` variables. Subkeys:<ul><li>`username`: Username</li><li>`password`: Password</li></ul> | unset |
+| `mongodb__admin_user` | The main user account for the database administrator. This is required when authorization is enabled by `mongodb__conf_security_authorization`. To create additional ones, use the `mongodb__users__*_var` variables. Subkeys:<ul><li>`username`: Username</li><li>`password`: Password</li></ul> | unset |
 | `mongodb__conf_security_authorization` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-security.authorization) | `false` |
 | `mongodb__dump_user` | The MongoDB user for dumping the database when Role-Based Access Control is enabled (`mongodb__conf_security_authorization`). Subkeys: <br> * `auth_database`: Optional, string. Database to authenticate against. Defaults to `'admin'`. <br> * `username`: Required, string. <br> * `password`: Required, string. | unset |
 
@@ -114,7 +114,7 @@ Important: When setting up a replica set across members, make sure that there is
 To setup a replica set from scratch:
 * Choose a name via the `mongodb__conf_replication_repl_set_name__*_var` (needs to be the same for all members).
 * Make sure that the cluster members can reach each other by setting `mongodb__conf_net_bind_ip` accordingly.
-* For production use, also make sure that `mongodb__conf_security_authorization` is enabled.
+* For production use, also make sure that `mongodb__conf_security_authorization` is enabled and `mongodb__keyfile_content` is set for all members.
 * Set `mongodb__repl_set_skip_init` for all the secondaries.
 * Rollout against the secondaries.
 * Set `mongodb__repl_set_members` on the primary (see below).
@@ -123,11 +123,29 @@ To setup a replica set from scratch:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `mongodb__keyfile_content` | The content of the MongoDB keyfile which is used for [internal authentication](https://www.mongodb.com/docs/manual/core/security-internal-authentication/) between the members. Setting this automatically adjusts the MongoDB config to use the keyfile. The content can be generated using `openssl rand -base64 756`. | unset |
 | `mongodb__repl_set_members` | List of dictionaries of all the members (including the primary) which should be part of the replica set. Subkeys: <ul><li>`host`: Mandatory, string. Hostname and optionally, the port number, of the set member.</li><li>Any other [Replica Set Configuration Field](https://www.mongodb.com/docs/manual/reference/replica-configuration/#replica-set-configuration-fields).</li></ul> | unset |
 
 Example:
 ```yaml
 # replica set
+mongodb__keyfile_content: |-
+  5Ku/Zd0QhNCiWICdejkGEPOKhhI08mYNJAKY1RBec8OiEmcNFIWMgiMcKaLLYFmY
+  sD2WteR5ebZltlsp2wFuQ6V29iwnZ3m7MALDH6nQZ72cHbgaicaEL7fz8epPr9N+
+  Xfdn5gt9AyTQIspTBa2l6fjAC2kGBhpf0qTHOpCZw/IWQJcnEBp80ymAjEub5MnS
+  yn5dG+QJ0c28jHRnEdQbK2Ss1In21qAPEvlwa/3btB+fOxFMR3COlt/55I+10izx
+  ABuUlwHMj4j4snh7JFOd7qbEsN5XE8zFvcnUlw1CxWtg6RvGJ5tCkliW1UcLZ0NF
+  MXX3b6pbee5d5SgpyzXVgenLvaXO3CIi1mY2G2+8+8fcLd4D4c9phAnzARsMLdUR
+  ACYv+0qs7A6JdvItnmNKDbF2pTsJMGa92+c/zSbay2bHiv0Gx9kX/HbLdMbSsFCn
+  TCFN0OwhakRIhGOf1utYu2l03mE007bu+8kDzr+ZnDu6ih4NGt28OzWxzgZU8qlT
+  vz7UOeNz4S9TCsx3exqwhKssOEfTmuUckkKINeXYvCzO9RdxTpznApth8DihdLg8
+  8Nb4CajaahCmyQ4yYKYIh5N8hQ3CioFWe9ZC+fq/0Rz/UTXbET7Y453CdEHa6TBe
+  tjJlBcMFbDgvemKcGW7JPCC5EdfGIQIlcOhgpWKgduevXr2+07YG2LxuN7pw/pGV
+  oeC/Dm1WMHqb81jjrjnf2gENDRPtniHr/GyXQmNnB9e+WqBgwkqYzrMEu/jqbo7e
+  SErBq6Nd1BdhveaPnTanQjDaEHnC6s5LS+vDBZcJue+kx/OqIbVHmxbm0DziOTM9
+  2q1LXXSUxOVPlFmlM0xf45qLHtZ6d1i2Ejz1JOOPvzpbF61s0S7NslUh5RL+411p
+  S4W8KlvezgcANfLzsADMez5tdGsgHoZ3Jn0aUql/5fGKLGg/aQO3ah5JGrXfWt5X
+  n4HrWwbzWW5Nw2pRC6kcjgwfTWsjoVrNtGTViPZ156x3vYt5
 mongodb__repl_set_members:
   - host: 'node1.example.com'
   - host: 'node2.example.com:27018'
