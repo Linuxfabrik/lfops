@@ -39,3 +39,54 @@ enabled=1
 gpgcheck=1
 countme=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
+
+
+## Sources
+[baseos-source]
+name=AlmaLinux $releasever - BaseOS Source
+mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/baseos-source
+# baseurl=https://repo.almalinux.org/vault/$releasever/BaseOS/Source/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
+
+[appstream-source]
+name=AlmaLinux $releasever - AppStream Source
+mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/appstream-source
+# baseurl=https://repo.almalinux.org/vault/$releasever/AppStream/Source/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
+
+[extras-source]
+name=AlmaLinux $releasever - Extras Source
+mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/extras-source
+# baseurl=https://repo.almalinux.org/vault/$releasever/extras/Source/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
+
+## Debuginfo
+[baseos-debuginfo]
+name=AlmaLinux $releasever - BaseOS debuginfo
+mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/baseos-debuginfo
+# baseurl=https://repo.almalinux.org/vault/$releasever/BaseOS/debug/$basearch/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
+
+[appstream-debuginfo]
+name=AlmaLinux $releasever - AppStream debuginfo
+mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/appstream-debuginfo
+# baseurl=https://repo.almalinux.org/vault/$releasever/AppStream/debug/$basearch/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
+
+[extras-debuginfo]
+name=AlmaLinux $releasever - Extras debuginfo
+mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/extras-debuginfo
+# baseurl=https://repo.almalinux.org/vault/$releasever/extras/debug/$basearch/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
