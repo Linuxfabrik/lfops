@@ -109,6 +109,8 @@
 
   - name: 'check if host is primary and writable'
     community.mongodb.mongodb_shell:
+      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_port: '{{ mongodb__conf_net_port }}'
       eval: 'db.hello().isWritablePrimary'
       mongo_cmd: 'mongosh'
       transform: 'json'
@@ -131,14 +133,14 @@
 
   - name: 'Create DBA "{{ mongodb__admin_user["username"] }}" (if first user, using localhost exception)' # https://www.mongodb.com/docs/manual/core/localhost-exception/
     community.mongodb.mongodb_user:
+      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_port: '{{ mongodb__conf_net_port }}'
       name: '{{ mongodb__admin_user["username"] }}'
       password: '{{ mongodb__admin_user["password"] }}'
       database: 'admin'
       roles: 'root'
       state: 'present'
       update_password: 'always'
-      login_host: '{{ mongodb__conf_net_bind_ip }}'
-      login_port: '{{ mongodb__conf_net_port }}'
       create_for_localhost_exception: '/etc/ansible/facts.d/mongodb__dba_created.state'
     when:
       - 'mongodb__conf_security_authorization'
@@ -147,17 +149,17 @@
 
   - name: 'Create, update or delete MongoDB users'
     community.mongodb.mongodb_user:
+      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_port: '{{ mongodb__conf_net_port }}'
+      login_user: '{{ mongodb__admin_user["username"] }}'
+      login_password: '{{ mongodb__admin_user["password"] }}'
+      login_database: 'admin'
       name: '{{ item["username"] }}'
       password: '{{ item["password"] }}'
       database: '{{ item["database"] }}'
       roles: '{{ item["roles"] | default(omit) }}'
       state: '{{ item["state"] | default("present") }}'
       update_password: 'always' # note: sadly 'always' is not idempotent
-      login_host: '{{ mongodb__conf_net_bind_ip }}'
-      login_port: '{{ mongodb__conf_net_port }}'
-      login_user: '{{ mongodb__admin_user["username"] }}'
-      login_password: '{{ mongodb__admin_user["password"] }}'
-      login_database: 'admin'
     loop: '{{ mongodb__users__combined_var }}'
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
@@ -173,17 +175,17 @@
 
   - name: 'Create MongoDB Dump user'
     community.mongodb.mongodb_user:
+      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_port: '{{ mongodb__conf_net_port }}'
+      login_user: '{{ mongodb__admin_user["username"] }}'
+      login_password: '{{ mongodb__admin_user["password"] }}'
+      login_database: 'admin'
       name: '{{ mongodb__dump_user["username"] }}'
       password: '{{ mongodb__dump_user["password"] }}'
       database: '{{ mongodb__dump_user["auth_database"] | d("admin") }}'
       roles: 'backup' # https://www.mongodb.com/docs/manual/reference/built-in-roles/#mongodb-authrole-backup
       state: '{{ mongodb__dump_user["state"] | default("present") }}'
       update_password: 'always' # note: sadly 'always' is not idempotent
-      login_host: '{{ mongodb__conf_net_bind_ip }}'
-      login_port: '{{ mongodb__conf_net_port }}'
-      login_user: '{{ mongodb__admin_user["username"] }}'
-      login_password: '{{ mongodb__admin_user["password"] }}'
-      login_database: 'admin'
     when:
       - 'mongodb__dump_user is defined'
       - 'mongodb__dump_user | length'
