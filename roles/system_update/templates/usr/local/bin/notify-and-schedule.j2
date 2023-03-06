@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2022030102
+# 2023030601
 
 export LC_ALL=C
 
@@ -36,7 +36,7 @@ EOF
 
 {% if ansible_facts['os_family'] == 'RedHat' %}
 yum clean all 1> /dev/null 2>&1
-yum check-update >> /tmp/check-update 2> /tmp/system-update-check-stderr
+yum -y check-update >> /tmp/check-update 2> /tmp/system-update-check-stderr
 retc=$?
 
 if [ "$retc" -eq 100 ]; then
