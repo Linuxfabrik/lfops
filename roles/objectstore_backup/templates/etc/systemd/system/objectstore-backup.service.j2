@@ -5,7 +5,7 @@
 Description=Minio ObjectStore Backup Service
 
 [Service]
-ExecStart=/usr/local/bin/mc --config-dir /etc/mc mirror --remove --overwrite "{{ objectstore_backup__source_name }}"/{{ objectstore_backup__source_bucket }}/ "{{ objectstore_backup__destination_name }}"/{{ objectstore_backup__destination_bucket }}
+ExecStart=/usr/local/bin/mc.sh
 Type=oneshot
 User=root
 

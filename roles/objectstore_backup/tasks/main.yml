@@ -25,6 +25,16 @@
       - 'etc/systemd/system/objectstore-backup.service'
       - 'etc/systemd/system/objectstore-backup.timer'
 
+  - name: 'Deploy systemd service wrapper script'
+    ansible.builtin.template:
+      src: '{{ item }}.j2'
+      dest: '/{{ item }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    loop:
+      - 'usr/local/bin/mc.sh'
+
   - name: 'systemctl enable objectstore-backup.timer --now'
     ansible.builtin.systemd:
       name: 'objectstore-backup.timer'
