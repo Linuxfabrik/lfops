@@ -10,5 +10,10 @@
       path: '/etc/NetworkManager/conf.d/99-cloud-init.conf'
       state: 'absent'
 
+  - name: 'rm /etc/cloud/cloud.cfg.rpmsave'
+    ansible.builtin.file:
+      path: '/etc/cloud/cloud.cfg.rpmsave'
+      state: 'absent'
+
   tags:
     - 'cloud_init'
