@@ -10,7 +10,10 @@
 
     - role: 'linuxfabrik.lfops.at'
     - role: 'linuxfabrik.lfops.mailx'
+
     - role: 'linuxfabrik.lfops.postfix'
+      when:
+        - 'not system_update__skip_postfix | d(false)'
 
     - role: 'linuxfabrik.lfops.mailto_root'
       when:
