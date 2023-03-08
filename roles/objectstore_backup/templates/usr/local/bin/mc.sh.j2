@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
-/usr/local/bin/mc --config-dir /etc/mc mirror --remove --overwrite "{{ objectstore_backup__source_  name }}"/{{ objectstore_backup__source_bucket }}/ "{{ objectstore_backup__destination_name }}"/{{ objectstor  e_backup__destination_bucket }}
+# {{ ansible_managed }}
+# 2023030801
+
+/usr/local/bin/mc --config-dir /etc/mc mirror --remove --overwrite "{{ objectstore_backup__source_  name }}"/{{ objectstore_backup__source_bucket }}/ "{{ objectstore_backup__destination_name }}"/{{ objectstore_backup__destination_bucket }}
