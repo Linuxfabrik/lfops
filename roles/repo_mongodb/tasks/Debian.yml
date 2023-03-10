@@ -1,0 +1,28 @@
+- block:
+
+  # https://www.mongodb.com/docs/v6.0/tutorial/install-mongodb-on-debian/
+  - name: 'apt install gnupg # required for apt-key add'
+    ansible.builtin.package:
+      name:
+        - 'gnupg'
+      state: 'present'
+
+  - name: 'wget -qO - https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc | apt-key add -'
+    ansible.builtin.apt_key:
+      url: 'https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc'
+      state: 'present'
+
+  - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: 'etc/apt/sources.list.d/mongodb-org.list.j2'
+      dest: '/etc/apt/sources.list.d/mongodb-org.list'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+
+  tags:
+    - 'repo_mongodb'
