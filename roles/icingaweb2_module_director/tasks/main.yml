@@ -175,4 +175,5 @@
       state: 'absent'
 
   tags:
+    - 'icingaweb2_module_director'
     - 'icingaweb2_module_director:basket'
