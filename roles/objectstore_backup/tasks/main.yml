@@ -33,7 +33,7 @@
       group: 'root'
       mode: 0o755
     loop:
-      - 'usr/local/bin/mc.sh'
+      - 'usr/local/bin/mc-mirror.sh'
 
   - name: 'systemctl enable objectstore-backup.timer --now'
     ansible.builtin.systemd:
