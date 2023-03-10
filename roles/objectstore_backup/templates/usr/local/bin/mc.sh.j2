@@ -2,9 +2,9 @@
 # {{ ansible_managed }}
 # 2023030801
 
-/usr/local/bin/mc --config-dir /etc/mc mirror --remove --overwrite "{{ objectstore_backup__source_  name }}"/{{ objectstore_backup__source_bucket }}/ "{{ objectstore_backup__destination_name }}"/{{ objectstore_backup__destination_bucket }}|awk '\
+/usr/local/bin/mc --config-dir /etc/mc mirror --remove --overwrite "{{ objectstore_backup__source_name }}"/{{ objectstore_backup__source_bucket }}/ "{{ objectstore_backup__destination_name }}"/{{ objectstore_backup__destination_bucket }}|awk '\
 BEGIN {removed=0; copied=0;}\
-{ 
+{
  if ($1 == "Removed") removed+=1; \
 else if ($2 == "->") copied++; \
 else if ($1 != "Removed" && $2!="->" ) print $0 \
