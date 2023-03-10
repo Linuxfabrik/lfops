@@ -1,10 +1,13 @@
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
   - name: 'Install python3-virtualenv python3-devel'
     ansible.builtin.package:
-      name:
-        - 'python3-virtualenv'
-        - 'python3-devel'
+      name: '{{ python_venv__required_packages }}'
       state: 'present'
 
   # - name: 'Deploy /etc/systemd/system/python-venv-update.service'

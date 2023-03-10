@@ -1,6 +1,6 @@
-- name: 'python3 -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %} {{ venv.name }}'
+- name: 'python3 -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %}{{ venv.name }}'
   ansible.builtin.command:
-    cmd: 'python3 -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %} {{ venv.name }}'
+    cmd: 'python3 -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %}{{ venv.name }}'
     chdir: '/opt/python-venv'
     creates: '/opt/python-venv/{{ venv.name }}/bin/activate'
   ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified

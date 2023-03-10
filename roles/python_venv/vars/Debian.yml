@@ -1,0 +1,3 @@
+python_venv__required_packages:
+  - 'python3-venv'
+  - 'python3-dev'

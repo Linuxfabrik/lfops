@@ -7,6 +7,7 @@ Runs on
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
 * Fedora 35
+* Debian 11
 
 
 ## Mandatory Requirements
