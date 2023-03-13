@@ -344,9 +344,9 @@
       path: '/tmp/mariadb-sys-schema'
       state: 'directory'
 
-  - name: 'tar xzvf /tmp/mariadb-sys-schema.tar.gz'
+  - name: 'tar xzvf /tmp/ansible.mariadb-sys-schema.tar.gz'
     ansible.builtin.unarchive:
-      src: '/tmp/mariadb-sys-schema.tar.gz'
+      src: '/tmp/ansible.mariadb-sys-schema.tar.gz'
       dest: '/tmp/mariadb-sys-schema'
       remote_src: true
 
