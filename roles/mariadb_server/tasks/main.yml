@@ -326,10 +326,18 @@
 
 - block:
 
-  - name: 'wget https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz'
+  - name: 'curl https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz --output /tmp/ansible.mariadb-sys-schema.tar.gz'
     ansible.builtin.get_url:
       url: 'https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz'
-      dest: '/tmp/mariadb-sys-schema.tar.gz'
+      dest: '/tmp/ansible.mariadb-sys-schema.tar.gz'
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.mariadb-sys-schema.tar.gz to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.mariadb-sys-schema.tar.gz'
+      dest: '/tmp/ansible.mariadb-sys-schema.tar.gz'
 
   - name: 'mkdir /tmp/mariadb-sys-schema'
     ansible.builtin.file:
