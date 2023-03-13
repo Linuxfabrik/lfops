@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'curl https://rpms.remirepo.net/RPM-GPG-KEY-remi --remote-name /tmp/ansible.RPM-GPG-KEY-remi'
+  - name: 'curl https://rpms.remirepo.net/RPM-GPG-KEY-remi --output /tmp/ansible.RPM-GPG-KEY-remi'
     ansible.builtin.get_url:
       url: 'https://rpms.remirepo.net/RPM-GPG-KEY-remi'
       dest: '/tmp/ansible.RPM-GPG-KEY-remi'

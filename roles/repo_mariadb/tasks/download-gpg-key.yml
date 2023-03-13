@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'curl {{ gpg_key.url }} --remote-name /tmp/ansible.{{ gpg_key.dest | basename }}'
+  - name: 'curl {{ gpg_key.url }} --output /tmp/ansible.{{ gpg_key.dest | basename }}'
     ansible.builtin.get_url:
       url: '{{ gpg_key.url }}'
       dest: '/tmp/ansible.{{ gpg_key.dest | basename }}'

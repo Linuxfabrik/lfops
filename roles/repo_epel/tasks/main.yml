@@ -37,7 +37,7 @@
       mode: 0o644
     loop: '{{ repo_epel__repo_files }}'
 
-  - name: 'curl {{ repo_epel__gpg_key_url }} --remote-name /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
+  - name: 'curl {{ repo_epel__gpg_key_url }} --output /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
     ansible.builtin.get_url:
       url: '{{ repo_epel__gpg_key_url }}'
       dest: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
