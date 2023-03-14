@@ -6,6 +6,7 @@
 
     - role: 'linuxfabrik.lfops.yum_utils'
       when:
+        - 'ansible_facts["os_family"] == "RedHat"'
         - 'not system_update__skip_yum_utils | d(false)'
 
     - role: 'linuxfabrik.lfops.at'
