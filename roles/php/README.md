@@ -117,11 +117,11 @@ Variables for `php.ini` directives and their default values, defined and support
 | Role Variable     | Documentation      | Default Value      |
 | -------------     | -------------      | -------------      |
 | `php__fpm_pools__group_var` / `php__fpm_pools__host_var` | List defining pool configuration. Possible options:<ul><li>`name`: Pool name</li><li>`user`</li><li>`group`</li><li>`raw`</li></ul> | `name: 'www'` `user: 'apache'` `group: 'apache'` |
-| `php__fpm_pool_conf_pm__combined_var__group_var` / `php__fpm_pool_conf_pm__combined_var__host_var` | Choose how the process manager will control the number of child processes. | `'dynamic'` |
-| `php__fpm_pool_conf_pm_max_children__combined_var__group_var` / `php__fpm_pool_conf_pm_max_children__combined_var__host_var` | The number of child processes to be created when pm is set to 'static' and the maximum number of child processes when pm is set to 'dynamic' or 'ondemand'. | `50` |
-| `php__fpm_pool_conf_pm_max_spare_servers__combined_var__group_var` / `php__fpm_pool_conf_pm_max_spare_servers__combined_var__host_var` | The desired maximum number of idle server processes. | `35` |
-| `php__fpm_pool_conf_pm_min_spare_servers__combined_var__group_var` / `php__fpm_pool_conf_pm_min_spare_servers__combined_var__host_var` | The desired minimum number of idle server processes. | `5` |
-| `php__fpm_pool_conf_pm_start_servers__combined_var__group_var` / `php__fpm_pool_conf_pm_start_servers__combined_var__host_var` | The number of child processes created on startup. | `5` |
+| `php__fpm_pool_conf_pm__group_var` / `php__fpm_pool_conf_pm__host_var` | Choose how the process manager will control the number of child processes. | `'dynamic'` |
+| `php__fpm_pool_conf_pm_max_children__group_var` / `php__fpm_pool_conf_pm_max_children__host_var` | The number of child processes to be created when pm is set to 'static' and the maximum number of child processes when pm is set to 'dynamic' or 'ondemand'. | `50` |
+| `php__fpm_pool_conf_pm_max_spare_servers__group_var` / `php__fpm_pool_conf_pm_max_spare_servers__host_var` | The desired maximum number of idle server processes. | `35` |
+| `php__fpm_pool_conf_pm_min_spare_servers__group_var` / `php__fpm_pool_conf_pm_min_spare_servers__host_var` | The desired minimum number of idle server processes. | `5` |
+| `php__fpm_pool_conf_pm_start_servers__group_var` / `php__fpm_pool_conf_pm_start_servers__host_var` | The number of child processes created on startup. | `5` |
 
 Example:
 ```yaml
