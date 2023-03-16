@@ -1,5 +1,10 @@
 - block:
 
+  - name: 'get size of /var/log/journal filesystem'
+    ansible.builtin.shell:
+      cmd: 'df --output=size /var/log/journal'
+      register: 'systemd_journald_var_log_journal_df_result'
+
   - name: 'Deploy /etc/systemd/journald.conf'
     ansible.builtin.template:
       src: 'etc/systemd/journald.conf.j2'
