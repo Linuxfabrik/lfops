@@ -1,3 +1,4 @@
 systemd_journald__conf_storage: 'persistent'
+systemd_journald__conf_system_max_use: 40
 systemd_journald__service_enabled: true
 systemd_journald__service_state: 'started'
