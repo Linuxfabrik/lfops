@@ -7,6 +7,7 @@ Important: When setting up a replica set across members, make sure that there is
 Runs on
 
 * RHEL 8 (and compatible)
+* Debian 11
 
 This role is only compatible with the following MongoDB versions:
 
