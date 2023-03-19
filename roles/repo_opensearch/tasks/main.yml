@@ -1,17 +1,16 @@
-- block:
-
-  - name: 'import opensearch gpg key'
-    ansible.builtin.rpm_key:
-      state: 'present'
-      key: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
-
-  - name: 'deploy /etc/yum.repos.d/opensearch.repo (mirror: {{ repo_opensearch__mirror_url | default("") }})'
-    ansible.builtin.template:
-      src: 'etc/yum.repos.d/opensearch.repo.j2'
-      dest: '/etc/yum.repos.d/opensearch.repo'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  vars:
+    __task_file:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
     - 'repo_opensearch'

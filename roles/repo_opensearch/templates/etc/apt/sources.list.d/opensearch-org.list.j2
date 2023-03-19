@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2023031901
+
+{% if repo_opensearch__mirror_url is defined and repo_opensearch__mirror_url | length %}
+deb {{ repo_opensearch__mirror_url }}/opensearch/{{ repo_opensearch__version__combined_var }}/apt stable main
+{% else %}
+deb https://artifacts.opensearch.org/releases/bundle/opensearch/{{ repo_opensearch__version__combined_var }}/apt stable main
+{% endif %}

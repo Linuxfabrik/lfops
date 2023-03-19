@@ -1,0 +1,28 @@
+- block:
+
+  # https://www.opensearch.com/docs/v6.0/tutorial/install-opensearch-on-debian/
+  - name: 'apt install gnupg # required for apt-key add'
+    ansible.builtin.package:
+      name:
+        - 'gnupg'
+      state: 'present'
+
+  - name: 'curl -o- https://artifacts.opensearch.org/publickeys/opensearch.pgp | sudo apt-key add -'
+    ansible.builtin.apt_key:
+      url: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
+      state: 'present'
+
+  - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: 'etc/apt/sources.list.d/opensearch-org.list.j2'
+      dest: '/etc/apt/sources.list.d/opensearch-org.list'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+
+  tags:
+    - 'repo_opensearch'
