@@ -5,6 +5,7 @@ This role deploys the [Opensearch Package Repository](https://opensearch.org/doc
 Runs on
 
 * RHEL 8 (and compatible)
+* Debian 11
 
 
 ## Tags
