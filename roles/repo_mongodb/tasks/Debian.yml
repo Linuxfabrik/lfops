@@ -12,7 +12,7 @@
       url: 'https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc'
       state: 'present'
 
-  - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
+  - name: 'deploy the repo file (mirror: {{ repo_mongodb__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/apt/sources.list.d/mongodb-org.list.j2'
       dest: '/etc/apt/sources.list.d/mongodb-org.list'
