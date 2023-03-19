@@ -23,7 +23,7 @@
 
   - name: 'Deploy /etc/mongod.conf'
     ansible.builtin.template:
-      src: 'etc/{{ mongodb__installed_version }}-mongod.conf.j2'
+      src: 'etc/{{ ansible_facts["distribution"] }}-{{ mongodb__installed_version }}-mongod.conf.j2'
       dest: '/etc/mongod.conf'
       owner: 'root'
       group: 'root'
