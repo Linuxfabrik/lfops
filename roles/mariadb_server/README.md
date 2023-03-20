@@ -73,7 +73,7 @@ mariadb_server__admin_user:
 ```yaml
 # recommended
 mariadb_server__dump_user:
-  username: 'mariadb-dump'
+  username: 'mariadb-backup'
   password: 'linuxfabrik'
   state: 'present'
 ```
