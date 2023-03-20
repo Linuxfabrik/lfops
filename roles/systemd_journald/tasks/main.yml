@@ -1,5 +1,11 @@
 - block:
 
+  - name: 'mkdir -p /var/log/journal'
+    ansible.builtin.file:
+      path: '/var/log/journal'
+      state: 'directory'
+      # not touching permissions, as they are managed by /usr/lib/tmpfiles.d/systemd.conf
+
   - name: 'get size of /var/log/journal filesystem'
     ansible.builtin.shell:
       cmd: 'df --output=size /var/log/journal'
