@@ -171,6 +171,13 @@ graylog_server__is_leader: false
 ```
 
 
+## Troubleshooting
+
+`/bin/sh: /opt/python-venv/pymongo/bin/python3: No such file or directory`
+
+You either have to run the whole playbook, or python_venv directly: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_server --tags python_venv`
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)
