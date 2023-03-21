@@ -14,15 +14,6 @@
       mode: 0o644
     notify: 'systemd_journald: restart systemd-journald'
 
-  - name: 'Deploy logrotate.conf'
-    ansible.builtin.copy:
-      src: 'files/etc/logrotate.conf'
-      dest: '/etc/logrotate.conf'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-      backup: 'true'
-
   tags:
     - 'systemd_journald'
 
