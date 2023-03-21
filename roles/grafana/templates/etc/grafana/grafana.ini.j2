@@ -605,7 +605,7 @@ hide_version = true
 
 #################################### Auth LDAP ##########################
 [auth.ldap]
-enabled = {{ (grafana__ldap_config is defined and grafana__ldap_config | length) | string | lower }}
+enabled = {{ (grafana__ldap_config is defined and grafana__ldap_config.keys() | length) | ternary(true | string | lower, false | string | lower) }}
 config_file = /etc/grafana/ldap.toml
 allow_sign_up = true
 
