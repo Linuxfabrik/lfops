@@ -11,6 +11,7 @@ Runs on
 
 This role is only compatible with the following MongoDB versions:
 
+* 4.2 (only tested on RHEL 8)
 * 4.4 (only tested on RHEL 8)
 * 6.0
 
