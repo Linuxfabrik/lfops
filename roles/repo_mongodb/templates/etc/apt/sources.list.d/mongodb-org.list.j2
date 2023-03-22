@@ -1,8 +1,8 @@
 # {{ ansible_managed }}
-# 2023031001
+# 2023032201
 
 {% if repo_mongodb__mirror_url is defined and repo_mongodb__mirror_url | length %}
-deb http://repo.mongodb.org/apt/debian {{ ansible_facts["distribution_release"] }}/mongodb-org/{{ repo_mongodb__version }} main # TODO: usage with mirror? what path?
+deb {{ repo_mongodb__mirror_url }}/mongodb-org {{ ansible_facts["distribution_release"] }}/mongodb-org/{{ repo_mongodb__version }} main
 {% else %}
 deb http://repo.mongodb.org/apt/debian {{ ansible_facts["distribution_release"] }}/mongodb-org/{{ repo_mongodb__version }} main
 {% endif %}
