@@ -1,4 +1,4 @@
-# Ansible Role linuxfabrik.lfops.repo_gitlab
+# Ansible Role linuxfabrik.lfops.repo_gitlab_ce
 
 This role deploys the GitLab CE Repository.
 
