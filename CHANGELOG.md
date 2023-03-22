@@ -12,17 +12,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+Playbook: setup_basic
+* Add support for AlmaLinux 8
+
+Role: cloud_init
+* Add task to remove `/etc/cloud/cloud.cfg.rpmsave`
+
+Role: graylog_server
+* Add variables and documentation for multi-node setup
+
+Role: logrotate
+* Add compression
+
+Role: mongodb
+* Add Debian support
+
+Role: mongodb
+* Add keyfile handling
+
+Role: mongodb
+* Adjust for replica set across members
+
+Role: mongodb
+* Implement user management (fix #89)
+
+Role: opensearch
+* Add Debian support
+* Add variables for cluster configuration
+
 Role: php
 * Add tag `php:fpm`
+
+Role: python_venv
+* Add Debian support
+
+Role: repo_baseos
+* Add AlmaLinux 8 support
+
+Role: repo_mongodb
+* Add Debian support
+
+Role: repo_opensearch
+* Add Debian support
+
+Role: systemd_journald
+* Make SystemMaxUse configurable
+
+Role: systemd_update
+* Add option `-y` to `yum check-update`
 
 
 ### Changed
 
 Role: opensearch
 * Make `opensearch__version*` optional
-
-
-
 
 
 
