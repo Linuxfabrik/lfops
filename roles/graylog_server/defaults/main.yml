@@ -92,14 +92,11 @@ graylog_server__apps__apps__dependent_var:
 
 graylog_server__kernel_settings__transparent_hugepages__dependent_var: 'never'
 
-graylog_server__repo_elasticsearch_oss__version__dependent_var: '7.x'
 graylog_server__elasticsearch_oss__action_auto_create_index__dependent_var: false
 graylog_server__elasticsearch_oss__cluster_name__dependent_var: 'graylog'
 
-graylog_server__repo_opensearch__version__dependent_var: '2.x'
 graylog_server__opensearch__action_auto_create_index__dependent_var: false
 graylog_server__opensearch__cluster_name__dependent_var: 'graylog'
-graylog_server__opensearch__version__dependent_var: '2.5.0'
 
 graylog_server__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'

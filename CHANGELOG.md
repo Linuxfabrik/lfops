@@ -67,6 +67,8 @@ Role: systemd_update
 Role: opensearch
 * Make `opensearch__version*` optional
 
+Role: graylog_server
+* Remove version defaults from the role
 
 
 ## [2.0.1] - 2023-02-28
