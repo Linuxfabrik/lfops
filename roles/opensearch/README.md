@@ -9,6 +9,7 @@ Currently supported versions:
 Runs on
 
 * RHEL 8 (and compatible)
+* Debian 11
 
 
 ## Mandatory Requirements
