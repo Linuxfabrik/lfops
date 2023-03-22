@@ -1,0 +1,28 @@
+- block:
+
+  # https://go2docs.graylog.org/5-0/downloading_and_installing_graylog/debian_installation.htm
+  - name: 'apt install gnupg # required for apt-key add'
+    ansible.builtin.package:
+      name:
+        - 'gnupg'
+      state: 'present'
+
+  - name: 'wget -qO - https://packages.graylog2.org/repo/debian/pubkey.gpg | apt-key add -'
+    ansible.builtin.apt_key:
+      url: 'https://packages.graylog2.org/repo/debian/pubkey.gpg'
+      state: 'present'
+
+  - name: 'deploy the repo file (mirror: {{ repo_graylog__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: 'etc/apt/sources.list.d/graylog.list.j2'
+      dest: '/etc/apt/sources.list.d/graylog.list'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+
+  tags:
+    - 'repo_graylog'

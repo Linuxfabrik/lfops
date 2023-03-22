@@ -49,6 +49,9 @@ Role: python_venv
 Role: repo_baseos
 * Add AlmaLinux 8 support
 
+Role: repo_graylog
+* Add Debian support
+
 Role: repo_mongodb
 * Add Debian support
 
