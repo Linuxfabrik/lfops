@@ -1,14 +1,22 @@
 - block:
 
-  - name: 'Install opensearch-{{ opensearch__version__combined_var }}'
+  - name: 'Install opensearch{{ (opensearch__version__combined_var | length) | ternary("-" ~ opensearch__version__combined_var, "") }}'
     ansible.builtin.package:
       name:
-        - 'opensearch-{{ opensearch__version__combined_var }}'
+        - 'opensearch{{ (opensearch__version__combined_var | length) | ternary("-" ~ opensearch__version__combined_var, "") }}'
       state: 'present'
 
-  - name: 'Deploy /etc/opensearch/{{ opensearch__version__combined_var[0:1] }}.x-opensearch.yml'
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get installed OpenSearch version'
+    ansible.builtin.set_fact:
+      opensearch__installed_version: '{{ ansible_facts["packages"]["opensearch"][0]["version"] | regex_replace("\.\d+$", "") }}'
+
+  - name: 'Deploy /etc/opensearch/{{ opensearch__installed_version[:1] }}.x-opensearch.yml'
     ansible.builtin.template:
-      src: 'etc/opensearch/{{ opensearch__version__combined_var[0:1] }}.x-opensearch.yml.j2'
+      src: 'etc/opensearch/{{ opensearch__installed_version[:1] }}.x-opensearch.yml.j2'
       dest: '/etc/opensearch/opensearch.yml'
       owner: 'opensearch'
       group: 'opensearch'

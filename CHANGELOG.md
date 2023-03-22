@@ -18,6 +18,8 @@ Role: php
 
 ### Changed
 
+Role: opensearch
+* Make `opensearch__version*` optional
 
 
 
