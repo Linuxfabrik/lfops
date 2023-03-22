@@ -73,8 +73,6 @@
       ports: '{{ openvpn_server__port }}'
       proto: 'udp'
       setype: 'openvpn_port_t'
-    vars:
-      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   - name: 'Deploy example client config to /tmp/{{ inventory_hostname }}.conf (on ansible control node)'
     ansible.builtin.template:

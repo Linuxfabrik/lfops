@@ -18,7 +18,6 @@
       kernel_settings_sysfs: '{{ kernel_settings__sysfs__combined_var }}'
       kernel_settings_transparent_hugepages: '{{ kernel_settings__transparent_hugepages__combined_var }}'
       kernel_settings_transparent_hugepages_defrag: '{{ kernel_settings__transparent_hugepages_defrag__combined_var }}'
-      ansible_python_interpreter: '/usr/libexec/platform-python'
 
   - ansible.builtin.debug:
       msg: 'Please restart the server manually to apply new kernel settings.'
