@@ -20,9 +20,9 @@
     ansible.builtin.set_fact:
       graylog_server__installed_version: '{{ ansible_facts["packages"]["graylog-server"][0]["version"] | regex_replace("\.\d+$", "") }}'
 
-  - name: 'Deploy /etc/graylog/server/server.conf'
+  - name: 'Deploy /etc/graylog/server/server.conf (version: {{ graylog_server__installed_version[:3] }})'
     ansible.builtin.template:
-      src: 'etc/graylog/server/{{ graylog_server__installed_version }}-server.conf.j2'
+      src: 'etc/graylog/server/{{ graylog_server__installed_version[:3] }}-server.conf.j2'
       dest: '/etc/graylog/server/server.conf'
       owner: 'graylog'
       group: 'graylog'

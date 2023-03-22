@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role: graylog_server
+* Remove support for Graylog < 5.0
+
 
 ### Added
 
@@ -20,6 +23,7 @@ Role: cloud_init
 
 Role: graylog_server
 * Add variables and documentation for multi-node setup
+* Add Debian support
 
 Role: logrotate
 * Add compression

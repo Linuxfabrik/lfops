@@ -87,7 +87,6 @@ graylog_server__system_default_index_set:
 # ---------------------------------------------------
 
 graylog_server__apps__apps__dependent_var:
-  - name: 'java-17-openjdk'
   - name: 'tar'
 
 graylog_server__kernel_settings__transparent_hugepages__dependent_var: 'never'

@@ -3,10 +3,6 @@
 This role installs and configures a [Graylog](https://www.graylog.org) server. Optionally, it allows the creation of a cluster setup.
 
 Currently supported versions:
-* 4.0
-* 4.1
-* 4.2
-* 4.3
 * 5.0
 
 You can choose between `opensearch` (default) and `elasticsearch` for the searchengine. If you choose to use `opensearch`, Graylog Server 4.3+ is required.
@@ -18,6 +14,7 @@ Note that this role does NOT let you specify a particular Graylog Server version
 Runs on
 
 * RHEL 8 (and compatible)
+* Debian 11
 
 
 ## Mandatory Requirements
