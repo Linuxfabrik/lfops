@@ -14,6 +14,7 @@
       src: '/tmp/ansible.linuxfabrik.key'
       dest: '/tmp/ansible.linuxfabrik.key'
       mode: 0o644
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'rpm --import /tmp/ansible.linuxfabrik.key'
     ansible.builtin.rpm_key:
