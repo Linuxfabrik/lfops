@@ -47,43 +47,43 @@
 
 - block:
 
-  - name: 'Create directory /opt/keycloak/tls'
-    ansible.builtin.file:
-      path: '/opt/keycloak/tls'
-      state: 'directory'
+  - name: "Create keycloak config file"
+    ansible.builtin.template:
+      src: 'opt/keycloak/conf/keycloak.conf.j2'
+      dest: '/opt/keycloak/conf/keycloak.conf'
       owner: 'keycloak'
       group: 'keycloak'
-    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
+      mode: 0o640
 
   - name: 'Create private key (RSA, 4096 bits)'
     community.crypto.openssl_privatekey:
-      path: '/opt/keycloak/tls/keycloak.key'
+      path: '/opt/keycloak/conf/keycloak.key.pem'
       owner: 'keycloak'
       group: 'keycloak'
-    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
+    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode | length == 0 or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
 
   - name: 'Create certificate signing request (CSR) for self-signed certificate'
     community.crypto.openssl_csr_pipe:
-      privatekey_path: '/opt/keycloak/tls/keycloak.key'
+      privatekey_path: '/opt/keycloak/conf/keycloak.key.pem'
       common_name: 'linuxfabrik.ch'
       organization_name: 'Linuxfabrik GmbH'
       subject_alt_name:
         - "DNS:keycloak.local"
     register: 'csr'
-    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
+    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode | length == 0 or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
 
   - name: 'Create simple self-signed certificate'
     community.crypto.x509_certificate:
-      path: '/opt/keycloak/tls/keycloak.pem'
+      path: '/opt/keycloak/conf/keycloak.crt.pem'
       owner: 'keycloak'
       group: 'keycloak'
-      privatekey_path: '/opt/keycloak/tls/keycloak.key'
+      privatekey_path: '/opt/keycloak/conf/keycloak.key.pem'
       csr_content: "{{ csr.csr }}"
       provider: 'selfsigned'
-    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
+    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode | length == 0 or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
 
-  - name: 'Change the working directory to /opt/keycloak and bin/kc.sh build --db {{ keycloak__db_server }}'
-    ansible.builtin.shell: 'bin/kc.sh build --db {{ keycloak__db_server }}'
+  - name: 'Change the working directory to /opt/keycloak and bin/kc.sh build --db {{ keycloak__db_vendor }}'
+    ansible.builtin.shell: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
     args:
       chdir: '/opt/keycloak'
 

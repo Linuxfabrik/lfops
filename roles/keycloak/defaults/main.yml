@@ -1,6 +1,39 @@
-keycloak__version: '18.0.0'
+keycloak__db_url_host: 'localhost'
+keycloak__db_vendor: 'mariadb'
+keycloak__db_url_database: 'keycloak'
+keycloak__expose_metrics_endpoints: true
+keycloak__expose_healthcheck_endpoints: true
+keycloak__hostname_strict_backchannel: false
 keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
-keycloak__db_server: 'mariadb'
-keycloak__db_host: 'localhost'
-keycloak__db_name: 'keycloak'
-keycloak__db_user: 'keycloak'
+keycloak__log: 'file'
+keycloak__log_file: '/var/log/keycloak/keycloak.log'
+keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
+
+# -----------------------------------------------------------------------------
+# no need to document the variables in the README below this line, as they
+# are internally for this role
+
+keycloak__apps__apps__dependent_var:
+  - name: 'java-11-openjdk'
+    state: 'present'
+
+
+keycloak__mariadb_server__databases__dependent_var:
+  - name: '{{ keycloak__db_url_database }}'
+    collation: 'utf8_general_ci'
+    encoding: 'utf8'
+    state: 'present'
+
+keycloak__mariadb_server__users__dependent_var:
+  - username: '{{ keycloak__db_login.username }}'
+    password: '{{ keycloak__db_login.password }}'
+    host: '127.0.0.1'
+    priv:
+      - '{{ keycloak__db_url_database }}.*:ALL'
+    state: 'present'
+  - username: '{{ keycloak__db_login.username }}'
+    password: '{{ keycloak__db_login.password }}'
+    host: '{{ keycloak__db_url_host }}'
+    priv:
+      - '{{ keycloak__db_url_database }}.*:ALL'
+    state: 'present'

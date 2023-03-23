@@ -1,3 +1,6 @@
+# {{ ansible_managed }}
+# 2023032301
+
 [Unit]
 Description=Keycloak Service
 After=network.target
@@ -6,31 +9,7 @@ After=network.target
 User=keycloak
 Group=keycloak
 EnvironmentFile=/etc/sysconfig/keycloak
-{% if keycloak__mode == 'production' %}
-
-{% if keycloak__proxy_mode is defined and keycloak__proxy_mode == 'edge' %}
-
-ExecStart=/opt/keycloak/bin/kc.sh start --log=file --log-file=/var/log/keycloak/keycloak.log --db-url-host={{ keycloak__db_host }} --db-url-database={{ keycloak__db_name }} --db-username={{ keycloak__db_user }} --db-password={{ keycloak__db_password }} --hostname={{ keycloak__hostname }} --hostname-strict-backchannel={{ keycloak__hostname_strict_backchannel | default('false') }} --proxy edge
-
-{% elif keycloak__proxy_mode is defined and keycloak__proxy_mode == 'reencrypt' %}  --hostname-strict-backchannel={{ keycloak__hostname_strict_backchannel | default('false') }}
-
-ExecStart=/opt/keycloak/bin/kc.sh start --log=file --log-file=/var/log/keycloak/keycloak.log --https-certificate-file=/opt/keycloak/tls/keycloak.pem --https-certificate-key-file=/opt/keycloak/tls/keycloak.key --https-protocols={{ keycloak__https_protocols }} --db-url-host={{ keycloak__db_host }} --db-url-database={{ keycloak__db_name }} --db-username={{ keycloak__db_user }} --db-password={{ keycloak__db_password }} --hostname={{ keycloak__hostname }} --hostname-strict-backchannel={{ keycloak__hostname_strict_backchannel | default('false') }} --proxy reencrypt
-
-{% elif keycloak__proxy_mode is defined and keycloak__proxy_mode == 'passthrough' %}
-
-ExecStart=/opt/keycloak/bin/kc.sh start --log=file --log-file=/var/log/keycloak/keycloak.log --https-certificate-file=/opt/keycloak/tls/keycloak.pem --https-certificate-key-file=/opt/keycloak/tls/keycloak.key --https-protocols={{ keycloak__https_protocols }} --db-url-host={{ keycloak__db_host }} --db-url-database={{ keycloak__db_name }} --db-username={{ keycloak__db_user }} --db-password={{ keycloak__db_password }} --hostname={{ keycloak__hostname }} --hostname-strict-backchannel={{ keycloak__hostname_strict_backchannel | default('false') }} --proxy passthrough
-
-{% else %}
-
-ExecStart=/opt/keycloak/bin/kc.sh start --log=file --log-file=/var/log/keycloak/keycloak.log --https-certificate-file=/opt/keycloak/tls/keycloak.pem --https-certificate-key-file=/opt/keycloak/tls/keycloak.key --https-protocols={{ keycloak__https_protocols }} --db-url-host={{ keycloak__db_host }} --db-url-database={{ keycloak__db_name }} --db-username={{ keycloak__db_user }} --db-password={{ keycloak__db_password }} --hostname={{ keycloak__hostname }} --hostname-strict-backchannel={{ keycloak__hostname_strict_backchannel | default('false') }}
-
-{% endif %}
-
-{% else %}
-
-ExecStart=/opt/keycloak/bin/kc.sh start-dev --log=file --log-file=/var/log/keycloak/keycloak.log
-
-{% endif %}
+ExecStart=/opt/keycloak/bin/kc.sh {% if keycloak__mode == 'development' %}start-dev{% else %}start{% endif %}
 
 WorkingDirectory=/opt/keycloak
 

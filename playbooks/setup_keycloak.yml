@@ -28,9 +28,14 @@
         - 'not keycloak__skip_kernel_settings | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
+      mariadb_server__databases__dependent_var:
+        - '{{ keycloak__mariadb_server__databases__dependent_var }}'
+      mariadb_server__users__dependent_var:
+        - '{{ keycloak__mariadb_server__users__dependent_var }}'
 
     - role: 'linuxfabrik.lfops.python'
 
     - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: '{{ keycloak__apps__apps__dependent_var | d([]) }}'
 
     - role: 'linuxfabrik.lfops.keycloak'

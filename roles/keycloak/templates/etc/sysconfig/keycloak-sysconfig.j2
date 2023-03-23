@@ -1,3 +1,5 @@
 # {{ ansible_managed }}
-KEYCLOAK_ADMIN={{ keycloak__admin_user }}
-KEYCLOAK_ADMIN_PASSWORD='{{ keycloak__admin_pass }}'
+# 2023032301
+
+KEYCLOAK_ADMIN={{ keycloak__admin_login.username }}
+KEYCLOAK_ADMIN_PASSWORD={{ keycloak__admin_login.password }}
