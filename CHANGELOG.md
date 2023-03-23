@@ -30,14 +30,8 @@ Role: logrotate
 
 Role: mongodb
 * Add Debian support
-
-Role: mongodb
 * Add keyfile handling
-
-Role: mongodb
 * Adjust for replica set across members
-
-Role: mongodb
 * Implement user management (fix #89)
 
 Role: opensearch
