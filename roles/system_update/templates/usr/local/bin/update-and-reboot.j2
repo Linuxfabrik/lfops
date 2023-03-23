@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2022102701
+# 2023032301
 
 export LC_ALL=C
 
@@ -96,7 +96,7 @@ find / -mount -name '*.ucf-dist' -exec /root/send-mail "{{ system_update__mail_s
 
 # any restarts needed?
 {% if ansible_facts['os_family'] == 'RedHat' %}
-needs-restarting --reboothint 1> /dev/null
+needs-restarting --reboothint &> /dev/null
 if [ $? -eq 1 ]; then
     # save time and don't wait for any apache graceful finishing
     kill -9 "$($PIDOF httpd)" 2> /dev/null
@@ -109,7 +109,7 @@ if [ $? -eq 1 ]; then
     schedule_downtime_and_reboot
 fi
 
-needs-restarting > /tmp/needs-restarting
+needs-restarting 2> /dev/null > /tmp/needs-restarting
 if [ -s /tmp/needs-restarting ]; then
     # save time and don't wait for any graceful finishing apache
     kill -9 "$($PIDOF httpd)" 2> /dev/null
