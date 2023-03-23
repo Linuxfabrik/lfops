@@ -13,5 +13,5 @@ monitoring_plugins__linux_variant: 'package'
 monitoring_plugins__python__modules__dependent_var:
   - 'python3-psutil'
 monitoring_plugins__python_version: 3
-monitoring_plugins__repo_version: 'latest'
+monitoring_plugins__repo_version: '{{ lfops__monitoring_plugins_version | default("latest") }}'
 monitoring_plugins__windows_variant: 'nuitka'

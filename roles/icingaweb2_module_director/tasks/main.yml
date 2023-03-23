@@ -120,38 +120,12 @@
 
 - block:
 
-  - name: 'Store the github release version'
-    ansible.builtin.set_fact:
-      icingaweb2_module_director__monitoring_plugins_github_version: '{{ icingaweb2_module_director__monitoring_plugins_version }}'
-    when: 'icingaweb2_module_director__monitoring_plugins_version != "latest"'
-
-
-  - block:
-
-    - name: 'Get latest release version'
-      ansible.builtin.uri:
-        url: 'https://api.github.com/repos/linuxfabrik/monitoring-plugins/releases/latest'
-      register: 'icingaweb2_module_director__monitoring_plugins_github_release'
-      check_mode: false # run task even if `--check` is specified
-      delegate_to: 'localhost'
-
-    - name: 'Store the latest release version'
-      ansible.builtin.set_fact:
-        icingaweb2_module_director__monitoring_plugins_github_version: '{{ icingaweb2_module_director__monitoring_plugins_github_release["json"]["tag_name"] }}'
-
-    # block
-    when: 'icingaweb2_module_director__monitoring_plugins_version == "latest"'
-
-
-  - name: 'Clone the monitoring plugins git repo to localhost (version: {{ icingaweb2_module_director__monitoring_plugins_github_version | d(icingaweb2_module_director__monitoring_plugins_version) }})'
-    ansible.builtin.git:
-      repo: 'https://github.com/Linuxfabrik/monitoring-plugins.git'
-      dest: '/tmp/ansible.monitoring-plugins-repo'
-      version: '{{ icingaweb2_module_director__monitoring_plugins_github_version | d(icingaweb2_module_director__monitoring_plugins_version) }}'
-      depth: 1
-    delegate_to: 'localhost'
-    run_once: true
-    check_mode: false # run task even if `--check` is specified
+  - name: 'Clone the monitoring plugins repo'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'clone-monitoring-plugins-repo.yml'
+    vars:
+      shared__monitoring_plugins_repo_version: '{{ icingaweb2_module_director__monitoring_plugins_version }}'
 
   - name: 'Generate the joined basket from git'
     ansible.builtin.command: 'python3 ./tools/basket-join' # use python3 instead of directly calling the file so that it works on a noexec partition

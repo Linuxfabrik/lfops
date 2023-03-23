@@ -41,7 +41,7 @@ icingaweb2_module_grafana__version: 'v1.4.2'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `icingaweb2_module_grafana__monitoring_plugins_version` | The version of the monitoring plugins that will be used for generating the grafana graph configuration. Possible options: * `latest`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).<br> * `main`: The development version. Use with care.<br> * A specific release, for example `2022030201`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases). | `'{{ monitoring_plugins__repo_version }}'` |
+| `icingaweb2_module_grafana__monitoring_plugins_version` | The version of the monitoring plugins that will be used for generating the grafana graph configuration. Possible options: * `latest`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).<br> * `main`: The development version. Use with care.<br> * A specific release, for example `2022030201`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases). | `'{{ lfops__monitoring_plugins_version \| default("latest") }}'` |
 | `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config` | Skip the deployment of the graph configuration for [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). | `false` |
 | `icingaweb2_module_grafana__theme` | The theme for the Grafana graphs. Possible options:<br> * `dark`<br> * `light` | `'light'` |
 | `icingaweb2_module_grafana__url` | The Grafana URL. This should be reachable from both the IcingaWeb2 server and the client device. | `{{ grafana__root_url }}` |
