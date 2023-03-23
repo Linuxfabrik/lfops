@@ -101,6 +101,15 @@ ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.setup_nextcloud
 Imagine that you want to deploy an updated MariaDB dump script to all hosts that have a MariaDB server. This would mean that you would need to run not only the `linuxfabrik.lfops.mariadb_server` playbook, but also all playbooks that include MariaDB Server, e.g. `linuxfabrik.lfops.setup_wordpress`, etc. To simplify this, you can simply use the `linuxfabrik.lfops.all` playbook, which imports all other playbooks. Make sure you use it with `--tags` and `--limit` to get the desired effect.
 
 
+## LFOps-wide Variables
+
+There are a handful of variables that are used across roles. It is still possible to overwrite the LFOps-wide variable with the role-specific one.
+
+### `lfops__repo_mirror_url`
+
+This variable is used as the default across all `repo_*` roles if it is set. Have a look at the respective role's REAMDE for details.
+
+
 ## Tips, Tricks & Troubleshooting
 
 ### ansible_become: true
