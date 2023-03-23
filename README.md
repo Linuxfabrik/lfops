@@ -105,14 +105,23 @@ Imagine that you want to deploy an updated MariaDB dump script to all hosts that
 
 There are a handful of variables that are used across roles. It is still possible to overwrite the LFOps-wide variable with the role-specific one.
 
+### `lfops__monitoring_plugins_version`
+
+This variable is used a the default whenever the version of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) repo is required. Have a look at the [monitoring_plugins Role README](https://github.com/Linuxfabrik/lfops/blob/main/roles/monitoring_plugins/README.md) for details.
+
+Example:
+```yaml
+lfops__monitoring_plugins_version: 'main'
+```
+
 ### `lfops__repo_mirror_url`
 
 This variable is used as the default across all `repo_*` roles if it is set. Have a look at the respective role's REAMDE for details.
 
-### `lfops__monitoring_plugins_version`
-
-This variable is used a the default whenever the version of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) repo is required.
-
+Example:
+```yaml
+lfops__repo_mirror_url: 'https://mirror.example.com'
+```
 
 ## Tips, Tricks & Troubleshooting
 
