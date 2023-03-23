@@ -5,71 +5,22 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
-  - name: 'Store the github release version'
-    ansible.builtin.set_fact:
-      monitoring_plugins__github_version: '{{ monitoring_plugins__repo_version }}'
-    when: 'monitoring_plugins__repo_version != "latest"'
-
   tags:
     - 'monitoring_plugins'
     - 'monitoring_plugins:custom'
     - 'monitoring_plugins:nuitka_compile'
 
-
-- block:
-
-  - name: 'Get latest release version'
-    ansible.builtin.uri:
-      url: 'https://api.github.com/repos/linuxfabrik/monitoring-plugins/releases/latest'
-    register: 'monitoring_plugins__github_release'
-    check_mode: false # run task even if `--check` is specified
-    delegate_to: 'localhost'
-
-  - name: 'Store the latest release version'
-    ansible.builtin.set_fact:
-      monitoring_plugins__github_version: '{{ monitoring_plugins__github_release["json"]["tag_name"] }}'
-
-  # block
-  when: 'monitoring_plugins__repo_version == "latest"'
+- name: 'Clone the monitoring plugins repo'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'clone-monitoring-plugins-repo.yml'
+  vars:
+    shared__monitoring_plugins_repo_version: '{{ monitoring_plugins__repo_version }}'
   tags:
     - 'monitoring_plugins'
 
-
-- block:
-
-  - name: 'Clone the monitoring plugins git repo to localhost (version: {{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }})'
-    ansible.builtin.git:
-      repo: '{{ monitoring_plugins__repo_url }}'
-      dest: '/tmp/ansible.monitoring-plugins-repo'
-      version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
-      depth: 1
-    delegate_to: 'localhost'
-    run_once: true
-    check_mode: false # run task even if `--check` is specified
-
-  rescue:
-
-    - name: 'Remove the old repo and clone again'
-      ansible.builtin.file:
-        path: '/tmp/ansible.monitoring-plugins-repo'
-        state: 'absent'
-      delegate_to: 'localhost'
-
-    - name: 'Clone the monitoring plugins git repo to localhost (version: {{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }})'
-      ansible.builtin.git:
-        repo: '{{ monitoring_plugins__repo_url }}'
-        dest: '/tmp/ansible.monitoring-plugins-repo'
-        version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
-        depth: 1
-      delegate_to: 'localhost'
-      run_once: true
-      check_mode: false # run task even if `--check` is specified
-
-  tags:
-    - 'monitoring_plugins'
-
-
-- ansible.builtin.import_tasks: 'generate-monitoring-plugins-list.yml'
+- name: 'Generate the monitoring plugins list'
+  ansible.builtin.import_tasks: 'generate-monitoring-plugins-list.yml'
   tags:
     - 'monitoring_plugins'
     - 'monitoring_plugins:nuitka_compile'
@@ -116,7 +67,8 @@
     - 'monitoring_plugins'
 
 
-- ansible.builtin.include_tasks: 'linux-python-variant.yml'
+- name: 'Install the Linux Python Variant'
+  ansible.builtin.include_tasks: 'linux-python-variant.yml'
   when:
     - 'ansible_facts["os_family"] != "Windows"'
     - 'monitoring_plugins__linux_variant == "python"'
@@ -126,13 +78,13 @@
 
 - block:
 
-  - name: 'Copy the /etc/sudoers.d/icinga2-plugins file to the server (Linux)'
+  - name: 'Copy the /etc/sudoers.d/monitoring-plugins file to the server (Linux)'
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["distribution"] ~ ansible_facts["distribution_major_version"] }}.sudoers'
       dest: '/etc/sudoers.d/monitoring-plugins'
       mode: 0o640
 
-  - name: 'Make sure to remove the legacy sudoers file'
+  - name: 'Make sure the legacy sudoers file is absent'
     ansible.builtin.file:
       path: '/etc/sudoers.d/icinga2-plugins'
       state: 'absent'

@@ -2,7 +2,7 @@
 
   - name: 'Clone the lib git repo to localhost (version: {{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }})'
     ansible.builtin.git:
-      repo: '{{ monitoring_plugins__lib_repo_url }}'
+      repo: 'https://github.com/Linuxfabrik/lib.git'
       dest: '/tmp/ansible.lib-repo'
       version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
       depth: 1
@@ -20,7 +20,7 @@
 
     - name: 'Clone the lib git repo to localhost (version: {{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }})'
       ansible.builtin.git:
-        repo: '{{ monitoring_plugins__lib_repo_url }}'
+        repo: 'https://github.com/Linuxfabrik/lib.git'
         dest: '/tmp/ansible.lib-repo'
         version: '{{ monitoring_plugins__github_version | d(monitoring_plugins__repo_version) }}'
         depth: 1
