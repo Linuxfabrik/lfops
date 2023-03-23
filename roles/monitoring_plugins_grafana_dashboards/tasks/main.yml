@@ -1,0 +1,66 @@
+- block:
+
+  - name: 'Clone the monitoring plugins repo'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'clone-monitoring-plugins-repo.yml'
+    vars:
+      shared__monitoring_plugins_repo_version: '{{ monitoring_plugins_grafana_dashboards__repo_version }}'
+
+  - name: 'Generate list of monitoring plugins'
+    ansible.builtin.import_role:
+      name: 'monitoring_plugins'
+      tasks_from: 'generate-monitoring-plugins-list.yml'
+
+  tags:
+    - 'monitoring_plugins_grafana_dashboards'
+
+
+- block:
+
+  - name: 'rm -rf /var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins (make sure there are no old dashboards to prevent duplicate uids)'
+    ansible.builtin.file:
+      path: '/var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins'
+      state: 'absent'
+
+  - name: 'mkdir /var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins'
+    ansible.builtin.file:
+      path: '/var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins'
+      state: 'directory'
+      owner: 'grafana'
+      group: 'grafana'
+      mode: 0o755
+
+  - name: 'Copy the default grafana dashboard to /var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/assets/grafana/default.grafana-provisioning.json'
+      dest: '/var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins/'
+      owner: 'root'
+      group: 'grafana'
+      mode: 0o644
+
+  - name: 'Copy grafana dashboards for linux to /var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins'
+    ansible.builtin.copy:
+      src: "/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}.grafana-provisioning.json"
+      dest: "/var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins/{{ item }}.json"
+      owner: 'root'
+      group: 'grafana'
+      mode: 0o644
+    # when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/" ~ item ~ "/" ~ item ~ ".grafana-provisioning.json" is file'
+    when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}.grafana-provisioning.json" is file'
+    loop: "{{ monitoring_plugins__plugin_list }}"
+
+  - name: 'Copy grafana dashboards for windows to /var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins'
+    ansible.builtin.copy:
+      src: "/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}-windows.grafana-provisioning.json"
+      dest: "/var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins/{{ item }}-windows.json"
+      owner: 'root'
+      group: 'grafana'
+      mode: 0o644
+    # when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/" ~ item ~ "/" ~ item ~ "-windows.grafana-provisioning.json" is file'
+    when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}-windows.grafana-provisioning.json" is file'
+    loop: "{{ monitoring_plugins__plugin_list }}"
+
+  # block
+  tags:
+    - 'monitoring_plugins_grafana_dashboards'

@@ -109,6 +109,10 @@ There are a handful of variables that are used across roles. It is still possibl
 
 This variable is used as the default across all `repo_*` roles if it is set. Have a look at the respective role's REAMDE for details.
 
+### `lfops__monitoring_plugins_version`
+
+This variable is used a the default whenever the version of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) repo is required.
+
 
 ## Tips, Tricks & Troubleshooting
 
