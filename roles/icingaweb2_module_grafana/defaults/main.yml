@@ -1,52 +1,9 @@
 icingaweb2_module_grafana__monitoring_plugins_version: '{{ monitoring_plugins__repo_version }}'
-icingaweb2_module_grafana__skip_monitoring_plugins_dashboards: false
 icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config: false
 icingaweb2_module_grafana__theme: 'light'
 icingaweb2_module_grafana__url: '{{ grafana__root_url }}'
 
 # -----------------------------------------------------------------------------
-
-icingaweb2_module_grafana__grafana__provisioning_dashboards__dependent_var:
-  - name: 'linuxfabrik-monitoring-plugins'
-    orgId: 1
-    folder: 'Linuxfabrik Monitoring Plugins'
-    folderUid: 'linuxfabrik-monitoring-plugins'
-    type: 'file'
-    disableDeletion: false
-    editable: false
-    updateIntervalSeconds: 60
-    options:
-      path: '/var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins'
-
-icingaweb2_module_grafana__grafana__provisioning_datasources__dependent_var:
-  - name: 'InfluxDB'
-    type: 'influxdb'
-    access: 'proxy'
-    orgId: 1
-    url: 'http://{{ icinga2_master__influxdb_host }}:8086'
-    user: '{{ icinga2_master__influxdb_login["username"] }}'
-    database: '{{ icinga2_master__influxdb_database_name }}'
-    isDefault: true
-    jsonData:
-      timeInterval: '1m'
-      tlsAuth: false
-      tlsAuthWithCACert: false
-    secureJsonData:
-      password: '{{ icinga2_master__influxdb_login["password"] }}'
-    version: 1
-    editable: false
-  - name: 'icinga_director'
-    type: 'mysql'
-    access: 'proxy'
-    orgId: 1
-    url: '{{ icingaweb2_module_director__database_host }}:3306'
-    user: '{{ icingaweb2_module_director__database_login["username"] }}'
-    database: '{{ icingaweb2_module_director__database_name }}'
-    isDefault: false
-    secureJsonData:
-      password: '{{ icingaweb2_module_director__database_login["password"] }}'
-    version: 1
-    editable: false
 
 icingaweb2_module_grafana__icingaweb2__navigation_menu_entries__dependent_var:
   - name: 'Grafana'
