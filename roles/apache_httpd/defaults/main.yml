@@ -1,3 +1,4 @@
+apache_httpd__skip_mod_security_coreruleset: false
 apache_httpd__skip_php_fpm: false
 apache_httpd__systemd_enabled: true
 apache_httpd__systemd_state: 'started'
