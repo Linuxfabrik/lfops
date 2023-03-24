@@ -36,14 +36,19 @@ If you use the ["Setup Keycloak" Playbook](https://github.com/Linuxfabrik/lfops/
 
 | Variable | Description |
 | -------- | ----------- |
+| `keycloak__apps__apps__host_var` / `keycloak__apps__apps__group_var` | The version of Keycloak that should be installed. |
 | `keycloak__admin_login` | The Keycloak Admin login credentials. Subkeys:<br> * `username`: Mandatory, string. Username.<br> * `password`: Mandatory, string. Password. |
 | `keycloak__db_login` | The database login credentials for keycloak. Subkeys:<br> * `username`: Mandatory, string. Username.<br> * `password`: Mandatory, string. Password. |
 | `keycloak__hostname` | The hostname where keycloak is reachable. |
+| `keycloak__java_package_name` | The Java package to be installed. |
 | `keycloak__version` | The version of Keycloak that should be installed. |
 
 Example:
 ```yml
 # mandatory
+keycloak__apps__apps__host_var:
+  - name: 'java-17-openjdk'
+    state: 'present'
 keycloak__admin_login:
   password: 'password'
   username: 'keycloak-admin'

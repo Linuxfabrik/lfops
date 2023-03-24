@@ -1,3 +1,5 @@
+keycloak__enabled: true
+keycloak__state: 'started'
 keycloak__db_url_host: 'localhost'
 keycloak__db_vendor: 'mariadb'
 keycloak__db_url_database: 'keycloak'
@@ -14,9 +16,8 @@ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
 # are internally for this role
 
 keycloak__apps__apps__dependent_var:
-  - name: 'java-11-openjdk'
+  - name: '{{ keycloak__java_package_name }}'
     state: 'present'
-
 
 keycloak__mariadb_server__databases__dependent_var:
   - name: '{{ keycloak__db_url_database }}'

@@ -5,7 +5,6 @@
   tags:
     - 'keycloak'
 
-
 - name: 'Add the user keycloak with primary group of keycloak'
   ansible.builtin.user:
     name: 'keycloak'
@@ -13,7 +12,6 @@
     group: 'keycloak'
   tags:
     - 'keycloak'
-
 
 - name: 'Create log directory "/var/log/keycloak"'
   ansible.builtin.file:
@@ -24,12 +22,10 @@
   tags:
     - 'keycloak'
 
-
-- name: 'chown -R keycloak:keycloak /opt/keycloak'
+- name: 'mkdir /opt/keycloak'
   ansible.builtin.file:
     path: '/opt/keycloak'
     state: 'directory'
-    recurse: true
     owner: 'keycloak'
     group: 'keycloak'
   tags:
@@ -44,6 +40,17 @@
       - '--strip-components=1'
   tags:
     - 'keycloak'
+
+- name: 'chown -R keycloak:keycloak /opt/keycloak'
+  ansible.builtin.file:
+    path: '/opt/keycloak'
+    state: 'directory'
+    recurse: true
+    owner: 'keycloak'
+    group: 'keycloak'
+  tags:
+    - 'keycloak'
+
 
 - block:
 
@@ -82,51 +89,53 @@
       provider: 'selfsigned'
     when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode | length == 0 or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
 
-  - name: 'Change the working directory to /opt/keycloak and bin/kc.sh build --db {{ keycloak__db_vendor }}'
-    ansible.builtin.shell: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
-    args:
-      chdir: '/opt/keycloak'
+  - name: "Configure sysconfig file for keycloak service"
+    ansible.builtin.template:
+      src: 'etc/sysconfig/keycloak-sysconfig.j2'
+      dest: '/etc/sysconfig/keycloak'
+      owner: 'root'
+      group: 'root'
+      mode: 0o640
 
-  - name: 'chown -R keycloak:keycloak /opt/keycloak'
-    ansible.builtin.file:
-      path: '/opt/keycloak'
-      state: 'directory'
-      recurse: true
-      owner: 'keycloak'
-      group: 'keycloak'
+  - name: 'Create keycloak.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/keycloak.service.j2'
+      dest: '/etc/systemd/system/keycloak.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
 
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+
+  tags:
+    - 'keycloak'
+    - 'keycloak:configure'
+
+
+- name: 'Change the working directory to /opt/keycloak and bin/kc.sh build --db {{ keycloak__db_vendor }}'
+  ansible.builtin.shell: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
+  args:
+    chdir: '/opt/keycloak'
   when: 'keycloak__mode == "production"'
   tags:
     - 'keycloak'
 
 
-- name: "Configure sysconfig file for keycloak service"
-  ansible.builtin.template:
-    src: 'etc/sysconfig/keycloak-sysconfig.j2'
-    dest: '/etc/sysconfig/keycloak'
-    owner: 'root'
-    group: 'root'
-    mode: 0o640
+- block:
+
+  - name: 'systemctl {{ keycloak__enabled | bool | ternary("enable", "disable") }} keycloak.service'
+    ansible.builtin.service:
+      name: 'keycloak.service'
+      enabled: '{{ keycloak__enabled }}'
+
+  - name: 'systemctl {{ keycloak__state[:-2] }} keycloak.service'
+    ansible.builtin.service:
+      name: 'keycloak.service'
+      state: '{{ keycloak__state }}'
+
   tags:
     - 'keycloak'
-
-
-- name: 'Create keycloak.service'
-  ansible.builtin.template:
-    src: 'etc/systemd/system/keycloak.service.j2'
-    dest: '/etc/systemd/system/keycloak.service'
-    owner: 'root'
-    group: 'root'
-    mode: 0o644
-  tags:
-    - 'keycloak'
-
-
-- name: 'systemctl enable --now keycloak.service'
-  ansible.builtin.systemd:
-    name: 'keycloak.service'
-    state: 'started'
-    enabled: true
-    daemon_reload: true
-  tags:
-    - 'keycloak'
+    - 'keycloak:configure'
+    - 'keycloak:state'
