@@ -22,18 +22,6 @@
       when:
         - 'not setup_basic__skip_network | d(false)'
 
-
-    # === Security ===
-    - role: 'linuxfabrik.lfops.policycoreutils'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-
-    - role: 'linuxfabrik.lfops.selinux'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_basic__skip_selinux | d(false)'
-
-
     # === Basic repositories ===
     - role: 'linuxfabrik.lfops.repo_baseos'
       when:
@@ -46,6 +34,16 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not setup_basic__skip_repo_epel | d(false)'
+
+    # === Security ===
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - role: 'linuxfabrik.lfops.selinux'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_basic__skip_selinux | d(false)'
 
     # === Sensible defaults ===
     - role: 'linuxfabrik.lfops.systemd_journald'
