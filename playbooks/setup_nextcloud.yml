@@ -126,6 +126,13 @@
       when:
         - 'not setup_nextcloud__skip_coturn | d(false)'
 
+      # === Objectstore Backup
+    - role: 'linuxfabrik.lfops.minio_client'
+      minio_client__aliases__dependent_var:
+        - '{{ objectstore_backup__minio_client__aliases__dependent_var }}'
+      when:
+        - 'not setup_nextcloud__skip_minio_client | d(false)'
+
     - role: 'linuxfabrik.lfops.objectstore_backup'
       when:
         - 'not setup_nextcloud__skip_objectstore_backup | d(false)'
