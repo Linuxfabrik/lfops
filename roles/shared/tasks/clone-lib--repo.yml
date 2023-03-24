@@ -1,0 +1,55 @@
+# if the shared__lib_repo_version is not set to latest, we just use that value.
+# if not, we fetch the latest version from the github api.
+
+- name: 'Store the github release version'
+  ansible.builtin.set_fact:
+    shared__lib_github_version: '{{ shared__lib_repo_version }}'
+  when: 'shared__lib_repo_version != "latest"'
+
+
+- block:
+
+  - name: 'Get latest release version'
+    ansible.builtin.uri:
+      url: 'https://api.github.com/repos/linuxfabrik/lib/releases/latest'
+    register: 'shared__lib_github_release'
+    check_mode: false # run task even if `--check` is specified
+    delegate_to: 'localhost'
+
+  - name: 'Store the latest release version'
+    ansible.builtin.set_fact:
+      shared__lib_github_version: '{{ shared__lib_github_release["json"]["tag_name"] }}'
+
+  # block
+  when: 'shared__lib_repo_version == "latest"'
+
+
+- block:
+
+  - name: 'Clone the lib git repo to localhost (version: {{ shared__lib_github_version }})'
+    ansible.builtin.git:
+      repo: 'https://github.com/Linuxfabrik/lib.git'
+      dest: '/tmp/ansible.lib-repo'
+      version: '{{ shared__lib_github_version }}'
+      depth: 1
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  rescue:
+
+    - name: 'Remove the old repo and clone again'
+      ansible.builtin.file:
+        path: '/tmp/ansible.lib-repo'
+        state: 'absent'
+      delegate_to: 'localhost'
+
+    - name: 'Clone the lib git repo to localhost (version: {{ shared__lib_github_version }})'
+      ansible.builtin.git:
+        repo: 'https://github.com/Linuxfabrik/lib.git'
+        dest: '/tmp/ansible.lib-repo'
+        version: '{{ shared__lib_github_version }}'
+        depth: 1
+      delegate_to: 'localhost'
+      run_once: true
+      check_mode: false # run task even if `--check` is specified
