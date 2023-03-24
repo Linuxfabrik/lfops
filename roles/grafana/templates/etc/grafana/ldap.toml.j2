@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023032401
+# 2023032402
 
 # To troubleshoot and get more log info enable ldap debug logging in grafana.ini
 # [log]
@@ -32,7 +32,7 @@ bind_password = """{{ grafana__ldap_config.bind_password }}"""
 search_filter = "{{ grafana__ldap_config.search_filter }}"
 
 # An array of base dns to search through
-search_base_dns = "{{ grafana__ldap_config.search_base_dns }}"
+search_base_dns = {{ grafana__ldap_config.search_base_dns }}
 
 ## For Posix or LDAP setups that does not support member_of attribute you can define the below settings
 ## Please check grafana LDAP docs for examples
