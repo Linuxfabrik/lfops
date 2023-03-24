@@ -1,0 +1,13 @@
+- name: 'Install and configure Objectstore Backup'
+  hosts:
+    - 'lfops_setup_objectstore_backup'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.minio_client'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["8"]'
+
+    - role: 'linuxfabrik.lfops.objectstore_backup'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["8"]'
