@@ -16,7 +16,7 @@
       group: 'icingaweb2'
       mode: 0o755
 
-  - name: 'curl {{ icingaweb2_module_director__url }} -O /tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+  - name: 'curl {{ icingaweb2_module_director__url }} --output /tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
     ansible.builtin.get_url:
       url: '{{ icingaweb2_module_director__url }}'
       dest: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'

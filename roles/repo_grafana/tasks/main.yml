@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'curl https://packages.grafana.com/gpg.key -O /tmp/ansible.grafana.key'
+  - name: 'curl https://packages.grafana.com/gpg.key -o /tmp/ansible.grafana.key'
     ansible.builtin.get_url:
       url: 'https://packages.grafana.com/gpg.key'
       dest: '/tmp/ansible.grafana.key'

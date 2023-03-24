@@ -31,7 +31,7 @@
       group: 'root'
       mode: 0o644
 
-  - name: 'curl https://packages.icinga.com/icinga.key -O /tmp/ansible.RPM-GPG-KEY-ICINGA'
+  - name: 'curl https://packages.icinga.com/icinga.key --output /tmp/ansible.RPM-GPG-KEY-ICINGA'
     ansible.builtin.get_url:
       url: 'https://packages.icinga.com/icinga.key'
       dest: '/tmp/ansible.RPM-GPG-KEY-ICINGA'

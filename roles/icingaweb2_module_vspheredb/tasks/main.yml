@@ -33,7 +33,7 @@
       group: 'root'
       mode: 0o755
 
-  - name: 'curl https://github.com/Icinga/icingaweb2-module-vspheredb/archive/v{{ icingaweb2_module_vspheredb__version }}.tar.gz -O /tmp/ansible.icingaweb2-module-vspheredb-v{{ icingaweb2_module_vspheredb__version }}.tar.gz'
+  - name: 'curl https://github.com/Icinga/icingaweb2-module-vspheredb/archive/v{{ icingaweb2_module_vspheredb__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-vspheredb-v{{ icingaweb2_module_vspheredb__version }}.tar.gz'
     ansible.builtin.get_url:
       url: 'https://github.com/Icinga/icingaweb2-module-vspheredb/archive/v{{ icingaweb2_module_vspheredb__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-vspheredb-v{{ icingaweb2_module_vspheredb__version }}.tar.gz'

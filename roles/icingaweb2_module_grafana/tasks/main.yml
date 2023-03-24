@@ -16,7 +16,7 @@
       group: 'icingaweb2'
       mode: 0o755
 
-  - name: 'curl https://github.com/Mikesch-mp/icingaweb2-module-grafana/archive/{{ icingaweb2_module_grafana__version }}.tar.gz -O /tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz'
+  - name: 'curl https://github.com/Mikesch-mp/icingaweb2-module-grafana/archive/{{ icingaweb2_module_grafana__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz'
     ansible.builtin.get_url:
       url: 'https://github.com/Mikesch-mp/icingaweb2-module-grafana/archive/{{ icingaweb2_module_grafana__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz'

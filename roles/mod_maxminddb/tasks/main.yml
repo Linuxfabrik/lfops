@@ -10,7 +10,7 @@
         - 'tar'
       state: 'present'
 
-  - name: 'curl https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz -O /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+  - name: 'curl https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz --output /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
     ansible.builtin.get_url:
       url: 'https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
       dest: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'

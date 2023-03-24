@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'curl https://packages.icinga.com/windows/Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi -O /tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+  - name: 'curl https://packages.icinga.com/windows/Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi --output /tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
     ansible.builtin.get_url:
       url: 'https://packages.icinga.com/windows/Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
       dest: '/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'

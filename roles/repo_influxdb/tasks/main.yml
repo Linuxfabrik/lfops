@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'curl https://repos.influxdata.com/influxdata-archive_compat.key -O /tmp/ansible.influxdata-archive_compat.key'
+  - name: 'curl https://repos.influxdata.com/influxdata-archive_compat.key --output /tmp/ansible.influxdata-archive_compat.key'
     ansible.builtin.get_url:
       url: 'https://repos.influxdata.com/influxdata-archive_compat.key'
       dest: '/tmp/ansible.influxdata-archive_compat.key'

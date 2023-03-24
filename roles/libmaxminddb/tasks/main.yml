@@ -9,7 +9,7 @@
         - 'tar'
       state: 'present'
 
-  - name: 'curl https://github.com/maxmind/libmaxminddb/releases/download/{{ libmaxminddb__version }}/libmaxminddb-{{ libmaxminddb__version }}.tar.gz -O /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz'
+  - name: 'curl https://github.com/maxmind/libmaxminddb/releases/download/{{ libmaxminddb__version }}/libmaxminddb-{{ libmaxminddb__version }}.tar.gz --output /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz'
     ansible.builtin.get_url:
       url: 'https://github.com/maxmind/libmaxminddb/releases/download/{{ libmaxminddb__version }}/libmaxminddb-{{ libmaxminddb__version }}.tar.gz'
       dest: '/tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz'
