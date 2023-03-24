@@ -1,0 +1,17 @@
+- name: 'Deploy the Grafana Dashboards for the Linuxfabrik Monitoring Plugins'
+  hosts:
+    - 'lfops_monitoring_plugins_grafana_dashboards'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_grafana'
+      when:
+        - 'not monitoring_plugins_grafana_dashboards__skip_repo_grafana | d(false)'
+
+    - role: 'linuxfabrik.lfops.grafana'
+      grafana__provisioning_dashboards__dependent_var: '{{ monitoring_plugins_grafana_dashboards__grafana__provisioning_dashboards__dependent_var }}'
+      grafana__provisioning_datasources__dependent_var: '{{ monitoring_plugins_grafana_dashboards__grafana__provisioning_datasources__dependent_var }}'
+      when:
+        - 'not monitoring_plugins_grafana_dashboards__skip_grafana | default(false)'
+
+    - role: 'linuxfabrik.lfops.monitoring_plugins_grafana_dashboards'
