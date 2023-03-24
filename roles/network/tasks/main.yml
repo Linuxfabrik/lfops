@@ -15,6 +15,7 @@
       name:
         - 'hc-utils'
       state: 'absent'
+    ignore_errors: true # allow this task to fail, for example due to unconfigured repos
 
   - ansible.builtin.debug:
       msg: 'Please restart the network manually if needed (systemctl restart NetworkManager).'
