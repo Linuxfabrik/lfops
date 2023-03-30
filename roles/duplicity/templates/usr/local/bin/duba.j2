@@ -19,7 +19,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2022111501'
+__version__ = '2023033001'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -145,7 +145,7 @@ def do_backup(config):
             for exclude in src.get('excludes', []):
                 cmd += ['--exclude', f"{exclude}"]
             cmd += ['--exclude-other-filesystems']
-            cmd += ['--full-if-older-than', f"{config.get('retention_time', '30D')}"]
+            cmd += ['--full-if-older-than', f"{config.get('full_if_older_than', '30D')}"]
             logfile = re.sub(r'[^A-Za-z0-9]+', '-', f)
             if logfile[0] == '-':
                 # cut the first "-"

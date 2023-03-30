@@ -5,6 +5,7 @@
   "backup_excludes": {{ duplicity__excludes | to_nice_json }},
   "backup_dest": "{{ duplicity__backup_dest }}",
   "retention_time": "{{ duplicity__backup_retention_time }}",
+  "full_if_older_than": "{{ duplicity__backup_full_if_older_than }}",
   "loglevel": "{{ duplicity__loglevel | d('notice') }}",
   "logdir": "{{ duplicity__logdir | d('/var/log/duplicity') }}",
   "backend": "{{ duplicity__backup_backend | d('swift') }}",

@@ -18,6 +18,9 @@ Role: graylog_server
 Playbook: setup_basic
 * Add support for AlmaLinux 8
 
+Role: duplicity:
+* Add `duplicity__backup_full_if_older_than` variable
+
 Role: cloud_init
 * Add task to remove `/etc/cloud/cloud.cfg.rpmsave`
 

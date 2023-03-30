@@ -1,6 +1,7 @@
-duplicity__backup_dest_container: '{{ ansible_nodename }}'
 duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | regex_replace("/$", "") }}'
-duplicity__backup_retention_time: '30D' # days
+duplicity__backup_dest_container: '{{ ansible_nodename }}'
+duplicity__backup_full_if_older_than: '30D'
+duplicity__backup_retention_time: '30D'
 
 duplicity__backup_sources__group_var: []
 duplicity__backup_sources__host_var: []
@@ -37,7 +38,7 @@ duplicity__timer_enabled: true
 duplicity__on_calendar_hour: '23'
 duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 59 | random(seed=inventory_hostname) }}'
 
-duplicity__loglevel: 'notice' # error, warning, notice, info, debug
+duplicity__loglevel: 'notice'
 
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
 duplicity__swift_authversion: '3'
