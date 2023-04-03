@@ -83,7 +83,7 @@
 
   - name: 'systemctl {{ influxdb__dump_timer_enabled | bool | ternary("enable", "disable") }} --now influxdb-dump.timer'
     ansible.builtin.systemd:
-      name: 'influxdb.service'
+      name: 'influxdb-dump.service'
       enabled: '{{ influxdb__dump_timer_enabled }}'
       state: '{{ influxdb__dump_timer_enabled | bool | ternary("started", "stopped") }}'
 

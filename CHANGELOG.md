@@ -66,6 +66,12 @@ Role: systemd_update
 * Add option `-y` to `yum check-update`
 
 
+### Fixed
+
+Role: influxdb
+* Fix wrong systemd service name, which was preventing influxdb dumps from being scheduled
+
+
 ### Changed
 
 Role: opensearch
