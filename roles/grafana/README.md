@@ -102,15 +102,15 @@ grafana__provisioning_datasources__host_var:
     version: 1
     editable: false
 grafana__ldap_config:
-  host: 'ldap.example.com'
-  port: 389
+  attribute_username: 'uid'
   bind_dn: 'uid=freeipa-reader,cn=sysaccounts,cn=etc,dc=example,dc=com'
   bind_password: 'linuxfabrik'
-  search_filter: '(uid=%s)' # or for example: '(cn=%s)' or '(sAMAccountName=%s)'
+  editor_group_dn: 'cn=monitoring,cn=groups,cn=accounts,dc=example,dc=com'
+  host: 'ldap.example.com'
+  port: 389
   search_base_dns:
     - 'cn=users,cn=accounts,dc=example,dc=com'
-  attribute_username: 'uid'
-  editor_group_dn: 'cn=monitoring,cn=groups,cn=accounts,dc=example,dc=com'
+  search_filter: '(uid=%s)' # or for example: '(cn=%s)' or '(sAMAccountName=%s)'
   viewer_group_dn: '*'
 grafana__service_enabled: true
 ```
