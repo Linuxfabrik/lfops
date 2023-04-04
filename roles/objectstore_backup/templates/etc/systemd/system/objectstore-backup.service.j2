@@ -1,10 +1,12 @@
 # {{ ansible_managed }}
-# 2023021701
+# 2023040401
 
 [Unit]
 Description=Minio ObjectStore Backup Service
 
 [Service]
+Nice=19
+IOSchedulingClass=idle
 ExecStart=/usr/local/bin/mc-mirror.sh
 Type=oneshot
 User=root
