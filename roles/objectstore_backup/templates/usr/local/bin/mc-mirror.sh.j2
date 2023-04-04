@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2023030801
-
+# 2023040401
+set -o pipefail
 /usr/local/bin/mc --config-dir /etc/mc mirror --remove --overwrite "{{ objectstore_backup__source_name }}"/{{ objectstore_backup__source_bucket }}/ "{{ objectstore_backup__destination_name }}"/{{ objectstore_backup__destination_bucket }}|awk '\
 BEGIN {removed=0; copied=0;}\
 {
