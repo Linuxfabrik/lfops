@@ -10,7 +10,7 @@ Runs on
 ## Mandatory Requirements
 
 * Install the `python3-psycopg2` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
-*
+
 If you use the [postgresql_server Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/postgresql_server.yml), this is automatically done for you.
 
 
