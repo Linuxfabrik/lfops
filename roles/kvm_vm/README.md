@@ -87,8 +87,8 @@ kvm_vm__name: '{{ inventory_hostname }}'
 kvm_vm__network_connections:
   - name: 'eth0'
     addresses:
-      - '10.42.1.2'
-    gateway4: '10.42.1.1'
+      - '192.0.2.2'
+    gateway4: '192.0.2.1'
 kvm_vm__packages:
   - 'cloud-init'
   - 'qemu-guest-agent'
