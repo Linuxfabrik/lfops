@@ -5,8 +5,6 @@ set -e
 
 BACKUP_DIR='/backup/influxdb-dump'
 
-mkdir -p "$BACKUP_DIR"
-
 # detect paths
 INFLUXD="$(which influxd)"
 
@@ -15,7 +13,8 @@ old_umask=$(umask)
 umask 027
 
 echo "Deleting former dump files."
-rm -f "$BACKUP_DIR/*"
+rm -rf "$BACKUP_DIR"
+mkdir -p "$BACKUP_DIR"
 
 # full dump
 "$INFLUXD" backup -portable "$BACKUP_DIR"
