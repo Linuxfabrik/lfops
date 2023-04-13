@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022082301
+# 2023041201
 
 ##################### Grafana Configuration Example #####################
 #
@@ -56,7 +56,7 @@ app_mode = production
 root_url = {{ grafana__root_url }}
 
 # Serve Grafana from subpath specified in `root_url` setting. By default it is set to `false` for compatibility reasons.
-;serve_from_sub_path = false
+serve_from_sub_path = {{ grafana__serve_from_sub_path | string | lower }}
 
 # Log web requests
 ;router_logging = false

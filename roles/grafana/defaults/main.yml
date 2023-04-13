@@ -21,4 +21,5 @@ grafana__provisioning_datasources__dependent_var: []
 grafana__provisioning_datasources__group_var: []
 grafana__provisioning_datasources__host_var: []
 grafana__provisioning_datasources__role_var: []
+grafana__serve_from_sub_path: true
 grafana__service_enabled: true
