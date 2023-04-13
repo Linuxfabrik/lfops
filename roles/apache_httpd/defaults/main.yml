@@ -169,7 +169,7 @@ apache_httpd__mods__role_var:
     template: 'proxy'
 
   - filename: 'proxy_fcgi'
-    enabled: false
+    enabled: true
     state: 'present'
     template: 'proxy_fcgi'
 
