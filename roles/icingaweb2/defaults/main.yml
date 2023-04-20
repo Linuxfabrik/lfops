@@ -4,6 +4,47 @@ icingaweb2__default_theme: 'Icinga'
 
 # -----------------------------------------------------------------------------
 
+icingaweb2__apache_httpd__mods__dependent_var:
+  - filename: 'env'
+    enabled: true
+    state: 'present'
+icingaweb2__apache_httpd__vhosts__dependent_var:
+  - conf_server_name: '{{ icingaweb2__url_host }}'
+    by_role: 'icingaweb2'
+    comment: 'vHost for IcingaWeb2'
+    enabled: true
+    state: 'present'
+    template: 'app'
+    allowed_http_methods:
+      - 'GET'
+      - 'OPTIONS'
+      - 'POST'
+    authz_file_extensions: |-
+        Require all granted
+    authz_document_root: |-
+        Require all granted
+    virtualhost_port: 80
+    conf_allow_override: 'All'
+    conf_directory_index: 'index.php'
+    conf_document_root: '/usr/share/icingaweb2/public'
+    conf_options: 'FollowSymLinks'
+    raw: |-
+      <LocationMatch "^/+$">
+          Redirect / /icingaweb2
+      </LocationMatch>
+
+      SetEnv ICINGAWEB_CONFIGDIR "/etc/icingaweb2"
+
+      Alias /icingaweb2 "/usr/share/icingaweb2/public"
+      <Directory /usr/share/icingaweb2/public>
+          RewriteBase /icingaweb2/
+          RewriteCond %{REQUEST_FILENAME} -s [OR]
+          RewriteCond %{REQUEST_FILENAME} -l [OR]
+          RewriteCond %{REQUEST_FILENAME} -d
+          RewriteRule ^.*$ - [NC,L]
+          RewriteRule ^.*$ index.php [NC,L]
+      </Directory>
+
 icingaweb2__authentications__dependent_var: []
 icingaweb2__authentications__group_var: []
 icingaweb2__authentications__host_var: []

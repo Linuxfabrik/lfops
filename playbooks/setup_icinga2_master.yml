@@ -84,6 +84,7 @@
 
     - role: 'linuxfabrik.lfops.selinux'
       selinux__booleans__dependent_var:
+        - '{{ apache_httpd__selinux__booleans__dependent_var }}'
         - '{{ icinga2_master__selinux__booleans__dependent_var }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
@@ -105,6 +106,12 @@
         - '{{ icingaweb2__php__modules__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_php | default(false)'
+
+    - role: 'linuxfabrik.lfops.apache_httpd'
+      apache_httpd__mods__dependent_var: '{{ icingaweb2__apache_httpd__mods__dependent_var }}'
+      apache_httpd__vhosts__dependent_var: '{{ icingaweb2__apache_httpd__vhosts__dependent_var }}'
+      when:
+        - 'not setup_icinga2_master__skip_apache_httpd | default(false)'
 
     - role: 'linuxfabrik.lfops.icingaweb2'
       icingaweb2__navigation_menu_entries__dependent_var:

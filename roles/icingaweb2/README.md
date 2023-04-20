@@ -35,6 +35,7 @@ Runs on
 | --------                     | -----------                                                                          |
 | `icingaweb2__api_user_login` | The account for accessing the Icinga2 API.                                           |
 | `icingaweb2__database_login` | The user account for accessing the SQL database. Currently, only MySQL is supported. |
+| `icingaweb2__url_host`       | The host part of the URL for IcingaWeb2. Will be used for the Apache HTTPd vHost.    |
 
 Example:
 ```yaml
@@ -45,6 +46,7 @@ icingaweb2__api_user_login:
 icingaweb2__database_login:
   username: 'icingaweb2_user'
   password: 'linuxfabrik'
+icingaweb2__url_host: 'monitoring.example.com'
 ```
 
 
