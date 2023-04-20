@@ -16,7 +16,7 @@
     ansible.builtin.set_fact:
       postgresql_server__installed_version: '{{ postgresql_server__version }}'
       postgresql_server__service_name: 'postgresql-{{ postgresql_server__version }}'
-      postgres_server__data_dir: '/var/lib/pgsql/{{ postgresql_server__version }}/data'
+      postgresql_server__data_dir: '/var/lib/pgsql/{{ postgresql_server__version }}/data'
       postgresql_server__initdb_cmd: '/usr/pgsql-{{ postgresql_server__version }}/bin/postgresql-{{ postgresql_server__version }}-setup initdb'
 
   when:
@@ -39,7 +39,7 @@
   - name: 'set internal vars for role'
     ansible.builtin.set_fact:
       postgresql_server__service_name: 'postgresql'
-      postgres_server__data_dir: '/var/lib/pgsql/data'
+      postgresql_server__data_dir: '/var/lib/pgsql/data'
       postgresql_server__initdb_cmd: '/usr/bin/postgresql-setup --initdb'
 
   when:
@@ -56,34 +56,34 @@
       cmd: '{{ postgresql_server__initdb_cmd }}'
       creates: '{{ postgresql_server__data_dir }}/PG_VERSION'
 
-  - name: 'Include conf.d in {{ postgres_server__data_dir }}/postgresql.conf'
+  - name: 'Include conf.d in {{ postgresql_server__data_dir }}/postgresql.conf'
     ansible.builtin.lineinfile:
       line: "include_dir = 'conf.d'"
       regexp: '^include_dir(\s+|\s*=\s*)?''conf.d''\s*(#.*)?$'
-      path: '{{ postgres_server__data_dir }}/postgresql.conf'
+      path: '{{ postgresql_server__data_dir }}/postgresql.conf'
     notify: 'postgresql_server: restart posgresql'
 
-  - name: 'mkdir -p {{ postgres_server__data_dir }}/conf.d'
+  - name: 'mkdir -p {{ postgresql_server__data_dir }}/conf.d'
     ansible.builtin.file:
-      path: '{{ postgres_server__data_dir }}/conf.d'
+      path: '{{ postgresql_server__data_dir }}/conf.d'
       owner: 'postgres'
       group: 'postgres'
       mode: 0o700
       state: 'directory'
 
-  - name: 'Deploy {{ postgres_server__data_dir }}/conf.d/z00-linuxfabrik.conf'
+  - name: 'Deploy {{ postgresql_server__data_dir }}/conf.d/z00-linuxfabrik.conf'
     ansible.builtin.template:
       src: 'var/lib/pgsql/data/conf.d/z00-linuxfabrik.conf.j2'
-      dest: '{{ postgres_server__data_dir }}/conf.d/z00-linuxfabrik.conf'
+      dest: '{{ postgresql_server__data_dir }}/conf.d/z00-linuxfabrik.conf'
       owner: 'postgres'
       group: 'postgres'
       mode: 0o600
     notify: 'postgresql_server: restart posgresql'
 
-  - name: 'Deploy {{ postgres_server__data_dir }}/pg_hba.conf'
+  - name: 'Deploy {{ postgresql_server__data_dir }}/pg_hba.conf'
     ansible.builtin.template:
       src: 'var/lib/pgsql/data/pg_hba.conf.j2'
-      dest: '{{ postgres_server__data_dir }}/pg_hba.conf'
+      dest: '{{ postgresql_server__data_dir }}/pg_hba.conf'
       owner: 'postgres'
       group: 'postgres'
       mode: 0o600
