@@ -26,7 +26,6 @@
       name: 'keepalived.service'
       enabled: '{{ keepalived__service_enabled }}'
       state: '{{ keepalived__service_enabled | bool | ternary("started", "stopped") }}'
-    register: 'keepalived__systemctl_result'
 
   tags:
     - 'keepalived'

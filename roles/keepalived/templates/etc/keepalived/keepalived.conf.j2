@@ -1,4 +1,4 @@
-{{ ansible_managed }}
+# {{ ansible_managed }}
 # 2023041901
 
 ! Configuration File for keepalived
@@ -16,8 +16,7 @@ global_defs {
 
 vrrp_instance VI_1 {
         state {{ keepalived__state }}
-        interface {% if keepalived__interface is defined and keepalived__interface | length %}{{ keepalived__interface }}{% else %}{{ ansible_facts["default_ipv4"]["interface"] }}{% endif %}
-
+        interface {{ keepalived__interface }}
         virtual_router_id 51
         priority {% if keepalived__state == 'MASTER' %}255{% else %}200{% endif %}
 

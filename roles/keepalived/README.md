@@ -28,9 +28,9 @@ Example:
 # mandatory
 keepalived__notification_email_addresses:
   - 'root@example.com'
+keepalived__password: 'linuxfabrik'
 keepalived__state: 'MASTER'
-keepalived__password: 'password'
-keepalived__virtual_ipaddress: '192.168.56.199'
+keepalived__virtual_ipaddress: '192.0.2.1'
 ```
 
 
@@ -38,8 +38,8 @@ keepalived__virtual_ipaddress: '192.168.56.199'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `keepalived__interface` | The network interface keepalived should use. | `default ipv4 interface` |
-| `keepalived__notification_email_from` | The email address keepalived should use the sender address for email notifications. | `root@hostname` |
+| `keepalived__interface` | The network interface keepalived should use. | `{{ ansible_facts["default_ipv4"]["interface"] }}` |
+| `keepalived__notification_email_from` | The email address keepalived should use the sender address for email notifications. | `root@{{ ansible_facts["hostname"] }}` |
 | `keepalived__smtp_server` | The SMTP server keepalived should use in order to send email notifications. | `localhost` |
 
 Example:

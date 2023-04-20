@@ -1,3 +1,4 @@
-keepalived__notification_email_from: 'root@{{ inventory_hostname }}'
+keepalived__interface: '{{ ansible_facts["default_ipv4"]["interface"] }}'
+keepalived__notification_email_from: 'root@{{ ansible_facts["hostname"] }}'
 keepalived__service_enabled: true
 keepalived__smtp_server: 'localhost'
