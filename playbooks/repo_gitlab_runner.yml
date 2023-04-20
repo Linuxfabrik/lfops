@@ -1,0 +1,7 @@
+- name: 'Manage and configure the GitLab Runner Repository'
+  hosts:
+    - 'lfops_repo_gitlab_runner'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_gitlab_runner'
