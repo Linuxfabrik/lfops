@@ -15,6 +15,7 @@ Role: graylog_server
 
 ### Added
 
+* Role: dnf_versionlock
 Playbook: setup_basic
 * Add support for AlmaLinux 8
 

@@ -1,0 +1,7 @@
+- name: 'Install and configure dnf versionlock'
+  hosts:
+    - 'lfops_dnf_versionlock'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.dnf_versionlock'

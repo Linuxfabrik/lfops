@@ -1,0 +1,22 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  - name: 'install {{ dnf_versionlock__packages | join(" ") }}'
+    ansible.builtin.package:
+      name: '{{ dnf_versionlock__packages }}'
+      state: 'present'
+
+  - name: 'deploy /etc/dnf/plugins/versionlock.list'
+    ansible.builtin.template:
+      src: 'etc/dnf/plugins/versionlock.list.j2'
+      dest: '{{ dnf_versionlock__list_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'dnf_versionlock'

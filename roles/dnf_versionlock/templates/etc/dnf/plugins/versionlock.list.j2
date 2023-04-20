@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# 2023040501
+
+{% for item in dnf_versionlock__versionlocks %}
+{{ item }}
+{% endfor %}

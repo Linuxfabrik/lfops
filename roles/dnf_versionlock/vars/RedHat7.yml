@@ -1,0 +1,3 @@
+dnf_versionlock__list_path: '/etc/yum/pluginconf.d/versionlock.list'
+dnf_versionlock__packages:
+  - 'yum-plugin-versionlock'
