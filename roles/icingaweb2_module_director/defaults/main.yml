@@ -6,6 +6,7 @@ icingaweb2_module_director__database_name: 'icinga_director'
 icingaweb2_module_director__monitoring_plugins_version: '{{ lfops__monitoring_plugins_version | default("latest") }}'
 icingaweb2_module_director__url: 'https://github.com/Linuxfabrik/icingaweb2-module-director/archive/{{ icingaweb2_module_director__version }}.tar.gz'
 
+# -----------------------------------------------------------------------------
 
 icingaweb2_module_director__icinga2_master__api_users__dependent_var:
   - username: '{{ icingaweb2_module_director__api_user_login.username }}'
