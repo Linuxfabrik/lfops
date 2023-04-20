@@ -1,0 +1,7 @@
+- name: 'Install keepalived'
+  hosts:
+    - 'lfops_keepalived'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.keepalived'

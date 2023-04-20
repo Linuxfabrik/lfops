@@ -1,0 +1,3 @@
+keepalived__notification_email_from: 'root@{{ inventory_hostname }}'
+keepalived__service_enabled: true
+keepalived__smtp_server: 'localhost'

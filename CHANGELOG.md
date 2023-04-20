@@ -225,6 +225,7 @@ New features:
 * Role: influxdb
 * Role: infomaniak_vm
 * Role: kdump
+* Role: keepalived
 * Role: kernel_settings
 * Role: keycloak
 * Role: kvm_host

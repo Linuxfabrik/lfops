@@ -1,0 +1,33 @@
+- block:
+
+  - name: 'Install keepalived'
+    ansible.builtin.package:
+      name:
+        - 'keepalived'
+      state: 'present'
+
+  - name: 'Deploy /etc/keepalived/keepalived.conf'
+    ansible.builtin.template:
+      src: 'etc/keepalived/keepalived.conf.j2'
+      dest: '/etc/keepalived/keepalived.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'keepalived: restart keepalived'
+
+  tags:
+    - 'keepalived'
+
+
+- block:
+
+  - name: 'systemctl {{ keepalived__service_enabled | bool | ternary("enable", "disable") }} --now keepalived.service'
+    ansible.builtin.systemd:
+      name: 'keepalived.service'
+      enabled: '{{ keepalived__service_enabled }}'
+      state: '{{ keepalived__service_enabled | bool | ternary("started", "stopped") }}'
+    register: 'keepalived__systemctl_result'
+
+  tags:
+    - 'keepalived'
+    - 'keepalived:state'
