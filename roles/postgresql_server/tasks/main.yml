@@ -17,7 +17,7 @@
       postgresql_server__installed_version: '{{ postgresql_server__version }}'
       postgresql_server__service_name: 'postgresql-{{ postgresql_server__version }}'
       postgres_server__data_dir: '/var/lib/pgsql/{{ postgresql_server__version }}/data'
-      postgres_server__bin_dir: '/usr/pgsql-{{ postgresql_server__version }}/bin'
+      postgresql_server__initdb_cmd: '/usr/pgsql-{{ postgresql_server__version }}/bin/postgresql-{{ postgresql_server__version }}-setup initdb'
 
   when:
     - 'postgresql_server__version | string | length'
@@ -40,7 +40,7 @@
     ansible.builtin.set_fact:
       postgresql_server__service_name: 'postgresql'
       postgres_server__data_dir: '/var/lib/pgsql/data'
-      postgres_server__bin_dir: '/usr/pgsql/bin'
+      postgresql_server__initdb_cmd: '/usr/bin/postgresql-setup --initdb'
 
   when:
     - 'not postgresql_server__version | string | length'
@@ -51,10 +51,10 @@
 
 - block:
 
-  - name: '{{ postgres_server__bin_dir }}/postgresql-setup initdb'
+  - name: '{{ postgresql_server__initdb_cmd }}'
     ansible.builtin.command:
-      cmd: '{{ postgres_server__bin_dir }}/postgresql-setup initdb'
-      creates: '{{ postgres_server__data_dir }}/PG_VERSION'
+      cmd: '{{ postgresql_server__initdb_cmd }}'
+      creates: '{{ postgresql_server__data_dir }}/PG_VERSION'
 
   - name: 'Include conf.d in {{ postgres_server__data_dir }}/postgresql.conf'
     ansible.builtin.lineinfile:
