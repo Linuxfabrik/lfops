@@ -12,11 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Role: graylog_server
 * Remove support for Graylog < 5.0
 
+Playbook: Setup Icinga2 Master
+* changed default of `setup_icinga2_master__skip_icingaweb2_module_monitoring` from `false` to `true`
+
 
 ### Added
 
 * Role: dnf_versionlock
 * Role: repo_gitlab_runner
+* Role: icingadb
+
 Playbook: setup_basic
 * Add support for AlmaLinux 8
 

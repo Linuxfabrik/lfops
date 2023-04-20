@@ -1,0 +1,148 @@
+- block:
+
+  - name: 'install icingadb icingadb-web'
+    ansible.builtin.package:
+      name:
+        - 'icingadb'
+        - 'icingadb-web'
+      state: 'present'
+
+  tags:
+    - 'icingadb'
+
+
+# https://icinga.com/docs/icinga-2/latest/doc/09-object-types/#icingadb
+# note: we are not using icingadb-redis - we prefer to use the lfops redis role, as that gives us more config options
+- block:
+
+  - name: 'deploy /etc/icinga2/features-available/icingadb.conf'
+    ansible.builtin.template:
+      src: 'etc/icinga2/features-available/icingadb.conf.j2'
+      dest: '/etc/icinga2/features-available/icingadb.conf'
+      owner: 'icinga'
+      group: 'icinga'
+      mode: 0o640
+    notify: 'icingadb: restart icinga2'
+
+  - name: 'icinga2 feature enable icingadb'
+    community.general.icinga2_feature:
+      name: 'icingadb'
+      state: 'present'
+    notify: 'icingadb: restart icinga2'
+
+  tags:
+    - 'icingadb'
+
+
+# https://icinga.com/docs/icinga-db/latest/doc/02-Installation/04-RHEL/
+- block:
+
+  - name: 'Check if the icingadb tables exist'
+    community.mysql.mysql_query:
+      login_user: '{{ icingadb__database_login["username"] }}'
+      login_password: '{{ icingadb__database_login["password"] }}'
+      login_host: '{{ icingadb__database_host }}'
+      login_db: '{{ icingadb__database_name }}'
+      query: 'SHOW TABLES LIKE "icingadb_schema";'
+    register: 'icingadb__table_exists_result'
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'import schema for icingadb database'
+    community.mysql.mysql_db:
+      login_user: '{{ icingadb__database_login["username"] }}'
+      login_password: '{{ icingadb__database_login["password"] }}'
+      login_host: '{{ icingadb__database_host }}'
+      login_unix_socket: '{{ (icingadb__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      name: '{{ icingadb__database_name }}'
+      state: 'import'
+      target: '/usr/share/icingadb/schema/mysql/schema.sql'
+    when:
+      # this module is not idempotent when state is import, and will import the dump file each time if run more than once. therefore, we check the existence manually before
+      - 'icingadb__table_exists_result["rowcount"][0] == 0'
+
+  - name: 'deploy /etc/icingadb/config.yml'
+    ansible.builtin.template:
+      src: 'etc/icingadb/config.yml.j2'
+      dest: '/etc/icingadb/config.yml'
+      owner: 'icingadb'
+      group: 'icingadb'
+      mode: 0o640
+    notify: 'icingadb: restart icingadb'
+
+  - name: 'systemctl {{ icingadb__service_enabled | bool | ternary("enable", "disable") }} --now icingadb.service'
+    ansible.builtin.systemd:
+      name: 'icingadb.service'
+      enabled: '{{ icingadb__service_enabled }}'
+      state: '{{ icingadb__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'icingadb'
+    - 'icingadb:test'
+
+
+# https://icinga.com/docs/icinga-db-web/latest/doc/02-Installation/04-RHEL/
+- block:
+
+  - name: 'mkdir -p /etc/icingaweb2/modules/icingadb'
+    ansible.builtin.file:
+      path: '/etc/icingaweb2/modules/icingadb'
+      state: 'directory'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o2770
+
+  - name: 'Generate icingadb-web config files'
+    ansible.builtin.template:
+      src: 'etc/icingaweb2/modules/icingadb/{{ item }}.j2'
+      dest: '/etc/icingaweb2/modules/icingadb/{{ item }}'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o660
+    loop:
+      - 'commandtransports.ini'
+      - 'config.ini'
+      - 'redis.ini'
+
+  - name: 'icingacli module enable icingadb'
+    ansible.builtin.command: 'icingacli module enable icingadb'
+    args:
+      creates: '/etc/icingaweb2/enabledModules/icingadb'
+
+  tags:
+    - 'icingadb'
+
+
+# https://icinga.com/docs/icinga-db/latest/doc/06-Migration/
+- block:
+
+  - name: 'SELECT MIN(event_time)/1000 FROM icingadb.history; get latest entry in the icingadb for the migration from ido'
+    community.mysql.mysql_query:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      query: 'SELECT MIN(event_time) AS min_event_time FROM {{ icingadb__database_name }}.history;'
+    register: 'icingadb__latest_icingadb_history_result'
+
+  - name: 'cat /var/lib/icinga2/icingadb.env'
+    ansible.builtin.slurp:
+      src: '/var/lib/icinga2/icingadb.env'
+    register: 'icingadb__migration_icingadb_env_result'
+
+  - name: 'deploy /tmp/icingadb-migration.yml'
+    ansible.builtin.template:
+      src: 'tmp/icingadb-migration.yml.j2'
+      dest: '/tmp/icingadb-migration.yml'
+      mode: 0o600 # contains secrets
+
+  - debug:
+      msg: |-
+        Follow these manual steps to finish the migration:
+        1. Double check the values in `/tmp/icingadb-migration.yml`
+        2. Run the migration: `icingadb-migrate --config /tmp/icingadb-migration.yml --cache /tmp/icingadb-migration.cache`
+        3. Clean up: `rm -rf /tmp/icingadb-migration.cache /tmp/icingadb-migration.yml`
+        4. If everything works, disable the IcingaWeb2 monitoring module: `icingacli module disable monitoring`
+
+  when:
+    - 'not icingadb__skip_migration'
+  tags:
+    - 'icingadb'
+    - 'icingadb:migration'

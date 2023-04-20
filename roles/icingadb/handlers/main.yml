@@ -1,0 +1,9 @@
+- name: 'icingadb: restart icinga2'
+  ansible.builtin.service:
+    name: 'icinga2'
+    state: 'restarted'
+
+- name: 'icingadb: restart icingadb'
+  ansible.builtin.service:
+    name: 'icingadb'
+    state: 'restarted'

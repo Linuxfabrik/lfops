@@ -1,0 +1,30 @@
+# {{ ansible_managed }}
+# 2023040601
+
+# https://icinga.com/docs/icinga-db/latest/doc/06-Migration/#preparing-the-configuration
+
+icinga2:
+  # Content of /var/lib/icinga2/icingadb.env
+  env: {{ icingadb__migration_icingadb_env_result["content"] | b64decode }}
+
+# IDO database
+ido:
+  type: 'mysql' # or "pgsql" for PostgreSQL
+  host: '{{ ((icinga2_master__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", icinga2_master__database_host)) | d("todo") }}'
+  # port: 3306
+  database: '{{ icinga2_master__database_name | d("todo") }}'
+  user: '{{ icinga2_master__database_login["username"] | d("todo") }}'
+  password: '{{ icinga2_master__database_login["password"] | d("todo") }}'
+
+  # Input time range
+  #from: 0
+  to: {{ icingadb__latest_icingadb_history_result["query_result"][0][0]["min_event_time"] | int / 1000 }}
+
+# Icinga DB database
+icingadb:
+  type: 'mysql' # or "pgsql" for PostgreSQL
+  host: '{{ icingadb__database_host }}'
+  #port: 3306
+  database: '{{ icingadb__database_name }}'
+  user: '{{ icingadb__database_login["username"] }}'
+  password: '{{ icingadb__database_login["password"] }}'

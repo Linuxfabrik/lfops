@@ -1,0 +1,9 @@
+; {{ ansible_managed }}
+; 2023040601
+
+[redis1]
+host = "{{ icingadb__redis_host }}"
+port = {{ icingadb__redis_port }}
+{% if icingadb__redis_password is defined and icingadb__redis_password | length %}
+password = "{{ icingadb__redis_password }}"
+{% endif %}

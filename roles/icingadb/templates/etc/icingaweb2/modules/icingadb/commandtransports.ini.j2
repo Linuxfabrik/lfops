@@ -1,0 +1,9 @@
+; {{ ansible_managed }}
+; 2023040301
+
+[{{ icingadb__api_user_login['username'] }}]
+transport = "api"
+host = "{{ icingadb__api_host }}"
+port = "{{ icingadb__api_port }}"
+username = "{{ icingadb__api_user_login['username'] }}"
+password = "{{ icingadb__api_user_login['password'] }}"

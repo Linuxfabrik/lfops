@@ -1,0 +1,97 @@
+# {{ ansible_managed }}
+# 2023040601
+
+# This is the configuration file for Icinga DB.
+
+# Connection configuration for the database to which Icinga DB synchronizes monitoring data.
+# This is also the database used in Icinga DB Web to view and work with the data.
+# In high availability setups, all Icinga DB instances must write to the same database.
+database:
+  # Database type. Either 'mysql' for MySQL or 'pgsql' for PostgreSQL.
+  # Defaults to 'mysql'.
+#  type: mysql
+
+  # Database host or absolute Unix socket path.
+  host: '{{ icingadb__database_host }}'
+
+  # Database port. By default, the MySQL or PostgreSQL port, depending on the database type.
+#  port:
+
+  # Database name.
+  database: '{{ icingadb__database_name }}'
+
+  # Database user.
+  user: '{{ icingadb__database_login["username"] }}'
+
+  # Database password.
+  password: '{{ icingadb__database_login["password"] }}'
+
+# Connection configuration for the Redis server where Icinga 2 writes its configuration, state and history items.
+# This is the same connection as configured in the 'icingadb' feature of the corresponding Icinga 2 node.
+# High availability setups require a dedicated Redis server per Icinga 2 node and
+# therefore a dedicated Icinga DB instance that connects to it.
+redis:
+  # Redis host or absolute Unix socket path.
+  host: '{{ icingadb__redis_host }}'
+
+  # Redis port.
+  # Defaults to '6380' since the Redis server provided by the 'icingadb-redis' package listens on that port.
+  port: {{ icingadb__redis_port }}
+
+  # Redis password.
+{% if icingadb__redis_password is defined and icingadb__redis_password | length %}
+#  password:
+  password: '{{ icingadb__redis_password }}'
+{% endif %}
+
+# Icinga DB logs its activities at various severity levels and any errors that occur either
+# on the console or in systemd's journal. The latter is used automatically when running under systemd.
+# In any case, the default log level is 'info'.
+logging:
+  # Default logging level. Can be set to 'fatal', 'error', 'warn', 'info' or 'debug'.
+  # If not set, defaults to 'info'.
+#  level: info
+
+  # Logging output. Can be set to 'console' (stderr) or 'systemd-journald'.
+  # If not set, logs to systemd-journald when running under systemd, otherwise stderr.
+#  output:
+
+  # Interval for periodic logging defined as duration string.
+  # A duration string is a sequence of decimal numbers and a unit suffix, such as "20s".
+  # Valid units are "ms", "s", "m", "h".
+  # Defaults to "20s".
+#  interval: 20s
+
+  # Map of component-logging level pairs to define a different log level than the default value for each component.
+  options:
+#    config-sync:
+#    database:
+#    dump-signals:
+#    heartbeat:
+#    high-availability:
+#    history-sync:
+#    overdue-sync:
+#    redis:
+#    retention:
+#    runtime-updates:
+#    telemetry:
+
+# Retention is an optional feature to limit the number of days that historical data is available,
+# as no historical data is deleted by default.
+retention:
+  # Number of days to retain full historical data. By default, historical data is retained forever.
+#  history-days:
+
+  # Number of days to retain historical data for SLA reporting. By default, it is retained forever.
+#  sla-days:
+
+  # Map of history category to number of days to retain its data in order to
+  # enable retention only for specific categories or to
+  # override the number that has been configured in history-days.
+  options:
+#    acknowledgement:
+#    comment:
+#    downtime:
+#    flapping:
+#    notification:
+#    state:

@@ -26,10 +26,12 @@
     - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__databases__dependent_var:
         - '{{ icinga2_master__mariadb_server__databases__dependent_var }}'
+        - '{{ icingadb__mariadb_server__databases__dependent_var }}'
         - '{{ icingaweb2__mariadb_server__databases__dependent_var }}'
         - '{{ icingaweb2_module_director__mariadb_server__databases__dependent_var }}'
       mariadb_server__users__dependent_var:
         - '{{ icinga2_master__mariadb_server__users__dependent_var }}'
+        - '{{ icingadb__mariadb_server__users__dependent_var }}'
         - '{{ icingaweb2__mariadb_server__users__dependent_var }}'
         - '{{ icingaweb2_module_director__mariadb_server__users__dependent_var }}'
         - '{{ monitoring_plugins_grafana_dashboards__mariadb_server__users__dependent_var }}'
@@ -74,6 +76,7 @@
 
     - role: 'linuxfabrik.lfops.icinga2_master'
       icinga2_master__api_users__dependent_var:
+        - '{{ icingadb__icinga2_master__api_users__dependent_var }}'
         - '{{ icingaweb2__icinga2_master__api_users__dependent_var }}'
         - '{{ icingaweb2_module_director__icinga2_master__api_users__dependent_var }}'
 
@@ -117,12 +120,27 @@
       icingaweb2__navigation_menu_entries__dependent_var:
         - '{{ icingaweb2_module_grafana__icingaweb2__navigation_menu_entries__dependent_var }}'
       icingaweb2__resources__dependent_var:
-        - '{{ icingaweb2_module_monitoring__icingaweb2__resources__dependent_var }}'
+        - '{{ icingadb__icingaweb2__resources__dependent_var }}'
         - '{{ icingaweb2_module_director__icingaweb2__resources__dependent_var }}'
+        - '{{ icingaweb2_module_monitoring__icingaweb2__resources__dependent_var }}'
       icingaweb2__users__dependent_var:
         - '{{ icingaweb2_module_director__icingaweb2__users__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2 | default(false)'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ redis__kernel_settings__sysctl__dependent_var | d([]) }}'
+      kernel_settings__transparent_hugepages__dependent_var: "{{ redis__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      when:
+        - 'not redis__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.redis'
+      when:
+        - 'not setup_icinga2_master__skip_redis | default(false)'
+
+    - role: 'linuxfabrik.lfops.icingadb'
+      when:
+        - 'not setup_icinga2_master__skip_icingadb | default(false)'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_doc'
       when:
@@ -130,7 +148,7 @@
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_monitoring'
       when:
-        - 'not setup_icinga2_master__skip_icingaweb2_module_monitoring | default(false)'
+        - 'not setup_icinga2_master__skip_icingaweb2_module_monitoring | default(true)'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_company'
       when:

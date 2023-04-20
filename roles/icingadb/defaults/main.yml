@@ -1,0 +1,44 @@
+icingadb__api_host: 'localhost'
+icingadb__api_port: 5665
+icingadb__database_host: '127.0.0.1'
+icingadb__database_name: 'icingadb'
+icingadb__redis_host: '127.0.0.1'
+icingadb__redis_port: 6379
+icingadb__service_enabled: true
+icingadb__skip_migration: true
+
+# -----------------------------------------------------------------------------
+
+icingadb__icinga2_master__api_users__dependent_var:
+  - username: '{{ icingadb__api_user_login["username"] }}'
+    password: '{{ icingadb__api_user_login["password"] }}'
+    permissions:
+      - 'actions/*'
+      - 'objects/modify/*'
+      - 'objects/query/*'
+      - 'status/query'
+
+icingadb__icingaweb2__resources__dependent_var:
+  - name: '{{ icingadb__database_name }}'
+    type: 'db'
+    db: 'mysql'
+    host: '{{ icingadb__database_host }}'
+    port: 3306
+    dbname: '{{ icingadb__database_name }}'
+    username: '{{ icingadb__database_login["username"] }}'
+    password: '{{ icingadb__database_login["password"] }}'
+    charset: 'utf8mb4'
+
+icingadb__mariadb_server__databases__dependent_var:
+  - name: '{{ icingadb__database_name }}'
+    collation: 'utf8_general_ci'
+    encoding: 'utf8'
+    state: 'present'
+
+icingadb__mariadb_server__users__dependent_var:
+  - username: '{{ icingadb__database_login["username"] }}'
+    password: '{{ icingadb__database_login["password"] }}'
+    host: '{{ icingadb__database_host }}'
+    priv:
+      - '{{ icingadb__database_name }}.*:ALL'
+    state: 'present'
