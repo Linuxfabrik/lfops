@@ -47,7 +47,7 @@ If you use the [postgresql_server Playbook](https://github.com/Linuxfabrik/lfops
 | `postgresql_server__privs__host_var` / `postgresql_server__privs__group_var` | List of PostgreSQL privileges to apply. Subkeys:<ul><li>`privs`: Optional, list of strings. List of privileges to grant/revoke. Defaults to unset.</li><li>`type`: Optional, string. Type of database object to set privileges on. Defaults to `'database'`.</li><li>`objs`: Mandatory, list of strings. List of database objects (of type `type`) to set privileges on.</li><li>`grant_option`: Mandatory, boolean. Whether the role may grant/revoke the specified privileges/group memberships to others. Defaults to unset.</li></ul> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `postgresql_server__state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<ul><li>`started`</li><li>`stopped`</li><li>`restarted`</li><li>`reloaded`</li></ul> | `'started'` |
 | `postgresql_server__users__host_var` / `postgresql_server__users__group_var` | List of dictionaries of users to create . Subkeys:<ul><li>`name`: Mandatory, string. Username. </li><li>`password`: Optional, string. Password. Defaults to unset. </li><li>`role_attr_flags`: Optional, list of strings. List of [PostgreSQL user attributes](https://www.postgresql.org/docs/current/role-attributes.html). Defaults to unset. </li><li>`state`: Optional, string. `present` or `absent`. Defaults to `'present'`.</li></ul>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `postgresql_server__version` | Specifies the PostgreSQL verison to install. Set this when using the official PostgreSQL Repo. | `''` |
+| `postgresql_server__version` | Specifies the PostgreSQL verison to install (use only the major version number like `'14'`. The latest minor version is used). Set this when using the official PostgreSQL Repo. | `''` |
 
 
 Example:
@@ -75,7 +75,7 @@ postgresql_server__users__host_var:
   - name: 'user1'
     password: 'linuxfabrik'
     state: 'present'
-postgresql_server__version: ''
+postgresql_server__version: '14'
 ```
 
 
