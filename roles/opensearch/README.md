@@ -59,9 +59,15 @@ opensearch__service_enabled: false
 
 Use the following variables if you want to setup a OpenSearch cluster. Make sure that the cluster members can reach each other by setting `opensearch__network_host` accordingly.
 
+You can check the status of the cluster with the following commands:
+```bash
+curl 'localhost:9200/_cluster/health?pretty'
+curl 'localhost:9200/_cat/nodes?v'
+```
+
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `opensearch__cluster_initial_cluster_manager_nodes` | A list of initial master-eligible nodes. You need to set this once when bootstrapping the cluster (aka the first start of the cluster). Make sure to remove this option after the first start, the nodes should not restart with this option active. Most of the time contains the same value as `opensearch__discovery_seed_hosts`. | unset |
+| `opensearch__cluster_initial_cluster_manager_nodes` | A list of initial master-eligible nodes. The entries have to match the `opensearch__node_name`. You need to set this once when bootstrapping the cluster (aka the first start of the cluster). Make sure to remove this option after the first start, the nodes should not restart with this option active. Most of the time contains the same value as `opensearch__discovery_seed_hosts`. | unset |
 | `opensearch__discovery_seed_hosts` | A list of IPs or hostnames that point to other master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten using `:9301`, for example. | unset |
 
 Example:
