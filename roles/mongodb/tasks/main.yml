@@ -1,5 +1,10 @@
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
   - name: 'Make sure that Ansible local facts directory exists'
     ansible.builtin.file:
       path: '/etc/ansible/facts.d'
@@ -42,8 +47,8 @@
     ansible.builtin.template:
       src: 'etc/mongod.key.j2'
       dest: '/etc/mongod.key'
-      owner: 'mongod'
-      group: 'mongod'
+      owner: '{{ mongodb__mongodb_user }}'
+      group: '{{ mongodb__mongodb_user }}'
       mode: 0o400 # contains secrets
     when:
       - 'mongodb__keyfile_content is defined and mongodb__keyfile_content | length'
