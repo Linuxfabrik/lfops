@@ -81,7 +81,9 @@
       headers:
         X-Requested-By: 'cli'
     loop: '{{ graylog_server__input_result | community.general.json_query("json.inputs[*].id") }}'
-    when: 'graylog_server__input_result.json.inputs is defined and graylog_server__input_result.json.inputs | length'
+    when:
+      - 'graylog_server__is_leader | bool' # only run this against one host, else we get duplicate inputs
+      - 'graylog_server__input_result.json.inputs is defined and graylog_server__input_result.json.inputs | length'
 
   - name: 'Launch input on this node'
     ansible.builtin.uri:
@@ -145,7 +147,8 @@
         X-Requested-By: 'cli'
     when: "index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length > 0"
 
-  when: 'graylog_server__is_leader | bool' # only run this against one host, else we get duplicate inputs
+  when:
+    - 'graylog_server__is_leader | bool' # only run this against one host, else we get duplicate inputs
   tags:
     - 'graylog_server'
     - 'graylog_server:configure'
