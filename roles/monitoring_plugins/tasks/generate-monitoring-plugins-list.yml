@@ -16,7 +16,7 @@
       monitoring_plugins__check_plugin_search_name: "{{
           (ansible_facts['os_family'] == 'Windows') | bool | ternary(
             '.windows',
-            '(?P=check)' ~ monitoring_plugins__python_version
+            '(?P=check)'
           )
         }}"
 

@@ -23,12 +23,12 @@
       owner: 'root'
       mode: 0o755
     with_fileglob:
-      - '/tmp/ansible.lib-repo/*{{ monitoring_plugins__python_version }}.py'
+      - '/tmp/ansible.lib-repo/*.py'
       - '/tmp/ansible.lib-repo/__init__.py'
 
   - name: 'Copy the Linuxfabrik monitoring plugins (Linux)'
     ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}{{ monitoring_plugins__python_version }}'
+      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}'
       dest: '/usr/lib64/nagios/plugins/{{ item }}'
       owner: 'root'
       mode: 0o755
@@ -65,7 +65,7 @@
 
     - name: 'Copy the Linuxfabrik notification plugins (Linux)'
       ansible.builtin.copy:
-        src: '/tmp/ansible.monitoring-plugins-repo/notification-plugins/{{ item }}/{{ item }}{{ monitoring_plugins__python_version }}'
+        src: '/tmp/ansible.monitoring-plugins-repo/notification-plugins/{{ item }}/{{ item }}'
         dest: '/usr/lib64/nagios/plugins/{{ item }}'
         owner: 'root'
         mode: 0o755

@@ -51,11 +51,11 @@
       src: '{{ item }}'
       dest: 'C:\ProgramData\icinga2\usr\lib64\nagios\plugins\lib\'
     with_fileglob:
-      - '/tmp/ansible.lib-repo/*{{ monitoring_plugins__python_version }}.py'
+      - '/tmp/ansible.lib-repo/*.py'
 
   - name: 'Copy the Linuxfabrik monitoring plugins (Windows)'
     ansible.windows.win_copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}{{ monitoring_plugins__python_version }}'
+      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}'
       dest: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\{{ item }}.py'
     loop: '{{ monitoring_plugins__plugin_list }}'
 
