@@ -19,7 +19,7 @@ Runs on
 | Variable | Description |
 | -------- | ----------- |
 | `keepalived__notification_email_addresses` | The email addresses for notifications. |
-| `keepalived__password` | The password for the communication between the MASTER and BACKUP instances. |
+| `keepalived__password` | The password for the communication between the MASTER and BACKUP instances. Only the first eight (8) characters are used. |
 | `keepalived__state` | Determines whether to be the MASTER or BACKUP. |
 | `keepalived__virtual_ipaddress` | The IP address to be shared between the MASTER and BACKUP. |
 
