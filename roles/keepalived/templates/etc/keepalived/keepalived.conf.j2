@@ -18,6 +18,7 @@ vrrp_instance VI_1 {
         state {{ keepalived__state }}
         interface {{ keepalived__interface }}
         virtual_router_id 51
+        smtp_alert
         priority {% if keepalived__state == 'MASTER' %}255{% else %}200{% endif %}
 
         advert_int 1
