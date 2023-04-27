@@ -1,3 +1,4 @@
+keepalived__instance_id: 1
 keepalived__interface: '{{ ansible_facts["default_ipv4"]["interface"] }}'
 keepalived__notification_email_from: 'root@{{ ansible_facts["nodename"] }}'
 keepalived__service_enabled: true

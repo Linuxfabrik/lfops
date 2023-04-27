@@ -14,7 +14,7 @@ global_defs {
    smtp_connect_timeout 30
 }
 
-vrrp_instance VI_1 {
+vrrp_instance VI_{{ keepalived__instance_id }} {
         state {{ keepalived__state }}
         interface {{ keepalived__interface }}
         virtual_router_id 51
