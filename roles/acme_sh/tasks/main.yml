@@ -84,9 +84,9 @@
       --reloadcmd '{{ item["reload_cmd"] | d("systemctl reload httpd") }}'
     loop: '{{ acme_sh__certificates }}'
 
-  - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --deply ...'
+  - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy ...'
     ansible.builtin.command: |-
-      /opt/acme.sh/acme.sh --config-home /etc/acme.sh --deply \
+      /opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy \
       --domain '{{ item["name"] }}' \
       --deploy-hook ssh
     environment:
