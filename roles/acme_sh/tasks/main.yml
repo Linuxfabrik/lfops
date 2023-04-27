@@ -84,6 +84,22 @@
       --reloadcmd '{{ item["reload_cmd"] | d("systemctl reload httpd") }}'
     loop: '{{ acme_sh__certificates }}'
 
+  - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --deply ...'
+    ansible.builtin.command: |-
+      /opt/acme.sh/acme.sh --config-home /etc/acme.sh --deply \
+      --domain '{{ item["name"] }}' \
+      --deploy-hook ssh
+    environment:
+      DEPLOY_SSH_USER: 'root'
+      DEPLOY_SSH_SERVER: '{{ acme_sh__deploy_to_host }}'
+      DEPLOY_SSH_CERTFILE: '/etc/pki/tls/certs/{{ item["name"] }}.crt'
+      DEPLOY_SSH_KEYFILE: '/etc/pki/tls/private/{{ item["name"] }}.key'
+      DEPLOY_SSH_FULLCHAIN: '/etc/pki/tls/certs/{{ item["name"] }}-fullchain.crt'
+      DEPLOY_SSH_CAFILE: '/etc/pki/tls/certs/{{ item["name"] }}-chain.crt'
+      DEPLOY_SSH_REMOTE_CMD: '{{ item["reload_cmd"] | d("systemctl reload httpd") }}'
+    loop: '{{ acme_sh__certificates }}'
+    when: 'acme_sh__deploy_to_host is defined and acme_sh__deploy_to_host | length'
+
   tags:
     - 'acme_sh'
     - 'acme_sh:certificates'
