@@ -55,6 +55,10 @@ acme_sh__certificates:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `acme_sh__deploy_to_host`  | The host which the issued certificates should be deployed to. | unset |
+| `acme_sh__deploy_to_host_hook`  | The deployment hook which should be used to deploy the certificates to the deploy host. | `ssh` |
+| `acme_sh__deploy_to_host_reload_cmd`  | The reload command which should be executed after the certificates were deployed to the deploy host. | `acme_sh__certificates["reload_cmd"]` |
+| `acme_sh__deploy_to_host_user`  | The remote user account which should be used to deploy the certificates to the deploy host. | `root` |
 | `acme_sh__key_length`  | Key length in bits of the certificates to issue. | `4096` |
 | `acme_sh__timer_enabled` | Enables or disables the weekly acme.sh timer, analogous to `systemctl enable/disable --now`. | `true` |
 
