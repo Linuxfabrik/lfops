@@ -96,7 +96,7 @@
       DEPLOY_SSH_KEYFILE: '/etc/pki/tls/private/{{ item["name"] }}.key'
       DEPLOY_SSH_FULLCHAIN: '/etc/pki/tls/certs/{{ item["name"] }}-fullchain.crt'
       DEPLOY_SSH_CAFILE: '/etc/pki/tls/certs/{{ item["name"] }}-chain.crt'
-      DEPLOY_SSH_REMOTE_CMD: '{{ acme_sh__deploy_to_host_reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length) | ternary("item[\"reload_cmd\"]", "systemctl reload httpd")) }}'
+      DEPLOY_SSH_REMOTE_CMD: '{{ acme_sh__deploy_to_host_reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
     loop: '{{ acme_sh__certificates }}'
     when: 'acme_sh__deploy_to_host is defined and acme_sh__deploy_to_host | length'
 
