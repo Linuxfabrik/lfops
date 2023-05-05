@@ -26,7 +26,7 @@
     notify: 'grafana: restart grafana-server'
 
   - name: 'mkdir -p /etc/grafana/provisioning/datasources/'
-    file:
+    ansible.builtin.file:
       path: '/etc/grafana/provisioning/datasources/'
       state: 'directory'
       owner: 'grafana'
@@ -34,7 +34,7 @@
       recurse: true
 
   - name: 'deploy the grafana datasource provisioning file'
-    template:
+    ansible.builtin.template:
       src: 'etc/grafana/provisioning/datasources/linuxfabrik-monitoring-plugins.yml.j2'
       dest: '/etc/grafana/provisioning/datasources/linuxfabrik-monitoring-plugins.yml'
       owner: 'grafana'
@@ -43,7 +43,7 @@
     notify: 'grafana: restart grafana-server'
 
   - name: 'mkdir -p /etc/grafana/provisioning/dashboards/'
-    file:
+    ansible.builtin.file:
       path: '/etc/grafana/provisioning/dashboards/'
       state: 'directory'
       recurse: true
@@ -51,7 +51,7 @@
       group: 'grafana'
 
   - name: 'deploy the grafana dashboard provisioning file'
-    template:
+    ansible.builtin.template:
       src: 'etc/grafana/provisioning/dashboards/linuxfabrik-monitoring-plugins.yml.j2'
       dest: '/etc/grafana/provisioning/dashboards/linuxfabrik-monitoring-plugins.yml'
       owner: 'grafana'
