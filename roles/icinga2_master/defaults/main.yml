@@ -50,8 +50,8 @@ icinga2_master__influxdb__databases__dependent_var:
     retention: '{{ icinga2_master__influxdb_retention }}'
 
 icinga2_master__influxdb__users__dependent_var:
-  - name: '{{ icinga2_master__influxdb_login.username }}'
-    password: '{{ icinga2_master__influxdb_login.password }}'
+  - name: '{{ icinga2_master__influxdb_login["username"] }}'
+    password: '{{ icinga2_master__influxdb_login["password"] }}'
     state: 'present'
     admin: false
     grants:
