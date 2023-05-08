@@ -24,6 +24,7 @@ Playbook: Setup Icinga2 Master
 
 Role: grafana
 * creation of service accounts and their tokens
+* installs grizzly
 
 Playbook: setup_basic
 * Add support for AlmaLinux 8

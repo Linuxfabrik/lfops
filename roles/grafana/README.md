@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.grafana
 
-This role installs and configures [Grafana](https://grafana.com/).
+This role installs and configures [Grafana](https://grafana.com/). Additionally, it installs [grizzly](https://grafana.github.io/grizzly/), a tool for the management of Grafana dashboards.
 
 Runs on
 
@@ -14,12 +14,13 @@ Runs on
 
 ## Tags
 
-| Tag       | What it does                    |
-| ---       | ------------                    |
-| `grafana` | Installs and configures Grafana |
-| `grafana:configure` | Deploys the Grafana config files |
-| `grafana:provisioning` | Deploys the Grafana provisioning config files |
-| `grafana:service_accounts` | Creates Service Accounts and their tokens |
+| Tag                        | What it does                                  |
+| ---                        | ------------                                  |
+| `grafana`                  | Installs and configures Grafana               |
+| `grafana:configure`        | Deploys the Grafana config files              |
+| `grafana:grizzly`          | Installs Grizzly                              |
+| `grafana:provisioning`     | Deploys the Grafana provisioning config files |
+| `grafana:service_accounts` | Creates Service Accounts and their tokens     |
 
 
 ## Mandatory Role Variables
