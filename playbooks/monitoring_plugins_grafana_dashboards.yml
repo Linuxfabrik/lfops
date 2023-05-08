@@ -9,7 +9,6 @@
         - 'not monitoring_plugins_grafana_dashboards__skip_repo_grafana | d(false)'
 
     - role: 'linuxfabrik.lfops.grafana'
-      grafana__provisioning_dashboards__dependent_var: '{{ monitoring_plugins_grafana_dashboards__grafana__provisioning_dashboards__dependent_var }}'
       grafana__provisioning_datasources__dependent_var: '{{ monitoring_plugins_grafana_dashboards__grafana__provisioning_datasources__dependent_var }}'
       when:
         - 'not monitoring_plugins_grafana_dashboards__skip_grafana | default(false)'

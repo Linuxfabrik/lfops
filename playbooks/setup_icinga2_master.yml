@@ -167,7 +167,6 @@
         - 'not setup_icinga2_master__skip_repo_grafana | default(false)'
 
     - role: 'linuxfabrik.lfops.grafana'
-      grafana__provisioning_dashboards__dependent_var: '{{ monitoring_plugins_grafana_dashboards__grafana__provisioning_dashboards__dependent_var }}'
       grafana__provisioning_datasources__dependent_var: '{{ monitoring_plugins_grafana_dashboards__grafana__provisioning_datasources__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_grafana | default(false)'

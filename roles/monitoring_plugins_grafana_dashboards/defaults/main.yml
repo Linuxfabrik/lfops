@@ -1,7 +1,6 @@
-monitoring_plugins_grafana_dashboard__director_database_host: '127.0.0.1'
-monitoring_plugins_grafana_dashboard__director_database_name: '{{ icingaweb2_module_director__database_name }}'
 monitoring_plugins_grafana_dashboard__influxdb_database_name: '{{ icinga2_master__influxdb_database_name }}'
 monitoring_plugins_grafana_dashboard__influxdb_host: '{{ icinga2_master__influxdb_host }}'
+monitoring_plugins_grafana_dashboards__grafana_url: '{{ grafana__root_url }}'
 monitoring_plugins_grafana_dashboards__repo_version: '{{ lfops__monitoring_plugins_version | default("latest") }}'
 
 # -----------------------------------------------------------------------------
@@ -14,26 +13,6 @@ monitoring_plugins_grafana_dashboards__influxdb__users__dependent_var:
     grants:
       - database: '{{ monitoring_plugins_grafana_dashboard__influxdb_database_name }}'
         privilege: 'READ'
-
-monitoring_plugins_grafana_dashboards__mariadb_server__users__dependent_var:
-  - username: '{{ monitoring_plugins_grafana_dashboard__director_database_login["username"] }}'
-    password: '{{ monitoring_plugins_grafana_dashboard__director_database_login["password"] }}'
-    host: '{{ monitoring_plugins_grafana_dashboard__director_database_host }}'
-    priv:
-      - '{{ monitoring_plugins_grafana_dashboard__director_database_name }}.*:SELECT'
-    state: 'present'
-
-monitoring_plugins_grafana_dashboards__grafana__provisioning_dashboards__dependent_var:
-  - name: 'linuxfabrik-monitoring-plugins'
-    orgId: 1
-    folder: 'Linuxfabrik Monitoring Plugins'
-    folderUid: 'linuxfabrik-monitoring-plugins'
-    type: 'file'
-    disableDeletion: false
-    editable: false
-    updateIntervalSeconds: 60
-    options:
-      path: '/var/lib/grafana/dashboards/linuxfabrik-monitoring-plugins'
 
 monitoring_plugins_grafana_dashboards__grafana__provisioning_datasources__dependent_var:
   - name: 'InfluxDB'
@@ -50,17 +29,5 @@ monitoring_plugins_grafana_dashboards__grafana__provisioning_datasources__depend
       tlsAuthWithCACert: false
     secureJsonData:
       password: '{{ monitoring_plugins_grafana_dashboard__influxdb_login["password"] }}'
-    version: 1
-    editable: false
-  - name: 'icinga_director'
-    type: 'mysql'
-    access: 'proxy'
-    orgId: 1
-    url: '{{ monitoring_plugins_grafana_dashboard__director_database_host }}:3306'
-    user: '{{ monitoring_plugins_grafana_dashboard__director_database_login["username"] }}'
-    database: '{{ monitoring_plugins_grafana_dashboard__director_database_name }}'
-    isDefault: false
-    secureJsonData:
-      password: '{{ monitoring_plugins_grafana_dashboard__director_database_login["password"] }}'
     version: 1
     editable: false
