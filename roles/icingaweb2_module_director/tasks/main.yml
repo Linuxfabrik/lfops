@@ -140,10 +140,10 @@
       src: '/tmp/ansible.monitoring-plugins-repo/icingaweb2-module-director-basket.json'
       dest: '/tmp/icingaweb2-module-director-basket.json'
 
-  - name: 'Import the basket'
+  - name: 'icingacli director basket restore < /tmp/icingaweb2-module-director-basket.json'
     ansible.builtin.shell: 'icingacli director basket restore < /tmp/icingaweb2-module-director-basket.json'
 
-  - name: 'Delete the imported basket file'
+  - name: 'rm /tmp/icingaweb2-module-director-basket.json'
     ansible.builtin.file:
       path: '/tmp/icingaweb2-module-director-basket.json'
       state: 'absent'
