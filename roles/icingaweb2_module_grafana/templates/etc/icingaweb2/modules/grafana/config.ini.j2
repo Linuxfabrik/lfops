@@ -1,7 +1,11 @@
+; {{ ansible_managed }}
+; 2023050801
+
 [grafana]
 version = "1"
 host = "{{ (icingaweb2_module_grafana__url | split('://'))[1] }}"
 protocol = "{{ (icingaweb2_module_grafana__url | split('://'))[0] }}"
+timerange = "2d"
 timerangeAll = "1w/w"
 defaultdashboard = "Default"
 defaultdashboarduid = "default"
