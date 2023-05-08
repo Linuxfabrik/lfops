@@ -1,0 +1,59 @@
+- block:
+
+  - name: 'Get latest grizzly release version'
+    ansible.builtin.uri:
+      url: 'https://api.github.com/repos/grafana/grizzly/releases/latest'
+    register: 'grafana_grizzly__github_release'
+    check_mode: false # run task even if `--check` is specified
+    delegate_to: 'localhost'
+
+  - name: 'curl --location https://github.com/grafana/grizzly/releases/download/{{ grafana_grizzly__github_release["json"]["tag_name"] }}/grr-linux-amd64 --output /tmp/ansible.grr'
+    ansible.builtin.get_url:
+      url: 'https://github.com/grafana/grizzly/releases/download/{{ grafana_grizzly__github_release["json"]["tag_name"] }}/grr-linux-amd64'
+      dest: '/tmp/ansible.grr'
+      mode: 0o644
+    delegate_to: 'localhost'
+    run_once: true
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.grr to /usr/local/bin/grr'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.grr'
+      dest: '/usr/local/bin/grr'
+      mode: 0o755
+
+  tags:
+    - 'grafana_grizzly'
+
+
+- block:
+
+  - name: 'mkdir -p /tmp/ansible.grafana_grizzly'
+    ansible.builtin.file:
+      path: '/tmp/ansible.grafana_grizzly'
+      state: 'directory'
+
+  - name: 'copy the grizzly resources to /tmp/ansible.grafana_grizzly/'
+    ansible.builtin.copy:
+      src: '{{ item }}'
+      dest: '/tmp/ansible.grafana_grizzly/{{ item | basename }}'
+    loop: '{{ lookup("ansible.builtin.fileglob", inventory_dir ~ "/host_vars/" ~ inventory_hostname ~ "/files/grafana_grizzly/*.yml", wantlist=True) }}'
+
+  - name: 'grr apply /tmp/ansible.grafana_grizzly/*.yml'
+    ansible.builtin.command: 'grr apply /tmp/ansible.grafana_grizzly/{{ item | basename }}'
+    environment:
+      GRAFANA_URL: '{{ grafana_grizzly__grafana_url }}'
+      GRAFANA_USER: '{{ grafana_grizzly__grafana_service_account_login["username"] }}'
+      GRAFANA_TOKEN: '{{ grafana_grizzly__grafana_service_account_login["password"] }}'
+    register: 'grafana_grizzly__grr_apply_result'
+    changed_when: '"added" in grafana_grizzly__grr_apply_result["stdout"]'
+    loop: '{{ lookup("ansible.builtin.fileglob", inventory_dir ~ "/host_vars/" ~ inventory_hostname ~ "/files/grafana_grizzly/*.yml", wantlist=True) }}'
+
+  - name: 'rm -rf /tmp/ansible.grafana_grizzly'
+    ansible.builtin.file:
+      path: '/tmp/ansible.grafana_grizzly'
+      state: 'absent'
+
+  tags:
+    - 'grafana_grizzly:apply'

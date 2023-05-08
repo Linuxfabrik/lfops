@@ -1,0 +1,7 @@
+- name: 'Install grizzly and optionally deploys Grafana resources'
+  hosts:
+    - 'lfops_grafana_grizzly'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.grafana_grizzly'

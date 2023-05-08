@@ -19,12 +19,12 @@ Playbook: Setup Icinga2 Master
 ### Added
 
 * Role: dnf_versionlock
-* Role: repo_gitlab_runner
+* Role: grafana_grizzly
 * Role: icingadb
+* Role: repo_gitlab_runner
 
 Role: grafana
 * creation of service accounts and their tokens
-* installs grizzly
 
 Playbook: setup_basic
 * Add support for AlmaLinux 8

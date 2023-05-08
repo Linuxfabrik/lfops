@@ -172,6 +172,10 @@
       when:
         - 'not setup_icinga2_master__skip_grafana | default(false)'
 
+    - role: 'linuxfabrik.lfops.grafana_grizzly'
+      when:
+        - 'not setup_icinga2_master__skip_grafana_grizzly | default(false)'
+
     - role: 'linuxfabrik.lfops.icingaweb2_module_grafana'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_grafana | default(false)'
