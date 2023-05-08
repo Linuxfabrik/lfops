@@ -40,8 +40,8 @@
       dest: '/tmp/ansible.grafana_grizzly/{{ item | basename }}'
     loop: '{{ lookup("ansible.builtin.fileglob", inventory_dir ~ "/host_vars/" ~ inventory_hostname ~ "/files/grafana_grizzly/*.yml", wantlist=True) }}'
 
-  - name: 'grr apply /tmp/ansible.grafana_grizzly/*.yml'
-    ansible.builtin.command: 'grr apply /tmp/ansible.grafana_grizzly/{{ item | basename }}'
+  - name: '/usr/local/bin/grr apply /tmp/ansible.grafana_grizzly/*.yml'
+    ansible.builtin.command: '/usr/local/bin/grr apply /tmp/ansible.grafana_grizzly/{{ item | basename }}'
     environment:
       GRAFANA_URL: '{{ grafana_grizzly__grafana_url }}'
       GRAFANA_USER: '{{ grafana_grizzly__grafana_service_account_login["username"] }}'
