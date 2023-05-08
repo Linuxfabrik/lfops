@@ -106,6 +106,14 @@
 
 - block:
 
+  - name: 'mkdir /usr/lib64/nagios/plugins/assets (monitoring.php for php-status)'
+    ansible.builtin.file:
+      path: '/usr/lib64/nagios/plugins/assets'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
   - name: 'deploy /usr/lib64/nagios/plugins/assets/monitoring.php (monitoring.php for php-status)'
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/php-status/assets/monitoring.php'
@@ -116,7 +124,7 @@
 
   - name: 'check if /var/www/html/localhost exists (monitoring.php for php-status)'
     ansible.builtin.stat:
-      path: '/var/www/html/localhost exists'
+      path: '/var/www/html/localhost'
     register: 'monitoring_plugins__stat_var_www_html_localhost_result'
 
   - name: 'deploy /var/www/html/localhost/monitoring.php (monitoring.php for php-status)'
