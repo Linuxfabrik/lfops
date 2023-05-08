@@ -1,19 +1,17 @@
 ; {{ ansible_managed }}
-; 2023050801
+; 2023050802
 
 [grafana]
-version = "1"
+accessmode = "iframe"
+datasource = "influxdb"
+debug = "0"
+defaultdashboard = "Default"
+defaultdashboardpanelid = "1"
+defaultdashboarduid = "default"
+defaultorgid = "1"
 host = "{{ (icingaweb2_module_grafana__url | split('://'))[1] }}"
 protocol = "{{ (icingaweb2_module_grafana__url | split('://'))[0] }}"
-timerange = "2d"
-timerangeAll = "1w/w"
-defaultdashboard = "Default"
-defaultdashboarduid = "default"
-defaultdashboardpanelid = "1"
-defaultorgid = "1"
 shadows = "0"
 theme = "{{ icingaweb2_module_grafana__theme }}"
-datasource = "influxdb"
-accessmode = "iframe"
-debug = "0"
-usepublic = "no"
+timerange = "2d"
+timerangeAll = "1w/w"
