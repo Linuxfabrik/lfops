@@ -83,3 +83,87 @@
 
   tags:
     - 'grafana'
+
+
+- block:
+
+  # https://grafana.com/docs/grafana/latest/developers/http_api/serviceaccount/
+  - name: 'get list of service accounts'
+    ansible.builtin.uri:
+      url: '{{ grafana__root_url }}/api/serviceaccounts/search'
+      user: '{{ grafana__admin_login["username"] }}'
+      password: '{{ grafana__admin_login["password"] }}'
+      force_basic_auth: true
+      body_format: 'json'
+      headers:
+        Accept: 'application/json'
+    register: 'grafana__service_accounts_list_result'
+
+  - name: 'create service accounts'
+    ansible.builtin.uri:
+      url: '{{ grafana__root_url }}/api/serviceaccounts'
+      user: '{{ grafana__admin_login["username"] }}'
+      password: '{{ grafana__admin_login["password"] }}'
+      force_basic_auth: true
+      method: 'POST'
+      body: >
+        {
+          "name": "{{ item['name'] }}",
+          "role": "{{ item['role'] | d('Viewer') }}"
+        }
+      status_code: 201
+      body_format: 'json'
+      headers:
+        Accept: 'application/json'
+    register: 'grafana__service_accounts_create_result'
+    loop: '{{ grafana__provisioning_service_accounts__combined_var }}'
+    when: 'item["name"] not in grafana__service_accounts_list_result["json"]["serviceAccounts"] | map(attribute="name")'
+    changed_when: true # the task is either skipped when the account already exists, or a new account is created
+
+  - name: 'create tokens for service accounts'
+    ansible.builtin.uri:
+      url: '{{ grafana__root_url }}/api/serviceaccounts/{{ item["json"]["id"] }}/tokens'
+      user: '{{ grafana__admin_login["username"] }}'
+      password: '{{ grafana__admin_login["password"] }}'
+      force_basic_auth: true
+      method: 'POST'
+      body: >
+        {
+          "name": "{{ item['item']['name'] }}",
+          "role": "{{ item['item']['role'] | d('Viewer') }}"
+        }
+      body_format: 'json'
+      headers:
+        Accept: 'application/json'
+    register: 'grafana__service_accounts_token_result'
+    loop: '{{ grafana__service_accounts_create_result["results"] }}'
+    when:
+      - 'not (item["skipped"] is defined and item["skipped"])'
+    changed_when: true # the task is either skipped when the account already exists, or a new token is created
+
+  - name: 'display new service account tokens !! one time only !!'
+    ansible.builtin.debug:
+      msg: 'Token for {{ item["json"]["name"] }}: {{ item["json"]["key"] }}'
+    loop: '{{ grafana__service_accounts_token_result["results"] }}'
+    when:
+      - 'not (item["skipped"] is defined and item["skipped"])'
+
+  - name: 'store tokens to bitwarden'
+    linuxfabrik.lfops.bitwarden_item:
+      collection_id: '{{ grafana__bitwarden_collection_id }}'
+      organization_id: '{{ grafana__bitwarden_organization_id }}'
+      hostname: '{{ inventory_hostname }}'
+      purpose: 'Grafana Service Account Token'
+      username: '{{ item["json"]["name"] }}'
+      password: '{{ item["json"]["key"] }}'
+    loop: '{{ grafana__service_accounts_token_result["results"] }}'
+    delegate_to: 'localhost'
+    when:
+      - 'not grafana__skip_token_to_bitwarden'
+      - 'not (item["skipped"] is defined and item["skipped"])'
+      - 'grafana__bitwarden_collection_id is defined and grafana__bitwarden_collection_id | length'
+      - 'grafana__bitwarden_organization_id is defined and grafana__bitwarden_organization_id | length'
+
+  tags:
+    - 'grafana'
+    - 'grafana:service_accounts'

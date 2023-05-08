@@ -22,6 +22,9 @@ Playbook: Setup Icinga2 Master
 * Role: repo_gitlab_runner
 * Role: icingadb
 
+Role: grafana
+* creation of service accounts and their tokens
+
 Playbook: setup_basic
 * Add support for AlmaLinux 8
 
