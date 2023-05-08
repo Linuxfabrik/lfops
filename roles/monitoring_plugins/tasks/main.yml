@@ -80,7 +80,7 @@
 
   - name: 'Copy the /etc/sudoers.d/monitoring-plugins file to the server (Linux)'
     ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["distribution"] ~ ansible_facts["distribution_major_version"] }}.sudoers'
+      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}.sudoers'
       dest: '/etc/sudoers.d/monitoring-plugins'
       mode: 0o640
 
