@@ -73,40 +73,38 @@
       name: 'monitoring_plugins'
       tasks_from: 'generate-monitoring-plugins-list.yml'
 
-  - name: 'Copy the icingaweb2-grafana.ini files for linux to /tmp/ansible.icinga2_master-icingaweb2-grafana-temp'
+  - name: 'Copy the global icingaweb2 module grafana ini files to /tmp/ansible.icingaweb2-module-grafana-inis'
     ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}.icingaweb2-grafana.ini'
-      dest: '/tmp/ansible.icinga2_master-icingaweb2-grafana-temp/'
-    when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}.icingaweb2-grafana.ini" is file'
+      src: '/tmp/ansible.monitoring-plugins-repo/assets/icingaweb2-module-grafana/{{ item }}'
+      dest: '/tmp/ansible.icingaweb2-module-grafana-inis/'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+    loop:
+      - 'icinga.ini'
+
+  - name: 'Copy the icingaweb2 module grafana ini files to /tmp/ansible.icingaweb2-module-grafana-inis'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/icingaweb2-module-grafana/{{ item }}.ini'
+      dest: '/tmp/ansible.icingaweb2-module-grafana-inis/'
+    when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/icingaweb2-module-grafana/{{ item }}.ini" is file'
     loop: '{{ monitoring_plugins__plugin_list }}'
     delegate_to: 'localhost'
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'Copy the icingaweb2-grafana.ini files for windows to /tmp/ansible.icinga2_master-icingaweb2-grafana-temp'
-    ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}-windows.icingaweb2-grafana.ini'
-      dest: '/tmp/ansible.icinga2_master-icingaweb2-grafana-temp/'
-    # when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/" ~ item ~ "/" ~ item ~ "-windows.icingaweb2-grafana.ini" is file'
-    when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/{{ item }}-windows.icingaweb2-grafana.ini" is file'
-    loop: '{{ monitoring_plugins__plugin_list }}'
-    delegate_to: 'localhost'
-    run_once: true
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Assemble /tmp/ansible.icinga2_master-icingaweb2-grafana'
+  - name: 'Assemble /tmp/ansible.icingaweb2-module-grafana-combined.ini'
     ansible.builtin.assemble:
-      src: '/tmp/ansible.icinga2_master-icingaweb2-grafana-temp/'
-      dest: '/tmp/ansible.icinga2_master-icingaweb2-grafana'
-      regexp: '.icingaweb2-grafana.ini$'
-      delimiter: '\n'
+      src: '/tmp/ansible.icingaweb2-module-grafana-inis'
+      dest: '/tmp/ansible.icingaweb2-module-grafana-combined.ini'
+      delimiter: '\n\n'
     delegate_to: 'localhost'
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'Copy the /etc/icingaweb2/modules/grafana/graphs.ini file to the server'
+  - name: 'Copy /tmp/ansible.icingaweb2-module-grafana-combined.ini to /etc/icingaweb2/modules/grafana/graphs.ini'
     ansible.builtin.copy:
-      src: '/tmp/ansible.icinga2_master-icingaweb2-grafana'
+      src: '/tmp/ansible.icingaweb2-module-grafana-combined.ini'
       dest: '/etc/icingaweb2/modules/grafana/graphs.ini'
       owner: 'apache'
       group: 'icingaweb2'
