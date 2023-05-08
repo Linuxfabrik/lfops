@@ -56,4 +56,5 @@
       state: 'absent'
 
   tags:
+    - 'grafana_grizzly'
     - 'grafana_grizzly:apply'
