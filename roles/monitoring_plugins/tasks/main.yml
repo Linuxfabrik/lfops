@@ -106,6 +106,38 @@
 
 - block:
 
+  - name: 'deploy /usr/lib64/nagios/plugins/assets/monitoring.php (monitoring.php for php-status)'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/php-status/assets/monitoring.php'
+      dest: '/usr/lib64/nagios/plugins/assets/monitoring.php'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'check if /var/www/html/localhost exists (monitoring.php for php-status)'
+    ansible.builtin.stat:
+      path: '/var/www/html/localhost exists'
+    register: 'monitoring_plugins__stat_var_www_html_localhost_result'
+
+  - name: 'deploy /var/www/html/localhost/monitoring.php (monitoring.php for php-status)'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/php-status/assets/monitoring.php'
+      dest: '/var/www/html/localhost/monitoring.php'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o644
+    when: 'monitoring_plugins__stat_var_www_html_localhost_result["stat"]["exists"]'
+
+  # block
+  when:
+    - 'ansible_facts["os_family"] != "Windows"'
+    - '"php-status" in monitoring_plugins__plugin_list'
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
   - name: 'Check if custom plugins exist'
     ansible.builtin.stat:
       path: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
