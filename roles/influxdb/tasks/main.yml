@@ -104,16 +104,6 @@
     vars:
       ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
 
-  - name: 'Drop retention policy if exists'
-    community.general.influxdb_query:
-      database_name: '{{ item.name }}'
-      password: '{{ influxdb__admin_login.password | default(omit) }}'
-      username: '{{ influxdb__admin_login.username }}'
-      query: 'DROP RETENTION POLICY lf_retention_policy ON icinga_influxdb'
-    loop: '{{ influxdb__databases__combined_var }}'
-    vars:
-      ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
-
   - name: 'Create retention policy'
     community.general.influxdb_retention_policy:
       database_name: '{{ item.name }}'
