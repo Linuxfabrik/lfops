@@ -6,6 +6,12 @@
         - 'grafana'
       state: 'present'
 
+  tags:
+    - 'grafana'
+
+
+- block:
+
   - name: 'deploy /etc/grafana/grafana.ini'
     ansible.builtin.template:
       src: 'etc/grafana/grafana.ini.j2'
@@ -24,6 +30,13 @@
       mode: 0o640
     when: 'grafana__ldap_config is defined and grafana__ldap_config | length'
     notify: 'grafana: restart grafana-server'
+
+  tags:
+    - 'grafana'
+    - 'grafana:configure'
+
+
+- block:
 
   - name: 'mkdir -p /etc/grafana/provisioning/datasources/'
     ansible.builtin.file:
@@ -61,6 +74,7 @@
 
   tags:
     - 'grafana'
+    - 'grafana:provisioning'
 
 
 - block:

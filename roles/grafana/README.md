@@ -17,6 +17,8 @@ Runs on
 | Tag       | What it does                    |
 | ---       | ------------                    |
 | `grafana` | Installs and configures Grafana |
+| `grafana:configure` | Deploys the Grafana config files |
+| `grafana:provisioning` | Deploys the Grafana provisioning config files |
 | `grafana:service_accounts` | Creates Service Accounts and their tokens |
 
 
