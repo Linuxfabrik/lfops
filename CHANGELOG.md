@@ -15,6 +15,9 @@ Role: graylog_server
 Playbook: Setup Icinga2 Master
 * changed default of `setup_icinga2_master__skip_icingaweb2_module_monitoring` from `false` to `true`
 
+Role: monitoring_plugins_grafana_dashboards
+* Change from provisioning to grizzly for the deployment of the dashboards
+
 
 ### Added
 
