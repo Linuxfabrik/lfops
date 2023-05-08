@@ -52,11 +52,6 @@ options:
         default: None
         required: False
         type: str
-    executable:
-        description: The explicit executable or pathname for the C(bw) executable.
-        default: C(/usr/local/bin/bw)
-        required: False
-        type: str
     hostname:
         description: Hostname to which the password belongs. Used for automatic name/title generation if I(name) is not specified.
         required: False
@@ -125,7 +120,6 @@ EXAMPLES = r'''
 # a full-fledged example
 - name: 'Get or create a password item from Bitwarden (automated name creation).'
   linuxfabrik.lfops.bitwarden_item:
-    executable: '/usr/local/bin/bw'
     collection_id: '4649ec03-c1be-4d5a-9413-7f7ad8ebbace'
     organization_id: '06c7691f-c64f-4140-8680-d4f60a9cb038'
     hostname: 'appsrv12'
@@ -294,7 +288,6 @@ def run_module():
     module_args = dict(
         attachments=dict(type='list', required=False, default=[]),
         collection_id=dict(type='str', required=False, default=None),
-        executable=dict(type='str', required=False, default='bw'),
         folder_id=dict(type='list', required=False, default=None),
         hostname=dict(type='str', required=False, default=None),
         id=dict(type='str', required=False, default=None),
@@ -328,7 +321,6 @@ def run_module():
 
     # extract the variables to make the code more readable
     collection_id = module.params['collection_id']
-    executable = module.params['executable']
     folder_id = module.params['folder_id']
     hostname = module.params['hostname']
     item_id = module.params['id']
@@ -340,7 +332,7 @@ def run_module():
     uris = module.params['uris']
     username = module.params['username']
 
-    bw = Bitwarden(executable)
+    bw = Bitwarden()
 
     if not bw.is_unlocked:
         module.fail_json('Not logged into Bitwarden, or Bitwarden Vault is locked. Please run `bw login` and `bw unlock` first.')
