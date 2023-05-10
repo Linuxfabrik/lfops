@@ -2,7 +2,7 @@
 
 This role installs and configures [IcingaDB](https://github.com/Icinga/icingadb).
 
-If `icingadb__skip_migration: false` is set, it also tries to prepare the configuration file required for the migration from the IDO feature to Icinga DB. Note that the migration requires the following manual steps after running the role:
+When running the `icingadb:migration` tag, it also tries to prepare the configuration file required for the migration from the IDO feature to Icinga DB. Note that the migration requires the following manual steps after running the role:
 1. Double check the values in `/tmp/icingadb-migration.yml`
 2. Run the migration: `icingadb-migrate --config /tmp/icingadb-migration.yml --cache /tmp/icingadb-migration.cache`
 3. Clean up: `rmdir /tmp/icingadb-migration.cache`
@@ -22,8 +22,8 @@ Runs on
 
 | Tag        | What it does                                 |
 | ---        | ------------                                 |
-| `icingadb` | Installs and configures IcingaDB, and prepares the migration. |
-| `icingadb:migration` | Prepares the migration of the history from the IDO feature to Icinga DB. |
+| `icingadb` | Installs and configures IcingaDB. |
+| `icingadb:migration` | Not normally run. Prepares the migration of the history from the IDO feature to Icinga DB. |
 
 
 ## Mandatory Role Variables
@@ -57,7 +57,6 @@ icingadb__database_login:
 | `icingadb__redis_password` | The password for the Redis instance, if authentication is enabled. | unset |
 | `icingadb__redis_port` | The port on which Redis instance is reachable. | `6379` |
 | `icingadb__service_enabled` | Enables or disables the IcingaDB service, analogous to `systemctl enable/disable --now`. | `true` |
-| `icingadb__skip_migration` | If the configuration file for the IDO to IcingaDB migration should be deployed or not. | `true` |
 
 Example:
 ```yaml
@@ -70,7 +69,6 @@ icingadb__redis_host: '127.0.0.1'
 icingadb__redis_password: 'linuxfabrik'
 icingadb__redis_port: 6379
 icingadb__service_enabled: true
-icingadb__skip_migration: true
 ```
 
 
