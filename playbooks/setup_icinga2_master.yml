@@ -34,7 +34,6 @@
         - '{{ icingadb__mariadb_server__users__dependent_var }}'
         - '{{ icingaweb2__mariadb_server__users__dependent_var }}'
         - '{{ icingaweb2_module_director__mariadb_server__users__dependent_var }}'
-        - '{{ monitoring_plugins_grafana_dashboards__mariadb_server__users__dependent_var }}'
       when:
         - 'not setup_icinga2_master__skip_mariadb_server | default(false)'
 
