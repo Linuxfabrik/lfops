@@ -17,6 +17,7 @@ Playbook: Setup Icinga2 Master
 
 Role: monitoring_plugins
 * Remove the tasks for Nuitka compilation, as the compilation is done by the [Monitoring Plugins GitHub Action](https://github.com/Linuxfabrik/monitoring-plugins/actions/workflows/nuitka-compile.yml) now.
+* Locks the version of the `monitoring-plugins` package after installing it. Updating the plugins should be done manually along with updating the monitoring system configuration.
 
 Role: monitoring_plugins_grafana_dashboards
 * Change from provisioning to grizzly for the deployment of the dashboards

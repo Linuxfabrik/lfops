@@ -1,0 +1,3 @@
+monitoring_plugins__versionlock_package: 'yum-plugin-versionlock'
+monitoring_plugins__versionlock_lock_command: 'yum versionlock add'
+monitoring_plugins__versionlock_unlock_command: 'yum versionlock delete'
