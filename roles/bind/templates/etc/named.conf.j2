@@ -71,3 +71,8 @@ zone "{{ item.name }}" IN {
 };
 
 {% endfor %}
+
+{% if bind__named_conf_raw is defined and bind__named_conf_raw | length %}
+# raw
+{{ bind__named_conf_raw }}
+{% endif %}

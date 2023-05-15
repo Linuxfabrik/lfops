@@ -85,6 +85,7 @@ bind__zones:
 | -------- | ----------- | ------------- |
 | `bind__forwarders` | List of DNS servers to which DNS queries to unknown domain names should be forwarded. | `['1.0.0.1', '1.1.1.1']` |
 | `bind__listen_on_addresses` | List of addresses on which the server will listen. This indirectly sets the listening interface(s). | `['any']` |
+| `bind__named_conf_raw` | Optional, string. Raw content which will be appended to the end of `/etc/named.conf` | unset |
 | `bind__named_service_enabled` | Enables or disables the named service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
 | `bind__rpz_zone` | This enables the usage of a reverse-policy zone (have a look at https://dnsrpz.info/, basically acts as a `/etc/hosts` file for all clients). To use this, also create a zone with `name: '{{ bind__rpz_zone }}'` in `bind__zones`. | unset |
 
@@ -96,6 +97,11 @@ bind__forwarders:
   - '1.1.1.1'
 bind__listen_on_addresses:
   - '192.0.2.2/32'
+bind__named_conf_raw: |-
+  zone "example.com" {
+      type forward;
+      forwarders { my-dns.loc; };
+  };
 bind__named_service_enabled: true
 bind__rpz_zone: 'rpz'
 ```

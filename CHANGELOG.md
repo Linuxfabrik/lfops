@@ -26,6 +26,9 @@ Role: monitoring_plugins_grafana_dashboards
 * Role: icingadb
 * Role: repo_gitlab_runner
 
+Role:bind
+* add `bind__named_conf_raw` variable
+
 Role: grafana
 * creation of service accounts and their tokens
 
