@@ -130,28 +130,3 @@
 
   tags:
     - 'monitoring_plugins'
-
-
-- block:
-
-  - name: 'Remove old compile artifacts'
-    ansible.windows.win_file:
-      path: 'C:\\nuitka-compile-temp'
-      state: 'absent'
-
-  - name: 'Compile the monitoring plugins using nuitka'
-    ansible.windows.win_command: 'py -3.9 -m nuitka --mingw64 --follow-imports --output-dir C:\\nuitka-compile-temp --remove-output --standalone {{ item }}.py'
-    args:
-      chdir: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\'
-    loop: '{{ monitoring_plugins__plugin_list }}'
-
-  - name: 'Remove .dist from the folder names'
-    ansible.windows.win_command: 'cmd.exe /c "rename {{ item }}.dist {{ item }}"'
-    args:
-      chdir: 'C:\\nuitka-compile-temp'
-    loop: '{{ monitoring_plugins__plugin_list }}'
-
-  # block
-  tags:
-    - 'never'
-    - 'monitoring_plugins:nuitka_compile'

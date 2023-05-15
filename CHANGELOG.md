@@ -15,6 +15,9 @@ Role: graylog_server
 Playbook: Setup Icinga2 Master
 * changed default of `setup_icinga2_master__skip_icingaweb2_module_monitoring` from `false` to `true`
 
+Role: monitoring_plugins
+* Remove the tasks for Nuitka compilation, as the compilation is done by the [Monitoring Plugins GitHub Action](https://github.com/Linuxfabrik/monitoring-plugins/actions/workflows/nuitka-compile.yml) now.
+
 Role: monitoring_plugins_grafana_dashboards
 * Change from provisioning to grizzly for the deployment of the dashboards
 

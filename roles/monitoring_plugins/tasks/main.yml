@@ -8,7 +8,6 @@
   tags:
     - 'monitoring_plugins'
     - 'monitoring_plugins:custom'
-    - 'monitoring_plugins:nuitka_compile'
 
 - name: 'Clone the monitoring plugins repo'
   ansible.builtin.import_role:
@@ -23,7 +22,6 @@
   ansible.builtin.import_tasks: 'generate-monitoring-plugins-list.yml'
   tags:
     - 'monitoring_plugins'
-    - 'monitoring_plugins:nuitka_compile'
 
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
@@ -41,7 +39,6 @@
   ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
     - 'monitoring_plugins'
-    - 'monitoring_plugins:nuitka_compile'
 
 
 - block:
