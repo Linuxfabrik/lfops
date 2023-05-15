@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023050801
+# 2023051501
 
 [grafana]
 name=grafana
@@ -14,3 +14,5 @@ gpgcheck=1
 gpgkey = file:///etc/pki/rpm-gpg/grafana.key
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+# To prevent beta versions from being installed, add the following exclude line to your .repo file.
+exclude=*beta*
