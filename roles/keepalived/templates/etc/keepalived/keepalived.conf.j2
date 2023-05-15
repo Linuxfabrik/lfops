@@ -17,7 +17,7 @@ global_defs {
 vrrp_instance VI_{{ keepalived__instance_id }} {
         state {{ keepalived__state }}
         interface {{ keepalived__interface }}
-        virtual_router_id 51
+        virtual_router_id {{ keepalived__virtual_router_id | default(keepalived__instance_id) }}
         smtp_alert
         priority {% if keepalived__state == 'MASTER' %}255{% else %}200{% endif %}
 
