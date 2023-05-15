@@ -65,10 +65,6 @@
       when:
         - 'not setup_icinga2_master__skip_monitoring_plugins | d(false)'
 
-    - role: 'linuxfabrik.lfops.monitoring_plugins_grafana_dashboards'
-      when:
-        - 'not setup_icinga2_master__skip_monitoring_plugins_grafana_dashboards | d(false)'
-
     - role: 'linuxfabrik.lfops.repo_icinga'
       when:
         - 'not setup_icinga2_master__skip_repo_icinga | default(false)'
@@ -177,3 +173,7 @@
     - role: 'linuxfabrik.lfops.icingaweb2_module_grafana'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_grafana | default(false)'
+
+    - role: 'linuxfabrik.lfops.monitoring_plugins_grafana_dashboards'
+      when:
+        - 'not setup_icinga2_master__skip_monitoring_plugins_grafana_dashboards | d(false)'
