@@ -69,7 +69,7 @@
 
   - name: 'Download the Linuxfabrik monitoring plugins (Windows)'
     ansible.builtin.get_url:
-      url: 'https://download.linuxfabrik.ch/monitoring-plugins/windows/{{ monitoring_plugins__repo_version }}.zip'
+      url: 'https://download.linuxfabrik.ch/monitoring-plugins/windows/linuxfabrik-monitoring-plugins-{{ monitoring_plugins__repo_version }}.zip'
       dest: '/tmp/ansible.{{ monitoring_plugins__repo_version }}.zip'
     delegate_to: 'localhost'
     check_mode: false # run task even if `--check` is specified

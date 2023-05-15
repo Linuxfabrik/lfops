@@ -15,6 +15,9 @@
     tasks_from: 'clone-monitoring-plugins-repo.yml'
   vars:
     shared__monitoring_plugins_repo_version: '{{ monitoring_plugins__repo_version }}'
+  when:
+    - 'ansible_facts["os_family"] != "Windows"
+      or monitoring_plugins__windows_variant == "python"'
   tags:
     - 'monitoring_plugins'
 
