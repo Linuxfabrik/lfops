@@ -14,7 +14,7 @@
       src: '/tmp/ansible.grafana.key'
       dest: '/etc/pki/rpm-gpg/grafana.key'
 
-  # https://grafana.com/docs/installation/rpm/
+  # https://grafana.com/docs/grafana/latest/setup-grafana/installation/redhat-rhel-fedora/
   - name: 'deploy the Grafana repo (mirror: {{ repo_grafana__mirror_url }})'
     ansible.builtin.template:
       src: 'etc/yum.repos.d/grafana.repo.j2'
