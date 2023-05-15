@@ -5,7 +5,6 @@ icingadb__database_name: 'icingadb'
 icingadb__redis_host: '127.0.0.1'
 icingadb__redis_port: 6379
 icingadb__service_enabled: true
-icingadb__skip_migration: true
 
 # -----------------------------------------------------------------------------
 

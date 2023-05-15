@@ -141,8 +141,6 @@
         3. Clean up: `rm -rf /tmp/icingadb-migration.cache /tmp/icingadb-migration.yml`
         4. If everything works, disable the IcingaWeb2 monitoring module: `icingacli module disable monitoring`
 
-  when:
-    - 'not icingadb__skip_migration'
   tags:
     - 'never'
     - 'icingadb:migration'
