@@ -33,8 +33,8 @@
     when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/grafana/{{ item }}.yml" is file'
     loop: '{{ monitoring_plugins__plugin_list }}'
 
-  - name: 'grr apply /tmp/ansible.monitoring_plugins_grafana_dashboards/*.yml'
-    ansible.builtin.command: 'grr apply /tmp/ansible.monitoring_plugins_grafana_dashboards/{{ item }}.yml'
+  - name: '/usr/local/bin/grr apply /tmp/ansible.monitoring_plugins_grafana_dashboards/*.yml'
+    ansible.builtin.command: '/usr/local/bin/grr apply /tmp/ansible.monitoring_plugins_grafana_dashboards/{{ item }}.yml'
     environment:
       GRAFANA_URL: '{{ monitoring_plugins_grafana_dashboards__grafana_url }}'
       GRAFANA_USER: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["username"] }}'
