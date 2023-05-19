@@ -6,6 +6,11 @@ Runs on
 
 * RHEL 8 (and compatible)
 
+This role is tested with the following IcingaWeb2 Grafana Module versions:
+
+* 0.17.0
+* 0.20.0
+
 
 ## Mandatory Requirements
 

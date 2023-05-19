@@ -6,7 +6,7 @@ Runs on
 
 * RHEL 8 (and compatible)
 
-This role is compatible with the following IcingaWeb2 Director Module versions:
+This role is tested with the following IcingaWeb2 Director Module versions:
 
 * 1.10.2
 * 1.10.2.2023042001

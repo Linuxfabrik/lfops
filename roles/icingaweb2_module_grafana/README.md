@@ -3,9 +3,14 @@
 This role installs and configures the [IcingaWeb2 Grafana Module](https://github.com/Mikesch-mp/icingaweb2-module-grafana).
 Additionally, it deploys the the graph configuration for the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This can be disabled using `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config`.
 
-Tested on
+Runs on
 
 * RHEL 8 (and compatible)
+
+This role is tested with the following IcingaWeb2 Grafana Module versions:
+
+* 1.4.2
+* 2.0.3
 
 
 ## Mandatory Requirements
