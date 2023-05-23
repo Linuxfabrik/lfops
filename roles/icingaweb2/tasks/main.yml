@@ -88,7 +88,6 @@
       - 'config.ini'
       - 'resources.ini'
       - 'groups.ini'
-      - 'roles.ini'
 
   - name: 'Deploy /etc/icingaweb2/navigation/menu.ini'
     ansible.builtin.template:
@@ -111,6 +110,14 @@
 
 
 - block:
+
+  - name: 'Deploy /etc/icingaweb2/roles.ini'
+    ansible.builtin.template:
+      src: 'etc/icingaweb2/roles.ini.j2'
+      dest: '/etc/icingaweb2/roles.ini'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o660
 
   - name: 'add users into the icingaweb2 database (insert only, no update)'
     ansible.builtin.shell: >
