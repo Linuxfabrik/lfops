@@ -61,7 +61,7 @@ bind__zones:
 
       2    IN PTR dns-server.example.com.
 
-  - name: '{{ bind__rpz_zone }}'
+  - name: '{{ bind__rpz_zone }}' # note: requires setting `bind__rpz_zone`, see optional role variables below
     file: '{{ bind__rpz_zone }}.zone'
     raw: |-
       $TTL 1H
