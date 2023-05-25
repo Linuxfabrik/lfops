@@ -60,22 +60,6 @@ bind__zones:
       @ IN NS dns-server.example.com.
 
       2    IN PTR dns-server.example.com.
-
-  - name: '{{ bind__rpz_zone }}' # note: requires setting `bind__rpz_zone`, see optional role variables below
-    file: '{{ bind__rpz_zone }}.zone'
-    raw: |-
-      $TTL 1H
-
-      @ IN SOA 001-p-infra01.example.com. info@example.com. (
-          2022101801 ; <SERNO>
-          1H         ; <TIME-TO-REFRESH>
-          1H         ; <TIME-TO-RETRY>
-          1W         ; <TIME-TO-EXPIRE>
-          1D )       ; <minimum-TTL>
-
-      @ IN NS 001-p-infra01.example.com.
-
-      internal-website.example.com     A     192.0.2.3
 ```
 
 
@@ -104,6 +88,23 @@ bind__named_conf_raw: |-
   };
 bind__named_service_enabled: true
 bind__rpz_zone: 'rpz'
+bind__zones:
+  # make use of the bind__rpz_zone
+  - name: '{{ bind__rpz_zone }}'
+    file: '{{ bind__rpz_zone }}.zone'
+    raw: |-
+      $TTL 1H
+
+      @ IN SOA 001-p-infra01.example.com. info@example.com. (
+          2022101801 ; <SERNO>
+          1H         ; <TIME-TO-REFRESH>
+          1H         ; <TIME-TO-RETRY>
+          1W         ; <TIME-TO-EXPIRE>
+          1D )       ; <minimum-TTL>
+
+      @ IN NS 001-p-infra01.example.com.
+
+      internal-website.example.com     A     192.0.2.3
 ```
 
 
