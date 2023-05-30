@@ -23,7 +23,10 @@
         - 'not mariadb_server__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings__sysctl__dependent_var: '{{ keycloak__kernel_settings__sysctl__dependent_var | d([]) }}'
+      kernel_settings__sysctl__dependent_var: '{{
+          mariadb_server__kernel_settings__sysctl__dependent_var | d([]) +
+          keycloak__kernel_settings__sysctl__dependent_var | d([])
+        }}'
       when:
         - 'not keycloak__skip_kernel_settings | d(false)'
 
