@@ -74,6 +74,8 @@
         - '{{ icingadb__icinga2_master__api_users__dependent_var }}'
         - '{{ icingaweb2__icinga2_master__api_users__dependent_var }}'
         - '{{ icingaweb2_module_director__icinga2_master__api_users__dependent_var }}'
+      when:
+        - 'not setup_icinga2_master__skip_icinga2_master | default(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
@@ -130,7 +132,7 @@
         }}'
       kernel_settings__transparent_hugepages__dependent_var: "{{ redis__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
       when:
-        - 'not redis__skip_kernel_settings | d(false)'
+        - 'not setup_icinga2_master__skip_kernel_settings | d(false)'
 
     - role: 'linuxfabrik.lfops.redis'
       when:
