@@ -1,4 +1,5 @@
 icingaweb2__database_host: 'localhost'
+icingaweb2__database_login_host: 'localhost'
 icingaweb2__database_name: 'icingaweb2'
 icingaweb2__default_theme: 'Icinga'
 
@@ -159,7 +160,7 @@ icingaweb2__mariadb_server__databases__dependent_var:
 icingaweb2__mariadb_server__users__dependent_var:
   - username: '{{ icingaweb2__database_login.username }}'
     password: '{{ icingaweb2__database_login.password }}'
-    host: '{{ icingaweb2__database_host }}'
+    host: '{{ icingaweb2__database_login_host }}'
     priv:
       - '{{ icingaweb2__database_name }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
     state: 'present'

@@ -55,6 +55,7 @@ icingaweb2__url_host: 'monitoring.example.com'
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `icingaweb2__database_host` | The host on which the SQL database is reachable. | `'localhost'` |
+| `icingaweb2__database_login_host` | The Host-part of the SQL database user. | `'localhost'` |
 | `icingaweb2__database_name` | The name of the SQL database. | `'icingaweb2'` |
 | `icingaweb2__default_theme` | The application-wide default theme for the web interface. | `'Icinga'` |
 | `icingaweb2__authentications__host_var` /<br> `icingaweb2__authentications__group_var` | A list of dictionaries defining the authentication backends (e.g. database) for IcingaWeb2. Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/05-Authentication/. Subkeys:<br> * `name`: Mandatory, string. The name of the authentication backend.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | IcingaWeb2 Database |
@@ -68,6 +69,7 @@ Example:
 ```yaml
 # optional
 icingaweb2__database_host: 'localhost'
+icingaweb2__database_login_host: 'localhost'
 icingaweb2__database_name: 'icingaweb2'
 icingaweb2__default_theme: 'Icinga'
 icingaweb2__authentications__host_var:
