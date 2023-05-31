@@ -120,8 +120,10 @@
 
   - name: 'SELECT MIN(event_time)/1000 FROM icingadb.history; get latest entry in the icingadb for the migration from ido'
     community.mysql.mysql_query:
-      login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_user: '{{ icingadb__database_login["username"] }}'
+      login_password: '{{ icingadb__database_login["password"] }}'
+      login_host: '{{ icingadb__database_host }}'
+      login_db: '{{ icingadb__database_name }}'
       query: 'SELECT MIN(event_time) AS min_event_time FROM {{ icingadb__database_name }}.history;'
     register: 'icingadb__latest_icingadb_history_result'
 
