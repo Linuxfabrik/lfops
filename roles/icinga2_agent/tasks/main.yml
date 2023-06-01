@@ -101,7 +101,7 @@
       name: 'icinga2'
       state: 'restarted'
 
-  - name: 'add host to icinga director'
+  - name: 'add host to icinga director at {{ icinga2_agent__icingaweb2_url }}/director/host'
     ansible.builtin.uri:
       url: '{{ icinga2_agent__icingaweb2_url }}/director/host'
       user: '{{ icinga2_agent__icingaweb2_user_login["username"] }}'
