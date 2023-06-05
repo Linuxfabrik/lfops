@@ -1,4 +1,5 @@
 grafana__allow_embedding: true
+grafana__api_url: '{{ grafana__root_url }}'
 grafana__auth_anonymous_enabled: false
 grafana__auth_anonymous_org_name: 'Main Org.'
 grafana__auth_anonymous_org_role: 'Viewer'

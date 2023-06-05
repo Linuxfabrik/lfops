@@ -104,7 +104,7 @@
   # https://grafana.com/docs/grafana/latest/developers/http_api/serviceaccount/
   - name: 'get list of service accounts'
     ansible.builtin.uri:
-      url: '{{ grafana__root_url }}/api/serviceaccounts/search'
+      url: '{{ grafana__api_url }}/api/serviceaccounts/search'
       user: '{{ grafana__admin_login["username"] }}'
       password: '{{ grafana__admin_login["password"] }}'
       force_basic_auth: true
@@ -115,7 +115,7 @@
 
   - name: 'create service accounts'
     ansible.builtin.uri:
-      url: '{{ grafana__root_url }}/api/serviceaccounts'
+      url: '{{ grafana__api_url }}/api/serviceaccounts'
       user: '{{ grafana__admin_login["username"] }}'
       password: '{{ grafana__admin_login["password"] }}'
       force_basic_auth: true
@@ -136,7 +136,7 @@
 
   - name: 'create tokens for service accounts'
     ansible.builtin.uri:
-      url: '{{ grafana__root_url }}/api/serviceaccounts/{{ item["json"]["id"] }}/tokens'
+      url: '{{ grafana__api_url }}/api/serviceaccounts/{{ item["json"]["id"] }}/tokens'
       user: '{{ grafana__admin_login["username"] }}'
       password: '{{ grafana__admin_login["password"] }}'
       force_basic_auth: true

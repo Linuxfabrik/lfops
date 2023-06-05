@@ -45,6 +45,7 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `grafana__allow_embedding` | Whether to allow browsers to render Grafana in a <frame>, <iframe>, <embed> or <object>. | `true` |
+| `grafana__api_url` | The url on which the Grafana API is reachable. This might differ from the `grafana__root_url` when running a Grafana cluster behind a loadbalancer. | `'{{ grafana__root_url }}'` |
 | `grafana__auth_anonymous_enabled` | Whether to allow anonymous (passwordless) access or not. Possible options: `true` or `false` | `false` |
 | `grafana__auth_anonymous_org_name` | The organization name that should be used for unauthenticated users. | `'Main Org.'` |
 | `grafana__auth_anonymous_org_role` | The role for unauthenticated users. | `'Viewer'` |
@@ -63,6 +64,7 @@ Example:
 ```yaml
 # optional
 grafana__allow_embedding: true
+grafana__api_url: 'https://grafana01.example.com/grafana'
 grafana__auth_anonymous_enabled: false
 grafana__auth_anonymous_org_name: 'Main Org.'
 grafana__auth_anonymous_org_role: 'Viewer'
