@@ -49,7 +49,6 @@
       user_password: '{{ influxdb__admin_login.password }}'
       admin: true
       state: 'present'
-    register: 'influxdb__create_admin_result'
     vars:
       ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
 
