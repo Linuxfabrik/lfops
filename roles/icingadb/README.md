@@ -8,6 +8,11 @@ When running the `icingadb:migration` tag, it also tries to prepare the configur
 3. Clean up: `rmdir /tmp/icingadb-migration.cache`
 4. If everything works, disable the IcingaWeb2 monitoring module: `icingacli module disable monitoring`
 
+Notes on high availability / Icinga2 Master clusters:
+* Redis: "High availability setups require a dedicated Redis server per Icinga 2 node and therefore a dedicated Icinga DB instance that connects to it."
+* SQL database: "In high availability setups, all Icinga DB instances must write to the same database."
+* Have a look at the [official documentation](https://icinga.com/docs/icinga-db/latest/doc/03-Configuration/) and this [community thread](https://community.icinga.com/t/missed-ha-instructions-for-icinga-2-12rc/3939).
+
 Runs on
 
 * RHEL 8 (and compatible)
@@ -52,6 +57,7 @@ icingadb__database_login:
 | `icingadb__api_host` | The host on which the Icinga2 API is reachable. | `'localhost'` |
 | `icingadb__api_port` | The port on which the Icinga2 API is reachable. | `5665` |
 | `icingadb__database_host` | The host on which the IcingaDB SQL database is reachable. | `'localhost'` |
+| `icingadb__database_login_host` | The Host-part of the SQL database user. | `'localhost'` |
 | `icingadb__database_name` | The name of the IcingaDB SQL database. | `'icingadb'` |
 | `icingadb__redis_host` | The host on which Redis instance is reachable. | `'127.0.0.1'` |
 | `icingadb__redis_password` | The password for the Redis instance, if authentication is enabled. | unset |
@@ -64,6 +70,7 @@ Example:
 icingadb__api_host: 'localhost'
 icingadb__api_port: 5665
 icingadb__database_host: '127.0.0.1'
+icingadb__database_login_host: 'localhost'
 icingadb__database_name: 'icingadb'
 icingadb__redis_host: '127.0.0.1'
 icingadb__redis_password: 'linuxfabrik'
