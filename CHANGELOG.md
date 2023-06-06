@@ -30,6 +30,9 @@ Role: monitoring_plugins_grafana_dashboards
 * Role: icingadb
 * Role: repo_gitlab_runner
 
+Role:systemd_unit
+* add support for mount units
+
 Role:bind
 * add `bind__named_conf_raw` variable
 

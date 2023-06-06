@@ -1,3 +1,13 @@
+systemd_unit__mounts__dependent_var: []
+systemd_unit__mounts__group_var: []
+systemd_unit__mounts__host_var: []
+systemd_unit__mounts__role_var: []
+systemd_unit__mounts__combined_var: '{{ systemd_unit__mounts__role_var +
+  systemd_unit__mounts__group_var +
+  systemd_unit__mounts__host_var +
+  systemd_unit__mounts__dependent_var
+ }}'
+
 systemd_unit__services__dependent_var: []
 systemd_unit__services__group_var: []
 systemd_unit__services__host_var: []
