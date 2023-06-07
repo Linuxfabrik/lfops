@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023040601
+# 2023060701
 
 # https://icinga.com/docs/icinga-db/latest/doc/06-Migration/#preparing-the-configuration
 
@@ -18,7 +18,12 @@ ido:
 
   # Input time range
   #from: 0
+{% icingadb__latest_icingadb_history_result["query_result"][0][0]["min_event_time"] | int / 1000 ) == 0.0 %}
+{# this means that there are no new events in the icingadb, since the history is empty. so we can just migrate everything without the risk of duplicates #}
+  #to: 0
+{% else %}
   to: {{ icingadb__latest_icingadb_history_result["query_result"][0][0]["min_event_time"] | int / 1000 }}
+{% endif %}
 
 # Icinga DB database
 icingadb:
