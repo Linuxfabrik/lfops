@@ -56,8 +56,8 @@ icingadb__database_login:
 | -------- | ----------- | ------------- |
 | `icingadb__api_host` | The host on which the Icinga2 API is reachable. | `'localhost'` |
 | `icingadb__api_port` | The port on which the Icinga2 API is reachable. | `5665` |
-| `icingadb__database_host` | The host on which the IcingaDB SQL database is reachable. | `'localhost'` |
-| `icingadb__database_login_host` | The Host-part of the SQL database user. | `'localhost'` |
+| `icingadb__database_host` | The host on which the IcingaDB SQL database is reachable. | `127.0.0.1` |
+| `icingadb__database_login_host` | The Host-part of the SQL database user. | `127.0.0.1` |
 | `icingadb__database_name` | The name of the IcingaDB SQL database. | `'icingadb'` |
 | `icingadb__redis_host` | The host on which Redis instance is reachable. | `'127.0.0.1'` |
 | `icingadb__redis_password` | The password for the Redis instance, if authentication is enabled. | unset |

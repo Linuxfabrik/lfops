@@ -45,6 +45,7 @@
       login_user: '{{ icingadb__database_login["username"] }}'
       login_password: '{{ icingadb__database_login["password"] }}'
       login_host: '{{ icingadb__database_host }}'
+      login_unix_socket: '{{ (icingadb__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
       login_db: '{{ icingadb__database_name }}'
       query: 'SHOW TABLES LIKE "icingadb_schema";'
     register: 'icingadb__table_exists_result'
