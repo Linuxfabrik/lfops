@@ -58,9 +58,11 @@
 
     - name: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins'
       ansible.builtin.command: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins'
+      ignore_errors: true
 
     - name: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins'
       ansible.builtin.command: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins'
+      ignore_errors: true
       when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
 
     # block
