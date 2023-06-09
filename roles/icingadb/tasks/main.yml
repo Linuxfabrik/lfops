@@ -81,7 +81,6 @@
 
   tags:
     - 'icingadb'
-    - 'icingadb:test'
 
 
 # https://icinga.com/docs/icinga-db-web/latest/doc/02-Installation/04-RHEL/
