@@ -33,6 +33,9 @@ Role: grafana
 * Role: icingadb
 * Role: repo_gitlab_runner
 
+Role:selinux
+* add support for SELinux ports
+
 Role:systemd_unit
 * add support for mount units
 

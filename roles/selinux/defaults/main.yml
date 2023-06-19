@@ -19,3 +19,13 @@ selinux__fcontexts__combined_var: '{{
   selinux__fcontexts__dependent_var
   | flatten
  }}'
+
+selinux__ports__dependent_var: []
+selinux__ports__group_var: []
+selinux__ports__host_var: []
+selinux__ports__combined_var: '{{
+  selinux__ports__group_var +
+  selinux__ports__host_var +
+  selinux__ports__dependent_var
+  | flatten
+ }}'
