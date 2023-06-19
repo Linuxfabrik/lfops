@@ -9,9 +9,10 @@ When running the `icingadb:migration` tag, it also tries to prepare the configur
 4. If everything works, disable the IcingaWeb2 monitoring module: `icingacli module disable monitoring`
 
 Notes on high availability / Icinga2 Master clusters:
-* Redis: "High availability setups require a dedicated Redis server per Icinga 2 node and therefore a dedicated Icinga DB instance that connects to it."
-* SQL database: "In high availability setups, all Icinga DB instances must write to the same database."
-* Have a look at the [official documentation](https://icinga.com/docs/icinga-db/latest/doc/03-Configuration/) and this [community thread](https://community.icinga.com/t/missed-ha-instructions-for-icinga-2-12rc/3939).
+* Redis: "Each of the master nodes must have the Icinga DB feature enabled and have their own dedicated Redis server set up for it."
+* SQL database: "Icinga DB instances must write to the same database, which of course can be replicated or a cluster."
+* Environment ID: Make sure that `/var/lib/icinga2/icingadb.env` is the same on all master nodes.
+* Have a look at the [official documentation](https://icinga.com/docs/icinga-db/latest/doc/05-Distributed-Setups/).
 
 Runs on
 
