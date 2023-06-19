@@ -54,9 +54,7 @@ kvm_vm__vcpus: 2
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `kvm_vm__additional_disks` | A list of additional disks. They will be created in the `kvm_vm__pool` if they do not exist already. Subkeys:
-* `name`: Mandatory, string. The name of the disk. Will be prepended with the `kvm_vm__name` and suffixed with `.qcow2`.
-* `size`: Mandatory, string. The size of the disk, in the same format as `kvm_vm__boot_disk_size`. | `[]` |
+| `kvm_vm__additional_disks` | A list of additional disks. They will be created in the `kvm_vm__pool` if they do not exist already. Subkeys:<ul><li>`name`: Mandatory, string. The name of the disk. Will be prepended with the `kvm_vm__name` and suffixed with `.qcow2`.</li><li>* `size`: Mandatory, string. The size of the disk, in the same format as `kvm_vm__boot_disk_size`.</li></ul>| `[]` |
 | `kvm_vm__autostart` | Whether the VM should be started on host boot up or not. | `true` |
 | `kvm_vm__existing_additional_disks` | A list of existing additional disks. They will not be modified, only added to the VM during creation. The disk have to be placed in the `kvm_vm__pool` storage pool. | `[]` |
 | `kvm_vm__existing_boot_disk` | This allows to provide an already existing boot image, skipping the usage of a base image, and any modification to the disk. The disk has to be placed in the `kvm_vm__pool` storage pool. | unset |
