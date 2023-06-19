@@ -33,6 +33,6 @@ grafana__provisioning_service_accounts__dependent_var: []
 grafana__provisioning_service_accounts__group_var: []
 grafana__provisioning_service_accounts__host_var: []
 grafana__provisioning_service_accounts__role_var: []
-grafana__serve_from_sub_path: true
+grafana__serve_from_sub_path: false
 grafana__service_enabled: true
 grafana__skip_token_to_bitwarden: false

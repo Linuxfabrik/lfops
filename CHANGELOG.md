@@ -22,6 +22,9 @@ Role: monitoring_plugins
 Role: monitoring_plugins_grafana_dashboards
 * Change from provisioning to grizzly for the deployment of the dashboards
 
+Role: grafana
+* Changed default value for `grafana__serve_from_sub_path` from `true` to `false`
+
 
 ### Added
 
