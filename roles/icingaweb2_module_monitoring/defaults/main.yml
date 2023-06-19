@@ -14,5 +14,4 @@ icingaweb2_module_monitoring__icingaweb2__resources__dependent_var:
     dbname: '{{ icingaweb2_module_monitoring__backend_database_name }}'
     username: '{{ icinga2_master__database_login.username }}'
     password: '{{ icinga2_master__database_login.password }}'
-    charset: 'utf8mb4'
-    # charset: '' # required to be blank for special characters (eg umlaute) to be displayed correctly
+    charset: '' # required to be blank for special characters (eg umlaute) to be displayed correctly
