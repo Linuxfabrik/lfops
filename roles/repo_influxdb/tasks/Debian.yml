@@ -3,7 +3,7 @@
   # https://docs.influxdata.com/influxdb/v1.8/introduction/install/
   - name: 'curl https://repos.influxdata.com/influxdata-archive_compat.key --output /tmp/ansible.influxdata-archive_compat.key'
     ansible.builtin.get_url:
-      url: https://repos.influxdata.com/influxdata-archive_compat.key
+      url: 'https://repos.influxdata.com/influxdata-archive_compat.key'
       dest: '/tmp/ansible.influxdata-archive_compat.key'
       # checksum: sha256:393e8779c89ac8d958f81f942f9ad7fb82a25e133faddaf92e15b16e6ac9ce4c
     delegate_to: 'localhost'
@@ -26,7 +26,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-      
+
   - name: 'deploy the repo file (mirror: {{ repo_influxdb__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/apt/sources.list.d/influxdb.list.j2'
@@ -38,6 +38,6 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
-        
+
   tags:
     - 'repo_influxdb'
