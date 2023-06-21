@@ -1,0 +1,7 @@
+- name: 'Installs the Icingaweb2 Business Process Module'
+  hosts:
+    - 'lfops_icingaweb2_module_businessprocess'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.icingaweb2_module_businessprocess'

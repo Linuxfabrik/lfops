@@ -1,0 +1,51 @@
+- block:
+
+  - name: 'mkdir -p /etc/icingaweb2/modules/businessprocess'
+    ansible.builtin.file:
+      path: '/etc/icingaweb2/modules/businessprocess'
+      state: 'directory'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o2770
+
+  - name: 'mkdir -p /usr/share/icingaweb2/modules/businessprocess'
+    ansible.builtin.file:
+      path: '/usr/share/icingaweb2/modules/businessprocess'
+      state: 'directory'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o755
+
+  - name: 'curl https://github.com/Icinga/icingaweb2-module-businessprocess/archive/{{ icingaweb2_module_businessprocess__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-businessprocess-{{ icingaweb2_module_businessprocess__version }}.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://github.com/Icinga/icingaweb2-module-businessprocess/archive/{{ icingaweb2_module_businessprocess__version }}.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-module-businessprocess-{{ icingaweb2_module_businessprocess__version }}.tar.gz'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.icingaweb2-module-businessprocess-{{ icingaweb2_module_businessprocess__version }}.tar.gz to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.icingaweb2-module-businessprocess-{{ icingaweb2_module_businessprocess__version }}.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-module-businessprocess-{{ icingaweb2_module_businessprocess__version }}.tar.gz'
+
+  - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/businessprocess /tmp/ansible.icingaweb2-module-businessprocess-{{ icingaweb2_module_businessprocess__version }}.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible.icingaweb2-module-businessprocess-{{ icingaweb2_module_businessprocess__version }}.tar.gz'
+      dest: '/usr/share/icingaweb2/modules/businessprocess'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'rm -f /tmp/ansible.icingaweb2-module-businessprocess-{{ icingaweb2_module_businessprocess__version }}.tar.gz'
+    ansible.builtin.file:
+      path: '/tmp/ansible.icingaweb2-module-businessprocess-{{ icingaweb2_module_businessprocess__version }}.tar.gz'
+      state: 'absent'
+
+  - name: 'icingacli module enable businessprocess'
+    ansible.builtin.command: 'icingacli module enable businessprocess'
+    args:
+      creates: '/etc/icingaweb2/enabledModules/businessprocess'
+
+  tags:
+    - 'icingaweb2_module_businessprocess'
