@@ -59,6 +59,7 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
 | `grafana__serve_from_sub_path` | Bool. Whether Grafana itself should run on a subpath or not. Only effective if there is a subpath in `grafana__root_url` | `true` |
 | `grafana__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
 | `grafana__skip_token_to_bitwarden` | Skip the storing of the service account tokens to Bitwarden. | `false` |
+| `grafana__users_case_insensitive_login` | Have a look at https://grafana.com/blog/2022/12/12/guide-to-using-the-new-grafana-cli-user-identity-conflict-tool-in-grafana-9.3 | unset |
 
 Example:
 ```yaml
@@ -69,6 +70,17 @@ grafana__auth_anonymous_enabled: false
 grafana__auth_anonymous_org_name: 'Main Org.'
 grafana__auth_anonymous_org_role: 'Viewer'
 grafana__cookie_samesite: 'lax'
+grafana__ldap_config:
+  attribute_username: 'uid'
+  bind_dn: 'uid=freeipa-reader,cn=sysaccounts,cn=etc,dc=example,dc=com'
+  bind_password: 'linuxfabrik'
+  editor_group_dn: 'cn=monitoring,cn=groups,cn=accounts,dc=example,dc=com'
+  host: 'ldap.example.com'
+  port: 389
+  search_base_dns:
+    - 'cn=users,cn=accounts,dc=example,dc=com'
+  search_filter: '(uid=%s)' # or for example: '(cn=%s)' or '(sAMAccountName=%s)'
+  viewer_group_dn: '*'
 grafana__provisioning_dashboards__group_var: []
 grafana__provisioning_dashboards__host_var:
   - name: 'linuxfabrik-monitoring-plugins'
@@ -111,17 +123,6 @@ grafana__provisioning_datasources__host_var:
       password: '{{ icingaweb2_module_director__database_login["password"] }}'
     version: 1
     editable: false
-grafana__ldap_config:
-  attribute_username: 'uid'
-  bind_dn: 'uid=freeipa-reader,cn=sysaccounts,cn=etc,dc=example,dc=com'
-  bind_password: 'linuxfabrik'
-  editor_group_dn: 'cn=monitoring,cn=groups,cn=accounts,dc=example,dc=com'
-  host: 'ldap.example.com'
-  port: 389
-  search_base_dns:
-    - 'cn=users,cn=accounts,dc=example,dc=com'
-  search_filter: '(uid=%s)' # or for example: '(cn=%s)' or '(sAMAccountName=%s)'
-  viewer_group_dn: '*'
 grafana__provisioning_service_accounts__group_var: []
 grafana__provisioning_service_accounts__host_var:
   - name: 'grizzly'
@@ -129,6 +130,7 @@ grafana__provisioning_service_accounts__host_var:
 grafana__serve_from_sub_path: false
 grafana__service_enabled: true
 grafana__skip_token_to_bitwarden: true
+grafana__users_case_insensitive_login: false
 ```
 
 

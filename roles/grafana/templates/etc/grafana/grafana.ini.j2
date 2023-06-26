@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023041201
+# 2023062601
 
 ##################### Grafana Configuration Example #####################
 #
@@ -402,6 +402,10 @@ allow_org_create = false
 
 # Enter a comma-separated list of users login to hide them in the Grafana UI. These users are shown to Grafana admins and themselves.
 ; hidden_users =
+
+{% if grafana__users_case_insensitive_login is defined and grafana__users_case_insensitive_login | length %}
+case_insensitive_login = {{ grafana__users_case_insensitive_login | string | lower }}
+{% endif %}
 
 [auth]
 # Login cookie name
