@@ -2,7 +2,7 @@
 
 This role configures the server to do (weekly) system updates by deploying two shell scripts: The first script `notify-and-schedule` checks for available updates (normally during the day), and notifies the system administrators either via email or [Rocket.Chat](https://rocket.chat/). On update time (usually the next morning at round about 4 AM), the second script `update-and-reboot`
 
-* sets a downtime for the host and all it's services in Icinga
+* sets a downtime for the host and all its services in Icinga
 * applies all updates
 * and, if necessary, automatically reboots the host after the updates.
 
@@ -32,8 +32,9 @@ Runs on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `system_update__icinga2_api_user_login` | The Icinga2 API User to set the downtime for the corresponding host and all it's services. | unset |
-| `system_update__icinga2_master` | The hostname or ip address of the Icinga2 master instance where to set the downtime for the corresponding host and all it's services. | unset |
+| `system_update__icinga2_api_url` | The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `reboot` alias. | `'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'` |
+| `system_update__icinga2_api_user_login` | The Icinga2 API User to set the downtime for the corresponding host and all its services. | unset |
+| `system_update__icinga2_hostname` | The hostname of the Icinga2 host on which the downtime should be set. |  `'{{ ansible_facts["nodename"] }}'` |
 | `system_update__mail_from` | The email sender account. This will be used as the "from"-address for all notifications. | `'{{ postfix__relayhost_username }}'` |
 | `system_update__mail_recipients_new_configfiles` | A list of email recipients to notify if there is a new version of a config file (`rpmnew` / `rpmsave` / `dpkg-dist` / `ucf-dist`). | `'{{ mailto_root__to }}'` |
 | `system_update__mail_recipients_updates` | A list of email recipients to notify about the expected updates and the report of the installed updates. | `'{{ mailto_root__to }}'` |
@@ -48,10 +49,11 @@ Runs on
 Example:
 ```yaml
 # optional
+system_update__icinga2_api_url: 'https://icinga.example.com:5665'
 system_update__icinga2_api_user_login:
   username: 'downtime-user'
   password: 'linuxfabrik'
-system_update__icinga2_master: 'icinga.example.com'
+system_update__icinga2_hostname: 'myhost.example.com'
 system_update__mail_from: 'noreply@example.com'
 system_update__mail_recipients_new_configfiles:
   - 'info@example.com'

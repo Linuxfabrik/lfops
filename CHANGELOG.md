@@ -25,6 +25,9 @@ Role: monitoring_plugins_grafana_dashboards
 Role: grafana
 * Changed default value for `grafana__serve_from_sub_path` from `true` to `false`
 
+Role: system_update
+* Remove `system_update__icinga2_master` variable. Use `system_update__icinga2_api_url` instead
+
 
 ### Added
 
