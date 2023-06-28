@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023051901
+# 2023062801
 
 alias whatismyip="curl ipecho.net/plain"
 alias dmesg='dmesg --level=emerg,alert,crit,err --reltime'
@@ -8,7 +8,7 @@ function lf-confirm() {
     echo -n "Are you sure? [y/N] "
     read reply
 
-    if [ "$reply" = y -o "$reply" = Y ]
+    if [ "$reply" = y ] || [ "$reply" = Y ]
     then
         return 0
     else
@@ -31,9 +31,19 @@ function schedule-icinga-downtime() {
     fi
 
     START_TIME=$(date +%s)
-    END_TIME=$(( $START_TIME + $1 ))
-    DATA="{ \"type\": \"Host\", \"filter\": \"match(\\\"{{ tools__icinga2_hostname }}\\\", host.name)\", \"start_time\": \"$START_TIME\", \"end_time\": \"$END_TIME\", \"author\": \"{{ tools__icinga2_hostname }}\", \"comment\": \"$comment\" , \"all_services\": true }"
-    curl --connect-timeout 5 --insecure --silent --user '{{ tools__icinga2_api_user_login["username"] }}:{{ tools__icinga2_api_user_login["password"] }}' --header 'Accept: application/json' --request POST '{{ tools__icinga2_api_url }}/v1/actions/schedule-downtime' --data "$DATA" 1> /dev/null
+    END_TIME=$(( START_TIME + $1 ))
+    curl --connect-timeout 5 --insecure --silent --user '{{ tools__icinga2_api_user_login["username"] }}:{{ tools__icinga2_api_user_login["password"] }}' --header 'Accept: application/json' --request POST '{{ tools__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
+    {
+        "type": "Host",
+        "filter": "match(\"{{ tools__icinga2_hostname }}\", host.name)",
+        "start_time": "$START_TIME",
+        "end_time": "$END_TIME",
+        "author": "{{ tools__icinga2_hostname }}",
+        "comment": "$comment",
+        "all_services": true
+    }
+EOF
+
 }
 
 alias reboot="lf-confirm && schedule-icinga-downtime 300 'Manual reboot' && /usr/sbin/reboot"
