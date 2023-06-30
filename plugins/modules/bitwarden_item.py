@@ -20,18 +20,17 @@ description:
     - If there is an existing Bitwarden item that differs from the given parameters, the item is updated, and the updated item is returned.
     - If a search returns multiple entries, this lookup plugin throws an error, since it cannot decide which one to use.
     - On success, this lookup plugin returns the complete Bitwarden item object.
-    - If you don't specify a name/title for a password item, a name/title will be created automatically, using C(hostname - purpose), C(hostname - purpose) or just C(hostname) (depending on what is provided).
+    - If you don't specify a name/title for a password item, a name/title will be created automatically, using C(hostname - purpose) (for example "C(dbserver - MariaDB)") or just C(hostname) (for example "C(dbserver)", depending on what is provided).
 
 notes:
-    - Tested with C(bw) version 1.20.0.
     - This lookup plugin just handles password items, nothing else.
     - It does not handle TOTP at all.
     - It cannot edit URIs in existing password items.
-    - You can get the organization, collection and folder IDs from the URL in the Bitwarden webgui.
+    - You can get the organization, collection and folder IDs from the URL in the Bitwarden Web-GUI.
 
 requirements:
-    - Requires the Bitwarden CLI tool C(bw). Have a look at U(https://bitwarden.com/help/article/cli/) for installation instructions.
-    - You must already be logged in to Bitwarden using the CLI tool and have the client API running. You can login to the vault using `bw login` and `bw unlock`, then start the client API by running `bw serve`.
+    - Requires the Bitwarden CLI tool C(bw) version v2022.9.0+. Have a look at U(https://bitwarden.com/help/article/cli/) for installation instructions.
+    - You must already be logged in to Bitwarden using the CLI tool and have the client API running. You can login to the vault using `bw login` and `bw unlock`, then start the client RESTful API webserver by running `bw serve`.
 
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
