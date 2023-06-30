@@ -92,7 +92,9 @@ ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.setup_nextcloud
 
 ## Bitwarden
 
-If you want to use Bitwarden as your password manager backend, first do a `lookup` in your inventory like this:
+Requires the [bw CLI](https://bitwarden.com/help/article/cli/) version v2022.9.0+.
+
+If you want to use Bitwarden as your password manager backend, do a `lookup` in your inventory like this:
 
 ```yaml
 grafana_grizzly__grafana_service_account_login:
@@ -106,16 +108,21 @@ grafana_grizzly__grafana_service_account_login:
   ) }}"
 ```
 
-Then, before running Ansible, unlock your Bitwarden vault as follows:
+Before running Ansible, unlock the access to your Bitwarden vault and start the Bitwarden RESTful API webserver as follows:
 
 ```bash
 export BW_SESSION="$(bw unlock --raw)"
+bw status | jq
 bw serve &
+```
 
+After that run your playbook as usual:
+
+```bash
 ansible-playbook ...
 ```
 
-The Bitwarden module will create an item if it does not exist. See `ansible-doc -t lookup linuxfabrik.lfops.bitwarden_item` for all the details.
+The LFOps Bitwarden module will fetch the item from the vault and create it if it does not exist. See `ansible-doc -t lookup linuxfabrik.lfops.bitwarden_item` for all the details.
 
 
 ## Documentation
