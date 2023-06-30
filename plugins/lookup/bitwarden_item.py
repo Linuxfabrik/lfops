@@ -19,17 +19,17 @@ description:
     - If you do not specify a name or Bitwarden ID, it searches using the name/title.
     - If a search returns multiple entries, this lookup plugin throws an error, since it cannot decide which one to use.
     - On success, this lookup plugin returns the complete Bitwarden item object.
-    - If you don't specify a name/title for a password item, a name/title will be created automatically, using C(hostname - purpose), C(hostname - purpose) or just C(hostname) (depending on what is provided).
+    - If you don't specify a name/title for a password item, a name/title will be created automatically, using C(hostname - purpose) (for example "C(dbserver - MariaDB)") or just C(hostname) (for example "C(dbserver)", depending on what is provided).
 
 notes:
-    - Tested with C(bw) version 1.20.0.
+    - Tested with C(bw) version 2023.5.0
     - This lookup plugin just handles password items, nothing else.
     - It does not handle TOTP at all.
     - You can get the organization, collection and folder IDs from the URL in the Bitwarden webgui.
 
 requirements:
-    - Requires the Bitwarden CLI tool C(bw). Have a look at U(https://bitwarden.com/help/article/cli/) for installation instructions.
-    - You must already be logged in to Bitwarden using the CLI tool and have the client API running. You can login to the vault using `bw login` and `bw unlock`, then start the client API by running `bw serve`.
+    - Requires the Bitwarden CLI tool C(bw) version v2022.9.0+. Have a look at U(https://bitwarden.com/help/article/cli/) for installation instructions.
+    - You must already be logged in to Bitwarden using the CLI tool and have the client API running. You can login to the vault using `bw login` and `bw unlock`, then start the client RESTful API webserver by running `bw serve --hostname 127.0.0.1`.
 
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
@@ -43,6 +43,7 @@ options:
         type: str
     folder_id:
         description: Bitwarden folder ID in which the password item is stored.
+        default: None
         required: False
         type: str
     hostname:
@@ -106,7 +107,7 @@ options:
 '''
 
 EXAMPLES = r'''
-- name: 'The normal way using this lookup plugin. Search for the Bitwarden item using hostname, purpose and username. If not found, creates a new item called `appsrv01 - MariaDB`. Returns the password item.'
+- name: 'The normal way using this lookup plugin. Search for the Bitwarden item using hostname, purpose and username. If not found, creates a new item called `appsrv01 - MariaDB`. Returns the password item, including a `username` and a `password` subkey.'
   ansible.builtin.debug:
     msg: "{{ lookup('linuxfabrik.lfops.bitwarden_item',
         {
@@ -115,6 +116,16 @@ EXAMPLES = r'''
           'username': 'mariadb-monitoring',
         },
       ) }}"
+
+- name: 'If only the password is required, use the following lookup.'
+  ansible.builtin.debug:
+    msg: "{{ lookup('linuxfabrik.lfops.bitwarden_item',
+        {
+          'hostname': 'appsrv01',
+          'purpose': 'MariaDB',
+          'username': 'mariadb-monitoring',
+        },
+      )['password'] }}"
 
 - name: 'Lookup by name. If not found, creates the item `appsrv01 - MariaDB`.'
   ansible.builtin.debug:

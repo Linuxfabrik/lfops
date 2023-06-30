@@ -124,7 +124,7 @@ ansible-playbook ...
 
 The LFOps Bitwarden module will fetch the item from the vault and create it if it does not exist. See `ansible-doc -t lookup linuxfabrik.lfops.bitwarden_item` for all the details.
 
-The lookup normally returns multiple keys, including the `username` and `password` subkeys. If you only need the password, use the following lookup:
+The lookup normally returns multiple keys, including the `username` and `password` subkeys. If only the password is required, use the following lookup:
 
 ```yaml
 freeipa_server__directory_manager_password:

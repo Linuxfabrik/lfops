@@ -23,6 +23,7 @@ description:
     - If you don't specify a name/title for a password item, a name/title will be created automatically, using C(hostname - purpose) (for example "C(dbserver - MariaDB)") or just C(hostname) (for example "C(dbserver)", depending on what is provided).
 
 notes:
+    - Tested with C(bw) version 2023.5.0
     - This lookup plugin just handles password items, nothing else.
     - It does not handle TOTP at all.
     - It cannot edit URIs in existing password items.
@@ -30,7 +31,7 @@ notes:
 
 requirements:
     - Requires the Bitwarden CLI tool C(bw) version v2022.9.0+. Have a look at U(https://bitwarden.com/help/article/cli/) for installation instructions.
-    - You must already be logged in to Bitwarden using the CLI tool and have the client API running. You can login to the vault using `bw login` and `bw unlock`, then start the client RESTful API webserver by running `bw serve`.
+    - You must already be logged in to Bitwarden using the CLI tool and have the client API running. You can login to the vault using `bw login` and `bw unlock`, then start the client RESTful API webserver by running `bw serve --hostname 127.0.0.1`.
 
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
