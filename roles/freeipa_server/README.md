@@ -23,7 +23,7 @@ Ideally, the FreeIPA should be installed on a separate server. If that is not po
 * Do not use an existing domain or hostname unless you own the domain. It's a common mistake to use `example.com`. We recommend to use a reserved top level domain from RFC2606 for private test installations, e.g. `ipa.test`. 
 * Install the [ansible-freeipa Ansible Collection](https://github.com/freeipa/ansible-freeipa) on the Ansible control node. This can be done by calling `ansible-galaxy collection install freeipa.ansible_freeipa`.
 
-After running this role (and for now until implemented), run this as root:
+On RHEL 8+, after running this role (and for now until implemented), run this as root:
 
 ```
 authselect current
