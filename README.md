@@ -113,7 +113,7 @@ Before running Ansible, unlock the access to your Bitwarden vault and start the 
 ```bash
 export BW_SESSION="$(bw unlock --raw)"
 bw status | jq
-bw serve &
+bw serve --hostname 127.0.0.1 --port 8087 &
 ```
 
 After that run your playbook as usual:
