@@ -100,7 +100,8 @@ If you want to use Bitwarden as your password manager backend, do a `lookup` in 
 grafana_grizzly__grafana_service_account_login:
   "{{ lookup('linuxfabrik.lfops.bitwarden_item',
     {
-      'name': inventory_hostname ~ ' - Grafana Service Account Token',
+      'hostname': inventory_hostname,
+      'purpose': 'Grafana Service Account Token',
       'username': 'grizzly',
       'collection_id': lfops__bitwarden_collection_id,
       'organization_id': lfops__bitwarden_organization_id,
@@ -130,7 +131,8 @@ The lookup normally returns multiple keys, including the `username` and `passwor
 freeipa_server__directory_manager_password:
   "{{ lookup('linuxfabrik.lfops.bitwarden_item',
     {
-      'name': inventory_hostname ~ ' - FreeIPA',
+      'hostname': inventory_hostname,
+      'purpose': 'FreeIPA',
       'username': 'cn=Directory Manager',
       'collection_id': lfops__bitwarden_collection_id,
       'organization_id': lfops__bitwarden_organization_id,
@@ -144,7 +146,8 @@ Beware that if you are using the lookup in `group_vars`, you probably do not wan
 freeipa_server__ipa_admin_password:
   "{{ lookup('linuxfabrik.lfops.bitwarden_item',
     {
-      'name': inventory_hostname ~ '060-p-infra01 - FreeIPA',
+      'hostname': inventory_hostname,
+      'purpose': 'FreeIPA',
       'username': 'admin',
       'collection_id': lfops__bitwarden_collection_id,
       'organization_id': lfops__bitwarden_organization_id,
@@ -158,7 +161,8 @@ Instead, replace `inventory_hostname` with the correct FreeIPA server hostname:
 freeipa_server__ipa_admin_password:
   "{{ lookup('linuxfabrik.lfops.bitwarden_item',
     {
-      'name': 'freeipa.example.com - FreeIPA',
+      'hostname': 'freeipa.example.com',
+      'purpose': 'FreeIPA',
       'username': 'admin',
       'collection_id': lfops__bitwarden_collection_id,
       'organization_id': lfops__bitwarden_organization_id,
