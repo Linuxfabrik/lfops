@@ -124,6 +124,48 @@ ansible-playbook ...
 
 The LFOps Bitwarden module will fetch the item from the vault and create it if it does not exist. See `ansible-doc -t lookup linuxfabrik.lfops.bitwarden_item` for all the details.
 
+The lookup normally returns multiple keys, including the `username` and `password` subkeys. If you only need the password, use the following lookup:
+
+```yaml
+freeipa_server__directory_manager_password:
+  "{{ lookup('linuxfabrik.lfops.bitwarden_item',
+    {
+      'name': inventory_hostname ~ ' - FreeIPA',
+      'username': 'cn=Directory Manager',
+      'collection_id': lfops__bitwarden_collection_id,
+      'organization_id': lfops__bitwarden_organization_id,
+    },
+  )['password'] }}"
+```
+
+Beware that if you are using the lookup in `group_vars`, you probably do not want to use inventory_hostname. For example, the following would create a new login for each FreeIPA client:
+
+```yaml
+freeipa_server__ipa_admin_password:
+  "{{ lookup('linuxfabrik.lfops.bitwarden_item',
+    {
+      'name': inventory_hostname ~ '060-p-infra01 - FreeIPA',
+      'username': 'admin',
+      'collection_id': lfops__bitwarden_collection_id,
+      'organization_id': lfops__bitwarden_organization_id,
+    },
+  )['password'] }}"
+```
+
+Instead, replace `inventory_hostname` with the correct FreeIPA server hostname:
+
+```yaml
+freeipa_server__ipa_admin_password:
+  "{{ lookup('linuxfabrik.lfops.bitwarden_item',
+    {
+      'name': 'freeipa.example.com - FreeIPA',
+      'username': 'admin',
+      'collection_id': lfops__bitwarden_collection_id,
+      'organization_id': lfops__bitwarden_organization_id,
+    },
+  )['password'] }}"
+```
+
 
 ## Documentation
 
