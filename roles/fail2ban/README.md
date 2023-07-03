@@ -57,10 +57,10 @@ fail2ban__jail_portscan_server_ips:
   - '192.0.2.5'
   - '198.51.100.100'
 fail2ban__jails__host_var:
-  - name: 'z10-apache-dos'
+  - filename: 'z10-apache-dos'
     state: 'absent'
     template: 'apache-dos'
-  - name: 'z20-custom-apache-dos'
+  - filename: 'z20-custom-apache-dos'
     state: 'present'
     template: 'raw'
     raw: |-

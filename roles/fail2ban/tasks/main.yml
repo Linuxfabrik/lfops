@@ -59,7 +59,11 @@
     notify:
       - 'fail2ban: restart fail2ban'
 
-  - name: 'Remove jails'
+  - name: 'Combined Jails:'
+    ansible.builtin.debug:
+      var: 'fail2ban__jails__combined_var'
+
+  - name: 'Remove Jails'
     ansible.builtin.file:
       path: '/etc/fail2ban/jail.d/z10-{{ item["filename"] }}.conf'
       state: 'absent'
@@ -69,7 +73,7 @@
     notify:
       - 'fail2ban: restart fail2ban'
 
-  - name: 'Create jails'
+  - name: 'Create Jails'
     ansible.builtin.template:
       src: 'etc/fail2ban/jail.d/z10-{{ item["template"] }}.conf.j2'
       dest: '/etc/fail2ban/jail.d/{{ item["filename"] }}.conf'

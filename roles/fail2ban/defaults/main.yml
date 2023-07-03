@@ -13,19 +13,15 @@ fail2ban__jail_portscan_server_ips: '{{ ansible_facts["all_ipv4_addresses"] }}'
 
 
 fail2ban__jails__role_var:
-
   - filename: 'z10-portscan'
     state: 'present'
     template: 'portscan'
-
   - filename: 'z10-sshd'
     state: 'present'
     template: 'sshd'
-
 fail2ban__jails__dependent_var: []
 fail2ban__jails__group_var: []
 fail2ban__jails__host_var: []
-
 fail2ban__jails__combined_var: '{{ fail2ban__jails__role_var +
   fail2ban__jails__group_var +
   fail2ban__jails__host_var +
