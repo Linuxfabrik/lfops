@@ -17,8 +17,8 @@ Runs on
 
 | Tag         | What it does                                  |
 | ---         | ------------                                  |
-| `ssh`       | Configures sshd                               |
-| `ssh:state` | Manages the state of the sshd systemd service |
+| `sshd`       | Configures sshd                               |
+| `sshd:state` | Manages the state of the sshd systemd service |
 
 
 ## Optional Role Variables
