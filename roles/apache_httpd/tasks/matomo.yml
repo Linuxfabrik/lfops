@@ -1,4 +1,4 @@
-- name: 'Deploys Matomo Log Analytics Python Script to /usr/local/sbin/import_logy.py'
+- name: 'Deploy Matomo Log Analytics Python Script to /usr/local/sbin/import_logs.py'
   ansible.builtin.template:
     src: 'usr/local/sbin/import_logs.py.j2'
     dest: '/usr/local/sbin/import_logs.py'
