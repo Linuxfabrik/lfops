@@ -9,6 +9,7 @@ collabora__coolwsd_allowed_languages:
   - 'fr'
   - 'it_IT'
 collabora__coolwsd_deepl_api_url: 'https://api-free.deepl.com/v2/translate'
+collabora__coolwsd_deepl_auth_key: ''
 collabora__coolwsd_deepl_enabled: false
 collabora__coolwsd_experimental_features: false
 collabora__coolwsd_logging_file_enable: true
