@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2023062801
+# 2023071101
 
 export LC_ALL=C
 
@@ -86,7 +86,7 @@ fi
 {% if ansible_facts['os_family'] == 'Debian' %}
 apt-get update 1> /dev/null
 export DEBIAN_FRONTEND=noninteractive
-yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" upgrade > /tmp/update_output
+yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output
 {% endif %}
 
 {% if ansible_facts['os_family'] == 'RedHat' %}
