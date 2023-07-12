@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022101801
+# 2023071201
 
 acl "trusted" {
     localhost;
@@ -13,7 +13,6 @@ options {
     allow-query-cache { trusted; };
     allow-recursion { trusted; };
     allow-transfer { none; };
-    bindkeys-file "/etc/named.iscdlv.key";
     directory "/var/named";
     disable-empty-zone yes;
     dnssec-enable no;
