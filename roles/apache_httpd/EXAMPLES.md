@@ -72,8 +72,8 @@ apache_httpd__vhosts__host_var:
       <Proxy *>
           Require all granted
       </Proxy>
-      RewriteRule ^/(.*) http://192.0.2.5/$1 [proxy,last]
-      ProxyPassReverse / http://192.0.2.5/
+      RewriteRule ^/(.*) http://webserver/$1 [proxy,last]
+      ProxyPassReverse / http://webserver/
       ProxyPassReverse / http://www.example.com/
 ```
 
@@ -84,6 +84,80 @@ apache_httpd__vhosts__host_var:
   - template: 'redirect'
     virtualhost_port: 80
     conf_server_name: 'www.example.com'
+```
+
+
+### A non-hardened standard Apache vHost
+
+This is an Apache configuration that is close to the RHEL default configuration, without any CIS remediations.
+
+```yaml
+apache_httpd__conf__host_var:
+  - filename: 'expires'
+    enabled: false
+    state: 'present'
+    template: 'expires'
+  - filename: 'headers'
+    enabled: false
+    state: 'present'
+    template: 'headers'
+  - filename: 'mod_security'
+    enabled: false
+    state: 'present'
+    template: 'mod_security'
+apache_httpd__conf_add_default_charset: 'Off'
+apache_httpd__conf_enable_send_file: 'Off'
+apache_httpd__conf_limit_request_body: 1073741824
+apache_httpd__conf_max_keep_alive_requests: 100
+apache_httpd__conf_timeout: 60
+apache_httpd__conf_trace_enable: 'On'
+apache_httpd__mods__host_var:
+  - filename: 'cgid'
+    enabled: true
+    state: 'present'
+    template: 'cgid'
+  - filename: 'deflate'
+    enabled: true
+    state: 'present'
+    template: 'deflate'
+  - filename: 'filter'
+    enabled: true
+    state: 'present'
+    template: 'filter'
+  - filename: 'http2'
+    enabled: true
+    state: 'present'
+    template: 'http2'
+  - filename: 'proxy_http'
+    enabled: true
+    state: 'present'
+    template: 'proxy_http'
+  - filename: 'proxy_wstunnel'
+    enabled: true
+    state: 'present'
+    template: 'proxy_wstunnel'
+apache_httpd__vhosts__host_var:
+  - template: 'proxy'
+    virtualhost_port: 443
+    allowed_http_methods:
+      - '.*'
+    conf_proxy_timeout: 60
+    conf_server_name: 'www.example.com'
+    conf_timeout: 60
+    raw: !unsafe |-
+      RequestHeader set X-Forwarded-Proto "https"
+      # ssl_module
+      SSLEngine on
+      SSLCertificateFile      /etc/pki/tls/certs/www.example.com.crt
+      SSLCertificateKeyFile   /etc/pki/tls/private/www.example.com.key
+      SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-fullchain.crt
+      # proxy_module and other
+      <Proxy *>
+          Require all granted
+      </Proxy>
+      RewriteRule ^/(.*) http://webserver/$1 [proxy,last]
+      ProxyPassReverse / http://webserver/
+      ProxyPassReverse / http://www.example.com/
 ```
 
 
