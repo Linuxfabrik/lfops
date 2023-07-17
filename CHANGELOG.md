@@ -37,6 +37,9 @@ Role: system_update
 * Role: repo_gitlab_runner
 * Role: icingaweb2_module_businessprocess
 
+Role:python_venv
+* allow specifying different certificate store
+
 Role:selinux
 * add support for SELinux ports
 

@@ -20,6 +20,7 @@
       - 'setuptools'
     state: 'latest'
     virtualenv: '/opt/python-venv/{{ venv.name }}'
+    extra_args: '{{ ("--cert " ~ python_venv__pip_cert) if python_venv__pip_cert is defined and python_venv__pip_cert | length }}'
 
 - name: 'Install dnf package requirements'
   ansible.builtin.package:
@@ -31,6 +32,7 @@
     name: '{{ venv.packages }}'
     state: 'present'
     virtualenv: '/opt/python-venv/{{ venv.name }}'
+    extra_args: '{{ ("--cert " ~ python_venv__pip_cert) if python_venv__pip_cert is defined and python_venv__pip_cert | length }}'
 
 - name: 'Link choosen binaries to /usr/local/bin'
   ansible.builtin.file:
