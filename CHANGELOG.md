@@ -39,6 +39,7 @@ Role: system_update
 
 Role:python_venv
 * allow specifying different certificate store
+* allow specifying the python executable to be used in the venv
 
 Role:selinux
 * add support for SELinux ports

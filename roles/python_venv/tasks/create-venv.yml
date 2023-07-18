@@ -1,6 +1,11 @@
-- name: 'python3 -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %}{{ venv.name }}'
+- name: 'Install dnf package requirements'
+  ansible.builtin.package:
+    name: '{{ venv.package_requirements | d([]) }}'
+    state: 'present'
+
+- name: '{{ venv["python_executable"] | d("python3") }} -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %}{{ venv.name }}'
   ansible.builtin.command:
-    cmd: 'python3 -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %}{{ venv.name }}'
+    cmd: '{{ venv["python_executable"] | d("python3") }} -m venv {% if venv.system_site_packages | d("true") %} --system-site-packages {% endif %}{{ venv.name }}'
     chdir: '/opt/python-venv'
     creates: '/opt/python-venv/{{ venv.name }}/bin/activate'
   ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
@@ -21,11 +26,6 @@
     state: 'latest'
     virtualenv: '/opt/python-venv/{{ venv.name }}'
     extra_args: '{{ ("--cert " ~ python_venv__pip_cert) if python_venv__pip_cert is defined and python_venv__pip_cert | length }}'
-
-- name: 'Install dnf package requirements'
-  ansible.builtin.package:
-    name: '{{ venv.package_requirements | d([]) }}'
-    state: 'present'
 
 - name: 'Install packages using pip'
   ansible.builtin.pip:
