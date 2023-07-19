@@ -27,7 +27,7 @@ Runs on
 
 | Variable            | Description                                                     |
 | --------            | -----------                                                     |
-| `mailto_root__to`   | List recipient addresses, to which the mails should be relayed. |
+| `mailto_root__to`   | List recipient addresses to which the mails should be relayed. |
 
 Example:
 ```yaml
