@@ -1,6 +1,6 @@
-# Ansible Role linuxfabrik.lfops.python_venv
+# Ansible Role linuxfabrik.lfops.rocketchat
 
-This role creates and manages various [Python 3 virtual environments (venv)](https://docs.python.org/3/library/venv.html). These are placed below `/opt/python-venv/` on the target system.
+This role installs and configures [Rocket.Chat](https://www.rocket.chat/), an Open-Source Chat system.
 
 Runs on
 
