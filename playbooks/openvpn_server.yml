@@ -4,8 +4,17 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.yum_utils'
+      when:
+        - 'not openvpn_server__skip_yum_utils | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'not openvpn_server__skip_repo_epel | d(false)'
+
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not openvpn_server__skip_policycoreutils | d(false)'
 
     - role: 'linuxfabrik.lfops.openvpn_server'
