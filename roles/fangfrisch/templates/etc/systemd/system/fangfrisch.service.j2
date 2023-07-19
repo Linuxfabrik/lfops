@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# 2023071901
+
+[Unit]
+Description=Download unofficial clamav virus definition files
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=clamupdate
+WorkingDirectory=/var/lib/fangfrisch
+ExecStart=/opt/python-venv/clamav-fangfrisch/bin/fangfrisch --conf /etc/fangfrisch.conf refresh
+
+[Install]
+WantedBy=multi-user.target

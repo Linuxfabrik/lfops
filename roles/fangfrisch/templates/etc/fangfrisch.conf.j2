@@ -1,0 +1,28 @@
+# {{ ansible_managed }}
+# 2023071901
+
+[DEFAULT]
+# Other sections inherit values from DEFAULT and may also overwrite values.
+db_url = sqlite:////var/lib/fangfrisch/db.sqlite
+local_directory = /var/lib/clamav
+log_level = info
+on_update_exec = clamdscan --reload
+on_update_timeout = 42
+
+[sanesecurity]
+enabled = true
+
+[urlhaus]
+enabled = true
+
+{% if fangfrisch__malwarepatrol_receipt is defined and fangfrisch__malwarepatrol_receipt | length %}
+[malwarepatrol]
+enabled = true
+receipt = {{ fangfrisch__malwarepatrol_receipt }}
+{% endif %}
+
+{% if fangfrisch__securiteinfo_customer_id is defined and fangfrisch__securiteinfo_customer_id | length %}
+[securiteinfo]
+enabled = true
+customer_id = {{ fangfrisch__securiteinfo_customer_id }}
+{% endif %}

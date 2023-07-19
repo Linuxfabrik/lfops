@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+# 2023071901
+
+[Unit]
+Description=Download unofficial clamav virus definition files
+Requires=fangfrisch.service
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=10m
+Unit=fangfrisch.service
+
+[Install]
+WantedBy=timers.target

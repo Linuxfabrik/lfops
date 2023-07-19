@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2023071203
+
+set -e
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 <sender_address> <recipient1> <recipient2> ... <recipientX>"
+    exit 1
+fi
+
+SENDER="$1"
+RECIPIENTS="${*:2}"
+
+{# using `hostname --short` is blocked by SELinux for some reason. fallback to `cat /etc/hostname` #}
+SUBJECT="{{ clamav__mail_subject_prefix }}$(cat /etc/hostname): Malware found"
+MESSAGE="$CLAM_VIRUSEVENT_FILENAME $CLAM_VIRUSEVENT_VIRUSNAME($(sigtool --md5 $CLAM_VIRUSEVENT_FILENAME)) FOUND"
+
+echo -n "$MESSAGE" | mail -s "$SUBJECT" -r "$SENDER" $RECIPIENTS

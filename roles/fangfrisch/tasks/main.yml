@@ -1,0 +1,56 @@
+- block:
+
+  - name: 'mkdir /var/lib/fangfrisch'
+    ansible.builtin.file:
+      path: '/var/lib/fangfrisch'
+      state: 'directory'
+      owner: 'clamupdate'
+      group: 'clamupdate'
+      mode: 0o700
+
+  - name: 'Deploy /etc/fangfrisch.conf'
+    ansible.builtin.template:
+      src: 'etc/fangfrisch.conf.j2'
+      dest: '/etc/fangfrisch.conf'
+      owner: 'clamupdate'
+      group: 'clamupdate'
+      mode: 0o640
+
+  - name: 'sudo --user=clamupdate -- /opt/python-venv/clamav-fangfrisch/bin/fangfrisch --conf /etc/fangfrisch.conf initdb'
+    ansible.builtin.command: 'sudo --user=clamupdate -- /opt/python-venv/clamav-fangfrisch/bin/fangfrisch --conf /etc/fangfrisch.conf initdb'
+    args:
+      creates: '/var/lib/fangfrisch/db.sqlite'
+
+  - name: 'Deploy /etc/systemd/system/fangfrisch.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/fangfrisch.service.j2'
+      dest: '/etc/systemd/system/fangfrisch.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy /etc/systemd/system/fangfrisch.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/fangfrisch.timer.j2'
+      dest: '/etc/systemd/system/fangfrisch.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'fangfrisch__systemd_timer_result'
+
+  tags:
+    - 'fangfrisch'
+
+
+- block:
+
+  - name: 'systemctl {{ fangfrisch_timer_enabled | bool | ternary("enable", "disable") }} --now fangfrisch.timer'
+    ansible.builtin.service:
+      name: 'fangfrisch.timer'
+      enabled: '{{ fangfrisch_timer_enabled }}'
+      state: '{{ fangfrisch_timer_enabled | bool | ternary("started", "stopped") }}'
+      daemon_reload: '{{ fangfrisch__systemd_timer_result is changed }}'
+
+  tags:
+    - 'fangfrisch'
+    - 'fangfrisch:state'

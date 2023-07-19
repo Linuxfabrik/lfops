@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# 2023071801
+
+[Unit]
+Description=ClamAV Full Scan via clamdscan
+
+[Service]
+ExecStart=/bin/clamdscan --fdpass --multiscan --log=/var/log/clamd.log --file-list=/etc/clamd.d/clamdscan.filelist
+Type=simple
+User=root
+# RETURN CODES (see `man clamdscan`)
+# 0 : No virus found.
+# 1 : Virus(es) found.
+# 2 : An error occurred.
+SuccessExitStatus=0 1

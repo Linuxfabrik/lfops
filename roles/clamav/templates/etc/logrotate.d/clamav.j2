@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+# 2023071902
+
+/var/log/clamd.log
+{
+    rotate 14
+    daily
+    copytruncate
+    dateext
+    missingok
+    postrotate
+        /bin/kill --signal SIGHUP $(cat /run/clamd.scan/clamd.pid) {# using `/usr/bin/systemctl kill --signal=SIGHUP 'clamd@*.service'` is prevented by selinux, would need a custom policy #}
+    endscript
+}
+
+/var/log/freshclam.log
+{
+    rotate 14
+    daily
+    copytruncate
+    dateext
+    missingok
+}

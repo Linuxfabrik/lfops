@@ -1,0 +1,30 @@
+clamav__clamd_service_enabled: true
+clamav__clamdscan_on_calendar: '*-*-* 21:{{ 59 | random(seed=inventory_hostname) }}'
+clamav__clamdscan_paths: '{{ clamav__scan_on_access_include_paths }}'
+clamav__clamdscan_timer_enabled: false
+clamav__clamonacc_service_enabled: false
+clamav__freshclam_private_mirror: []
+clamav__freshclam_service_enabled: true
+clamav__mail_from: '{{ postfix__relayhost_username }}'
+clamav__mail_recipients: '{{ mailto_root__to }}'
+clamav__mail_subject_prefix: ''
+clamav__scan_alert_broken_executables: true
+clamav__scan_detect_pua: true
+clamav__scan_max_directory_recursion: 20
+clamav__scan_max_file_size: '450M'
+clamav__scan_max_recursion: 30
+clamav__scan_max_scan_size: '450M'
+clamav__scan_on_access_exclude_paths: []
+clamav__scan_on_access_include_paths: []
+clamav__scan_on_access_max_file_size: '500M'
+clamav__scan_on_access_prevention: false
+clamav__whitelist_files: []
+clamav__whitelist_signatures: []
+
+# -----------------------------------------------------------------------------
+
+clamav__selinux__booleans__dependent_var:
+  - key: 'antivirus_can_scan_system'
+    value: 'on'
+  - key: 'antivirus_use_jit'
+    value: 'on'

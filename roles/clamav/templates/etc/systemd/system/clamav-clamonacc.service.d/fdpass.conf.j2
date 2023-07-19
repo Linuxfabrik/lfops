@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2023071201
+
+[Service]
+# empty ExecStart is required to prevent an "Service has more than one ExecStart= setting" error
+ExecStart=
+# --fdpass allows scanning files that are not accessible by the "clamscan" user, for example root-owned files
+ExecStart=/usr/sbin/clamonacc -F --fdpass --config-file=/etc/clamd.d/scan.conf

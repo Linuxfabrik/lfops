@@ -1,0 +1,13 @@
+- name: 'clamav: restart clamd@scan'
+  ansible.builtin.service:
+    name: 'clamd@scan'
+    state: 'restarted'
+  when:
+    - 'clamav__clamd_service_enabled'
+
+- name: 'clamav: restart clamav-clamonacc'
+  ansible.builtin.service:
+    name: 'clamav-clamonacc'
+    state: 'restarted'
+  when:
+    - 'clamav__clamonacc_service_enabled'

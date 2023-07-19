@@ -1,0 +1,34 @@
+- name: 'Install and configure ClamAV'
+  hosts:
+    - 'lfops_clamav'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not clamav__skip_repo_epel | default(false)'
+
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not clamav__skip_policycoreutils | default(false)'
+
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var:
+        - '{{ clamav__selinux__booleans__dependent_var }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not clamav__skip_selinux | default(false)'
+
+    - role: 'linuxfabrik.lfops.python_venv'
+      python_venv__venvs__dependent_var:
+        - '{{ fangfrisch__python_venv__venvs__dependent_var | d({}) }}'
+      when:
+        - 'not clamav__skip_python_venv | default(false)'
+
+    - role: 'linuxfabrik.lfops.clamav'
+
+    - role: 'linuxfabrik.lfops.fangfrisch'
+      when:
+        - 'not clamav__skip_fangfrisch | default(false)'

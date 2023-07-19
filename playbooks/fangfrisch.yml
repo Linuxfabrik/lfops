@@ -1,0 +1,11 @@
+- name: 'Install and configure Fangfrisch'
+  hosts:
+    - 'lfops_fangfrisch'
+
+    - role: 'linuxfabrik.lfops.python_venv'
+      python_venv__venvs__dependent_var:
+        - '{{ fangfrisch__python_venv__venvs__dependent_var | d({}) }}'
+      when:
+        - 'not clamav__skip_python_venv | default(false)'
+
+    - role: 'linuxfabrik.lfops.fangfrisch'

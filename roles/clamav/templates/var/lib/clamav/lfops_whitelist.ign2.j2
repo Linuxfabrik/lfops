@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# 2023071201
+{# no whitelines allowed #}
+{% for item in clamav__whitelist_signatures %}
+{{ item }}
+{% endfor %}

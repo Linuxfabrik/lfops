@@ -31,11 +31,13 @@ Role: system_update
 
 ### Added
 
+* Role: clamav
 * Role: dnf_versionlock
+* Role: fangfrisch
 * Role: grafana_grizzly
 * Role: icingadb
-* Role: repo_gitlab_runner
 * Role: icingaweb2_module_businessprocess
+* Role: repo_gitlab_runner
 
 Role:python_venv
 * allow specifying different certificate store

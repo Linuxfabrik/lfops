@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2023071201
+
+[Unit]
+Description=ClamAV Full Scan Timer
+
+[Timer]
+OnCalendar={{ clamav__clamdscan_on_calendar }}
+Unit=clamav-clamdscan.service
+
+[Install]
+WantedBy=timers.target

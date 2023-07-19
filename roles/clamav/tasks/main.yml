@@ -1,0 +1,146 @@
+- block:
+
+  - name: 'install clamav clamav-update clamd'
+    package:
+      name:
+        - 'clamav'
+        - 'clamav-update' # provides freshclam
+        - 'clamd'
+      state: 'present'
+
+  - name: 'mkdir -p /etc/systemd/system/clamav-clamonacc.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/clamav-clamonacc.service.d/'
+      state: 'directory'
+
+  - name: 'Deploy /etc/systemd/system/clamav-clamonacc.service.d/fdpass.conf'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/clamav-clamonacc.service.d/fdpass.conf.j2'
+      dest: '/etc/systemd/system/clamav-clamonacc.service.d/fdpass.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'clamav__clamonacc_fdpass_result'
+    notify: 'clamav: restart clamav-clamonacc'
+
+  - name: 'Deploy /etc/systemd/system/clamav-clamdscan.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/clamav-clamdscan.service.j2'
+      dest: '/etc/systemd/system/clamav-clamdscan.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy /etc/systemd/system/clamav-clamdscan.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/clamav-clamdscan.timer.j2'
+      dest: '/etc/systemd/system/clamav-clamdscan.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'clamav__systemd_clamdscan_timer_result'
+
+  - name: 'Deploy /usr/local/bin/clamav-virusevent.sh'
+    ansible.builtin.template:
+      src: 'usr/local/bin/clamav-virusevent.sh.j2'
+      dest: '/usr/local/bin/clamav-virusevent.sh'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/logrotate.d/clamav'
+    ansible.builtin.template:
+      src: 'etc/logrotate.d/clamav.j2'
+      dest: '/etc/logrotate.d/clamav'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'clamav'
+
+
+- block:
+
+  - name: 'Deploy /etc/clamd.d/scan.conf'
+    ansible.builtin.template:
+      src: 'etc/clamd.d/scan.conf.j2'
+      dest: '/etc/clamd.d/scan.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify:
+      - 'clamav: restart clamd@scan'
+      - 'clamav: restart clamav-clamonacc'
+
+  - name: 'Deploy /etc/freshclam.conf'
+    ansible.builtin.template:
+      src: 'etc/freshclam.conf.j2'
+      dest: '/etc/freshclam.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+    # no notify required, as it is run by a timer
+
+  - name: 'Deploy /var/lib/clamav/lfops_whitelist.ign2'
+    ansible.builtin.template:
+      src: 'var/lib/clamav/lfops_whitelist.ign2.j2'
+      dest: '/var/lib/clamav/lfops_whitelist.ign2'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'clamav: restart clamd@scan'
+
+  - name: 'Deploy /var/lib/clamav/lfops_whitelist.fp'
+    ansible.builtin.template:
+      src: 'var/lib/clamav/lfops_whitelist.fp.j2'
+      dest: '/var/lib/clamav/lfops_whitelist.fp'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'clamav: restart clamd@scan'
+
+  - name: 'Deploy /etc/clamd.d/clamdscan.filelist'
+    ansible.builtin.template:
+      src: 'etc/clamd.d/clamdscan.filelist.j2'
+      dest: '/etc/clamd.d/clamdscan.filelist'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'clamav'
+    - 'clamav:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ clamav__clamd_service_enabled | bool | ternary("enable", "disable") }} --now clamd@scan.service'
+    ansible.builtin.service:
+      name: 'clamd@scan'
+      enabled: '{{ clamav__clamd_service_enabled }}'
+      state: '{{ clamav__clamd_service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ clamav__clamonacc_service_enabled | bool | ternary("enable", "disable") }} --now clamav-clamonacc.service'
+    ansible.builtin.service:
+      name: 'clamav-clamonacc.service'
+      enabled: '{{ clamav__clamonacc_service_enabled }}'
+      state: '{{ clamav__clamonacc_service_enabled | bool | ternary("started", "stopped") }}'
+      daemon_reload: '{{ clamav__clamonacc_fdpass_result is changed }}'
+
+  - name: 'systemctl {{ clamav__clamdscan_timer_enabled | bool | ternary("enable", "disable") }} --now clamav-clamdscan.timer'
+    ansible.builtin.service:
+      name: 'clamav-clamdscan.timer'
+      enabled: '{{ clamav__clamdscan_timer_enabled }}'
+      state: '{{ clamav__clamdscan_timer_enabled | bool | ternary("started", "stopped") }}'
+      daemon_reload: '{{ clamav__systemd_clamdscan_timer_result is changed }}'
+
+  - name: 'systemctl {{ clamav__freshclam_service_enabled | bool | ternary("enable", "disable") }} --now clamav-freshclam.service'
+    ansible.builtin.service:
+      name: 'clamav-freshclam.service'
+      enabled: '{{ clamav__freshclam_service_enabled }}'
+      state: '{{ clamav__freshclam_service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'clamav'
+    - 'clamav:state'
