@@ -41,6 +41,9 @@ Role:python_venv
 * allow specifying different certificate store
 * allow specifying the python executable to be used in the venv
 
+Role:kvm_vm
+* add the option to boot the VM with UEFI
+
 Role:selinux
 * add support for SELinux ports
 

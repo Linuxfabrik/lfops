@@ -113,6 +113,9 @@
   - name: 'virt-install ...'
     ansible.builtin.command: >
       virt-install
+      {% if kvm_vm__boot_uefi %}
+      --boot uefi
+      {% endif %}
       --import
       --connect {{ kvm_vm__connect_url }}
       --name {{ kvm_vm__name }}
