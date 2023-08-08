@@ -33,7 +33,7 @@ For flexibility, use the `raw` variable to configure the following topics (have 
 * Proxy passing rules.
 * Any other configuration instructions not covered in the "Role Variables" chapters.
 
-If you want to check Apache with [our STIG audit script](https://github.com/Linuxfabrik/stig>), run it like this:
+If you want to check Apache with [our STIG audit script](https://github.com/Linuxfabrik/stig), run it like this:
 
 * Apache Application Server:<br>`./audit.py --lengthy --profile-name='CIS Apache HTTP Server 2.4' --profile-version='v2.0.0' --hostname=web --control-name-exclude='2\.4|2\.6|2\.8|5\.7|6\.6|6\.7`
 * Apache Reverse Proxy Server:<br>`./audit.py --lengthy --profile-name='CIS Apache HTTP Server 2.4' --profile-version='v2.0.0' --hostname=proxy --control-name-exclude='2\.4|2\.6|2\.8|5\.7`
