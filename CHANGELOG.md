@@ -9,11 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role: apache_httpd
+* Changed `conf_server_alias` from a string to a list
+
 Role: graylog_server
 * Remove support for Graylog < 5.0
 
 Playbook: Setup Icinga2 Master
-* changed default of `setup_icinga2_master__skip_icingaweb2_module_monitoring` from `false` to `true`
+* Changed default of `setup_icinga2_master__skip_icingaweb2_module_monitoring` from `false` to `true`
 
 Role: monitoring_plugins
 * Remove the tasks for Nuitka compilation, as the compilation is done by the [Monitoring Plugins GitHub Action](https://github.com/Linuxfabrik/monitoring-plugins/actions/workflows/nuitka-compile.yml) now.

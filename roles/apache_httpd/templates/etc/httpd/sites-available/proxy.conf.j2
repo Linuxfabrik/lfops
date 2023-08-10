@@ -9,7 +9,9 @@
 <VirtualHost {{ item['virtualhost_ip'] | d('*') }}:{{ item['virtualhost_port'] | d(443) }}>
     ServerName {{ item['conf_server_name'] }}
 {% if item['conf_server_alias'] is defined and item['conf_server_alias'] | length %}
-    ServerAlias {{ item['conf_server_alias'] }}
+{% for alias in item['conf_server_alias'] %}
+    ServerAlias {{ alias }}
+{% endfor %}
 {% endif %}
     ServerAdmin {{ item['conf_server_admin'] | d(apache_httpd__conf_server_admin) }}
 
