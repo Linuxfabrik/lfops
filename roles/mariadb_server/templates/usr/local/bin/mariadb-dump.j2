@@ -33,7 +33,7 @@ mysql_table_lock_retc=$?
 # https://github.com/maxbube/mydumper
 mydumper --host=$HOST --user=$USERNAME --password=$PASSWORD \
     --build-empty-files \
-    --compress \
+    --compress ZSTD \
     --events \
     --logfile $BACKUP_DIR/mydumper.log \
     --outputdir $BACKUP_DIR \
