@@ -27,7 +27,7 @@ Runs on
 * For some machines you might need to set `ansible_python_interpreter: '/usr/bin/python3'` to prevent the error message `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`.
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 * Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
-
+* Bitwarden RESTful API webserver as described at https://github.com/Linuxfabrik/lfops#bitwarden
 
 ## Optional Requirements
 
