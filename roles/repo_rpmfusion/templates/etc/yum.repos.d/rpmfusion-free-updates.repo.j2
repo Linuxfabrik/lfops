@@ -1,0 +1,29 @@
+# {{ ansible_managed }}
+# 2023090101
+
+[rpmfusion-free-updates]
+name=RPM Fusion for EL 8 - Free - Updates
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length %}
+baseurl={{ repo_rpmfusion__mirror_url }}/rpmfusion/free-el-updates-released-8/x86_64
+{% else %}
+mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=free-el-updates-released-8&arch=$basearch
+{% endif %}
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-8
+
+[rpmfusion-free-updates-debuginfo]
+name=RPM Fusion for EL 8 - Free - Updates Debug
+mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=free-el-updates-released-debug-8&arch=$basearch
+enabled=0
+type=rpm-md
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-8
+
+[rpmfusion-free-updates-source]
+name=RPM Fusion for EL 8 - Free - Updates Source
+mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=free-el-updates-released-source-8&arch=$basearch
+enabled=0
+type=rpm-md
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-8
