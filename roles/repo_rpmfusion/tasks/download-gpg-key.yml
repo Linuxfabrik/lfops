@@ -1,0 +1,19 @@
+- block:
+
+  - name: 'curl {{ gpg_key.url }} --output /tmp/ansible.{{ gpg_key.dest | basename }}'
+    ansible.builtin.get_url:
+      url: '{{ gpg_key.url }}'
+      dest: '/tmp/ansible.{{ gpg_key.dest | basename }}'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.{{ gpg_key.dest | basename }} to {{ gpg_key.dest }}'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.{{ gpg_key.dest | basename }}'
+      dest: '{{ gpg_key.dest }}'
+      mode: 0o644
+
+  tags:
+    - 'repo_mariadb'

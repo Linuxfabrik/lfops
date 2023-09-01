@@ -1,0 +1,7 @@
+- name: 'Manage and configure the RPM Fusion Repository'
+  hosts:
+    - 'lfops_repo_rpmfusion'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_rpmfusion'

@@ -1,0 +1,30 @@
+# {{ ansible_managed }}
+# 2023090101
+
+[rpmfusion-nonfree-updates-testing]
+name=RPM Fusion for EL 8 - Nonfree - Test Updates
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length %}
+baseurl={{ repo_rpmfusion__mirror_url }}/rpmfusion/nonfree-el-updates-testing-8/x86_64
+{% else %}
+mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=nonfree-el-updates-testing-8&arch=$basearch
+{% endif %}
+enabled=0
+type=rpm-md
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8
+
+[rpmfusion-nonfree-updates-testing-debuginfo]
+name=RPM Fusion for EL 8 - Nonfree - Test Updates Debug
+mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=nonfree-el-updates-testing-debug-8&arch=$basearch
+enabled=0
+type=rpm-md
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8
+
+[rpmfusion-nonfree-updates-testing-source]
+name=RPM Fusion for EL 8 - Nonfree - Test Updates Source
+mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=nonfree-el-updates-testing-source-8&arch=$basearch
+enabled=0
+type=rpm-md
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8

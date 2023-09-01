@@ -41,6 +41,7 @@ Role: system_update
 * Role: icingadb
 * Role: icingaweb2_module_businessprocess
 * Role: repo_gitlab_runner
+* Role: repo_rpmfusion
 
 Role:python_venv
 * allow specifying different certificate store

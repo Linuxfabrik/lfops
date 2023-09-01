@@ -1,0 +1,38 @@
+- block:
+
+  - name: 'Deploy the RPM Fusion nonfree repo (mirror: {{ repo_rpmfusion__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/rpmfusion-free-updates.repo.j2'
+      dest: '/etc/yum.repos.d/rpmfusion-free-updates.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+  - name: 'Deploy the RPM Fusion free repo (mirror: {{ repo_rpmfusion__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/rpmfusion-nonfree-updates.repo.j2'
+      dest: '/etc/yum.repos.d/rpmfusion-nonfree-updates.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+  - name: 'Deploy the RPM Fusion nonfree testing repo (mirror: {{ repo_rpmfusion__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/rpmfusion-free-updates-testing.repo.j2'
+      dest: '/etc/yum.repos.d/rpmfusion-free-updates-testing.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+  - name: 'Deploy the RPM Fusion free testing repo (mirror: {{ repo_rpmfusion__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/rpmfusion-nonfree-updates-testing.repo.j2'
+      dest: '/etc/yum.repos.d/rpmfusion-nonfree-updates-testing.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - ansible.builtin.include_tasks: 'download-gpg-key.yml'
+    loop: '{{ repo_rpmfusion__gpg_keys }}'
+    loop_control:
+      loop_var: 'gpg_key'
+
+  tags:
+    - 'repo_rpmfusion'
