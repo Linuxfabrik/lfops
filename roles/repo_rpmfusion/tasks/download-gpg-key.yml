@@ -16,4 +16,4 @@
       mode: 0o644
 
   tags:
-    - 'repo_mariadb'
+    - 'repo_rpmfusion'
