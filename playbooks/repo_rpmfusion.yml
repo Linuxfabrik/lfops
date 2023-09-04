@@ -4,4 +4,12 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.yum_utils'
+      when:
+        - 'not repo_rpmfusion__skip_yum_utils | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'not repo_rpmfusion__skip_repo_epel | d(false)'
+
     - role: 'linuxfabrik.lfops.repo_rpmfusion'
