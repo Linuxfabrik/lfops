@@ -1,5 +1,6 @@
 # {{ ansible_managed }}
-# 2022102101
+# 2023090401
+{# taken from the RPM package at https://yum.postgresql.org/repopackages/ #}
 
 #######################################################
 # PGDG Red Hat Enterprise Linux / Rocky repositories  #
@@ -98,18 +99,6 @@ name=PostgreSQL 11 for RHEL / Rocky $releasever - $basearch
 baseurl={{ repo_postgresql__mirror_url }}/pgdg/repos/yum/11/redhat/rhel-$releasever-$basearch
 {% else %}
 baseurl=https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-$releasever-$basearch
-{% endif %}
-enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
-repo_gpgcheck = 1
-
-[pgdg10]
-name=PostgreSQL 10 for RHEL / Rocky $releasever - $basearch
-{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length %}
-baseurl={{ repo_postgresql__mirror_url }}/pgdg/repos/yum/10/redhat/rhel-$releasever-$basearch
-{% else %}
-baseurl=https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-$releasever-$basearch
 {% endif %}
 enabled=1
 gpgcheck=1
@@ -279,14 +268,6 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
 
-[pgdg10-source]
-name=PostgreSQL 10 for RHEL / Rocky $releasever - $basearch - Source
-baseurl=https://download.postgresql.org/pub/repos/yum/srpms/10/redhat/rhel-$releasever-$basearch
-enabled=0
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
-repo_gpgcheck = 1
-
 # Debuginfo/debugsource packages for stable repos
 
 [pgdg15-debuginfo]
@@ -324,14 +305,6 @@ repo_gpgcheck = 1
 [pgdg11-debuginfo]
 name=PostgreSQL 11 for RHEL / Rocky $releasever - $basearch - Debuginfo
 baseurl=https://download.postgresql.org/pub/repos/yum/debug/11/redhat/rhel-$releasever-$basearch
-enabled=0
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
-repo_gpgcheck = 1
-
-[pgdg10-debuginfo]
-name=PostgreSQL 10 for RHEL / Rocky $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/debug/10/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
