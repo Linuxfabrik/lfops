@@ -99,7 +99,7 @@
       PATH: '{{ rocketchat__node_prefix }}/bin:{{ ansible_facts["env"]["PATH"] }}'
     when: 'rocketchat__npm_version_result != rocketchat__npm_version'
 
-  - name: 'Fetch the Rocket.Chat binary tarball'
+  - name: 'Fetch the Rocket.Chat binary tarball [Version: {{ rocketchat__api_version_dependencies_result["json"]["tag"] }}]'
     ansible.builtin.get_url:
       url: 'https://releases.rocket.chat/{{ rocketchat__version }}/download'
       dest: '{{ rocketchat__application_path }}/rocket.chat-{{ rocketchat__version }}.tgz'
