@@ -2,6 +2,8 @@
   hosts:
     - 'lfops_fangfrisch'
 
+  roles:
+
     - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var:
         - '{{ fangfrisch__python_venv__venvs__dependent_var | d({}) }}'
