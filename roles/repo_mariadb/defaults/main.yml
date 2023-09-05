@@ -1,12 +1,1 @@
-repo_mariadb__gpg_keys:
-
-  - url: 'https://downloads.mariadb.com/MariaDB/MariaDB-Server-GPG-KEY'
-    dest: '/etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY'
-
-  - url: 'https://downloads.mariadb.com/MaxScale/MariaDB-MaxScale-GPG-KEY'
-    dest: '/etc/pki/rpm-gpg/MariaDB-MaxScale-GPG-KEY'
-
-  - url: 'https://downloads.mariadb.com/Tools/MariaDB-Enterprise-GPG-KEY'
-    dest: '/etc/pki/rpm-gpg/MariaDB-Enterprise-GPG-KEY'
-
 repo_mariadb__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
