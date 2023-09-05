@@ -19,16 +19,28 @@
 
 - block:
 
-  - name: 'Install mariadb-server libzstd zstd'
+  - name: 'Install mariadb-server'
     ansible.builtin.package:
       name:
         - 'mariadb-server'
+      state: 'present'
+
+  tags:
+    - 'mariadb_server'
+
+
+- block:
+
+  - name: 'Install libzstd zstd needed by mydumper'
+    ansible.builtin.package:
+      name:
         - 'libzstd'
         - 'zstd'
       state: 'present'
 
   tags:
     - 'mariadb_server'
+    - 'mariadb_server:dump'
 
 
 - block:
