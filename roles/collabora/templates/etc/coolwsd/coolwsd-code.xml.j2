@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2023070701 -->
+    <!-- 2023090501 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -255,8 +255,6 @@
         </ssl>
     </storage>
 
-    <tile_cache_persistent desc="Should the tiles persist between two editing sessions of the given document?" type="bool" default="true">true</tile_cache_persistent>
-
     <admin_console desc="Web admin console settings.">
         <enable desc="Enable the admin console functionality" type="bool" default="true">true</enable>
         <enable_pam desc="Enable admin user authentication with PAM" type="bool" default="false">false</enable_pam>
@@ -265,6 +263,7 @@
     </admin_console>
 
     <monitors desc="Addresses of servers we connect to on start for monitoring">
+        <!-- <monitor desc="Address of the monitor and interval after which it should try reconnting after disconnect" retryInterval="20">wss://foobar:234/ws</monitor> -->
     </monitors>
 
     <quarantine_files desc="Files are stored here to be examined later in cases of crashes or similar situation." default="false" enable="false">
