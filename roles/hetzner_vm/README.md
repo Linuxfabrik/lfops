@@ -83,7 +83,7 @@ hetzner_vm__networks:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `hetzner_vm__backups` | Choose if Hetzner itself should make backups of the volumes. Note that backups cost an additional 20% of the server price. Volumes are not included in backups. Possible options: | `false` |
+| `hetzner_vm__backups` | Choose if Hetzner itself should make backups of the volumes. Note that backups cost an additional 20% of the server price. Volumes are not included in backups. Possible options: `true`, `false`. | `false` |
 | `hetzner_vm__firewall_rules` | List of firewall rules that should be applied to the server. Subkeys:<br> * `direction`: Mandatory, string. Either `in` or `out`.<br> * `port`: Mandatory, int. Port.<br> * `protocol`: Mandatory, string. Either `tcp`, `udp`, `icmp`.<br> * `source_ips`: Mandatory, list. List of allowed CIDR source addresses. | `[]` |
 | `hetzner_vm__force` | Force the update of the server. This may power off the server. The rescaling process will usually take just a few minutes. Also have a look at `hetzner_vm__upgrade_disk`. | `false` |
 | `hetzner_vm__name` | The name of the server. By default, it uses the Ansible inventory name. | `'{{ inventory_hostname }}'` |
