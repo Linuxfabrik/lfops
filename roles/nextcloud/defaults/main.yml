@@ -53,7 +53,7 @@ nextcloud__sysconfig:
   - { key: 'memcache.locking',                   value: '--value=\\OC\\Memcache\\Redis' }
   - { key: 'filelocking.enabled',                value: '--value=true --type=boolean' }
 
-nextcloud__timer_app_update_enabled: true
+nextcloud__timer_app_update_enabled: false
 nextcloud__timer_jobs_enabled: true
 nextcloud__timer_ldap_show_remnants_enabled: true
 nextcloud__timer_scan_files_enabled: true
