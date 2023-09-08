@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 2023081401
+# 2023090801
 # This file is managed by Ansible - do not edit
 
 set -e
@@ -21,6 +21,7 @@ sudo -u apache php /var/www/html/nextcloud/occ app:list > /tmp/nextcloud-app-lis
 
 systemctl restart php-fpm.service
 setsebool httpd_unified on
+sudo -u apache php /var/www/html/nextcloud/occ app:update --all --no-interaction
 sudo -u apache php /var/www/html/nextcloud/updater/updater.phar -n
 sudo -u apache php /var/www/html/nextcloud/occ upgrade
 setsebool httpd_unified off
