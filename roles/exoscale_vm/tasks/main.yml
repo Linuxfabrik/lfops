@@ -1,30 +1,125 @@
 - block:
 
-  - name: 'Manage the VM at Exoscale'
-    ngine_io.cloudstack.cs_instance:
+  - name: 'Manage the security group for the VM'
+    ngine_io.cloudstack.cs_securitygroup:
       api_key: '{{ exoscale_vm__api_key }}'
       api_secret: '{{ exoscale_vm__api_secret }}'
       api_url: 'https://api.exoscale.com/compute'
       name: '{{ exoscale_vm__name }}'
-      service_offering: '{{ exoscale_vm__service_offering }}'
-      ssh_key: '{{ exoscale_vm__ssh_key }}'
-      state: '{{ exoscale_vm__state }}'
-      template: '{{ exoscale_vm__template }}'
-      zone: '{{ exoscale_vm__zone }}'
-      root_disk_size: '{{ exoscale_vm__disk_size }}'
+      state: 'present'
     delegate_to: 'localhost'
+    when:
+      - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length'
+      - 'exoscale_vm__state != "absent"'
+
+  - name: 'Manage the required security group rules for the VM'
+    ngine_io.cloudstack.cs_securitygroup_rule:
+      api_key: '{{ exoscale_vm__api_key }}'
+      api_secret: '{{ exoscale_vm__api_secret }}'
+      api_url: 'https://api.exoscale.com/compute'
+      cidr: '{{ item["cidr"] | default(omit) }}'
+      protocol: '{{ item["protocol"] | default(omit) }}'
+      security_group: '{{ exoscale_vm__name }}'
+      start_port: '{{ item["start_port"] | default(omit) }}'
+      end_port: '{{ item["end_port"] | default(omit) }}'
+      state: '{{ item["state"] | d("present") }}'
+      type: '{{ item["type"] | default("ingress") }}'
+    loop: '{{ exoscale_vm__security_group_rules }}'
+    delegate_to: 'localhost'
+    when:
+      - 'exoscale_vm__security_group_rules is defined'
+      - 'exoscale_vm__state != "absent"'
+
+  tags:
+    - 'exoscale_vm'
+    - 'exoscale_vm:firewalls'
+
+
+- block:
+
+  # using the exo cli instead, as creating private instances is not supported by the v1 API which the cloudstack modules use
+  # - name: 'Manage the VM at Exoscale'
+  #   ngine_io.cloudstack.cs_instance:
+  #     api_key: '{{ exoscale_vm__api_key }}'
+  #     api_secret: '{{ exoscale_vm__api_secret }}'
+  #     api_url: 'https://api.exoscale.com/compute'
+  #     name: '{{ exoscale_vm__name }}'
+  #     service_offering: '{{ exoscale_vm__service_offering }}'
+  #     security_groups: '{{ (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length) | ternary(["default", exoscale_vm__name], ["default"]) }}'
+  #     ssh_key: '{{ exoscale_vm__ssh_key }}'
+  #     state: '{{ exoscale_vm__state }}'
+  #     template: '{{ exoscale_vm__template }}'
+  #     zone: '{{ exoscale_vm__zone }}'
+  #     root_disk_size: '{{ exoscale_vm__disk_size }}'
+  #     force: true
+  #   delegate_to: 'localhost'
+
+  - name: 'List the VMs at Exoscale'
+    ansible.builtin.command: >
+      exo compute instance list
+      --use-account '{{ exoscale_vm__account }}'
+      --output-format json
+    register: 'exoscale_vm__instance_list_result'
+    delegate_to: 'localhost'
+    changed_when: false # just gathering information, no actual change happening here
+
+  - name: 'Create the VM at Exoscale'
+    ansible.builtin.command: >
+      exo compute instance create
+      --use-account '{{ exoscale_vm__account }}'
+      --output-format json
+      --instance-type '{{ exoscale_vm__service_offering }}'
+      {% for item in  (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length) | ternary(["default", exoscale_vm__name], ["default"]) %}
+      --security-group '{{ item }}'
+      {% endfor %}
+      --ssh-key '{{ exoscale_vm__ssh_key }}'
+      --template '{{ exoscale_vm__template }}'
+      --zone '{{ exoscale_vm__zone }}'
+      --disk-size '{{ exoscale_vm__disk_size }}'
+      {% if exoscale_vm__private_instance %}
+      --private-instance
+      {% endif %}
+      '{{ exoscale_vm__name }}'
+    delegate_to: 'localhost'
+    when:
+      - 'exoscale_vm__state != "absent"'
+      - 'exoscale_vm__name not in  exoscale_vm__instance_list_result["stdout"] | from_json | map(attribute="name")'
+
+  - name: 'Delete the VM at Exoscale'
+    ansible.builtin.command: >
+      exo compute instance delete
+      --use-account '{{ exoscale_vm__account }}'
+      --output-format json
+      --zone '{{ exoscale_vm__zone }}'
+      --force
+      '{{ exoscale_vm__name }}'
+    delegate_to: 'localhost'
+    when:
+      - 'exoscale_vm__state == "absent"'
+      - 'exoscale_vm__name in exoscale_vm__instance_list_result["stdout"] | from_json | map(attribute="name")'
+
+  tags:
+    - 'exoscale_vm'
+
+
+- block:
 
   - name: 'Create the networks required by the VM'
     ngine_io.cloudstack.cs_network:
       api_key: '{{ exoscale_vm__api_key }}'
       api_secret: '{{ exoscale_vm__api_secret }}'
       api_url: 'https://api.exoscale.com/compute'
-      name: '{{ item }}'
+      name: '{{ item["name"] }}'
       zone: '{{ exoscale_vm__zone }}'
+      start_ip: '{{ item["cidr"] | ansible.utils.ipaddr("2") | ansible.utils.ipaddr("address") }}'
+      end_ip: '{{ item["cidr"] | ansible.utils.ipaddr("-3") | ansible.utils.ipaddr("address") }}'
+      netmask: '{{ item["cidr"] | ansible.utils.ipaddr("netmask") }}'
       state: 'present' # never delete, as it could be used by other VMs as well
       network_offering: 'Private Network'
     loop: '{{ exoscale_vm__private_networks }}'
-    when: 'exoscale_vm__state == "present"'
+    when:
+      - 'exoscale_vm__state != "absent"'
+      - 'item["cidr"] is defined'
     delegate_to: 'localhost'
 
   - name: "Manage the VM's networks"
@@ -33,11 +128,31 @@
       api_secret: '{{ exoscale_vm__api_secret }}'
       api_url: 'https://api.exoscale.com/compute'
       name: '{{ exoscale_vm__name }}'
-      network: '{{ item }}'
+      network: '{{ item["name"] }}'
+      ip_address: '{{ item["fixed_ip"] }}'
       zone: '{{ exoscale_vm__zone }}'
     loop: '{{ exoscale_vm__private_networks }}'
-    when: 'exoscale_vm__state == "present"'
+    when: 'exoscale_vm__state != "absent"'
     delegate_to: 'localhost'
+
+  tags:
+    - 'exoscale_vm'
+    - 'exoscale_vm:networks'
+
+- block:
+
+  # Cleanup
+  - name: 'Clean up the security group for the VM'
+    ngine_io.cloudstack.cs_securitygroup:
+      api_key: '{{ exoscale_vm__api_key }}'
+      api_secret: '{{ exoscale_vm__api_secret }}'
+      api_url: 'https://api.exoscale.com/compute'
+      name: '{{ exoscale_vm__name }}'
+      state: 'absent'
+    delegate_to: 'localhost'
+    when:
+      - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length'
+      - 'exoscale_vm__state == "absent"'
 
   tags:
     - 'exoscale_vm'
