@@ -80,8 +80,8 @@
     community.mongodb.mongodb_replicaset:
       login_host: '{{ mongodb__conf_net_bind_ip }}'
       login_port: '{{ mongodb__conf_net_port }}'
-      login_user: '{{ mongodb__admin_user["username"] }}'
-      login_password: '{{ mongodb__admin_user["password"] }}'
+      login_user: '{{ mongodb__admin_user["username"] | default(omit) }}'
+      login_password: '{{ mongodb__admin_user["password"] | default(omit) }}'
       login_database: 'admin'
       replica_set: '{{ mongodb__conf_replication_repl_set_name__combined_var }}'
       members: '{{ mongodb__repl_set_members }}'
@@ -94,8 +94,8 @@
     community.mongodb.mongodb_status:
       login_host: '{{ mongodb__conf_net_bind_ip }}'
       login_port: '{{ mongodb__conf_net_port }}'
-      login_user: '{{ mongodb__admin_user["username"] }}'
-      login_password: '{{ mongodb__admin_user["password"] }}'
+      login_user: '{{ mongodb__admin_user["username"] | default(omit) }}'
+      login_password: '{{ mongodb__admin_user["password"] | default(omit) }}'
       login_database: 'admin'
       replica_set: '{{ mongodb__conf_replication_repl_set_name__combined_var }}'
       poll: 5
@@ -121,6 +121,7 @@
       transform: 'json'
     register: 'mongodb__is_writable_primary_result'
     changed_when: false # just gathering information
+    check_mode: false # run task even if `--check` is specified
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
 
