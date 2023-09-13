@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023091301
+# 2023091302
 
 ### Welcome to the InfluxDB configuration file.
 
@@ -572,7 +572,7 @@ reporting-disabled = true
   # query-stats-enabled = false
 
   # interval for how often continuous queries will be checked if they need to run
-  # run-interval = "1s"
+  run-interval = "{{ influxdb__conf_continuous_queries_run_interval }}"
 
 ###
 ### [tls]

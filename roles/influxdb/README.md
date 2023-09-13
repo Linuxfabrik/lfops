@@ -44,6 +44,7 @@ influxdb__admin_login:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `influxdb__conf_continuous_queries_log_enabled` | Controls whether queries are logged when executed by the continuous query service. | `false` |
+| `influxdb__conf_continuous_queries_run_interval` | Interval for how often continuous queries will be checked if they need to run. | `'1s'` |
 | `influxdb__conf_log_queries_after` | The time threshold when a query will be logged as a slow query. Setting the value to 0 disables the slow query logging. | `'0s'` |
 | `influxdb__dump_timer_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
 | `influxdb__databases__host_var` /<br> `influxdb__databases__group_var` | List of InfluxDB databases that should be created or deleted.<br> Subkeys:<br> * `name`: Mandatory, string. Name of the database.<br> * `state`: Optional, string. Defaults to `present`. The state of the database. Possible options: `present`, `absent`.<br> * `retention`: Mandatory, string. Determines how long InfluxDB should keep the data. If specified, it should be `INF` or at least one hour.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
@@ -54,6 +55,7 @@ Example:
 ```yaml
 # optional
 influxdb__conf_continuous_queries_log_enabled: true
+influxdb__conf_continuous_queries_run_interval: '1s'
 influxdb__conf_log_queries_after: '0s'
 influxdb__dump_timer_enabled: true
 influxdb__databases__host_var:
