@@ -1,3 +1,4 @@
+libreoffice__client_apache: false
 libreoffice__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
     value: 'on'

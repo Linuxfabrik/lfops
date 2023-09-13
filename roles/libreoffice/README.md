@@ -18,7 +18,7 @@ Runs on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `libreoffice__client_apache`| Boolean. If set to `true`, LibreOffice is configured to run under the user "apache". | unset |
+| `libreoffice__client_apache`| Boolean. If set to `true`, LibreOffice is configured to run under the user "apache". | `false` |
 
 Example:
 ```yaml
