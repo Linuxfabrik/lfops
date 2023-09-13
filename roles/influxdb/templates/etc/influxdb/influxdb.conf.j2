@@ -566,7 +566,7 @@ reporting-disabled = true
   # enabled = true
 
   # Controls whether queries are logged when executed by the CQ service.
-  log-enabled = false
+  log-enabled = {{ influxdb__conf_continuous_queries_log_enabled | string | lower }}
 
   # Controls whether queries are logged to the self-monitoring data store.
   # query-stats-enabled = false
