@@ -1,3 +1,4 @@
+influxdb__conf_log_queries_after: '0s'
 influxdb__databases__dependent_var: []
 influxdb__databases__group_var: []
 influxdb__databases__host_var: []

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023040301
+# 2023091301
 
 ### Welcome to the InfluxDB configuration file.
 
@@ -176,7 +176,7 @@ reporting-disabled = true
 
   # The time threshold when a query will be logged as a slow query.  This limit can be set to help
   # discover slow or resource intensive queries.  Setting the value to 0 disables the slow query logging.
-  # log-queries-after = "0s"
+  log-queries-after = "{{ influxdb__conf_log_queries_after }}"
 
   # The maximum number of points a SELECT can process.  A value of 0 will make
   # the maximum point count unlimited.  This will only be checked every second so queries will not

@@ -43,6 +43,7 @@ influxdb__admin_login:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `influxdb__conf_log_queries_after` | The time threshold when a query will be logged as a slow query. Setting the value to 0 disables the slow query logging. | `'0s'` |
 | `influxdb__dump_timer_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
 | `influxdb__databases__host_var` /<br> `influxdb__databases__group_var` | List of InfluxDB databases that should be created or deleted.<br> Subkeys:<br> * `name`: Mandatory, string. Name of the database.<br> * `state`: Optional, string. Defaults to `present`. The state of the database. Possible options: `present`, `absent`.<br> * `retention`: Mandatory, string. Determines how long InfluxDB should keep the data. If specified, it should be `INF` or at least one hour.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `influxdb__users__host_var` /<br> `influxdb__users__group_var` | List of InfluxDB users that should be created, updated or deleted.<br> Subkeys:<br> * `name`: Mandatory, string. The name of the account.<br> * `password`: Mandatory, string. The password of the account.<br> * `state`: Optional, string. Defaults to `present`. The state of the account. Possible options: `present`, `absent`.<br> * `admin`: Optional, boolean. Defaults to `false`. Whether the user should be in the admin role or not.<br> * `grants`: Optional, list. Defaults to omit. Takes a list of dicts containing the `database` and `privilege` keys.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
@@ -51,6 +52,7 @@ influxdb__admin_login:
 Example:
 ```yaml
 # optional
+influxdb__conf_log_queries_after: '0s'
 influxdb__dump_timer_enabled: true
 influxdb__databases__host_var:
   - name: 'database1'
