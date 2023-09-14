@@ -369,7 +369,7 @@ def run_module():
         # check if changed, adjust if necessary
         changed, updated_item = diff_and_update(current_item, target_item)
         if changed:
-            out = bw.edit_item(updated_item, updated_item['id'])
+            result = bw.edit_item(updated_item, updated_item['id'])
         else:
             result = current_item
 
