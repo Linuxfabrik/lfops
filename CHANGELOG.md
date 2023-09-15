@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role:rocketchat
+* Removed Rocket.Chat notifications from the default banaction
+
 Role:redis
 * Changed default of `redis__service_timeout_start_sec` and `redis__service_timeout_stop_sec` from `5s` to `90s`.
 
