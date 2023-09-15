@@ -29,8 +29,8 @@ Runs on
 | -------- | ----------- | ------------- |
 | `redis__service_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
 | `redis__service_limit_nofile` | Systemd: Resource limit directive for the number of file descriptors. | `10240` |
-| `redis__service_timeout_start_sec` | Systemd: Configures the time to wait for start-up. If Redis does not signal start-up completion within the configured time, the service will be considered failed and will be shut down again. | `5` |
-| `redis__service_timeout_stop_sec` | Systemd: First, it configures the time to wait for the ExecStop= command. Second, it configures the time to wait for the Redis itself to stop. If Redis doesn't terminate in the specified time, it will be forcibly terminated by SIGKILL. | `5` |
+| `redis__service_timeout_start_sec` | Systemd: Configures the time to wait for start-up. If Redis does not signal start-up completion within the configured time, the service will be considered failed and will be shut down again. | `'90s'` |
+| `redis__service_timeout_stop_sec` | Systemd: First, it configures the time to wait for the ExecStop= command. Second, it configures the time to wait for the Redis itself to stop. If Redis doesn't terminate in the specified time, it will be forcibly terminated by SIGKILL. | `'90s'` |
 
 Example:
 ```yaml

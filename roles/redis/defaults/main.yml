@@ -1,7 +1,7 @@
 redis__service_enabled: true
 redis__service_limit_nofile: 10240
-redis__service_timeout_start_sec: '5s'
-redis__service_timeout_stop_sec: '5s'
+redis__service_timeout_start_sec: '90s'
+redis__service_timeout_stop_sec: '90s'
 
 # -----------------------------------------------------------------------------
 

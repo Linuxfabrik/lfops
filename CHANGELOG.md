@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role:redis
+* Changed default of `redis__service_timeout_start_sec` and `redis__service_timeout_stop_sec` from `5s` to `90s`.
+
 Role: nextcloud
 * Changed default of `nextcloud__timer_app_update_enabled` from `true` to `false`, as this can sometimes lead to Nextcloud ending up in maintenance mode
 
