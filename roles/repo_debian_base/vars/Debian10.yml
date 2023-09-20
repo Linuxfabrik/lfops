@@ -1,2 +1,0 @@
-repo_debian_base__dist_security: '{{ ansible_facts["distribution_release"] }}/updates'
-repo_debian_base__dist_updates: '{{ ansible_facts["distribution_release"] }}-updates'

@@ -1,13 +1,8 @@
 - block:
 
-  - name: 'Set platform/version specific variables'
-    ansible.builtin.import_role:
-      name: 'shared'
-      tasks_from: 'platform-variables.yml'
-
   - name: 'deploy the repo files (mirror: {{ repo_debian_base__mirror_url | default("") }})'
     ansible.builtin.template:
-      src: 'etc/apt/sources.list.j2'
+      src: 'etc/apt/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-sources.list.j2'
       dest: '/etc/apt/sources.list'
       owner: 'root'
       group: 'root'
