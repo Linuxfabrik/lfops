@@ -35,7 +35,7 @@ ln -s /path/to/lfops ~/.ansible/collections/ansible_collections/linuxfabrik/
 Example: If you want to run `playbooks/php.yml`, place your host `myhost` in the `lfops_php` group. After that, run:
 
 ```bash
-ansible-playbook --inventory path/to/environment linuxfabrik.lfops.php --limit myhost
+ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.php --limit myhost
 ```
 
 For more details on group names, Ansible tags, etc., see the playbooks and README files for the roles.
@@ -209,6 +209,15 @@ lfops__repo_mirror_url: 'https://mirror.example.com'
 ### ansible_become: true
 
 Don't use `become: true` or `ansible_become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars ONLY (not in `all.yml` - `localhost` must not be part of the group. Otherwise you'll get errors like `sudo: a password is required`).
+
+
+### Finding all groups a host belongs to
+
+When running playbooks against a host it might be useful to know all the group memberships.
+
+```bash
+ansible --inventory path/to/inventory myhost -m debug -a "var=group_names"
+```
 
 
 ### Re-use values which are defined in `rolename__group_varname` in `rolename__host_varname` without duplicating them
