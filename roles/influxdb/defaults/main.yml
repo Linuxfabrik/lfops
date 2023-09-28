@@ -1,6 +1,7 @@
 influxdb__conf_continuous_queries_log_enabled: false
 influxdb__conf_continuous_queries_run_interval: '1s'
 influxdb__conf_log_queries_after: '0s'
+influxdb__conf_logging_level: 'warn'
 influxdb__databases__dependent_var: []
 influxdb__databases__group_var: []
 influxdb__databases__host_var: []
