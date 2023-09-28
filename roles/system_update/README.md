@@ -8,16 +8,20 @@ This role configures the server to do (weekly) system updates by deploying two s
 
 Runs on
 
-* Debian
+* Debian 11
+* Fedora
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
-* Fedora
 
 
 ## Mandatory Requirements
 
 * Install at. This can be done using the [linuxfabrik.lfops.at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at) role.
 * Install mailx. This can be done using the [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx) role.
+* Install needrestart on Debian. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
+* Install yum-utils on RHEL. This can be done using the [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils) role.
+
+If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/system_update.yml), this is automatically done for you.
 
 
 ## Tags

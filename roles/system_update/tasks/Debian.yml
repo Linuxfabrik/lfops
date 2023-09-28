@@ -1,0 +1,7 @@
+- name: 'install needrestart'
+  ansible.builtin.package:
+    name:
+      - 'needrestart'
+    state: 'present'
+  tags:
+    - 'system_update'
