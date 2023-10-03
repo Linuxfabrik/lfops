@@ -1,6 +1,6 @@
 - block:
 
-  - name: 'Install additional tools like bash-completion, jq, nano and other'
+  - name: 'Install additional tools like bash-completion, jq, nano, ncdu and other'
     ansible.builtin.package:
       name:
         - 'bash-completion'
@@ -9,6 +9,7 @@
         - 'jq'
         - 'lsof'
         - 'nano'
+        - 'ncdu'
         - 'rsync'
         - 'tmux'
         - 'vim'
