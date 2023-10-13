@@ -20,11 +20,12 @@ apache_httpd__packages__role_var:
 apache_httpd__packages__dependent_var: []
 apache_httpd__packages__group_var: []
 apache_httpd__packages__host_var: []
-apache_httpd__packages__combined_var: '{{
-    apache_httpd__packages__role_var +
-    apache_httpd__packages__dependent_var +
-    apache_httpd__packages__group_var +
-    apache_httpd__packages__host_var
+apache_httpd__packages__combined_var: '{{ (
+      apache_httpd__packages__role_var +
+      apache_httpd__packages__dependent_var +
+      apache_httpd__packages__group_var +
+      apache_httpd__packages__host_var
+    ) | linuxfabrik.lfops.combine_lod
   }}'
 
 
@@ -251,11 +252,12 @@ apache_httpd__mods__role_var:
 apache_httpd__mods__dependent_var: []
 apache_httpd__mods__group_var: []
 apache_httpd__mods__host_var: []
-apache_httpd__mods__combined_var: '{{
-    apache_httpd__mods__role_var +
-    apache_httpd__mods__dependent_var +
-    apache_httpd__mods__group_var +
-    apache_httpd__mods__host_var
+apache_httpd__mods__combined_var: '{{ (
+      apache_httpd__mods__role_var +
+      apache_httpd__mods__dependent_var +
+      apache_httpd__mods__group_var +
+      apache_httpd__mods__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
   }}'
 
 
@@ -369,11 +371,12 @@ apache_httpd__conf__role_var:
 apache_httpd__conf__dependent_var: []
 apache_httpd__conf__group_var: []
 apache_httpd__conf__host_var: []
-apache_httpd__conf__combined_var: '{{
-    apache_httpd__conf__role_var +
-    apache_httpd__conf__dependent_var +
-    apache_httpd__conf__group_var +
-    apache_httpd__conf__host_var
+apache_httpd__conf__combined_var: '{{ (
+      apache_httpd__conf__role_var +
+      apache_httpd__conf__dependent_var +
+      apache_httpd__conf__group_var +
+      apache_httpd__conf__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
   }}'
 
 
@@ -499,11 +502,12 @@ apache_httpd__vhosts__role_var:
 apache_httpd__vhosts__dependent_var: []
 apache_httpd__vhosts__group_var: []
 apache_httpd__vhosts__host_var: []
-apache_httpd__vhosts__combined_var: '{{
-    apache_httpd__vhosts__role_var +
-    apache_httpd__vhosts__dependent_var +
-    apache_httpd__vhosts__group_var +
-    apache_httpd__vhosts__host_var
+apache_httpd__vhosts__combined_var: '{{ (
+      apache_httpd__vhosts__role_var +
+      apache_httpd__vhosts__dependent_var +
+      apache_httpd__vhosts__group_var +
+      apache_httpd__vhosts__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["conf_server_name", "virtualhost_port"])
   }}'
 
 
