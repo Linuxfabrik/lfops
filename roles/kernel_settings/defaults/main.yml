@@ -2,21 +2,25 @@ kernel_settings__sysctl__dependent_var: []
 kernel_settings__sysctl__group_var: []
 kernel_settings__sysctl__host_var: []
 kernel_settings__sysctl__role_var: []
-kernel_settings__sysctl__combined_var: '{{ kernel_settings__sysctl__role_var +
-  kernel_settings__sysctl__group_var +
-  kernel_settings__sysctl__host_var +
-  kernel_settings__sysctl__dependent_var
- }}'
+kernel_settings__sysctl__combined_var: '{{ (
+    kernel_settings__sysctl__role_var +
+    kernel_settings__sysctl__dependent_var +
+    kernel_settings__sysctl__group_var +
+    kernel_settings__sysctl__host_var
+  ) | linuxfabrik.lfops.combine_lod
+}}'
 
 kernel_settings__sysfs__dependent_var: []
 kernel_settings__sysfs__group_var: []
 kernel_settings__sysfs__host_var: []
 kernel_settings__sysfs__role_var: []
-kernel_settings__sysfs__combined_var: '{{ kernel_settings__sysfs__role_var +
-  kernel_settings__sysfs__group_var +
-  kernel_settings__sysfs__host_var +
-  kernel_settings__sysfs__dependent_var
- }}'
+kernel_settings__sysfs__combined_var: '{{ (
+    kernel_settings__sysfs__role_var +
+    kernel_settings__sysfs__dependent_var +
+    kernel_settings__sysfs__group_var +
+    kernel_settings__sysfs__host_var
+  ) | linuxfabrik.lfops.combine_lod
+}}'
 
 kernel_settings__systemd_cpu_affinity__dependent_var: ''
 kernel_settings__systemd_cpu_affinity__group_var: ''
