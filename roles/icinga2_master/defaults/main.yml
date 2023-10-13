@@ -9,12 +9,13 @@ icinga2_master__api_users__role_var:
     password: '{{ icinga2_master__enrolment_api_user["password"] }}'
     permissions:
       - 'actions/generate-ticket'
-icinga2_master__api_users__combined_var: '{{ icinga2_master__api_users__role_var +
-  icinga2_master__api_users__group_var +
-  icinga2_master__api_users__host_var +
-  icinga2_master__api_users__dependent_var
-  | flatten
- }}'
+icinga2_master__api_users__combined_var: '{{ (
+      icinga2_master__api_users__role_var +
+      icinga2_master__api_users__dependent_var +
+      icinga2_master__api_users__group_var +
+      icinga2_master__api_users__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+  }}'
 
 icinga2_master__cn: '{{ ansible_facts["nodename"] }}'
 icinga2_master__database_enable_ha: false

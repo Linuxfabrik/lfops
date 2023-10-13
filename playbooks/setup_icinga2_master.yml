@@ -70,10 +70,11 @@
         - 'not setup_icinga2_master__skip_repo_icinga | default(false)'
 
     - role: 'linuxfabrik.lfops.icinga2_master'
-      icinga2_master__api_users__dependent_var:
-        - '{{ icingadb__icinga2_master__api_users__dependent_var }}'
-        - '{{ icingaweb2__icinga2_master__api_users__dependent_var }}'
-        - '{{ icingaweb2_module_director__icinga2_master__api_users__dependent_var }}'
+      icinga2_master__api_users__dependent_var: '{{
+          icingadb__icinga2_master__api_users__dependent_var +
+          icingaweb2__icinga2_master__api_users__dependent_var +
+          icingaweb2_module_director__icinga2_master__api_users__dependent_var
+        }}'
       when:
         - 'not setup_icinga2_master__skip_icinga2_master | default(false)'
 
