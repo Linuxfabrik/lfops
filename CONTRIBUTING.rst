@@ -540,16 +540,30 @@ Other times it is useful to generate a list of present and absent elements, for 
 
 .. code-block:: yaml
 
-  - name: 'Ensure PHP modules are absent'
-    ansible.builtin.package:
-      name: '{{ php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
-      state: 'absent'
+    - name: 'Ensure PHP modules are absent'
+      ansible.builtin.package:
+        name: '{{ php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
+        state: 'absent'
 
-  - name: 'Ensure PHP modules are present'
-    ansible.builtin.package:
-      name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
-          + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
-      state: 'present'
+    - name: 'Ensure PHP modules are present'
+      ansible.builtin.package:
+        name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+            + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
+        state: 'present'
+
+The vHost example above can be used to showcase another feature of ``linuxfabrik.lfops.combine_lod``.
+Normally the list elements are merged based on a ``unique_key`` which was to match, for example the ``name`` key. However, this does not work with ``conf_server_name``, as one can have a vHost with the same ``conf_server_name`` for multiple ports.
+This means that the ``unique_key`` has to be a combination of ``conf_server_name`` and ``virtualhost_port``:
+
+.. code-block:: yaml
+
+    apache_httpd__vhosts__combined_var: '{{ (
+          apache_httpd__vhosts__role_var +
+          apache_httpd__vhosts__dependent_var +
+          apache_httpd__vhosts__group_var +
+          apache_httpd__vhosts__host_var
+        ) | linuxfabrik.lfops.combine_lod(unique_key=["conf_server_name", "virtualhost_port"])
+      }}'
 
 Note:
 
