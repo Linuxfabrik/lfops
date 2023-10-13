@@ -75,6 +75,59 @@ EXAMPLES = r'''
 #   allow_all: false
 #   allowed_users:
 #   - linuxfabrik
+
+
+# more complicated example
+# defaults:
+mariadb_server__kernel_settings__sysctl__dependent_var:
+  - name: 'fs.aio-max-nr'
+    value: 1048576
+  - name: 'sunrpc.tcp_slot_table_entries'
+    value: 128
+  - name: 'vm.swappiness'
+    value: 10
+
+redis__kernel_settings__sysctl__dependent_var:
+  - name: 'vm.overcommit_memory'
+    value: 1
+  - name: 'net.core.somaxconn'
+    value: 1024
+
+kernel_settings__sysctl__dependent_var: '{{
+    mariadb_server__kernel_settings__sysctl__dependent_var | d([]) +
+    redis__kernel_settings__sysctl__dependent_var | d([])
+  }}'
+
+kernel_settings__sysctl__host_var:
+  - name: 'net.core.somaxconn'
+    value: 2048
+
+kernel_settings__sysctl__group_var: []
+kernel_settings__sysctl__role_var: []
+kernel_settings__sysctl__combined_var: '{{ (
+  kernel_settings__sysctl__role_var +
+  kernel_settings__sysctl__dependent_var +
+  kernel_settings__sysctl__group_var +
+  kernel_settings__sysctl__host_var
+  ) | linuxfabrik.lfops.combine_lod
+ }}'
+
+# tasks:
+  - name: 'display combined var'
+    debug:
+      msg: '{{ kernel_settings__sysctl__combined_var }}'
+
+# =>
+# - name: fs.aio-max-nr
+#   value: 1048576
+# - name: sunrpc.tcp_slot_table_entries
+#   value: 128
+# - name: vm.swappiness
+#   value: 10
+# - name: vm.overcommit_memory
+#   value: 1
+# - name: net.core.somaxconn
+#   value: 2048
 '''
 
 RETURN = r'''
