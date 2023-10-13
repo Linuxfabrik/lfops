@@ -17,6 +17,7 @@
   - name: 'Combined Modules:'
     ansible.builtin.debug:
       var: 'php__modules__combined_var'
+
   - name: 'Ensure PHP modules are absent'
     # providing the packages as a list is much more faster than looping for each
     ansible.builtin.package:
