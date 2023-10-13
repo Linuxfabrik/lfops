@@ -115,14 +115,17 @@
         - 'not setup_icinga2_master__skip_apache_httpd | default(false)'
 
     - role: 'linuxfabrik.lfops.icingaweb2'
-      icingaweb2__navigation_menu_entries__dependent_var:
-        - '{{ icingaweb2_module_grafana__icingaweb2__navigation_menu_entries__dependent_var }}'
-      icingaweb2__resources__dependent_var:
-        - '{{ icingadb__icingaweb2__resources__dependent_var }}'
-        - '{{ icingaweb2_module_director__icingaweb2__resources__dependent_var }}'
-        - '{{ icingaweb2_module_monitoring__icingaweb2__resources__dependent_var }}'
-      icingaweb2__users__dependent_var:
-        - '{{ icingaweb2_module_director__icingaweb2__users__dependent_var }}'
+      icingaweb2__navigation_menu_entries__dependent_var: '{{
+          icingaweb2_module_grafana__icingaweb2__navigation_menu_entries__dependent_var
+        }}'
+      icingaweb2__resources__dependent_var: '{{
+          icingadb__icingaweb2__resources__dependent_var +
+          icingaweb2_module_director__icingaweb2__resources__dependent_var +
+          icingaweb2_module_monitoring__icingaweb2__resources__dependent_var
+        }}'
+      icingaweb2__users__dependent_var: '{{
+          icingaweb2_module_director__icingaweb2__users__dependent_var
+        }}'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2 | default(false)'
 

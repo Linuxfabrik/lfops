@@ -131,11 +131,25 @@
         (name, active, password_hash)
         VALUES ('{{ item.username }}', 1, '$(php -r 'echo password_hash("{{ item.password }}", PASSWORD_DEFAULT);')')
       ;"
+    when:
+      - 'item["state"] | d("present") != "absent"'
     loop: "{{ icingaweb2__users__combined_var }}"
     register: 'icingaweb2__mysql_user_insert_result'
     changed_when: "'error 1062 (23000)' not in icingaweb2__mysql_user_insert_result.stderr | lower"
     failed_when: "icingaweb2__mysql_user_insert_result.rc != 0 and 'error 1062 (23000)' not in icingaweb2__mysql_user_insert_result.stderr | lower"
     # https://stackoverflow.com/questions/25981863/using-failed-when-on-a-with-items-task-depending-on-return-codes
+
+  - name: 'remove users from the icingaweb2 database'
+    community.mysql.mysql_query:
+      login_user: '{{ icingaweb2__database_login["username"] }}'
+      login_password: '{{ icingaweb2__database_login["password"] }}'
+      login_host: '{{ icingaweb2__database_host }}'
+      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/pymysql/pymysql/issues/509#issuecomment-244072354
+      login_db: '{{ icingaweb2__database_name }}'
+      query: 'DELETE FROM icingaweb_user WHERE name = "{{ item["username"] }}"'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: "{{ icingaweb2__users__combined_var }}"
 
   tags:
     - 'icingaweb2'
