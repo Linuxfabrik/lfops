@@ -31,6 +31,7 @@ Roles:
 * Do not over-engineer the role during the development - it should fulfill its use case, but can grow and be improved on later.
 * The role should support the installation and configuration of multiple major versions of the software. For example, PHP 7.1, 7.2, 7.3 etc. should all be supported by a single role. Upgrades are either done manually or using Ansible, depending on the software and the implementation effort.
 * Do not use role dependencies via ``meta/main.yml``. Dependencies make it harder to maintain a role, especially if it has many complex dependencies.
+* Whenever the role requires a list as an input, use a list of dictionaries, preferably with `state: present/absent`. See "Injections" below.
 
 Common:
 
@@ -455,22 +456,29 @@ Variables
 Injections
 ~~~~~~~~~~
 
-Your role might accept variable injection from another role. It depends on the context on how to implement that. Examples:
+The goal of injections is that variables can be set in multiple places, and then merged in order to be used in the role.
+For example, the user can overwrite a specific configuration role default (``__role_var``) from their inventory (``__host_var`` / ``__group_var``).
+
+Furthermore, other roles can also inject their sensible defaults via the ``__dependent_var``, with a higher precedence than the role defaults, but lower than the user's inventory.
+
+To enable this behaviour, one needs to define the ``__combined_var`` as follows:
 
 .. code-block:: yaml
 
-    # for lists
+    # for list of dictionaries
     my_role__my_var__dependent_var: []
     my_role__my_var__group_var: []
     my_role__my_var__host_var: []
     my_role__my_var__role_var: []
-    my_role__my_var__combined_var: '{{ my_role__my_var__role_var +
-      my_role__my_var__group_var +
-      my_role__my_var__host_var +
-      my_role__my_var__dependent_var
-     }}'
+    my_role__my_var__combined_var: '{{ (
+          my_role__my_var__role_var +
+          my_role__my_var__dependent_var +
+          my_role__my_var__group_var +
+          my_role__my_var__host_var
+        ) | linuxfabrik.lfops.combine_lod
+      }}'
 
-    # this is for simple values like strings or numbers:
+    # for simple values like strings, numbers or booleans
     my_role__my_var__dependent_var: ''
     my_role__my_var__group_var: ''
     my_role__my_var__host_var: ''
@@ -482,11 +490,72 @@ Your role might accept variable injection from another role. It depends on the c
         my_role__my_var__role_var
       }}'
 
-Why? Let's assume an Ansible playbook with two roles. Role1 (tag1) sets a default value. Role2 (tag2) wants to override the default value. Ansible is not able to do this: Neither with tag-based ``ansible-playbook`` calls nor with a full playbook run, Role2 is able to override the default value of Role1. This is the reason for implementing injections.
+The ``__combined_var`` will then be used in the tasks or templates of the role.
 
-Do not use dictionaries, even though they allow overwriting of earlier elemens, since one cannot template the keyname using Jinja2. This would prevent passing on of variables, especially in `__dependent_var`` (for details have a look at https://docs.linuxfabrik.ch/software/ansible.html).
+The role always has to implement some sort of ``state`` key, else the user cannot "unselect" a value defined in the defaults. Imagine the user wants to disable the default localhost vHost of the Apache HTTPd role:
 
-Note that single value ``__combined_var`` are always returned as strings. Convert them to integers when using maths.
+.. code-block:: yaml
+    :caption: defaults/main.yml
+
+    apache_httpd__vhosts__role_var:
+
+      - conf_server_name: 'localhost'
+        virtualhost_port: 80
+        template: 'localhost'
+
+Without the `state` key, the user has no way of achieving this, as they cannot remove previously defined elements from the list via the inventory. With the ``state`` key
+
+.. code-block:: yaml
+    :caption: inventory
+
+    apache_httpd__vhosts__role_var:
+
+      - conf_server_name: 'localhost'
+        virtualhost_port: 80
+        state: 'absent'
+
+will remove the vHost.
+
+The handling of the state in the role can look something like this, assuming the default value for ``state`` is ``present``:
+
+.. code-block:: yaml
+
+    - name: 'Remove sites-available vHosts'
+      ansible.builtin.file:
+        path: '...'
+        state: 'absent'
+      when:
+        - 'item["state"] | d("present") == "absent"'
+      loop: '{{ apache_httpd__vhosts__combined_var }}'
+
+    - name: 'Create sites-available vHosts'
+      ansible.builtin.template:
+        src: '...'
+        dest: '...'
+      when:
+        - 'item["state"] | d("present") != "absent"'
+      loop: '{{ apache_httpd__vhosts__combined_var }}'
+
+Other times it is useful to generate a list of present and absent elements, for example when using ``ansible.builtin.package``, as providing the packages as a list is much faster than looping through them.
+
+.. code-block:: yaml
+
+  - name: 'Ensure PHP modules are absent'
+    ansible.builtin.package:
+      name: '{{ php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
+      state: 'absent'
+
+  - name: 'Ensure PHP modules are present'
+    ansible.builtin.package:
+      name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+          + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
+      state: 'present'
+
+Note:
+
+* Have a look at ``ansible-doc --type filter linuxfabrik.lfops.combine_lod``.
+* Always use lists of dictionaries or simple values. Never use dictionaries, even though they allow overwriting of earlier elemens, since one cannot template the keyname using Jinja2. This would prevent passing on of variables, especially in `__dependent_var`` (for details have a look at https://docs.linuxfabrik.ch/software/ansible.html#besonderheiten-von-ansible).
+* Simple value ``__combined_var`` are always returned as strings. Convert them to integers when using maths.
 
 
 Ansible Facts / Magic Vars
