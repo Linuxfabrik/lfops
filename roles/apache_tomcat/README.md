@@ -42,7 +42,7 @@ The GUI is protected against CSRF, but the text and JMX interfaces are not. To m
 | Variable | Description |
 | -------- | ----------- |
 | `apache_tomcat__webapps_manager_context_xml_allow` | String. [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). A regex that describes which IP addresses are allowed to access the manager and host-manager webapps. |
-| `apache_tomcat__users__host_var` | List. List of users allowed to access the Manager Web GUI. Possible options:<br> * `username`: Mandatory, string.<br> * `password`: Mandatory, string.<br> * `roles`: Mandatory, list. Any of `admin`, `admin-gui`, `admin-script`, `manager`, `manager-gui`, `manager-script`, `manager-jmx`, `manager-status` |
+| `apache_tomcat__users__host_var` / <br> `apache_tomcat__users__group_var`  | List of dictionaries. Users allowed to access the Manager Web GUI. Subkeys: <ul><li>`password`: Mandatory, string.</li><li>`roles`: Mandatory, list. Any of `admin`, `admin-gui`, `admin-script`, `manager`, `manager-gui`, `manager-script`, `manager-jmx`, `manager-status` </li><li>`state`: Optional, string. Either `present` or `absent`.</li><li>`username`: Mandatory, string.</li></ul> |
 
 Example:
 ```yaml
@@ -53,6 +53,7 @@ apache_tomcat__users__host_var:
     roles:
       - 'admin-gui'
       - 'manager-gui'
+    state: 'present'
 apache_tomcat__webapps_manager_context_xml_allow: '|192\.168\.122\.\d+|10\.80\.32\.\d+'
 ```
 
@@ -66,7 +67,7 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.168\.122\.\d+|10\.80\.3
 | `apache_tomcat__env_xmx` | Number. `CATALINA_OPTS=-Xmx`. Specifies the maximum heap size. | `'1024M'` |
 | `apache_tomcat__env_xx` | For specifiying various [JVM Options](http://www.oracle.com/technetwork/articles/java/vmoptions-jsp-140102.html) after `-XX:`:<br>* Boolean options are turned on with `-XX:+` and turned off with `-XX:-`.<br> * Numeric options are set with `-XX:=`. Numbers can include `'m'` or `'M'` for megabytes, `'k'` or `'K'` for kilobytes, and `'g'` or `'G'` for gigabytes (for example, `32k` is the same as `32768`).<br> * String options are set with `-XX:=`, are usually used to specify a file, a path, or a list of commands. | `'+UseParallelGC'` |
 | `apache_tomcat__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
-| `apache_tomcat__roles__group_var` / `apache_tomcat__roles__host_var` | List. List of Tomcat roles to deploy. Built-in Tomcat manager roles are:<br> * `manager-gui`: Allows access to the HTML GUI and the status pages.<br> * `manager-script`: Allows access to the HTTP API and the status pages.<br> * `manager-jmx`: Allows access to the JMX proxy and the status pages.<br> * `manager-status`: Allows access to the status pages only. | `['admin-gui', 'manager-gui']` |
+| `apache_tomcat__roles__host_var` / <br> `apache_tomcat__roles__group_var` | List of dictionaries. Tomcat roles to deploy. Subkeys: <ul><li>`name`: Mandatory, string. Name of the role.</li><li>`state`: Optional, string. Either `present` or `absent`.</li></ul><br> Built-in Tomcat manager roles are: <ul><li>`manager-gui`: Allows access to the HTML GUI and the status pages.</li><li>`manager-script`: Allows access to the HTTP API and the status pages.</li><li>`manager-jmx`: Allows access to the JMX proxy and the status pages.</li><li>`manager-status`: Allows access to the status pages only.</li></ul> | `['admin-gui', 'manager-gui']` |
 | `apache_tomcat__server_xml_ajp_port` | Number. The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of 0 (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/ajp.html) | unset (not listening on AJP) |
 | `apache_tomcat__server_xml_connector_compression` | String. The Connector may use HTTP/1.1 GZIP compression in an attempt to save server bandwidth. The acceptable values for the parameter is "off" (disable compression), "on" (allow compression, which causes text data to be compressed), "force" (forces compression in all cases), or a numerical integer value (which is equivalent to "on", but specifies the minimum amount of data before the output is compressed). If the content-length is not known and compression is set to "on" or more aggressive, the output will also be compressed. If not specified, this attribute is set to "off".<br>Note: There is a tradeoff between using compression (saving your bandwidth) and using the sendfile feature (saving your CPU cycles). If the connector supports the sendfile feature, e.g. the NIO connector, using sendfile will take precedence over compression. The symptoms will be that static files greater that 48 Kb will be sent uncompressed. You can turn off sendfile by setting useSendfile attribute of the connector, as documented below, or change the sendfile usage threshold in the configuration of the DefaultServlet in the default conf/web.xml or in the web.xml of your web application. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `'on'` |
 | `apache_tomcat__server_xml_connector_connection_timeout` | The number of milliseconds this Connector will wait, after accepting a connection, for the request URI line to be presented. Use a value of `-1` to indicate no (i.e. infinite) timeout. The default value is `60000` (i.e. 60 seconds) but note that the standard `server.xml` that ships with Tomcat sets this to `20000` (i.e. 20 seconds). Unless `disableUploadTimeout` is set to `false`, this timeout will also be used when reading the request body (if any). This parameter is there specifically to fight one type of Denial-Of-Service attack, whereby some malicious client(s) create a TCP connection to the server (which has the effect of reserving some resources on the server for handling this connection), and then just sit there without sending any HTTP request on that connection. By making this delay shorter, you shorten the time during which the server resources are allocated, to serve a request that will never come. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `20000` |
@@ -89,8 +90,10 @@ apache_tomcat__env_xmx: '1024M'
 apache_tomcat__env_xx: '+UseParallelGC'
 apache_tomcat__logrotate: 7
 apache_tomcat__roles__host_var:
-  - 'admin-gui'
-  - 'manager-gui'
+  - name: 'admin-gui'
+    state: 'present'
+  - name: 'manager-gui'
+    state: 'absent'
 apache_tomcat__server_xml_ajp_port: 8009
 apache_tomcat__server_xml_connector_compressable_mime_types: 'text/html,text/xml,text/plain'
 apache_tomcat__server_xml_connector_compression: 'on'

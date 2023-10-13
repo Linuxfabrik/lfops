@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role:apache_tomcat
+* Changed `apache_tomcat__users__*_var` from a simple list to a list of dictionaries.
+
 Role:rocketchat
 * Removed Rocket.Chat notifications from the default banaction
 

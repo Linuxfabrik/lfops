@@ -66,11 +66,11 @@
 <!-- <role rolename="manager-jmx"/> -->
 <!-- <role rolename="manager-status"/> -->
 <!-- <user name="admin" password="<must-be-changed>" roles="admin,manager,admin-gui,admin-script,manager-gui,manager-script,manager-jmx,manager-status" /> -->
-{% for role in apache_tomcat__roles__combined_var %}
-<role rolename="{{ role }}"/>
+{% for role in apache_tomcat__roles__combined_var if role['state'] | d('present') != 'absent' %}
+<role rolename="{{ role['name'] }}"/>
 {% endfor %}
 
-{% for user in apache_tomcat__users__combined_var %}
+{% for user in apache_tomcat__users__combined_var if user['state'] | d('present') != 'absent' %}
 <user name="{{ user['username'] }}" password="{{ user['password'] }}" roles="{{ user['roles'] | join(',') }}"/>
 {% endfor %}
 </tomcat-users>

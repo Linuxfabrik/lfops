@@ -2,13 +2,14 @@ apache_tomcat__roles__dependent_var: []
 apache_tomcat__roles__group_var: []
 apache_tomcat__roles__host_var: []
 apache_tomcat__roles__role_var:
-  - 'admin-gui'
-  - 'manager-gui'
-apache_tomcat__roles__combined_var: '{{
-    apache_tomcat__roles__role_var +
-    apache_tomcat__roles__dependent_var +
-    apache_tomcat__roles__group_var +
-    apache_tomcat__roles__host_var
+  - name: 'admin-gui'
+  - name: 'manager-gui'
+apache_tomcat__roles__combined_var: '{{ (
+      apache_tomcat__roles__role_var +
+      apache_tomcat__roles__dependent_var +
+      apache_tomcat__roles__group_var +
+      apache_tomcat__roles__host_var
+    ) | linuxfabrik.lfops.combine_lod
   }}'
 
 apache_tomcat__context_xml_cache_max_size: 10240
@@ -29,9 +30,10 @@ apache_tomcat__users__dependent_var: []
 apache_tomcat__users__group_var: []
 apache_tomcat__users__host_var: []
 apache_tomcat__users__role_var: []
-apache_tomcat__users__combined_var: '{{
-    apache_tomcat__users__role_var +
-    apache_tomcat__users__dependent_var +
-    apache_tomcat__users__group_var +
-    apache_tomcat__users__host_var
+apache_tomcat__users__combined_var: '{{ (
+      apache_tomcat__users__role_var +
+      apache_tomcat__users__dependent_var +
+      apache_tomcat__users__group_var +
+      apache_tomcat__users__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
   }}'
