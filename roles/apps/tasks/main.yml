@@ -6,19 +6,14 @@
 
   - name: 'Remove apps using the package manager'
     ansible.builtin.package:
-      name: '{{ item["name"] }}'
+      name: '{{ apps__apps__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
       state: 'absent'
-    when:
-      - 'item["state"] | d("present") == "absent"'
-    loop: '{{ apps__apps__combined_var }}'
 
   - name: 'Deploy apps using the package manager'
     ansible.builtin.package:
-      name: '{{ item["name"] }}'
+      name: '{{ (apps__apps__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+          + (apps__apps__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
-    when:
-      - 'item["state"] | d("present") != "absent"'
-    loop: '{{ apps__apps__combined_var }}'
 
   tags:
     - 'apps'
