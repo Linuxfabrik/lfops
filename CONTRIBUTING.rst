@@ -495,8 +495,8 @@ The ``__combined_var`` will then be used in the tasks or templates of the role.
 The role always has to implement some sort of ``state`` key, else the user cannot "unselect" a value defined in the defaults. Imagine the user wants to disable the default localhost vHost of the Apache HTTPd role:
 
 .. code-block:: yaml
-    :caption: defaults/main.yml
 
+    # defaults/main.yml
     apache_httpd__vhosts__role_var:
 
       - conf_server_name: 'localhost'
@@ -506,8 +506,8 @@ The role always has to implement some sort of ``state`` key, else the user canno
 Without the `state` key, the user has no way of achieving this, as they cannot remove previously defined elements from the list via the inventory. With the ``state`` key
 
 .. code-block:: yaml
-    :caption: inventory
 
+    # inventory
     apache_httpd__vhosts__role_var:
 
       - conf_server_name: 'localhost'
