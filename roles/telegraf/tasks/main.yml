@@ -16,7 +16,7 @@
 
   - name: 'Deploy /etc/telegraf/telegraf.d configs'
     ansible.builtin.template:
-      src: 'etc/telegraf/{{ item["template"] }}.conf.j2'
+      src: 'etc/telegraf/telegraf.d/{{ item["template"] }}.conf.j2'
       dest: '/etc/telegraf/telegraf.d/{{ item["filename"] }}.conf'
       owner: 'root'
       group: 'root'
