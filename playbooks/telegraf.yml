@@ -5,5 +5,7 @@
   roles:
 
     - role: 'linuxfabrik.lfops.repo_influxdb'
+      when:
+        - 'not telegraf__skip_repo_influxdb | default(false)'
 
     - role: 'linuxfabrik.lfops.telegraf'
