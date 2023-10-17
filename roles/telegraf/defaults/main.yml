@@ -15,6 +15,7 @@ telegraf__inputs_disk_enable: true
 telegraf__inputs_diskio_enable: true
 telegraf__inputs_kernel_enable: true
 telegraf__inputs_mem_enable: true
+telegraf__inputs_net_enable: false
 telegraf__inputs_processes_enable: true
 telegraf__inputs_swap_enable: true
 telegraf__inputs_system_enable: true

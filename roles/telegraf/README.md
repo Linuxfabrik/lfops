@@ -31,6 +31,7 @@ Runs on
 | `telegraf__inputs_diskio_enable` | Read metrics about disk IO by device | `true` |
 | `telegraf__inputs_kernel_enable` | Get kernel statistics from /proc/stat | `true` |
 | `telegraf__inputs_mem_enable` | Read metrics about memory usage | `true` |
+| `telegraf__inputs_net_enable` | Gather metrics about network interfaces | `false` |
 | `telegraf__inputs_processes_enable` | Get the number of processes and group them by status | `true` |
 | `telegraf__inputs_swap_enable` | Read metrics about swap memory usage | `true` |
 | `telegraf__inputs_system_enable` | Read metrics about system load & uptime | `true` |
@@ -60,6 +61,7 @@ telegraf__inputs_disk_enable: false
 telegraf__inputs_diskio_enable: false
 telegraf__inputs_kernel_enable: false
 telegraf__inputs_mem_enable: false
+telegraf__inputs_net_enable: false
 telegraf__inputs_processes_enable: false
 telegraf__inputs_swap_enable: false
 telegraf__inputs_system_enable: false
