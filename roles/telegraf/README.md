@@ -25,6 +25,7 @@ Runs on
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `telegraf__agent_interval` | Default data collection interval for all inputs | `'10s'` |
+| `telegraf__conf__host_var` / <br> `telegraf__conf__group_var` | List of dictionaries. Configurations to deploy to `/etc/telegraf/telegraf.d/`. Subkeys:<ul><li>`filename`: Mandatory, string. Destination filename. Normally equal to the name of the source `template` used. Will be suffixed with `.conf`.</li><li>`raw`: Optional, string. Raw content that should be part of the config.</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li><li>`template`: Mandatory, string. Which template to use for the config. Possible options: `raw` or `graylog`.</li><li>`username`: Optional, string. Username. Set this to the Graylog access token when using `template: 'graylog'`.</li></ul> | [] |
 | `telegraf__inputs_cpu_enable` | Read metrics about cpu usage | `true` |
 | `telegraf__inputs_disk_enable` | Read metrics about disk usage by mount point | `true` |
 | `telegraf__inputs_diskio_enable` | Read metrics about disk IO by device | `true` |
@@ -49,6 +50,11 @@ Example:
 ```yaml
 # optional
 telegraf__agent_interval: '10s'
+telegraf__conf__host_var:
+  - filename: 'graylog'
+    state: 'present'
+    template: 'graylog'
+    username: 'linuxfabrik' # graylog access token (need to be sent as the username)
 telegraf__inputs_cpu_enable: false
 telegraf__inputs_disk_enable: false
 telegraf__inputs_diskio_enable: false

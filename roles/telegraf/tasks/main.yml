@@ -5,13 +5,34 @@
       name: 'telegraf'
       state: 'present'
 
-  - name: 'Generate telegraf config'
+  - name: 'Deploy /etc/telegraf/telegraf.conf'
     ansible.builtin.template:
       src: 'etc/telegraf/telegraf.conf.j2'
       dest: '/etc/telegraf/telegraf.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'telegraf: systemctl restart telegraf.service'
+
+  - name: 'Deploy /etc/telegraf/telegraf.d configs'
+    ansible.builtin.template:
+      src: 'etc/telegraf/{{ item["template"] }}.conf.j2'
+      dest: '/etc/telegraf/telegraf.d/{{ item["filename"] }}.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ telegraf__conf__combined_var }}'
+    notify: 'telegraf: systemctl restart telegraf.service'
+
+  - name: 'Remove /etc/telegraf/telegraf.d configs'
+    ansible.builtin.file:
+      dest: '/etc/telegraf/telegraf.d/{{ item["filename"] }}.conf'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ telegraf__conf__combined_var }}'
     notify: 'telegraf: systemctl restart telegraf.service'
 
   tags:

@@ -1,5 +1,15 @@
 telegraf__agent_interval: '10s'
-
+telegraf__conf__combined_var: '{{ (
+      telegraf__conf__role_var +
+      telegraf__conf__dependent_var +
+      telegraf__conf__group_var +
+      telegraf__conf__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
+  }}'
+telegraf__conf__dependent_var: []
+telegraf__conf__group_var: []
+telegraf__conf__host_var: []
+telegraf__conf__role_var: []
 telegraf__inputs_cpu_enable: true
 telegraf__inputs_disk_enable: true
 telegraf__inputs_diskio_enable: true
@@ -12,13 +22,11 @@ telegraf__inputs_vsphere_enable: false
 telegraf__inputs_vsphere_password: ''
 telegraf__inputs_vsphere_username: ''
 telegraf__inputs_vsphere_vcenters: []
-
 telegraf__outputs_influxdb_database: ''
 telegraf__outputs_influxdb_password: ''
 telegraf__outputs_influxdb_skip_database_creation: true
 telegraf__outputs_influxdb_urls:
   - 'http://127.0.0.1:8086'
 telegraf__outputs_influxdb_username: ''
-
 telegraf__service_enabled: true
 telegraf__service_state: 'started'
