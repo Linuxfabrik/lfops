@@ -5,10 +5,12 @@
   roles:
 
     - role: 'linuxfabrik.lfops.selinux'
-      selinux__booleans__dependent_var:
-        - '{{ libreoffice__selinux__booleans__dependent_var }}'
-      selinux__fcontexts__dependent_var:
-        - '{{ libreoffice__selinux__fcontexts__dependent_var }}'
+      selinux__booleans__dependent_var: '{{
+          libreoffice__selinux__booleans__dependent_var
+        }}'
+      selinux__fcontexts__dependent_var: '{{
+          libreoffice__selinux__fcontexts__dependent_var
+        }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'libreoffice__client_apache is defined'

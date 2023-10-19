@@ -46,7 +46,8 @@
   - name: 'semanage port --add --type ... --proto ...'
     community.general.seport:
       setype: '{{ item["setype"] }}'
-      ports: '{{ item["ports"] }}'
+      ports:
+        - '{{ item["port"] }}'
       proto: '{{ item["proto"] | d("tcp") }}'
       state: '{{ item["state"] | d("present") }}'
       ignore_selinux_state: true

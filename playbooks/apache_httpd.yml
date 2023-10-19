@@ -19,8 +19,9 @@
         - 'not apache_httpd__skip_policycoreutils | default(false)'
 
     - role: 'linuxfabrik.lfops.selinux'
-      selinux__booleans__dependent_var:
-        - '{{ apache_httpd__selinux__booleans__dependent_var }}'
+      selinux__booleans__dependent_var: '{{
+          apache_httpd__selinux__booleans__dependent_var
+        }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not apache_httpd__skip_selinux | default(false)'

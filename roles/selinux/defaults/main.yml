@@ -3,29 +3,35 @@ selinux__state: 'enforcing'
 selinux__booleans__dependent_var: []
 selinux__booleans__group_var: []
 selinux__booleans__host_var: []
-selinux__booleans__combined_var: '{{
-  selinux__booleans__group_var +
-  selinux__booleans__host_var +
-  selinux__booleans__dependent_var
-  | flatten
- }}'
+selinux__booleans__role_var: []
+selinux__booleans__combined_var: '{{ (
+      selinux__booleans__role_var +
+      selinux__booleans__dependent_var +
+      selinux__booleans__group_var +
+      selinux__booleans__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="key")
+  }}'
 
 selinux__fcontexts__dependent_var: []
 selinux__fcontexts__group_var: []
 selinux__fcontexts__host_var: []
-selinux__fcontexts__combined_var: '{{
-  selinux__fcontexts__group_var +
-  selinux__fcontexts__host_var +
-  selinux__fcontexts__dependent_var
-  | flatten
- }}'
+selinux__fcontexts__role_var: []
+selinux__fcontexts__combined_var: '{{ (
+      selinux__fcontexts__role_var +
+      selinux__fcontexts__dependent_var +
+      selinux__fcontexts__group_var +
+      selinux__fcontexts__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["setype", "target"])
+  }}'
 
 selinux__ports__dependent_var: []
 selinux__ports__group_var: []
 selinux__ports__host_var: []
-selinux__ports__combined_var: '{{
-  selinux__ports__group_var +
-  selinux__ports__host_var +
-  selinux__ports__dependent_var
-  | flatten
- }}'
+selinux__ports__role_var: []
+selinux__ports__combined_var: '{{ (
+      selinux__ports__role_var +
+      selinux__ports__dependent_var +
+      selinux__ports__group_var +
+      selinux__ports__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["setype", "port", "proto"])
+  }}'

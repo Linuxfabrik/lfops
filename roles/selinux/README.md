@@ -34,7 +34,7 @@ Runs on
 | -------- | ----------- | ------------- |
 | `selinux__booleans__host_var` /<br> `selinux__booleans__group_var` | A list of dictionaries containing SELinux booleans to set persistently. Subkeys:<br> * `key`: Mandatory, string. Key of the SELinux boolean.<br> * `value`: Mandatory, string. Value of the SELinux boolean.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `selinux__fcontexts__host_var` /<br> `selinux__fcontexts__group_var` | A list of dictionaries containing SELinux file contexts. Subkeys:<br> * `setype`: Mandatory, string. SELinux file type.<br> * `target`: Mandatory, string. The FILE_SPEC which maps file paths using regular expressions to SELinux labels. Either a fully qualified path, or a Perl compatible regular expression (PCRE).<br> * `state`: Optional, string. Whether the SELinux file context must be `absent` or `present`. Defaults to `'present'`. | `[]` |
-| `selinux__fcontexts__host_var` /<br> `selinux__fcontexts__group_var` | A list of dictionaries containing SELinux ports. Subkeys:<ul><li>`setype`: Mandatory, string. SELinux port type.</li><li>`ports`: Mandatory, string. List of ports or port ranges.</li><li>`proto`: Optional, string. Protocol for the specified ports. Defaults to `'tcp'`.</li><li>`state`: Optional, string. Whether the SELinux port must be `absent` or `present`. Defaults to `'present'`.</li></ul> | `[]` |
+| `selinux__fcontexts__host_var` /<br> `selinux__fcontexts__group_var` | A list of dictionaries containing SELinux ports. Subkeys:<ul><li>`setype`: Mandatory, string. SELinux port type.</li><li>`port`: Mandatory, string. Port or port range.</li><li>`proto`: Optional, string. Protocol for the specified port (range). Defaults to `'tcp'`.</li><li>`state`: Optional, string. Whether the SELinux port must be `absent` or `present`. Defaults to `'present'`.</li></ul> | `[]` |
 | `selinux__state` | The SELinux state. Possible options:<br> * `disabled`<br> * `enforcing`<br> * `permissive` | `'enforcing'` |
 
 Example:
@@ -58,9 +58,9 @@ selinux__fcontexts__host_var:
     state: 'present'
 selinux__ports__host_var:
   - setype: http_port_t
-    ports:
-      - 8070
-      - 8448
+    port: '8070-8080'
+  - setype: ssh_port_t
+    port: 22
 selinux__state: 'enforcing'
 ```
 
