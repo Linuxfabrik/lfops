@@ -8,18 +8,18 @@
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy msi file from "/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi" to "C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi"'
+  - name: 'copy msi file from "/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi" to "{{ icinga2_agent__windows_download_path }}\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi"'
     ansible.windows.win_copy:
       src: '/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
-      dest: 'C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+      dest: '{{ icinga2_agent__windows_download_path }}\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
 
   - name: 'install Icinga2 packages'
     ansible.windows.win_package:
-      path: 'C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+      path: '{{ icinga2_agent__windows_download_path }}\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
 
-  - name: 'remove C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+  - name: 'remove {{ icinga2_agent__windows_download_path }}\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
     ansible.windows.win_file:
-      path: 'C:\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+      path: '{{ icinga2_agent__windows_download_path }}\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
       state: 'absent'
 
   # '&' -> https://ss64.com/ps/call.html
