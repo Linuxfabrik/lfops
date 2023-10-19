@@ -573,6 +573,17 @@ This means that the ``unique_key`` has to be a combination of ``conf_server_name
         ) | linuxfabrik.lfops.combine_lod(unique_key=["conf_server_name", "virtualhost_port"])
       }}'
 
+When setting a ``dependent_var`` in a playbook, make sure to use the following format to avoid needing to flatten the list:
+
+.. code-block:: yaml
+
+    - role: 'linuxfabrik.lfops.icinga2_master'
+      icinga2_master__api_users__dependent_var: '{{
+          icingadb__icinga2_master__api_users__dependent_var +
+          icingaweb2__icinga2_master__api_users__dependent_var +
+          icingaweb2_module_director__icinga2_master__api_users__dependent_var
+        }}'
+
 Note:
 
 * Have a look at ``ansible-doc --type filter linuxfabrik.lfops.combine_lod``.
