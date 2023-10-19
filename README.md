@@ -220,40 +220,6 @@ ansible --inventory path/to/inventory myhost -m debug -a "var=group_names"
 ```
 
 
-### Re-use values which are defined in `rolename__group_varname` in `rolename__host_varname` without duplicating them
-
-Nice trick for variables that get combined. Imagine you just want to add a single setting on a host, and want to avoid repeating all other settings (because if you do not specify them, they will be considered as "unset" on the host level). This is a real life example for the `linuxfabrik.lfops.login` role:
-
-group var:
-```yaml
-login__users__group_var:
-  - name: 'linuxfabrikadmin'
-    state: 'present'
-    additional_groups:
-      - 'sudo'
-    sshd_authorized_keys:
-      - 'ssh-rsa ...'
-      - 'ssh-rsa ...'
-      - 'ssh-ed25519 ...'
-      - 'ssh-ed25519 ...'
-      - 'ssh-ed25519 ...'
-```
-
-host_var - add some group definitions for the user, but get all ssh keys from group vars (which is the first entry in `login__users__group_var`, therefore get item `0` from the `login__users__group_var` list):
-```yaml
-login__users__host_var:
-  - name: 'linuxfabrikadmin'
-    state: 'present'
-    additional_groups:
-      - 'adm'
-      - 'cdrom'
-      - 'dip'
-      - 'lxd'
-      - 'plugdev'
-      - 'sudo'
-    sshd_authorized_keys: '{{ login__users__group_var.0.sshd_authorized_keys }}'
-```
-
 ## Known Limitations
 
 Combined lists and dictionaries (`rolename__combined_varname`) containing default values cannot be unset or overwritten, they can only be extended. If you need to overwrite to delete a pre-defined value, use `rolename__role_varname` or `rolename__combined_varname` and assign all needed values.
