@@ -7,8 +7,11 @@
     - role: 'linuxfabrik.lfops.maxmind_geoip'
 
     - role: 'linuxfabrik.lfops.systemd_unit'
-      systemd_unit__services__dependent_var: '{{ maxmind_geoip__systemd_unit__services__dependent_var | d([]) }}'
-      systemd_unit__timers__dependent_var: '{{ maxmind_geoip__systemd_unit__timers__dependent_var | d([]) }}'
+      systemd_unit__services__dependent_var: '{{
+          maxmind_geoip__systemd_unit__services__dependent_var
+        }}'
+      systemd_unit__timers__dependent_var: '{{
+          maxmind_geoip__systemd_unit__timers__dependent_var
+        }}'
       when:
         - 'not maxmind_geoip__skip_systemd_unit | d(false)'
-

@@ -2,28 +2,34 @@ systemd_unit__mounts__dependent_var: []
 systemd_unit__mounts__group_var: []
 systemd_unit__mounts__host_var: []
 systemd_unit__mounts__role_var: []
-systemd_unit__mounts__combined_var: '{{ systemd_unit__mounts__role_var +
-  systemd_unit__mounts__group_var +
-  systemd_unit__mounts__host_var +
-  systemd_unit__mounts__dependent_var
- }}'
+systemd_unit__mounts__combined_var: '{{ (
+      systemd_unit__mounts__role_var +
+      systemd_unit__mounts__dependent_var +
+      systemd_unit__mounts__group_var +
+      systemd_unit__mounts__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 
 systemd_unit__services__dependent_var: []
 systemd_unit__services__group_var: []
 systemd_unit__services__host_var: []
 systemd_unit__services__role_var: []
-systemd_unit__services__combined_var: '{{ systemd_unit__services__role_var +
-  systemd_unit__services__group_var +
-  systemd_unit__services__host_var +
-  systemd_unit__services__dependent_var
- }}'
+systemd_unit__services__combined_var: '{{ (
+      systemd_unit__services__role_var +
+      systemd_unit__services__dependent_var +
+      systemd_unit__services__group_var +
+      systemd_unit__services__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 
 systemd_unit__timers__dependent_var: []
 systemd_unit__timers__group_var: []
 systemd_unit__timers__host_var: []
 systemd_unit__timers__role_var: []
-systemd_unit__timers__combined_var: '{{ systemd_unit__timers__role_var +
-  systemd_unit__timers__group_var +
-  systemd_unit__timers__host_var +
-  systemd_unit__timers__dependent_var
- }}'
+systemd_unit__timers__combined_var: '{{ (
+      systemd_unit__timers__role_var +
+      systemd_unit__timers__dependent_var +
+      systemd_unit__timers__group_var +
+      systemd_unit__timers__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
