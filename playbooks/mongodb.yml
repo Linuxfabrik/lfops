@@ -13,8 +13,9 @@
     - role: 'linuxfabrik.lfops.tar'
 
     - role: 'linuxfabrik.lfops.python_venv'
-      python_venv__venvs__dependent_var:
-        - '{{ mongodb__python_venv__venvs__dependent_var | d({}) }}'
+      python_venv__venvs__dependent_var: '{{
+          mongodb__python_venv__venvs__dependent_var
+        }}'
       when:
         - 'not mongodb__skip_python_venv | d(false)'
 

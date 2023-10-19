@@ -10,8 +10,9 @@
         - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
 
     - role: 'linuxfabrik.lfops.python_venv'
-      python_venv__venvs__dependent_var:
-        - '{{ duplicity__python_venv__venvs__dependent_var | d({}) }}'
+      python_venv__venvs__dependent_var: '{{
+          duplicity__python_venv__venvs__dependent_var
+        }}'
       when:
         - 'not duplicity__skip_python_venv | d(false)'
 

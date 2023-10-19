@@ -2,10 +2,10 @@ python_venv__venvs__dependent_var: []
 python_venv__venvs__group_var: []
 python_venv__venvs__host_var: []
 python_venv__venvs__role_var: []
-
-python_venv__venvs__combined_var: '{{ python_venv__venvs__role_var +
-  python_venv__venvs__group_var +
-  python_venv__venvs__host_var +
-  python_venv__venvs__dependent_var
-  | flatten
- }}'
+python_venv__venvs__combined_var: '{{ (
+      python_venv__venvs__role_var +
+      python_venv__venvs__dependent_var +
+      python_venv__venvs__group_var +
+      python_venv__venvs__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'

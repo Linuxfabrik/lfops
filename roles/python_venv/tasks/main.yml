@@ -36,6 +36,18 @@
     loop: '{{ python_venv__venvs__combined_var }}'
     loop_control:
       loop_var: 'venv'
+    when:
+      - 'venv["state"] | d("present") != "absent"'
+
+  - name: 'Remove venvs'
+    ansible.builtin.file:
+      path: '/opt/python_venv/{{ venv["name"] }}'
+      state: 'absent'
+    loop: '{{ python_venv__venvs__combined_var }}'
+    loop_control:
+      loop_var: 'venv'
+    when:
+      - 'venv["state"] | d("present") == "absent"'
 
   tags:
     - 'python_venv'

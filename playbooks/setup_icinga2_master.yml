@@ -42,8 +42,9 @@
         - 'not setup_icinga2_master__skip_repo_influxdb | default(false)'
 
     - role: 'linuxfabrik.lfops.python_venv'
-      python_venv__venvs__dependent_var:
-        - '{{ influxdb__python_venv__venvs__dependent_var }}'
+      python_venv__venvs__dependent_var: '{{
+          influxdb__python_venv__venvs__dependent_var
+        }}'
       when:
         - 'not setup_icinga2_master__skip_python_venv | default(false)'
 

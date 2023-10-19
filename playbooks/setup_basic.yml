@@ -156,8 +156,9 @@
 
     # === Backups ===
     - role: 'linuxfabrik.lfops.python_venv'
-      python_venv__venvs__dependent_var:
-        - '{{ duplicity__python_venv__venvs__dependent_var | d({}) }}'
+      python_venv__venvs__dependent_var: '{{
+          duplicity__python_venv__venvs__dependent_var
+        }}'
       when:
         - 'not setup_basic__skip_python_venv | d(false)'
 
