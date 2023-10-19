@@ -38,8 +38,9 @@
       path: '/etc/rsyslog.d/{{ item["filename"] }}.conf'
       mode: 0o644
       state: 'absent'
+    when:
+      - 'item["state"] | d("present") == "absent"'
     loop: '{{ rsyslog__conf__combined_var }}'
-    when: 'item["state"] | d("present") == "absent"'
     notify: 'rsyslog: restart rsyslog'
 
   - name: 'Create conf files in /etc/rsyslog.d/'
@@ -49,7 +50,8 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    when: 'item["state"] | d("present") != "absent"'
+    when:
+      - 'item["state"] | d("present") != "absent"'
     loop: '{{ rsyslog__conf__combined_var }}'
     notify: 'rsyslog: restart rsyslog'
 

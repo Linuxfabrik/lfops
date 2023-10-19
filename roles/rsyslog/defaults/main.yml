@@ -1,13 +1,14 @@
-rsyslog__conf__combined_var: '{{
-    rsyslog__conf__role_var +
-    rsyslog__conf__dependent_var +
-    rsyslog__conf__group_var +
-    rsyslog__conf__host_var
-  }}'
 rsyslog__conf__dependent_var: []
 rsyslog__conf__group_var: []
 rsyslog__conf__host_var: []
 rsyslog__conf__role_var: []
+rsyslog__conf__combined_var: '{{ (
+      rsyslog__conf__role_var +
+      rsyslog__conf__dependent_var +
+      rsyslog__conf__group_var +
+      rsyslog__conf__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 
 rsyslog__service_enabled: true
 rsyslog__service_state: 'started'
