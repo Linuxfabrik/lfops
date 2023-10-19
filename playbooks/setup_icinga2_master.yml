@@ -48,11 +48,13 @@
         - 'not setup_icinga2_master__skip_python_venv | default(false)'
 
     - role: 'linuxfabrik.lfops.influxdb'
-      influxdb__databases__dependent_var:
-        - '{{ icinga2_master__influxdb__databases__dependent_var }}'
-      influxdb__users__dependent_var:
-        - '{{ icinga2_master__influxdb__users__dependent_var }}'
-        - '{{ monitoring_plugins_grafana_dashboards__influxdb__users__dependent_var }}'
+      influxdb__databases__dependent_var: '{{
+          icinga2_master__influxdb__databases__dependent_var
+        }}'
+      influxdb__users__dependent_var: '{{
+          icinga2_master__influxdb__users__dependent_var +
+          monitoring_plugins_grafana_dashboards__influxdb__users__dependent_var
+        }}'
       when:
         - 'not setup_icinga2_master__skip_influxdb | default(false)'
 

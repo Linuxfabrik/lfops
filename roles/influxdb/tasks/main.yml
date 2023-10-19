@@ -112,6 +112,8 @@
       duration: '{{ item.retention }}'
       replication: 1
       default: true
+    when:
+      - 'item["state"] | d("present") != "absent"'
     loop: '{{ influxdb__databases__combined_var }}'
     vars:
       ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'

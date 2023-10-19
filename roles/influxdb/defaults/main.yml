@@ -6,23 +6,26 @@ influxdb__databases__dependent_var: []
 influxdb__databases__group_var: []
 influxdb__databases__host_var: []
 influxdb__databases__role_var: []
-influxdb__databases__combined_var: '{{ influxdb__databases__role_var +
-  influxdb__databases__group_var +
-  influxdb__databases__host_var +
-  influxdb__databases__dependent_var
-  | flatten
- }}'
+influxdb__databases__combined_var: '{{ (
+      influxdb__databases__role_var +
+      influxdb__databases__dependent_var +
+      influxdb__databases__group_var +
+      influxdb__databases__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
 influxdb__dump_timer_enabled: true
 influxdb__users__dependent_var: []
 influxdb__users__group_var: []
 influxdb__users__host_var: []
 influxdb__users__role_var: []
-influxdb__users__combined_var: '{{ influxdb__users__role_var +
-  influxdb__users__group_var +
-  influxdb__users__host_var +
-  influxdb__users__dependent_var
-  | flatten
- }}'
+influxdb__users__combined_var: '{{ (
+      influxdb__users__role_var +
+      influxdb__users__dependent_var +
+      influxdb__users__group_var +
+      influxdb__users__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 
 influxdb__service_enabled: true
 
