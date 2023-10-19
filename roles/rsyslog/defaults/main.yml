@@ -7,7 +7,7 @@ rsyslog__conf__combined_var: '{{ (
       rsyslog__conf__dependent_var +
       rsyslog__conf__group_var +
       rsyslog__conf__host_var
-    ) | linuxfabrik.lfops.combine_lod
+    ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
   }}'
 
 rsyslog__service_enabled: true
