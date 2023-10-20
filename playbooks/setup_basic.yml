@@ -94,8 +94,9 @@
 
     # === Various tools / dependencies ===
     - role: 'linuxfabrik.lfops.python'
-      python__modules__dependent_var:
-        - '{{ monitoring_plugins__python__modules__dependent_var | d([]) }}'
+      python__modules__dependent_var: '{{
+          monitoring_plugins__python__modules__dependent_var
+        }}'
       when:
         - 'not setup_basic__skip_python | d(false)'
 

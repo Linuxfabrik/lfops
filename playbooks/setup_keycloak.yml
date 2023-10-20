@@ -18,7 +18,9 @@
         - 'not mariadb_server__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
-      python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var | d([]) }}'
+      python__modules__dependent_var: '{{
+          mariadb_server__python__modules__dependent_var
+        }}'
       when:
         - 'not mariadb_server__skip_python | d(false)'
 

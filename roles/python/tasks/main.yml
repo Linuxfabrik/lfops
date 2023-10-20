@@ -12,8 +12,14 @@
 
   - name: 'Install additional python modules'
     ansible.builtin.package:
-      name: "{{ python__modules__combined_var }}"
+      name: '{{ (python__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+          + (python__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
+
+  - name: 'Remove additional python modules'
+    ansible.builtin.package:
+      name: '{{ python__modules__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
+      state: 'absent'
 
   # block
   when: 'ansible_facts["os_family"] != "Windows"'

@@ -1,15 +1,13 @@
-python__version: 3
-
-# -----------------------------------------------------------------------------
-
 python__modules__dependent_var: []
 python__modules__group_var: []
 python__modules__host_var: []
 python__modules__role_var: []
+python__modules__combined_var: '{{ (
+      python__modules__role_var +
+      python__modules__dependent_var +
+      python__modules__group_var +
+      python__modules__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 
-python__modules__combined_var: '{{ python__modules__role_var +
-  python__modules__group_var +
-  python__modules__host_var +
-  python__modules__dependent_var
-  | flatten
- }}'
+python__version: 3

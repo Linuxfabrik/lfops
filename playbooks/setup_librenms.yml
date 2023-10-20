@@ -41,8 +41,9 @@
         - 'not setup_librenms__skip_selinux | default(false)'
 
     - role: 'linuxfabrik.lfops.python'
-      python__modules__dependent_var:
-        - '{{ mariadb_server__python__modules__dependent_var | default([]) }}'
+      python__modules__dependent_var: '{{
+          mariadb_server__python__modules__dependent_var
+        }}'
       when:
         - 'not librenms__skip_python | default(false)'
 

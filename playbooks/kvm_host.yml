@@ -5,7 +5,9 @@
   roles:
 
     - role: 'linuxfabrik.lfops.python'
-      python__modules__dependent_var: '{{ kvm_host__python__modules__dependent_var | d([]) }}'
+      python__modules__dependent_var: '{{
+          kvm_host__python__modules__dependent_var
+        }}'
       when:
         - 'not kvm_host__skip_python | d(false)'
 

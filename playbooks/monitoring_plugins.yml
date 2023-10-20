@@ -10,7 +10,9 @@
         - 'not monitoring_plugins__skip_repo_epel | d(true)'
 
     - role: 'linuxfabrik.lfops.python'
-      python__modules__dependent_var: '{{ monitoring_plugins__python__modules__dependent_var | d([]) }}'
+      python__modules__dependent_var: '{{
+          monitoring_plugins__python__modules__dependent_var
+        }}'
       when:
         - 'ansible_facts["os_family"] != "Windows"'
         - 'not monitoring_plugins__skip_python | d(true)'

@@ -19,7 +19,9 @@
         - 'not icingaweb2__skip_repo_mariadb | default(false)'
 
     - role: 'linuxfabrik.lfops.python'
-      python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var | default([]) }}'
+      python__modules__dependent_var: '{{
+          mariadb_server__python__modules__dependent_var
+        }}'
       when:
         - 'not icingaweb2__skip_python | default(false)'
 

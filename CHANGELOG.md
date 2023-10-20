@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role:python
+* Changed `python__modules__*_var` to a list of dictionaries from a list of strings.
+
 Role:selinux
 * Changed `ports` subkey of `selinux__ports__*_var` to `port`, accepting only a single port or port range, not a list of ports / port ranges.
 

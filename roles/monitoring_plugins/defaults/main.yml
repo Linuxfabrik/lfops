@@ -1,7 +1,7 @@
 monitoring_plugins__icinga2_cn: '{{ ansible_facts["nodename"] }}'
 monitoring_plugins__linux_variant: 'package'
 monitoring_plugins__python__modules__dependent_var:
-  - 'python3-psutil'
+  - name: 'python3-psutil'
 monitoring_plugins__repo_version: '{{ lfops__monitoring_plugins_version | default("latest") }}'
 monitoring_plugins__skip_notification_plugins__combined_var: '{{
     monitoring_plugins__skip_notification_plugins__host_var if (monitoring_plugins__skip_notification_plugins__host_var | string | length) else

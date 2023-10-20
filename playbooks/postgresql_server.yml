@@ -5,7 +5,9 @@
   roles:
 
     - role: 'linuxfabrik.lfops.python'
-      python__modules__dependent_var: '{{ postgresql_server__python__modules__dependent_var | d([]) }}'
+      python__modules__dependent_var: '{{
+          postgresql_server__python__modules__dependent_var
+        }}'
       when:
         - 'not postgresql_server__skip_python | d(false)'
 
