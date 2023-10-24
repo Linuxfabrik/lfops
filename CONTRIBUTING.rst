@@ -503,7 +503,7 @@ The role must always implement some sort of ``state`` key, otherwise the user ca
         virtualhost_port: 80
         template: 'localhost'
 
-Without the ``state`` key, the user has no way of achieving this, as they cannot remove previously defined elements from the list via the inventory. With the ``state`` key, the combine_lod-filter will remove the vHost:
+Without the ``state`` key, the user has no way of achieving this, as they cannot remove previously defined elements from the list via the inventory. With the ``state`` key, the role knows it has to remove the vHost:
 
 .. code-block:: yaml
 
