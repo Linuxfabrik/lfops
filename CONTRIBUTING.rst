@@ -114,7 +114,7 @@ Quotes
     # double quotes w/ nested single quotes
     - name: 'start all robots'
       ansible.builtin.service:
-        name: '{{ item["robot_name"] }}''
+        name: '{{ item["robot_name"] }}'
         state: 'started'
         enabled: true
       with_items: '{{ robots }}'
@@ -559,9 +559,7 @@ Or in a Jinja2 template:
     <role rolename="{{ role['name'] }}"/>
     {% endfor %}
 
-The vHost example above can be used to showcase another feature of ``linuxfabrik.lfops.combine_lod``.
-Normally the list elements are merged based on a ``unique_key`` which was to match, for example the ``name`` key. However, this does not work with ``conf_server_name``, as one can have a vHost with the same ``conf_server_name`` for multiple ports.
-This means that the ``unique_key`` has to be a combination of ``conf_server_name`` and ``virtualhost_port``:
+The vHost example above can be used to demonstrate another feature of ``linuxfabrik.lfops.combine_lod``. Normally, the list items are combined based on a ``unique_key`` that should match, for example, the ``name`` key. However, this does not work with ``conf_server_name`` because you can have a vHost with the same ``conf_server_name`` for multiple ports. This means that the ``unique_key`` must be a *combination* of ``conf_server_name`` and ``virtualhost_port``.:
 
 .. code-block:: yaml
 
