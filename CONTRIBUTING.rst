@@ -461,7 +461,7 @@ For example, the user can overwrite a specific configuration role default (``__r
 
 Furthermore, other roles can also inject their sensible defaults via the ``__dependent_var``, with a higher precedence than the role defaults, but lower than the user's inventory.
 
-To enable this behaviour, one needs to define the ``__combined_var`` as follows:
+To enable this behavior, you must define the ``__combined_var`` as follows:
 
 .. code-block:: yaml
 
@@ -492,7 +492,7 @@ To enable this behaviour, one needs to define the ``__combined_var`` as follows:
 
 The ``__combined_var`` will then be used in the tasks or templates of the role.
 
-The role always has to implement some sort of ``state`` key, else the user cannot "unselect" a value defined in the defaults. Imagine the user wants to disable the default localhost vHost of the Apache HTTPd role:
+The role must always implement some sort of ``state`` key, otherwise the user cannot "unselect" a value defined in the defaults. Suppose the user wants to disable the default localhost vHost of the Apache HTTPd role:
 
 .. code-block:: yaml
 
@@ -503,7 +503,7 @@ The role always has to implement some sort of ``state`` key, else the user canno
         virtualhost_port: 80
         template: 'localhost'
 
-Without the `state` key, the user has no way of achieving this, as they cannot remove previously defined elements from the list via the inventory. With the ``state`` key
+Without the ``state`` key, the user has no way of achieving this, as they cannot remove previously defined elements from the list via the inventory. With the ``state`` key, the combine_lod-filter will remove the vHost:
 
 .. code-block:: yaml
 
@@ -513,8 +513,6 @@ Without the `state` key, the user has no way of achieving this, as they cannot r
       - conf_server_name: 'localhost'
         virtualhost_port: 80
         state: 'absent'
-
-will remove the vHost.
 
 The handling of the state in the role can look something like this, assuming the default value for ``state`` is ``present``:
 
@@ -585,7 +583,7 @@ When setting a ``dependent_var`` in a playbook, make sure to use the following f
 Note:
 
 * Have a look at ``ansible-doc --type filter linuxfabrik.lfops.combine_lod``.
-* Always use lists of dictionaries or simple values. Never use dictionaries, even though they allow overwriting of earlier elemens, since one cannot template the keyname using Jinja2. This would prevent passing on of variables, especially in `__dependent_var`` (for details have a look at https://docs.linuxfabrik.ch/software/ansible.html#besonderheiten-von-ansible).
+* Always use lists of dictionaries or simple values. Never use dictionaries, even though they allow overwriting of earlier elemens, since one cannot template the keyname using Jinja2. This would prevent passing on of variables, especially in ``__dependent_var`` (for details have a look at https://docs.linuxfabrik.ch/software/ansible.html#besonderheiten-von-ansible).
 * Simple value ``__combined_var`` are always returned as strings. Convert them to integers when using maths.
 
 
