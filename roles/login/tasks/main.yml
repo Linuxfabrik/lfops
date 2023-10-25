@@ -26,6 +26,7 @@
     ansible.builtin.user:
       append: false
       create_home: true
+      group: '{{ item["primary_group"] | d(omit) }}'
       groups: '{{ item["additional_groups"] | d([]) }}'
       home: '{{ item["home"] | d(omit) }}'
       name: '{{ item["name"] }}'
