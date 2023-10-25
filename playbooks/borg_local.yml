@@ -1,0 +1,17 @@
+- name: 'Install and configure borg for local backups'
+  hosts:
+    - 'lfops_borg_local'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.borg_local'
+
+    - role: 'linuxfabrik.lfops.systemd_unit'
+      systemd_unit__services__dependent_var: '{{
+          borg_local__systemd_unit__services__dependent_var
+        }}'
+      systemd_unit__timers__dependent_var: '{{
+          borg_local__systemd_unit__timers__dependent_var
+        }}'
+      when:
+        - 'not borg_local__skip_systemd_unit | d(false)'

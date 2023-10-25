@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2023102401
+
+FILES_INCLUDE="{{ borg_include_files }}"
+FILES_EXCLUDE="{{ borg_exclude_files }}"
+
+RETENTION_DAILY={{ borg_retention_daily | default('14d') }}
+RETENTION_HOURLY={{ borg_retention_hourly | default('99H') }}
+RETENTION_ONDEMAND=30d
+
+BACKUP_DIR={{ borg_backup_dir }}
+BACKUP_OPTS="--stats --progress --one-file-system --compression lz4 --checkpoint-interval 86400"
+
+export BORG_RELOCATED_REPO_ACCESS_IS_OK={{ borg_relocated_repo_access_is_ok|default('no') }}
+export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=no
+export BORG_PASSPHRASE="$(cat /etc/borg/borg-passphrase)"

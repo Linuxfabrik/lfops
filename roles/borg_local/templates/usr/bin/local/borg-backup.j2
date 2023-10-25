@@ -1,0 +1,55 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# 2023102401
+
+systemctl is-active clamd@scan.service --quiet
+if [[ $? -eq 0 ]]; then
+    # needed for Icinga to set clamd@scan service downtime (max. 90 minutes downtime)
+    # START_TIME=$(date +%s)
+    # END_TIME=$(( $START_TIME + 5400 ))
+    # DATA="{ \"type\": \"Service\", \"filter\": \"match(\\\"*{{ ansible_facts['hostname'] }}*\\\", host.name) && match(\\\"*Systemd Unit - clamd@scan*\\\", service.name)\", \"start_time\": \"$START_TIME\", \"end_time\": \"$END_TIME\", \"author\": \"{{ ansible_facts['fqdn'] }}\", \"comment\": \"Disabling clamd@scan during borg backup.\" }"
+    # curl --connect-timeout 5 --insecure --silent --user {{ icinga2_api_user | default('') }}:{{ icinga2_api_password | default('') }} --header 'Accept: application/json' --request POST 'https://{{ icinga2_master | default('') }}:5665/v1/actions/schedule-downtime' --data "$DATA" 1> /dev/null
+    # sleep 5
+
+    systemctl stop clamd@scan.service
+    start_clamd=1
+fi
+
+
+if [ "$1" == "daily" ]; then
+    source /etc/borg/borg.conf
+    DATE=$(date +"%Y%m%d")
+    BORG_REPO=$BACKUP_DIR/daily
+    echo "start: $(date +'%Y-%m-%d %H:%M:%S')" > /var/log/borg/borg.log
+    borg prune --list --keep-within=$RETENTION_DAILY $BORG_REPO &> /var/log/borg/borg-prune.log
+    echo "prune_retc: $?" >> /var/log/borg/borg.log
+    borg create $BACKUP_OPTS $FILES_EXCLUDE $BORG_REPO::$DATE $FILES_INCLUDE &> /var/log/borg/borg-create.log
+    echo "create_retc: $?" >> /var/log/borg/borg.log
+    echo "end: $(date +'%Y-%m-%d %H:%M:%S')" >> /var/log/borg/borg.log
+elif [ "$1" == "hourly" ]; then
+    source /etc/borg/borg.conf
+    DATE=$(date +"%Y%m%d-%H")
+    BORG_REPO=$BACKUP_DIR/hourly
+    echo "start: $(date +'%Y-%m-%d %H:%M:%S')" > /var/log/borg/borg.log
+    borg prune --list --keep-within=$RETENTION_HOURLY $BORG_REPO &> /var/log/borg/borg-prune.log
+    echo "prune_retc: $?" >> /var/log/borg/borg.log
+    borg create $BACKUP_OPTS $FILES_EXCLUDE $BORG_REPO::$DATE $FILES_INCLUDE &> /var/log/borg/borg-create.log
+    echo "create_retc: $?" >> /var/log/borg/borg.log
+    echo "end: $(date +'%Y-%m-%d %H:%M:%S')" >> /var/log/borg/borg.log
+else
+    # any other parameter: on demand / manual / ad-hoc backup
+    source /etc/borg/borg.conf
+    DATE=$(date +"%Y%m%d-%H%M%S")
+    BORG_REPO=$BACKUP_DIR/on-demand
+    borg prune --list --keep-within=$RETENTION_ONDEMAND $BORG_REPO
+    borg create $BACKUP_OPTS $FILES_EXCLUDE $BORG_REPO::$DATE $FILES_INCLUDE
+fi
+
+
+if [[ $start_clamd -eq 1 ]]; then
+    systemctl start clamd@scan.service
+
+    # remove Icinga downtime
+    # DATA="{ \"type\": \"Service\", \"filter\": \"match(\\\"*{{ ansible_facts['hostname'] }}*\\\", host.name) && match(\\\"*Systemd Unit - clamd@scan*\\\", service.name)\" }"
+    # curl --insecure --silent --user {{ icinga2_api_user }}:{{ icinga2_api_password }} --header 'Accept: application/json' --request POST 'https://{{ icinga2_master }}:5665/v1/actions/remove-downtime' --data "$DATA" 1> /dev/null
+fi
