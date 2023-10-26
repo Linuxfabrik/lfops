@@ -1,13 +1,33 @@
-collabora__coolwsd_allowed_languages:
-  - 'de_AT'
-  - 'de_CH'
-  - 'de_DE'
-  - 'en_AU'
-  - 'en_CA'
-  - 'en_GB'
-  - 'en_US'
-  - 'fr'
-  - 'it_IT'
+collabora__coolwsd_allowed_languages__dependent_var: []
+collabora__coolwsd_allowed_languages__group_var: []
+collabora__coolwsd_allowed_languages__host_var: []
+collabora__coolwsd_allowed_languages__role_var:
+  - name: 'de_AT'
+    state: 'present'
+  - name: 'de_CH'
+    state: 'present'
+  - name: 'de_DE'
+    state: 'present'
+  - name: 'en_AU'
+    state: 'present'
+  - name: 'en_CA'
+    state: 'present'
+  - name: 'en_GB'
+    state: 'present'
+  - name: 'en_US'
+    state: 'present'
+  - name: 'fr'
+    state: 'present'
+  - name: 'it_IT'
+    state: 'present'
+collabora__coolwsd_allowed_languages__combined_var: '{{ (
+      collabora__coolwsd_allowed_languages__role_var +
+      collabora__coolwsd_allowed_languages__dependent_var +
+      collabora__coolwsd_allowed_languages__group_var +
+      collabora__coolwsd_allowed_languages__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
 collabora__coolwsd_deepl_api_url: 'https://api-free.deepl.com/v2/translate'
 collabora__coolwsd_deepl_auth_key: ''
 collabora__coolwsd_deepl_enabled: false
@@ -20,48 +40,71 @@ collabora__coolwsd_ssl_settings_ca_file_path: '/etc/coolwsd/ca-chain.cert.pem'
 collabora__coolwsd_ssl_settings_cert_file_path: '/etc/coolwsd/cert.pem'
 collabora__coolwsd_ssl_settings_key_file_path: '/etc/coolwsd/key.pem'
 collabora__coolwsd_ssl_termination: true
-collabora__coolwsd_storage_wopi__combined_var: '{{ collabora__coolwsd_storage_wopi__role_var +
-  collabora__coolwsd_storage_wopi__group_var +
-  collabora__coolwsd_storage_wopi__host_var +
-  collabora__coolwsd_storage_wopi__dependent_var
-  | flatten
- }}'
 collabora__coolwsd_storage_wopi__dependent_var: []
 collabora__coolwsd_storage_wopi__group_var: []
 collabora__coolwsd_storage_wopi__host_var: []
 collabora__coolwsd_storage_wopi__role_var: []
-collabora__language_packages__combined_var: '{{ collabora__language_packages__role_var +
-  collabora__language_packages__group_var +
-  collabora__language_packages__host_var +
-  collabora__language_packages__dependent_var
-  | flatten
- }}'
+collabora__coolwsd_storage_wopi__combined_var: '{{ (
+      collabora__coolwsd_storage_wopi__role_var +
+      collabora__coolwsd_storage_wopi__dependent_var +
+      collabora__coolwsd_storage_wopi__group_var +
+      collabora__coolwsd_storage_wopi__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
 collabora__language_packages__dependent_var: []
 collabora__language_packages__group_var: []
 collabora__language_packages__host_var: []
 collabora__language_packages__role_var:
   # de
-  - 'collaboraoffice-dict-de'
-  - 'collaboraofficebasis-de'
-  - 'mythes-de'
-  - 'hunspell-de'
+  - name: 'collaboraoffice-dict-de'
+    state: 'present'
+  - name: 'collaboraofficebasis-de'
+    state: 'present'
+  - name: 'mythes-de'
+    state: 'present'
+  - name: 'hunspell-de'
+    state: 'present'
   # en
-  - 'collaboraoffice-dict-en'
-  - 'collaboraofficebasis-en-GB'
-  - 'collaboraofficebasis-en-US'
-  - 'mythes-en'
-  - 'hunspell-en'
-  - 'hunspell-en-GB'
-  - 'hunspell-en-US'
+  - name: 'collaboraoffice-dict-en'
+    state: 'present'
+  - name: 'collaboraofficebasis-en-GB'
+    state: 'present'
+  - name: 'collaboraofficebasis-en-US'
+    state: 'present'
+  - name: 'mythes-en'
+    state: 'present'
+  - name: 'hunspell-en'
+    state: 'present'
+  - name: 'hunspell-en-GB'
+    state: 'present'
+  - name: 'hunspell-en-US'
+    state: 'present'
   # fr
-  - 'collaboraoffice-dict-fr'
-  - 'collaboraofficebasis-fr'
-  - 'mythes-fr'
-  - 'hunspell-fr'
+  - name: 'collaboraoffice-dict-fr'
+    state: 'present'
+  - name: 'collaboraofficebasis-fr'
+    state: 'present'
+  - name: 'mythes-fr'
+    state: 'present'
+  - name: 'hunspell-fr'
+    state: 'present'
   # it
-  - 'collaboraoffice-dict-it'
-  - 'collaboraofficebasis-it'
-  - 'mythes-it'
-  - 'hunspell-it'
+  - name: 'collaboraoffice-dict-it'
+    state: 'present'
+  - name: 'collaboraofficebasis-it'
+    state: 'present'
+  - name: 'mythes-it'
+    state: 'present'
+  - name: 'hunspell-it'
+    state: 'present'
+collabora__language_packages__combined_var: '{{ (
+      collabora__language_packages__role_var +
+      collabora__language_packages__dependent_var +
+      collabora__language_packages__group_var +
+      collabora__language_packages__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
 collabora__service_enabled: true
 collabora__use_code: true

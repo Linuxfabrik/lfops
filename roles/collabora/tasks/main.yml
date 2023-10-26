@@ -61,10 +61,20 @@
         - 'mythes'
       state: 'present'
 
+  - name: 'Combined Language Packages:'
+    ansible.builtin.debug:
+      var: 'collabora__language_packages__combined_var'
+
   - name: 'install language packages'
     ansible.builtin.package:
-      name: '{{ collabora__language_packages__combined_var }}'
+      name: '{{ (collabora__language_packages__combined_var  | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+          + (collabora__language_packages__combined_var  | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
+
+  - name: 'remove language packages'
+    ansible.builtin.package:
+      name: '{{ collabora__language_packages__combined_var  | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
+      state: 'absent'
 
   tags:
     - 'collabora'
