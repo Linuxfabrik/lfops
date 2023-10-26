@@ -3,27 +3,35 @@ duplicity__backup_dest_container: '{{ ansible_nodename }}'
 duplicity__backup_full_if_older_than: '30D'
 duplicity__backup_retention_time: '30D'
 
+duplicity__backup_sources__dependent_var: []
 duplicity__backup_sources__group_var: []
 duplicity__backup_sources__host_var: []
 duplicity__backup_sources__role_var:
   - path: '/backup'
     divide: false
+    state: 'present'
   - path: '/etc'
     divide: false
+    state: 'present'
   - path: '/home'
     divide: false
+    state: 'present'
   - path: '/opt'
     divide: false
+    state: 'present'
   - path: '/root'
     divide: false
+    state: 'present'
   - path: '/var/spool/cron'
     divide: false
-duplicity__backup_sources__combined_var: '{{
-    duplicity__backup_sources__role_var +
-    duplicity__backup_sources__group_var +
-    duplicity__backup_sources__host_var
-    | flatten
- }}'
+    state: 'present'
+duplicity__backup_sources__combined_var: '{{ (
+      duplicity__backup_sources__role_var +
+      duplicity__backup_sources__dependent_var +
+      duplicity__backup_sources__group_var +
+      duplicity__backup_sources__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
 
 duplicity__excludes:
   - '**/*.git*'
