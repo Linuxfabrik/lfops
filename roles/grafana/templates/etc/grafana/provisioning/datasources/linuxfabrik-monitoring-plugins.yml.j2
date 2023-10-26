@@ -5,9 +5,12 @@ apiVersion: 1
 
 deleteDatasources: []
 
-{% if grafana__provisioning_datasources__combined_var | length %}
+{% if (grafana__provisioning_datasources__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent")
+            + (grafana__provisioning_datasources__combined_var | selectattr("state", "undefined"))) | length %}
 datasources:
-{{ grafana__provisioning_datasources__combined_var | to_nice_yaml }}
+{% for item in grafana__provisioning_datasources__combined_var if item['state'] | d('present') != 'absent' %}
+  - {{ item | to_nice_yaml(indent=2) | indent(4) }}
+{% endfor %}
 {% else %}
 datasources: []
 {% endif %}
