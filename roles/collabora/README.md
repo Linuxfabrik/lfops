@@ -13,12 +13,14 @@ Runs on
 
 If you use the ["Collabora" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/collabora.yml), this is automatically done for you.
 
+
 ## Tags
 
 | Tag              | What it does                           |
 | ---              | ------------                           |
 | `collabora` | Installs and configures either Collabora CODE or Collabora Enterprise |
 | `collabora:spell_check` | Installs spell checking tools |
+
 
 ## Optional Role Variables
 
