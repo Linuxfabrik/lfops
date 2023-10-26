@@ -3,11 +3,11 @@
     "gpg_encrypt_master_key": "{{ duplicity__gpg_encrypt_master_key }}",
     "backup_sources": [
 {% for item in duplicity__backup_sources__combined_var if item['state'] | d('present') != 'absent' %}
-        {{ item | to_nice_json(indent=12) }}{% if not loop.last %},
+{{ item | to_nice_json | indent(8, first=True) }}{% if not loop.last %},
 {% endif %}
 {% endfor %}
     ],
-    "backup_excludes": {{ duplicity__excludes | to_nice_json(indent=8) }},
+    "backup_excludes": {{ duplicity__excludes | to_nice_json | indent(8) }},
     "backup_dest": "{{ duplicity__backup_dest }}",
     "retention_time": "{{ duplicity__backup_retention_time }}",
     "full_if_older_than": "{{ duplicity__backup_full_if_older_than }}",
