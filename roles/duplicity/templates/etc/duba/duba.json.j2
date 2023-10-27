@@ -1,20 +1,25 @@
 {
-  "gpg_encrypt_local_key": "{{ duplicity__gpg_encrypt_local_key["key"]["fingerprint"] }}",
-  "gpg_encrypt_master_key": "{{ duplicity__gpg_encrypt_master_key }}",
-  "backup_sources": {{ duplicity__backup_sources__combined_var | to_nice_json }},
-  "backup_excludes": {{ duplicity__excludes | to_nice_json }},
-  "backup_dest": "{{ duplicity__backup_dest }}",
-  "retention_time": "{{ duplicity__backup_retention_time }}",
-  "full_if_older_than": "{{ duplicity__backup_full_if_older_than }}",
-  "loglevel": "{{ duplicity__loglevel | d('notice') }}",
-  "logdir": "{{ duplicity__logdir | d('/var/log/duplicity') }}",
-  "backend": "{{ duplicity__backup_backend | d('swift') }}",
-  "env": {
-    "SWIFT_AUTHURL": "{{ duplicity__swift_authurl }}",
-    "SWIFT_USERNAME": "{{ duplicity__swift_login["username"] }}",
+    "gpg_encrypt_local_key": "{{ duplicity__gpg_encrypt_local_key["key"]["fingerprint"] }}",
+    "gpg_encrypt_master_key": "{{ duplicity__gpg_encrypt_master_key }}",
+    "backup_sources": [
+{% for item in duplicity__backup_sources__combined_var if item['state'] | d('present') != 'absent' %}
+{{ item | to_nice_json | indent(8, first=True) }}{% if not loop.last %},
+{% endif %}
+{% endfor %}
+    ],
+    "backup_excludes": {{ duplicity__excludes | to_nice_json | indent(8) }},
+    "backup_dest": "{{ duplicity__backup_dest }}",
+    "retention_time": "{{ duplicity__backup_retention_time }}",
+    "full_if_older_than": "{{ duplicity__backup_full_if_older_than }}",
+    "loglevel": "{{ duplicity__loglevel | d('notice') }}",
+    "logdir": "{{ duplicity__logdir | d('/var/log/duplicity') }}",
+    "backend": "{{ duplicity__backup_backend | d('swift') }}",
+    "env": {
+        "SWIFT_AUTHURL": "{{ duplicity__swift_authurl }}",
+        "SWIFT_USERNAME": "{{ duplicity__swift_login["username"] }}",
     "SWIFT_PASSWORD": "{{ duplicity__swift_login["password"] }}",
     "SWIFT_AUTHVERSION": "{{ duplicity__swift_authversion }}",
     "SWIFT_TENANTNAME": "{{ duplicity__swift_tenantname }}",
     "PASSPHRASE": ""
-  }
+    }
 }

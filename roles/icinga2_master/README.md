@@ -65,17 +65,30 @@ Example:
 # optional
 icinga2_master__api_users__group_var: []
 icinga2_master__api_users__host_var:
-  - username: 'ticket-user'
-    password: 'linuxfabrik'
+  - username: 'dashboard' # for example for grafinga
+    password: "{{ lookup('linuxfabrik.lfops.bitwarden_item',
+        {
+          'hostname': inventory_hostname,
+          'purpose': 'Icinga2 API',
+          'username': 'dashboard',
+          'collection_id': lfops__bitwarden_collection_id,
+          'organization_id': lfops__bitwarden_organization_id,
+        },
+      )['password'] }}"
     permissions:
-      - 'actions/generate-ticket'
-    state: 'present'
+      - 'objects/query/*'
+      - 'status/query'
   - username: 'downtime-user'
     password: 'linuxfabrik'
     permissions:
       - 'actions/schedule-downtime'
       - 'actions/remove-downtime'
       - 'actions/reschedule-check'
+    state: 'present'
+  - username: 'ticket-user'
+    password: 'linuxfabrik'
+    permissions:
+      - 'actions/generate-ticket'
     state: 'present'
   - username: 'check-logfile-windows-api-user'
     password: 'linuxfabrik'

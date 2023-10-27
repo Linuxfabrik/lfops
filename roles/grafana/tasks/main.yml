@@ -101,6 +101,10 @@
 
 - block:
 
+  - name: 'Combined Service Accounts:'
+    ansible.builtin.debug:
+      var: 'grafana__provisioning_service_accounts__combined_var'
+
   # https://grafana.com/docs/grafana/latest/developers/http_api/serviceaccount/
   - name: 'get list of service accounts'
     ansible.builtin.uri:
@@ -112,6 +116,7 @@
       headers:
         Accept: 'application/json'
     register: 'grafana__service_accounts_list_result'
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'create service accounts'
     ansible.builtin.uri:
@@ -131,7 +136,11 @@
         Accept: 'application/json'
     register: 'grafana__service_accounts_create_result'
     loop: '{{ grafana__provisioning_service_accounts__combined_var }}'
-    when: 'item["name"] not in grafana__service_accounts_list_result["json"]["serviceAccounts"] | map(attribute="name")'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["name"] not in grafana__service_accounts_list_result["json"]["serviceAccounts"] | map(attribute="name")'
     changed_when: true # the task is either skipped when the account already exists, or a new account is created
 
   - name: 'create tokens for service accounts'
@@ -151,6 +160,8 @@
         Accept: 'application/json'
     register: 'grafana__service_accounts_token_result'
     loop: '{{ grafana__service_accounts_create_result["results"] }}'
+    loop_control:
+      label: '{{ item["item"]["name"] }}'
     when:
       - 'not (item["skipped"] is defined and item["skipped"])'
     changed_when: true # the task is either skipped when the account already exists, or a new token is created

@@ -1,1 +1,8 @@
 grafana_grizzly__grafana_url: '{{ grafana__api_url }}'
+
+# -----------------------------------------------------------------------------
+
+grafana_grizzly__grafana__provisioning_service_accounts__dependent_var:
+  - name: '{{ grafana_grizzly__grafana_service_account_login["username"] }}'
+    role: 'Admin'
+    state: 'present'

@@ -119,7 +119,9 @@
         - 'not setup_nextcloud__skip_repo_collabora | default(true)'
 
     - role: 'linuxfabrik.lfops.collabora'
-      collabora__coolwsd_storage_wopi__dependent_var: '{{ nextcloud__collabora__coolwsd_storage_wopi__dependent_var | d([]) }}'
+      collabora__coolwsd_storage_wopi__dependent_var: '{{
+          nextcloud__collabora__coolwsd_storage_wopi__dependent_var
+        }}'
       when:
         - 'not setup_nextcloud__skip_collabora | d(false)'
 

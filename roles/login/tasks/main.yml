@@ -41,7 +41,7 @@
       user: '{{ item["name"] }}'
       state: 'present'
       key: "{{ item['sshd_authorized_keys'] | d([]) | join('\n') }}" # do not swap quotes - else \n will be used literally
-      exclusive: '{{ item["remove_other_sshd_authorized_keys"] | d(true) }}'
+      exclusive: '{{ item["remove_other_sshd_authorized_keys"] | d(false) }}'
     when: 'item["state"] | d("present") == "present"'
     loop: '{{ login__users__combined_var }}'
 

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role:collabora
+* Changed `collabora__coolwsd_storage_wopi__*_var` to a list of dictionaries from a list of strings.
+* Changed `collabora__language_packages__*_var` to a list of dictionaries from a list of strings.
+* Renamed `collabora__coolwsd_allowed_languages` to `collabora__coolwsd_allowed_languages__*_var` and changed it to a list of dictionaries from a list of strings.
+
 Role:python
 * Changed `python__modules__*_var` to a list of dictionaries from a list of strings.
 
