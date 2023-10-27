@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role:login
+* Changed default of `remove_other_sshd_authorized_keys` from `true` to `false`.
+
 Role:collabora
 * Changed `collabora__coolwsd_storage_wopi__*_var` to a list of dictionaries from a list of strings.
 * Changed `collabora__language_packages__*_var` to a list of dictionaries from a list of strings.
