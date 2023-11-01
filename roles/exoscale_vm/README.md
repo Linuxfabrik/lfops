@@ -56,7 +56,7 @@ exoscale_vm__zone: 'ch-dk-2'
 
 | Variable                 | Description | Default Value |
 | --------                 | ----------- | ------------- |
-| `exoscale_vm__disk_size` | The disk size in GBs. Has to be higher than 10. Note that shrinking of volumes is not supported, and that these changes will only be applied to stopped instances.| `10` |
+| `exoscale_vm__disk_size` | The disk size in GBs. Has to be higher than 10. Note that adjusting the disk size currently is currently not supported. | `10` |
 | `exoscale_vm__name` | The name of the instance. By default, the Ansible inventory name prefixed with `e` is used, as it has to start with a letter. | `'e{{ inventory_hostname }}'` |
 | `exoscale_vm__private_instance` | Boolean to choose if the instance should be "private" without a public IP, or not. | `false` |
 | `exoscale_vm__private_networks` | A list of dictionaries defining which networks should be attached to this instance. It also allows the creation of new internal networks, or setting a fixed IP for the instance. Subkeys: <ul><li>`name`: Mandatory, string. The name of an existing network, or the network which should be created.</li><li>`cidr`: Optional, string. If this is given, a new network with this cidr is created.</li><li>`fixed_ip`: Optional, string. The fixed IP of this instance. This can be used for attach to an existing network, or when creating a new one.</li></ul> | unset |
