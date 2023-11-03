@@ -37,6 +37,7 @@ Common:
 
 * Document all changes in the `CHANGELOG.md <https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md>`_ file.
 * Do not support and remove software versions that are EOL.
+* When implementing a role for a new application, consider security, monitoring and backups.
 
 
 Pre-Commit
