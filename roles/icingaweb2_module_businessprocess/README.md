@@ -36,6 +36,19 @@ icingaweb2_module_businessprocess__version: 'v2.4.0'
 ```
 
 
+## Optional Role Variables
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `icingaweb2_module_businessprocess__url` | The URL from where to download the IcingaWeb2 Business Process Module. | `https://github.com/Icinga/icingaweb2-module-businessprocess/archive/{{ icingaweb2_module_businessprocess__version }}.tar.gz` |
+
+Example:
+```yaml
+# optional
+icingaweb2_module_businessprocess__url: 'https://github.com/Linuxfabrik/icingaweb2-module-businessprocess/archive/{{ icingaweb2_module_businessprocess__version }}.tar.gz'
+```
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)
