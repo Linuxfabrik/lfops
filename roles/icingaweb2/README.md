@@ -25,8 +25,9 @@ Runs on
 | Tag                | What it does                                      |
 | ---                | ------------                                      |
 | `icingaweb2`       | Installs and configures IcingaWeb2                |
-| `icingaweb2:user`  | Creates user accounts and deploys the role config |
 | `icingaweb2:icons` | Deploys icon assets for IcingaWeb2                |
+| `icingaweb2:resources` | Deploys `/etc/icingaweb2/resources.ini`       |
+| `icingaweb2:user`  | Creates user accounts and deploys the role config |
 
 
 ## Mandatory Role Variables

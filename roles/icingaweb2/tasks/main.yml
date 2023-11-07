@@ -86,7 +86,6 @@
     loop:
       - 'authentication.ini'
       - 'config.ini'
-      - 'resources.ini'
       - 'groups.ini'
 
   - name: 'Deploy /etc/icingaweb2/navigation/menu.ini'
@@ -107,6 +106,21 @@
 
   tags:
     - 'icingaweb2'
+
+
+- block:
+
+  - name: 'Deploy /etc/icingaweb2/resources.ini'
+    ansible.builtin.template:
+      src: 'etc/icingaweb2/resources.ini.j2'
+      dest: '/etc/icingaweb2/resources.ini'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o660
+
+  tags:
+    - 'icingaweb2'
+    - 'icingaweb2:resources'
 
 
 - block:
