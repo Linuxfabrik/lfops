@@ -11,6 +11,7 @@
       cmd: 'df --output=size /var/log/journal'
     register: 'systemd_journald_var_log_journal_df_result'
     check_mode: false # run task even if `--check` is specified
+    changed_when: false # not an actual config change on the server
 
   - name: 'Deploy /etc/systemd/journald.conf'
     ansible.builtin.template:
