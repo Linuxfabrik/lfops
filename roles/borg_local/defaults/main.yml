@@ -6,7 +6,7 @@ borg_local__on_calendar_hourly: '*-*-* *:{{ 59 |random(start=45) }}'
 borg_local__exclude_files: "--exclude /root/.cache --exclude '*.svn*' --exclude '*.git*' --exclude '*.tmp' --exclude '*.temp' --exclude '*/cache/*' --exclude '*/log/*'"
 borg_local__include_files: '/etc /home /opt /root /var/spool/cron'
 borg_local__relocated_repo_access_is_ok: 'no' # has to be a string!
-borg_local__retention_daily: '90d'
+borg_local__retention_daily: '14d'
 borg_local__retention_hourly: '99H'
 borg_local__service_enabled: true
 
@@ -16,16 +16,24 @@ borg_local__systemd_unit__services__dependent_var:
       ExecStart=/usr/local/bin/borg-backup daily
       Type=oneshot
       User=root
+    state: 'present'
+    enabled: false
   - name: 'borg-backup-hourly'
     raw_service: |-
       ExecStart=/usr/local/bin/borg-backup hourly
       Type=oneshot
       User=root
+    state: 'present'
+    enabled: false
 
 borg_local__systemd_unit__timers__dependent_var:
   - name: 'borg-backup-daily'
     raw_timer: |-
       OnCalendar={{ borg_local__on_calendar_daily }}
+    state: 'present'
+    enabled: false
   - name: 'borg-backup-hourly'
     raw_timer: |-
       OnCalendar={{ borg_local__on_calendar_hourly }}
+    state: 'present'
+    enabled: false

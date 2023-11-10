@@ -4,13 +4,15 @@
 
 systemctl is-active clamd@scan.service --quiet
 if [[ $? -eq 0 ]]; then
+{% if icinga2_api_user is defined and icinga2_api_user | length %}
     # needed for Icinga to set clamd@scan service downtime (max. 90 minutes downtime)
-    # START_TIME=$(date +%s)
-    # END_TIME=$(( $START_TIME + 5400 ))
-    # DATA="{ \"type\": \"Service\", \"filter\": \"match(\\\"*{{ ansible_facts['hostname'] }}*\\\", host.name) && match(\\\"*Systemd Unit - clamd@scan*\\\", service.name)\", \"start_time\": \"$START_TIME\", \"end_time\": \"$END_TIME\", \"author\": \"{{ ansible_facts['fqdn'] }}\", \"comment\": \"Disabling clamd@scan during borg backup.\" }"
-    # curl --connect-timeout 5 --insecure --silent --user {{ icinga2_api_user | default('') }}:{{ icinga2_api_password | default('') }} --header 'Accept: application/json' --request POST 'https://{{ icinga2_master | default('') }}:5665/v1/actions/schedule-downtime' --data "$DATA" 1> /dev/null
-    # sleep 5
+    START_TIME=$(date +%s)
+    END_TIME=$(( $START_TIME + 5400 ))
+    DATA="{ \"type\": \"Service\", \"filter\": \"match(\\\"*{{ ansible_facts['hostname'] }}*\\\", host.name) && match(\\\"*Systemd Unit - clamd@scan*\\\", service.name)\", \"start_time\": \"$START_TIME\", \"end_time\": \"$END_TIME\", \"author\": \"{{ ansible_facts['fqdn'] }}\", \"comment\": \"Disabling clamd@scan during borg backup.\" }"
+    curl --connect-timeout 5 --insecure --silent --user {{ icinga2_api_user | default('') }}:{{ icinga2_api_password | default('') }} --header 'Accept: application/json' --request POST 'https://{{ icinga2_master | default('') }}:5665/v1/actions/schedule-downtime' --data "$DATA" 1> /dev/null
+    sleep 5
 
+{% endif %}
     systemctl stop clamd@scan.service
     start_clamd=1
 fi
@@ -48,8 +50,10 @@ fi
 
 if [[ $start_clamd -eq 1 ]]; then
     systemctl start clamd@scan.service
+{% if icinga2_api_user is defined and icinga2_api_user | length %}
 
     # remove Icinga downtime
-    # DATA="{ \"type\": \"Service\", \"filter\": \"match(\\\"*{{ ansible_facts['hostname'] }}*\\\", host.name) && match(\\\"*Systemd Unit - clamd@scan*\\\", service.name)\" }"
-    # curl --insecure --silent --user {{ icinga2_api_user }}:{{ icinga2_api_password }} --header 'Accept: application/json' --request POST 'https://{{ icinga2_master }}:5665/v1/actions/remove-downtime' --data "$DATA" 1> /dev/null
+    DATA="{ \"type\": \"Service\", \"filter\": \"match(\\\"*{{ ansible_facts['hostname'] }}*\\\", host.name) && match(\\\"*Systemd Unit - clamd@scan*\\\", service.name)\" }"
+    curl --insecure --silent --user {{ icinga2_api_user }}:{{ icinga2_api_password }} --header 'Accept: application/json' --request POST 'https://{{ icinga2_master }}:5665/v1/actions/remove-downtime' --data "$DATA" 1> /dev/null
+{% endif %}
 fi

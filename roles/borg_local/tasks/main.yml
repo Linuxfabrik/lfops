@@ -76,7 +76,7 @@
     systemd:
       name: 'borg-backup-hourly.timer'
       state: '{{ (borg_local__service_enabled | bool and borg_local__backup_hourly_enabled | bool) | ternary("started", "stopped") }}'
-      enabled: '{{ borg_local__service_enabled | bool }} and {{ borg_local__backup_hourly_enabled | bool }}'
+      enabled: '{{ borg_local__service_enabled | bool and borg_local__backup_hourly_enabled | bool }}'
       daemon_reload: true
 
   tags:
