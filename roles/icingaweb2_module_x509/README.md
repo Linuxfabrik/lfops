@@ -48,13 +48,13 @@ icingaweb2_module_x509__version: 'v1.3.1'
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `icingaweb2_module_x509__database_host` | The host of the SQL database server. | `'localhost'` |
-| `icingaweb2_module_x509__database_name` | The name of the x509 SQL database. | `'x509'` |
+| `icingaweb2_module_x509__database_name` | The name of the x509 SQL database. | `'icinga_x509'` |
 
 Example:
 ```yaml
 # optional
 icingaweb2_module_x509__database_host: 'localhost'
-icingaweb2_module_x509__database_name: 'x509'
+icingaweb2_module_x509__database_name: 'icinga_x509'
 ```
 
 
