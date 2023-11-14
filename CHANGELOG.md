@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role:icingaweb2_module_vspheredb
+* Removed the `v` prefix from the `icingaweb2_module_vspheredb__version` variable to be consistent with the other `icingaweb2_module_*` roles.
+
 Role:login
 * Changed default of `remove_other_sshd_authorized_keys` from `true` to `false`.
 
