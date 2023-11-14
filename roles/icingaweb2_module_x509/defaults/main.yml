@@ -25,7 +25,7 @@ icingaweb2_module_x509__mariadb_server__users__dependent_var:
     password: '{{ icingaweb2_module_x509__database_login["password"] }}'
     host: '{{ icingaweb2_module_x509__database_host }}'
     priv:
-      - '{{ icingaweb2_module_x509__database_name }}.*:CREATE,SELECT,INSERT,UPDATE,DELETE,DROP,ALTER,CREATE VIEW,INDEX,EXECUTE'
+      - '{{ icingaweb2_module_x509__database_name | replace("_", "\_") | replace("%", "\%") }}.*:CREATE,SELECT,INSERT,UPDATE,DELETE,DROP,ALTER,CREATE VIEW,INDEX,EXECUTE'
     state: 'present'
 
 icingaweb2_module_x509__php__modules__dependent_var:

@@ -26,7 +26,7 @@ icingaweb2_module_vspheredb__mariadb_server__users__dependent_var:
     password: '{{ icingaweb2_module_vspheredb__database_login["password"] }}'
     host: '{{ icingaweb2_module_vspheredb__database_host }}'
     priv:
-      - '{{ icingaweb2_module_vspheredb__database_name }}.*:ALL'
+      - '{{ icingaweb2_module_vspheredb__database_name | replace("_", "\_") | replace("%", "\%") }}.*:ALL'
     state: 'present'
 
 icingaweb2_module_vspheredb__php__modules__dependent_var:

@@ -72,7 +72,7 @@ librenms__mariadb_server__users__dependent_var:
     password: '{{ librenms__database_login.password }}'
     host: '{{ librenms__database_host }}'
     priv:
-      - '{{ librenms__database_name }}.*:ALL'
+      - '{{ librenms__database_name | replace("_", "\_") | replace("%", "\%") }}.*:ALL'
     state: 'present'
 
 

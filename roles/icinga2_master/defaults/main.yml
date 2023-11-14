@@ -42,7 +42,7 @@ icinga2_master__mariadb_server__users__dependent_var:
     password: '{{ icinga2_master__database_login.password }}'
     host: '{{ icinga2_master__database_host }}'
     priv:
-      - '{{ icinga2_master__database_name }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
+      - '{{ icinga2_master__database_name | replace("_", "\_") | replace("%", "\%") }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
     state: 'present'
 
 icinga2_master__influxdb__databases__dependent_var:

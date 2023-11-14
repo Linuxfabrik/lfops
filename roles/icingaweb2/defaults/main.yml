@@ -168,5 +168,5 @@ icingaweb2__mariadb_server__users__dependent_var:
     password: '{{ icingaweb2__database_login.password }}'
     host: '{{ icingaweb2__database_login_host }}'
     priv:
-      - '{{ icingaweb2__database_name }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
+      - '{{ icingaweb2__database_name | replace("_", "\_") | replace("%", "\%") }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
     state: 'present'
