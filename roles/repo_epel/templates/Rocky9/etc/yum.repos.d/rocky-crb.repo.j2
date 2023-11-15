@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# 2023111301
+
+[crb]
+name=Rocky Linux $releasever - CRB
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
+baseurl={{ repo_epel__mirror_url }}/rocky/$releasever/CRB/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=CRB-$releasever$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/CRB/$basearch/os/
+{% endif %}
+gpgcheck=1
+enabled=1
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
