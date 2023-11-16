@@ -8,6 +8,7 @@ Note that removing `cloud-init` could break some functions of the cloud provider
 Runs on
 
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 * Ubuntu 16
 
 
