@@ -5,6 +5,7 @@ This role deploys the MongoDB repository.
 Runs on
 
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 * Debian 11
 
 
