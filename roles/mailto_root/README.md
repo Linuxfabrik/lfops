@@ -5,6 +5,7 @@ This role enables relaying all mail that is sent to the root user (or other serv
 Runs on
 
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 * Ubuntu 16
 
 
