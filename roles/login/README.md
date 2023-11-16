@@ -11,6 +11,7 @@ Runs on
 
 * Fedora Server 35+
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 * Ubuntu 16
 
 
