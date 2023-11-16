@@ -5,6 +5,7 @@ This role ensures that the DNF-makecache Systemd service and timer are disabled.
 Runs on
 
 * RHEL 8 (and compatible)
+* RHEL 9(and compatible)
 
 
 ## Tags
