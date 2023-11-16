@@ -5,6 +5,7 @@ This role simply sets the hostname of the server.
 Runs on
 
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 * Ubuntu 16
 
 
