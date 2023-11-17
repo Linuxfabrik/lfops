@@ -1,4 +1,4 @@
-# Ansible Role linuxfabrik.lfops.python_venv
+# Ansible Role linuxfabrik.lfops.mariadb_client
 
 This role simply installs the command line client for MariaDB `mysql`.
 
