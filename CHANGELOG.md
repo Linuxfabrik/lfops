@@ -63,6 +63,7 @@ Role: system_update
 
 ### Added
 
+* Role: apache_solr
 * Role: clamav
 * Role: dnf_versionlock
 * Role: fangfrisch

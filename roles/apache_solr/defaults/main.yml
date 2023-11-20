@@ -1,0 +1,37 @@
+apache_solr__data_dir: '/var/solr/data'
+apache_solr__group: 'solr'
+apache_solr__http_bind_address: '0.0.0.0'
+apache_solr__http_bind_port: 8983
+apache_solr__install_dir: '/opt'
+apache_solr__log4j_props: '/var/solr/log4j2.xml'
+apache_solr__log_level: 'INFO'
+apache_solr__logs_dir: '/var/log/solr'
+apache_solr__pid_dir: '/var/solr'
+apache_solr__service: 'solr'
+apache_solr__service_enabled: true
+apache_solr__user: 'solr'
+apache_solr__var_dir: '/var/solr'
+
+apache_solr__roles__role_var: []
+apache_solr__roles__dependent_var: []
+apache_solr__roles__group_var: []
+apache_solr__roles__host_var: []
+apache_solr__roles__combined_var: '{{ (
+      apache_solr__roles__role_var +
+      apache_solr__roles__dependent_var +
+      apache_solr__roles__group_var +
+      apache_solr__roles__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="name")
+  }}'
+
+apache_solr__users__role_var: []
+apache_solr__users__dependent_var: []
+apache_solr__users__group_var: []
+apache_solr__users__host_var: []
+apache_solr__users__combined_var: '{{ (
+      apache_solr__users__role_var +
+      apache_solr__users__dependent_var +
+      apache_solr__users__group_var +
+      apache_solr__users__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+  }}'

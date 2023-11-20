@@ -1,0 +1,15 @@
+- name: 'Install and configure Apache Solr'
+  hosts:
+    - 'lfops_apache_solr'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var:
+        - name: 'bc'
+        - name: 'java-latest-openjdk'  # on rhel8, 'java' installs 1.8.0, which is way too old (requires java 11+)
+        - name: 'lsof'
+        - name: 'pwgen'
+        - name: 'tar'
+
+    - role: 'linuxfabrik.lfops.apache_solr'
