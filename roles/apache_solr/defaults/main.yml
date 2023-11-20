@@ -35,3 +35,12 @@ apache_solr__users__combined_var: '{{ (
       apache_solr__users__host_var
     ) | linuxfabrik.lfops.combine_lod(unique_key="username")
   }}'
+
+# -----------------------------------------------------------------------------
+
+apache_solr__apps__apps__dependent_var:
+  - name: 'bc'
+  - name: 'java-latest-openjdk'  # on rhel8, 'java' installs 1.8.0, which is way too old (requires java 11+)
+  - name: 'lsof'
+  - name: 'pwgen'
+  - name: 'tar'
