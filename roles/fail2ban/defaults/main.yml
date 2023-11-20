@@ -26,7 +26,7 @@ fail2ban__jails__combined_var: '{{ (
       fail2ban__jails__dependent_var +
       fail2ban__jails__group_var +
       fail2ban__jails__host_var
-    ) | linuxfabrik.lfops.combine_lod
+    ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
   }}'
 
 # -----------------------------------------------------------------------------
