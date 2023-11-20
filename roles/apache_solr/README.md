@@ -8,6 +8,11 @@ This Ansible role
 * and supports Rule-based authorization with the `RuleBasedAuthorizationPlugin`,
 * but does not create any cores.
 
+Runs on
+
+* RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
+
 
 ## Mandatory Requirements
 
@@ -54,11 +59,11 @@ apache_solr__version: '9.4.0'
 | `apache_solr__log_level` | String. [SOLR_LOG_LEVEL](https://solr.apache.org/guide/solr/latest/deployment-guide/configuring-logging.html) | `'INFO'` |
 | `apache_solr__logs_dir` | String. [SOLR_LOGS_DIR](https://solr.apache.org/guide/solr/latest/deployment-guide/configuring-logging.html#permanent-logging-settings) | `'/var/log/solr'` |
 | `apache_solr__pid_dir` | String. [SOLR_PID_DIR](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#environment-overrides-include-file) | `'/var/solr'` |
-| `apache_solr__roles__group_var`/<br/>`apache_solr__roles__host_var` | List of dictionaries. Roles bridge the gap between users and permissions. The roles can be used with any of the authentication plugins or with a custom authentication plugin if you have created one. You will only need to ensure that logged-in users are mapped to the roles defined by the plugin. The role-to-user mappings must be defined explicitly for every possible authenticated user. | `[]` |
+| `apache_solr__roles__group_var`/<br/>`apache_solr__roles__host_var` | List of dictionaries. Roles bridge the gap between users and permissions. The roles can be used with any of the authentication plugins or with a custom authentication plugin if you have created one. You will only need to ensure that logged-in users are mapped to the roles defined by the plugin. The role-to-user mappings must be defined explicitly for every possible authenticated user.<br/>Subkeys: <ul><li>`name`: Mandatory, string. Name for the role.</li><li>`permissions`: Mandatory, list of strings. Apache Solr permissions assigned to this role. Have a look at the example for all possible values.</li><li>`state`: Optional, string. Either `present` or `absent`.</li></ul> | unset (see example bewlow) |
 | `apache_solr__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
 | `apache_solr__service` | String. Name of the systemd service. | `'solr'` |
 | `apache_solr__user` | String. Username running the systemd service. | `'solr'` |
-| `apache_solr__users__group_var`/<br/>`apache_solr__users__host_var` | List of dictionaries. This Ansible role supports Basic authentication for users with the use of the `BasicAuthPlugin`, which only provides user authentication. To control user permissions, you may need to configure `apache_solr__roles__group_var` / `apache_solr__roles__host_var`.<br/>Note: The 'all' permission should always be the last permission in your config so that more specific permissions are applied first. | `[]` |
+| `apache_solr__users__group_var`/<br/>`apache_solr__users__host_var` | List of dictionaries. This Ansible role supports Basic authentication for users with the use of the `BasicAuthPlugin`, which only provides user authentication. To control user permissions, you may need to configure `apache_solr__roles__group_var` / `apache_solr__roles__host_var`.<br/>Note: The 'all' permission should always be the last permission in your config so that more specific permissions are applied first.<br/>Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password.</li><li>`role`: Mandatory, string. Name of the role the user belongs to.</li><li>`state`: Optional, string. Either `present` or `absent`.</li></ul> | unset (see example bewlow) |
 | `apache_solr__var_dir` | String. The absolute path to the Solr home directory for each Solr node. | `'/var/solr'` |
 
 Example:
