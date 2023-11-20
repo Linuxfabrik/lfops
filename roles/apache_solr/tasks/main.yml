@@ -166,6 +166,7 @@
 
   - name: 'Generate hashed passwords'
     ansible.builtin.shell: |-
+      set -o pipefail
       PW='{{ item["password"] }}'
       SALT=$(pwgen 48 -1)
       echo '{{ item["username"] }}'
