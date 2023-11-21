@@ -108,6 +108,11 @@ graylog_server__elasticsearch_oss__cluster_name__dependent_var: 'graylog'
 
 graylog_server__opensearch__action_auto_create_index__dependent_var: false
 graylog_server__opensearch__cluster_name__dependent_var: 'graylog'
+graylog_server__opensearch__internal_users__dependent_var:
+  - username: '{{ graylog_server__opensearch_login["username"] }}'
+    password: '{{ graylog_server__opensearch_login["password"] }}'
+    backend_roles:
+      - 'admin' # could maybe be refined in the future, but there is no documentation on the required permissions
 
 graylog_server__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'

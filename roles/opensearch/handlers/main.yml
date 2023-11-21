@@ -2,3 +2,18 @@
   ansible.builtin.service:
     name: 'opensearch'
     state: 'restarted'
+
+- name: 'opensearch: /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh ...'
+  ansible.builtin.command: >-
+    /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh
+    -cacert /etc/opensearch/root-ca.pem
+    -cert /etc/opensearch/admin.pem
+    -key /etc/opensearch/admin.key
+    --configdir /etc/opensearch/opensearch-security
+    --disable-host-name-verification
+    -icl
+    --ignore-clustername
+    --hostname localhost
+  environment:
+    JAVA_HOME: '/usr/share/opensearch/jdk'
+  changed_when: true

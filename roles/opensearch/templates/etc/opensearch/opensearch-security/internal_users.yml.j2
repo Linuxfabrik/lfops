@@ -1,0 +1,22 @@
+---
+# {{ ansible_managed }}
+# 2023112101
+#
+# This is the internal user database
+# The hash value is a bcrypt hash and can be generated with plugin/tools/hash.sh
+
+_meta:
+  type: "internalusers"
+  config_version: 2
+
+# Define your internal users here
+
+{% for user in opensearch__internal_users__hashed_result["results"] if user["item"]['state'] | d('present') != 'absent' %}
+{{ user["item"]["username"] }}:
+  hash: '{{ user["stdout"] }}'
+  backend_roles: {{ user["item"]["backend_roles"] | d([]) }}
+  # prevent changes via API as it is managed by ansible
+  # https://opensearch.org/docs/latest/security/access-control/api/#reserved-and-hidden-resources
+  reserved: true
+
+{% endfor %}

@@ -22,21 +22,33 @@ If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/m
 
 | Tag             | What it does                            |
 | ---             | ------------                            |
-| `opensearch`       | <ul><li>Install opensearch-`{{ opensearch__version__combined_var }}`</li><li>Deploy `/etc/opensearch/opensearch.yml`</li><li>
-Deploy `/etc/sysconfig/opensearch`</li><li>`systemctl {{ opensearch__service_enabled | bool | ternary("enable", "disable") }} --now opensearch.service`</li></ul> |
-| `opensearch:state` | <ul><li>`systemctl {{ opensearch__service_enabled | bool | ternary("enable", "disable") }} --now opensearch.service`</li></ul> |
+| `opensearch`       | <ul><li>Install opensearch-`{{ opensearch__version__combined_var }}`</li><li>Deploy `/etc/opensearch/opensearch.yml`</li><li>Deploy `/etc/sysconfig/opensearch`</li><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> |
+| `opensearch:state` | <ul><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> |
+| `opensearch:configure` | Deploys the config files and configures the security plugin |
 
 
-## Optional Role Variables
+## Optional Role Variables - General
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `opensearch__action_auto_create_index__host_var` / <br> `opensearch__action_auto_create_index__group_var` | Automatic index creation allows any index to be created automatically.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `true` |
 | `opensearch__cluster_name__host_var` / <br> `opensearch__cluster_name__group_var` | A descriptive name for your cluster.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
+| `opensearch__internal_users__host_var` / <br> `opensearch__internal_users__group_var` | List of dictionaries. Internal users that can access OpenSearch via HTTP Basic Auth. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password.</li><li>`backend_roles`: Optional, list. Defaults to `[]`.</li><li>`state`: Optional, string. State of the user. Either `present` or `absent`.</li></ul> |
 | `opensearch__network_host` | Set the bind address to a specific IP. | `'127.0.0.1'` |
 | `opensearch__node_name` | A descriptive name for the node | `'{{ ansible_facts["nodename"] }}'` |
 | `opensearch__path_data__host_var` / <br> `opensearch__path_data__group_var` | Path to directory where to store the data. Directory will be created. | `'/var/lib/opensearch'` |
-| `opensearch__plugins_security_disabled` | Enables or disables the opensearch [security plugin](https://opensearch.org/docs/1.3/security-plugin/index/), which offers `encryption`, `authentication`, `access control` and `audit logging and compliance`. <br/>Note: If you want to use this feature, there is more configuration needed, which is currently not supported by this role. You will need to do the additional configuration of the security plugin manually. | `true` |
+| `opensearch__plugins_security_admin_certificate` | The ASCII-armored public PEM admin certificate. | unset |
+| `opensearch__plugins_security_admin_certificate_key` | The ASCII-armored private PEM admin key. | unset |
+| `opensearch__plugins_security_allow_unsafe_democertificates` | When set to true, OpenSearch starts up with demo certificates. These certificates are issued only for demo purposes. See https://opensearch.org/docs/latest/install-and-configure/configuring-opensearch/security-settings/#advanced-settings | `false` |
+| `opensearch__plugins_security_authcz_admin_dns` | List of distinguished names of certificates that should have admin permissions. | `[]` |
+| `opensearch__plugins_security_disabled` | Enables or disables the opensearch [security plugin](https://opensearch.org/docs/1.3/security-plugin/index/), which offers encryption, authentication, access control as well as audit logging and compliance. | `false` |
+| `opensearch__plugins_security_http_certificate` | The ASCII-armored public PEM http certificate. | unset |
+| `opensearch__plugins_security_http_certificate_key` | The ASCII-armored private PEM http key. | unset |
+| `opensearch__plugins_security_root_ca` | The ASCII-armored public PEM root CA certificate. | unset |
+| `opensearch__plugins_security_transport_certificate` | The ASCII-armored public PEM transport certificate. | unset |
+| `opensearch__plugins_security_transport_certificate_key` | The ASCII-armored private PEM transport key. | unset |
+| `opensearch__plugins_security_transport_enforce_hostname_verification` | See https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup | `false` |
+| `opensearch__plugins_security_transport_resolve_hostname` | See https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup | `true` |
 | `opensearch__service_enabled` | Enables or disables the opensearch service, analogous to `systemctl enable/disable --now`. | `true` |
 | `opensearch__version__host_var` / <br> `opensearch__version__group_var` | The version of OpenSearch which should be installed. If unset, latest will be installed.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | unset |
 
@@ -45,17 +57,47 @@ Example:
 # optional
 opensearch__action_auto_create_index__host_var: false
 opensearch__cluster_name__host_var: 'my-cluster'
+opensearch__internal_users__host_var:
+  - username: 'opensearch-admin'
+    password: 'linuxfabrik'
+    backend_roles:
+      - 'admin'
 opensearch__network_host: '127.0.0.1'
 opensearch__node_name: 'my-node1'
 opensearch__path_data__host_var: '/var/lib/opensearch'
-opensearch__version__host_var: '2.5.0'
-
+opensearch__plugins_security_admin_certificate: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/group_vars/vagrant_debian11_multi/files/etc/opensearch/admin.pem")
+  }}'
+opensearch__plugins_security_admin_certificate_key: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/group_vars/vagrant_debian11_multi/files/etc/opensearch/admin.key")
+  }}'
+opensearch__plugins_security_allow_unsafe_democertificates: false
+opensearch__plugins_security_authcz_admin_dns:
+  - 'CN=A,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
 opensearch__plugins_security_disabled: false
+opensearch__plugins_security_http_certificate: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_http.pem")
+  }}'
+opensearch__plugins_security_http_certificate_key: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_http.key")
+  }}'
+opensearch__plugins_security_root_ca: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/root-ca.pem")
+  }}'
+opensearch__plugins_security_transport_certificate: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_transport.pem")
+  }}'
+opensearch__plugins_security_transport_certificate_key: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_transport.key")
+  }}'
+opensearch__plugins_security_transport_enforce_hostname_verification: false
+opensearch__plugins_security_transport_resolve_hostname: true
 opensearch__service_enabled: false
+opensearch__version__host_var: '2.5.0'
 ```
 
 
-### Cluster Configuration
+## Optional Role Variables - Cluster Configuration
 
 Use the following variables if you want to setup a OpenSearch cluster. Make sure that the cluster members can reach each other by setting `opensearch__network_host` accordingly.
 
@@ -69,6 +111,7 @@ curl 'localhost:9200/_cat/nodes?v'
 | -------- | ----------- | ------------- |
 | `opensearch__cluster_initial_cluster_manager_nodes` | A list of initial master-eligible nodes. The entries have to match the `opensearch__node_name`. You need to set this once when bootstrapping the cluster (aka the first start of the cluster). Make sure to remove this option after the first start, the nodes should not restart with this option active. Most of the time contains the same value as `opensearch__discovery_seed_hosts`. | unset |
 | `opensearch__discovery_seed_hosts` | A list of IPs or hostnames that point to other master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten using `:9301`, for example. | unset |
+| `opensearch__plugins_security_nodes_dns` | List of distinguished names of the other cluster members. | `[]` |
 
 Example:
 ```yaml
@@ -81,6 +124,10 @@ opensearch__discovery_seed_hosts:
   - 'node1.example.com'
   - 'node2.example.com'
   - 'node3.example.com'
+opensearch__plugins_security_nodes_dns:
+  - 'CN=debian11-01,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
+  - 'CN=debian11-02,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
+  - 'CN=debian11-03,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
 ```
 
 
