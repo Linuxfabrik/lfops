@@ -37,7 +37,7 @@ If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/
 | Tag                         | What it does                                    |
 | ---                         | ------------                                    |
 | `graylog_server`            | Installs and configures Graylog Server          |
-| `graylog_server:configure`  | Creates system inputs and a default index set   |
+| `graylog_server:configure`  | Deploys the config files, manages the CA keystore, creates the system inputs and a default index set |
 | `graylog_server:state`      | Manages the state of the Graylog Server service |
 
 
