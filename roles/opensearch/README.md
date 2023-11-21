@@ -66,10 +66,10 @@ opensearch__network_host: '127.0.0.1'
 opensearch__node_name: 'my-node1'
 opensearch__path_data__host_var: '/var/lib/opensearch'
 opensearch__plugins_security_admin_certificate: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/group_vars/vagrant_debian11_multi/files/etc/opensearch/admin.pem")
+    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/admin.pem")
   }}'
 opensearch__plugins_security_admin_certificate_key: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/group_vars/vagrant_debian11_multi/files/etc/opensearch/admin.key")
+    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/admin.key")
   }}'
 opensearch__plugins_security_allow_unsafe_democertificates: false
 opensearch__plugins_security_authcz_admin_dns:
@@ -103,8 +103,8 @@ Use the following variables if you want to setup a OpenSearch cluster. Make sure
 
 You can check the status of the cluster with the following commands:
 ```bash
-curl 'localhost:9200/_cluster/health?pretty'
-curl 'localhost:9200/_cat/nodes?v'
+curl 'https://localhost:9200/_cluster/health?pretty' --user opensearch-admin:linuxfabrik --insecure
+curl 'https://localhost:9200/_cat/nodes?v' --user opensearch-admin:linuxfabrik --insecure
 ```
 
 | Variable | Description | Default Value |
@@ -125,9 +125,9 @@ opensearch__discovery_seed_hosts:
   - 'node2.example.com'
   - 'node3.example.com'
 opensearch__plugins_security_nodes_dns:
-  - 'CN=debian11-01,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
-  - 'CN=debian11-02,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
-  - 'CN=debian11-03,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
+  - 'CN=node1.example.com,OU=ops,O=acme,L=Zuerich,ST=Zuerich,C=CH'
+  - 'CN=node2.example.com,OU=ops,O=acme,L=Zuerich,ST=Zuerich,C=CH'
+  - 'CN=node3.example.com,OU=ops,O=acme,L=Zuerich,ST=Zuerich,C=CH'
 ```
 
 
