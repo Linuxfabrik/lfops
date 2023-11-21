@@ -110,6 +110,8 @@
       force_basic_auth: true
       status_code: 200
     register: 'graylog_server__input_result'
+    changed_when: false # no actual config change
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'Terminate input on this node'
     ansible.builtin.uri:
@@ -150,6 +152,8 @@
       force_basic_auth: true
       status_code: 200
     register: 'graylog_server__get_index_sets_result'
+    changed_when: false # no actual config change
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'Create index set'
     ansible.builtin.uri:
@@ -175,6 +179,8 @@
       force_basic_auth: true
       status_code: 200
     register: 'graylog_server__get_index_sets_result'
+    changed_when: false # no actual config change
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'Set default index set'
     ansible.builtin.uri:
