@@ -1,3 +1,15 @@
+graylog_server__cacerts_imports__dependent_var: []
+graylog_server__cacerts_imports__group_var: []
+graylog_server__cacerts_imports__host_var: []
+graylog_server__cacerts_imports__role_var: []
+graylog_server__cacerts_imports__combined_var: '{{ (
+      graylog_server__cacerts_imports__role_var +
+      graylog_server__cacerts_imports__dependent_var +
+      graylog_server__cacerts_imports__group_var +
+      graylog_server__cacerts_imports__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
 graylog_server__elasticsearch_hosts:
   - 'http://127.0.0.1:9200'
 graylog_server__http_bind_address: '127.0.0.1'

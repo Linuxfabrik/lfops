@@ -11,6 +11,11 @@
       name: '{{ item }}'
       state: 'present'
     loop: '{{ graylog_server__plugins }}'
+  tags:
+    - 'graylog_server'
+
+
+- block:
 
   - name: 'Get the list of installed packages'
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
@@ -29,8 +34,44 @@
       mode: 0o644
     notify: 'graylog: restart graylog-server'
 
+  - name: '/usr/share/graylog-server/jvm/bin/keytool -list ...'
+    ansible.builtin.command: >-
+      /usr/share/graylog-server/jvm/bin/keytool
+      -keystore /usr/share/graylog-server/jvm/lib/security/cacerts
+      -storepass changeit
+      -list
+    register: 'graylog_server__cacerts_list_result'
+    changed_when: false # no actual config change
+    check_mode: false # run task even if `--check` is specified
+
+  - name: '/usr/share/graylog-server/jvm/bin/keytool -importcert ...'
+    ansible.builtin.command: >-
+      /usr/share/graylog-server/jvm/bin/keytool
+      -importcert
+      -keystore /usr/share/graylog-server/jvm/lib/security/cacerts
+      -storepass changeit
+      -alias {{ item['name'] }}
+      -file {{ item['file'] }}
+      -noprompt
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["name"] not in graylog_server__cacerts_list_result["stdout"]'
+    loop: '{{ graylog_server__cacerts_imports__combined_var }}'
+
+  - name: '/usr/share/graylog-server/jvm/bin/keytool -delete ...'
+    ansible.builtin.command: >-
+      /usr/share/graylog-server/jvm/bin/keytool
+      -delete
+      -keystore /usr/share/graylog-server/jvm/lib/security/cacerts
+      -storepass changeit
+      -alias {{ item['name'] }}
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ graylog_server__cacerts_imports__combined_var }}'
+
   tags:
     - 'graylog_server'
+    - 'graylog_server:configure'
 
 
 - block:
