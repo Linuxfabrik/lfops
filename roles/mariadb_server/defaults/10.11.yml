@@ -18,6 +18,8 @@ mariadb_server__cnf_query_cache_limit__role_var: '1M'
 mariadb_server__cnf_query_cache_size__role_var: 0
 mariadb_server__cnf_query_cache_type__role_var: 'OFF'
 mariadb_server__cnf_skip_name_resolve__role_var: 'ON'
+mariadb_server__cnf_slow_query_log__role_var: 0
+mariadb_server__cnf_slow_query_log_file__role_var: '/var/log/mariadb/mariadb-slowquery.log'
 mariadb_server__cnf_table_definition_cache__role_var: 400
 mariadb_server__cnf_tmp_table_size__role_var: '16M'
 mariadb_server__cnf_wait_timeout__role_var: 28800
