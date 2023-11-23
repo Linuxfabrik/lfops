@@ -6,7 +6,6 @@ name=Extra Packages for Enterprise Linux $releasever - $basearch
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/9/Everything/x86_64
 {% else %}
-#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Everything/$basearch
 metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% endif %}
 enabled=1
@@ -19,7 +18,6 @@ name=Extra Packages for Enterprise Linux $releasever - $basearch - Debug
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/9/Everything/x86_64/debug
 {% else %}
-#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Everything/$basearch/debug
 metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% endif %}
 enabled=0
@@ -29,9 +27,8 @@ gpgcheck=1
 [epel-source]
 name=Extra Packages for Enterprise Linux $releasever - $basearch - Source
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
-baseurl={{ repo_epel__mirror_url }}/epel/9/Everything/SRPMS
+baseurl={{ repo_epel__mirror_url }}/epel/9/Everything/source/tree/
 {% else %}
-#baseurl=https://download.fedoraproject.org/pub/epel/$releasever/Everything/SRPMS
 metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% endif %}
 enabled=0
