@@ -83,7 +83,7 @@
       --endpoint {{ item["host"] }},{{ item["host"] }},{{ item["port"] | d(5665) }}
       {% endfor %}
       --parent_host {{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_port }}
-      --parent_zone master
+      --parent_zone {{ icinga2_agent__parent_zone }}
       --cn {{ icinga2_agent__cn }}
       --accept-config
       --accept-commands
