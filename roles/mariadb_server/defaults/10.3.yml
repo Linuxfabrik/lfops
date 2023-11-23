@@ -1,3 +1,4 @@
+mariadb_server__cnf_bulk_insert_buffer_size__role_var: 8388608
 mariadb_server__cnf_character_set_server__role_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__role_var: 'utf8mb4_unicode_ci'
 mariadb_server__cnf_expire_logs_days__role_var: 0
