@@ -61,8 +61,11 @@
         - 'not setup_graylog_server__skip_repo_opensearch | default(false)'
 
     - role: 'linuxfabrik.lfops.opensearch'
-      opensearch__cluster_name__dependent_var: '{{ graylog_server__opensearch__cluster_name__dependent_var }}'
       opensearch__action_auto_create_index__dependent_var: '{{ graylog_server__opensearch__action_auto_create_index__dependent_var }}'
+      opensearch__cluster_name__dependent_var: '{{ graylog_server__opensearch__cluster_name__dependent_var }}'
+      opensearch__internal_users__dependent_var: '{{
+          graylog_server__opensearch__internal_users__dependent_var
+        }}'
       when:
         - 'not setup_graylog_server__skip_opensearch | default(false)'
 
@@ -71,3 +74,6 @@
         - 'not setup_graylog_server__skip_repo_graylog | d(false)'
 
     - role: 'linuxfabrik.lfops.graylog_server'
+      graylog_server__cacerts_imports__dependent_var: '{{
+          opensearch__graylog_server__cacerts_imports__dependent_var
+        }}'

@@ -13,6 +13,9 @@ Role:mailto_root
 * Changed `mailto_root__from` from optional to mandatory.
 * Testmail to external addresses is now using sender address (mailto_root__from).
 
+Role: opensearch
+* Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.
+
 Role:icingaweb2_module_vspheredb
 * Removed the `v` prefix from the `icingaweb2_module_vspheredb__version` variable to be consistent with the other `icingaweb2_module_*` roles.
 
@@ -41,6 +44,8 @@ Role:redis
 
 Role: nextcloud
 * Changed default of `nextcloud__timer_app_update_enabled` from `true` to `false`, as this can sometimes lead to Nextcloud ending up in maintenance mode
+* Renamed `nextcloud__apache_httpd__vhosts_virtualhost_ip` to `nextcloud__vhost_virtualhost_ip`
+* Renamed `nextcloud__apache_httpd__vhosts_virtualhost_port` to `nextcloud__vhost_virtualhost_port`
 
 Role: apache_httpd
 * Changed `conf_server_alias` from a string to a list
@@ -67,6 +72,7 @@ Role: system_update
 
 ### Added
 
+* Role: apache_solr
 * Role: clamav
 * Role: dnf_versionlock
 * Role: fangfrisch

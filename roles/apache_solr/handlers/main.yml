@@ -1,0 +1,4 @@
+- name: 'apache_solr: restart solr.service'
+  ansible.builtin.service:
+    name: 'solr.service'
+    state: 'restarted'
