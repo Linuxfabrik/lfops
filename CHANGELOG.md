@@ -40,6 +40,8 @@ Role:redis
 
 Role: nextcloud
 * Changed default of `nextcloud__timer_app_update_enabled` from `true` to `false`, as this can sometimes lead to Nextcloud ending up in maintenance mode
+* Renamed `nextcloud__apache_httpd__vhosts_virtualhost_ip` to `nextcloud__vhost_virtualhost_ip`
+* Renamed `nextcloud__apache_httpd__vhosts_virtualhost_port` to `nextcloud__vhost_virtualhost_port`
 
 Role: apache_httpd
 * Changed `conf_server_alias` from a string to a list

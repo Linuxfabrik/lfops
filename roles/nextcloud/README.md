@@ -76,8 +76,6 @@ nextcloud__users:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `nextcloud__apache_httpd__vhosts__group_var` / `nextcloud__apache_httpd__vhosts__host_var` | The Apache vHost definition for the Nextcloud instance. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__apache_httpd__vhosts_virtualhost_ip` | String. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `*` |
-| `nextcloud__apache_httpd__vhosts_virtualhost_port` | Number. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `80` |
 | `nextcloud__apps` | List of Nextcloud Apps to install. Possible options:<br> * `name`: Mandatory, string. The app name.<br> * `state`: Mandatory, string. State of the app, one of `present`, `absent`. | `[]` |
 | `nextcloud__apps_config` | List of Key/Value pairs for configuring Apps in Nextcloud via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
 | `nextcloud__database_host` | Host where MariaDB is located. | `'localhost'` |
@@ -101,6 +99,8 @@ nextcloud__users:
 | `nextcloud__timer_jobs_enabled` | Enables/disables Systemd-Timer for running OCC background jobs. | `true` |
 | `nextcloud__timer_ldap_show_remnants_enabled` | Enables/disables Systemd-Timer for mailing once a month which users are not available on LDAP anymore, but have remnants in Nextcloud. Will only be applied if the app `users_ldap` is present. | `true` |
 | `nextcloud__version` | Which version to install. One of `'latest'`, `'latest-XX'` or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/ for a list of available releases. | `'latest'` |
+| `nextcloud__vhost_virtualhost_ip` | String. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `*` |
+| `nextcloud__vhost_virtualhost_port` | Number. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `80` |
 
 Example:
 ```yaml
@@ -160,6 +160,8 @@ nextcloud__timer_jobs_enabled: true
 nextcloud__timer_ldap_show_remnants_enabled: true
 
 nextcloud__version: 'latest'
+nextcloud__vhost_virtualhost_ip: '127.0.0.1'
+nextcloud__vhost_virtualhost_port: '81'
 ```
 
 ## License
