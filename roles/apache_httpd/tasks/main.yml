@@ -137,6 +137,7 @@
       group: 'apache'
       recurse: true
     ignore_errors: true
+    when: 'not apache_httpd__skip_document_root_chown'
 
   tags:
     - 'apache_httpd'

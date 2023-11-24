@@ -1,0 +1,35 @@
+#jinja2:block_start_string:'{{%%', block_end_string:'%%}}',variable_start_string:'{{{{', variable_end_string:'}}}}'
+{
+    "authentication":
+    {
+        "blockUnknown": true,
+        "class": "solr.BasicAuthPlugin",
+        "credentials":
+        {
+            {{%% for user in apache_solr__pwhashes.results if user.stdout_lines[3] | d('present') != 'absent' %%}}
+                "{{{{ user.stdout_lines[0] }}}}": "{{{{ user.stdout_lines[1] }}}}"{{%% if not loop.last %%}},{{%% endif %%}}
+            {{%% endfor %%}}
+        },
+        "realm": "Linuxfabrik Solr users",
+        "forwardCredentials": false
+    },
+    "authorization":
+    {
+        "class": "solr.RuleBasedAuthorizationPlugin",
+        "permissions":
+        [
+            {{%% for role in apache_solr__roles__combined_var if role.state | d('present') != 'absent' %%}}
+                {
+                    "name": "{{{{ role.permissions | join(",") }}}}",
+                    "role": "{{{{ role.name }}}}"
+                }{{%% if not loop.last %%}},{{%% endif %%}}
+            {{%% endfor %%}}
+        ],
+        "user-role":
+        {
+            {{%% for user in apache_solr__pwhashes.results if user.stdout_lines[3] | d('present') != 'absent' %%}}
+                "{{{{ user.stdout_lines[0] }}}}": "{{{{ user.stdout_lines[2] }}}}"{{%% if not loop.last %%}},{{%% endif %%}}
+            {{%% endfor %%}}
+        }
+    }
+}

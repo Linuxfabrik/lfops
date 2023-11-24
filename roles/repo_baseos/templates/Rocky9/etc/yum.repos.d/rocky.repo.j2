@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023111301
+# 2023112001
 
 # rocky.repo
 #
@@ -25,6 +25,32 @@ countme=1
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
 
+[baseos-debug]
+name=Rocky Linux $releasever - BaseOS - Debug
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/9/BaseOS/x86_64/debug/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=BaseOS-$releasever-debug$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/BaseOS/$basearch/debug/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+
+[baseos-source]
+name=Rocky Linux $releasever - BaseOS - Source
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/9/BaseOS/source/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=source&repo=BaseOS-$releasever-source$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/BaseOS/source/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+
 
 [appstream]
 name=Rocky Linux $releasever - AppStream
@@ -37,5 +63,31 @@ mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=AppStre
 gpgcheck=1
 enabled=1
 countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+
+[appstream-debug]
+name=Rocky Linux $releasever - AppStream - Debug
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/9/AppStream/x86_64/debug/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=AppStream-$releasever-debug$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/AppStream/$basearch/debug/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+
+[appstream-source]
+name=Rocky Linux $releasever - AppStream - Source
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/9/AppStream/source/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=source&repo=AppStream-$releasever-source$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/AppStream/source/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9

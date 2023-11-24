@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role: opensearch
+* Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.
+
 Role:icingaweb2_module_vspheredb
 * Removed the `v` prefix from the `icingaweb2_module_vspheredb__version` variable to be consistent with the other `icingaweb2_module_*` roles.
 
@@ -63,6 +66,7 @@ Role: system_update
 
 ### Added
 
+* Role: apache_solr
 * Role: clamav
 * Role: dnf_versionlock
 * Role: fangfrisch

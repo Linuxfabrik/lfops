@@ -1,16 +1,7 @@
-opensearch__action_auto_create_index__role_var: true
-opensearch__cluster_name__role_var: 'my-application'
-opensearch__network_host: '127.0.0.1'
-opensearch__node_name: '{{ ansible_facts["nodename"] }}'
-opensearch__path_data__role_var: '/var/lib/opensearch'
-opensearch__plugins_security_disabled: true
-opensearch__service_enabled: true
-
-# ---------------------------------------------------------------------
-
 opensearch__action_auto_create_index__dependent_var: ''
 opensearch__action_auto_create_index__group_var: ''
 opensearch__action_auto_create_index__host_var: ''
+opensearch__action_auto_create_index__role_var: true
 opensearch__action_auto_create_index__combined_var: '{{
     opensearch__action_auto_create_index__host_var if (opensearch__action_auto_create_index__host_var | string | length) else
     opensearch__action_auto_create_index__group_var if (opensearch__action_auto_create_index__group_var | string | length) else
@@ -21,6 +12,7 @@ opensearch__action_auto_create_index__combined_var: '{{
 opensearch__cluster_name__dependent_var: ''
 opensearch__cluster_name__group_var: ''
 opensearch__cluster_name__host_var: ''
+opensearch__cluster_name__role_var: 'my-application'
 opensearch__cluster_name__combined_var: '{{
     opensearch__cluster_name__host_var if (opensearch__cluster_name__host_var | string | length) else
     opensearch__cluster_name__group_var if (opensearch__cluster_name__group_var | string | length) else
@@ -28,15 +20,39 @@ opensearch__cluster_name__combined_var: '{{
     opensearch__cluster_name__role_var
   }}'
 
+opensearch__internal_users__dependent_var: []
+opensearch__internal_users__group_var: []
+opensearch__internal_users__host_var: []
+opensearch__internal_users__role_var: []
+opensearch__internal_users__combined_var: '{{ (
+      opensearch__internal_users__role_var +
+      opensearch__internal_users__dependent_var +
+      opensearch__internal_users__group_var +
+      opensearch__internal_users__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+  }}'
+
+opensearch__network_host: '127.0.0.1'
+opensearch__node_name: '{{ ansible_facts["nodename"] }}'
+
 opensearch__path_data__dependent_var: ''
 opensearch__path_data__group_var: ''
 opensearch__path_data__host_var: ''
+opensearch__path_data__role_var: '/var/lib/opensearch'
 opensearch__path_data__combined_var: '{{
     opensearch__path_data__host_var if (opensearch__path_data__host_var | string | length) else
     opensearch__path_data__group_var if (opensearch__path_data__group_var | string | length) else
     opensearch__path_data__dependent_var if (opensearch__path_data__dependent_var | string | length) else
     opensearch__path_data__role_var
   }}'
+
+opensearch__plugins_security_allow_unsafe_democertificates: false
+opensearch__plugins_security_authcz_admin_dns: []
+opensearch__plugins_security_disabled: false
+opensearch__plugins_security_nodes_dns: []
+opensearch__plugins_security_transport_enforce_hostname_verification: true
+opensearch__plugins_security_transport_resolve_hostname: true
+opensearch__service_enabled: true
 
 opensearch__version__dependent_var: ''
 opensearch__version__group_var: ''
@@ -48,3 +64,9 @@ opensearch__version__combined_var: '{{
     opensearch__version__dependent_var if (opensearch__version__dependent_var | string | length) else
     opensearch__version__role_var
   }}'
+
+# -----------------------------------------------------------------------------
+
+opensearch__graylog_server__cacerts_imports__dependent_var:
+  - name: 'opensearch-root-ca'
+    file: '/etc/opensearch/root-ca.pem'

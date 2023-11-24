@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023030101
+# 2023112101
 # 2.x
 # ======================== OpenSearch Configuration =========================
 #
@@ -99,26 +99,22 @@ cluster.initial_cluster_manager_nodes: {{ opensearch__cluster_initial_cluster_ma
 action.auto_create_index: {{ opensearch__action_auto_create_index__combined_var | default(true) | string | lower }}
 plugins.security.disabled: {{ opensearch__plugins_security_disabled | default(true) | string | lower }}
 
-######## Start OpenSearch Security Demo Configuration ########
-# WARNING: revise all the lines below before you go into production
-plugins.security.ssl.transport.pemcert_filepath: esnode.pem
-plugins.security.ssl.transport.pemkey_filepath: esnode-key.pem
-plugins.security.ssl.transport.pemtrustedcas_filepath: root-ca.pem
-plugins.security.ssl.transport.enforce_hostname_verification: false
-plugins.security.ssl.http.enabled: true
-plugins.security.ssl.http.pemcert_filepath: esnode.pem
-plugins.security.ssl.http.pemkey_filepath: esnode-key.pem
-plugins.security.ssl.http.pemtrustedcas_filepath: root-ca.pem
-plugins.security.allow_unsafe_democertificates: true
-plugins.security.allow_default_init_securityindex: true
-plugins.security.authcz.admin_dn:
-  - CN=kirk,OU=client,O=client,L=test, C=de
-
-plugins.security.audit.type: internal_opensearch
-plugins.security.enable_snapshot_restore_privilege: true
+plugins.security.allow_default_init_securityindex: false
+plugins.security.allow_unsafe_democertificates: {{ opensearch__plugins_security_allow_unsafe_democertificates | string | lower }}
+plugins.security.audit.type: 'internal_opensearch'
+plugins.security.authcz.admin_dn: {{ opensearch__plugins_security_authcz_admin_dns }}
 plugins.security.check_snapshot_restore_write_privileges: true
-plugins.security.restapi.roles_enabled: ["all_access", "security_rest_api_access"]
-plugins.security.system_indices.enabled: true
-plugins.security.system_indices.indices: [".plugins-ml-model", ".plugins-ml-task", ".opendistro-alerting-config", ".opendistro-alerting-alert*", ".opendistro-anomaly-results*", ".opendistro-anomaly-detector*", ".opendistro-anomaly-checkpoints", ".opendistro-anomaly-detection-state", ".opendistro-reports-*", ".opensearch-notifications-*", ".opensearch-notebooks", ".opensearch-observability", ".opendistro-asynchronous-search-response*", ".replication-metadata-store"]
-node.max_local_storage_nodes: 3
-######## End OpenSearch Security Demo Configuration ########
+plugins.security.enable_snapshot_restore_privilege: true
+plugins.security.nodes_dn: {{ opensearch__plugins_security_nodes_dns }}
+plugins.security.restapi.roles_enabled:
+  - "all_access"
+  - "security_rest_api_access"
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemcert_filepath: 'node-http.pem'
+plugins.security.ssl.http.pemkey_filepath: 'node-http.key'
+plugins.security.ssl.http.pemtrustedcas_filepath: 'root-ca.pem'
+plugins.security.ssl.transport.enforce_hostname_verification: {{ opensearch__plugins_security_transport_enforce_hostname_verification | d(false) | string | lower }}
+plugins.security.ssl.transport.pemcert_filepath: 'node-transport.pem'
+plugins.security.ssl.transport.pemkey_filepath: 'node-http.key'
+plugins.security.ssl.transport.pemtrustedcas_filepath: 'root-ca.pem'
+plugins.security.ssl.transport.resolve_hostname: {{ opensearch__plugins_security_transport_resolve_hostname | d(true) | string | lower }}

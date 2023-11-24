@@ -1,0 +1,191 @@
+- block:
+
+  - name: 'Download and verify Apache Solr {{ apache_solr__version }} from Solr archive (the full binary package, for all operating systems)'
+    ansible.builtin.get_url:
+      url: 'https://archive.apache.org/dist/solr/solr/{{ apache_solr__version }}/solr-{{ apache_solr__version }}.tgz'
+      dest: '/tmp/solr-{{ apache_solr__version }}.tgz'
+      checksum: '{{ apache_solr__checksum }}'
+    delegate_to: 'localhost'
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # just gathering info, no actual change
+    when:
+      - 'apache_solr__version is version("9.0.0", ">=")'
+
+  - name: 'Download and verify Apache Solr {{ apache_solr__version }} from Lucene archive (the full binary package, for all operating systems)'
+    ansible.builtin.get_url:
+      url: 'https://archive.apache.org/dist/lucene/solr/{{ apache_solr__version }}/solr-{{ apache_solr__version }}.tgz'
+      dest: '/tmp/solr-{{ apache_solr__version }}.tgz'
+      checksum: '{{ apache_solr__checksum }}'
+    delegate_to: 'localhost'
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # just gathering info, no actual change
+    when:
+      - 'apache_solr__version is version("9.0.0", "<")'
+
+  - name: 'Ensure group "{{ apache_solr__user }}" exists'
+    ansible.builtin.group:
+      name: '{{ apache_solr__user }}'
+      state: 'present'
+
+  - name: 'Add the user "{{ apache_solr__user }}" with primary group of "{{ apache_solr__user }}"'
+    ansible.builtin.user:
+      comment: 'User for Apache Solr service'
+      create_home: true
+      group: '{{ apache_solr__user }}'
+      home: '{{ apache_solr__var_dir }}'
+      name: '{{ apache_solr__user }}'
+      system: true
+
+  - name: 'mkdir -p {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}'
+    ansible.builtin.file:
+      path: '{{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}'
+      state: 'directory'
+
+  - name: 'mkdir -p {{ apache_solr__data_dir }}'
+    ansible.builtin.file:
+      path: '{{ apache_solr__data_dir }}'
+      state: 'directory'
+
+  - name: 'mkdir -p {{ apache_solr__logs_dir }}'
+    ansible.builtin.file:
+      path: '{{ apache_solr__logs_dir }}'
+      state: 'directory'
+      owner: '{{ apache_solr__user }}'
+      group: '{{ apache_solr__user }}'
+      mode: 0o750
+
+  - name: 'tar xvzf /tmp/solr-{{ apache_solr__version }}.tgz'
+    ansible.builtin.unarchive:
+      src: '/tmp/solr-{{ apache_solr__version }}.tgz'
+      dest: '{{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}/'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'ln -s {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }} {{ apache_solr__install_dir }}/solr'
+    ansible.builtin.file:
+      src: '{{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}'
+      dest: '{{ apache_solr__install_dir }}/solr'
+      state: 'link'
+    ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified
+    notify: 'apache_solr: restart solr.service'
+
+  - name: 'Deploy {{ apache_solr__install_dir }}/solr/bin/solr.in.sh'
+    ansible.builtin.template:
+      src: 'opt/solr/bin/solr.in.sh.j2'
+      dest: '{{ apache_solr__install_dir }}/solr/bin/solr.in.sh'
+    notify: 'apache_solr: restart solr.service'
+
+  - name: 'Deploy {{ apache_solr__log4j_props }}'
+    ansible.builtin.template:
+      src: 'var/solr/log4j.xml.j2'
+      dest: '{{ apache_solr__log4j_props }}'
+    notify: 'apache_solr: restart solr.service'
+
+  - name: 'chown -R {{ apache_solr__user }}:{{ apache_solr__user }} {{ apache_solr__install_dir }}/solr'
+    ansible.builtin.file:
+      group: '{{ apache_solr__user }}'
+      owner: '{{ apache_solr__user }}'
+      path: '{{ apache_solr__install_dir }}/solr'
+      recurse: true
+      state: 'directory'
+
+  - name: 'chown -R {{ apache_solr__user }}:{{ apache_solr__user }} {{ apache_solr__var_dir }}'
+    ansible.builtin.file:
+      group: '{{ apache_solr__user }}'
+      owner: '{{ apache_solr__user }}'
+      path: '{{ apache_solr__var_dir }}'
+      recurse: true
+      state: 'directory'
+
+  - name: 'find {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }} -type d -exec chmod --changes 0755 {} \;'
+    ansible.builtin.command: 'find {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }} -type d -exec chmod --changes 0755 {} \;'
+    register: 'apache_solr__chmod_dirs_result'
+    changed_when: 'apache_solr__chmod_dirs_result["stdout"] | length'
+
+  - name: 'find {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }} -type f -exec chmod --changes 0644 {} \;'
+    ansible.builtin.command: 'find {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }} -type f -exec chmod --changes 0644 {} \;'
+    register: 'apache_solr__chmod_files_result'
+    changed_when: 'apache_solr__chmod_files_result["stdout"] | length'
+
+  - name: 'chmod -R 0755 {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}/bin'
+    ansible.builtin.file:
+      mode: 0o0755
+      path: '{{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}/bin'
+      recurse: true
+      state: 'directory'
+
+  - name: 'find {{ apache_solr__var_dir }} -type d -exec chmod --changes 0750 {} \;'
+    ansible.builtin.command: 'find {{ apache_solr__var_dir }} -type d -exec chmod --changes 0750 {} \;'
+    register: 'apache_solr__chmod_dirs_result'
+    changed_when: 'apache_solr__chmod_dirs_result["stdout"] | length'
+
+  - name: 'find {{ apache_solr__var_dir }} -type f -exec chmod --changes 0640 {} \;'
+    ansible.builtin.command: 'find {{ apache_solr__var_dir }} -type f -exec chmod --changes 0640 {} \;'
+    register: 'apache_solr__chmod_files_result'
+    changed_when: 'apache_solr__chmod_files_result["stdout"] | length'
+
+  tags:
+    - 'apache_solr'
+
+
+- block:
+
+  - name: 'Deploy /etc/systemd/system/solr.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/solr.service.j2'
+      dest: '/etc/systemd/system/solr.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'apache_solr__systemd_service_template_result'
+
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - 'apache_solr__systemd_service_template_result is changed'
+
+  - name: 'systemctl {{ apache_solr__service_enabled | bool | ternary("enable", "disable") }} --now solr.service'
+    ansible.builtin.systemd:
+      name: 'solr.service'
+      enabled: '{{ apache_solr__service_enabled }}'
+      state: '{{ apache_solr__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'apache_solr'
+    - 'apache_solr:state'
+
+
+# user management
+- block:
+
+  - name: 'Combined Users:'
+    ansible.builtin.debug:
+      var: 'apache_solr__users__combined_var'
+
+  - name: 'Generate hashed passwords'
+    ansible.builtin.shell: |-
+      set -o pipefail
+      PW='{{ item["password"] }}'
+      SALT=$(pwgen 48 -1)
+      echo '{{ item["username"] }}'
+      echo "$(echo -n "$SALT$PW" | sha256sum --binary | xxd -r -p | sha256sum --binary | xxd -r -p | base64 --wrap=1024) $(echo -n "$SALT" | base64 --wrap=1024)"
+      echo '{{ item["role"] }}'
+      echo '{{ item["state"] }}'
+    loop: '{{ apache_solr__users__combined_var }}'
+    register: 'apache_solr__pwhashes'
+    when:
+      - 'apache_solr__users__combined_var is defined and apache_solr__users__combined_var | length'
+
+  - name: 'Deploy {{ apache_solr__var_dir }}/security.json'
+    ansible.builtin.template:
+      src: 'var/solr/security.json.j2'
+      dest: '{{ apache_solr__var_dir }}/security.json'
+    notify: 'apache_solr: restart solr.service'
+    when:
+      - 'apache_solr__users__combined_var is defined and apache_solr__users__combined_var | length'
+
+  tags:
+    - 'apache_solr'
+    - 'apache_solr:user'

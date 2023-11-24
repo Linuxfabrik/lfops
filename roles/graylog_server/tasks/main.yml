@@ -11,6 +11,11 @@
       name: '{{ item }}'
       state: 'present'
     loop: '{{ graylog_server__plugins }}'
+  tags:
+    - 'graylog_server'
+
+
+- block:
 
   - name: 'Get the list of installed packages'
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
@@ -29,8 +34,44 @@
       mode: 0o644
     notify: 'graylog: restart graylog-server'
 
+  - name: '/usr/share/graylog-server/jvm/bin/keytool -list ...'
+    ansible.builtin.command: >-
+      /usr/share/graylog-server/jvm/bin/keytool
+      -keystore /usr/share/graylog-server/jvm/lib/security/cacerts
+      -storepass changeit
+      -list
+    register: 'graylog_server__cacerts_list_result'
+    changed_when: false # no actual config change
+    check_mode: false # run task even if `--check` is specified
+
+  - name: '/usr/share/graylog-server/jvm/bin/keytool -importcert ...'
+    ansible.builtin.command: >-
+      /usr/share/graylog-server/jvm/bin/keytool
+      -importcert
+      -keystore /usr/share/graylog-server/jvm/lib/security/cacerts
+      -storepass changeit
+      -alias {{ item['name'] }}
+      -file {{ item['file'] }}
+      -noprompt
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["name"] not in graylog_server__cacerts_list_result["stdout"]'
+    loop: '{{ graylog_server__cacerts_imports__combined_var }}'
+
+  - name: '/usr/share/graylog-server/jvm/bin/keytool -delete ...'
+    ansible.builtin.command: >-
+      /usr/share/graylog-server/jvm/bin/keytool
+      -delete
+      -keystore /usr/share/graylog-server/jvm/lib/security/cacerts
+      -storepass changeit
+      -alias {{ item['name'] }}
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ graylog_server__cacerts_imports__combined_var }}'
+
   tags:
     - 'graylog_server'
+    - 'graylog_server:configure'
 
 
 - block:
@@ -69,6 +110,8 @@
       force_basic_auth: true
       status_code: 200
     register: 'graylog_server__input_result'
+    changed_when: false # no actual config change
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'Terminate input on this node'
     ansible.builtin.uri:
@@ -108,7 +151,9 @@
       method: 'GET'
       force_basic_auth: true
       status_code: 200
-    register: 'index_sets_result'
+    register: 'graylog_server__get_index_sets_result'
+    changed_when: false # no actual config change
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'Create index set'
     ansible.builtin.uri:
@@ -123,7 +168,7 @@
       headers:
         Accept: 'application/json'
         X-Requested-By: 'cli'
-    when: "index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length == 0"
+    when: "graylog_server__get_index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length == 0"
 
   - name: 'Get a list of all index sets'
     ansible.builtin.uri:
@@ -133,11 +178,13 @@
       method: 'GET'
       force_basic_auth: true
       status_code: 200
-    register: 'index_sets_result'
+    register: 'graylog_server__get_index_sets_result'
+    changed_when: false # no actual config change
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'Set default index set'
     ansible.builtin.uri:
-      url: "http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets/{{ index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | regex_replace(\"\\[\\'|\\'\\]\", \"\") }}/default"
+      url: "http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets/{{ graylog_server__get_index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | regex_replace(\"\\[\\'|\\'\\]\", \"\") }}/default"
       user: '{{ graylog_server__admin_user["username"] }}'
       password: '{{ graylog_server__admin_user["password"] }}'
       method: 'PUT'
@@ -145,7 +192,7 @@
       status_code: 200
       headers:
         X-Requested-By: 'cli'
-    when: "index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length > 0"
+    when: "graylog_server__get_index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length > 0"
 
   when:
     - 'graylog_server__is_leader | bool' # only run this against one host, else we get duplicate inputs
