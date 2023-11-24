@@ -101,6 +101,12 @@
     changed_when: '"All tables already up to date" not in nextcloud__convert_filecache_bigint_result["stdout"]'
     # changed_when: there is no easy way to check for changes
 
+  tags:
+    - 'nextcloud'
+
+
+- block:
+
   - name: 'Set Nextcloud system settings'
     ansible.builtin.command: |
       sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["value"] }}
@@ -129,6 +135,7 @@
 
   tags:
     - 'nextcloud'
+    - 'nextcloud:configure'
 
 
 - block:

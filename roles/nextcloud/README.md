@@ -38,10 +38,10 @@ If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops
 | ---                       | ------------ |
 | `nextcloud`               | Installs and configures the whole Nextcloud server |
 | `nextcloud:apps`          | Enables, disables apps and sets their settings |
+| `nextcloud:configure`     | Deploys the `nextcloud_sysconfig` and the `nextcloud__proxyconfig` |
 | `nextcloud:cron`          | Sets the Nextcloud background job setting to cron, deploys and manages the state of: <ul><li>`nextcloud-app-update.{service,timer}`</li><li>`nextcloud-jobs.{service,timer}`</li><li>`nextcloud-ldap-show-remnants.{service,timer}`</li><li>`nextcloud-ldap-show-remnants` script</li><li>`nextcloud-scan-files.{service,timer}`</li></ul> |
+| `nextcloud:scripts`       | Deploys `/usr/local/bin/nextcloud-update` |
 | `nextcloud:state`         | Manages the state of: <ul><li>`nextcloud-jobs.timer`</li><li>`nextcloud-app-update.timer`</li><li>`nextcloud-scan-files.timer`</li><li>`nextcloud-ldap-show-remnants.timer`</li></ul> |
-| `nextcloud:scripts` | Deploys `/usr/local/bin/nextcloud-update` |
-| `nextcloud:user`          | Creates Nextcloud user and adjusts their Nextcloud settings |
 
 
 ## Mandatory Role Variables
