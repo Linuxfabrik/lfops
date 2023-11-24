@@ -9,6 +9,7 @@ apache_solr__logs_dir: '/var/log/solr'
 apache_solr__pid_dir: '/var/solr'
 apache_solr__service: 'solr'
 apache_solr__service_enabled: true
+apache_solr__stop_wait: 15
 apache_solr__user: 'solr'
 apache_solr__var_dir: '/var/solr'
 
