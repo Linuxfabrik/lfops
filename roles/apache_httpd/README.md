@@ -139,6 +139,7 @@ apache_httpd__conf_trace_enable: 'Off'
 | `apache_httpd__conf__group_var` /<br> `apache_httpd__conf__host_var` | List. List of dictionaries of `conf-available`/`conf-enabled` files. <br> Subkeys:<br> * `filename`: Mandatory, string. Destination filename in `conf-available/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.<br> * `enabled`: boolean. Defaults to `true`. Creates a symlink to `conf-available/<keyname>.conf` in `conf-enabled/` (`true`), otherwise the link is removed (`false`).<br> * `state`: string. `conf-available/<keyname>.conf` is created (`present`), otherwise file is removed (`absent`).<br> * `template`: Mandatory, string. Name of the Jinja template source file to use.<br>See example below. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
 | `apache_httpd__mods__group_var` / `apache_httpd__mods__host_var` | List. List of dictionaries of `mods-available`/`mods-enabled` files. <br>Subkeys:<br> * `filename`: Mandatory, string. Destination filename in `mods-available/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.<br> * `enabled`: boolean. Defaults to `true`. Creates a symlink to `mods-available/<keyname>.mods` in `mods-enabled/` (`true`), otherwise the link is removed (`false`).<br> * `state`: string. `mods-available/<keyname>.conf` is created (`present`), otherwise file is removed (`absent`).<br> * `template`: string. Name of the Ansible Jinja template source file to use. If ommited, `filename` is used.<br>See example below. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
 | `apache_httpd__packages__group_var` / `apache_httpd__packages__host_var` | List. List of dictionaries of packages to install, related to Apache, using the OS package manager. Possible options:<br> * `name`: Mandatory, string. The package name.<br> * `state`: Mandatory, string. State of the package, one of `present`, `absent`. Packages are removed first and then added. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
+| `apache_httpd__skip_document_root_chown` | Boolean. Set to true to skip the `chown -R apache:apache` of the document root. | `false` |
 | `apache_httpd__skip_php_fpm` | Boolean. Skip PHP configuration globally and in each vHost within Apache. | `false` |
 | `apache_httpd__systemd_enabled` | Boolean. Whether the Apache webserver service should start on boot (`true`) or not (`false`). | `true` |
 | `apache_httpd__systemd_state` | String. Make sure Apache webserver service is in a specific state. Possible options:<br> * `reloaded`<br> * `restarted`<br> * `started`<br> * `stopped` | `'started'` |
@@ -163,6 +164,7 @@ apache_httpd__mods__host_var:
 apache_httpd__packages__host_var:
   - name: 'mod_qos'
     state: 'present'
+apache_httpd__skip_document_root_chown: true
 apache_httpd__skip_php_fpm: false
 apache_httpd__systemd_enabled: true
 apache_httpd__systemd_state: 'started'
@@ -291,7 +293,7 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 | `apache_httpd__mod_security_coreruleset_checksum` | String. The OWASP ModSecurity Core Rule Set (CRS) SHA1 checksum according to your version. | `'https://github.com/coreruleset/coreruleset/archive'` |
 | `apache_httpd__mod_security_coreruleset_url` | String. The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers. | `'3.3.2'` |
 | `apache_httpd__mod_security_coreruleset_version` | String. The OWASP ModSecurity Core Rule Set (CRS) version number without "v". | `'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'` |
-|` apache_httpd__skip_mod_security_coreruleset | Boolean. Skip the installation of the OWASP ModSecurity Core Rule Set (CRS). | `false` |
+| `apache_httpd__skip_mod_security_coreruleset` | Boolean. Skip the installation of the OWASP ModSecurity Core Rule Set (CRS). | `false` |
 
 Example:
 ```yaml

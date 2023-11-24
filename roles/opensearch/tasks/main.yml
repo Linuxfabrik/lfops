@@ -6,6 +6,12 @@
         - 'opensearch{{ (opensearch__version__combined_var | length) | ternary("-" ~ opensearch__version__combined_var, "") }}'
       state: 'present'
 
+  tags:
+    - 'opensearch'
+
+
+- block:
+
   - name: 'Get the list of installed packages'
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
@@ -42,6 +48,111 @@
 
   tags:
     - 'opensearch'
+    - 'opensearch:configure'
+
+
+- block:
+
+  - name: 'Deploy /etc/opensearch/root-ca.pem'
+    ansible.builtin.copy:
+      dest: '/etc/opensearch/root-ca.pem'
+      content: '{{ opensearch__plugins_security_root_ca }}'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o600
+
+  - name: 'Deploy /etc/opensearch/admin.pem'
+    ansible.builtin.copy:
+      dest: '/etc/opensearch/admin.pem'
+      content: '{{ opensearch__plugins_security_admin_certificate }}'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o600
+
+  - name: 'Deploy /etc/opensearch/admin.key'
+    ansible.builtin.copy:
+      dest: '/etc/opensearch/admin.key'
+      content: '{{ opensearch__plugins_security_admin_certificate_key }}'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o600
+
+  - name: 'Deploy /etc/opensearch/node-http.pem'
+    ansible.builtin.copy:
+      dest: '/etc/opensearch/node-http.pem'
+      content: '{{ opensearch__plugins_security_http_certificate }}'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o600
+
+  - name: 'Deploy /etc/opensearch/node-http.key'
+    ansible.builtin.copy:
+      dest: '/etc/opensearch/node-http.key'
+      content: '{{ opensearch__plugins_security_http_certificate_key }}'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o600
+
+  - name: 'Deploy /etc/opensearch/node-transport.pem'
+    ansible.builtin.copy:
+      dest: '/etc/opensearch/node-transport.pem'
+      content: '{{ opensearch__plugins_security_transport_certificate }}'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o600
+
+  - name: 'Deploy /etc/opensearch/node-transport.key'
+    ansible.builtin.copy:
+      dest: '/etc/opensearch/node-transport.key'
+      content: '{{ opensearch__plugins_security_transport_certificate_key }}'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o600
+    notify: 'opensearch: /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh ...'
+
+  - name: 'Remove demo certificates'
+    ansible.builtin.file:
+      path: '/etc/opensearch/{{ item }}'
+      state: 'absent'
+    loop:
+      - 'esnode-key.pem'
+      - 'esnode.pem'
+      - 'kirk-key.pem'
+      - 'kirk.pem'
+    when:
+      - 'not opensearch__plugins_security_allow_unsafe_democertificates'
+
+
+  - block:
+
+    - name: 'Generate hashed passwords for the internal users'
+      ansible.builtin.command: '/usr/share/opensearch/plugins/opensearch-security/tools/hash.sh -p {{ item["password"] }}'
+      environment:
+        JAVA_HOME: '/usr/share/opensearch/jdk'
+      loop: '{{ opensearch__internal_users__combined_var }}'
+      register: 'opensearch__internal_users__hashed_result'
+      changed_when: false # no actual config change
+      check_mode: false # run task even if `--check` is specified
+
+    - name: 'Deploy /etc/opensearch/opensearch-security/internal_users.yml'
+      ansible.builtin.template:
+        src: 'etc/opensearch/opensearch-security/internal_users.yml.j2'
+        dest: '/etc/opensearch/opensearch-security/internal_users.yml'
+        owner: 'opensearch'
+        group: 'opensearch'
+        mode: 0o600
+
+    tags:
+      - 'opensearch'
+      - 'opensearch:configure'
+      - 'opensearch:user'
+
+  notify: 'opensearch: /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh ...'
+  when:
+    - 'not opensearch__plugins_security_disabled'
+  tags:
+    - 'opensearch'
+    - 'opensearch:configure'
 
 
 - block:
@@ -55,3 +166,59 @@
   tags:
     - 'opensearch'
     - 'opensearch:state'
+
+- name: 'make sure opensearch is restarted and securityadmin.sh ran if necessary, so that the roles afterwards can use opensearch'
+  ansible.builtin.meta: 'flush_handlers'
+  tags:
+    - 'opensearch'
+    - 'opensearch:configure'
+    - 'opensearch:user'
+
+
+# this is completely unrelated to the rest of the tasks, just a convenience feature to help the admin generate TLS certificates.
+# have a look at the README.
+- block:
+
+  - name: 'mkdir /tmp/opensearch-certs'
+    ansible.builtin.file:
+      path: '/tmp/opensearch-certs'
+      state: 'directory'
+
+  - name: 'Download search-guard-tlstool'
+    ansible.builtin.get_url:
+      # we use version 1.5, same as the official opensearch ansible role
+      # https://github.com/opensearch-project/ansible-playbook/blob/29bc5280fcd5e62ecf5594dc8de7aec26ff3d3de/roles/linux/opensearch/tasks/security.yml#L26
+      url: 'https://search.maven.org/remotecontent?filepath=com/floragunn/search-guard-tlstool/1.5/search-guard-tlstool-1.5.tar.gz'
+      dest: '/tmp/opensearch-certs/search-guard-tlstool.tar.gz'
+
+  - name: 'tar xzf --strip-components 1 -C /tmp/opensearch-certs/tmp/opensearch-certs/search-guard-tlstool.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/opensearch-certs/search-guard-tlstool.tar.gz'
+      dest: '/tmp/opensearch-certs'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'chmod +x /tmp/opensearch-certs/tools/sgtlstool.sh'
+    ansible.builtin.file:
+      path: '/tmp/opensearch-certs/tools/sgtlstool.sh'
+      mode: 0o0755
+
+  - name: 'Deploy /tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml'
+    ansible.builtin.file:
+      src: '/tmp/opensearch-certs/config/tlsconfig.yml.j2'
+      dest: '/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml'
+
+  - name: '/tmp/opensearch-nodecerts/tools/sgtlstool.sh ...'
+    ansible.builtin.command: >-
+      /tmp/opensearch-nodecerts/tools/sgtlstool.sh
+      --config /tmp/opensearch-nodecerts//config/{{ inventory_hostname }}-tlsconfig.yml
+      --create-ca
+      --create-crt
+      ---target /tmp/opensearch-nodecerts/{{ inventory_hostname }}
+    changed_when: true
+
+  delegate_to: 'localhost'
+  tags:
+    - 'never'
+    - 'opensearch:generate_certs'

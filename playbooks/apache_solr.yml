@@ -1,0 +1,12 @@
+- name: 'Install and configure Apache Solr'
+  hosts:
+    - 'lfops_apache_solr'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: '{{
+          apache_solr__apps__apps__dependent_var
+        }}'
+
+    - role: 'linuxfabrik.lfops.apache_solr'

@@ -289,6 +289,8 @@
       encoding: '{{ item["encoding"] | default("utf8") }}'
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ mariadb_server__databases__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
 
   tags:
     - 'mariadb_server'
@@ -312,6 +314,8 @@
       priv: '{{ (item["priv"] | join("/")) | default(omit) }}'
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ mariadb_server__users__combined_var }}'
+    loop_control:
+      label: '{{ item["username"] }}@{{ item["host"] | default("localhost") }}'
 
   tags:
     - 'mariadb_server'

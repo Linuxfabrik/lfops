@@ -2,7 +2,7 @@
 
 This role installs [acme.sh](https://github.com/acmesh-official/acme.sh) and enables issuing certificates with [Let's Encrypt](https://letsencrypt.org). Issued certificates are copied from `/etc/acme.sh` to the appropriate subfolders of `/etc/pki/`.
 
-After running this role, configure Apache like so:
+After running this role, configure Apache HTTPd as follows:
 ```
 SSLEngine on
 SSLCertificateFile      /etc/pki/tls/certs/www.example.com.crt
@@ -57,7 +57,7 @@ acme_sh__certificates:
 | -------- | ----------- | ------------- |
 | `acme_sh__deploy_to_host`  | The host which the issued certificates should be deployed to. | unset |
 | `acme_sh__deploy_to_host_hook`  | The deployment hook which should be used to deploy the certificates to the deploy host. | `ssh` |
-| `acme_sh__deploy_to_host_reload_cmd`  | The reload command which should be executed after the certificates were deployed to the deploy host. | `acme_sh__certificates["reload_cmd"]` |
+| `acme_sh__deploy_to_host_reload_cmd`  | The reload command which should be executed after the certificates were deployed to the deploy host. | `reload_cmd` subkey of the `acme_sh__certificates` item, or `systemctl reload httpd` |
 | `acme_sh__deploy_to_host_user`  | The remote user account which should be used to deploy the certificates to the deploy host. | `root` |
 | `acme_sh__key_length`  | Key length in bits of the certificates to issue. | `4096` |
 | `acme_sh__timer_enabled` | Enables or disables the weekly acme.sh timer, analogous to `systemctl enable/disable --now`. | `true` |
@@ -65,6 +65,10 @@ acme_sh__certificates:
 Example:
 ```yaml
 # optional
+acme_sh__deploy_to_host: 'proxy02.example.com'
+acme_sh__deploy_to_host_hook: 'ssh'
+acme_sh__deploy_to_host_reload_cmd: 'systemctl reload nginx'
+acme_sh__deploy_to_host_user: 'root'
 acme_sh__key_length: 4096
 acme_sh__timer_enabled: true
 ```
