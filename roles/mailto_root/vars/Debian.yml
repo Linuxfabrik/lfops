@@ -1,1 +1,1 @@
-mailto_root__from_var: '-a "From: {{ mailto_root__from }}"'
+mailto_root__from_command: '-a "From: {{ mailto_root__from }}"'

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+Role:mailto_root
+* Changed `mailto_root__from` from optional to mandatory.
+* Testmail to external addresses is now using sender address (mailto_root__from).
+
 Role:icingaweb2_module_vspheredb
 * Removed the `v` prefix from the `icingaweb2_module_vspheredb__version` variable to be consistent with the other `icingaweb2_module_*` roles.
 
