@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Role:mailto_root
 * Changed `mailto_root__from` from optional to mandatory.
-* Testmail to external addresses is now using sender address (mailto_root__from).
+* Testmail to external addresses is now using sender address (`mailto_root__from`).
 
 Role: opensearch
 * Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.
