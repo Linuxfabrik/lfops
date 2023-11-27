@@ -11,6 +11,10 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:mailto_root
+* Changed `mailto_root__from` from optional to mandatory.
+* Testmail to external addresses is now using sender address (`mailto_root__from`).
+
 Role: opensearch
 * Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.
 
