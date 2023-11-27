@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023111701
+# 2023112401
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -360,3 +360,4 @@ SOLR_LOG_LEVEL={{ apache_solr__log_level | d('INFO') }}
 SOLR_LOGS_DIR="{{ apache_solr__logs_dir | d('logs') }}"
 SOLR_PID_DIR="{{ apache_solr__pid_dir }}"
 SOLR_PORT={{ apache_solr__http_bind_port | d(8983) }}
+SOLR_STOP_WAIT={{ apache_solr__stop_wait | d(180) }}

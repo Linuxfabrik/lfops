@@ -28,27 +28,16 @@ Runs on
 
 | Variable            | Description                                                     |
 | --------            | -----------                                                     |
-| `mailto_root__to`   | List recipient addresses to which the mails should be relayed. |
+| `mailto_root__from` | The sender address from which the relayed mail should be sent.  |
+| `mailto_root__to`   | List recipient addresses to which the mails should be relayed.  |
 
 Example:
 ```yaml
 # mandatory
+mailto_root__from: 'noreply@example.com'
 mailto_root__to:
   - 'root@example.com'
   - 'root@other.example'
-```
-
-
-## Optional Role Variables
-
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `mailto_root__from` | The sender address from which the relayed mail should be sent.  | `'{{ postfix__relayhost_username }}'` |
-
-Example:
-```yaml
-# optional
-mailto_root__from: 'noreply@example.com'
 ```
 
 

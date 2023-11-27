@@ -4,10 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Note: Always add new entries to the top of the section, even if this results in multiple paragraphs for the same role. Otherwise the user will have to read through all the breaking changes every time they update LFOps. This way they can just read the new entries at the top, making it much easier for users to follow the CHANGELOG.
+
 
 ## [Unreleased]
 
 ### Breaking Changes
+
+Role:mailto_root
+* Changed `mailto_root__from` from optional to mandatory.
+* Testmail to external addresses is now using sender address (`mailto_root__from`).
 
 Role: opensearch
 * Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.

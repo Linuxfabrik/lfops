@@ -17,7 +17,7 @@ nextcloud__apps_config:
   - { key: 'theming',           value: 'name --value="Nextcloud für Teams / Nextcloud for Business"' }
   - { key: 'theming',           value: 'privacyUrl --value=https://www.linuxfabrik.ch/ueber-uns/agb/datenschutzerklaerung/' }
   - { key: 'theming',           value: 'slogan --value="powered by Linuxfabrik GmbH, Zürich"' }
-  - { key: 'theming',           value: 'url --value=https:\/\/ws.linuxfabrik.ch' }
+  - { key: 'theming',           value: 'url --value=https:\/\/ws.linuxfabrik.io' }
 
 nextcloud__datadir: '/data'
 
