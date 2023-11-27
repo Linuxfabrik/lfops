@@ -46,7 +46,7 @@
         line: 'smtp_sasl_auth_enable = {{ postfix__smtp_sasl_auth_enable | bool | ternary("yes", "no") }}'
 
       - regexp: '(?i)^#?smtp_sasl_security_options ='
-        line: '{{ (postfix__smtp_sasl_security_options is defined and postfix__smtp_sasl_security_options | length) | ternary("smtp_sasl_security_options = " + postfix__smtp_sasl_security_options, "#smtp_sasl_security_options =") }}'
+        line: '{{ postfix__smtp_sasl_security_options | length | ternary("smtp_sasl_security_options = " + postfix__smtp_sasl_security_options | default(["noplaintext", "noanonymous"]) | join(", "), "smtp_sasl_security_options =") }}'
 
       - regexp: '(?i)^#?smtp_sasl_password_maps ='
         line: 'smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd'

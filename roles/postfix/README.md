@@ -44,7 +44,7 @@ postfix__relayhost: 'mail.example.com:587'
 | `postfix__service_enabled` | Enables or disables the postfix service, analogous to `systemctl enable/disable`. | `true` |
 | `postfix__service_state` | Changes the state of the postfix service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
 | `postfix__smtp_sasl_auth_enable` | Enable SASL authentication in the Postfix SMTP client. By default, the Postfix SMTP client uses no authentication. | `true` |
-| `postfix__smtp_sasl_security_options` | Postfix SMTP client SASL security options. Possible options:<br>* `noplaintext`<br>* `noactive`<br>* `nodictionary`<br>* `noanonymous`<br>* `mutual_auth` | `'noanonymous'` |
+| `postfix__smtp_sasl_security_options` | Postfix SMTP client SASL security options, separated by commas. Possible options:<br>* `noplaintext`<br>* `noactive`<br>* `nodictionary`<br>* `noanonymous`<br>* `mutual_auth` | `'noplaintext, noanonymous'` |
 | `postfix__smtp_tls_security_level`| SMTPS wrappermode (TCP port 465) requires setting "smtp_tls_wrappermode = yes", and "smtp_tls_security_level = encrypt" (or stronger). The default SMTP TLS security level for the Postfix SMTP client. When a non-empty value is specified, this overrides the obsolete parameters smtp_use_tls, smtp_enforce_tls, and smtp_tls_enforce_peername; when no value is specified for smtp_tls_enforce_peername or the obsolete parameters, the default SMTP TLS security level is none. | unset |
 | `postfix__smtp_tls_wrappermode` | SMTPS wrappermode (TCP port 465) requires setting "smtp_tls_wrappermode = yes", and "smtp_tls_security_level = encrypt" (or stronger). Request that the Postfix SMTP client connects using the SUBMISSIONS/SMTPS protocol instead of using the STARTTLS command. | `false` |
 
@@ -58,7 +58,9 @@ postfix__relayhost_username: ''
 postfix__service_enabled: true
 postfix__service_state: 'started'
 postfix__smtp_sasl_auth_enable: true
-postfix__smtp_sasl_security_options: 'noanonymous'
+postfix__smtp_sasl_security_options:
+  - 'noanonymous'
+  - 'noplaintext'
 postfix__smtp_tls_security_level: 'encrypt'
 postfix__smtp_tls_wrappermode: true
 ```

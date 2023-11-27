@@ -5,5 +5,7 @@ postfix__relayhost_username: '{{ mailto_root__from }}'
 postfix__service_enabled: true
 postfix__service_state: 'started'
 postfix__smtp_sasl_auth_enable: true
-postfix__smtp_sasl_security_options: 'noanonymous'
+postfix__smtp_sasl_security_options:
+  - 'noplaintext'
+  - 'noanonymous'
 postfix__smtp_tls_wrappermode: false
