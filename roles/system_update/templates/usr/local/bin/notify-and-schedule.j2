@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2023030601
+# 2023112801
 
 export LC_ALL=C
 
 send_msg () {
 {% if ansible_facts['distribution'] == 'Debian' %}
-    echo -n "$MSGBODY" | mail -s "$SUBJECT" -a "From: $SENDER" "$RECIPIENTS"
+{# note: do not quote the $RECIPIENTS, else they are passed as a single argument #}
+    echo -n "$MSGBODY" | mail -s "$SUBJECT" -a "From: $SENDER" $RECIPIENTS
 {% else %}
-    echo -n "$MSGBODY" | mail -s "$SUBJECT" -r "$SENDER" "$RECIPIENTS"
+{# note: do not quote the $RECIPIENTS, else they are passed as a single argument #}
+    echo -n "$MSGBODY" | mail -s "$SUBJECT" -r "$SENDER" $RECIPIENTS
 {% endif %}
 {% if system_update__rocketchat_url is defined and system_update__rocketchat_url | length %}
     /usr/bin/curl --silent --output /dev/null --data-urlencode \
