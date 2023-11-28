@@ -1,6 +1,6 @@
 system_update__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
 system_update__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
-system_update__mail_from: '{{ postfix__relayhost_username }}'
+system_update__mail_from: '{{ mailto_root__from }}'
 system_update__mail_recipients_new_configfiles: '{{ mailto_root__to }}'
 system_update__mail_recipients_updates: '{{ mailto_root__to }}'
 system_update__mail_subject_prefix: ''

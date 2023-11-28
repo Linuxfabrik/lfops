@@ -40,7 +40,7 @@ If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blo
 | `system_update__icinga2_api_url` | The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `reboot` alias. | `'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'` |
 | `system_update__icinga2_api_user_login` | The Icinga2 API User to set the downtime for the corresponding host and all its services. | unset |
 | `system_update__icinga2_hostname` | The hostname of the Icinga2 host on which the downtime should be set. |  `'{{ ansible_facts["nodename"] }}'` |
-| `system_update__mail_from` | The email sender account. This will be used as the "from"-address for all notifications. | `'{{ postfix__relayhost_username }}'` |
+| `system_update__mail_from` | The email sender account. This will be used as the "from"-address for all notifications. | `'{{ mailto_root__from }}'` |
 | `system_update__mail_recipients_new_configfiles` | A list of email recipients to notify if there is a new version of a config file (`rpmnew` / `rpmsave` / `dpkg-dist` / `ucf-dist`). | `'{{ mailto_root__to }}'` |
 | `system_update__mail_recipients_updates` | A list of email recipients to notify about the expected updates and the report of the installed updates. | `'{{ mailto_root__to }}'` |
 | `system_update__mail_subject_prefix` | This will set a prefix that will be showed in front of the hostname. Can be used to separate servers by environment or customer. | `''` |

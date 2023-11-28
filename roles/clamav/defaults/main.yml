@@ -5,7 +5,7 @@ clamav__clamdscan_timer_enabled: false
 clamav__clamonacc_service_enabled: false
 clamav__freshclam_private_mirror: []
 clamav__freshclam_service_enabled: true
-clamav__mail_from: '{{ postfix__relayhost_username }}'
+clamav__mail_from: '{{ mailto_root__from }}'
 clamav__mail_recipients: '{{ mailto_root__to }}'
 clamav__mail_subject_prefix: ''
 clamav__scan_alert_broken_executables: true
