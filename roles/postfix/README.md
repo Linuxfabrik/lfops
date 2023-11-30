@@ -37,12 +37,20 @@ postfix__relayhost: 'mail.example.com:587'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `postfix__biff` | Boolean. See https://www.postfix.org/postconf.5.html#biff | `false` |
+| `postfix__bounce_queue_lifetime` | See https://www.postfix.org/postconf.5.html#bounce_queue_lifetime | `'5d'` |
 | `postfix__inet_interfaces` | The local network interface addresses that this mail system receives mail on. | `'127.0.0.1'` |
 | `postfix__inet_protocols` | The Internet protocols Postfix will attempt to use when making or accepting connections. Specify one or more of `ipv4` or `ipv6`, separated by whitespace or commas. The form `all` is equivalent to `ipv4, ipv6` or `ipv4`, depending on whether the operating system implements IPv6. | `'all'` |
+| `postfix__mailbox_size_limit` | See https://www.postfix.org/postconf.5.html#mailbox_size_limit | `51200000` |
+| `postfix__maximal_queue_lifetime` | See https://www.postfix.org/postconf.5.html#maximal_queue_lifetime | `'5d'` |
+| `postfix__message_size_limit` | See https://www.postfix.org/postconf.5.html#message_size_limit | `10240000` |
+| `postfix__recipient_delimiter` | See https://www.postfix.org/postconf.5.html#recipient_delimiter | `''` |
 | `postfix__relayhost_password` | Password for the specified user | `''` |
 | `postfix__relayhost_username` | Username with access to the mail server. | `'{{ mailto_root__from }}'` |
 | `postfix__service_enabled` | Enables or disables the postfix service, analogous to `systemctl enable/disable`. | `true` |
 | `postfix__service_state` | Changes the state of the postfix service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+| `postfix__smtp_destination_concurrency_limit` | See https://www.postfix.org/postconf.5.html#smtp_destination_concurrency_limit | `20` |
+| `postfix__smtp_destination_recipient_limit` | See https://www.postfix.org/postconf.5.html#smtp_destination_recipient_limit | `50` |
 | `postfix__smtp_sasl_auth_enable` | Enable SASL authentication in the Postfix SMTP client. By default, the Postfix SMTP client uses no authentication. | `true` |
 | `postfix__smtp_sasl_security_options` | List of Postfix SMTP client SASL security options, separated by commas. Possible options:<br>* `noplaintext`<br>* `noactive`<br>* `nodictionary`<br>* `noanonymous`<br>* `mutual_auth` | `['noplaintext', 'noanonymous']` |
 | `postfix__smtp_tls_security_level`| SMTPS wrappermode (TCP port 465) requires setting "smtp_tls_wrappermode = yes", and "smtp_tls_security_level = encrypt" (or stronger). The default SMTP TLS security level for the Postfix SMTP client. When a non-empty value is specified, this overrides the obsolete parameters smtp_use_tls, smtp_enforce_tls, and smtp_tls_enforce_peername; when no value is specified for smtp_tls_enforce_peername or the obsolete parameters, the default SMTP TLS security level is none. | unset |
@@ -51,16 +59,24 @@ postfix__relayhost: 'mail.example.com:587'
 Example:
 ```yaml
 # optional
+postfix__biff: false
+postfix__bounce_queue_lifetime: '5d'
 postfix__inet_interfaces: 'all'
 postfix__inet_protocols: 'all'
+postfix__mailbox_size_limit: 51200000
+postfix__maximal_queue_lifetime: '5d'
+postfix__message_size_limit: 10240000
+postfix__recipient_delimiter: ''
 postfix__relayhost_password: ''
 postfix__relayhost_username: ''
 postfix__service_enabled: true
 postfix__service_state: 'started'
+postfix__smtp_destination_concurrency_limit: 20
+postfix__smtp_destination_recipient_limit: 50
 postfix__smtp_sasl_auth_enable: true
 postfix__smtp_sasl_security_options:
-  - 'noanonymous'
   - 'noplaintext'
+  - 'noanonymous'
 postfix__smtp_tls_security_level: 'encrypt'
 postfix__smtp_tls_wrappermode: true
 ```
