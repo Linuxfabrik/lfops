@@ -180,6 +180,10 @@
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_monitoring | default(true)'
 
+    - role: 'linuxfabrik.lfops.icingaweb2_module_businessprocess'
+      when:
+        - 'not setup_icinga2_master__skip_icingaweb2_module_businessprocess | default(true)'
+
     - role: 'linuxfabrik.lfops.icingaweb2_module_company'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_company | default(false)'
