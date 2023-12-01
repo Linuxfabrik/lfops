@@ -49,12 +49,14 @@ icingaweb2_module_x509__version: 'v1.3.1'
 | -------- | ----------- | ------------- |
 | `icingaweb2_module_x509__database_host` | The host of the SQL database server. | `'localhost'` |
 | `icingaweb2_module_x509__database_name` | The name of the x509 SQL database. | `'icinga_x509'` |
+| `icingaweb2_module_x509__service_enabled` | Enables or disables the x509 service, analogous to `systemctl enable/disable --now`. | `true` on the primary Icinga2 Master |
 
 Example:
 ```yaml
 # optional
 icingaweb2_module_x509__database_host: 'localhost'
 icingaweb2_module_x509__database_name: 'icinga_x509'
+icingaweb2_module_x509__service_enabled: true
 ```
 
 

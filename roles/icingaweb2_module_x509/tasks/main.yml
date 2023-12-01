@@ -79,5 +79,18 @@
       # this module is not idempotent when state is import, and will import the dump file each time if run more than once. therefore, we check the existence manually before
       - 'icingaweb2_module_x509__table_exists_result["rowcount"][0] == 0'
 
+  - name: 'cp /usr/share/icingaweb2/modules/x509/config/systemd/icinga-x509.service /etc/systemd/system/'
+    ansible.builtin.copy:
+      src: '/usr/share/icingaweb2/modules/x509/config/systemd/icinga-x509.service'
+      dest: '/etc/systemd/system/'
+      remote_src: true
+    notify: 'icingaweb2_module_x509: systemctl daemon-reload'
+
+  - name: 'systemctl {{ icingaweb2_module_x509__service_enabled | bool | ternary("enable", "disable") }} --now icinga-x509.service'
+    ansible.builtin.service:
+      name: 'icinga-x509.service'
+      enabled: '{{ icingaweb2_module_x509__service_enabled }}'
+      state: '{{ icingaweb2_module_x509__service_enabled | bool | ternary("started", "stopped") }}'
+
   tags:
     - 'icingaweb2_module_x509'

@@ -1,5 +1,6 @@
 icingaweb2_module_x509__database_host: 'localhost'
 icingaweb2_module_x509__database_name: 'icinga_x509'
+icingaweb2_module_x509__service_enabled: true
 
 # -----------------------------------------------------------------------------
 
