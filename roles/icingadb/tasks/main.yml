@@ -145,6 +145,7 @@
         2. Run the migration: `icingadb-migrate --config /tmp/icingadb-migration.yml --cache /tmp/icingadb-migration.cache`
         3. Clean up: `rm -rf /tmp/icingadb-migration.cache /tmp/icingadb-migration.yml`
         4. If everything works, disable the IcingaWeb2 monitoring module: `icingacli module disable monitoring`
+        Also have a look at https://icinga.com/docs/icinga-db-web/latest/doc/10-Migration/ for other migration steps
 
   tags:
     - 'never'
