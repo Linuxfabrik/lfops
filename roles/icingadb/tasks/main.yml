@@ -138,7 +138,7 @@
       dest: '/tmp/icingadb-migration.yml'
       mode: 0o600 # contains secrets
 
-  - debug:
+  - ansible.builtin.debug:
       msg: |-
         Follow these manual steps to finish the migration:
         1. Double check the values in `/tmp/icingadb-migration.yml`
