@@ -72,6 +72,8 @@ network.host: {{ opensearch__network_host }}
 #discovery.seed_hosts: ["host1", "host2"]
 {% if opensearch__discovery_seed_hosts is defined and opensearch__discovery_seed_hosts | length %}
 discovery.seed_hosts: {{ opensearch__discovery_seed_hosts | ansible.builtin.to_yaml }}
+{% else %}
+discovery.type: single-node
 {% endif %}
 #
 # Bootstrap the cluster using an initial set of cluster-manager-eligible nodes:
