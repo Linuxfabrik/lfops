@@ -105,7 +105,7 @@
   - name: 'Be sure fwb is enabled and not masked. Reboot the server manually later to start fwb.'
     ansible.builtin.systemd:
       name: 'fwb.service'
-      enabled: false
+      enabled: true
       masked: false
       daemon_reload: true
 
