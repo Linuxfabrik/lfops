@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2023112801
+# 2023121201
 
 export LC_ALL=C
 
@@ -161,6 +161,6 @@ send_msg
 
 {% if ansible_facts['os_family'] == 'Debian' %}
 SUBJECT="$SUBJECT_PREFIX - System updated without Reboot"
-MSGBODY=$(cat /tmp/check-update | grep upgradable)
+MSGBODY=$(cat /tmp/update_output)
 send_msg
 {% endif %}
