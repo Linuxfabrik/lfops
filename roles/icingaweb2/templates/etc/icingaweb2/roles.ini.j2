@@ -1,3 +1,6 @@
+; {{ ansible_managed }}
+; 2023121301
+
 {% for item in icingaweb2__roles__combined_var if item['state'] | d('present') != 'absent' %}
 [{{ item['name'] }}]
 {% for key, value in item.items() if not key == 'name' %}

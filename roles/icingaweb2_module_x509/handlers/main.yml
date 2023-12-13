@@ -1,0 +1,3 @@
+- name: 'icingaweb2_module_x509: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true
