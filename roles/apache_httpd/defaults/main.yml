@@ -110,6 +110,11 @@ apache_httpd__mods__role_var:
     state: 'present'
     template: 'http2'
 
+  - filename: 'include'
+    enabled: true # required for `AddOutputFilter INCLUDES .shtml` of `conf-available/mime.conf`
+    state: 'present'
+    template: 'include'
+
   - filename: 'info'
     enabled: true
     state: 'present'
