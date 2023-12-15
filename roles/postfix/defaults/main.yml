@@ -14,6 +14,5 @@ postfix__smtp_destination_concurrency_limit: 20
 postfix__smtp_destination_recipient_limit: 50
 postfix__smtp_sasl_auth_enable: true
 postfix__smtp_sasl_security_options:
-  - 'noplaintext'
   - 'noanonymous'
 postfix__smtp_tls_wrappermode: false
