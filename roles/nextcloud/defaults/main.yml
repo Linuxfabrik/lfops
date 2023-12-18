@@ -52,6 +52,8 @@ nextcloud__sysconfig:
   - { key: 'memcache.distributed',               value: '--value=\\OC\\Memcache\\Redis' }
   - { key: 'memcache.locking',                   value: '--value=\\OC\\Memcache\\Redis' }
   - { key: 'filelocking.enabled',                value: '--value=true --type=boolean' }
+  # https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/config_sample_php_parameters.html#forbidden-chars
+  - { key: 'forbidden_chars',                    value: '--value=["?", "<", ">", ":", "*", "|", "\"", "\u0000", "\n", "\r"]' }
 
 nextcloud__timer_app_update_enabled: false
 nextcloud__timer_jobs_enabled: true
