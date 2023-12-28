@@ -148,6 +148,8 @@
       path: '/tmp/icingaweb2-module-director-basket.json'
       state: 'absent'
 
+  when:
+    - 'not icingaweb2_module_director__skip_basket_import'
   tags:
     - 'icingaweb2_module_director'
     - 'icingaweb2_module_director:basket'
