@@ -15,8 +15,9 @@
         - 'not grav__skip_policycoreutils | default(false)'
 
     - role: 'linuxfabrik.lfops.apps'
-      apps__apps__dependent_var:
-        - '{{ grav__apps__apps__dependent_var }}'
+      apps__apps__dependent_var: '{{
+          grav__apps__apps__dependent_var
+        }}'
       when:
         - 'not grav__skip_apps | default(false)'
 
