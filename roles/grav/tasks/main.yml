@@ -1,10 +1,5 @@
 - block:
 
-  - name: 'Install unzip'
-    ansible.builtin.package:
-      name: 'unzip'
-      state: 'present'
-
   - name: 'Test if Grav is already installed'
     stat:
       path: '{{ grav__install_dir | quote }}/index.php'
@@ -112,7 +107,7 @@
     loop: '{{ grav__users }}'
 
   when:
-    - 'not grav__skip_admin | d(false)'
+    - 'not grav__skip_admin'
   tags:
     - 'grav'
     - 'grav:user'
@@ -135,8 +130,6 @@
     changed_when: 'grav__restorecon_grav_result["stdout"] | length'
     loop:
       - '{{ grav__install_dir }}'
-
-    # todo: "rw" just necessary if using the Grav admin plugin, otherwise "r" would be sufficient
 
   - name: 'find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;'
     ansible.builtin.command: |
