@@ -80,7 +80,11 @@ logging:
 # as no historical data is deleted by default.
 retention:
   # Number of days to retain full historical data. By default, historical data is retained forever.
+{% if icingadb__retention_history_days is defined and icingadb__retention_history_days | string | length %}
+  history-days: {{ icingadb__retention_history_days }}
+{% else %}
 #  history-days:
+{% endif %}
 
   # Number of days to retain historical data for SLA reporting. By default, it is retained forever.
 #  sla-days:

@@ -5,8 +5,9 @@ This role installs and configures [IcingaDB](https://github.com/Icinga/icingadb)
 When running the `icingadb:migration` tag, it also tries to prepare the configuration file required for the migration from the IDO feature to Icinga DB. Note that the migration requires the following manual steps after running the role:
 1. Double check the values in `/tmp/icingadb-migration.yml`
 2. Run the migration: `icingadb-migrate --config /tmp/icingadb-migration.yml --cache /tmp/icingadb-migration.cache`
-3. Clean up: `rmdir /tmp/icingadb-migration.cache`
+3. Clean up: `rm -rf /tmp/icingadb-migration.cache /tmp/icingadb-migration.yml`
 4. If everything works, disable the IcingaWeb2 monitoring module: `icingacli module disable monitoring`
+Also have a look at https://icinga.com/docs/icinga-db-web/latest/doc/10-Migration/ for other migration steps.
 
 Notes on high availability / Icinga2 Master clusters:
 * Redis: "Each of the master nodes must have the Icinga DB feature enabled and have their own dedicated Redis server set up for it."
@@ -63,6 +64,7 @@ icingadb__database_login:
 | `icingadb__redis_host` | The host on which Redis instance is reachable. | `'127.0.0.1'` |
 | `icingadb__redis_password` | The password for the Redis instance, if authentication is enabled. | unset |
 | `icingadb__redis_port` | The port on which Redis instance is reachable. | `6379` |
+| `icingadb__retention_history_days` | Number of days to retain full historical data. By default, historical data is retained forever. | unset |
 | `icingadb__service_enabled` | Enables or disables the IcingaDB service, analogous to `systemctl enable/disable --now`. | `true` |
 
 Example:
@@ -76,6 +78,7 @@ icingadb__database_name: 'icingadb'
 icingadb__redis_host: '127.0.0.1'
 icingadb__redis_password: 'linuxfabrik'
 icingadb__redis_port: 6379
+icingadb__retention_history_days: 360
 icingadb__service_enabled: true
 ```
 
