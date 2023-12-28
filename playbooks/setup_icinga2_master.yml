@@ -30,6 +30,7 @@
       mariadb_server__databases__dependent_var:
         - '{{ icingaweb2_module_vspheredb__mariadb_server__databases__dependent_var }}'
         - '{{ icingaweb2_module_x509__mariadb_server__databases__dependent_var }}'
+        - '{{ icingaweb2_module_reporting__mariadb_server__databases__dependent_var }}'
         - '{{ icinga2_master__mariadb_server__databases__dependent_var }}'
         - '{{ icingadb__mariadb_server__databases__dependent_var }}'
         - '{{ icingaweb2__mariadb_server__databases__dependent_var }}'
@@ -37,6 +38,7 @@
       mariadb_server__users__dependent_var:
         - '{{ icingaweb2_module_vspheredb__mariadb_server__users__dependent_var }}'
         - '{{ icingaweb2_module_x509__mariadb_server__users__dependent_var }}'
+        - '{{ icingaweb2_module_reporting__mariadb_server__users__dependent_var }}'
         - '{{ icinga2_master__mariadb_server__users__dependent_var }}'
         - '{{ icingadb__mariadb_server__users__dependent_var }}'
         - '{{ icingaweb2__mariadb_server__users__dependent_var }}'
@@ -93,18 +95,6 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_icinga2_master__skip_policycoreutils | default(false)'
 
-    - role: 'linuxfabrik.lfops.selinux'
-      selinux__booleans__dependent_var: '{{
-          apache_httpd__selinux__booleans__dependent_var +
-          icinga2_master__selinux__booleans__dependent_var
-        }}'
-      selinux__fcontexts__dependent_var: '{{
-          icingaweb2_module_vspheredb__selinux__fcontexts__dependent_var
-        }}'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_icinga2_master__skip_selinux | default(false)'
-
     - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
@@ -138,6 +128,7 @@
       icingaweb2__resources__dependent_var: '{{
           icingaweb2_module_vspheredb__icingaweb2__resources__dependent_var +
           icingaweb2_module_x509__icingaweb2__resources__dependent_var +
+          icingaweb2_module_reporting__icingaweb2__resources__dependent_var +
           icingaweb2_module_monitoring__icingaweb2__resources__dependent_var +
           icingaweb2_module_director__icingaweb2__resources__dependent_var +
           icingadb__icingaweb2__resources__dependent_var
@@ -147,6 +138,18 @@
         }}'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2 | default(false)'
+
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var: '{{
+          apache_httpd__selinux__booleans__dependent_var +
+          icinga2_master__selinux__booleans__dependent_var
+        }}'
+      selinux__fcontexts__dependent_var: '{{
+          icingaweb2_module_vspheredb__selinux__fcontexts__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_icinga2_master__skip_selinux | default(false)'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{
@@ -169,9 +172,9 @@
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_doc | default(true)'
 
-    - role: 'linuxfabrik.lfops.icingaweb2_module_vspheredb'
+    - role: 'linuxfabrik.lfops.icingaweb2_module_reporting'
       when:
-        - 'not setup_icinga2_master__skip_icingaweb2_module_vspheredb | default(true)'
+        - 'not setup_icinga2_master__skip_icingaweb2_module_reporting | default(true)'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_x509'
       when:
@@ -192,6 +195,10 @@
     - role: 'linuxfabrik.lfops.icingaweb2_module_incubator'
       when:
         - 'not setup_icinga2_master__skip_icingaweb2_module_incubator | default(false)'
+
+    - role: 'linuxfabrik.lfops.icingaweb2_module_vspheredb'
+      when:
+        - 'not setup_icinga2_master__skip_icingaweb2_module_vspheredb | default(true)'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_director'
       when:
