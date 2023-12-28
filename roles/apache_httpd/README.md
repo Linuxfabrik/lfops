@@ -54,6 +54,7 @@ If you want to check Apache with [our STIG audit script](https://github.com/Linu
 ## Mandatory Requirements
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
+* Install the `python3-passlib` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
 
 
 ## Optional Requirements
@@ -68,6 +69,7 @@ If you want to check Apache with [our STIG audit script](https://github.com/Linu
 | ---      | ------------                   |
 | `apache_httpd` | * Installs and configures apache_httpd |
 | `apache_httpd:config` | * Creates or updates global Apache configuration<br> * Removes conf-available configs<br> * Creates conf-available configs<br> * Disables configs<br> * Enables configs |
+| `apache_httpd:htpasswd` | Manages htpasswd files. |
 | `apache_httpd:matomo` | * Deploys Matomo Log Analytics Python Script |
 | `apache_httpd:mod_security_coreruleset` | * Downloads, verifies and installs OWASP ModSecurity Core Rule Set (CRS)<br> * Installs tar<br> * Unarchives the CRS<br> * Links the CRS |
 | `apache_httpd:mods` | * Removes mods-available configs<br> * Create mods-available configs<br> * Disable mods<br> * Enable mods |
@@ -137,6 +139,7 @@ apache_httpd__conf_trace_enable: 'Off'
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `apache_httpd__conf__group_var` /<br> `apache_httpd__conf__host_var` | List. List of dictionaries of `conf-available`/`conf-enabled` files. <br> Subkeys:<br> * `filename`: Mandatory, string. Destination filename in `conf-available/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.<br> * `enabled`: boolean. Defaults to `true`. Creates a symlink to `conf-available/<keyname>.conf` in `conf-enabled/` (`true`), otherwise the link is removed (`false`).<br> * `state`: string. `conf-available/<keyname>.conf` is created (`present`), otherwise file is removed (`absent`).<br> * `template`: Mandatory, string. Name of the Jinja template source file to use.<br>See example below. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
+| `apache_httpd__htpasswd__group_var` /<br> `apache_httpd__htpasswd__host_var` | List of dictionaries containing used to create and update the flat-files used to store usernames and password for basic authentication of HTTP users. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password.</li><li>`path`: Optional, string. Path to the htpasswd file. Defaults to `/etc/httpd/.htpasswd`.</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
 | `apache_httpd__mods__group_var` / `apache_httpd__mods__host_var` | List. List of dictionaries of `mods-available`/`mods-enabled` files. <br>Subkeys:<br> * `filename`: Mandatory, string. Destination filename in `mods-available/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.<br> * `enabled`: boolean. Defaults to `true`. Creates a symlink to `mods-available/<keyname>.mods` in `mods-enabled/` (`true`), otherwise the link is removed (`false`).<br> * `state`: string. `mods-available/<keyname>.conf` is created (`present`), otherwise file is removed (`absent`).<br> * `template`: string. Name of the Ansible Jinja template source file to use. If ommited, `filename` is used.<br>See example below. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
 | `apache_httpd__packages__group_var` / `apache_httpd__packages__host_var` | List. List of dictionaries of packages to install, related to Apache, using the OS package manager. Possible options:<br> * `name`: Mandatory, string. The package name.<br> * `state`: Mandatory, string. State of the package, one of `present`, `absent`. Packages are removed first and then added. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml) |
 | `apache_httpd__skip_document_root_chown` | Boolean. Set to true to skip the `chown -R apache:apache` of the document root. | `false` |
@@ -152,6 +155,10 @@ apache_httpd__conf__host_var:
     enabled: true
     state: 'present'
     template: 'deflate'
+apache_httpd__htpasswd__host_var:
+  - username: 'test-user'
+    password: 'linuxfabrik'
+    state: 'present'
 apache_httpd__mods__host_var:
   - filename: 'alias'
     enabled: true

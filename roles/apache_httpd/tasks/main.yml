@@ -5,6 +5,7 @@
   tags:
     - 'apache_httpd'
     - 'apache_httpd:config'
+    - 'apache_httpd:htpasswd'
     - 'apache_httpd:mod_security_coreruleset'
     - 'apache_httpd:mods'
     - 'apache_httpd:state'
@@ -102,6 +103,15 @@
   tags:
     - 'apache_httpd'
     - 'apache_httpd:config'
+
+
+- block:
+
+  - ansible.builtin.include_tasks: 'htpasswd.yml'
+
+  tags:
+    - 'apache_httpd'
+    - 'apache_httpd:htpasswd'
 
 
 - block:

@@ -385,6 +385,22 @@ apache_httpd__conf__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
   }}'
 
+# Apache "htpasswd"
+# -----------------
+
+# apache_httpd__htpasswd__combined_var
+apache_httpd__htpasswd__dependent_var: []
+apache_httpd__htpasswd__group_var: []
+apache_httpd__htpasswd__host_var: []
+apache_httpd__htpasswd__role_var: []
+apache_httpd__htpasswd__combined_var: '{{ (
+      apache_httpd__htpasswd__role_var +
+      apache_httpd__htpasswd__dependent_var +
+      apache_httpd__htpasswd__group_var +
+      apache_httpd__htpasswd__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+  }}'
+
 
 # Apache Module Config
 # --------------------
@@ -516,6 +532,9 @@ apache_httpd__vhosts__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod(unique_key=["conf_server_name", "virtualhost_port"])
   }}'
 
+
+apache_httpd__python__modules__dependent_var:
+  - name: 'python3-passlib'
 
 apache_httpd__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
