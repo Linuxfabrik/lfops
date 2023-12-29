@@ -19,11 +19,15 @@ Runs on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `repo_baseos__basic_auth_login` | Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles. | `{{ lfops__repo_basic_auth_login \| default("") }}` |
 | `repo_mydumper__baseurl` | Set the URL to a custom mirror server providing the repository. | `https://mirror.linuxfabrik.ch/mydumper/el/{{ ansible_facts["distribution_major_version"] }}` |
 
 Example:
 ```yaml
 # optional
+repo_mydumper__basic_auth_login:
+  username: 'my-username'
+  password: 'linuxfabrik'
 repo_mydumper__baseurl: 'https://mirror.example.com'
 ```
 
