@@ -1,1 +1,2 @@
+repo_baseos__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
 repo_baseos__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
