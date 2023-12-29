@@ -9,3 +9,7 @@ baseurl={{ repo_collabora__mirror_url }}/CollaboraOnline/{{ repo_collabora__vers
 baseurl=https://www.collaboraoffice.com/repos/CollaboraOnline/{{ repo_collabora__version }}/customer-centos7-{{ repo_collabora__customer_token }}
 {% endif %}
 enabled=1
+{% if repo_collabora__basic_auth_login is defined and repo_collabora__basic_auth_login | length %}
+username={{ repo_collabora__basic_auth_login["username"] }}
+password={{ repo_collabora__basic_auth_login["password"] }}
+{% endif %}
