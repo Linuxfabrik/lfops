@@ -11,3 +11,7 @@ baseurl = https://repos.influxdata.com/rhel/$releasever/$basearch/stable
 enabled = 1
 gpgcheck = 1
 gpgkey = file:///etc/pki/rpm-gpg/influxdata-archive_compat.key
+{% if repo_influxdb__basic_auth_login is defined and repo_influxdb__basic_auth_login | length %}
+username={{ repo_influxdb__basic_auth_login["username"] }}
+password={{ repo_influxdb__basic_auth_login["password"] }}
+{% endif %}
