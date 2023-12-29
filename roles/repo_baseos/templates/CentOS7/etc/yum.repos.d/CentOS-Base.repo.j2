@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2023122902
 
 [base]
 name=CentOS-$releasever - Base
@@ -11,6 +11,10 @@ mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo
 {% endif %}
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
 
 #released updates
 [updates]
@@ -23,6 +27,10 @@ mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo
 {% endif %}
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
 
 #additional packages that may be useful
 [extras]
@@ -35,6 +43,10 @@ mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo
 {% endif %}
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
 
 #additional packages that extend functionality of existing packages
 [centosplus]
