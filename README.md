@@ -203,7 +203,7 @@ Note: Currently this only works for RPM repositories.
 
 Example:
 ```yaml
-repo_epel__basic_auth_login:
+lfops__repo_basic_auth_login:
   username: 'mirror-user'
   password: 'linuxfabrik'
 ```
