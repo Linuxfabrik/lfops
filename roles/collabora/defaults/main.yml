@@ -33,6 +33,7 @@ collabora__coolwsd_deepl_auth_key: ''
 collabora__coolwsd_deepl_enabled: false
 collabora__coolwsd_experimental_features: false
 collabora__coolwsd_logging_file_enable: true
+collabora__coolwsd_lok_allow: []
 collabora__coolwsd_out_of_focus_timeout_secs: 120
 collabora__coolwsd_post_allow: []
 collabora__coolwsd_ssl_enable: false

@@ -32,6 +32,7 @@ If you use the ["Collabora" Playbook](https://github.com/Linuxfabrik/lfops/blob/
 | `collabora__coolwsd_deepl_enabled` | If true, shows translate option as a menu entry in the compact view and as an icon in the tabbed view. | `false` |
 | `collabora__coolwsd_experimental_features` | If experimental features should be enabled or not. | `false` |
 | `collabora__coolwsd_logging_file_enable` | If coolwsd should write to a logfile or not. Possible options: | `true` |
+| `collabora__coolwsd_lok_allow` | Allowed hosts as an external data source inside edited files. All allowed post_allow.host and storage.wopi entries are also considered to be allowed as a data source. Used for example in: PostMessage Action_InsertGraphics, =WEBSERVICE() function, external reference in the cell. | `[]` |
 | `collabora__coolwsd_out_of_focus_timeout_secs` | The maximum number of seconds before dimming and stopping updates when the browser tab is no longer in focus. | `120` |
 | `collabora__coolwsd_post_allow` | List of client IP addresses to allow for POST(REST). | `[]` |
 | `collabora__coolwsd_ssl_enable` | Controls whether SSL encryption between coolwsd and the network is enabled (do not disable for production deployment). Possible options: | `false` |
@@ -59,6 +60,7 @@ collabora__coolwsd_deepl_auth_key: 'd3ca0484-915a-4214-80a5-b75f95238d9c:fx'
 collabora__coolwsd_deepl_enabled: false
 collabora__coolwsd_experimental_features: false
 collabora__coolwsd_logging_file_enable: true
+collabora__coolwsd_lok_allow: []
 collabora__coolwsd_out_of_focus_timeout_secs: 120
 collabora__coolwsd_post_allow: []
 collabora__coolwsd_ssl_enable: false
