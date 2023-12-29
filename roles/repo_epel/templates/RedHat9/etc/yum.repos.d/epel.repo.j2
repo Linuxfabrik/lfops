@@ -12,6 +12,10 @@ enabled=1
 gpgcheck=1
 countme=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}
 
 [epel-debuginfo]
 name=Extra Packages for Enterprise Linux $releasever - $basearch - Debug
@@ -23,6 +27,10 @@ metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-$releasever&
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9
 gpgcheck=1
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}
 
 [epel-source]
 name=Extra Packages for Enterprise Linux $releasever - $basearch - Source
@@ -34,3 +42,7 @@ metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-$releasever
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9
 gpgcheck=1
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}

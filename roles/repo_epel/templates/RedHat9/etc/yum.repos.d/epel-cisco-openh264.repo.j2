@@ -15,6 +15,10 @@ repo_gpgcheck=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever
 skip_if_unavailable=True
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}
 
 [epel-cisco-openh264-debuginfo]
 name=Extra Packages for Enterprise Linux $releasever openh264 (From Cisco) - $basearch - Debug
@@ -30,6 +34,10 @@ repo_gpgcheck=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever
 skip_if_unavailable=True
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}
 
 [epel-cisco-openh264-source]
 name=Extra Packages for Enterprise Linux $releasever openh264 (From Cisco) - $basearch - Source
@@ -45,3 +53,7 @@ repo_gpgcheck=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever
 skip_if_unavailable=True
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}

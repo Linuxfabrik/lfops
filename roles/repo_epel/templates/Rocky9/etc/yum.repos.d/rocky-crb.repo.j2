@@ -14,6 +14,10 @@ enabled=1
 countme=1
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}
 
 [crb-debug]
 name=Rocky Linux $releasever - CRB - Debug
@@ -27,6 +31,10 @@ gpgcheck=1
 enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}
 
 [crb-source]
 name=Rocky Linux $releasever - CRB - Source
@@ -40,3 +48,7 @@ gpgcheck=1
 enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}
