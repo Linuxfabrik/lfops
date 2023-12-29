@@ -19,6 +19,10 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 # Red Hat recently breaks compatibility between 8.n and 8.n+1. PGDG repo is
 # affected with the LLVM packages. This is a band aid repo for the llvmjit users
@@ -31,6 +35,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 # We provide extra package to support some RPMs in the PostgreSQL RPM repo, like
 # consul, haproxy, etc.
@@ -42,6 +50,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 # PGDG Red Hat Enterprise Linux / Rocky stable repositories:
 
@@ -56,6 +68,10 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg14]
 name=PostgreSQL 14 for RHEL / Rocky $releasever - $basearch
@@ -68,6 +84,10 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg13]
 name=PostgreSQL 13 for RHEL / Rocky $releasever - $basearch
@@ -80,6 +100,10 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg12]
 name=PostgreSQL 12 for RHEL / Rocky $releasever - $basearch
@@ -92,6 +116,10 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg11]
 name=PostgreSQL 11 for RHEL / Rocky $releasever - $basearch
@@ -104,6 +132,10 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 # PGDG RHEL / Rocky Updates Testing common repository.
 
@@ -114,6 +146,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 # PGDG RHEL / Rocky Updates Testing repositories. (These packages should not be used in production)
 # Available for 11 and above.
@@ -125,6 +161,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg15-updates-testing]
 name=PostgreSQL 15 for RHEL / Rocky $releasever - $basearch - Updates testing
@@ -133,6 +173,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg14-updates-testing]
 name=PostgreSQL 14 for RHEL / Rocky $releasever - $basearch - Updates testing
@@ -141,6 +185,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg13-updates-testing]
 name=PostgreSQL 13 for RHEL / Rocky $releasever - $basearch - Updates testing
@@ -149,6 +197,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg12-updates-testing]
 name=PostgreSQL 12 for RHEL / Rocky $releasever - $basearch - Updates testing
@@ -157,6 +209,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg11-updates-testing]
 name=PostgreSQL 11 for RHEL / Rocky $releasever - $basearch - Updates testing
@@ -165,6 +221,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 # PGDG Red Hat Enterprise Linux / Rocky SRPM testing common repository
 
@@ -175,6 +235,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 # PGDG RHEL / Rocky testing common SRPM repository for all PostgreSQL versions
 
@@ -185,6 +249,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 # PGDG Source RPMs (SRPM), and their testing repositories:
 
@@ -195,6 +263,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg15-source-updates-testing]
 name=PostgreSQL 15 for RHEL / Rocky $releasever - $basearch - Source updates testing
@@ -203,6 +275,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg14-source]
 name=PostgreSQL 14 for RHEL / Rocky $releasever - $basearch - Source
@@ -211,6 +287,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg14-source-updates-testing]
 name=PostgreSQL 14 for RHEL / Rocky $releasever - $basearch - Source updates testing
@@ -219,6 +299,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg13-source]
 name=PostgreSQL 13 for RHEL / Rocky $releasever - $basearch - Source
@@ -227,6 +311,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg13-source-updates-testing]
 name=PostgreSQL 13 for RHEL / Rocky $releasever - $basearch - Source updates testing
@@ -235,6 +323,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg12-source]
 name=PostgreSQL 12 for RHEL / Rocky $releasever - $basearch - Source
@@ -243,6 +335,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg12-source-updates-testing]
 name=PostgreSQL 12 for RHEL / Rocky $releasever - $basearch - Source update testing
@@ -251,6 +347,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg11-source]
 name=PostgreSQL 11 for RHEL / Rocky $releasever - $basearch - Source
@@ -259,6 +359,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg11-source-updates-testing]
 name=PostgreSQL 11 for RHEL / Rocky $releasever - $basearch - Source update testing
@@ -267,6 +371,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 # Debuginfo/debugsource packages for stable repos
 
@@ -277,6 +385,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg14-debuginfo]
 name=PostgreSQL 14 for RHEL / Rocky $releasever - $basearch - Debuginfo
@@ -285,6 +397,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg13-debuginfo]
 name=PostgreSQL 13 for RHEL / Rocky $releasever - $basearch - Debuginfo
@@ -293,6 +409,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg12-debuginfo]
 name=PostgreSQL 12 for RHEL / Rocky $releasever - $basearch - Debuginfo
@@ -301,6 +421,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg11-debuginfo]
 name=PostgreSQL 11 for RHEL / Rocky $releasever - $basearch - Debuginfo
@@ -309,6 +433,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 # Debuginfo/debugsource packages for testing repos
 # Available for 11 and above.
@@ -320,6 +448,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg14-updates-testing-debuginfo]
 name=PostgreSQL 14 for RHEL / Rocky $releasever - $basearch - Debuginfo
@@ -328,6 +460,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg13-updates-testing-debuginfo]
 name=PostgreSQL 13 for RHEL / Rocky $releasever - $basearch - Debuginfo
@@ -336,6 +472,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg12-updates-testing-debuginfo]
 name=PostgreSQL 12 for RHEL / Rocky $releasever - $basearch - Debuginfo
@@ -344,6 +484,10 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg11-updates-testing-debuginfo]
 name=PostgreSQL 11 for RHEL / Rocky $releasever - $basearch - Debuginfo
@@ -352,3 +496,7 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
 repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
