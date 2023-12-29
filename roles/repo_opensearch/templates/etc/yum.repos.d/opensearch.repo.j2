@@ -14,3 +14,7 @@ gpgcheck=1
 gpgkey=https://artifacts.opensearch.org/publickeys/opensearch.pgp
 autorefresh=1
 type=rpm-md
+{% if repo_opensearch__basic_auth_login is defined and repo_opensearch__basic_auth_login | length %}
+username={{ repo_opensearch__basic_auth_login["username"] }}
+password={{ repo_opensearch__basic_auth_login["password"] }}
+{% endif %}
