@@ -11,6 +11,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:repo_icinga
+* Renamed `repo_icinga__subscription_login` to `repo_icinga__basic_auth_login` and instead added a variable to explicitly use the Icinga Repo Subscription URL (`repo_icinga__use_subscription_url`). If you have `repo_icinga__subscription_login` set in your inventory, rename it to `repo_icinga__basic_auth_login` and set `repo_icinga__use_subscription_url: true` for the same effect as before.
+
 Role:mailto_root
 * Changed `mailto_root__from` from optional to mandatory.
 * Testmail to external addresses is now using sender address (`mailto_root__from`).

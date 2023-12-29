@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022092801
+# 2023122901
 
 {% if repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length %}
   {% set repo_icinga__baseurl = repo_icinga__mirror_url ~ '/icinga' %}
@@ -7,7 +7,7 @@
   {% set repo_icinga__baseurl = 'https://packages.icinga.com' %}
 {% endif %}
 
-{% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
+{% if repo_icinga__use_subscription_url %}
   {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/subscription/sles' %}
 {% else %}
   {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/openSUSE' %}
@@ -17,8 +17,8 @@
 
 [icinga-snapshot-builds]
 name=ICINGA (snapshot builds)
-{% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
-baseurl={{ repo_icinga__baseurl.split('://')[0] }}://{{ repo_icinga__subscription_login['username'] }}:{{ repo_icinga__subscription_login['password'] }}@{{ repo_icinga__baseurl.split('://')[1] }}
+{% if repo_icinga__basic_auth_login is defined and repo_icinga__basic_auth_login | length %}
+baseurl={{ repo_icinga__baseurl.split('://')[0] }}://{{ repo_icinga__basic_auth_login['username'] }}:{{ repo_icinga__basic_auth_login['password'] }}@{{ repo_icinga__baseurl.split('://')[1] }}
 {% else %}
 baseurl={{ repo_icinga__baseurl }}
 {% endif %}

@@ -1,1 +1,3 @@
+repo_icinga__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
 repo_icinga__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+repo_icinga__use_subscription_url: false
