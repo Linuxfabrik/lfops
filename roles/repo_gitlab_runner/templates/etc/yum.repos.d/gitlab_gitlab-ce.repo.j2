@@ -17,6 +17,10 @@ gpgkey=https://packages.gitlab.com/runner/gitlab-runner/gpgkey
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 metadata_expire=300
+{% if repo_gitlab_runner__basic_auth_login is defined and repo_gitlab_runner__basic_auth_login | length %}
+username={{ repo_gitlab_runner__basic_auth_login["username"] }}
+password={{ repo_gitlab_runner__basic_auth_login["password"] }}
+{% endif %}
 
 [runner_gitlab-runner-source]
 name=runner_gitlab-runner-source
@@ -34,3 +38,7 @@ gpgkey=https://packages.gitlab.com/runner/gitlab-runner/gpgkey
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 metadata_expire=300
+{% if repo_gitlab_runner__basic_auth_login is defined and repo_gitlab_runner__basic_auth_login | length %}
+username={{ repo_gitlab_runner__basic_auth_login["username"] }}
+password={{ repo_gitlab_runner__basic_auth_login["password"] }}
+{% endif %}
