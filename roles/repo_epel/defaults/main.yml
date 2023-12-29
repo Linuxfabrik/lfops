@@ -1,1 +1,2 @@
+repo_epel__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
 repo_epel__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
