@@ -1,2 +1,2 @@
-repo_gitlab_ce__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
 repo_gitlab_ce__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
+repo_gitlab_ce__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
