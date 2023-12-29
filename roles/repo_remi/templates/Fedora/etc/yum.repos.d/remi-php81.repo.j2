@@ -15,6 +15,10 @@ gpgcheck=1
 fastestmirror=1
 repo_gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi-$releasever
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
 
 [remi-php81-debuginfo]
 name=Remi's PHP 8.1 RPM repository for Fedora $releasever - $basearch - debuginfo
@@ -27,3 +31,7 @@ enabled=0
 gpgcheck=1
 repo_gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi-$releasever
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}

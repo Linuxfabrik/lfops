@@ -17,6 +17,10 @@ mirrorlist=http://cdn.remirepo.net/enterprise/7/remi/mirror
 enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
 
 [remi-php55]
 name=Remi's PHP 5.5 RPM repository for Enterprise Linux 7 - $basearch
@@ -31,6 +35,10 @@ mirrorlist=http://cdn.remirepo.net/enterprise/7/php55/mirror
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
 
 [remi-php56]
 name=Remi's PHP 5.6 RPM repository for Enterprise Linux 7 - $basearch
@@ -45,6 +53,10 @@ mirrorlist=http://cdn.remirepo.net/enterprise/7/php56/mirror
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
 
 [remi-test]
 name=Remi's test RPM repository for Enterprise Linux 7 - $basearch
@@ -59,6 +71,10 @@ mirrorlist=http://cdn.remirepo.net/enterprise/7/test/mirror
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
 
 [remi-debuginfo]
 name=Remi's RPM repository for Enterprise Linux 7 - $basearch - debuginfo
@@ -70,6 +86,10 @@ baseurl=http://rpms.remirepo.net/enterprise/7/debug-remi/$basearch/
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
 
 [remi-php55-debuginfo]
 name=Remi's PHP 5.5 RPM repository for Enterprise Linux 7 - $basearch - debuginfo
@@ -81,6 +101,10 @@ baseurl=http://rpms.remirepo.net/enterprise/7/debug-php55/$basearch/
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
 
 [remi-php56-debuginfo]
 name=Remi's PHP 5.6 RPM repository for Enterprise Linux 7 - $basearch - debuginfo
@@ -92,6 +116,10 @@ baseurl=http://rpms.remirepo.net/enterprise/7/debug-php56/$basearch/
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
 
 [remi-test-debuginfo]
 name=Remi's test RPM repository for Enterprise Linux 7 - $basearch - debuginfo
@@ -103,3 +131,7 @@ baseurl=http://rpms.remirepo.net/enterprise/7/debug-test/$basearch/
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
