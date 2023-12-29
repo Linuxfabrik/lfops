@@ -195,9 +195,22 @@ Example:
 lfops__monitoring_plugins_version: 'main'
 ```
 
+### `lfops__repo_basic_auth_login`
+
+This variable is used as the default across all `repo_*` roles if it is set. Can be used to authenticate against the repository server using HTTP basic auth. Have a look at the respective role's README for details.
+
+Note: Currently this only works for RPM repositories.
+
+Example:
+```yaml
+repo_epel__basic_auth_login:
+  username: 'mirror-user'
+  password: 'linuxfabrik'
+```
+
 ### `lfops__repo_mirror_url`
 
-This variable is used as the default across all `repo_*` roles if it is set. Have a look at the respective role's README for details.
+This variable is used as the default across all `repo_*` roles if it is set. Can be used to set the URL to a custom mirror server providing the repository. Have a look at the respective role's README for details.
 
 Example:
 ```yaml
