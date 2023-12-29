@@ -14,3 +14,7 @@ gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
 enabled=1
 autorefresh=1
 type=rpm-md
+{% if repo_elasticsearch__basic_auth_login is defined and repo_elasticsearch__basic_auth_login | length %}
+username={{ repo_elasticsearch__basic_auth_login["username"] }}
+password={{ repo_elasticsearch__basic_auth_login["password"] }}
+{% endif %}
