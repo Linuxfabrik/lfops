@@ -12,6 +12,10 @@ enabled=0
 type=rpm-md
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8
+{% if repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+username={{ repo_rpmfusion__basic_auth_login["username"] }}
+password={{ repo_rpmfusion__basic_auth_login["password"] }}
+{% endif %}
 
 [rpmfusion-nonfree-updates-testing-debuginfo]
 name=RPM Fusion for EL 8 - Nonfree - Test Updates Debug
@@ -20,6 +24,10 @@ enabled=0
 type=rpm-md
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8
+{% if repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+username={{ repo_rpmfusion__basic_auth_login["username"] }}
+password={{ repo_rpmfusion__basic_auth_login["password"] }}
+{% endif %}
 
 [rpmfusion-nonfree-updates-testing-source]
 name=RPM Fusion for EL 8 - Nonfree - Test Updates Source
@@ -28,3 +36,7 @@ enabled=0
 type=rpm-md
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8
+{% if repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+username={{ repo_rpmfusion__basic_auth_login["username"] }}
+password={{ repo_rpmfusion__basic_auth_login["password"] }}
+{% endif %}
