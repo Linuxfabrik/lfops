@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022092301
+# 2023122901
 
 {% if repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length %}
   {% set repo_icinga__baseurl = repo_icinga__mirror_url ~ '/icinga' %}
@@ -11,7 +11,7 @@
   {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/fedora' %}
 
 {% elif ansible_facts["os_family"] == "RedHat" %}
-  {% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
+  {% if repo_icinga__use_subscription_url %}
     {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/subscription/rhel' %}
   {% else %}
     {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/epel' %}
@@ -27,7 +27,7 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ICINGA
 metadata_expire=1d
-{% if repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length %}
-username={{ repo_icinga__subscription_login["username"] }}
-password={{ repo_icinga__subscription_login["password"] }}
+{% if repo_icinga__basic_auth_login is defined and repo_icinga__basic_auth_login | length %}
+username={{ repo_icinga__basic_auth_login["username"] }}
+password={{ repo_icinga__basic_auth_login["password"] }}
 {% endif %}
