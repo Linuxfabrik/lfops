@@ -1,1 +1,2 @@
 repo_mongodb__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+repo_mongodb__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
