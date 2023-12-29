@@ -1,1 +1,2 @@
+repo_collabora_code__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
 repo_collabora_code__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
