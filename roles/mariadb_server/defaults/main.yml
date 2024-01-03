@@ -272,25 +272,25 @@ mariadb_server__databases__dependent_var: []
 mariadb_server__databases__group_var: []
 mariadb_server__databases__host_var: []
 mariadb_server__databases__role_var: []
-mariadb_server__databases__combined_var: '{{
-  mariadb_server__databases__role_var +
-  mariadb_server__databases__group_var +
-  mariadb_server__databases__host_var +
-  mariadb_server__databases__dependent_var
-  | flatten
- }}'
+mariadb_server__databases__combined_var: '{{ (
+      mariadb_server__databases__role_var +
+      mariadb_server__databases__dependent_var +
+      mariadb_server__databases__group_var +
+      mariadb_server__databases__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 
 mariadb_server__users__dependent_var: []
 mariadb_server__users__group_var: []
 mariadb_server__users__host_var: []
 mariadb_server__users__role_var: []
-mariadb_server__users__combined_var: '{{
-  mariadb_server__users__role_var +
-  mariadb_server__users__group_var +
-  mariadb_server__users__host_var +
-  mariadb_server__users__dependent_var
-  | flatten
- }}'
+mariadb_server__users__combined_var: '{{ (
+      mariadb_server__users__role_var +
+      mariadb_server__users__dependent_var +
+      mariadb_server__users__group_var +
+      mariadb_server__users__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+  }}'
 
 # -----------------------------------------------------------------------------
 
