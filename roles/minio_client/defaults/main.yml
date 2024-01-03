@@ -1,10 +1,12 @@
-minio_client__aliases__combined_var: '{{ minio_client__aliases__role_var +
-  minio_client__aliases__group_var +
-  minio_client__aliases__host_var +
-  minio_client__aliases__dependent_var
- | flatten }}'
 minio_client__aliases__dependent_var: []
 minio_client__aliases__group_var: []
 minio_client__aliases__host_var: []
 minio_client__aliases__role_var: []
+minio_client__aliases__combined_var: '{{ (
+      minio_client__aliases__role_var +
+      minio_client__aliases__dependent_var +
+      minio_client__aliases__group_var +
+      minio_client__aliases__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 minio_client__mc_binary_url: 'https://dl.min.io/client/mc/release/linux-amd64/mc'
