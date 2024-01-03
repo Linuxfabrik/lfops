@@ -24,37 +24,37 @@ postgresql_server__databases__dependent_var: []
 postgresql_server__databases__group_var: []
 postgresql_server__databases__host_var: []
 postgresql_server__databases__role_var: []
-postgresql_server__databases__combined_var: '{{
-  postgresql_server__databases__role_var +
-  postgresql_server__databases__group_var +
-  postgresql_server__databases__host_var +
-  postgresql_server__databases__dependent_var
-  | flatten
- }}'
+postgresql_server__databases__combined_var: '{{ (
+      postgresql_server__databases__role_var +
+      postgresql_server__databases__dependent_var +
+      postgresql_server__databases__group_var +
+      postgresql_server__databases__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 
 postgresql_server__privs__dependent_var: []
 postgresql_server__privs__group_var: []
 postgresql_server__privs__host_var: []
 postgresql_server__privs__role_var: []
-postgresql_server__privs__combined_var: '{{
-  postgresql_server__privs__role_var +
-  postgresql_server__privs__group_var +
-  postgresql_server__privs__host_var +
-  postgresql_server__privs__dependent_var
-  | flatten
- }}'
+postgresql_server__privs__combined_var: '{{ (
+      postgresql_server__privs__role_var +
+      postgresql_server__privs__dependent_var +
+      postgresql_server__privs__group_var +
+      postgresql_server__privs__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="objs")
+  }}'
 
 postgresql_server__users__dependent_var: []
 postgresql_server__users__group_var: []
 postgresql_server__users__host_var: []
 postgresql_server__users__role_var: []
-postgresql_server__users__combined_var: '{{
-  postgresql_server__users__role_var +
-  postgresql_server__users__group_var +
-  postgresql_server__users__host_var +
-  postgresql_server__users__dependent_var
-  | flatten
- }}'
+postgresql_server__users__combined_var: '{{ (
+      postgresql_server__users__role_var +
+      postgresql_server__users__dependent_var +
+      postgresql_server__users__group_var +
+      postgresql_server__users__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+  }}'
 
 # -----------------------------------------------------------------------------
 
