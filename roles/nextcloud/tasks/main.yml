@@ -62,7 +62,7 @@
   - name: 'Run the Nextcloud installer'
     # installation hangs without "--admin-user" and "--admin-pass"
     ansible.builtin.command: >-
-      sudo -u apache php occ maintenance:install
+      php occ maintenance:install
         --admin-pass '{{ nextcloud__users.0.password }}'
         --admin-user '{{ nextcloud__users.0.username }}'
         --data-dir '{{ nextcloud__datadir }}'
@@ -74,12 +74,16 @@
     args:
       chdir: '/var/www/html/nextcloud/'
       creates: '/var/www/html/nextcloud/config/config.php'
+    become: true
+    become_user: 'apache'
 
   - name: 'Convert some database columns to big int'
     ansible.builtin.command: |
-      sudo -u apache php occ db:convert-filecache-bigint --no-interaction
+      php occ db:convert-filecache-bigint --no-interaction
     args:
       chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: 'apache'
     register: 'nextcloud__convert_filecache_bigint_result'
     changed_when: '"All tables already up to date" not in nextcloud__convert_filecache_bigint_result["stdout"]'
     # changed_when: there is no easy way to check for changes
@@ -93,14 +97,16 @@
   - name: 'Set Nextcloud system settings'
     # note: do not quote the key, that is how occ accesses array subkeys, eg 'redis timeout'
     ansible.builtin.command: >-
-      sudo -u apache php occ config:system:set
+      php occ config:system:set
       {{ item["key"] }}
       --value={{ item["value"] | quote }}
       --type={{ item["type"] | d("string") | quote }}
-    loop: '{{ nextcloud__sysconfig__combined_var }}'
     args:
       chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: 'apache'
     # changed_when: there is no easy way to check for changes
+    loop: '{{ nextcloud__sysconfig__combined_var }}'
 
   # do this straight after the installation to get NC up and running
   # otherwise subsequent occ commands might fail
@@ -118,9 +124,11 @@
 
   - name: 'Disable Nextcloud apps'
     ansible.builtin.command: |
-      sudo -u apache php occ app:disable {{ item['name'] | quote }}
+      php occ app:disable {{ item['name'] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: 'apache'
     when:
       - 'item["state"] | d("enabled") == "disabled"'
     loop: '{{ nextcloud__apps__combined_var }}'
@@ -130,9 +138,11 @@
 
   - name: 'Remove Nextcloud apps'
     ansible.builtin.command: |
-      sudo -u apache php occ app:remove {{ item['name'] | quote }}
+      php occ app:remove {{ item['name'] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: 'apache'
     when:
       - 'item["state"] | d("enabled") == "absent"'
     loop: '{{ nextcloud__apps__combined_var }}'
@@ -143,12 +153,14 @@
   - name: 'Install Nextcloud apps'
     # using `--keep-disabled` so that the apps are not instantly enabled, as that is done anyway in the next task
     ansible.builtin.command: >-
-      sudo -u apache php occ app:install
+      php occ app:install
       --keep-disabled
       {{ (item['force'] | d(false)) | ternary("--force", "") }}
       {{ item['name'] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: 'apache'
     when:
       - 'item["state"] | d("enabled") in ["present", "enabled"]'
     loop: '{{ nextcloud__apps__combined_var }}'
@@ -158,11 +170,13 @@
 
   - name: 'Enable Nextcloud apps'
     ansible.builtin.command: |
-      sudo -u apache php occ app:enable
+      php occ app:enable
       {{ (item['force'] | d(false)) | ternary("--force", "") }}
       {{ item['name'] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: 'apache'
     when:
       - 'item["state"] | d("enabled") == "enabled"'
     loop: '{{ nextcloud__apps__combined_var }}'
@@ -173,9 +187,11 @@
   - name: 'Delete Nextcloud app settings'
     # note: do not quote the key, that is how occ accesses array subkeys, eg 'redis timeout'
     ansible.builtin.command: |
-      sudo -u apache php occ config:app:delete {{ item["key"] }} --value={{ item["value"] | quote }}
+      php occ config:app:delete {{ item["key"] }} --value={{ item["value"] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: 'apache'
     when:
       - 'item["state"] | d("present") == "absent"'
     loop: '{{ nextcloud__app_configs__combined_var }}'
@@ -183,9 +199,11 @@
   - name: 'Set Nextcloud app settings'
     # note: do not quote the key, that is how occ accesses array subkeys, eg 'redis timeout'
     ansible.builtin.command: |
-      sudo -u apache php occ config:app:set {{ item["key"] }} --value={{ item["value"] | quote }}
+      php occ config:app:set {{ item["key"] }} --value={{ item["value"] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: 'apache'
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ nextcloud__app_configs__combined_var }}'
@@ -250,9 +268,11 @@
 
   - name: 'Set background job to "cron"'
     ansible.builtin.command: |
-      sudo -u apache php occ background:cron
+      php occ background:cron
     args:
       chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: 'apache'
     # changed_when: there is no easy way to check for changes
 
   - name: 'Deploy /etc/systemd/system/nextcloud-app-update.service'
