@@ -27,8 +27,9 @@
         - 'not grav__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
-      php__modules__dependent_var:
-        - '{{ grav__php__modules__dependent_var | default([]) }}'
+      php__modules__dependent_var: '{{
+          grav__php__modules__dependent_var
+        }}'
       when:
         - 'not grav__skip_php | default(false)'
 
