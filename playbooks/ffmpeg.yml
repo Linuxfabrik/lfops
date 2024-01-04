@@ -19,3 +19,4 @@
     - role: 'linuxfabrik.lfops.apps'
       apps__apps__dependent_var:
         - name: 'ffmpeg'
+          state: 'present'

@@ -27,20 +27,22 @@
         - 'not setup_icinga2_master__skip_repo_mydumper | default(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
-      mariadb_server__databases__dependent_var:
-        - '{{ icingaweb2_module_vspheredb__mariadb_server__databases__dependent_var }}'
-        - '{{ icingaweb2_module_x509__mariadb_server__databases__dependent_var }}'
-        - '{{ icinga2_master__mariadb_server__databases__dependent_var }}'
-        - '{{ icingadb__mariadb_server__databases__dependent_var }}'
-        - '{{ icingaweb2__mariadb_server__databases__dependent_var }}'
-        - '{{ icingaweb2_module_director__mariadb_server__databases__dependent_var }}'
-      mariadb_server__users__dependent_var:
-        - '{{ icingaweb2_module_vspheredb__mariadb_server__users__dependent_var }}'
-        - '{{ icingaweb2_module_x509__mariadb_server__users__dependent_var }}'
-        - '{{ icinga2_master__mariadb_server__users__dependent_var }}'
-        - '{{ icingadb__mariadb_server__users__dependent_var }}'
-        - '{{ icingaweb2__mariadb_server__users__dependent_var }}'
-        - '{{ icingaweb2_module_director__mariadb_server__users__dependent_var }}'
+      mariadb_server__databases__dependent_var: '{{
+          icingaweb2_module_vspheredb__mariadb_server__databases__dependent_var +
+          icingaweb2_module_x509__mariadb_server__databases__dependent_var +
+          icingaweb2_module_director__mariadb_server__databases__dependent_var +
+          icingaweb2__mariadb_server__databases__dependent_var +
+          icingadb__mariadb_server__databases__dependent_var +
+          icinga2_master__mariadb_server__databases__dependent_var
+        }}'
+      mariadb_server__users__dependent_var: '{{
+          icingaweb2_module_vspheredb__mariadb_server__users__dependent_var +
+          icingaweb2_module_x509__mariadb_server__users__dependent_var +
+          icingaweb2_module_director__mariadb_server__users__dependent_var +
+          icingaweb2__mariadb_server__users__dependent_var +
+          icingadb__mariadb_server__users__dependent_var +
+          icinga2_master__mariadb_server__users__dependent_var
+        }}'
       when:
         - 'not setup_icinga2_master__skip_mariadb_server | default(false)'
 

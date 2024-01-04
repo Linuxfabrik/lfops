@@ -42,10 +42,12 @@
         - 'not setup_wordpress__skip_kernel_settings | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
-      mariadb_server__databases__dependent_var:
-        - '{{ wordpress__mariadb_server__databases__dependent_var | default({}) }}'
-      mariadb_server__users__dependent_var:
-        - '{{ wordpress__mariadb_server__users__dependent_var | default({}) }}'
+      mariadb_server__databases__dependent_var: '{{
+          wordpress__mariadb_server__databases__dependent_var
+        }}'
+      mariadb_server__users__dependent_var: '{{
+          wordpress__mariadb_server__users__dependent_var
+        }}'
       when:
         - 'not setup_wordpress__skip_mariadb_server | default(false)'
 
@@ -55,8 +57,9 @@
         - 'not setup_wordpress__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
-      php__modules__dependent_var:
-        - '{{ wordpress__php__modules__dependent_var | default([]) }}'
+      php__modules__dependent_var: '{{
+          wordpress__php__modules__dependent_var
+        }}'
       when:
         - 'not setup_wordpress__skip_php | default(false)'
 
