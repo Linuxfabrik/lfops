@@ -11,6 +11,30 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:nextcloud
+* `nextcloud__apps_config`:
+    * Renamed the variable to `nextcloud__app_configs__*_var`.
+    * Added a `state` subkey that properly manages the state of the config options.
+    * Made more use of the `value` subkey. `--value` is no longer required. See the example below.
+```yaml
+# old
+nextcloud__apps_config:
+  - { key: 'core',              value: 'shareapi_default_expire_date --value=yes' }
+# new
+nextcloud__app_configs__host_var:
+  - key: 'core shareapi_default_expire_date'
+    value: 'yes'
+    state: 'present'
+```
+* `nextcloud__apps`:
+    * Renamed the variable to `nextcloud__apps__*_var`.
+    * Added a `state` subkey that properly manages the state of apps.
+* `nextcloud__sysconfig`:
+    * Renamed the variable to `nextcloud__sysconfig__*_var`.
+    * Added a `state` subkey that properly manages the state of the config options.
+    * Made more use of the `value` subkey. `--value` is no longer required, same as `nextcloud__app_configs__*_var`. See the example above.
+* Removed `nextcloud__proxyconfig`. Use `nextcloud__sysconfig__*_var` instead.
+
 Role:postgresql_server
 * Renamed the `name` subkey of `postgresql_server__users__*_var` to `username` for consistency and easier integration of the Bitwarden lookup plugin.
 

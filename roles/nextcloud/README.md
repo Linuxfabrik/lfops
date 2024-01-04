@@ -38,7 +38,7 @@ If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops
 | ---                       | ------------ |
 | `nextcloud`               | Installs and configures the whole Nextcloud server |
 | `nextcloud:apps`          | Enables, disables apps and sets their settings |
-| `nextcloud:configure`     | Deploys the `nextcloud_sysconfig` and the `nextcloud__proxyconfig` |
+| `nextcloud:configure`     | Deploys the `nextcloud__sysconfig__*_var` |
 | `nextcloud:cron`          | Sets the Nextcloud background job setting to cron, deploys and manages the state of: <ul><li>`nextcloud-app-update.{service,timer}`</li><li>`nextcloud-jobs.{service,timer}`</li><li>`nextcloud-ldap-show-remnants.{service,timer}`</li><li>`nextcloud-ldap-show-remnants` script</li><li>`nextcloud-scan-files.{service,timer}`</li></ul> |
 | `nextcloud:scripts`       | Deploys `/usr/local/bin/nextcloud-update` |
 | `nextcloud:state`         | Manages the state of: <ul><li>`nextcloud-jobs.timer`</li><li>`nextcloud-app-update.timer`</li><li>`nextcloud-scan-files.timer`</li><li>`nextcloud-ldap-show-remnants.timer`</li></ul> |
@@ -74,20 +74,20 @@ nextcloud__users:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `nextcloud__apps_config` | List of Key/Value pairs for configuring Apps in Nextcloud via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__apps` | List of Nextcloud Apps to install. Subkeys:<br> * `name`: Mandatory, string. The app name.<br> * `state`: Optional, string. State of the app, either `present` or `absent`. Defaults to `present`. | `[]` |
+| `nextcloud__app_configs__host_var` / <br> `nextcloud__app_configs__group_var` | List of dictionaries containing key-value pairs for configuring apps in Nextcloud. Subkeys: <ul><li>`key`: Mandatory, string. The name of the config option to set.</li><li>`value`: Mandatory, string. The configuration value.</li><li>`force`: Optional, boolean. Set to `true` to install the app regardless of the Nextcloud version requirement.</li><li>`state`: Optional, string. Either `absent`, `disabled`, `enabled` or `present`. Note that `enabled` also installs the app. Defaults to `enabled`.</li></ul> | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__apps__host_var` / <br> `nextcloud__apps__group_var` | List of dictionaries containing Nextcloud apps to install. Subkeys: <ul><li>`name`: Mandatory, string. The app name.</li><li>`state`: Optional, string. State of the app, either `present` or `absent`. Defaults to `present`.</li></ul> | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
 | `nextcloud__database_host` | Host where MariaDB is located. | `'localhost'` |
 | `nextcloud__database_name` | Name of the Nextcloud database in MariaDB. | `'nextcloud'` |
 | `nextcloud__datadir` | Where to store the user files. | `'/data'` |
 | `nextcloud__mariadb_login` | The user account for the database administrator. The Nextcloud setup will create its own database account. | `'{{ mariadb_server__admin_user }}'` |
-| `nextcloud__on_calendar_app_update` | Time to update the Nextcloud Apps. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'06,18,23:{{ 59 \| random(seed=inventory_hostname) }}'` |
+| `nextcloud__on_calendar_app_update` | Time to update the Nextcloud apps. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'06,18,23:{{ 59 \| random(seed=inventory_hostname) }}'` |
 | `nextcloud__on_calendar_jobs`| Run interval of OCC background jobs. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'*:0/5'` |
 | `nextcloud__on_calendar_scan_files`| Run interval of rescanning filesystem. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'*:50:15'` |
-| `nextcloud__proxyconfig` | List of dictionaries for [configuring Nextcloud behind a reverse proxy](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/reverse_proxy_configuration.html) via OCC. The IP addresses are those of the reverse proxy. Have a look at the example below on how to configure. | unset |
+| `nextcloud__skip_apps` | Boolean. Completely skips the management of Nextcloud apps. Set this to prevent changes via the WebGUI from being overwritten. | `false` |
 | `nextcloud__storage_backend_s3` | S3 Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. Have a look at the example below on how to configure. | unset |
 | `nextcloud__storage_backend_swift` | Swift Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. Have a look at the example below on how to configure. | unset |
-| `nextcloud__sysconfig` | List of Key/Value pairs for configuring Nextcloud itself via OCC. | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__timer_app_update_enabled` | Enables/disables Systemd-Timer for updating Apps. | `false` |
+| `nextcloud__sysconfig__host_var` / <br> `nextcloud__sysconfig__group_var` | List of dictionaries containing key-value pairs for Nextcloud system config settings. Also use this setting to configure [Nextcloud behind a reverse proxy](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/reverse_proxy_configuration.html), have a look at the example below on how to configure. Subkeys: <ul><li>`key`: Mandatory, string. The name of the config option to set.</li><li>`value`: Mandatory, string. The configuration value.</li><li>`type`: Optional, string. The type of the configuration value. Defaults to `'string`'.</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
+| `nextcloud__timer_app_update_enabled` | Enables/disables Systemd-Timer for updating apps. | `false` |
 | `nextcloud__timer_jobs_enabled` | Enables/disables Systemd-Timer for running OCC background jobs. | `true` |
 | `nextcloud__timer_ldap_show_remnants_enabled` | Enables/disables Systemd-Timer for mailing once a month which users are not available on LDAP anymore, but have remnants in Nextcloud. Will only be applied if the app `users_ldap` is present. | `true` |
 | `nextcloud__timer_scan_files_enabled` | Enables/disables Systemd-Timer for re-scanning the Nextcloud files. | `true` |
@@ -98,7 +98,14 @@ nextcloud__users:
 Example:
 ```yaml
 # optional
-nextcloud__apps:
+nextcloud__app_configs__host_var:
+  - key: 'core shareapi_default_expire_date'
+    value: 'yes'
+    state: 'present'
+  - key: 'theming imprintUrl'
+    value: 'https://www.example.com'
+    state: 'present'
+nextcloud__apps__host_var:
   - name: 'bruteforcesettings'
     state: 'present'
   - name: 'weather'
@@ -110,13 +117,7 @@ nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'
 nextcloud__on_calendar_scan_files: '*:50:15'
-nextcloud__proxyconfig:
-  - { key: 'overwrite.cli.url', value: '--value=https://cloud.example.com' }
-  - { key: 'overwritecondaddr', value: '--value=^192\\.0\\.2\\.7$' }
-  - { key: 'overwritehost',     value: '--value=cloud.example.com' }
-  - { key: 'overwriteprotocol', value: '--value=https' }
-  - { key: 'overwritewebroot',  value: '--value=/' }
-  - { key: 'trusted_proxies',   value: '0 --value=192.0.2.7' }
+nextcloud__skip_apps: true
 # if not local storage, then either one of s3 ...
 nextcloud__storage_backend_s3:
   autocreate: true
@@ -140,6 +141,39 @@ nextcloud__storage_backend_swift:
   user_domain_name: 'Default'
   user_name: 'PCU-XXXXXX'
   user_password: 'linuxfabrik'
+nextcloud__sysconfig__host_var:
+  - key: 'check_for_working_wellknown_setup'
+    value: 'true'
+    type: 'boolean'
+    state: 'present'
+  - key: 'updatechecker'
+    value: 'false'
+    type: 'boolean'
+    state: 'present'
+  - key: 'redis timeout'
+    value: '0.5'
+    type: 'double'
+    state: 'present'
+  # reverse proxy config
+  - key: 'overwrite.cli.url '
+    value: 'https://cloud.example.com'
+    state: 'present'
+  - key: 'overwritecondaddr '
+    value: '^192\\.0\\.2\\.7$' # IP of the reverse proxy
+    state: 'present'
+  - key: 'overwritehost '
+    value: 'cloud.example.com'
+    state: 'present'
+  - key: 'overwriteprotocol '
+    value: 'https'
+    state: 'present'
+  - key: 'overwritewebroot '
+    value: '/'
+    state: 'present'
+  - key: 'trusted_proxies 0 '
+    value: '192.0.2.7' # IP of the reverse proxy
+    state: 'present'
+
 nextcloud__timer_app_update_enabled: true
 nextcloud__timer_jobs_enabled: true
 nextcloud__timer_ldap_show_remnants_enabled: true

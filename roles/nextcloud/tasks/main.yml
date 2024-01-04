@@ -1,19 +1,5 @@
 - block:
 
-  - name: 'Make sure that Ansible local facts directory exists'
-    ansible.builtin.file:
-      path: '/etc/ansible/facts.d'
-      state: 'directory'
-      owner: 'root'
-      group: 'root'
-      mode: 0o755
-
-  tags:
-    - 'nextcloud'
-
-
-- block:
-
   - name: 'Install bzip2 jq openldap-clients samba-client'
     ansible.builtin.package:
       name:
@@ -35,7 +21,7 @@
       remote_src: true
       creates: '/var/www/html/nextcloud/config'
 
-  - name: 'Storage Backend: Deploy /var/www/html/nextcloud/config/objectstore.config.php'
+  - name: 'Deploy /var/www/html/nextcloud/config/objectstore.config.php (storage backend)'
     ansible.builtin.template:
       src: 'var/www/html/nextcloud/config/objectstore.config.php.j2'
       dest: '/var/www/html/nextcloud/config/objectstore.config.php'
@@ -68,15 +54,12 @@
       path: '/var/www/html/nextcloud/occ'
       mode: 0o755
 
-  - name: 'restorecon -Fvr ...'
-    ansible.builtin.command: 'restorecon -Fvr {{ item }}'
+  - name: 'restorecon -Fvr /data /var/www/html/nextcloud'
+    ansible.builtin.command: 'restorecon -Fvr /data /var/www/html/nextcloud'
     register: 'nextcloud__restorecon_nextcloud_result'
     changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length'
-    loop:
-      - '/data'
-      - '/var/www/html/nextcloud'
 
-  - name: 'Run nextcloud installer'
+  - name: 'Run the Nextcloud installer'
     # installation hangs without "--admin-user" and "--admin-pass"
     ansible.builtin.command: >-
       sudo -u apache php occ maintenance:install
@@ -108,27 +91,20 @@
 - block:
 
   - name: 'Set Nextcloud system settings'
-    ansible.builtin.command: |
-      sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["value"] }}
-    loop: '{{ nextcloud__sysconfig }}'
-    args:
-      chdir: '/var/www/html/nextcloud/'
-    # changed_when: there is no easy way to check for changes
-
-  - name: 'Set Nextcloud proxy settings'
-    ansible.builtin.command: |
-      sudo -u apache php occ config:system:set {{ item["key"] }} {{ item["value"] }}
-    loop: '{{ nextcloud__proxyconfig }}'
-    when:
-      - 'nextcloud__proxyconfig is defined'
-      - 'nextcloud__proxyconfig | length'
+    # note: do not quote the key, that is how occ accesses array subkeys, eg 'redis timeout'
+    ansible.builtin.command: >-
+      sudo -u apache php occ config:system:set
+      {{ item["key"] }}
+      --value={{ item["value"] | quote }}
+      --type={{ item["type"] | d("string") | quote }}
+    loop: '{{ nextcloud__sysconfig__combined_var }}'
     args:
       chdir: '/var/www/html/nextcloud/'
     # changed_when: there is no easy way to check for changes
 
   # do this straight after the installation to get NC up and running
   # otherwise subsequent occ commands might fail
-  - name: 'nextcloud: restart php-fpm'
+  - name: 'restart php-fpm'
     ansible.builtin.service:
       name: 'php-fpm'
       state: 'restarted'
@@ -140,151 +116,87 @@
 
 - block:
 
-  - name: 'Register if role state file exists'
-    ansible.builtin.stat:
-      path: '/etc/ansible/facts.d/nextcloud__app_install.state'
-    register: 'nextcloud__app_install_state'
-
-  tags:
-    - 'nextcloud'
-
-
-- block:
-
-  - name: 'Disable every possible Nextcloud App on initial setup, but do this only once'
+  - name: 'Disable Nextcloud apps'
     ansible.builtin.command: |
-      sudo -u apache php occ app:disable {{ item }}
-    loop:
-      # commented modules are default, and can't be disabled
-      - 'accessibility'
-      - 'activity'
-      - 'circles'
-      # - 'cloud_federation_api'
-      - 'comments'
-      - 'contactsinteraction'
-      - 'dashboard'
-      # - 'dav'
-      # - 'federatedfilesharing'
-      - 'federation'
-      # - 'files'
-      - 'files_pdfviewer'
-      - 'files_rightclick'
-      - 'files_sharing'
-      - 'files_trashbin'
-      - 'files_versions'
-      - 'files_videoplayer'
-      - 'firstrunwizard'
-      - 'logreader'
-      # - 'lookup_server_connector'
-      - 'nextcloud_announcements'
-      - 'notifications'
-      # - 'oauth2'
-      - 'password_policy'
-      - 'photos'
-      - 'privacy'
-      # - 'provisioning_api'
-      - 'recommendations'
-      - 'serverinfo'
-      # - 'settings'
-      - 'sharebymail'
-      - 'support'
-      - 'survey_client'
-      - 'systemtags'
-      - 'text'
-      - 'theming'
-      # - 'twofactor_backupcodes'
-      - 'updatenotification'
-      - 'user_status'
-      # - 'viewer'
-      - 'weather_status'
-      # - 'workflowengine'
+      sudo -u apache php occ app:disable {{ item['name'] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
-    ignore_errors: true
+    when:
+      - 'item["state"] | d("enabled") == "disabled"'
+    loop: '{{ nextcloud__apps__combined_var }}'
+    register: 'nextcloud__apps_disable_result'
+    changed_when: '"disabled" in nextcloud__apps_disable_result["stdout"]'
+    failed_when: 'nextcloud__apps_disable_result["rc"] != 0 and "No such app enabled:" not in nextcloud__apps_disable_result["stdout"]'
 
-  - name: 'Install and enable Nextcloud Apps on initial setup, but do this only once'
+  - name: 'Remove Nextcloud apps'
     ansible.builtin.command: |
-      sudo -u apache php occ app:install {{ item }}
-    loop:
-      - 'bruteforcesettings'
+      sudo -u apache php occ app:remove {{ item['name'] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
-    ignore_errors: true
+    when:
+      - 'item["state"] | d("enabled") == "absent"'
+    loop: '{{ nextcloud__apps__combined_var }}'
+    register: 'nextcloud__apps_remove_result'
+    changed_when: '"removed" in nextcloud__apps_remove_result["stdout"]'
+    failed_when: 'nextcloud__apps_remove_result["rc"] != 0 and "is not installed" not in nextcloud__apps_remove_result["stdout"]'
 
-  - name: 'Enable a subset of pre-installed Nextcloud Apps on initial setup, but do this only once'
-    ansible.builtin.command: |
-      sudo -u apache php occ app:enable {{ item }}
-    loop:
-      - 'files_pdfviewer'
-      - 'files_rightclick'
-      - 'files_sharing'
-      - 'files_trashbin'
-      - 'files_versions'
-      - 'files_videoplayer'
-      - 'password_policy'
-      - 'serverinfo'
-      - 'sharebymail'
-      - 'text'
-      - 'theming'
+  - name: 'Install Nextcloud apps'
+    # using `--keep-disabled` so that the apps are not instantly enabled, as that is done anyway in the next task
+    ansible.builtin.command: >-
+      sudo -u apache php occ app:install
+      --keep-disabled
+      {{ (item['force'] | d(false)) | ternary("--force", "") }}
+      {{ item['name'] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
-    ignore_errors: true
+    when:
+      - 'item["state"] | d("enabled") in ["present", "enabled"]'
+    loop: '{{ nextcloud__apps__combined_var }}'
+    register: 'nextcloud__apps_install_result'
+    changed_when: 'nextcloud__apps_install_result["rc"] == 0 and "already installed" not in nextcloud__apps_install_result["stdout"]'
+    failed_when: 'nextcloud__apps_install_result["rc"] != 0 and "already installed" not in nextcloud__apps_install_result["stdout"]'
 
-  - name: 'Create a role state file'
-    ansible.builtin.file:
-      dest: '/etc/ansible/facts.d/nextcloud__app_install.state'
-      owner: 'root'
-      group: 'root'
-      mode: '0600'
-      state: 'touch'
-
-  when:
-    - 'not nextcloud__app_install_state.stat.exists'
-  tags:
-    - 'nextcloud'
-
-
-- block:
-
-  - name: 'Disable Nextcloud Apps'
+  - name: 'Enable Nextcloud apps'
     ansible.builtin.command: |
-      sudo -u apache php occ app:disable {{ item }}
-    loop: '{{ nextcloud__apps | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
+      sudo -u apache php occ app:enable
+      {{ (item['force'] | d(false)) | ternary("--force", "") }}
+      {{ item['name'] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
-    ignore_errors: true
+    when:
+      - 'item["state"] | d("enabled") == "enabled"'
+    loop: '{{ nextcloud__apps__combined_var }}'
+    register: 'nextcloud__apps_enable_result'
+    changed_when: 'nextcloud__apps_enable_result["rc"] == 0 and "already enabled" not in nextcloud__apps_enable_result["stdout"]'
+    failed_when: 'nextcloud__apps_enable_result["rc"] != 0 and "already enabled" not in nextcloud__apps_enable_result["stdout"]'
 
-  - name: 'Install Nextcloud Apps'
+  - name: 'Delete Nextcloud app settings'
+    # note: do not quote the key, that is how occ accesses array subkeys, eg 'redis timeout'
     ansible.builtin.command: |
-      sudo -u apache php occ app:install {{ item }}
-    loop: '{{ (nextcloud__apps | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
-          + (nextcloud__apps | selectattr("state", "undefined") | map(attribute="name")) }}'
+      sudo -u apache php occ config:app:delete {{ item["key"] }} --value={{ item["value"] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
-    ignore_errors: true
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ nextcloud__app_configs__combined_var }}'
 
-  - name: 'Enable Nextcloud Apps'
+  - name: 'Set Nextcloud app settings'
+    # note: do not quote the key, that is how occ accesses array subkeys, eg 'redis timeout'
     ansible.builtin.command: |
-      sudo -u apache php occ app:enable {{ item }}
-    loop: '{{ (nextcloud__apps | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
-          + (nextcloud__apps | selectattr("state", "undefined") | map(attribute="name")) }}'
+      sudo -u apache php occ config:app:set {{ item["key"] }} --value={{ item["value"] | quote }}
     args:
       chdir: '/var/www/html/nextcloud/'
-    ignore_errors: true
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ nextcloud__app_configs__combined_var }}'
 
-  - name: 'Set Nextcloud App Settings'
-    ansible.builtin.command: |
-      sudo -u apache php occ config:app:set {{ item["key"] }} {{ item["value"] }}
-    loop: '{{ nextcloud__apps_config }}'
-    args:
-      chdir: '/var/www/html/nextcloud/'
-    ignore_errors: true
-
-  - name: 'nextcloud: restart php-fpm'
+  - name: 'restart php-fpm'
     ansible.builtin.service:
       name: 'php-fpm'
       state: 'restarted'
 
+  when:
+    - 'not nextcloud__skip_apps'
   tags:
     - 'nextcloud'
     - 'nextcloud:apps'
@@ -386,10 +298,6 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    when:
-      - 'nextcloud__apps is defined'
-      - '(nextcloud__apps | selectattr("state", "defined") | selectattr("state", "ne", "absent") | selectattr("name", "eq", "user_ldap") | selectattr("state", "eq", "present") | map(attribute="name") | length)
-        or (nextcloud__apps | selectattr("state", "undefined") | selectattr("name", "eq", "user_ldap") | selectattr("state", "eq", "present") | map(attribute="name") | length)'
     notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/nextcloud-ldap-show-remnants.timer'
@@ -399,10 +307,6 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    when:
-      - 'nextcloud__apps is defined'
-      - '(nextcloud__apps | selectattr("state", "defined") | selectattr("state", "ne", "absent") | selectattr("name", "eq", "user_ldap") | selectattr("state", "eq", "present") | map(attribute="name") | length)
-        or (nextcloud__apps | selectattr("state", "undefined") | selectattr("name", "eq", "user_ldap") | selectattr("state", "eq", "present") | map(attribute="name") | length)'
     notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /usr/local/bin/nextcloud-ldap-show-remnants'
@@ -443,9 +347,6 @@
       name: 'nextcloud-ldap-show-remnants.timer'
       state: '{{ nextcloud__timer_ldap_show_remnants_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ nextcloud__timer_ldap_show_remnants_enabled }}'
-    when:
-      - 'nextcloud__apps is defined'
-      - 'nextcloud__apps | selectattr("name", "defined") | selectattr("name", "eq", "user_ldap") | selectattr("state", "eq", "present") | map(attribute="name") | length'
 
   tags:
     - 'nextcloud'

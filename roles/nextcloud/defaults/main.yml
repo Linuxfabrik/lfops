@@ -1,23 +1,151 @@
-# yamllint disable rule:braces
-# yamllint disable rule:commas
+nextcloud__app_configs__dependent_var: []
+nextcloud__app_configs__group_var: []
+nextcloud__app_configs__host_var: []
+nextcloud__app_configs__role_var:
+  - key: 'core shareapi_default_expire_date'
+    value: 'yes'
+    state: 'present'
+  - key: 'core shareapi_enforce_expire_date'
+    value: 'no'
+    state: 'present'
+  - key: 'core shareapi_expire_after_n_days'
+    value: '90'
+    state: 'present'
+  - key: 'dav buildCalendarSearchIndex'
+    value: 'yes'
+    state: 'present'
+  - key: 'password_policy enforceHaveIBeenPwned'
+    value: '1'
+    state: 'present'
+  - key: 'password_policy minLength'
+    value: '12'
+    state: 'present'
+  - key: 'privacy readableLocation'
+    value: 'ch'
+    state: 'present'
+  - key: 'text workspace_available'
+    value: '0'
+    state: 'present'
+  - key: 'theming imprintUrl'
+    value: 'https://www.linuxfabrik.ch/ueber-uns/agb/'
+    state: 'present'
+  - key: 'theming name'
+    value: 'Nextcloud für Teams / Nextcloud for Business'
+    state: 'present'
+  - key: 'theming privacyUrl'
+    value: 'https://www.linuxfabrik.ch/ueber-uns/agb/datenschutzerklaerung/'
+    state: 'present'
+  - key: 'theming slogan'
+    value: 'powered by Linuxfabrik GmbH, Zürich'
+    state: 'present'
+  - key: 'theming url'
+    value: 'https:\/\/ws.linuxfabrik.io'
+    state: 'present'
+nextcloud__app_configs__combined_var: '{{ (
+      nextcloud__app_configs__role_var +
+      nextcloud__app_configs__dependent_var +
+      nextcloud__app_configs__group_var +
+      nextcloud__app_configs__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="key")
+  }}'
 
-nextcloud__apps: []
-
-# can't use a "real" dict, because there are multiple keys with the same name, and also key names including dots
-nextcloud__apps_config:
-  - { key: 'core',              value: 'shareapi_default_expire_date --value=yes' }
-  - { key: 'core',              value: 'shareapi_enforce_expire_date --value=no' }
-  - { key: 'core',              value: 'shareapi_expire_after_n_days --value=90' }
-  - { key: 'dav',               value: 'buildCalendarSearchIndex --value=yes' }
-  - { key: 'password_policy',   value: 'enforceHaveIBeenPwned --value=1' }
-  - { key: 'password_policy',   value: 'minLength --value=12' }
-  - { key: 'privacy',           value: 'readableLocation --value="ch"' }
-  - { key: 'text',              value: 'workspace_available --value=0' }
-  - { key: 'theming',           value: 'imprintUrl --value=https://www.linuxfabrik.ch/ueber-uns/agb/' }
-  - { key: 'theming',           value: 'name --value="Nextcloud für Teams / Nextcloud for Business"' }
-  - { key: 'theming',           value: 'privacyUrl --value=https://www.linuxfabrik.ch/ueber-uns/agb/datenschutzerklaerung/' }
-  - { key: 'theming',           value: 'slogan --value="powered by Linuxfabrik GmbH, Zürich"' }
-  - { key: 'theming',           value: 'url --value=https:\/\/ws.linuxfabrik.io' }
+nextcloud__apps__dependent_var: []
+nextcloud__apps__group_var: []
+nextcloud__apps__host_var: []
+nextcloud__apps__role_var:
+  # we disable most apps by default in order to install a minimalistic instance
+  # commented modules are nextcloud defaults, and can't be disabled ("could not be removed as it is a shipped app")
+  - name: 'accessibility'
+    state: 'disabled'
+  - name: 'activity'
+    state: 'disabled'
+  - name: 'bruteforcesettings'
+    state: 'enabled'
+  - name: 'circles'
+    state: 'disabled'
+  # - name: 'cloud_federation_api'
+  #   state: 'disabled'
+  - name: 'comments'
+    state: 'disabled'
+  - name: 'contactsinteraction'
+    state: 'disabled'
+  - name: 'dashboard'
+    state: 'disabled'
+  # - name: 'dav'
+  #   state: 'disabled'
+  # - name: 'federatedfilesharing'
+  #   state: 'disabled'
+  - name: 'federation'
+    state: 'disabled'
+  # - name: 'files'
+  #   state: 'disabled'
+  - name: 'files_pdfviewer'
+    state: 'enabled'
+  - name: 'files_rightclick'
+    state: 'enabled'
+  - name: 'files_sharing'
+    state: 'enabled'
+  - name: 'files_trashbin'
+    state: 'enabled'
+  - name: 'files_versions'
+    state: 'enabled'
+  - name: 'firstrunwizard'
+    state: 'disabled'
+  - name: 'logreader'
+    state: 'disabled'
+  # - name: 'lookup_server_connector'
+  #   state: 'disabled'
+  - name: 'nextcloud_announcements'
+    state: 'disabled'
+  - name: 'notifications'
+    state: 'disabled'
+  # - name: 'oauth2'
+  #   state: 'disabled'
+  - name: 'password_policy'
+    state: 'enabled'
+  - name: 'photos'
+    state: 'disabled'
+  - name: 'privacy'
+    state: 'disabled'
+  # - name: 'provisioning_api'
+  #   state: 'disabled'
+  - name: 'recommendations'
+    state: 'disabled'
+  - name: 'serverinfo'
+    state: 'enabled'
+  # - name: 'settings'
+  #   state: 'disabled'
+  - name: 'sharebymail'
+    state: 'enabled'
+  - name: 'support'
+    state: 'disabled'
+  - name: 'survey_client'
+    state: 'disabled'
+  - name: 'systemtags'
+    state: 'disabled'
+  - name: 'text'
+    state: 'enabled'
+  - name: 'theming'
+    state: 'enabled'
+  # - name: 'twofactor_backupcodes'
+  #   state: 'disabled'
+  - name: 'updatenotification'
+    state: 'disabled'
+  - name: 'user_status'
+    state: 'disabled'
+  - name: 'viewer'
+    state: 'enabled'
+  - name: 'weather_status'
+    state: 'disabled'
+  # - name: 'workflowengine'
+  #   state: 'disabled'
+nextcloud__apps__combined_var: '{{ (
+      nextcloud__apps__role_var +
+      nextcloud__apps__dependent_var +
+      nextcloud__apps__group_var +
+      nextcloud__apps__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 
 nextcloud__datadir: '/data'
 
@@ -29,31 +157,113 @@ nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'          # every 5 minutes
 nextcloud__on_calendar_scan_files: '*:50:15'  # every hour at hh:50:15
+nextcloud__skip_apps: false
 
-nextcloud__proxyconfig: []
-
+nextcloud__sysconfig__dependent_var: []
+nextcloud__sysconfig__group_var: []
+nextcloud__sysconfig__host_var: []
 # order matters here, so do not sort alphabetically
-nextcloud__sysconfig:
-  - { key: 'check_for_working_wellknown_setup',  value: '--value=true --type=boolean' }
-  - { key: 'datadirectory',                      value: '--value={{ nextcloud__datadir }}' }
-  - { key: 'default_language',                   value: '--value=en' }
-  - { key: 'default_phone_region',               value: '--value=CH' }
-  - { key: 'log_rotate_size',                    value: '--value=10485760 --type=integer' }
-  - { key: 'loglevel',                           value: '--value=2 --type=integer' }
-  - { key: 'logtimezone',                        value: '--value=Europe/Zurich' }
-  - { key: 'trusted_domains',                    value: "1 --value={{ ansible_facts['default_ipv4']['address'] }}" }
-  - { key: 'trusted_domains',                    value: "2 --value={{ nextcloud__fqdn }}" }
-  - { key: 'updatechecker',                      value: '--value=false --type=boolean' }
-  - { key: 'redis',                              value: 'dbindex --value=0 --type=integer' }
-  - { key: 'redis',                              value: 'host --value=127.0.0.1' }
-  - { key: 'redis',                              value: 'port --value=6379 --type=integer' }
-  - { key: 'redis',                              value: 'timeout --value=0.5 --type=integer' }
-  - { key: 'memcache.local',                     value: '--value=\\OC\\Memcache\\Redis' }
-  - { key: 'memcache.distributed',               value: '--value=\\OC\\Memcache\\Redis' }
-  - { key: 'memcache.locking',                   value: '--value=\\OC\\Memcache\\Redis' }
-  - { key: 'filelocking.enabled',                value: '--value=true --type=boolean' }
+nextcloud__sysconfig__role_var:
+  - key: 'check_for_working_wellknown_setup'
+    value: 'true'
+    type: 'boolean'
+    state: 'present'
+  - key: 'datadirectory'
+    value: '{{ nextcloud__datadir }}'
+    state: 'present'
+  - key: 'default_language'
+    value: 'en'
+    state: 'present'
+  - key: 'default_phone_region'
+    value: 'CH'
+    state: 'present'
+  - key: 'log_rotate_size'
+    value: '10485760'
+    type: 'integer'
+    state: 'present'
+  - key: 'loglevel'
+    value: '2'
+    type: 'integer'
+    state: 'present'
+  - key: 'logtimezone'
+    value: 'Europe/Zurich'
+    state: 'present'
+  - key: 'trusted_domains 1'
+    value: '{{ ansible_facts["default_ipv4"]["address"] }}'
+    state: 'present'
+  - key: 'trusted_domains 2'
+    value: '{{ nextcloud__fqdn }}'
+    state: 'present'
+  - key: 'updatechecker'
+    value: 'false'
+    type: 'boolean'
+    state: 'present'
+  - key: 'redis dbindex'
+    value: '0'
+    type: 'integer'
+    state: 'present'
+  - key: 'redis host'
+    value: '127.0.0.1'
+    state: 'present'
+  - key: 'redis port'
+    value: '6379'
+    type: 'integer'
+    state: 'present'
+  - key: 'redis timeout'
+    value: '0.5'
+    type: 'double'
+    state: 'present'
+  - key: 'filelocking.enabled'
+    value: 'true'
+    type: 'boolean'
+    state: 'present'
+  - key: 'memcache.locking'
+    value: '\OC\Memcache\Redis'
+    state: 'present'
+  - key: 'memcache.distributed'
+    value: '\OC\Memcache\Redis'
+    state: 'present'
+  - key: 'memcache.local'
+    value: '\OC\Memcache\Redis'
+    state: 'present'
   # https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/config_sample_php_parameters.html#forbidden-chars
-  - { key: 'forbidden_chars',                    value: '--value=["?", "<", ">", ":", "*", "|", "\"", "\u0000", "\n", "\r"]' }
+  - key: 'forbidden_chars 0'
+    value: '*'
+    state: 'present'
+  - key: 'forbidden_chars 1'
+    value: ':'
+    state: 'present'
+  - key: 'forbidden_chars 2'
+    value: '<'
+    state: 'present'
+  - key: 'forbidden_chars 3'
+    value: '>'
+    state: 'present'
+  - key: 'forbidden_chars 4'
+    value: '?'
+    state: 'present'
+  - key: 'forbidden_chars 5'
+    value: "'"
+    state: 'present'
+  - key: 'forbidden_chars 6'
+    value: '\n'
+    state: 'present'
+  - key: 'forbidden_chars 7'
+    value: '\r'
+    state: 'present'
+  - key: 'forbidden_chars 8'
+    value: '\u0000'
+    state: 'present'
+  - key: 'forbidden_chars 9'
+    value: '|'
+    state: 'present'
+nextcloud__sysconfig__combined_var: '{{ (
+      nextcloud__sysconfig__role_var +
+      nextcloud__sysconfig__dependent_var +
+      nextcloud__sysconfig__group_var +
+      nextcloud__sysconfig__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="key")
+  }}'
 
 nextcloud__timer_app_update_enabled: false
 nextcloud__timer_jobs_enabled: true
@@ -64,8 +274,6 @@ nextcloud__timer_scan_files_enabled: true
 nextcloud__version: 'latest'
 
 # -----------------------------------------------------------------------------
-# no need to document the variables in the README below this line, as they
-# are internally for this role
 
 nextcloud__apache_httpd__mods__dependent_var:
   - filename: 'proxy_fcgi'
