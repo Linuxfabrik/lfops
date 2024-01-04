@@ -231,8 +231,3 @@ When running playbooks against a host it might be useful to know all the group m
 ```bash
 ansible --inventory path/to/inventory myhost -m debug -a "var=group_names"
 ```
-
-
-## Known Limitations
-
-Combined lists and dictionaries (`rolename__combined_varname`) containing default values cannot be unset or overwritten, they can only be extended. If you need to overwrite to delete a pre-defined value, use `rolename__role_varname` or `rolename__combined_varname` and assign all needed values.
