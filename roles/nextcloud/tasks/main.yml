@@ -222,6 +222,31 @@
 
 - block:
 
+  - name: 'restorecon -Fvr /var/www/html/nextcloud/apps/notify_push/'
+    ansible.builtin.command: 'restorecon -Fvr /var/www/html/nextcloud/apps/notify_push/'
+    register: 'nextcloud__restorecon_notify_push_result'
+    changed_when: 'nextcloud__restorecon_notify_push_result["stdout"] | length'
+
+  - name: 'systemctl restart notify_push.service'
+    ansible.builtin.systemd_service:
+      name: 'notify_push.service'
+      state: 'restarted'
+
+  - name: 'Setup notify_push'
+    ansible.builtin.command: |
+      php occ notify_push:setup https://{{ nextcloud__fqdn }}/push
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: 'apache'
+
+  tags:
+    - 'nextcloud'
+    - 'nextcloud:configure'
+
+
+- block:
+
   # nested loop construct (for user in users; for setting in user.settings; ...)
   - ansible.builtin.include_tasks: 'create-user.yml'
     loop: '{{ nextcloud__users }}'

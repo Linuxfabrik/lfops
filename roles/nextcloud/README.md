@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.nextcloud
 
-This role installs Nextcloud including the tools needed by the most popular business plugins. By default, the latest available version is installed. You can choose wether to use
+This role installs Nextcloud including the tools needed by the most popular business plugins and [notify_push](https://github.com/nextcloud/notify_push). By default, the latest available version is installed. You can choose wether to use
 * local block storage (default)
 * S3 object storage backend (by providing `nextcloud__storage_backend_s3`)
 * Swift object storage backend (by providing `nextcloud__storage_backend_swift`)
@@ -20,6 +20,7 @@ Runs on
 * Install PHP 8.1+. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
 * Install Redis 7+. This can be done using the [linuxfabrik.lfops.repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) role.
 * Set the size of your `/tmp` partition accordingly. For example: If you want to allow 5x simultaneous uploads with files each 10 GB in size, set it to 50 GB+.
+* Configure the systemd service for [notify_push](https://github.com/nextcloud/notify_push).
 
 If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you (you still have to take care of providing the required versions).
 
@@ -38,7 +39,7 @@ If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops
 | ---                       | ------------ |
 | `nextcloud`               | Installs and configures the whole Nextcloud server |
 | `nextcloud:apps`          | Enables, disables apps and sets their settings |
-| `nextcloud:configure`     | Deploys the `nextcloud__sysconfig__*_var` |
+| `nextcloud:configure`     | Deploys the `nextcloud__sysconfig__*_var` and configures notify_push |
 | `nextcloud:cron`          | Sets the Nextcloud background job setting to cron, deploys and manages the state of: <ul><li>`nextcloud-app-update.{service,timer}`</li><li>`nextcloud-jobs.{service,timer}`</li><li>`nextcloud-ldap-show-remnants.{service,timer}`</li><li>`nextcloud-ldap-show-remnants` script</li><li>`nextcloud-scan-files.{service,timer}`</li></ul> |
 | `nextcloud:scripts`       | Deploys `/usr/local/bin/nextcloud-update` |
 | `nextcloud:state`         | Manages the state of: <ul><li>`nextcloud-jobs.timer`</li><li>`nextcloud-app-update.timer`</li><li>`nextcloud-scan-files.timer`</li><li>`nextcloud-ldap-show-remnants.timer`</li></ul> |

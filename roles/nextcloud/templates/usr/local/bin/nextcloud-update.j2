@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 2023090801
+# 2024010401
 # {{ ansible_managed }}
 
 set -e
@@ -26,6 +26,7 @@ sudo -u apache php /var/www/html/nextcloud/updater/updater.phar -n
 sudo -u apache php /var/www/html/nextcloud/occ upgrade
 setsebool httpd_unified off
 systemctl restart php-fpm.service
+systemctl restart notify_push.service
 
 sleep 5
 

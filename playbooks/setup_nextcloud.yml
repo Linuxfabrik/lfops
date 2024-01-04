@@ -107,8 +107,14 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_nextcloud__skip_selinux | default(false)'
 
-    - role: 'linuxfabrik.lfops.nextcloud'
+    - role: 'linuxfabrik.lfops.systemd_unit'
+      systemd_unit__services__dependent_var: '{{
+          nextcloud__systemd_unit__services__dependent_var
+        }}'
+      when:
+        - 'not nextcloud__skip_systemd_unit | d(false)'
 
+    - role: 'linuxfabrik.lfops.nextcloud'
 
       # === Online Office
     - role: 'linuxfabrik.lfops.repo_collabora_code'

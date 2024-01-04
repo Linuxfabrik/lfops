@@ -34,6 +34,12 @@ nextcloud__app_configs__host_var:
     * Added a `state` subkey that properly manages the state of the config options.
     * Made more use of the `value` subkey. `--value` is no longer required, same as `nextcloud__app_configs__*_var`. See the example above.
 * Removed `nextcloud__proxyconfig`. Use `nextcloud__sysconfig__*_var` instead.
+* Implemented [notify_push](https://github.com/nextcloud/notify_push). Add the following to your Apache HTTPd config:
+```apacheconf
+RewriteRule ^\/push\/ws(.*) ws://nextcloud-server:7867/ws$1 [proxy,last]
+RewriteRule ^\/push\/(.*)   http://nextcloud-server:7867/$1 [proxy,last]
+ProxyPassReverse /push/     http://nextcloud-server:7867/
+```
 
 Role:postgresql_server
 * Renamed the `name` subkey of `postgresql_server__users__*_var` to `username` for consistency and easier integration of the Bitwarden lookup plugin.

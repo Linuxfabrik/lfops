@@ -99,6 +99,8 @@ nextcloud__apps__role_var:
     state: 'disabled'
   - name: 'notifications'
     state: 'disabled'
+  - name: 'notify_push'
+    state: 'enabled'
   # - name: 'oauth2'
   #   state: 'disabled'
   - name: 'password_policy'
@@ -428,7 +430,6 @@ nextcloud__php__ini_memory_limit__dependent_var: '1024M'
 nextcloud__php__ini_opcache_interned_strings_buffer__dependent_var: '20'
 nextcloud__php__ini_post_max_size__dependent_var: '16M'
 nextcloud__php__ini_upload_max_filesize__dependent_var: '10000M'
-
 nextcloud__php__modules__dependent_var:
   - name: 'php-bcmath'
     state: 'present'
@@ -471,6 +472,9 @@ nextcloud__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
     value: 'on'
 nextcloud__selinux__fcontexts__dependent_var:
+  - setype: 'bin_t'
+    target: '/var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push'
+    state: 'present'
   - setype: 'httpd_sys_rw_content_t'
     target: '/data(/.*)?'
     state: 'present'
@@ -491,4 +495,17 @@ nextcloud__selinux__fcontexts__dependent_var:
     state: 'present'
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/data(/.*)?'
+    state: 'present'
+
+nextcloud__systemd_unit__services__dependent_var:
+  - name: 'notify_push'
+    description: 'Push daemon for Nextcloud clients'
+    raw_unit: |-
+      Documentation=https://github.com/nextcloud/notify_push
+    raw_service: |-
+      Environment=NEXTCLOUD_URL=https://{{ nextcloud__fqdn }}
+      Environment=PORT=7867
+      ExecStart=/var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push /var/www/html/nextcloud/config/config.php
+      User=apache
+    enabled: true
     state: 'present'
