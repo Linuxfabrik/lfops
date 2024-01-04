@@ -1,22 +1,22 @@
-- name: 'Create Nextcloud user {{ ncuser.username }}'
+- name: 'Create Nextcloud user {{ ncuser["username"] }}'
   ansible.builtin.shell: >-
-    export OC_PASS='{{ ncuser.password }}';
+    export OC_PASS={{ ncuser["password"] | quote }};
     sudo -E -u apache php occ user:add
     --password-from-env
-    --group {{ ncuser.group | d('""')}}
-    {{ ncuser.username }}
+    --group {{ ncuser["group"] | d('""') | quote }}
+    {{ ncuser["username"] | quote }}
   register: 'nextcloud__create_user_result'
   failed_when:
-    - 'nextcloud__create_user_result.rc != 0'
-    - '" already exists" not in nextcloud__create_user_result.stdout | lower'
-  changed_when: '" already exists" not in nextcloud__create_user_result.stdout | lower'
+    - 'nextcloud__create_user_result["rc"] != 0'
+    - '" already exists" not in nextcloud__create_user_result["stdout"] | lower'
+  changed_when: '" already exists" not in nextcloud__create_user_result["stdout"] | lower'
   args:
     chdir: '/var/www/html/nextcloud/'
 
-- name: 'Update Nextcloud settings for user {{ ncuser.username }}'
+- name: 'Update Nextcloud settings for user {{ ncuser["username"] }}'
   ansible.builtin.command: |
-    sudo -u apache php occ user:setting {{ ncuser.username }} {{ item }}
+    sudo -u apache php occ user:setting {{ ncuser["username"] }} {{ item }}
   args:
     chdir: '/var/www/html/nextcloud/'
-  # there is no easy way to check for changes
-  loop: '{{ ncuser.settings | d([]) }}'
+  # changed_when: there is no easy way to check for changes
+  loop: '{{ ncuser["settings"] | d([]) }}'
