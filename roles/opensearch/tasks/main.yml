@@ -191,13 +191,11 @@
       url: 'https://search.maven.org/remotecontent?filepath=com/floragunn/search-guard-tlstool/1.5/search-guard-tlstool-1.5.tar.gz'
       dest: '/tmp/opensearch-certs/search-guard-tlstool.tar.gz'
 
-  - name: 'tar xzf --strip-components 1 -C /tmp/opensearch-certs/tmp/opensearch-certs/search-guard-tlstool.tar.gz'
+  - name: 'tar xzf -C /tmp/opensearch-certs/tmp/opensearch-certs/search-guard-tlstool.tar.gz'
     ansible.builtin.unarchive:
       src: '/tmp/opensearch-certs/search-guard-tlstool.tar.gz'
       dest: '/tmp/opensearch-certs'
       remote_src: false
-      extra_opts:
-        - '--strip-components=1'
 
   - name: 'chmod +x /tmp/opensearch-certs/tools/sgtlstool.sh'
     ansible.builtin.file:
@@ -205,17 +203,22 @@
       mode: 0o0755
 
   - name: 'Deploy /tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml'
-    ansible.builtin.file:
-      src: '/tmp/opensearch-certs/config/tlsconfig.yml.j2'
+    ansible.builtin.template:
+      src: 'tmp/opensearch-certs/config/tlsconfig.yml.j2'
       dest: '/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml'
 
-  - name: '/tmp/opensearch-nodecerts/tools/sgtlstool.sh ...'
+  - name: 'mkdir /tmp/opensearch-certs/output-{{ inventory_hostname }}'
+    ansible.builtin.file:
+      path: '/tmp/opensearch-certs/output-{{ inventory_hostname }}'
+      state: 'directory'
+
+  - name: '/tmp/opensearch-certs/tools/sgtlstool.sh ...'
     ansible.builtin.command: >-
-      /tmp/opensearch-nodecerts/tools/sgtlstool.sh
-      --config /tmp/opensearch-nodecerts//config/{{ inventory_hostname }}-tlsconfig.yml
+      /tmp/opensearch-certs/tools/sgtlstool.sh
+      --config /tmp/opensearch-certs//config/{{ inventory_hostname }}-tlsconfig.yml
       --create-ca
-      --create-crt
-      ---target /tmp/opensearch-nodecerts/{{ inventory_hostname }}
+      --create-cert
+      --target /tmp/opensearch-certs/output-{{ inventory_hostname }}
     changed_when: true
 
   delegate_to: 'localhost'

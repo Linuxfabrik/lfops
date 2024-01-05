@@ -2,6 +2,10 @@
 
 This role installs and configures a OpenSearch server. Optionally, it allows the creation of a cluster setup.
 
+Hints for configuring TLS:
+* The admin certificate cannot be the same as the node certificate. This will lead to the following error: `Seems you use a node certificate. This is not permitted, you have to use a client certificate and register it as admin_dn in opensearch.yml`
+* The node certificates either need to have `extendedKeyUsage = serverAuth, clientAuth` (`TLS Web Server Authentication`, `TLS Web Client Authentication`, respectively) set, or no `Extended Key Usage` at all. Else running `securityadmin.sh` results in `ERR: An unexpected SSLHandshakeException occured: Received fatal alert: certificate_unknown`.
+
 Currently supported versions:
 * 1.x
 * 2.x
@@ -96,6 +100,27 @@ opensearch__service_enabled: false
 opensearch__version__host_var: '2.5.0'
 ```
 
+## Optional Role Variables - TLS Certificate Generation
+
+Use the following variables to easily generate self-signed certificates. These tasks run against the ansible controller. Internally, the [SecureGuard TLS Tool](https://docs.search-guard.com/latest/offline-tls-tool) is used for this, with the generated config at `/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml`.
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `opensearch__generate_certs_admin_cn`` | The common name of the admin certificate. | `'OpenSearch Admin'` |
+| `opensearch__generate_certs_base_dn`` | The base distinguished name for all the self-signed certificates. | `'OU=Secure Services,O=ACME,ST=Zurich,C=CH'` |
+| `opensearch__generate_certs_ca_cn`` | The common name of the CA certificate. | `'OpenSearch Self-signed RootCA'` |
+| `opensearch__generate_certs_nodes` | List of dictionaries for the node certificates. Subkeys: <ul><li>`cn`: Mandatory, string. Common name of the node certificate.</li><li>`ip`: Mandatory, string. IP address of the node.</li></ul> | `[]` |
+
+Example:
+```yaml
+# tls certificate generation
+opensearch__generate_certs_admin_cn: 'OpenSearch Admin'
+opensearch__generate_certs_base_dn: 'OU=Secure Services,O=ACME,ST=Zurich,C=CH'
+opensearch__generate_certs_ca_cn: 'OpenSearch Self-signed RootCA'
+opensearch__generate_certs_nodes:
+  - cn: 'node1.example.com'
+    ip: '192.0.2.10'
+```
 
 ## Optional Role Variables - Cluster Configuration
 
