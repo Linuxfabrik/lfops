@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 2024010301
 # {{ ansible_managed }}
+# 2024010301
 
 output=$(/usr/bin/php /var/www/html/nextcloud/occ ldap:show-remnants)
 if [ -z "$output" ]; then
