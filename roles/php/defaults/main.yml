@@ -158,6 +158,17 @@ php__ini_max_input_time__combined_var: '{{
     php__ini_max_input_time__role_var
   }}'
 
+php__ini_max_input_vars__dependent_var: ''
+php__ini_max_input_vars__group_var: ''
+php__ini_max_input_vars__host_var: ''
+php__ini_max_input_vars__role_var: ''
+php__ini_max_input_vars__combined_var: '{{
+    php__ini_max_input_vars__host_var if (php__ini_max_input_vars__host_var | string | length) else
+    php__ini_max_input_vars__group_var if (php__ini_max_input_vars__group_var | string | length) else
+    php__ini_max_input_vars__dependent_var if (php__ini_max_input_vars__dependent_var | string | length) else
+    php__ini_max_input_vars__role_var
+  }}'
+
 php__ini_memory_limit__dependent_var: ''
 php__ini_memory_limit__group_var: ''
 php__ini_memory_limit__host_var: ''
