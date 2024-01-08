@@ -238,6 +238,16 @@ mariadb_server__cnf_slow_query_log_file__combined_var: '{{
     mariadb_server__cnf_slow_query_log_file__role_var
   }}'
 
+mariadb_server__cnf_sql_mode__dependent_var: ''
+mariadb_server__cnf_sql_mode__group_var: ''
+mariadb_server__cnf_sql_mode__host_var: ''
+mariadb_server__cnf_sql_mode__combined_var: '{{
+    mariadb_server__cnf_sql_mode__host_var if (mariadb_server__cnf_sql_mode__host_var | string | length) else
+    mariadb_server__cnf_sql_mode__group_var if (mariadb_server__cnf_sql_mode__group_var | string | length) else
+    mariadb_server__cnf_sql_mode__dependent_var if (mariadb_server__cnf_sql_mode__dependent_var | string | length) else
+    mariadb_server__cnf_sql_mode__role_var
+  }}'
+
 mariadb_server__cnf_table_definition_cache__dependent_var: ''
 mariadb_server__cnf_table_definition_cache__group_var: ''
 mariadb_server__cnf_table_definition_cache__host_var: ''
