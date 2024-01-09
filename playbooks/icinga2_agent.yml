@@ -1,8 +1,30 @@
-- name: 'Install and configure Icinga2 as a agent'
+- name: 'Install and configure Icinga2 as an agent'
   hosts:
     - 'lfops_icinga2_agent'
 
   roles:
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not icinga2_agent__skip_repo_epel | d(true)'
+
+    - role: 'linuxfabrik.lfops.python'
+      python__modules__dependent_var: '{{
+          monitoring_plugins__python__modules__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] != "Windows"'
+        - 'not icinga2_agent__skip_python | d(true)'
+
+    - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
+      when:
+        - 'ansible_facts["os_family"] != "Windows"'
+        - 'not icinga2_agent__skip_repo_monitoring_plugins | d(false)'
+
+    - role: 'linuxfabrik.lfops.monitoring_plugins'
+      when:
+        - 'not icinga2_agent__skip_monitoring_plugins | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_icinga'
       when:
