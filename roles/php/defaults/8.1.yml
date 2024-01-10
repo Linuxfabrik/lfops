@@ -6,6 +6,7 @@ php__ini_error_reporting__role_var: 'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRI
 php__ini_max_execution_time__role_var: 30
 php__ini_max_file_uploads__role_var: 50
 php__ini_max_input_time__role_var: -1
+php__ini_max_input_vars__role_var: 1000
 php__ini_memory_limit__role_var: '128M'
 php__ini_opcache_blacklist_filename__role_var: '/etc/php-zts.d/opcache*.blacklist'
 php__ini_opcache_enable__role_var: 1

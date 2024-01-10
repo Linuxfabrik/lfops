@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023112301
+# 2024010801
 # 10.4
 
 # https://mariadb.com/kb/en/library/server-system-variables/
@@ -28,6 +28,7 @@ query_cache_type               = {{ mariadb_server__cnf_query_cache_type__combin
 skip_name_resolve              = {{ mariadb_server__cnf_skip_name_resolve__combined_var | d('OFF') }}
 slow_query_log                 = {{ mariadb_server__cnf_slow_query_log__combined_var | d(0) }}
 slow_query_log_file            = {{ mariadb_server__cnf_slow_query_log_file__combined_var | d('host_name-slow.log') }}
+sql_mode                       = {{ mariadb_server__cnf_sql_mode__combined_var | d('STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION') }}
 table_definition_cache         = {{ mariadb_server__cnf_table_definition_cache__combined_var | d(400) }}
 tmp_table_size                 = {{ mariadb_server__cnf_tmp_table_size__combined_var | d('16M') }}
 wait_timeout                   = {{ mariadb_server__cnf_wait_timeout__combined_var | d(28800) }}

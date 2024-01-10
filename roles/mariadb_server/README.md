@@ -156,6 +156,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_skip_name_resolve__group_var` / `mariadb_server__cnf_skip_name_resolve__host_var`              | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#skip_name_resolve) | `'ON'`                           |
 | `mariadb_server__cnf_slow_query_log__group_var` / `mariadb_server__cnf_slow_query_log__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log) | `0` |
 | `mariadb_server__cnf_slow_query_log_file__group_var` / `mariadb_server__cnf_slow_query_log_file__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log_file) | `'/var/log/mariadb/mariadb-slowquery.log'` |
+| `mariadb_server__cnf_sql_mode__group_var` / `mariadb_server__cnf_sql_mode__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#sql_mode) | `'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'` |
 | `mariadb_server__cnf_table_definition_cache__group_var` / `mariadb_server__cnf_table_definition_cache__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#table_definition_cache) | 400
 | `mariadb_server__cnf_tmp_table_size__group_var` / `mariadb_server__cnf_tmp_table_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#tmp_table_size) | `'16M'`                          |
 | `mariadb_server__cnf_wait_timeout__group_var` / `mariadb_server__cnf_wait_timeout__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#wait_timeout) | `28800`                          |
@@ -186,6 +187,7 @@ mariadb_server__cnf_query_cache_type__host_var: 'OFF'
 mariadb_server__cnf_skip_name_resolve__host_var: 'ON'
 mariadb_server__cnf_slow_query_log__host_var: 0
 mariadb_server__cnf_slow_query_log_file__host_var: '/var/log/mariadb/mariadb-slowquery.log'
+mariadb_server__cnf_sql_mode__host_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__host_var: 400
 mariadb_server__cnf_tmp_table_size__host_var: '16M'
 mariadb_server__cnf_wait_timeout__host_var: 28800

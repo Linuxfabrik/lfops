@@ -18,6 +18,7 @@ icingaweb2__apache_httpd__vhosts__dependent_var:
     state: 'present'
     template: 'app'
     allowed_http_methods:
+      - 'DELETE' # for the icinga director api
       - 'GET'
       - 'OPTIONS'
       - 'POST'

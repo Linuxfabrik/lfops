@@ -41,6 +41,9 @@ RewriteRule ^\/push\/(.*)   http://nextcloud-server:7867/$1 [proxy,last]
 ProxyPassReverse /push/     http://nextcloud-server:7867/
 ```
 
+Playbook:icinga2_agent
+* Changed to also include the installation of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This can be skipped by setting `icinga2_agent__skip_monitoring_plugins: true`.
+
 Role:postgresql_server
 * Renamed the `name` subkey of `postgresql_server__users__*_var` to `username` for consistency and easier integration of the Bitwarden lookup plugin.
 

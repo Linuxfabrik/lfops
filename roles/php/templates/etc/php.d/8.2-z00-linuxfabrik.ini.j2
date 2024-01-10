@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2022121601
+; 2024010801
 ; php 8.2
 
 [PHP]
@@ -13,6 +13,7 @@ html_errors = Off
 max_execution_time = {{ php__ini_max_execution_time__combined_var | default('30') }}
 max_file_uploads = {{ php__ini_max_file_uploads__combined_var | default('20') }}
 max_input_time = {{ php__ini_max_input_time__combined_var | default('60') }}
+max_input_vars = {{ php__ini_max_input_vars__combined_var | default('1000') }}
 memory_limit = {{ php__ini_memory_limit__combined_var | default('128M') }}
 post_max_size = {{ php__ini_post_max_size__combined_var | default('8M') }}
 realpath_cache_size = 4M

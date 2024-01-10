@@ -11,9 +11,8 @@
     -key /etc/opensearch/admin.key
     --configdir /etc/opensearch/opensearch-security
     --disable-host-name-verification
-    -icl
     --ignore-clustername
-    --hostname localhost
+    --hostname '{{ opensearch__network_host }}'
   environment:
     JAVA_HOME: '/usr/share/opensearch/jdk'
   changed_when: true
