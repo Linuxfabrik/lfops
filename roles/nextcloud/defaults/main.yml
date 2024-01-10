@@ -53,8 +53,9 @@ nextcloud__apps__dependent_var: []
 nextcloud__apps__group_var: []
 nextcloud__apps__host_var: []
 nextcloud__apps__role_var:
-  # we disable most apps by default in order to install a minimalistic instance
-  # commented modules are nextcloud defaults, and can't be disabled ("could not be removed as it is a shipped app")
+  # we disable most apps by default in order to install a minimalistic instance.
+  # however, the nextcloud default modules can't be disabled / removed ("can't be disabled" / "could not be removed as it is a shipped app"),
+  # and are therefore commented out below.
   - name: 'accessibility'
     state: 'disabled'
   - name: 'activity'
@@ -81,6 +82,8 @@ nextcloud__apps__role_var:
   #   state: 'disabled'
   - name: 'files_pdfviewer'
     state: 'enabled'
+  - name: 'files_reminders'
+    state: 'disabled'
   - name: 'files_rightclick'
     state: 'enabled'
   - name: 'files_sharing'
