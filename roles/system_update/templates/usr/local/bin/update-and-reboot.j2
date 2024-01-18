@@ -58,7 +58,7 @@ post_update_code () {
 {% endif %}
 
 SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}$(hostname --short)"
-SENDER="{{ system_update__mail_from }}"
+SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ' ) }}"
 
 if systemctl is-active --quiet aide-check.timer && systemctl is-failed --quiet aide-check.service; then

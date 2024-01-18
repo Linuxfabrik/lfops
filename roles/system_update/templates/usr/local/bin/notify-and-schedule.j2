@@ -25,7 +25,7 @@ send_msg () {
 
 SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}$(hostname --short)"
 SUBJECT="$SUBJECT_PREFIX - Update at {{ system_update__update_time }}"
-SENDER="{{ system_update__mail_from }}"
+SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ') }}"
 
 cat > /tmp/check-update << 'EOF'
