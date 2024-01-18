@@ -85,6 +85,7 @@ nextcloud__users:
 | `nextcloud__on_calendar_jobs`| Run interval of OCC background jobs. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'*:0/5'` |
 | `nextcloud__on_calendar_scan_files`| Run interval of rescanning filesystem. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'*:50:15'` |
 | `nextcloud__skip_apps` | Boolean. Completely skips the management of Nextcloud apps. Set this to prevent changes via the WebGUI from being overwritten. | `false` |
+| `nextcloud__skip_notify_push` | Boolean. Skips the configuration of notify_push. Use this if the DNS setup is not done yet when running the role. | `false` |
 | `nextcloud__storage_backend_s3` | S3 Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. Have a look at the example below on how to configure. | unset |
 | `nextcloud__storage_backend_swift` | Swift Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. Have a look at the example below on how to configure. | unset |
 | `nextcloud__sysconfig__host_var` / <br> `nextcloud__sysconfig__group_var` | List of dictionaries containing key-value pairs for Nextcloud system config settings. Also use this setting to configure [Nextcloud behind a reverse proxy](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/reverse_proxy_configuration.html), have a look at the example below on how to configure. Subkeys: <ul><li>`key`: Mandatory, string. The name of the config option to set.</li><li>`value`: Mandatory, string. The configuration value.</li><li>`type`: Optional, string. The type of the configuration value. Defaults to `'string`'.</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
@@ -119,6 +120,7 @@ nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostn
 nextcloud__on_calendar_jobs: '*:0/5'
 nextcloud__on_calendar_scan_files: '*:50:15'
 nextcloud__skip_apps: true
+nextcloud__skip_notify_push: true
 # if not local storage, then either one of s3 ...
 nextcloud__storage_backend_s3:
   autocreate: true

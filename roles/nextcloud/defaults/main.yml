@@ -163,6 +163,7 @@ nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostn
 nextcloud__on_calendar_jobs: '*:0/5'          # every 5 minutes
 nextcloud__on_calendar_scan_files: '*:50:15'  # every hour at hh:50:15
 nextcloud__skip_apps: false
+nextcloud__skip_notify_push: false
 
 nextcloud__sysconfig__dependent_var: []
 nextcloud__sysconfig__group_var: []

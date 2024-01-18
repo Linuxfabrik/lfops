@@ -240,6 +240,8 @@
     become: true
     become_user: 'apache'
 
+  when:
+    - 'not nextcloud__skip_notify_push'
   tags:
     - 'nextcloud'
     - 'nextcloud:configure'
