@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2023090501 -->
+    <!-- 2024011901 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -45,7 +45,7 @@
     <hexify_embedded_urls desc="Enable to protect encoded URLs from getting decoded by intermediate hops. Particularly useful on Azure deployments" type="bool" default="false"></hexify_embedded_urls>
     <experimental_features desc="Enable/Disable experimental features" type="bool" default="true">{{ collabora__coolwsd_experimental_features | string | lower }}</experimental_features>
 
-    <memproportion desc="The maximum percentage of system memory consumed by all of the Collabora Online Development Edition, after which we start cleaning up idle documents" type="double" default="80.0"></memproportion>
+    <memproportion desc="The maximum percentage of available memory consumed by all of the Collabora Online Development Edition processes, after which we start cleaning up idle documents. If cgroup memory limits are set, this is the maximum percentage of that limit to consume." type="double" default="80.0"></memproportion>
     <num_prespawn_children desc="Number of child processes to keep started in advance and waiting for new clients." type="uint" default="1">1</num_prespawn_children>
     <!-- <fetch_update_check desc="Every number of hours will fetch latest version data. Defaults to 10 hours." type="uint" default="10">10</fetch_update_check> -->
     <per_document desc="Document-specific settings, including LO Core settings.">
@@ -56,7 +56,7 @@
         <idle_timeout_secs desc="The maximum number of seconds before unloading an idle document. Defaults to 1 hour." type="uint" default="3600">3600</idle_timeout_secs>
         <idlesave_duration_secs desc="The number of idle seconds after which document, if modified, should be saved. Disabled when 0. Defaults to 30 seconds." type="uint" default="30">30</idlesave_duration_secs>
         <autosave_duration_secs desc="The number of seconds after which document, if modified, should be saved. Disabled when 0. Defaults to 5 minutes." type="uint" default="300">300</autosave_duration_secs>
-        <always_save_on_exit desc="On exiting the last editor, always perform the save, even if the document is not modified." type="bool" default="false">false</always_save_on_exit>
+        <always_save_on_exit desc="On exiting the last editor, always perform a save and upload if the document had been modified. This is to allow the storage to store the document, if it had skipped doing so, previously, as an optimization." type="bool" default="false">false</always_save_on_exit>
         <limit_virt_mem_mb desc="The maximum virtual memory allowed to each document process. 0 for unlimited." type="uint">0</limit_virt_mem_mb>
         <limit_stack_mem_kb desc="The maximum stack size allowed to each document process. 0 for unlimited." type="uint">8000</limit_stack_mem_kb>
         <limit_file_size_mb desc="The maximum file size allowed to each document process to write. 0 for unlimited." type="uint">0</limit_file_size_mb>
@@ -165,6 +165,25 @@
         <host desc="The IPv4 private 10.0.0.0/8 subnet (Podman).">10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}</host>
         <host desc="Ditto, but as IPv4-mapped IPv6 addresses">::ffff:10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}</host>
       </post_allow>
+      <lok_allow desc="Allowed hosts as an external data source inside edited files. All allowed post_allow.host and storage.wopi entries are also considered to be allowed as a data source. Used for example in: PostMessage Action_InsertGraphics, =WEBSERVICE() function, external reference in the cell.">
+        {% for item in collabora__coolwsd_lok_allow %}
+        <host desc="">{{ item }}</host>
+        {% endfor %}
+        <host desc="The IPv4 private 192.168 block as plain IPv4 dotted decimal addresses.">192\.168\.[0-9]{1,3}\.[0-9]{1,3}</host>
+        <host desc="Ditto, but as IPv4-mapped IPv6 addresses">::ffff:192\.168\.[0-9]{1,3}\.[0-9]{1,3}</host>
+        <host desc="The IPv4 loopback (localhost) address.">127\.0\.0\.1</host>
+        <host desc="Ditto, but as IPv4-mapped IPv6 address">::ffff:127\.0\.0\.1</host>
+        <host desc="The IPv6 loopback (localhost) address.">::1</host>
+        <host desc="The IPv4 private 172.16.0.0/12 subnet part 1.">172\.1[6789]\.[0-9]{1,3}\.[0-9]{1,3}</host>
+        <host desc="Ditto, but as IPv4-mapped IPv6 addresses">::ffff:172\.1[6789]\.[0-9]{1,3}\.[0-9]{1,3}</host>
+        <host desc="The IPv4 private 172.16.0.0/12 subnet part 2.">172\.2[0-9]\.[0-9]{1,3}\.[0-9]{1,3}</host>
+        <host desc="Ditto, but as IPv4-mapped IPv6 addresses">::ffff:172\.2[0-9]\.[0-9]{1,3}\.[0-9]{1,3}</host>
+        <host desc="The IPv4 private 172.16.0.0/12 subnet part 3.">172\.3[01]\.[0-9]{1,3}\.[0-9]{1,3}</host>
+        <host desc="Ditto, but as IPv4-mapped IPv6 addresses">::ffff:172\.3[01]\.[0-9]{1,3}\.[0-9]{1,3}</host>
+        <host desc="The IPv4 private 10.0.0.0/8 subnet (Podman).">10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}</host>
+        <host desc="Ditto, but as IPv4-mapped IPv6 addresses">::ffff:10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}</host>
+        <host desc="Localhost access by name">localhost</host>
+      </lok_allow>
       <content_security_policy desc="Customize the CSP header by specifying one or more policy-directive, separated by semicolons. See w3.org/TR/CSP2"></content_security_policy>
       <frame_ancestors desc="OBSOLETE: Use content_security_policy. Specify who is allowed to embed the Collabora Online iframe (coolwsd and WOPI host are always allowed). Separate multiple hosts by space."></frame_ancestors>
       <connection_timeout_secs desc="Specifies the connection, send, recv timeout in seconds for connections initiated by coolwsd (such as WOPI connections)." type="int" default="30"></connection_timeout_secs>
@@ -201,6 +220,7 @@
       <jwt_expiry_secs desc="Time in seconds before the Admin Console's JWT token expires" type="int" default="1800">1800</jwt_expiry_secs>
       <enable_macros_execution desc="Specifies whether the macro execution is enabled in general. This will enable Basic and Python scripts to execute both installed and from documents. If it is set to false, the macro_security_level is ignored. If it is set to true, the mentioned entry specified the level of macro security." type="bool" default="false">false</enable_macros_execution>
       <macro_security_level desc="Level of Macro security. 1 (Medium) Confirmation required before executing macros from untrusted sources. 0 (Low, not recommended) All macros will be executed without confirmation." type="int" default="1">1</macro_security_level>
+      <enable_websocket_urp desc="Should we enable URP (UNO remote protocol) communication over the websocket. This allows full control of the Kit child server to anyone with access to the websocket including executing macros without confirmation or running arbitrary shell commands in the jail." type="bool" default="false">false</enable_websocket_urp>
       <enable_metrics_unauthenticated desc="When enabled, the /cool/getMetrics endpoint will not require authentication." type="bool" default="false">false</enable_metrics_unauthenticated>
     </security>
 
@@ -260,6 +280,12 @@
         <enable_pam desc="Enable admin user authentication with PAM" type="bool" default="false">false</enable_pam>
         <username desc="The username of the admin console. Ignored if PAM is enabled."></username>
         <password desc="The password of the admin console. Deprecated on most platforms. Instead, use PAM or coolconfig to set up a secure password."></password>
+        <logging desc="Log admin activities irrespective of logging.level">
+            <admin_login desc="log when an admin logged into the console" type="bool" default="true">true</admin_login>
+            <metrics_fetch desc="log when metrics endpoint is accessed and metrics endpoint authentication is enabled" type="bool" default="true">true</metrics_fetch>
+            <monitor_connect desc="log when external monitor gets connected" type="bool" default="true">true</monitor_connect>
+            <admin_action desc="log when admin does some action for example killing a process" type="bool" default="true">true</admin_action>
+        </logging>
     </admin_console>
 
     <monitors desc="Addresses of servers we connect to on start for monitoring">
@@ -269,13 +295,15 @@
     <quarantine_files desc="Files are stored here to be examined later in cases of crashes or similar situation." default="false" enable="false">
         <limit_dir_size_mb desc="Maximum directory size. On exceeding the specified limit, older files will be deleted." default="250" type="uint"></limit_dir_size_mb>
         <max_versions_to_maintain desc="How many versions of the same file to keep." default="2" type="uint"></max_versions_to_maintain>
-        <path desc="Path to directory under which quarantined files will be stored" type="path" relative="true" default="quarantine"></path>
+        <path desc="Absolute path of the directory under which quarantined files will be stored. Do not use a relative path." type="path" relative="false"></path>
         <expiry_min desc="Time in mins after quarantined files will be deleted." type="int" default="30"></expiry_min>
     </quarantine_files>
 
     <remote_config>
         <remote_url desc="remote server to which you will send resquest to get remote config in response" type="string" default=""></remote_url>
     </remote_config>
+
+    <stop_on_config_change desc="Stop coolwsd whenever config files change." type="bool" default="false">false</stop_on_config_change>
 
     <remote_font_config>
         <url desc="URL of optional JSON file that lists fonts to be included in Online" type="string" default=""></url>
@@ -302,5 +330,14 @@
     </zotero>
 
     <help_url desc="The Help root URL, or empty for no help (hides the Help buttons)" type="string" default="https://help.collaboraoffice.com/help.html?">https://help.collaboraoffice.com/help.html?</help_url>
+
+    <overwrite_mode>
+        <enable desc="Enable overwrite mode (user can use insert key)" type="bool" default="true">true</enable>
+    </overwrite_mode>
+
+    <wasm desc="WASM-specific settings">
+        <enable desc="Enable WASM support" type="bool" default="false"></enable>
+        <force desc="When enabled, all requests are redirected to WASM." type="bool" default="false"></force>
+    </wasm>
 
 </config>

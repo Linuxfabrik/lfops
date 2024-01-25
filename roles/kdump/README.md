@@ -5,6 +5,7 @@ This role stops and disables the `kdump` service. Since most of the time, kdump 
 Runs on
 
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 * Ubuntu 16
 
 

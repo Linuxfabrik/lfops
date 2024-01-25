@@ -9,6 +9,7 @@ Runs on
 * Fedora
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 * Ubuntu 16
 
 

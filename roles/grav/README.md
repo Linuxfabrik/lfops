@@ -32,7 +32,7 @@ If you use the ["Grav" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/
 | Variable | Description |
 | -------- | ----------- |
 | `grav__url` | The Grav URL, without `http://` or `https://`.  |
-| `grav__users` | List. Mandatory if using the Grav Admin Panel. Have a look at the example below for defining a user. The `permissions` key can be either `a` for Admin access only, `s` for Site access only and `b` for both Admin and Site access. |
+| `grav__users` | List of dictionaries. Mandatory if using the Grav Admin Panel. Have a look at the example below for defining a user. The `permissions` key can be either `a` for Admin access only, `s` for Site access only and `b` for both Admin and Site access. |
 
 Example:
 ```yaml

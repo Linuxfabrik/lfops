@@ -10,6 +10,8 @@
     mode: 0o644
     state: 'absent'
   loop: '{{ apache_httpd__vhosts__combined_var }}'
+  loop_control:
+    label: '{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}'
   when: 'not item["enabled"] | d(true)
         or item["state"] | d("present") == "absent"'
   notify:
@@ -22,6 +24,8 @@
   when:
     - 'item["state"] | d("present") == "absent"'
   loop: '{{ apache_httpd__vhosts__combined_var }}'
+  loop_control:
+    label: '{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}'
 
 - name: 'Create DocumentRoot for all vHosts'
   ansible.builtin.file:
@@ -32,6 +36,8 @@
     - 'item["template"] in ["app", "localhost"]'
     - 'item["state"] | d("present") != "absent"'
   loop: '{{ apache_httpd__vhosts__combined_var }}'
+  loop_control:
+    label: '{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}'
 
 - name: 'Create sites-available vHosts'
   ansible.builtin.template:
@@ -43,6 +49,8 @@
   when:
     - 'item["state"] | d("present") != "absent"'
   loop: '{{ apache_httpd__vhosts__combined_var }}'
+  loop_control:
+    label: '{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
 
@@ -54,6 +62,8 @@
     state: 'link'
     force: '{{ ansible_check_mode|d() | bool }}' # prevent errors with --check
   loop: '{{ apache_httpd__vhosts__combined_var }}'
+  loop_control:
+    label: '{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}'
   when:
     - 'item["enabled"] | d(true)'
     - 'item["state"] | d("present") != "absent"'

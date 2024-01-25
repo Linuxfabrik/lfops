@@ -1,1 +1,39 @@
-icingaweb2_module_vspheredb__resource: 'vSphereDB'
+icingaweb2_module_vspheredb__database_host: 'localhost'
+icingaweb2_module_vspheredb__database_name: 'icinga_vspheredb'
+icingaweb2_module_vspheredb__service_enabled: '{{ icinga2_master__node_role | d("primary") == "primary" }}' # only start on one icinga2 master
+
+# -----------------------------------------------------------------------------
+
+icingaweb2_module_vspheredb__icingaweb2__resources__dependent_var:
+  - name: '{{ icingaweb2_module_vspheredb__database_name }}'
+    type: 'db'
+    db: 'mysql'
+    host: '{{ icingaweb2_module_vspheredb__database_host }}'
+    port: 3306
+    dbname: '{{ icingaweb2_module_vspheredb__database_name }}'
+    username: '{{ icingaweb2_module_vspheredb__database_login["username"] }}'
+    password: '{{ icingaweb2_module_vspheredb__database_login["password"] }}'
+    charset: 'utf8mb4'
+
+icingaweb2_module_vspheredb__mariadb_server__databases__dependent_var:
+  - name: '{{ icingaweb2_module_vspheredb__database_name }}'
+    collation: 'utf8_general_ci'
+    encoding: 'utf8'
+    state: 'present'
+
+icingaweb2_module_vspheredb__mariadb_server__users__dependent_var:
+  - username: '{{ icingaweb2_module_vspheredb__database_login["username"] }}'
+    password: '{{ icingaweb2_module_vspheredb__database_login["password"] }}'
+    host: '{{ icingaweb2_module_vspheredb__database_host }}'
+    priv:
+      - '{{ icingaweb2_module_vspheredb__database_name | replace("_", "\_") | replace("%", "\%") }}.*:ALL'
+    state: 'present'
+
+icingaweb2_module_vspheredb__php__modules__dependent_var:
+  - name: 'php-soap'
+    state: 'present'
+
+icingaweb2_module_vspheredb__selinux__fcontexts__dependent_var:
+  - setype: 'icingaweb2_rw_content_t'
+    target: '/var/run/icinga-vspheredb(/.*)?'
+    state: 'present'

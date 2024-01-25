@@ -1,8 +1,12 @@
 # {{ ansible_managed }}
-# 2022050501
+# 2023122901
 
 [mydumper]
 name = mydumper
 baseurl= {{ repo_mydumper__baseurl }}
 gpgcheck = 0
 enabled = 1
+{% if repo_mydumper__basic_auth_login is defined and repo_mydumper__basic_auth_login | length %}
+username={{ repo_mydumper__basic_auth_login["username"] }}
+password={{ repo_mydumper__basic_auth_login["password"] }}
+{% endif %}

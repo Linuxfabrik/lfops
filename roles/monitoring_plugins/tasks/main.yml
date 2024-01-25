@@ -70,16 +70,16 @@
       - 'not monitoring_plugins__skip_package_versionlock'
 
 
-  - name: 'install linuxfabrik-monitoring-plugins (latest)'
+  - name: 'install linuxfabrik-monitoring-plugins{{ (monitoring_plugins__repo_version != "latest") | ternary("-" ~ monitoring_plugins__repo_version, "") }}'
     ansible.builtin.package:
       name:
-        - 'linuxfabrik-monitoring-plugins'
+        - 'linuxfabrik-monitoring-plugins{{ (monitoring_plugins__repo_version != "latest") | ternary("-" ~ monitoring_plugins__repo_version, "") }}'
       state: 'latest' # use latest for the versionlock after
 
-  - name: 'install linuxfabrik-notification-plugins (latest)'
+  - name: 'install linuxfabrik-notification-plugins{{ (monitoring_plugins__repo_version != "latest") | ternary("-" ~ monitoring_plugins__repo_version, "") }}'
     ansible.builtin.package:
       name:
-        - 'linuxfabrik-notification-plugins'
+        - 'linuxfabrik-notification-plugins{{ (monitoring_plugins__repo_version != "latest") | ternary("-" ~ monitoring_plugins__repo_version, "") }}'
       state: 'latest' # use latest for the versionlock after
     when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
 

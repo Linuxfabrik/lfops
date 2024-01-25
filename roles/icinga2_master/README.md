@@ -120,7 +120,8 @@ Adjust the following variables for the secondary Icinga2 master.
 | `icinga2_master__additional_master_endpoints` | A list of endpoints which should be in the Icinga2 master zone. For example, the primary Icinga2 master endpoint on the secondary, and vice versa. Subkeys: <br> * `cn`: Mandatory, string. The common name of the additional Icinga2 master. This should be equal to `icinga2_master__cn` on the additional master. <br> * `host`: Mandatory, string. The hostname or IP of the additional Icinga2 master. <br> * `port`: Optional, int. Icinga2 Port. Defaults to 5665. | `[]` |
 | `icinga2_master__api_ticket_login` | The Icinga2 API user which should be used to create a ticket for CSR (certificate signing request) [auto-signing](https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#generate-ticket). The user needs to have the `actions/generate-ticket` permission. | `'{{ icinga2_master__enrolment_api_user }}'` |
 | `icinga2_master__database_enable_ha` | If high availability should be enabled for the ido database or not. Have a look at https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#high-availability-with-db-ido. | `false` |
-| `icinga2_master__influxdb_enable_ha` | If high availability should be enabled for the ido database or not. Have a look at https://icinga.com/docs/icinga-2/latest/doc/14-features/#influxdb-in-cluster-ha-zones. | `false` |
+| `icinga2_master__influxdb_enable_ha` | If high availability should be enabled for the InfluxDB database or not. Have a look at https://icinga.com/docs/icinga-2/latest/doc/14-features/#influxdb-in-cluster-ha-zones. | `false` |
+| `icinga2_master__influxdb_ssl_enable` | If SSL should be enabled for the InfluxDB database connection. Have a look at https://icinga.com/docs/icinga-2/latest/doc/09-object-types/#objecttype-influxdbwriter | `false` |
 | `icinga2_master__node_role` | The role of this Icinga2 node. Possible options:<br> * `primary`<br> * `secondary` | `'primary'` |
 | `icinga2_master__primary_host` | The host on which the Icinga2 master is running. Needs to be reachable from the secondary node. | unset |
 | `icinga2_master__primary_port` | The port on which the Icinga2 master is running. Needs to be reachable from the secondary node. | `5665` |
@@ -137,6 +138,7 @@ icinga2_master__api_ticket_login:
   password: 'linuxfabrik'
 icinga2_master__database_enable_ha: false
 icinga2_master__influxdb_enable_ha: false
+icinga2_master__influxdb_ssl_enable: false
 icinga2_master__node_role: 'primary'
 icinga2_master__primary_host: 'master1.example.com'
 icinga2_master__primary_port: 5666

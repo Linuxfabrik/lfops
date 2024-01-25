@@ -5,12 +5,13 @@ Aditionally, a group can be added to the sudoers for password-less `sudo` access
 
 IMPORTANT:
 
-* The default behavior of this role is that it distributes SSH keys that it knows from the host/group variables and deletes any other keys that already exist on the target system in `.authorized_keys`. This might break things. Set `remove_other_sshd_authorized_keys` accordingly.
+* The default behavior of this role is that it distributes SSH keys that it knows from the host/group variables and deletes any other keys that already exist on the target system in `.ssh/authorized_keys`. This might break things. Set `remove_other_sshd_authorized_keys` accordingly.
 
 Runs on
 
 * Fedora Server 35+
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 * Ubuntu 16
 
 
@@ -48,11 +49,6 @@ login__users__host_var:
 login__users__group_var: []
 login__passwordless_sudo_group: ''
 ```
-
-
-## Combining Group and Host Vars
-
-Have a look [here](../../README.md#re-use-values-which-are-defined-in-rolename__group_varname-in-rolename__host_varname-without-duplicating-them).
 
 
 ## License

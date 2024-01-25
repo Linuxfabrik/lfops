@@ -1,7 +1,0 @@
-- name: 'Installs the Icinga vSphereDB Module.'
-  hosts:
-    - 'lfops_icingaweb2_module_vspheredb'
-
-  roles:
-
-    - role: 'linuxfabrik.lfops.icingaweb2_module_vspheredb'

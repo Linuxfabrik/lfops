@@ -5,8 +5,9 @@
   roles:
 
     - role: 'linuxfabrik.lfops.minio_client'
-      minio_client__aliases__dependent_var:
-        - '{{ objectstore_backup__minio_client__aliases__dependent_var }}'
+      minio_client__aliases__dependent_var: '{{
+          objectstore_backup__minio_client__aliases__dependent_var
+        }}'
       when:
         - 'not objectstore_backup__skip_minio_client | d(false)'
 

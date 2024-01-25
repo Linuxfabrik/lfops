@@ -42,6 +42,7 @@
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
+          apache_httpd__python__modules__dependent_var +
           mariadb_server__python__modules__dependent_var
         }}'
       when:
@@ -53,10 +54,12 @@
         - 'not librenms__skip_kernel_settings | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
-      mariadb_server__databases__dependent_var:
-        - '{{ librenms__mariadb_server__databases__dependent_var | default({}) }}'
-      mariadb_server__users__dependent_var:
-        - '{{ librenms__mariadb_server__users__dependent_var | default({}) }}'
+      mariadb_server__databases__dependent_var: '{{
+          librenms__mariadb_server__databases__dependent_var
+        }}'
+      mariadb_server__users__dependent_var: '{{
+          librenms__mariadb_server__users__dependent_var
+        }}'
       when:
         - 'not librenms__skip_mariadb_server | default(false)'
 
@@ -66,16 +69,19 @@
         - 'not librenms__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
-      php__modules__dependent_var:
-        - '{{ librenms__php__modules__dependent_var | default([]) }}'
-      php__fpm_pools__dependent_var:
-        - '{{ librenms__php__fpm_pools__dependent_var | default([]) }}'
+      php__modules__dependent_var: '{{
+          librenms__php__modules__dependent_var
+        }}'
+      php__fpm_pools__dependent_var: '{{
+          librenms__php__fpm_pools__dependent_var
+        }}'
       when:
         - 'not librenms__skip_php | default(false)'
 
     - role: 'linuxfabrik.lfops.apps'
-      apps__apps__dependent_var:
-        - '{{ librenms__apps__apps__dependent_var }}'
+      apps__apps__dependent_var: '{{
+          librenms__apps__apps__dependent_var
+        }}'
       when:
         - 'not librenms__skip_apps | default(false)'
 

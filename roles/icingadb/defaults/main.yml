@@ -40,5 +40,5 @@ icingadb__mariadb_server__users__dependent_var:
     password: '{{ icingadb__database_login["password"] }}'
     host: '{{ icingadb__database_login_host }}'
     priv:
-      - '{{ icingadb__database_name }}.*:ALL'
+      - '{{ icingadb__database_name | replace("_", "\_") | replace("%", "\%") }}.*:ALL'
     state: 'present'

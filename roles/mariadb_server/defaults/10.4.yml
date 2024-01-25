@@ -1,3 +1,4 @@
+mariadb_server__cnf_bulk_insert_buffer_size__role_var: 8388608
 mariadb_server__cnf_character_set_server__role_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__role_var: 'utf8mb4_unicode_ci'
 mariadb_server__cnf_expire_logs_days__role_var: 0
@@ -18,6 +19,9 @@ mariadb_server__cnf_query_cache_limit__role_var: '1M'
 mariadb_server__cnf_query_cache_size__role_var: 0
 mariadb_server__cnf_query_cache_type__role_var: 'OFF'
 mariadb_server__cnf_skip_name_resolve__role_var: 'ON'
+mariadb_server__cnf_slow_query_log__role_var: 0
+mariadb_server__cnf_slow_query_log_file__role_var: '/var/log/mariadb/mariadb-slowquery.log'
+mariadb_server__cnf_sql_mode__role_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__role_var: 400
 mariadb_server__cnf_tmp_table_size__role_var: '16M'
 mariadb_server__cnf_wait_timeout__role_var: 28800

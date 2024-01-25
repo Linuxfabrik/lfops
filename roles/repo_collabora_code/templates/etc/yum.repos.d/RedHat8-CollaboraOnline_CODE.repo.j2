@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022062901
+# 2023122901
 
 [CollaboraOnline_CODE]
 name = Collabora Office YUM repo
@@ -10,3 +10,7 @@ baseurl = https://www.collaboraoffice.com/repos/CollaboraOnline/CODE-centos8
 {% endif %}
 enabled = 1
 gpgcheck = 0
+{% if repo_collabora_code__basic_auth_login is defined and repo_collabora_code__basic_auth_login | length %}
+username={{ repo_collabora_code__basic_auth_login["username"] }}
+password={{ repo_collabora_code__basic_auth_login["password"] }}
+{% endif %}

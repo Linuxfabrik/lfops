@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2020111901
+# 2023122901
 
 [mariadb-main]
 name = MariaDB Server
@@ -12,6 +12,10 @@ gpgkey = file:///etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY
 gpgcheck = 1
 enabled = 1
 module_hotfixes = 1
+{% if repo_mariadb__basic_auth_login is defined and repo_mariadb__basic_auth_login | length %}
+username={{ repo_mariadb__basic_auth_login["username"] }}
+password={{ repo_mariadb__basic_auth_login["password"] }}
+{% endif %}
 
 [mariadb-maxscale]
 # To use the latest stable release of MaxScale, use "latest" as the version
@@ -25,6 +29,10 @@ baseurl = https://downloads.mariadb.com/MaxScale/2.4/centos/$releasever/$basearc
 gpgkey = file:///etc/pki/rpm-gpg/MariaDB-MaxScale-GPG-KEY
 gpgcheck = 1
 enabled = 1
+{% if repo_mariadb__basic_auth_login is defined and repo_mariadb__basic_auth_login | length %}
+username={{ repo_mariadb__basic_auth_login["username"] }}
+password={{ repo_mariadb__basic_auth_login["password"] }}
+{% endif %}
 
 [mariadb-tools]
 name = MariaDB Tools
@@ -36,3 +44,7 @@ baseurl = https://downloads.mariadb.com/Tools/rhel/$releasever/$basearch
 gpgkey = file:///etc/pki/rpm-gpg/MariaDB-Enterprise-GPG-KEY
 gpgcheck = 1
 enabled = 1
+{% if repo_mariadb__basic_auth_login is defined and repo_mariadb__basic_auth_login | length %}
+username={{ repo_mariadb__basic_auth_login["username"] }}
+password={{ repo_mariadb__basic_auth_login["password"] }}
+{% endif %}

@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2022120901 -->
+    <!-- 2024010901 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -12,16 +12,18 @@
     <allowed_languages desc="List of supported languages of Writing Aids (spell checker, grammar checker, thesaurus, hyphenation) on this instance. Allowing too many has negative effect on startup performance." default="de_DE en_GB en_US es_ES fr_FR it nl pt_BR pt_PT ru">{{ ((collabora__coolwsd_allowed_languages__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name")) + (collabora__coolwsd_allowed_languages__combined_var | selectattr("state", "undefined") | map(attribute="name"))) | join(' ') }}</allowed_languages>
 
     <!--
-        This is LanguageTool.org API settings. To turn it on, please set "enabled" property to true.
-        "base_url" may be https://api.languagetoolplus.com/v2 if the cloud version is used.
-        However, your data in the document e.g. the text part of it will be sent to the cloud API. Please read the privacy policy: https://languagetool.org/legal/privacy
+        These are the settings of external (remote) spellchecker and grammar checker services. Currently LanguageTool and Duden Korrekturserver APIs are supported, you can
+        set either of them. By default they are disabled. To turn the support on, please set "enabled" property to true. It works with self hosted or cloud services, free
+        and premium as well. The "base_url" may be https://api.languagetoolplus.com/v2 if the cloud version of LanguageTool is used. Please note that your data in the
+        document e.g. the text part of it will be sent to the cloud API. Please read the respective privacy policies, e.g. https://languagetool.org/legal/privacy.
     -->
-    <languagetool desc="LanguageTool Remote API settings for grammar checking">
-        <enabled desc="Enable LanguageTool Remote Grammar Checker" type="bool" default="false"></enabled>
-        <base_url desc="Http endpoint for the LanguageTool API server, without /check or /languages postfix at the end." type="string" default=""></base_url>
-        <user_name desc="LanguageTool account username for premium usage." type="string" default=""></user_name>
-        <api_key desc="Api key provided by LanguageTool account for premium usage." type="string" default=""></api_key>
-        <ssl_verification desc="Enable or disable SSL verification" type="string" default="true"></ssl_verification>
+    <languagetool desc="Remote API settings for spell and grammar checking">
+        <enabled desc="Enable Remote Spell and Grammar Checker" type="bool" default="false"></enabled>
+        <base_url desc="HTTP endpoint for the API server, without /check or /languages postfix at the end." type="string" default=""></base_url>
+        <user_name desc="LanguageTool or Duden account username for premium usage." type="string" default=""></user_name>
+        <api_key desc="API key provided by LanguageTool or Duden account for premium usage." type="string" default=""></api_key>
+        <ssl_verification desc="Enable or disable SSL verification. You may have to disable it in test environments with self-signed certificates." type="string" default="true"></ssl_verification>
+        <rest_protocol desc="REST API protocol. For LanguageTool leave it blank, for Duden Korrekturserver use the string 'duden'." type="string" default=""></rest_protocol>
     </languagetool>
 
     <deepl desc="DeepL API settings for translation service">
@@ -160,7 +162,8 @@
         <host desc="The IPv4 private 10.0.0.0/8 subnet (Podman).">10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}</host>
         <host desc="Ditto, but as IPv4-mapped IPv6 addresses">::ffff:10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}</host>
       </post_allow>
-      <frame_ancestors desc="Specify who is allowed to embed the Collabora Online iframe (coolwsd and WOPI host are always allowed). Separate multiple hosts by space."></frame_ancestors>
+      <content_security_policy desc="Customize the CSP header by specifying one or more policy-directive, separated by semicolons. See w3.org/TR/CSP2"></content_security_policy>
+      <frame_ancestors desc="OBSOLETE: Use content_security_policy. Specify who is allowed to embed the Collabora Online iframe (coolwsd and WOPI host are always allowed). Separate multiple hosts by space."></frame_ancestors>
       <connection_timeout_secs desc="Specifies the connection, send, recv timeout in seconds for connections initiated by coolwsd (such as WOPI connections)." type="int" default="30"></connection_timeout_secs>
 
       <!-- this setting radically changes how online works, it should not be used in a production environment -->
@@ -193,7 +196,7 @@
       <seccomp desc="Should we use the seccomp system call filtering." type="bool" default="true">true</seccomp>
       <capabilities desc="Should we require capabilities to isolate processes into chroot jails" type="bool" default="true">true</capabilities>
       <jwt_expiry_secs desc="Time in seconds before the Admin Console's JWT token expires" type="int" default="1800">1800</jwt_expiry_secs>
-      <enable_macros_execution desc="Specifies whether the macro execution is enabled in general. This will enable Basic, Beanshell, Javascript and Python scripts. If it is set to false, the macro_security_level is ignored. If it is set to true, the mentioned entry specified the level of macro security." type="bool" default="false">false</enable_macros_execution>
+      <enable_macros_execution desc="Specifies whether the macro execution is enabled in general. This will enable Basic and Python scripts to execute both installed and from documents. If it is set to false, the macro_security_level is ignored. If it is set to true, the mentioned entry specified the level of macro security." type="bool" default="false">false</enable_macros_execution>
       <macro_security_level desc="Level of Macro security. 1 (Medium) Confirmation required before executing macros from untrusted sources. 0 (Low, not recommended) All macros will be executed without confirmation." type="int" default="1">1</macro_security_level>
       <enable_metrics_unauthenticated desc="When enabled, the /cool/getMetrics endpoint will not require authentication." type="bool" default="false">false</enable_metrics_unauthenticated>
     </security>
@@ -284,6 +287,10 @@
         <handling desc="How to handle fonts mising in a document: 'report', 'log', 'both', or 'ignore'" type="string" default="log">log</handling>
     </fonts_missing>
 
+    <indirection_endpoint>
+        <url desc="URL endpoint to server which servers routeToken in json format" default=""></url>
+    </indirection_endpoint>
+
     <feature_lock desc="Feature lock settings">
         <locked_hosts desc="Allow/deny feature-locked hosts. When allowed, the below host specification overrides the CheckFileInfo response." allow="false">
             <fallback desc="What to do if the given host is not covered by any rule in locked_hosts" read_only="true" disabled_commands="true"/>
@@ -292,7 +299,7 @@
             <host desc="Regex pattern of hostname to set as full-featured or locked." read_only="false" disabled_commands="false">172\.301\.0-9{1,3}\.0-9{1,3}</host>
         </locked_hosts>
         <is_lock_readonly desc="Give locked users read only access to the documents. If this is set to true it will make all the locked_host readonly who has disabled_commands set to true" type="bool" default="false">false</is_lock_readonly>
-        <locked_commands desc="List of commands to lock the functionality" default=".uno:DataDataPilotRun .uno:RecalcPivotTable .uno:DeletePivotTable .uno:SamplingDialog .uno:DescriptiveStatisticsDialog .uno:AnalysisOfVarianceDialog .uno:CorrelationDialog .uno:CovarianceDialog .uno:ExponentialSmoothingDialog .uno:MovingAverageDialog .uno:RegressionDialog .uno:TTestDialog .uno:FTestDialog .uno:ZTestDialog .uno:ChiSquareTestDialog .uno:FourierAnalysisDialog .uno:Validation .uno:DataFilterSpecialFilter .uno:TrackChanges .uno:AcceptTrackedChanges .uno:InsertReferenceField .uno:Watermark .uno:InsertIndexesEntry .uno:InsertAuthoritiesEntry .uno:InsertMultiIndex .uno:SlideMasterPage downloadas-epub downloadas-rtf masterslidebutton">.uno:DataDataPilotRun .uno:RecalcPivotTable .uno:DeletePivotTable .uno:SamplingDialog .uno:DescriptiveStatisticsDialog .uno:AnalysisOfVarianceDialog .uno:CorrelationDialog .uno:CovarianceDialog .uno:ExponentialSmoothingDialog .uno:MovingAverageDialog .uno:RegressionDialog .uno:TTestDialog .uno:FTestDialog .uno:ZTestDialog .uno:ChiSquareTestDialog .uno:FourierAnalysisDialog .uno:Validation .uno:DataFilterSpecialFilter .uno:TrackChanges .uno:AcceptTrackedChanges .uno:InsertReferenceField .uno:Watermark .uno:InsertIndexesEntry .uno:InsertAuthoritiesEntry .uno:InsertMultiIndex .uno:SlideMasterPage downloadas-epub downloadas-rtf masterslidebutton</locked_commands>
+        <locked_commands desc="List of commands to lock the functionality" default=".uno:DataDataPilotRun .uno:RecalcPivotTable .uno:DeletePivotTable .uno:SamplingDialog .uno:DescriptiveStatisticsDialog .uno:AnalysisOfVarianceDialog .uno:CorrelationDialog .uno:CovarianceDialog .uno:ExponentialSmoothingDialog .uno:MovingAverageDialog .uno:RegressionDialog .uno:TTestDialog .uno:FTestDialog .uno:ZTestDialog .uno:ChiSquareTestDialog .uno:FourierAnalysisDialog .uno:Validation .uno:DataFilterSpecialFilter .uno:TrackChanges .uno:AcceptTrackedChanges .uno:InsertReferenceField .uno:Watermark .uno:InsertIndexesEntry .uno:InsertMultiIndex .uno:SlideMasterPage exportepub downloadas-rtf masterslidebutton">.uno:DataDataPilotRun .uno:RecalcPivotTable .uno:DeletePivotTable .uno:SamplingDialog .uno:DescriptiveStatisticsDialog .uno:AnalysisOfVarianceDialog .uno:CorrelationDialog .uno:CovarianceDialog .uno:ExponentialSmoothingDialog .uno:MovingAverageDialog .uno:RegressionDialog .uno:TTestDialog .uno:FTestDialog .uno:ZTestDialog .uno:ChiSquareTestDialog .uno:FourierAnalysisDialog .uno:Validation .uno:DataFilterSpecialFilter .uno:TrackChanges .uno:AcceptTrackedChanges .uno:InsertReferenceField .uno:Watermark .uno:InsertIndexesEntry .uno:InsertMultiIndex .uno:SlideMasterPage exportepub downloadas-rtf masterslidebutton</locked_commands>
         <unlock_title desc="Title to show user when prompting the unlock popup" default="Unlock your potential">Unlock your potential</unlock_title>
         <unlock_link desc="Link from where user can unlock the features" default="https://www.collaboraoffice.com/subscriptions/">https://www.collaboraoffice.com/subscriptions/</unlock_link>
         <unlock_description desc="Description about unlocking features" default="Head over to the details page and discover all the features:">Head over to the details page and discover all the features:</unlock_description>
@@ -318,5 +325,11 @@
     </feature_lock>
 
     <restricted_commands dec="List of uno commands to be disabled"></restricted_commands>
+
+    <zotero desc="Zotero plugin configuration. For more details about Zotero visit https://www.zotero.org/">
+        <enable desc="Enable Zotero plugin." type="bool" default="true">true</enable>
+    </zotero>
+
+    <help_url desc="The Help root URL, or empty for no help (hides the Help buttons)" type="string" default="https://help.collaboraoffice.com/help.html?">https://help.collaboraoffice.com/help.html?</help_url>
 
 </config>

@@ -1,3 +1,4 @@
+repo_elasticsearch_oss__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
 repo_elasticsearch_oss__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
 
 repo_elasticsearch_oss__version__dependent_var: ''

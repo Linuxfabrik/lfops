@@ -5,6 +5,7 @@ This role installs and configures [rsyslog](https://www.rsyslog.com/). Useful fo
 Runs on
 
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 
 
 ## Tags

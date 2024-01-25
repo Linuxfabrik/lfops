@@ -49,10 +49,12 @@
     RewriteCond %{THE_REQUEST} !HTTP/3
     RewriteRule .* - [forbidden]
 
+{% if not item['allow_requests_without_hostname'] | d(false) %}
     # requests without a hostname are disallowed
     RewriteCond %{HTTP_HOST} !^{{ item['conf_server_name'] | regex_escape() }} [nocase]
     RewriteCond %{REQUEST_URI} !^/error [nocase]
     RewriteRule ^.(.*) - [last,forbidden]
+{% endif %}
 
 {% if item['raw'] | d() %}
 # raw content

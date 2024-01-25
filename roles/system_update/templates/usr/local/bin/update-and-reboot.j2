@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2023092801
+# 2023121201
 
 export LC_ALL=C
 
@@ -31,9 +31,11 @@ EOF
 
 send_msg () {
 {% if ansible_facts['distribution'] == 'Debian' %}
-    echo -n "$MSGBODY" | mail -s "$SUBJECT" -a "From: $SENDER" "$RECIPIENTS"
+{# note: do not quote the $RECIPIENTS, else they are passed as a single argument #}
+    echo -n "$MSGBODY" | mail -s "$SUBJECT" -a "From: $SENDER" $RECIPIENTS
 {% else %}
-    echo -n "$MSGBODY" | mail -s "$SUBJECT" -r "$SENDER" "$RECIPIENTS"
+{# note: do not quote the $RECIPIENTS, else they are passed as a single argument #}
+    echo -n "$MSGBODY" | mail -s "$SUBJECT" -r "$SENDER" $RECIPIENTS
 {% endif %}
 {% if system_update__rocketchat_url is defined and system_update__rocketchat_url | length %}
     /usr/bin/curl --silent --output /dev/null --data-urlencode \
@@ -56,7 +58,7 @@ post_update_code () {
 {% endif %}
 
 SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}$(hostname --short)"
-SENDER="{{ system_update__mail_subject_prefix }}$(hostname --short) <{{ system_update__mail_from }}>"
+SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ' ) }}"
 
 if systemctl is-active --quiet aide-check.timer && systemctl is-failed --quiet aide-check.service; then
@@ -159,6 +161,6 @@ send_msg
 
 {% if ansible_facts['os_family'] == 'Debian' %}
 SUBJECT="$SUBJECT_PREFIX - System updated without Reboot"
-MSGBODY=$(cat /tmp/check-update | grep upgradable)
+MSGBODY=$(cat /tmp/update_output)
 send_msg
 {% endif %}

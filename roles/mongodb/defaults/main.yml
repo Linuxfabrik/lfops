@@ -30,13 +30,13 @@ mongodb__users__dependent_var: []
 mongodb__users__group_var: []
 mongodb__users__host_var: []
 mongodb__users__role_var: []
-mongodb__users__combined_var: '{{
-  mongodb__users__role_var +
-  mongodb__users__group_var +
-  mongodb__users__host_var +
-  mongodb__users__dependent_var
-  | flatten
- }}'
+mongodb__users__combined_var: '{{ (
+      mongodb__users__role_var +
+      mongodb__users__dependent_var +
+      mongodb__users__group_var +
+      mongodb__users__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+  }}'
 
 # -----------------------------------------------------------------------------
 

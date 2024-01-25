@@ -4,10 +4,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Note: Always add new entries to the top of the section, even if this results in multiple paragraphs for the same role. Otherwise the user will have to read through all the breaking changes every time they update LFOps. This way they can just read the new entries at the top, making it much easier for users to follow the CHANGELOG.
+
 
 ## [Unreleased]
 
 ### Breaking Changes
+
+Role:nextcloud
+* `nextcloud__apps_config`:
+    * Renamed the variable to `nextcloud__app_configs__*_var`.
+    * Added a `state` subkey that properly manages the state of the config options.
+    * Made more use of the `value` subkey. `--value` is no longer required. See the example below.
+```yaml
+# old
+nextcloud__apps_config:
+  - { key: 'core',              value: 'shareapi_default_expire_date --value=yes' }
+# new
+nextcloud__app_configs__host_var:
+  - key: 'core shareapi_default_expire_date'
+    value: 'yes'
+    state: 'present'
+```
+* `nextcloud__apps`:
+    * Renamed the variable to `nextcloud__apps__*_var`.
+    * Added a `state` subkey that properly manages the state of apps.
+* `nextcloud__sysconfig`:
+    * Renamed the variable to `nextcloud__sysconfig__*_var`.
+    * Added a `state` subkey that properly manages the state of the config options.
+    * Made more use of the `value` subkey. `--value` is no longer required, same as `nextcloud__app_configs__*_var`. See the example above.
+* Removed `nextcloud__proxyconfig`. Use `nextcloud__sysconfig__*_var` instead.
+* Implemented [notify_push](https://github.com/nextcloud/notify_push). Add the following to your Apache HTTPd config:
+```apacheconf
+RewriteRule ^\/push\/ws(.*) ws://nextcloud-server:7867/ws$1 [proxy,last]
+RewriteRule ^\/push\/(.*)   http://nextcloud-server:7867/$1 [proxy,last]
+ProxyPassReverse /push/     http://nextcloud-server:7867/
+```
+
+Playbook:icinga2_agent
+* Changed to also include the installation of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This can be skipped by setting `icinga2_agent__skip_monitoring_plugins: true`.
+
+Role:postgresql_server
+* Renamed the `name` subkey of `postgresql_server__users__*_var` to `username` for consistency and easier integration of the Bitwarden lookup plugin.
+
+Role:repo_icinga
+* Renamed `repo_icinga__subscription_login` to `repo_icinga__basic_auth_login` and instead added a variable to explicitly use the Icinga Repo Subscription URL (`repo_icinga__use_subscription_url`). If you have `repo_icinga__subscription_login` set in your inventory, rename it to `repo_icinga__basic_auth_login` and set `repo_icinga__use_subscription_url: true` for the same effect as before.
+
+Role:mailto_root
+* Changed `mailto_root__from` from optional to mandatory.
+* Testmail to external addresses is now using sender address (`mailto_root__from`).
+
+Role: opensearch
+* Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.
+
+Role:icingaweb2_module_vspheredb
+* Removed the `v` prefix from the `icingaweb2_module_vspheredb__version` variable to be consistent with the other `icingaweb2_module_*` roles.
+
+Role:login
+* Changed default of `remove_other_sshd_authorized_keys` from `true` to `false`.
 
 Role:collabora
 * Changed `collabora__coolwsd_storage_wopi__*_var` to a list of dictionaries from a list of strings.
@@ -31,6 +85,8 @@ Role:redis
 
 Role: nextcloud
 * Changed default of `nextcloud__timer_app_update_enabled` from `true` to `false`, as this can sometimes lead to Nextcloud ending up in maintenance mode
+* Renamed `nextcloud__apache_httpd__vhosts_virtualhost_ip` to `nextcloud__vhost_virtualhost_ip`
+* Renamed `nextcloud__apache_httpd__vhosts_virtualhost_port` to `nextcloud__vhost_virtualhost_port`
 
 Role: apache_httpd
 * Changed `conf_server_alias` from a string to a list
@@ -57,6 +113,7 @@ Role: system_update
 
 ### Added
 
+* Role: apache_solr
 * Role: clamav
 * Role: dnf_versionlock
 * Role: fangfrisch

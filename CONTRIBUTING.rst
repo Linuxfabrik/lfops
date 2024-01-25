@@ -37,6 +37,7 @@ Common:
 
 * Document all changes in the `CHANGELOG.md <https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md>`_ file.
 * Do not support and remove software versions that are EOL.
+* When implementing a role for a new application, consider security, monitoring and backups.
 
 
 Pre-Commit
@@ -626,31 +627,26 @@ Special Roles
 
 Roles with special technical implementations and capabilities:
 
-* `librenms <https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms>`_:
+* | `librenms <https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms>`_
+  | Compiles and loads an SELinux module.
 
-    * Compiles and loads an SELinux module.
+* | `nextcloud <https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud>`_
+  | The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs.
+  | The role's README has a concise but informative "Tags" section.
 
-* `nextcloud <https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud>`_:
+* | `php <https://github.com/Linuxfabrik/lfops/tree/main/roles/php>`_
+  | Build list for ansible.builtin.packages based on state ``present`` and ``absent``.
+  | Some Jinja templates use non-default strings marking the beginning/end of a block.
 
-    * The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs.
+* | `redis <https://github.com/Linuxfabrik/lfops/tree/main/roles/redis>`_
+  | Gathers the installed version and deploys the corresponding config file.
+  | Configures Systemd with Unit File overrides.
 
-* `php <https://github.com/Linuxfabrik/lfops/tree/main/roles/php>`_:
+* | `telegraf <https://github.com/Linuxfabrik/lfops/tree/main/roles/telegraf>`_
+  | Jinja templates use non-default strings marking the beginning/end of a print statement.
 
-    * Build list for ansible.builtin.packages based on state ``present`` and ``absent``.
-    * Some Jinja templates use non-default strings marking the beginning/end of a block.
-
-* `redis <https://github.com/Linuxfabrik/lfops/tree/main/roles/redis>`_:
-
-    * Gathers the installed version and deploys the corresponding config file.
-    * Configures Systemd with Unit File overrides.
-
-* `telegraf <https://github.com/Linuxfabrik/lfops/tree/main/roles/telegraf>`_:
-
-    * Jinja templates use non-default strings marking the beginning/end of a print statement.
-
-* `wordpress <https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress>`_:
-
-    * chmod: Sets file and folder permissions separately using ``find``.
+* | `wordpress <https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress>`_
+  | chmod: Sets file and folder permissions separately using ``find``.
 
 
 Credits

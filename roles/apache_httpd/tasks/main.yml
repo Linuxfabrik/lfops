@@ -5,6 +5,7 @@
   tags:
     - 'apache_httpd'
     - 'apache_httpd:config'
+    - 'apache_httpd:htpasswd'
     - 'apache_httpd:mod_security_coreruleset'
     - 'apache_httpd:mods'
     - 'apache_httpd:state'
@@ -106,6 +107,15 @@
 
 - block:
 
+  - ansible.builtin.include_tasks: 'htpasswd.yml'
+
+  tags:
+    - 'apache_httpd'
+    - 'apache_httpd:htpasswd'
+
+
+- block:
+
   - ansible.builtin.include_tasks: 'vhosts.yml'
 
   tags:
@@ -137,6 +147,7 @@
       group: 'apache'
       recurse: true
     ignore_errors: true
+    when: 'not apache_httpd__skip_document_root_chown'
 
   tags:
     - 'apache_httpd'

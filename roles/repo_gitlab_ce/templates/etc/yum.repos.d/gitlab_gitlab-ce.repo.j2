@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022091601
+# 2023122901
 
 [gitlab_gitlab-ce]
 name=gitlab_gitlab-ce
@@ -16,6 +16,10 @@ enabled=1
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 metadata_expire=300
+{% if repo_gitlab_ce__basic_auth_login is defined and repo_gitlab_ce__basic_auth_login | length %}
+username={{ repo_gitlab_ce__basic_auth_login["username"] }}
+password={{ repo_gitlab_ce__basic_auth_login["password"] }}
+{% endif %}
 
 [gitlab_gitlab-ce-source]
 name=gitlab_gitlab-ce-source
@@ -32,3 +36,7 @@ enabled=1
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 metadata_expire=300
+{% if repo_gitlab_ce__basic_auth_login is defined and repo_gitlab_ce__basic_auth_login | length %}
+username={{ repo_gitlab_ce__basic_auth_login["username"] }}
+password={{ repo_gitlab_ce__basic_auth_login["password"] }}
+{% endif %}

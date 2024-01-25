@@ -8,7 +8,7 @@
 
   when:
     - 'repo_icinga__mirror_url is not defined or not repo_icinga__mirror_url | length'
-    - 'repo_icinga__subscription_login is not defined or not repo_icinga__subscription_login | length'
+    - 'repo_icinga__basic_auth_login is not defined or not repo_icinga__basic_auth_login | length'
   tags:
     - 'repo_icinga'
 
@@ -46,6 +46,6 @@
       dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-ICINGA'
 
   when:
-    - '(repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length) or (repo_icinga__subscription_login is defined and repo_icinga__subscription_login | length)'
+    - '(repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length) or (repo_icinga__basic_auth_login is defined and repo_icinga__basic_auth_login | length)'
   tags:
     - 'repo_icinga'

@@ -4,6 +4,7 @@ icingaweb2_module_director__api_port: 5665
 icingaweb2_module_director__database_host: 'localhost'
 icingaweb2_module_director__database_name: 'icinga_director'
 icingaweb2_module_director__monitoring_plugins_version: '{{ lfops__monitoring_plugins_version | default("latest") }}'
+icingaweb2_module_director__skip_basket_import: false
 icingaweb2_module_director__url: 'https://github.com/Linuxfabrik/icingaweb2-module-director/archive/{{ icingaweb2_module_director__version }}.tar.gz'
 
 # -----------------------------------------------------------------------------
@@ -36,7 +37,7 @@ icingaweb2_module_director__mariadb_server__users__dependent_var:
     password: '{{ icingaweb2_module_director__database_login.password }}'
     host: '{{ icingaweb2_module_director__database_host }}'
     priv:
-      - '{{ icingaweb2_module_director__database_name }}.*:ALL'
+      - '{{ icingaweb2_module_director__database_name | replace("_", "\_") | replace("%", "\%") }}.*:ALL'
     state: 'present'
 
 icingaweb2_module_director__icingaweb2__users__dependent_var:

@@ -87,7 +87,7 @@ mariadb_server__dump_user:
 | `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | List of dictionaries of databases to create. Subkeys:<br> * `name`: Mandatory, string. Name of the databse schema. <br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `mariadb_server__dump_directory` | Dump output directory name. | `'/backup/mariadb-dump'`|
 | `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
-| `mariadb_server__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'`|
+| `mariadb_server__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 \| random(start=0, seed=inventory_hostname) }}:00'`|
 | `mariadb_server__dump_threads` | The number of threads to use for dumping data. | `4`|
 | `mariadb_server__enabled`| Enables or disables the Systemd unit. | `true` |
 | `mariadb_server__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
@@ -133,6 +133,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 | Role Variable                                        | Documentation                                                                                      | Default Value (v10.6)                    |
 | -------------                                        | -------------                                                                                      | -------------                    |
+| `mariadb_server__cnf_bulk_insert_buffer_size__group_var` / `mariadb_server__cnf_bulk_insert_buffer_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bulk_insert_buffer_size) | `28800`                          |
 | `mariadb_server__cnf_character_set_server__group_var` / `mariadb_server__cnf_character_set_server__host_var`           | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#character_set_server) | `'utf8mb4'`                      |
 | `mariadb_server__cnf_collation_server__group_var` / `mariadb_server__cnf_collation_server__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#collation_server) | `'utf8mb4_unicode_ci'`           |
 | `mariadb_server__cnf_expire_logs_days__group_var` / `mariadb_server__cnf_expire_logs_days__host_var`               | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#expire_logs_days) | `0.000000`                              |
@@ -153,6 +154,9 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_query_cache_size__group_var` / `mariadb_server__cnf_query_cache_size__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_size) | `0`                              |
 | `mariadb_server__cnf_query_cache_type__group_var` / `mariadb_server__cnf_query_cache_type__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_type) | `'OFF'`                          |
 | `mariadb_server__cnf_skip_name_resolve__group_var` / `mariadb_server__cnf_skip_name_resolve__host_var`              | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#skip_name_resolve) | `'ON'`                           |
+| `mariadb_server__cnf_slow_query_log__group_var` / `mariadb_server__cnf_slow_query_log__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log) | `0` |
+| `mariadb_server__cnf_slow_query_log_file__group_var` / `mariadb_server__cnf_slow_query_log_file__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log_file) | `'/var/log/mariadb/mariadb-slowquery.log'` |
+| `mariadb_server__cnf_sql_mode__group_var` / `mariadb_server__cnf_sql_mode__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#sql_mode) | `'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'` |
 | `mariadb_server__cnf_table_definition_cache__group_var` / `mariadb_server__cnf_table_definition_cache__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#table_definition_cache) | 400
 | `mariadb_server__cnf_tmp_table_size__group_var` / `mariadb_server__cnf_tmp_table_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#tmp_table_size) | `'16M'`                          |
 | `mariadb_server__cnf_wait_timeout__group_var` / `mariadb_server__cnf_wait_timeout__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#wait_timeout) | `28800`                          |
@@ -160,6 +164,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 Example:
 ```yaml
 # optional - cnf directives
+mariadb_server__cnf_bulk_insert_buffer_size__host_var: 8388608
 mariadb_server__cnf_character_set_server__host_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__host_var: 'utf8mb4_unicode_ci'
 mariadb_server__cnf_expire_logs_days__host_var: 0.000000
@@ -168,6 +173,7 @@ mariadb_server__cnf_innodb_file_per_table__host_var: 'ON'
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__host_var: 1
 mariadb_server__cnf_innodb_io_capacity__host_var: 200
 mariadb_server__cnf_innodb_log_file_size__host_var: '96M'
+mariadb_server__cnf_interactive_timeout__host_var: 28800
 mariadb_server__cnf_join_buffer_size__host_var: '256K'
 mariadb_server__cnf_log_error__host_var: '/var/log/mariadb/mariadb.log'
 mariadb_server__cnf_lower_case_table_names__host_var: 0
@@ -179,8 +185,12 @@ mariadb_server__cnf_query_cache_limit__host_var: '1M'
 mariadb_server__cnf_query_cache_size__host_var: 0
 mariadb_server__cnf_query_cache_type__host_var: 'OFF'
 mariadb_server__cnf_skip_name_resolve__host_var: 'ON'
+mariadb_server__cnf_slow_query_log__host_var: 0
+mariadb_server__cnf_slow_query_log_file__host_var: '/var/log/mariadb/mariadb-slowquery.log'
+mariadb_server__cnf_sql_mode__host_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__host_var: 400
 mariadb_server__cnf_tmp_table_size__host_var: '16M'
+mariadb_server__cnf_wait_timeout__host_var: 28800
 ```
 
 

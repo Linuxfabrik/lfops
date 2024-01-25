@@ -35,6 +35,8 @@
       state: '{{ item["state"] | d("present") }}'
       system: '{{ item["system"] | d(false) }}'
     loop: '{{ login__users__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
 
   - name: 'Set up authorized keys'
     ansible.posix.authorized_key:
@@ -44,6 +46,8 @@
       exclusive: '{{ item["remove_other_sshd_authorized_keys"] | d(false) }}'
     when: 'item["state"] | d("present") == "present"'
     loop: '{{ login__users__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
 
   - name: 'Allow "{{ login__passwordless_sudo_group }}" group to have password-less sudo'
     community.general.sudoers:

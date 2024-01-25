@@ -39,6 +39,8 @@ grav__apache_httpd__vhosts__dependent_var:
 grav__apps__apps__dependent_var:
   - name: 'git'
     state: 'present'
+  - name: 'unzip'
+    state: 'present'
 
 
 grav__php__modules__dependent_var:
@@ -46,11 +48,9 @@ grav__php__modules__dependent_var:
     state: 'present'
 
 
-# todo: just necessary if using the Grav admin plugin
 grav__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
-    value: 'on'
-# todo: "rw" just necessary if using the Grav admin plugin, otherwise "r" would be sufficient
+    value: '{{ grav__skip_admin | ternary("off", "on") }}'
 grav__selinux__fcontexts__dependent_var:
   - setype: 'httpd_sys_rw_content_t'
     target: '{{ grav__install_dir }}(/.*)?'

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023013101
+# 2023122901
 
 [elasticsearch-{{ repo_elasticsearch_oss__version__combined_var }}]
 name=Elasticsearch repository for {{ repo_elasticsearch_oss__version__combined_var }} packages
@@ -13,3 +13,7 @@ gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
 enabled=1
 autorefresh=1
 type=rpm-md
+{% if repo_elasticsearch_oss__basic_auth_login is defined and repo_elasticsearch_oss__basic_auth_login | length %}
+username={{ repo_elasticsearch_oss__basic_auth_login["username"] }}
+password={{ repo_elasticsearch_oss__basic_auth_login["password"] }}
+{% endif %}

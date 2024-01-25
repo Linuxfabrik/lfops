@@ -10,8 +10,9 @@
         - 'not setup_rocketchat__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.apps'
-      apps__apps__dependent_var:
-        - '{{ rocketchat__apps__apps__dependent_var }}'
+      apps__apps__dependent_var: '{{
+          rocketchat__apps__apps__dependent_var
+        }}'
       when:
         - 'not rocketchat__skip_apps | default(false)'
 

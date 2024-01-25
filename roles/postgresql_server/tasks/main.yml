@@ -115,7 +115,7 @@
   - name: 'Create, update or delete PostgreSQL users'
     community.postgresql.postgresql_user:
       port: '{{ postgresql_server__conf_port }}'
-      name: '{{ item["name"] }}'
+      name: '{{ item["username"] }}'
       password: '{{ item["password"] | default(omit) }}'
       role_attr_flags: '{{ item["role_attr_flags"] | default([]) | join(",") }}'
       state: '{{ item["state"] | default("present") }}'

@@ -23,6 +23,7 @@
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
+          apache_httpd__python__modules__dependent_var +
           mariadb_server__python__modules__dependent_var
         }}'
       when:
@@ -106,8 +107,14 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_nextcloud__skip_selinux | default(false)'
 
-    - role: 'linuxfabrik.lfops.nextcloud'
+    - role: 'linuxfabrik.lfops.systemd_unit'
+      systemd_unit__services__dependent_var: '{{
+          nextcloud__systemd_unit__services__dependent_var
+        }}'
+      when:
+        - 'not nextcloud__skip_systemd_unit | d(false)'
 
+    - role: 'linuxfabrik.lfops.nextcloud'
 
       # === Online Office
     - role: 'linuxfabrik.lfops.repo_collabora_code'
@@ -133,8 +140,9 @@
 
       # === Objectstore Backup
     - role: 'linuxfabrik.lfops.minio_client'
-      minio_client__aliases__dependent_var:
-        - '{{ objectstore_backup__minio_client__aliases__dependent_var }}'
+      minio_client__aliases__dependent_var: '{{
+          objectstore_backup__minio_client__aliases__dependent_var
+        }}'
       when:
         - 'not setup_nextcloud__skip_minio_client | d(false)'
 

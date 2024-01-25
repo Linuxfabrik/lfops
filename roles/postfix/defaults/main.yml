@@ -1,6 +1,18 @@
+postfix__biff: false
+postfix__bounce_queue_lifetime: '5d'
+postfix__inet_interfaces: '127.0.0.1'
 postfix__inet_protocols: 'all'
+postfix__mailbox_size_limit: 51200000
+postfix__maximal_queue_lifetime: '5d'
+postfix__message_size_limit: 10240000
+postfix__recipient_delimiter: ''
 postfix__relayhost_password: ''
+postfix__relayhost_username: '{{ mailto_root__from }}'
 postfix__service_enabled: true
 postfix__service_state: 'started'
+postfix__smtp_destination_concurrency_limit: 20
+postfix__smtp_destination_recipient_limit: 50
 postfix__smtp_sasl_auth_enable: true
+postfix__smtp_sasl_security_options:
+  - 'noanonymous'
 postfix__smtp_tls_wrappermode: false

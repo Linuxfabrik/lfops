@@ -1,3 +1,4 @@
+apache_httpd__skip_document_root_chown: false
 apache_httpd__skip_mod_security_coreruleset: false
 apache_httpd__skip_php_fpm: false
 apache_httpd__systemd_enabled: true
@@ -108,6 +109,11 @@ apache_httpd__mods__role_var:
     enabled: false
     state: 'present'
     template: 'http2'
+
+  - filename: 'include'
+    enabled: true # required for `AddOutputFilter INCLUDES .shtml` of `conf-available/mime.conf`
+    state: 'present'
+    template: 'include'
 
   - filename: 'info'
     enabled: true
@@ -379,6 +385,22 @@ apache_httpd__conf__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
   }}'
 
+# Apache "htpasswd"
+# -----------------
+
+# apache_httpd__htpasswd__combined_var
+apache_httpd__htpasswd__dependent_var: []
+apache_httpd__htpasswd__group_var: []
+apache_httpd__htpasswd__host_var: []
+apache_httpd__htpasswd__role_var: []
+apache_httpd__htpasswd__combined_var: '{{ (
+      apache_httpd__htpasswd__role_var +
+      apache_httpd__htpasswd__dependent_var +
+      apache_httpd__htpasswd__group_var +
+      apache_httpd__htpasswd__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+  }}'
+
 
 # Apache Module Config
 # --------------------
@@ -510,6 +532,9 @@ apache_httpd__vhosts__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod(unique_key=["conf_server_name", "virtualhost_port"])
   }}'
 
+
+apache_httpd__python__modules__dependent_var:
+  - name: 'python3-passlib'
 
 apache_httpd__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'

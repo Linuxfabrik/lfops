@@ -1,0 +1,2 @@
+repo_monitoring_plugins__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
+repo_monitoring_plugins__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'

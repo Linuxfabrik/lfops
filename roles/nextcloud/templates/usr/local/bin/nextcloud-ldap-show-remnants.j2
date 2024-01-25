@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
-# 2022100401
-# This file is managed by Ansible - do not edit
+# {{ ansible_managed }}
+# 2024010301
 
-cd /var/www/html/nextcloud
-/usr/bin/php occ ldap:show-remnants | /usr/bin/mail -s "$(hostname --short) - Users not available on LDAP anymore, but have remnants in Nextcloud" {{ mailto_root__to | join(',') }}
+output=$(/usr/bin/php /var/www/html/nextcloud/occ ldap:show-remnants)
+if [ -z "$output" ]; then
+    echo 'Got not output from ldap:show-remnants, maybe the user_ldap app is not enabled.'
+    exit 0
+fi
+
+# only send output if there is any
+echo "$output" | /usr/bin/mail -s "$(hostname --short) - Users not available on LDAP anymore, but have remnants in Nextcloud" {{ mailto_root__to | join(' ') }}
 exit 0

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2021100601
+# 2023122901
 
 # Rocky-PowerTools.repo
 #
@@ -22,3 +22,7 @@ mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=PowerTo
 gpgcheck=1
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rockyofficial
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}

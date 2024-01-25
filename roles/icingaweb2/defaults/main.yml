@@ -2,6 +2,7 @@ icingaweb2__database_host: 'localhost'
 icingaweb2__database_login_host: 'localhost'
 icingaweb2__database_name: 'icingaweb2'
 icingaweb2__default_theme: 'Icinga'
+icingaweb2__url_port: 80
 
 # -----------------------------------------------------------------------------
 
@@ -17,6 +18,7 @@ icingaweb2__apache_httpd__vhosts__dependent_var:
     state: 'present'
     template: 'app'
     allowed_http_methods:
+      - 'DELETE' # for the icinga director api
       - 'GET'
       - 'OPTIONS'
       - 'POST'
@@ -24,7 +26,7 @@ icingaweb2__apache_httpd__vhosts__dependent_var:
         Require all granted
     authz_document_root: |-
         Require all granted
-    virtualhost_port: 80
+    virtualhost_port: '{{ icingaweb2__url_port }}'
     conf_allow_override: 'All'
     conf_directory_index: 'index.php'
     conf_document_root: '/usr/share/icingaweb2/public'
@@ -168,5 +170,5 @@ icingaweb2__mariadb_server__users__dependent_var:
     password: '{{ icingaweb2__database_login.password }}'
     host: '{{ icingaweb2__database_login_host }}'
     priv:
-      - '{{ icingaweb2__database_name }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
+      - '{{ icingaweb2__database_name | replace("_", "\_") | replace("%", "\%") }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
     state: 'present'

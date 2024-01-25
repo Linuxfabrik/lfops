@@ -37,7 +37,7 @@ If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/
 | Tag                         | What it does                                    |
 | ---                         | ------------                                    |
 | `graylog_server`            | Installs and configures Graylog Server          |
-| `graylog_server:configure`  | Creates system inputs and a default index set   |
+| `graylog_server:configure`  | Deploys the config files, manages the CA keystore, creates the system inputs and a default index set |
 | `graylog_server:state`      | Manages the state of the Graylog Server service |
 
 
@@ -63,6 +63,7 @@ graylog_server__password_secret: 'linuxfabrik'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `graylog_server__cacerts_imports__host_var` / <br> `graylog_server__cacerts_imports__group_var` | List of dictionaries. CA certificates that should be imported into the Graylog keystore. Subkeys: <ul><li>`name`: Mandatory, string. Name / alias for the certificate.</li><li>`file`: Mandatory, string. Path to the certificate file.</li><li>`state`: Optional, string. State of the certificate. Either `present` or `absent`.</li></ul> | `[]` |
 | `graylog_server__elasticsearch_hosts` | List of Elasticsearch hosts URLs Graylog should connect to. | `['http://127.0.0.1:9200']` |
 | `graylog_server__http_bind_address` | The network interface used by the Graylog HTTP interface. | `'127.0.0.1'` |
 | `graylog_server__http_bind_port` | The port used by the Graylog HTTP interface. | `9000` |
@@ -76,6 +77,12 @@ graylog_server__password_secret: 'linuxfabrik'
 Example:
 ```yaml
 # optional
+graylog_server__cacerts_imports__host_var:
+  - name: 'central-ca'
+    file: '/etc/pki/tls/certs/central-ca-chain.crt'
+    state: 'preset'
+  - name: 'opensearch-root-ca'
+    state: 'absent'
 graylog_server__elasticsearch_hosts:
   - 'http://graylog1.example.com:9200'
   - 'http://username:password@graylog2.example.com:9200'

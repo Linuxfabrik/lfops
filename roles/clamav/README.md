@@ -45,7 +45,7 @@ If you use the [ClamAV Playbook](https://github.com/Linuxfabrik/lfops/blob/main/
 | `clamav__clamonacc_service_enabled` | Enables or disables the on-access scanning service, analogous to `systemctl enable/disable`. | `false` |
 | `clamav__freshclam_private_mirror` | "This option allows you to easily point freshclam to private mirrors" (see `man freshclam.conf`). | `[]` |
 | `clamav__freshclam_service_enabled` | Enables or disables the freshclam service, analogous to `systemctl enable/disable`. Freshclam is responsible for updating the official ClamAV signatures. | `true` |
-| `clamav__mail_from` | Username with access to the mail server. Required to send mail notifications for found viruses. | `'{{ postfix__relayhost_username }}'` |
+| `clamav__mail_from` | Username with access to the mail server. Required to send mail notifications for found viruses. | `'{{ mailto_root__from }}'` |
 | `clamav__mail_recipients` | List recipient addresses to which the mail notifications should be sent. | `'{{ mailto_root__to }}'` |
 | `clamav__mail_subject_prefix` | This will set a prefix that will be showed in front of the hostname. Can be used to separate servers by environment or customer. | `''` |
 | `clamav__scan_alert_broken_executables` | "With this option clamav will try to detect broken executables (both PE and ELF) and alert on them with the Broken.Executable heuristic signature." | `true` |
@@ -72,7 +72,7 @@ clamav__clamdscan_timer_enabled: false
 clamav__clamonacc_service_enabled: false
 clamav__freshclam_private_mirror: []
 clamav__freshclam_service_enabled: true
-clamav__mail_from: '{{ postfix__relayhost_username }}'
+clamav__mail_from: '{{ mailto_root__from }}'
 clamav__mail_recipients: '{{ mailto_root__to }}'
 clamav__mail_subject_prefix: '000-my-customer-'
 clamav__scan_alert_broken_executables: true

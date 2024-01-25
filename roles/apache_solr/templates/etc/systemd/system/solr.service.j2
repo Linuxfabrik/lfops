@@ -1,0 +1,19 @@
+# {{ ansible_managed }}
+# 2023111701
+
+[Unit]
+After=syslog.target network.target
+Description=Solr Service
+
+[Service]
+ExecStart=/opt/solr/bin/solr start
+ExecStop=/opt/solr/bin/solr stop
+Group=solr
+LimitNOFILE=65000
+LimitNPROC=65000
+SuccessExitStatus=5 6
+Type=forking
+User=solr
+
+[Install]
+WantedBy=multi-user.target

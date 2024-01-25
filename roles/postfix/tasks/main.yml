@@ -32,24 +32,48 @@
     notify: 'postfix: restart postfix'
     with_items:
 
+      - regexp: '(?i)^#?biff ='
+        line: 'biff = {{ postfix__biff | bool | ternary("yes", "no") }}'
+
+      - regexp: '(?i)^#?bounce_queue_lifetime ='
+        line: 'bounce_queue_lifetime = {{ postfix__bounce_queue_lifetime }}'
+
       # fails on machines without IPv6 if set to 'localhost', so set explicitely to the IPv4 localhost address
       - regexp: '(?i)^inet_interfaces ='
-        line: 'inet_interfaces = 127.0.0.1'
+        line: 'inet_interfaces = {{ postfix__inet_interfaces }}'
 
       - regexp: '(?i)^inet_protocols ='
         line: 'inet_protocols = {{ postfix__inet_protocols }}'
 
+      - regexp: '(?i)^#?mailbox_size_limit ='
+        line: 'mailbox_size_limit = {{ postfix__mailbox_size_limit }}'
+
+      - regexp: '(?i)^#?maximal_queue_lifetime ='
+        line: 'maximal_queue_lifetime = {{ postfix__maximal_queue_lifetime }}'
+
+      - regexp: '(?i)^#?message_size_limit ='
+        line: 'message_size_limit = {{ postfix__message_size_limit }}'
+
+      - regexp: '(?i)^#?recipient_delimiter ='
+        line: 'recipient_delimiter = {{ postfix__recipient_delimiter }}'
+
       - regexp: '(?i)^relayhost ='
         line: 'relayhost = {{ postfix__relayhost }}'
+
+      - regexp: '(?i)^#?smtp_destination_concurrency_limit ='
+        line: 'smtp_destination_concurrency_limit = {{ postfix__smtp_destination_concurrency_limit }}'
+
+      - regexp: '(?i)^#?smtp_destination_recipient_limit ='
+        line: 'smtp_destination_recipient_limit = {{ postfix__smtp_destination_recipient_limit }}'
 
       - regexp: '(?i)^#?smtp_sasl_auth_enable ='
         line: 'smtp_sasl_auth_enable = {{ postfix__smtp_sasl_auth_enable | bool | ternary("yes", "no") }}'
 
-      - regexp: '(?i)^#?smtp_sasl_security_options ='
-        line: 'smtp_sasl_security_options = noanonymous'
-
       - regexp: '(?i)^#?smtp_sasl_password_maps ='
         line: 'smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd'
+
+      - regexp: '(?i)^#?smtp_sasl_security_options ='
+        line: '{{ postfix__smtp_sasl_security_options | length | ternary("smtp_sasl_security_options = " + postfix__smtp_sasl_security_options | default(["noplaintext", "noanonymous"]) | join(", "), "smtp_sasl_security_options =") }}'
 
       - regexp: '(?i)^#?smtp_tls_wrappermode ='
         line: 'smtp_tls_wrappermode = {{ postfix__smtp_tls_wrappermode | bool | ternary("yes", "no") }}'
@@ -63,23 +87,28 @@
     when:
       - 'postfix__smtp_tls_security_level is defined and postfix__smtp_tls_security_level | length'
 
-  - name: 'Create plain sasl_passwd file'
-    ansible.builtin.template:
-      src: 'etc/postfix/sasl_passwd.j2'
-      dest: '/etc/postfix/sasl_passwd'
-      owner: 'root'
-      group: 'root'
-      mode: 0o600
+  - block:
 
-  - name: 'Create Postfix lookup table based on sasl_passwd file'
-    ansible.builtin.shell: 'postmap /etc/postfix/sasl_passwd'
+    - name: 'Create plain sasl_passwd file'
+      ansible.builtin.template:
+        src: 'etc/postfix/sasl_passwd.j2'
+        dest: '/etc/postfix/sasl_passwd'
+        owner: 'root'
+        group: 'root'
+        mode: 0o600
 
-  - name: 'Chmod sasl_passwd.db'
-    ansible.builtin.file:
-      path: '/etc/postfix/sasl_passwd.db'
-      owner: 'root'
-      group: 'root'
-      mode: 0o600
+    - name: 'Create Postfix lookup table based on sasl_passwd file'
+      ansible.builtin.shell: 'postmap /etc/postfix/sasl_passwd'
+
+    - name: 'Chmod sasl_passwd.db'
+      ansible.builtin.file:
+        path: '/etc/postfix/sasl_passwd.db'
+        owner: 'root'
+        group: 'root'
+        mode: 0o600
+
+    when:
+      - 'postfix__relayhost_username is defined and postfix__relayhost_username | length'
 
   - name: 'flush handlers so that postfix can be used by the later roles'
     ansible.builtin.meta: 'flush_handlers'

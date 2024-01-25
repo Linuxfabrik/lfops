@@ -5,11 +5,12 @@ php__fpm_pools__role_var:
   - name: 'www'
     user: 'apache'
     group: 'apache'
-php__fpm_pools__combined_var: '{{
-    php__fpm_pools__role_var +
-    php__fpm_pools__dependent_var +
-    php__fpm_pools__group_var +
-    php__fpm_pools__host_var
+php__fpm_pools__combined_var: '{{ (
+      php__fpm_pools__role_var +
+      php__fpm_pools__dependent_var +
+      php__fpm_pools__group_var +
+      php__fpm_pools__host_var
+    ) | linuxfabrik.lfops.combine_lod
   }}'
 
 php__fpm_pool_conf_pm__dependent_var: ''
@@ -155,6 +156,17 @@ php__ini_max_input_time__combined_var: '{{
     php__ini_max_input_time__group_var if (php__ini_max_input_time__group_var | string | length) else
     php__ini_max_input_time__dependent_var if (php__ini_max_input_time__dependent_var | string | length) else
     php__ini_max_input_time__role_var
+  }}'
+
+php__ini_max_input_vars__dependent_var: ''
+php__ini_max_input_vars__group_var: ''
+php__ini_max_input_vars__host_var: ''
+php__ini_max_input_vars__role_var: ''
+php__ini_max_input_vars__combined_var: '{{
+    php__ini_max_input_vars__host_var if (php__ini_max_input_vars__host_var | string | length) else
+    php__ini_max_input_vars__group_var if (php__ini_max_input_vars__group_var | string | length) else
+    php__ini_max_input_vars__dependent_var if (php__ini_max_input_vars__dependent_var | string | length) else
+    php__ini_max_input_vars__role_var
   }}'
 
 php__ini_memory_limit__dependent_var: ''
@@ -351,8 +363,9 @@ php__modules__role_var:
   - name: 'php-opcache'
     state: 'present'
 php__modules__combined_var: '{{ (
-    php__modules__role_var +
-    php__modules__dependent_var +
-    php__modules__group_var +
-    php__modules__host_var) | flatten
+      php__modules__role_var +
+      php__modules__dependent_var +
+      php__modules__group_var +
+      php__modules__host_var
+    ) | linuxfabrik.lfops.combine_lod
   }}'

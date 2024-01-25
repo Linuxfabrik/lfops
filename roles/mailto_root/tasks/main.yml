@@ -1,5 +1,10 @@
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
   - name: 'Change root mail address'
     ansible.builtin.lineinfile:
       path: '/etc/aliases'
@@ -37,7 +42,7 @@
     ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to root" root'
 
   - name: 'Send test mail to {{ mailto_root__to[0] }}' # noqa no-changed-when
-    ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to {{ mailto_root__to[0] }}" {{ mailto_root__to[0] }}'
+    ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to {{ mailto_root__to[0] }}" {{ mailto_root__from_command }} {{ mailto_root__to[0] }}'
 
   tags:
     - 'mailto_root'

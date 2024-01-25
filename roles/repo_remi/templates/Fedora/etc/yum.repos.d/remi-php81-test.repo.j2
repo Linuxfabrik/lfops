@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022061401
+# 2023122901
 
 [remi-php81-test]
 name=Remi's RPM repository - Testing - PHP 8.1 - Fedora $releasever - $basearch
@@ -15,6 +15,10 @@ gpgcheck=1
 repo_gpgcheck=1
 fastestmirror=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi-$releasever
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
 
 [remi-php81-test-debuginfo]
 name=Remi's PHP 8.1 test RPM repository for Fedora $releasever - $basearch - debuginfo
@@ -27,3 +31,7 @@ enabled=0
 gpgcheck=1
 repo_gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi-$releasever
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}

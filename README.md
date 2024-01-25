@@ -195,9 +195,22 @@ Example:
 lfops__monitoring_plugins_version: 'main'
 ```
 
+### `lfops__repo_basic_auth_login`
+
+This variable is used as the default across all `repo_*` roles if it is set. Can be used to authenticate against the repository server using HTTP basic auth. Have a look at the respective role's README for details.
+
+Note: Currently this only works for RPM repositories.
+
+Example:
+```yaml
+lfops__repo_basic_auth_login:
+  username: 'mirror-user'
+  password: 'linuxfabrik'
+```
+
 ### `lfops__repo_mirror_url`
 
-This variable is used as the default across all `repo_*` roles if it is set. Have a look at the respective role's README for details.
+This variable is used as the default across all `repo_*` roles if it is set. Can be used to set the URL to a custom mirror server providing the repository. Have a look at the respective role's README for details.
 
 Example:
 ```yaml
@@ -218,8 +231,3 @@ When running playbooks against a host it might be useful to know all the group m
 ```bash
 ansible --inventory path/to/inventory myhost -m debug -a "var=group_names"
 ```
-
-
-## Known Limitations
-
-Combined lists and dictionaries (`rolename__combined_varname`) containing default values cannot be unset or overwritten, they can only be extended. If you need to overwrite to delete a pre-defined value, use `rolename__role_varname` or `rolename__combined_varname` and assign all needed values.

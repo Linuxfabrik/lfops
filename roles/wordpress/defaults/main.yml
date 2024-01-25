@@ -44,7 +44,7 @@ wordpress__mariadb_server__users__dependent_var:
     password: '{{ wordpress__database_user["password"] }}'
     host: '{{ wordpress__database_host }}'
     priv:
-      - '{{ wordpress__database_name }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
+      - '{{ wordpress__database_name | replace("_", "\_") | replace("%", "\%") }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
     state: 'present'
 
 wordpress__php__modules__dependent_var:

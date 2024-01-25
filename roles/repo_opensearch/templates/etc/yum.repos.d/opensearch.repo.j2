@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022102601
+# 2023122901
 
 [opensearch-{{ repo_opensearch__version__combined_var }}]
 name=OpenSearch {{ repo_opensearch__version__combined_var }}
@@ -14,3 +14,7 @@ gpgcheck=1
 gpgkey=https://artifacts.opensearch.org/publickeys/opensearch.pgp
 autorefresh=1
 type=rpm-md
+{% if repo_opensearch__basic_auth_login is defined and repo_opensearch__basic_auth_login | length %}
+username={{ repo_opensearch__basic_auth_login["username"] }}
+password={{ repo_opensearch__basic_auth_login["password"] }}
+{% endif %}
