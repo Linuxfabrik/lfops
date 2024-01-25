@@ -1,25 +1,38 @@
 - block:
 
-  - name: 'Get latest grizzly release version'
-    ansible.builtin.uri:
-      url: 'https://api.github.com/repos/grafana/grizzly/releases/latest'
-    register: 'grafana_grizzly__github_release'
-    check_mode: false # run task even if `--check` is specified
-    delegate_to: 'localhost'
+  - name: 'Store the github release version'
+    ansible.builtin.set_fact:
+      grafana_grizzly__github_version: '{{ grafana_grizzly__version }}'
+    when: 'grafana_grizzly__version != "latest"'
 
-  - name: 'curl --location https://github.com/grafana/grizzly/releases/download/{{ grafana_grizzly__github_release["json"]["tag_name"] }}/grr-linux-amd64 --output /tmp/ansible.grr'
+  - block:
+
+    - name: 'Get latest grizzly release version'
+      ansible.builtin.uri:
+        url: 'https://api.github.com/repos/grafana/grizzly/releases/latest'
+      register: 'grafana_grizzly__github_release'
+      check_mode: false # run task even if `--check` is specified
+      delegate_to: 'localhost'
+
+    - name: 'Store the latest release version'
+      ansible.builtin.set_fact:
+        grafana_grizzly__github_version: '{{ grafana_grizzly__github_release["json"]["tag_name"] }}'
+
+    # block
+    when: 'grafana_grizzly__version == "latest"'
+
+  - name: 'curl --location https://github.com/grafana/grizzly/releases/download/{{ grafana_grizzly__github_version }}/grr-linux-amd64 --output /tmp/ansible.grr'
     ansible.builtin.get_url:
-      url: 'https://github.com/grafana/grizzly/releases/download/{{ grafana_grizzly__github_release["json"]["tag_name"] }}/grr-linux-amd64'
-      dest: '/tmp/ansible.grr'
+      url: 'https://github.com/grafana/grizzly/releases/download/{{ grafana_grizzly__github_version }}/grr-linux-amd64'
+      dest: '/tmp/ansible.grr-{{ grafana_grizzly__github_version }}'
       mode: 0o644
     delegate_to: 'localhost'
-    run_once: true
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.grr to /usr/local/bin/grr'
     ansible.builtin.copy:
-      src: '/tmp/ansible.grr'
+      src: '/tmp/ansible.grr-{{ grafana_grizzly__github_version }}'
       dest: '/usr/local/bin/grr'
       mode: 0o755
 
