@@ -86,32 +86,13 @@
 
 - block:
 
-  - name: 'Check if repo daily is initialised'
-    stat:
-      path: "{{ borg_local__backup_dir }}/daily/config"
-    register: 'repo_daily_init_check'
-
-  - name: 'Initialise repo daily if needed'
-    shell: "source /etc/borg/borg.conf; borg init --encryption=repokey-blake2 {{ borg_local__backup_dir }}/daily"
-    when: 'repo_daily_init_check.stat.exists == false'
-
-  - name: 'Check if repo hourly is initialised'
-    stat:
-      path: "{{ borg_local__backup_dir }}/hourly/config"
-    register: 'repo_hourly_init_check'
-
-  - name: 'Initialise repo hourly if needed'
-    shell: "source /etc/borg/borg.conf; borg init --encryption=repokey-blake2 {{ borg_local__backup_dir }}/hourly"
-    when: 'repo_hourly_init_check.stat.exists == false'
-
-  - name: 'Check if repo on-demand is initialised'
-    stat:
-      path: "{{ borg_local__backup_dir }}/on-demand/config"
-    register: 'repo_demand_init_check'
-
-  - name: 'Initialise repo on-demand if needed'
-    shell: "source /etc/borg/borg.conf; borg init --encryption=repokey-blake2 {{ borg_local__backup_dir }}/on-demand"
-    when: 'repo_demand_init_check.stat.exists == false'
+  - ansible.builtin.include_tasks: 'initialise-repo.yml'
+    loop:
+      - 'daily'
+      - 'hourly'
+      - 'on-demand'
+    loop_control:
+      loop_var: 'repo'
 
   tags:
     - 'borg_local'

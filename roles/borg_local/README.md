@@ -28,12 +28,12 @@ This role does not have any mandatory variables.
 | -------- | ----------- | ------------- |
 | `borg_local__backup_dir` | The directory where the backup repositories will be created. | `/backup` |
 | `borg_local__backup_hourly_enabled` | Whether the hourly backup should be enabled. | `false` |
-| `borg_local__exclude_files` | The list of files which should be excluded from the backup. | `'--exclude /root/.cache --exclude '*.svn*' --exclude '*.git*' --exclude '*.tmp' --exclude '*.temp' --exclude '*/cache/*' --exclude '*/log/*''` |
-| `borg_local__include_files` | The list of directories which should be included in the backup.  | `'/etc /home /opt /root /var/spool/cron'` |
-| `borg_local__on_calendar_daily` | The time the daily backup will happen. Once per day. | `'*-*-* {{ borg_local__on_calendar_daily_hour }}:{{ 45|random(seed=inventory_hostname) }}'` |
+| `borg_local__backup_opts__host_vars` / <br> `borg_local__backup_opts__group_vars` | The list of options used by borg. Subkeys: <ul><li>`option`: Mandatory, string. The option to be used</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | <ul><li>`'--stats'`</li><li>`'--progress'`</li><li>`'--one-file-system'`</li><li>`'--compression lz4'`</li><li>`'--checkpoint-interval 86400'`</li></ul> |
+| `borg_local__exclude_files__host_vars` / <br> `borg_local__exclude_files__group_vars` | The list of files or direcotries which should be excluded from the backup. Subkeys: <ul><li>`file`: Mandatory, string. The option to be used</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | <ul><li>`'/root/.cache'`</li><li>`'*.svn*'`</li><li>`'*.git*'`</li><li>`'*.tmp'`</li><li>`'*.temp'`</li><li>`'*/cache/*'`</li><li>`'*/log/*'`</li></ul> |
+| `borg_local__include_files__host_vars` / <br> `borg_local__include_files__group_vars` | The list of files or directories which should be included in the backup. Subkeys: <ul><li>`file`: Mandatory, string. The option to be used</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | <ul><li>`'/etc'`</li><li>`'/home'`</li><li>`'/opt'`</li><li>`'/root'`</li><li>`'/var/spool/cron'`</li></ul> |
+| `borg_local__on_calendar_daily` | The time the daily backup will happen. Once per day. | `'*-*-* {{ borg_local__on_calendar_daily_hour }}:{{ 45\|random(seed=inventory_hostname) }}'` |
 | `borg_local__on_calendar_daily_hour` | The hour of the daily backup  | `23` |
-| `borg_local__on_calendar_hourly` | The time the daily backup will happen. Once per hour. | `'*-*-* *:{{ 59 |random(start=45) }}'` |
-| `borg_local__relocated_repo_access_is_ok` | Depending on this value, borg may warn you that the repository has been moved, if you did so. You will be given a prompt to confirm you are OK with this. | `'yes'` |
+| `borg_local__on_calendar_hourly` | The time the daily backup will happen. Once per hour. | `'*-*-* *:{{ 59 \|random(start=45) }}'` |
 | `borg_local__retention_daily` | The amount of daily backups into the past. | `'14d'` |
 | `borg_local__retention_hourly` | The amount of hourly backups into the past. | `'99H'` |
 | `borg_local__service_enabled` | Whether the borg service is enabled or not. | `true` |
@@ -43,12 +43,29 @@ Example:
 # optional
 borg_local__backup_dir: '/backup'
 borg_local__backup_hourly_enabled: false
-borg_local__exclude_files: "--exclude /root/.cache --exclude '*.svn*' --exclude '*.git*' --exclude '*.tmp' --exclude '*.temp' --exclude '*/cache/*' --exclude '*/log/*'"
-borg_local__include_files: '/etc /home /opt /root /var/spool/cron'
+borg_local__backup_opts__host_var:
+  - option: '--stats'
+  - option: '--progress'
+  - option: '--one-file-system'
+  - option: '--compression lz4'
+  - option: '--checkpoint-interval 86400'
+borg_local__exclude_files__host_var:
+  - file: '/root/.cache'
+  - file: '*.svn*'
+  - file: '*.git*'
+  - file: '*.tmp'
+  - file: '*.temp'
+  - file: '*/cache/*'
+  - file: '*/log/*'
+borg_local__include_files__host_var:
+  - file: '/etc'
+  - file: '/home'
+  - file: '/opt'
+  - file: '/root'
+  - file: '/var/spool/cron'
 borg_local__on_calendar_daily: '*-*-* {{ borg_local__on_calendar_daily_hour }}:{{ 45|random(seed=inventory_hostname) }}'
 borg_local__on_calendar_daily_hour: 23
 borg_local__on_calendar_hourly: '*-*-* *:{{ 59 |random(start=45) }}'
-borg_local__relocated_repo_access_is_ok: 'yes'
 borg_local__retention_daily: '14d'
 borg_local__retention_hourly: '99H'
 borg_local__service_enabled: true
