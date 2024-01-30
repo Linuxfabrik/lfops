@@ -18,9 +18,9 @@ rocketchat__apps__apps__dependent_var:
 
 rocketchat__mongodb__conf_replication_repl_set_name__dependent_var: '{{ rocketchat__mongodb_repl_set_name }}'
 rocketchat__mongodb__users__dependent_var:
-  - username: '{{ rocketchat__mongodb_login["username"] }}'
-    password: '{{ rocketchat__mongodb_login["password"] }}'
-    database: 'graylog'
+  - username: '{{ rocketchat__mongodb_login["username"] | d(omit) }}'
+    password: '{{ rocketchat__mongodb_login["password"] | d(omit) }}'
+    database: 'rocketchat'
     roles:
       - db: 'rocketchat'
         role: 'readWrite'
