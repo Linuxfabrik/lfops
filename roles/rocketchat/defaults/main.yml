@@ -26,4 +26,4 @@ rocketchat__mongodb__users__dependent_var:
         role: 'readWrite'
       - db: 'rocketchat'
         role: 'dbAdmin'
-    state: 'present'
+    state: '{{ (rocketchat__mongodb_login is defined and rocketchat__mongodb_login | length) | ternary("present", "skip") }}'

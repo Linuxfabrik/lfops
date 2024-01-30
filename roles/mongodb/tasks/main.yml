@@ -167,6 +167,8 @@
       state: '{{ item["state"] | default("present") }}'
       update_password: 'always' # note: sadly 'always' is not idempotent
     loop: '{{ mongodb__users__combined_var }}'
+    when:
+      - 'item["state"] | d("present") != "skip"'
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
 

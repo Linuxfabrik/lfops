@@ -630,6 +630,9 @@ Roles with special technical implementations and capabilities:
 * | `librenms <https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms>`_
   | Compiles and loads an SELinux module.
 
+* | `mongodb <https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb>`_
+  | The role implements a ``skip`` state that completely ignores the entry.
+
 * | `nextcloud <https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud>`_
   | The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs.
   | The role's README has a concise but informative "Tags" section.
