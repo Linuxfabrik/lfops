@@ -153,6 +153,10 @@
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
 
+  - name: 'Combined Users:'
+    ansible.builtin.debug:
+      var: 'mongodb__users__combined_var'
+
   - name: 'Create, update or delete MongoDB users'
     community.mongodb.mongodb_user:
       login_host: '{{ mongodb__conf_net_bind_ip }}'
