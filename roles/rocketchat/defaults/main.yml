@@ -17,3 +17,13 @@ rocketchat__apps__apps__dependent_var:
     state: 'present'
 
 rocketchat__mongodb__conf_replication_repl_set_name__dependent_var: '{{ rocketchat__mongodb_repl_set_name }}'
+rocketchat__mongodb__users__dependent_var:
+  - username: '{{ rocketchat__mongodb_login["username"] }}'
+    password: '{{ rocketchat__mongodb_login["password"] }}'
+    database: 'graylog'
+    roles:
+      - db: 'rocketchat'
+        role: 'readWrite'
+      - db: 'rocketchat'
+        role: 'dbAdmin'
+    state: 'present'
