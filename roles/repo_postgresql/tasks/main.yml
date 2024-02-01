@@ -1,9 +1,9 @@
 - block:
 
-  - name: 'deploy /etc/pki/RPM-GPG-KEY-PGDG'
+  - name: 'deploy /etc/pki/PGDG-RPM-GPG-KEY-RHEL'
     ansible.builtin.copy:
-      src: 'etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG'
-      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG'
+      src: 'etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL'
+      dest: '/etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL'
       owner: 'root'
       group: 'root'
       mode: 0o644
