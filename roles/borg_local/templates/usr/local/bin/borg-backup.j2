@@ -4,17 +4,17 @@
 
 systemctl is-active clamd@scan.service --quiet
 if [[ $? -eq 0 ]]; then
-{% if system_update__icinga2_api_user_login is defined and system_update__icinga2_api_user_login | length %}
+{% if borg_local__icinga2_api_user_login is defined and borg_local__icinga2_api_user_login | length %}
     # needed for Icinga to set clamd@scan service downtime (max. 90 minutes downtime)
     START_TIME=$(date +%s)
     END_TIME=$(( START_TIME + 5400 ))
-    curl --connect-timeout 5 --insecure --silent --user '{{ system_update__icinga2_api_user_login["username"] }}:{{ system_update__icinga2_api_user_login["password"] }}' --header 'Accept: application/json' --request POST '{{ system_update__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
+    curl --connect-timeout 5 --insecure --silent --user '{{ borg_local__icinga2_api_user_login["username"] }}:{{ borg_local__icinga2_api_user_login["password"] }}' --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
     {
         "type": "Service",
-        "filter": "match(\"{{ system_update__icinga2_hostname }}\", host.name) && "match(\"*Systemd Unit - clamd@scan*\", service.name)",
+        "filter": "match(\"{{ borg_local__icinga2_hostname }}\", host.name) && "match(\"*Systemd Unit - clamd@scan*\", service.name)",
         "start_time": "$START_TIME",
         "end_time": "$END_TIME",
-        "author": "{{ system_update__icinga2_hostname }}",
+        "author": "{{ borg_local__icinga2_hostname }}",
         "comment": "Disabling clamd@scan during borg backup.",
     }
 EOF
@@ -56,10 +56,10 @@ fi
 
 if [[ $start_clamd -eq 1 ]]; then
     systemctl start clamd@scan.service
-{% if icinga2_api_user is defined and icinga2_api_user | length %}
+{% if borg_local__icinga2_api_user_login is defined and borg_local__icinga2_api_user_login | length %}
 
     # remove Icinga downtime
-    DATA="{ \"type\": \"Service\", \"filter\": \"match(\\\"*{{ ansible_facts['hostname'] }}*\\\", host.name) && match(\\\"*Systemd Unit - clamd@scan*\\\", service.name)\" }"
-    curl --insecure --silent --user {{ icinga2_api_user }}:{{ icinga2_api_password }} --header 'Accept: application/json' --request POST 'https://{{ icinga2_master }}:5665/v1/actions/remove-downtime' --data "$DATA" 1> /dev/null
+    DATA="{ \"type\": \"Service\", \"filter\": \"match(\\\"*{{ borg_local__icinga2_hostname }}*\\\", host.name) && match(\\\"*Systemd Unit - clamd@scan*\\\", service.name)\" }"
+    curl --insecure --silent --user {{ borg_local__icinga2_api_user_login["username"] }}:{{ borg_local__icinga2_api_user_login["password"] }} --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/remove-downtime' --data "$DATA" 1> /dev/null
 {% endif %}
 fi

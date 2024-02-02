@@ -5,7 +5,7 @@ FILES_INCLUDE="{% for item in borg_local__include_files__combined_var if item['s
 {{ item['file'] }}{% if not loop.last %} {% endif %}
 {% endfor %}"
 FILES_EXCLUDE="{% for item in borg_local__exclude_files__combined_var if item['state'] | d('present') != 'absent' %}
---exclude {{ item['file'] }}{% if not loop.last %} {% endif %}
+--exclude '{{ item['file'] }}'{% if not loop.last %} {% endif %}
 {% endfor %}"
 
 RETENTION_DAILY={{ borg_local__retention_daily }}

@@ -34,6 +34,8 @@ borg_local__exclude_files__combined_var: '{{ (
       borg_local__exclude_files__host_var
     ) | linuxfabrik.lfops.combine_lod(unique_key="file")
   }}'
+borg_local__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
+borg_local__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
 borg_local__include_files__dependent_var: []
 borg_local__include_files__group_var: []
 borg_local__include_files__host_var: []
