@@ -1,0 +1,10 @@
+github_project_createrepo__base_path: '/var/www/html/github-repos'
+github_project_createrepo__timer_enabled: true
+
+# -----------------------------------------------------------------------------
+
+github_project_createrepo__apps__apps__dependent_var:
+  - name: 'createrepo'
+    state: 'present'
+  - name: 'git'
+    state: 'present'

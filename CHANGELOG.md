@@ -113,6 +113,7 @@ Role: system_update
 
 ### Added
 
+* Role: github_project_createrepo
 * Role: apache_solr
 * Role: clamav
 * Role: dnf_versionlock

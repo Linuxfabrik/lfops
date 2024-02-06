@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+# 2024020201
+
+base_path: '{{ github_project_createrepo__base_path }}'
+
+github_repos:
+{{ github_project_createrepo__github_repos | ansible.builtin.to_nice_yaml(indent=2) | indent(2, first=True) }}

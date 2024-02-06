@@ -1,0 +1,43 @@
+- block:
+
+  - name: 'git clone --recurse-submodules https://github.com/Linuxfabrik/github-project-createrepo.git /opt/github-project-createrepo'
+    ansible.builtin.git:
+      repo: 'https://github.com/Linuxfabrik/github-project-createrepo.git'
+      dest: '/opt/github-project-createrepo'
+      force: false
+
+  - name: 'cp /opt/github-project-createrepo/systemd/github-project-createrepo.service /etc/systemd/system/github-project-createrepo.service'
+    ansible.builtin.copy:
+      src: '/opt/github-project-createrepo/systemd/github-project-createrepo.service'
+      dest: '/etc/systemd/system/github-project-createrepo.service'
+      remote_src: true
+    notify: 'github_project_createrepo: systemctl daemon-reload'
+
+  - name: 'cp /opt/github-project-createrepo/systemd/github-project-createrepo.timer /etc/systemd/system/github-project-createrepo.timer'
+    ansible.builtin.copy:
+      src: '/opt/github-project-createrepo/systemd/github-project-createrepo.timer'
+      dest: '/etc/systemd/system/github-project-createrepo.timer'
+      remote_src: true
+    notify: 'github_project_createrepo: systemctl daemon-reload'
+
+  - name: 'systemctl {{ github_project_createrepo__timer_enabled | bool | ternary("enable", "disable") }} --now github-project-createrepo.timer'
+    ansible.builtin.service:
+      name: 'github-project-createrepo.timer'
+      enabled: '{{ github_project_createrepo__timer_enabled }}'
+      state: '{{ github_project_createrepo__timer_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'mkdir {{ github_project_createrepo__base_path }}'
+    ansible.builtin.file:
+      path: '{{ github_project_createrepo__base_path }}'
+      state: 'directory'
+
+  - name: 'deploy /etc/github_project_createrepo.yml'
+    ansible.builtin.template:
+      src: 'etc/github-project-createrepo.yml.j2'
+      dest: '/etc/github-project-createrepo.yml'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'github_project_createrepo'

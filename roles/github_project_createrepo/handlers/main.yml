@@ -1,0 +1,3 @@
+- name: 'github_project_createrepo: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true
