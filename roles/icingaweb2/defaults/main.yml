@@ -100,7 +100,7 @@ icingaweb2__resources__role_var:
     dbname: '{{ icingaweb2__database_name }}'
     username: '{{ icingaweb2__database_login.username }}'
     password: '{{ icingaweb2__database_login.password }}'
-    charset: 'utf8mb4'
+    # charset: 'utf8mb4' for some reason, the charset has to be unset for umlaute to be displayed correctly
 icingaweb2__resources__combined_var: '{{ (
       icingaweb2__resources__role_var +
       icingaweb2__resources__dependent_var +
