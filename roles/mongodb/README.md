@@ -56,7 +56,7 @@ mongodb__dump_user:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mongodb__conf_net_bind_ip` | The IP on which MongoDB should be available. To bind to multiple addresses, enter a list of comma-separated values. Make sure to include `'localhost'` if you need to use the [localhost exception](https://www.mongodb.com/docs/manual/core/localhost-exception/) to create the first DBA. Have a look at [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-net.bindIp). | `'localhost'` |
+| `mongodb__conf_net_bind_ip` | List of the IPs on which MongoDB should be available. Make sure that the first address in the list is reachable by the server itself, and to set the first address to `'localhost'` if you need to use the [localhost exception](https://www.mongodb.com/docs/manual/core/localhost-exception/) to create the first DBA. Have a look at [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-net.bindIp). | `'localhost'` |
 | `mongodb__conf_net_port` | The port on which MongoDB should be available. | `27017` |
 | `mongodb__conf_replication_oplog_size_mb` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.oplogSizeMB) | unset |
 | `mongodb__conf_replication_repl_set_name__host_var` /<br> `mongodb__conf_replication_repl_set_name__group_var` | Set this to enable replication. Have a look at <https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.replSetName>. Will be initiated automatically (have a look at `mongodb__repl_set_skip_init`). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | unset |
@@ -79,7 +79,8 @@ mongodb__dump_user:
 Example:
 ```yaml
 # optional
-mongodb__conf_net_bind_ip: '127.0.0.1'
+mongodb__conf_net_bind_ip:
+  - '127.0.0.1'
 mongodb__conf_net_port: 27017
 mongodb__conf_replication_oplog_size_mb: 50
 mongodb__conf_replication_repl_set_name__host_var: 'replSet1'

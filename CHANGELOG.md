@@ -11,6 +11,17 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:mongodb
+* `mongodb__conf_net_bind_ip`: Changed from a string to a list of strings. For example:
+```yaml
+# old
+mongodb__conf_net_bind_ip: '0.0.0.0'
+
+# new
+mongodb__conf_net_bind_ip:
+  - '0.0.0.0'
+```
+
 Role:nextcloud
 * `nextcloud__apps_config`:
     * Renamed the variable to `nextcloud__app_configs__*_var`.
