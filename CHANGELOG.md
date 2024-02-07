@@ -113,6 +113,7 @@ Role: system_update
 
 ### Added
 
+* Role: borg_local
 * Role: apache_solr
 * Role: clamav
 * Role: dnf_versionlock
