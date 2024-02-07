@@ -28,7 +28,7 @@ systemLog:
 # network interfaces
 net:
   port: {{ mongodb__conf_net_port }}
-  bindIp: {{ mongodb__conf_net_bind_ip }}
+  bindIp: {{ mongodb__conf_net_bind_ip | join(",") }}
 
 # how the process runs
 processManagement:
