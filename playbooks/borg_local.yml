@@ -1,0 +1,22 @@
+- name: 'Install and configure borg for local backups'
+  hosts:
+    - 'lfops_borg_local'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.systemd_unit'
+      systemd_unit__services__dependent_var: '{{
+          borg_local__systemd_unit__services__dependent_var
+        }}'
+      systemd_unit__timers__dependent_var: '{{
+          borg_local__systemd_unit__timers__dependent_var
+        }}'
+      when:
+        - 'not borg_local__skip_systemd_unit | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'not borg_local__skip_repo_epel | default(false)'
+
+    - role: 'linuxfabrik.lfops.borg_local'
