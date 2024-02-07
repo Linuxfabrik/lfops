@@ -38,6 +38,9 @@
 
     - role: 'linuxfabrik.lfops.mongodb'
       mongodb__conf_replication_repl_set_name__dependent_var: '{{ rocketchat__mongodb__conf_replication_repl_set_name__dependent_var }}'
+      mongodb__users__dependent_var: '{{
+          rocketchat__mongodb__users__dependent_var
+        }}'
       when:
         - 'not setup_rocketchat__skip_mongodb | default(false)'
 

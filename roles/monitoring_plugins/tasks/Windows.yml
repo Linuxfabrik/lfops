@@ -1,5 +1,12 @@
 - block:
 
+  - name: 'Clone the lib repo'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'clone-lib-repo.yml'
+    vars:
+      shared__lib_repo_version: '{{ monitoring_plugins__repo_version }}'
+
   - name: 'Make sure the plugin directory exists (Windows)'
     ansible.windows.win_file:
       path: 'C:\\ProgramData\\icinga2\\usr\\lib64\\nagios\\plugins\\'

@@ -1,4 +1,5 @@
-mongodb__conf_net_bind_ip: 'localhost'
+mongodb__conf_net_bind_ip:
+  - 'localhost'
 mongodb__conf_net_port: 27017
 mongodb__conf_replication_repl_set_name__dependent_var: ''
 mongodb__conf_replication_repl_set_name__group_var: ''

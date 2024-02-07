@@ -1,4 +1,8 @@
 # {{ ansible_managed }}
-# 2022100601
+# 2024020701
 
+{% if repo_monitoring_plugins__mirror_url is defined and repo_monitoring_plugins__mirror_url | length %}
+deb [signed-by=/etc/apt/trusted.gpg.d/linuxfabrik.asc] {{ repo_monitoring_plugins__mirror_url }}/linuxfabrik/monitoring-plugins/{{ ansible_facts["distribution"] | lower }}/ {{ ansible_facts["distribution_release"] }}-release main
+{% else %}
 deb [signed-by=/etc/apt/trusted.gpg.d/linuxfabrik.asc] https://repo.linuxfabrik.ch/monitoring-plugins/{{ ansible_facts["distribution"] | lower }}/ {{ ansible_facts["distribution_release"] }}-release main
+{% endif %}

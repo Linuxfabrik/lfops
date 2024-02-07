@@ -21,6 +21,23 @@ grav__apache_httpd__vhosts__dependent_var:
     enabled: true
     state: 'present'
     template: 'app'
+    allowed_file_extensions:
+      - 'css'
+      - 'gif'
+      - 'html?'
+      - 'ico'
+      - 'jp?g'
+      - 'js'
+      - 'pdf'
+      - 'php'
+      - 'png'
+      - 'svg'
+      - 'ttf'
+      - 'txt'
+      - 'webp'
+      - 'woff?'
+      - 'xml'
+      - 'xsl'
     allowed_http_methods:
       - 'GET'
       - 'OPTIONS'

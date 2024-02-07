@@ -5,21 +5,22 @@
       url: 'https://www.python.org/ftp/python/{{ python__version }}/python-{{ python__version }}-amd64.exe'
       dest: 'C:\python-install.exe'
 
-  - name: 'Install python3 (Windows)'
+  - name: 'Install python (Windows)'
     ansible.windows.win_command: 'C:\python-install.exe /quiet /passive InstallAllUsers=1 Include_test=0'
 
-  - name: 'Remove the python3-install.exe (Windows)'
+  - name: 'Remove the python-install.exe (Windows)'
     ansible.windows.win_file:
-      path: 'C:\python3-install.exe'
+      path: 'C:\python-install.exe'
       state: 'absent'
 
-  - name: "py -{{ python__version | regex_replace('\\.\\d$', '') }} -m pip install --upgrade setuptools pip wheel (Windows)"
-    ansible.windows.win_shell: "py -{{ python__version | regex_replace('\\.\\d$', '') }} -m pip install --upgrade setuptools pip wheel"
+  - name: 'py -{{ python__version | regex_replace("\.\d$", "") }} -m pip install --upgrade setuptools pip wheel'
+    ansible.windows.win_shell: 'py -{{ python__version | regex_replace("\.\d$", "") }} -m pip install --upgrade setuptools pip wheel'
 
   - name: 'Install additional python modules (Windows)'
-    ansible.windows.win_shell: "py -{{ python__version | regex_replace('\\.\\d$', '') }} -m pip install {{ item }}"
-    loop: "{{ python__modules__combined_var }}"
-    when: 'python__modules__combined_var is defined and python__modules__combined_var | length'
+    ansible.windows.win_shell: 'py -{{ python__version | regex_replace("\.\d$", "") }} -m pip install {{ item["name"] }}'
+    loop: '{{ python__modules__combined_var }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
 
   tags:
-    - 'python3'
+    - 'python'

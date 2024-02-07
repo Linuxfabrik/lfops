@@ -41,6 +41,7 @@ If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops
 | `nextcloud:apps`          | Enables, disables apps and sets their settings |
 | `nextcloud:configure`     | Deploys the `nextcloud__sysconfig__*_var` and configures notify_push |
 | `nextcloud:cron`          | Sets the Nextcloud background job setting to cron, deploys and manages the state of: <ul><li>`nextcloud-app-update.{service,timer}`</li><li>`nextcloud-jobs.{service,timer}`</li><li>`nextcloud-ldap-show-remnants.{service,timer}`</li><li>`nextcloud-ldap-show-remnants` script</li><li>`nextcloud-scan-files.{service,timer}`</li></ul> |
+| `nextcloud:notify_push`   | Configures notify_push |
 | `nextcloud:scripts`       | Deploys `/usr/local/bin/nextcloud-update` |
 | `nextcloud:state`         | Manages the state of: <ul><li>`nextcloud-jobs.timer`</li><li>`nextcloud-app-update.timer`</li><li>`nextcloud-scan-files.timer`</li><li>`nextcloud-ldap-show-remnants.timer`</li></ul> |
 

@@ -13,4 +13,11 @@
       when:
         - 'not monitoring_plugins_grafana_dashboards__skip_grafana | default(false)'
 
+    - role: 'linuxfabrik.lfops.grafana_grizzly'
+      grafana__provisioning_service_accounts__dependent_var: '{{
+          (not monitoring_plugins_grafana_dashboards__skip_grafana_grizzly | default(false)) | ternary(grafana_grizzly__grafana__provisioning_service_accounts__dependent_var, [])
+        }}'
+      when:
+        - 'not monitoring_plugins_grafana_dashboards__skip_grafana_grizzly | default(false)'
+
     - role: 'linuxfabrik.lfops.monitoring_plugins_grafana_dashboards'

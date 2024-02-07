@@ -78,7 +78,7 @@
 
   - name: 'Ensure replicaset "{{ mongodb__conf_replication_repl_set_name__combined_var }}" exists'
     community.mongodb.mongodb_replicaset:
-      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
       login_port: '{{ mongodb__conf_net_port }}'
       login_user: '{{ mongodb__admin_user["username"] | default(omit) }}'
       login_password: '{{ mongodb__admin_user["password"] | default(omit) }}'
@@ -92,7 +92,7 @@
 
   - name: 'Wait for the replicaset to stabilise'
     community.mongodb.mongodb_status:
-      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
       login_port: '{{ mongodb__conf_net_port }}'
       login_user: '{{ mongodb__admin_user["username"] | default(omit) }}'
       login_password: '{{ mongodb__admin_user["password"] | default(omit) }}'
@@ -114,7 +114,7 @@
 
   - name: 'check if host is primary and writable'
     community.mongodb.mongodb_shell:
-      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
       login_port: '{{ mongodb__conf_net_port }}'
       eval: 'db.hello().isWritablePrimary'
       mongo_cmd: 'mongosh'
@@ -139,7 +139,7 @@
 
   - name: 'Create DBA "{{ mongodb__admin_user["username"] }}" (if first user, using localhost exception)' # https://www.mongodb.com/docs/manual/core/localhost-exception/
     community.mongodb.mongodb_user:
-      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
       login_port: '{{ mongodb__conf_net_port }}'
       name: '{{ mongodb__admin_user["username"] }}'
       password: '{{ mongodb__admin_user["password"] }}'
@@ -153,9 +153,13 @@
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
 
+  - name: 'Combined Users:'
+    ansible.builtin.debug:
+      var: 'mongodb__users__combined_var'
+
   - name: 'Create, update or delete MongoDB users'
     community.mongodb.mongodb_user:
-      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
       login_port: '{{ mongodb__conf_net_port }}'
       login_user: '{{ mongodb__admin_user["username"] }}'
       login_password: '{{ mongodb__admin_user["password"] }}'
@@ -167,6 +171,8 @@
       state: '{{ item["state"] | default("present") }}'
       update_password: 'always' # note: sadly 'always' is not idempotent
     loop: '{{ mongodb__users__combined_var }}'
+    when:
+      - 'item["state"] | d("present") != "skip"'
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
 
@@ -181,7 +187,7 @@
 
   - name: 'Create MongoDB Dump user'
     community.mongodb.mongodb_user:
-      login_host: '{{ mongodb__conf_net_bind_ip }}'
+      login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
       login_port: '{{ mongodb__conf_net_port }}'
       login_user: '{{ mongodb__admin_user["username"] }}'
       login_password: '{{ mongodb__admin_user["password"] }}'

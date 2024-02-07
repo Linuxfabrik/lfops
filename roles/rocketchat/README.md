@@ -16,6 +16,7 @@ Runs on
 * Install nodejs. This can be done using the [linuxfabrik.lfops.nodejs](https://github.com/Linuxfabrik/lfops/tree/main/roles/nodejs) role.
 * Enable the MongoDB repository. This can be done using the [linuxfabrik.lfops.repo_mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mongodb) role.
 * Install MongoDB and configure a replica set. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
+* Create a MongoDB user for Rocket.Chat. Mandatory when authentication in MongoDB is enabled. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
 
 If you use the ["Setup Rocket.Chat" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_rocketchat.yml), thinstallation is automatically done for you (you still have to take care of providing the required versions).
 
@@ -31,12 +32,16 @@ If you use the ["Setup Rocket.Chat" Playbook](https://github.com/Linuxfabrik/lfo
 ## Mandatory Role Variables
 | Variable                  | Description                                                |
 | --------                  | -----------                                                |
+| `rocketchat__mongodb_login` | The user account for accessing the MongoDB database. Mandatory when authentication in MongoDB is enabled. |
 | `rocketchat__npm_version` | The required NPM version for the Rocket.Chat version. Have a look at the [release page](https://github.com/RocketChat/Rocket.Chat/releases). (Sadly this value is not available via the releases.rocket.chat api). |
 | `rocketchat__root_url`    | The URL on which the Rocket.Chat server will be available. |
 
 Example:
 ```yaml
 # mandatory
+rocketchat__mongodb_login:
+  username: 'rocketchat'
+  password: 'linuxfabrik'
 rocketchat__npm_version: '6.14.17'
 rocketchat__root_url: 'https://rocketchat.example.com'
 ```

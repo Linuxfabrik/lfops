@@ -245,6 +245,7 @@
   tags:
     - 'nextcloud'
     - 'nextcloud:configure'
+    - 'nextcloud:notify_push'
 
 
 - block:

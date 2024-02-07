@@ -43,11 +43,13 @@ grafana_grizzly__grafana_service_account_login:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `grafana_grizzly__grafana_url` | The URL under which Grafana is reachable | `'{{ grafana__root_url }}'` |
+| `grafana_grizzly__version` | The version of Grizzly to install. Possible options: `'latest'`, or any from https://github.com/grafana/grizzly/releases. | `'latest'` |
 
 Example:
 ```yaml
 # optional
 grafana_grizzly__grafana_url: 'http://localhost:3000'
+grafana_grizzly__version: 'v0.2.0'
 ```
 
 

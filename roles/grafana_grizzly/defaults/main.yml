@@ -1,4 +1,5 @@
 grafana_grizzly__grafana_url: '{{ grafana__api_url }}'
+grafana_grizzly__version: 'latest'
 
 # -----------------------------------------------------------------------------
 
