@@ -15,26 +15,31 @@
       mode: 0o755
 
   - name: 'Generate borg passphrase'
-    ansible.builtin.shell: '< /dev/urandom tr -dc A-Za-z0-9 | head -c30 > /etc/borg/borg-passphrase'
+    ansible.builtin.shell: |-
+      set -o pipefail
+      < /dev/urandom tr -dc A-Za-z0-9 | head -c30 > /etc/borg/borg-passphrase
     args:
       creates: '/etc/borg/borg-passphrase'
     register: 'borg_local__generated_passphrase_result'
 
   - name: 'Mail the borg passphrase to {{ borg_local__passphrase_mail }}'
-    ansible.builtin.shell: '/root/send-mail \"$(hostname --short) - Borg\" \"$BORG_PASSPHRASE\" {{ borg_local__passphrase_mail }}'
-    environment:
-      BORG_PASSPHRASE: '{{ borg_local__generated_passphrase_result }}'
-    when: 'borg_local__generated_passphrase_result.changed'
+    ansible.builtin.shell: '/root/send-mail "$(hostname --short) - Borg" "{{ borg_local__generated_passphrase_result }}" "{{ borg_local__passphrase_mail }}"'
+    when: 'borg_local__generated_passphrase_result["changed"]'
 
   - name: 'chmod 0400 /etc/borg/borg-passphrase'
     ansible.builtin.file:
       path: '/etc/borg/borg-passphrase'
+      owner: 'root'
+      group: 'root'
       mode: 0o400
 
   - name: 'Create repo folders and /var/log/borg if needed'
     ansible.builtin.file:
       path: '{{ item }}'
       state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o750
     loop:
       - '{{ borg_local__backup_dir }}/daily'
       - '{{ borg_local__backup_dir }}/hourly'
@@ -51,6 +56,8 @@
     ansible.builtin.template:
       src: 'etc/borg/borg.conf.j2'
       dest: '/etc/borg/borg.conf'
+      owner: 'root'
+      group: 'root'
       mode: 0o644
 
   - name: 'Deploy the borg backup wrapper script'
