@@ -1,13 +1,13 @@
 - block:
 
   - name: 'Install borgbackup'
-    package:
+    ansible.builtin.package:
       name:
         - 'borgbackup'
       state: 'present'
 
   - name: 'mkdir /etc/borg'
-    file:
+    ansible.builtin.file:
       path: '/etc/borg'
       state: 'directory'
       owner: 'root'
@@ -15,28 +15,30 @@
       mode: 0o755
 
   - name: 'Generate borg passphrase'
-    shell: '< /dev/urandom tr -dc A-Za-z0-9 | head -c30 > /etc/borg/borg-passphrase'
+    ansible.builtin.shell: '< /dev/urandom tr -dc A-Za-z0-9 | head -c30 > /etc/borg/borg-passphrase'
     args:
       creates: '/etc/borg/borg-passphrase'
-    register: 'borg_passphrase_generated'
+    register: 'borg_local__generated_passphrase_result'
 
-  - name: 'Mail the borg passphrase to {{ borg_passphrase_mail }}'
-    shell: "BORG_PASSPHRASE=\"$(cat /etc/borg/borg-passphrase)\"; /root/send-mail \"$(hostname --short) - Borg\" \"$BORG_PASSPHRASE\" {{ borg_local__passphrase_mail }}"
-    when: 'borg_passphrase_generated.changed == true'
+  - name: 'Mail the borg passphrase to {{ borg_local__passphrase_mail }}'
+    ansible.builtin.shell: '/root/send-mail \"$(hostname --short) - Borg\" \"$BORG_PASSPHRASE\" {{ borg_local__passphrase_mail }}'
+    environment:
+      BORG_PASSPHRASE: '{{ borg_local__generated_passphrase_result }}'
+    when: 'borg_local__generated_passphrase_result.changed'
 
   - name: 'chmod 0400 /etc/borg/borg-passphrase'
-    file:
+    ansible.builtin.file:
       path: '/etc/borg/borg-passphrase'
       mode: 0o400
 
   - name: 'Create repo folders and /var/log/borg if needed'
-    file:
-      path: "{{ item }}"
+    ansible.builtin.file:
+      path: '{{ item }}'
       state: 'directory'
     loop:
-      - "{{ borg_local__backup_dir }}/daily"
-      - "{{ borg_local__backup_dir }}/hourly"
-      - "{{ borg_local__backup_dir }}/on-demand"
+      - '{{ borg_local__backup_dir }}/daily'
+      - '{{ borg_local__backup_dir }}/hourly'
+      - '{{ borg_local__backup_dir }}/on-demand'
       - '/var/log/borg'
 
   tags:
@@ -46,16 +48,17 @@
 - block:
 
   - name: 'Deploy borg configuration'
-    template:
+    ansible.builtin.template:
       src: 'etc/borg/borg.conf.j2'
       dest: '/etc/borg/borg.conf'
       mode: 0o644
 
   - name: 'Deploy the borg backup wrapper script'
-    template:
+    ansible.builtin.template:
       src: 'usr/local/bin/borg-backup.j2'
       dest: '/usr/local/bin/borg-backup'
       owner: 'root'
+      group: 'root'
       mode: 0o755
 
   tags:
@@ -65,18 +68,18 @@
 
 - block:
 
-  - name: 'systemctl {{ borg_local__service_enabled | bool | ternary("enable", "disable") }} borg-backup-daily.timer --now'
-    systemd:
+  - name: 'systemctl {{ borg_local__on_calendar_daily_enabled | bool | ternary("enable", "disable") }} borg-backup-daily.timer --now'
+    ansible.builtin.systemd:
       name: 'borg-backup-daily.timer'
-      state: '{{ borg_local__service_enabled | bool | ternary("started", "stopped") }}'
-      enabled: '{{ borg_local__service_enabled }}'
+      state: '{{ borg_local__on_calendar_daily_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ borg_local__on_calendar_daily_enabled }}'
       daemon_reload: true
 
-  - name: 'systemctl {{ (borg_local__service_enabled | bool and borg_local__backup_hourly_enabled | bool) | ternary("enable", "disable") }} borg-backup-hourly.timer --now'
-    systemd:
+  - name: 'systemctl {{ borg_local__on_calendar_hourly_enabled | bool | ternary("enable", "disable") }} borg-backup-hourly.timer --now'
+    ansible.builtin.systemd:
       name: 'borg-backup-hourly.timer'
-      state: '{{ (borg_local__service_enabled | bool and borg_local__backup_hourly_enabled | bool) | ternary("started", "stopped") }}'
-      enabled: '{{ borg_local__service_enabled | bool and borg_local__backup_hourly_enabled | bool }}'
+      state: '{{ borg_local__on_calendar_hourly_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ borg_local__on_calendar_hourly_enabled | bool }}'
       daemon_reload: true
 
   tags:
