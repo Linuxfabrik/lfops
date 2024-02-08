@@ -231,3 +231,17 @@ When running playbooks against a host it might be useful to know all the group m
 ```bash
 ansible --inventory path/to/inventory myhost -m debug -a "var=group_names"
 ```
+
+### Connecting as an unprivileged user, correct sudoers config
+
+When connecting as an unprivileged user, you must make sure that the user is allowed to change to all other user accounts, not just root.
+Otherwise it will be impossible to run tasks as other unprivileged users, for example `become_user: 'apache'`.
+This means that the Runas_Spec in sudoers must be `(ALL)`, for example:
+
+```
+ansible-user ALL=(ALL) NOPASSWD: ALL
+```
+or
+```
+ansible-user ALL=(ALL) ALL
+```
