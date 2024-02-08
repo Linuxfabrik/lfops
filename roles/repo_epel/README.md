@@ -9,11 +9,6 @@ Runs on
 * RHEL 9 (and compatible)
 
 
-## Mandatory Requirements
-
-* Install `dnf-utils`. This can be done using the [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils) role.
-
-
 ## Tags
 
 | Tag         | What it does                |

@@ -8,24 +8,6 @@
     - 'repo_epel'
 
 
-- name: 'Perform platform/version specific tasks'
-  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
-  vars:
-    __task_file:
-      files:
-        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
-        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
-        - '{{ ansible_facts["distribution"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}.yml'
-      paths:
-        - '{{ role_path }}/tasks'
-  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
-  tags:
-    - 'repo_epel'
-
-
 - block:
 
   - name: 'Deploy the repo files (mirror: {{ repo_epel__mirror_url }})'
