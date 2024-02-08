@@ -9,6 +9,11 @@ Runs on
 * Fedora 35
 
 
+## Mandatory Requirements
+
+* For RHEL7, install `yum-utils`. This can be done using the [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils) role.
+
+
 ## Tags
 
 | Tag         | What it does                |
