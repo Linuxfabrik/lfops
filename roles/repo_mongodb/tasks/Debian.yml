@@ -7,9 +7,24 @@
         - 'gnupg'
       state: 'present'
 
-  - name: 'wget -qO - https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc | apt-key add -'
-    ansible.builtin.apt_key:
+  - name: 'curl https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc --output /tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
+    ansible.builtin.get_url:
       url: 'https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc'
+      dest: '/tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
+      dest: '/tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
+      mode: 0o644
+
+  - name: 'apt-key add /tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
+    ansible.builtin.apt_key:
+      file: '/tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
       state: 'present'
 
   - name: 'deploy the repo file (mirror: {{ repo_mongodb__mirror_url | default("") }})'

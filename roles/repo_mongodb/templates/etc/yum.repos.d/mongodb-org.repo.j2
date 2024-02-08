@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2024020801
 
 [mongodb-org-{{ repo_mongodb__version }}]
 name=MongoDB Repository for Version {{ repo_mongodb__version }}
@@ -10,7 +10,8 @@ baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/{{ repo_mong
 {% endif %}
 enabled=1
 gpgcheck=1
-gpgkey=https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc
+# gpgkey=https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-MONGODB.asc
 {% if repo_mongodb__basic_auth_login is defined and repo_mongodb__basic_auth_login | length %}
 username={{ repo_mongodb__basic_auth_login["username"] }}
 password={{ repo_mongodb__basic_auth_login["password"] }}
