@@ -4,8 +4,4 @@
 
   roles:
 
-    - role: 'linuxfabrik.lfops.yum_utils'
-      when:
-        - 'not repo_epel__skip_yum_utils | d(false)'
-
     - role: 'linuxfabrik.lfops.repo_epel'

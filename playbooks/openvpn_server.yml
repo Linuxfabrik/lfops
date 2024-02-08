@@ -4,10 +4,6 @@
 
   roles:
 
-    - role: 'linuxfabrik.lfops.yum_utils'
-      when:
-        - 'not openvpn_server__skip_yum_utils | d(false)'
-
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'not openvpn_server__skip_repo_epel | d(false)'
