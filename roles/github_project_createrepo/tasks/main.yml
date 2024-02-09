@@ -100,6 +100,12 @@
       recursive: true
       state: 'present'
 
+  tags:
+    - 'github_project_createrepo'
+
+
+- block:
+
   - name: 'deploy /etc/github_project_createrepo.yml'
     ansible.builtin.template:
       src: 'etc/github-project-createrepo.yml.j2'
@@ -110,3 +116,4 @@
 
   tags:
     - 'github_project_createrepo'
+    - 'github_project_createrepo:configure'

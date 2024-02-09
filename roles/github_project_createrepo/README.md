@@ -21,6 +21,7 @@ If you use the [`github_project_createrepo` Playbook](https://github.com/Linuxfa
 | Tag           | What it does                                 |
 | ---           | ------------                                 |
 | `github_project_createrepo` | Installs and configures github_project_createrepo |
+| `github_project_createrepo:configure` | Deploys `/etc/github_project_createrepo.yml` |
 
 
 ## Mandatory Role Variables
@@ -50,7 +51,7 @@ github_project_createrepo__github_repos:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `github_project_createrepo__base_path` | Directory under which all the repos will be placed. This directory should be served by a webserver. | `'/var/www/html/github-repos'` |
-| `github_project_createrepo__timer_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
+| `github_project_createrepo__timer_enabled` | Enables or disables the github-project-createrepo timer, analogous to `systemctl enable/disable --now`. | `true` |
 | `github_project_createrepo__webserver_user` | The user under which the webserver runs. Will be used to set the correct FACL entries so that both users can access the files. | `'apache'` |
 
 Example:
