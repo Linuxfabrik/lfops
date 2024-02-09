@@ -316,7 +316,7 @@ apache_httpd__skip_mod_security_coreruleset: true
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__mpm_common_listen` | Number. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#listen) | `[80]` |
+| `apache_httpd__mpm_common_listen` | List of numbers or strings. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#listen) | `[80]` |
 
 
 Example:
@@ -324,6 +324,7 @@ Example:
 # optional - mpm_common
 apache_httpd__mpm_common_listen:
   - 80
+  - '192.0.2.10:80'
 ```
 
 
