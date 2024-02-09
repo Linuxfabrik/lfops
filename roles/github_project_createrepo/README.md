@@ -51,12 +51,14 @@ github_project_createrepo__github_repos:
 | -------- | ----------- | ------------- |
 | `github_project_createrepo__base_path` | Directory under which all the repos will be placed. This directory should be served by a webserver. | `'/var/www/html/github-repos'` |
 | `github_project_createrepo__timer_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
+| `github_project_createrepo__webserver_user` | The user under which the webserver runs. Will be used to set the correct FACL entries so that both users can access the files. | `'apache'` |
 
 Example:
 ```yaml
 # optional
 github_project_createrepo__base_path: '/var/www/html/github-repos'
 github_project_createrepo__timer_enabled: true
+github_project_createrepo__webserver_user: 'nginx'
 ```
 
 

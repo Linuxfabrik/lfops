@@ -6,6 +6,15 @@
       dest: '/opt/github-project-createrepo'
       force: false
 
+  - name: 'useradd --system --home-dir /opt/github-project-createrepo --shell /bin/false github-project-createrepo'
+    ansible.builtin.user:
+      comment: 'GitHub Project Createrepo Service User'
+      name: 'github-project-createrepo'
+      home: '/opt/github-project-createrepo'
+      shell: '/bin/false'
+      state: 'present'
+      system: true
+
   - name: 'cp /opt/github-project-createrepo/systemd/github-project-createrepo.service /etc/systemd/system/github-project-createrepo.service'
     ansible.builtin.copy:
       src: '/opt/github-project-createrepo/systemd/github-project-createrepo.service'
@@ -30,6 +39,66 @@
     ansible.builtin.file:
       path: '{{ github_project_createrepo__base_path }}'
       state: 'directory'
+      owner: '{{ github_project_createrepo__webserver_user }}'
+      group: '{{ github_project_createrepo__webserver_user }}'
+      mode: 0o755
+
+  - name: 'setfacl --recursive --modify user:{{ github_project_createrepo__webserver_user }}:rwx {{ github_project_createrepo__base_path }}'
+    ansible.posix.acl:
+      entity: '{{ github_project_createrepo__webserver_user }}'
+      etype: 'user'
+      path: '{{ github_project_createrepo__base_path }}'
+      permissions: 'rwx'
+      recursive: true
+      state: 'present'
+
+  - name: 'setfacl --recursive --modify user:{{ github_project_createrepo__webserver_user }}:rwx {{ github_project_createrepo__base_path }}'
+    ansible.posix.acl:
+      default: true
+      entity: '{{ github_project_createrepo__webserver_user }}'
+      etype: 'user'
+      path: '{{ github_project_createrepo__base_path }}'
+      permissions: 'rwx'
+      recursive: true
+      state: 'present'
+
+  - name: 'setfacl --recursive --modify group:{{ github_project_createrepo__webserver_user }}:rx {{ github_project_createrepo__base_path }}'
+    ansible.posix.acl:
+      entity: '{{ github_project_createrepo__webserver_user }}'
+      etype: 'group'
+      path: '{{ github_project_createrepo__base_path }}'
+      permissions: 'rx'
+      recursive: true
+      state: 'present'
+
+  - name: 'setfacl --recursive --modify group:{{ github_project_createrepo__webserver_user }}:rx {{ github_project_createrepo__base_path }}'
+    ansible.posix.acl:
+      default: true
+      entity: '{{ github_project_createrepo__webserver_user }}'
+      etype: 'group'
+      path: '{{ github_project_createrepo__base_path }}'
+      permissions: 'rx'
+      recursive: true
+      state: 'present'
+
+  - name: 'setfacl --recursive --modify user:github-project-createrepo:rwx {{ github_project_createrepo__base_path }}'
+    ansible.posix.acl:
+      entity: 'github-project-createrepo'
+      etype: 'user'
+      path: '{{ github_project_createrepo__base_path }}'
+      permissions: 'rwx'
+      recursive: true
+      state: 'present'
+
+  - name: 'setfacl --recursive --modify user:github-project-createrepo:rwx --default {{ github_project_createrepo__base_path }}'
+    ansible.posix.acl:
+      default: true
+      entity: 'github-project-createrepo'
+      etype: 'user'
+      path: '{{ github_project_createrepo__base_path }}'
+      permissions: 'rwx'
+      recursive: true
+      state: 'present'
 
   - name: 'deploy /etc/github_project_createrepo.yml'
     ansible.builtin.template:

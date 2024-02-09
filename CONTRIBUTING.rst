@@ -627,6 +627,9 @@ Special Roles
 
 Roles with special technical implementations and capabilities:
 
+* | `github_project_createrepo <https://github.com/Linuxfabrik/lfops/tree/main/roles/github_project_createrepo>`_
+  | Sets FACL entries to allow both the webserver user and the github-project-createrepo user to access files.
+
 * | `librenms <https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms>`_
   | Compiles and loads an SELinux module.
 
