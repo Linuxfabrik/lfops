@@ -124,6 +124,7 @@ Role: system_update
 
 ### Added
 
+* Role: mirror
 * Role: borg_local
 * Role: github_project_createrepo
 * Role: apache_solr

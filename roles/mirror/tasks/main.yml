@@ -1,0 +1,124 @@
+- block:
+
+  - name: 'git clone --recurse-submodules https://github.com/Linuxfabrik/mirror.git /opt/mirror'
+    ansible.builtin.git:
+      repo: 'https://github.com/Linuxfabrik/mirror.git'
+      dest: '/opt/mirror'
+      force: false
+
+  - name: 'useradd --system --home-dir /opt/mirror --shell /bin/false mirror'
+    ansible.builtin.user:
+      comment: 'Mirror Update Service User'
+      name: 'mirror'
+      home: '/opt/mirror'
+      shell: '/bin/false'
+      state: 'present'
+      system: true
+
+  - name: 'cp /opt/mirror/mirror.sudoers /etc/sudoers.d/mirror'
+    ansible.builtin.copy:
+      src: '/opt/mirror/mirror.sudoers'
+      dest: '/etc/sudoers.d/mirror'
+      remote_src: true
+
+  - name: 'cp /opt/mirror/systemd/mirror-update.service /etc/systemd/system/mirror-update.service'
+    ansible.builtin.copy:
+      src: '/opt/mirror/systemd/mirror-update.service'
+      dest: '/etc/systemd/system/mirror-update.service'
+      remote_src: true
+    notify: 'mirror: systemctl daemon-reload'
+
+  - name: 'cp /opt/mirror/systemd/mirror-update.timer /etc/systemd/system/mirror-update.timer'
+    ansible.builtin.copy:
+      src: '/opt/mirror/systemd/mirror-update.timer'
+      dest: '/etc/systemd/system/mirror-update.timer'
+      remote_src: true
+    notify: 'mirror: systemctl daemon-reload'
+
+  - name: 'systemctl {{ mirror__timer_enabled | bool | ternary("enable", "disable") }} --now mirror-update.timer'
+    ansible.builtin.service:
+      name: 'mirror-update.timer'
+      enabled: '{{ mirror__timer_enabled }}'
+      state: '{{ mirror__timer_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'mkdir {{ mirror__base_path }}'
+    ansible.builtin.file:
+      path: '{{ mirror__base_path }}'
+      state: 'directory'
+      owner: '{{ mirror__webserver_user }}'
+      group: '{{ mirror__webserver_user }}'
+      mode: 0o755
+
+  - name: 'setfacl --recursive --modify user:{{ mirror__webserver_user }}:rwx {{ mirror__base_path }}'
+    ansible.posix.acl:
+      entity: '{{ mirror__webserver_user }}'
+      etype: 'user'
+      path: '{{ mirror__base_path }}'
+      permissions: 'rwx'
+      recursive: true
+      state: 'present'
+
+  - name: 'setfacl --recursive --modify user:{{ mirror__webserver_user }}:rwx {{ mirror__base_path }}'
+    ansible.posix.acl:
+      default: true
+      entity: '{{ mirror__webserver_user }}'
+      etype: 'user'
+      path: '{{ mirror__base_path }}'
+      permissions: 'rwx'
+      recursive: true
+      state: 'present'
+
+  - name: 'setfacl --recursive --modify group:{{ mirror__webserver_user }}:rx {{ mirror__base_path }}'
+    ansible.posix.acl:
+      entity: '{{ mirror__webserver_user }}'
+      etype: 'group'
+      path: '{{ mirror__base_path }}'
+      permissions: 'rx'
+      recursive: true
+      state: 'present'
+
+  - name: 'setfacl --recursive --modify group:{{ mirror__webserver_user }}:rx {{ mirror__base_path }}'
+    ansible.posix.acl:
+      default: true
+      entity: '{{ mirror__webserver_user }}'
+      etype: 'group'
+      path: '{{ mirror__base_path }}'
+      permissions: 'rx'
+      recursive: true
+      state: 'present'
+
+  - name: 'setfacl --recursive --modify user:mirror:rwx {{ mirror__base_path }}'
+    ansible.posix.acl:
+      entity: 'mirror'
+      etype: 'user'
+      path: '{{ mirror__base_path }}'
+      permissions: 'rwx'
+      recursive: true
+      state: 'present'
+
+  - name: 'setfacl --recursive --modify user:mirror:rwx --default {{ mirror__base_path }}'
+    ansible.posix.acl:
+      default: true
+      entity: 'mirror'
+      etype: 'user'
+      path: '{{ mirror__base_path }}'
+      permissions: 'rwx'
+      recursive: true
+      state: 'present'
+  tags:
+    - 'mirror'
+
+
+- block:
+
+  - name: 'deploy /etc/mirror.yml'
+    ansible.builtin.template:
+      src: 'etc/mirror.yml.j2'
+      dest: '/etc/mirror.yml'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'mirror'
+    - 'mirror:configure'

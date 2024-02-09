@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+# 2024020901
+
+base_path: '{{ mirror__base_path }}'
+
+reposync_repos:
+{{ mirror__reposync_repos | ansible.builtin.to_nice_yaml(indent=2) | indent(2, first=True) }}
