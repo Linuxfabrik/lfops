@@ -9,7 +9,7 @@
           github_project_createrepo__apps__apps__dependent_var
         }}'
       when:
-        - 'not github_project_createrepo__skip_yum_utils | d(false)'
+        - 'not github_project_createrepo__skip_apps | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
       when:
