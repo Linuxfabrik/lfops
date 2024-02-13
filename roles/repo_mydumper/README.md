@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.repo_mydumper
 
-This role deploys a repository for the mydumper package. Note that no official repository exists - Linuxfabrik currently uses its own (non-public) server.
+This role deploys a repository for the mydumper package. Note that no official repository exists - Linuxfabrik currently uses its [own repository server](https://repo.linuxfabrik.ch/).
 
 Runs on
 
@@ -20,7 +20,7 @@ Runs on
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `repo_baseos__basic_auth_login` | Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles. | `{{ lfops__repo_basic_auth_login \| default("") }}` |
-| `repo_mydumper__baseurl` | Set the URL to a custom mirror server providing the repository. | `https://repo.linuxfabrik.ch/mydumper/el/{{ ansible_facts["distribution_major_version"] }}` |
+| `repo_mydumper__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used. | `'{{ lfops__repo_mirror_url | default("") }}'` |
 
 Example:
 ```yaml
@@ -28,7 +28,7 @@ Example:
 repo_mydumper__basic_auth_login:
   username: 'my-username'
   password: 'linuxfabrik'
-repo_mydumper__baseurl: 'https://mirror.example.com'
+repo_mydumper__mirror_url: 'https://mirror.example.com'
 ```
 
 

@@ -1,9 +1,13 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2024021301
 
 [mydumper]
 name = mydumper
-baseurl= {{ repo_mydumper__baseurl }}
+{% if repo_mydumper__mirror_url is defined and repo_mydumper__mirror_url | length %}
+baseurl={{ repo_mydumper__mirror_url }}/mydumper/el/{{ ansible_facts["distribution_major_version"] }}
+{% else %}
+baseurl=https://repo.linuxfabrik.ch/mydumper/el/{{ ansible_facts["distribution_major_version"] }}
+{% endif %}
 gpgcheck = 0
 enabled = 1
 {% if repo_mydumper__basic_auth_login is defined and repo_mydumper__basic_auth_login | length %}

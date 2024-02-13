@@ -578,6 +578,7 @@ When setting a ``dependent_var`` in a playbook, make sure to use the following f
       icinga2_master__api_users__dependent_var: '{{
           icingadb__icinga2_master__api_users__dependent_var +
           icingaweb2__icinga2_master__api_users__dependent_var +
+          (not setup_icinga2_master__skip_icingaweb2_module_vspheredb | default(true)) | ternary(icingaweb2_module_vspheredb__mariadb_server__users__dependent_var, []) +
           icingaweb2_module_director__icinga2_master__api_users__dependent_var
         }}'
 
