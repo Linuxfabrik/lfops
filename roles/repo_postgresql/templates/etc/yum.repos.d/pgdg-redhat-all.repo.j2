@@ -91,6 +91,9 @@ password={{ repo_postgresql__basic_auth_login["password"] }}
 
 [pgdg14]
 name=PostgreSQL 14 for RHEL / Rocky / AlmaLinux $releasever - $basearch
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length %}
+baseurl={{ repo_postgresql__mirror_url }}/pgdg/repos/yum/14/redhat/rhel-$releasever-$basearch
+{% else %}
 baseurl=https://download.postgresql.org/pub/repos/yum/14/redhat/rhel-$releasever-$basearch
 {% endif %}
 enabled=1
@@ -487,3 +490,7 @@ name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debugi
 baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/12/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
