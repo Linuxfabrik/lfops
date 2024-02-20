@@ -27,6 +27,18 @@ influxdb__users__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
+influxdb__https__dependent_var: []
+influxdb__https__group_var: []
+influxdb__https__host_var: []
+influxdb__https__role_var: []
+influxdb__https__combined_var: '{{ (
+      influxdb__https__role_var +
+      influxdb__https__dependent_var +
+      influxdb__https__group_var +
+      influxdb__https__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="certificate_path")
+  }}'
+
 influxdb__service_enabled: true
 
 # -----------------------------------------------------------------------------
