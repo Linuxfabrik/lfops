@@ -50,6 +50,7 @@ influxdb__admin_login:
 | `influxdb__dump_timer_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
 | `influxdb__databases__host_var` /<br> `influxdb__databases__group_var` | List of InfluxDB databases that should be created or deleted.<br> Subkeys:<br> * `name`: Mandatory, string. Name of the database.<br> * `state`: Optional, string. Defaults to `present`. The state of the database. Possible options: `present`, `absent`.<br> * `retention`: Mandatory, string. Determines how long InfluxDB should keep the data. If specified, it should be `INF` or at least one hour.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `influxdb__users__host_var` /<br> `influxdb__users__group_var` | List of InfluxDB users that should be created, updated or deleted.<br> Subkeys:<br> * `name`: Mandatory, string. The name of the account.<br> * `password`: Mandatory, string. The password of the account.<br> * `state`: Optional, string. Defaults to `present`. The state of the account. Possible options: `present`, `absent`.<br> * `admin`: Optional, boolean. Defaults to `false`. Whether the user should be in the admin role or not.<br> * `grants`: Optional, list. Defaults to omit. Takes a list of dicts containing the `database` and `privilege` keys.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `influxdb__https__host_var` /<br> `influxdb__https__group_var` | Determines whether HTTPS is enabled or not.<br> Subkeys:<br> * `certificate_path`: Mandatory, string. The path of the certificate file used for SSL encryption.<br> * `privatekey_path`: Mandatory, string. The path of the certificate key file used for SSL encryption.<br> * `validate_certs`: Optional, boolean. Defaults to `true`. If set to `false`, the SSL certificates will not be validated. Possible options: `true`, `false`. | `[]` |
 | `influxdb__service_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
 
 Example:
@@ -72,6 +73,10 @@ influxdb__users__host_var:
     grants:
       - database: 'database1'
         privilege: 'ALL'
+influxdb__https__host_var:
+  - certificate_path: /etc/ssl/ssl-certificate.crt
+    privatekey_path: /etc/ssl/ssl-certificate.key
+    validate_certs: false
 influxdb__service_enabled: true
 ```
 
