@@ -15,7 +15,7 @@ use_ssl = {{ grafana__ldap_config.use_ssl | default('false') }}
 # If set to true, use LDAP with STARTTLS instead of LDAPS
 start_tls = false
 # set to true if you want to skip ssl cert validation
-ssl_skip_verify = false
+ssl_skip_verify = {{ grafana__ldap_config.ssl_skip_verify | default('false') }}
 # set to the path to your root CA certificate or leave unset to use system defaults
 # root_ca_cert = "/path/to/certificate.crt"
 # Authentication against LDAP servers requiring client certificates
