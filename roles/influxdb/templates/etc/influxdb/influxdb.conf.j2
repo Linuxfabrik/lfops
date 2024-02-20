@@ -309,6 +309,19 @@ reporting-disabled = true
   # ping-auth-enabled = false
 
   # Determines whether HTTPS is enabled.
+{% if influxdb__https__combined_var %}
+{% for item in influxdb__https__combined_var %}
+{% if 'certificate_path' in item and 'privatekey_path' in item %}
+  https-enabled = true
+
+  # The SSL certificate to use when HTTPS is enabled.
+  https-certificate = "{{ item['certificate_path'] }}"
+
+  # Use a separate private key location.
+  https-private-key = "{{ item['privatekey_path'] }}"
+{% endif %}
+{% endfor %}
+{% else %}
   # https-enabled = false
 
   # The SSL certificate to use when HTTPS is enabled.
@@ -316,6 +329,7 @@ reporting-disabled = true
 
   # Use a separate private key location.
   # https-private-key = ""
+{% endif %}
 
   # The JWT auth shared secret to validate requests using JSON web tokens.
   # shared-secret = ""
