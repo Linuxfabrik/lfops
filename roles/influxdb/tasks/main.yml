@@ -6,6 +6,22 @@
         - 'influxdb'
       state: 'present'
 
+  - name: 'make sure the certificate file exists'
+    ansible.builtin.file:
+      path: '{{ item.certificate_path }}'
+      state: 'file'
+    loop: '{{ influxdb__https__combined_var }}'
+    when:
+      - 'influxdb__https__combined_var | default(false) | list | length > 0'
+
+  - name: 'make sure the private key file exists'
+    ansible.builtin.file:
+      path: '{{ item.privatekey_path }}'
+      state: 'file'
+    loop: '{{ influxdb__https__combined_var }}'
+    when:
+      - 'influxdb__https__combined_var | default(false) | list | length > 0'
+
   - name: 'Deploy /etc/influxdb/influxdb.conf'
     ansible.builtin.template:
       src: 'etc/influxdb/influxdb.conf.j2'
@@ -14,6 +30,9 @@
       group: 'root'
       mode: 0o644
     notify: 'influxdb: restart influxdb'
+
+  - name: Flush handlers
+    ansible.builtin.meta: flush_handlers
 
   tags:
     - 'influxdb'
@@ -49,6 +68,8 @@
       user_password: '{{ influxdb__admin_login.password }}'
       admin: true
       state: 'present'
+      ssl: '{{ influxdb__https__combined_var | default(false) | list | length > 0 }}'
+      validate_certs: '{{ influxdb__https__combined_var[0].validate_certs | default(omit) }}'
     vars:
       ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
 
@@ -99,6 +120,8 @@
       password: '{{ influxdb__admin_login.password | default(omit) }}'
       username: '{{ influxdb__admin_login.username }}'
       state: '{{ item.state | default("present") }}'
+      ssl: '{{ influxdb__https__combined_var | default(false) | list | length > 0 }}'
+      validate_certs: '{{ influxdb__https__combined_var[0].validate_certs | default(omit) }}'
     loop: '{{ influxdb__databases__combined_var }}'
     vars:
       ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
@@ -112,6 +135,8 @@
       duration: '{{ item.retention }}'
       replication: 1
       default: true
+      ssl: '{{ influxdb__https__combined_var | default(false) | list | length > 0 }}'
+      validate_certs: '{{ influxdb__https__combined_var[0].validate_certs | default(omit) }}'
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ influxdb__databases__combined_var }}'
@@ -132,6 +157,8 @@
     state: '{{ item.state | default("present") }}'
     grants: '{{ item.grants | default(omit) }}'
     admin: '{{ item.admin | default(false) }}'
+    ssl: '{{ influxdb__https__combined_var | default(false) | list | length > 0 }}'
+    validate_certs: '{{ influxdb__https__combined_var[0].validate_certs | default(omit) }}'
   loop: '{{ influxdb__users__combined_var }}'
   vars:
     ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
