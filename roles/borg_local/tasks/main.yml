@@ -23,7 +23,7 @@
     register: 'borg_local__generated_passphrase_result'
 
   - name: 'Mail the borg passphrase to {{ borg_local__passphrase_mail }}'
-    ansible.builtin.shell: '/root/send-mail "$(hostname --short) - Borg" "{{ borg_local__generated_passphrase_result }}" "{{ borg_local__passphrase_mail }}"'
+    ansible.builtin.shell: '/root/send-mail "$(hostname --short) - Borg" "$(cat /etc/borg/borg-passphrase)" "{{ borg_local__passphrase_mail }}"'
     when: 'borg_local__generated_passphrase_result["changed"]'
 
   - name: 'chmod 0400 /etc/borg/borg-passphrase'
