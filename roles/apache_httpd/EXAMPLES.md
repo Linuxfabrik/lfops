@@ -236,6 +236,19 @@ CIS: You do not want to use this - it does not meet current security standards f
 </Location>
 ```
 
+Basic Auth for everything except one location:
+
+```
+<Location />
+    AuthType Basic
+    AuthName "Restricted Area"
+    AuthBasicProvider file
+    AuthUserFile /etc/httpd/.htpasswd
+    Require expr %{REQUEST_URI} =~ m#^/except-this-url/.*#
+    Require user linuxfabrik-user
+</Location>
+```
+
 
 ### Require directive examples
 
