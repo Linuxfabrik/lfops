@@ -87,7 +87,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/icingaweb2-module-grafana/{{ item }}.ini'
       dest: '/tmp/ansible.icingaweb2-module-grafana-inis/'
-    when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/icingaweb2-module-grafana/{{ item }}.ini" is file'
+    when: '("/tmp/ansible.monitoring-plugins-repo/check-plugins/" ~ item ~ "/icingaweb2-module-grafana/" ~ item ~ ".ini") is file'
     loop: '{{ monitoring_plugins__plugin_list }}'
     delegate_to: 'localhost'
     run_once: true

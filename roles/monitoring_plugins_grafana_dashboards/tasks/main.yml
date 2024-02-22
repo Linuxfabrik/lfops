@@ -30,7 +30,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/grafana/{{ item }}.yml'
       dest: '/tmp/ansible.monitoring_plugins_grafana_dashboards/{{ item }}.yml'
-    when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/grafana/{{ item }}.yml" is file'
+    when: '("/tmp/ansible.monitoring-plugins-repo/check-plugins/" ~ item ~ "/grafana/" ~ item ~ ".yml") is file'
     loop: '{{ monitoring_plugins__plugin_list }}'
 
   - name: '/usr/local/bin/grr apply ... # global assets'
@@ -55,7 +55,7 @@
       GRAFANA_TOKEN: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["password"] }}'
     register: 'monitoring_plugins_grafana_dashboards__grr_apply_result'
     changed_when: '"added" in monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"] or "updated" in monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"]'
-    when: '"/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/grafana/{{ item }}.yml" is file'
+    when: '("/tmp/ansible.monitoring-plugins-repo/check-plugins/" ~ item ~ "/grafana/" ~ item ~ ".yml") is file'
     loop: '{{ monitoring_plugins__plugin_list }}'
 
   - name: 'rm -rf /tmp/ansible.monitoring_plugins_grafana_dashboards'
