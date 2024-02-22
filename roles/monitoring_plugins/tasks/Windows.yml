@@ -38,6 +38,7 @@
       and (monitoring_plugins__icinga2_api_user is defined and monitoring_plugins__icinga2_api_user | length)
       and (monitoring_plugins__icinga2_api_password is defined and monitoring_plugins__icinga2_api_password | length)'
     delegate_to: 'localhost'
+    ignore_errors: true # it is possible that the host does not yet exist in icinga2
 
   - name: 'Stop the Icinga2 service'
     ansible.windows.win_service:
