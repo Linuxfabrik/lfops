@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023091302
+# 2024022301
 
 ### Welcome to the InfluxDB configuration file.
 
@@ -309,27 +309,21 @@ reporting-disabled = true
   # ping-auth-enabled = false
 
   # Determines whether HTTPS is enabled.
-{% if influxdb__https__combined_var %}
-{% for item in influxdb__https__combined_var %}
-{% if 'certificate_path' in item and 'privatekey_path' in item %}
-  https-enabled = true
-
+  https-enabled = {{ (influxdb__conf_https is defined and influxdb__conf_https | length) | string | lower }}
+  {% if influxdb__conf_https is defined and influxdb__conf_https | length %}
   # The SSL certificate to use when HTTPS is enabled.
-  https-certificate = "{{ item['certificate_path'] }}"
+  https-certificate = "{{ influxdb__conf_https['certificate_path'] }}"
 
   # Use a separate private key location.
-  https-private-key = "{{ item['privatekey_path'] }}"
-{% endif %}
-{% endfor %}
-{% else %}
-  # https-enabled = false
+  https-private-key = "{{ influxdb__conf_https['private_key_path'] }}"
+  {% else %}
 
   # The SSL certificate to use when HTTPS is enabled.
   # https-certificate = "/etc/ssl/influxdb.pem"
 
   # Use a separate private key location.
   # https-private-key = ""
-{% endif %}
+  {% endif %}
 
   # The JWT auth shared secret to validate requests using JSON web tokens.
   # shared-secret = ""
