@@ -1,2 +1,3 @@
 graylog_server__apps__apps__dependent_var:
   - name: 'tar'
+graylog_server__opts_file: '/etc/default/graylog-server'

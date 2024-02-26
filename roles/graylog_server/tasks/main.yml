@@ -17,6 +17,11 @@
 
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
   - name: 'Get the list of installed packages'
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
@@ -31,6 +36,15 @@
       dest: '/etc/graylog/server/server.conf'
       owner: 'graylog'
       group: 'graylog'
+      mode: 0o644
+    notify: 'graylog: restart graylog-server'
+
+  - name: 'Deploy {{ graylog_server__opts_file }}'
+    ansible.builtin.template:
+      src: '{{ graylog_server__opts_file[1:] }}.j2'
+      dest: '{{ graylog_server__opts_file }}'
+      owner: 'root'
+      group: 'root'
       mode: 0o644
     notify: 'graylog: restart graylog-server'
 
