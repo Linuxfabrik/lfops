@@ -1,1 +1,2 @@
-nfs_client__nfs_client_package: 'nfs-utils'
+mount__cifs_client_package: 'cifs-utils'
+mount__nfs_client_package: 'nfs-utils'

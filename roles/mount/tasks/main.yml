@@ -3,18 +3,18 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'nfs_client'
+    - 'mount'
 
 
 - block:
 
-  - name: 'Install {{ nfs_client__nfs_client_package }}'
+  - name: 'Install {{ mount__mount_package }}'
     ansible.builtin.package:
-      name: '{{ nfs_client__nfs_client_package }}'
+      name: '{{ mount__mount_package }}'
       state: 'present'
 
   tags:
-    - 'nfs_client'
+    - 'mount'
 
 
 - block:
@@ -26,7 +26,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o755
-    loop: '{{ nfs_client__mounts }}'
+    loop: '{{ mount__mounts }}'
 
   - name: 'Mount NFS volumes'
     ansible.posix.mount:
@@ -35,10 +35,10 @@
       opts: '{{ item["opts"] }}'
       state: '{{ item["state"] }}'
       fstype: 'nfs'
-    loop: '{{ nfs_client__mounts }}'
+    loop: '{{ mount__mounts }}'
 
   when:
-    - 'nfs_client__mounts is defined'
-    - 'nfs_client__mounts | length'
+    - 'mount__mounts is defined'
+    - 'mount__mounts | length'
   tags:
-    - 'nfs_client'
+    - 'mount'
