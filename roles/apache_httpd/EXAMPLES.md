@@ -25,8 +25,6 @@ apache_httpd__mods__host_var:
 apache_httpd__vhosts__host_var:
   - template: 'app'
     virtualhost_port: 80
-    authz_document_root: |-
-        Require all granted
     conf_directory_index: 'index.php'
     conf_server_name: 'test'
 ```

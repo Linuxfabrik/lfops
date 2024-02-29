@@ -308,10 +308,6 @@ nextcloud__apache_httpd__vhosts__dependent_var:
       - '.*'
     allowed_http_methods:
       - '.*'
-    authz_file_extensions: |-
-        Require all granted
-    authz_document_root: |-
-        Require all granted
     virtualhost_ip: '{{ nextcloud__vhost_virtualhost_ip | d("*") }}'
     virtualhost_port: '{{ nextcloud__vhost_virtualhost_port | d(80) }}'
     conf_custom_log_format: 'combined'

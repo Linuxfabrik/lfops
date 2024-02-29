@@ -36,12 +36,6 @@ librenms__apache_httpd__vhosts__dependent_var:
       - 'POST'
       - 'PUT'
 
-    authz_file_extensions: |-
-      Require all granted
-
-    authz_document_root: |-
-      Require all granted
-
     virtualhost_port: 80
 
     conf_allow_override: 'All' # TODO
