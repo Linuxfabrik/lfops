@@ -309,8 +309,9 @@ reporting-disabled = true
   # ping-auth-enabled = false
 
   # Determines whether HTTPS is enabled.
-  https-enabled = {{ (influxdb__conf_https is defined and influxdb__conf_https | length) | string | lower }}
+  https-enabled = {{ (influxdb__conf_https is defined and influxdb__conf_https | length > 1) | string | lower }}
   {% if influxdb__conf_https is defined and influxdb__conf_https | length %}
+
   # The SSL certificate to use when HTTPS is enabled.
   https-certificate = "{{ influxdb__conf_https['certificate_path'] }}"
 
