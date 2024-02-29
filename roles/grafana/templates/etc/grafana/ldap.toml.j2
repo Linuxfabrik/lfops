@@ -50,9 +50,9 @@ group_search_filter_user_attribute = "{{ grafana__ldap_config.group_search_filte
 [servers.attributes]
 name = "givenName"
 surname = "sn"
-username = "{{ grafana__ldap_config.attribute_username | default('cn') }}"
+username = "{{ grafana__ldap_config.username | default('cn') }}"
 member_of = "memberOf"
-email =  "{{ grafana__ldap_config.attribute_email | default('email') }}"
+email =  "{{ grafana__ldap_config.email | default('email') }}"
 
 # Map ldap groups to grafana org roles
 {% if grafana__ldap_config.admin_group_dn is defined and grafana__ldap_config.admin_group_dn | length %}

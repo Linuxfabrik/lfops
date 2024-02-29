@@ -71,7 +71,7 @@ grafana__auth_anonymous_org_name: 'Main Org.'
 grafana__auth_anonymous_org_role: 'Viewer'
 grafana__cookie_samesite: 'lax'
 grafana__ldap_config:
-  attribute_username: 'uid'
+  username: 'uid'
   bind_dn: 'uid=freeipa-reader,cn=sysaccounts,cn=etc,dc=example,dc=com'
   bind_password: 'linuxfabrik'
   editor_group_dn: 'cn=monitoring,cn=groups,cn=accounts,dc=example,dc=com'
