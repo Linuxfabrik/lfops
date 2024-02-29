@@ -11,6 +11,11 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:apache_httpd:
+* the default of the `authz_document_root` vHost variable changed from `Require local` to `Require all granted`. This is a more sensible default, as `allowed_file_extensions` is used to restrict the access.
+* removed the `authz_file_extensions` vHost variable. This was required to allow access to file extensions listed in `allowed_file_extensions'. From now on, the access to listed file extensions is always allowed.
+* fixed a bug that allowed access to dotfiles which had extensions listed in `allowed_file_extensions`. Make sure this does not break your application, or set `allow_accessing_dotfiles: true`.
+
 Role:repo_mydumper
 * adjusted to use https://repo.linuxfabrik.ch/mydumper/ by default
 * removed `repo_mydumper__baseurl`, instead added `repo_mydumper__mirror_url`
@@ -127,6 +132,9 @@ Role: system_update
 
 
 ### Added
+
+Role:apache_httpd:
+* added the `skip_allowed_file_extensions` vHost variable
 
 * Role: mirror
 * Role: borg_local

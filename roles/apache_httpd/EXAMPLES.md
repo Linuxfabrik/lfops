@@ -27,8 +27,6 @@ apache_httpd__vhosts__host_var:
     virtualhost_port: 80
     authz_document_root: |-
         Require all granted
-    authz_file_extensions: |-
-        Require all granted
     conf_directory_index: 'index.php'
     conf_server_name: 'test'
 ```
@@ -702,4 +700,3 @@ CustomLog "||/usr/local/sbin/import_logs.py \
 # GELF Realtime Logging
 CustomLog "|/usr/bin/nc --udp graylog.example.com 12201" gelf
 ```
-
