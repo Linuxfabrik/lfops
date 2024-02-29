@@ -1,5 +1,11 @@
 # Manage Apache virtual hosts
 
+- name: 'Limit apache_httpd__vhosts__combined_var if apache_httpd__limit_vhosts is set'
+  ansible.builtin.set_fact:
+    apache_httpd__vhosts__combined_var: '{{ apache_httpd__vhosts__combined_var | selectattr("conf_server_name", "in", apache_httpd__limit_vhosts) | list }}'
+  when:
+    - 'apache_httpd__limit_vhosts is defined and apache_httpd__limit_vhosts | length'
+
 - name: 'Combined vHosts:'
   ansible.builtin.debug:
     var: 'apache_httpd__vhosts__combined_var'
