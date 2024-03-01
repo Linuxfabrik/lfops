@@ -306,6 +306,7 @@ nextcloud__apache_httpd__vhosts__dependent_var:
     template: 'app'
     virtualhost_ip: '{{ nextcloud__vhost_virtualhost_ip | d("*") }}'
     virtualhost_port: '{{ nextcloud__vhost_virtualhost_port | d(80) }}'
+    conf_custom_log: 'logs/nextcloud-access.log linuxfabrikio'
     conf_directory_index: 'index.php index.html index.htm'
     conf_document_root: '/var/www/html/nextcloud'
     conf_error_log: 'logs/nextcloud-error.log'

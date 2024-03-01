@@ -52,7 +52,6 @@ apache_httpd__vhosts__host_var:
       - 'OPTIONS'
       - 'POST'
       - 'PUT'
-    conf_custom_log: 'logs/www.example.com-access.log linuxfabrikio'
     conf_directory_index: 'index.php'
     conf_proxy_error_override: 'Off'
     conf_proxy_preserve_host: 'On'
