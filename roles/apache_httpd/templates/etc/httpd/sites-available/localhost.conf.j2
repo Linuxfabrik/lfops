@@ -83,6 +83,9 @@
 
 {% if not item['skip_allowed_file_extensions'] | d(false) %}
     # only allow access to the listed file extensions
+    # but make sure it is an actual file
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-d
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
     RewriteCond %{REQUEST_URI} !\.({{ item['allowed_file_extensions'] | d(['css', 'gif', 'html?', 'ico', 'jpe?g', 'js', 'pdf', 'php', 'png', 'svg', 'ttf', 'txt', 'woff2?']) | join('|') }})$ [nocase]
     # however, always allow access to /
     RewriteCond %{REQUEST_URI} !/$
