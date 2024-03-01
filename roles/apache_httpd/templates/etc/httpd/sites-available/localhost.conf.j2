@@ -88,9 +88,10 @@
     # but make sure it is an actual file
     RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-d
     RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
+    # ensure there is a file extension
+    RewriteCond %{REQUEST_URI} \..+$
+    # then, specifically allow only the listed file extensions
     RewriteCond %{REQUEST_URI} !\.({{ item['allowed_file_extensions'] | d(['css', 'gif', 'html?', 'ico', 'jpe?g', 'js', 'pdf', 'php', 'png', 'svg', 'ttf', 'txt', 'woff2?']) | join('|') }})$ [nocase]
-    # however, always allow access to /
-    RewriteCond %{REQUEST_URI} !/$
     RewriteRule ^ - [last,forbidden]
 {% endif %}
 
