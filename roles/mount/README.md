@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.mount
 
-This role installs NFS client utilities and controls active and configured NFS mount points in `/etc/fstab`.
+This role installs NFS and CIFS client utilities when necessary and configures mount points in `/etc/fstab`.
 
 
 Runs on
@@ -14,23 +14,34 @@ Runs on
 
 | Tag                  | What it does                           |
 | ---                  | ------------                           |
-| `nfs_client`         | <ul><li>Install nfs-utils on RedHat-Based systems or nfs-common on Debian-Based systems</li><li>`mkdir -p nfs-mount-point`</li><li>Mount NFS volumes</li></ul> |
+| `mount`              | <ul><li>Install nfs-utils/cifs on RedHat-Based systems or nfs-common/cifs-utils on Debian-Based systems</li><li>`mkdir -p mount-point`</li><li>Mount volumes</li></ul> |
 
 
 ## Optional Role Variables
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `nfs_client__mounts` | List of NFS mounts to create. Subkeys: <ul><li>`src`</li><li>`path`</li><li>`opts`</li><li>`state`</li></ul>For details, have a look at the [ansible.posix.mount_module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html#parameter-state). | unset |
+| `mount__mounts` | List of mounts to create. Subkeys: <ul><li>`path`</li><li>`src`</li><li>`fstype`</li><li>`opts`</li><li>`state`</li></ul>For details, have a look at the [ansible.posix.mount_module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html#parameter-state). | unset |
 
 Example:
 ```yaml
 # optional
-nfs_client__mounts:
-  - src: 'nfs-server.example.com:/path/to/exported/data'
-    path: '/mnt/nfs/data'
+mount__mounts:
+  - path: '/mnt/nfs/data'
+    fstype: 'nfs'
+    src: 'nfs-server.example.com:/path/to/exported/data'
     opts: 'defaults'
-    state: 'mounted'
+    state: 'present'
+  - path: '/mnt/cifs/data'
+    fstype: 'cifs'
+    src: '//192.0.2.0/CIFS-Share'
+    opts: 'username=USERNAME,password=PASSWORD,vers=2.0,rw'
+    state: 'present'
+  - path: '/data'
+    fstype: 'xfs'
+    src: '/dev/sdb1'
+    opts: 'defaults'
+    state: 'present'
 ```
 
 

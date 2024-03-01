@@ -8,18 +8,37 @@
 
 - block:
 
-  - name: 'Install {{ mount__mount_package }}'
+  - name: 'Is fstype nfs present?'
+    ansible.builtin.set_fact:
+      mount__nfs_present: true
+    loop:
+      '{{ mount__mounts }}'
+    when: '"nfs" in item["fstype"]'
+
+  - name: 'Install {{ mount__nfs_client_package }}'
     ansible.builtin.package:
-      name: '{{ mount__mount_package }}'
+      name: '{{ mount__nfs_client_package }}'
       state: 'present'
+    when:
+      - 'mount__nfs_present is defined'
+      - 'mount__nfs_present | bool == true'
 
-  tags:
-    - 'mount'
+  - name: 'Is fstype cifs present?'
+    ansible.builtin.set_fact:
+      mount__cifs_present: true
+    loop:
+      '{{ mount__mounts }}'
+    when: '"cifs" in item["fstype"]'
 
+  - name: 'Install {{ mount__cifs_client_package }}'
+    ansible.builtin.package:
+      name: '{{ mount__cifs_client_package }}'
+      state: 'present'
+    when:
+      - 'mount__cifs_present is defined'
+      - 'mount__cifs_present | bool == true'
 
-- block:
-
-  - name: 'mkdir -p nfs-mount-point'
+  - name: 'mkdir -p mount-point'
     ansible.builtin.file:
       path: '{{ item["path"] }}'
       state: 'directory'
@@ -28,17 +47,18 @@
       mode: 0o755
     loop: '{{ mount__mounts }}'
 
-  - name: 'Mount NFS volumes'
+  - name: 'Mount volumes'
     ansible.posix.mount:
-      src: '{{ item["src"] }}'
       path: '{{ item["path"] }}'
+      src: '{{ item["src"] }}'
       opts: '{{ item["opts"] }}'
       state: '{{ item["state"] }}'
-      fstype: 'nfs'
+      fstype: '{{ item["fstype"] }}'
     loop: '{{ mount__mounts }}'
 
   when:
     - 'mount__mounts is defined'
     - 'mount__mounts | length'
+
   tags:
     - 'mount'
