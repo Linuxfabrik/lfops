@@ -28,6 +28,7 @@ grav__apache_httpd__vhosts__dependent_var:
       - 'ico'
       - 'jpe?g'
       - 'js'
+      - 'map'
       - 'pdf'
       - 'php'
       - 'png'
