@@ -135,8 +135,7 @@ apache_httpd__mods__host_var:
 apache_httpd__vhosts__host_var:
   - template: 'proxy'
     virtualhost_port: 443
-    allowed_http_methods:
-      - '.*'
+    skip_allowed_http_methods: true
     conf_proxy_timeout: 60
     conf_server_name: 'www.example.com'
     conf_timeout: 60

@@ -57,9 +57,11 @@
     # rewrite_module
     RewriteEngine On
 
+{% if not item['skip_allowed_http_methods'] | d(false) %}
     # limit allowed http request methods
     RewriteCond %{REQUEST_METHOD} !^({{ item['allowed_http_methods'] | d(['GET', 'OPTIONS']) | join('|') }})
     RewriteRule ^ - [redirect=405,last]
+{% endif %}
 
     # disable old HTTP protocol versions
     # just allow those ones listed below
