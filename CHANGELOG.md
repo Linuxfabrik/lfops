@@ -228,6 +228,9 @@ Role: influxdb
 
 ### Changed
 
+Role:apache_httpd:
+* the default of the `conf_custom_log` vHost variable changed from unset to `'logs/{{ conf_server_name }}-access.log linuxfabrikio`
+
 Role: opensearch
 * Make `opensearch__version*` optional
 
