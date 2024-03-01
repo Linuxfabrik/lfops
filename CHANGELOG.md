@@ -135,6 +135,7 @@ Role: system_update
 
 Role:apache_httpd:
 * added the `skip_allowed_file_extensions` vHost variable
+* added the `skip_allowed_http_methods` vHost variable
 
 * Role: mirror
 * Role: borg_local

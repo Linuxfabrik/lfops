@@ -304,10 +304,6 @@ nextcloud__apache_httpd__vhosts__dependent_var:
     filename: 'nextcloud'
     state: 'present'
     template: 'app'
-    allowed_file_extensions:
-      - '.*'
-    allowed_http_methods:
-      - '.*'
     virtualhost_ip: '{{ nextcloud__vhost_virtualhost_ip | d("*") }}'
     virtualhost_port: '{{ nextcloud__vhost_virtualhost_port | d(80) }}'
     conf_custom_log_format: 'combined'
@@ -317,6 +313,8 @@ nextcloud__apache_httpd__vhosts__dependent_var:
     conf_server_admin: 'webmaster@linuxfabrik.ch'
     conf_server_name: '{{ nextcloud__fqdn }}'
     conf_timeout: 600
+    skip_allowed_file_extensions: true
+    skip_allowed_http_methods: true
     raw: !unsafe |-
       <IfModule mod_dav.c>
           Dav off
