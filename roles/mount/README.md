@@ -34,7 +34,7 @@ mount__mounts:
     state: 'present'
   - path: '/mnt/cifs/data'
     fstype: 'cifs'
-    src: '//192.0.2.0/CIFS-Share'
+    src: '//cifs-server.example.com/CIFS-Share'
     opts: 'username=USERNAME,password=PASSWORD,vers=2.0,rw'
     state: 'present'
   - path: '/data'
