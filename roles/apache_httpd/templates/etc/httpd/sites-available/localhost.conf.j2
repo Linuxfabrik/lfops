@@ -78,6 +78,8 @@
 {% if not item['allow_accessing_dotfiles'] | d(false) %}
     # forbid any URI that contains '/.' indicating a hidden file or directory
     RewriteCond %{REQUEST_URI} "/\."
+    # but allow .well-known (https://tools.ietf.org/html/rfc5785)
+    RewriteCond %{REQUEST_URI} !^/\.well-known [nocase]
     RewriteRule ^ - [last,forbidden]
 {% endif %}
 
