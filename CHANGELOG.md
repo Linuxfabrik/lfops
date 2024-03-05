@@ -128,6 +128,7 @@ Role: system_update
 
 ### Added
 
+* Role: mount
 * Role: mirror
 * Role: borg_local
 * Role: github_project_createrepo
