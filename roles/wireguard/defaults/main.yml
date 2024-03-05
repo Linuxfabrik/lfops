@@ -1,0 +1,9 @@
+#wireguard__ip_addresses
+wireguard__listening_port: 51820
+wireguard__save_config: true
+
+#-------------------------------------------------
+
+wireguard__kernel_settings__sysctl__dependent_var:
+  - name: 'net.ipv4.ip_forward'
+    value: 1

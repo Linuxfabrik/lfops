@@ -1,0 +1,8 @@
+[Interface]
+PrivateKey = {{ lookup('ansible.builtin.file', '/etc/wireguard/private.key') }}
+Address = {{ wireguard__client_ip_address }}
+
+[Peer]
+PublicKey = base64_encoded_server_public_key_goes_here
+AllowedIPs = 10.8.0.0/24, fd0d:86fa:c3bc::/64
+Endpoint = 203.0.113.1:51820
