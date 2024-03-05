@@ -10,10 +10,7 @@
 
   - name: 'Is fstype nfs present?'
     ansible.builtin.set_fact:
-      mount__nfs_present: true
-    loop:
-      '{{ mount__mounts }}'
-    when: '"nfs" in item["fstype"]'
+      mount__nfs_present: '{{ mount__mounts | selectattr("state", "ne", "absent") | selectattr("fstype", "equalto", "nfs") | list | length | bool }}'
 
   - name: 'Install {{ mount__nfs_client_package }}'
     ansible.builtin.package:
@@ -21,14 +18,11 @@
       state: 'present'
     when:
       - 'mount__nfs_present is defined'
-      - 'mount__nfs_present | bool == true'
+      - 'mount__nfs_present'
 
   - name: 'Is fstype cifs present?'
     ansible.builtin.set_fact:
-      mount__cifs_present: true
-    loop:
-      '{{ mount__mounts }}'
-    when: '"cifs" in item["fstype"]'
+      mount__cifs_present: '{{ mount__mounts | selectattr("state", "ne", "absent") | selectattr("fstype", "equalto", "cifs") | list | length | bool }}'
 
   - name: 'Install {{ mount__cifs_client_package }}'
     ansible.builtin.package:
@@ -36,7 +30,7 @@
       state: 'present'
     when:
       - 'mount__cifs_present is defined'
-      - 'mount__cifs_present | bool == true'
+      - 'mount__cifs_present'
 
   - name: 'mkdir -p mount-point'
     ansible.builtin.file:

@@ -1,4 +1,4 @@
-- name: 'Install necessary tools and mount volumes '
+- name: 'Install necessary tools and mount volumes'
   hosts:
     - 'lfops_mount'
 

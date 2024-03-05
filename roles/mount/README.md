@@ -14,14 +14,14 @@ Runs on
 
 | Tag                  | What it does                           |
 | ---                  | ------------                           |
-| `mount`              | <ul><li>Install nfs-utils/cifs on RedHat-Based systems or nfs-common/cifs-utils on Debian-Based systems</li><li>`mkdir -p mount-point`</li><li>Mount volumes</li></ul> |
+| `mount`              | Installs nfs-utils/cifs on RedHat-Based systems or nfs-common/cifs-utils on Debian-Based systems, creates the corresponding directories for the mount points, alters `/etc/fstab` und mounts the volumes |
 
 
 ## Optional Role Variables
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mount__mounts` | List of mounts to create. Subkeys: <ul><li>`path`</li><li>`src`</li><li>`fstype`</li><li>`opts`</li><li>`state`</li></ul>For details, have a look at the [ansible.posix.mount_module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html#parameter-state). | unset |
+| `mount__mounts` | List of mounts to create. Subkeys: <ul><li>`path`</li><li>`src`</li><li>`fstype`</li><li>`opts`</li><li>`state`</li></ul>For details, have a look at the [ansible.posix.mount_module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html). | unset |
 
 Example:
 ```yaml
@@ -31,17 +31,17 @@ mount__mounts:
     fstype: 'nfs'
     src: 'nfs-server.example.com:/path/to/exported/data'
     opts: 'defaults'
-    state: 'present'
+    state: 'mounted'
   - path: '/mnt/cifs/data'
     fstype: 'cifs'
     src: '//cifs-server.example.com/CIFS-Share'
     opts: 'username=USERNAME,password=PASSWORD,vers=2.0,rw'
-    state: 'present'
+    state: 'mounted'
   - path: '/data'
     fstype: 'xfs'
     src: '/dev/sdb1'
     opts: 'defaults'
-    state: 'present'
+    state: 'mounted'
 ```
 
 
