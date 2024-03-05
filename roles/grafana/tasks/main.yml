@@ -93,7 +93,7 @@
 - block:
 
   - name: 'set the password for admin'
-    ansible.builtin.command: 'grafana-cli admin reset-admin-password {{ grafana__admin_login["password"] }}'
+    ansible.builtin.command: "grafana-cli admin reset-admin-password '{{ grafana__admin_login[\"password\"] }}'"
 
   tags:
     - 'grafana'
