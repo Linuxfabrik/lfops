@@ -143,8 +143,8 @@
   - name: 'chown -R apache:apache {{ apache_httpd__conf_document_root }}'
     ansible.builtin.file:
       path: '{{ apache_httpd__conf_document_root }}'
-      owner: 'apache'
-      group: 'apache'
+      owner: '{{ apache_httpd__user }}'
+      group: '{{ apache_httpd__group }}'
       recurse: true
     ignore_errors: true
     when: 'not apache_httpd__skip_document_root_chown'
