@@ -35,7 +35,13 @@ app_mode = production
 #################################### Server ####################################
 [server]
 # Protocol (http, https, h2, socket)
+{% if grafana__https_config is defined and grafana__https_config | length %}
+
+protocol = https
+{% else %}
+
 ;protocol = http
+{% endif %}
 
 # The ip address to bind to, empty will bind to all interfaces
 ;http_addr =
@@ -68,8 +74,16 @@ serve_from_sub_path = {{ grafana__serve_from_sub_path | string | lower }}
 ;enable_gzip = false
 
 # https certs & key file
+{% if grafana__https_config is defined and grafana__https_config | length %}
+
+cert_file = "{{ grafana__https_config['cert_path'] }}"
+cert_key = "{{ grafana__https_config['key_path'] }}"
+{% else %}
+
 ;cert_file =
 ;cert_key =
+{% endif %}
+
 
 # Unix socket path
 ;socket =

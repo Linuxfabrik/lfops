@@ -12,6 +12,20 @@
 
 - block:
 
+  - name: 'make sure the certificate file exists'
+    ansible.builtin.file:
+      path: '{{ grafana__https_config["cert_path"] }}'
+      state: 'file'
+    when:
+      - 'grafana__https_config is defined and grafana__https_config | length'
+
+  - name: 'make sure the private key file exists'
+    ansible.builtin.file:
+      path: '{{ grafana__https_config["key_path"] }}'
+      state: 'file'
+    when:
+      - 'grafana__https_config is defined and grafana__https_config | length'
+
   - name: 'deploy /etc/grafana/grafana.ini'
     ansible.builtin.template:
       src: 'etc/grafana/grafana.ini.j2'
