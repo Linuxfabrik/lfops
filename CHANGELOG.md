@@ -11,6 +11,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:mount
+* changed `mount__mounts` to `mount__mounts__host_var` / `mount__mounts__group_var`.
+
 Role:repo_mydumper
 * adjusted to use https://repo.linuxfabrik.ch/mydumper/ by default
 * removed `repo_mydumper__baseurl`, instead added `repo_mydumper__mirror_url`
