@@ -65,19 +65,6 @@
 
 - block:
 
-  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm'
-    ansible.builtin.service:
-      name: 'php-fpm'
-      enabled: '{{ php__fpm_service_enabled }}'
-      state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
-
-  tags:
-    - 'php:state'
-    - 'php'
-
-
-- block:
-
   - name: 'Remove absent pools from /etc/php-fpm.d'
     ansible.builtin.file:
       path: '/etc/php-fpm.d/{{ item["name"] }}.conf'
@@ -101,4 +88,17 @@
 
   tags:
     - 'php:fpm'
+    - 'php'
+
+
+- block:
+
+  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm'
+    ansible.builtin.service:
+      name: 'php-fpm'
+      enabled: '{{ php__fpm_service_enabled }}'
+      state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'php:state'
     - 'php'

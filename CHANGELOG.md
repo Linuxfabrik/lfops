@@ -16,6 +16,9 @@ Role:apache_httpd:
 * removed the `authz_file_extensions` vHost variable. This was required to allow access to file extensions listed in `allowed_file_extensions'. From now on, the access to listed file extensions is always allowed.
 * fixed a bug that allowed access to dotfiles which had extensions listed in `allowed_file_extensions`. Make sure this does not break your application, or set `allow_accessing_dotfiles: true`.
 
+Role:mount
+* changed `mount__mounts` to `mount__mounts__host_var` / `mount__mounts__group_var`.
+
 Role:repo_mydumper
 * adjusted to use https://repo.linuxfabrik.ch/mydumper/ by default
 * removed `repo_mydumper__baseurl`, instead added `repo_mydumper__mirror_url`
@@ -137,6 +140,7 @@ Role:apache_httpd:
 * added the `skip_allowed_file_extensions` vHost variable
 * added the `skip_allowed_http_methods` vHost variable
 
+* Role: mount
 * Role: mirror
 * Role: borg_local
 * Role: github_project_createrepo

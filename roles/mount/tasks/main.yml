@@ -1,0 +1,44 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'mount'
+
+
+- block:
+
+  - name: 'Install {{ mount__nfs_client_package }}'
+    ansible.builtin.package:
+      name: '{{ mount__nfs_client_package }}'
+      state: 'present'
+    when:
+      - 'mount__mounts__combined_var | selectattr("state", "ne", "absent") | selectattr("fstype", "equalto", "nfs") | list | length | bool'
+
+  - name: 'Install {{ mount__cifs_client_package }}'
+    ansible.builtin.package:
+      name: '{{ mount__cifs_client_package }}'
+      state: 'present'
+    when:
+      - 'mount__mounts__combined_var | selectattr("state", "ne", "absent") | selectattr("fstype", "equalto", "cifs") | list | length | bool'
+
+  - name: 'mkdir -p mount-point'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    loop: '{{ mount__mounts__combined_var }}'
+
+  - name: 'Mount volumes'
+    ansible.posix.mount:
+      path: '{{ item["path"] }}'
+      src: '{{ item["src"] }}'
+      opts: '{{ item["opts"] }}'
+      state: '{{ item["state"] }}'
+      fstype: '{{ item["fstype"] }}'
+    loop: '{{ mount__mounts__combined_var }}'
+
+  tags:
+    - 'mount'

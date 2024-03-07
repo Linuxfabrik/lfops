@@ -4,4 +4,11 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.python'
+      python__modules__dependent_var: '{{
+          login__python__modules__dependent_var
+        }}'
+      when:
+        - 'not login__skip_python | d(false)'
+
     - role: 'linuxfabrik.lfops.login'

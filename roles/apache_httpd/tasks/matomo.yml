@@ -2,6 +2,6 @@
   ansible.builtin.template:
     src: 'usr/local/sbin/import_logs.py.j2'
     dest: '/usr/local/sbin/import_logs.py'
-    owner: 'apache'
-    group: 'apache'
+    owner: '{{ apache_httpd__user }}'
+    group: '{{ apache_httpd__group }}'
     mode: 0o755

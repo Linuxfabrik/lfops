@@ -12,3 +12,8 @@ login__users__combined_var: '{{ (
   }}'
 
 login__passwordless_sudo_group: ''
+
+# -----------------------------------------------------------------------------
+
+login__python__modules__dependent_var:
+  - name: 'python3-passlib'

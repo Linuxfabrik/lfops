@@ -1,0 +1,7 @@
+- name: 'Install necessary tools and mount volumes'
+  hosts:
+    - 'lfops_mount'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.mount'

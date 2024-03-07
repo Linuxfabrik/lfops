@@ -30,6 +30,16 @@
       groups: '{{ item["additional_groups"] | d([]) }}'
       home: '{{ item["home"] | d(omit) }}'
       name: '{{ item["name"] }}'
+      # `d(None)` is used to check if item["password"] is set.
+      # the ternary does not do lazy evaluation, so both the true and false statement are evaluated.
+      # therefore, `d()` is needed so that `password_hash()` does not fail,
+      # even though the result is not used in the end
+      password: '{{ (item["password"] | d(None)) | ternary(
+            (
+              item["password"] | d()
+              | password_hash("sha512", (65534 | random(seed=inventory_hostname) | string))
+            ), omit)
+          }}'
       remove: true #  only affects `state=absent`
       shell: '{{ item["shell"] | d(omit) }}'
       state: '{{ item["state"] | d("present") }}'
