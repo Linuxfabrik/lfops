@@ -10,7 +10,7 @@ librenms__apache_httpd__vhosts__dependent_var:
     enabled: true
     filename: 'librenms'
     state: 'present'
-    type: 'app'
+    template: 'app'
 
     # TODO
     # allowed_file_extensions:
