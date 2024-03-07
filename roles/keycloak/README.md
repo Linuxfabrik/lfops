@@ -44,7 +44,7 @@ If you use the ["Setup Keycloak" Playbook](https://github.com/Linuxfabrik/lfops/
 | `keycloak__version` | The version of Keycloak that should be installed. |
 
 Example:
-```yml
+```yaml
 # mandatory
 keycloak__apps__apps__host_var:
   - name: 'java-17-openjdk'
@@ -78,7 +78,7 @@ keycloak__version: '18.0.0'
 | `keycloak__proxy_mode` | The proxy address forwarding mode if the server is behind a reverse proxy.<br>* edge: Enables communication through HTTP between the proxy and Keycloak. This mode is suitable for deployments with a highly secure internal network where the reverse proxy keeps a secure connection (HTTP over TLS) with clients while communicating with Keycloak using HTTP.<br>* reencrypt: Requires communication through HTTPS between the proxy and Keycloak. This mode is suitable for deployments where internal communication between the reverse proxy and Keycloak should also be protected. Different keys and certificates are used on the reverse proxy as well as on Keycloak.<br>* passthrough: Enables communication through HTTP or HTTPS between the proxy and Keycloak. This mode is suitable for deployments where the reverse proxy is not terminating TLS. The proxy instead is forwarding requests to the Keycloak server so that secure connections between the server and clients are based on the keys and certificates used by the Keycloak server. | `unset` |
 
 Example:
-```yml
+```yaml
 # optional
 keycloak__db_url_host: 'localhost'
 keycloak__db_url_database: 'keycloak'
