@@ -299,7 +299,7 @@ mariadb_server__users__combined_var: '{{ (
       mariadb_server__users__dependent_var +
       mariadb_server__users__group_var +
       mariadb_server__users__host_var
-    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["username", "host"])
   }}'
 
 # -----------------------------------------------------------------------------
