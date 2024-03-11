@@ -1,5 +1,0 @@
-[Interface]
-PrivateKey = {{ lookup('ansible.builtin.file', '/etc/wireguard/private.key') }}
-Address = {{ wireguard__ip_addresses }}
-ListenPort = {{ wireguard__listening_port }}
-SaveConfig = {{ wireguard__save_config }}

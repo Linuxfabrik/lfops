@@ -1,0 +1,9 @@
+wireguard_client__interface: 'wg0'
+wireguard_client__service_enabled: true
+wireguard_client__service_state: 'started'
+
+#-------------------------------------------------
+
+wireguard_client__kernel_settings__sysctl__dependent_var:
+  - name: 'net.ipv4.ip_forward'
+    value: 1

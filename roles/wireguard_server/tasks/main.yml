@@ -1,0 +1,73 @@
+- block:
+
+  - name: 'Installing elrepo-release'
+    ansible.builtin.package:
+      name:
+        - 'elrepo-release'
+      state: 'present'
+
+  - name: 'Installing wireguard and wireguard-tools'
+    ansible.builtin.package:
+      name:
+        - 'kmod-wireguard'
+        - 'wireguard-tools'
+      state: 'present'
+
+  tags:
+    - 'wireguard_server'
+
+
+- block:
+
+  - name: 'Generating private key'
+    ansible.builtin.shell: |-
+      wg genkey | (umask 0077 && tee /etc/wireguard/private.key)
+    args:
+      creates: '/etc/wireguard/private.key'
+
+  - name: 'Generating public key'
+    ansible.builtin.shell: |-
+      cat /etc/wireguard/private.key | wg pubkey | tee /etc/wireguard/public.key
+    args:
+      creates: '/etc/wireguard/public.key'
+
+  tags:
+    - 'wireguard_server'
+    - 'wireguard_server:create_keys'
+
+
+- block:
+
+  - name: 'Registering private key'
+    ansible.builtin.shell: |-
+      cat /etc/wireguard/private.key
+    register: 'wireguard_server__private_key'
+
+  - name: 'Deploying /etc/wireguard/wg0.conf'
+    ansible.builtin.template:
+      src: 'etc/wireguard/wg0.conf.j2'
+      dest: '/etc/wireguard/{{ wireguard_server__interface }}.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'wireguard_server'
+    - 'wireguard_server:configure'
+
+
+- block:
+
+  - name: 'systemctl: wg-quick@wg0.service enabled = {{ wireguard_server__service_enabled }}'
+    ansible.builtin.systemd:
+      name: 'wg-quick@wg0.service'
+      enabled: '{{ wireguard_server__service_enabled }}'
+
+  - name: 'systemctl: wg-quick@wg0.service state = {{ wireguard_server__service_state }}'
+    ansible.builtin.systemd:
+      name: 'wg-quick@wg0.service'
+      state: '{{ wireguard_server__service_state }}'
+
+  tags:
+    - 'wireguard_server'
+    - 'wireguard_server:state'

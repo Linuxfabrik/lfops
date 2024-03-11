@@ -1,6 +1,6 @@
 - name: 'Install and configure a wireguard tunnel'
   hosts:
-    - 'wireguard'
+    - 'lfops_wireguard_client'
 
   roles:
 
@@ -10,8 +10,8 @@
         - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings__sysctl__dependent_var: '{{ wireguard__kernel_settings__sysctl__dependent_var | d([]) }}'
+      kernel_settings__sysctl__dependent_var: '{{ wireguard_client__kernel_settings__sysctl__dependent_var | d([]) }}'
       when:
-        - 'not wireguard__skip_kernel_settings | d(false)'
+        - 'not wireguard_client__skip_kernel_settings | d(false)'
 
-    - role: 'linuxfabrik.lfops.wireguard'
+    - role: 'linuxfabrik.lfops.wireguard_client'

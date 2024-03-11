@@ -1,0 +1,1 @@
+wireguard__server: 'wgserver'

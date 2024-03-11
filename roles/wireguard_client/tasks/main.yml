@@ -1,0 +1,89 @@
+- block:
+
+  - name: 'Installing elrepo-release'
+    ansible.builtin.package:
+      name:
+        - 'elrepo-release'
+      state: 'present'
+
+  - name: 'Installing wireguard and wireguard-tools'
+    ansible.builtin.package:
+      name:
+        - 'kmod-wireguard'
+        - 'wireguard-tools'
+      state: 'present'
+
+  tags:
+    - 'wireguard_client'
+
+
+- block:
+
+  - name: 'Generating private key'
+    ansible.builtin.shell: |-
+      wg genkey | (umask 0077 && tee /etc/wireguard/private.key)
+    args:
+      creates: '/etc/wireguard/private.key'
+
+  - name: 'Generating public key'
+    ansible.builtin.shell: |-
+      cat /etc/wireguard/private.key | wg pubkey | tee /etc/wireguard/public.key
+    args:
+      creates: '/etc/wireguard/public.key'
+
+  tags:
+    - 'wireguard_client'
+    - 'wireguard_client:create_keys'
+
+
+- block:
+
+  - name: 'Registering public key of server'
+    ansible.builtin.shell: |-
+      cat /etc/wireguard/public.key
+    delegate_to: '{{ wireguard_client__server }}'
+    register: 'wireguard_client__server_public_key'
+
+  - name: 'Registering private key of client'
+    ansible.builtin.shell: |-
+      cat /etc/wireguard/private.key
+    register: 'wireguard_client__private_key'
+
+  - name: 'Registering public key of client'
+    ansible.builtin.shell: |-
+      cat /etc/wireguard/public.key
+    register: 'wireguard_client__public_key'
+
+  - name: 'Deploying /etc/wireguard/wg0.conf'
+    ansible.builtin.template:
+      src: 'etc/wireguard/wg0.conf.j2'
+      dest: '/etc/wireguard/{{ wireguard_client__interface }}.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Adding client to server'
+    ansible.builtin.shell: |-
+      wg set {{ wireguard_client__interface }} peer {{ wireguard_client__public_key.stdout }} allowed-ips {{ wireguard_client__ip_address }}
+    delegate_to: '{{ wireguard_client__server }}'
+    register: 'wireguard_server_public_key'
+
+  tags:
+    - 'wireguard_client'
+    - 'wireguard_client:configure'
+
+# - block:
+
+#   - name: 'systemctl: wg-quick@wg0.service enabled = {{ wireguard__service_enabled }}'
+#     ansible.builtin.systemd:
+#       name: 'wg-quick@wg0.service'
+#       enabled: '{{ wireguard__service_enabled }}'
+
+#   - name: 'systemctl: wg-quick@wg0.service state = {{ wireguard__service_state }}'
+#     ansible.builtin.systemd:
+#       name: 'wg-quick@wg0.service'
+#       state: '{{ wireguard__service_state }}'
+
+#   tags:
+#     - 'wireguard'
+#     - 'wireguard:state'

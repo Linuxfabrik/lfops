@@ -1,0 +1,11 @@
+wireguard_server__interface: 'wg0'
+wireguard_server__listening_port: 51820
+wireguard_server__save_config: true
+wireguard_server__service_enabled: true
+wireguard_server__service_state: 'started'
+
+#-------------------------------------------------
+
+wireguard_server__kernel_settings__sysctl__dependent_var:
+  - name: 'net.ipv4.ip_forward'
+    value: 1

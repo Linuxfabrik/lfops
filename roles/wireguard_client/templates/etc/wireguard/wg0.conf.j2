@@ -1,0 +1,8 @@
+[Interface]
+PrivateKey = {{ wireguard_client__private_key.stdout }}
+Address = {{ wireguard_client__ip_address }}
+
+[Peer]
+PublicKey = {{ wireguard_client__server_public_key.stdout }}
+AllowedIPs = {{ wireguard_client__ip_address }}
+Endpoint = 192.168.56.21:51820
