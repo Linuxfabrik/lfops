@@ -19,6 +19,25 @@
 
 - block:
 
+  - name: 'Removing private key'
+    ansible.builtin.file:
+      path: '/etc/wireguard/private.key'
+      state: 'absent'
+    notify: 'wireguard_server: restart wireguard'
+
+  - name: 'Removing public key'
+    ansible.builtin.file:
+      path: '/etc/wireguard/public.key'
+      state: 'absent'
+    notify: 'wireguard_server: restart wireguard'
+
+  tags:
+    - 'wireguard_server:rekey'
+    - 'never'
+
+
+- block:
+
   - name: 'Generating private key'
     ansible.builtin.shell: |-
       wg genkey | (umask 0077 && tee /etc/wireguard/private.key)
@@ -34,6 +53,7 @@
   tags:
     - 'wireguard_server'
     - 'wireguard_server:create_keys'
+    - 'wireguard_server:rekey'
 
 
 - block:
@@ -54,6 +74,7 @@
   tags:
     - 'wireguard_server'
     - 'wireguard_server:configure'
+    - 'wireguard_server:rekey'
 
 
 - block:

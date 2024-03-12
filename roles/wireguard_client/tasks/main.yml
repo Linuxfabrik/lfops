@@ -19,6 +19,35 @@
 
 - block:
 
+  - name: 'Registering old public key of client'
+    ansible.builtin.shell: |-
+      cat /etc/wireguard/public.key
+    register: 'wireguard_client__old_public_key'
+
+  - name: 'Removing client from server'
+    ansible.builtin.shell: |-
+      wg set {{ wireguard_client__interface }} peer {{ wireguard_client__old_public_key.stdout }} remove
+    delegate_to: '{{ wireguard_client__server }}'
+
+  - name: 'Removing private key'
+    ansible.builtin.file:
+      path: '/etc/wireguard/private.key'
+      state: 'absent'
+    notify: 'wireguard_client: restart wireguard'
+
+  - name: 'Removing public key'
+    ansible.builtin.file:
+      path: '/etc/wireguard/public.key'
+      state: 'absent'
+    notify: 'wireguard_client: restart wireguard'
+
+  tags:
+    - 'wireguard_client:rekey'
+    - 'never'
+
+
+- block:
+
   - name: 'Generating private key'
     ansible.builtin.shell: |-
       wg genkey | (umask 0077 && tee /etc/wireguard/private.key)
@@ -34,6 +63,7 @@
   tags:
     - 'wireguard_client'
     - 'wireguard_client:create_keys'
+    - 'wireguard_client:rekey'
 
 
 - block:
@@ -71,6 +101,7 @@
   tags:
     - 'wireguard_client'
     - 'wireguard_client:configure'
+    - 'wireguard_client:rekey'
 
 - block:
 
