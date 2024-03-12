@@ -26,8 +26,9 @@ grav__apache_httpd__vhosts__dependent_var:
       - 'gif'
       - 'html?'
       - 'ico'
-      - 'jp?g'
+      - 'jpe?g'
       - 'js'
+      - 'map'
       - 'pdf'
       - 'php'
       - 'png'
@@ -35,17 +36,13 @@ grav__apache_httpd__vhosts__dependent_var:
       - 'ttf'
       - 'txt'
       - 'webp'
-      - 'woff?'
+      - 'woff2?'
       - 'xml'
       - 'xsl'
     allowed_http_methods:
       - 'GET'
       - 'OPTIONS'
       - 'POST'  # todo: just necessary if using the Grav admin plugin
-    authz_file_extensions: |-
-        Require all granted
-    authz_document_root: |-
-        Require all granted
     virtualhost_port: 80
     conf_allow_override: 'All'
     conf_directory_index: 'index.php index.html index.htm'

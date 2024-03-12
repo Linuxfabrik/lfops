@@ -57,9 +57,9 @@ selinux__fcontexts__host_var:
     target: '/var/www/html/nextcloud/.htaccess'
     state: 'present'
 selinux__ports__host_var:
-  - setype: http_port_t
+  - setype: 'http_port_t'
     port: '8070-8080'
-  - setype: ssh_port_t
+  - setype: 'ssh_port_t'
     port: 22
 selinux__state: 'enforcing'
 ```

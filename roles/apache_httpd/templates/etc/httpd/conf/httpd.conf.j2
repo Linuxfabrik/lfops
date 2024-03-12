@@ -17,9 +17,9 @@
 # possible.
 #
 # It is split into several files forming the configuration hierarchy outlined
-# below, all located in the /etc/httpd/ directory:
+# below, all located in the {{ apache_httpd__config_path }}/ directory:
 #
-#   /etc/httpd/
+#   {{ apache_httpd__config_path }}/
 #   |-- httpd.conf
 #   |-- conf-enabled
 #   |   `-- *.conf

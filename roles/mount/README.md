@@ -21,12 +21,12 @@ Runs on
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mount__mounts` | List of mounts to create. Subkeys: <ul><li>`path`</li><li>`src`</li><li>`fstype`</li><li>`opts`</li><li>`state`</li></ul>For details, have a look at the [ansible.posix.mount_module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html). | unset |
+| `mount__mounts__host_var` / <br> `mount__mounts__group_var` | List of directories containing the mounts to create. Subkeys: <ul><li>`path`</li><li>`src`</li><li>`fstype`</li><li>`opts`</li><li>`state`</li></ul>For details, have a look at the [ansible.posix.mount_module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html). | unset |
 
 Example:
 ```yaml
 # optional
-mount__mounts:
+mount__mounts__host_var:
   - path: '/mnt/nfs/data'
     fstype: 'nfs'
     src: 'nfs-server.example.com:/path/to/exported/data'

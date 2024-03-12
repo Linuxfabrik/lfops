@@ -1,0 +1,11 @@
+mount__mounts__dependent_var: []
+mount__mounts__group_var: []
+mount__mounts__host_var: []
+mount__mounts__role_var: []
+mount__mounts__combined_var: '{{ (
+      mount__mounts__role_var +
+      mount__mounts__dependent_var +
+      mount__mounts__group_var +
+      mount__mounts__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
