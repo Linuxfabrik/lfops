@@ -72,18 +72,18 @@
     - 'wireguard_client'
     - 'wireguard_client:configure'
 
-# - block:
+- block:
 
-#   - name: 'systemctl: wg-quick@wg0.service enabled = {{ wireguard__service_enabled }}'
-#     ansible.builtin.systemd:
-#       name: 'wg-quick@wg0.service'
-#       enabled: '{{ wireguard__service_enabled }}'
+  - name: 'systemctl: wg-quick@wg0.service enabled = {{ wireguard_client__service_enabled }}'
+    ansible.builtin.systemd:
+      name: 'wg-quick@wg0.service'
+      enabled: '{{ wireguard_client__service_enabled }}'
 
-#   - name: 'systemctl: wg-quick@wg0.service state = {{ wireguard__service_state }}'
-#     ansible.builtin.systemd:
-#       name: 'wg-quick@wg0.service'
-#       state: '{{ wireguard__service_state }}'
+  - name: 'systemctl: wg-quick@wg0.service state = {{ wireguard_client__service_state }}'
+    ansible.builtin.systemd:
+      name: 'wg-quick@wg0.service'
+      state: '{{ wireguard_client__service_state }}'
 
-#   tags:
-#     - 'wireguard'
-#     - 'wireguard:state'
+  tags:
+    - 'wireguard_client'
+    - 'wireguard_client:state'

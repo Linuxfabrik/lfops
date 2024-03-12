@@ -4,5 +4,6 @@ Address = {{ wireguard_client__ip_address }}
 
 [Peer]
 PublicKey = {{ wireguard_client__server_public_key.stdout }}
-AllowedIPs = {{ wireguard_client__ip_address }}
-Endpoint = 192.168.56.21:51820
+AllowedIPs = {{ wireguard_client__ip_address.split('.')[0] }}.{{ wireguard_client__ip_address.split('.')[1] }}.{{ wireguard_client__ip_address.split('.')[2] }}.0/24
+Endpoint = {{ wireguard_client__server_endpoint }}:{{ wireguard_client__server_port }}
+PersistentKeepalive = {{ wireguard_client__persistent_keepalive }}
