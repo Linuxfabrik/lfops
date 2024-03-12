@@ -25,13 +25,12 @@
       state: 'stopped'
 
   - name: 'Registering old public key of wireguard client'
-    ansible.builtin.shell: |-
-      cat /etc/wireguard/public.key
+    ansible.builtin.slurp:
+      src: '/etc/wireguard/public.key'
     register: 'wireguard_client__old_public_key'
 
   - name: 'Removing wireguard client from wireguard server'
-    ansible.builtin.shell: |-
-      wg set {{ wireguard_client__interface }} peer {{ wireguard_client__old_public_key.stdout }} remove
+    ansible.builtin.command: 'wg set {{ wireguard_client__interface }} peer {{ wireguard_client__old_public_key["content"] | b64decode | trim }} remove'
     delegate_to: '{{ wireguard_client__wireguard_server }}'
 
   - name: 'Removing wireguard private key'
@@ -74,19 +73,19 @@
 - block:
 
   - name: 'Registering public key of wireguard server'
-    ansible.builtin.shell: |-
-      cat /etc/wireguard/public.key
+    ansible.builtin.slurp:
+      src: '/etc/wireguard/public.key'
     delegate_to: '{{ wireguard_client__wireguard_server }}'
     register: 'wireguard_client__wireguard_server_public_key'
 
   - name: 'Registering private key of wireguard client'
-    ansible.builtin.shell: |-
-      cat /etc/wireguard/private.key
+    ansible.builtin.slurp:
+      src: '/etc/wireguard/private.key'
     register: 'wireguard_client__private_key'
 
   - name: 'Registering public key of wireguard client'
-    ansible.builtin.shell: |-
-      cat /etc/wireguard/public.key
+    ansible.builtin.slurp:
+      src: '/etc/wireguard/public.key'
     register: 'wireguard_client__public_key'
 
   - name: 'Deploying /etc/wireguard/{{ wireguard_client__interface }}.conf'
@@ -99,8 +98,7 @@
     notify: 'wireguard_client: restart wireguard'
 
   - name: 'Adding wireguard client to wireguard server'
-    ansible.builtin.shell: |-
-      wg set {{ wireguard_client__interface }} peer {{ wireguard_client__public_key.stdout }} allowed-ips {{ wireguard_client__ipaddress }}
+    ansible.builtin.command: 'wg set {{ wireguard_client__interface }} peer {{ wireguard_client__public_key["content"] | b64decode | trim }} allowed-ips {{ wireguard_client__ipaddress }}'
     delegate_to: '{{ wireguard_client__wireguard_server }}'
 
   tags:
