@@ -19,23 +19,28 @@
 
 - block:
 
-  - name: 'Registering old public key of client'
+  - name: 'Stopping wireguard service'
+    ansible.builtin.systemd:
+      name: 'wg-quick@{{ wireguard_client__interface }}.service'
+      state: 'stopped'
+
+  - name: 'Registering old public key of wireguard client'
     ansible.builtin.shell: |-
       cat /etc/wireguard/public.key
     register: 'wireguard_client__old_public_key'
 
-  - name: 'Removing client from server'
+  - name: 'Removing wireguard client from wireguard server'
     ansible.builtin.shell: |-
       wg set {{ wireguard_client__interface }} peer {{ wireguard_client__old_public_key.stdout }} remove
-    delegate_to: '{{ wireguard_client__server }}'
+    delegate_to: '{{ wireguard_client__wireguard_server }}'
 
-  - name: 'Removing private key'
+  - name: 'Removing wireguard private key'
     ansible.builtin.file:
       path: '/etc/wireguard/private.key'
       state: 'absent'
     notify: 'wireguard_client: restart wireguard'
 
-  - name: 'Removing public key'
+  - name: 'Removing wireguard public key'
     ansible.builtin.file:
       path: '/etc/wireguard/public.key'
       state: 'absent'
@@ -48,13 +53,13 @@
 
 - block:
 
-  - name: 'Generating private key'
+  - name: 'Generating wireguard private key'
     ansible.builtin.shell: |-
       wg genkey | (umask 0077 && tee /etc/wireguard/private.key)
     args:
       creates: '/etc/wireguard/private.key'
 
-  - name: 'Generating public key'
+  - name: 'Generating wireguard public key'
     ansible.builtin.shell: |-
       cat /etc/wireguard/private.key | wg pubkey | tee /etc/wireguard/public.key
     args:
@@ -68,35 +73,35 @@
 
 - block:
 
-  - name: 'Registering public key of server'
+  - name: 'Registering public key of wireguard server'
     ansible.builtin.shell: |-
       cat /etc/wireguard/public.key
-    delegate_to: '{{ wireguard_client__server }}'
-    register: 'wireguard_client__server_public_key'
+    delegate_to: '{{ wireguard_client__wireguard_server }}'
+    register: 'wireguard_client__wireguard_server_public_key'
 
-  - name: 'Registering private key of client'
+  - name: 'Registering private key of wireguard client'
     ansible.builtin.shell: |-
       cat /etc/wireguard/private.key
     register: 'wireguard_client__private_key'
 
-  - name: 'Registering public key of client'
+  - name: 'Registering public key of wireguard client'
     ansible.builtin.shell: |-
       cat /etc/wireguard/public.key
     register: 'wireguard_client__public_key'
 
-  - name: 'Deploying /etc/wireguard/wg0.conf'
+  - name: 'Deploying /etc/wireguard/{{ wireguard_client__interface }}.conf'
     ansible.builtin.template:
       src: 'etc/wireguard/wg0.conf.j2'
       dest: '/etc/wireguard/{{ wireguard_client__interface }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'wireguard_client: restart wireguard'
 
-  - name: 'Adding client to server'
+  - name: 'Adding wireguard client to wireguard server'
     ansible.builtin.shell: |-
-      wg set {{ wireguard_client__interface }} peer {{ wireguard_client__public_key.stdout }} allowed-ips {{ wireguard_client__ip_address }}
-    delegate_to: '{{ wireguard_client__server }}'
-    register: 'wireguard_server_public_key'
+      wg set {{ wireguard_client__interface }} peer {{ wireguard_client__public_key.stdout }} allowed-ips {{ wireguard_client__ipaddress }}
+    delegate_to: '{{ wireguard_client__wireguard_server }}'
 
   tags:
     - 'wireguard_client'
@@ -105,14 +110,14 @@
 
 - block:
 
-  - name: 'systemctl: wg-quick@wg0.service enabled = {{ wireguard_client__service_enabled }}'
+  - name: 'systemctl: wg-quick@{{ wireguard_client__interface }}.service enabled = {{ wireguard_client__service_enabled }}'
     ansible.builtin.systemd:
-      name: 'wg-quick@wg0.service'
+      name: 'wg-quick@{{ wireguard_client__interface }}.service'
       enabled: '{{ wireguard_client__service_enabled }}'
 
-  - name: 'systemctl: wg-quick@wg0.service state = {{ wireguard_client__service_state }}'
+  - name: 'systemctl: wg-quick@{{ wireguard_client__interface }}.service state = {{ wireguard_client__service_state }}'
     ansible.builtin.systemd:
-      name: 'wg-quick@wg0.service'
+      name: 'wg-quick@{{ wireguard_client__interface }}.service'
       state: '{{ wireguard_client__service_state }}'
 
   tags:

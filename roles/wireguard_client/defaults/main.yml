@@ -1,6 +1,6 @@
 wireguard_client__interface: 'wg0'
-wireguard_client__persistent_keepalive: 60
-wireguard_client__server_port: 51820
+wireguard_client__persistent_keepalive: 0
+wireguard_client__server_endpoint_port: 51820
 wireguard_client__service_enabled: true
 wireguard_client__service_state: 'started'
 

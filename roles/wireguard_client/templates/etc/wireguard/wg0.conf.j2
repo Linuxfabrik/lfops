@@ -1,9 +1,9 @@
 [Interface]
 PrivateKey = {{ wireguard_client__private_key.stdout }}
-Address = {{ wireguard_client__ip_address }}
+Address = {{ wireguard_client__ipaddress }}
 
 [Peer]
-PublicKey = {{ wireguard_client__server_public_key.stdout }}
-AllowedIPs = {{ wireguard_client__ip_address.split('.')[0] }}.{{ wireguard_client__ip_address.split('.')[1] }}.{{ wireguard_client__ip_address.split('.')[2] }}.0/24
-Endpoint = {{ wireguard_client__server_endpoint }}:{{ wireguard_client__server_port }}
+PublicKey = {{ wireguard_client__wireguard_server_public_key.stdout }}
+AllowedIPs = {{ wireguard_client__ipaddress.split('.')[0] }}.{{ wireguard_client__ipaddress.split('.')[1] }}.{{ wireguard_client__ipaddress.split('.')[2] }}.0/24
+Endpoint = {{ wireguard_client__server_endpoint_ipaddress }}:{{ wireguard_client__server_endpoint_port }}
 PersistentKeepalive = {{ wireguard_client__persistent_keepalive }}
