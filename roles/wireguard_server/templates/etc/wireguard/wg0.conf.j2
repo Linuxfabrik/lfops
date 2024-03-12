@@ -1,5 +1,5 @@
 [Interface]
-PrivateKey = {{ wireguard_server__private_key.stdout }}
+PrivateKey = {{ wireguard_server__private_key['content'] | b64decode | trim }}
 Address = {{ wireguard_server__ipaddress }}
 ListenPort = {{ wireguard_server__listening_port }}
 SaveConfig = {{ wireguard_server__save_config }}

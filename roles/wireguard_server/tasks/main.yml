@@ -64,8 +64,8 @@
 - block:
 
   - name: 'Registering wireguard private key'
-    ansible.builtin.shell: |-
-      cat /etc/wireguard/private.key
+    ansible.builtin.slurp:
+      src: '/etc/wireguard/private.key'
     register: 'wireguard_server__private_key'
 
   - name: 'Deploying /etc/wireguard/{{ wireguard_server__interface }}.conf'

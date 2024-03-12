@@ -128,6 +128,8 @@ Role: system_update
 
 ### Added
 
+* Role: wireguard_client
+* Role: wireguard_server
 * Role: mount
 * Role: mirror
 * Role: borg_local
