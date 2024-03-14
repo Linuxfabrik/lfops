@@ -9,7 +9,7 @@ Runs on
 * RHEL 8 (and compatible)
 
 
-# Mandatory Requirements
+## Mandatory Requirements
 
 * Install the [Linux System Roles](https://linux-system-roles.github.io/) on the Ansible control node, for example by calling `ansible-galaxy collection install fedora.linux_system_roles`.
 
