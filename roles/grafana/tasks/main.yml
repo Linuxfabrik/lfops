@@ -14,14 +14,14 @@
 
   - name: 'make sure the certificate file exists'
     ansible.builtin.file:
-      path: '{{ grafana__https_config["cert_path"] }}'
+      path: '{{ grafana__https_config["cert_file"] }}'
       state: 'file'
     when:
       - 'grafana__https_config is defined and grafana__https_config | length'
 
   - name: 'make sure the private key file exists'
     ansible.builtin.file:
-      path: '{{ grafana__https_config["key_path"] }}'
+      path: '{{ grafana__https_config["cert_key"] }}'
       state: 'file'
     when:
       - 'grafana__https_config is defined and grafana__https_config | length'

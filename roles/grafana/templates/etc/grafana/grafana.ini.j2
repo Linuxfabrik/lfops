@@ -73,8 +73,8 @@ serve_from_sub_path = {{ grafana__serve_from_sub_path | string | lower }}
 
 # https certs & key file
 {% if grafana__https_config is defined and grafana__https_config | length %}
-cert_file = "{{ grafana__https_config['cert_path'] }}"
-cert_key = "{{ grafana__https_config['key_path'] }}"
+cert_file = "{{ grafana__https_config['cert_file'] }}"
+cert_key = "{{ grafana__https_config['cert_key'] }}"
 {% else %}
 ;cert_file =
 ;cert_key =
