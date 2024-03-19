@@ -28,6 +28,7 @@ influxdb__users__combined_var: '{{ (
   }}'
 
 influxdb__service_enabled: true
+influxdb__validate_certs: true
 
 # -----------------------------------------------------------------------------
 

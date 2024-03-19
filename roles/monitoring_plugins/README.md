@@ -89,6 +89,11 @@ monitoring_plugins__windows_variant: 'nuitka'
 ```
 
 
+## Troubleshooting
+
+If you get `No package linuxfabrik-monitoring-plugins-main available. msg: Failed to install some of the specified packages` while setting `monitoring_plugins__repo_version: 'main'`, you simply forgot to also set `monitoring_plugins__linux_variant: 'python'`.
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)

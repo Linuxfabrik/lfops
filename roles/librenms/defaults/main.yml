@@ -10,7 +10,7 @@ librenms__apache_httpd__vhosts__dependent_var:
     enabled: true
     filename: 'librenms'
     state: 'present'
-    type: 'app'
+    template: 'app'
 
     # TODO
     # allowed_file_extensions:
@@ -36,16 +36,9 @@ librenms__apache_httpd__vhosts__dependent_var:
       - 'POST'
       - 'PUT'
 
-    authz_file_extensions: |-
-      Require all granted
-
-    authz_document_root: |-
-      Require all granted
-
     virtualhost_port: 80
 
     conf_allow_override: 'All' # TODO
-    conf_custom_log_format: 'combined'
     conf_directory_index: 'index.php index.html index.htm'
     conf_document_root: '/opt/librenms/html'
     conf_server_name: '{{ librenms__fqdn }}'

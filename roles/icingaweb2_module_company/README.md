@@ -23,7 +23,7 @@ This role is tested with the following IcingaWeb2 Company Module versions:
 | `icingaweb2_module_company` | Installs and configures the IcingaWeb2 Company Module |
 
 
-# License
+## License
 
 [The Unlicense](https://unlicense.org/)
 

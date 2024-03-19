@@ -25,10 +25,6 @@ apache_httpd__mods__host_var:
 apache_httpd__vhosts__host_var:
   - template: 'app'
     virtualhost_port: 80
-    authz_document_root: |-
-        Require all granted
-    authz_file_extensions: |-
-        Require all granted
     conf_directory_index: 'index.php'
     conf_server_name: 'test'
 ```
@@ -56,7 +52,6 @@ apache_httpd__vhosts__host_var:
       - 'OPTIONS'
       - 'POST'
       - 'PUT'
-    conf_custom_log: 'logs/www.example.com-access.log linuxfabrikio'
     conf_directory_index: 'index.php'
     conf_proxy_error_override: 'Off'
     conf_proxy_preserve_host: 'On'
@@ -139,8 +134,7 @@ apache_httpd__mods__host_var:
 apache_httpd__vhosts__host_var:
   - template: 'proxy'
     virtualhost_port: 443
-    allowed_http_methods:
-      - '.*'
+    skip_allowed_http_methods: true
     conf_proxy_timeout: 60
     conf_server_name: 'www.example.com'
     conf_timeout: 60
@@ -702,4 +696,3 @@ CustomLog "||/usr/local/sbin/import_logs.py \
 # GELF Realtime Logging
 CustomLog "|/usr/bin/nc --udp graylog.example.com 12201" gelf
 ```
-

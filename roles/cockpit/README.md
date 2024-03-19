@@ -17,7 +17,7 @@ Runs on
 | `cockpit` | Removes all cockpit packages |
 
 
-# License
+## License
 
 [The Unlicense](https://unlicense.org/)
 
