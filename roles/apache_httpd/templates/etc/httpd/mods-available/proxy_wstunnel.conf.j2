@@ -5,5 +5,5 @@
 {% endif %}
 
 <IfModule proxy_module>
-    LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
+    LoadModule proxy_wstunnel_module {{ apache_httpd__modules_path }}/mod_proxy_wstunnel.so
 </IfModule>

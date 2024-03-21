@@ -6,5 +6,5 @@
 
 <IfModule proxy_module>
     # Needed for PHP-FPM, for example.
-    LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so
+    LoadModule proxy_fcgi_module {{ apache_httpd__modules_path }}/mod_proxy_fcgi.so
 </IfModule>

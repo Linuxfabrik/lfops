@@ -5,4 +5,4 @@
 {% endif %}
 
 # Depends: proxy_balancer
-LoadModule lbmethod_byrequests_module modules/mod_lbmethod_byrequests.so
+LoadModule lbmethod_byrequests_module {{ apache_httpd__modules_path }}/mod_lbmethod_byrequests.so

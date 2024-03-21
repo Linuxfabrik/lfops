@@ -5,4 +5,4 @@
 {% endif %}
 
 # Depends: proxy_balancer
-LoadModule lbmethod_heartbeat_module modules/mod_lbmethod_heartbeat.so
+LoadModule lbmethod_heartbeat_module {{ apache_httpd__modules_path }}/mod_lbmethod_heartbeat.so

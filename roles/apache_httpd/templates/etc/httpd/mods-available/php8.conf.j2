@@ -6,6 +6,6 @@
 
 # PHP 8+
 <IfModule mpm_prefork_module>
-    LoadModule php_module modules/libphp.so
+    LoadModule php_module {{ apache_httpd__modules_path }}/libphp.so
 </IfModule>
 # otherwise use PHP-FPM

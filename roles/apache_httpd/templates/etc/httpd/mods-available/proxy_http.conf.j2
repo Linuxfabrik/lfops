@@ -5,5 +5,5 @@
 {% endif %}
 
 <IfModule proxy_module>
-    LoadModule proxy_http_module modules/mod_proxy_http.so
+    LoadModule proxy_http_module {{ apache_httpd__modules_path }}/mod_proxy_http.so
 </IfModule>
