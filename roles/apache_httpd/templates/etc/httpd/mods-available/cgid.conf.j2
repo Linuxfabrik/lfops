@@ -8,8 +8,8 @@
 # which has been activated. mod_cgid should be used
 # with a threaded MPM; mod_cgi with the prefork MPM.
 <IfModule mpm_worker_module>
-   LoadModule cgid_module modules/mod_cgid.so
+   LoadModule cgid_module {{ apache_httpd__modules_path }}/mod_cgid.so
 </IfModule>
 <IfModule mpm_event_module>
-   LoadModule cgid_module modules/mod_cgid.so
+   LoadModule cgid_module {{ apache_httpd__modules_path }}/mod_cgid.so
 </IfModule>
