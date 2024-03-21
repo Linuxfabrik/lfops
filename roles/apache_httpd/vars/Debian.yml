@@ -1,1 +1,20 @@
+# List of base packages to install
+apache_httpd__base_packages:
+  - 'apache2'
+  - 'bind9-dnsutils'  # for dig etc.
+
+apache_httpd__group: 'www-data'
+apache_httpd__service_name: 'apache2'
+apache_httpd__user: 'www-data'
+
+apache_httpd__config_file: '{{ apache_httpd__config_path }}/apache2.conf'
+apache_httpd__config_path: '/etc/apache2'
+apache_httpd__config_test_command: 'apachectl -t'
+
 apache_httpd__modules_path: '/usr/lib/apache2/modules'
+apache_httpd__root_path: '/var/www'
+apache_httpd__roothtml_path: '/var/www/html'
+
+apache_httpd__openssl_certificate_path: '/etc/pki/tls/certs'
+apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'
+apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
