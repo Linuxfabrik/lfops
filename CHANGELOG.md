@@ -136,6 +136,9 @@ Role: system_update
 
 ### Added
 
+* Role: wireguard_client
+* Role: wireguard_server
+
 Role:apache_httpd:
 * added the `skip_allowed_file_extensions` vHost variable
 * added the `skip_allowed_http_methods` vHost variable

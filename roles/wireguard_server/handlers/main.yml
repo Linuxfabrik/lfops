@@ -1,0 +1,4 @@
+- name: 'wireguard_server: restart wireguard'
+  ansible.builtin.service:
+    name: 'wg-quick@{{ wireguard_server__interface }}.service'
+    state: 'restarted'

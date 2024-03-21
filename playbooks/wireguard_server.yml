@@ -1,0 +1,17 @@
+- name: 'Install and configure a wireguard tunnel'
+  hosts:
+    - 'lfops_wireguard_server'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ wireguard_server__kernel_settings__sysctl__dependent_var | d([]) }}'
+      when:
+        - 'not wireguard_server__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.wireguard_server'
