@@ -47,12 +47,12 @@
       group: 'root'
       mode: 0o755
     loop:
-      - '{{ apache_httpd__config_path }}/conf-available'
-      - '{{ apache_httpd__config_path }}/conf-enabled'
-      - '{{ apache_httpd__config_path }}/mods-available'
-      - '{{ apache_httpd__config_path }}/mods-enabled'
-      - '{{ apache_httpd__config_path }}/sites-available'
-      - '{{ apache_httpd__config_path }}/sites-enabled'
+      - '{{ apache_httpd__config_path }}/conf-available-lf'
+      - '{{ apache_httpd__config_path }}/conf-enabled-lf'
+      - '{{ apache_httpd__config_path }}/mods-available-lf'
+      - '{{ apache_httpd__config_path }}/mods-enabled-lf'
+      - '{{ apache_httpd__config_path }}/sites-available-lf'
+      - '{{ apache_httpd__config_path }}/sites-enabled-lf'
 
   tags:
     - 'apache_httpd'

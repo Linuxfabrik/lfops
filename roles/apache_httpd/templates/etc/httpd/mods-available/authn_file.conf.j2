@@ -5,5 +5,5 @@
 {% endif %}
 
 <IfModule authn_core_module>
-    LoadModule authn_file_module modules/mod_authn_file.so
+    LoadModule authn_file_module {{ apache_httpd__modules_path }}/mod_authn_file.so
 </IfModule>

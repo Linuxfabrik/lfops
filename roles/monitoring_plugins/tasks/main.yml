@@ -170,8 +170,8 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/php-status/assets/monitoring.php'
       dest: '/var/www/html/localhost/monitoring.php'
-      owner: 'apache'
-      group: 'apache'
+      owner: 'www-data'
+      group: 'www-data'
       mode: 0o644
     when: 'monitoring_plugins__stat_var_www_html_localhost_result["stat"]["exists"]'
 

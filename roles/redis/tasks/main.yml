@@ -11,7 +11,7 @@
 
   - name: 'Get Redis version'
     ansible.builtin.set_fact:
-      redis__installed_version: '{{ ansible_facts.packages["redis"][0]["version"][:1] }}'
+      redis__installed_version: '{{ ansible_facts.packages["redis"][0]["version"].split(":")[1][:1] }}' # wont work on rhel... and there is not always an epoch...
 
   - name: 'Deploy /etc/redis.conf (v{{ redis__installed_version }})'
     ansible.builtin.template:
@@ -34,6 +34,11 @@
     notify: 'redis: restart redis'
     when:
       - 'redis__installed_version in ["7"]'
+
+  - name: 'mkdir -p /etc/systemd/system/redis.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/redis.service.d/'
+      state: 'directory'
 
   - name: 'Deploy /etc/systemd/system/redis.service.d/z00-linuxfabrik.conf.j2'
     ansible.builtin.template:

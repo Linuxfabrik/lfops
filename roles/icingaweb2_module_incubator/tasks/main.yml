@@ -4,7 +4,7 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/incubator'
       state: 'directory'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o755
 

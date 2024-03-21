@@ -11,6 +11,7 @@ apache_httpd__config_file: '{{ apache_httpd__config_path }}/conf/httpd.conf'
 apache_httpd__config_path: '/etc/httpd'
 apache_httpd__config_test_command: 'httpd -t'
 
+apache_httpd__modules_path: 'modules'
 apache_httpd__root_path: '/var/www'
 apache_httpd__roothtml_path: '/var/www/html'
 

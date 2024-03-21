@@ -4,7 +4,7 @@
     ansible.builtin.package:
       name:
         - 'icingaweb2'
-        - 'icingaweb2-selinux'
+        # - 'icingaweb2-selinux'
         - 'icingacli'
       state: 'present'
 
@@ -45,7 +45,7 @@
       login_user: "{{ icingaweb2__database_login.username }}"
       login_password: "{{ icingaweb2__database_login.password }}"
       login_host: "{{ icingaweb2__database_host }}"
-      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary("/run/mysqld/mysqld.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
       name: '{{ icingaweb2__database_name }}'
       state: 'import'
       target: '/usr/share/doc/icingaweb2/schema/mysql.schema.sql'
@@ -59,7 +59,7 @@
       login_user: "{{ icingaweb2__database_login.username }}"
       login_password: "{{ icingaweb2__database_login.password }}"
       login_host: "{{ icingaweb2__database_host }}"
-      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary("/run/mysqld/mysqld.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
       name: '{{ icingaweb2__database_name }}'
       state: 'import'
       target: '/usr/share/icingaweb2/schema/mysql.schema.sql'
@@ -72,7 +72,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/navigation'
       state: 'directory'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -80,7 +80,7 @@
     ansible.builtin.template:
       src: 'etc/icingaweb2/{{ item }}.j2'
       dest: "/etc/icingaweb2/{{ item }}"
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o660
     loop:
@@ -92,7 +92,7 @@
     ansible.builtin.template:
       src: 'etc/icingaweb2/navigation/menu.ini.j2'
       dest: '/etc/icingaweb2/navigation/menu.ini'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -100,7 +100,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/enabledModules'
       state: 'directory'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -114,7 +114,7 @@
     ansible.builtin.template:
       src: 'etc/icingaweb2/resources.ini.j2'
       dest: '/etc/icingaweb2/resources.ini'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -129,7 +129,7 @@
     ansible.builtin.template:
       src: 'etc/icingaweb2/roles.ini.j2'
       dest: '/etc/icingaweb2/roles.ini'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o660
 

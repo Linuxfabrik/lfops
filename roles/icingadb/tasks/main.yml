@@ -18,20 +18,20 @@
   - name: 'deploy /etc/icinga2/features-available/icingadb.conf'
     ansible.builtin.template:
       src: 'etc/icinga2/features-available/icingadb.conf.j2'
-      dest: '/etc/icinga2/features-available/icingadb.conf'
+      dest: '/tmp/icinga2-features-available-icingadb.conf'
       owner: 'icinga'
       group: 'icinga'
       mode: 0o640
     notify: 'icingadb: restart icinga2'
 
-  - name: 'icinga2 feature enable icingadb'
-    community.general.icinga2_feature:
-      name: 'icingadb'
-      state: 'present'
-    notify: 'icingadb: restart icinga2'
+  # - name: 'icinga2 feature enable icingadb'
+  #   community.general.icinga2_feature:
+  #     name: 'icingadb'
+  #     state: 'present'
+  #   notify: 'icingadb: restart icinga2'
 
-  - name: 'Flush handlers so that the icinga2 icingadb feature is active' # else /var/lib/icinga2/icingadb.env is missing later on
-    ansible.builtin.meta: 'flush_handlers'
+  # - name: 'Flush handlers so that the icinga2 icingadb feature is active' # else /var/lib/icinga2/icingadb.env is missing later on
+  #   ansible.builtin.meta: 'flush_handlers'
 
   tags:
     - 'icingadb'
@@ -90,7 +90,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/icingadb'
       state: 'directory'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -98,7 +98,7 @@
     ansible.builtin.template:
       src: 'etc/icingaweb2/modules/icingadb/{{ item }}.j2'
       dest: '/etc/icingaweb2/modules/icingadb/{{ item }}'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o660
     loop:

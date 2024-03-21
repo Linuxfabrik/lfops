@@ -1,5 +1,5 @@
 apache_httpd__skip_document_root_chown: false
-apache_httpd__skip_mod_security_coreruleset: false
+apache_httpd__skip_mod_security_coreruleset: true # too complicated on deb rn
 apache_httpd__skip_php_fpm: false
 apache_httpd__systemd_enabled: true
 apache_httpd__systemd_state: 'started'
@@ -9,14 +9,14 @@ apache_httpd__systemd_state: 'started'
 # --------------------------
 
 apache_httpd__packages__role_var:
-  - name: 'mod_qos'
+  - name: 'libapache2-mod-qos'
+    state: 'absent' # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1000072
+
+  - name: 'libapache2-mod-security2'
     state: 'present'
 
-  - name: 'mod_security'
-    state: 'present'
-
-  - name: 'mod_ssl'
-    state: 'present'
+  # - name: 'mod_ssl' # part of apache2-bin package on deb
+  #   state: 'present'
 
 apache_httpd__packages__dependent_var: []
 apache_httpd__packages__group_var: []
@@ -121,13 +121,13 @@ apache_httpd__mods__role_var:
     template: 'info'
 
   - filename: 'log_config'
-    enabled: true
-    state: 'present'
+    enabled: false # module ... is built-in and can''t be loaded'
+    state: 'absent'
     template: 'log_config'
 
   - filename: 'logio'
-    enabled: true
-    state: 'present'
+    enabled: false # module ... is built-in and can''t be loaded'
+    state: 'absent'
     template: 'logio'
 
   - filename: 'maxminddb'
@@ -191,8 +191,8 @@ apache_httpd__mods__role_var:
     template: 'proxy_wstunnel'
 
   - filename: 'qos'
-    enabled: true
-    state: 'present'
+    enabled: false # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1000072
+    state: 'absent'
     template: 'qos'
 
   - filename: 'reqtimeout'
@@ -236,8 +236,8 @@ apache_httpd__mods__role_var:
     template: 'status'
 
   - filename: 'systemd'
-    enabled: true
-    state: 'present'
+    enabled: false # cannot open shared object file: No such file or directory'
+    state: 'absent'
     template: 'systemd'
 
   - filename: 'unique_id'
@@ -246,8 +246,8 @@ apache_httpd__mods__role_var:
     template: 'unique_id'
 
   - filename: 'unix'
-    enabled: true
-    state: 'present'
+    enabled: false # module ... is built-in and can''t be loaded'
+    state: 'absent'
     template: 'unix'
 
   - filename: 'wsgi_python3'

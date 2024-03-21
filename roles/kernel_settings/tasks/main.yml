@@ -10,10 +10,11 @@
         - 'Combined transparent_hugepages: {{ kernel_settings__transparent_hugepages__combined_var }}'
         - 'Combined transparent_hugepages_defrag: {{ kernel_settings__transparent_hugepages_defrag__combined_var }}'
 
-  - name: 'systemctl restart tuned # this prevents errors later on'
-    ansible.builtin.systemd:
-      name: 'tuned.service'
-      state: 'restarted'
+  # does not help, as tuned would need to be restarted after applying and before checking the settings
+  # - name: 'systemctl restart tuned # this prevents errors later on'
+  #   ansible.builtin.systemd:
+  #     name: 'tuned.service'
+  #     state: 'restarted'
 
   - name: 'Use fedora.linux_system_roles.kernel_settings role to configure the kernel settings'
     include_role:

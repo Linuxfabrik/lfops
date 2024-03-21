@@ -32,7 +32,7 @@ icingaweb2_module_x509__mariadb_server__users__dependent_var:
 icingaweb2_module_x509__php__modules__dependent_var:
   - name: 'php-gmp'
     state: 'present'
-  - name: 'php-openssl'
-    state: 'present'
-  - name: 'php-pcntl'
-    state: 'present'
+  # - name: 'php-openssl' # already in php on debian
+  #   state: 'present'
+  # - name: 'php-pcntl' # already in php on debian
+  #   state: 'present'

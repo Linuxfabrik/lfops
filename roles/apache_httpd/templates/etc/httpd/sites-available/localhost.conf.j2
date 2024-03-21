@@ -37,7 +37,7 @@
     # Enable http authorization headers
     SetEnvIfNoCase ^Authorization$ "(.+)" HTTP_AUTHORIZATION=$1
     <FilesMatch \.(php|phar)$>
-        {{ item['php_set_handler'] | d('SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"') }}
+        {{ item['php_set_handler'] | d('SetHandler "proxy:unix:/run/php/www.sock|fcgi://localhost"') }}
     </FilesMatch>
     # Specific PHP configuration options like "session.save_handler" have to be set
     # in /etc/php-fpm.d/{{ item['conf_server_name'] }}.conf, for example

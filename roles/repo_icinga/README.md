@@ -6,6 +6,10 @@ Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
+* Debian 9
+* Debian 10
+* Debian 11
+* Debian 12
 
 
 ## Tags

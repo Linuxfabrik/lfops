@@ -17,7 +17,7 @@ SSLCryptoDevice builtin
 # identify a compatibility level (nothing to worry about, just a display issue).
 SSLHonorCipherOrder off
 
-SSLPassPhraseDialog exec:/usr/libexec/httpd-ssl-pass-dialog
+# SSLPassPhraseDialog exec:/usr/libexec/httpd-ssl-pass-dialog # file '/usr/libexec/httpd-ssl-pass-dialog' does not exist
 SSLRandomSeed connect builtin
 SSLRandomSeed startup file:/dev/urandom  1024
 SSLSessionCache shmcb:/run/httpd/sslcache(512000)

@@ -4,7 +4,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/x509'
       state: 'directory'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -12,7 +12,7 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/x509'
       state: 'directory'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o755
 
@@ -51,7 +51,7 @@
     ansible.builtin.template:
       src: 'etc/icingaweb2/modules/x509/config.ini.j2'
       dest: '/etc/icingaweb2/modules/x509/config.ini'
-      owner: 'apache'
+      owner: 'www-data'
       group: 'icingaweb2'
       mode: 0o664
 
@@ -60,7 +60,7 @@
       login_user: '{{ icingaweb2_module_x509__database_login["username"] }}'
       login_password: '{{ icingaweb2_module_x509__database_login["password"] }}'
       login_host: '{{ icingaweb2_module_x509__database_host }}'
-      login_unix_socket: '{{ (icingaweb2_module_x509__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      login_unix_socket: '{{ (icingaweb2_module_x509__database_host == "localhost") | ternary("/run/mysqld/mysqld.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
       login_db: '{{ icingaweb2_module_x509__database_name }}'
       query: 'SHOW TABLES LIKE "x509_certificate";'
     register: 'icingaweb2_module_x509__table_exists_result'
@@ -71,7 +71,7 @@
       login_user: '{{ icingaweb2_module_x509__database_login["username"] }}'
       login_password: '{{ icingaweb2_module_x509__database_login["password"] }}'
       login_host: '{{ icingaweb2_module_x509__database_host }}'
-      login_unix_socket: '{{ (icingaweb2_module_x509__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      login_unix_socket: '{{ (icingaweb2_module_x509__database_host == "localhost") | ternary("/run/mysqld/mysqld.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
       name: '{{ icingaweb2_module_x509__database_name }}'
       state: 'import'
       target: '/usr/share/icingaweb2/modules/x509/schema/mysql.schema.sql'

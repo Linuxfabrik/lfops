@@ -21,11 +21,11 @@
 #
 #   {{ apache_httpd__config_path }}/
 #   |-- httpd.conf
-#   |-- conf-enabled
+#   |-- conf-enabled-lf
 #   |   `-- *.conf
-#   |-- mods-enabled
+#   |-- mods-enabled-lf
 #   |   `-- *.conf
-#   `-- sites-enabled
+#   `-- sites-enabled-lf
 #       `-- *.conf
 
 
@@ -33,7 +33,7 @@ ServerRoot "{{ apache_httpd__config_path }}"
 
 
 # Load Modules
-IncludeOptional mods-enabled/*.conf
+IncludeOptional mods-enabled-lf/*.conf
 
 
 # core
@@ -119,5 +119,5 @@ BrowserMatchNoCase (wiederfreibot) is_a_bot
 BrowserMatchNoCase (yacybot|Yandex) is_a_bot
 
 
-IncludeOptional conf-enabled/*.conf
-IncludeOptional sites-enabled/*.conf
+IncludeOptional conf-enabled-lf/*.conf
+IncludeOptional sites-enabled-lf/*.conf

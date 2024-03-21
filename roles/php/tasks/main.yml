@@ -44,7 +44,7 @@
 
   - name: 'Get PHP version'
     ansible.builtin.set_fact:
-      php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_replace("\.\d+$", "") }}'
+      php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}' # test regex against rhel
 
   - name: 'Load default values for {{ php__installed_version }}'
     ansible.builtin.include_vars: 'defaults/{{ php__installed_version }}.yml'
@@ -52,7 +52,7 @@
   - name: 'Deploy the /etc/php.d/z00-linuxfabrik.ini'
     ansible.builtin.template:
       src: 'etc/php.d/{{ php__installed_version }}-z00-linuxfabrik.ini.j2'
-      dest: '/etc/php.d/z00-linuxfabrik.ini'
+      dest: '/etc/php/8.2/cli/conf.d/z00-linuxfabrik.ini' # do we also need to deploy to apache2 & fpm?
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -77,7 +77,7 @@
   - name: 'Deploy the pools to /etc/php-fpm.d/'
     ansible.builtin.template:
       src: 'etc/php-fpm.d/pool.conf.j2'
-      dest: '/etc/php-fpm.d/{{ item["name"] }}.conf'
+      dest: '/etc/php/8.2/fpm/pool.d/{{ item["name"] }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -95,7 +95,7 @@
 
   - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm'
     ansible.builtin.service:
-      name: 'php-fpm'
+      name: 'php{{ php__installed_version }}-fpm'
       enabled: '{{ php__fpm_service_enabled }}'
       state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
 

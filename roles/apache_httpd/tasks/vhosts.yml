@@ -12,7 +12,7 @@
 
 - name: 'Disable vHosts'
   ansible.builtin.file:
-    path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
+    path: '{{ apache_httpd__config_path }}/sites-enabled-lf/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
     mode: 0o644
     state: 'absent'
   loop: '{{ apache_httpd__vhosts__combined_var }}'
@@ -23,9 +23,9 @@
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
 
-- name: 'Remove sites-available vHosts'
+- name: 'Remove sites-available-lf vHosts'
   ansible.builtin.file:
-    path: '{{ apache_httpd__config_path }}/sites-available/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
+    path: '{{ apache_httpd__config_path }}/sites-available-lf/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
     state: 'absent'
   when:
     - 'item["state"] | d("present") == "absent"'
@@ -45,10 +45,10 @@
   loop_control:
     label: '{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}'
 
-- name: 'Create sites-available vHosts'
+- name: 'Create sites-available-lf vHosts'
   ansible.builtin.template:
     src: 'etc/httpd/sites-available/{{ item["template"] }}.conf.j2'
-    dest: '{{ apache_httpd__config_path }}/sites-available/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
+    dest: '{{ apache_httpd__config_path }}/sites-available-lf/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
     owner: 'root'
     group: 'root'
     mode: 0o644
@@ -62,8 +62,8 @@
 
 - name: 'Enable vHosts'
   ansible.builtin.file:
-    src: '../sites-available/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
-    path: '{{ apache_httpd__config_path }}/sites-enabled/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
+    src: '../sites-available-lf/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
+    path: '{{ apache_httpd__config_path }}/sites-enabled-lf/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
     mode: 0o644
     state: 'link'
     force: '{{ ansible_check_mode|d() | bool }}' # prevent errors with --check

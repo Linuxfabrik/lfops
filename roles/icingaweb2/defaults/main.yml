@@ -149,10 +149,10 @@ icingaweb2__php__modules__dependent_var:
     state: 'present'
   - name: 'php-mbstring'
     state: 'present'
-  - name: 'php-pecl-imagick'
+  - name: 'php-imagick'
     state: 'present'
-  - name: 'php-process'
-    state: 'present'
+  # - name: 'php-process' no clue
+  #   state: 'present'
   - name: 'php-xml'
     state: 'present'
 
