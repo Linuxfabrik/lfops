@@ -13,7 +13,7 @@ _meta:
 
 {% for user in opensearch__internal_users__hashed_result["results"] if user["item"]['state'] | d('present') != 'absent' %}
 {{ user["item"]["username"] }}:
-  hash: '{{ user["stdout"] }}'
+  hash: '{{ user["stdout"].splitlines() | last }}'
   backend_roles: {{ user["item"]["backend_roles"] | d([]) }}
   # prevent changes via API as it is managed by ansible
   # https://opensearch.org/docs/latest/security/access-control/api/#reserved-and-hidden-resources
