@@ -7,9 +7,24 @@
         - 'gnupg'
       state: 'present'
 
-  - name: 'wget -qO - https://packages.graylog2.org/repo/debian/pubkey.gpg | apt-key add -'
-    ansible.builtin.apt_key:
+  - name: 'curl https://packages.graylog2.org/repo/debian/pubkey.gpg --output /tmp/ansible.graylog.gpg'
+    ansible.builtin.get_url:
       url: 'https://packages.graylog2.org/repo/debian/pubkey.gpg'
+      dest: '/tmp/ansible.graylog.gpg'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.graylog.gpg to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.graylog.gpg'
+      dest: '/tmp/ansible.graylog.gpg'
+      mode: 0o644
+
+  - name: 'apt-key add /tmp/ansible.graylog.pgp'
+    ansible.builtin.apt_key:
+      file: '/tmp/tmp/ansible.graylog.pgp'
       state: 'present'
 
   - name: 'deploy the repo file (mirror: {{ repo_graylog__mirror_url | default("") }})'
