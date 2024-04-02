@@ -33,7 +33,7 @@ If you use the [Apache Solr Playbook](https://github.com/Linuxfabrik/lfops/blob/
 
 | Variable                             | Description                                                                                                        |
 | --------                             | -----------                                                                                                        |
-| `apache_solr__checksum` | String. The SHA512 checksum according to your version. See https://archive.apache.org/dist/solr/solr/ for Solr 9+, https://archive.apache.org/dist/lucene/solr/ for Solr 8-. | `'sha512:7147caaec5290049b721f9a4e8b0c09b1775315fc4aa790fa7a88a783a45a61815b3532a938731fd583e91195492c4176f3c87d0438216dab26a07a4da51c1f5'` |
+| `apache_solr__checksum` | String. The SHA512 checksum according to your version. See `solr-X.X.X.tgz.sha512` file at https://archive.apache.org/dist/solr/solr/ for Solr 9+, https://archive.apache.org/dist/lucene/solr/ for Solr 8-. |
 | `apache_solr__version` | The version to install. See https://archive.apache.org/dist/solr/solr/ for Solr 9+, https://archive.apache.org/dist/lucene/solr/ for Solr 8-. |
 
 Example:
