@@ -10,6 +10,7 @@ This role
 Runs on
 
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 
 
 ## Mandatory Requirements
