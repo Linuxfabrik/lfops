@@ -6,6 +6,7 @@ Runs on
 
 * RHEL 7 (and compatible)
 * RHEL 8 (and compatible)
+* RHEL 9 (and compatible)
 * Fedora 35
 * Debian 11
 
@@ -13,6 +14,7 @@ Runs on
 ## Mandatory Requirements
 
 * Install Python 3
+* On Rocky 9, the CRB Repo ("Code Ready Builder") needs to be enabled to be able to deploy `python3-virtualenv` - otherwise you'll get `nothing provides python3-wheel-wheel needed by python3-virtualenv-20.21.1-1.el9.noarch from epel`.
 
 
 ## Tags
