@@ -5,7 +5,11 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
-  - name: 'Install python3-virtualenv python3-devel'
+  - name: 'Combined Packages:'
+    ansible.builtin.debug:
+      var: 'python_venv__required_packages'
+
+  - name: 'Install the required packages'
     ansible.builtin.package:
       name: '{{ python_venv__required_packages }}'
       state: 'present'
