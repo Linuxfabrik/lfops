@@ -37,6 +37,7 @@ Runs on
 | Tag          | What it does                   |
 | ---          | ------------                   |
 | `hetzner_vm` | Creates and manages the server |
+| `hetzner_vm:firewalls` | Manages the provider firewalls of the host |
 
 
 ## Mandatory Role Variables
