@@ -1,0 +1,7 @@
+- name: 'Manage directories, files and symlinks'
+  hosts:
+    - 'lfops_files'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.files'
