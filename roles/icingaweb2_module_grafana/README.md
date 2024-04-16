@@ -56,6 +56,14 @@ icingaweb2_module_grafana__version: 'v1.4.2'
 Example:
 ```yaml
 # optional
+icingaweb2_module_grafana__custom_graphs_config: |-
+  [icingacli-x509]
+  dashboard = "Default"
+  panelId = "1"
+  orgId = ""
+  repeatable = "no"
+  dashboarduid = "default"
+  timerange = "7d"
 icingaweb2_module_grafana__default_dashboard: 'Default'
 icingaweb2_module_grafana__monitoring_plugins_version: 'latest'
 icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config: true
