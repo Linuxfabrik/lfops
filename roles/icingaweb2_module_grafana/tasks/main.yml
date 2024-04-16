@@ -93,13 +93,19 @@
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
+  - name: 'Deploy /tmp/ansible.icingaweb2-module-grafana-inis/z00-custom.ini'
+    ansible.builtin.copy:
+      content: '{{ icingaweb2_module_grafana__custom_graphs_config }}'
+      dest: '/tmp/ansible.icingaweb2-module-grafana-inis/z00-custom.ini'
+    delegate_to: 'localhost'
+    check_mode: false # run task even if `--check` is specified
+
   - name: 'Assemble /tmp/ansible.icingaweb2-module-grafana-combined.ini'
     ansible.builtin.assemble:
       src: '/tmp/ansible.icingaweb2-module-grafana-inis'
       dest: '/tmp/ansible.icingaweb2-module-grafana-combined.ini'
       delimiter: '\n\n'
     delegate_to: 'localhost'
-    run_once: true
     check_mode: false # run task even if `--check` is specified
 
   - name: 'Copy /tmp/ansible.icingaweb2-module-grafana-combined.ini to /etc/icingaweb2/modules/grafana/graphs.ini'
