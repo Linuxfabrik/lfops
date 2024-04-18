@@ -8,8 +8,11 @@ Which Ansible role is proven to run on which OS?
 
     Role,                                   Debian 10,  Debian 11,  Debian 12,  RHEL 7, RHEL 8, RHEL 9, Ubuntu 16.04,   Ubuntu 18.04,   Ubuntu 20.04,   other
     acme_sh,                                ,           ,           ,           ,       x,      ,       ,               ,               ,               
-    cockpit,                                ,           ,           ,           ,       x,      x,      x,              ,               ,               Fedora Server 35
+    ansible_init,                           ,           ,           ,           ,       ,       ,       ,               ,               ,               Fedora 35+
+    cockpit,                                ,           ,           ,           ,       x,      x,      x,              ,               ,               Fedora 35
+    monitoring_plugins,                     x,          ,           ,           x,      x,      ,       x,              ,               ,               "Debian 9, Fedora, Suse, Windows"
     repo_mongodb,                           ,           x,          ,           ,       x,      x,      ,               ,               ,               
+
 
 Legend:
 
