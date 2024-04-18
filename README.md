@@ -90,6 +90,11 @@ ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.setup_nextcloud
 ```
 
 
+## Compatibility List
+
+Which Ansible role is proven to run on which OS? See [COMPATIBILTY](https://github.com/Linuxfabrik/LFOps/blob/main/COMPATIBILITY.rst)
+
+
 ## Bitwarden
 
 Requires the [bw CLI](https://bitwarden.com/help/article/cli/) version v2022.9.0+.
