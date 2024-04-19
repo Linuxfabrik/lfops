@@ -20,7 +20,7 @@ Which Ansible role is proven to run on which OS?
     chrony                               ,         
     clamav                               ,         
     cloud_init                           ,         
-    cockpit                              ,         ,         ,         ,      ,x     ,x     ,x           ,            ,            
+    cockpit                              ,         ,         ,         ,      ,x     ,x     ,x           ,            ,            ,Fedora 35
     collabora                            ,         
     coturn                               ,         
     crypto_policy                        ,         
@@ -82,8 +82,8 @@ Which Ansible role is proven to run on which OS?
     mirror                               ,         
     mod_maxminddb                        ,         
     mongodb                              ,         
-    monitoring_plugins                   ,         
-    monitoring_plugins_grafana_dashboards,x        ,         ,         ,x     ,x     ,      ,x           ,            ,            ,"Debian 9, Fedora, Suse, Windows"
+    monitoring_plugins                   ,x        ,         ,         ,x     ,x     ,      ,x           ,            ,            ,"Debian 9, Fedora, Suse, Windows"
+    monitoring_plugins_grafana_dashboards,
     motd                                 ,         
     mount                                ,         
     network                              ,         
