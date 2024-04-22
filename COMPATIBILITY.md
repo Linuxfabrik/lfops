@@ -8,153 +8,151 @@ Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
 acme_sh                              |    |    |    |   | x |   |       |       |       |
 ansible_init                         |    |    |    |   |   |   |       |       |       | Fedora 35+
-apache_httpd                         |    |    |    |   |   |   |       |       |       |
-apache_solr                          |    |    |    |   |   |   |       |       |       |
-apache_tomcat                        |    |    |    |   |   |   |       |       |       |
-apps                                 |    |    |    |   |   |   |       |       |       |
-at                                   |    |    |    |   |   |   |       |       |       |
-audit                                |    |    |    |   |   |   |       |       |       |
-bind                                 |    |    |    |   |   |   |       |       |       |
-borg_local                           |    |    |    |   |   |   |       |       |       |
-chrony                               |    |    |    |   |   |   |       |       |       |
-clamav                               |    |    |    |   |   |   |       |       |       |
-cloud_init                           |    |    |    |   |   |   |       |       |       |
+apache_httpd                         |    |    |    |   | x |   |       |       |       |
+apache_solr                          |    |    |    |   | x | x |       |       |       |
+apache_tomcat                        |    |    |    | x | x |   |       |       |       |
+apps                                 |    |    |    |   | x |   |       |       |       |
+at                                   |    |    |    |   | x | x |   x   |       |       | Fedora 35
+audit                                |    |    |    | x | x |   |       |       |       |
+bind                                 |    |    |    |   | x | x |       |       |       |
+borg_local                           |    |    |    | x | x |   |       |       |       |
+chrony                               |    |    |    | x | x | x |       |       |       |
+clamav                               |    |    |    |   | x |   |       |       |       |
+cloud_init                           |    |    |    |   | x | x |   x   |       |       |
 cockpit                              |    |    |    |   | x | x |   x   |       |       | Fedora 35
-collabora                            |    |    |    |   |   |   |       |       |       |
-coturn                               |    |    |    |   |   |   |       |       |       |
-crypto_policy                        |    |    |    |   |   |   |       |       |       |
-dnf_makecache                        |    |    |    |   |   |   |       |       |       |
-dnf_versionlock                      |    |    |    |   |   |   |       |       |       |
-docker                               |    |    |    |   |   |   |       |       |       |
-duplicity                            |    |    |    |   |   |   |       |       |       |
-elasticsearch_oss                    |    |    |    |   |   |   |       |       |       |
-example                              |    |    |    |   |   |   |       |       |       |
-exoscale_vm                          |    |    |    |   |   |   |       |       |       |
-fail2ban                             |    |    |    |   |   |   |       |       |       |
-fangfrisch                           |    |    |    |   |   |   |       |       |       |
-files                                |    |    |    |   |   |   |       |       |       |
-firewall                             |    |    |    |   |   |   |       |       |       |
-freeipa_client                       |    |    |    |   |   |   |       |       |       |
-freeipa_server                       |    |    |    |   |   |   |       |       |       |
-github_project_createrepo            |    |    |    |   |   |   |       |       |       |
-gitlab_ce                            |    |    |    |   |   |   |       |       |       |
-glances                              |    |    |    |   |   |   |       |       |       |
-grafana                              |    |    |    |   |   |   |       |       |       |
-grafana_grizzly                      |    |    |    |   |   |   |       |       |       |
-grav                                 |    |    |    |   |   |   |       |       |       |
-graylog_server                       |    |    |    |   |   |   |       |       |       |
-haveged                              |    |    |    |   |   |   |       |       |       |
-hetzner_vm                           |    |    |    |   |   |   |       |       |       |
-hostname                             |    |    |    |   |   |   |       |       |       |
+collabora                            |    |    |    |   | x |   |       |       |       |
+coturn                               |    |    |    |   | x |   |       |       |       |
+crypto_policy                        |    |    |    |   | x |   |       |       |       |
+dnf_makecache                        |    |    |    |   | x | x |       |       |       |
+dnf_versionlock                      |    |    |    | x | x |   |       |       |       |
+docker                               |    |    |    |   | x |   |       |       |       |
+duplicity                            |    |    |    | x | x | x |       |       |       | Fedora 35
+elasticsearch_oss                    |    |    |    |   | x |   |       |       |       |
+exoscale_vm                          |    |    |    |   |   |   |       |       |       | Fedora 35+
+fail2ban                             |    |    |    |   | x |   |       |       |       |
+fangfrisch                           |    |    |    |   | x |   |       |       |       |
+files                                |    |    |    |   | x |   |       |       |       |
+firewall                             |    |    |    | x | x | x |   x   |       |       |
+freeipa_client                       |    |    |    | x | x |   |       |       |       |
+freeipa_server                       |    |    |    |   | x |   |       |       |       |
+github_project_createrepo            |    |    |    |   | x |   |       |       |       |
+gitlab_ce                            |    |    |    |   | x |   |       |       |       |
+glances                              |    |    |    |   | x | x |   x   |       |       |
+grafana                              |    |    |    |   | x |   |       |       |       |
+grafana_grizzly                      |    |    |    |   | x |   |       |       |       |
+grav                                 |    |    |    |   | x |   |       |       |       |
+graylog_server                       |    |  x |    |   | x |   |       |       |       |
+haveged                              |    |    |    |   | x |   |       |       |       |
+hetzner_vm                           |    |    |    |   |   |   |       |       |       | Fedora 35+
+hostname                             |    |    |    |   | x | x |   x   |       |       |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
                                      |    Debian    |   RHEL    |        Ubuntu         | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
-icinga2_agent                        |    |    |    |   |   |   |       |       |       |
-icinga2_master                       |    |    |    |   |   |   |       |       |       |
-icingadb                             |    |    |    |   |   |   |       |       |       |
-icingaweb2                           |    |    |    |   |   |   |       |       |       |
-icingaweb2_module_businessprocess    |    |    |    |   |   |   |       |       |       |
-icingaweb2_module_company            |    |    |    |   |   |   |       |       |       |
-icingaweb2_module_director           |    |    |    |   |   |   |       |       |       |
-icingaweb2_module_doc                |    |    |    |   |   |   |       |       |       |
-icingaweb2_module_grafana            |    |    |    |   |   |   |       |       |       |
-icingaweb2_module_incubator          |    |    |    |   |   |   |       |       |       |
-icingaweb2_module_monitoring         |    |    |    |   |   |   |       |       |       |
-icingaweb2_module_vspheredb          |    |    |    |   |   |   |       |       |       |
-icingaweb2_module_x509               |    |    |    |   |   |   |       |       |       |
-influxdb                             |    |    |    |   |   |   |       |       |       |
-infomaniak_vm                        |    |    |    |   |   |   |       |       |       |
-kdump                                |    |    |    |   |   |   |       |       |       |
-keepalived                           |    |    |    |   |   |   |       |       |       |
-kernel_settings                      |    |    |    |   |   |   |       |       |       |
-keycloak                             |    |    |    |   |   |   |       |       |       |
-kvm_host                             |    |    |    |   |   |   |       |       |       |
-kvm_vm                               |    |    |    |   |   |   |       |       |       |
-libmaxminddb                         |    |    |    |   |   |   |       |       |       |
-librenms                             |    |    |    |   |   |   |       |       |       |
-libreoffice                          |    |    |    |   |   |   |       |       |       |
-login                                |    |    |    |   |   |   |       |       |       |
-logrotate                            |    |    |    |   |   |   |       |       |       |
-mailto_root                          |    |    |    |   |   |   |       |       |       |
-mailx                                |    |    |    |   |   |   |       |       |       |
-mariadb_client                       |    |    |    |   |   |   |       |       |       |
-mariadb_server                       |    |    |    |   |   |   |       |       |       |
-maxmind_geoip                        |    |    |    |   |   |   |       |       |       |
-minio_client                         |    |    |    |   |   |   |       |       |       |
-mirror                               |    |    |    |   |   |   |       |       |       |
-mod_maxminddb                        |    |    |    |   |   |   |       |       |       |
-mongodb                              |    |    |    |   |   |   |       |       |       |
+icinga2_agent                        |    |    |    | x | x |   |       |       |       | Fedora 35
+icinga2_master                       |    |    |    |   | x |   |       |       |       |
+icingadb                             |    |    |    |   | x |   |       |       |       |
+icingaweb2                           |    |    |    |   | x |   |       |       |       |
+icingaweb2_module_businessprocess    |    |    |    |   | x |   |       |       |       |
+icingaweb2_module_company            |    |    |    |   | x |   |       |       |       |
+icingaweb2_module_director           |    |    |    |   | x |   |       |       |       |
+icingaweb2_module_doc                |    |    |    |   | x |   |       |       |       |
+icingaweb2_module_grafana            |    |    |    |   | x |   |       |       |       |
+icingaweb2_module_incubator          |    |    |    |   | x |   |       |       |       |
+icingaweb2_module_monitoring         |    |    |    |   | x |   |       |       |       |
+icingaweb2_module_vspheredb          |    |    |    |   | x |   |       |       |       |
+icingaweb2_module_x509               |    |    |    |   | x |   |       |       |       |
+influxdb                             |    |    |    |   | x |   |       |       |       |
+infomaniak_vm                        |    |    |    |   |   |   |       |       |       | Fedora 35+
+kdump                                |    |    |    |   | x | x |   x   |       |       |
+keepalived                           |    |    |    |   | x |   |       |       |       |
+kernel_settings                      |    |    |    |   | x |   |       |       |       |
+keycloak                             |    |    |    |   | x |   |       |       |       |
+kvm_host                             |    |    |    |   | x |   |       |       |       |
+kvm_vm                               |    |    |    |   | x |   |       |       |       |
+libmaxminddb                         |    |    |    |   | x |   |       |       |       |
+librenms                             |    |    |    |   | x |   |       |       |       |
+libreoffice                          |    |    |    |   | x |   |       |       |       |
+login                                |    |    |    |   | x | x |   x   |       |       | Fedora 35+
+logrotate                            |    |    |    | x | x | x |   x   |       |       |
+mailto_root                          |    |    |    |   | x | x |   x   |       |       |
+mailx                                |    |    |    | x | x | x |   x   |       |       |
+mariadb_client                       |    |    |    |   | x |   |       |       |       |
+mariadb_server                       |    |    |    |   | x |   |       |       |       |
+maxmind_geoip                        |    |    |    |   | x |   |       |       |       |
+minio_client                         |    |    |    |   | x |   |       |       |       |
+mirror                               |    |    |    |   | x |   |       |       |       |
+mod_maxminddb                        |    |    |    |   | x |   |       |       |       |
+mongodb                              |    |  x |    |   | x | x |       |       |       |
 monitoring_plugins                   |  x |    |    | x | x |   |   x   |       |       | Debian 9, Fedora, Suse, Windows
-monitoring_plugins_grafana_dashboards|    |    |    |   |   |   |       |       |       |
-motd                                 |    |    |    |   |   |   |       |       |       |
-mount                                |    |    |    |   |   |   |       |       |       |
-network                              |    |    |    |   |   |   |       |       |       |
+monitoring_plugins_grafana_dashboards|    |    |    |   | x |   |       |       |       |
+motd                                 |    |    |    | x | x | x |   x   |       |       |
+mount                                |    |  x |    | x | x |   |       |       |       |
+network                              |    |    |    | x | x | x |       |       |       |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
                                      |    Debian    |   RHEL    |        Ubuntu         | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
-nextcloud                            |    |    |    |   |   |   |       |       |       |
-nfs_client                           |    |    |    |   |   |   |       |       |       |
-nfs_server                           |    |    |    |   |   |   |       |       |       |
-nodejs                               |    |    |    |   |   |   |       |       |       |
-objectstore_backup                   |    |    |    |   |   |   |       |       |       |
-opensearch                           |    |    |    |   |   |   |       |       |       |
-openssl                              |    |    |    |   |   |   |       |       |       |
-open_vm_tools                        |    |    |    |   |   |   |       |       |       |
-openvpn_server                       |    |    |    |   |   |   |       |       |       |
-perl                                 |    |    |    |   |   |   |       |       |       |
-php                                  |    |    |    |   |   |   |       |       |       |
-policycoreutils                      |    |    |    |   |   |   |       |       |       |
-postfix                              |    |    |    |   |   |   |       |       |       |
-postgresql_server                    |    |    |    |   |   |   |       |       |       |
-python                               |    |    |    |   |   |   |       |       |       |
-python_venv                          |    |    |    |   |   |   |       |       |       |
-qemu_guest_agent                     |    |    |    |   |   |   |       |       |       |
-redis                                |    |    |    |   |   |   |       |       |       |
-repo_baseos                          |    |    |    |   |   |   |       |       |       |
-repo_collabora                       |    |    |    |   |   |   |       |       |       |
-repo_collabora_code                  |    |    |    |   |   |   |       |       |       |
-repo_debian_base                     |    |    |    |   |   |   |       |       |       |
-repo_docker                          |    |    |    |   |   |   |       |       |       |
-repo_elasticsearch                   |    |    |    |   |   |   |       |       |       |
-repo_elasticsearch_oss               |    |    |    |   |   |   |       |       |       |
-repo_epel                            |    |    |    |   |   |   |       |       |       |
-repo_gitlab_ce                       |    |    |    |   |   |   |       |       |       |
-repo_gitlab_runner                   |    |    |    |   |   |   |       |       |       |
-repo_grafana                         |    |    |    |   |   |   |       |       |       |
-repo_graylog                         |    |    |    |   |   |   |       |       |       |
-repo_icinga                          |    |    |    |   |   |   |       |       |       |
-repo_influxdb                        |    |    |    |   |   |   |       |       |       |
-repo_mariadb                         |    |    |    |   |   |   |       |       |       |
-repo_mongodb                         |    | x  |    |   | x | x |       |       |       |
-repo_monitoring_plugins              |    |    |    |   |   |   |       |       |       |
-repo_mydumper                        |    |    |    |   |   |   |       |       |       |
-repo_opensearch                      |    |    |    |   |   |   |       |       |       |
-repo_postgresql                      |    |    |    |   |   |   |       |       |       |
-repo_remi                            |    |    |    |   |   |   |       |       |       |
-repo_rpmfusion                       |    |    |    |   |   |   |       |       |       |
+nextcloud                            |    |    |    |   | x |   |       |       |       |
+nfs_client                           |    |  x |    | x | x |   |       |       |       |
+nfs_server                           |    |  x |    | x | x |   |       |       |       |
+nodejs                               |    |    |    |   | x |   |       |       |       |
+objectstore_backup                   |    |    |    |   | x |   |       |       |       |
+opensearch                           |    |  x |    |   | x |   |       |       |       |
+openssl                              |    |    |    |   | x |   |   x   |       |       |
+open_vm_tools                        |    |    |    |   | x |   |   x   |       |       |
+openvpn_server                       |    |    |    |   | x |   |       |       |       |
+perl                                 |    |    |    |   | x |   |   x   |       |       |
+php                                  |    |    |    |   | x |   |       |       |       |
+policycoreutils                      |    |    |    | x | x | x |       |       |       | Fedora 35
+postfix                              |    |    |    | x | x | x |   x   |       |       |
+postgresql_server                    |    |    |    |   | x |   |       |       |       |
+python                               |    |    |    |   | x | x |   x   |       |       | Windows
+python_venv                          |    |  x |    | x | x | x |       |       |       | Fedora 35
+qemu_guest_agent                     |    |    |    |   | x |   |   x   |       |       |
+redis                                |    |    |    |   | x |   |       |       |       |
+repo_baseos                          |    |    |    | x | x | x |       |       |       |
+repo_collabora                       |    |    |    | x | x |   |       |       |       |
+repo_collabora_code                  |    |    |    | x | x |   |       |       |       |
+repo_debian_base                     |  x |  x |    |   |   |   |       |       |       |
+repo_docker                          |    |    |    |   | x |   |       |       |       |
+repo_elasticsearch                   |    |    |    |   | x |   |       |       |       |
+repo_elasticsearch_oss               |    |    |    |   | x |   |       |       |       |
+repo_epel                            |    |    |    | x | x | x |       |       |       |
+repo_gitlab_ce                       |    |    |    |   | x |   |       |       |       |
+repo_gitlab_runner                   |    |    |    |   | x |   |       |       |       |
+repo_grafana                         |    |    |    |   | x |   |       |       |       |
+repo_graylog                         |    |  x |    |   | x |   |       |       |       |
+repo_icinga                          |    |    |    | x | x |   |       |       |       |
+repo_influxdb                        |    |  x |    | x | x |   |       |       |       |
+repo_mariadb                         |    |    |    | x | x |   |       |       |       |
+repo_mongodb                         |    |  x |    |   | x | x |       |       |       |
+repo_monitoring_plugins              |  x |  x |    | x | x |   |       |   x   |   x   | Ubuntu 22.04
+repo_mydumper                        |    |    |    | x | x |   |       |       |       |
+repo_opensearch                      |    |  x |    |   | x |   |       |       |       |
+repo_postgresql                      |    |    |    |   | x |   |       |       |       |
+repo_remi                            |    |    |    | x | x |   |       |       |       | Fedora 35
+repo_rpmfusion                       |    |    |    |   | x |   |       |       |       |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
                                      |    Debian    |   RHEL    |        Ubuntu         | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
-repo_sury                            |    |    |    |   |   |   |       |       |       |
-rocketchat                           |    |    |    |   |   |   |       |       |       |
-rsyslog                              |    |    |    |   |   |   |       |       |       |
-selinux                              |    |    |    |   |   |   |       |       |       |
-shared                               |    |    |    |   |   |   |       |       |       |
-snmp                                 |    |    |    |   |   |   |       |       |       |
-sshd                                 |    |    |    |   |   |   |       |       |       |
-systemd_journald                     |    |    |    |   |   |   |       |       |       |
-systemd_unit                         |    |    |    |   |   |   |       |       |       |
-system_update                        |    |    |    |   |   |   |       |       |       |
-tar                                  |    |    |    |   |   |   |       |       |       |
-telegraf                             |    |    |    |   |   |   |       |       |       |
-timezone                             |    |    |    |   |   |   |       |       |       |
-tools                                |    |    |    |   |   |   |       |       |       |
-unattended_upgrades                  |    |    |    |   |   |   |       |       |       |
-wordpress                            |    |    |    |   |   |   |       |       |       |
-yum_utils                            |    |    |    |   |   |   |       |       |       |
+repo_sury                            |  x |  x |    |   |   |   |       |       |       |
+rocketchat                           |    |    |    | x | x |   |       |       |       | Fedora 35
+rsyslog                              |    |    |    |   | x | x |       |       |       |
+selinux                              |    |    |    |   | x | x |       |       |       |
+snmp                                 |    |    |    | x | x | x |       |       |       |
+sshd                                 |    |    |    | x | x | x |       |       |       |
+system_update                        |    |  x |    | x | x | x |       |       |       |
+systemd_journald                     |    |    |    |   | x | x |       |       |       |
+systemd_unit                         |    |    |    |   | x | x |       |       |       |
+tar                                  |    |    |    |   | x |   |   x   |       |       |
+telegraf                             |    |    |    |   | x |   |       |       |       |
+timezone                             |    |    |    | x | x | x |   x   |       |       | Fedora 35
+tools                                |    |    |    | x | x | x |       |       |       | Fedora
+unattended_upgrades                  |    |  x |    |   |   |   |   x   |       |       |
+wordpress                            |    |    |    |   | x |   |       |       |       |
+yum_utils                            |    |    |    | x | x | x |       |       |       | Fedora 35
 ```
 
 Legend:
