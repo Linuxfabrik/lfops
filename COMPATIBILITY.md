@@ -84,7 +84,7 @@ minio_client                         |    |    |    |   | x |   |       |       
 mirror                               |    |    |    |   | x |   |       |       |       |
 mod_maxminddb                        |    |    |    |   | x |   |       |       |       |
 mongodb                              |    | x  |    |   | x | x |       |       |       |
-monitoring_plugins                   |  x |    |    | x | x |   |   x   |       |       | Debian 9, Fedora, Suse, Windows
+monitoring_plugins                   | x  |    |    | x | x |   |   x   |       |       | Debian 9, Fedora, Suse, Windows
 monitoring_plugins_grafana_dashboards|    |    |    |   | x |   |       |       |       |
 motd                                 |    |    |    | x | x | x |   x   |       |       |
 mount                                |    | x  |    | x | x |   |       |       |       |
@@ -114,7 +114,7 @@ redis                                |    |    |    |   | x |   |       |       
 repo_baseos                          |    |    |    | x | x | x |       |       |       |
 repo_collabora                       |    |    |    | x | x |   |       |       |       |
 repo_collabora_code                  |    |    |    | x | x |   |       |       |       |
-repo_debian_base                     |  x |  x |    |   |   |   |       |       |       |
+repo_debian_base                     | x  | x  |    |   |   |   |       |       |       |
 repo_docker                          |    |    |    |   | x |   |       |       |       |
 repo_elasticsearch                   |    |    |    |   | x |   |       |       |       |
 repo_elasticsearch_oss               |    |    |    |   | x |   |       |       |       |
@@ -137,13 +137,13 @@ repo_rpmfusion                       |    |    |    |   | x |   |       |       
                                      |    Debian    |   RHEL    |        Ubuntu         | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
-repo_sury                            |  x |  x |    |   |   |   |       |       |       |
+repo_sury                            | x  | x  |    |   |   |   |       |       |       |
 rocketchat                           |    |    |    | x | x |   |       |       |       | Fedora 35
 rsyslog                              |    |    |    |   | x | x |       |       |       |
 selinux                              |    |    |    |   | x | x |       |       |       |
 snmp                                 |    |    |    | x | x | x |       |       |       |
 sshd                                 |    |    |    | x | x | x |       |       |       |
-system_update                        |    |  x |    | x | x | x |       |       |       |
+system_update                        |    | x  |    | x | x | x |       |       |       |
 systemd_journald                     |    |    |    |   | x | x |       |       |       |
 systemd_unit                         |    |    |    |   | x | x |       |       |       |
 tar                                  |    |    |    |   | x |   |   x   |       |       |
