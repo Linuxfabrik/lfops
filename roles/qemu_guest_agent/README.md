@@ -2,11 +2,6 @@
 
 This role installs the [QEMU Guest Agent](https://wiki.qemu.org/Features/GuestAgent/) for the generic and open source machine emulator and virtualizer.
 
-Runs on
-
-* RHEL 8 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 

@@ -7,11 +7,6 @@ This role
 * sets SELinux file contexts using `semanage fcontext`. It does NOT apply them using `restorecon` - do this in your role where it fits.
 * manages SELinux ports using `semanage port`
 
-Runs on
-
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-
 
 ## Mandatory Requirements
 

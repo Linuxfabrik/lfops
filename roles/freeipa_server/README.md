@@ -2,10 +2,6 @@
 
 This role installs and configures [FreeIPA](https://www.freeipa.org/) as a server.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 Ideally, the FreeIPA should be installed on a separate server. If that is not possible, you could group it with DNS and NTP on an infrastructure server. As a last resort you can install it on the central firewall / gateway server.
 
 

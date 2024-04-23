@@ -2,13 +2,6 @@
 
 This role ensures that login warning banners are configured properly (according to CIS).
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 

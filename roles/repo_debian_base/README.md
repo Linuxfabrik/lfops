@@ -2,11 +2,6 @@
 
 This role deploys the basic Debian repositories, which can be used to set a custom mirror server.
 
-Runs on
-
-* Debian 10 (and compatible)
-* Debian 11 (and compatible)
-
 
 ## Tags
 

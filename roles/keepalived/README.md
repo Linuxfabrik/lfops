@@ -2,9 +2,6 @@
 
 This role installs and configures [keepalived](https://www.keepalived.org/).
 
-Runs on
-
-* RHEL 8 (and compatible)
 
 ## Tags
 

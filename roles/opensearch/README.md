@@ -14,11 +14,6 @@ Currently supported versions:
 * 1.x
 * 2.x
 
-Runs on
-
-* RHEL 8 (and compatible)
-* Debian 11
-
 
 ## Mandatory Requirements
 

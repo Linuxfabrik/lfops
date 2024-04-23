@@ -2,10 +2,6 @@
 
 This role deploys the Docker CE Repository.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

@@ -2,10 +2,6 @@
 
 This role installs the MinIO client binary, including bash completion and sets config location to `/etc/mc/`.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

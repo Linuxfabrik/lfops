@@ -2,11 +2,6 @@
 
 This role deploys a repository for the mydumper package. Note that no official repository exists - Linuxfabrik currently uses its [own repository server](https://repo.linuxfabrik.ch/).
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

@@ -4,10 +4,6 @@ This role installs [grizzly](https://grafana.github.io/grizzly/), a tool for the
 
 Additionally, this role allows you to apply Grafana resources which are saved as `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/grafana_grizzly/*.yml`.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

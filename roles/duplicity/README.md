@@ -4,13 +4,6 @@ This role configures *daily file-based* backups using [duplicity](https://duplic
 
 Note that this role does not support running with `--check`, as it first creates a GPG-Key which is required for the rest of the role.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Fedora 35
-
 
 ## duba (Duplicity Backup)
 

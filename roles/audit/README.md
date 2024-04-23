@@ -2,11 +2,6 @@
 
 This role installs and configures [audit](http://people.redhat.com/sgrubb/audit/), including the daemon's logrotating behaviour.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

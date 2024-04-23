@@ -2,10 +2,6 @@
 
 This role deploys the [RPM Fusion](https://rpmfusion.org/RPM%20Fusion) free and nonfree Repositories.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

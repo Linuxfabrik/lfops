@@ -2,11 +2,6 @@
 
 This role installs [tar](https://www.gnu.org/software/tar/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 

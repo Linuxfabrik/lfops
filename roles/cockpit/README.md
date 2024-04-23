@@ -2,13 +2,6 @@
 
 This role simply removes all `cockpit*` packages from the system.
 
-Runs on
-
-* Fedora Server 35
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 

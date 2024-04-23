@@ -2,10 +2,6 @@
 
 This role installs [keycloak](https://www.keycloak.org/guides#getting-started).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

@@ -2,10 +2,6 @@
 
 This role installs and configures [coturn](https://github.com/coturn/coturn).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

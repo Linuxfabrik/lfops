@@ -2,11 +2,6 @@
 
 This role simply removes the `unattended-upgrades` package from the system.
 
-Runs on
-
-* Debian 11
-* Ubuntu 16
-
 
 ## Tags
 

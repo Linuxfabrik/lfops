@@ -24,17 +24,6 @@ Additionally, this role allows you to deploy custom plugins which are placed und
 
 Windows only: Since you cannot change files that are currently used by a process in Windows, when running against a Windows host, this role first stops the Icinga2 service, deploys the plugins and starts the service again. Optionally, it sets a downtime for each host. Have a look at the optional role variables below for this.
 
-Runs on
-
-* Debian 9
-* Debian 10
-* Fedora
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* Suse
-* Ubuntu 16
-* Windows
-
 
 ## Mandatory Requirements
 

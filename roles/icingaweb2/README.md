@@ -2,10 +2,6 @@
 
 This role installs and configures [IcingaWeb2](https://icinga.com/docs/icinga-web-2/latest/doc/01-About/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

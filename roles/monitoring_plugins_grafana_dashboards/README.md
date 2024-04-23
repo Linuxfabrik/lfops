@@ -2,10 +2,6 @@
 
 This role deploys the Monitoring Plugins Grafana Dashboards for a Grafana Server using [grizzly](https://grafana.github.io/grizzly/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

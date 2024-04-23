@@ -15,10 +15,6 @@ Notes on high availability / Icinga2 Master clusters:
 * Environment ID: Make sure that `/var/lib/icinga2/icingadb.env` is the same on all master nodes.
 * Have a look at the [official documentation](https://icinga.com/docs/icinga-db/latest/doc/05-Distributed-Setups/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

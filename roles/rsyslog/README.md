@@ -2,11 +2,6 @@
 
 This role installs and configures [rsyslog](https://www.rsyslog.com/). Useful for configuring log forwarding, for example to a Graylog server.
 
-Runs on
-
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-
 
 ## Tags
 

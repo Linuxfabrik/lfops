@@ -4,10 +4,6 @@ This role configures kernel settings. The settings are made permanently and acti
 
 The role does nothing on its own and relies on the [linux_system_roles.kernel_settings role](https://github.com/linux-system-roles/kernel_settings).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

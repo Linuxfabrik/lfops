@@ -4,10 +4,6 @@ This role installs and configures a Elasticsearch OSS server.
 
 Note that this role does NOT let you specify a particular Elasticsearch OSS server version. It simply installs the latest available Elasticsearch OSS server version from the repos configured in the system. If you want or need to install a specific Elasticsearch OSS server version, use the [linuxfabrik.lfops.repo_elasticsearch_oss](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch_oss) beforehand.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

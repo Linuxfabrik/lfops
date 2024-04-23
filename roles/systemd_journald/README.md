@@ -1,12 +1,6 @@
 # Ansible Role linuxfabrik.lfops.systemd_journald
 
-
 This role configures Systemd's logging service "journald".
-
-Runs on
-
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
 
 
 ## Tags

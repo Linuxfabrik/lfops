@@ -2,12 +2,6 @@
 
 This role installs and configures [Rocket.Chat](https://www.rocket.chat/), an Open-Source Chat system.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* Fedora 35
-
 
 ## Mandatory Requirements
 

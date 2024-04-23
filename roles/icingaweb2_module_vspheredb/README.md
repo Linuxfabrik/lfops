@@ -2,10 +2,6 @@
 
 This role installs and configures the [IcingaWeb2 vSphereDB Module](https://github.com/Icinga/icingaweb2-module-vspheredb).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 This role is tested with the following IcingaWeb2 vSphereDB Module versions:
 
 * 1.6.0

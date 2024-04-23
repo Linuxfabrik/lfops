@@ -2,12 +2,6 @@
 
 This role installs [glances](https://nicolargo.github.io/glances/). It also aliases `top` to `glances -t 1`.
 
-Runs on
-
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Ubuntu 16
-
 
 ## Mandatory Requirements
 

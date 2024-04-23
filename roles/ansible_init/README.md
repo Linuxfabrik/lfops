@@ -11,12 +11,6 @@ This role:
 * Optionally clones the roles to `../roles/`
 * Installs recommended Ansible collections
 
-Runs on
-
-* Fedora 35
-* Fedora 36
-
-
 
 ## Tags
 

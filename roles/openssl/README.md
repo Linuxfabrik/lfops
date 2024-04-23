@@ -2,11 +2,6 @@
 
 This role just installs [openssl](https://www.openssl.org/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 

@@ -2,15 +2,6 @@
 
 This role installs [mailx](http://heirloom.sourceforge.net/mailx.html) and deploys a bash wrapper script that make sending mail easier to `/root/send-mail`.
 
-Runs on
-
-* Debian
-* Fedora
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 

@@ -2,10 +2,6 @@
 
 This role installs and configures the [IcingaWeb2 Director Module](https://icinga.com/docs/icinga-director/latest/doc/01-Introduction/), and deploys the baskets from the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 This role is tested with the following IcingaWeb2 Director Module versions:
 
 * 1.10.2

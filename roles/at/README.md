@@ -2,13 +2,6 @@
 
 This role installs at, a daemon that allows commands to be run at a specified time.
 
-Runs on
-
-* Fedora Server 35
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 

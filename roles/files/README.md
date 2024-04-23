@@ -2,10 +2,6 @@
 
 This role manages file system entities such as files, directories and symlinks.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Optional Requirements
 

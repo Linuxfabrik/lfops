@@ -2,10 +2,6 @@
 
 This role installs and configures [github_project_createrepo](https://github.com/Linuxfabrik/github-project-createrepo).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

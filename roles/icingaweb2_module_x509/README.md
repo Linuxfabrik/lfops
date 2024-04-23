@@ -2,10 +2,6 @@
 
 This role installs and configures the [IcingaWeb2 x509 Module](https://icinga.com/docs/icinga-certificate-monitoring/latest/doc/01-About/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 This role is tested with the following IcingaWeb2 x509 Module versions:
 
 * 1.3.1

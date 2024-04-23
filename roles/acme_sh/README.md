@@ -10,11 +10,6 @@ SSLCertificateKeyFile   /etc/pki/tls/private/www.example.com.key
 SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-chain.crt
 ```
 
-Runs on
-
-* RHEL 8 (and compatible)
-
-
 ## Mandatory Requirements
 
 * Install `openssl`. This can be done using the [linuxfabrik.lfops.openssl](https://github.com/Linuxfabrik/lfops/tree/main/roles/openssl) role.

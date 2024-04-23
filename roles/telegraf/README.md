@@ -2,10 +2,6 @@
 
 This role installs and configures [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

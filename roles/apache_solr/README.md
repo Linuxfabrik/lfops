@@ -8,11 +8,6 @@ This Ansible role
 * and supports Rule-based authorization with the `RuleBasedAuthorizationPlugin`,
 * but currently does not create any cores or collections.
 
-Runs on
-
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-
 
 ## Mandatory Requirements
 

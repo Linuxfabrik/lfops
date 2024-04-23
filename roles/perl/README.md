@@ -2,11 +2,6 @@
 
 This role installs [perl](https://www.perl.org/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 

@@ -2,10 +2,6 @@
 
 This role sets the system crypto policy. Additionally, it deploys crypto policies modified by Linuxfabrik to allow things such as the EPEL-release and ssh-ed25519 keys.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

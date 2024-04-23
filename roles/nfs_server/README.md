@@ -2,12 +2,6 @@
 
 This role installs and configures [NFS](http://linux-nfs.org/) as a server.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* Debian 11 (and compatible)
-
 
 ## Tags
 

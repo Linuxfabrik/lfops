@@ -2,13 +2,6 @@
 
 This role simply installs `yum-utils` package.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Fedora Server 35
-
 
 ## Tags
 

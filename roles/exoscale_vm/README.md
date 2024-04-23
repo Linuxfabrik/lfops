@@ -2,11 +2,6 @@
 
 This role creates and manages instances (virtual machines) on [Exoscale](https://www.exoscale.com/). It also allows creating other compontents for the instance, such as networks and firewall rules.
 
-Runs on
-
-* Fedora 35
-* Fedora 38
-
 
 ## Known Limitations
 

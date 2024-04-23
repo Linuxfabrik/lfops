@@ -17,10 +17,6 @@ This role is only compatible with the following MariaDB versions:
 
 We will add the next long-term support release as soon as it's available (therefore currently not implementing 10.7+).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

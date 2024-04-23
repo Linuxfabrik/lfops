@@ -5,12 +5,6 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 * to act like a client
 * by specifying `chrony__allow` to act like a NTP-server providing time syncing to other clients
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-
 
 ## Tags
 

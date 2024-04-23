@@ -2,10 +2,6 @@
 
 This role installs and configures [LibreNMS](https://www.librenms.org/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

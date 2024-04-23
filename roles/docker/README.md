@@ -2,10 +2,6 @@
 
 This role installs and configures [docker](https://www.docker.com/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

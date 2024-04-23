@@ -4,12 +4,6 @@ This role configures the network settings on the server. It also disables the [z
 
 The role heavily relies on the [linux_system_roles.network Role](https://github.com/linux-system-roles/network).
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-
 
 ## Mandatory Requirements
 

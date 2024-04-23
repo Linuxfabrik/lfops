@@ -2,10 +2,6 @@
 
 This role installs LibreOffice on a server, so it is intended for headless operation and is mainly used for document conversion.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

@@ -2,11 +2,6 @@
 
 This role deploys the official [Collabora CODE Repository](https://docs.fedoraproject.org/en-US/collabora_code/).
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

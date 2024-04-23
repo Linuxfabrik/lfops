@@ -5,13 +5,6 @@ This role installs [Icinga2](https://icinga.com/), configures it to act as an ag
 Currently, this role only works if the host can reach the Icinga2 master API.
 
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* Fedora 35
-
-
 ## Mandatory Requirements
 
 * Enable the [Icinga Package Repository](https://packages.icinga.com/). This can be done using the [linuxfabrik.lfops.repo_icinga](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga) role.

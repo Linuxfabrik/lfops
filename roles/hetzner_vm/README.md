@@ -15,11 +15,6 @@ This role creates and manages servers (virtual machines) and volumes at the [Het
 
 This role does not configure the VM's network interfaces.
 
-Runs on
-
-* Fedora 35
-* Fedora 36
-
 
 ## Mandatory Requirements
 

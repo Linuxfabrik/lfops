@@ -3,13 +3,6 @@
 This role installs NFS client utilities and controls active and configured NFS mount points in `/etc/fstab`.
 
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* Debian 11 (and compatible)
-
-
 ## Tags
 
 | Tag                  | What it does                           |
