@@ -41,7 +41,7 @@ glances                              |    |    |    |   | x | x |   x   |       
 grafana                              |    |    |    |   | x |   |       |       |       |
 grafana_grizzly                      |    |    |    |   | x |   |       |       |       |
 grav                                 |    |    |    |   | x |   |       |       |       |
-graylog_server                       |    |  x |    |   | x |   |       |       |       |
+graylog_server                       |    | x  |    |   | x |   |       |       |       |
 haveged                              |    |    |    |   | x |   |       |       |       |
 hetzner_vm                           |    |    |    |   |   |   |       |       |       | Fedora 35+
 hostname                             |    |    |    |   | x | x |   x   |       |       |
@@ -74,41 +74,41 @@ libmaxminddb                         |    |    |    |   | x |   |       |       
 librenms                             |    |    |    |   | x |   |       |       |       |
 libreoffice                          |    |    |    |   | x |   |       |       |       |
 login                                |    |    |    |   | x | x |   x   |       |       | Fedora 35+
-logrotate                            |    |    |    | x | x | x |   x   |       |       |
-mailto_root                          |    |    |    |   | x | x |   x   |       |       |
-mailx                                |    |    |    | x | x | x |   x   |       |       |
+logrotate                            |    |    |    | x | x | x |   x   |       |       | Fedora
+mailto_root                          |    |    |    | x | x | x |   x   |       |       |
+mailx                                | x  | x  | x  | x | x | x |   x   |       |       | Fedora
 mariadb_client                       |    |    |    |   | x |   |       |       |       |
 mariadb_server                       |    |    |    |   | x |   |       |       |       |
 maxmind_geoip                        |    |    |    |   | x |   |       |       |       |
 minio_client                         |    |    |    |   | x |   |       |       |       |
 mirror                               |    |    |    |   | x |   |       |       |       |
 mod_maxminddb                        |    |    |    |   | x |   |       |       |       |
-mongodb                              |    |  x |    |   | x | x |       |       |       |
+mongodb                              |    | x  |    |   | x | x |       |       |       |
 monitoring_plugins                   |  x |    |    | x | x |   |   x   |       |       | Debian 9, Fedora, Suse, Windows
 monitoring_plugins_grafana_dashboards|    |    |    |   | x |   |       |       |       |
 motd                                 |    |    |    | x | x | x |   x   |       |       |
-mount                                |    |  x |    | x | x |   |       |       |       |
+mount                                |    | x  |    | x | x |   |       |       |       |
 network                              |    |    |    | x | x | x |       |       |       |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
                                      |    Debian    |   RHEL    |        Ubuntu         | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
 nextcloud                            |    |    |    |   | x |   |       |       |       |
-nfs_client                           |    |  x |    | x | x |   |       |       |       |
-nfs_server                           |    |  x |    | x | x |   |       |       |       |
+nfs_client                           |    | x  |    | x | x |   |       |       |       |
+nfs_server                           |    | x  |    | x | x |   |       |       |       |
 nodejs                               |    |    |    |   | x |   |       |       |       |
 objectstore_backup                   |    |    |    |   | x |   |       |       |       |
-opensearch                           |    |  x |    |   | x |   |       |       |       |
-openssl                              |    |    |    |   | x |   |   x   |       |       |
+opensearch                           |    | x  |    |   | x |   |       |       |       |
+openssl                              |    | x  |    |   | x |   |   x   |       |       |
 open_vm_tools                        |    |    |    |   | x |   |   x   |       |       |
 openvpn_server                       |    |    |    |   | x |   |       |       |       |
 perl                                 |    |    |    |   | x |   |   x   |       |       |
 php                                  |    |    |    |   | x |   |       |       |       |
 policycoreutils                      |    |    |    | x | x | x |       |       |       | Fedora 35
-postfix                              |    |    |    | x | x | x |   x   |       |       |
+postfix                              | x  | x  | x  | x | x | x |   x   |       |       | Fedora 35
 postgresql_server                    |    |    |    |   | x |   |       |       |       |
 python                               |    |    |    |   | x | x |   x   |       |       | Windows
-python_venv                          |    |  x |    | x | x | x |       |       |       | Fedora 35
+python_venv                          |    | x  |    | x | x | x |       |       |       | Fedora 35
 qemu_guest_agent                     |    |    |    |   | x |   |   x   |       |       |
 redis                                |    |    |    |   | x |   |       |       |       |
 repo_baseos                          |    |    |    | x | x | x |       |       |       |
@@ -122,14 +122,14 @@ repo_epel                            |    |    |    | x | x | x |       |       
 repo_gitlab_ce                       |    |    |    |   | x |   |       |       |       |
 repo_gitlab_runner                   |    |    |    |   | x |   |       |       |       |
 repo_grafana                         |    |    |    |   | x |   |       |       |       |
-repo_graylog                         |    |  x |    |   | x |   |       |       |       |
+repo_graylog                         |    | x  |    |   | x |   |       |       |       |
 repo_icinga                          |    |    |    | x | x |   |       |       |       |
-repo_influxdb                        |    |  x |    | x | x |   |       |       |       |
+repo_influxdb                        |    | x  |    | x | x |   |       |       |       |
 repo_mariadb                         |    |    |    | x | x |   |       |       |       |
-repo_mongodb                         |    |  x |    |   | x | x |       |       |       |
-repo_monitoring_plugins              |  x |  x |    | x | x |   |       |   x   |   x   | Ubuntu 22.04
+repo_mongodb                         |    | x  |    |   | x | x |       |       |       |
+repo_monitoring_plugins              | x  | x  |    | x | x |   |       |   x   |   x   | Ubuntu 22.04
 repo_mydumper                        |    |    |    | x | x |   |       |       |       |
-repo_opensearch                      |    |  x |    |   | x |   |       |       |       |
+repo_opensearch                      |    | x  |    |   | x |   |       |       |       |
 repo_postgresql                      |    |    |    |   | x |   |       |       |       |
 repo_remi                            |    |    |    | x | x |   |       |       |       | Fedora 35
 repo_rpmfusion                       |    |    |    |   | x |   |       |       |       |
@@ -150,7 +150,7 @@ tar                                  |    |    |    |   | x |   |   x   |       
 telegraf                             |    |    |    |   | x |   |       |       |       |
 timezone                             |    |    |    | x | x | x |   x   |       |       | Fedora 35
 tools                                |    |    |    | x | x | x |       |       |       | Fedora
-unattended_upgrades                  |    |  x |    |   |   |   |   x   |       |       |
+unattended_upgrades                  |    | x  |    |   |   |   |   x   |       |       |
 wordpress                            |    |    |    |   | x |   |       |       |       |
 yum_utils                            |    |    |    | x | x | x |       |       |       | Fedora 35
 ```
