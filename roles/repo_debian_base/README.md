@@ -4,8 +4,8 @@ This role deploys the basic Debian repositories, which can be used to set a cust
 
 Runs on
 
-* Debian 11 (and compatible)
 * Debian 10 (and compatible)
+* Debian 11 (and compatible)
 
 
 ## Tags

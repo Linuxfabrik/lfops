@@ -4,8 +4,8 @@ This role deploys the [Sury repository](https://deb.sury.org/).
 
 Runs on
 
-* Debian 11 (and compatible)
 * Debian 10 (and compatible)
+* Debian 11 (and compatible)
 
 
 ## Tags
