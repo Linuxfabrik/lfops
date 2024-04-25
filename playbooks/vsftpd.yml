@@ -1,0 +1,7 @@
+- name: 'Install and configure vsftpd'
+  hosts:
+    - 'lfops_vsftpd'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.vsftpd'

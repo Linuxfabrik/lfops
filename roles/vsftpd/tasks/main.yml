@@ -1,0 +1,73 @@
+- block:
+
+  - name: 'Install vsftpd'
+    ansible.builtin.package:
+      name:
+        - 'vsftpd'
+      state: 'present'
+
+  tags:
+    - 'vsftpd'
+
+
+- block:
+
+  - name: 'Deploy /etc/vsftpd/vsftpd.conf'
+    ansible.builtin.template:
+      src: 'etc/vsftpd/vsftpd.conf.j2'
+      dest: '/etc/vsftpd/vsftpd.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+    notify: 'vsftpd: restart vsftpd'
+
+  - name: 'Manage directories'
+    ansible.builtin.file:
+      path: '{{ vsftpd__conf_user_config_dir }}'
+      state: 'directory'
+      mode: 0o700
+      owner: 'root'
+      group: 'root'
+    when:
+      - 'vsftpd__conf_user_config_dir is defined and vsftpd__conf_user_config_dir | length'
+
+  - name: 'Remove user-specific configs'
+    ansible.builtin.file:
+      path: '{{ vsftpd__conf_user_config_dir }}/{{ item["name"] }}'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ vsftpd__user_config__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Deploy user-specific configs'
+    ansible.builtin.template:
+      src: 'etc/vsftpd/user_config/{{ item["template"] | d("raw") }}.j2'
+      dest: '{{ vsftpd__conf_user_config_dir }}/{{ item["name"] }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+    when:
+      - 'vsftpd__conf_user_config_dir is defined and vsftpd__conf_user_config_dir | length'
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ vsftpd__user_config__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'vsftpd'
+    - 'vsftpd:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ vsftpd__service_enabled | bool | ternary("enable", "disable") }} --now vsftpd.service'
+    ansible.builtin.systemd:
+      name: 'vsftpd.service'
+      enabled: '{{ vsftpd__service_enabled }}'
+      state: '{{ vsftpd__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'vsftpd'
+    - 'vsftpd:state'
