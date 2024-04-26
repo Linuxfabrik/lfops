@@ -21,7 +21,15 @@
       mode: 0o600
     notify: 'vsftpd: restart vsftpd'
 
-  - name: 'Manage directories'
+  - name: 'Deploy /etc/pam.d/vsftpd'
+    ansible.builtin.template:
+      src: 'etc/pam.d/vsftpd.j2'
+      dest: '/etc/pam.d/vsftpd'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'mkdir -p {{ vsftpd__conf_user_config_dir }}'
     ansible.builtin.file:
       path: '{{ vsftpd__conf_user_config_dir }}'
       state: 'directory'

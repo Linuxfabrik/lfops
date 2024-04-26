@@ -11,6 +11,7 @@ vsftpd__conf_user_config_dir: '/etc/vsftpd/user_config'
 vsftpd__conf_userlist_enable: false
 vsftpd__conf_userlist_log: false
 vsftpd__conf_xferlog_std_format: false
+vsftpd__pam_use_sss: false
 vsftpd__service_enabled: true
 
 vsftpd__user_config__dependent_var: []
