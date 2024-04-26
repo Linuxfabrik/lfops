@@ -151,6 +151,7 @@ telegraf                             |    |    |    |   | x |   |       |       
 timezone                             |    |    |    | x | x | x |   x   |       |       | Fedora 35
 tools                                |    |    |    | x | x | x |       |       |       | Fedora
 unattended_upgrades                  |    | x  |    |   |   |   |   x   |       |       |
+vsftpd                               |    |    |    |   | x |   |       |       |       |
 wordpress                            |    |    |    |   | x |   |       |       |       |
 yum_utils                            |    |    |    | x | x | x |       |       |       | Fedora 35
 ```
