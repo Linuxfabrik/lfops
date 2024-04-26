@@ -20,9 +20,6 @@ This role ensures that sshd is configured. Do not apply this role if you want to
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `sshd__ciphers` | Specifies the ciphers allowed. Multiple ciphers must be comma-separated. | `'chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr'` |
-| `sshd__kex` | Specifies the available KEX (Key Exchange) algorithms. Multiple algorithms must be comma-separated. | `'curve25519-sha256@libssh.org'` |
-| `sshd__macs` | Specifies the available MAC (message authentication code) algorithms. The MAC algorithm is used for data integrity protection. Multiple algorithms must be comma-separated. | `'hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com'` |
 | `sshd__password_authentication` | Specifies whether password authentication is allowed. | `false` |
 | `sshd__permit_root_login` | Specifies whether root can log in using ssh. Possible options:<br> * `yes`<br> * `prohibit-password`<br> * `forced-commands-only`<br> * `no` | `'yes'` |
 | `sshd__port` | Which port the sshd server should use. | `22` |
@@ -33,9 +30,6 @@ This role ensures that sshd is configured. Do not apply this role if you want to
 Example:
 ```yaml
 # optional
-sshd__ciphers: 'chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr'
-sshd__kex: 'curve25519-sha256@libssh.org'
-sshd__macs: 'hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com'
 sshd__password_authentication: false
 sshd__permit_root_login: 'yes'
 sshd__port: 22
