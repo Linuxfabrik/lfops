@@ -3,6 +3,7 @@ sshd__permit_root_login: 'yes'
 sshd__port: 22
 sshd__service_enabled: true
 sshd__service_state: 'started'
+sshd__sftp_subsystem: 'internal-sftp'
 sshd__use_dns: false
 
 sshd__log_level__dependent_var: ''

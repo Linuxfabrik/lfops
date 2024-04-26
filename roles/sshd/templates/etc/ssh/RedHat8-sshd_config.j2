@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024042601
+# 2024042602
 
 #	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
 
@@ -138,7 +138,7 @@ AcceptEnv LC_IDENTIFICATION LC_ALL LANGUAGE
 AcceptEnv XMODIFIERS
 
 # override default of no subsystems
-Subsystem	sftp	/usr/libexec/openssh/sftp-server
+Subsystem	sftp	{{ sshd__sftp_subsystem }}
 
 # Example of overriding settings on a per-user basis
 #Match User anoncvs
@@ -146,3 +146,6 @@ Subsystem	sftp	/usr/libexec/openssh/sftp-server
 #	AllowTcpForwarding no
 #	PermitTTY no
 #	ForceCommand cvs server
+
+# raw content
+{{ sshd__raw }}

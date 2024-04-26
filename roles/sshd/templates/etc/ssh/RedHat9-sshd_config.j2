@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024042601
+# 2024042602
 
 #	$OpenBSD: sshd_config,v 1.104 2021/07/02 05:11:21 dtucker Exp $
 
@@ -123,7 +123,7 @@ UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}
 #Banner none
 
 # override default of no subsystems
-Subsystem	sftp	/usr/libexec/openssh/sftp-server
+Subsystem	sftp	{{ sshd__sftp_subsystem }}
 
 # Example of overriding settings on a per-user basis
 #Match User anoncvs
@@ -131,3 +131,8 @@ Subsystem	sftp	/usr/libexec/openssh/sftp-server
 #	AllowTcpForwarding no
 #	PermitTTY no
 #	ForceCommand cvs server
+
+{% if sshd__raw is defined and sshd__raw | length %}
+# raw content
+{{ sshd__raw }}
+{% endif %}

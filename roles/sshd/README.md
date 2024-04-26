@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.sshd
 
-This role ensures that sshd is configured. Do not apply this role if you want to configure Crypto Policies via [linuxfabrik.lfops.crypto_policy](https://github.com/Linuxfabrik/lfops/tree/main/roles/crypto_policy) (using Crypto Policies is recommended).
+This role ensures that sshd is configured.
 
 
 ## Mandatory Requirements
@@ -23,8 +23,10 @@ This role ensures that sshd is configured. Do not apply this role if you want to
 | `sshd__password_authentication` | Specifies whether password authentication is allowed. | `false` |
 | `sshd__permit_root_login` | Specifies whether root can log in using ssh. Possible options:<br> * `yes`<br> * `prohibit-password`<br> * `forced-commands-only`<br> * `no` | `'yes'` |
 | `sshd__port` | Which port the sshd server should use. | `22` |
+| `sshd__raw` | Raw (user-defined) SSH-Config. Will be placed at the end of the `/etc/ssh/sshd_config` file. Useful for `Match` directives. | unset |
 | `sshd__service_enabled` | Enables or disables the sshd service, analogous to `systemctl enable/disable`. | `true` |
 | `sshd__service_state` | Changes the state of the sshd service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+| `sshd__sftp_subsystem` | Which command should be used for the sftp subsystem. | `'internal-sftp'` |
 | `sshd__use_dns` | Specifies whether sshd should look up the remote hostname, and to check that the resolved host name for the remote IP address maps back to the very same IP address. | `false` |
 
 Example:
@@ -33,6 +35,12 @@ Example:
 sshd__password_authentication: false
 sshd__permit_root_login: 'yes'
 sshd__port: 22
+sshd__raw: |-
+  Match Group sftpusers
+    AllowTcpForwarding no
+    ChrootDirectory /data
+    ForceCommand internal-sftp
+    X11Forwarding no
 sshd__service_enabled: true
 sshd__service_state: 'started'
 sshd__use_dns: false
