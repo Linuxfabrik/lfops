@@ -11,6 +11,11 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:sshd:
+* removed `sshd__ciphers`, `sshd__kex` and `sshd__macs` variables, as these settings are managed by `crypto-policy` on RHEL.
+* now deploys the complete `/etc/ssh/sshd_config` as a template
+* removed support for RHEL7
+
 Role:apache_httpd:
 * the default of the `authz_document_root` vHost variable changed from `Require local` to `Require all granted`. This is a more sensible default, as `allowed_file_extensions` is used to restrict the access.
 * removed the `authz_file_extensions` vHost variable. This was required to allow access to file extensions listed in `allowed_file_extensions'. From now on, the access to listed file extensions is always allowed.

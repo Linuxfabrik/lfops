@@ -1,14 +1,12 @@
-# (?i) case insensitive - http://docs.python.org/2/library/re.html
-# ^#?text = string starting with "text", commented or not
 - block:
 
-  - name: 'Change Port in /etc/ssh/sshd_config to {{ sshd__port }}'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^#?Port'
-      line: 'Port {{ sshd__port }}'
-      state: 'present'
-      validate: '/usr/sbin/sshd -t -f %s'
+  - name: 'Deploy /etc/ssh/sshd_config'
+    ansible.builtin.template:
+      src: 'etc/ssh/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-sshd_config.j2'
+      dest: '/etc/ssh/sshd_config'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
     notify: 'sshd: reload sshd'
 
   - name: 'semanage port --add --type ssh_port_t --proto tcp {{ sshd__port }}'
@@ -22,75 +20,6 @@
       - 'sshd__seport_result["failed"] is defined'
       - 'sshd__seport_result["failed"]'
       - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
-
-  - name: 'Change Ciphers in /etc/ssh/sshd_config to {{ sshd__ciphers }}'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^#?Ciphers'
-      line: 'Ciphers {{ sshd__ciphers }}'
-      state: 'present'
-      validate: '/usr/sbin/sshd -t -f %s'
-    when:
-      - 'sshd__ciphers is defined'
-    notify: 'sshd: reload sshd'
-
-  - name: 'Change KexAlgorithms in /etc/ssh/sshd_config to {{ sshd__kex }}'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^#?KexAlgorithms'
-      line: 'KexAlgorithms {{ sshd__kex }}'
-      state: 'present'
-      validate: '/usr/sbin/sshd -t -f %s'
-    when:
-      - 'sshd__kex is defined'
-    notify: 'sshd: reload sshd'
-
-  - name: 'Change LogLevel in /etc/ssh/sshd_config to {{ sshd__log_level__combined_var }}'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^#?LogLevel'
-      line: 'LogLevel {{ sshd__log_level__combined_var }}'
-      state: 'present'
-      validate: '/usr/sbin/sshd -t -f %s'
-    notify: 'sshd: reload sshd'
-
-  - name: 'Change MACs in /etc/ssh/sshd_config to {{ sshd__macs }}'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^#?MACS'
-      line: 'MACs {{ sshd__macs }}'
-      state: 'present'
-      validate: '/usr/sbin/sshd -t -f %s'
-    when:
-      - 'sshd__macs is defined'
-    notify: 'sshd: reload sshd'
-
-  - name: 'Change PasswordAuthentication in /etc/ssh/sshd_config to {{ sshd__password_authentication | bool | ternary("yes", "no") }}'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^PasswordAuthentication'
-      line: 'PasswordAuthentication {{ sshd__password_authentication | bool | ternary("yes", "no") }}'
-      state: 'present'
-      validate: '/usr/sbin/sshd -t -f %s'
-    notify: 'sshd: reload sshd'
-
-  - name: 'Change PermitRootLogin in /etc/ssh/sshd_config to {{ sshd__permit_root_login }}'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^#?PermitRootLogin'
-      line: 'PermitRootLogin {{ sshd__permit_root_login }}'
-      state: 'present'
-      validate: '/usr/sbin/sshd -t -f %s'
-    notify: 'sshd: reload sshd'
-
-  - name: 'Change UseDNS in /etc/ssh/sshd_config to {{ sshd__use_dns | bool | ternary("yes", "no") }}'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^#?UseDNS'
-      line: 'UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}'
-      state: 'present'
-      validate: '/usr/sbin/sshd -t -f %s'
-    notify: 'sshd: reload sshd'
 
   tags:
     - 'sshd'

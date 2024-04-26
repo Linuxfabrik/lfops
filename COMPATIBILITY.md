@@ -142,7 +142,7 @@ rocketchat                           |    |    |    | x | x |   |       |       
 rsyslog                              |    |    |    |   | x | x |       |       |       |
 selinux                              |    |    |    |   | x | x |       |       |       |
 snmp                                 |    |    |    | x | x | x |       |       |       |
-sshd                                 |    |    |    | x | x | x |       |       |       |
+sshd                                 |    |    |    |   | x | x |       |       |       |
 system_update                        |    | x  |    | x | x | x |       |       |       |
 systemd_journald                     |    |    |    |   | x | x |       |       |       |
 systemd_unit                         |    |    |    |   | x | x |       |       |       |
