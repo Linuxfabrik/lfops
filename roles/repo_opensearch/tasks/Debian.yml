@@ -7,10 +7,30 @@
         - 'gnupg'
       state: 'present'
 
-  - name: 'curl -o- https://artifacts.opensearch.org/publickeys/opensearch.pgp | sudo apt-key add -'
-    ansible.builtin.apt_key:
+  - name: 'curl https://artifacts.opensearch.org/publickeys/opensearch.pgp --output /tmp/ansible.opensearch.pgp'
+    ansible.builtin.get_url:
       url: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
+      dest: '/tmp/ansible.opensearch.pgp'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.opensearch.pgp to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.opensearch.pgp'
+      dest: '/tmp/ansible.opensearch.pgp'
+      mode: 0o644
+
+  - name: 'apt-key add /tmp/ansible.opensearch.pgp'
+    ansible.builtin.apt_key:
+      file: '/tmp/ansible.opensearch.pgp'
       state: 'present'
+
+  - name: 'rm /tmp/ansible.opensearch.pgp'
+    ansible.builtin.file:
+      path: '/tmp/ansible.opensearch.pgp'
+      state: 'absent'
 
   - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
     ansible.builtin.template:

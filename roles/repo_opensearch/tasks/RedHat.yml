@@ -1,9 +1,19 @@
 - block:
 
-  - name: 'import opensearch gpg key'
-    ansible.builtin.rpm_key:
-      state: 'present'
-      key: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
+  - name: 'curl https://artifacts.opensearch.org/publickeys/opensearch.pgp --output /tmp/ansible.RPM-GPG-KEY-opensearch'
+    ansible.builtin.get_url:
+      url: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
+      dest: '/tmp/ansible.RPM-GPG-KEY-opensearch'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.RPM-PGP-KEY-opensearch to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.RPM-GPG-KEY-opensearch'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-opensearch'
+      mode: 0o644
 
   - name: 'deploy /etc/yum.repos.d/opensearch.repo (mirror: {{ repo_opensearch__mirror_url | default("") }})'
     ansible.builtin.template:
