@@ -22,14 +22,14 @@
       dest: '/tmp/ansible.graylog.gpg'
       mode: 0o644
 
-  - name: 'apt-key add /tmp/ansible.graylog.pgp'
+  - name: 'apt-key add /tmp/ansible.graylog.gpg'
     ansible.builtin.apt_key:
-      file: '/tmp/tmp/ansible.graylog.pgp'
+      file: '/tmp/ansible.graylog.gpg'
       state: 'present'
 
-  - name: 'rm /tmp/ansible.graylog.pgp'
+  - name: 'rm /tmp/ansible.graylog.gpg'
     ansible.builtin.file:
-      path: '/tmp/tmp/ansible.graylog.pgp'
+      path: '/tmp/ansible.graylog.gpg'
       state: 'absent'
 
   - name: 'deploy the repo file (mirror: {{ repo_graylog__mirror_url | default("") }})'
