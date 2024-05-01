@@ -24,7 +24,7 @@
 
   - name: 'apt-key add /tmp/ansible.opensearch.pgp'
     ansible.builtin.apt_key:
-      file: '/tmp/tmp/ansible.opensearch.pgp'
+      file: '/tmp/ansible.opensearch.pgp'
       state: 'present'
 
   - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
