@@ -27,6 +27,11 @@
       file: '/tmp/ansible.opensearch.pgp'
       state: 'present'
 
+  - name: 'rm /tmp/ansible.opensearch.pgp'
+    ansible.builtin.file:
+      path: '/tmp/ansible.opensearch.pgp'
+      state: 'absent'
+
   - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/apt/sources.list.d/opensearch-org.list.j2'
