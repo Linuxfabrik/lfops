@@ -1,17 +1,17 @@
 - block:
-  - name: 'curl https://packages.graylog2.org/repo/debian/pubkey.gpg --output /tmp/ansible.RPM-GPG-KEY-GRAYLOG.gpg'
+  - name: 'curl https://packages.graylog2.org/repo/debian/pubkey.gpg --output /tmp/ansible.RPM-GPG-KEY-graylog'
     ansible.builtin.get_url:
       url: 'https://packages.graylog2.org/repo/debian/pubkey.gpg'
-      dest: '/tmp/ansible.RPM-GPG-KEY-GRAYLOG.gpg'
+      dest: '/tmp/ansible.RPM-GPG-KEY-graylog'
       mode: 0o644
     delegate_to: 'localhost'
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.RPM-GPG-KEY-GRAYLOG.gpg to remote host'
+  - name: 'copy /tmp/ansible.RPM-GPG-KEY-graylog to remote host'
     ansible.builtin.copy:
-      src: '/tmp/ansible.RPM-GPG-KEY-GRAYLOG.gpg'
-      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-GRAYLOG.gpg'
+      src: '/tmp/ansible.RPM-GPG-KEY-graylog'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-graylog'
       mode: 0o644
 
   # https://www.elastic.co/guide/en/graylog/reference/current/rpm.html#rpm-repo
