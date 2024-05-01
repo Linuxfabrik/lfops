@@ -27,6 +27,11 @@
       file: '/tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
       state: 'present'
 
+  - name: 'rm /tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
+    ansible.builtin.file:
+      path: '/tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
+      state: 'absent'
+
   - name: 'deploy the repo file (mirror: {{ repo_mongodb__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/apt/sources.list.d/mongodb-org.list.j2'
