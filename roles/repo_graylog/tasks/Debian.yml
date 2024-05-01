@@ -27,6 +27,11 @@
       file: '/tmp/tmp/ansible.graylog.pgp'
       state: 'present'
 
+  - name: 'rm /tmp/ansible.graylog.pgp'
+    ansible.builtin.file:
+      path: '/tmp/tmp/ansible.graylog.pgp'
+      state: 'absent'
+
   - name: 'deploy the repo file (mirror: {{ repo_graylog__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/apt/sources.list.d/graylog.list.j2'
