@@ -16,6 +16,7 @@ This role installs and configures [vsftpd](https://security.appspot.com/vsftpd.h
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `vsftpd__conf_allow_writeable_chroot` | Allow chroot()'ing a user to a directory writable by that user. Note that setting this to YES is potentially dangerous. This setting is only necessary if the root directory of the user's chroot jail itself is writable. Uploading in subfolders works even if this setting is false. | `false`|
 | `vsftpd__conf_chroot_local_user` | Boolean. If the user should be placed in a `chroot()` or not. See `man vsftpd.conf`. | `false` |
 | `vsftpd__conf_debug_ssl` | Boolean. If true, OpenSSL connection diagnostics are dumped to the vsftpd log file. See `man vsftpd.conf`. | `false` |
 | `vsftpd__conf_dual_log_enable` | Boolean. If enabled, two log files are generated in parallel, going by default to `/var/log/xferlog` and `/var/log/vsftpd.log`. See `man vsftpd.conf`. | `false` |
@@ -38,6 +39,7 @@ This role installs and configures [vsftpd](https://security.appspot.com/vsftpd.h
 Example:
 ```yaml
 # optional
+vsftpd__conf_allow_writeable_chroot: false
 vsftpd__conf_chroot_local_user: true
 vsftpd__conf_debug_ssl: true
 vsftpd__conf_dual_log_enable: true

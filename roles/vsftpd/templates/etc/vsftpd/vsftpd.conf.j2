@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024042501
+# 2024050201
 
 # The default compiled in settings are fairly paranoid. This sample file
 # loosens things up a bit, to make the ftp daemon more usable.
@@ -126,6 +126,7 @@ listen_ipv6=YES
 pam_service_name=vsftpd
 userlist_enable={{ vsftpd__conf_userlist_enable | ternary('YES', 'NO') }}
 
+allow_writeable_chroot={{ vsftpd__conf_allow_writeable_chroot | ternary('YES', 'NO') }}
 {% if vsftpd__conf_local_root is defined and vsftpd__conf_local_root | length %}
 local_root={{ vsftpd__conf_local_root }}
 {% endif %}

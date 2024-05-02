@@ -1,3 +1,4 @@
+vsftpd__conf_allow_writeable_chroot: false
 vsftpd__conf_chroot_local_user: false
 vsftpd__conf_debug_ssl: false
 vsftpd__conf_dual_log_enable: false
