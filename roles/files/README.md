@@ -34,7 +34,8 @@ files__directories__host_var:
     owner: 'apache'
 files__files__host_var:
   - path: '/data/file1'
-    content: |-
+    # just use `|` so that there is a newline at the end of the file
+    content: |
       echo "a script with
       multiple lines"
     mode: 0o755
