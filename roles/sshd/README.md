@@ -20,6 +20,8 @@ This role ensures that sshd is configured.
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `sshd__address_family` | Specifies which address family should be used. Possible options: `any`, `inet` (use IPv4 only) or `inet6` (use IPv6 only). | `'any'` |
+| `sshd__gssapi_authentication` | Specifies whether user authentication based on GSSAPI is allowed | `true` |
 | `sshd__password_authentication` | Specifies whether password authentication is allowed. | `false` |
 | `sshd__permit_root_login` | Specifies whether root can log in using ssh. Possible options:<br> * `yes`<br> * `prohibit-password`<br> * `forced-commands-only`<br> * `no` | `'yes'` |
 | `sshd__port` | Which port the sshd server should use. | `22` |
@@ -32,15 +34,16 @@ This role ensures that sshd is configured.
 Example:
 ```yaml
 # optional
+sshd__address_family: 'inet'
+sshd__gssapi_authentication: false
 sshd__password_authentication: false
 sshd__permit_root_login: 'yes'
 sshd__port: 22
 sshd__raw: |-
   Match Group sftpusers
-    AllowTcpForwarding no
     ChrootDirectory /data
+    DisableForwarding yes
     ForceCommand internal-sftp
-    X11Forwarding no
 sshd__service_enabled: true
 sshd__service_state: 'started'
 sshd__use_dns: false

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024042602
+# 2024050201
 
 #	$OpenBSD: sshd_config,v 1.104 2021/07/02 05:11:21 dtucker Exp $
 
@@ -22,7 +22,7 @@ Include /etc/ssh/sshd_config.d/*.conf
 # semanage port -a -t ssh_port_t -p tcp #PORTNUMBER
 #
 Port {{ sshd__port }}
-#AddressFamily any
+AddressFamily {{ sshd__address_family }}
 #ListenAddress 0.0.0.0
 #ListenAddress ::
 
@@ -79,7 +79,7 @@ PasswordAuthentication {{ sshd__password_authentication | bool | ternary("yes", 
 #KerberosUseKuserok yes
 
 # GSSAPI options
-#GSSAPIAuthentication no
+GSSAPIAuthentication {{ sshd__gssapi_authentication | bool | ternary("yes", "no") }}
 #GSSAPICleanupCredentials yes
 #GSSAPIStrictAcceptorCheck yes
 #GSSAPIKeyExchange no

@@ -1,3 +1,5 @@
+sshd__address_family: 'any'
+sshd__gssapi_authentication: true
 sshd__password_authentication: false
 sshd__permit_root_login: 'yes'
 sshd__port: 22
