@@ -11,9 +11,9 @@ ansible_init                         |    |    |    |   |   |   |       |       
 apache_httpd                         |    |    |    |   | x |   |       |       |       |
 apache_solr                          |    |    |    |   | x | x |       |       |       |
 apache_tomcat                        |    |    |    | x | x |   |       |       |       |
-apps                                 |    |    |    |   | x |   |       |       |       |
+apps                                 |    |    |    |   | x | x |       |       |       |
 at                                   |    |    |    |   | x | x |   x   |       |       | Fedora 35
-audit                                |    |    |    | x | x |   |       |       |       |
+audit                                |    |    |    | x | x | x |       |       |       |
 bind                                 |    |    |    |   | x | x |       |       |       |
 borg_local                           |    |    |    | x | x |   |       |       |       |
 chrony                               |    |    |    | x | x | x |       |       |       |
@@ -22,7 +22,7 @@ cloud_init                           |    |    |    |   | x | x |   x   |       
 cockpit                              |    |    |    |   | x | x |   x   |       |       | Fedora 35
 collabora                            |    |    |    |   | x |   |       |       |       |
 coturn                               |    |    |    |   | x |   |       |       |       |
-crypto_policy                        |    |    |    |   | x |   |       |       |       |
+crypto_policy                        |    |    |    |   | x | x |       |       |       |
 dnf_makecache                        |    |    |    |   | x | x |       |       |       |
 dnf_versionlock                      |    |    |    | x | x |   |       |       |       |
 docker                               |    |    |    |   | x |   |       |       |       |
@@ -42,7 +42,7 @@ grafana                              |    |    |    |   | x |   |       |       
 grafana_grizzly                      |    |    |    |   | x |   |       |       |       |
 grav                                 |    |    |    |   | x |   |       |       |       |
 graylog_server                       |    | x  |    |   | x |   |       |       |       |
-haveged                              |    |    |    |   | x |   |       |       |       |
+haveged                              |    |    |    |   | x | x |       |       |       |
 hetzner_vm                           |    |    |    |   |   |   |       |       |       | Fedora 35+
 hostname                             |    |    |    |   | x | x |   x   |       |       |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
@@ -66,7 +66,7 @@ influxdb                             |    |    |    |   | x |   |       |       
 infomaniak_vm                        |    |    |    |   |   |   |       |       |       | Fedora 35+
 kdump                                |    |    |    |   | x | x |   x   |       |       |
 keepalived                           |    |    |    |   | x |   |       |       |       |
-kernel_settings                      |    |    |    |   | x |   |       |       |       |
+kernel_settings                      |    |    |    |   | x | x |       |       |       |
 keycloak                             |    |    |    |   | x |   |       |       |       |
 kvm_host                             |    |    |    |   | x |   |       |       |       |
 kvm_vm                               |    |    |    |   | x |   |       |       |       |
@@ -77,7 +77,7 @@ login                                |    |    |    |   | x | x |   x   |       
 logrotate                            |    |    |    | x | x | x |   x   |       |       | Fedora
 mailto_root                          |    |    |    | x | x | x |   x   |       |       |
 mailx                                | x  | x  | x  | x | x | x |   x   |       |       | Fedora
-mariadb_client                       |    |    |    |   | x |   |       |       |       |
+mariadb_client                       |    |    |    |   | x | y |       |       |       |
 mariadb_server                       |    |    |    |   | x |   |       |       |       |
 maxmind_geoip                        |    |    |    |   | x |   |       |       |       |
 minio_client                         |    |    |    |   | x |   |       |       |       |
@@ -87,22 +87,22 @@ mongodb                              |    | x  |    |   | x | x |       |       
 monitoring_plugins                   | x  |    |    | x | x |   |   x   |       |       | Debian 9, Fedora, Suse, Windows
 monitoring_plugins_grafana_dashboards|    |    |    |   | x |   |       |       |       |
 motd                                 |    |    |    | x | x | x |   x   |       |       |
-mount                                |    | x  |    | x | x |   |       |       |       |
+mount                                |    | x  |    | x | x | x |       |       |       |
 network                              |    |    |    | x | x | x |       |       |       |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
                                      |    Debian    |   RHEL    |        Ubuntu         | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
 nextcloud                            |    |    |    |   | x |   |       |       |       |
-nfs_client                           |    | x  |    | x | x |   |       |       |       |
+nfs_client                           |    | x  |    | x | x | x |       |       |       |
 nfs_server                           |    | x  |    | x | x |   |       |       |       |
-nodejs                               |    |    |    |   | x |   |       |       |       |
+nodejs                               |    |    |    |   | x | x |       |       |       |
 objectstore_backup                   |    |    |    |   | x |   |       |       |       |
 opensearch                           |    | x  |    |   | x |   |       |       |       |
-openssl                              |    | x  |    |   | x |   |   x   |       |       |
-open_vm_tools                        |    |    |    |   | x |   |   x   |       |       |
+openssl                              |    | x  |    |   | x | x |   x   |       |       |
+open_vm_tools                        |    |    |    |   | x | x |   x   |       |       |
 openvpn_server                       |    |    |    |   | x |   |       |       |       |
-perl                                 |    |    |    |   | x |   |   x   |       |       |
+perl                                 |    |    |    |   | x | x |   x   |       |       |
 php                                  |    |    |    |   | x |   |       |       |       |
 policycoreutils                      |    |    |    | x | x | x |       |       |       | Fedora 35
 postfix                              | x  | x  | x  | x | x | x |   x   |       |       | Fedora 35
@@ -137,7 +137,7 @@ repo_rpmfusion                       |    |    |    |   | x |   |       |       
                                      |    Debian    |   RHEL    |        Ubuntu         | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
-repo_sury                            | x  | x  |    |   |   |   |       |       |       |
+repo_sury                            | x  | x  |    | - | - | - |       |       |       |
 rocketchat                           |    |    |    | x | x |   |       |       |       | Fedora 35
 rsyslog                              |    |    |    |   | x | x |       |       |       |
 selinux                              |    |    |    |   | x | x |       |       |       |
@@ -146,7 +146,7 @@ sshd                                 |    |    |    |   | x | x |       |       
 system_update                        |    | x  |    | x | x | x |       |       |       |
 systemd_journald                     |    |    |    |   | x | x |       |       |       |
 systemd_unit                         |    |    |    |   | x | x |       |       |       |
-tar                                  |    |    |    |   | x |   |   x   |       |       |
+tar                                  |    |    |    |   | x | x |   x   |       |       |
 telegraf                             |    |    |    |   | x |   |       |       |       |
 timezone                             |    |    |    | x | x | x |   x   |       |       | Fedora 35
 tools                                |    |    |    | x | x | x |       |       |       | Fedora
@@ -160,3 +160,4 @@ Legend:
 
 * empty: don't know/unproven/untested
 * "x": proven/works on this OS
+* "-": will never run on this OS
