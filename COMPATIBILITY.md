@@ -66,7 +66,7 @@ influxdb                             |    |    |    |   | x |   |       |       
 infomaniak_vm                        |    |    |    |   |   |   |       |       |       | Fedora 35+
 kdump                                |    |    |    |   | x | x |   x   |       |       |
 keepalived                           |    |    |    |   | x |   |       |       |       |
-kernel_settings                      |    |    |    |   | x | x |       |       |       |
+kernel_settings                      | -  | -  | -  |   | x | x |   -   |   -   |   -   |
 keycloak                             |    |    |    |   | x |   |       |       |       |
 kvm_host                             |    |    |    |   | x |   |       |       |       |
 kvm_vm                               |    |    |    |   | x |   |       |       |       |
@@ -78,7 +78,7 @@ logrotate                            |    |    |    | x | x | x |   x   |       
 mailto_root                          |    |    |    | x | x | x |   x   |       |       |
 mailx                                | x  | x  | x  | x | x | x |   x   |       |       | Fedora
 mariadb_client                       |    |    |    |   | x | y |       |       |       |
-mariadb_server                       |    |    |    |   | x |   |       |       |       |
+mariadb_server                       | -  | -  | -  |   | x |   |   -   |   -   |   -   |
 maxmind_geoip                        |    |    |    |   | x |   |       |       |       |
 minio_client                         |    |    |    |   | x |   |       |       |       |
 mirror                               |    |    |    |   | x |   |       |       |       |
@@ -108,7 +108,7 @@ policycoreutils                      |    |    |    | x | x | x |       |       
 postfix                              | x  | x  | x  | x | x | x |   x   |       |       | Fedora 35
 postgresql_server                    |    |    |    |   | x |   |       |       |       |
 python                               |    |    |    |   | x | x |   x   |       |       | Windows
-python_venv                          |    | x  |    | x | x | x |       |       |       | Fedora 35
+python_venv                          |    | x  | x  | x | x | x |       |       |       | Fedora 35
 qemu_guest_agent                     |    |    |    |   | x |   |   x   |       |       |
 redis                                |    |    |    |   | x |   |       |       |       |
 repo_baseos                          |    |    |    | x | x | x |       |       |       |
@@ -160,4 +160,4 @@ Legend:
 
 * empty: don't know/unproven/untested
 * "x": proven/works on this OS
-* "-": will never run on this OS
+* "-": does not currently run on this OS
