@@ -73,7 +73,7 @@ infomaniak_vm__state: 'present'
 
 ## Troubleshooting
 
-`BadRequestException: 400: Client Error for url: https://api.pub1.infomaniak.cloud/compute/v2.1/os-volumes_boot, Invalid key_name provided.`: Provide the correct display name of a SSH Key Pair.
+`BadRequestException: 400: Client Error for url: https://api.pub1.infomaniak.cloud/compute/v2.1/os-volumes_boot, Invalid key_name provided.`: [Provide the correct "Key Pair Name" of your SSH Key](https://api.pub1.infomaniak.cloud/horizon/project/key_pairs). It should match your local Linux username.
 
 
 ## License
