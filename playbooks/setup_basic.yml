@@ -3,18 +3,6 @@
     - 'lfops_setup_basic'
 
 
-  pre_tasks:
-
-    # currently, this is thought for centos7, rocky8 and fedora35. therefore, if there is no when-staement, it should work against those.
-    # please extend and improve as required.
-    - name: 'Check if the OS is supported'
-      ansible.builtin.meta: 'end_host'
-      when:
-        - 'ansible_facts["os_family"] != "RedHat"'
-      tags:
-        - 'always'
-
-
   roles:
 
     # we need correct network settings for the rest to work
@@ -119,7 +107,6 @@
 
 
     # === SSH ===
-    # TODO: does this work with CIS?
     - role: 'linuxfabrik.lfops.sshd'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
