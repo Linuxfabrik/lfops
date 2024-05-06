@@ -147,5 +147,7 @@ Subsystem	sftp	{{ sshd__sftp_subsystem }}
 #	PermitTTY no
 #	ForceCommand cvs server
 
+{% if sshd__raw is defined and sshd__raw | length %}
 # raw content
 {{ sshd__raw }}
+{% endif %}
