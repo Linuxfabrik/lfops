@@ -119,6 +119,11 @@ duplicity__timer_enabled: true
 ```
 
 
+## Troubleshooting
+
+If the `gpg --import /tmp/public-master-key` task fails with `gpg: invalid armor header` in `stderr`, make sure your `duplicity__gpg_encrypt_master_key_block` is correct and has an empty line after the `-----BEGIN PGP PUBLIC KEY BLOCK-----`.
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)
