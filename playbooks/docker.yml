@@ -4,13 +4,15 @@
 
   roles:
 
-    - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings__sysctl__dependent_var: '{{ docker__kernel_settings__sysctl__dependent_var | d([]) }}'
-      when:
-        - 'not docker__skip_kernel_settings | d(false)'
-
     - role: 'linuxfabrik.lfops.repo_docker'
       when:
         - 'not docker__skip_repo_docker | default(false)'
 
     - role: 'linuxfabrik.lfops.docker'
+
+    # kernel_settings needs to run after docker so that the bridge kernel module is loaded
+    # else the sysctl settings are not found
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ docker__kernel_settings__sysctl__dependent_var | d([]) }}'
+      when:
+        - 'not docker__skip_kernel_settings | d(false)'
