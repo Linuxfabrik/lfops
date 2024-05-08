@@ -33,7 +33,7 @@ If you use the [acme.sh Playbook](https://github.com/Linuxfabrik/lfops/blob/main
 | Variable                 | Description                                                                           |
 | --------                 | -----------                                                                           |
 | `acme_sh__account_email` | Email address for the Let's encrypt account. This address will receive expiry emails. |
-| `acme_sh__certificates`  | List of certificates that should be issued. Subkeys: <ul><li>`name`: Mandatory, string. Domain of the certificate.</li><li>`reload_cmd`: Optional, string. Command to execute after issue/renew to reload the server. Defaults to `systemctl reload httpd`.</li></ul> |
+| `acme_sh__certificates`  | List of certificates that should be issued. Subkeys: <ul><li>`name`: Mandatory, string. Domain of the certificate.</li><li>`alternative_names`: Optional, list. Subject Alternative Names (SAN) for the certificate. Defaults to unset.</li><li>`reload_cmd`: Optional, string. Command to execute after issue/renew to reload the server. Defaults to `systemctl reload httpd`.</li></ul> |
 
 Example:
 ```yaml
