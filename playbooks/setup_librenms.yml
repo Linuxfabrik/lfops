@@ -12,17 +12,17 @@
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not librenms__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]' # currently doesn't work for fedora
         - 'not librenms__skip_repo_mydumper | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not librenms__skip_repo_mariadb | default(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
@@ -66,7 +66,7 @@
 
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not librenms__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'

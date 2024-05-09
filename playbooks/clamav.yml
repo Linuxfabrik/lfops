@@ -6,7 +6,7 @@
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not clamav__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'

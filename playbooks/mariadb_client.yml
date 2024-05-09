@@ -6,7 +6,7 @@
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not mariadb_client__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_client'

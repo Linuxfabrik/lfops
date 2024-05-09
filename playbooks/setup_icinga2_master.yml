@@ -6,12 +6,12 @@
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not setup_icinga2_master__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not setup_icinga2_master__skip_repo_mariadb | default(false)'
 
     - role: 'linuxfabrik.lfops.python'
@@ -103,7 +103,7 @@
 
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not setup_icinga2_master__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'

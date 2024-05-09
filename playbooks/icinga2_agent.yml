@@ -14,7 +14,7 @@
     # install the plugins after the agent, else the installation of the agent fails on Windows
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not icinga2_agent__skip_repo_epel | d(true)'
 
     - role: 'linuxfabrik.lfops.python'
