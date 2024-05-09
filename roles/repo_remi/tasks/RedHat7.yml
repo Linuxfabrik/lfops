@@ -9,7 +9,7 @@
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.RPM-GPG-KEY-remi to /etc/pki/rpm-gpg/RPM-GPG-KEY-remi'
+  - name: 'cp /tmp/ansible.RPM-GPG-KEY-remi /etc/pki/rpm-gpg/RPM-GPG-KEY-remi'
     ansible.builtin.copy:
       src: '/tmp/ansible.RPM-GPG-KEY-remi'
       dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-remi'

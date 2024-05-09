@@ -1,15 +1,5 @@
 - block:
 
-  - name: 'deploy /etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8'
-    copy:
-      src: 'RedHat8/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8'
-      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8'
-  tags:
-    - 'repo_remi'
-
-
-- block:
-
   - name: 'dnf -y module reset php'
     command: 'dnf -y module reset php'
     register: 'repo_remi__dnf_module_reset_php_result'

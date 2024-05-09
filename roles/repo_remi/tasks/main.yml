@@ -8,7 +8,11 @@
 
 - block:
 
-  - name: 'Deploy the repo files (mirror: {{ repo_remi__mirror_url | d("public mirrors") }})'
+  - name: 'Remi Repo Mirror URL:'
+    ansible.builtin.debug:
+      var: 'repo_remi__mirror_url'
+
+  - name: 'Deploy the repo files'
     ansible.builtin.template:
       src: '{{ item }}.j2'
       dest: '/etc/yum.repos.d/{{ item | basename }}'

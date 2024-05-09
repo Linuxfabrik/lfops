@@ -1,0 +1,8 @@
+- block:
+
+  - name: 'Deploy /etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8'
+    copy:
+      src: 'RedHat8/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8'
+  tags:
+    - 'repo_remi'
