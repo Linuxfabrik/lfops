@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024050201
+# 2024050901
 
 #	$OpenBSD: sshd_config,v 1.104 2021/07/02 05:11:21 dtucker Exp $
 
@@ -119,8 +119,8 @@ UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}
 #ChrootDirectory none
 #VersionAddendum none
 
-# no default banner path
-#Banner none
+# default banner path
+Banner /etc/issue.net
 
 # override default of no subsystems
 Subsystem	sftp	{{ sshd__sftp_subsystem }}
