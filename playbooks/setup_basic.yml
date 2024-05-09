@@ -13,7 +13,7 @@
     # === Basic repositories ===
     - role: 'linuxfabrik.lfops.repo_baseos'
       when:
-        - '(ansible_facts["distribution"] == "CentOS" and ansible_facts["distribution_major_version"] in ["7", "8"])
+        - '(ansible_facts["distribution"] == "CentOS" and ansible_facts["distribution_major_version"] in ["7", "8", "9"])
           or (ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] in ["8", "9"])
           or (ansible_facts["distribution"] == "AlmaLinux" and ansible_facts["distribution_major_version"] in ["8"])'
         - 'not setup_basic__skip_repo_baseos | d(false)'
