@@ -77,8 +77,8 @@ login                                |    |    |    |   | x | x |   x   |       
 logrotate                            |    |    |    | x | x | x |   x   |       |       | Fedora
 mailto_root                          |    |    |    | x | x | x |   x   |       |       |
 mailx                                | x  | x  | x  | x | x | x |   x   |       |       | Fedora
-mariadb_client                       |    |    |    |   | x | y |       |       |       |
-mariadb_server                       | -  | -  | -  |   | x |   |   -   |   -   |   -   |
+mariadb_client                       |    |    |    |   | x | x |       |       |       |
+mariadb_server                       | -  | -  | -  |   | x | x |   -   |   -   |   -   |
 maxmind_geoip                        |    |    |    |   | x |   |       |       |       |
 minio_client                         |    |    |    |   | x |   |       |       |       |
 mirror                               |    |    |    |   | x |   |       |       |       |
@@ -103,7 +103,7 @@ openssl                              |    | x  |    |   | x | x |   x   |       
 open_vm_tools                        |    |    |    |   | x | x |   x   |       |       |
 openvpn_server                       |    |    |    |   | x |   |       |       |       |
 perl                                 |    |    |    |   | x | x |   x   |       |       |
-php                                  |    |    |    |   | x |   |       |       |       |
+php                                  |    |    |    |   | x | x |       |       |       |
 policycoreutils                      |    |    |    | x | x | x |       |       |       | Fedora 35
 postfix                              | x  | x  | x  | x | x | x |   x   |       |       | Fedora 35
 postgresql_server                    |    |    |    |   | x |   |       |       |       |
@@ -125,7 +125,7 @@ repo_grafana                         |    |    |    |   | x |   |       |       
 repo_graylog                         |    | x  |    |   | x |   |       |       |       |
 repo_icinga                          |    |    |    | x | x |   |       |       |       |
 repo_influxdb                        |    | x  |    | x | x |   |       |       |       |
-repo_mariadb                         |    |    |    | x | x |   |       |       |       |
+repo_mariadb                         |    |    |    | x | x | x |       |       |       |
 repo_mongodb                         |    | x  |    |   | x | x |       |       |       |
 repo_monitoring_plugins              | x  | x  |    | x | x |   |       |   x   |   x   | Ubuntu 22.04
 repo_mydumper                        |    |    |    | x | x |   |       |       |       |
