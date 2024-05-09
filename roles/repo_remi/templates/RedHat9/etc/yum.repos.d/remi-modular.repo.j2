@@ -1,0 +1,79 @@
+# {{ ansible_managed }}
+# 2024050901
+
+# Repository: https://rpms.remirepo.net/
+# Blog:       https://blog.remirepo.net/
+# Forum:      https://forum.remirepo.net/
+
+[remi-modular]
+name=Remi's Modular repository for Enterprise Linux 9 - $basearch
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/9/modular/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/9/modular/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/9/modular/$basearch/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/9/modular/$basearch/mirror
+{% endif %}
+enabled=1
+gpgcheck=1
+# can be enabled if not being a proxy because of possible cache issue
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el9
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
+
+[remi-modular-debuginfo]
+name=Remi's Modular repository for Enterprise Linux 9 - $basearch - debuginfo
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/9/debug-modular/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/9/debug-modular/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/9/debug-modular/$basearch/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/9/debug-modular/$basearch/mirror
+{% endif %}
+enabled=0
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el9
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
+
+[remi-modular-test]
+name=Remi's Modular testing repository for Enterprise Linux 9 - $basearch
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/9/modular-test/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/9/modular-test/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/9/modular-test/$basearch/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/9/modular-test/$basearch/mirror
+{% endif %}
+enabled=0
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el9
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
+
+[remi-modular-test-debuginfo]
+name=Remi's Modular testing repository for Enterprise Linux 9 - $basearch - debuginfo
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/9/debug-modular-test/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/9/debug-modular-test/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/9/debug-modular-test/$basearch/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/9/debug-modular-test/$basearch/mirror
+{% endif %}
+enabled=0
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el9
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}

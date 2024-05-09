@@ -131,7 +131,7 @@ repo_monitoring_plugins              | x  | x  |    | x | x |   |       |   x   
 repo_mydumper                        |    |    |    | x | x |   |       |       |       |
 repo_opensearch                      |    | x  |    |   | x |   |       |       |       |
 repo_postgresql                      |    |    |    |   | x |   |       |       |       |
-repo_remi                            |    |    |    | x | x |   |       |       |       | Fedora 35
+repo_remi                            |    |    |    | x | x | x |       |       |       | Fedora 35
 repo_rpmfusion                       |    |    |    |   | x |   |       |       |       |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-----------
                                      |    Debian    |   RHEL    |        Ubuntu         | other

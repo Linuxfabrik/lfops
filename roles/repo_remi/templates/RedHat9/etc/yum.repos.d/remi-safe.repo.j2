@@ -1,0 +1,41 @@
+# {{ ansible_managed }}
+# 2024050901
+
+# This repository is safe to use with RHEL/CentOS base repository
+# it only provides additional packages for the PHP stack
+# all dependencies are in base repository or in EPEL
+
+[remi-safe]
+name=Safe Remi's RPM repository for Enterprise Linux 9 - $basearch
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/9/safe/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/9/safe/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/9/safe/$basearch/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/9/safe/$basearch/mirror
+{% endif %}
+enabled=1
+gpgcheck=1
+# can be enabled if not being a proxy because of possible cache issue
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el9
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
+
+[remi-safe-debuginfo]
+name=Remi's RPM repository for Enterprise Linux 9 - $basearch - debuginfo
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/9/debug-remi/x86_64/
+{% else %}
+baseurl=http://rpms.remirepo.net/enterprise/9/debug-remi/$basearch/
+{% endif %}
+enabled=0
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el9
+{% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
+username={{ repo_remi__basic_auth_login["username"] }}
+password={{ repo_remi__basic_auth_login["password"] }}
+{% endif %}
