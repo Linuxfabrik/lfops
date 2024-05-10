@@ -240,11 +240,15 @@ Role: influxdb
 Role:apache_httpd:
 * the default of the `conf_custom_log` vHost variable changed from unset to `'logs/{{ conf_server_name }}-access.log linuxfabrikio`
 
+Role: graylog_server
+* Remove version defaults from the role
+
 Role: opensearch
 * Make `opensearch__version*` optional
 
-Role: graylog_server
-* Remove version defaults from the role
+Role: open_vm_tools
+* Starts and enables `vmtoolsd`
+
 
 
 ## [2.0.1] - 2023-02-28
