@@ -4,6 +4,7 @@ This role installs and configures a [MariaDB](https://mariadb.org/) server.
 
 It also tunes the following Kernel settings:
 * `fs.aio-max-nr`: `1048576`
+* `sunrpc.tcp_slot_table_entries`: 128
 * `vm.swapiness`: `10`
 
 Note that this role does NOT let you specify a particular MariaDB server version. It simply installs the latest available MariaDB server version from the repos configured in the system. If you want or need to install a specific MariaDB server version, use the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) beforehand.
