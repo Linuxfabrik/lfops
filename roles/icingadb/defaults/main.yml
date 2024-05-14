@@ -3,6 +3,7 @@ icingadb__api_port: 5665
 icingadb__database_host: '127.0.0.1'
 icingadb__database_login_host: '127.0.0.1'
 icingadb__database_name: 'icingadb'
+icingadb__logging_level: 'info'
 icingadb__redis_host: '127.0.0.1'
 icingadb__redis_port: 6379
 icingadb__service_enabled: true

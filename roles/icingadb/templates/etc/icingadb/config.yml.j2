@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023040601
+# 2024051401
 
 # This is the configuration file for Icinga DB.
 
@@ -50,7 +50,7 @@ redis:
 logging:
   # Default logging level. Can be set to 'fatal', 'error', 'warn', 'info' or 'debug'.
   # If not set, defaults to 'info'.
-#  level: info
+  level: '{{ icingadb__logging_level }}'
 
   # Logging output. Can be set to 'console' (stderr) or 'systemd-journald'.
   # If not set, logs to systemd-journald when running under systemd, otherwise stderr.

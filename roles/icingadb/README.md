@@ -57,6 +57,7 @@ icingadb__database_login:
 | `icingadb__database_host` | The host on which the IcingaDB SQL database is reachable. | `127.0.0.1` |
 | `icingadb__database_login_host` | The Host-part of the SQL database user. | `127.0.0.1` |
 | `icingadb__database_name` | The name of the IcingaDB SQL database. | `'icingadb'` |
+| `icingadb__logging_level` | The loglevel of IcingaDB. One of` 'fatal'`, `'error'`, `'warn'`, `'info'` or `'debug'`. | `'info'` |
 | `icingadb__redis_host` | The host on which Redis instance is reachable. | `'127.0.0.1'` |
 | `icingadb__redis_password` | The password for the Redis instance, if authentication is enabled. | unset |
 | `icingadb__redis_port` | The port on which Redis instance is reachable. | `6379` |
@@ -71,6 +72,7 @@ icingadb__api_port: 5665
 icingadb__database_host: '127.0.0.1'
 icingadb__database_login_host: 'localhost'
 icingadb__database_name: 'icingadb'
+icingadb__logging_level: 'debug'
 icingadb__redis_host: '127.0.0.1'
 icingadb__redis_password: 'linuxfabrik'
 icingadb__redis_port: 6379
