@@ -14,7 +14,7 @@
     ansible.builtin.systemd:
       name: 'tuned.service'
       state: 'restarted'
-    ignore_errors: true # might be missing on RHEL 9, for example
+    ignore_errors: true # fails if tuned is not installed yet (installation will be done by fedora.linux_system_roles.kernel_settings)
 
   - name: 'Use fedora.linux_system_roles.kernel_settings role to configure the kernel settings'
     include_role:
