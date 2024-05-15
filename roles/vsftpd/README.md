@@ -22,6 +22,8 @@ This role installs and configures [vsftpd](https://security.appspot.com/vsftpd.h
 | `vsftpd__conf_dual_log_enable` | Boolean. If enabled, two log files are generated in parallel, going by default to `/var/log/xferlog` and `/var/log/vsftpd.log`. See `man vsftpd.conf`. | `false` |
 | `vsftpd__conf_local_root` | Path to which vsftpd will try to change into after a local (i.e. non-anonymous) login. | unset |
 | `vsftpd__conf_log_ftp_protocol` | Boolean. When enabled, all FTP requests and responses are logged, providing the option `vsftpd__conf_xferlog_std_format` is not enabled. Useful for debugging. See `man vsftpd.conf`. | `false` |
+| `vsftpd__conf_pasv_addr_resolve` | Set to `true` if you want to use a hostname (as opposed to IP address) in `vsftpd__conf_pasv_address`. | `false` |
+| `vsftpd__conf_pasv_address` | Use this option to override the IP address that vsftpd will advertise in response to the PASV command. Use this when running behind a firewall or loadbalancer. Also see `vsftpd__conf_pasv_addr_resolve`. | unset |
 | `vsftpd__conf_pasv_max_port` | Number. The maximum port to allocate for PASV style data connections. `0` means any port. | `0` |
 | `vsftpd__conf_pasv_min_port` | Number. The minimum port to allocate for PASV style data connections. `0` means any port. | `0` |
 | `vsftpd__conf_rsa_cert_file` | Path of the RSA certificate to use for SSL encrypted connections. | `'/usr/share/ssl/certs/vsftpd.pem'` |
@@ -45,6 +47,8 @@ vsftpd__conf_debug_ssl: true
 vsftpd__conf_dual_log_enable: true
 vsftpd__conf_local_root: '/data'
 vsftpd__conf_log_ftp_protocol: true
+vsftpd__conf_pasv_addr_resolve: true
+vsftpd__conf_pasv_address: 'ftp.example.com'
 vsftpd__conf_pasv_max_port: 51000
 vsftpd__conf_pasv_min_port: 50000
 vsftpd__conf_rsa_cert_file: '/etc/pki/tls/certs/vsftpd.pem'

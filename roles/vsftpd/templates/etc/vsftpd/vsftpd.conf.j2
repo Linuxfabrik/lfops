@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024050201
+# 2024051501
 
 # The default compiled in settings are fairly paranoid. This sample file
 # loosens things up a bit, to make the ftp daemon more usable.
@@ -130,6 +130,12 @@ allow_writeable_chroot={{ vsftpd__conf_allow_writeable_chroot | ternary('YES', '
 {% if vsftpd__conf_local_root is defined and vsftpd__conf_local_root | length %}
 local_root={{ vsftpd__conf_local_root }}
 {% endif %}
+pasv_addr_resolve={{ vsftpd__conf_pasv_addr_resolve | ternary('YES', 'NO') }}
+{% if vsftpd__conf_pasv_address is defined and vsftpd__conf_pasv_address | length %}
+pasv_address={{ vsftpd__conf_pasv_address }}
+{% endif %}
+pasv_max_port={{ vsftpd__conf_pasv_max_port }}
+pasv_min_port={{ vsftpd__conf_pasv_min_port }}
 session_support={{ vsftpd__conf_session_support | ternary('YES', 'NO') }}
 userlist_log={{ vsftpd__conf_userlist_log | ternary('YES', 'NO') }}
 
@@ -143,8 +149,6 @@ user_config_dir={{ vsftpd__conf_user_config_dir }}
 {% endif %}
 
 # FTPS
-pasv_min_port={{ vsftpd__conf_pasv_min_port }}
-pasv_max_port={{ vsftpd__conf_pasv_max_port }}
 rsa_cert_file={{ vsftpd__conf_rsa_cert_file }}
 {% if vsftpd__conf_rsa_private_key_file is defined and vsftpd__conf_rsa_private_key_file | length %}
 rsa_private_key_file={{ vsftpd__conf_rsa_private_key_file }}
