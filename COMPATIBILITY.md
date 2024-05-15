@@ -33,8 +33,8 @@ fail2ban                             |    |    |    |   | x |   |       |       
 fangfrisch                           |    |    |    |   | x |   |       |       |       |       |       |
 files                                |    |    |    |   | x |   |       |       |       |       |       |
 firewall                             |    |    |    | x | x | x |   x   |       |       |       |       |
-freeipa_client                       |    |    |    | x | x |   |       |       |       |       |       |
-freeipa_server                       |    |    |    |   | x |   |       |       |       |       |       |
+freeipa_client                       |    |    |    | x | x | x |       |       |       |       |       |
+freeipa_server                       |    |    |    |   | x | x |       |       |       |       |       |
 github_project_createrepo            |    |    |    |   | x |   |       |       |       |       |       |
 gitlab_ce                            |    |    |    |   | x |   |       |       |       |       |       |
 glances                              |    |    |    |   | x | x |   x   |       |       |       |       |
@@ -49,7 +49,7 @@ hostname                             |    |    |    |   | x | x |   x   |       
                                      |    Debian    |   RHEL    |                Ubuntu                 | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-------+-------+-----------
-icinga2_agent                        |    |    |    | x | x |   |       |       |       |       |       | Fedora 35
+icinga2_agent                        |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
 icinga2_master                       |    |    |    |   | x | x |       |       |       |       |       |
 icingadb                             |    |    |    |   | x | x |       |       |       |       |       |
 icingaweb2                           |    |    |    |   | x | x |       |       |       |       |       |
@@ -110,7 +110,7 @@ postgresql_server                    |    |    |    |   | x |   |       |       
 python                               |    |    |    |   | x | x |   x   |       |       |       |       | Windows
 python_venv                          |    | x  | x  | x | x | x |       |       |       |       |       | Fedora 35
 qemu_guest_agent                     |    |    |    |   | x |   |   x   |       |       |       |       |
-redis                                |    |    |    |   | x |   |       |       |       |       |       |
+redis                                |    |    |    |   | x | x |       |       |       |       |       |
 repo_baseos                          |    |    |    | x | x | x |       |       |       |       |       |
 repo_collabora                       |    |    |    | x | x |   |       |       |       |       |       |
 repo_collabora_code                  |    |    |    | x | x |   |       |       |       |       |       |
@@ -121,7 +121,7 @@ repo_elasticsearch_oss               |    |    |    |   | x |   |       |       
 repo_epel                            |    |    |    | x | x | x |       |       |       |       |       |
 repo_gitlab_ce                       |    |    |    |   | x |   |       |       |       |       |       |
 repo_gitlab_runner                   |    |    |    |   | x |   |       |       |       |       |       |
-repo_grafana                         |    |    |    |   | x |   |       |       |       |       |       |
+repo_grafana                         |    |    |    |   | x | x |       |       |       |       |       |
 repo_graylog                         |    | x  |    |   | x |   |       |       |       |       |       |
 repo_icinga                          |    |    |    | x | x | x |       |       |       |       |       |
 repo_influxdb                        |    | x  |    | x | x | x |       |       |       |       |       |
