@@ -44,31 +44,44 @@ Variables for `redis.conf` directives and their default values, defined and supp
 
 | Role Variable                           | Documentation                                                    | Default Value  |
 | -------------                           | -------------                                                    | -------------  |
+| `redis__conf_appendonly`                | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'no'`         |
+| `redis__conf_appendfilename`            | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'"appendonly.aof"'`         |
 | `redis__conf_auto_aof_rewrite_min_size` | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'64mb'`       |
 | `redis__conf_bind`                      | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | v5, v6: `'127.0.0.1'`; v7: `'127.0.0.1 -::1'`  |
 | `redis__conf_daemonize`                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'no'`         |
 | `redis__conf_databases`                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `16`           |
+| `redis__conf_dbfilename`                | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'dump.rdb'`   |
 | `redis__conf_loglevel`                  | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'notice'`     |
 | `redis__conf_maxmemory`                 | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'50mb'`       |
 | `redis__conf_maxmemory_policy`          | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'noeviction'` |
 | `redis__conf_port`                      | If port `0` is specified Redis will not listen on a TCP socket. [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `6379`         |
 | `redis__conf_protected_mode`            | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'yes'`        |
 | `redis__conf_replica_serve_stale_data`  | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'yes'`        |
+| `redis__conf_requirepass`               | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `unset`        |
+| `redis__conf_save`                      | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | Redis5/6: `['900 1', '300 10', '60 10000']`<br>Redis7: `['3600 1', '300 100', '60 10000']` |
 | `redis__conf_supervised`                | [redis.conf](https://github.com/redis/redis/blob/6.0/redis.conf) | `'auto'`       |
 
 Example:
 
 ```yaml
+redis__conf_appendonly: 'yes'
+redis__conf_appendfilename: '"appendonly.aof"'
 redis__conf_auto_aof_rewrite_min_size: '64MB'
 redis__conf_bind: '127.0.0.1'
 redis__conf_daemonize: 'no'
 redis__conf_databases: 16
+redis__conf_dbfilename: 'dump.rdb'
 redis__conf_loglevel: 'notice'
 redis__conf_maxmemory: '50MB'
 redis__conf_maxmemory_policy: 'noeviction'
 redis__conf_port: 6379  # If port 0 is specified Redis will not listen on a TCP socket.
 redis__conf_protected_mode: 'yes'
 redis__conf_replica_serve_stale_data: 'yes'
+redis__conf_requirepass: 'password'
+redis__conf_save:
+  - '3600 1'
+  - '300 100'
+  - '60 10000'
 redis__conf_supervised: 'auto'
 ```
 

@@ -307,9 +307,13 @@ always-show-logo yes
 #
 #   save ""
 
-save 900 1
-save 300 10
-save 60 10000
+# save 900 1
+# save 300 10
+# save 60 10000
+
+{% for item in redis__conf_save | default(['900 1', '300 10', '60 10000']) %}
+save {{ item }}
+{% endfor %}
 
 # By default Redis will stop accepting writes if RDB snapshots are enabled
 # (at least one save point) and the latest background save failed.
@@ -342,7 +346,8 @@ rdbcompression yes
 rdbchecksum yes
 
 # The filename where to dump the DB
-dbfilename dump.rdb
+# dbfilename dump.rdb
+dbfilename {{ redis__conf_dbfilename | default('dump.rdb') }}
 
 # Remove RDB files used by replication in instances without persistence
 # enabled. By default this option is disabled, however there are environments
@@ -790,7 +795,11 @@ acllog-max-len 128
 # AUTH <password> as usually, or more explicitly with AUTH default <password>
 # if they follow the new protocol: both will work.
 #
+{% if redis__conf_requirepass is defined and redis__conf_requirepass | length%}
+requirepass {{ redis__conf_requirepass }}
+{% else %}
 # requirepass foobared
+{% endif %}
 
 # Command renaming (DEPRECATED).
 #
@@ -1089,11 +1098,13 @@ oom-score-adj-values 0 200 800
 #
 # Please check http://redis.io/topics/persistence for more information.
 
-appendonly no
+# appendonly no
+appendonly {{ redis__conf_appendonly | default('no') }}
 
 # The name of the append only file (default: "appendonly.aof")
 
-appendfilename "appendonly.aof"
+# appendfilename "appendonly.aof"
+appendfilename {{ redis__conf_appendfilename | default('"appendonly.aof"') }}
 
 # The fsync() call tells the Operating System to actually write data on disk
 # instead of waiting for more data in the output buffer. Some OS will really flush

@@ -218,9 +218,13 @@ always-show-logo yes
 #
 #   save ""
 
-save 900 1
-save 300 10
-save 60 10000
+# save 900 1
+# save 300 10
+# save 60 10000
+
+{% for item in redis__conf_save | default(['900 1', '300 10', '60 10000']) %}
+save {{ item }}
+{% endfor %}
 
 # By default Redis will stop accepting writes if RDB snapshots are enabled
 # (at least one save point) and the latest background save failed.
@@ -253,7 +257,8 @@ rdbcompression yes
 rdbchecksum yes
 
 # The filename where to dump the DB
-dbfilename dump.rdb
+# dbfilename dump.rdb
+dbfilename {{ redis__conf_dbfilename | default('dump.rdb') }}
 
 # The working directory.
 #
@@ -507,7 +512,11 @@ replica-priority 100
 # 150k passwords per second against a good box. This means that you should
 # use a very strong password otherwise it will be very easy to break.
 #
+{% if redis__conf_requirepass is defined and redis__conf_requirepass | length%}
+requirepass {{ redis__conf_requirepass }}
+{% else %}
 # requirepass foobared
+{% endif %}
 
 # Command renaming.
 #
@@ -699,11 +708,13 @@ replica-lazy-flush no
 #
 # Please check http://redis.io/topics/persistence for more information.
 
-appendonly no
+# appendonly no
+appendonly {{ redis__conf_appendonly | default('no') }}
 
 # The name of the append only file (default: "appendonly.aof")
 
-appendfilename "appendonly.aof"
+# appendfilename "appendonly.aof"
+appendfilename {{ redis__conf_appendfilename | default('"appendonly.aof"') }}
 
 # The fsync() call tells the Operating System to actually write data on disk
 # instead of waiting for more data in the output buffer. Some OS will really flush

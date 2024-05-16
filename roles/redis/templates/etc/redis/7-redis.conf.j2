@@ -434,6 +434,10 @@ proc-title-template "{title} {listen-addr} {server-mode}"
 # You can set these explicitly by uncommenting the following line.
 #
 # save 3600 1 300 100 60 10000
+{% for item in redis__conf_save | default(['3600 1', '300 100', '60 10000']) %}
+save {{ item }}
+{%- if not loop.last %} {% endif %}
+{% endfor %}
 
 # By default Redis will stop accepting writes if RDB snapshots are enabled
 # (at least one save point) and the latest background save failed.
@@ -481,7 +485,8 @@ rdbchecksum yes
 # sanitize-dump-payload no
 
 # The filename where to dump the DB
-dbfilename dump.rdb
+# dbfilename dump.rdb
+dbfilename {{ redis__conf_dbfilename | default('dump.rdb') }}
 
 # Remove RDB files used by replication in instances without persistence
 # enabled. By default this option is disabled, however there are environments
@@ -912,10 +917,10 @@ replica-priority 100
 #               commands. For instance ~* allows all the keys. The pattern
 #               is a glob-style pattern like the one of KEYS.
 #               It is possible to specify multiple patterns.
-# %R~<pattern>  Add key read pattern that specifies which keys can be read 
+# %R~<pattern>  Add key read pattern that specifies which keys can be read
 #               from.
 # %W~<pattern>  Add key write pattern that specifies which keys can be
-#               written to. 
+#               written to.
 #  allkeys      Alias for ~*
 #  resetkeys    Flush the list of allowed keys patterns.
 #  &<pattern>   Add a glob-style pattern of Pub/Sub channels that can be
@@ -942,10 +947,10 @@ replica-priority 100
 #               -@all. The user returns to the same state it has immediately
 #               after its creation.
 # (<options>)   Create a new selector with the options specified within the
-#               parentheses and attach it to the user. Each option should be 
-#               space separated. The first character must be ( and the last 
+#               parentheses and attach it to the user. Each option should be
+#               space separated. The first character must be ( and the last
 #               character must be ).
-# clearselectors            Remove all of the currently attached selectors. 
+# clearselectors            Remove all of the currently attached selectors.
 #                           Note this does not change the "root" user permissions,
 #                           which are the permissions directly applied onto the
 #                           user (outside the parentheses).
@@ -971,7 +976,7 @@ replica-priority 100
 # Basically ACL rules are processed left-to-right.
 #
 # The following is a list of command categories and their meanings:
-# * keyspace - Writing or reading from keys, databases, or their metadata 
+# * keyspace - Writing or reading from keys, databases, or their metadata
 #     in a type agnostic way. Includes DEL, RESTORE, DUMP, RENAME, EXISTS, DBSIZE,
 #     KEYS, EXPIRE, TTL, FLUSHALL, etc. Commands that may modify the keyspace,
 #     key or metadata will also have `write` category. Commands that only read
@@ -1036,7 +1041,11 @@ acllog-max-len 128
 # The requirepass is not compatible with aclfile option and the ACL LOAD
 # command, these will cause requirepass to be ignored.
 #
+{% if redis__conf_requirepass is defined and redis__conf_requirepass | length%}
+requirepass {{ redis__conf_requirepass }}
+{% else %}
 # requirepass foobared
+{% endif %}
 
 # New users are initialized with restrictive permissions by default, via the
 # equivalent of this ACL rule 'off resetkeys -@all'. Starting with Redis 6.2, it
@@ -1379,7 +1388,8 @@ disable-thp yes
 #
 # Please check https://redis.io/topics/persistence for more information.
 
-appendonly no
+# appendonly no
+appendonly {{ redis__conf_appendonly | default('no') }}
 
 # The base name of the append only file.
 #
@@ -1406,7 +1416,8 @@ appendonly no
 # - appendonly.aof.1.incr.aof, appendonly.aof.2.incr.aof as incremental files.
 # - appendonly.aof.manifest as a manifest file.
 
-appendfilename "appendonly.aof"
+# appendfilename "appendonly.aof"
+appendfilename {{ redis__conf_appendfilename | default('"appendonly.aof"') }}
 
 # For convenience, Redis stores all persistent append-only files in a dedicated
 # directory. The name of the directory is determined by the appenddirname
@@ -1592,8 +1603,8 @@ aof-timestamp-enabled no
 #
 # cluster-node-timeout 15000
 
-# The cluster port is the port that the cluster bus will listen for inbound connections on. When set 
-# to the default value, 0, it will be bound to the command port + 10000. Setting this value requires 
+# The cluster port is the port that the cluster bus will listen for inbound connections on. When set
+# to the default value, 0, it will be bound to the command port + 10000. Setting this value requires
 # you to specify the cluster bus port when executing cluster meet.
 # cluster-port 0
 
@@ -1728,12 +1739,12 @@ aof-timestamp-enabled no
 # PubSub message by default. (client-query-buffer-limit default value is 1gb)
 #
 # cluster-link-sendbuf-limit 0
- 
-# Clusters can configure their announced hostname using this config. This is a common use case for 
+
+# Clusters can configure their announced hostname using this config. This is a common use case for
 # applications that need to use TLS Server Name Indication (SNI) or dealing with DNS based
 # routing. By default this value is only shown as additional metadata in the CLUSTER SLOTS
-# command, but can be changed using 'cluster-preferred-endpoint-type' config. This value is 
-# communicated along the clusterbus to all nodes, setting it to an empty string will remove 
+# command, but can be changed using 'cluster-preferred-endpoint-type' config. This value is
+# communicated along the clusterbus to all nodes, setting it to an empty string will remove
 # the hostname and also propagate the removal.
 #
 # cluster-announce-hostname ""
@@ -1742,13 +1753,13 @@ aof-timestamp-enabled no
 # a user defined hostname, or by declaring they have no endpoint. Which endpoint is
 # shown as the preferred endpoint is set by using the cluster-preferred-endpoint-type
 # config with values 'ip', 'hostname', or 'unknown-endpoint'. This value controls how
-# the endpoint returned for MOVED/ASKING requests as well as the first field of CLUSTER SLOTS. 
-# If the preferred endpoint type is set to hostname, but no announced hostname is set, a '?' 
+# the endpoint returned for MOVED/ASKING requests as well as the first field of CLUSTER SLOTS.
+# If the preferred endpoint type is set to hostname, but no announced hostname is set, a '?'
 # will be returned instead.
 #
 # When a cluster advertises itself as having an unknown endpoint, it's indicating that
-# the server doesn't know how clients can reach the cluster. This can happen in certain 
-# networking situations where there are multiple possible routes to the node, and the 
+# the server doesn't know how clients can reach the cluster. This can happen in certain
+# networking situations where there are multiple possible routes to the node, and the
 # server doesn't know which one the client took. In this case, the server is expecting
 # the client to reach out on the same endpoint it used for making the last request, but use
 # the port provided in the response.
@@ -2061,7 +2072,7 @@ client-output-buffer-limit pubsub 32mb 8mb 60
 # errors or data eviction. To avoid this we can cap the accumulated memory
 # used by all client connections (all pubsub and normal clients). Once we
 # reach that limit connections will be dropped by the server freeing up
-# memory. The server will attempt to drop the connections using the most 
+# memory. The server will attempt to drop the connections using the most
 # memory first. We call this mechanism "client eviction".
 #
 # Client eviction is configured using the maxmemory-clients setting as follows:
