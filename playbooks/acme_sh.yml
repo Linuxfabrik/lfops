@@ -9,6 +9,4 @@
           acme_sh__apps__apps__dependent_var
         }}'
 
-    - role: 'linuxfabrik.lfops.tar'
-
     - role: 'linuxfabrik.lfops.acme_sh'

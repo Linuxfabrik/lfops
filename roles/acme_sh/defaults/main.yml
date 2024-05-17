@@ -8,3 +8,5 @@ acme_sh__timer_enabled: true
 acme_sh__apps__apps__dependent_var:
   - name: 'openssl'
     state: 'present'
+  - name: 'tar'
+    state: 'present'

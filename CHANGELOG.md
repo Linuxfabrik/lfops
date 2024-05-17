@@ -233,6 +233,9 @@ Role: systemd_journald
 Role: systemd_update
 * Add option `-y` to `yum check-update`
 
+Role:tar
+* Too trivial, removed (use the apps role instead)
+
 
 ### Fixed
 

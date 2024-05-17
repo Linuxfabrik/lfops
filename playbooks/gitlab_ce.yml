@@ -17,6 +17,9 @@
       when:
         - 'not gitlab_ce__skip_repo_gitlab_ce | d(false)'
 
-    - role: 'linuxfabrik.lfops.tar'
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: '{{
+          gitlab_ce__apps__apps__dependent_var
+        }}'
 
     - role: 'linuxfabrik.lfops.gitlab_ce'

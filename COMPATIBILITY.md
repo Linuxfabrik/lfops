@@ -143,7 +143,6 @@ sshd                                 |    |    |    |   | x | x |       |       
 system_update                        |    | x  | x  | x | x | x |       |       |       |       |       |
 systemd_journald                     |    |    |    |   | x | x |       |       |       |       |       |
 systemd_unit                         |    |    |    |   | x | x |       |       |       |       |       |
-tar                                  |    |    |    |   | x | x |   x   |       |       |       |       |
 telegraf                             |    |    |    |   | x |   |       |       |       |       |       |
 timezone                             |    |    |    | x | x | x |   x   |       |       |       |       | Fedora 35
 tools                                |    |    |    | x | x | x |       |       |       |       |       | Fedora
