@@ -12,7 +12,7 @@ SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-chain.crt
 
 ## Mandatory Requirements
 
-* Install `openssl`. This can be done using the [linuxfabrik.lfops.openssl](https://github.com/Linuxfabrik/lfops/tree/main/roles/openssl) role.
+* Install `openssl`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
 * Install `tar`. This can be done using the [linuxfabrik.lfops.tar](https://github.com/Linuxfabrik/lfops/tree/main/roles/tar) role.
 * Have a configured webserver.
 

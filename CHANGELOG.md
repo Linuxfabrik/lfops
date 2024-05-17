@@ -107,6 +107,9 @@ ProxyPassReverse /push/     http://nextcloud-server:7867/
 Role:opensearch
 * Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.
 
+Role:openssl
+* Too trivial, removed (use the apps role instead)
+
 Role:postgresql_server
 * Renamed the `name` subkey of `postgresql_server__users__*_var` to `username` for consistency and easier integration of the Bitwarden lookup plugin.
 

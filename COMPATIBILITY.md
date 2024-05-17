@@ -98,7 +98,6 @@ nfs_server                           |    | x  |    | x | x |   |       |       
 nodejs                               |    |    |    |   | x | x |       |       |       |       |       |
 objectstore_backup                   |    |    |    |   | x |   |       |       |       |       |       |
 opensearch                           |    | x  |    |   | x |   |       |       |       |       |       |
-openssl                              |    | x  |    |   | x | x |   x   |       |       |       |       |
 open_vm_tools                        |    |    |    |   | x | x |   x   |       |       |       |       |
 openvpn_server                       |    |    |    |   | x |   |       |       |       |       |       |
 perl                                 |    |    |    |   | x | x |   x   |       |       |       |       |

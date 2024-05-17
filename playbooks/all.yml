@@ -70,7 +70,6 @@
 - import_playbook: 'objectstore_backup.yml'
 - import_playbook: 'open_vm_tools.yml'
 - import_playbook: 'opensearch.yml'
-- import_playbook: 'openssl.yml'
 - import_playbook: 'openvpn_server.yml'
 - import_playbook: 'perl.yml'
 - import_playbook: 'php.yml'
