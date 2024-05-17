@@ -77,7 +77,6 @@ login                                |    |    |    |   | x | x |   x   |       
 logrotate                            |    |    |    | x | x | x |   x   |       |       |       |       | Fedora
 mailto_root                          |    |    |    | x | x | x |   x   |       |       |       |       |
 mailx                                | x  | x  | x  | x | x | x |   x   |       |       |       |       | Fedora
-mariadb_client                       |    |    |    |   | x | x |       |       |       |       |       |
 mariadb_server                       | -  | -  | -  |   | x | x |   -   |   -   |   -   |       |       |
 maxmind_geoip                        |    |    |    |   | x |   |       |       |       |       |       |
 minio_client                         |    |    |    |   | x |   |       |       |       |       |       |

@@ -54,7 +54,6 @@
 - import_playbook: 'logrotate.yml'
 - import_playbook: 'mailto_root.yml'
 - import_playbook: 'mailx.yml'
-- import_playbook: 'mariadb_client.yml'
 - import_playbook: 'mariadb_server.yml'
 - import_playbook: 'maxmind_geoip.yml'
 - import_playbook: 'mcm_vm.yml'
