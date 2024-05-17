@@ -100,7 +100,6 @@ objectstore_backup                   |    |    |    |   | x |   |       |       
 opensearch                           |    | x  |    |   | x |   |       |       |       |       |       |
 open_vm_tools                        |    |    |    |   | x | x |   x   |       |       |       |       |
 openvpn_server                       |    |    |    |   | x |   |       |       |       |       |       |
-perl                                 |    |    |    |   | x | x |   x   |       |       |       |       |
 php                                  |    |    |    |   | x | x |       |       |       |       |       |
 policycoreutils                      |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
 postfix                              | x  | x  | x  | x | x | x |   x   |       |       |       |       | Fedora 35

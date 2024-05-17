@@ -1,7 +1,0 @@
-- name: 'Install perl'
-  hosts:
-    - 'lfops_perl'
-
-  roles:
-
-    - role: 'linuxfabrik.lfops.perl'

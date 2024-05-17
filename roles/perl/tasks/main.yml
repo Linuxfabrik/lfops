@@ -1,7 +1,0 @@
-- name: 'Install perl'
-  ansible.builtin.package:
-    name: 'perl'
-    state: 'present'
-
-  tags:
-    - 'perl'

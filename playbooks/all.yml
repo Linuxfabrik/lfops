@@ -71,7 +71,6 @@
 - import_playbook: 'open_vm_tools.yml'
 - import_playbook: 'opensearch.yml'
 - import_playbook: 'openvpn_server.yml'
-- import_playbook: 'perl.yml'
 - import_playbook: 'php.yml'
 - import_playbook: 'policycoreutils.yml'
 - import_playbook: 'postfix.yml'
