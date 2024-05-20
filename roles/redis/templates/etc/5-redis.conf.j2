@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022063001
+# 2024052001
 
 # Redis v5 configuration file.
 #
@@ -158,7 +158,7 @@ supervised {{ redis__conf_supervised | d('no') }}
 #
 # Creating a pid file is best effort: if Redis is not able to create it
 # nothing bad happens, the server will start and run normally.
-pidfile /var/run/redis_6379.pid
+pidfile /var/run/redis/{{ redis__conf_port | d(6379) }}.pid
 
 # Specify the server verbosity level.
 # This can be one of:
@@ -222,7 +222,7 @@ always-show-logo yes
 # save 300 10
 # save 60 10000
 
-{% for item in redis__conf_save | default(['900 1', '300 10', '60 10000']) %}
+{% for item in redis__conf_save | d(['900 1', '300 10', '60 10000']) %}
 save {{ item }}
 {% endfor %}
 
@@ -257,8 +257,7 @@ rdbcompression yes
 rdbchecksum yes
 
 # The filename where to dump the DB
-# dbfilename dump.rdb
-dbfilename {{ redis__conf_dbfilename | default('dump.rdb') }}
+dbfilename {{ redis__conf_dbfilename | d('dump.rdb') }}
 
 # The working directory.
 #
@@ -708,13 +707,11 @@ replica-lazy-flush no
 #
 # Please check http://redis.io/topics/persistence for more information.
 
-# appendonly no
-appendonly {{ redis__conf_appendonly | default('no') }}
+appendonly {{ redis__conf_appendonly | d('no') }}
 
 # The name of the append only file (default: "appendonly.aof")
 
-# appendfilename "appendonly.aof"
-appendfilename {{ redis__conf_appendfilename | default('"appendonly.aof"') }}
+appendfilename {{ redis__conf_appendfilename | d('"appendonly.aof"') }}
 
 # The fsync() call tells the Operating System to actually write data on disk
 # instead of waiting for more data in the output buffer. Some OS will really flush
@@ -857,7 +854,7 @@ lua-time-limit 5000
 # Make sure that instances running in the same system do not have
 # overlapping cluster configuration file names.
 #
-# cluster-config-file nodes-6379.conf
+# cluster-config-file nodes-{{ redis__conf_port | d(6379) }}.conf
 
 # Cluster node timeout is the amount of milliseconds a node must be unreachable
 # for it to be considered in failure state.
@@ -985,7 +982,7 @@ lua-time-limit 5000
 # Example:
 #
 # cluster-announce-ip 10.1.1.5
-# cluster-announce-port 6379
+# cluster-announce-port {{ redis__conf_port | d(6379) }}
 # cluster-announce-bus-port 6380
 
 ################################## SLOW LOG ###################################

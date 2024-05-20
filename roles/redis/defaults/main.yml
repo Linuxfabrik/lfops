@@ -1,3 +1,5 @@
+redis__conf_bind: '127.0.0.1'
+
 redis__service_enabled: true
 redis__service_limit_nofile: 10240
 redis__service_timeout_start_sec: '90s'

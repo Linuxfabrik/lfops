@@ -242,6 +242,9 @@ Role:tar
 Role: influxdb
 * Fix wrong systemd service name, which was preventing influxdb dumps from being scheduled
 
+Role: redis
+* Fix various messages from log, fix v7 template settings, fix various comments and README
+
 
 ### Changed
 
