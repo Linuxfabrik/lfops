@@ -120,7 +120,7 @@
       body_format: 'json'
       headers:
         Accept: 'application/json'
-      validate_certs: '{{ icinga2_agent__validate_certs | d(true) }}'
+      validate_certs: '{{ icinga2_agent__validate_certs }}'
     ignore_errors: true
     when:
       - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length'

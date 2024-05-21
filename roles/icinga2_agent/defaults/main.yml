@@ -14,5 +14,6 @@ icinga2_agent__icinga2_master_port: 5665
 icinga2_agent__icingaweb2_url: 'https://{{ icinga2_agent__icinga2_master_host }}/icingaweb2'
 icinga2_agent__parent_zone: 'master'
 icinga2_agent__service_enabled: true
+icinga2_agent__validate_certs: true
 icinga2_agent__windows_download_path: 'C:'
 icinga2_agent__windows_service_user: 'NT AUTHORITY\SYSTEM'
