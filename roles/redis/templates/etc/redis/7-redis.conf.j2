@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022092801
+# 2024051601
 
 # Redis v7 configuration file.
 #
@@ -87,7 +87,7 @@
 # You will also need to set a password unless you explicitly disable protected
 # mode.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-bind {{ redis__conf_bind | d('127.0.0.1 -::1') }}
+bind {{ redis__conf_bind }}
 
 # By default, outgoing connections (from replica to master, from Sentinel to
 # instances, cluster bus, etc.) are not bound to a specific local address. In
@@ -111,7 +111,7 @@ bind {{ redis__conf_bind | d('127.0.0.1 -::1') }}
 # By default protected mode is enabled. You should disable it only if
 # you are sure you want clients from other hosts to connect to Redis
 # even if no authentication is configured.
-protected-mode {{ redis__conf_protected_mode | d('yes') }}
+protected-mode {{ redis__conf_protected_mode }}
 
 # Redis uses default hardened security configuration directives to reduce the
 # attack surface on innocent users. Therefore, several sensitive configuration
@@ -138,7 +138,7 @@ protected-mode {{ redis__conf_protected_mode | d('yes') }}
 
 # Accept connections on the specified port, default is 6379 (IANA #815344).
 # If port 0 is specified Redis will not listen on a TCP socket.
-port {{ redis__conf_port | d(6379) }}
+port {{ redis__conf_port }}
 
 # TCP listen() backlog.
 #
@@ -309,7 +309,7 @@ tcp-keepalive 300
 # By default Redis does not run as a daemon. Use 'yes' if you need it.
 # Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
 # When Redis is supervised by upstart or systemd, this parameter has no impact.
-daemonize {{ redis__conf_daemonize | d('no') }}
+daemonize {{ redis__conf_daemonize }}
 
 # If you run Redis from upstart or systemd, Redis can interact with your
 # supervision tree. Options:
@@ -327,7 +327,7 @@ daemonize {{ redis__conf_daemonize | d('no') }}
 # The default is "no". To run under upstart/systemd, you can simply uncomment
 # the line below:
 #
-supervised {{ redis__conf_supervised | d('no') }}
+supervised {{ redis__conf_supervised }}
 
 # If a pid file is specified, Redis writes it where specified at startup
 # and removes it at exit.
@@ -349,7 +349,7 @@ pidfile /var/run/redis_6379.pid
 # verbose (many rarely useful info, but not a mess like the debug level)
 # notice (moderately verbose, what you want in production probably)
 # warning (only very important / critical messages are logged)
-loglevel {{ redis__conf_loglevel | d('notice') }}
+loglevel {{ redis__conf_loglevel }}
 
 # Specify the log file name. Also the empty string can be used to force
 # Redis to log on the standard output. Note that if you use standard
@@ -379,7 +379,7 @@ logfile /var/log/redis/redis.log
 # Set the number of databases. The default database is DB 0, you can select
 # a different one on a per-connection basis using SELECT <dbid> where
 # dbid is a number between 0 and 'databases'-1
-databases {{ redis__conf_databases | d(16) }}
+databases {{ redis__conf_databases }}
 
 # By default Redis shows an ASCII art logo only when started to log to the
 # standard output and if the standard output is a TTY and syslog logging is
@@ -485,8 +485,7 @@ rdbchecksum yes
 # sanitize-dump-payload no
 
 # The filename where to dump the DB
-# dbfilename dump.rdb
-dbfilename {{ redis__conf_dbfilename | default('dump.rdb') }}
+dbfilename dump.rdb
 
 # Remove RDB files used by replication in instances without persistence
 # enabled. By default this option is disabled, however there are environments
@@ -566,7 +565,7 @@ dir /var/lib/redis
 #    UNSUBSCRIBE, PSUBSCRIBE, PUNSUBSCRIBE, PUBLISH, PUBSUB, COMMAND, POST,
 #    HOST and LATENCY.
 #
-replica-serve-stale-data {{ redis__conf_replica_serve_stale_data | d('yes') }}
+replica-serve-stale-data {{ redis__conf_replica_serve_stale_data }}
 
 # You can configure a replica instance to accept writes or not. Writing against
 # a replica instance may be useful to store some ephemeral data (because data
@@ -1041,7 +1040,7 @@ acllog-max-len 128
 # The requirepass is not compatible with aclfile option and the ACL LOAD
 # command, these will cause requirepass to be ignored.
 #
-{% if redis__conf_requirepass is defined and redis__conf_requirepass | length%}
+{% if redis__conf_requirepass is defined and redis__conf_requirepass | length %}
 requirepass {{ redis__conf_requirepass }}
 {% else %}
 # requirepass foobared
@@ -1128,7 +1127,7 @@ requirepass {{ redis__conf_requirepass }}
 # limit for maxmemory so that there is some free RAM on the system for replica
 # output buffers (but this is not needed if the policy is 'noeviction').
 #
-maxmemory {{ redis__conf_maxmemory | d('50M')}}
+maxmemory {{ redis__conf_maxmemory }}
 
 # MAXMEMORY POLICY: how Redis will select what to remove when maxmemory
 # is reached. You can select one from the following behaviors:
@@ -1157,7 +1156,7 @@ maxmemory {{ redis__conf_maxmemory | d('50M')}}
 #
 # The default is:
 #
-maxmemory-policy  {{ redis__conf_maxmemory_policy | d('noeviction')}}
+maxmemory-policy  {{ redis__conf_maxmemory_policy }}
 
 # LRU, LFU and minimal TTL algorithms are not precise algorithms but approximated
 # algorithms (in order to save memory), so you can tune it for speed or
@@ -1389,7 +1388,7 @@ disable-thp yes
 # Please check https://redis.io/topics/persistence for more information.
 
 # appendonly no
-appendonly {{ redis__conf_appendonly | default('no') }}
+appendonly {{ redis__conf_appendonly }}
 
 # The base name of the append only file.
 #
@@ -1416,8 +1415,7 @@ appendonly {{ redis__conf_appendonly | default('no') }}
 # - appendonly.aof.1.incr.aof, appendonly.aof.2.incr.aof as incremental files.
 # - appendonly.aof.manifest as a manifest file.
 
-# appendfilename "appendonly.aof"
-appendfilename {{ redis__conf_appendfilename | default('"appendonly.aof"') }}
+appendfilename "appendonly.aof"
 
 # For convenience, Redis stores all persistent append-only files in a dedicated
 # directory. The name of the directory is determined by the appenddirname
@@ -1491,7 +1489,7 @@ no-appendfsync-on-rewrite no
 # rewrite feature.
 
 auto-aof-rewrite-percentage 100
-auto-aof-rewrite-min-size {{ redis__conf_auto_aof_rewrite_min_size | d('64mb') }}
+auto-aof-rewrite-min-size {{ redis__conf_auto_aof_rewrite_min_size }}
 
 # An AOF file may be found to be truncated at the end during the Redis
 # startup process, when the AOF data gets loaded back into memory.
