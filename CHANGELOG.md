@@ -248,8 +248,11 @@ Role: redis
 
 ### Changed
 
-Role:apache_httpd:
+Role: apache_httpd:
 * the default of the `conf_custom_log` vHost variable changed from unset to `'logs/{{ conf_server_name }}-access.log linuxfabrikio`
+
+Role: icinga2_agent:
+* New variable `icinga2_agent__validate_certs`
 
 Role: graylog_server
 * Remove version defaults from the role

@@ -49,7 +49,8 @@ icinga2_agent__windows_version: 'v2.12.8'
 | `icinga2_agent__icingaweb2_url` | The URL where the IcingaWeb2 (the API) is reachable. This will be used to register the host in the Icinga Director (otherwise the host is registered in Icinga Core, but not visible in Icinga Director). | `'https://{{ icinga2_agent__icinga2_master_host }}/icingaweb2'` |
 | `icinga2_agent__icingaweb2_user_login` | A IcingaWeb2 user with `module/director,director/api,director/hosts` permissions. This will be used to register the host in the Icinga Director. | unset |
 | `icinga2_agent__parent_zone` | The Icinga2 parent zone of the host. | `'master'` |
-| `icinga2_agent__service_enabled` | Enables or disables the Icinga2 service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
+| `icinga2_agent__service_enabled` | Enables or disables the Icinga2 service, analogous to `systemctl enable/disable --now`. | `true` |
+| `icinga2_agent__validate_certs` | If false, TLS certificates offered by the Icinga Master will not be validated. This should only set to false used on personally controlled sites using self-signed certificates. | `false` |
 | `icinga2_agent__windows_download_path` | The path where the Icinga2.exe will be downloaded to. Certain Windows versions disallow the creation of files in `C:` which requires one to adjust this setting. Note that the path has to exist. | `C:` |
 | `icinga2_agent__windows_service_user` | The Windows user account under which the Icinga2 service will be run. | `'NT AUTHORITY\SYSTEM'` |
 
@@ -74,6 +75,7 @@ icinga2_agent__icingaweb2_user_login:
   username: 'enrolment-user'
 icinga2_agent__parent_zone: 'satellite01'
 icinga2_agent__service_enabled: true
+icinga2_agent__validate_certs: true
 icinga2_agent__windows_download_path: 'D:\Downloads'
 icinga2_agent__windows_service_user: 'Icinga Service User'
 ```
