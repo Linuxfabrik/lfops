@@ -39,6 +39,7 @@
       GRAFANA_URL: '{{ monitoring_plugins_grafana_dashboards__grafana_url }}'
       GRAFANA_USER: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["username"] }}'
       GRAFANA_TOKEN: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["password"] }}'
+      GODEBUG: 'x509ignoreCN=0'
     register: 'monitoring_plugins_grafana_dashboards__grr_apply_result'
     changed_when: '"added" in monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"] or "updated" in monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"]'
     loop:
