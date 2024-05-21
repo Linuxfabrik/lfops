@@ -52,7 +52,7 @@ Variables for `redis.conf` directives and their default values, defined and supp
 | `redis__conf_protected_mode`            | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'yes'`        |
 | `redis__conf_replica_serve_stale_data`  | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'yes'`        |
 | `redis__conf_requirepass`               | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `unset`        |
-| `redis__conf_save`                      | v5, v6: List, v7: String. [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | v5: `['900 1', '300 10', '60 10000']`<br>v6: `['3600 1', '300 100', '60 10000']`<br>v7: `'3600 1 300 100 60 10000'` |
+| `redis__conf_save`                      | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | v5: `['900 1', '300 10', '60 10000']`<br>v6: `['3600 1', '300 100', '60 10000']`<br>v7: `['3600 1', '300 100', '60 10000']` |
 | `redis__conf_supervised`                | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`       |
 
 Example:
@@ -70,7 +70,10 @@ redis__conf_port: 6379  # If port 0 is specified Redis will not listen on a TCP 
 redis__conf_protected_mode: 'yes'
 redis__conf_replica_serve_stale_data: 'yes'
 redis__conf_requirepass: 'password'
-redis__conf_save: '3600 1 300 100 60 10000'  # for Redis v7
+redis__conf_save:
+  - '3600 1'
+  - '300 100'
+  - '60 10000'
 redis__conf_supervised: 'auto'
 ```
 
