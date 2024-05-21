@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -31,10 +32,10 @@ Role:collabora
 * Changed `collabora__language_packages__*_var` to a list of dictionaries from a list of strings.
 * Renamed `collabora__coolwsd_allowed_languages` to `collabora__coolwsd_allowed_languages__*_var` and changed it to a list of dictionaries from a list of strings.
 
-Role: grafana
+Role:grafana
 * Changed default value for `grafana__serve_from_sub_path` from `true` to `false`
 
-Role: graylog_server
+Role:graylog_server
 * Remove support for Graylog < 5.0
 
 Role:icingaweb2_module_vspheredb
@@ -143,33 +144,80 @@ Role:sshd
 Role:system_update
 * Remove `system_update__icinga2_master` variable. Use `system_update__icinga2_api_url` instead
 
+Role:tar
+* Too trivial, removed (use the apps role instead)
+
 
 ### Added
+
+Playbook:setup_basic
+* Add support for AlmaLinux 8
 
 Role:apache_httpd:
 * added the `skip_allowed_file_extensions` vHost variable
 * added the `skip_allowed_http_methods` vHost variable
 
-* Role: mount
-* Role: mirror
-* Role: borg_local
-* Role: github_project_createrepo
-* Role: apache_solr
-* Role: clamav
-* Role: dnf_versionlock
-* Role: fangfrisch
-* Role: grafana_grizzly
-* Role: icingadb
-* Role: icingaweb2_module_businessprocess
-* Role: repo_gitlab_runner
-* Role: repo_rpmfusion
+Role:apache_solr
+* Added
+
+Role:bind
+* add `bind__named_conf_raw` variable
+
+Role:borg_local
+* Added
+
+Role:clamav
+* Added
+
+Role:cloud_init
+* Add task to remove `/etc/cloud/cloud.cfg.rpmsave`
+
+Role:dnf_versionlock
+* Added
+
+Role:duplicity:
+* Add `duplicity__backup_full_if_older_than` variable
+
+Role:fangfrisch
+* Added
+
+Role:github_project_createrepo
+* Added
+
+Role:grafana
+* creation of service accounts and their tokens
+
+Role:grafana_grizzly
+* Added
+
+Role:graylog_server
+* Add variables and documentation for multi-node setup
+* Add Debian support
+
+Role:icingadb
+* Added
+
+Role:icingaweb2_module_businessprocess
+* Added
+
+Role:kvm_vm
+* add the option to boot the VM with UEFI
+
+Role:mirror
+* Added
+
+Role:mount
+* Added
 
 Role:python_venv
 * allow specifying different certificate store
 * allow specifying the python executable to be used in the venv
 
-Role:kvm_vm
-* add the option to boot the VM with UEFI
+Role:repo_gitlab_runner
+* Added
+
+Role:repo_rpmfusion
+* Added
 
 Role:selinux
 * add support for SELinux ports
@@ -177,91 +225,69 @@ Role:selinux
 Role:systemd_unit
 * add support for mount units
 
-Role:bind
-* add `bind__named_conf_raw` variable
-
-Role: grafana
-* creation of service accounts and their tokens
-
-Playbook: setup_basic
-* Add support for AlmaLinux 8
-
-Role: duplicity:
-* Add `duplicity__backup_full_if_older_than` variable
-
-Role: cloud_init
-* Add task to remove `/etc/cloud/cloud.cfg.rpmsave`
-
-Role: graylog_server
-* Add variables and documentation for multi-node setup
-* Add Debian support
-
-Role: logrotate
+Role:logrotate
 * Add compression
 
-Role: mongodb
+Role:mongodb
 * Add Debian support
 * Add keyfile handling
 * Adjust for replica set across members
 * Implement user management (fix #89)
 
-Role: opensearch
+Role:opensearch
 * Add Debian support
 * Add variables for cluster configuration
 
-Role: php
+Role:php
 * Add tag `php:fpm`
 
-Role: python_venv
+Role:python_venv
 * Add Debian support
 
-Role: repo_baseos
+Role:repo_baseos
 * Add AlmaLinux 8 support
 
-Role: repo_graylog
+Role:repo_graylog
 * Add Debian support
 
-Role: repo_mongodb
+Role:repo_mongodb
 * Add Debian support
 
-Role: repo_opensearch
+Role:repo_opensearch
 * Add Debian support
 
-Role: systemd_journald
+Role:systemd_journald
 * Make SystemMaxUse configurable
 
-Role: systemd_update
+Role:systemd_update
 * Add option `-y` to `yum check-update`
-
-Role:tar
-* Too trivial, removed (use the apps role instead)
 
 
 ### Fixed
 
-Role: influxdb
+Role:influxdb
 * Fix wrong systemd service name, which was preventing influxdb dumps from being scheduled
 
-Role: redis
+Role:redis
 * Fix various messages from log, fix v7 template settings, fix various comments and README
 
 
 ### Changed
 
-Role: apache_httpd:
+Role:apache_httpd:
 * the default of the `conf_custom_log` vHost variable changed from unset to `'logs/{{ conf_server_name }}-access.log linuxfabrikio`
 
-Role: icinga2_agent:
-* New variable `icinga2_agent__validate_certs`
-
-Role: graylog_server
+Role:graylog_server
 * Remove version defaults from the role
 
-Role: opensearch
-* Make `opensearch__version*` optional
+Role:icinga2_agent:
+* New variable `icinga2_agent__validate_certs`
 
-Role: open_vm_tools
+Role:open_vm_tools
 * Starts and enables `vmtoolsd`
+
+Role:opensearch
+* Make `opensearch__version*` optional
 
 
 
@@ -282,75 +308,75 @@ All roles:
     * `rolename__host_varname` to `rolename__varname__host_var`
     * `rolename__role_varname` to `rolename__varname__role_var`
 
-Playbook: basic_setup
+Playbook:basic_setup
 * Renamed to setup_basic to be consitent with the other setup playbooks
 * Removed `audit` and `crypto_policy` roles for now
 
-Role: acme_sh
+Role:acme_sh
 * Added `name` subkey to `acme_sh__certificates`
 * Moved `acme_sh__reload_cmd` to a subkey of `acme_sh__certificates`
 
-Role: chrony
+Role:chrony
 * Fixed wrong variable prefix: Adjusted `chrony_server__` to `chrony__`.
 
-Role: collabora_code
+Role:collabora_code
 * Renamed rolename and vars from `collabora_code` to `collabora`
 
-Role: duplicity
+Role:duplicity
 * Renamed `duplicity__public_master_long_keyid` variable to `duplicity__gpg_encrypt_master_key`.
 * Renamed `duplicity__public_master_key` variable to `duplicity__gpg_encrypt_master_key_block`.
 * Changed the format of `duplicity__backup_sources__host_var`.
 
-Role: fail2ban
+Role:fail2ban
 * Adjusted subkeys of `fail2ban__jails__group_var` / `fail2ban__jails__host_var`
 
-Role: git
+Role:git
 * Added ...
 * ... and later removed in favor of a more general `app` role
 
-Role: hostname
+Role:hostname
 * Renamed `hostname__domain_name` to `hostname__domain_part`
 * Renamed `hostname__hostname` to `hostname__full_hostname`
 
-Role: icinga2_agent
+Role:icinga2_agent
 * Added new mandatory variable `icinga2_agent__icinga2_master_cn`
 * Made `icinga2_agent__icinga2_master_host` optional
 * Most users can replace all instances of `icinga2_agent__icinga2_master_host` to `icinga2_agent__icinga2_master_cn`
 
-Role: infomaniak_vm
+Role:infomaniak_vm
 * Renamed `infomaniak_vm__password` to `infomaniak_vm__api_password`
 * Renamed `infomaniak_vm__project_id` to `infomaniak_vm__api_project_id`
 * Renamed `infomaniak_vm__username` to `infomaniak_vm__api_username`
 * Renamed `infomaniak_vm__volume_size` to `infomaniak_vm__separate_boot_volume_size`
 
-Role: java
+Role:java
 * Removed, better substituted by `apps` role.
 
-Role: kernel_settings
+Role:kernel_settings
 * Make `kernel_settings__` variables injection-capable via `kernel_settings__host_*`, `kernel_settings__group_*` and `kernel_settings__dependent_*`.
 
-Role: libselinux_python:
+Role:libselinux_python:
 * Renamed the role to policycoreutils.
 
-Role: login
+Role:login
 * Changed logic and renamed `login__users` to two combined variables `login__users__group_var` (define users in group vars) and `login__users__host_var` (define users in host vars).
 
-Role: mariadb_server
+Role:mariadb_server
 * Renamed `mariadb_server__admin_login` to `mariadb_server__admin_user`
 * Moved `mariadb_server__admin_host` to `mariadb_server__admin_user["host"]`
 * Renamed `mariadb_server__dump_login` to `mariadb_server__dump_user`
 * Moved `mariadb_server__dump_user_*` to subkeys in `mariadb_server__dump_user`
 
-Role: monitoring_plugins
+Role:monitoring_plugins
 * Renamed `monitoring_plugins__deploy_notification_plugins` to `monitoring_plugins__skip_notification_plugins` and flipped the logic.
 
 Role php:
 * Made more variables injectable, therefore the variables have a new name.
 
-Role: stig
+Role:stig
 * Moved to a new GitHub repo (temporarily)
 
-Role: system_update
+Role:system_update
 * Renamed variables:
     * system_update__mail_recipients_new_configfiles => system_update__mail_recipients_new_configfiles
     * system_update__mail_recipients_updates => system_update__mail_recipients_updates
