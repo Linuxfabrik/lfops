@@ -11,22 +11,44 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
-Role:sshd:
-* removed `sshd__ciphers`, `sshd__kex` and `sshd__macs` variables, as these settings are managed by `crypto-policy` on RHEL.
-* now deploys the complete `/etc/ssh/sshd_config` as a template
-* removed support for RHEL7
+Playbook:icinga2_agent
+* Changed to also include the installation of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This can be skipped by setting `icinga2_agent__skip_monitoring_plugins: true`.
 
-Role:apache_httpd:
+Playbook:setup_icinga2_master
+* Changed default of `setup_icinga2_master__skip_icingaweb2_module_monitoring` from `false` to `true`
+
+Role:apache_httpd
+* Changed `conf_server_alias` from a string to a list
 * the default of the `authz_document_root` vHost variable changed from `Require local` to `Require all granted`. This is a more sensible default, as `allowed_file_extensions` is used to restrict the access.
 * removed the `authz_file_extensions` vHost variable. This was required to allow access to file extensions listed in `allowed_file_extensions'. From now on, the access to listed file extensions is always allowed.
 * fixed a bug that allowed access to dotfiles which had extensions listed in `allowed_file_extensions`. Make sure this does not break your application, or set `allow_accessing_dotfiles: true`.
 
-Role:mount
-* changed `mount__mounts` to `mount__mounts__host_var` / `mount__mounts__group_var`.
+Role:apache_tomcat
+* Changed `apache_tomcat__users__*_var` from a simple list to a list of dictionaries.
 
-Role:repo_mydumper
-* adjusted to use https://repo.linuxfabrik.ch/mydumper/ by default
-* removed `repo_mydumper__baseurl`, instead added `repo_mydumper__mirror_url`
+Role:collabora
+* Changed `collabora__coolwsd_storage_wopi__*_var` to a list of dictionaries from a list of strings.
+* Changed `collabora__language_packages__*_var` to a list of dictionaries from a list of strings.
+* Renamed `collabora__coolwsd_allowed_languages` to `collabora__coolwsd_allowed_languages__*_var` and changed it to a list of dictionaries from a list of strings.
+
+Role: grafana
+* Changed default value for `grafana__serve_from_sub_path` from `true` to `false`
+
+Role: graylog_server
+* Remove support for Graylog < 5.0
+
+Role:icingaweb2_module_vspheredb
+* Removed the `v` prefix from the `icingaweb2_module_vspheredb__version` variable to be consistent with the other `icingaweb2_module_*` roles.
+
+Role:login
+* Changed default of `remove_other_sshd_authorized_keys` from `true` to `false`.
+
+Role:mailto_root
+* Changed `mailto_root__from` from optional to mandatory.
+* Testmail to external addresses is now using sender address (`mailto_root__from`).
+
+Role:mariadb_client
+* Too trivial, removed (use the apps role instead)
 
 Role:mongodb
 * `mongodb__conf_net_bind_ip`: Changed from a string to a list of strings. For example:
@@ -38,6 +60,16 @@ mongodb__conf_net_bind_ip: '0.0.0.0'
 mongodb__conf_net_bind_ip:
   - '0.0.0.0'
 ```
+
+Role:monitoring_plugins
+* Remove the tasks for Nuitka compilation, as the compilation is done by the [Monitoring Plugins GitHub Action](https://github.com/Linuxfabrik/monitoring-plugins/actions/workflows/nuitka-compile.yml) now.
+* Locks the version of the `monitoring-plugins` package after installing it. Updating the plugins should be done manually along with updating the monitoring system configuration.
+
+Role:monitoring_plugins_grafana_dashboards
+* Change from provisioning to grizzly for the deployment of the dashboards
+
+Role:mount
+* changed `mount__mounts` to `mount__mounts__host_var` / `mount__mounts__group_var`.
 
 Role:nextcloud
 * `nextcloud__apps_config`:
@@ -68,74 +100,47 @@ RewriteRule ^\/push\/ws(.*) ws://nextcloud-server:7867/ws$1 [proxy,last]
 RewriteRule ^\/push\/(.*)   http://nextcloud-server:7867/$1 [proxy,last]
 ProxyPassReverse /push/     http://nextcloud-server:7867/
 ```
-
-Playbook:icinga2_agent
-* Changed to also include the installation of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This can be skipped by setting `icinga2_agent__skip_monitoring_plugins: true`.
-
-Role:postgresql_server
-* Renamed the `name` subkey of `postgresql_server__users__*_var` to `username` for consistency and easier integration of the Bitwarden lookup plugin.
-
-Role:repo_icinga
-* Renamed `repo_icinga__subscription_login` to `repo_icinga__basic_auth_login` and instead added a variable to explicitly use the Icinga Repo Subscription URL (`repo_icinga__use_subscription_url`). If you have `repo_icinga__subscription_login` set in your inventory, rename it to `repo_icinga__basic_auth_login` and set `repo_icinga__use_subscription_url: true` for the same effect as before.
-
-Role:mailto_root
-* Changed `mailto_root__from` from optional to mandatory.
-* Testmail to external addresses is now using sender address (`mailto_root__from`).
-
-Role: opensearch
-* Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.
-
-Role:icingaweb2_module_vspheredb
-* Removed the `v` prefix from the `icingaweb2_module_vspheredb__version` variable to be consistent with the other `icingaweb2_module_*` roles.
-
-Role:login
-* Changed default of `remove_other_sshd_authorized_keys` from `true` to `false`.
-
-Role:collabora
-* Changed `collabora__coolwsd_storage_wopi__*_var` to a list of dictionaries from a list of strings.
-* Changed `collabora__language_packages__*_var` to a list of dictionaries from a list of strings.
-* Renamed `collabora__coolwsd_allowed_languages` to `collabora__coolwsd_allowed_languages__*_var` and changed it to a list of dictionaries from a list of strings.
-
-Role:python
-* Changed `python__modules__*_var` to a list of dictionaries from a list of strings.
-
-Role:selinux
-* Changed `ports` subkey of `selinux__ports__*_var` to `port`, accepting only a single port or port range, not a list of ports / port ranges.
-
-Role:apache_tomcat
-* Changed `apache_tomcat__users__*_var` from a simple list to a list of dictionaries.
-
-Role:rocketchat
-* Removed Rocket.Chat notifications from the default banaction
-
-Role:redis
-* Changed default of `redis__service_timeout_start_sec` and `redis__service_timeout_stop_sec` from `5s` to `90s`.
-
-Role: nextcloud
 * Changed default of `nextcloud__timer_app_update_enabled` from `true` to `false`, as this can sometimes lead to Nextcloud ending up in maintenance mode
 * Renamed `nextcloud__apache_httpd__vhosts_virtualhost_ip` to `nextcloud__vhost_virtualhost_ip`
 * Renamed `nextcloud__apache_httpd__vhosts_virtualhost_port` to `nextcloud__vhost_virtualhost_port`
 
-Role: apache_httpd
-* Changed `conf_server_alias` from a string to a list
+Role:opensearch
+* Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.
 
-Role: graylog_server
-* Remove support for Graylog < 5.0
+Role:openssl
+* Too trivial, removed (use the apps role instead)
 
-Playbook: Setup Icinga2 Master
-* Changed default of `setup_icinga2_master__skip_icingaweb2_module_monitoring` from `false` to `true`
+Role:perl
+* Too trivial, removed (use the apps role instead)
 
-Role: monitoring_plugins
-* Remove the tasks for Nuitka compilation, as the compilation is done by the [Monitoring Plugins GitHub Action](https://github.com/Linuxfabrik/monitoring-plugins/actions/workflows/nuitka-compile.yml) now.
-* Locks the version of the `monitoring-plugins` package after installing it. Updating the plugins should be done manually along with updating the monitoring system configuration.
+Role:postgresql_server
+* Renamed the `name` subkey of `postgresql_server__users__*_var` to `username` for consistency and easier integration of the Bitwarden lookup plugin.
 
-Role: monitoring_plugins_grafana_dashboards
-* Change from provisioning to grizzly for the deployment of the dashboards
+Role:python
+* Changed `python__modules__*_var` to a list of dictionaries from a list of strings.
 
-Role: grafana
-* Changed default value for `grafana__serve_from_sub_path` from `true` to `false`
+Role:redis
+* Changed default of `redis__service_timeout_start_sec` and `redis__service_timeout_stop_sec` from `5s` to `90s`.
 
-Role: system_update
+Role:repo_icinga
+* Renamed `repo_icinga__subscription_login` to `repo_icinga__basic_auth_login` and instead added a variable to explicitly use the Icinga Repo Subscription URL (`repo_icinga__use_subscription_url`). If you have `repo_icinga__subscription_login` set in your inventory, rename it to `repo_icinga__basic_auth_login` and set `repo_icinga__use_subscription_url: true` for the same effect as before.
+
+Role:repo_mydumper
+* adjusted to use https://repo.linuxfabrik.ch/mydumper/ by default
+* removed `repo_mydumper__baseurl`, instead added `repo_mydumper__mirror_url`
+
+Role:rocketchat
+* Removed Rocket.Chat notifications from the default banaction
+
+Role:selinux
+* Changed `ports` subkey of `selinux__ports__*_var` to `port`, accepting only a single port or port range, not a list of ports / port ranges.
+
+Role:sshd
+* removed `sshd__ciphers`, `sshd__kex` and `sshd__macs` variables, as these settings are managed by `crypto-policy` on RHEL.
+* now deploys the complete `/etc/ssh/sshd_config` as a template
+* removed support for RHEL7
+
+Role:system_update
 * Remove `system_update__icinga2_master` variable. Use `system_update__icinga2_api_url` instead
 
 
@@ -228,17 +233,26 @@ Role: systemd_journald
 Role: systemd_update
 * Add option `-y` to `yum check-update`
 
+Role:tar
+* Too trivial, removed (use the apps role instead)
+
 
 ### Fixed
 
 Role: influxdb
 * Fix wrong systemd service name, which was preventing influxdb dumps from being scheduled
 
+Role: redis
+* Fix various messages from log, fix v7 template settings, fix various comments and README
+
 
 ### Changed
 
-Role:apache_httpd:
+Role: apache_httpd:
 * the default of the `conf_custom_log` vHost variable changed from unset to `'logs/{{ conf_server_name }}-access.log linuxfabrikio`
+
+Role: icinga2_agent:
+* New variable `icinga2_agent__validate_certs`
 
 Role: graylog_server
 * Remove version defaults from the role

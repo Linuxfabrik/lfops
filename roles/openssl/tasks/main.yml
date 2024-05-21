@@ -1,7 +1,0 @@
-- name: 'Install OpenSSL'
-  ansible.builtin.package:
-    name: 'openssl'
-    state: 'present'
-
-  tags:
-    - 'openssl'

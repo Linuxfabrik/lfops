@@ -21,3 +21,9 @@ gitlab_ce__rb_registry_nginx_listen_port: 5050
 gitlab_ce__rb_registry_nginx_proxy_set_headers:
   'X-Forwarded-Proto': 'https'
   'X-Forwarded-Ssl': 'on'
+
+# -----------------------------------------------------------------------------
+
+gitlab_ce__apps__apps__dependent_var:
+  - name: 'tar'
+    state: 'present'

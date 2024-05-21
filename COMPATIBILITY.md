@@ -77,7 +77,6 @@ login                                |    |    |    |   | x | x |   x   |       
 logrotate                            |    |    |    | x | x | x |   x   |       |       |       |       | Fedora
 mailto_root                          |    |    |    | x | x | x |   x   |       |       |       |       |
 mailx                                | x  | x  | x  | x | x | x |   x   |       |       |       |       | Fedora
-mariadb_client                       |    |    |    |   | x | x |       |       |       |       |       |
 mariadb_server                       | -  | -  | -  |   | x | x |   -   |   -   |   -   |       |       |
 maxmind_geoip                        |    |    |    |   | x |   |       |       |       |       |       |
 minio_client                         |    |    |    |   | x |   |       |       |       |       |       |
@@ -99,10 +98,8 @@ nfs_server                           |    | x  |    | x | x |   |       |       
 nodejs                               |    |    |    |   | x | x |       |       |       |       |       |
 objectstore_backup                   |    |    |    |   | x |   |       |       |       |       |       |
 opensearch                           |    | x  |    |   | x |   |       |       |       |       |       |
-openssl                              |    | x  |    |   | x | x |   x   |       |       |       |       |
 open_vm_tools                        |    |    |    |   | x | x |   x   |       |       |       |       |
 openvpn_server                       |    |    |    |   | x |   |       |       |       |       |       |
-perl                                 |    |    |    |   | x | x |   x   |       |       |       |       |
 php                                  |    |    |    |   | x | x |       |       |       |       |       |
 policycoreutils                      |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
 postfix                              | x  | x  | x  | x | x | x |   x   |       |       |       |       | Fedora 35
@@ -146,7 +143,6 @@ sshd                                 |    |    |    |   | x | x |       |       
 system_update                        |    | x  | x  | x | x | x |       |       |       |       |       |
 systemd_journald                     |    |    |    |   | x | x |       |       |       |       |       |
 systemd_unit                         |    |    |    |   | x | x |       |       |       |       |       |
-tar                                  |    |    |    |   | x | x |   x   |       |       |       |       |
 telegraf                             |    |    |    |   | x |   |       |       |       |       |       |
 timezone                             |    |    |    | x | x | x |   x   |       |       |       |       | Fedora 35
 tools                                |    |    |    | x | x | x |       |       |       |       |       | Fedora

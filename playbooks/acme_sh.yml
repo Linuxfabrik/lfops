@@ -4,8 +4,9 @@
 
   roles:
 
-    - role: 'linuxfabrik.lfops.openssl'
-
-    - role: 'linuxfabrik.lfops.tar'
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: '{{
+          acme_sh__apps__apps__dependent_var
+        }}'
 
     - role: 'linuxfabrik.lfops.acme_sh'

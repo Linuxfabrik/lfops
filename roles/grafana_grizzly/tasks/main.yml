@@ -59,6 +59,7 @@
       GRAFANA_URL: '{{ grafana_grizzly__grafana_url }}'
       GRAFANA_USER: '{{ grafana_grizzly__grafana_service_account_login["username"] }}'
       GRAFANA_TOKEN: '{{ grafana_grizzly__grafana_service_account_login["password"] }}'
+      GODEBUG: 'x509ignoreCN=0'
     register: 'grafana_grizzly__grr_apply_result'
     changed_when: '"added" in grafana_grizzly__grr_apply_result["stdout"] or "updated" in grafana_grizzly__grr_apply_result["stdout"]'
     loop: '{{ lookup("ansible.builtin.fileglob", inventory_dir ~ "/host_vars/" ~ inventory_hostname ~ "/files/grafana_grizzly/*.yml", wantlist=True) }}'

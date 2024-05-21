@@ -1,7 +1,0 @@
-- name: 'Install tar'
-  hosts:
-    - 'lfops_tar'
-
-  roles:
-
-    - role: 'linuxfabrik.lfops.tar'

@@ -27,7 +27,7 @@ SSLSessionCacheTimeout  1800
 SSLSessionTickets off
 
 # OCSP Stapling, only in httpd 2.3.3 and later
-SSLUseStapling on
+SSLUseStapling {{ apache_httpd__mod_ssl_ssl_use_stapling | d('off') }}
 SSLStaplingCache shmcb:/var/run/ocsp(128000)
 SSLStaplingResponderTimeout 3
 SSLStaplingReturnResponderErrors off

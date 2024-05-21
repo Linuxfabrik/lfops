@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024051601
+# 2024052001
 
 # Redis v5 configuration file.
 #
@@ -158,7 +158,7 @@ supervised {{ redis__conf_supervised }}
 #
 # Creating a pid file is best effort: if Redis is not able to create it
 # nothing bad happens, the server will start and run normally.
-pidfile /var/run/redis_6379.pid
+pidfile /var/run/redis/{{ redis__conf_port }}.pid
 
 # Specify the server verbosity level.
 # This can be one of:
@@ -222,7 +222,7 @@ always-show-logo yes
 # save 300 10
 # save 60 10000
 
-{% for item in redis__conf_save | default(['900 1', '300 10', '60 10000']) %}
+{% for item in redis__conf_save | d(['900 1', '300 10', '60 10000']) %}
 save {{ item }}
 {% endfor %}
 
@@ -855,7 +855,7 @@ lua-time-limit 5000
 # Make sure that instances running in the same system do not have
 # overlapping cluster configuration file names.
 #
-# cluster-config-file nodes-6379.conf
+# cluster-config-file nodes-{{ redis__conf_port }}.conf
 
 # Cluster node timeout is the amount of milliseconds a node must be unreachable
 # for it to be considered in failure state.
@@ -983,7 +983,7 @@ lua-time-limit 5000
 # Example:
 #
 # cluster-announce-ip 10.1.1.5
-# cluster-announce-port 6379
+# cluster-announce-port {{ redis__conf_port }}
 # cluster-announce-bus-port 6380
 
 ################################## SLOW LOG ###################################

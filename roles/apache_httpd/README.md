@@ -312,6 +312,19 @@ apache_httpd__skip_mod_security_coreruleset: true
 ```
 
 
+## Optional Role Variables - mod_ssl
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `apache_httpd__mod_ssl_ssl_use_stapling` | String. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling) | `'on'` |
+
+Example:
+```yaml
+# optional - mod_ssl
+apache_httpd__mod_ssl_ssl_use_stapling: 'on'
+```
+
+
 ## Optional Role Variables - mpm_common
 
 | Variable | Description | Default Value |
