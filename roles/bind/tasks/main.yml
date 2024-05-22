@@ -38,7 +38,9 @@
       group: 'named'
       mode: 0o640
     loop: '{{ bind__zones }}'
-    notify: 'bind: reload named'
+    loop_control:
+      label: '{{ item["name"] }}'
+    notify: 'bind: named-checkzone ... && reload named'
 
   tags:
     - 'bind'
