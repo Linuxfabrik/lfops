@@ -112,6 +112,12 @@
 
 - block:
 
+  - name: 'Wait for port {{ mongodb__conf_net_port }} to become open on the host'
+    ansible.builtin.wait_for:
+      host: '{{ mongodb__conf_net_bind_ip[0] }}'
+      port: '{{ mongodb__conf_net_port }}'
+      delay: 5
+
   - name: 'check if host is primary and writable'
     community.mongodb.mongodb_shell:
       login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
@@ -130,7 +136,6 @@
     - 'mongodb:dump'
     - 'mongodb:user'
     - 'mongodb:status'
-
 
 - block:
 
