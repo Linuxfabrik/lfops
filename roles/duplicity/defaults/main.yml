@@ -56,7 +56,6 @@ duplicity__python_venv__venvs__dependent_var:
   - name: 'duplicity'
     packages:
       - 'duplicity'
-      - 'fasteners' # workaround for https://gitlab.com/duplicity/duplicity/-/issues/817
       - 'python-keystoneclient'
       - 'python-swiftclient'
     package_requirements:
