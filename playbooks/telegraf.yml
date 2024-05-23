@@ -1,6 +1,12 @@
-- name: 'Manage and configure telegraf'
+- name: 'Playbook linuxfabrik.lfops.telegraf'
   hosts:
     - 'lfops_telegraf'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -9,3 +15,9 @@
         - 'not telegraf__skip_repo_influxdb | default(false)'
 
     - role: 'linuxfabrik.lfops.telegraf'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

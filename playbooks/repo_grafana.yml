@@ -1,7 +1,19 @@
-- name: 'Manage and configure the Grafana OSS Repository'
+- name: 'Playbook linuxfabrik.lfops.repo_grafana'
   hosts:
     - 'lfops_repo_grafana'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_grafana'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

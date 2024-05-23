@@ -1,6 +1,12 @@
-- name: 'Install and configure LibreNMS'
+- name: 'Playbook linuxfabrik.lfops.setup_librenms'
   hosts:
     - 'lfops_setup_librenms'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -92,3 +98,9 @@
       apache_httpd__vhosts__dependent_var: '{{ librenms__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
         - 'not librenms__skip_apache_httpd | default(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

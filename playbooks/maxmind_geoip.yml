@@ -1,6 +1,12 @@
-- name: 'Get Maxmind GeoIP databases'
+- name: 'Playbook linuxfabrik.lfops.maxmind_geoip'
   hosts:
     - 'lfops_maxmind_geoip'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -15,3 +21,9 @@
         }}'
       when:
         - 'not maxmind_geoip__skip_systemd_unit | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

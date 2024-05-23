@@ -1,7 +1,19 @@
-- name: 'Install necessary tools and mount volumes'
+- name: 'Playbook linuxfabrik.lfops.mount'
   hosts:
     - 'lfops_mount'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.mount'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

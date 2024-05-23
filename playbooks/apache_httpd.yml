@@ -1,6 +1,12 @@
-- name: 'Install apache_httpd'
+- name: 'Playbook linuxfabrik.lfops.apache_httpd'
   hosts:
     - 'lfops_apache_httpd'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -30,3 +36,9 @@
         - 'not apache_httpd__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.apache_httpd'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

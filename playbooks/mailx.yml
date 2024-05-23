@@ -1,7 +1,19 @@
-- name: 'Installs mailx and deploys wrapper scripts'
+- name: 'Playbook linuxfabrik.lfops.mailx'
   hosts:
     - 'lfops_mailx'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.mailx'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

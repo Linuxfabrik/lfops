@@ -1,6 +1,12 @@
-- name: 'Manage and configure redis'
+- name: 'Playbook linuxfabrik.lfops.redis'
   hosts:
     - 'lfops_redis'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -16,3 +22,9 @@
         - 'not redis__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.redis'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

@@ -1,6 +1,12 @@
-- name: 'Manage logins'
+- name: 'Playbook linuxfabrik.lfops.login'
   hosts:
     - 'lfops_login'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -12,3 +18,9 @@
         - 'not login__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.login'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

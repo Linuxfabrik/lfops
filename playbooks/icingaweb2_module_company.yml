@@ -1,7 +1,19 @@
-- name: 'Installs the Icingaweb2 Company Module'
+- name: 'Playbook linuxfabrik.lfops.icingaweb2_module_company'
   hosts:
     - 'lfops_icingaweb2_module_company'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_company'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

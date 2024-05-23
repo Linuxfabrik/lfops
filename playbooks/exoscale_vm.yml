@@ -1,8 +1,20 @@
-- name: 'Setup and manage an Exoscale VM'
+- name: 'Playbook linuxfabrik.lfops.exoscale_vm'
   hosts:
     - 'lfops_exoscale_vm'
   gather_facts: false
 
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
+
   roles:
 
     - role: 'linuxfabrik.lfops.exoscale_vm'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

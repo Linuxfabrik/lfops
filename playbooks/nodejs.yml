@@ -1,7 +1,19 @@
-- name: 'Install Node.js'
+- name: 'Playbook linuxfabrik.lfops.nodejs'
   hosts:
     - 'lfops_nodejs'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.nodejs'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

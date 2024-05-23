@@ -1,6 +1,12 @@
-- name: 'Installs and configures fail2ban'
+- name: 'Playbook linuxfabrik.lfops.fail2ban'
   hosts:
     - 'lfops_fail2ban'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -29,3 +35,9 @@
         - 'not fail2ban__skip_repo_epel | d(false)'
 
     - role: 'linuxfabrik.lfops.fail2ban'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

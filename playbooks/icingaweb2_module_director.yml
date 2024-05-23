@@ -1,7 +1,19 @@
-- name: 'Installs the Icingaweb2 Director Module'
+- name: 'Playbook linuxfabrik.lfops.icingaweb2_module_director'
   hosts:
     - 'lfops_icingaweb2_module_director'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_director'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

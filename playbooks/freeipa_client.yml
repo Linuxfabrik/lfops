@@ -1,7 +1,19 @@
-- name: 'Install and configure FreeIPA Client'
+- name: 'Playbook linuxfabrik.lfops.freeipa_client'
   hosts:
     - 'lfops_freeipa_client'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.freeipa_client'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

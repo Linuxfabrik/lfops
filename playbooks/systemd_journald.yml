@@ -1,7 +1,19 @@
-- name: 'Configure systemd-journald'
+- name: 'Playbook linuxfabrik.lfops.systemd_journald'
   hosts:
     - 'lfops_systemd_journald'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.systemd_journald'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

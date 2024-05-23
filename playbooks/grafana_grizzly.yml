@@ -1,7 +1,19 @@
-- name: 'Install grizzly and optionally deploys Grafana resources'
+- name: 'Playbook linuxfabrik.lfops.grafana_grizzly'
   hosts:
     - 'lfops_grafana_grizzly'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.grafana_grizzly'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

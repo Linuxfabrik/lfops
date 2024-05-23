@@ -1,7 +1,19 @@
-- name: 'Install and configure qemu-guest-agent'
+- name: 'Playbook linuxfabrik.lfops.qemu_guest_agent'
   hosts:
     - 'lfops_qemu_guest_agent'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.qemu_guest_agent'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

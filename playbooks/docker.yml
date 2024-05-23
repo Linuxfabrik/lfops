@@ -1,6 +1,12 @@
-- name: 'Manage and configure Docker'
+- name: 'Playbook linuxfabrik.lfops.docker'
   hosts:
     - 'lfops_docker'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -16,3 +22,9 @@
       kernel_settings__sysctl__dependent_var: '{{ docker__kernel_settings__sysctl__dependent_var | d([]) }}'
       when:
         - 'not docker__skip_kernel_settings | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

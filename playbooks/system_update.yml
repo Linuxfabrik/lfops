@@ -1,6 +1,12 @@
-- name: 'Setup automatic update'
+- name: 'Playbook linuxfabrik.lfops.system_update'
   hosts:
     - 'lfops_system_update'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -21,3 +27,9 @@
         - 'not system_update__skip_mailto_root | d(false)'
 
     - role: 'linuxfabrik.lfops.system_update'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

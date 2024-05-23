@@ -1,6 +1,12 @@
-- name: 'Install and configure Graylog'
+- name: 'Playbook linuxfabrik.lfops.setup_graylog_server'
   hosts:
     - 'lfops_setup_graylog_server'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -77,3 +83,9 @@
       graylog_server__cacerts_imports__dependent_var: '{{
           opensearch__graylog_server__cacerts_imports__dependent_var
         }}'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

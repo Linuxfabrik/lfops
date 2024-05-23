@@ -1,7 +1,19 @@
-- name: 'Install and configure bind'
+- name: 'Playbook linuxfabrik.lfops.bind'
   hosts:
     - 'lfops_bind'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.bind'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

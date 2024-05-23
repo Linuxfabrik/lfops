@@ -1,6 +1,12 @@
-- name: 'Objectstore backup service and timer'
+- name: 'Playbook linuxfabrik.lfops.objectstore_backup'
   hosts:
     - 'lfops_objectstore_backup'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -12,3 +18,9 @@
         - 'not objectstore_backup__skip_minio_client | d(false)'
 
     - role: 'linuxfabrik.lfops.objectstore_backup'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

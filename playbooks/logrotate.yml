@@ -1,7 +1,19 @@
-- name: 'Install and start logrotate'
+- name: 'Playbook linuxfabrik.lfops.logrotate'
   hosts:
     - 'lfops_logrotate'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.logrotate'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

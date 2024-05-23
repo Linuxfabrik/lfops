@@ -1,7 +1,19 @@
-- name: 'Manage and configure the MariaDB Repository'
+- name: 'Playbook linuxfabrik.lfops.repo_mariadb'
   hosts:
     - 'lfops_repo_mariadb'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

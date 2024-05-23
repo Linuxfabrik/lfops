@@ -1,6 +1,12 @@
-- name: 'Manage and configure MongoDB'
+- name: 'Playbook linuxfabrik.lfops.mongodb'
   hosts:
     - 'lfops_mongodb'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -27,3 +33,9 @@
         - 'not mongodb__skip_repo_mongodb | default(false)'
 
     - role: 'linuxfabrik.lfops.mongodb'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

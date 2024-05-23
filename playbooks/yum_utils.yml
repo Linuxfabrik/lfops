@@ -1,7 +1,19 @@
-- name: 'Install yum-utils'
+- name: 'Playbook linuxfabrik.lfops.yum_utils'
   hosts:
     - 'lfops_yum_utils'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.yum_utils'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

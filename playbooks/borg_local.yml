@@ -1,6 +1,12 @@
-- name: 'Install and configure borg for local backups'
+- name: 'Playbook linuxfabrik.lfops.borg_local'
   hosts:
     - 'lfops_borg_local'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -20,3 +26,9 @@
         - 'not borg_local__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.borg_local'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

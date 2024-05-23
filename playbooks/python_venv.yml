@@ -1,6 +1,12 @@
-- name: 'Creates and manages python venvs'
+- name: 'Playbook linuxfabrik.lfops.python_venv'
   hosts:
     - 'lfops_python_venv'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -9,3 +15,9 @@
         - 'not python_venv__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.python_venv'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

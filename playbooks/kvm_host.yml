@@ -1,6 +1,12 @@
-- name: 'Install and configure a KVM host'
+- name: 'Playbook linuxfabrik.lfops.kvm_host'
   hosts:
     - 'lfops_kvm_host'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -12,3 +18,9 @@
         - 'not kvm_host__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.kvm_host'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

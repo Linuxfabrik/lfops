@@ -1,7 +1,19 @@
-- name: 'Install and configure chrony'
+- name: 'Playbook linuxfabrik.lfops.chrony'
   hosts:
     - 'lfops_chrony'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.chrony'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

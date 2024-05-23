@@ -1,7 +1,19 @@
-- name: 'Install keepalived'
+- name: 'Playbook linuxfabrik.lfops.keepalived'
   hosts:
     - 'lfops_keepalived'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.keepalived'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

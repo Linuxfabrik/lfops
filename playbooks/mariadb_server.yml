@@ -1,6 +1,12 @@
-- name: 'Install and configure MariaDB server'
+- name: 'Playbook linuxfabrik.lfops.mariadb_server'
   hosts:
     - 'lfops_mariadb_server'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -31,3 +37,9 @@
         - 'not mariadb_server__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

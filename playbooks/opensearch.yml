@@ -1,6 +1,12 @@
-- name: 'Install Opensearch on the system'
+- name: 'Playbook linuxfabrik.lfops.opensearch'
   hosts:
     - 'lfops_opensearch'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -9,3 +15,9 @@
         - 'not opensearch__skip_repo_opensearch | default(false)'
 
     - role: 'linuxfabrik.lfops.opensearch'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

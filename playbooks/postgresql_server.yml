@@ -1,6 +1,12 @@
-- name: 'Install and configure PostgreSQL server'
+- name: 'Playbook linuxfabrik.lfops.postgresql_server'
   hosts:
     - 'lfops_postgresql_server'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -16,3 +22,9 @@
         - 'not postgresql_server__skip_repo_postgresql | d(false)'
 
     - role: 'linuxfabrik.lfops.postgresql_server'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

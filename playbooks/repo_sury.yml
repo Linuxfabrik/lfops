@@ -1,7 +1,19 @@
-- name: 'Manage and configure the Sury repository'
+- name: 'Playbook linuxfabrik.lfops.repo_sury'
   hosts:
     - 'lfops_repo_sury'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_sury'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

@@ -1,7 +1,19 @@
-- name: 'Set the hostname of the server '
+- name: 'Playbook linuxfabrik.lfops.hostname'
   hosts:
     - 'lfops_hostname'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.hostname'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

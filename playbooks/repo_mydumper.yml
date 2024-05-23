@@ -1,7 +1,19 @@
-- name: 'Configure the mydumper repository'
+- name: 'Playbook linuxfabrik.lfops.repo_mydumper'
   hosts:
     - 'lfops_repo_mydumper'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_mydumper'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

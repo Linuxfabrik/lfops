@@ -1,7 +1,19 @@
-- name: 'Install and configure vsftpd'
+- name: 'Playbook linuxfabrik.lfops.vsftpd'
   hosts:
     - 'lfops_vsftpd'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.vsftpd'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

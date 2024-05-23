@@ -1,7 +1,19 @@
-- name: 'Manage and configure Timezone'
+- name: 'Playbook linuxfabrik.lfops.timezone'
   hosts:
     - 'lfops_timezone'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.timezone'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

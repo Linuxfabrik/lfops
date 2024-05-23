@@ -1,7 +1,19 @@
-- name: 'Install haveged'
+- name: 'Playbook linuxfabrik.lfops.haveged'
   hosts:
     - 'lfops_haveged'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.haveged'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

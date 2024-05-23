@@ -1,6 +1,11 @@
-- name: 'The Linuxfabrik basic setup'
+- name: 'Playbook linuxfabrik.lfops.setup_basic'
   hosts:
     - 'lfops_setup_basic'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
 
 
   roles:
@@ -172,3 +177,9 @@
     - role: 'linuxfabrik.lfops.icinga2_agent'
       when:
         - 'not setup_basic__skip_icinga2_agent | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

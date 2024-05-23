@@ -1,6 +1,12 @@
-- name: 'Install and configure Grafana'
+- name: 'Playbook linuxfabrik.lfops.grafana'
   hosts:
     - 'lfops_grafana'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -9,3 +15,9 @@
         - 'not grafana_server__skip_repo_grafana | d(false)'
 
     - role: 'linuxfabrik.lfops.grafana'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

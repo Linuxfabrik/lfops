@@ -1,6 +1,12 @@
-- name: 'Install and configure Icinga2 as a master'
+- name: 'Playbook linuxfabrik.lfops.setup_icinga2_master'
   hosts:
     - 'lfops_setup_icinga2_master'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -223,3 +229,9 @@
     - role: 'linuxfabrik.lfops.monitoring_plugins_grafana_dashboards'
       when:
         - 'not setup_icinga2_master__skip_monitoring_plugins_grafana_dashboards | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

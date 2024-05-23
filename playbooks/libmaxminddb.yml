@@ -1,7 +1,19 @@
-- name: 'Get and compile libmaxminddb'
+- name: 'Playbook linuxfabrik.lfops.libmaxminddb'
   hosts:
     - 'lfops_libmaxminddb'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.libmaxminddb'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

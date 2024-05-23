@@ -1,6 +1,12 @@
-- name: 'Manage and configure the Remi Repository'
+- name: 'Playbook linuxfabrik.lfops.repo_remi'
   hosts:
     - 'lfops_repo_remi'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -15,3 +21,9 @@
         - 'ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
 
     - role: 'linuxfabrik.lfops.repo_remi'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

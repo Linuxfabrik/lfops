@@ -1,7 +1,19 @@
-- name: 'Set the system-wide cryptographic policy'
+- name: 'Playbook linuxfabrik.lfops.crypto_policy'
   hosts:
     - 'lfops_crypto_policy'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.crypto_policy'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

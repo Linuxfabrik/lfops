@@ -1,7 +1,19 @@
-- name: 'Install Python on the system, optionally with additional modules'
+- name: 'Playbook linuxfabrik.lfops.python'
   hosts:
     - 'lfops_python'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.python'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

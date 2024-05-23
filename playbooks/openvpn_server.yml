@@ -1,6 +1,12 @@
-- name: 'Install and configure OpenVPN as a server'
+- name: 'Playbook linuxfabrik.lfops.openvpn_server'
   hosts:
     - 'lfops_openvpn_server'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -14,3 +20,9 @@
         - 'not openvpn_server__skip_policycoreutils | d(false)'
 
     - role: 'linuxfabrik.lfops.openvpn_server'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

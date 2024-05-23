@@ -1,6 +1,12 @@
-- name: 'Install ffpmeg'
+- name: 'Playbook linuxfabrik.lfops.ffmpeg'
   hosts:
     - 'lfops_ffmpeg'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -16,3 +22,9 @@
       apps__apps__dependent_var:
         - name: 'ffmpeg'
           state: 'present'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

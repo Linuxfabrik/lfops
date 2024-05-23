@@ -1,6 +1,12 @@
-- name: 'Manage and configure duplicity'
+- name: 'Playbook linuxfabrik.lfops.duplicity'
   hosts:
     - 'lfops_duplicity'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -21,3 +27,9 @@
         - 'not duplicity__skip_haveged | d(false)'
 
     - role: 'linuxfabrik.lfops.duplicity'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

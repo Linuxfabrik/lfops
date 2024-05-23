@@ -1,6 +1,12 @@
-- name: 'Install and configure Rocket.Chat'
+- name: 'Playbook linuxfabrik.lfops.setup_rocketchat'
   hosts:
     - 'lfops_setup_rocketchat'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -45,3 +51,9 @@
         - 'not setup_rocketchat__skip_mongodb | default(false)'
 
     - role: 'linuxfabrik.lfops.rocketchat'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

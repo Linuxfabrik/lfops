@@ -1,7 +1,19 @@
-- name: 'Manage and configure SNMP'
+- name: 'Playbook linuxfabrik.lfops.snmp'
   hosts:
     - 'lfops_snmp'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.snmp'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

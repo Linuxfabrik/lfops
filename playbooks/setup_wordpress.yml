@@ -1,6 +1,12 @@
-- name: 'Install and configure Wordpress'
+- name: 'Playbook linuxfabrik.lfops.setup_wordpress'
   hosts:
     - 'lfops_setup_wordpress'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -82,3 +88,9 @@
         - 'not setup_wordpress__skip_selinux | default(false)'
 
     - role: 'linuxfabrik.lfops.wordpress'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

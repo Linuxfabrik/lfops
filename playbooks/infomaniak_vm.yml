@@ -1,8 +1,20 @@
-- name: 'Setup and manage an Infomaniak VM'
+- name: 'Playbook linuxfabrik.lfops.infomaniak_vm'
   hosts:
     - 'lfops_infomaniak_vm'
   gather_facts: false
 
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
+
   roles:
 
     - role: 'linuxfabrik.lfops.infomaniak_vm'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

@@ -1,7 +1,19 @@
-- name: 'Install and configure NFS as a server'
+- name: 'Playbook linuxfabrik.lfops.nfs_server'
   hosts:
     - 'lfops_nfs_server'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.nfs_server'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

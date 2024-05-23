@@ -1,9 +1,21 @@
-- name: 'Setup and manage an KVM VM'
+- name: 'Playbook linuxfabrik.lfops.kvm_vm'
   collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_kvm_vm'
   gather_facts: false
 
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
+
   roles:
 
     - role: 'kvm_vm'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

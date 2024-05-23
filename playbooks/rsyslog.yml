@@ -1,7 +1,19 @@
-- name: 'Install and configure rsyslog'
+- name: 'Playbook linuxfabrik.lfops.rsyslog'
   hosts:
     - 'lfops_rsyslog'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.rsyslog'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

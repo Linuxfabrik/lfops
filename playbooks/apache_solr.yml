@@ -1,6 +1,12 @@
-- name: 'Install and configure Apache Solr'
+- name: 'Playbook linuxfabrik.lfops.apache_solr'
   hosts:
     - 'lfops_apache_solr'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -10,3 +16,9 @@
         }}'
 
     - role: 'linuxfabrik.lfops.apache_solr'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

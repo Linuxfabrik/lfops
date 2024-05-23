@@ -1,6 +1,12 @@
-- name: 'Install and configure Icinga2 as an agent'
+- name: 'Playbook linuxfabrik.lfops.icinga2_agent'
   hosts:
     - 'lfops_icinga2_agent'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -32,3 +38,9 @@
     - role: 'linuxfabrik.lfops.monitoring_plugins'
       when:
         - 'not icinga2_agent__skip_monitoring_plugins | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

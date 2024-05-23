@@ -1,6 +1,12 @@
-- name: 'Install coturn'
+- name: 'Playbook linuxfabrik.lfops.coturn'
   hosts:
     - 'lfops_coturn'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -10,3 +16,9 @@
         - 'not coturn__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.coturn'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

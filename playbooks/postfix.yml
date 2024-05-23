@@ -1,7 +1,19 @@
-- name: 'Install and configure Postfix'
+- name: 'Playbook linuxfabrik.lfops.postfix'
   hosts:
     - 'lfops_postfix'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.postfix'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

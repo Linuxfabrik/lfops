@@ -1,6 +1,12 @@
-- name: 'Configures mail to root'
+- name: 'Playbook linuxfabrik.lfops.mailto_root'
   hosts:
     - 'lfops_mailto_root'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -17,3 +23,9 @@
         - 'not mailto_root__skip_mailx | d(false)'
 
     - role: 'linuxfabrik.lfops.mailto_root'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

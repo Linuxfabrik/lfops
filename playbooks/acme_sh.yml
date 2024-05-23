@@ -1,6 +1,12 @@
-- name: 'Install and configure acme.sh'
+- name: 'Playbook linuxfabrik.lfops.acme_sh'
   hosts:
     - 'lfops_acme_sh'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -10,3 +16,9 @@
         }}'
 
     - role: 'linuxfabrik.lfops.acme_sh'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

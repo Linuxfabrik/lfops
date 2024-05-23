@@ -1,7 +1,19 @@
-- name: 'Manage and configure the Elasticsearch OSS Repository'
+- name: 'Playbook linuxfabrik.lfops.repo_elasticsearch_oss'
   hosts:
     - 'lfops_repo_elasticsearch_oss'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_elasticsearch_oss'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

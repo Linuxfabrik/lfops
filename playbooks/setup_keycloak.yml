@@ -1,6 +1,12 @@
-- name: 'Install and configure Keycloak'
+- name: 'Playbook linuxfabrik.lfops.setup_keycloak'
   hosts:
     - 'lfops_setup_keycloak'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -46,3 +52,9 @@
       apps__apps__dependent_var: '{{ keycloak__apps__apps__dependent_var | d([]) }}'
 
     - role: 'linuxfabrik.lfops.keycloak'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

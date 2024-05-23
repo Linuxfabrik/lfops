@@ -1,6 +1,12 @@
-- name: 'Install and configure IcingaWeb2'
+- name: 'Playbook linuxfabrik.lfops.icingaweb2'
   hosts:
     - 'lfops_icingaweb2'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -61,3 +67,9 @@
     # TOOD: apache with injection
 
     - role: 'linuxfabrik.lfops.icingaweb2'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'

@@ -1,6 +1,12 @@
-- name: 'The Linuxfabrik Nextcloud setup'
+- name: 'Playbook linuxfabrik.lfops.setup_nextcloud'
   hosts:
     - 'lfops_setup_nextcloud'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+
 
   roles:
 
@@ -150,3 +156,9 @@
     - role: 'linuxfabrik.lfops.objectstore_backup'
       when:
         - 'not setup_nextcloud__skip_objectstore_backup | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
