@@ -1,7 +1,7 @@
 - name: 'Log START to /var/log/linuxfabrik-lfops.log'
   ansible.builtin.lineinfile:
     path: '/var/log/linuxfabrik-lfops.log'
-    line: '{{ now() }} - {{ ansible_play_name }}: START'
+    line: '{{ now() }} - {{ ansible_play_name }}: START (Tags: {{ ansible_run_tags }}, Skip Tags: {{ ansible_skip_tags }})'
     create: true
   when: 'not ansible_check_mode'
   changed_when: false
