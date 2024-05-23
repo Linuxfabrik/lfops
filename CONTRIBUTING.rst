@@ -18,6 +18,8 @@ Playbooks:
             - ansible.builtin.import_role:
                 name: 'shared'
                 tasks_from: 'log-start.yml'
+              tags:
+                - 'always'
 
           roles:
             - role: '...'
@@ -26,6 +28,8 @@ Playbooks:
             - ansible.builtin.import_role:
                 name: 'shared'
                 tasks_from: 'log-end.yml'
+              tags:
+                - 'always'
 
 Roles:
 
