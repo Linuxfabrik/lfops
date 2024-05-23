@@ -1,0 +1,7 @@
+- name: 'Log END to /var/log/linuxfabrik-lfops.log'
+  ansible.builtin.lineinfile:
+    path: '/var/log/linuxfabrik-lfops.log'
+    line: '{{ now() }} - {{ ansible_play_name }}: END'
+    create: true
+  when: 'not ansible_check_mode'
+  changed_when: false
