@@ -6,7 +6,7 @@ Which Ansible role is proven to run on which OS?
                                      |    Debian    |   RHEL    |                Ubuntu                 | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-------+-------+-----------
-acme_sh                              |    |    |    |   | x |   |       |       |       |       |       |
+acme_sh                              |    |    |    |   | x | x |       |       |       |       |       |
 ansible_init                         |    |    |    |   |   |   |       |       |       |       |       | Fedora 35+
 apache_httpd                         |    |    |    |   | x | x |       |       |       |       |       |
 apache_solr                          |    |    |    |   | x | x |       |       |       |       |       |
@@ -29,9 +29,9 @@ docker                               |    |    |    |   | x |   |       |       
 duplicity                            |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
 elasticsearch_oss                    |    |    |    |   | x |   |       |       |       |       |       |
 exoscale_vm                          |    |    |    |   |   |   |       |       |       |       |       | Fedora 35+
-fail2ban                             |    |    |    |   | x |   |       |       |       |       |       |
+fail2ban                             |    |    |    |   | x | x |       |       |       |       |       |
 fangfrisch                           |    |    |    |   | x |   |       |       |       |       |       |
-files                                |    |    |    |   | x |   |       |       |       |       |       |
+files                                |    |    |    |   | x | x |       |       |       |       |       |
 firewall                             |    |    |    | x | x | x |   x   |       |       |       |       |
 freeipa_client                       |    |    |    | x | x | x |       |       |       |       |       |
 freeipa_server                       |    |    |    |   | x | x |       |       |       |       |       |
