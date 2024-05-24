@@ -42,6 +42,8 @@ acme_sh__account_email: 'info@example.com'
 acme_sh__certificates:
   - name: 'other.example.com'
   - name: 'test.example.com'
+    alternative_names:
+      - 'linuxfabrik.example.com'
     reload_cmd: '/usr/local/sbin/custom_reload_script'
 ```
 
