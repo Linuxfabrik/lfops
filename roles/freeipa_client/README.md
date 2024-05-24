@@ -39,6 +39,8 @@ freeipa_client__ipa_admin_user:
 
 Re-join an unprovisioned host: `ansible-playbook ... --extra-vars='ipaclient_force_join=true'`
 
+`IPA client already installed with a conflicting domain`: Follow [Manually Unconfiguring Client Machines](https://access.redhat.com/documentation/de-de/red_hat_enterprise_linux/6/html/identity_management_guide/manually-unconfig-machines)
+
 
 ## License
 
