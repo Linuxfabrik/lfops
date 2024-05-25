@@ -458,10 +458,9 @@ apache_httpd__mpm_worker_threads_per_child: 25
 # mod_security
 # normally nothing that you have to change
 # get details from https://coreruleset.org/installation/
-# origin: https://github.com/coreruleset/coreruleset/archive/v3.3.2.tar.gz
+# origin: https://github.com/coreruleset/coreruleset/releases
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '3.3.2'
-apache_httpd__mod_security_coreruleset_checksum: 'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'
+apache_httpd__mod_security_coreruleset_version: '4.3.0'
 
 # mod_ssl
 apache_httpd__mod_ssl_ssl_use_stapling: 'on'

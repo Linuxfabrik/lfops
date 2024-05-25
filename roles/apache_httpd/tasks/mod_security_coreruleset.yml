@@ -1,9 +1,8 @@
-# Manage OWASP ModSecurity Core Rule Set (CRS), https://coreruleset.org/installation/
+# Manage OWASP ModSecurity Core Rule Set (CRS), https://coreruleset.org/docs/deployment/install/
 - name: 'Download, verify and install OWASP ModSecurity Core Rule Set (CRS)'
   ansible.builtin.get_url:
     url: '{{ apache_httpd__mod_security_coreruleset_url }}/v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
     dest: '/tmp/coreruleset-v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
-    checksum: '{{ apache_httpd__mod_security_coreruleset_checksum }}'
 
 - name: 'install tar'
   ansible.builtin.package:
