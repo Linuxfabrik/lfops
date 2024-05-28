@@ -15,9 +15,5 @@ login__passwordless_sudo_group: ''
 
 # -----------------------------------------------------------------------------
 
-login__apps__apps__dependent_var:
-  - name: 'libuser'
-    state: 'present'
-
 login__python__modules__dependent_var:
   - name: 'python3-passlib'
