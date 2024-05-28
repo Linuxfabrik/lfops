@@ -19,6 +19,13 @@
       when:
         - 'not login__skip_python | d(false)'
 
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: '{{
+          login__apps__apps__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
     - role: 'linuxfabrik.lfops.login'
 
 
