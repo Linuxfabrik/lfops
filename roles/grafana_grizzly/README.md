@@ -10,6 +10,8 @@ Additionally, this role allows you to apply Grafana resources which are saved as
 * A Grafana Server. This can be done using the [linuxfabrik.lfops.grafana](https://github.com/linuxfabrik/lfops/tree/main/roles/grafana) role.
 * A Grafana [service account](https://grafana.com/docs/grafana/latest/administration/service-accounts/) with an Admin token. This can be done using the [linuxfabrik.lfops.grafana](https://github.com/linuxfabrik/lfops/tree/main/roles/grafana) role.
 
+If you use the [Grafana Grizzly Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/grafana_grizzly.yml) this is automatically done for you.
+
 
 ## Tags
 

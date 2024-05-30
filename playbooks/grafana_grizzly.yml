@@ -12,6 +12,17 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.repo_grafana'
+      when:
+        - 'not grafana_server__skip_repo_grafana | d(false)'
+
+    - role: 'linuxfabrik.lfops.grafana'
+      grafana__provisioning_service_accounts__dependent_var: '{{
+          grafana_grizzly__grafana__provisioning_service_accounts__dependent_var
+        }}'
+      when:
+        - 'not grafana_server__skip_grafana | d(false)'
+
     - role: 'linuxfabrik.lfops.grafana_grizzly'
 
 
