@@ -52,6 +52,19 @@
 
 - block:
 
+  - name: 'install grafana plugins'
+    community.grafana.grafana_plugin:
+      name: '{{ item["name"] }}'
+      state: '{{ item ["state"] | d("present") }}'
+    loop: '{{ grafana__plugins__combined_var }}'
+    notify: 'grafana: restart grafana-server'
+
+  tags:
+    - 'grafana:plugins'
+
+
+- block:
+
   - name: 'mkdir -p /etc/grafana/provisioning/datasources/'
     ansible.builtin.file:
       path: '/etc/grafana/provisioning/datasources/'

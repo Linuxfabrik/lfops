@@ -6,6 +6,18 @@ grafana__auth_anonymous_org_role: 'Viewer'
 grafana__bitwarden_collection_id: '{{ lfops__bitwarden_collection_id | default() }}'
 grafana__bitwarden_organization_id: '{{ lfops__bitwarden_organization_id | default() }}'
 grafana__cookie_samesite: 'lax'
+grafana__plugins__dependent_var: []
+grafana__plugins__group_var: []
+grafana__plugins__host_var: []
+grafana__plugins__role_var: []
+grafana__plugins__combined_var: '{{ (
+      grafana__plugins__role_var +
+      grafana__plugins__dependent_var +
+      grafana__plugins__group_var +
+      grafana__plugins__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
 grafana__provisioning_dashboards__dependent_var: []
 grafana__provisioning_dashboards__group_var: []
 grafana__provisioning_dashboards__host_var: []
