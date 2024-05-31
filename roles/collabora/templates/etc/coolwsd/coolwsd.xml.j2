@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2024052701 -->
+    <!-- 2024053101 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -80,7 +80,7 @@
     </per_document>
 
     <per_view desc="View-specific settings.">
-        <out_of_focus_timeout_secs desc="The maximum number of seconds before dimming and stopping updates when the browser tab is no longer in focus. Defaults to 300 seconds." type="uint" default="300">300</out_of_focus_timeout_secs>
+        <out_of_focus_timeout_secs desc="The maximum number of seconds before dimming and stopping updates when the browser tab is no longer in focus. Defaults to 300 seconds." type="uint" default="300">{{ collabora__coolwsd_out_of_focus_timeout_secs | default(300) }}</out_of_focus_timeout_secs>
         <idle_timeout_secs desc="The maximum number of seconds before dimming and stopping updates when the user is no longer active (even if the browser is in focus). Defaults to 15 minutes." type="uint" default="900">900</idle_timeout_secs>
         <custom_os_info desc="Custom string shown as OS version in About dialog, get from system if empty." type="string" default=""></custom_os_info>
     </per_view>
@@ -170,6 +170,9 @@
         <host desc="Ditto, but as IPv4-mapped IPv6 addresses">::ffff:10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}</host>
       </post_allow>
       <lok_allow desc="Allowed hosts as an external data source inside edited files. All allowed post_allow.host and storage.wopi entries are also considered to be allowed as a data source. Used for example in: PostMessage Action_InsertGraphics, =WEBSERVICE() function, external reference in the cell.">
+        {% for item in collabora__coolwsd_lok_allow %}
+        <host desc="">{{ item }}</host>
+        {% endfor %}
         <host desc="The IPv4 private 192.168 block as plain IPv4 dotted decimal addresses.">192\.168\.[0-9]{1,3}\.[0-9]{1,3}</host>
         <host desc="Ditto, but as IPv4-mapped IPv6 addresses">::ffff:192\.168\.[0-9]{1,3}\.[0-9]{1,3}</host>
         <host desc="The IPv4 loopback (localhost) address.">127\.0\.0\.1</host>
