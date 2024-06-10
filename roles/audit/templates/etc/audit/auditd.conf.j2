@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023012601
+# 2024061001
 
 #
 # This file controls the configuration of the audit daemon
@@ -13,35 +13,31 @@ log_format = ENRICHED
 flush = INCREMENTAL_ASYNC
 freq = 50
 max_log_file = 8
+num_logs =  {{ audit__num_logs | d(5) }}
 priority_boost = 4
 name_format = NONE
 ##name = mydomain
-
-# Because the keep_logs option did not trigger the space_left_action, we set the max number logfiles to 10
-num_logs = 10
-max_log_file_action = rotate
-
-space_left = 20%
-# rotate will rotate logs, losing the oldest to free up space.
-space_left_action = rotate
+max_log_file_action = ROTATE
+space_left = {{ audit__space_left | d(75) }}
+space_left_action = {{ audit__space_left_action | d('SYSLOG') }}
 verify_email = yes
-action_mail_acct = {{ audit__action_mail_account }}
-admin_space_left = 10%
-admin_space_left_action = email
-
+action_mail_acct = {{ audit__action_mail_account | d('root') }}
+admin_space_left = {{ audit__admin_space_left | d(50) }}
+admin_space_left_action = {{ admin_space_left_action | d('SUSPEND') }}
 disk_full_action = SUSPEND
 disk_error_action = SUSPEND
 use_libwrap = yes
-## tcp_listen_port = 60
+##tcp_listen_port = 60
 tcp_listen_queue = 5
 tcp_max_per_addr = 1
-## tcp_client_ports = 1024-65535
+##tcp_client_ports = 1024-65535
 tcp_client_max_idle = 0
-## transport = TCP
+transport = TCP
 krb5_principal = auditd
-## krb5_key_file = /etc/audit/audit.key
+##krb5_key_file = /etc/audit/audit.key
 distribute_network = no
-## q_depth = 400
-## overflow_action = SYSLOG
-## max_restarts = 10
-## plugin_dir = /etc/audit/plugins.d
+q_depth = 1200
+overflow_action = SYSLOG
+max_restarts = 10
+plugin_dir = /etc/audit/plugins.d
+end_of_event_timeout = 2
