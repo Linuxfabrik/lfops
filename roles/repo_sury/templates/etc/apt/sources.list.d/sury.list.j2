@@ -1,10 +1,10 @@
 # {{ ansible_managed }}
-# 2023022001
+# 2024061101
 
 {% for item in repo_sury__enabled_repos %}
 {% if repo_sury__mirror_url is defined and repo_sury__mirror_url | length %}
-deb {{ repo_sury__mirror_url }}/{{ item }}/ {{ ansible_facts["distribution_release"] }} main
+deb [signed-by=/usr/share/keyrings/deb.sury.org-{{ item }}.gpg] {{ repo_sury__mirror_url }}/{{ item }}/ {{ ansible_facts["distribution_release"] }} main
 {% else %}
-deb https://packages.sury.org/{{ item }}/ {{ ansible_facts["distribution_release"] }} main
+deb [signed-by=/usr/share/keyrings/deb.sury.org-{{ item }}.gpg] https://packages.sury.org/{{ item }}/ {{ ansible_facts["distribution_release"] }} main
 {% endif %}
 {% endfor %}
