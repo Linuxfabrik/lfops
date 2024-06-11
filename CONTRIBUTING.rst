@@ -113,7 +113,7 @@ Quotes
 * Do not quote booleans (e.g. ``true``/``false``).
 * Do not quote numbers (e.g. ``42``).
 * Do not quote octal numbers (e.g. ``0755``).
-* Do not quote things referencing the local Ansible environment (e.g. boolean logic in ``when:` statements or names of variables we are assigning values to).
+* Do not quote things referencing the local Ansible environment (e.g. boolean logic in ``when:`` statements or names of variables we are assigning values to).
 
 .. code-block:: yml
 
