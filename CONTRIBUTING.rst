@@ -454,6 +454,48 @@ Variables
           fail_msg: 'Please define bootloader passwords for your hosts ("stig__grub2_password").''
 
 
+``skip_role``-Variables in Playbooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``playbook_name__role_name__skip_role`` and ``playbook_name__role_name__skip_role_injections`` variables should provide the user an option to skip the role and the role's injections respectively. Have a look at the `README.md <./README.md#skipping-roles-in-a-playbook`_.
+
+For this, we need to set the following two internal variables at the top of the playbook (between the ``hosts:`` and ``roles:``):
+
+.. code-block:: yaml
+
+      vars:
+
+        setup_icinga2_master__icingaweb2__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2__skip_injections | d(setup_icinga2_master__icingaweb2__skip_role__internal_var) }}'
+        setup_icinga2_master__icingaweb2__skip_role__internal_var:       '{{ setup_icinga2_master__icingaweb2__skip_role       | d(false) }}'
+
+Then use them with the roles as follows:
+
+.. code-block:: yaml
+
+    - role: 'linuxfabrik.lfops.icingaweb2'
+      when:
+        - 'not setup_icinga2_master__icingaweb2__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.mariadb_server'
+      mariadb_server__databases__dependent_var: '{{
+          (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__mariadb_server__databases__dependent_var, [])
+        }}'
+      mariadb_server__users__dependent_var: '{{
+          (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__mariadb_server__users__dependent_var, []) +
+        }}'
+
+Make sure to use the following format when passing multiple injections to avoid needing to flatten the list:
+
+.. code-block:: yaml
+
+    - role: 'linuxfabrik.lfops.icinga2_master'
+      icinga2_master__api_users__dependent_var: '{{
+          (not setup_icinga2_master__icingadb__skip_injections__internal_var) | ternary(icingadb__icinga2_master__api_users__dependent_var, []) +
+          (not setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var) | ternary(icingaweb2_module_director__icinga2_master__api_users__dependent_var, []) +
+          (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__icinga2_master__api_users__dependent_var, [])
+        }}'
+
+
 Injections
 ~~~~~~~~~~
 
@@ -569,18 +611,6 @@ The vHost example above can be used to demonstrate another feature of ``linuxfab
           apache_httpd__vhosts__host_var
         ) | linuxfabrik.lfops.combine_lod(unique_key=["conf_server_name", "virtualhost_port"])
       }}'
-
-When setting a ``dependent_var`` in a playbook, make sure to use the following format to avoid needing to flatten the list:
-
-.. code-block:: yaml
-
-    - role: 'linuxfabrik.lfops.icinga2_master'
-      icinga2_master__api_users__dependent_var: '{{
-          icingadb__icinga2_master__api_users__dependent_var +
-          icingaweb2__icinga2_master__api_users__dependent_var +
-          (not setup_icinga2_master__skip_icingaweb2_module_vspheredb | default(true)) | ternary(icingaweb2_module_vspheredb__mariadb_server__users__dependent_var, []) +
-          icingaweb2_module_director__icinga2_master__api_users__dependent_var
-        }}'
 
 Note:
 

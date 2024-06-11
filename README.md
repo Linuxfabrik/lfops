@@ -90,6 +90,24 @@ ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.setup_nextcloud
 ```
 
 
+## Skipping Roles in a Playbook
+
+The playbooks offer the option to skip roles based on variables that can be set in the inventory. For example to skip the setup of IcingaWeb2 for Icinga2 master, set `setup_icinga2_master__icingaweb2__skip_role: true`.
+
+Setting this also disables the injections coming from the `icingaweb2` role. Normally, the `icingaweb2` role injects databases and users to the `mariadb_server` role. This is now disabled. To re-activate this behaviour, also set `setup_icinga2_master__icingaweb2__skip_injections: false`. This is useful when one wants to run MariaDB and IcingaWeb2 on different hosts.
+
+In short:
+
+* `playbook_name__role_name__skip_role`:
+    * Skips the role and disables the role's injections.
+    * Have a look at the playbook for the default value.
+
+* `playbook_name__role_name__skip_role_injections`:
+    * Disables or re-enables the role's injections. Takes priority over  `playbook_name__role_name__skip_role`.
+    * Defaults to `playbook_name__role_name__skip_role` for ease of use.
+    * Have a look at the playbook for the affected injections.
+
+
 ## Bitwarden
 
 Requires the [bw CLI](https://bitwarden.com/help/article/cli/) version v2022.9.0+.
