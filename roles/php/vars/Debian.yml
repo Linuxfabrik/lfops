@@ -1,0 +1,8 @@
+php__conf_dest:
+  - '/etc/php/8.2/apache2/conf.d/z00-linuxfabrik.ini'
+  - '/etc/php/8.2/cli/conf.d/z00-linuxfabrik.ini'
+  - '/etc/php/8.2/fpm/conf.d/z00-linuxfabrik.ini'
+php__fpm_pools_path: '/etc/php/{{ php__installed_version }}/fpm/pool.d'
+php__fpm_service_name: 'php{{ php__installed_version }}-fpm'
+php__webserver_group: 'www-data'
+php__webserver_user: 'www-data'
