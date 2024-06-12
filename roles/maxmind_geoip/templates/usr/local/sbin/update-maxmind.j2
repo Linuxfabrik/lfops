@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
-# 2022121301
+# {{ ansible_managed }}
+# 2024061201
 
-MM_LIC={{ maxmind_geoip__lic }}
+set -e
 
-cd /tmp || exit
+MM_LIC="{{ maxmind_geoip__lic }}"
 
-MM_DB=GeoLite2-ASN
-wget --quiet "https://download.maxmind.com/app/geoip_download?edition_id=$MM_DB&suffix=tar.gz&license_key=$MM_LIC" -O $MM_DB.tar.gz
-tar xzf $MM_DB.tar.gz
-\cp "$MM_DB"_*/$MM_DB.mmdb /usr/share/GeoIP/
+cd /tmp
 
-MM_DB=GeoLite2-City
-wget --quiet "https://download.maxmind.com/app/geoip_download?edition_id=$MM_DB&suffix=tar.gz&license_key=$MM_LIC" -O $MM_DB.tar.gz
-tar xzf $MM_DB.tar.gz
-\cp "$MM_DB"_*/$MM_DB.mmdb /usr/share/GeoIP/
+for file in GeoLite2-ASN GeoLite2-City GeoLite2-Country; do
+    wget --quiet "https://download.maxmind.com/app/geoip_download?edition_id=$file&suffix=tar.gz&license_key=$MM_LIC" -O $file.tar.gz
+    tar xzf $file.tar.gz
+done
+logger "update-maxmind: Files downloaded and untared"
 
-MM_DB=GeoLite2-Country
-wget --quiet "https://download.maxmind.com/app/geoip_download?edition_id=$MM_DB&suffix=tar.gz&license_key=$MM_LIC" -O $MM_DB.tar.gz
-tar xzf $MM_DB.tar.gz
-\cp "$MM_DB"_*/$MM_DB.mmdb /usr/share/GeoIP/
+# to minimize errors like "The MaxMind DB file's search tree is corrupt", move all files
+# at the end of this script
+\cp "GeoLite2-ASN"_*/GeoLite2-ASN.mmdb /usr/share/GeoIP/
+\cp "GeoLite2-City"_*/GeoLite2-City.mmdb /usr/share/GeoIP/
+\cp "GeoLite2-Country"_*/GeoLite2-Country.mmdb /usr/share/GeoIP/
+logger "update-maxmind: Files copied, database updated"
 
 rm -rf /tmp/GeoLite2-*
