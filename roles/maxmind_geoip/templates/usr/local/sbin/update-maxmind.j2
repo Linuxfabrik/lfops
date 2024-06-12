@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2024061201
+# 2024061204
 
 set -e
 
@@ -8,17 +8,18 @@ MM_LIC="{{ maxmind_geoip__lic }}"
 
 cd /tmp
 
+echo "Starting download"
 for file in GeoLite2-ASN GeoLite2-City GeoLite2-Country; do
     wget --quiet "https://download.maxmind.com/app/geoip_download?edition_id=$file&suffix=tar.gz&license_key=$MM_LIC" -O $file.tar.gz
     tar xzf $file.tar.gz
 done
-logger "update-maxmind: Files downloaded and untared"
+echo "Files downloaded and untared"
 
 # to minimize errors like "The MaxMind DB file's search tree is corrupt", move all files
 # at the end of this script
 \cp "GeoLite2-ASN"_*/GeoLite2-ASN.mmdb /usr/share/GeoIP/
 \cp "GeoLite2-City"_*/GeoLite2-City.mmdb /usr/share/GeoIP/
 \cp "GeoLite2-Country"_*/GeoLite2-Country.mmdb /usr/share/GeoIP/
-logger "update-maxmind: Files copied, database updated"
+echo "Files copied, database updated"
 
 rm -rf /tmp/GeoLite2-*
