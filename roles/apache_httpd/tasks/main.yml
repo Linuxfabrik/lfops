@@ -47,12 +47,18 @@
       group: 'root'
       mode: 0o755
     loop:
-      - '{{ apache_httpd__config_path }}/conf-available'
-      - '{{ apache_httpd__config_path }}/conf-enabled'
-      - '{{ apache_httpd__config_path }}/mods-available'
-      - '{{ apache_httpd__config_path }}/mods-enabled'
-      - '{{ apache_httpd__config_path }}/sites-available'
-      - '{{ apache_httpd__config_path }}/sites-enabled'
+      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}conf-available'
+      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}conf-enabled'
+      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}mods-available'
+      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}mods-enabled'
+      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}sites-available'
+      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}sites-enabled'
+
+  - name: 'ln -s {{ apache_httpd__config_path}}/logs {{ apache_httpd__log_path }}'
+    ansible.builtin.file:
+      dest: '{{ apache_httpd__config_path}}/logs'
+      src: '{{ apache_httpd__log_path }}'
+      state: 'link'
 
   tags:
     - 'apache_httpd'

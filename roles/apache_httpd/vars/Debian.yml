@@ -1,20 +1,247 @@
-# List of base packages to install
 apache_httpd__base_packages:
   - 'apache2'
   - 'bind9-dnsutils'  # for dig etc.
-
-apache_httpd__group: 'www-data'
-apache_httpd__service_name: 'apache2'
-apache_httpd__user: 'www-data'
-
 apache_httpd__config_file: '{{ apache_httpd__config_path }}/apache2.conf'
 apache_httpd__config_path: '/etc/apache2'
+apache_httpd__config_prefix: 'lfops-' # deploy our configs into an directory that is not influenced by the package manager
 apache_httpd__config_test_command: 'apachectl -t'
+apache_httpd__group: 'www-data'
+apache_httpd__log_path: '/var/log/apache2'
+apache_httpd__mods__role_var:
+  - filename: 'alias'
+    enabled: true
+    state: 'present'
+    template: 'alias'
 
+  - filename: 'auth_basic'
+    enabled: true
+    state: 'present'
+    template: 'auth_basic'
+
+  - filename: 'authn_core'
+    enabled: true
+    state: 'present'
+    template: 'authn_core'
+
+  - filename: 'authn_file'
+    enabled: true
+    state: 'present'
+    template: 'authn_file'
+
+  - filename: 'authz_core'
+    enabled: true
+    state: 'present'
+    template: 'authz_core'
+
+  - filename: 'authz_host'
+    enabled: true
+    state: 'present'
+    template: 'authz_host'
+
+  - filename: 'authz_user'
+    enabled: true
+    state: 'present'
+    template: 'authz_user'
+
+  - filename: 'cgi'
+    enabled: false
+    state: 'present'
+    template: 'cgi'
+
+  - filename: 'cgid'
+    enabled: false
+    state: 'present'
+    template: 'cgid'
+
+  - filename: 'deflate'
+    enabled: false
+    state: 'present'
+    template: 'deflate'
+
+  - filename: 'dir'
+    enabled: true
+    state: 'present'
+    template: 'dir'
+
+  - filename: 'filter'
+    enabled: false
+    state: 'present'
+    template: 'filter'
+
+  - filename: 'expires'
+    enabled: true
+    state: 'present'
+    template: 'expires'
+
+  - filename: 'headers'
+    enabled: true
+    state: 'present'
+    template: 'headers'
+
+  - filename: 'http2'
+    enabled: false
+    state: 'present'
+    template: 'http2'
+
+  - filename: 'include'
+    enabled: true # required for `AddOutputFilter INCLUDES .shtml` of `conf-available/mime.conf`
+    state: 'present'
+    template: 'include'
+
+  - filename: 'info'
+    enabled: true
+    state: 'present'
+    template: 'info'
+
+  - filename: 'log_config'
+    enabled: false # module ... is built-in and can''t be loaded'
+    state: 'absent'
+    template: 'log_config'
+
+  - filename: 'logio'
+    enabled: false # module ... is built-in and can''t be loaded'
+    state: 'absent'
+    template: 'logio'
+
+  - filename: 'maxminddb'
+    enabled: false
+    state: 'present'
+    template: 'maxminddb'
+
+  - filename: 'mime'
+    enabled: true
+    state: 'present'
+    template: 'mime'
+
+  - filename: 'mime_magic'
+    enabled: true
+    state: 'present'
+    template: 'mime_magic'
+
+  - filename: 'mpm_event'
+    enabled: true
+    state: 'present'
+    template: 'mpm_event'
+
+  - filename: 'mpm_prefork'
+    enabled: false
+    state: 'present'
+    template: 'mpm_prefork'
+
+  - filename: 'mpm_worker'
+    enabled: false
+    state: 'present'
+    template: 'mpm_worker'
+
+  - filename: 'php7'
+    enabled: false
+    state: 'present'
+    template: 'php7'
+
+  - filename: 'php8'
+    enabled: false
+    state: 'present'
+    template: 'php8'
+
+  - filename: 'proxy'
+    enabled: true
+    state: 'present'
+    template: 'proxy'
+
+  - filename: 'proxy_fcgi'
+    enabled: true
+    state: 'present'
+    template: 'proxy_fcgi'
+
+  - filename: 'proxy_http'
+    enabled: false
+    state: 'present'
+    template: 'proxy_http'
+
+  - filename: 'proxy_wstunnel'
+    enabled: false
+    state: 'present'
+    template: 'proxy_wstunnel'
+
+  - filename: 'qos'
+    enabled: false # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1000072
+    state: 'absent'
+    template: 'qos'
+
+  - filename: 'reqtimeout'
+    enabled: true
+    state: 'present'
+    template: 'reqtimeout'
+
+  - filename: 'rewrite'
+    enabled: true
+    state: 'present'
+    template: 'rewrite'
+
+  - filename: 'security2'
+    enabled: false
+    state: 'present'
+    template: 'security2'
+
+  - filename: 'setenvif'
+    enabled: true
+    state: 'present'
+    template: 'setenvif'
+
+  - filename: 'slotmem_shm'
+    enabled: true
+    state: 'present'
+    template: 'slotmem_shm'
+
+  - filename: 'socache_shmcb'
+    enabled: true
+    state: 'present'
+    template: 'socache_shmcb'
+
+  - filename: 'ssl'
+    enabled: true
+    state: 'present'
+    template: 'ssl'
+
+  - filename: 'status'
+    enabled: true
+    state: 'present'
+    template: 'status'
+
+  - filename: 'systemd'
+    enabled: false # cannot open shared object file: No such file or directory'
+    state: 'absent'
+    template: 'systemd'
+
+  - filename: 'unique_id'
+    enabled: true
+    state: 'present'
+    template: 'unique_id'
+
+  - filename: 'unix'
+    enabled: false # module ... is built-in and can''t be loaded'
+    state: 'absent'
+    template: 'unix'
+
+  - filename: 'wsgi_python3'
+    enabled: false
+    state: 'present'
+    template: 'wsgi_python3'
 apache_httpd__modules_path: '/usr/lib/apache2/modules'
-apache_httpd__root_path: '/var/www'
-apache_httpd__roothtml_path: '/var/www/html'
-
 apache_httpd__openssl_certificate_path: '/etc/pki/tls/certs'
 apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'
 apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
+apache_httpd__packages__role_var:
+  # - name: 'libapache2-mod-qos'
+  #   state: 'absent' # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1000072
+
+  - name: 'libapache2-mod-security2'
+    state: 'present'
+
+  # - name: 'mod_ssl' # part of apache2-bin package on deb
+  #   state: 'present'
+apache_httpd__php_set_handler_default: 'SetHandler "proxy:unix:/run/php/www.sock|fcgi://localhost"'
+apache_httpd__root_path: '/var/www'
+apache_httpd__roothtml_path: '/var/www/html'
+apache_httpd__service_name: 'apache2'
+apache_httpd__user: 'www-data'

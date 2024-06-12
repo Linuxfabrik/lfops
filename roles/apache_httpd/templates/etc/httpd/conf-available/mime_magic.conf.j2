@@ -5,5 +5,9 @@
 {% endif %}
 
 # mime_magic_module>
+{% if ansible_facts["os_family"] == 'Debian' %}
+MIMEMagicFile magic
+{% else %}
 MIMEMagicFile conf/magic
+{% endif %}
 {{ item['raw'] | d() }}

@@ -17,7 +17,10 @@ SSLCryptoDevice builtin
 # identify a compatibility level (nothing to worry about, just a display issue).
 SSLHonorCipherOrder off
 
+{# file '/usr/libexec/httpd-ssl-pass-dialog' does not exist on Debian #}
+{% if ansible_facts["os_family"] != 'Debian' %}
 SSLPassPhraseDialog exec:/usr/libexec/httpd-ssl-pass-dialog
+{% endif %}
 SSLRandomSeed connect builtin
 SSLRandomSeed startup file:/dev/urandom  1024
 SSLSessionCache shmcb:/run/httpd/sslcache(512000)
