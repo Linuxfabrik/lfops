@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023092001
+# 2024061201
 
 {% if repo_debian_base__mirror_url is defined and repo_debian_base__mirror_url | length %}
 deb {{ repo_debian_base__mirror_url }}/debian/ {{ ansible_facts["distribution_release"] }} main
@@ -11,8 +11,8 @@ deb-src {{ repo_debian_base__mirror_url }}/debian-security {{ ansible_facts["dis
 deb {{ repo_debian_base__mirror_url }}/debian/ {{ ansible_facts["distribution_release"] }}-updates main
 deb-src {{ repo_debian_base__mirror_url }}/debian/ {{ ansible_facts["distribution_release"] }}-updates main
 
-deb {{ repo_debian_base__mirror_url }} {{ ansible_facts["distribution_release"] }}-backports main
-deb-src {{ repo_debian_base__mirror_url }} {{ ansible_facts["distribution_release"] }}-backports main
+deb {{ repo_debian_base__mirror_url }}/debian {{ ansible_facts["distribution_release"] }}-backports main
+deb-src {{ repo_debian_base__mirror_url }}/debian {{ ansible_facts["distribution_release"] }}-backports main
 {% else %}
 deb https://deb.debian.org/debian/ {{ ansible_facts["distribution_release"] }} main
 deb-src https://deb.debian.org/debian/ {{ ansible_facts["distribution_release"] }} main
