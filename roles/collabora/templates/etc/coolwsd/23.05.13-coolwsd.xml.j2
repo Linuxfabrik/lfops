@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2024053101 -->
+    <!-- 2024061301 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -45,20 +45,17 @@
     <hexify_embedded_urls desc="Enable to protect encoded URLs from getting decoded by intermediate hops. Particularly useful on Azure deployments" type="bool" default="false"></hexify_embedded_urls>
     <experimental_features desc="Enable/Disable experimental features" type="bool" default="false">{{ collabora__coolwsd_experimental_features | d('false') | string | lower }}</experimental_features>
 
-    <memproportion desc="The maximum percentage of available memory consumed by all of the Collabora Online Development Edition processes, after which we start cleaning up idle documents. If cgroup memory limits are set, this is the maximum percentage of that limit to consume." type="double" default="80.0"></memproportion>
-    <num_prespawn_children desc="Number of child processes to keep started in advance and waiting for new clients." type="uint" default="4">4</num_prespawn_children>
+    <memproportion desc="The maximum percentage of available memory consumed by all of the Collabora Online processes, after which we start cleaning up idle documents. If cgroup memory limits are set, this is the maximum percentage of that limit to consume." type="double" default="80.0"></memproportion>
+    <num_prespawn_children desc="Number of child processes to keep started in advance and waiting for new clients." type="uint" default="1">1</num_prespawn_children>
     <!-- <fetch_update_check desc="Every number of hours will fetch latest version data. Defaults to 10 hours." type="uint" default="10">10</fetch_update_check> -->
     <per_document desc="Document-specific settings, including LO Core settings.">
         <max_concurrency desc="The maximum number of threads to use while processing a document." type="uint" default="4">4</max_concurrency>
         <batch_priority desc="A (lower) priority for use by batch eg. convert-to processes to avoid starving interactive ones" type="uint" default="5">5</batch_priority>
-        <bgsave_priority desc="A (lower) priority for use by background save processes to free time for interactive ones" type="uint" default="5">5</bgsave_priority>
         <redlining_as_comments desc="If true show red-lines as comments" type="bool" default="false">false</redlining_as_comments>
         <pdf_resolution_dpi desc="The resolution, in DPI, used to render PDF documents as image. Memory consumption grows proportionally. Must be a positive value less than 385. Defaults to 96." type="uint" default="96">96</pdf_resolution_dpi>
         <idle_timeout_secs desc="The maximum number of seconds before unloading an idle document. Defaults to 1 hour." type="uint" default="3600">3600</idle_timeout_secs>
         <idlesave_duration_secs desc="The number of idle seconds after which document, if modified, should be saved. Disabled when 0. Defaults to 30 seconds." type="uint" default="30">30</idlesave_duration_secs>
         <autosave_duration_secs desc="The number of seconds after which document, if modified, should be saved. Disabled when 0. Defaults to 5 minutes." type="uint" default="300">300</autosave_duration_secs>
-        <background_autosave desc="Allow auto-saves to occur in a forked background process where possible." type="bool" default="true">true</background_autosave>
-        <background_manualsave desc="Allow manual save to occur in a forked background process where possible" type="bool" default="true">true</background_manualsave>
         <always_save_on_exit desc="On exiting the last editor, always perform a save and upload if the document had been modified. This is to allow the storage to store the document, if it had skipped doing so, previously, as an optimization." type="bool" default="false">false</always_save_on_exit>
         <limit_virt_mem_mb desc="The maximum virtual memory allowed to each document process. 0 for unlimited." type="uint">0</limit_virt_mem_mb>
         <limit_stack_mem_kb desc="The maximum stack size allowed to each document process. 0 for unlimited." type="uint">8000</limit_stack_mem_kb>
@@ -80,6 +77,7 @@
     </per_document>
 
     <per_view desc="View-specific settings.">
+        <group_download_as desc="If set to true, groups download as icons into a dropdown for the notebookbar view." type="bool" default="true">true</group_download_as>
         <out_of_focus_timeout_secs desc="The maximum number of seconds before dimming and stopping updates when the browser tab is no longer in focus. Defaults to 300 seconds." type="uint" default="300">{{ collabora__coolwsd_out_of_focus_timeout_secs | default(300) }}</out_of_focus_timeout_secs>
         <idle_timeout_secs desc="The maximum number of seconds before dimming and stopping updates when the user is no longer active (even if the browser is in focus). Defaults to 15 minutes." type="uint" default="900">900</idle_timeout_secs>
         <custom_os_info desc="Custom string shown as OS version in About dialog, get from system if empty." type="string" default=""></custom_os_info>
@@ -96,7 +94,6 @@
         -->
         <level type="string" desc="Can be 0-8 (with the lowest numbers being the least verbose), or none (turns off logging), fatal, critical, error, warning, notice, information, debug, trace" default="warning">warning</level>
         <level_startup type="string" desc="As for level - but for the initial startup phase which is most problematic, logging reverts to level configured above when startup is complete" default="trace">trace</level_startup>
-        <disabled_areas type="string" desc="High verbosity logging ie. info to trace are disable-able, comma separated: Generic, Socket, WebSocket, Http, WebServer, Storage, WOPI, Admin, Javascript" default="Socket,WebSocket,Admin">Socket,WebSocket,Admin</disabled_areas>
         <most_verbose_level_settable_from_client type="string" desc="A loggingleveloverride message from the client can not set a more verbose log level than this" default="notice">notice</most_verbose_level_settable_from_client>
         <least_verbose_level_settable_from_client type="string" desc="A loggingleveloverride message from a client can not set a less verbose log level than this" default="fatal">fatal</least_verbose_level_settable_from_client>
         <protocol type="bool" desc="Enable minimal client-site JS protocol logging from the start">false</protocol>
@@ -263,12 +260,11 @@
                     <host desc="hostname to allow or deny." allow="true">scheme://hostname:port</host>
                     <alias desc="regex pattern of aliasname">scheme://aliasname1:port</alias>
                     <alias desc="regex pattern of aliasname">scheme://aliasname2:port</alias>
-
+                    <unlock_link desc="Link from where user can unlock the features, which will get mapped with alias_group. According to hostname coolwsd will set the unlock link for feature unlock dialog. If not specified it will fallback to feature_lock.unlock_link entry" default=""></unlock_link>
             </group>-->
             <!-- More "group"s possible here -->
             </alias_groups>
 
-            <is_legacy_server desc="Set to true for legacy server that need deprecated headers." type="bool" default="false"></is_legacy_server>
         </wopi>
         <ssl desc="SSL settings">
             <as_scheme type="bool" default="true" desc="When set we exclusively use the WOPI URI's scheme to enable SSL for storage">true</as_scheme>
@@ -324,12 +320,42 @@
 
     <indirection_endpoint>
         <url desc="URL endpoint to server which servers routeToken in json format" default=""></url>
-      <migration_timeout_secs desc="The maximum number of seconds waiting for shutdown migration message from indirection server before unloading an document. Defaults to 180 second." type="uint" default="180"></migration_timeout_secs>
     </indirection_endpoint>
 
+    <feature_lock desc="Feature lock settings">
+        <locked_hosts desc="Allow/deny feature-locked hosts. When allowed, the below host specification overrides the CheckFileInfo response." allow="false">
+            <fallback desc="What to do if the given host is not covered by any rule in locked_hosts" read_only="true" disabled_commands="true"/>
+            <host desc="Regex pattern of hostname to set as full-featured or locked." read_only="false" disabled_commands="false">localhost</host>
+            <host desc="Regex pattern of hostname to set as full-featured or locked." read_only="false" disabled_commands="false">10\.0-9{1,3}\.0-9{1,3}\.0-9{1,3}</host>
+            <host desc="Regex pattern of hostname to set as full-featured or locked." read_only="false" disabled_commands="false">172\.301\.0-9{1,3}\.0-9{1,3}</host>
+        </locked_hosts>
+        <is_lock_readonly desc="Give locked users read only access to the documents. If this is set to true it will make all the locked_host readonly who has disabled_commands set to true" type="bool" default="false">false</is_lock_readonly>
+        <locked_commands desc="List of commands to lock the functionality" default=".uno:DataDataPilotRun .uno:RecalcPivotTable .uno:DeletePivotTable .uno:SamplingDialog .uno:DescriptiveStatisticsDialog .uno:AnalysisOfVarianceDialog .uno:CorrelationDialog .uno:CovarianceDialog .uno:ExponentialSmoothingDialog .uno:MovingAverageDialog .uno:RegressionDialog .uno:TTestDialog .uno:FTestDialog .uno:ZTestDialog .uno:ChiSquareTestDialog .uno:FourierAnalysisDialog .uno:Validation .uno:DataFilterSpecialFilter .uno:TrackChanges .uno:AcceptTrackedChanges .uno:InsertReferenceField .uno:Watermark .uno:InsertIndexesEntry .uno:InsertMultiIndex .uno:SlideMasterPage exportepub downloadas-rtf masterslidebutton">.uno:DataDataPilotRun .uno:RecalcPivotTable .uno:DeletePivotTable .uno:SamplingDialog .uno:DescriptiveStatisticsDialog .uno:AnalysisOfVarianceDialog .uno:CorrelationDialog .uno:CovarianceDialog .uno:ExponentialSmoothingDialog .uno:MovingAverageDialog .uno:RegressionDialog .uno:TTestDialog .uno:FTestDialog .uno:ZTestDialog .uno:ChiSquareTestDialog .uno:FourierAnalysisDialog .uno:Validation .uno:DataFilterSpecialFilter .uno:TrackChanges .uno:AcceptTrackedChanges .uno:InsertReferenceField .uno:Watermark .uno:InsertIndexesEntry .uno:InsertMultiIndex .uno:SlideMasterPage exportepub downloadas-rtf masterslidebutton</locked_commands>
+        <unlock_title desc="Title to show user when prompting the unlock popup" default="Unlock your potential">Unlock your potential</unlock_title>
+        <unlock_link desc="Link from where user can unlock the features" default="https://www.collaboraoffice.com/subscriptions/">https://www.collaboraoffice.com/subscriptions/</unlock_link>
+        <unlock_description desc="Description about unlocking features" default="Head over to the details page and discover all the features:">Head over to the details page and discover all the features:</unlock_description>
+        <unlock_image desc="URL of image shown when unlock dialog get displayed" default=""></unlock_image>
+        <writer_unlock_highlights desc="Short note about Writer benefits of unlocking" default="Review and write with ease">Review and write with ease</writer_unlock_highlights>
+        <calc_unlock_highlights desc="Short note about Calc benefits of unlocking" default="Get a better picture of your data">Get a better picture of your data</calc_unlock_highlights>
+        <impress_unlock_highlights desc="Short note about Impress benefits of unlocking" default="Nail your next presentation">Nail your next presentation</impress_unlock_highlights>
+        <draw_unlock_highlights desc="Short note about Draw benefits of unlocking" default="Draw and get organized">Draw and get organized</draw_unlock_highlights>
 
+        <translations>
+            <!-- Example to add german language for feature lock dialog -->
+            <!--
+            <language name="de">
+                <unlock_title desc="Title to show user when prompting the unlock popup" default="Entfesseln Sie Ihr Potenzial">Entfesseln Sie Ihr Potenzial</unlock_title>
+                <unlock_description desc="Description about unlocking features" default="Gehen Sie zur Detailseite und entdecken Sie alle Funktionen:">Gehen Sie zur Detailseite und entdecken Sie alle Funktionen:</unlock_description>
+                <writer_unlock_highlights desc="Short note about Writer benefits of unlocking" default="Überprüfen und schreiben Sie mit Leichtigkeit">Überprüfen und schreiben Sie mit Leichtigkeit</writer_unlock_highlights>
+                <calc_unlock_highlights desc="Short note about Calc benefits of unlocking" default="Machen Sie sich ein besseres Bild von Ihren Daten">Machen Sie sich ein besseres Bild von Ihren Daten</calc_unlock_highlights>
+                <impress_unlock_highlights desc="Short note about Impress benefits of unlocking" default="Bringen Sie Ihre nächste Präsentation auf den Punkt">Bringen Sie Ihre nächste Präsentation auf den Punkt</impress_unlock_highlights>
+                <draw_unlock_highlights desc="Short note about Draw benefits of unlocking" default="Zeichne und organisiere dich">Zeichne und organisiere dich</draw_unlock_highlights>
+            </language>
+            -->
+        </translations>
+    </feature_lock>
 
-
+    <restricted_commands dec="List of uno commands to be disabled"></restricted_commands>
 
     <zotero desc="Zotero plugin configuration. For more details about Zotero visit https://www.zotero.org/">
         <enable desc="Enable Zotero plugin." type="bool" default="true">true</enable>

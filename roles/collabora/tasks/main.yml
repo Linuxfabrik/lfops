@@ -28,9 +28,17 @@
       group: 'cool'
       mode: 0o640
 
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get installed Collabora version'
+    ansible.builtin.set_fact:
+      collabora__installed_version: '{{ ansible_facts["packages"]["coolwsd"][0]["version"] | regex_search("\d+\.\d+\.\d+") }}'
+
   - name: 'deploy /etc/coolwsd/coolwsd.xml'
     ansible.builtin.template:
-      src: '{{ collabora__use_code | bool | ternary("etc/coolwsd/coolwsd-code.xml.j2", "etc/coolwsd/coolwsd.xml.j2") }}'
+      src: 'etc/coolwsd/{{ collabora__installed_version }}-coolwsd{{ collabora__use_code | bool | ternary("-code", "") }}.xml.j2'
       dest: '/etc/coolwsd/coolwsd.xml'
       owner: 'cool'
       group: 'cool'

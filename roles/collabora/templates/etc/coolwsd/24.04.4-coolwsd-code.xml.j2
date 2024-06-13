@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2024053101 -->
+    <!-- 2024061301 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -43,7 +43,7 @@
     <server_name desc="External hostname:port of the server running coolwsd. If empty, it's derived from the request (please set it if this doesn't work). May be specified when behind a reverse-proxy or when the hostname is not reachable directly." type="string" default=""></server_name>
     <file_server_root_path desc="Path to the directory that should be considered root for the file server. This should be the directory containing cool." type="path" relative="true" default="browser/../"></file_server_root_path>
     <hexify_embedded_urls desc="Enable to protect encoded URLs from getting decoded by intermediate hops. Particularly useful on Azure deployments" type="bool" default="false"></hexify_embedded_urls>
-    <experimental_features desc="Enable/Disable experimental features" type="bool" default="false">{{ collabora__coolwsd_experimental_features | d('false') | string | lower }}</experimental_features>
+    <experimental_features desc="Enable/Disable experimental features" type="bool" default="true">{{ collabora__coolwsd_experimental_features | d('false') | string | lower }}</experimental_features>
 
     <memproportion desc="The maximum percentage of available memory consumed by all of the Collabora Online Development Edition processes, after which we start cleaning up idle documents. If cgroup memory limits are set, this is the maximum percentage of that limit to consume." type="double" default="80.0"></memproportion>
     <num_prespawn_children desc="Number of child processes to keep started in advance and waiting for new clients." type="uint" default="4">4</num_prespawn_children>
@@ -305,7 +305,7 @@
     </quarantine_files>
 
     <remote_config>
-        <remote_url desc="remote server to which you will send resquest to get remote config in response" type="string" default=""></remote_url>
+        <remote_url desc="remote server to which you will send request to get remote config in response" type="string" default=""></remote_url>
     </remote_config>
 
     <stop_on_config_change desc="Stop coolwsd whenever config files change." type="bool" default="false">false</stop_on_config_change>
@@ -323,7 +323,7 @@
     </fonts_missing>
 
     <indirection_endpoint>
-        <url desc="URL endpoint to server which servers routeToken in json format" default=""></url>
+      <url desc="URL endpoint to server which servers routeToken in json format" default=""></url>
       <migration_timeout_secs desc="The maximum number of seconds waiting for shutdown migration message from indirection server before unloading an document. Defaults to 180 second." type="uint" default="180"></migration_timeout_secs>
     </indirection_endpoint>
 
