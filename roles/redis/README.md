@@ -42,7 +42,7 @@ Variables for `redis.conf` directives and their default values, defined and supp
 | -------------                           | -------------                                                    | -------------  |
 | `redis__conf_appendonly`                | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`         |
 | `redis__conf_auto_aof_rewrite_min_size` | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'64mb'`       |
-| `redis__conf_bind`                      | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'127.0.0.1'`  |
+| `redis__conf_bind`                      | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'127.0.0.1 ::1'`  |
 | `redis__conf_daemonize`                 | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`         |
 | `redis__conf_databases`                 | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `16`           |
 | `redis__conf_loglevel`                  | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'notice'`     |
