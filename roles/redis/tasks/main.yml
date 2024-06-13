@@ -22,7 +22,7 @@
       mode: 0o644
     notify: 'redis: restart redis'
     when:
-      - 'redis__installed_version[:1] in ["6"]'
+      - 'redis__installed_version[:1] | int < 7'
 
   - name: 'Deploy /etc/redis/redis.conf (v{{ redis__installed_version }})'
     ansible.builtin.template:
@@ -33,7 +33,7 @@
       mode: 0o644
     notify: 'redis: restart redis'
     when:
-      - 'redis__installed_version[:1] in ["7"]'
+      - 'redis__installed_version[:1] | int >= 7'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
