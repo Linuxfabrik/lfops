@@ -2,6 +2,8 @@
 
 This role ensures that sshd is configured.
 
+Note that the role does not make use of `/etc/ssh/sshd_config.d/` since not all options can be overwritten (eg. `Subsystem 'sftp' already defined`).
+
 
 ## Mandatory Requirements
 
