@@ -9,6 +9,13 @@
       mode: 0o600
     notify: 'sshd: reload sshd'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/ssh/sshd_config'
+
   - name: 'semanage port --add --type ssh_port_t --proto tcp {{ sshd__port }}'
     community.general.seport:
       ports: '{{ sshd__port }}'

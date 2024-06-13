@@ -35,6 +35,14 @@
       mode: 0o644
     loop: '{{ repo_mariadb__repo_files }}'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/{{ item | basename }}'
+    loop: '{{ repo_mariadb__repo_files }}'
+
   - ansible.builtin.include_tasks: 'download-gpg-key.yml'
     loop: '{{ repo_mariadb__gpg_keys }}'
     loop_control:

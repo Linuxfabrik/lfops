@@ -231,6 +231,18 @@ Deploying files to the remote server
 
 * If deploying self-written scripts, copy them to ``/usr/local/bin`` (due to SELinux).
 
+* Add the following task after deploying a file that might get rpmnew or rpmsave files (or their Debian equivalents):
+
+.. code-block:: yaml
+
+    - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+      ansible.builtin.include_role:
+        name: 'shared'
+        tasks_from: 'remove-rpmnew-rpmsave.yml'
+      vars:
+        shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+      loop: '{{ repo_epel__repo_files }}'
+
 
 Handlers
 --------

@@ -45,6 +45,13 @@
       mode: 0o640
     notify: 'collabora: restart coolwsd'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/coolwsd/coolwsd.xml'
+
   - name: 'Deploy /etc/logrotate.d/coolwsd'
     ansible.builtin.template:
       src: 'etc/logrotate.d/coolwsd.j2'

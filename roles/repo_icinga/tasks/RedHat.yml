@@ -23,6 +23,13 @@
       group: 'root'
       mode: 0o644
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/ICINGA-release.repo'
+
   - name: 'Deploy the icinga-snapshot repo (mirror: {{ repo_icinga__mirror_url }})'
     ansible.builtin.template:
       src: 'etc/yum.repos.d/ICINGA-snapshot.repo.j2'
@@ -30,6 +37,13 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/ICINGA-snapshot.repo'
 
   - name: 'curl https://packages.icinga.com/icinga.key --output /tmp/ansible.RPM-GPG-KEY-ICINGA'
     ansible.builtin.get_url:

@@ -14,6 +14,13 @@
       mode: 0o644
     notify: 'telegraf: systemctl restart telegraf.service'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/telegraf/telegraf.conf'
+
   - name: 'Deploy /etc/telegraf/telegraf.d configs'
     ansible.builtin.template:
       src: 'etc/telegraf/telegraf.d/{{ item["template"] }}.conf.j2'

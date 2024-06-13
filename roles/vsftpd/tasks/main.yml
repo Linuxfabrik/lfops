@@ -21,6 +21,13 @@
       mode: 0o600
     notify: 'vsftpd: restart vsftpd'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/vsftpd/vsftpd.conf'
+
   - name: 'Deploy /etc/pam.d/vsftpd'
     ansible.builtin.template:
       src: 'etc/pam.d/vsftpd.j2'
@@ -28,6 +35,13 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/pam.d/vsftpd'
 
   - name: 'mkdir -p {{ vsftpd__conf_user_config_dir }}'
     ansible.builtin.file:

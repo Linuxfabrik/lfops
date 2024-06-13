@@ -24,6 +24,13 @@
       mode: 0o640
     notify: 'icingadb: restart icinga2'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/icinga2/features-available/icingadb.conf'
+
   - name: 'icinga2 feature enable icingadb'
     community.general.icinga2_feature:
       name: 'icingadb'
@@ -72,6 +79,13 @@
       group: 'icingadb'
       mode: 0o640
     notify: 'icingadb: restart icingadb'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/icingadb/config.yml'
 
   - name: 'systemctl {{ icingadb__service_enabled | bool | ternary("enable", "disable") }} --now icingadb.service'
     ansible.builtin.systemd:

@@ -18,6 +18,13 @@
       group: 'root'
       mode: 0o644
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/logrotate.conf'
+
   - name: 'Copy system logrotate templates to /etc/logrotate.d'
     ansible.builtin.template:
       src: 'etc/logrotate.d/syslog.j2'

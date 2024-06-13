@@ -200,6 +200,10 @@ Example:
 lfops__monitoring_plugins_version: 'main'
 ```
 
+### `lfops__remove_rpmnew_rpmsave`
+
+This variable aims to simplify the management of rpmnew and rpmsave files (and their Debian equivalents) by allowing the admin to remove them with LFOps. The workflow would be to adjust the template in LFOps according to the new config file, then deploy with `--extra-vars='lfops__remove_rpmnew_rpmsave=true'` to update the config and remove the rpmnew / rpmsave in one run.
+
 ### `lfops__repo_basic_auth_login`
 
 This variable is used as the default across all `repo_*` roles if it is set. Can be used to authenticate against the repository server using HTTP basic auth. Have a look at the respective role's README for details.

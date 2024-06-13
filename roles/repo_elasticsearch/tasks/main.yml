@@ -9,5 +9,12 @@
       group: 'root'
       mode: 0o644
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/elasticsearch.repo'
+
   tags:
     - 'repo_elasticsearch'

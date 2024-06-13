@@ -21,6 +21,14 @@
       mode: 0o644
     loop: '{{ repo_remi__repo_files }}'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/{{ item | basename }}'
+    loop: '{{ repo_remi__repo_files }}'
+
   tags:
     - 'repo_remi'
 

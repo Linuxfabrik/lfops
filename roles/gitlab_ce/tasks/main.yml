@@ -63,6 +63,13 @@
       mode: 0o600
     register: 'gitlab_ce___gitlab_rb_template_result'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/gitlab/gitlab.rb'
+
   - name: 'gitlab-ctl reconfigure'
     ansible.builtin.command: |-
       gitlab-ctl reconfigure

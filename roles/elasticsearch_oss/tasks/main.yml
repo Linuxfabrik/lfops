@@ -14,6 +14,13 @@
       mode: 0o660
     notify: 'elasticsearch_oss: restart elasticsearch'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/elasticsearch/elasticsearch.yml'
+
   - name: 'deploy /etc/sysconfig/elasticsearch'
     ansible.builtin.template:
       src: 'etc/sysconfig/elasticsearch.j2'

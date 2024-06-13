@@ -73,6 +73,13 @@
       - 'clamav: restart clamd@scan'
       - 'clamav: restart clamav-clamonacc'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/clamd.d/scan.conf'
+
   - name: 'Deploy /etc/freshclam.conf'
     ansible.builtin.template:
       src: 'etc/freshclam.conf.j2'
@@ -81,6 +88,13 @@
       group: 'root'
       mode: 0o600
     # no notify required, as it is run by a timer
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/freshclam.conf'
 
   - name: 'Deploy /var/lib/clamav/lfops_whitelist.ign2'
     ansible.builtin.template:

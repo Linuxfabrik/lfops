@@ -19,6 +19,14 @@
       mode: 0o644
     loop: '{{ repo_epel__repo_files }}'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+    loop: '{{ repo_epel__repo_files }}'
+
   - name: 'curl {{ repo_epel__gpg_key_url }} --output /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
     ansible.builtin.get_url:
       url: '{{ repo_epel__gpg_key_url }}'
