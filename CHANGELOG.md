@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:redis
+* removed support for Redis v5 (end of life)
+
 Playbook:icinga2_agent
 * Changed to also include the installation of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This can be skipped by setting `icinga2_agent__skip_monitoring_plugins: true`.
 

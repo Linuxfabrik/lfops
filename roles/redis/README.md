@@ -2,7 +2,7 @@
 
 This role installs and configures [Redis](https://redis.io/), per default listening on TCP 127.0.0.1:6379. Note that this role configures Systemd with unit file overrides for Redis.
 
-This role is compatible with Redis v5+.
+This role is compatible with Redis v6+.
 
 You can pre-enable Remi's repo with the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) role to get an up-to-date Redis version. If you use the [Redis Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/redis.yml), this is automatically done for you.
 
@@ -52,7 +52,7 @@ Variables for `redis.conf` directives and their default values, defined and supp
 | `redis__conf_protected_mode`            | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'yes'`        |
 | `redis__conf_replica_serve_stale_data`  | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'yes'`        |
 | `redis__conf_requirepass`               | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `unset`        |
-| `redis__conf_save`                      | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | v5: `['900 1', '300 10', '60 10000']`<br>v6: `['3600 1', '300 100', '60 10000']`<br>v7: `['3600 1', '300 100', '60 10000']` |
+| `redis__conf_save`                      | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | v6: `['3600 1', '300 100', '60 10000']`<br>v7: `['3600 1', '300 100', '60 10000']` |
 | `redis__conf_supervised`                | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`       |
 
 Example:
