@@ -28,18 +28,21 @@ Example:
 login__users__host_var:
   - name: 'test'
     password: 'linuxfabrik'
-    state: 'present'
+    home: '/home/linuxfabrik'
+    shell: '/bin/bash'
+    primary_group: 'testgroup'
     additional_groups:
       -  'wheel'
       -  '{{ login__passwordless_sudo_group }}'
-    primary_group: 'testgroup'
     sshd_authorized_keys:
       - 'ssh-ed25519 M4wt6qfbtyAaBnhSJDzoQEAOwiQM7k9lTvhYhNHJ7i6ciWH9uXJlbpbDF4Wv5lSr8t1maY test@example.com'
     remove_other_sshd_authorized_keys: true
+    state: 'present'
+    system: false
   - name: 'github-runner'
     home: '/opt/github-runner'
     state: 'present'
-    system: 'true'
+    system: true
 login__users__group_var: []
 login__passwordless_sudo_group: ''
 ```
