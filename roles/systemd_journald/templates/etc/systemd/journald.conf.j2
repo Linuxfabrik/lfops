@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023031601
+# 2024061401
 
 #  This file is part of systemd.
 #
@@ -14,6 +14,9 @@
 #
 # See journald.conf(5) for details.
 
+{% set max_use_percentage = systemd_journald__conf_system_max_use.endswith('%') %}
+{% set keep_free_percentage = systemd_journald__conf_system_keep_free.endswith('%') %}
+
 [Journal]
 Storage={{ systemd_journald__conf_storage }}
 #Compress=yes
@@ -22,8 +25,18 @@ Storage={{ systemd_journald__conf_storage }}
 #SyncIntervalSec=5m
 #RateLimitIntervalSec=30s
 #RateLimitBurst=10000
-SystemMaxUse={{ ((systemd_journald_var_log_journal_df_result["stdout_lines"][1] | int) * 1024 * systemd_journald__conf_system_max_use / 100) | int }}
-#SystemKeepFree=
+{% if max_use_percentage %}
+{% set max_use_value = (systemd_journald_var_log_journal_df_result["stdout_lines"][1] | int) * 1024 * (systemd_journald__conf_system_max_use[:-1] | int) / 100 %}
+SystemMaxUse={{ max_use_value | int }}
+{% else %}
+SystemMaxUse={{ systemd_journald__conf_system_max_use }}
+{% endif %}
+{% if keep_free_percentage %}
+{% set keep_free_value = (systemd_journald_var_log_journal_df_result["stdout_lines"][1] | int) * 1024 * (systemd_journald__conf_system_keep_free[:-1] | int) / 100 %}
+SystemKeepFree={{ keep_free_value | int }}
+{% else %}
+SystemKeepFree={{ systemd_journald__conf_system_keep_free }}
+{% endif %}
 #SystemMaxFileSize=
 #SystemMaxFiles=100
 #RuntimeMaxUse=

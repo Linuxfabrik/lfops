@@ -8,9 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Note: Always add new entries to the top of the section, even if this results in multiple paragraphs for the same role. Otherwise the user will have to read through all the breaking changes every time they update LFOps. This way they can just read the new entries at the top, making it much easier for users to follow the CHANGELOG.
 
 
-## [Unreleased]
+## [Unreleased] (in chronological order)
 
 ### Breaking Changes
+
+Role:systemd_journald
+* The value for the variable `systemd_journald__conf_system_max_use` is now interpreted as a size in bytes. It supports the size specifications possible in `journald.conf` (e.g. `4G`). If you want to specify a percentage, use `'40%'`.
 
 Role:redis
 * removed support for Redis v5 (end of life)
@@ -152,6 +155,9 @@ Role:tar
 
 
 ### Added
+
+Role:systemd_journald
+* Add variable `systemd_journald__conf_system_keep_free`
 
 Playbook:setup_basic
 * Add support for AlmaLinux 8
