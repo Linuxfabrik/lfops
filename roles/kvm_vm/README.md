@@ -2,13 +2,11 @@
 
 This role creates and manages virtual machines (VMs) on a KVM host.
 
-By default, this role uses a base image which will be modified using cloud-init and sysprep (for deploying ssh keys or setting the root password).
+By default, this role requires an OS image that has been modified using cloud-init and sysprep (to provide ssh keys or set the root password). Note: cloud-init and sysprep are only run when the boot disk is re-created.
 
-Note: cloud-init and sysprep are only run if the boot disk is newly created.
+If you want to create a VM with an existing disk, see the `kvm_vm__existing_boot_disk` variable.
 
-If you want to create a VM with an existing disk, have a look at the `kvm_vm__existing_boot_disk` variable.
-
-The role currently does not support resizing the VM.
+The role does not currently support resizing the VM.
 
 
 ## Mandatory Requirements
