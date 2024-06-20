@@ -43,7 +43,7 @@
           librenms__selinux__booleans__dependent_var
         }}'
       selinux__fcontexcts__dependent_var: '{{
-          librenms__selinux__fcontexcts__dependent_var
+          librenms__selinux__fcontexts__dependent_var
         }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'

@@ -104,7 +104,7 @@ librenms__selinux__booleans__dependent_var:
     value: 'on'
   - key: 'httpd_setrlimit'
     value: 'on'
-librenms__selinux__fcontexcts__dependent_var:
+librenms__selinux__fcontexts__dependent_var:
   - setype: 'httpd_sys_content_t'
     target: '/opt/librenms/html(/.*)?'
     state: 'present'
