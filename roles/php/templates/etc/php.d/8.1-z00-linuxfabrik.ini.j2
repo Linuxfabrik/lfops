@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2024010801
+; 2024062001
 ; php 8.1
 
 [PHP]
@@ -38,6 +38,8 @@ SMTP = {{ php__ini_smtp__combined_var | default('localhost') }}
 smtp_port = 25
 
 [Session]
+session.cookie_httponly = {{ php__ini_session_cookie_httponly__combined_var | default('off') }}
+session.cookie_secure = {{ php__ini_session_cookie_secure__combined_var | default('off') }}
 session.gc_maxlifetime = {{ php__ini_session_gc_maxlifetime__combined_var | default(1440) }}
 session.sid_length = {{ php__ini_session_sid_length__combined_var | default(26) }}
 session.trans_sid_tags = "{{ php__ini_session_trans_sid_tags__combined_var | default("a=href,area=href,frame=src,form=") }}"
