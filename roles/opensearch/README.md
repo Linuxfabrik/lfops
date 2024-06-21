@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.opensearch
 
-This role installs and configures a OpenSearch server. Optionally, it allows the creation of a cluster setup. 
+This role installs and configures a OpenSearch server. Optionally, it allows the creation of a cluster setup.
 
 TODO:
 * This role needs to be adapted to the latest https://opensearch.org/docs/latest/install-and-configure/install-opensearch/rpm/ and https://opensearch.org/docs/latest/install-and-configure/install-opensearch/debian/ documents.

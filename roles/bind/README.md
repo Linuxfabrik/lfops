@@ -2,7 +2,7 @@
 
 This role installs and configures [bind](https://www.isc.org/bind/) as a DNS server. Currently, it only supports standalone configurations, no primary-replica configuration.
 
-If you define a zone with `name`, `file` and `raw`, the role 
+If you define a zone with `name`, `file` and `raw`, the role
 
 * creates the zone file in `/var/named/{{ item.file }}`
 * creates the corresponding entry in `/etc/named.conf` like so:
