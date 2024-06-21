@@ -1,11 +1,11 @@
 # {{ ansible_managed }}
-# 2022100401
+# 2024062101
 
 [Unit]
 Description=Nextcloud LDAP Show Remnants Service
 
 [Service]
-# need the help of /bin/sh here, since systemd units don't understand pipes directly 
+# need the help of /bin/sh here, since systemd units don't understand pipes directly
 ExecStart=/usr/local/bin/nextcloud-ldap-show-remnants
 Type=oneshot
 User=apache
