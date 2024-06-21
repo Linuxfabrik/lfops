@@ -1,0 +1,23 @@
+- name: 'Playbook linuxfabrik.lfops.collect_rpmnew_rpmsave'
+  hosts:
+    - 'lfops_collect_rpmnew_rpmsave'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.collect_rpmnew_rpmsave'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'
