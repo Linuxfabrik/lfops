@@ -39,7 +39,7 @@
 
   - name: 'Ensure local directories exist with package names'
     ansible.builtin.file:
-      path: "{{ '/tmp/lfops/' + item.value + '/' + ansible_hostname + '/' + item.key | regex_replace('(.rpmnew|.rpmsave)$', '') | dirname }}"
+      path: "/tmp/lfops/{{ item.value }}/{{ ansible_hostname }}/{{ item.key | regex_replace('(.rpmnew|.rpmsave)$', '') | dirname }}"
       state: 'directory'
     loop: '{{ package_file_mappings | dict2items }}'
     loop_control:
@@ -51,7 +51,7 @@
   - name: 'Download rpmnew/rpmsave files to control node'
     ansible.builtin.fetch:
       src: '{{ item.key }}'
-      dest: "{{ '/tmp/lfops/' + item.value + '/' + ansible_hostname + '/' + item.key }}"
+      dest: "/tmp/lfops/{{ item.value }}/{{ ansible_hostname }}/{{ item.key }}"
       flat: true
     loop: '{{ package_file_mappings | dict2items }}'
     loop_control:
@@ -62,7 +62,7 @@
   - name: 'Download original files to control node'
     ansible.builtin.fetch:
       src: "{{ item.key | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
-      dest: "{{ '/tmp/lfops/' + item.value + '/' + ansible_hostname + '/' + item.key | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
+      dest: "/tmp/lfops/{{ item.value }}/{{ ansible_hostname }}/{{ item.key | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
       flat: true
     loop: '{{ package_file_mappings | dict2items }}'
     loop_control:
