@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024061901
+# 2024062101
 
 #
 # This file controls the configuration of the audit daemon
@@ -32,12 +32,12 @@ tcp_listen_queue = 5
 tcp_max_per_addr = 1
 ##tcp_client_ports = 1024-65535
 tcp_client_max_idle = 0
-#transport = TCP
+transport = TCP
 krb5_principal = auditd
 ##krb5_key_file = /etc/audit/audit.key
 distribute_network = no
-#q_depth = 1200
-#overflow_action = SYSLOG
-#max_restarts = 10
-#plugin_dir = /etc/audit/plugins.d
-#end_of_event_timeout = 2
+q_depth = 1200
+overflow_action = SYSLOG
+max_restarts = 10
+plugin_dir = /etc/audit/plugins.d
+end_of_event_timeout = 2
