@@ -39,8 +39,9 @@
 
   - name: 'Download rpmnew/rpmsave files to control node'
     ansible.builtin.fetch:
-      src: '{{ item.key }}'
-      dest: "/tmp/lfops/{{ item.value }}/"
+      src: "{{ item.key }}"
+      dest: "/tmp/lfops/{{ item.value }}/{{ inventory_hostname }}/{{ item.key }}"
+      flat: true
     loop: '{{ package_file_mappings | dict2items }}'
     loop_control:
       label: '{{ item.key }}'
@@ -50,7 +51,7 @@
   - name: 'Download original files to control node'
     ansible.builtin.fetch:
       src: "{{ item.key | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
-      dest: "/tmp/lfops/{{ item.value }}/{{ ansible_hostname }}/{{ item.key | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
+      dest: "/tmp/lfops/{{ item.value }}/{{ inventory_hostname }}/{{ item.key | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
       flat: true
     loop: '{{ package_file_mappings | dict2items }}'
     loop_control:
