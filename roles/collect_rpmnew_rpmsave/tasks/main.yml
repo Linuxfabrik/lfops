@@ -24,7 +24,7 @@
 
   - name: 'Set fact for OS name and version'
     ansible.builtin.set_fact:
-      os_name_version: '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}'
+      os_name_version: '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}'
     when:
       - 'found_files.files'
 
