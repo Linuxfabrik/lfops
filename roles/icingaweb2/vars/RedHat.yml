@@ -1,0 +1,6 @@
+icingaweb2__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'
+icingaweb2__required_packages:
+  - 'icingacli'
+  - 'icingaweb2'
+  - 'icingaweb2-selinux'
+icingaweb2__webserver_owner: 'apache'

@@ -1,0 +1,5 @@
+icingaweb2__mysql_login_unix_socket: '/run/mysqld/mysqld.sock'
+icingaweb2__required_packages:
+  - 'icingacli'
+  - 'icingaweb2'
+icingaweb2__webserver_owner: 'www-data'
