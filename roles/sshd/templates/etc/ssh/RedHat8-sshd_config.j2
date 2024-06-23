@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024050901
+# 2024062301
 
 #	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
 
@@ -24,6 +24,7 @@ AddressFamily {{ sshd__address_family }}
 
 HostKey /etc/ssh/ssh_host_rsa_key
 HostKey /etc/ssh/ssh_host_ecdsa_key
+#In FIPS mode Ed25519 keys are not supported, please comment out the next line
 HostKey /etc/ssh/ssh_host_ed25519_key
 
 # Ciphers and keying
