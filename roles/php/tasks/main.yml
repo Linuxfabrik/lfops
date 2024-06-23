@@ -25,6 +25,22 @@
 
 - block:
 
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get PHP version'
+    ansible.builtin.set_fact:
+      php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
+
+  tags:
+    - 'php'
+    - 'php:ini'
+    - 'php:modules'
+
+
+- block:
+
   - name: 'Combined Modules:'
     ansible.builtin.debug:
       var: 'php__modules__combined_var'
@@ -48,14 +64,6 @@
 
 
 - block:
-
-  - name: 'Get the list of installed packages'
-    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Get PHP version'
-    ansible.builtin.set_fact:
-      php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
 
   - name: 'Load default values for {{ php__installed_version }}'
     ansible.builtin.include_vars: 'defaults/{{ php__installed_version }}.yml'
