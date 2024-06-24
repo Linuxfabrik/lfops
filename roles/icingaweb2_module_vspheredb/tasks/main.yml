@@ -1,10 +1,15 @@
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
   - name: 'mkdir /etc/icingaweb2/modules/vspheredb'
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/vspheredb'
       state: 'directory'
-      owner: 'apache'
+      owner: '{{ icingaweb2_module_vspheredb__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -12,7 +17,7 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/vspheredb'
       state: 'directory'
-      owner: 'apache'
+      owner: '{{ icingaweb2_module_vspheredb__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o755
 
@@ -66,6 +71,8 @@
     ansible.builtin.command: 'restorecon -Fvr /var/run/icinga-vspheredb/'
     register: 'icingaweb2_module_vspheredb__restorecon_result'
     changed_when: 'icingaweb2_module_vspheredb__restorecon_result["stdout"] | length'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
 
   - name: 'icingacli module enable vspheredb'
     ansible.builtin.shell: 'icingacli module enable vspheredb'
@@ -84,7 +91,7 @@
     ansible.builtin.template:
       src: 'etc/icingaweb2/modules/vspheredb/config.ini.j2'
       dest: '/etc/icingaweb2/modules/vspheredb/config.ini'
-      owner: 'apache'
+      owner: '{{ icingaweb2_module_vspheredb__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o664
 
