@@ -41,7 +41,13 @@ grafana_grizzly__grafana_service_account_login:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `grafana_grizzly__grafana_url` | The URL under which Grafana is reachable | `'{{ grafana__root_url }}'` |
-| `grafana_grizzly__version` | The version of Grizzly to install. Possible options: `'latest'`, or any from https://github.com/grafana/grizzly/releases. | `'latest'` |
+| `grafana_grizzly__version` | The version of Grizzly to install. Possible options: `'latest'`, or any from https://github.com/grafana/grizzly/releases. | `'v0.2.0'` |
+
+Hints:
+
+* 20240624 we can't use "latest", because then we get annoying errors like:
+  `"Providers: Grafana - active, Mimir - inactive (mimir address is not set), Synthetic Monitoring - inactive (stack id is not set)'"`
+* `v0.2.0` is the last known good version to use for the way we how we deploy grizzly dashboards and datasources
 
 Example:
 ```yaml
