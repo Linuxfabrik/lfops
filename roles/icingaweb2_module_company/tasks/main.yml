@@ -1,10 +1,15 @@
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
   - name: 'mkdir -p /usr/share/icingaweb2/modules/company'
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/company'
       state: 'directory'
-      owner: 'apache'
+      owner: '{{ icingaweb2_module_company__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o755
     register: 'icingaweb2_module_company__mkdir_result'
