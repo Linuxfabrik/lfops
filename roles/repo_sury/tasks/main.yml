@@ -1,5 +1,27 @@
 - block:
 
+
+  - name: 'curl https://packages.sury.org/debsuryorg-archive-keyring.deb --output /tmp/ansible.debsuryorg-archive-keyring.deb'
+    ansible.builtin.get_url:
+      url: 'https://packages.sury.org/debsuryorg-archive-keyring.deb'
+      dest: '/tmp/ansible.debsuryorg-archive-keyring.deb'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+    run_once: true
+
+  - name: 'copy /tmp/ansible.debsuryorg-archive-keyring.deb to the host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.debsuryorg-archive-keyring.deb'
+      dest: '/tmp/ansible.debsuryorg-archive-keyring.deb'
+      mode: 0o644
+
+  - name: 'apt install /tmp/ansible.debsuryorg-archive-keyring.deb'
+    ansible.builtin.apt:
+      deb: '/tmp/ansible.debsuryorg-archive-keyring.deb'
+      state: 'present'
+
   - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/apt/sources.list.d/sury.list.j2'
