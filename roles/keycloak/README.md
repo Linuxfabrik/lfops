@@ -52,7 +52,7 @@ keycloak__db_login:
   password: 'password'
   username: 'keycloak'
 keycloak__hostname: 'keycloak.local'
-keycloak__version: '18.0.0'
+keycloak__version: '25.0.1'
 ```
 
 
