@@ -71,7 +71,7 @@
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
           (not setup_icinga2_master__apache_httpd__skip_injections__internal_var) | ternary(apache_httpd__python__modules__dependent_var, []) +
-          (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__python__modules__dependent_var, [])
+          (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__python__modules__dependent_var[ansible_facts["os_family"]], [])
         }}'
       when:
         - 'not setup_icinga2_master__python__skip_role__internal_var'

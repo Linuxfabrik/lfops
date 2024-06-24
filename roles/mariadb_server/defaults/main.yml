@@ -313,4 +313,7 @@ mariadb_server__kernel_settings__sysctl__dependent_var:
     value: 10
 
 mariadb_server__python__modules__dependent_var:
-  - name: 'python3-PyMySQL'
+  Debian:
+    - name: 'python3-pymysql'
+  RedHat:
+    - name: 'python3-PyMySQL'
