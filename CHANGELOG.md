@@ -11,6 +11,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:apache_httpd:
+* changed default of `apache_httpd__skip_mod_security_coreruleset` from false to true.
+
 Role:icingadb
 * split into two roles, one for the IcingaDB daemon and one for IcingaDB Web. Have a look at the variables in the READMEs. Generally it is enough to rename `icingadb__api_user_login` to `icingadb_web__api_user_login`.
 
