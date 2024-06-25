@@ -49,7 +49,7 @@
           icingaweb2__php__ini_upload_max_filesize__dependent_var
         }}'
       php__modules__dependent_var: '{{
-          icingaweb2__php__modules__dependent_var
+          icingaweb2__php__modules__dependent_var[ansible_facts["os_family"]]
         }}'
       when:
         - 'not icingaweb2__skip_php | default(false)'

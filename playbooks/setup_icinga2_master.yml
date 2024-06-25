@@ -54,6 +54,7 @@
     setup_icinga2_master__repo_monitoring_plugins__skip_role__internal_var: '{{ setup_icinga2_master__repo_monitoring_plugins__skip_role | d(false) }}'
     setup_icinga2_master__repo_mydumper__skip_role__internal_var: '{{ setup_icinga2_master__repo_mydumper__skip_role | d(false) }}'
     setup_icinga2_master__repo_remi__skip_role__internal_var: '{{ setup_icinga2_master__repo_remi__skip_role | d(false) }}'
+    setup_icinga2_master__repo_sury__skip_role__internal_var: '{{ setup_icinga2_master__repo_sury__skip_role | d(false) }}'
     setup_icinga2_master__selinux__skip_role__internal_var: '{{ setup_icinga2_master__selinux__skip_role | d(false) }}'
     setup_icinga2_master__yum_utils__skip_role__internal_var: '{{ setup_icinga2_master__yum_utils__skip_role | d(false) }}'
 
@@ -162,12 +163,17 @@
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
         - 'not setup_icinga2_master__repo_remi__skip_role__internal_var'
 
+    - role: 'linuxfabrik.lfops.repo_sury'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+        - 'not setup_icinga2_master__repo_sury__skip_role__internal_var'
+
     - role: 'linuxfabrik.lfops.php'
       php__ini_upload_max_filesize__dependent_var: '{{ (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__ini_upload_max_filesize__dependent_var, "") }}'
       php__modules__dependent_var: '{{
           (not setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections__internal_var) | ternary(icingaweb2_module_vspheredb__php__modules__dependent_var, []) +
-          (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__php__modules__dependent_var, []) +
-          (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__modules__dependent_var, [])
+          (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__php__modules__dependent_var[ansible_facts["os_family"]], []) +
+          (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__modules__dependent_var[ansible_facts["os_family"]], [])
         }}'
       when:
         - 'not setup_icinga2_master__php__skip_role__internal_var'
