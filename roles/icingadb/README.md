@@ -13,6 +13,7 @@ Notes on high availability / Icinga2 Master clusters:
 * Redis: "Each of the master nodes must have the Icinga DB feature enabled and have their own dedicated Redis server set up for it."
 * SQL database: "Icinga DB instances must write to the same database, which of course can be replicated or a cluster."
 * Environment ID: Make sure that `/var/lib/icinga2/icingadb.env` is the same on all master nodes.
+* "Although Icinga DB can run anywhere in an Icinga environment, we recommend to install it where the corresponding Icinga 2 node and Redis server is running to keep latency between the components low."
 * Have a look at the [official documentation](https://icinga.com/docs/icinga-db/latest/doc/05-Distributed-Setups/).
 
 Runs on
