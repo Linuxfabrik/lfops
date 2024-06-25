@@ -156,6 +156,9 @@ Role:tar
 
 ### Added
 
+Role:collect_rpmnew_rpmsave:
+* Added
+
 Role:systemd_journald
 * Add variable `systemd_journald__conf_system_keep_free`
 
