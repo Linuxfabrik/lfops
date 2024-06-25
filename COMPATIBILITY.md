@@ -106,7 +106,7 @@ php                                  |    |    | x  |   | x | x |       |       
 policycoreutils                      |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
 postfix                              | x  | x  | x  | x | x | x |   x   |       |       |       |       | Fedora 35
 postgresql_server                    |    |    |    |   | x |   |       |       |       |       |       |
-python                               |    |    |    |   | x | x |   x   |       |       |       |       | Windows
+python                               |    |    | x  |   | x | x |   x   |       |       |       |       | Windows
 python_venv                          |    | x  | x  | x | x | x |       |       |       |       |       | Fedora 35
 qemu_guest_agent                     |    |    |    |   | x | x |   x   |       |       |       |       |
 redis                                |    |    |    |   | x | x |       |       |       |       |       |
