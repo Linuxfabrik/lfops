@@ -10,8 +10,8 @@ icingadb_web__redis_port: '{{ icingadb__redis_port }}'
 # -----------------------------------------------------------------------------
 
 icingadb_web__icinga2_master__api_users__dependent_var:
-  - username: '{{ icingadb__api_user_login["username"] }}'
-    password: '{{ icingadb__api_user_login["password"] }}'
+  - username: '{{ icingadb_web__api_user_login["username"] }}'
+    password: '{{ icingadb_web__api_user_login["password"] }}'
     permissions:
       - 'actions/*'
       - 'objects/modify/*'
