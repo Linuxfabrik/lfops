@@ -299,7 +299,7 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 | -------- | ----------- | ------------- |
 | `apache_httpd__mod_security_coreruleset_url` | String. The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers. | `'https://github.com/coreruleset/coreruleset/archive'` |
 | `apache_httpd__mod_security_coreruleset_version` | String. The OWASP ModSecurity Core Rule Set (CRS) version number without "v". | `'4.4.0'` |
-| `apache_httpd__skip_mod_security_coreruleset` | Boolean. Skip the installation of the OWASP ModSecurity Core Rule Set (CRS). | `false` |
+| `apache_httpd__skip_mod_security_coreruleset` | Boolean. Skip the installation of the OWASP ModSecurity Core Rule Set (CRS). | `true` |
 
 Example:
 ```yaml

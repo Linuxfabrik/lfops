@@ -12,6 +12,16 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:apache_httpd:
+* changed default of `apache_httpd__skip_mod_security_coreruleset` from false to true.
+
+Role:icingadb
+* split into two roles, one for the IcingaDB daemon and one for IcingaDB Web. Have a look at the variables in the READMEs. Generally it is enough to rename `icingadb__api_user_login` to `icingadb_web__api_user_login`.
+
+Playbook:setup_icinga2_master:
+* changed the format of the role skip-variables from `playbook_name_skip_role_name` to `playbook_name__role_name__skip_role` for clarity and consistency. Have a look at the [README.md](./README.md#skipping-roles-in-a-playbook).
+* also added `playbook_name__role_name__skip_role_injections` variables to disable or re-enabled the role's injections.
+
 Role:systemd_journald
 * The value for the variable `systemd_journald__conf_system_max_use` is now interpreted as a size in bytes. It supports the size specifications possible in `journald.conf` (e.g. `4G`). If you want to specify a percentage, use `'40%'`.
 

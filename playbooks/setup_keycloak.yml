@@ -27,7 +27,7 @@
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
-          mariadb_server__python__modules__dependent_var
+          mariadb_server__python__modules__dependent_var[ansible_facts["os_family"]]
         }}'
       when:
         - 'not mariadb_server__skip_python | d(false)'

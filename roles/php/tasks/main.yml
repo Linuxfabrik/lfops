@@ -1,3 +1,14 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'php'
+    - 'php:fpm'
+    - 'php:ini'
+    - 'php:modules'
+    - 'php:state'
+
 - block:
 
   - name: 'Install php php-fpm composer'
@@ -10,6 +21,22 @@
 
   tags:
     - 'php'
+
+
+- block:
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get PHP version'
+    ansible.builtin.set_fact:
+      php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
+
+  tags:
+    - 'php'
+    - 'php:ini'
+    - 'php:modules'
 
 
 - block:
@@ -38,24 +65,17 @@
 
 - block:
 
-  - name: 'Get the list of installed packages'
-    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Get PHP version'
-    ansible.builtin.set_fact:
-      php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_replace("\.\d+$", "") }}'
-
   - name: 'Load default values for {{ php__installed_version }}'
     ansible.builtin.include_vars: 'defaults/{{ php__installed_version }}.yml'
 
-  - name: 'Deploy the /etc/php.d/z00-linuxfabrik.ini'
+  - name: 'Deploy the PHP configs'
     ansible.builtin.template:
       src: 'etc/php.d/{{ php__installed_version }}-z00-linuxfabrik.ini.j2'
-      dest: '/etc/php.d/z00-linuxfabrik.ini'
+      dest: '{{ item }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
+    loop: '{{ php__conf_dest }}'
     notify: 'php: restart php-fpm'
 
   tags:
@@ -65,19 +85,19 @@
 
 - block:
 
-  - name: 'Remove absent pools from /etc/php-fpm.d'
+  - name: 'Remove absent pools from {{ php__fpm_pools_path }}'
     ansible.builtin.file:
-      path: '/etc/php-fpm.d/{{ item["name"] }}.conf'
+      path: '{{ php__fpm_pools_path }}/{{ item["name"] }}.conf'
       state: 'absent'
     when:
       - 'item["state"] | d("present") == "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
-  - name: 'Deploy the pools to /etc/php-fpm.d/'
+  - name: 'Deploy the pools to {{ php__fpm_pools_path }}'
     ansible.builtin.template:
-      src: 'etc/php-fpm.d/pool.conf.j2'
-      dest: '/etc/php-fpm.d/{{ item["name"] }}.conf'
+      src: 'etc/php-fpm.d/{{ ansible_facts["os_family"] }}-pool.conf.j2'
+      dest: '{{ php__fpm_pools_path }}/{{ item["name"] }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -93,9 +113,9 @@
 
 - block:
 
-  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm'
+  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now {{ php__fpm_service_name }}'
     ansible.builtin.service:
-      name: 'php-fpm'
+      name: '{{ php__fpm_service_name }}'
       enabled: '{{ php__fpm_service_enabled }}'
       state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
 

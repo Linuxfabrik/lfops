@@ -1,10 +1,15 @@
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
   - name: 'mkdir -p /etc/icingaweb2/modules/grafana'
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/grafana'
       state: 'directory'
-      owner: 'apache'
+      owner: '{{ icingaweb2_module_grafana__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -12,7 +17,7 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/grafana'
       state: 'directory'
-      owner: 'apache'
+      owner: '{{ icingaweb2_module_grafana__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o755
 
@@ -51,7 +56,7 @@
     ansible.builtin.template:
       src: 'etc/icingaweb2/modules/grafana/config.ini.j2'
       dest: '/etc/icingaweb2/modules/grafana/config.ini'
-      owner: 'apache'
+      owner: '{{ icingaweb2_module_grafana__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -112,7 +117,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.icingaweb2-module-grafana-combined.ini'
       dest: '/etc/icingaweb2/modules/grafana/graphs.ini'
-      owner: 'apache'
+      owner: '{{ icingaweb2_module_grafana__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o664
 

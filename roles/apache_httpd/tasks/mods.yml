@@ -6,7 +6,7 @@
 
 - name: 'Disable mods'
   ansible.builtin.file:
-    path: '{{ apache_httpd__config_path + "/mods-enabled/" + item["filename"] + ".conf" }}'
+    path: '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}mods-enabled/{{ item["filename"] }}.conf'
     mode: 0o644
     state: 'absent'
   loop: '{{ apache_httpd__mods__combined_var }}'
@@ -17,7 +17,7 @@
 
 - name: 'Remove mods-available configs'
   ansible.builtin.file:
-    path: '{{ apache_httpd__config_path + "/mods-available/" + item["filename"] + ".conf" }}'
+    path: '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}mods-available/{{ item["filename"] }}.conf'
     state: 'absent'
   when:
     - 'item["state"] | d("present") == "absent"'
@@ -26,7 +26,7 @@
 - name: 'Create mods-available configs'
   ansible.builtin.template:
     src: 'etc/httpd/mods-available/{{ item["template"] | d(item["filename"]) }}.conf.j2'
-    dest: '{{ apache_httpd__config_path + "/mods-available/" + item["filename"] + ".conf" }}'
+    dest: '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}mods-available/{{ item["filename"] }}.conf'
     owner: 'root'
     group: 'root'
     mode: 0o644
@@ -38,8 +38,8 @@
 
 - name: 'Enable mods'
   ansible.builtin.file:
-    src: '../mods-available/{{ item["filename"] }}.conf'
-    path: '{{ apache_httpd__config_path + "/mods-enabled/" + item["filename"] + ".conf" }}'
+    src: '../{{ apache_httpd__config_prefix }}mods-available/{{ item["filename"] }}.conf'
+    path: '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}mods-enabled/{{ item["filename"] }}.conf'
     mode: 0o644
     state: 'link'
     force: '{{ ansible_check_mode|d() | bool }}' # prevent errors with --check

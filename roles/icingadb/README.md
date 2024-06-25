@@ -1,18 +1,19 @@
 # Ansible Role linuxfabrik.lfops.icingadb
 
-This role installs and configures [IcingaDB](https://github.com/Icinga/icingadb).
+[IcingaDB](https://icinga.com/docs/icinga-db/latest/doc/01-About/) consists of multiple components. This role only installs the [IcingaDB daemon](https://github.com/Icinga/icingadb). Generally, [IcingaDB Web](https://icinga.com/docs/icinga-db-web) is also required, use the [linuxfabrik.lfops.icingadb_web](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingadb_web) role for that.
 
-When running the `icingadb:migration` tag, it also tries to prepare the configuration file required for the migration from the IDO feature to Icinga DB. Note that the migration requires the following manual steps after running the role:
+When running the `icingadb:migration` tag, the role tries to prepare the configuration file required for the migration from the old IDO feature to Icinga DB. Note that the migration requires the following manual steps after running the role:
 1. Double check the values in `/tmp/icingadb-migration.yml`
 2. Run the migration: `icingadb-migrate --config /tmp/icingadb-migration.yml --cache /tmp/icingadb-migration.cache`
 3. Clean up: `rm -rf /tmp/icingadb-migration.cache /tmp/icingadb-migration.yml`
-4. If everything works, disable the IcingaWeb2 monitoring module: `icingacli module disable monitoring`
+4. If everything works, disable the old IcingaWeb2 monitoring module: `icingacli module disable monitoring`
 Also have a look at https://icinga.com/docs/icinga-db-web/latest/doc/10-Migration/ for other migration steps.
 
 Notes on high availability / Icinga2 Master clusters:
 * Redis: "Each of the master nodes must have the Icinga DB feature enabled and have their own dedicated Redis server set up for it."
 * SQL database: "Icinga DB instances must write to the same database, which of course can be replicated or a cluster."
 * Environment ID: Make sure that `/var/lib/icinga2/icingadb.env` is the same on all master nodes.
+* "Although Icinga DB can run anywhere in an Icinga environment, we recommend to install it where the corresponding Icinga 2 node and Redis server is running to keep latency between the components low."
 * Have a look at the [official documentation](https://icinga.com/docs/icinga-db/latest/doc/05-Distributed-Setups/).
 
 
@@ -33,15 +34,11 @@ Notes on high availability / Icinga2 Master clusters:
 
 | Variable | Description |
 | -------- | ----------- |
-| `icingadb__api_user_login` | The account for accessing the Icinga2 API. |
 | `icingadb__database_login` | The user account for accessing the IcingaDB SQL database. Currently, only MySQL is supported. |
 
 Example:
 ```yaml
 # mandatory
-icingadb__api_user_login:
-  username: 'icingadb-api-user'
-  password: 'linuxfabrik'
 icingadb__database_login:
   username: 'icingadb'
   password: 'linuxfabrik'
@@ -52,8 +49,6 @@ icingadb__database_login:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `icingadb__api_host` | The host on which the Icinga2 API is reachable. | `'localhost'` |
-| `icingadb__api_port` | The port on which the Icinga2 API is reachable. | `5665` |
 | `icingadb__database_host` | The host on which the IcingaDB SQL database is reachable. | `127.0.0.1` |
 | `icingadb__database_login_host` | The Host-part of the SQL database user. | `127.0.0.1` |
 | `icingadb__database_name` | The name of the IcingaDB SQL database. | `'icingadb'` |
@@ -67,8 +62,6 @@ icingadb__database_login:
 Example:
 ```yaml
 # optional
-icingadb__api_host: 'localhost'
-icingadb__api_port: 5665
 icingadb__database_host: '127.0.0.1'
 icingadb__database_login_host: 'localhost'
 icingadb__database_name: 'icingadb'

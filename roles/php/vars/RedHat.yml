@@ -1,0 +1,6 @@
+php__conf_dest:
+  - '/etc/php.d/z00-linuxfabrik.ini'
+php__fpm_pools_path: '/etc/php-fpm.d'
+php__fpm_service_name: 'php-fpm'
+php__webserver_group: 'apache'
+php__webserver_user: 'apache'

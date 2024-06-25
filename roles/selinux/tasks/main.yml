@@ -12,6 +12,10 @@
 
 - block:
 
+  - name: 'Combined SELinux booleans:'
+    ansible.builtin.debug:
+      var: 'selinux__booleans__combined_var'
+
   - name: 'setsebool -P ...'
     ansible.posix.seboolean:
       name: '{{ item.key }}'
@@ -28,6 +32,10 @@
 
 - block:
 
+  - name: 'Combined SELinux file contexts:'
+    ansible.builtin.debug:
+      var: 'selinux__fcontexts__combined_var'
+
   - name: 'semanage fcontext --add --type ...'
     community.general.sefcontext:
       setype: '{{ item["setype"] }}'
@@ -42,6 +50,10 @@
     - 'selinux:fcontext'
 
 - block:
+
+  - name: 'Combined SELinux ports:'
+    ansible.builtin.debug:
+      var: 'selinux__ports__combined_var'
 
   - name: 'semanage port --add --type ... --proto ...'
     community.general.seport:

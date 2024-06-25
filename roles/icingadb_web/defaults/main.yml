@@ -1,0 +1,30 @@
+icingadb_web__api_host: 'localhost'
+icingadb_web__api_port: 5665
+icingadb_web__database_host: '{{ icingadb__database_host }}'
+icingadb_web__database_login: '{{ icingadb__database_login }}'
+icingadb_web__database_name: '{{ icingadb__database_name }}'
+icingadb_web__redis_host: '{{ icingadb__redis_host }}'
+icingadb_web__redis_password: '{{ icingadb__redis_password | d() }}'
+icingadb_web__redis_port: '{{ icingadb__redis_port }}'
+
+# -----------------------------------------------------------------------------
+
+icingadb_web__icinga2_master__api_users__dependent_var:
+  - username: '{{ icingadb__api_user_login["username"] }}'
+    password: '{{ icingadb__api_user_login["password"] }}'
+    permissions:
+      - 'actions/*'
+      - 'objects/modify/*'
+      - 'objects/query/*'
+      - 'status/query'
+
+icingadb_web__icingaweb2__resources__dependent_var:
+  - name: '{{ icingadb_web__database_name }}'
+    type: 'db'
+    db: 'mysql'
+    host: '{{ icingadb_web__database_host }}'
+    port: 3306
+    dbname: '{{ icingadb_web__database_name }}'
+    username: '{{ icingadb_web__database_login["username"] }}'
+    password: '{{ icingadb_web__database_login["password"] }}'
+    charset: 'utf8mb4'

@@ -1,10 +1,9 @@
 - block:
 
-  - name: 'install icingadb icingadb-web'
+  - name: 'install icingadb'
     ansible.builtin.package:
       name:
         - 'icingadb'
-        - 'icingadb-web'
       state: 'present'
 
   tags:
@@ -92,38 +91,6 @@
       name: 'icingadb.service'
       enabled: '{{ icingadb__service_enabled }}'
       state: '{{ icingadb__service_enabled | bool | ternary("started", "stopped") }}'
-
-  tags:
-    - 'icingadb'
-
-
-# https://icinga.com/docs/icinga-db-web/latest/doc/02-Installation/04-RHEL/
-- block:
-
-  - name: 'mkdir -p /etc/icingaweb2/modules/icingadb'
-    ansible.builtin.file:
-      path: '/etc/icingaweb2/modules/icingadb'
-      state: 'directory'
-      owner: 'apache'
-      group: 'icingaweb2'
-      mode: 0o2770
-
-  - name: 'Generate icingadb-web config files'
-    ansible.builtin.template:
-      src: 'etc/icingaweb2/modules/icingadb/{{ item }}.j2'
-      dest: '/etc/icingaweb2/modules/icingadb/{{ item }}'
-      owner: 'apache'
-      group: 'icingaweb2'
-      mode: 0o660
-    loop:
-      - 'commandtransports.ini'
-      - 'config.ini'
-      - 'redis.ini'
-
-  - name: 'icingacli module enable icingadb'
-    ansible.builtin.command: 'icingacli module enable icingadb'
-    args:
-      creates: '/etc/icingaweb2/enabledModules/icingadb'
 
   tags:
     - 'icingadb'
