@@ -8,7 +8,7 @@ Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-------+-------+-----------
 acme_sh                              |    |    |    |   | x | x |       |       |       |       |       |
 ansible_init                         |    |    |    |   |   |   |       |       |       |       |       | Fedora 35+
-apache_httpd                         |    |    |    |   | x | x |       |       |       |       |       |
+apache_httpd                         |    |    | x  |   | x | x |       |       |       |       |       |
 apache_solr                          |    |    |    |   | x | x |       |       |       |       |       |
 apache_tomcat                        |    |    |    | x | x |   |       |       |       |       |       |
 apps                                 |    |    |    |   | x | x |       |       |       |       |       |
@@ -52,17 +52,18 @@ Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-------+-------+-----------
 icinga2_agent                        |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
 icinga2_master                       |    |    |    |   | x | x |       |       |       |       |       |
-icingadb                             |    |    |    |   | x | x |       |       |       |       |       |
-icingaweb2                           |    |    |    |   | x | x |       |       |       |       |       |
-icingaweb2_module_businessprocess    |    |    |    |   | x | x |       |       |       |       |       |
-icingaweb2_module_company            |    |    |    |   | x | x |       |       |       |       |       |
-icingaweb2_module_director           |    |    |    |   | x | x |       |       |       |       |       |
+icingadb                             |    |    | x  |   | x | x |       |       |       |       |       |
+icingadb_web                         |    |    | x  |   | x | x |       |       |       |       |       |
+icingaweb2                           |    |    | x  |   | x | x |       |       |       |       |       |
+icingaweb2_module_businessprocess    |    |    | x  |   | x | x |       |       |       |       |       |
+icingaweb2_module_company            |    |    | x  |   | x | x |       |       |       |       |       |
+icingaweb2_module_director           |    |    | x  |   | x | x |       |       |       |       |       |
 icingaweb2_module_doc                |    |    |    |   | x | x |       |       |       |       |       |
-icingaweb2_module_grafana            |    |    |    |   | x | x |       |       |       |       |       |
-icingaweb2_module_incubator          |    |    |    |   | x | x |       |       |       |       |       |
-icingaweb2_module_monitoring         |    |    |    |   | x | x |       |       |       |       |       |
-icingaweb2_module_vspheredb          |    |    |    |   | x | x |       |       |       |       |       |
-icingaweb2_module_x509               |    |    |    |   | x | x |       |       |       |       |       |
+icingaweb2_module_grafana            |    |    | x  |   | x | x |       |       |       |       |       |
+icingaweb2_module_incubator          |    |    | x  |   | x | x |       |       |       |       |       |
+icingaweb2_module_monitoring         |    |    | x  |   | x | x |       |       |       |       |       |
+icingaweb2_module_vspheredb          |    |    | x  |   | x | x |       |       |       |       |       |
+icingaweb2_module_x509               |    |    | x  |   | x | x |       |       |       |       |       |
 influxdb                             |    |    |    |   | x | x |       |       |       |       |       |
 infomaniak_vm                        |    |    |    |   |   |   |       |       |       |       |       | Fedora 35+
 kdump                                |    |    |    |   | x | x |   x   |       |       |       |       |
@@ -101,7 +102,7 @@ objectstore_backup                   |    |    |    |   | x |   |       |       
 opensearch                           |    | x  |    |   | x |   |       |       |       |       |       |
 open_vm_tools                        |    |    |    |   | x | x |   x   |       |       |       |       |
 openvpn_server                       |    |    |    |   | x | x |       |       |       |       |       |
-php                                  |    |    |    |   | x | x |       |       |       |       |       |
+php                                  |    |    | x  |   | x | x |       |       |       |       |       |
 policycoreutils                      |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
 postfix                              | x  | x  | x  | x | x | x |   x   |       |       |       |       | Fedora 35
 postgresql_server                    |    |    |    |   | x |   |       |       |       |       |       |
@@ -121,7 +122,7 @@ repo_gitlab_ce                       |    |    |    |   | x |   |       |       
 repo_gitlab_runner                   |    |    |    |   | x |   |       |       |       |       |       |
 repo_grafana                         |    |    |    |   | x | x |       |       |       |       |       |
 repo_graylog                         |    | x  |    |   | x |   |       |       |       |       |       |
-repo_icinga                          |    |    |    | x | x | x |       |       |       |       |       |
+repo_icinga                          |    |    | x  | x | x | x |       |       |       |       |       |
 repo_influxdb                        |    | x  |    | x | x | x |       |       |       |       |       |
 repo_mariadb                         |    |    |    | x | x | x |       |       |       |       |       |
 repo_mongodb                         |    | x  |    |   | x | x |       |       |       |       |       |
@@ -135,7 +136,7 @@ repo_rpmfusion                       |    |    |    |   | x |   |       |       
                                      |    Debian    |   RHEL    |                Ubuntu                 | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-------+-------+-----------
-repo_sury                            | x  | x  |    | - | - | - |       |       |       |       |       |
+repo_sury                            | x  | x  | x  | - | - | - |       |       |       |       |       |
 rocketchat                           |    |    |    | x | x |   |       |       |       |       |       | Fedora 35
 rsyslog                              |    |    |    |   | x | x |       |       |       |       |       |
 selinux                              |    |    |    |   | x | x |       |       |       |       |       |
