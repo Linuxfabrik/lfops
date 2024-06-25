@@ -2,10 +2,6 @@
 
 This role installs and configures [InfluxDB](https://www.influxdata.com/products/influxdb-overview/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

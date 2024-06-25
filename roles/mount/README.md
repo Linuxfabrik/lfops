@@ -3,13 +3,6 @@
 This role installs NFS and CIFS client utilities when necessary and configures mount points in `/etc/fstab`.
 
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* Debian 11 (and compatible)
-
-
 ## Tags
 
 | Tag                  | What it does                           |

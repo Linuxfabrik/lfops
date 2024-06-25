@@ -2,10 +2,6 @@
 
 This role installs and configures [Fangfrisch](https://rseichter.github.io/fangfrisch/), a tool that "allows downloading virus definition files that are not official ClamAV canon".
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

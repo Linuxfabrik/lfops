@@ -2,10 +2,6 @@
 
 This role installs and configures a [PostgreSQL](https://www.postgresql.org/) server.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

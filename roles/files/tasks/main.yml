@@ -1,0 +1,63 @@
+- block:
+
+  - name: 'Combined directories:'
+    ansible.builtin.debug:
+      var: 'files__directories__combined_var'
+
+  - name: 'Manage directories'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: '{{ (item["state"] | d("present") == "present") | ternary("directory", "absent") }}'
+      mode: '{{ item["mode"] | d("0o755") }}'
+      owner: '{{ item["owner"] | d("root") }}'
+      group: '{{ item["group"] | d("root") }}'
+    loop: '{{ files__directories__combined_var }}'
+    loop_control:
+      label: 'path={{ item["path"] }}, state={{ item["state"] | d("present") }}'
+
+  - name: 'Combined files:'
+    ansible.builtin.debug:
+      var: 'files__files__combined_var'
+
+  - name: 'Deploy files'
+    ansible.builtin.copy:
+      content: '{{ item["content"] | d(omit) }}'
+      src: '{{ (item["content"] is defined and item["content"] | length) | ternary(
+          omit,
+          inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/" ~ item["path"]
+        ) }}'
+      dest: '{{ item["path"] }}'
+      mode: '{{ item["mode"] | d("0o644") }}'
+      owner: '{{ item["owner"] | d("root") }}'
+      group: '{{ item["group"] | d("root") }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ files__files__combined_var }}'
+    loop_control:
+      label: 'path={{ item["path"] }}, state={{ item["state"] | d("present") }}'
+
+  - name: 'Remove files'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ files__files__combined_var }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+
+  - name: 'Combined symlinks:'
+    ansible.builtin.debug:
+      var: 'files__symlinks__combined_var'
+
+  - name: 'Manage symlinks'
+    ansible.builtin.file:
+      src: '{{ (item["state"] | d("present") != "absent") | ternary(item["src"], omit) }}'
+      path: '{{ item["dest"] }}'
+      state: '{{ (item["state"] | d("present") == "present") | ternary("link", "absent") }}'
+    loop: '{{ files__symlinks__combined_var }}'
+    loop_control:
+      label: 'src={{ item["src"] }}, dest={{ item["dest"] }}, state={{ item["state"] | d("present") }}'
+
+  tags:
+    - 'files'

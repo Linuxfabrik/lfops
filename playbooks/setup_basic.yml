@@ -1,16 +1,11 @@
-- name: 'The Linuxfabrik basic setup'
+- name: 'Playbook linuxfabrik.lfops.setup_basic'
   hosts:
     - 'lfops_setup_basic'
 
-
   pre_tasks:
-
-    # currently, this is thought for centos7, rocky8 and fedora35. therefore, if there is no when-staement, it should work against those.
-    # please extend and improve as required.
-    - name: 'Check if the OS is supported'
-      ansible.builtin.meta: 'end_host'
-      when:
-        - 'ansible_facts["os_family"] != "RedHat"'
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
       tags:
         - 'always'
 
@@ -25,7 +20,7 @@
     # === Basic repositories ===
     - role: 'linuxfabrik.lfops.repo_baseos'
       when:
-        - '(ansible_facts["distribution"] == "CentOS" and ansible_facts["distribution_major_version"] in ["7", "8"])
+        - '(ansible_facts["distribution"] == "CentOS" and ansible_facts["distribution_major_version"] in ["7", "8", "9"])
           or (ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] in ["8", "9"])
           or (ansible_facts["distribution"] == "AlmaLinux" and ansible_facts["distribution_major_version"] in ["8"])'
         - 'not setup_basic__skip_repo_baseos | d(false)'
@@ -119,7 +114,6 @@
 
 
     # === SSH ===
-    # TODO: does this work with CIS?
     - role: 'linuxfabrik.lfops.sshd'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
@@ -185,3 +179,11 @@
     - role: 'linuxfabrik.lfops.icinga2_agent'
       when:
         - 'not setup_basic__skip_icinga2_agent | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

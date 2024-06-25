@@ -1,10 +1,9 @@
 # Ansible Role linuxfabrik.lfops.dnf_versionlock
 This role installs and configures the [dnf versionlock plugin](https://dnf-plugins-core.readthedocs.io/en/latest/versionlock.html).
 
-Runs on
+Hints:
 
-* RHEL 7 (and compatible). Note that `yum versionlock` has less capabilites than the DNF variant.
-* RHEL 8 (and compatible)
+* Note that `yum versionlock` on RHEL 7 has less capabilites than the DNF variant on RHEL 8+.
 
 
 ## Tags

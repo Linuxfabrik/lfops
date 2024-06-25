@@ -1,6 +1,14 @@
-- name: 'The Linuxfabrik Nextcloud setup'
+- name: 'Playbook linuxfabrik.lfops.setup_nextcloud'
   hosts:
     - 'lfops_setup_nextcloud'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -14,7 +22,7 @@
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not setup_nextcloud__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
@@ -56,7 +64,7 @@
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not setup_nextcloud__skip_repo_remi | d(false)'
 
     - role: 'linuxfabrik.lfops.php'
@@ -75,14 +83,14 @@
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'   # currently doesn't work for fedora
+        - 'ansible_facts["distribution_major_version"] in ["7", "8", "9"]'   # currently doesn't work for fedora
         - 'not setup_nextcloud__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       # Attention: Using a fixed LTS version for Nextcloud.
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
@@ -150,3 +158,11 @@
     - role: 'linuxfabrik.lfops.objectstore_backup'
       when:
         - 'not setup_nextcloud__skip_objectstore_backup | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

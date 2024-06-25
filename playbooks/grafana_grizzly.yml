@@ -1,7 +1,34 @@
-- name: 'Install grizzly and optionally deploys Grafana resources'
+- name: 'Playbook linuxfabrik.lfops.grafana_grizzly'
   hosts:
     - 'lfops_grafana_grizzly'
 
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
   roles:
 
+    - role: 'linuxfabrik.lfops.repo_grafana'
+      when:
+        - 'not grafana_server__skip_repo_grafana | d(false)'
+
+    - role: 'linuxfabrik.lfops.grafana'
+      grafana__provisioning_service_accounts__dependent_var: '{{
+          grafana_grizzly__grafana__provisioning_service_accounts__dependent_var
+        }}'
+      when:
+        - 'not grafana_server__skip_grafana | d(false)'
+
     - role: 'linuxfabrik.lfops.grafana_grizzly'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

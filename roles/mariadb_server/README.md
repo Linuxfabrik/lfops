@@ -4,22 +4,18 @@ This role installs and configures a [MariaDB](https://mariadb.org/) server.
 
 It also tunes the following Kernel settings:
 * `fs.aio-max-nr`: `1048576`
+* `sunrpc.tcp_slot_table_entries`: 128
 * `vm.swapiness`: `10`
 
 Note that this role does NOT let you specify a particular MariaDB server version. It simply installs the latest available MariaDB server version from the repos configured in the system. If you want or need to install a specific MariaDB server version, use the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) beforehand.
 
-This role is only compatible with the following MariaDB versions:
+This role is compatible with the following MariaDB versions:
 
 * 10.3
 * 10.4
 * 10.5
-* 10.6 (preferred - long-term support MariaDB stable)
-
-We will add the next long-term support release as soon as it's available (therefore currently not implementing 10.7+).
-
-Runs on
-
-* RHEL 8 (and compatible)
+* 10.6 LTS
+* 10.11 LTS
 
 
 ## Mandatory Requirements
@@ -133,7 +129,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 | Role Variable                                        | Documentation                                                                                      | Default Value (v10.6)                    |
 | -------------                                        | -------------                                                                                      | -------------                    |
-| `mariadb_server__cnf_bulk_insert_buffer_size__group_var` / `mariadb_server__cnf_bulk_insert_buffer_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bulk_insert_buffer_size) | `28800`                          |
+| `mariadb_server__cnf_bulk_insert_buffer_size__group_var` / `mariadb_server__cnf_bulk_insert_buffer_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bulk_insert_buffer_size) | `8M`                          |
 | `mariadb_server__cnf_character_set_server__group_var` / `mariadb_server__cnf_character_set_server__host_var`           | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#character_set_server) | `'utf8mb4'`                      |
 | `mariadb_server__cnf_collation_server__group_var` / `mariadb_server__cnf_collation_server__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#collation_server) | `'utf8mb4_unicode_ci'`           |
 | `mariadb_server__cnf_expire_logs_days__group_var` / `mariadb_server__cnf_expire_logs_days__host_var`               | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#expire_logs_days) | `0.000000`                              |
@@ -154,7 +150,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_query_cache_size__group_var` / `mariadb_server__cnf_query_cache_size__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_size) | `0`                              |
 | `mariadb_server__cnf_query_cache_type__group_var` / `mariadb_server__cnf_query_cache_type__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_type) | `'OFF'`                          |
 | `mariadb_server__cnf_skip_name_resolve__group_var` / `mariadb_server__cnf_skip_name_resolve__host_var`              | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#skip_name_resolve) | `'ON'`                           |
-| `mariadb_server__cnf_slow_query_log__group_var` / `mariadb_server__cnf_slow_query_log__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log) | `0` |
+| `mariadb_server__cnf_slow_query_log__group_var` / `mariadb_server__cnf_slow_query_log__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log) | `'OFF'` |
 | `mariadb_server__cnf_slow_query_log_file__group_var` / `mariadb_server__cnf_slow_query_log_file__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log_file) | `'/var/log/mariadb/mariadb-slowquery.log'` |
 | `mariadb_server__cnf_sql_mode__group_var` / `mariadb_server__cnf_sql_mode__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#sql_mode) | `'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'` |
 | `mariadb_server__cnf_table_definition_cache__group_var` / `mariadb_server__cnf_table_definition_cache__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#table_definition_cache) | 400
@@ -164,7 +160,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 Example:
 ```yaml
 # optional - cnf directives
-mariadb_server__cnf_bulk_insert_buffer_size__host_var: 8388608
+mariadb_server__cnf_bulk_insert_buffer_size__host_var: '8M'
 mariadb_server__cnf_character_set_server__host_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__host_var: 'utf8mb4_unicode_ci'
 mariadb_server__cnf_expire_logs_days__host_var: 0.000000
@@ -185,7 +181,7 @@ mariadb_server__cnf_query_cache_limit__host_var: '1M'
 mariadb_server__cnf_query_cache_size__host_var: 0
 mariadb_server__cnf_query_cache_type__host_var: 'OFF'
 mariadb_server__cnf_skip_name_resolve__host_var: 'ON'
-mariadb_server__cnf_slow_query_log__host_var: 0
+mariadb_server__cnf_slow_query_log__host_var: 'OFF'
 mariadb_server__cnf_slow_query_log_file__host_var: '/var/log/mariadb/mariadb-slowquery.log'
 mariadb_server__cnf_sql_mode__host_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__host_var: 400

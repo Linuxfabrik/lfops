@@ -3,21 +3,21 @@
 
 [Unit]
 Description={% if item['description'] is defined and item['description'] %}{{ item['description'] }}{% else %}{{ item['name'] }} Mount{% endif %}
-{% if 'raw_unit' in item %}
+{% if 'raw_unit' in item +%}
 # raw
 {{ item['raw_unit'] }}
 {% endif %}
 
 
 [Mount]
-{% if 'raw_mount' in item %}
+{% if 'raw_mount' in item +%}
 # raw
 {{ item['raw_mount'] }}
 {% endif %}
 
 [Install]
 WantedBy={{ item['wanted_by'] | d('default.target') }}
-{% if 'raw_install' in item %}
+{% if 'raw_install' in item +%}
 # raw
 {{ item['raw_install'] }}
 {% endif %}

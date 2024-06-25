@@ -16,21 +16,6 @@
       group: 'root'
       mode: 0o644
 
-  # Why do we configure the SSHd here, and why don't we simply inject a Banner variable
-  # into the sshd role within the motd playbook?
-  # The problem here is that the SSH role is executed *completely* upon an inject. This has the
-  # effect that the policycore-utils must also be installed up front. Once the sshd role is
-  # executed, it hardens the SSH daemon. In the end that's way too many changes to
-  # the system overall just to set a simple MOTD.
-  - name: 'Ensure SSH warning banner is configured'
-    ansible.builtin.lineinfile:
-      path: '/etc/ssh/sshd_config'
-      regexp: '^#?Banner'
-      line: 'Banner /etc/issue.net'
-      state: 'present'
-      create: true
-    notify: 'motd: systemctl restart sshd.service'
-
   - name: 'rm -f /etc/motd'
     ansible.builtin.file:
       path: '/etc/motd'

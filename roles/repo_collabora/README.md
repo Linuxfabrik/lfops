@@ -2,11 +2,6 @@
 
 This role deploys the official Collabora Enterprise Repository.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

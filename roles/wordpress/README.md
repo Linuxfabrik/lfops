@@ -4,10 +4,6 @@ This role installs and configures the [WordPress CMS](https://wordpress.com/).
 
 Attention: It is intended that when you call `http://{wordpress__url}}` you will get a white page because no theme is installed. `http://{wordpress__url}}/wp-admin` works as expected.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

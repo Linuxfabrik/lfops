@@ -1,11 +1,28 @@
-- name: 'Install and configure acme.sh'
+- name: 'Playbook linuxfabrik.lfops.acme_sh'
   hosts:
     - 'lfops_acme_sh'
 
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
   roles:
 
-    - role: 'linuxfabrik.lfops.openssl'
-
-    - role: 'linuxfabrik.lfops.tar'
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: '{{
+          acme_sh__apps__apps__dependent_var
+        }}'
 
     - role: 'linuxfabrik.lfops.acme_sh'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

@@ -2,13 +2,6 @@
 
 This role installs the SELinux policy core python utilities.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Fedora Server 35
-
 
 ## Tags
 

@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2024050901
 
 [mariadb-main]
 name = MariaDB Server
 {% if repo_mariadb__mirror_url is defined and repo_mariadb__mirror_url | length %}
 baseurl = {{ repo_mariadb__mirror_url }}/MariaDB/mariadb-{{ repo_mariadb__version }}/yum/rhel/8/x86_64
 {% else %}
-baseurl = https://downloads.mariadb.com/MariaDB/mariadb-{{ repo_mariadb__version }}/yum/rhel/$releasever/$basearch
+baseurl = https://downloads.mariadb.com/MariaDB/mariadb-{{ repo_mariadb__version }}/yum/rhel/8/$basearch
 {% endif %}
 gpgkey = file:///etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY
 gpgcheck = 1
@@ -24,7 +24,7 @@ name = MariaDB MaxScale
 {% if repo_mariadb__mirror_url is defined and repo_mariadb__mirror_url | length %}
 baseurl = {{ repo_mariadb__mirror_url }}/MariaDB/MaxScale/2.4/centos/8/x86_64
 {% else %}
-baseurl = https://downloads.mariadb.com/MaxScale/2.4/centos/$releasever/$basearch
+baseurl = https://downloads.mariadb.com/MaxScale/2.4/centos/8/$basearch
 {% endif %}
 gpgkey = file:///etc/pki/rpm-gpg/MariaDB-MaxScale-GPG-KEY
 gpgcheck = 1
@@ -39,7 +39,7 @@ name = MariaDB Tools
 {% if repo_mariadb__mirror_url is defined and repo_mariadb__mirror_url | length %}
 baseurl = {{ repo_mariadb__mirror_url }}/MariaDB/Tools/rhel/8/x86_64
 {% else %}
-baseurl = https://downloads.mariadb.com/Tools/rhel/$releasever/$basearch
+baseurl = https://downloads.mariadb.com/Tools/rhel/8/$basearch
 {% endif %}
 gpgkey = file:///etc/pki/rpm-gpg/MariaDB-Enterprise-GPG-KEY
 gpgcheck = 1

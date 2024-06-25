@@ -19,6 +19,7 @@
       url: 'https://api.github.com/repos/librenms/librenms/releases/latest'
     register: 'librenms__github_release'
     check_mode: false # run task even if `--check` is specified
+    run_once: true
 
   - name: 'git clone https://github.com/librenms/librenms.git /opt/librenms'
     ansible.builtin.git:

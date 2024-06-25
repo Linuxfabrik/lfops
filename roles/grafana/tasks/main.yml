@@ -35,6 +35,13 @@
       mode: 0o640
     notify: 'grafana: restart grafana-server'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/grafana/grafana.ini'
+
   - name: 'deploy /etc/grafana/ldap.toml'
     ansible.builtin.template:
       src: 'etc/grafana/ldap.toml.j2'
@@ -48,6 +55,19 @@
   tags:
     - 'grafana'
     - 'grafana:configure'
+
+
+- block:
+
+  - name: 'install grafana plugins'
+    community.grafana.grafana_plugin:
+      name: '{{ item["name"] }}'
+      state: '{{ item ["state"] | d("present") }}'
+    loop: '{{ grafana__plugins__combined_var }}'
+    notify: 'grafana: restart grafana-server'
+
+  tags:
+    - 'grafana:plugins'
 
 
 - block:

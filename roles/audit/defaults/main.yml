@@ -1,2 +1,8 @@
 audit__action_mail_account: 'root'
+audit__admin_space_left: '10%'
+audit__admin_space_left_action: 'EMAIL'
+audit__num_logs: 10
+audit__space_left: '20%'
+audit__space_left_action: 'ROTATE'
+
 audit__service_enabled: true

@@ -1,7 +1,23 @@
-- name: 'Install at'
+- name: 'Playbook linuxfabrik.lfops.at'
   hosts:
     - 'lfops_at'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.at'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

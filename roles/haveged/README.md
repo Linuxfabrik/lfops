@@ -2,10 +2,6 @@
 
 This role installs [haveged](https://github.com/jirka-h/haveged).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

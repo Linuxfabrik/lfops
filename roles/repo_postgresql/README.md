@@ -2,10 +2,6 @@
 
 This role deploys the official [PostgreSQL Repo](https://www.postgresql.org/download/linux/redhat/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

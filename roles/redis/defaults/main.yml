@@ -1,3 +1,16 @@
+redis__conf_appendonly: 'no'
+redis__conf_auto_aof_rewrite_min_size: '64mb'
+redis__conf_bind: '127.0.0.1 ::1'
+redis__conf_daemonize: 'no'
+redis__conf_databases: 16
+redis__conf_loglevel: 'notice'
+redis__conf_maxmemory: '50M'
+redis__conf_maxmemory_policy: 'noeviction'
+redis__conf_port: 6379
+redis__conf_protected_mode: 'yes'
+redis__conf_replica_serve_stale_data: 'yes'
+redis__conf_supervised: 'no'
+
 redis__service_enabled: true
 redis__service_limit_nofile: 10240
 redis__service_timeout_start_sec: '90s'

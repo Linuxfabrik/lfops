@@ -2,12 +2,6 @@
 
 This role deploys the [Remi's RPM repository](https://rpms.remirepo.net/).
 
-Runs on
-
-* RHEL 7
-* RHEL 8 (and compatible)
-* Fedora 35
-
 
 ## Mandatory Requirements
 

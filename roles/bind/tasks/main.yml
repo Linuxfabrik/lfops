@@ -12,19 +12,6 @@
 
 - block:
 
-  - name: 'systemctl {{ bind__named_service_enabled | bool | ternary("enable", "disable") }} --now named.service'
-    ansible.builtin.systemd:
-      name: 'named.service'
-      enabled: '{{ bind__named_service_enabled }}'
-      state: '{{ bind__named_service_enabled | bool | ternary("started", "stopped") }}'
-
-  tags:
-    - 'bind'
-    - 'bind:state'
-
-
-- block:
-
   - name: 'Deploy /etc/sysconfig/named'
     ansible.builtin.template:
       src: 'etc/sysconfig/named.j2'
@@ -43,6 +30,13 @@
       mode: 0o640
     notify: 'bind: reload named'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/named.conf'
+
   - name: 'Deploy the forward and reverse zones'
     ansible.builtin.template:
       src: 'var/named/raw.zone.j2'
@@ -51,8 +45,23 @@
       group: 'named'
       mode: 0o640
     loop: '{{ bind__zones }}'
-    notify: 'bind: reload named'
+    loop_control:
+      label: '{{ item["name"] }}'
+    notify: 'bind: named-checkzone ... && reload named'
 
   tags:
     - 'bind'
     - 'bind:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ bind__named_service_enabled | bool | ternary("enable", "disable") }} --now named.service'
+    ansible.builtin.systemd:
+      name: 'named.service'
+      enabled: '{{ bind__named_service_enabled }}'
+      state: '{{ bind__named_service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'bind'
+    - 'bind:state'

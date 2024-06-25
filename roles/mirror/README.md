@@ -2,10 +2,6 @@
 
 This role installs and configures [mirror](https://github.com/Linuxfabrik/mirror).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

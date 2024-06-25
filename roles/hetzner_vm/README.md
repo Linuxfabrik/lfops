@@ -15,11 +15,6 @@ This role creates and manages servers (virtual machines) and volumes at the [Het
 
 This role does not configure the VM's network interfaces.
 
-Runs on
-
-* Fedora 35
-* Fedora 36
-
 
 ## Mandatory Requirements
 
@@ -37,6 +32,7 @@ Runs on
 | Tag          | What it does                   |
 | ---          | ------------                   |
 | `hetzner_vm` | Creates and manages the server |
+| `hetzner_vm:firewalls` | Manages the provider firewalls of the host |
 
 
 ## Mandatory Role Variables
@@ -90,7 +86,7 @@ hetzner_vm__networks:
 | `hetzner_vm__ssh_keys` | List of SSH-key names that should be placed on the server. The names have to match the SSH-keys depoisted in Hetzner. | `[]` |
 | `hetzner_vm__state` | The state of the server. Possible options:<br> * absent<br> * present<br> * rebuild<br> * restarted<br> * started<br> * stopped | `'started'` |
 | `hetzner_vm__upgrade_disk` | Resize the disk when resizing the server. This will prevent downgrades to a `hetzner_vm__server_type` with a smaller disk later on, as the disk cannot be shrunk. | `false` |
-| `hetzner_vm__volumes` | Dictionary of volumes that should be managed and attached to this server. Subkeys:<br> * `name`: Mandatory, string. The name of the volume.<br> * `size`: Mandatory, integer. The size in GBs. Has to be higher than 10. Note that shrinking of volumes is not supported.<br> * `format`: Optional, string. The format of the volume. Possible options: `xfs`, `ext4`.<br> * `state`: Optional, string. Defaults to `present`. The state of the volume. Possible options: `present`, `absent`. | `[]` |
+| `hetzner_vm__volumes` | Dictionary of volumes that should be managed and attached to this server. Subkeys:<br> * `name`: Mandatory, string. The name of the volume.<br> * `size`: Mandatory, integer. The size in GBs. Has to be higher than 10. Note that shrinking of volumes is not supported.<br> * `format`: Optional, string. The format of the volume. Possible options: `xfs`, `ext4`. Defaults to `xfs`.<br> * `state`: Optional, string. Defaults to `present`. The state of the volume. Possible options: `present`, `absent`. | `[]` |
 
 Example:
 ```yaml

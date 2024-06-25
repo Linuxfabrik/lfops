@@ -2,10 +2,6 @@
 
 This role installs and enables the [IcingaWeb2 Incubator Module](https://github.com/Icinga/icingaweb2-module-incubator).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 This role is tested with the following IcingaWeb2 Grafana Module versions:
 
 * 0.17.0

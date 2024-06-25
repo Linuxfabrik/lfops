@@ -1,0 +1,63 @@
+- block:
+
+  - name: 'Find all *.rpmnew and *.rpmsave files'
+    ansible.builtin.find:
+      paths:
+        - '/etc'
+        - '/opt'
+        - '/usr'
+        - '/var/lib'
+      file_type: 'file'
+      patterns: '*.rpmnew,*.rpmsave'
+      recurse: true
+    register: 'found_files'
+
+  - name: 'Get package name and version for each file'
+    ansible.builtin.command: "rpm -qf {{ item.path | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
+    register: 'package_info'
+    loop: '{{ found_files.files }}'
+    loop_control:
+      label: '{{ item.path }}'
+    changed_when: false
+    when:
+      - 'found_files.files'
+
+  - name: 'Set fact for OS name and version'
+    ansible.builtin.set_fact:
+      os_name_version: '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}'
+    when:
+      - 'found_files.files'
+
+  - name: 'Map files to their package info'
+    ansible.builtin.set_fact:
+      package_file_mappings: "{{ package_file_mappings | default({}) | combine({ item.item.path: os_name_version + '__' + item.stdout }) }}"
+    loop: '{{ package_info.results }}'
+    loop_control:
+      label: '{{ item.item.path }}'
+    when:
+      - 'found_files.files'
+
+  - name: 'Download rpmnew/rpmsave files to control node'
+    ansible.builtin.fetch:
+      src: "{{ item.key }}"
+      dest: "/tmp/lfops/{{ item.value }}/{{ inventory_hostname }}/{{ item.key }}"
+      flat: true
+    loop: '{{ package_file_mappings | dict2items }}'
+    loop_control:
+      label: '{{ item.key }}'
+    when:
+      - 'found_files.files'
+
+  - name: 'Download original files to control node'
+    ansible.builtin.fetch:
+      src: "{{ item.key | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
+      dest: "/tmp/lfops/{{ item.value }}/{{ inventory_hostname }}/{{ item.key | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
+      flat: true
+    loop: '{{ package_file_mappings | dict2items }}'
+    loop_control:
+      label: '{{ item.key }}'
+    when:
+      - 'found_files.files'
+
+  tags:
+    - 'collect_rpmnew_rpmsave'

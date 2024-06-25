@@ -2,11 +2,6 @@
 
 This role installs and manages systemd unit files. A unit file is a plain text ini-style file that encodes information about a service, a socket, a device, a mount point, an automount point, a swap file or partition, a start-up target, a watched file system path, a timer controlled and supervised by systemd, a resource management slice or a group of externally created processes. See `systemd.unit` for unit configuration, `systemd.syntax(7)` for a general description of the syntax, and [load-fragment-gperf.gperf.in](https://github.com/systemd/systemd/blob/main/src/core/load-fragment-gperf.gperf.in) for a list of all directives and their context.
 
-Runs on
-
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-
 
 ## Tags
 

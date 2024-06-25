@@ -6,14 +6,6 @@ This role configures the server to do (weekly) system updates by deploying two s
 * applies all updates
 * and, if necessary, automatically reboots the host after the updates.
 
-Runs on
-
-* Debian 11
-* Fedora
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-
 
 ## Mandatory Requirements
 

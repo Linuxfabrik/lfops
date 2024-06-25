@@ -1,6 +1,14 @@
-- name: 'Install and configure Mirror'
+- name: 'Playbook linuxfabrik.lfops.mirror'
   hosts:
     - 'lfops_mirror'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -23,3 +31,11 @@
         - 'not mirror__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.mirror'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

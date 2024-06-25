@@ -47,6 +47,7 @@
     delegate_to: 'localhost'
     when:
       - 'hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length'
+    tags: 'hetzner_vm:firewalls'
 
   - name: 'Manage the VMs at Hetzner'
     hetzner.hcloud.hcloud_server:

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023040601
+# 2024052701
 
 # This is the configuration file for Icinga DB.
 
@@ -26,9 +26,43 @@ database:
   # Database password.
   password: '{{ icingadb__database_login["password"] }}'
 
-# Connection configuration for the Redis server where Icinga 2 writes its configuration, state and history items.
+  # List of low-level database options that can be set to influence some Icinga DB internal default behaviours.
+  # Do not change the defaults if you don't have to!
+#  options:
+    # Maximum number of connections Icinga DB is allowed to open in parallel to the database.
+    # By default, Icinga DB is allowed to open up to "16" connections whenever necessary.
+    # Setting this to a number less than or equal to "-1" allows Icinga DB to open an unlimited number of connections.
+    # However, it is not possible to set this option to "0".
+#    max_connections: 16
+
+    # Maximum number of queries allowed to connect to a single database table simultaneously.
+    # By default, Icinga DB is allowed to execute up to "8" queries of any kind, e.g. INSERT,UPDATE,DELETE
+    # concurrently on a given table.
+    # It is not possible to set this option to a smaller number than "1".
+#    max_connections_per_table: 8
+
+    # Maximum number of placeholders Icinga DB is allowed to use for a single SQL statement.
+    # By default, Icinga DB uses up to "8192" placeholders when necessary, which showed the
+    # best performance in terms of execution time and parallelism in our tests.
+    # It is not possible to set this option to a smaller number than "1".
+#    max_placeholders_per_statement: 8192
+
+    # Maximum number of rows Icinga DB is allowed to select, delete, update or insert in a single transaction.
+    # By default, Icinga DB selects,deletes,updates,inserts up to "8192" rows in a single transaction, which showed
+    # the best performance in terms of execution time and parallelism in our tests.
+    # It is not possible to set this option to a smaller number than "1".
+#    max_rows_per_transaction: 8192
+
+    # Enforce Galera cluster nodes to perform strict cluster-wide causality checks before executing
+    # specific SQL queries determined by the number you provided.
+    # Note: You can only set this option to a number "0 - 15".
+    # Defaults to 7.
+    # See https://icinga.com/docs/icinga-db/latest/doc/03-Configuration/#galera-cluster
+#    wsrep_sync_wait: 7
+
+# Connection configuration for the Redis® server where Icinga 2 writes its configuration, state and history items.
 # This is the same connection as configured in the 'icingadb' feature of the corresponding Icinga 2 node.
-# High availability setups require a dedicated Redis server per Icinga 2 node and
+# High availability setups require a dedicated Redis® server per Icinga 2 node and
 # therefore a dedicated Icinga DB instance that connects to it.
 redis:
   # Redis host or absolute Unix socket path.
@@ -50,7 +84,7 @@ redis:
 logging:
   # Default logging level. Can be set to 'fatal', 'error', 'warn', 'info' or 'debug'.
   # If not set, defaults to 'info'.
-#  level: info
+  level: '{{ icingadb__logging_level }}'
 
   # Logging output. Can be set to 'console' (stderr) or 'systemd-journald'.
   # If not set, logs to systemd-journald when running under systemd, otherwise stderr.
@@ -89,6 +123,15 @@ retention:
   # Number of days to retain historical data for SLA reporting. By default, it is retained forever.
 #  sla-days:
 
+  # Interval for periodically cleaning up the historical data, defined as a duration string.
+  # A duration string is a sequence of decimal numbers and a unit suffix, such as "20s".
+  # Valid units are "ms", "s", "m", "h".
+  # Defaults to "1h".
+#  interval: 1h
+
+  # Number of old historical entries a single query can delete in a "DELETE FROM ... LIMIT count" manner.
+  # By default, this is limited to 5000 entries.
+#  count: 5000
   # Map of history category to number of days to retain its data in order to
   # enable retention only for specific categories or to
   # override the number that has been configured in history-days.

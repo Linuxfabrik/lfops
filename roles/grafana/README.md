@@ -2,10 +2,6 @@
 
 This role installs and configures [Grafana](https://grafana.com/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 
@@ -18,6 +14,7 @@ Runs on
 | ---                        | ------------                                  |
 | `grafana`                  | Installs and configures Grafana               |
 | `grafana:configure`        | Deploys the Grafana config files              |
+| `grafana:plugins`          | Manages Grafana Plugins                       |
 | `grafana:provisioning`     | Deploys the Grafana provisioning config files |
 | `grafana:service_accounts` | Creates Service Accounts and their tokens     |
 
@@ -54,6 +51,7 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
 | `grafana__cookie_samesite` | The [SameSite cookie attribute](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite). Possible options:<br> * disabled<br> * lax<br> * none<br> * strict | `'lax'` |
 | `grafana__https_config` | Determines whether HTTPS is enabled or not. Subkeys: <ul><li>`cert_file`: Mandatory, string. The path of the certificate file used for SSL encryption.</li><li>`cert_key`: Mandatory, string. The path of the certificate key file used for SSL encryption.</li></ul> | unset |
 | `grafana__ldap_config` | The configuration to use a LDAP user base for logging into Grafana. More information can be found [here](https://grafana.com/docs/grafana/latest/auth/ldap/). Subkeys: <ul><li>`host`: Optional, string. Defaults to `127.0.0.1`. The host on which the LDAP server is accessible. Specify multiple hosts space separated.</li><li>`port`: Optional, integer. Defaults to `389`. The port on which the LDAP server is accessible.</li><li>`use_ssl`: Optional, boolean. Defaults to `false`. If an encrypted TLS connection should be used.</li><li>`ssl_skip_verify`: Optional, boolean. Defaults to `false`. If the ssl cert validation should be skipped.</li><li>`bind_dn`: Mandatory, string. The distinguished name of the account which should be used to login to the LDAP server.</li><li>`bind_password`: Mandatory, string. The password of the account which should be used to login to the LDAP server.</li><li>`search_base_dns`: Mandatory, list. List of base dns to search through for users.</li><li>`search_filter`: Mandatory, string. A LDAP user filter expression.</li><li>`group_search_base_dns`: Optional, list. Defaults to unset. List of base dns to search through for groups.</li><li>`group_search_filter_user_attribute`: Optional, list. Defaults to unset. The `%s` in the search filter will be replaced by this.</li><li>`group_search_filter`: Optional, string. Defaults to unset. A LDAP filter, to retrieve the groups of which the user is a member (only set if memberOf attribute is not available).</li><li>`admin_group_dn`: Optional, string. Defaults to unset. The distinguished name of the LDAP group that should be Grafana admins.</li><li>`editor_group_dn`: Optional, string. Defaults to unset. The distinguished name of the LDAP group that should be Grafana editors.</li><li>`viewer_group_dn`: Optional, string. Defaults to unset. The distinguished name of the LDAP group that should be Grafana viewers.</li><li>`email`: Optional, string. Defaults to `email`. Email attribute in the LDAP directory.</li><li>`username`: Optional, string. Defaults to `cn`. Username attribute in the LDAP directory. | unset |</li></ul>
+| `grafana__plugins__group_var`/<br> `grafana__plugins__host_var` | List of dictionaries containing Grafana plugins. Subkeys: <ul><li>`name`: Mandatory, string. Name of the plugin. Can be found using `grafana-cli plugins list-remote`.</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `grafana__provisioning_dashboards__group_var`/<br> `grafana__provisioning_dashboards__host_var` | List of dictionaries containing the dashboards to deploy via provisioning. Subkeys: <ul><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li><li>Have a look at https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards for the subkeys. </li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `grafana__provisioning_datasources__group_var` /<br> `grafana__provisioning_datasources__host_var` | List of dictionaries containing the datasources to deploy via provisioning. Subkeys: <ul><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li><li>Have a look at https://grafana.com/docs/grafana/latest/administration/provisioning/#data-sources for the subkeys.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `grafana__provisioning_service_accounts__group_var` /<br> `grafana__provisioning_service_accounts__host_var` | List of dictionaries containing [service accounts](https://grafana.com/docs/grafana/latest/administration/service-accounts/) to create. It automatically creates a token for the service account, with the same role as the service account itself. Beware that the token is only displayed once during the Ansible run, or optionally saved to Bitwarden. Subkeys: <ul><li>name: Mandatory, string. Name of the service account.</li><li>role: Optional, string. Role of the service account. Possible options: `'Admin'`, `'Editor'` or `'Viewer'`. Defaults to `'Viewer'`</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
@@ -86,6 +84,9 @@ grafana__ldap_config:
     - 'cn=users,cn=accounts,dc=example,dc=com'
   search_filter: '(uid=%s)' # or for example: '(cn=%s)' or '(sAMAccountName=%s)'
   viewer_group_dn: '*'
+grafana__plugins__group_var: []
+grafana__plugins__host_var:
+  - name: 'yesoreyeram-infinity-datasource'
 grafana__provisioning_dashboards__group_var: []
 grafana__provisioning_dashboards__host_var:
   - name: 'linuxfabrik-monitoring-plugins'

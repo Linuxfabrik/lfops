@@ -90,6 +90,11 @@ ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.setup_nextcloud
 ```
 
 
+## Compatibility List
+
+Which Ansible role is proven to run on which OS? See [COMPATIBILTY](https://github.com/Linuxfabrik/LFOps/blob/main/COMPATIBILITY.md)
+
+
 ## Skipping Roles in a Playbook
 
 Note: this is currently only implemented in this form in the `setup_icinga2_master` playbook.
@@ -215,6 +220,10 @@ Example:
 lfops__monitoring_plugins_version: 'main'
 ```
 
+### `lfops__remove_rpmnew_rpmsave`
+
+This variable aims to simplify the management of rpmnew and rpmsave files (and their Debian equivalents) by allowing the admin to remove them with LFOps. The workflow would be to adjust the template in LFOps according to the new config file, then deploy with `--extra-vars='lfops__remove_rpmnew_rpmsave=true'` to update the config and remove the rpmnew / rpmsave in one run.
+
 ### `lfops__repo_basic_auth_login`
 
 This variable is used as the default across all `repo_*` roles if it is set. Can be used to authenticate against the repository server using HTTP basic auth. Have a look at the respective role's README for details.
@@ -264,4 +273,13 @@ ansible-user ALL=(ALL) NOPASSWD: ALL
 or
 ```
 ansible-user ALL=(ALL) ALL
+```
+
+### Finding out which playbooks ran against a host
+
+All playbooks log every run to `/var/log/linuxfabrik-lfops.log` on the host. For example:
+
+```
+2024-05-23 11:15:26.604794 - Playbook linuxfabrik.lfops.apps: START
+2024-05-23 11:15:32.877064 - Playbook linuxfabrik.lfops.apps: END
 ```

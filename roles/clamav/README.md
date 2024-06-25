@@ -3,10 +3,6 @@
 This role installs and configures [ClamAV](https://www.clamav.net/), "an open-source antivirus engine for detecting trojans, viruses, malware & other malicious threats." It also configures freshclam to regularly update the official ClamAV signatures (12 times a day).
 This role exposes options for enabling on-access scanning and / or periodic full-scans and configures mail notifications for found viruses.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 When using on-access scanning, one might need to increase the `inotify/max_user_watches`. Have a look at the [official documentation](https://docs.clamav.net/manual/OnAccess.html?highlight=inotify#troubleshooting). This can be done using the [linuxfabrik.lfops.kernel_settings](https://github.com/linuxfabrik/lfops/tree/main/roles/kernel_settings) role.
 ClamAV can be tested using the EICAR test virus:
 ```bash

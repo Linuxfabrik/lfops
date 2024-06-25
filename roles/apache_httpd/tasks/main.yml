@@ -88,6 +88,13 @@
     notify:
       - 'apache_httpd: httpd -t; systemctl reload httpd'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ apache_httpd__config_file }}'
+
   tags:
     - 'apache_httpd'
     - 'apache_httpd:config'

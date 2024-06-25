@@ -15,6 +15,7 @@
     register: 'shared__lib_github_release'
     check_mode: false # run task even if `--check` is specified
     delegate_to: 'localhost'
+    run_once: true
 
   - name: 'Store the latest release version'
     ansible.builtin.set_fact:

@@ -1,6 +1,14 @@
-- name: 'Manage and configure influxdb'
+- name: 'Playbook linuxfabrik.lfops.influxdb'
   hosts:
     - 'lfops_influxdb'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -14,3 +22,11 @@
         - 'not influxdb__skip_python_venv | d(false)'
 
     - role: 'linuxfabrik.lfops.influxdb'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

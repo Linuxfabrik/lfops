@@ -2,10 +2,6 @@
 
 This role installs and configures either [Collabora Online Development Edition](https://www.collaboraoffice.com/code/) or [Collabora Online Enterprise Edition](https://www.collaboraoffice.com/collabora-online-3/). Note: To use Collabora Enterprise, you need an active [Collabora Subscription](https://www.collaboraoffice.com/subscriptions-2/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

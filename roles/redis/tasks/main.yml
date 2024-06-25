@@ -11,7 +11,7 @@
 
   - name: 'Get Redis version'
     ansible.builtin.set_fact:
-      redis__installed_version: '{{ ansible_facts.packages["redis"][0]["version"][:1] }}'
+      redis__installed_version: '{{ ansible_facts.packages["redis"][0]["version"] | regex_search("\d+\.\d+") }}'
 
   - name: 'Deploy /etc/redis.conf (v{{ redis__installed_version }})'
     ansible.builtin.template:
@@ -22,7 +22,7 @@
       mode: 0o644
     notify: 'redis: restart redis'
     when:
-      - 'redis__installed_version in ["5", "6"]'
+      - 'redis__installed_version[:1] | int < 7'
 
   - name: 'Deploy /etc/redis/redis.conf (v{{ redis__installed_version }})'
     ansible.builtin.template:
@@ -33,7 +33,14 @@
       mode: 0o644
     notify: 'redis: restart redis'
     when:
-      - 'redis__installed_version in ["7"]'
+      - 'redis__installed_version[:1] | int >= 7'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/redis.conf'
 
   - name: 'Deploy /etc/systemd/system/redis.service.d/z00-linuxfabrik.conf.j2'
     ansible.builtin.template:

@@ -7,10 +7,30 @@
         - 'gnupg'
       state: 'present'
 
-  - name: 'wget -qO - https://packages.graylog2.org/repo/debian/pubkey.gpg | apt-key add -'
-    ansible.builtin.apt_key:
+  - name: 'curl https://packages.graylog2.org/repo/debian/pubkey.gpg --output /tmp/ansible.graylog.gpg'
+    ansible.builtin.get_url:
       url: 'https://packages.graylog2.org/repo/debian/pubkey.gpg'
+      dest: '/tmp/ansible.graylog.gpg'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.graylog.gpg to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.graylog.gpg'
+      dest: '/tmp/ansible.graylog.gpg'
+      mode: 0o644
+
+  - name: 'apt-key add /tmp/ansible.graylog.gpg'
+    ansible.builtin.apt_key:
+      file: '/tmp/ansible.graylog.gpg'
       state: 'present'
+
+  - name: 'rm /tmp/ansible.graylog.gpg'
+    ansible.builtin.file:
+      path: '/tmp/ansible.graylog.gpg'
+      state: 'absent'
 
   - name: 'deploy the repo file (mirror: {{ repo_graylog__mirror_url | default("") }})'
     ansible.builtin.template:
@@ -19,6 +39,13 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/graylog.list'
 
   - name: 'apt update # update the cache'
     ansible.builtin.apt:

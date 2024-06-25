@@ -1,0 +1,35 @@
+files__directories__dependent_var: []
+files__directories__group_var: []
+files__directories__host_var: []
+files__directories__role_var: []
+files__directories__combined_var: '{{ (
+      files__directories__role_var +
+      files__directories__dependent_var +
+      files__directories__group_var +
+      files__directories__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
+
+files__files__dependent_var: []
+files__files__group_var: []
+files__files__host_var: []
+files__files__role_var: []
+files__files__combined_var: '{{ (
+      files__files__role_var +
+      files__files__dependent_var +
+      files__files__group_var +
+      files__files__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
+
+files__symlinks__dependent_var: []
+files__symlinks__group_var: []
+files__symlinks__host_var: []
+files__symlinks__role_var: []
+files__symlinks__combined_var: '{{ (
+      files__symlinks__role_var +
+      files__symlinks__dependent_var +
+      files__symlinks__group_var +
+      files__symlinks__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["src", "dest"])
+  }}'

@@ -16,6 +16,9 @@
   ansible.builtin.command: |-
     /opt/acme.sh/acme.sh --config-home /etc/acme.sh --issue \
     --domain '{{ certificate["name"] }}' \
+    {% for item in certificate["alternative_names"] | d([]) %}
+    --domain '{{ item }}' \
+    {% endfor %}
     --webroot /var/www/html/letsencrypt \
-    --keylength '{{ acme_sh__key_length }}'
+    --keylength '{{ acme_sh__key_length }}' \
     --server https://acme-v02.api.letsencrypt.org/directory

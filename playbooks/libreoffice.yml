@@ -1,6 +1,14 @@
-- name: 'Install and configure a server-based/headless LibreOffice'
+- name: 'Playbook linuxfabrik.lfops.libreoffice'
   hosts:
     - 'lfops_libreoffice'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -17,3 +25,11 @@
         - 'libreoffice__client_apache'
 
     - role: 'linuxfabrik.lfops.libreoffice'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

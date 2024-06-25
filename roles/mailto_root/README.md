@@ -2,12 +2,6 @@
 
 This role enables relaying all mail that is sent to the root user (or other service accounts on the system) to an actual mail account. For example, any output of crontab is sent tho the configured address if this role is applied to the system.
 
-Runs on
-
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Ubuntu 16
-
 
 ## Mandatory Requirements
 

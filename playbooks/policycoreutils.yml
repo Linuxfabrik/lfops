@@ -1,7 +1,23 @@
-- name: 'Install policycoreutils'
+- name: 'Playbook linuxfabrik.lfops.policycoreutils'
   hosts:
     - 'lfops_policycoreutils'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.policycoreutils'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

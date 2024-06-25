@@ -1,4 +1,4 @@
-- name: 'Setup and manage an Hetzner VM'
+- name: 'Playbook linuxfabrik.lfops.hetzner_vm'
   hosts:
     - 'lfops_hetzner_vm'
   gather_facts: false

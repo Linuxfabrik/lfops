@@ -2,10 +2,6 @@
 
 This role configures a backup service/timer for an objectstore to objectstore backup using the 'MinIO' client `mc`.
 
-Runs on
-
-* Rocky 8
-
 
 ## Mandatory Requirements
 

@@ -8,10 +8,6 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
 2. mod_maxminddb
 3. maxmind_geoip
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

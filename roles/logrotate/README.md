@@ -4,14 +4,6 @@ This role ensures that logrotate is installed and configured for main classic sy
 
 Additionally, this role allows you to deploy custom logrotate configs which are placed under `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/logrotate.d` on the Ansible control node. Keep in mind that later config files may override the options given in earlier files, so the order in which the logrotate config files are listed is important.
 
-Runs on
-
-* Fedora
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 

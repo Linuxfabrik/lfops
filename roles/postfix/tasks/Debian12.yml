@@ -1,0 +1,17 @@
+- block:
+
+  - name: 'Install postfix, mailutils, sasl2-bin, libsasl2-2 and libsasl2-modules on Debian 12'
+    ansible.builtin.apt:
+      pkg:
+        - 'postfix'
+        - 'mailutils'
+        - 'sasl2-bin'
+        - 'libsasl2-2'
+        - 'libsasl2-modules'
+      update_cache: true
+      state: 'present'
+    environment:
+      DEBIAN_FRONTEND: 'noninteractive'
+
+  tags:
+    - 'postfix'

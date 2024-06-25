@@ -1,4 +1,4 @@
-- name: 'Setup and manage an KVM VM'
+- name: 'Playbook linuxfabrik.lfops.kvm_vm'
   collections: ['linuxfabrik.lfops']
   hosts:
     - 'lfops_kvm_vm'

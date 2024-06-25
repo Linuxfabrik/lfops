@@ -35,6 +35,13 @@
       mode: 0o644
     notify: 'mongodb: systemctl restart mongod.service'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/mongod.conf'
+
   - name: 'Deploy /etc/logrotate.d/mongod'
     ansible.builtin.template:
       src: 'etc/logrotate.d/mongod.j2'
@@ -76,6 +83,12 @@
 
 - block:
 
+  - name: 'Wait for port {{ mongodb__conf_net_port }} to become open on the host'
+    ansible.builtin.wait_for:
+      host: '{{ mongodb__conf_net_bind_ip[0] }}'
+      port: '{{ mongodb__conf_net_port }}'
+      delay: 5
+
   - name: 'Ensure replicaset "{{ mongodb__conf_replication_repl_set_name__combined_var }}" exists'
     community.mongodb.mongodb_replicaset:
       login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
@@ -112,6 +125,12 @@
 
 - block:
 
+  - name: 'Wait for port {{ mongodb__conf_net_port }} to become open on the host'
+    ansible.builtin.wait_for:
+      host: '{{ mongodb__conf_net_bind_ip[0] }}'
+      port: '{{ mongodb__conf_net_port }}'
+      delay: 5
+
   - name: 'check if host is primary and writable'
     community.mongodb.mongodb_shell:
       login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
@@ -130,7 +149,6 @@
     - 'mongodb:dump'
     - 'mongodb:user'
     - 'mongodb:status'
-
 
 - block:
 

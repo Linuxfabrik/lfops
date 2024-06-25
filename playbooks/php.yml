@@ -1,6 +1,14 @@
-- name: 'Install PHP on the system, optionally with additional modules'
+- name: 'Playbook linuxfabrik.lfops.php'
   hosts:
     - 'lfops_php'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -16,3 +24,11 @@
         - 'not php__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

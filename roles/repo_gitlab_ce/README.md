@@ -2,10 +2,6 @@
 
 This role deploys the GitLab CE Repository.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

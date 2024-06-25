@@ -2,11 +2,6 @@
 
 This role deploys the [Graylog Repository](https://docs.graylog.org/docs/operating-system-packages). Although the Graylog project doesn't recommend to do that, LFOps prefers to install the repository configuration manually, because it's the only way to handle custom mirror servers.
 
-Runs on
-
-* RHEL 8 (and compatible)
-* Debian 11
-
 
 ## Tags
 

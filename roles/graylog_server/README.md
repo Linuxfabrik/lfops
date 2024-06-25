@@ -11,11 +11,6 @@ Additionally this role creates default "System Inputs" and a Linuxfabrik default
 
 Note that this role does NOT let you specify a particular Graylog Server version. It simply installs the latest available Graylog Server version from the repos configured in the system. If you want or need to install a specific Graylog Server version, use the [linuxfabrik.lfops.repo_graylog_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog_server) beforehand.
 
-Runs on
-
-* RHEL 8 (and compatible)
-* Debian 11
-
 
 ## Mandatory Requirements
 
@@ -71,6 +66,7 @@ graylog_server__password_secret: 'linuxfabrik'
 | `graylog_server__opts` | The Java options like heapsize used by Graylog. | `'-Xms1g -Xmx1g -server -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow'` |
 | `graylog_server__plugins` | A list of available plugins which can be installed additionally. Possible options:<ul><li>`graylog-enterprise-plugins`</li><li>`graylog-integrations-plugins`</li><li>`graylog-enterprise-integrations-plugins`</li></ul> | `[]` |
 | `graylog_server__service_enabled` | Enables or disables the Systemd unit. | `true` |
+| `graylog_server__stale_leader_timeout_ms` | Time in milliseconds after which a detected stale leader node is being rechecked on startup. Try increasing this if `NO_LEADER: There was no leader Graylog server node detected in the cluster` appear in the System Messages. | `2000` |
 | `graylog_server__system_default_index_set` | Creates a default index set. Subkeys: <ul><li>`can_be_default`: Mandatory, boolean. Whether this index set can be default.</li><li>`creation_date`: Mandatory, date. Date in iso8601 format.</li><li>`description`: Mandatory, string. Description of index set.</li><li>`field_type_refresh_interval`: Mandatory, integer. Refresh interval in milliseconds.</li><li>`index_analyzer`: Mandatory, string. Elasticsearch/Opensearch analyzer for this index set.</li><li>`index_optimization_max_num_segments`: Mandatory, integer. Maximum number of segments per Elasticsearch/Opensearch index after optimization (force merge).</li><li>`index_optimization_disabled`: Mandatory, boolean. Whether Elasticsearch/Opensearch index optimization (force merge) after rotation is disabled.</li><li>`index_prefix`: Mandatory, string. A unique prefix used in Elasticsearch/Opensearch indices belonging to this index set. The prefix must start with a letter or number, and can only contain letters, numbers, `_`, `-` and `+`.</li><li>`replicas`: Mandatory, integer. Number of Elasticsearch/Opensearch replicas used per index in this index set.</li><li>`retention_strategy_class`: Mandatory, string. Retention strategy class to clean up old indices.</li><li>`retention_strategy`<ul><li>`max_number_of_indices`: Mandatory, integer. Maximum number of indices to keep before retention strategy gets triggered.</li><li>`type`: Mandatory, string. Retention strategy type to clean up old indices.</li></ul><li>`rotation_strategy_class`: Mandatory, string. Graylog uses multiple indices to store documents in. You can configure the strategy it uses to determine when to rotate the currently active write index.</li><li>`rotation_strategy`<ul><li>`rotation_period`: Mandatory, string. How long an index gets written to before it is rotated. (i.e. "P1D" for 1 day, "PT6H" for 6 hours).</li><li>`rotate_empty_index_set`: Mandatory, boolean. Apply the rotation strategy even when the index set is empty (not recommended).</li><li>`type`: Mandatory, string. The type of the Rotation Strategy.</li></ul><li>`shards`: Mandatory, integer. Number of Elasticsearch/Opensearch shards used per index in this index set.</li><li>`title`: Mandatory, string. Descriptive name of the index set.</li><li>`writable`: Mandatory, boolean. Whether this Index Set is writable.</li></ul> | One index per day; 365 indices max |
 | `graylog_server__system_inputs` | Creates system inputs. Subkeys: <ul><li>`configuration`: Mandatory, dictionay. Specific configuration of corresponding input. Please refer to above API documentation.</li><li>`global`: Mandatory, boolean. Whether this input should start on all nodes.</li><li>`title`: Mandatory, string. The title for this input.</li><li>`type`: Mandatory, string. The type of the input.</li></ul> | Gelf (12201/TCP), Gelf (12201/UDP), Syslog (1514/UDP) |
 | `graylog_server__timezone` | The time zone setting of the root user. See [joda.org](http://www.joda.org/joda-time/timezones.html) for a list of valid time zones. | `'Europe/Zurich'` |
@@ -97,6 +93,7 @@ graylog_server__plugins:
   - 'graylog-integrations-plugins'
   - 'graylog-enterprise-integrations-plugins'
 graylog_server__service_enabled: false
+graylog_server__stale_leader_timeout_ms: 10000
 graylog_server__system_default_index_set:
   can_be_default: true
   creation_date: '{{ ansible_date_time.iso8601 }}'

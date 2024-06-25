@@ -2,10 +2,6 @@
 
 This role deploys the Grafana OSS Repository.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Tags
 
@@ -29,6 +25,11 @@ repo_grafana__basic_auth_login:
   password: 'linuxfabrik'
 repo_grafana__mirror_url: 'https://mirror.example.com'
 ```
+
+
+## Troubleshooting
+
+`Status code: 403 for https://rpm.grafana.com/repodata/repomd.xml (IP: 151.101.194.217)`: Unset `repo_grafana__basic_auth_login`.
 
 
 ## License

@@ -400,6 +400,8 @@ nextcloud__apache_httpd__vhosts__dependent_var:
       <IfModule mod_mime.c>
         AddType image/svg+xml svg svgz
         AddType application/wasm wasm
+        # Nextcloud uses .mjs for JavaScript since version 27
+        AddType text/javascript js mjs
         AddEncoding gzip svgz
       </IfModule>
 

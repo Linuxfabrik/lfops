@@ -2,10 +2,6 @@
 
 This role manages a list of applications using the OS's package manager.
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

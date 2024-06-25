@@ -2,15 +2,6 @@
 
 This role installs and configures [postfix](https://www.postfix.org/).
 
-Runs on
-
-* Debian
-* Fedora 35
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 

@@ -13,6 +13,18 @@
       - 'etc/yum.repos.d/rpmfusion-nonfree-updates-testing.repo'
       - 'etc/yum.repos.d/rpmfusion-nonfree-updates.repo'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+    loop:
+      - 'etc/yum.repos.d/rpmfusion-free-updates-testing.repo'
+      - 'etc/yum.repos.d/rpmfusion-free-updates.repo'
+      - 'etc/yum.repos.d/rpmfusion-nonfree-updates-testing.repo'
+      - 'etc/yum.repos.d/rpmfusion-nonfree-updates.repo'
+
   - ansible.builtin.include_tasks: 'download-gpg-key.yml'
     loop: '{{ repo_rpmfusion__gpg_keys }}'
     loop_control:

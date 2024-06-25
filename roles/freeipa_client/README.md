@@ -2,11 +2,6 @@
 
 This role installs and configures [FreeIPA](https://www.freeipa.org/) as a client.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 
@@ -43,6 +38,8 @@ freeipa_client__ipa_admin_user:
 `Joining realm failed: JSON-RPC call failed: Couldn't connect to server`: Check firewall settings, perhaps a port like LDAP or HTTPS is blocked.
 
 Re-join an unprovisioned host: `ansible-playbook ... --extra-vars='ipaclient_force_join=true'`
+
+`IPA client already installed with a conflicting domain`: Follow [Manually Unconfiguring Client Machines](https://access.redhat.com/documentation/de-de/red_hat_enterprise_linux/6/html/identity_management_guide/manually-unconfig-machines)
 
 
 ## License

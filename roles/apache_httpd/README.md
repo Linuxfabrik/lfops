@@ -2,10 +2,6 @@
 
 This role installs and configures a CIS-compliant [Apache httpd](https://httpd.apache.org/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## What this Role does
 
@@ -258,7 +254,7 @@ This role creates a vHost named `localhost` by default. Have a look at the [defa
 | `php_set_handler` | String. Set the handler for PHP<br> * socket-based: `SetHandler "proxy:unix:/run/php-fpm/www.sock\|fcgi://localhost"`<br> * network-based: `SetHandler "proxy:fcgi://127.0.0.1:9000/"` | * app: `'SetHandler "proxy:unix:/run/php-fpm/www.sock\|fcgi://localhost"'`<br> * localhost: `'SetHandler "proxy:unix:/run/php-fpm/www.sock\|fcgi://localhost"'` |
 | `raw` | String. It is sometimes desirable to pass variable content that Jinja would handle as variables or blocks. Jinja's `{% raw %}` statement does not work in Ansible. The best and safest solution is to declare `raw` variables as `!unsafe`, to prevent templating errors and information disclosure.  | * app: unset<br> * localhost: unset<br> * proxy: unset<br> * raw: unset<br> * redirect: unset |
 | `skip_allowed_file_extensions` | Boolean. Skips checking file extensions in app- and localhost-vHosts, allowing essentially all file extensions. | `false` |
-| `skip_allowed_http_methods` | Boolean. Skips checking the HTTP methods in app- and localhost-vHosts, allowing essentially all HTTP methods. | `false` |
+| `skip_allowed_http_methods` | Boolean. Skips checking the HTTP methods in app-, localhost-, proxy-, wordpress-vHosts, allowing essentially all HTTP methods. | `false` |
 | `state` | String. Should the vhost definition file be created (`present`) or deleted (`absent`). | * app: unset<br> * localhost: `'present'`<br> * proxy: unset<br> * raw: unset<br> * redirect: unset |
 | `template` | String. Have a look at the intro of this paragraph. | unset |
 | `virtualhost_ip` | String. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | * app: `'*'`<br> * localhost: `'*'`<br> * proxy: `'*'`<br> * raw: `'*'`<br> * redirect: `'*'` |
@@ -301,18 +297,29 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apache_httpd__mod_security_coreruleset_checksum` | String. The OWASP ModSecurity Core Rule Set (CRS) SHA1 checksum according to your version. | `'https://github.com/coreruleset/coreruleset/archive'` |
-| `apache_httpd__mod_security_coreruleset_url` | String. The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers. | `'3.3.2'` |
-| `apache_httpd__mod_security_coreruleset_version` | String. The OWASP ModSecurity Core Rule Set (CRS) version number without "v". | `'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'` |
+| `apache_httpd__mod_security_coreruleset_url` | String. The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers. | `'https://github.com/coreruleset/coreruleset/archive'` |
+| `apache_httpd__mod_security_coreruleset_version` | String. The OWASP ModSecurity Core Rule Set (CRS) version number without "v". | `'4.4.0'` |
 | `apache_httpd__skip_mod_security_coreruleset` | Boolean. Skip the installation of the OWASP ModSecurity Core Rule Set (CRS). | `true` |
 
 Example:
 ```yaml
 # optional - mod_security
-apache_httpd__mod_security_coreruleset_checksum: 'sha1:63aa8ee3f3c9cb23f5639dd235bac1fa1bc64264'
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '3.3.2'
+apache_httpd__mod_security_coreruleset_version: '4.4.0'
 apache_httpd__skip_mod_security_coreruleset: true
+```
+
+
+## Optional Role Variables - mod_ssl
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `apache_httpd__mod_ssl_ssl_use_stapling` | String. [Apache Directive](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling) | `'on'` |
+
+Example:
+```yaml
+# optional - mod_ssl
+apache_httpd__mod_ssl_ssl_use_stapling: 'on'
 ```
 
 

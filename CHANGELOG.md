@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -7,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Note: Always add new entries to the top of the section, even if this results in multiple paragraphs for the same role. Otherwise the user will have to read through all the breaking changes every time they update LFOps. This way they can just read the new entries at the top, making it much easier for users to follow the CHANGELOG.
 
 
-## [Unreleased]
+## [Unreleased] (in chronological order)
 
 ### Breaking Changes
 
@@ -21,17 +22,50 @@ Playbook:setup_icinga2_master:
 * changed the format of the role skip-variables from `playbook_name_skip_role_name` to `playbook_name__role_name__skip_role` for clarity and consistency. Have a look at the [README.md](./README.md#skipping-roles-in-a-playbook).
 * also added `playbook_name__role_name__skip_role_injections` variables to disable or re-enabled the role's injections.
 
-Role:apache_httpd:
+Role:systemd_journald
+* The value for the variable `systemd_journald__conf_system_max_use` is now interpreted as a size in bytes. It supports the size specifications possible in `journald.conf` (e.g. `4G`). If you want to specify a percentage, use `'40%'`.
+
+Role:redis
+* removed support for Redis v5 (end of life)
+
+Playbook:icinga2_agent
+* Changed to also include the installation of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This can be skipped by setting `icinga2_agent__skip_monitoring_plugins: true`.
+
+Playbook:setup_icinga2_master
+* Changed default of `setup_icinga2_master__skip_icingaweb2_module_monitoring` from `false` to `true`
+
+Role:apache_httpd
+* Changed `conf_server_alias` from a string to a list
 * the default of the `authz_document_root` vHost variable changed from `Require local` to `Require all granted`. This is a more sensible default, as `allowed_file_extensions` is used to restrict the access.
 * removed the `authz_file_extensions` vHost variable. This was required to allow access to file extensions listed in `allowed_file_extensions'. From now on, the access to listed file extensions is always allowed.
 * fixed a bug that allowed access to dotfiles which had extensions listed in `allowed_file_extensions`. Make sure this does not break your application, or set `allow_accessing_dotfiles: true`.
 
-Role:mount
-* changed `mount__mounts` to `mount__mounts__host_var` / `mount__mounts__group_var`.
+Role:apache_tomcat
+* Changed `apache_tomcat__users__*_var` from a simple list to a list of dictionaries.
 
-Role:repo_mydumper
-* adjusted to use https://repo.linuxfabrik.ch/mydumper/ by default
-* removed `repo_mydumper__baseurl`, instead added `repo_mydumper__mirror_url`
+Role:collabora
+* Changed `collabora__coolwsd_storage_wopi__*_var` to a list of dictionaries from a list of strings.
+* Changed `collabora__language_packages__*_var` to a list of dictionaries from a list of strings.
+* Renamed `collabora__coolwsd_allowed_languages` to `collabora__coolwsd_allowed_languages__*_var` and changed it to a list of dictionaries from a list of strings.
+
+Role:grafana
+* Changed default value for `grafana__serve_from_sub_path` from `true` to `false`
+
+Role:graylog_server
+* Remove support for Graylog < 5.0
+
+Role:icingaweb2_module_vspheredb
+* Removed the `v` prefix from the `icingaweb2_module_vspheredb__version` variable to be consistent with the other `icingaweb2_module_*` roles.
+
+Role:login
+* Changed default of `remove_other_sshd_authorized_keys` from `true` to `false`.
+
+Role:mailto_root
+* Changed `mailto_root__from` from optional to mandatory.
+* Testmail to external addresses is now using sender address (`mailto_root__from`).
+
+Role:mariadb_client
+* Too trivial, removed (use the apps role instead)
 
 Role:mongodb
 * `mongodb__conf_net_bind_ip`: Changed from a string to a list of strings. For example:
@@ -43,6 +77,16 @@ mongodb__conf_net_bind_ip: '0.0.0.0'
 mongodb__conf_net_bind_ip:
   - '0.0.0.0'
 ```
+
+Role:monitoring_plugins
+* Remove the tasks for Nuitka compilation, as the compilation is done by the [Monitoring Plugins GitHub Action](https://github.com/Linuxfabrik/monitoring-plugins/actions/workflows/nuitka-compile.yml) now.
+* Locks the version of the `monitoring-plugins` package after installing it. Updating the plugins should be done manually along with updating the monitoring system configuration.
+
+Role:monitoring_plugins_grafana_dashboards
+* Change from provisioning to grizzly for the deployment of the dashboards
+
+Role:mount
+* changed `mount__mounts` to `mount__mounts__host_var` / `mount__mounts__group_var`.
 
 Role:nextcloud
 * `nextcloud__apps_config`:
@@ -73,103 +117,126 @@ RewriteRule ^\/push\/ws(.*) ws://nextcloud-server:7867/ws$1 [proxy,last]
 RewriteRule ^\/push\/(.*)   http://nextcloud-server:7867/$1 [proxy,last]
 ProxyPassReverse /push/     http://nextcloud-server:7867/
 ```
-
-Playbook:icinga2_agent
-* Changed to also include the installation of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This can be skipped by setting `icinga2_agent__skip_monitoring_plugins: true`.
-
-Role:postgresql_server
-* Renamed the `name` subkey of `postgresql_server__users__*_var` to `username` for consistency and easier integration of the Bitwarden lookup plugin.
-
-Role:repo_icinga
-* Renamed `repo_icinga__subscription_login` to `repo_icinga__basic_auth_login` and instead added a variable to explicitly use the Icinga Repo Subscription URL (`repo_icinga__use_subscription_url`). If you have `repo_icinga__subscription_login` set in your inventory, rename it to `repo_icinga__basic_auth_login` and set `repo_icinga__use_subscription_url: true` for the same effect as before.
-
-Role:mailto_root
-* Changed `mailto_root__from` from optional to mandatory.
-* Testmail to external addresses is now using sender address (`mailto_root__from`).
-
-Role: opensearch
-* Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.
-
-Role:icingaweb2_module_vspheredb
-* Removed the `v` prefix from the `icingaweb2_module_vspheredb__version` variable to be consistent with the other `icingaweb2_module_*` roles.
-
-Role:login
-* Changed default of `remove_other_sshd_authorized_keys` from `true` to `false`.
-
-Role:collabora
-* Changed `collabora__coolwsd_storage_wopi__*_var` to a list of dictionaries from a list of strings.
-* Changed `collabora__language_packages__*_var` to a list of dictionaries from a list of strings.
-* Renamed `collabora__coolwsd_allowed_languages` to `collabora__coolwsd_allowed_languages__*_var` and changed it to a list of dictionaries from a list of strings.
-
-Role:python
-* Changed `python__modules__*_var` to a list of dictionaries from a list of strings.
-
-Role:selinux
-* Changed `ports` subkey of `selinux__ports__*_var` to `port`, accepting only a single port or port range, not a list of ports / port ranges.
-
-Role:apache_tomcat
-* Changed `apache_tomcat__users__*_var` from a simple list to a list of dictionaries.
-
-Role:rocketchat
-* Removed Rocket.Chat notifications from the default banaction
-
-Role:redis
-* Changed default of `redis__service_timeout_start_sec` and `redis__service_timeout_stop_sec` from `5s` to `90s`.
-
-Role: nextcloud
 * Changed default of `nextcloud__timer_app_update_enabled` from `true` to `false`, as this can sometimes lead to Nextcloud ending up in maintenance mode
 * Renamed `nextcloud__apache_httpd__vhosts_virtualhost_ip` to `nextcloud__vhost_virtualhost_ip`
 * Renamed `nextcloud__apache_httpd__vhosts_virtualhost_port` to `nextcloud__vhost_virtualhost_port`
 
-Role: apache_httpd
-* Changed `conf_server_alias` from a string to a list
+Role:opensearch
+* Changed default of `opensearch__plugins_security_disabled` from `true` to `false`.
 
-Role: graylog_server
-* Remove support for Graylog < 5.0
+Role:openssl
+* Too trivial, removed (use the apps role instead)
 
-Playbook: Setup Icinga2 Master
-* Changed default of `setup_icinga2_master__skip_icingaweb2_module_monitoring` from `false` to `true`
+Role:perl
+* Too trivial, removed (use the apps role instead)
 
-Role: monitoring_plugins
-* Remove the tasks for Nuitka compilation, as the compilation is done by the [Monitoring Plugins GitHub Action](https://github.com/Linuxfabrik/monitoring-plugins/actions/workflows/nuitka-compile.yml) now.
-* Locks the version of the `monitoring-plugins` package after installing it. Updating the plugins should be done manually along with updating the monitoring system configuration.
+Role:postgresql_server
+* Renamed the `name` subkey of `postgresql_server__users__*_var` to `username` for consistency and easier integration of the Bitwarden lookup plugin.
 
-Role: monitoring_plugins_grafana_dashboards
-* Change from provisioning to grizzly for the deployment of the dashboards
+Role:python
+* Changed `python__modules__*_var` to a list of dictionaries from a list of strings.
 
-Role: grafana
-* Changed default value for `grafana__serve_from_sub_path` from `true` to `false`
+Role:redis
+* Changed default of `redis__service_timeout_start_sec` and `redis__service_timeout_stop_sec` from `5s` to `90s`.
 
-Role: system_update
+Role:repo_icinga
+* Renamed `repo_icinga__subscription_login` to `repo_icinga__basic_auth_login` and instead added a variable to explicitly use the Icinga Repo Subscription URL (`repo_icinga__use_subscription_url`). If you have `repo_icinga__subscription_login` set in your inventory, rename it to `repo_icinga__basic_auth_login` and set `repo_icinga__use_subscription_url: true` for the same effect as before.
+
+Role:repo_mydumper
+* adjusted to use https://repo.linuxfabrik.ch/mydumper/ by default
+* removed `repo_mydumper__baseurl`, instead added `repo_mydumper__mirror_url`
+
+Role:rocketchat
+* Removed Rocket.Chat notifications from the default banaction
+
+Role:selinux
+* Changed `ports` subkey of `selinux__ports__*_var` to `port`, accepting only a single port or port range, not a list of ports / port ranges.
+
+Role:sshd
+* removed `sshd__ciphers`, `sshd__kex` and `sshd__macs` variables, as these settings are managed by `crypto-policy` on RHEL.
+* now deploys the complete `/etc/ssh/sshd_config` as a template
+* removed support for RHEL7
+
+Role:system_update
 * Remove `system_update__icinga2_master` variable. Use `system_update__icinga2_api_url` instead
+
+Role:tar
+* Too trivial, removed (use the apps role instead)
 
 
 ### Added
+
+Role:systemd_journald
+* Add variable `systemd_journald__conf_system_keep_free`
+
+Playbook:setup_basic
+* Add support for AlmaLinux 8
 
 Role:apache_httpd:
 * added the `skip_allowed_file_extensions` vHost variable
 * added the `skip_allowed_http_methods` vHost variable
 
-* Role: mount
-* Role: mirror
-* Role: borg_local
-* Role: github_project_createrepo
-* Role: apache_solr
-* Role: clamav
-* Role: dnf_versionlock
-* Role: fangfrisch
-* Role: grafana_grizzly
-* Role: icingadb
-* Role: icingaweb2_module_businessprocess
-* Role: repo_gitlab_runner
-* Role: repo_rpmfusion
+Role:apache_solr
+* Added
+
+Role:bind
+* add `bind__named_conf_raw` variable
+
+Role:borg_local
+* Added
+
+Role:clamav
+* Added
+
+Role:cloud_init
+* Add task to remove `/etc/cloud/cloud.cfg.rpmsave`
+
+Role:dnf_versionlock
+* Added
+
+Role:duplicity:
+* Add `duplicity__backup_full_if_older_than` variable
+
+Role:fangfrisch
+* Added
+
+Role:github_project_createrepo
+* Added
+
+Role:grafana
+* creation of service accounts and their tokens
+
+Role:grafana_grizzly
+* Added
+
+Role:graylog_server
+* Add variables and documentation for multi-node setup
+* Add Debian support
+
+Role:icingadb
+* Added
+
+Role:icingaweb2_module_businessprocess
+* Added
+
+Role:kvm_vm
+* add the option to boot the VM with UEFI
+
+Role:mirror
+* Added
+
+Role:mount
+* Added
 
 Role:python_venv
 * allow specifying different certificate store
 * allow specifying the python executable to be used in the venv
 
-Role:kvm_vm
-* add the option to boot the VM with UEFI
+Role:repo_gitlab_runner
+* Added
+
+Role:repo_rpmfusion
+* Added
 
 Role:selinux
 * add support for SELinux ports
@@ -177,67 +244,51 @@ Role:selinux
 Role:systemd_unit
 * add support for mount units
 
-Role:bind
-* add `bind__named_conf_raw` variable
-
-Role: grafana
-* creation of service accounts and their tokens
-
-Playbook: setup_basic
-* Add support for AlmaLinux 8
-
-Role: duplicity:
-* Add `duplicity__backup_full_if_older_than` variable
-
-Role: cloud_init
-* Add task to remove `/etc/cloud/cloud.cfg.rpmsave`
-
-Role: graylog_server
-* Add variables and documentation for multi-node setup
-* Add Debian support
-
-Role: logrotate
+Role:logrotate
 * Add compression
 
-Role: mongodb
+Role:mongodb
 * Add Debian support
 * Add keyfile handling
 * Adjust for replica set across members
 * Implement user management (fix #89)
 
-Role: opensearch
+Role:opensearch
 * Add Debian support
 * Add variables for cluster configuration
 
-Role: php
+Role:php
 * Add tag `php:fpm`
 
-Role: python_venv
+Role:python_venv
 * Add Debian support
 
-Role: repo_baseos
+Role:repo_baseos
 * Add AlmaLinux 8 support
 
-Role: repo_graylog
+Role:repo_graylog
 * Add Debian support
 
-Role: repo_mongodb
+Role:repo_mongodb
 * Add Debian support
 
-Role: repo_opensearch
+Role:repo_opensearch
 * Add Debian support
 
-Role: systemd_journald
+Role:systemd_journald
 * Make SystemMaxUse configurable
 
-Role: systemd_update
+Role:systemd_update
 * Add option `-y` to `yum check-update`
 
 
 ### Fixed
 
-Role: influxdb
+Role:influxdb
 * Fix wrong systemd service name, which was preventing influxdb dumps from being scheduled
+
+Role:redis
+* Fix various messages from log, fix v7 template settings, fix various comments and README
 
 
 ### Changed
@@ -245,11 +296,21 @@ Role: influxdb
 Role:apache_httpd:
 * the default of the `conf_custom_log` vHost variable changed from unset to `'logs/{{ conf_server_name }}-access.log linuxfabrikio`
 
-Role: opensearch
+Role:audit:
+* Add more config variables
+
+Role:graylog_server
+* Remove version defaults from the role
+
+Role:icinga2_agent:
+* New variable `icinga2_agent__validate_certs`
+
+Role:open_vm_tools
+* Starts and enables `vmtoolsd`
+
+Role:opensearch
 * Make `opensearch__version*` optional
 
-Role: graylog_server
-* Remove version defaults from the role
 
 
 ## [2.0.1] - 2023-02-28
@@ -269,75 +330,75 @@ All roles:
     * `rolename__host_varname` to `rolename__varname__host_var`
     * `rolename__role_varname` to `rolename__varname__role_var`
 
-Playbook: basic_setup
+Playbook:basic_setup
 * Renamed to setup_basic to be consitent with the other setup playbooks
 * Removed `audit` and `crypto_policy` roles for now
 
-Role: acme_sh
+Role:acme_sh
 * Added `name` subkey to `acme_sh__certificates`
 * Moved `acme_sh__reload_cmd` to a subkey of `acme_sh__certificates`
 
-Role: chrony
+Role:chrony
 * Fixed wrong variable prefix: Adjusted `chrony_server__` to `chrony__`.
 
-Role: collabora_code
+Role:collabora_code
 * Renamed rolename and vars from `collabora_code` to `collabora`
 
-Role: duplicity
+Role:duplicity
 * Renamed `duplicity__public_master_long_keyid` variable to `duplicity__gpg_encrypt_master_key`.
 * Renamed `duplicity__public_master_key` variable to `duplicity__gpg_encrypt_master_key_block`.
 * Changed the format of `duplicity__backup_sources__host_var`.
 
-Role: fail2ban
+Role:fail2ban
 * Adjusted subkeys of `fail2ban__jails__group_var` / `fail2ban__jails__host_var`
 
-Role: git
+Role:git
 * Added ...
 * ... and later removed in favor of a more general `app` role
 
-Role: hostname
+Role:hostname
 * Renamed `hostname__domain_name` to `hostname__domain_part`
 * Renamed `hostname__hostname` to `hostname__full_hostname`
 
-Role: icinga2_agent
+Role:icinga2_agent
 * Added new mandatory variable `icinga2_agent__icinga2_master_cn`
 * Made `icinga2_agent__icinga2_master_host` optional
 * Most users can replace all instances of `icinga2_agent__icinga2_master_host` to `icinga2_agent__icinga2_master_cn`
 
-Role: infomaniak_vm
+Role:infomaniak_vm
 * Renamed `infomaniak_vm__password` to `infomaniak_vm__api_password`
 * Renamed `infomaniak_vm__project_id` to `infomaniak_vm__api_project_id`
 * Renamed `infomaniak_vm__username` to `infomaniak_vm__api_username`
 * Renamed `infomaniak_vm__volume_size` to `infomaniak_vm__separate_boot_volume_size`
 
-Role: java
+Role:java
 * Removed, better substituted by `apps` role.
 
-Role: kernel_settings
+Role:kernel_settings
 * Make `kernel_settings__` variables injection-capable via `kernel_settings__host_*`, `kernel_settings__group_*` and `kernel_settings__dependent_*`.
 
-Role: libselinux_python:
+Role:libselinux_python:
 * Renamed the role to policycoreutils.
 
-Role: login
+Role:login
 * Changed logic and renamed `login__users` to two combined variables `login__users__group_var` (define users in group vars) and `login__users__host_var` (define users in host vars).
 
-Role: mariadb_server
+Role:mariadb_server
 * Renamed `mariadb_server__admin_login` to `mariadb_server__admin_user`
 * Moved `mariadb_server__admin_host` to `mariadb_server__admin_user["host"]`
 * Renamed `mariadb_server__dump_login` to `mariadb_server__dump_user`
 * Moved `mariadb_server__dump_user_*` to subkeys in `mariadb_server__dump_user`
 
-Role: monitoring_plugins
+Role:monitoring_plugins
 * Renamed `monitoring_plugins__deploy_notification_plugins` to `monitoring_plugins__skip_notification_plugins` and flipped the logic.
 
 Role php:
 * Made more variables injectable, therefore the variables have a new name.
 
-Role: stig
+Role:stig
 * Moved to a new GitHub repo (temporarily)
 
-Role: system_update
+Role:system_update
 * Renamed variables:
     * system_update__mail_recipients_new_configfiles => system_update__mail_recipients_new_configfiles
     * system_update__mail_recipients_updates => system_update__mail_recipients_updates

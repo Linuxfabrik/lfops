@@ -2,11 +2,6 @@
 
 This role installs and configures [borg](https://www.borgbackup.org/) and sets up the desired backup repositories in a local directory.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

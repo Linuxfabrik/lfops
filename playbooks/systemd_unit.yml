@@ -1,7 +1,23 @@
-- name: 'Manage systemd units'
+- name: 'Playbook linuxfabrik.lfops.systemd_unit'
   hosts:
     - 'lfops_systemd_unit'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.systemd_unit'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

@@ -1,21 +1,29 @@
-- name: 'Install and configure IcingaWeb2'
+- name: 'Playbook linuxfabrik.lfops.icingaweb2'
   hosts:
     - 'lfops_icingaweb2'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
 
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]' # currently doesn't work for fedora
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]' # currently doesn't work for fedora
         - 'not icingaweb2__skip_repo_mydumper | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not icingaweb2__skip_repo_mariadb | default(false)'
 
     - role: 'linuxfabrik.lfops.python'
@@ -41,7 +49,7 @@
 
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not icingaweb2__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
@@ -61,3 +69,11 @@
     # TOOD: apache with injection
 
     - role: 'linuxfabrik.lfops.icingaweb2'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

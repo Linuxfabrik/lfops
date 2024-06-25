@@ -1,6 +1,14 @@
-- name: 'Manage and configure MongoDB'
+- name: 'Playbook linuxfabrik.lfops.mongodb'
   hosts:
     - 'lfops_mongodb'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -10,7 +18,10 @@
       when:
         - 'not mongodb__skip_kernel_settings | d(false)'
 
-    - role: 'linuxfabrik.lfops.tar'
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: '{{
+          mongodb__apps__apps__dependent_var
+        }}'
 
     - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var: '{{
@@ -24,3 +35,11 @@
         - 'not mongodb__skip_repo_mongodb | default(false)'
 
     - role: 'linuxfabrik.lfops.mongodb'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

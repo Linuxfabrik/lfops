@@ -1,4 +1,4 @@
-- name: 'Install and configure Icinga2 as a master'
+- name: 'Playbook linuxfabrik.lfops.setup_icinga2_master'
   hosts:
     - 'lfops_setup_icinga2_master'
 
@@ -59,16 +59,24 @@
     setup_icinga2_master__yum_utils__skip_role__internal_var: '{{ setup_icinga2_master__yum_utils__skip_role | d(false) }}'
 
 
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
   roles:
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not setup_icinga2_master__repo_epel__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not setup_icinga2_master__repo_mariadb__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.python'
@@ -160,7 +168,7 @@
 
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not setup_icinga2_master__repo_remi__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.repo_sury'
@@ -289,3 +297,11 @@
     - role: 'linuxfabrik.lfops.monitoring_plugins_grafana_dashboards'
       when:
         - 'not setup_icinga2_master__monitoring_plugins_grafana_dashboards__skip_role__internal_var'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

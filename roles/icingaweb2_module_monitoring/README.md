@@ -2,10 +2,6 @@
 
 This role installs and configures the [IcingaWeb2 Monitoring Module](https://icinga.com/docs/icinga-web-2/latest/modules/monitoring/doc/01-About/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

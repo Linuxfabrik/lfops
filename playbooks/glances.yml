@@ -1,11 +1,27 @@
-- name: 'Install glances'
+- name: 'Playbook linuxfabrik.lfops.glances'
   hosts:
     - 'lfops_glances'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
 
     - role: 'linuxfabrik.lfops.glances'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

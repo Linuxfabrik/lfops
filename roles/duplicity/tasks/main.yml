@@ -14,6 +14,10 @@
 
 - block:
 
+  - name: 'Combined Paths:'
+    ansible.builtin.debug:
+      var: 'duplicity__backup_sources__combined_var'
+
   - name: 'Generate local gpg key'
     linuxfabrik.lfops.gpg_key:
       name_real: 'duplicity'

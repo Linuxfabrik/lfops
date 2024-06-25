@@ -1,7 +1,23 @@
-- name: 'Manages the DNF-Makecache service'
+- name: 'Playbook linuxfabrik.lfops.dnf_makecache'
   hosts:
     - 'lfops_dnf_makecache'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.dnf_makecache'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

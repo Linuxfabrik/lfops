@@ -1,6 +1,14 @@
-- name: 'Install and configure Icinga2 as an agent'
+- name: 'Playbook linuxfabrik.lfops.icinga2_agent'
   hosts:
     - 'lfops_icinga2_agent'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -14,7 +22,7 @@
     # install the plugins after the agent, else the installation of the agent fails on Windows
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not icinga2_agent__skip_repo_epel | d(true)'
 
     - role: 'linuxfabrik.lfops.python'
@@ -32,3 +40,11 @@
     - role: 'linuxfabrik.lfops.monitoring_plugins'
       when:
         - 'not icinga2_agent__skip_monitoring_plugins | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

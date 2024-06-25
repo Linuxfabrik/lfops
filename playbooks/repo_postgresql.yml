@@ -1,7 +1,23 @@
-- name: 'Manage and configure the official PostgreSQL'
+- name: 'Playbook linuxfabrik.lfops.repo_postgresql'
   hosts:
     - 'lfops_repo_postgresql'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_postgresql'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

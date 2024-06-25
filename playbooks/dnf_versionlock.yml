@@ -1,7 +1,23 @@
-- name: 'Install and configure dnf versionlock'
+- name: 'Playbook linuxfabrik.lfops.dnf_versionlock'
   hosts:
     - 'lfops_dnf_versionlock'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.dnf_versionlock'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

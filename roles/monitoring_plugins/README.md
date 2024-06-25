@@ -9,7 +9,7 @@ There are three possible installation methods:
 * This means that Python does not have to be installed on the host.
 * Requires the repository to be set up on the server (see [Mandatory Requirements](#mandatory-requirements) below).
 * The role always installs the latest available package from the repository.
-* And (by default) enables a version lock / version pin for the installed package. This prevents automatic updates from causing inconsistencies between the installed plugins and the configuration of the monitoring system (e.g. outdated Icinga Director configuration). Updating the plugins should be done manually along with updating the monitoring system configuration. Set `monitoring_plugins__skip_package_versionlock: true` to disable this behaviour.
+* And (by default) enables version lock / version pinning for the installed package. This prevents automatic updates from causing inconsistencies between the installed plugins and the configuration of the monitoring system (e.g. outdated Icinga Director configuration). Updating plugins should be done in a controlled manner along with updating the monitoring server configuration. See `monitoring_plugins__skip_package_versionlock` for details.
 
 2. Windows only: Deployment of the Nuitka-compiled plugins (`monitoring_plugins__windows_variant == 'nuitka'`):
 * This is the preferred variant for Windows, as the packages provide the plugins compiled, with batteries (libraries) included.
@@ -23,17 +23,6 @@ There are three possible installation methods:
 Additionally, this role allows you to deploy custom plugins which are placed under `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins` on the Ansible control node.
 
 Windows only: Since you cannot change files that are currently used by a process in Windows, when running against a Windows host, this role first stops the Icinga2 service, deploys the plugins and starts the service again. Optionally, it sets a downtime for each host. Have a look at the optional role variables below for this.
-
-Runs on
-
-* Debian 9
-* Debian 10
-* Fedora
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* Suse
-* Ubuntu 16
-* Windows
 
 
 ## Mandatory Requirements
@@ -70,7 +59,7 @@ or:
 | `monitoring_plugins__plugin_list` | Overwrite the automatically generated list of monitoring plugins that should be deployed. Note: This does not work for the compiled Nuitka plugins, (as they are all packaged in a single zip-file), nor with the RPM / DEB packages. | unset |
 | `monitoring_plugins__repo_version` | String. Linux only: Which version of the monitoring plugins should be deployed? Possible options: <ul><li>`latest`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`main`: The development version. Use with care.</li><li>A specific release, for example `2022030201`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li></ul> | `'{{ lfops__monitoring_plugins_version \| default("latest") }}'` |
 | `monitoring_plugins__skip_notification_plugins__host_var` / `monitoring_plugins__skip_notification_plugins__group_var` | Skips the deployment of the notification-plugins (in addition to the check-plugins). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `true` |
-| `monitoring_plugins__skip_package_versionlock` | By default, the version of the `linuxfabrik-monitoring-plugins` (and `linuxfabrik-notification-plugins`) is locked after installation. Setting this to true skips this step. | `false` |
+| `monitoring_plugins__skip_package_versionlock` | By default, the version of the `linuxfabrik-monitoring-plugins` (and `linuxfabrik-notification-plugins`) is locked after installation. Setting this to `true` skips this step (and never unlocks the version pinning again). | `false` |
 | `monitoring_plugins__windows_variant` | Windows only. Which variant of the monitoring plugins should be deployed? Possible options:<br> * `nuitka`: Deploy the nuitka-compiled checks (EXE files). This does not require Python on the system.<br> * `python`: Deploy the plain Python plugins. This requires Python to be installed on Windows. | `'nuitka'` |
 
 Example:

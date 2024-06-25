@@ -1,0 +1,7 @@
+- name: 'Install libuser'
+  ansible.builtin.package:
+    name:
+      - 'libuser'
+    state: 'present'
+  tags:
+    - 'login'

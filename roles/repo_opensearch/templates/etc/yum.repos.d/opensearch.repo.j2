@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2024050101
 
 [opensearch-{{ repo_opensearch__version__combined_var }}]
 name=OpenSearch {{ repo_opensearch__version__combined_var }}
@@ -11,7 +11,8 @@ baseurl=https://artifacts.opensearch.org/releases/bundle/opensearch/{{ repo_open
 enabled=1
 repo_gpgcheck=1
 gpgcheck=1
-gpgkey=https://artifacts.opensearch.org/publickeys/opensearch.pgp
+# gpgkey=https://artifacts.opensearch.org/publickeys/opensearch.pgp
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-opensearch
 autorefresh=1
 type=rpm-md
 {% if repo_opensearch__basic_auth_login is defined and repo_opensearch__basic_auth_login | length %}

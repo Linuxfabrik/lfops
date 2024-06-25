@@ -1,6 +1,14 @@
-- name: 'Installs and manages Collabora'
+- name: 'Playbook linuxfabrik.lfops.collabora'
   hosts:
     - 'lfops_collabora'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -13,3 +21,11 @@
         - 'not collabora__skip_repo_collabora | default(true)'
 
     - role: 'linuxfabrik.lfops.collabora'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

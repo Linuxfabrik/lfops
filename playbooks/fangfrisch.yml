@@ -1,6 +1,14 @@
-- name: 'Install and configure Fangfrisch'
+- name: 'Playbook linuxfabrik.lfops.fangfrisch'
   hosts:
     - 'lfops_fangfrisch'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -12,3 +20,11 @@
         - 'not clamav__skip_python_venv | default(false)'
 
     - role: 'linuxfabrik.lfops.fangfrisch'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

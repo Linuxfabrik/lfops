@@ -1,7 +1,23 @@
-- name: 'Configure login banners ("motd", but in the right way)'
+- name: 'Playbook linuxfabrik.lfops.motd'
   hosts:
     - 'lfops_motd'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.motd'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

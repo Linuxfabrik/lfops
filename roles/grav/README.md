@@ -4,9 +4,6 @@ This role installs Grav (a simple file-based flat-file CMS platform) using PHP c
 
 It is possible to configure whether the Grav Admin Panel should be installed (it is installed by default). By default, you can access the admin by pointing your browser to http://grav.example.com/admin. You can simply log in with the username and password set in the role variables.
 
-Runs on
-
-* RHEL 8 (and compatible)
 
 
 ## Mandatory Requirements

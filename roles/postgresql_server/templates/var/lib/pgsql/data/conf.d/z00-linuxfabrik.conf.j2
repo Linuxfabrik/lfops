@@ -1,11 +1,11 @@
 # {{ ansible_managed }}
-# 2022111701
+# 2024061001
 
 #------------------------------------------------------------------------------
 # CONNECTIONS AND AUTHENTICATION
 #------------------------------------------------------------------------------
 
-listen_addresses = {{ postgresql_server__conf_listen_addresses | d(['localhost']) | join(',') }}
+listen_addresses = '{{ postgresql_server__conf_listen_addresses | d(['localhost']) | join(',') }}'
 port = {{ postgresql_server__conf_port | d(5432) }}
 max_connections = {{ postgresql_server__conf_max_connections | d(100) }}
 

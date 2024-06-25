@@ -4,12 +4,6 @@ This role configures *daily file-based* backups using [duplicity](https://duplic
 
 Note that this role does not support running with `--check`, as it first creates a GPG-Key which is required for the rest of the role.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* Fedora 35
-
 
 ## duba (Duplicity Backup)
 
@@ -123,6 +117,11 @@ duplicity__swift_authversion: '3'
 duplicity__swift_tenantname: 'sb_project_SBI-MF827483'
 duplicity__timer_enabled: true
 ```
+
+
+## Troubleshooting
+
+If the `gpg --import /tmp/public-master-key` task fails with `gpg: invalid armor header` in `stderr`, make sure your `duplicity__gpg_encrypt_master_key_block` is correct and has an empty line after the `-----BEGIN PGP PUBLIC KEY BLOCK-----`.
 
 
 ## License

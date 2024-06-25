@@ -2,10 +2,6 @@
 
 This role installs [keycloak](https://www.keycloak.org/guides#getting-started).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 
@@ -56,7 +52,7 @@ keycloak__db_login:
   password: 'password'
   username: 'keycloak'
 keycloak__hostname: 'keycloak.local'
-keycloak__version: '18.0.0'
+keycloak__version: '25.0.1'
 ```
 
 

@@ -16,13 +16,13 @@
         - 'wget'
       state: 'present'
 
-  - name: 'Install glibc-langpack-de'
+  - name: 'dnf -y glibc-langpack-de'
     ansible.builtin.package:
       name:
         - 'glibc-langpack-de' # this prevents "Failed to set locale, defaulting to C.UTF-8" errors when using a german LANG on the local admin machine
       state: 'present'
     when:
-      - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["8"]'
+      - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["8", "9"]'
 
   - name: 'Enhance session profiles for all users in /etc/profile.d'
     ansible.builtin.template:

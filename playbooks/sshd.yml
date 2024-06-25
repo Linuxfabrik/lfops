@@ -1,6 +1,14 @@
-- name: 'Configure sshd'
+- name: 'Playbook linuxfabrik.lfops.sshd'
   hosts:
     - 'lfops_sshd'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -9,3 +17,11 @@
         - 'ansible_facts["os_family"] == "RedHat"'
 
     - role: 'linuxfabrik.lfops.sshd'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

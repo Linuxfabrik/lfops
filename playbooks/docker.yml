@@ -1,16 +1,34 @@
-- name: 'Manage and configure Docker'
+- name: 'Playbook linuxfabrik.lfops.docker'
   hosts:
     - 'lfops_docker'
 
-  roles:
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
 
-    - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings__sysctl__dependent_var: '{{ docker__kernel_settings__sysctl__dependent_var | d([]) }}'
-      when:
-        - 'not docker__skip_kernel_settings | d(false)'
+
+  roles:
 
     - role: 'linuxfabrik.lfops.repo_docker'
       when:
         - 'not docker__skip_repo_docker | default(false)'
 
     - role: 'linuxfabrik.lfops.docker'
+
+    # kernel_settings needs to run after docker so that the bridge kernel module is loaded
+    # else the sysctl settings are not found
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ docker__kernel_settings__sysctl__dependent_var | d([]) }}'
+      when:
+        - 'not docker__skip_kernel_settings | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

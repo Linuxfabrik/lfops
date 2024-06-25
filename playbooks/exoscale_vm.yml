@@ -1,4 +1,4 @@
-- name: 'Setup and manage an Exoscale VM'
+- name: 'Playbook linuxfabrik.lfops.exoscale_vm'
   hosts:
     - 'lfops_exoscale_vm'
   gather_facts: false

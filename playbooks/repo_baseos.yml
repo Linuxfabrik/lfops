@@ -1,7 +1,23 @@
-- name: 'Manage and configure the BaseOS repositories'
+- name: 'Playbook linuxfabrik.lfops.repo_baseos'
   hosts:
     - 'lfops_repo_baseos'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_baseos'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

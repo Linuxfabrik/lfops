@@ -4,17 +4,12 @@ This role installs and configures a [MongoDB](https://www.mongodb.com/) server, 
 
 Important: When setting up a replica set across members, make sure that there is no data being written on any member until all members have joined the replica set. Else you need to [manually prepare the data files](https://www.mongodb.com/docs/manual/tutorial/expand-replica-set/#data-files) on the to-be-added secondary before joining.
 
-Runs on
-
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Debian 11
-
 This role is only compatible with the following MongoDB versions:
 
 * 4.2 (only tested on RHEL 8)
 * 4.4 (only tested on RHEL 8)
 * 6.0
+* 7.0
 
 
 ## Mandatory Requirements

@@ -2,9 +2,20 @@
 
 This role installs and configures [bind](https://www.isc.org/bind/) as a DNS server. Currently, it only supports standalone configurations, no primary-replica configuration.
 
-Runs on
+If you define a zone with `name`, `file` and `raw`, the role
 
-* RHEL 8 (and compatible)
+* creates the zone file in `/var/named/{{ item.file }}`
+* creates the corresponding entry in `/etc/named.conf` like so:
+
+    zone "{{ item.name }}" IN {
+        type master;
+        file "{{ item.file }}";
+        # do normal iterative resolution (do not forward)
+        forwarders { };
+        allow-query { trusted; };
+        allow-transfer { none; };
+        allow-update { none; };
+    };
 
 
 ## Tags

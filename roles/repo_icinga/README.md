@@ -2,11 +2,6 @@
 
 This role deploys the [Icinga Package Repository](https://packages.icinga.com/).
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-
 
 ## Tags
 

@@ -301,6 +301,28 @@ php__ini_post_max_size__combined_var: '{{
     php__ini_post_max_size__role_var
   }}'
 
+php__ini_session_cookie_httponly__dependent_var: ''
+php__ini_session_cookie_httponly__group_var: ''
+php__ini_session_cookie_httponly__host_var: ''
+php__ini_session_cookie_httponly__role_var: ''
+php__ini_session_cookie_httponly__combined_var: '{{
+    php__ini_session_cookie_httponly__host_var if (php__ini_session_cookie_httponly__host_var | string | length) else
+    php__ini_session_cookie_httponly__group_var if (php__ini_session_cookie_httponly__group_var | string | length) else
+    php__ini_session_cookie_httponly__dependent_var if (php__ini_session_cookie_httponly__dependent_var | string | length) else
+    php__ini_session_cookie_httponly__role_var
+  }}'
+
+php__ini_session_cookie_secure__dependent_var: ''
+php__ini_session_cookie_secure__group_var: ''
+php__ini_session_cookie_secure__host_var: ''
+php__ini_session_cookie_secure__role_var: ''
+php__ini_session_cookie_secure__combined_var: '{{
+    php__ini_session_cookie_secure__host_var if (php__ini_session_cookie_secure__host_var | string | length) else
+    php__ini_session_cookie_secure__group_var if (php__ini_session_cookie_secure__group_var | string | length) else
+    php__ini_session_cookie_secure__dependent_var if (php__ini_session_cookie_secure__dependent_var | string | length) else
+    php__ini_session_cookie_secure__role_var
+  }}'
+
 php__ini_session_gc_maxlifetime__dependent_var: ''
 php__ini_session_gc_maxlifetime__group_var: ''
 php__ini_session_gc_maxlifetime__host_var: ''

@@ -27,6 +27,11 @@
       file: '/tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
       state: 'present'
 
+  - name: 'rm /tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
+    ansible.builtin.file:
+      path: '/tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
+      state: 'absent'
+
   - name: 'deploy the repo file (mirror: {{ repo_mongodb__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/apt/sources.list.d/mongodb-org.list.j2'
@@ -34,6 +39,13 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/mongodb-org.list'
 
   - name: 'apt update # update the cache'
     ansible.builtin.apt:

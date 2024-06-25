@@ -1,6 +1,14 @@
-- name: 'Install Elasticsearch OSS on the system'
+- name: 'Playbook linuxfabrik.lfops.elasticsearch_oss'
   hosts:
     - 'lfops_elasticsearch_oss'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -10,3 +18,11 @@
         - 'not elasticsearch_oss__skip_repo_elasticsearch_oss | default(false)'
 
     - role: 'linuxfabrik.lfops.elasticsearch_oss'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

@@ -2,10 +2,6 @@
 
 This role installs and enables the [IcingaWeb2 Company Module](https://github.com/Icinga/icingaweb2-theme-company).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 This role is tested with the following IcingaWeb2 Company Module versions:
 
 * 1.0.0

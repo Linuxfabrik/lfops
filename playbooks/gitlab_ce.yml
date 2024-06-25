@@ -1,6 +1,14 @@
-- name: 'Install and configure GitLab CE'
+- name: 'Playbook linuxfabrik.lfops.gitlab_ce'
   hosts:
     - 'lfops_gitlab_ce'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -17,6 +25,17 @@
       when:
         - 'not gitlab_ce__skip_repo_gitlab_ce | d(false)'
 
-    - role: 'linuxfabrik.lfops.tar'
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: '{{
+          gitlab_ce__apps__apps__dependent_var
+        }}'
 
     - role: 'linuxfabrik.lfops.gitlab_ce'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

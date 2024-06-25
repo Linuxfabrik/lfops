@@ -8,7 +8,28 @@ Playbooks:
 
 * Each playbook must contain all dependencies to run flawlessly against a newly installed machine.
 * Playbooks installing an application together with software packages that are complex to configure (``apache_httpd``, ``mariadb_server`` and/or ``php``) as a dependency are prefixed by ``setup_``. Example: ``setup_nextcloud`` because Nextcloud also needs Apache httpd, MariaDB Server etc.
+* The name of the playbook should be ``- name: 'Playbook linuxfabrik.lfops.example'``.
 * After creating a new playbook, add it in the ``playbooks/all.yml``.
+* Every run of the playbooks should be logged to ``/var/log/linuxfabrik-lfops.log``. Include the following code in the playbook for this
+
+    .. code-block:: yaml
+
+          pre_tasks:
+            - ansible.builtin.import_role:
+                name: 'shared'
+                tasks_from: 'log-start.yml'
+              tags:
+                - 'always'
+
+          roles:
+            - role: '...'
+
+          post_tasks:
+            - ansible.builtin.import_role:
+                name: 'shared'
+                tasks_from: 'log-end.yml'
+              tags:
+                - 'always'
 
 Roles:
 
@@ -92,7 +113,7 @@ Quotes
 * Do not quote booleans (e.g. ``true``/``false``).
 * Do not quote numbers (e.g. ``42``).
 * Do not quote octal numbers (e.g. ``0755``).
-* Do not quote things referencing the local Ansible environment (e.g. boolean logic in ``when:` statements or names of variables we are assigning values to).
+* Do not quote things referencing the local Ansible environment (e.g. boolean logic in ``when:`` statements or names of variables we are assigning values to).
 
 .. code-block:: yml
 
@@ -209,6 +230,18 @@ Deploying files to the remote server
 * Always use the ``.j2`` file extension for files in the ``template`` folder.
 
 * If deploying self-written scripts, copy them to ``/usr/local/bin`` (due to SELinux).
+
+* Add the following task after deploying a file that might get rpmnew or rpmsave files (or their Debian equivalents):
+
+.. code-block:: yaml
+
+    - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+      ansible.builtin.include_role:
+        name: 'shared'
+        tasks_from: 'remove-rpmnew-rpmsave.yml'
+      vars:
+        shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+      loop: '{{ repo_epel__repo_files }}'
 
 
 Handlers

@@ -1,0 +1,29 @@
+vsftpd__conf_allow_writeable_chroot: false
+vsftpd__conf_chroot_local_user: false
+vsftpd__conf_debug_ssl: false
+vsftpd__conf_dual_log_enable: false
+vsftpd__conf_log_ftp_protocol: false
+vsftpd__conf_pasv_addr_resolve: false
+vsftpd__conf_pasv_max_port: 0
+vsftpd__conf_pasv_min_port: 0
+vsftpd__conf_rsa_cert_file: '/usr/share/ssl/certs/vsftpd.pem'
+vsftpd__conf_session_support: false
+vsftpd__conf_ssl_enable: false
+vsftpd__conf_user_config_dir: '/etc/vsftpd/user_config'
+vsftpd__conf_userlist_enable: false
+vsftpd__conf_userlist_log: false
+vsftpd__conf_xferlog_std_format: false
+vsftpd__pam_use_sss: false
+vsftpd__service_enabled: true
+
+vsftpd__user_config__dependent_var: []
+vsftpd__user_config__group_var: []
+vsftpd__user_config__host_var: []
+vsftpd__user_config__role_var: []
+vsftpd__user_config__combined_var: '{{ (
+      vsftpd__user_config__role_var +
+      vsftpd__user_config__dependent_var +
+      vsftpd__user_config__group_var +
+      vsftpd__user_config__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'

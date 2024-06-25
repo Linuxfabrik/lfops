@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2024050101
 
 # https://docs.graylog.org/docs/operating-system-packages
 [graylog-{{ repo_graylog__version }}]
@@ -11,7 +11,8 @@ baseurl=https://packages.graylog2.org/repo/el/stable/{{ repo_graylog__version }}
 {% endif %}
 gpgcheck=1
 repo_gpgcheck=0
-gpgkey=https://raw.githubusercontent.com/Graylog2/fpm-recipes/{{ repo_graylog__version }}/recipes/graylog-repository/files/rpm/RPM-GPG-KEY-graylog
+#gpgkey=https://raw.githubusercontent.com/Graylog2/fpm-recipes/{{ repo_graylog__version }}/recipes/graylog-repository/files/rpm/RPM-GPG-KEY-graylog
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-graylog
 {% if repo_graylog__basic_auth_login is defined and repo_graylog__basic_auth_login | length %}
 username={{ repo_graylog__basic_auth_login["username"] }}
 password={{ repo_graylog__basic_auth_login["password"] }}

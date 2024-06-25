@@ -29,6 +29,13 @@
       mode: 0o644
     notify: 'opensearch: restart opensearch'
 
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/opensearch/opensearch.yml'
+
   - name: 'mkdir -p {{ opensearch__path_data__combined_var }}'
     ansible.builtin.file:
       path: '{{ opensearch__path_data__combined_var }}'

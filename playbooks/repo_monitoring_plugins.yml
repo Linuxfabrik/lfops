@@ -1,7 +1,23 @@
-- name: 'Configure the Linuxfabrik Monitoring Plugins repository'
+- name: 'Playbook linuxfabrik.lfops.repo_monitoring_plugins'
   hosts:
     - 'lfops_repo_monitoring_plugins'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

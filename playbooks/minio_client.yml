@@ -1,7 +1,23 @@
-- name: 'Ensures that MinIO client is installed'
+- name: 'Playbook linuxfabrik.lfops.minio_client'
   hosts:
     - 'lfops_minio_client'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.minio_client'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

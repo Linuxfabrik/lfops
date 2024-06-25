@@ -2,10 +2,6 @@
 
 This role enables the [IcingaWeb2 Doc Module](https://icinga.com/docs/icinga-web-2/latest/modules/doc/doc/01-About/).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 
 ## Mandatory Requirements
 

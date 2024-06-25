@@ -1,0 +1,12 @@
+- name: 'Remove rpmnew / rpmsave (and Debian equivalents) for {{ shared__remove_rpmnew_rpmsave_config_file }}'
+  ansible.builtin.file:
+    path: '{{ file_path }}'
+    state: 'absent'
+  loop:
+    - '{{ shared__remove_rpmnew_rpmsave_config_file }}.rpmnew'
+    - '{{ shared__remove_rpmnew_rpmsave_config_file }}.rpmsave'
+    - '{{ shared__remove_rpmnew_rpmsave_config_file }}.dpkg-dist'
+    - '{{ shared__remove_rpmnew_rpmsave_config_file }}.ucf-dist'
+  loop_control:
+    loop_var: 'file_path'
+  when: 'lfops__remove_rpmnew_rpmsave | d(false)'

@@ -4,6 +4,8 @@
 
 maxmind_geoip__systemd_unit__services__dependent_var:
   - name: 'update-maxmind'
+    state: 'present'
+    enabled: false
     raw_service: |-
       ExecStart=/usr/local/sbin/update-maxmind
       Type=oneshot

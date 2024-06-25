@@ -7,13 +7,6 @@ IMPORTANT:
 
 * The default behavior of this role is that it distributes SSH keys that it knows from the host/group variables and deletes any other keys that already exist on the target system in `.ssh/authorized_keys`. This might break things. Set `remove_other_sshd_authorized_keys` accordingly.
 
-Runs on
-
-* Fedora Server 35+
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-* Ubuntu 16
-
 
 ## Tags
 
@@ -35,18 +28,21 @@ Example:
 login__users__host_var:
   - name: 'test'
     password: 'linuxfabrik'
-    state: 'present'
+    home: '/home/linuxfabrik'
+    shell: '/bin/bash'
+    primary_group: 'testgroup'
     additional_groups:
       -  'wheel'
       -  '{{ login__passwordless_sudo_group }}'
-    primary_group: 'testgroup'
     sshd_authorized_keys:
       - 'ssh-ed25519 M4wt6qfbtyAaBnhSJDzoQEAOwiQM7k9lTvhYhNHJ7i6ciWH9uXJlbpbDF4Wv5lSr8t1maY test@example.com'
     remove_other_sshd_authorized_keys: true
+    state: 'present'
+    system: false
   - name: 'github-runner'
     home: '/opt/github-runner'
     state: 'present'
-    system: 'true'
+    system: true
 login__users__group_var: []
 login__passwordless_sudo_group: ''
 ```

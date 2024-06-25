@@ -1,7 +1,23 @@
-- name: 'Installs the Icingaweb2 Business Process Module'
+- name: 'Playbook linuxfabrik.lfops.icingaweb2_module_businessprocess'
   hosts:
     - 'lfops_icingaweb2_module_businessprocess'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_businessprocess'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

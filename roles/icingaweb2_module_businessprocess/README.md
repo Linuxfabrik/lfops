@@ -2,10 +2,6 @@
 
 This role installs and configures the [IcingaWeb2 Business Process Module](https://github.com/Icinga/icingaweb2-module-businessprocess).
 
-Runs on
-
-* RHEL 8 (and compatible)
-
 This role is tested with the following IcingaWeb2 Business Process Module versions:
 
 * 2.4.0

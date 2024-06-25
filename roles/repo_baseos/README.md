@@ -2,12 +2,6 @@
 
 This role deploys the BaseOS repositories, which can be used to set a custom mirror server.
 
-Runs on
-
-* RHEL 7 (and compatible)
-* RHEL 8 (and compatible)
-* RHEL 9 (and compatible)
-
 
 ## Tags
 

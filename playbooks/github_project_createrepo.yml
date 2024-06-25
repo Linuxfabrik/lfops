@@ -1,6 +1,14 @@
-- name: 'Install and configure Github Project Createrepo'
+- name: 'Playbook linuxfabrik.lfops.github_project_createrepo'
   hosts:
     - 'lfops_github_project_createrepo'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -16,3 +24,11 @@
         - 'not github_project_createrepo__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.github_project_createrepo'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

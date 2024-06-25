@@ -1,9 +1,25 @@
-- name: 'Set the SELinux state'
+- name: 'Playbook linuxfabrik.lfops.selinux'
   hosts:
     - 'lfops_selinux'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.policycoreutils'
 
     - role: 'linuxfabrik.lfops.selinux'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

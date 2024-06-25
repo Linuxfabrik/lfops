@@ -6,5 +6,11 @@
         - 'open-vm-tools'
       state: 'present'
 
+  - name: 'systemctl enable --now vmtoolsd.service'
+    ansible.builtin.systemd:
+      name: 'vmtoolsd.service'
+      enabled: true
+      state: 'started'
+
   tags:
     - 'open_vm_tools'

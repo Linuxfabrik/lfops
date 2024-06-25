@@ -56,8 +56,8 @@ duplicity__python_venv__venvs__dependent_var:
   - name: 'duplicity'
     packages:
       - 'duplicity'
-      - 'python-swiftclient'
       - 'python-keystoneclient'
+      - 'python-swiftclient'
     package_requirements:
       - 'gcc'
       - 'librsync-devel'

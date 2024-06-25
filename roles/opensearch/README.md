@@ -2,6 +2,10 @@
 
 This role installs and configures a OpenSearch server. Optionally, it allows the creation of a cluster setup.
 
+TODO:
+* This role needs to be adapted to the latest https://opensearch.org/docs/latest/install-and-configure/install-opensearch/rpm/ and https://opensearch.org/docs/latest/install-and-configure/install-opensearch/debian/ documents.
+* Currently this role does not follow the configuration hints on https://opensearch.org/docs/latest/install-and-configure/install-opensearch/index/.
+
 Hints for configuring TLS:
 * The admin certificate cannot be the same as the node certificate. This will lead to the following error: `Seems you use a node certificate. This is not permitted, you have to use a client certificate and register it as admin_dn in opensearch.yml`
 * The node certificates either need to have `extendedKeyUsage = serverAuth, clientAuth` (`TLS Web Server Authentication`, `TLS Web Client Authentication`, respectively) set, or no `Extended Key Usage` at all. Else running `securityadmin.sh` results in `ERR: An unexpected SSLHandshakeException occured: Received fatal alert: certificate_unknown`.
@@ -10,17 +14,13 @@ Currently supported versions:
 * 1.x
 * 2.x
 
-Runs on
-
-* RHEL 8 (and compatible)
-* Debian 11
-
 
 ## Mandatory Requirements
 
 * Enable the official OpenSearch repository. This can be done using the [linuxfabrik.lfops.repo_opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_opensearch) role.
 
 If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/opensearch.yml), this is automatically done for you.
+
 
 ## Tags
 
@@ -106,9 +106,9 @@ Use the following variables to easily generate self-signed certificates. These t
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `opensearch__generate_certs_admin_cn`` | The common name of the admin certificate. | `'OpenSearch Admin'` |
-| `opensearch__generate_certs_base_dn`` | The base distinguished name for all the self-signed certificates. | `'OU=Secure Services,O=ACME,ST=Zurich,C=CH'` |
-| `opensearch__generate_certs_ca_cn`` | The common name of the CA certificate. | `'OpenSearch Self-signed RootCA'` |
+| `opensearch__generate_certs_admin_cn` | The common name of the admin certificate. | `'OpenSearch Admin'` |
+| `opensearch__generate_certs_base_dn` | The base distinguished name for all the self-signed certificates. | `'OU=Secure Services,O=ACME,ST=Zurich,C=CH'` |
+| `opensearch__generate_certs_ca_cn` | The common name of the CA certificate. | `'OpenSearch Self-signed RootCA'` |
 | `opensearch__generate_certs_nodes` | List of dictionaries for the node certificates. Subkeys: <ul><li>`cn`: Mandatory, string. Common name of the node certificate.</li><li>`ip`: Mandatory, string. IP address of the node.</li></ul> | `[]` |
 
 Example:
