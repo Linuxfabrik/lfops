@@ -1,6 +1,11 @@
 # https://icinga.com/docs/icinga-db-web/latest/doc/02-Installation/04-RHEL/
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
   - name: 'install icingadb-web'
     ansible.builtin.package:
       name:
@@ -11,7 +16,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/icingadb'
       state: 'directory'
-      owner: 'www-data'
+      owner: '{{ icingadb_web__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -19,7 +24,7 @@
     ansible.builtin.template:
       src: 'etc/icingaweb2/modules/icingadb/{{ item }}.j2'
       dest: '/etc/icingaweb2/modules/icingadb/{{ item }}'
-      owner: 'www-data'
+      owner: '{{ icingadb_web__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o660
     loop:
