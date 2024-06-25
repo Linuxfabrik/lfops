@@ -21,6 +21,7 @@ clamav                               |    |    |    |   | x |   |       |       
 cloud_init                           |    |    |    |   | x | x |   x   |       |       |       |       |
 cockpit                              |    |    |    |   | x | x |   x   |       |       |       |       | Fedora 35
 collabora                            |    |    |    |   | x |   |       |       |       |       |       |
+collect_rpmnew_rpmsave               |    |    |    | x | x | x |       |       |       |       |       | Fedora 40
 coturn                               |    |    |    |   | x |   |       |       |       |       |       |
 crypto_policy                        |    |    |    |   | x | x |       |       |       |       |       |
 dnf_makecache                        |    |    |    |   | x | x |       |       |       |       |       |
@@ -80,7 +81,7 @@ mailx                                | x  | x  | x  | x | x | x |   x   |       
 mariadb_server                       | -  | -  | -  |   | x | x |   -   |   -   |   -   |       |       |
 maxmind_geoip                        |    |    |    |   | x |   |       |       |       |       |       |
 minio_client                         |    |    |    |   | x |   |       |       |       |       |       |
-mirror                               |    |    |    |   | x |   |       |       |       |       |       |
+mirror                               |    |    |    |   | x | x |       |       |       |       |       |
 mod_maxminddb                        |    |    |    |   | x |   |       |       |       |       |       |
 mongodb                              |    | x  |    |   | x | x |       |       |       |       |       |
 monitoring_plugins                   | x  |    |    | x | x | x |   x   |       |       |       |       | Debian 9, Fedora, Suse, Windows
@@ -99,14 +100,14 @@ nodejs                               |    |    |    |   | x | x |       |       
 objectstore_backup                   |    |    |    |   | x |   |       |       |       |       |       |
 opensearch                           |    | x  |    |   | x |   |       |       |       |       |       |
 open_vm_tools                        |    |    |    |   | x | x |   x   |       |       |       |       |
-openvpn_server                       |    |    |    |   | x |   |       |       |       |       |       |
+openvpn_server                       |    |    |    |   | x | x |       |       |       |       |       |
 php                                  |    |    |    |   | x | x |       |       |       |       |       |
 policycoreutils                      |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
 postfix                              | x  | x  | x  | x | x | x |   x   |       |       |       |       | Fedora 35
 postgresql_server                    |    |    |    |   | x |   |       |       |       |       |       |
 python                               |    |    |    |   | x | x |   x   |       |       |       |       | Windows
 python_venv                          |    | x  | x  | x | x | x |       |       |       |       |       | Fedora 35
-qemu_guest_agent                     |    |    |    |   | x |   |   x   |       |       |       |       |
+qemu_guest_agent                     |    |    |    |   | x | x |   x   |       |       |       |       |
 redis                                |    |    |    |   | x | x |       |       |       |       |       |
 repo_baseos                          |    |    |    | x | x | x |       |       |       |       |       |
 repo_collabora                       |    |    |    | x | x |   |       |       |       |       |       |
