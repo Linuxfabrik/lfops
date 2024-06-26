@@ -1,0 +1,11 @@
+shell__commands__dependent_var: []
+shell__commands__group_var: []
+shell__commands__host_var: []
+shell__commands__role_var: []
+shell__commands__combined_var: '{{ (
+      shell__commands__role_var +
+      shell__commands__dependent_var +
+      shell__commands__group_var +
+      shell__commands__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'

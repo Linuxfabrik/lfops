@@ -166,6 +166,9 @@ Role:tar
 
 ### Added
 
+Role:shell:
+* Added
+
 Role:collect_rpmnew_rpmsave:
 * Added
 
