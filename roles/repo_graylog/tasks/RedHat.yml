@@ -1,4 +1,5 @@
 - block:
+
   - name: 'curl https://packages.graylog2.org/repo/debian/pubkey.gpg --output /tmp/ansible.RPM-GPG-KEY-graylog'
     ansible.builtin.get_url:
       url: 'https://packages.graylog2.org/repo/debian/pubkey.gpg'
