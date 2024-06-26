@@ -1,0 +1,34 @@
+- block:
+
+  - name: 'curl https://packages.grafana.com/gpg.key --output /tmp/ansible.grafana.key'
+    ansible.builtin.get_url:
+      url: 'https://packages.grafana.com/gpg.key'
+      dest: '/tmp/ansible.grafana.key'
+    delegate_to: 'localhost'
+    run_once: true
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.grafana.key to /etc/pki/rpm-gpg/grafana.key'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.grafana.key'
+      dest: '/etc/pki/rpm-gpg/grafana.key'
+
+  # https://grafana.com/docs/grafana/latest/setup-grafana/installation/redhat-rhel-fedora/
+  - name: 'deploy the Grafana repo (mirror: {{ repo_grafana__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/grafana.repo.j2'
+      dest: '/etc/yum.repos.d/grafana.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/grafana.repo'
+
+  tags:
+    - 'repo_grafana'

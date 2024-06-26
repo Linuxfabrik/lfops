@@ -1,0 +1,34 @@
+- block:
+
+  - name: 'curl https://apt.grafana.com/gpg.key --output /tmp/ansible.grafana.gpg'
+    ansible.builtin.get_url:
+      url: 'https://apt.grafana.com/gpg.key'
+      dest: '/tmp/ansible.grafana.gpg'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.grafana.gpg to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.grafana.gpg'
+      dest: '/usr/share/keyrings/grafana.key'
+      mode: 0o644
+
+  - name: 'deploy the repo file (mirror: {{ repo_grafana__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: 'etc/apt/sources.list.d/grafana.list.j2'
+      dest: '/etc/apt/sources.list.d/grafana.list'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/grafana.list'
+
+  tags:
+    - 'repo_grafana'
