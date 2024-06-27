@@ -14,6 +14,8 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.graylog.gpg'
       dest: '/etc/apt/keyrings/graylog.asc' # use asc for ASCII-armored keys
+      owner: 'root'
+      group: 'root'
       mode: 0o644
 
   - name: 'deploy the repo file (mirror: {{ repo_graylog__mirror_url | default("") }})'
