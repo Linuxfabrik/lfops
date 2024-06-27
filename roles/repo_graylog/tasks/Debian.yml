@@ -1,13 +1,7 @@
 - block:
 
   # https://go2docs.graylog.org/5-0/downloading_and_installing_graylog/debian_installation.htm
-  - name: 'apt install gnupg # required for apt-key add'
-    ansible.builtin.package:
-      name:
-        - 'gnupg'
-      state: 'present'
-
-  - name: 'curl https://packages.graylog2.org/repo/debian/pubkey.gpg --output /tmp/ansible.graylog.gpg'
+  - name: 'curl --location https://packages.graylog2.org/repo/debian/pubkey.gpg --output /tmp/ansible.graylog.gpg'
     ansible.builtin.get_url:
       url: 'https://packages.graylog2.org/repo/debian/pubkey.gpg'
       dest: '/tmp/ansible.graylog.gpg'
@@ -19,18 +13,8 @@
   - name: 'copy /tmp/ansible.graylog.gpg to remote host'
     ansible.builtin.copy:
       src: '/tmp/ansible.graylog.gpg'
-      dest: '/tmp/ansible.graylog.gpg'
+      dest: '/etc/apt/keyrings/graylog.asc' # use asc for ASCII-armored keys
       mode: 0o644
-
-  - name: 'apt-key add /tmp/ansible.graylog.gpg'
-    ansible.builtin.apt_key:
-      file: '/tmp/ansible.graylog.gpg'
-      state: 'present'
-
-  - name: 'rm /tmp/ansible.graylog.gpg'
-    ansible.builtin.file:
-      path: '/tmp/ansible.graylog.gpg'
-      state: 'absent'
 
   - name: 'deploy the repo file (mirror: {{ repo_graylog__mirror_url | default("") }})'
     ansible.builtin.template:

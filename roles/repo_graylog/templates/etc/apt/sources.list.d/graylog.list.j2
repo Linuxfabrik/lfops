@@ -2,7 +2,7 @@
 # 2023032201
 
 {% if repo_graylog__mirror_url is defined and repo_graylog__mirror_url | length %}
-deb {{ repo_graylog__mirror_url }}/graylog/ stable {{ repo_graylog__version }}
+deb [signed-by=/etc/apt/keyrings/graylog.asc] {{ repo_graylog__mirror_url }}/graylog/ stable {{ repo_graylog__version }}
 {% else %}
-deb https://packages.graylog2.org/repo/debian/ stable {{ repo_graylog__version }}
+deb [signed-by=/etc/apt/keyrings/graylog.asc] https://packages.graylog2.org/repo/debian/ stable {{ repo_graylog__version }}
 {% endif %}
