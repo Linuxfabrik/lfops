@@ -1,9 +1,21 @@
 - block:
 
-  - name: 'Add Linuxfabrik apt repository key'
+  - name: 'curl https://repo.linuxfabrik.ch/linuxfabrik.key --output /tmp/ansible.linuxfabrik.key'
     ansible.builtin.get_url:
       url: 'https://repo.linuxfabrik.ch/linuxfabrik.key'
-      dest: '/etc/apt/trusted.gpg.d/linuxfabrik.asc'
+      dest: '/tmp/ansible.linuxfabrik.key'
+      mode: 0o644
+    delegate_to: 'localhost'
+    run_once: true
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.linuxfabrik.key to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.linuxfabrik.key'
+      dest: '/etc/apt/keyrings/linuxfabrik.asc' # use asc for ASCII-armored keys
+      owner: 'root'
+      group: 'root'
       mode: 0o644
 
   - name: 'Deploy /etc/apt/sources.list.d/linuxfabrik-monitoring-plugins.list'
@@ -13,6 +25,10 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
 
   tags:
     - 'repo_monitoring_plugins'
