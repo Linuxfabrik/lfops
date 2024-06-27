@@ -57,3 +57,4 @@ grafana__provisioning_service_accounts__combined_var: '{{ (
 grafana__serve_from_sub_path: false
 grafana__service_enabled: true
 grafana__skip_token_to_bitwarden: false
+grafana__validate_certs: true

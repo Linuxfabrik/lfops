@@ -152,6 +152,7 @@
       url: '{{ grafana__api_url }}/api/serviceaccounts/search'
       user: '{{ grafana__admin_login["username"] }}'
       password: '{{ grafana__admin_login["password"] }}'
+      validate_certs: '{{ grafana__validate_certs }}'
       force_basic_auth: true
       body_format: 'json'
       headers:
@@ -164,6 +165,7 @@
       url: '{{ grafana__api_url }}/api/serviceaccounts'
       user: '{{ grafana__admin_login["username"] }}'
       password: '{{ grafana__admin_login["password"] }}'
+      validate_certs: '{{ grafana__validate_certs }}'
       force_basic_auth: true
       method: 'POST'
       body: >
@@ -189,6 +191,7 @@
       url: '{{ grafana__api_url }}/api/serviceaccounts/{{ item["json"]["id"] }}/tokens'
       user: '{{ grafana__admin_login["username"] }}'
       password: '{{ grafana__admin_login["password"] }}'
+      validate_certs: '{{ grafana__validate_certs }}'
       force_basic_auth: true
       method: 'POST'
       body: >
@@ -211,6 +214,8 @@
     ansible.builtin.debug:
       msg: 'Token for {{ item["json"]["name"] }}: {{ item["json"]["key"] }}'
     loop: '{{ grafana__service_accounts_token_result["results"] }}'
+    loop_control:
+      label: '{{ item["json"]["name"] | d(item) }}'
     when:
       - 'not (item["skipped"] is defined and item["skipped"])'
 
@@ -223,6 +228,8 @@
       username: '{{ item["json"]["name"] }}'
       password: '{{ item["json"]["key"] }}'
     loop: '{{ grafana__service_accounts_token_result["results"] }}'
+    loop_control:
+      label: '{{ item["json"]["name"] | d(item) }}'
     delegate_to: 'localhost'
     when:
       - 'not grafana__skip_token_to_bitwarden'

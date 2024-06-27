@@ -60,6 +60,7 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
 | `grafana__skip_token_to_bitwarden` | Skip the storing of the service account tokens to Bitwarden. | `false` |
 | `grafana__smtp_config` | Email server settings. More information can be found here: https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#smtp. Subkeys:<br> * `host`: Optional, string. Defaults to `localhost:25`. The host and port on which the SMTP server is accessible.<br> * `user`: Optional, string. Defaults to unset. The user, in case of SMTP auth.<br> * `password`: Optional, string. Defaults to unset. The password, in case of SMTP auth.<br> * `cert_file`: Optional, string. Defaults to unset. File path to a cert file.<br> * `key_file`: Optional, string. Defaults to unset. File path to a key file.<br> * `skip_verify`: Optional, string. Defaults to `false`.If the ssl cert validation should be skipped.<br> * `from_name`: Optional, string. Defaults to `Grafana`. Name to be used when sending out emails.<br> * `from_address`: Optional, string. Defaults to `admin@grafana.localhost`. Address used when sending out emails. | unset |
 | `grafana__users_case_insensitive_login` | Have a look at https://grafana.com/blog/2022/12/12/guide-to-using-the-new-grafana-cli-user-identity-conflict-tool-in-grafana-9.3 | unset |
+| `grafana__validate_certs` | If set to `false`, the role will not validate SSL certificates when connecting to Grafana via `grafana__root_url`. This is useful when using self-signed certificates. | `true` |
 
 Example:
 ```yaml
@@ -142,6 +143,7 @@ grafana__smtp_config:
   password: 'linuxfabrik'
   from_address: 'grafana@example.com'
 grafana__users_case_insensitive_login: false
+grafana__validate_certs: true
 ```
 
 
