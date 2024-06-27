@@ -13,7 +13,7 @@
   - name: 'copy /tmp/ansible.redis.gpg to remote host'
     ansible.builtin.copy:
       src: '/tmp/ansible.redis.gpg'
-      dest: '/usr/share/keyrings/redis-archive-keyring.asc' # use asc for ASCII-armored keys
+      dest: '/etc/apt/keyrings/redis-archive-keyring.asc' # use asc for ASCII-armored keys
       owner: 'root'
       group: 'root'
       mode: 0o644
