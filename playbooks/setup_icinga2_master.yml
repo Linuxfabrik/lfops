@@ -53,6 +53,7 @@
     setup_icinga2_master__repo_mariadb__skip_role__internal_var: '{{ setup_icinga2_master__repo_mariadb__skip_role | d(false) }}'
     setup_icinga2_master__repo_monitoring_plugins__skip_role__internal_var: '{{ setup_icinga2_master__repo_monitoring_plugins__skip_role | d(false) }}'
     setup_icinga2_master__repo_mydumper__skip_role__internal_var: '{{ setup_icinga2_master__repo_mydumper__skip_role | d(false) }}'
+    setup_icinga2_master__repo_redis__skip_role__internal_var: '{{ setup_icinga2_master__repo_redis__skip_role | d(false) }}'
     setup_icinga2_master__repo_remi__skip_role__internal_var: '{{ setup_icinga2_master__repo_remi__skip_role | d(false) }}'
     setup_icinga2_master__repo_sury__skip_role__internal_var: '{{ setup_icinga2_master__repo_sury__skip_role | d(false) }}'
     setup_icinga2_master__selinux__skip_role__internal_var: '{{ setup_icinga2_master__selinux__skip_role | d(false) }}'
@@ -229,6 +230,11 @@
       kernel_settings__transparent_hugepages__dependent_var: '{{ (not setup_icinga2_master__redis__skip_injections__internal_var) | ternary(redis__kernel_settings__transparent_hugepages__dependent_var, "") }}'
       when:
         - 'not setup_icinga2_master__kernel_settings__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.repo_redis'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"' # not available for RedHat, instead using repo_remi there
+        - 'not setup_icinga2_master__repo_redis__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.redis'
       when:

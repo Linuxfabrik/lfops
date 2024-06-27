@@ -166,6 +166,9 @@ Role:tar
 
 ### Added
 
+Role:repo_redis:
+* Added
+
 Role:shell:
 * Added
 

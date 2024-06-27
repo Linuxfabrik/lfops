@@ -1,0 +1,38 @@
+- block:
+
+  - name: 'curl https://packages.redis.io/gpg --output /tmp/ansible.redis.gpg'
+    ansible.builtin.get_url:
+      url: 'https://packages.redis.io/gpg'
+      dest: '/tmp/ansible.redis.gpg'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.redis.gpg to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.redis.gpg'
+      dest: '/usr/share/keyrings/redis-archive-keyring.asc' # use asc for ASCII-armored keys
+      mode: 0o644
+
+  - name: 'deploy the repo file (mirror: {{ repo_redis__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: 'etc/apt/sources.list.d/redis.list.j2'
+      dest: '/etc/apt/sources.list.d/redis.list'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/redis.list'
+
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+
+  tags:
+    - 'repo_redis'

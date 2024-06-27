@@ -130,12 +130,13 @@ repo_monitoring_plugins              | x  | x  |    | x | x | x |       |   x   
 repo_mydumper                        |    |    |    | x | x | x |       |       |       |       |       |
 repo_opensearch                      |    | x  |    |   | x |   |       |       |       |       |       |
 repo_postgresql                      |    |    |    |   | x |   |       |       |       |       |       |
-repo_remi                            |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
-repo_rpmfusion                       |    |    |    |   | x |   |       |       |       |       |       |
+repo_redis                           |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
+repo_remi                            |    |    | x  |   |   |   |       |       |       |       |       |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-------+-------+-----------
                                      |    Debian    |   RHEL    |                Ubuntu                 | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-------+-------+-----------
+repo_rpmfusion                       |    |    |    |   | x |   |       |       |       |       |       |
 repo_sury                            | x  | x  | x  | - | - | - |       |       |       |       |       |
 rocketchat                           |    |    |    | x | x |   |       |       |       |       |       | Fedora 35
 rsyslog                              |    |    |    |   | x | x |       |       |       |       |       |

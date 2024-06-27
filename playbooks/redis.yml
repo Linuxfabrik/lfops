@@ -23,6 +23,11 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not redis__skip_repo_remi | default(false)'
 
+    - role: 'linuxfabrik.lfops.repo_redis'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"' # not available for RedHat, instead using repo_remi there
+        - 'not redis__skip_repo_redis'
+
     - role: 'linuxfabrik.lfops.redis'
 
 

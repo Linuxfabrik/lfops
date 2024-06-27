@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2024062701
+
+{% if repo_redis__mirror_url is defined and repo_redis__mirror_url | length %}
+deb [signed-by=/usr/share/keyrings/redis-archive-keyring.asc] {{ repo_redis__mirror_url }}/redis {{ ansible_facts["distribution_release"] }} main
+{% else %}
+deb [signed-by=/usr/share/keyrings/redis-archive-keyring.asc] https://packages.redis.io/deb {{ ansible_facts["distribution_release"] }} main
+{% endif %}

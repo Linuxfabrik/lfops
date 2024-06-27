@@ -1,0 +1,2 @@
+repo_redis__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
+repo_redis__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
