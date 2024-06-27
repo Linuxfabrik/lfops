@@ -1,8 +1,8 @@
 # {{ ansible_managed }}
-# 2023032201
+# 2024062701
 
 {% if repo_influxdb__mirror_url is defined and repo_influxdb__mirror_url | length %}
-deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg] {{ repo_influxdb__mirror_url }}/influxdb stable main
+deb [signed-by=/etc/apt/keyrings/influxdata-archive_compat.asc] {{ repo_influxdb__mirror_url }}/influxdb stable main
 {% else %}
-deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg] https://repos.influxdata.com/debian stable main
+deb [signed-by=/etc/apt/keyrings/influxdata-archive_compat.asc] https://repos.influxdata.com/debian stable main
 {% endif %}

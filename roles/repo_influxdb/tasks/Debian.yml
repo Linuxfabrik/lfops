@@ -5,24 +5,16 @@
     ansible.builtin.get_url:
       url: 'https://repos.influxdata.com/influxdata-archive_compat.key'
       dest: '/tmp/ansible.influxdata-archive_compat.key'
-      # checksum: sha256:393e8779c89ac8d958f81f942f9ad7fb82a25e133faddaf92e15b16e6ac9ce4c
+      mode: 0o644
     delegate_to: 'localhost'
     run_once: true
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'dearmour key to /tmp/ansible.influxdata-archive_compat.gpg'
-    ansible.builtin.shell:
-      cmd: 'cat /tmp/ansible.influxdata-archive_compat.key | gpg --dearmor > /tmp/ansible.influxdata-archive_compat.gpg'
-    delegate_to: 'localhost'
-    run_once: true
-    changed_when: false # not an actual config change on the server
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'copy /tmp/ansible.influxdata-archive_compat.gpg to /etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg'
+  - name: 'copy /tmp/ansible.influxdata-archive_compat.key to remote host'
     ansible.builtin.copy:
-      src: '/tmp/ansible.influxdata-archive_compat.gpg'
-      dest: '/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg'
+      src: '/tmp/ansible.influxdata-archive_compat.key'
+      dest: '/etc/apt/keyrings/influxdata-archive_compat.asc' # use asc for ASCII-armored keys
       owner: 'root'
       group: 'root'
       mode: 0o644
