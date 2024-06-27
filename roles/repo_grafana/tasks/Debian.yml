@@ -12,7 +12,7 @@
   - name: 'copy /tmp/ansible.grafana.gpg to remote host'
     ansible.builtin.copy:
       src: '/tmp/ansible.grafana.gpg'
-      dest: '/usr/share/keyrings/grafana.asc' # use asc for ASCII-armored keys
+      dest: '/etc/apt/keyrings/grafana.asc' # use asc for ASCII-armored keys
       mode: 0o644
 
   - name: 'deploy the repo file (mirror: {{ repo_grafana__mirror_url | default("") }})'
