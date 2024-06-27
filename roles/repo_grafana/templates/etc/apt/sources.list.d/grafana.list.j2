@@ -1,8 +1,8 @@
 # {{ ansible_managed }}
-# 2024062601
+# 2024062701
 
 {% if repo_grafana__mirror_url is defined and repo_grafana__mirror_url | length %}
-deb [signed-by=/usr/share/keyrings/grafana.key] {{ repo_grafana__mirror_url }}/grafana stable main
+deb [signed-by=/usr/share/keyrings/grafana.asc] {{ repo_grafana__mirror_url }}/grafana stable main
 {% else %}
-deb [signed-by=/usr/share/keyrings/grafana.key] https://apt.grafana.com stable main
+deb [signed-by=/usr/share/keyrings/grafana.asc] https://apt.grafana.com stable main
 {% endif %}
