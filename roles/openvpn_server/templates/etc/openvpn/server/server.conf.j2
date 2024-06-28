@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022051801
+# 2024062801
 
 auth SHA384
 cipher AES-256-GCM
@@ -11,7 +11,7 @@ tls-version-min 1.2
 # crl file (or directory) is read every time a peer connects,
 crl-verify /etc/openvpn/server/crl.pem
 dh /etc/openvpn/dh2048.pem
-pkcs12 /etc/openvpn/server/server.p12
+pkcs12 {{ openvpn_server__pkcs12 | d('/etc/openvpn/server/server.p12') }}
 
 port {{ openvpn_server__port }}
 dev tun
@@ -43,3 +43,8 @@ status /var/log/openvpn-status.log
 # 5 and 6 can help to debug connection problems
 # 9 is extremely verbose
 verb 4
+
+{% if openvpn_server__raw | d() %}
+# raw content
+{{ openvpn_server__raw }}
+{% endif %}
