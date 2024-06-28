@@ -109,7 +109,7 @@ postgresql_server                    |    |    |    |   | x |   |       |       
 python                               |    |    | x  |   | x | x |   x   |       |       |       |       | Windows
 python_venv                          |    | x  | x  | x | x | x |       |       |       |       |       | Fedora 35
 qemu_guest_agent                     |    |    |    |   | x | x |   x   |       |       |       |       |
-redis                                |    |    |    |   | x | x |       |       |       |       |       |
+redis                                |    |    | x  |   | x | x |       |       |       |       |       |
 repo_baseos                          |    |    |    | x | x | x |       |       |       |       |       |
 repo_collabora                       |    |    |    | x | x |   |       |       |       |       |       |
 repo_collabora_code                  |    |    |    | x | x |   |       |       |       |       |       |
@@ -130,8 +130,8 @@ repo_monitoring_plugins              | x  | x  |    | x | x | x |       |   x   
 repo_mydumper                        |    |    |    | x | x | x |       |       |       |       |       |
 repo_opensearch                      |    | x  |    |   | x |   |       |       |       |       |       |
 repo_postgresql                      |    |    |    |   | x |   |       |       |       |       |       |
-repo_redis                           |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
-repo_remi                            |    |    | x  |   |   |   |       |       |       |       |       |
+repo_redis                           |    |    | x  |   |   |   |       |       |       |       |       |
+repo_remi                            |    |    |    | x | x | x |       |       |       |       |       | Fedora 35
 -------------------------------------+----+----+----+---+---+---+-------+-------+-------+-------+-------+-----------
                                      |    Debian    |   RHEL    |                Ubuntu                 | other
 Role                                 | 10 | 11 | 12 | 7 | 8 | 9 | 16.04 | 18.04 | 20.04 | 22.04 | 24.04 |

@@ -1,3 +1,12 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'redis'
+    - 'redis:state'
+
+
 - block:
 
   - name: 'Install redis'
@@ -42,10 +51,15 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/redis.conf'
 
-  - name: 'Deploy /etc/systemd/system/redis.service.d/z00-linuxfabrik.conf.j2'
+  - name: 'mkdir -p /etc/systemd/system/{{ redis__service_name }}.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/{{ redis__service_name }}.d/'
+      state: 'directory'
+
+  - name: 'Deploy /etc/systemd/system/{{ redis__service_name }}.d/z00-linuxfabrik.conf.j2'
     ansible.builtin.template:
       src: 'etc/systemd/system/redis.service.d/z00-linuxfabrik.conf.j2'
-      dest: '/etc/systemd/system/redis.service.d/z00-linuxfabrik.conf'
+      dest: '/etc/systemd/system/{{ redis__service_name }}.d/z00-linuxfabrik.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -56,9 +70,9 @@
 
 - block:
 
-  - name: 'systemctl {{ redis__service_enabled | bool | ternary("enable", "disable") }} --now redis.service'
+  - name: 'systemctl {{ redis__service_enabled | bool | ternary("enable", "disable") }} --now {{ redis__service_name }}'
     ansible.builtin.systemd:
-      name: 'redis.service'
+      name: '{{ redis__service_name }}'
       enabled: '{{ redis__service_enabled }}'
       state: '{{ redis__service_enabled | bool | ternary("started", "stopped") }}'
       daemon_reload: true
