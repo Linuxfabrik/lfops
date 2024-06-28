@@ -9,6 +9,7 @@
     - 'php:modules'
     - 'php:state'
 
+
 - block:
 
   - name: 'Install php php-fpm composer'
@@ -59,8 +60,8 @@
       state: 'present'
 
   tags:
-    - 'php:modules'
     - 'php'
+    - 'php:modules'
 
 
 - block:
@@ -79,8 +80,8 @@
     notify: 'php: restart php-fpm'
 
   tags:
-    - 'php:ini'
     - 'php'
+    - 'php:ini'
 
 
 - block:
@@ -107,8 +108,8 @@
     notify: 'php: restart php-fpm'
 
   tags:
-    - 'php:fpm'
     - 'php'
+    - 'php:fpm'
 
 
 - block:
@@ -120,5 +121,5 @@
       state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
 
   tags:
-    - 'php:state'
     - 'php'
+    - 'php:state'
