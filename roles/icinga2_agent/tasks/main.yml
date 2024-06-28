@@ -55,7 +55,7 @@
 
   - name: 'Get PKI ticket from the icinga2 master'
     ansible.builtin.uri:
-      url: 'https://{{ icinga2_agent__icinga2_master_host }}:{{ icinga2_agent__icinga2_master_port }}/v1/actions/generate-ticket'
+      url: '{{ icinga2_agent__icinga2_api_url }}/v1/actions/generate-ticket'
       validate_certs: false
       user: '{{ icinga2_agent__icinga2_api_user_login["username"] }}'
       password: '{{ icinga2_agent__icinga2_api_user_login["password"] }}'

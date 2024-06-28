@@ -44,6 +44,7 @@ icinga2_agent__windows_version: 'v2.12.8'
 | `icinga2_agent__director_host_object_address` | The host address of the Icinga Director host object. Tries to default to the IPv4 address of the server. | `'{{ ansible_facts["ip_addresses"][0] }}'` for Windows, else `{{ ansible_facts["default_ipv4"]["address"] }}` |
 | `icinga2_agent__director_host_object_display_name` | The host display name of the Icinga Director host object. Tries to default to the hostname. | `'{{ ansible_facts["hostname"] }}'` |
 | `icinga2_agent__director_host_object_import` | A list of Icinga Director host templates which should be imported for this server. | `['tpl-host-windows']` for Windows, else `['tpl-host-linux']` |
+| `icinga2_agent__icinga2_api_url` | The URL to the Icinga2 API. | `'https://{{ icinga2_agent__icinga2_master_host }}:{{ icinga2_agent__icinga2_master_port }}'` |
 | `icinga2_agent__icinga2_master_host`    | The host where the Icinga2 Master is running. Has to be reachable from the Agent. | `'{{ icinga2_agent__icinga2_master_cn }}'` |
 | `icinga2_agent__icinga2_master_port` | The port on which the Icinga2 master is reachable. | `5665` |
 | `icinga2_agent__icingaweb2_url` | The URL where the IcingaWeb2 (the API) is reachable. This will be used to register the host in the Icinga Director (otherwise the host is registered in Icinga Core, but not visible in Icinga Director). | `'https://{{ icinga2_agent__icinga2_master_host }}/icingaweb2'` |
@@ -58,15 +59,16 @@ Example:
 ```yaml
 # optional
 icinga2_agent__additional_icinga2_master_endpoints:
-  - host: 'master1.example.com'
-    port: 5665
   - host: 'master2.example.com'
+    port: 5665
+  - host: 'master3.example.com'
 icinga2_agent__bind_host: '0.0.0.0'
 icinga2_agent__cn: '{{ ansible_facts["nodename"] }}'
 icinga2_agent__director_host_object_address: '{{ ansible_facts["default_ipv4"]["address"] }}'
 icinga2_agent__director_host_object_display_name: '{{ ansible_facts["hostname"] }}'
 icinga2_agent__director_host_object_import:
   - 'tpl-host-linux'
+icinga2_agent__icinga2_api_url: 'https://master3.example.com:{{ icinga2_agent__icinga2_master_port }}'
 icinga2_agent__icinga2_master_host: '192.0.2.10'
 icinga2_agent__icinga2_master_port: 5665
 icinga2_agent__icingaweb2_url: 'https://monitoring.example.com/icingaweb2'
