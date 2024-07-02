@@ -1,2 +1,0 @@
-repo_mariadb__repo_files:
-  - 'RedHat8/etc/yum.repos.d/MariaDB.repo'

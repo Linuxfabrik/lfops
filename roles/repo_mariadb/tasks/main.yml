@@ -1,11 +1,3 @@
-- name: 'Set platform/version specific variables'
-  ansible.builtin.import_role:
-    name: 'shared'
-    tasks_from: 'platform-variables.yml'
-  tags:
-    - 'repo_mariadb'
-
-
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
   vars:
@@ -26,25 +18,29 @@
 
 - block:
 
-  - name: 'deploy the repo files (mirror: {{ repo_mariadb__mirror_url | default("") }})'
+  - name: 'deploy the repo file (mirror: {{ repo_mariadb__mirror_url | default("") }})'
     ansible.builtin.template:
-      src: '{{ item }}.j2'
-      dest: '/etc/yum.repos.d/{{ item | basename }}'
+      src: 'etc/yum.repos.d/MariaDB.repo.j2'
+      dest: '/etc/yum.repos.d/MariaDB.repo'
       owner: 'root'
       group: 'root'
       mode: 0o644
-    loop: '{{ repo_mariadb__repo_files }}'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
       name: 'shared'
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
-      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/{{ item | basename }}'
-    loop: '{{ repo_mariadb__repo_files }}'
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/MariaDB.repo'
 
   - ansible.builtin.include_tasks: 'download-gpg-key.yml'
-    loop: '{{ repo_mariadb__gpg_keys }}'
+    loop:
+      - url: 'https://downloads.mariadb.com/MariaDB/MariaDB-Server-GPG-KEY'
+        dest: '/etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY'
+      - url: 'https://downloads.mariadb.com/MaxScale/MariaDB-MaxScale-GPG-KEY'
+        dest: '/etc/pki/rpm-gpg/MariaDB-MaxScale-GPG-KEY'
+      - url: 'https://downloads.mariadb.com/Tools/MariaDB-Enterprise-GPG-KEY'
+        dest: '/etc/pki/rpm-gpg/MariaDB-Enterprise-GPG-KEY'
     loop_control:
       loop_var: 'gpg_key'
 
