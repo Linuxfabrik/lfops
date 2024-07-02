@@ -64,7 +64,7 @@ icingaweb2_module_incubator          |    | x  | x | x |       |       |       |
 icingaweb2_module_monitoring         |    | x  | x | x |       |       |       |
 icingaweb2_module_vspheredb          |    | x  | x | x |       |       |       |
 icingaweb2_module_x509               |    | x  | x | x |       |       |       |
-influxdb                             |    |    | x | x |       |       |       |
+influxdb                             |    | x  | x | x |       |       |       |
 infomaniak_vm                        |    |    |   |   |       |       |       | Fedora 35+
 kdump                                |    |    | x | x |       |       |       |
 keepalived                           |    |    | x |   |       |       |       |
@@ -123,7 +123,7 @@ repo_gitlab_runner                   |    |    | x |   |       |       |       |
 repo_grafana                         |    | x  | x | x |       |       |       |
 repo_graylog                         | x  |    | x |   |       |       |       |
 repo_icinga                          |    | x  | x | x |       |       |       |
-repo_influxdb                        | x  |    | x | x |       |       |       |
+repo_influxdb                        | x  | x  | x | x |       |       |       |
 repo_mariadb                         |    |    | x | x |       |       |       |
 repo_mongodb                         | x  |    | x | x |       |       |       |
 repo_monitoring_plugins              | x  |    | x | x |   x   |   x   |       |
