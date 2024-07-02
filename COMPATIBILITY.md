@@ -68,7 +68,7 @@ influxdb                             |    | x  | x | x |       |       |       |
 infomaniak_vm                        |    |    |   |   |       |       |       | Fedora 35+
 kdump                                |    |    | x | x |       |       |       |
 keepalived                           |    |    | x |   |       |       |       |
-kernel_settings                      | -  | -  | x | x |   -   |       |       |
+kernel_settings                      | -  | x  | x | x |   -   |       |       |
 keycloak                             |    |    | x |   |       |       |       |
 kvm_host                             |    |    | x |   |       |       |       |
 kvm_vm                               |    |    | x |   |       |       |       |
