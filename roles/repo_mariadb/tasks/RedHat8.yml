@@ -1,6 +1,0 @@
-- name: 'dnf -y module disable mariadb # prevent the default module stream from being used'
-  ansible.builtin.command: 'dnf -y module disable mariadb'
-  register: 'repo_mariadb__command_result'
-  changed_when: "'Nothing to do' not in repo_mariadb__command_result.stdout"
-  tags:
-    - 'repo_mariadb'

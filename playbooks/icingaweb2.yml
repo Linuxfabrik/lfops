@@ -23,7 +23,6 @@
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not icingaweb2__skip_repo_mariadb | default(false)'
 
     - role: 'linuxfabrik.lfops.python'

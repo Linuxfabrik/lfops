@@ -1,0 +1,26 @@
+# {{ ansible_managed }}
+# 2024070301
+
+# MariaDB Server
+# To use a different major version of the server, or to pin to a specific minor version, change URI below.
+{% if repo_mariadb__mirror_url is defined and repo_mariadb__mirror_url | length %}
+deb [signed-by=/etc/apt/keyrings/mariadb.gpg] {{ repo_mariadb__mirror_url }}/MariaDB/mariadb-server/{{ repo_mariadb__version }}/repo/debian bookworm main
+{% else %}
+deb [signed-by=/etc/apt/keyrings/mariadb.gpg] https://dlm.mariadb.com/repo/mariadb-server/{{ repo_mariadb__version }}/repo/debian bookworm main
+{% endif %}
+
+# MariaDB MaxScale
+# To use the latest stable release of MaxScale, use "latest" as the version
+# To use the latest beta (or stable if no current beta) release of MaxScale, use "beta" as the version
+{% if repo_mariadb__mirror_url is defined and repo_mariadb__mirror_url | length %}
+deb [signed-by=/etc/apt/keyrings/mariadb.gpg] {{ repo_mariadb__mirror_url }}/MariaDB/maxscale/latest/apt bookworm main
+{% else %}
+deb [signed-by=/etc/apt/keyrings/mariadb.gpg] https://dlm.mariadb.com/repo/maxscale/latest/apt bookworm main
+{% endif %}
+
+# MariaDB Tools
+{% if repo_mariadb__mirror_url is defined and repo_mariadb__mirror_url | length %}
+deb [signed-by=/etc/apt/keyrings/mariadb.gpg] {{ repo_mariadb__mirror_url }}/MariaDB/Tools/debian bookworm main
+{% else %}
+deb [signed-by=/etc/apt/keyrings/mariadb.gpg] http://downloads.mariadb.com/Tools/debian bookworm main
+{% endif %}

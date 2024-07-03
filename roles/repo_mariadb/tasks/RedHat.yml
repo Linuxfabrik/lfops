@@ -1,0 +1,36 @@
+- block:
+
+  - name: 'deploy the repo file (mirror: {{ repo_mariadb__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/MariaDB.repo.j2'
+      dest: '/etc/yum.repos.d/MariaDB.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/MariaDB.repo'
+
+  - ansible.builtin.include_tasks: 'download-gpg-key.yml'
+    loop:
+      - url: 'https://downloads.mariadb.com/MariaDB/MariaDB-Server-GPG-KEY'
+        dest: '/etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY'
+      - url: 'https://downloads.mariadb.com/MaxScale/MariaDB-MaxScale-GPG-KEY'
+        dest: '/etc/pki/rpm-gpg/MariaDB-MaxScale-GPG-KEY'
+      - url: 'https://downloads.mariadb.com/Tools/MariaDB-Enterprise-GPG-KEY'
+        dest: '/etc/pki/rpm-gpg/MariaDB-Enterprise-GPG-KEY'
+    loop_control:
+      loop_var: 'gpg_key'
+
+  - name: 'dnf -y module disable mariadb # prevent the default module stream from being used'
+    ansible.builtin.command: 'dnf -y module disable mariadb'
+    register: 'repo_mariadb__command_result'
+    changed_when: "'Nothing to do' not in repo_mariadb__command_result.stdout"
+    when: 'ansible_facts["distribution_major_version"] | int > 7'
+
+  tags:
+    - 'repo_mariadb'

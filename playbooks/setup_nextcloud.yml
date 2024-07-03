@@ -89,8 +89,6 @@
     - role: 'linuxfabrik.lfops.repo_mariadb'
       # Attention: Using a fixed LTS version for Nextcloud.
       when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'

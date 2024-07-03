@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# 2024070301
+{# makes sure that the official repo is used in preference. check with `apt-cache policy` and `apt-cache policy mariadb-server` #}
+
+{% if repo_mariadb__mirror_url is defined and repo_mariadb__mirror_url | length %}
+Package: *
+Pin: origin {{ repo_mariadb__mirror_url | ansible.builtin.urlsplit("hostname") }}
+Pin-Priority: 1000
+{% else %}
+Package: *
+Pin: origin dlm.mariadb.com
+Pin-Priority: 1000
+{% endif %}
+
+Package: *
+Pin: release l=MariaDB
+Pin-Priority: 1000
+
+Package: *
+Pin: release o=MariaDB
+Pin-Priority: 1000
