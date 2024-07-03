@@ -69,8 +69,6 @@
       seuser: 'system_u'
       serole: 'object_r'
       setype: 'openvpn_etc_t'
-    when:
-      - 'openvpn_server__crl_verify is not defined or openvpn_server__crl_verify == ""'
 
   - name: 'semanage port --add --type openvpn_port_t --proto udp {{ openvpn_server__port }}'
     community.general.seport:
