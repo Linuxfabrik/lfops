@@ -1,5 +1,11 @@
 openvpn_server__client_configs: []
 openvpn_server__client_netmask: '255.255.255.0'
+openvpn_server__crl_verify: '/etc/openvpn/server/crl.pem'
+openvpn_server__crl_verify_skip_deploy: false
+openvpn_server__dh: '/etc/openvpn/dh2048.pem'
+openvpn_server__dh_skip_deploy: false
+openvpn_server__pkcs12: '/etc/openvpn/server/server.p12'
+openvpn_server__pkcs12_skip_deploy: false
 openvpn_server__port: 1194
 openvpn_server__pushs: []
 openvpn_server__service_enabled: true

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024070301
+# 2024070302
 
 auth SHA384
 cipher AES-256-GCM
@@ -9,8 +9,8 @@ tls-version-min 1.2
 
 # and it has to contain at least one item
 # crl file (or directory) is read every time a peer connects,
-crl-verify /etc/openvpn/server/crl.pem
-dh /etc/openvpn/dh2048.pem
+crl-verify {{ openvpn_server__crl_verify }}
+dh {{ openvpn_server__dh }}
 pkcs12 {{ openvpn_server__pkcs12 }}
 
 port {{ openvpn_server__port }}

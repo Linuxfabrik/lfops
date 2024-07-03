@@ -7,10 +7,12 @@
 
   - name: 'Generate DH Parameters with 2048 bits size'
     community.crypto.openssl_dhparam:
-      path: '/etc/openvpn/dh2048.pem'
+      path: '{{ openvpn_server__dh }}'
       size: 2048
       mode: 0o440
       group: 'openvpn'
+    when:
+      - 'not openvpn_server__dh_skip_deploy'
 
   - name: 'mkdir /etc/openvpn/ccd'
     ansible.builtin.file:
@@ -57,7 +59,7 @@
       serole: 'object_r'
       setype: 'openvpn_etc_t'
     when:
-      - 'openvpn_server__pkcs12 is not defined or openvpn_server__pkcs12 == ""'
+      - 'not openvpn_server__pkcs12_skip_deploy'
 
   - name: 'Deploy /etc/openvpn/server/crl.pem'
     ansible.builtin.copy:
@@ -69,6 +71,8 @@
       seuser: 'system_u'
       serole: 'object_r'
       setype: 'openvpn_etc_t'
+    when:
+      - 'not openvpn_server__crl_verify_skip_deploy'
 
   - name: 'semanage port --add --type openvpn_port_t --proto udp {{ openvpn_server__port }}'
     community.general.seport:
