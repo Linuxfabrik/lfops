@@ -144,6 +144,8 @@ icingaweb2__icinga2_master__api_users__dependent_var:
 icingaweb2__php__ini_upload_max_filesize__dependent_var: '10M'
 icingaweb2__php__modules__dependent_var:
   Debian:
+    - name: 'php-bz2'
+      state: 'present'
     - name: 'php-curl'
       state: 'present'
     - name: 'php-intl'
