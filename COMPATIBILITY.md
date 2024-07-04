@@ -51,14 +51,14 @@ hostname                             |    |    | x | x |       |       |       |
 Role                                 | 11 | 12 | 8 | 9 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+---+---+-------+-------+-------+-----------
 icinga2_agent                        |    |    | x | x |       |       |       | Fedora 35
-icinga2_master                       |    |    | x | x |       |       |       |
+icinga2_master                       |    | x  | x | x |       |       |       |
 icingadb                             |    | x  | x | x |       |       |       |
 icingadb_web                         |    | x  | x | x |       |       |       |
 icingaweb2                           |    | x  | x | x |       |       |       |
 icingaweb2_module_businessprocess    |    | x  | x | x |       |       |       |
 icingaweb2_module_company            |    | x  | x | x |       |       |       |
 icingaweb2_module_director           |    | x  | x | x |       |       |       |
-icingaweb2_module_doc                |    |    | x | x |       |       |       |
+icingaweb2_module_doc                |    | x  | x | x |       |       |       |
 icingaweb2_module_grafana            |    | x  | x | x |       |       |       |
 icingaweb2_module_incubator          |    | x  | x | x |       |       |       |
 icingaweb2_module_monitoring         |    | x  | x | x |       |       |       |
