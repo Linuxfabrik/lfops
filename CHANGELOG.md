@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Playbook:setup_icinga2_master:
+* changed default of `setup_icinga2_master__icingaweb2_module_company__skip_role` from false to true.
+
 Role:apache_httpd:
 * changed default of `apache_httpd__skip_mod_security_coreruleset` from false to true.
 

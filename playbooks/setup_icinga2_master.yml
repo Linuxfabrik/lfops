@@ -19,7 +19,7 @@
     setup_icinga2_master__icingaweb2__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2__skip_injections | d(setup_icinga2_master__icingaweb2__skip_role__internal_var) }}'
     setup_icinga2_master__icingaweb2__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2__skip_role | d(false) }}'
     setup_icinga2_master__icingaweb2_module_businessprocess__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_businessprocess__skip_role | d(true) }}'
-    setup_icinga2_master__icingaweb2_module_company__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_company__skip_role | d(false) }}'
+    setup_icinga2_master__icingaweb2_module_company__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_company__skip_role | d(true) }}'
     setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2_module_director__skip_injections | d(setup_icinga2_master__icingaweb2_module_director__skip_role__internal_var) }}'
     setup_icinga2_master__icingaweb2_module_director__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_director__skip_role | d(false) }}'
     setup_icinga2_master__icingaweb2_module_doc__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_doc__skip_role | d(false) }}'
