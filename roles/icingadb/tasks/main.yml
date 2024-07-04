@@ -1,3 +1,11 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'icingadb'
+
+
 - block:
 
   - name: 'install icingadb'
@@ -18,8 +26,8 @@
     ansible.builtin.template:
       src: 'etc/icinga2/features-available/icingadb.conf.j2'
       dest: '/etc/icinga2/features-available/icingadb.conf'
-      owner: 'icinga'
-      group: 'icinga'
+      owner: '{{ icingadb__icinga_user }}'
+      group: '{{ icingadb__icinga_user }}'
       mode: 0o640
     notify: 'icingadb: restart icinga2'
 
