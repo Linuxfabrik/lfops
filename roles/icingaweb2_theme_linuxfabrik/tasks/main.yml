@@ -1,0 +1,48 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  - name: 'mkdir -p /usr/share/icingaweb2/modules/linuxfabrik'
+    ansible.builtin.file:
+      path: '/usr/share/icingaweb2/modules/linuxfabrik'
+      state: 'directory'
+      owner: '{{ icingaweb2_theme_linuxfabrik__icingaweb2_owner }}'
+      group: 'icingaweb2'
+      mode: 0o755
+
+  - name: 'curl https://github.com/Linuxfabrik/icingaweb2-theme-linuxfabrik/archive/{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz --output /tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://github.com/Linuxfabrik/icingaweb2-theme-linuxfabrik/archive/{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
+
+  - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/linuxfabrik /tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
+      dest: '/usr/share/icingaweb2/modules/linuxfabrik'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'rm -f /tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
+    ansible.builtin.file:
+      path: '/tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
+      state: 'absent'
+
+  - name: 'icingacli module enable linuxfabrik'
+    ansible.builtin.command: 'icingacli module enable linuxfabrik'
+    args:
+      creates: '/etc/icingaweb2/enabledModules/linuxfabrik'
+
+  tags:
+    - 'icingaweb2_theme_linuxfabrik'
