@@ -1,7 +1,7 @@
 icingaweb2__database_host: 'localhost'
 icingaweb2__database_login_host: 'localhost'
 icingaweb2__database_name: 'icingaweb2'
-icingaweb2__default_theme: 'Icinga'
+icingaweb2__default_theme: 'linuxfabrik/linuxfabrik'
 icingaweb2__url_port: 80
 
 # -----------------------------------------------------------------------------
