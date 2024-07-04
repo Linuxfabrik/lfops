@@ -1,13 +1,16 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'icinga2_master'
+
+
 - block:
 
   - name: 'install icinga2 and dependent packages'
     ansible.builtin.package:
-      name:
-        - 'icinga2'
-        - 'icinga2-ido-mysql'
-        - 'icinga2-selinux'
-        - 'nano-icinga2'
-        - 'vim-icinga2'
+      name: '{{ icinga2_master__required_packages }}'
       state: 'present'
 
   tags:
@@ -48,7 +51,7 @@
       login_user: "{{ icinga2_master__database_login.username }}"
       login_password: "{{ icinga2_master__database_login.password }}"
       login_host: "{{ icinga2_master__database_host }}"
-      login_unix_socket: '{{ (icinga2_master__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/pymysql/pymysql/issues/509#issuecomment-244072354
+      login_unix_socket: '{{ (icinga2_master__database_host == "localhost") | ternary(icinga2_master__mysql_login_unix_socket, omit) }}' # https://github.com/pymysql/pymysql/issues/509#issuecomment-244072354
       name: '{{ icinga2_master__database_name }}'
       state: 'import'
       target: '/usr/share/icinga2-ido-mysql/schema/mysql.sql'
@@ -59,8 +62,8 @@
     ansible.builtin.template:
       src: 'etc/icinga2/features-available/ido-mysql.conf.j2'
       dest: '/etc/icinga2/features-available/ido-mysql.conf'
-      owner: 'icinga'
-      group: 'icinga'
+      owner: '{{ icinga2_master__icinga_user }}'
+      group: '{{ icinga2_master__icinga_user }}'
       mode: 0o640
     notify: 'icinga2_master: restart icinga2'
 
@@ -97,8 +100,8 @@
     ansible.builtin.template:
       src: 'etc/icinga2/features-available/influxdb.conf.j2'
       dest: '/etc/icinga2/features-available/influxdb.conf'
-      owner: 'icinga'
-      group: 'icinga'
+      owner: '{{ icinga2_master__icinga_user }}'
+      group: '{{ icinga2_master__icinga_user }}'
       mode: 0o640
     notify: 'icinga2_master: restart icinga2'
 
@@ -209,8 +212,8 @@
     ansible.builtin.template:
       src: 'etc/icinga2/zones.conf.j2'
       dest: '/etc/icinga2/zones.conf'
-      owner: 'icinga'
-      group: 'icinga'
+      owner: '{{ icinga2_master__icinga_user }}'
+      group: '{{ icinga2_master__icinga_user }}'
       mode: 0o640
     notify: 'icinga2_master: restart icinga2'
 
