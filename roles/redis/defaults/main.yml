@@ -9,7 +9,7 @@ redis__conf_maxmemory_policy: 'noeviction'
 redis__conf_port: 6379
 redis__conf_protected_mode: 'yes'
 redis__conf_replica_serve_stale_data: 'yes'
-redis__conf_supervised: 'no'
+redis__conf_supervised: 'auto'
 
 redis__service_enabled: true
 redis__service_limit_nofile: 10240
