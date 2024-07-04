@@ -1,1 +1,5 @@
-crypto_policy__policy: 'DEFAULT'
+crypto_policy__policy: '{{ crypto_policy__policy__role_var[ansible_facts["os_family"] ~ ansible_facts["distribution_major_version"]] }}'
+
+crypto_policy__policy__role_var:
+  RedHat8: 'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20'
+  RedHat9: 'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20:LINUXFABRIK-SSH-NO-ETM'
