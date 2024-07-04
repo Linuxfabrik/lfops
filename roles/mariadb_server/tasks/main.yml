@@ -1,3 +1,18 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:configure'
+    - 'mariadb_server:database'
+    - 'mariadb_server:dump'
+    - 'mariadb_server:secure_installation'
+    - 'mariadb_server:state'
+    - 'mariadb_server:sys_schema'
+    - 'mariadb_server:user'
+
+
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
   vars:
@@ -31,27 +46,13 @@
 
 - block:
 
-  - name: 'Install libzstd zstd needed by mydumper'
-    ansible.builtin.package:
-      name:
-        - 'libzstd'
-        - 'zstd'
-      state: 'present'
-
-  tags:
-    - 'mariadb_server'
-    - 'mariadb_server:dump'
-
-
-- block:
-
   - name: 'Get the list of installed packages'
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
 
   - name: 'Get mariadb-server version'
     ansible.builtin.set_fact:
-      mariadb_server__installed_version: '{{ (ansible_facts["packages"]["MariaDB-server"][0]["version"] | d(ansible_facts["packages"]["mariadb-server"][0]["version"])) | regex_replace("\.\d+$", "") }}' # strip the patch version
+      mariadb_server__installed_version: '{{ (ansible_facts["packages"]["MariaDB-server"][0]["version"] | d(ansible_facts["packages"]["mariadb-server"][0]["version"])) | regex_search("\d+\.\d+") }}'
 
   - name: 'Load default values for {{ mariadb_server__installed_version }}'
     ansible.builtin.include_vars: 'defaults/{{ mariadb_server__installed_version }}.yml'
@@ -85,10 +86,10 @@
       group: 'mysql'
       mode: 0o660
 
-  - name: 'Deploy /etc/my.cnf.d/z00-linuxfabrik.cnf'
+  - name: 'Deploy {{ mariadb_server__config_file }}'
     ansible.builtin.template:
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
-      dest: '/etc/my.cnf.d/z00-linuxfabrik.cnf'
+      dest: '{{ mariadb_server__config_file }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -151,7 +152,7 @@
       check_implicit_admin: true
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
-      login_unix_socket: '/var/lib/mysql/mysql.sock' # required instead of localhost
+      login_unix_socket: '{{ mariadb_server__mysql_login_unix_socket }}' # required instead of localhost
       name: '{{ mariadb_server__admin_user["username"] }}'
       password: '{{ mariadb_server__admin_user["password"] }}'
       host: '{{ item }}'
@@ -210,10 +211,12 @@
 # configure backup (mariadb-dump user, scripts and timer)
 - block:
 
-  - name: 'Install {{ mariadb_server__dump_mydumper_package }}'
+  - name: 'Install {{ mariadb_server__dump_mydumper_package }} libzstd zstd'
     ansible.builtin.package:
       name:
         - '{{ mariadb_server__dump_mydumper_package }}'
+        - 'libzstd'
+        - 'zstd'
       state: 'present'
 
   - name: 'Deploy /usr/local/bin/mariadb-dump'

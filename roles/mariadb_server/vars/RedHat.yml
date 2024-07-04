@@ -1,0 +1,2 @@
+mariadb_server__config_file: '/etc/my.cnf.d/z00-linuxfabrik.cnf'
+mariadb_server__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'
