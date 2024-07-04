@@ -40,6 +40,7 @@ collabora__coolwsd_ssl_enable: false
 collabora__coolwsd_ssl_settings_ca_file_path: '/etc/coolwsd/ca-chain.cert.pem'
 collabora__coolwsd_ssl_settings_cert_file_path: '/etc/coolwsd/cert.pem'
 collabora__coolwsd_ssl_settings_key_file_path: '/etc/coolwsd/key.pem'
+collabora__coolwsd_ssl_settings_ssl_verification: false
 collabora__coolwsd_ssl_termination: true
 collabora__coolwsd_storage_wopi__dependent_var: []
 collabora__coolwsd_storage_wopi__group_var: []

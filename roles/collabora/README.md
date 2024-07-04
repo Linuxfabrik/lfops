@@ -35,6 +35,7 @@ If you use the ["Collabora" Playbook](https://github.com/Linuxfabrik/lfops/blob/
 | `collabora__coolwsd_ssl_settings_ca_file_path` | Path to the ca file. Set this when coolwsd is SSL-terminating. | `'/etc/coolwsd/ca-chain.cert.pem'` |
 | `collabora__coolwsd_ssl_settings_cert_file_path` | Path to the cert file. Set this when coolwsd is SSL-terminating. | `'/etc/coolwsd/cert.pem'` |
 | `collabora__coolwsd_ssl_settings_key_file_path` | Path to the key file. Set this when coolwsd is SSL-terminating. | `'/etc/coolwsd/key.pem'` |
+| `collabora__coolwsd_ssl_settings_ssl_verification` | Enable or disable SSL verification of hosts remote to coolwsd. If true SSL verification will be strict, otherwise certs of hosts will not be verified. | `false` |
 | `collabora__coolwsd_ssl_termination` | Enable if coolwsd is behind a SSL-terminating proxy and therefore should act as if its using https but actually receives http. Possible options: | `true` |
 | `collabora__coolwsd_storage_wopi__host_var` / <br> `collabora__coolwsd_storage_wopi__group_var` | List of dictionaries containing regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. Subkeys: <ul><li>`name`: Mandatory, string. Regex pattern.</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
 | `collabora__language_packages__host_var` / <br> `collabora__language_packages__group_var` | A list of dictionaries containing additional packages to be installed for language support (spell checking, thesaurus, etc). Subkeys: <ul><li>`name`: Mandatory, string. Name of the package</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | `dict`, `mythes` and `hunspell` for de, en, fr, it |
@@ -63,6 +64,7 @@ collabora__coolwsd_ssl_enable: false
 collabora__coolwsd_ssl_settings_ca_file_path: '/etc/coolwsd/ca-chain.cert.pem'
 collabora__coolwsd_ssl_settings_cert_file_path: '/etc/coolwsd/cert.pem'
 collabora__coolwsd_ssl_settings_key_file_path: '/etc/coolwsd/key.pem'
+collabora__coolwsd_ssl_settings_ssl_verification: false
 collabora__coolwsd_ssl_termination: true
 collabora__coolwsd_storage_wopi__group_var: []
 collabora__coolwsd_storage_wopi__host_var:
