@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+# 2024070401
+
+# STIG:
+# * CIS_Red_Hat_Enterprise_Linux_8_Benchmark_v3.0.0: 1.6.3 Ensure system wide crypto policy disables cbc for ssh (Automated)
+# * CIS_Red_Hat_Enterprise_Linux_9_Benchmark_v2.0.0: 1.6.5 Ensure system wide crypto policy disables cbc for ssh (Automated)
+
+# Cypher Block Chaining (CBC) is an algorithm that uses a block cipher.
+
+# A vulnerability exists in SSH messages that employ CBC mode that may allow an
+# attacker to recover plaintext from a block of ciphertext. If exploited, this attack can
+# potentially allow an attacker to recover up to 32 bits of plaintext from an arbitrary block
+# of ciphertext from a connection secured using the SSH protocol.
+
+# CBC ciphers might be the only common cyphers when connecting to older SSH clients
+# and servers.
+
+cipher@SSH = -*-CBC # Disables the CBC cipher for SSH

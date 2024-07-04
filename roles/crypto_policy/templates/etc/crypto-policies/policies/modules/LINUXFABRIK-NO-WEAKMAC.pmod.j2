@@ -1,0 +1,24 @@
+# {{ ansible_managed }}
+# 2024070401
+
+# STIG:
+# * CIS_Red_Hat_Enterprise_Linux_8_Benchmark_v3.0.0: 1.6.4 Ensure system wide crypto policy disables macs less than128 bits (Automated)
+# * CIS_Red_Hat_Enterprise_Linux_9_Benchmark_v2.0.0: 1.6.4 Ensure system wide crypto policy disables macs less than 128 bits (Automated)
+
+# Message Authentication Code (MAC) algorithm is a family of cryptographic functions
+# that is parameterized by a symmetric key. Each of the functions can act on input data
+# (called a “message”) of variable length to produce an output value of a specified length.
+# The output value is called the MAC of the input message.
+# A MAC algorithm can be used to provide data-origin authentication and data-integrity
+# protection
+
+# Weak algorithms continue to have a great deal of attention as a weak spot that can be
+# exploited with expanded computing power. An attacker that breaks the algorithm could
+# take advantage of a MiTM position to decrypt the tunnel and capture credentials and
+# information.
+
+# A MAC algorithm must be computationally infeasible to determine the MAC of a
+# message without knowledge of the key, even if one has already seen the results of
+# using that key to compute the MAC's of other messages.
+
+mac = -*-64* # Disables weak macs

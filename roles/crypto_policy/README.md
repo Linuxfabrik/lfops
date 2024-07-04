@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.crypto_policy
 
-This role sets the system crypto policy. Additionally, it deploys crypto policies modified by Linuxfabrik to allow things such as the EPEL-release and ssh-ed25519 keys.
+This role sets the crypto policy for the system. In addition, it implements and deploys crypto policies defined by Linuxfabrik, e.g. to support CIS hardening.
 
 
 ## Tags
@@ -14,12 +14,12 @@ This role sets the system crypto policy. Additionally, it deploys crypto policie
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `crypto_policy__policy` | The crypto policy to activate. Possible options:<br> * `FIPS:LINUXFABRIK-FIPS`<br> * `FUTURE:LINUXFABRIK-FUTURE`<br> * any listed in `man 7 crypto-policies` | `'FUTURE:LINUXFABRIK-FUTURE'` |
+| `crypto_policy__policy` | The crypto policy to activate. See `roles/crypto_policy/templates/etc/crypto-policies/policies/modules/` for a list of available crypto policies. Example: `DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-SSH-NO-CBC` | `'DEFAULT'` |
 
 Example:
 ```yaml
 # optional
-crypto_policy__policy: 'FUTURE:LINUXFABRIK-FUTURE'
+crypto_policy__policy: 'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20'
 ```
 
 

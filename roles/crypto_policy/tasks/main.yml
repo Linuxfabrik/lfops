@@ -1,20 +1,14 @@
 - block:
 
-  - name: 'Deploy /etc/crypto-policies/policies/modules/LINUXFABRIK-FUTURE.pmod'
+  - name: 'Deploy /etc/crypto-policies/policies/modules/*.pmod'
     ansible.builtin.template:
-      src: 'etc/crypto-policies/policies/modules/LINUXFABRIK-FUTURE.pmod.j2'
-      dest: '/etc/crypto-policies/policies/modules/LINUXFABRIK-FUTURE.pmod'
+      src: '{{ item }}'
+      dest: '/etc/crypto-policies/policies/modules/{{ item | basename | split(".") | first }}.pmod'
       owner: 'root'
       group: 'root'
       mode: 0o640
-
-  - name: 'Deploy /etc/crypto-policies/policies/modules/LINUXFABRIK-FIPS.pmod'
-    ansible.builtin.template:
-      src: 'etc/crypto-policies/policies/modules/LINUXFABRIK-FIPS.pmod.j2'
-      dest: '/etc/crypto-policies/policies/modules/LINUXFABRIK-FIPS.pmod'
-      owner: 'root'
-      group: 'root'
-      mode: 0o640
+    with_fileglob:
+      - 'templates/etc/crypto-policies/policies/modules/*.pmod.j2'
 
   - name: 'update-crypto-policies --show'
     ansible.builtin.command: 'update-crypto-policies --show'

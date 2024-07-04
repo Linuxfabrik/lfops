@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+# 2024070401
+
+# STIG:
+# * CIS_Red_Hat_Enterprise_Linux_8_Benchmark_v3.0.0: -
+# * CIS_Red_Hat_Enterprise_Linux_9_Benchmark_v2.0.0: 1.6.6 Ensure system wide crypto policy disables chacha20-poly1305 for ssh (Manual)
+
+# ChaCha20-Poly1305 is an authenticated encryption with additional data (AEAD)
+# algorithm, that combines the ChaCha20 stream cipher with the Poly1305 message
+# authentication code. Its usage in IETF protocols is standardized in RFC 8439.
+
+# A vulnerability exists in ChaCha20-Poly1305 as referenced in CVE-2023-48795
+
+cipher@SSH = -CHACHA20-POLY1305 # Disables the chacha20-poly1305 cipher for SSH
