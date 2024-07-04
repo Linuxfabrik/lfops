@@ -240,7 +240,8 @@ apache_httpd__packages__role_var:
 
   # - name: 'mod_ssl' # part of apache2-bin package on deb
   #   state: 'present'
-apache_httpd__php_set_handler_default: 'SetHandler "proxy:unix:/run/php/www.sock|fcgi://localhost"'
+apache_httpd__php_set_handler_default: 'SetHandler "proxy:unix:{{ apache_httpd__php_socket }}|fcgi://localhost"'
+apache_httpd__php_socket: '/run/php/www.sock'
 apache_httpd__root_path: '/var/www'
 apache_httpd__roothtml_path: '/var/www/html'
 apache_httpd__service_name: 'apache2'
