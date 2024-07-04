@@ -1,5 +1,0 @@
-repo_icinga__required_packages:
-  - 'apt-transport-https'
-  - 'gpg'
-  - 'python-apt'
-repo_icinga__additional_repo_urls: []

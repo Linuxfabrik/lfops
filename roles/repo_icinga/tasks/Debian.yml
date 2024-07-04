@@ -1,16 +1,24 @@
 - block:
 
-  - name: 'apt install ... # required packages'
-    ansible.builtin.package:
-      name: '{{ repo_icinga__required_packages }}'
-      state: 'present'
-
-  - name: 'Add Apt signing key for icinga repository'
-    ansible.builtin.apt_key:
+  # https://icinga.com/docs/icinga-2/latest/doc/02-installation/01-Debian/
+  - name: 'curl https://packages.icinga.com/icinga.key --output /tmp/ansible.icinga.key'
+    ansible.builtin.get_url:
       url: 'https://packages.icinga.com/icinga.key'
-      state: 'present'
+      dest: '/tmp/ansible.icinga.key'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
 
-  - name: 'Deploy the icinga repo (mirror: {{ repo_icinga__mirror_url }})'
+  - name: 'copy /tmp/ansible.icinga.key to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.icinga.key'
+      dest: '/etc/apt/keyrings/icinga.asc' # use asc for ASCII-armored keys
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'deploy the repo file (mirror: {{ repo_icinga__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/apt/sources.list.d/packages_icinga_com_debian.list.j2'
       dest: '/etc/apt/sources.list.d/packages_icinga_com_debian.list'
@@ -25,12 +33,9 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/packages_icinga_com_debian.list'
 
-  - name: 'Add additional repositories needed by Icinga on Debian'
-    ansible.builtin.apt_repository:
-      repo: '{{ item }}'
-      validate_certs: false
-      state: 'present'
-    loop: '{{ repo_icinga__additional_repo_urls }}'
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
 
   tags:
     - 'repo_icinga'
