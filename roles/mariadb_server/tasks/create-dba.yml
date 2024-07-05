@@ -1,0 +1,28 @@
+- block:
+
+  - name: 'Create DBA "{{ mariadb_server__admin_user["username"] }}"'
+    community.mysql.mysql_user:
+      check_implicit_admin: true
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__mysql_login_unix_socket }}' # required instead of localhost
+      name: '{{ mariadb_server__admin_user["username"] }}'
+      password: '{{ mariadb_server__admin_user["password"] }}'
+      host: '{{ item }}'
+      priv: '*.*:ALL,GRANT'
+      state: 'present'
+
+  rescue:
+
+  - name: 'Create DBA "{{ mariadb_server__admin_user["username"] }}" (with old_password)'
+    community.mysql.mysql_user:
+      check_implicit_admin: true
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["old_password"] }}'
+      login_unix_socket: '{{ mariadb_server__mysql_login_unix_socket }}' # required instead of localhost
+      name: '{{ mariadb_server__admin_user["username"] }}'
+      password: '{{ mariadb_server__admin_user["password"] }}'
+      host: '{{ item }}'
+      priv: '*.*:ALL,GRANT'
+      state: 'present'
+    when: 'mariadb_server__admin_user["old_password"] is defined and mariadb_server__admin_user["old_password"] | length'

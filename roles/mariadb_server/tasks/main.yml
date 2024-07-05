@@ -147,17 +147,7 @@
 
 - block:
 
-  - name: 'Create DBA "{{ mariadb_server__admin_user["username"] }}"'
-    community.mysql.mysql_user:
-      check_implicit_admin: true
-      login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
-      login_unix_socket: '{{ mariadb_server__mysql_login_unix_socket }}' # required instead of localhost
-      name: '{{ mariadb_server__admin_user["username"] }}'
-      password: '{{ mariadb_server__admin_user["password"] }}'
-      host: '{{ item }}'
-      priv: '*.*:ALL,GRANT'
-      state: 'present'
+  - ansible.builtin.include_tasks: 'create-dba.yml'
     loop: '{{ mariadb_server__admin_user["host"] | d(["localhost", "127.0.0.1", "::1"]) }}'
 
   tags:

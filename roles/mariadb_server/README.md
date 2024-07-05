@@ -49,7 +49,11 @@ This role is compatible with the following MariaDB versions:
 
 | Variable | Description |
 | -------- | ----------- |
-| `mariadb_server__admin_user` | The main user account for the database administrator. To create additional ones, use the `mariadb_server__users__*` variables. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `host`: Optional, list. Defaults to `["localhost", "127.0.0.1", "::1"]`. Host-part(s). |
+| `mariadb_server__admin_user` | The main user account for the database administrator. To create additional ones, use the `mariadb_server__users__*` variables. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password</li><li>`host`: Optional, list. Defaults to `["localhost", "127.0.0.1", "::1"]`. Host-part(s).</li><li>`old_password`: String, optional. The old password. Set this when changing the password.</li></ul> |
+
+
+
+| `influxdb__admin_login` | The user account for the database administrator. Subkeys:
 
 Example:
 ```yaml
@@ -57,6 +61,7 @@ Example:
 mariadb_server__admin_user:
   username: 'mariadb-admin'
   password: 'linuxfabrik'
+  # old_password: 'previous-linuxfabrik'
 ```
 
 
