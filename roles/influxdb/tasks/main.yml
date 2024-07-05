@@ -63,21 +63,40 @@
   - name: 'wait 5 seconds for influxdb to start'
     ansible.builtin.pause:
       seconds: 5
-    when: 'influxdb__systemctl_result["changed"] | bool'
+    when: 'influxdb__systemctl_result["changed"] | d(false) | bool'
 
-  - name: 'create new admin user "{{ influxdb__admin_login["username"] }}"'
-    community.general.influxdb_user:
-      # always pass the username and password, if there is no admin account it doesn't matter, and prevents the task from failing on the 2nd run
-      username: '{{ influxdb__admin_login.username }}'
-      password: '{{ influxdb__admin_login.password | default(omit) }}'
-      user_name: '{{ influxdb__admin_login.username }}'
-      user_password: '{{ influxdb__admin_login.password }}'
-      admin: true
-      state: 'present'
-      ssl: '{{ (influxdb__conf_https is defined and influxdb__conf_https | length > 1) | string | lower }}'
-      validate_certs: '{{ influxdb__validate_certs }}'
-    vars:
-      ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
+  - block:
+
+    - name: 'create new admin user "{{ influxdb__admin_login["username"] }}"'
+      community.general.influxdb_user:
+        # always pass the username and password, if there is no admin account it doesn't matter, and prevents the task from failing on the 2nd run
+        username: '{{ influxdb__admin_login.username }}'
+        password: '{{ influxdb__admin_login.password | default(omit) }}'
+        user_name: '{{ influxdb__admin_login.username }}'
+        user_password: '{{ influxdb__admin_login.password }}'
+        admin: true
+        state: 'present'
+        ssl: '{{ (influxdb__conf_https is defined and influxdb__conf_https | length > 1) | string | lower }}'
+        validate_certs: '{{ influxdb__validate_certs }}'
+      vars:
+        ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
+
+    rescue:
+
+    - name: 'create new admin user "{{ influxdb__admin_login["username"] }}" (with old_password)'
+      community.general.influxdb_user:
+        # always pass the username and password, if there is no admin account it doesn't matter, and prevents the task from failing on the 2nd run
+        username: '{{ influxdb__admin_login.username }}'
+        password: '{{ influxdb__admin_login.old_password }}'
+        user_name: '{{ influxdb__admin_login.username }}'
+        user_password: '{{ influxdb__admin_login.password }}'
+        admin: true
+        state: 'present'
+        ssl: '{{ (influxdb__conf_https is defined and influxdb__conf_https | length > 1) | string | lower }}'
+        validate_certs: '{{ influxdb__validate_certs }}'
+      vars:
+        ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
+      when: 'influxdb__admin_login["old_password"] is defined and influxdb__admin_login["old_password"] | length'
 
   tags:
     - 'influxdb'

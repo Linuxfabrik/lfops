@@ -24,7 +24,7 @@ This role installs and configures [InfluxDB](https://www.influxdata.com/products
 
 | Variable | Description |
 | -------- | ----------- |
-| `influxdb__admin_login` | The user account for the database administrator. |
+| `influxdb__admin_login` | The user account for the database administrator. Subkeys: <ul><li>`username`: String, mandatory. Username.</li><li>`password`: String, mandatory. Password</li><li>`old_password`: String, optional. The old password. Set this when changing the password.</li></ul> |
 
 Example:
 ```yaml
@@ -32,6 +32,7 @@ Example:
 influxdb__admin_login:
   username: 'influxdb-admin'
   password: 'linuxfabrik'
+  # old_password: 'previous-linuxfabrik'
 ```
 
 
