@@ -1,24 +1,5 @@
 - block:
 
-  - name: 'Combined commands:'
-    ansible.builtin.debug:
-      var: 'shell__commands__combined_var | sort(attribute="name")'
-
-  - name: 'Run commands'
-    ansible.builtin.shell:
-      cmd: '{{ item["commands"] }}'
-      chdir: '{{ item["chdir"] | d(omit) }}'
-      creates: '{{ (item["run_once"] | d(false)) | ternary("/etc/ansible/facts.d/shell_" ~ item["name"] ~ ".state", item["creates"]) | d(omit) }}'
-      removes: '{{ item["removes"] | d(omit) }}'
-      stdin: '{{ item["stdin"] | d(omit) }}'
-      stdin_add_newline: '{{ item["stdin_add_newline"] | d(omit) }}'
-    become_user: '{{ item["user"] | d(omit) }}'
-    when:
-      - 'item["state"] | d("present") != "absent"'
-    loop: '{{ shell__commands__combined_var | sort(attribute="name") }}'
-    loop_control:
-      label: 'path={{ item["name"] }}, state={{ item["state"] | d("present") }}'
-
   - name: 'Make sure that Ansible facts directory exists'
     ansible.builtin.file:
       path: '/etc/ansible/facts.d'
@@ -27,17 +8,7 @@
       group: 'root'
       mode: 0o755
 
-  - name: 'Create state file in /etc/ansible/facts.d if run_once is true'
-    # using copy instead of file with state touch so that it is not always changed
-    ansible.builtin.copy:
-      content: ''
-      dest: '/etc/ansible/facts.d/shell_{{ item["name"] }}.state'
-      owner: 'root'
-      group: 'root'
-      mode: 0o600
-    when:
-      - 'item["state"] | d("present") != "absent"'
-      - 'item["run_once"] | d(false)'
+  - ansible.builtin.include_tasks: 'run-commands.yml'
     loop: '{{ shell__commands__combined_var | sort(attribute="name") }}'
     loop_control:
       label: 'path={{ item["name"] }}, state={{ item["state"] | d("present") }}'
