@@ -113,11 +113,11 @@
     when:
       - 'icingaweb2_module_director__kickstart_required_result.rc == 0'
 
-  - name: 'systemctl enable --now icinga-director.service'
+  - name: 'systemctl {{ icingaweb2_module_director__service_enabled | bool | ternary("enable", "disable") }} --now icinga-director.service'
     ansible.builtin.systemd:
       name: 'icinga-director.service'
-      enabled: true
-      state: 'started'
+      enabled: '{{ icingaweb2_module_director__service_enabled }}'
+      state: '{{ icingaweb2_module_director__service_enabled | bool | ternary("started", "stopped") }}'
 
   tags:
     - 'icingaweb2_module_director'
