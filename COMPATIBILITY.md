@@ -61,6 +61,7 @@ icingaweb2_module_cube               |    | x  | x | x |       |       |       |
 icingaweb2_module_director           |    | x  | x | x |       |       |       |
 icingaweb2_module_doc                |    | x  | x | x |       |       |       |
 icingaweb2_module_fileshipper        |    | x  | x | x |       |       |       |
+icingaweb2_module_generictts          |    | x  | x | x |       |       |       |
 icingaweb2_module_grafana            |    | x  | x | x |       |       |       |
 icingaweb2_module_incubator          |    | x  | x | x |       |       |       |
 icingaweb2_module_monitoring         |    | x  | x | x |       |       |       |
@@ -89,11 +90,11 @@ mod_maxminddb                        |    |    | x |   |       |       |       |
 mongodb                              | x  |    | x | x |       |       |       |
 monitoring_plugins                   |    |    | x | x |       |       |       | Debian 9, Fedora, Suse, Windows
 monitoring_plugins_grafana_dashboards|    |    | x | x |       |       |       |
-motd                                 |    |    | x | x |       |       |       |
 -------------------------------------+----+----+---+---+-------+-------+-------+-----------
                                      |  Debian |  RHEL |         Ubuntu        | other
 Role                                 | 11 | 12 | 8 | 9 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+---+---+-------+-------+-------+-----------
+motd                                 |    |    | x | x |       |       |       |
 mount                                | x  |    | x | x |       |       |       |
 network                              |    |    | x | x |       |       |       |
 nextcloud                            |    |    | x |   |       |       |       |
@@ -133,11 +134,11 @@ repo_mydumper                        |    |    | x | x |       |       |       |
 repo_opensearch                      | x  |    | x |   |       |       |       |
 repo_postgresql                      |    |    | x |   |       |       |       |
 repo_redis                           |    | x  |   |   |       |       |       |
-repo_remi                            |    |    | x | x |       |       |       | Fedora 35
 -------------------------------------+----+----+---+---+-------+-------+-------+-----------
                                      |  Debian |  RHEL |         Ubuntu        | other
 Role                                 | 11 | 12 | 8 | 9 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+---+---+-------+-------+-------+-----------
+repo_remi                            |    |    | x | x |       |       |       | Fedora 35
 repo_rpmfusion                       |    |    | x |   |       |       |       |
 repo_sury                            | x  | x  | - | - |       |       |       |
 rocketchat                           |    |    | x |   |       |       |       | Fedora 35

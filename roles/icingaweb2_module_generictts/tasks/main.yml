@@ -1,0 +1,56 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  - name: 'mkdir -p /etc/icingaweb2/modules/generictts'
+    ansible.builtin.file:
+      path: '/etc/icingaweb2/modules/generictts'
+      state: 'directory'
+      owner: '{{ icingaweb2_module_generictts__icingaweb2_owner }}'
+      group: 'icingaweb2'
+      mode: 0o2770
+
+  - name: 'mkdir -p /usr/share/icingaweb2/modules/generictts'
+    ansible.builtin.file:
+      path: '/usr/share/icingaweb2/modules/generictts'
+      state: 'directory'
+      owner: '{{ icingaweb2_module_generictts__icingaweb2_owner }}'
+      group: 'icingaweb2'
+      mode: 0o755
+
+  - name: 'curl {{ icingaweb2_module_generictts__url }} --output /tmp/ansible.icingaweb2-module-generictts-{{ icingaweb2_module_generictts__version }}.tar.gz'
+    ansible.builtin.get_url:
+      url: '{{ icingaweb2_module_generictts__url }}'
+      dest: '/tmp/ansible.icingaweb2-module-generictts-{{ icingaweb2_module_generictts__version }}.tar.gz'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.icingaweb2-module-generictts-{{ icingaweb2_module_generictts__version }}.tar.gz to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.icingaweb2-module-generictts-{{ icingaweb2_module_generictts__version }}.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-module-generictts-{{ icingaweb2_module_generictts__version }}.tar.gz'
+
+  - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/generictts /tmp/ansible.icingaweb2-module-generictts-{{ icingaweb2_module_generictts__version }}.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible.icingaweb2-module-generictts-{{ icingaweb2_module_generictts__version }}.tar.gz'
+      dest: '/usr/share/icingaweb2/modules/generictts'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'rm -f /tmp/ansible.icingaweb2-module-generictts-{{ icingaweb2_module_generictts__version }}.tar.gz'
+    ansible.builtin.file:
+      path: '/tmp/ansible.icingaweb2-module-generictts-{{ icingaweb2_module_generictts__version }}.tar.gz'
+      state: 'absent'
+
+  - name: 'icingacli module enable generictts'
+    ansible.builtin.command: 'icingacli module enable generictts'
+    args:
+      creates: '/etc/icingaweb2/enabledModules/generictts'
+
+  tags:
+    - 'icingaweb2_module_generictts'

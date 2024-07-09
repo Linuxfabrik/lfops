@@ -169,6 +169,9 @@ Role:tar
 
 ### Added
 
+Role:icingaweb2_module_generictts
+* Added
+
 Role:icingaweb2_module_fileshipper
 * Added
 

@@ -26,6 +26,7 @@
     setup_icinga2_master__icingaweb2_module_doc__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_doc__skip_role | d(false) }}'
     setup_icinga2_master__icingaweb2_module_fileshipper__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2_module_fileshipper__skip_injections | d(setup_icinga2_master__icingaweb2_module_fileshipper__skip_role__internal_var) }}'
     setup_icinga2_master__icingaweb2_module_fileshipper__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_fileshipper__skip_role | d(true) }}'
+    setup_icinga2_master__icingaweb2_module_generictts__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_generictts__skip_role | d(true) }}'
     setup_icinga2_master__icingaweb2_module_grafana__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2_module_grafana__skip_injections | d(setup_icinga2_master__icingaweb2_module_grafana__skip_role__internal_var) }}'
     setup_icinga2_master__icingaweb2_module_grafana__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_grafana__skip_role | d(false) }}'
     setup_icinga2_master__icingaweb2_module_incubator__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_incubator__skip_role | d(false) }}'
@@ -259,6 +260,10 @@
     - role: 'linuxfabrik.lfops.icingaweb2_module_fileshipper'
       when:
         - 'not setup_icinga2_master__icingaweb2_module_fileshipper__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.icingaweb2_module_generictts'
+      when:
+        - 'not setup_icinga2_master__icingaweb2_module_generictts__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_x509'
       when:
