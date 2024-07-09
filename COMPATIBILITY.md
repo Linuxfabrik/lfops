@@ -60,6 +60,7 @@ icingaweb2_module_company            |    | x  | x | x |       |       |       |
 icingaweb2_module_cube               |    | x  | x | x |       |       |       |
 icingaweb2_module_director           |    | x  | x | x |       |       |       |
 icingaweb2_module_doc                |    | x  | x | x |       |       |       |
+icingaweb2_module_fileshipper        |    | x  | x | x |       |       |       |
 icingaweb2_module_grafana            |    | x  | x | x |       |       |       |
 icingaweb2_module_incubator          |    | x  | x | x |       |       |       |
 icingaweb2_module_monitoring         |    | x  | x | x |       |       |       |
@@ -89,11 +90,11 @@ mongodb                              | x  |    | x | x |       |       |       |
 monitoring_plugins                   |    |    | x | x |       |       |       | Debian 9, Fedora, Suse, Windows
 monitoring_plugins_grafana_dashboards|    |    | x | x |       |       |       |
 motd                                 |    |    | x | x |       |       |       |
-mount                                | x  |    | x | x |       |       |       |
 -------------------------------------+----+----+---+---+-------+-------+-------+-----------
                                      |  Debian |  RHEL |         Ubuntu        | other
 Role                                 | 11 | 12 | 8 | 9 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+---+---+-------+-------+-------+-----------
+mount                                | x  |    | x | x |       |       |       |
 network                              |    |    | x | x |       |       |       |
 nextcloud                            |    |    | x |   |       |       |       |
 nfs_client                           | x  |    | x | x |       |       |       |

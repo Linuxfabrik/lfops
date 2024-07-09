@@ -24,6 +24,8 @@
     setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2_module_director__skip_injections | d(setup_icinga2_master__icingaweb2_module_director__skip_role__internal_var) }}'
     setup_icinga2_master__icingaweb2_module_director__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_director__skip_role | d(false) }}'
     setup_icinga2_master__icingaweb2_module_doc__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_doc__skip_role | d(false) }}'
+    setup_icinga2_master__icingaweb2_module_fileshipper__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2_module_fileshipper__skip_injections | d(setup_icinga2_master__icingaweb2_module_fileshipper__skip_role__internal_var) }}'
+    setup_icinga2_master__icingaweb2_module_fileshipper__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_fileshipper__skip_role | d(true) }}'
     setup_icinga2_master__icingaweb2_module_grafana__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2_module_grafana__skip_injections | d(setup_icinga2_master__icingaweb2_module_grafana__skip_role__internal_var) }}'
     setup_icinga2_master__icingaweb2_module_grafana__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_grafana__skip_role | d(false) }}'
     setup_icinga2_master__icingaweb2_module_incubator__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_incubator__skip_role | d(false) }}'
@@ -181,6 +183,7 @@
     - role: 'linuxfabrik.lfops.php'
       php__ini_upload_max_filesize__dependent_var: '{{ (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__ini_upload_max_filesize__dependent_var, "") }}'
       php__modules__dependent_var: '{{
+          (not setup_icinga2_master__icingaweb2_module_fileshipper__skip_injections__internal_var) | ternary(icingaweb2_module_fileshipper__php__modules__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections__internal_var) | ternary(icingaweb2_module_vspheredb__php__modules__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__php__modules__dependent_var[ansible_facts["os_family"]], []) +
           (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__modules__dependent_var[ansible_facts["os_family"]], [])
@@ -252,6 +255,10 @@
     - role: 'linuxfabrik.lfops.icingaweb2_module_doc'
       when:
         - 'not setup_icinga2_master__icingaweb2_module_doc__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.icingaweb2_module_fileshipper'
+      when:
+        - 'not setup_icinga2_master__icingaweb2_module_fileshipper__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_x509'
       when:

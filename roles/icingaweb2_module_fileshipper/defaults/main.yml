@@ -1,0 +1,11 @@
+icingaweb2_module_fileshipper__url: 'https://github.com/Icinga/icingaweb2-module-fileshipper/archive/{{ icingaweb2_module_fileshipper__version }}.tar.gz'
+
+# -----------------------------------------------------------------------------
+
+icingaweb2_module_fileshipper__php__modules__dependent_var:
+  - name: 'php-xml'
+    state: 'present'
+  - name: 'php-yaml'
+    state: 'present'
+  - name: 'php-zip'
+    state: 'present'
