@@ -169,6 +169,9 @@ Role:tar
 
 ### Added
 
+Role:icingaweb2_module_cube
+* Added
+
 Role:repo_redis:
 * Added
 
