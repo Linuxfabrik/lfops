@@ -5,17 +5,20 @@
 #          https://www.linuxfabrik.ch/
 # License: The Unlicense, see LICENSE file.
 
-# {{ ansible_managed }}
-# 2023081701
+# This file is managed by Ansible - do not edit
+# 2024071001
 
 
+# no `set -e` because we change some things at the beginning of the script
+# and have to reset them at the end
 function exit_with_first_failed_retc() {
-    for retc in $@; do
-        if [ $retc -ne 0 ]; then
-            exit $retc
+    for retc in "$@"; do
+        if [ "$retc" -ne 0 ]; then
+            exit "$retc"
         fi
     done
 }
+
 
 # make sure the backup is not readable by others
 old_umask=$(umask)
@@ -24,29 +27,29 @@ umask 027
 source /etc/mariadb-dump.conf
 
 rm -rf "$BACKUP_DIR"
-mkdir -p $BACKUP_DIR
+mkdir -p "$BACKUP_DIR"
 
-mysql --host=$HOST --user=$USERNAME --password=$PASSWORD \
+mysql --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
     --execute='SET GLOBAL innodb_buffer_pool_dump_now = ON;'
 mysql_table_lock_retc=$?
 
-# https://github.com/maxbube/mydumper
-mydumper --host=$HOST --user=$USERNAME --password=$PASSWORD \
+# https://github.com/mydumper/mydumper
+# parameters compatible/tested with v0.16.3-6
+mydumper --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
     --build-empty-files \
-    --compress ZSTD \
+    --dirty \
     --events \
-    --logfile $BACKUP_DIR/mydumper.log \
-    --outputdir $BACKUP_DIR \
+    --logfile="$BACKUP_DIR"/mydumper.log \
+    --outputdir="$BACKUP_DIR" \
     --routines \
-    --threads $THREADS \
+    --threads="$THREADS" \
     --triggers \
-    --use-savepoints \
     --verbose 3
 mydumper_retc=$?
 
 umask "$old_umask"
 
-mysql --host=$HOST --user=$USERNAME --password=$PASSWORD \
+mysql --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
     --execute='SET GLOBAL innodb_buffer_pool_load_now = ON;'
 mysql_table_unlock_retc=$?
 

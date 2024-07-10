@@ -10,12 +10,11 @@ It also tunes the following Kernel settings:
 Note that this role does NOT let you specify a particular MariaDB server version. It simply installs the latest available MariaDB server version from the repos configured in the system. If you want or need to install a specific MariaDB server version, use the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) beforehand.
 
 This role is compatible with the following MariaDB versions:
-
-* 10.3
-* 10.4
-* 10.5
-* 10.6 LTS
 * 10.11 LTS
+* 10.6 LTS
+* 10.5
+* 10.4
+* 10.3
 
 
 ## Mandatory Requirements
@@ -89,7 +88,7 @@ mariadb_server__dump_user:
 | `mariadb_server__dump_directory` | Dump output directory name. | `'/backup/mariadb-dump'`|
 | `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
 | `mariadb_server__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 \| random(start=0, seed=inventory_hostname) }}:00'`|
-| `mariadb_server__dump_threads` | The number of threads to use for dumping data. | `4`|
+| `mariadb_server__dump_threads` | The number of threads to use for dumping data. `0` means to use number of CPUs. | `0`|
 | `mariadb_server__enabled`| Enables or disables the Systemd unit. | `true` |
 | `mariadb_server__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |

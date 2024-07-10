@@ -6,7 +6,7 @@ mariadb_server__skip_sys_schema: false
 mariadb_server__dump_directory: '/backup/mariadb-dump'
 mariadb_server__dump_mydumper_package: 'mydumper'
 mariadb_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
-mariadb_server__dump_threads: 4
+mariadb_server__dump_threads: 0  # 0 means to use number of CPUs
 
 mariadb_server__cnf_bulk_insert_buffer_size__dependent_var: ''
 mariadb_server__cnf_bulk_insert_buffer_size__group_var: ''
