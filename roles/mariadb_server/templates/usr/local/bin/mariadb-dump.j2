@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # This file is managed by Ansible - do not edit
-# 2024071001
+# 2024071102
 
 
 # no `set -e` because we change some things at the beginning of the script
@@ -33,18 +33,35 @@ mysql --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
     --execute='SET GLOBAL innodb_buffer_pool_dump_now = ON;'
 mysql_table_lock_retc=$?
 
+
 # https://github.com/mydumper/mydumper
-# parameters compatible/tested with v0.16.3-6
-mydumper --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
-    --build-empty-files \
-    --dirty \
-    --events \
-    --logfile="$BACKUP_DIR"/mydumper.log \
-    --outputdir="$BACKUP_DIR" \
-    --routines \
-    --threads="$THREADS" \
-    --triggers \
-    --verbose 3
+
+# get installed mydumper version ("mydumper v0.15.1-3, built against MySQL 8.0.33-25 with SSL support")
+mydumper_version=$(mydumper --version | awk '{print $2}' | tr --delete ',')
+
+# build the cmdline parameters for mydumper
+mydumper_params="--host=$HOST "
+mydumper_params+="--user=$USERNAME "
+mydumper_params+="--password=$PASSWORD "
+mydumper_params+="--build-empty-files "
+if [ -n "$COMPRESS" ]; then
+    mydumper_params+="--compress=$COMPRESS "
+fi
+if [[ "$(echo -e "$mydumper_version\nv0.15.2-7" | sort --version-sort | tail -n1)" == "$mydumper_version" ]]; then
+    # parameter available in mydumper v0.15.2-8+
+    mydumper_params+="--dirty "
+fi
+mydumper_params+="--events "
+mydumper_params+="--logfile=$BACKUP_DIR/mydumper.log "
+mydumper_params+="--outputdir=$BACKUP_DIR "
+mydumper_params+="--routines "
+mydumper_params+="--threads=$THREADS "
+mydumper_params+="--triggers "
+mydumper_params+="--verbose 3"
+
+# run mydumper
+echo mydumper "$mydumper_params"
+mydumper $mydumper_params
 mydumper_retc=$?
 
 umask "$old_umask"

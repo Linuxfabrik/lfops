@@ -50,10 +50,6 @@ This role is compatible with the following MariaDB versions:
 | -------- | ----------- |
 | `mariadb_server__admin_user` | The main user account for the database administrator. To create additional ones, use the `mariadb_server__users__*` variables. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password</li><li>`host`: Optional, list. Defaults to `["localhost", "127.0.0.1", "::1"]`. Host-part(s).</li><li>`old_password`: String, optional. The old password. Set this when changing the password.</li></ul> |
 
-
-
-| `influxdb__admin_login` | The user account for the database administrator. Subkeys:
-
 Example:
 ```yaml
 # mandatory
@@ -70,6 +66,7 @@ mariadb_server__admin_user:
 | -------- | ----------- | ------------- |
 | `mariadb_server__dump_user` | User to whom backup privileges are granted to. Setting this user automatically enables daily MariaDB-Dumps. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `["*.*:event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options: `'present'`, `'absent'` | unset |
 
+Example:
 ```yaml
 # recommended
 mariadb_server__dump_user:
@@ -81,10 +78,10 @@ mariadb_server__dump_user:
 
 ## Optional Role Variables - Specific to this role
 
-
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | List of dictionaries of databases to create. Subkeys:<br> * `name`: Mandatory, string. Name of the databse schema. <br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__dump_compress` | Compress output files. One of `''` or `false` (no compression, extremely fast), `'ZSTD'` or `'GZIP'` (both very slow). | `''` (no compression) |
 | `mariadb_server__dump_directory` | Dump output directory name. | `'/backup/mariadb-dump'`|
 | `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
 | `mariadb_server__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 \| random(start=0, seed=inventory_hostname) }}:00'`|
@@ -95,6 +92,7 @@ mariadb_server__dump_user:
 | `mariadb_server__state`| Controls the Systemd service. One of<br> * `started`<br> * `stopped`<br> * `reloaded` | `'started'` |
 | `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_user`). Subkeys:<br> * `username`: Mandatory, String. Username. <br> * `host`: Mandatory, String. Host. <br> * `password`<br> * `priv`<br> * `state`<br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 
+Example:
 ```yaml
 # optional - role variables
 mariadb_server__databases__host_var:
@@ -102,6 +100,7 @@ mariadb_server__databases__host_var:
     collation: 'utf8mb4_unicode_ci'
     encoding: 'utf8mb4'
     state: 'present'
+mariadb_server__dump_compress: 'GZIP'
 mariadb_server__dump_directory: '/backup/mariadb-dump'
 mariadb_server__dump_mydumper_package: 'https://github.com/mydumper/mydumper/releases/download/v0.12.6-1/mydumper-0.12.6-1.el8.x86_64.rpm'
 mariadb_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
@@ -192,6 +191,13 @@ mariadb_server__cnf_table_definition_cache__host_var: 400
 mariadb_server__cnf_tmp_table_size__host_var: '16M'
 mariadb_server__cnf_wait_timeout__host_var: 28800
 ```
+
+
+## Troubleshooting
+
+Q: `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`
+
+A: Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
 
 
 ## License

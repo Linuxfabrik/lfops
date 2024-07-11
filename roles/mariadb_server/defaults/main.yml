@@ -3,6 +3,7 @@ mariadb_server__state: 'started'
 
 mariadb_server__skip_sys_schema: false
 
+mariadb_server__dump_compress: ''  # or false, means "no compression"
 mariadb_server__dump_directory: '/backup/mariadb-dump'
 mariadb_server__dump_mydumper_package: 'mydumper'
 mariadb_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'

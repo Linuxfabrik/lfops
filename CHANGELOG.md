@@ -314,6 +314,9 @@ Role:redis
 
 ### Changed
 
+Role:mariadb_server:
+* role:mariadb_server: mariadb-dump checks for the mydumper version and sets parameters accordingly
+
 Role:apache_httpd:
 * the default of the `conf_custom_log` vHost variable changed from unset to `'logs/{{ conf_server_name }}-access.log linuxfabrikio`
 
