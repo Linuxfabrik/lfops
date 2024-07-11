@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # This file is managed by Ansible - do not edit
-# 2024071102
+# 2024071103
 
 
 # no `set -e` because we change some things at the beginning of the script
@@ -60,7 +60,6 @@ mydumper_params+="--triggers "
 mydumper_params+="--verbose 3"
 
 # run mydumper
-echo mydumper "$mydumper_params"
 mydumper $mydumper_params
 mydumper_retc=$?
 
