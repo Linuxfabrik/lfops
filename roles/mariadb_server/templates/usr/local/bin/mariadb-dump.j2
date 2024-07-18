@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # This file is managed by Ansible - do not edit
-# 2024071103
+# 2024071801
 
 
 # no `set -e` because we change some things at the beginning of the script
@@ -48,11 +48,13 @@ if [ -n "$COMPRESS" ]; then
     mydumper_params+="--compress=$COMPRESS "
 fi
 if [[ "$(echo -e "$mydumper_version\nv0.15.2-7" | sort --version-sort | tail -n1)" == "$mydumper_version" ]]; then
-    # parameter available in mydumper v0.15.2-8+
+    # if $(mydumper --version) > 0.15.2-7:
+    # parameter available since mydumper v0.15.2-8+
     mydumper_params+="--dirty "
 fi
 mydumper_params+="--events "
 mydumper_params+="--logfile=$BACKUP_DIR/mydumper.log "
+mydumper_params+="--long-query-guard=$LONG_QUERY_GUARD"
 mydumper_params+="--outputdir=$BACKUP_DIR "
 mydumper_params+="--routines "
 mydumper_params+="--threads=$THREADS "

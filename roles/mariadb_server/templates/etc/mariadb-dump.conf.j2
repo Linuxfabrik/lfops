@@ -4,7 +4,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # {{ ansible_managed }}
-# 2024071101
+# 2024071801
 
 HOST=localhost
 USERNAME={{ mariadb_server__dump_user["username"] }}
@@ -12,3 +12,4 @@ PASSWORD={{ mariadb_server__dump_user["password"] }}
 BACKUP_DIR={{ mariadb_server__dump_directory }}
 THREADS={{ mariadb_server__dump_threads }}
 COMPRESS={{ mariadb_server__dump_compress }}
+LONG_QUERY_GUARD={{ mariadb_server__dump_long_query_guard }}

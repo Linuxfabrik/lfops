@@ -83,6 +83,7 @@ mariadb_server__dump_user:
 | `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | List of dictionaries of databases to create. Subkeys:<br> * `name`: Mandatory, string. Name of the databse schema. <br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `mariadb_server__dump_compress` | Compress output files. One of `''` or `false` (no compression, extremely fast), `'ZSTD'` or `'GZIP'` (both very slow). | `''` (no compression) |
 | `mariadb_server__dump_directory` | Dump output directory name. | `'/backup/mariadb-dump'`|
+| `mariadb_server__dump_long_query_guard` | Set long query timer in seconds. | `60` |
 | `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
 | `mariadb_server__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 \| random(start=0, seed=inventory_hostname) }}:00'`|
 | `mariadb_server__dump_threads` | The number of threads to use for dumping data. `0` means to use number of CPUs. | `0`|
@@ -102,6 +103,7 @@ mariadb_server__databases__host_var:
     state: 'present'
 mariadb_server__dump_compress: 'GZIP'
 mariadb_server__dump_directory: '/backup/mariadb-dump'
+mariadb_server__dump_long_query_guard: 60
 mariadb_server__dump_mydumper_package: 'https://github.com/mydumper/mydumper/releases/download/v0.12.6-1/mydumper-0.12.6-1.el8.x86_64.rpm'
 mariadb_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
 mariadb_server__dump_threads: 4
