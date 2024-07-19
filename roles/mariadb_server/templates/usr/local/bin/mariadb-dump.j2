@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # This file is managed by Ansible - do not edit
-# 2024071801
+# 2024071901
 
 
 # no `set -e` because we change some things at the beginning of the script
@@ -54,7 +54,7 @@ if [[ "$(echo -e "$mydumper_version\nv0.15.2-7" | sort --version-sort | tail -n1
 fi
 mydumper_params+="--events "
 mydumper_params+="--logfile=$BACKUP_DIR/mydumper.log "
-mydumper_params+="--long-query-guard=$LONG_QUERY_GUARD"
+mydumper_params+="--long-query-guard=$LONG_QUERY_GUARD "
 mydumper_params+="--outputdir=$BACKUP_DIR "
 mydumper_params+="--routines "
 mydumper_params+="--threads=$THREADS "
