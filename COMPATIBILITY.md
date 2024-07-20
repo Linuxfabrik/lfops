@@ -25,7 +25,7 @@ collect_rpmnew_rpmsave               |    |    | x | x |       |       |       |
 coturn                               |    |    | x |   |       |       |       |
 crypto_policy                        |    |    | x | x |       |       |       |
 dnf_makecache                        |    |    | x | x |       |       |       |
-dnf_versionlock                      |    |    | x |   |       |       |       |
+dnf_versionlock                      |    |    | x | x |       |       |       |
 docker                               |    |    | x |   |       |       |       |
 duplicity                            |    |    | x | x |       |       |       | Fedora 35
 elasticsearch_oss                    |    |    | x |   |       |       |       |

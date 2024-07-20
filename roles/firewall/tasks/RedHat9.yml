@@ -1,0 +1,10 @@
+- block:
+
+  - name: 'Make sure nftables is installed (required for fwb on modern RedHat based OSs)'
+    ansible.builtin.package:
+      name: 'nftables'
+      state: 'present'
+
+  when: 'firewall__firewall == "fwbuilder"'
+  tags:
+    - 'firewall'
