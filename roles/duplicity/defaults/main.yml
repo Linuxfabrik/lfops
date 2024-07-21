@@ -46,6 +46,20 @@ duplicity__timer_enabled: true
 duplicity__on_calendar_hour: '23'
 duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 59 | random(seed=inventory_hostname) }}'
 
+duplicity__python_venv__venvs__dependent_var:
+  - name: 'duplicity'
+    packages:
+      - 'duplicity'
+      # If we add these, we get "SetuptoolsDeprecationWarning: Invalid dash-separated options",
+      # and current versions of duplicity (now) installs these as well:
+      # - 'python-keystoneclient'
+      # - 'python-swiftclient'
+    package_requirements:
+      - 'gcc'
+      - 'librsync-devel'
+    exposed_binaries:
+      - 'duplicity'
+
 duplicity__loglevel: 'notice'
 
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
