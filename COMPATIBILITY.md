@@ -61,7 +61,7 @@ icingaweb2_module_cube               |    | x  | x | x |       |       |       |
 icingaweb2_module_director           |    | x  | x | x |       |       |       |
 icingaweb2_module_doc                |    | x  | x | x |       |       |       |
 icingaweb2_module_fileshipper        |    | x  | x | x |       |       |       |
-icingaweb2_module_generictts          |    | x  | x | x |       |       |       |
+icingaweb2_module_generictts         |    | x  | x | x |       |       |       |
 icingaweb2_module_grafana            |    | x  | x | x |       |       |       |
 icingaweb2_module_incubator          |    | x  | x | x |       |       |       |
 icingaweb2_module_monitoring         |    | x  | x | x |       |       |       |
@@ -116,7 +116,7 @@ redis                                |    | x  | x | x |       |       |       |
 repo_baseos                          |    |    | x | x |       |       |       |
 repo_collabora                       |    |    | x |   |       |       |       |
 repo_collabora_code                  |    |    | x |   |       |       |       |
-repo_debian_base                     | x  |    |   |   |       |       |       |
+repo_debian_base                     | x  |    | - | - |       |       |       |
 repo_docker                          |    |    | x |   |       |       |       |
 repo_elasticsearch                   |    |    | x |   |       |       |       |
 repo_elasticsearch_oss               |    |    | x |   |       |       |       |
