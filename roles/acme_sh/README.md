@@ -14,9 +14,18 @@ SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-chain.crt
 
 * Install `openssl`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
 * Install `tar`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
-* Have a configured webserver.
+* Have a configured web server. If you are using LFOps to manage an Apache reverse proxy, a virtual host working for acme might be defined like this:
 
-If you use the [acme.sh Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/acme_sh.yml), this is automatically done for you.
+```
+apache_httpd__vhosts__host_var:
+  - conf_server_name: 'other.example.com'
+    enabled: true
+    state: 'present'
+    template: 'redirect'
+    virtualhost_port: 80
+```
+
+If you use the [acme.sh Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/acme_sh.yml), this is automatically done for you (except configuring the webserver).
 
 
 ## Tags
@@ -73,17 +82,14 @@ acme_sh__timer_enabled: true
 
 ## Troubleshooting
 
+`Request failed: <urlopen error timed out>'`: Check if your Reverse Proxy is available over the Internet (Ports on Provider- and Host-Firewall, DNS set correctly, DNAT configured), and check if it is hosting the requested domain on Port 80.
+
 Replace an issued certificate:
 
 ```bash
-# on the remote host:
-acme.sh --remove --domain www.example.com
-rm -rf /etc/acme.sh/certs/www.example.com/
-```
-
-```bash
 # on the control node:
-ansible-playbook --inventory $INV linuxfabrik.lfops.acme_sh
+ansible MYHOST --inventory=$INV --module-name=shell --args "acme.sh --remove --domain www.example.com; rm -rf /etc/acme.sh/certs/www.example.com/"
+ansible-playbook --inventory=$INV linuxfabrik.lfops.acme_sh
 ```
 
 
