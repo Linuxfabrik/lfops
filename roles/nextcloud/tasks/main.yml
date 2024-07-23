@@ -232,7 +232,7 @@
       name: 'notify_push.service'
       state: 'restarted'
 
-  - name: 'Setup notify_push'
+  - name: 'Setup notify_push at https://{{ nextcloud__fqdn }}/push'
     ansible.builtin.command: |
       php occ notify_push:setup https://{{ nextcloud__fqdn }}/push
     args:
