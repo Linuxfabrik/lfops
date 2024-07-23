@@ -86,6 +86,13 @@
       group: 'mysql'
       mode: 0o660
 
+  - name: 'restorecon -Fvr /var/log/mariadb/mariadb.log'
+    ansible.builtin.command: 'restorecon -Fvr /var/log/mariadb/mariadb.log'
+    register: 'var_log_mariadb__restorecon_result'
+    changed_when: 'var_log_mariadb__restorecon_result["stdout"] | length'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+
   - name: 'Deploy {{ mariadb_server__config_file }}'
     ansible.builtin.template:
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
