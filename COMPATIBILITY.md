@@ -20,9 +20,9 @@ chrony                               |    |    | x | x |       |       |       |
 clamav                               |    |    | x |   |       |       |       |
 cloud_init                           |    |    | x | x |       |       |       |
 cockpit                              |    |    | x | x |       |       |       | Fedora 35
-collabora                            |    |    | x |   |       |       |       |
+collabora                            |    |    | x | x |       |       |       |
 collect_rpmnew_rpmsave               |    |    | x | x |       |       |       | Fedora 40
-coturn                               |    |    | x |   |       |       |       |
+coturn                               |    |    | x | x |       |       |       |
 crypto_policy                        |    |    | x | x |       |       |       |
 dnf_makecache                        |    |    | x | x |       |       |       |
 dnf_versionlock                      |    |    | x | x |       |       |       |
@@ -97,7 +97,7 @@ Role                                 | 11 | 12 | 8 | 9 | 20.04 | 22.04 | 24.04 |
 motd                                 |    |    | x | x |       |       |       |
 mount                                | x  |    | x | x |       |       |       |
 network                              |    |    | x | x |       |       |       |
-nextcloud                            |    |    | x |   |       |       |       |
+nextcloud                            |    |    | x | x |       |       |       |
 nfs_client                           | x  |    | x | x |       |       |       |
 nfs_server                           | x  |    | x |   |       |       |       |
 nodejs                               |    |    | x | x |       |       |       |
@@ -115,7 +115,7 @@ qemu_guest_agent                     |    |    | x | x |       |       |       |
 redis                                |    | x  | x | x |       |       |       |
 repo_baseos                          |    |    | x | x |       |       |       |
 repo_collabora                       |    |    | x |   |       |       |       |
-repo_collabora_code                  |    |    | x |   |       |       |       |
+repo_collabora_code                  |    |    | x | x |       |       |       |
 repo_debian_base                     | x  |    | - | - |       |       |       |
 repo_docker                          |    |    | x |   |       |       |       |
 repo_elasticsearch                   |    |    | x |   |       |       |       |
