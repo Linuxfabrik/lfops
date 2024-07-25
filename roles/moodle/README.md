@@ -28,7 +28,7 @@ If you use the ["moodle" Playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 | -------- | ----------- |
 | `moodle__admin` | Dictionary. The admin account to create. Subkeys: <ul><li>`username`: Mandatory, string. Username for the Moodle admin account.</li><li>`password`: Mandatory, string. Password for the Moodle admin account.</li><li>`email`: Email address for the Moodle admin account. Visible for everyone.</li></ul> |
 | `moodle__database_login` | Dictionary. The user account for accessing the Moodle SQL database. Currently, only MySQL/MariaDB is supported.  Subkeys: <ul><li>`username`: Mandatory, string. Username for the Moodle database account.</li><li>`password`: Mandatory, string. Password for the Moodle database account.</li></ul> |
-| `moodle__url` | String. The public facing Moodle URL, without `http://` or `https://`. |
+| `moodle__url` | String. The public facing Moodle URL, including `http://` or `https://` (the latter if you are behind a Reverse Proxy which is the TLS endpoint). |
 
 Example:
 ```yaml
@@ -40,7 +40,7 @@ moodle__admin:
 moodle__database_login:
   username: 'moodle'
   password: 'linuxfabrik'
-moodle__url: 'learning.example.com'
+moodle__url: 'https://learning.example.com'
 ```
 
 
@@ -48,6 +48,7 @@ moodle__url: 'learning.example.com'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `moodle__behind_reverse_proxy` | Behind a Reverse Proxy (assuming it terminates TLS) or not? | `true` |
 | `moodle__data_dir` | String. Location of the moodle data folder, must not be web accessible. | `'/data'` |
 | `moodle__database_host` | String. Database host. | `'localhost'` |
 | `moodle__database_login_host` | String. The Host-part of the SQL database user. | `localhost` |
@@ -69,6 +70,7 @@ moodle__url: 'learning.example.com'
 Example:
 ```yaml
 # optional
+moodle__behind_reverse_proxy: true
 moodle__data_dir: '/data'
 moodle__database_host: 'localhost'
 moodle__database_login_host: 'localhost'

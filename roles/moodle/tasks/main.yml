@@ -73,7 +73,7 @@
       sudo -u apache /usr/bin/php {{ moodle__install_dir }}/admin/cli/install.php \
         --chmod=2750 \
         --lang=en \
-        --wwwroot=http://{{ moodle__url }} \
+        --wwwroot={{ moodle__url }} \
         --dataroot={{ moodle__data_dir }} \
         --dbtype=mariadb \
         --dbhost={{ moodle__database_host }} \
@@ -99,6 +99,28 @@
     # if running against an already existing moodle instance, we get
     # `The configuration file config.php already exists. Please use admin/cli/install_database.php to upgrade Moodle for this site.`
     ignore_errors: true
+
+  - name: 'Configure Moodle if behind a reverse proxy ($CFG->reverseproxy = true)'
+    ansible.builtin.lineinfile:
+      path: '{{ moodle__install_dir }}/config.php'
+      regexp: '^\$CFG->reverseproxy'
+      line: '$CFG->reverseproxy = true;'
+      mode: 0o440
+      state: 'present'
+    when:
+      - 'moodle__behind_reverse_proxy is defined'
+      - 'moodle__behind_reverse_proxy'
+
+  - name: 'Configure Moodle if behind a reverse proxy ($CFG->sslproxy = true)'
+    ansible.builtin.lineinfile:
+      path: '{{ moodle__install_dir }}/config.php'
+      regexp: '^\$CFG->sslproxy'
+      line: '$CFG->sslproxy = true;'
+      mode: 0o440
+      state: 'present'
+    when:
+      - 'moodle__behind_reverse_proxy is defined'
+      - 'moodle__behind_reverse_proxy'
 
   - name: 'Security checks > Executable paths: Executable paths only settable in config.php'
     ansible.builtin.lineinfile:

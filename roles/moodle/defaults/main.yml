@@ -1,3 +1,4 @@
+moodle__behind_reverse_proxy: true
 moodle__data_dir: '/data'
 moodle__database_host: 'localhost'
 moodle__database_login_host: 'localhost'
@@ -60,7 +61,7 @@ moodle__apache_httpd__vhosts__dependent_var:
     conf_document_root: '{{ moodle__install_dir }}'
     conf_error_log: 'logs/moodle-error.log'
     conf_server_admin: '{{ apache_httpd__conf_server_admin }}'
-    conf_server_name: '{{ moodle__url }}'
+    conf_server_name: '{{ moodle__url | regex_replace("^(http://|https://)", "") }}'
     raw: !unsafe |-
       <IfModule mod_headers.c>
         <IfModule mod_env.c>
