@@ -177,5 +177,6 @@ moodle__selinux__fcontexts__dependent_var:
 
 
 # hard-coded for Moodle 4.1 LTS
+# https://moodledev.io/general/development/policies/php
 repo_remi__enabled_php_version: '8.1'
 repo_remi__enabled_redis_version: '7.2'
