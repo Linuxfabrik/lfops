@@ -31,7 +31,7 @@ repo_remi__basic_auth_login:
   username: 'my-username'
   password: 'linuxfabrik'
 repo_remi__enabled_php_version: '8.1'
-repo_remi__enabled_redis_version: '7.0'
+repo_remi__enabled_redis_version: '7.2'
 repo_remi__mirror_url: 'https://mirror.example.com'
 ```
 
