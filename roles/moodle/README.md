@@ -6,7 +6,7 @@ This role installs the latest LTS version of the Moodle LMS (v4.1 as of 20240725
 ## Mandatory Requirements
 
 * Install a web server (for example Apache httpd), and configure a virtual host for Moodle. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
-* As Moodle v4.1 has very specific version requirements regarding PHP, install PHP v8.1 (although EOL as of 20240724). This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
+* As Moodle v4.1 has very specific version requirements regarding PHP, install PHP v8.1. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
 * Install Redis. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) role.
 
 If you use the ["moodle" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/moodle.yml), this is automatically done for you.
