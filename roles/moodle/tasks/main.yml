@@ -126,6 +126,12 @@
     register: 'moodle__chmod_files_result'
     changed_when: 'moodle__chmod_files_result["stdout"] | length'
 
+  # this is needed for monitoring plugins and an icinga user, for example
+  - name: 'chmod o+r {{ moodle__install_dir }}/version.php'
+    ansible.builtin.file:
+      path: '{{ moodle__install_dir }}/version.php'
+      mode: 'o+r'
+
   # new files and folders inherit group ownership from the parent folder
   - name: 'chmod u+s,g+s {{ moodle__install_dir }}'
     ansible.builtin.file:
