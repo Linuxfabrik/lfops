@@ -482,8 +482,6 @@ nextcloud__php__modules__dependent_var:
   - name: 'php-zip'
     state: 'present'
 
-nextcloud__repo_remi__enabled_redis_version__dependent_var: '7.0'
-
 nextcloud__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
     value: 'on'
