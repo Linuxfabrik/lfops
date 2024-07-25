@@ -169,6 +169,9 @@ Role:tar
 
 ### Added
 
+Role:moodle
+* Added
+
 Role:icingaweb2_module_generictts
 * Added
 

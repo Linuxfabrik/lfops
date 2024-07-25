@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2024072501
+
+[Unit]
+Description=Moodle cron.php Service
+
+[Service]
+ExecStart=/usr/bin/php --file /var/www/html/moodle/admin/cli/cron.php
+Type=oneshot
+User=apache

@@ -1,0 +1,172 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+
+
+- block:
+
+  - name: 'mkdir -p {{ moodle__install_dir }}'
+    ansible.builtin.file:
+      path: '{{ moodle__install_dir }}'
+      state: 'directory'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o755
+
+  - name: 'Get all moodle release versions'
+    ansible.builtin.uri:
+      url: 'https://api.github.com/repos/moodle/moodle/tags'
+    register: 'moodle__github_release'
+    check_mode: false # run task even if `--check` is specified
+    delegate_to: 'localhost'
+    run_once: true
+
+  - name: 'Init moodle__github_version'
+    ansible.builtin.set_fact:
+      moodle__github_version: ''
+
+  - name: 'Get the latest v4.1 (LTS) version of moodle'
+    ansible.builtin.set_fact:
+      moodle__github_version: "{{ item.name }}"
+    loop: '{{ moodle__github_release["json"] }}'
+    when:
+      - 'item.name is search("^v4\.1\.")'
+      - 'not moodle__github_version'
+
+  - name: 'moodle__github_version:'
+    ansible.builtin.debug:
+      var: 'moodle__github_version'
+
+  - name: 'curl --location https://github.com/moodle/moodle/archive/refs/tags/{{ moodle__github_version }}.tar.gz --output /tmp/moodle-{{ moodle__github_version }}.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://github.com/moodle/moodle/archive/refs/tags/{{ moodle__github_version }}.tar.gz'
+      dest: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Copy /tmp/moodle.tar.gz to the server'
+    ansible.builtin.copy:
+      src: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
+      dest: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
+
+  - name: 'cd {{ moodle__install_dir }} && tar xfz --strip-components 1 /tmp/moodle-{{ moodle__github_version }}.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
+      dest: '{{ moodle__install_dir }}'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'mkdir -p {{ moodle__data_dir }}'
+    ansible.builtin.file:
+      path: '{{ moodle__data_dir }}'
+      state: 'directory'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o755
+
+  - name: 'sudo -u apache /usr/bin/php admin/cli/install.php ...'
+    ansible.builtin.command: |-
+      sudo -u apache /usr/bin/php {{ moodle__install_dir }}/admin/cli/install.php \
+        --chmod=2750 \
+        --lang=en \
+        --wwwroot=http://{{ moodle__url }} \
+        --dataroot={{ moodle__data_dir }} \
+        --dbtype=mariadb \
+        --dbhost={{ moodle__database_host }} \
+        --dbname={{ moodle__database_name }} \
+        --dbuser={{ moodle__database_login.username }} \
+        --dbpass={{ moodle__database_login.password }} \
+        --dbport={{ moodle__database_port }} \
+        --dbsocket={{ moodle__database_socket }} \
+        --prefix={{ moodle__database_table_prefix }} \
+        --fullname='{{ moodle__site_fullname }}' \
+        --shortname='{{ moodle__site_shortname }}' \
+        --summary='{{ moodle__site_summary }}' \
+        --adminuser={{ moodle__admin.username }} \
+        --adminpass={{ moodle__admin.password }} \
+        --adminemail={{ moodle__admin.email }} \
+        --sitepreset={{ moodle__sitepreset }} \
+        --supportemail={{ moodle__supportemail }} \
+        --upgradekey={{ moodle__upgradekey }} \
+        --non-interactive \
+        --agree-license
+    args:
+      chdir: '{{ moodle__install_dir }}'
+    # if running against an already existing moodle instance, we get
+    # `The configuration file config.php already exists. Please use admin/cli/install_database.php to upgrade Moodle for this site.`
+    ignore_errors: true
+
+  - name: 'find {{ moodle__install_dir }} -type f -exec chmod --changes 0440 {} \;'
+    ansible.builtin.command: 'find {{ moodle__install_dir }} -type f -exec chmod --changes 0440 {} \;'
+    register: 'moodle__chmod_files_result'
+    changed_when: 'moodle__chmod_files_result["stdout"] | length'
+
+  # new files and folders inherit group ownership from the parent folder
+  - name: 'chmod u+s,g+s {{ moodle__install_dir }}'
+    ansible.builtin.file:
+      path: '{{ moodle__install_dir }}'
+      mode: 'g+s'
+
+  - name: 'chown -R apache:apache {{ item }}'
+    ansible.builtin.file:
+      path: '{{ item | quote }}'
+      owner: 'apache'
+      group: 'apache'
+      recurse: true
+    loop:
+      - '{{ moodle__data_dir }}'
+      - '{{ moodle__install_dir }}'
+
+  - name: 'restorecon -Fvr ...'
+    ansible.builtin.command: 'restorecon -Fvr {{ item }}'
+    register: 'moodle__restorecon_moodle_result'
+    changed_when: 'moodle__restorecon_moodle_result["stdout"] | length'
+    loop:
+      - '{{ moodle__data_dir }}'
+      - '{{ moodle__install_dir }}'
+
+  tags:
+    - 'moodle'
+
+
+- block:
+
+  - name: 'Deploy /etc/systemd/system/moodle-cron.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/moodle-cron.service.j2'
+      dest: '/etc/systemd/system/moodle-cron.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'moodle: systemctl daemon-reload'
+
+  - name: 'Deploy /etc/systemd/system/moodle-cron.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/moodle-cron.timer.j2'
+      dest: '/etc/systemd/system/moodle-cron.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'moodle: systemctl daemon-reload'
+
+  tags:
+    - 'moodle'
+    - 'moodle:cron'
+
+
+- block:
+
+  - name: 'systemctl {{ moodle__timer_cron_enabled | bool | ternary("enable", "disable") }} moodle-cron.timer --now'
+    ansible.builtin.systemd:
+      name: 'moodle-cron.timer'
+      state: '{{ moodle__timer_cron_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ moodle__timer_cron_enabled }}'
+
+  tags:
+    - 'moodle'
+    - 'moodle:cron'
+    - 'moodle:state'

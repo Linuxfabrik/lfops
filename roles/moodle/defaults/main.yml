@@ -1,0 +1,168 @@
+moodle__data_dir: '/data'
+moodle__database_host: 'localhost'
+moodle__database_login_host: 'localhost'
+moodle__database_name: 'moodle'
+moodle__database_port: 3306
+moodle__database_socket: '/var/lib/mysql/mysql.sock'
+moodle__database_table_prefix: 'mdl_'
+moodle__install_dir: '/var/www/html/moodle'
+moodle__on_calendar_cron: 'minutely'
+moodle__site_fullname: 'Moodle powered by Linuxfabrik'
+moodle__site_shortname: 'Moodle'
+moodle__site_summary: ''
+moodle__sitepreset: ''
+moodle__supportemail: ''
+moodle__timer_cron_enabled: true
+moodle__upgradekey: ''
+
+# -----------------------------------------------------------------------------
+
+moodle__apache_httpd__mods__dependent_var:
+  - filename: 'proxy_fcgi'
+    enabled: true
+    state: 'present'
+moodle__apache_httpd__vhosts__dependent_var:
+  - by_role: 'moodle'
+    comment: 'vHost for moodle (LMS)'
+    enabled: true
+    state: 'present'
+    template: 'app'
+    allowed_file_extensions:
+      - 'css'
+      - 'gif'
+      - 'html?'
+      - 'ico'
+      - 'jpe?g'
+      - 'js'
+      - 'map'
+      - 'pdf'
+      - 'php'
+      - 'png'
+      - 'svg'
+      - 'ttf'
+      - 'txt'
+      - 'webp'
+      - 'woff2?'
+      - 'xml'
+      - 'xsl'
+    allowed_http_methods:
+      - 'GET'
+      - 'OPTIONS'
+      - 'POST'
+    virtualhost_port: 80
+    conf_custom_log: 'logs/moodle-access.log linuxfabrikio'
+    conf_directory_index: 'index.php index.html index.htm'
+    conf_document_root: '{{ moodle__install_dir }}'
+    conf_error_log: 'logs/moodle-error.log'
+    conf_log_level: 'debug'
+    conf_server_admin: '{{ apache_httpd__conf_server_admin }}'
+    conf_server_name: '{{ moodle__url }}'
+    raw: !unsafe |-
+      <IfModule mod_headers.c>
+        <IfModule mod_env.c>
+          # Add security and privacy related headers
+          SetEnv modHeadersAvailable true
+        </IfModule>
+
+        # Add cache control for static resources
+        <FilesMatch "\.(css|gif|ico|jpg|js|png|svg|tflite|wasm)$">
+          Header set Cache-Control "max-age=15778463"
+        </FilesMatch>
+
+        <FilesMatch "\.(css|gif|ico|jpg|js|png|svg|tflite|wasm)(\?v=.*)?$">
+          Header set Cache-Control "max-age=15778463, immutable"
+        </FilesMatch>
+
+        # Let browsers cache WOFF files for a week
+        <FilesMatch "\.woff2?$">
+          Header set Cache-Control "max-age=604800"
+        </FilesMatch>
+      </IfModule>
+
+      # PHP 8+
+      <IfModule mod_php.c>
+        php_value mbstring.func_overload 0
+        php_value default_charset 'UTF-8'
+        php_value output_buffering 0
+        <IfModule mod_env.c>
+          SetEnv htaccessWorking true
+        </IfModule>
+      </IfModule>
+
+      <IfModule mod_mime.c>
+        AddType image/svg+xml svg svgz
+        AddType application/wasm wasm
+        AddEncoding gzip svgz
+      </IfModule>
+
+      <IfModule mod_rewrite.c>
+        RewriteEngine on
+        RewriteRule "(\/vendor\/)" - [F]
+        RewriteRule "(\/node_modules\/)" - [F]
+        RewriteRule "(^|/)\.(?!well-known\/)" - [F]
+        RewriteRule "(composer\.json)" - [F]
+        RewriteRule "(\.lock)" - [F]
+        RewriteRule "(\/environment.xml)" - [F]
+        Options -Indexes
+        RewriteRule "(\/install.xml)" - [F]
+        RewriteRule "(\/README)" - [F]
+        RewriteRule "(\/readme)" - [F]
+        RewriteRule "(\/moodle_readme)" - [F]
+        RewriteRule "(\/upgrade\.txt)" - [F]
+        RewriteRule "(phpunit\.xml\.dist)" - [F]
+        RewriteRule "(\/tests\/behat\/)" - [F]
+        RewriteRule "(\/fixtures\/)" - [F]
+      </IfModule>
+
+      AddDefaultCharset utf-8
+
+      ErrorDocument 404 /error/index.php
+
+      # This sends any 403 from apache through to the same page, but also
+      # overrides the http status with 404 instead for better security.
+      ErrorDocument 403 /error/index.php?code=404
+
+# https://docs.moodle.org/404/en/MariaDB
+moodle__mariadb_server__databases__dependent_var:
+  - name: '{{ moodle__database_name }}'
+    collation: 'utf8_general_ci'
+    encoding: 'utf8'
+    state: 'present'
+
+moodle__mariadb_server__users__dependent_var:
+  - username: '{{ moodle__database_login.username }}'
+    password: '{{ moodle__database_login.password }}'
+    host: '{{ moodle__database_login_host }}'
+    priv:
+      # https://docs.moodle.org/404/en/Installation_quick_guide
+      - '{{ moodle__database_name | replace("_", "\_") | replace("%", "\%") }}.*:SELECT,INSERT,UPDATE,DELETE,CREATE,CREATE TEMPORARY TABLES,DROP,INDEX,ALTER'
+    state: 'present'
+
+
+# https://docs.moodle.org/404/en/PHP
+moodle__php__ini_max_input_vars__dependent_var: 7500
+moodle__php__modules__dependent_var:
+  - name: 'php-gd'
+    state: 'present'
+  - name: 'php-redis'
+    state: 'present'
+  - name: 'php-mysqlnd'  # MySQL Native Driver for MariaDB - fast, but specific
+    state: 'present'
+  - name: 'php-soap'
+    state: 'present'
+  - name: 'php-xmlrpc'
+    state: 'present'
+
+
+moodle__selinux__booleans__dependent_var:
+  - key: 'httpd_can_network_connect'
+    value: 'on'
+moodle__selinux__fcontexts__dependent_var:
+  - setype: 'httpd_sys_rw_content_t'
+    target: '{{ moodle__data_dir }}(/.*)?'
+    state: 'present'
+
+
+# hard-coded for Moodle 4.1 LTS
+repo_remi__enabled_php_version: '8.1'
+repo_remi__enabled_redis_version: '7.2'

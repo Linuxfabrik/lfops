@@ -1,0 +1,98 @@
+- name: 'Playbook linuxfabrik.lfops.setup_moodle'
+  hosts:
+    - 'lfops_setup_moodle'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+      # === Prepare the system
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not moodle__skip_policycoreutils | default(false)'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{
+          mariadb_server__kernel_settings__sysctl__dependent_var | d([]) +
+          redis__kernel_settings__sysctl__dependent_var | d([])
+        }}'
+      kernel_settings__transparent_hugepages__dependent_var: "{{ redis__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      when:
+        - 'not setup_moodle__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.python'
+      python__modules__dependent_var: '{{
+          mariadb_server__python__modules__dependent_var[ansible_facts["os_family"]] +
+          apache_httpd__python__modules__dependent_var
+        }}'
+      when:
+        - 'not setup_moodle__skip_python | default(false)'
+
+
+      # === Redis, PHP and PHP-FPM from Remi Repo
+    - role: 'linuxfabrik.lfops.repo_remi'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'not moodle__skip_repo_remi | default(false)'
+
+    - role: 'linuxfabrik.lfops.php'
+      php__ini_max_input_vars__dependent_var: '{{ moodle__php__ini_max_input_vars__dependent_var }}'
+      php__modules__dependent_var: '{{ moodle__php__modules__dependent_var }}'
+      when:
+        - 'not moodle__skip_php | default(false)'
+
+    - role: 'linuxfabrik.lfops.redis'
+      when:
+        - 'not setup_moodle__skip_redis | d(false)'
+
+
+      # === MariaDB
+    - role: 'linuxfabrik.lfops.repo_mydumper'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'not setup_moodle__skip_repo_mydumper | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_mariadb'
+      when:
+        - 'not setup_moodle__skip_repo_mariadb | d(false)'
+
+    - role: 'linuxfabrik.lfops.mariadb_server'
+      mariadb_server__databases__dependent_var: '{{ moodle__mariadb_server__databases__dependent_var | default([]) }}'
+      mariadb_server__users__dependent_var: '{{ moodle__mariadb_server__users__dependent_var }}'
+      when:
+        - 'not setup_moodle__skip_mariadb_server | d(false)'
+
+
+    - role: 'linuxfabrik.lfops.apache_httpd'
+      apache_httpd__mods__dependent_var: '{{ moodle__apache_httpd__mods__dependent_var | d([]) }}'
+      apache_httpd__vhosts__dependent_var: '{{ moodle__apache_httpd__vhosts__dependent_var | d([]) }}'
+      when:
+        - 'not setup_moodle__skip_apache_httpd | d(false)'
+
+
+      # ====SELinux
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var: '{{ moodle__selinux__booleans__dependent_var }}'
+      selinux__fcontexts__dependent_var: '{{ moodle__selinux__fcontexts__dependent_var }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_moodle__skip_selinux | default(false)'
+
+
+      # ====Moodle
+    - role: 'linuxfabrik.lfops.moodle'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

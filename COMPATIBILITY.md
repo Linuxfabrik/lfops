@@ -94,6 +94,7 @@ monitoring_plugins_grafana_dashboards|    |    | x | x |       |       |       |
                                      |  Debian |  RHEL |         Ubuntu        | other
 Role                                 | 11 | 12 | 8 | 9 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+---+---+-------+-------+-------+-----------
+moodle                               | -  | -  | x | x |       |       |       |
 motd                                 |    |    | x | x |       |       |       |
 mount                                | x  |    | x | x |       |       |       |
 network                              |    |    | x | x |       |       |       |

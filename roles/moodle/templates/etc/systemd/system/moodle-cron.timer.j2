@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2024072501
+
+[Unit]
+Description=Moodle cron.php Timer
+
+[Timer]
+OnCalendar={{ moodle__on_calendar_cron }}
+Unit=moodle-cron.service
+
+[Install]
+WantedBy=timers.target
