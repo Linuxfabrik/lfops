@@ -100,22 +100,12 @@
     # `The configuration file config.php already exists. Please use admin/cli/install_database.php to upgrade Moodle for this site.`
     ignore_errors: true
 
-  - name: 'Configure Moodle if behind a reverse proxy ($CFG->reverseproxy = true)'
-    ansible.builtin.lineinfile:
-      path: '{{ moodle__install_dir }}/config.php'
-      regexp: '^\$CFG->reverseproxy'
-      line: '$CFG->reverseproxy = true;'
-      mode: 0o440
-      state: 'present'
-    when:
-      - 'moodle__behind_reverse_proxy is defined'
-      - 'moodle__behind_reverse_proxy'
-
-  - name: 'Configure Moodle if behind a reverse proxy ($CFG->sslproxy = true)'
+  - name: 'Configure Moodle if behind a TLS-terminating reverse proxy ($CFG->sslproxy = true)'
     ansible.builtin.lineinfile:
       path: '{{ moodle__install_dir }}/config.php'
       regexp: '^\$CFG->sslproxy'
       line: '$CFG->sslproxy = true;'
+      insertbefore: '^require_once'
       mode: 0o440
       state: 'present'
     when:
@@ -127,6 +117,7 @@
       path: '{{ moodle__install_dir }}/config.php'
       regexp: '^\$CFG->preventexecpath'
       line: '$CFG->preventexecpath = true;'
+      insertbefore: '^require_once'
       mode: 0o440
       state: 'present'
 
