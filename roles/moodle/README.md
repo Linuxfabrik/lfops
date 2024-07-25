@@ -16,9 +16,10 @@ If you use the ["moodle" Playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 
 | Tag         | What it does                 |
 | ---         | ------------                 |
-| `moodle`      | Search for the most recent LTS version on GitHub, download tar.gz locally, put it on the host, run the Moodle installer, fix file permissions, set up Moodle's cron job, and enable/disable it. |
+| `moodle`      | Search for the most recent LTS version on GitHub, download tar.gz locally, put it on the host, run the Moodle installer, fix file permissions, set up Moodle's cron job, enable/disable it, and set up Moosh. |
 | `moodle:cron` | Set up Moodle's cron job. |
 | `moodle:state` | Enable/disable Moodle's cron job. |
+| `moodle:moosh` | Set up Moosh. |
 
 
 ## Mandatory Role Variables
@@ -55,6 +56,7 @@ moodle__url: 'learning.example.com'
 | `moodle__database_socket` | String. Path to database socket file. | `'/var/lib/mysql/mysql.sock'` |
 | `moodle__database_table_prefix` | String. Table prefix for all database tables. | `'mdl_'` |
 | `moodle__install_dir` | String. Database socket path. | `'/var/www/html/moodle'` |
+| `moodle__moosh_download_url` | String. Moosh download URL on moodle.org. | `'https://moodle.org/plugins/download.php/31885/moosh_moodle44_2024050100.zip'` |
 | `moodle__on_calendar_cron`| String. Run interval of Moodle `cron.php`. It is recommended that the Systemd timer is run every minute, as required for asynchronous activity deletion when using the recycle bin. | `'minutely'` |
 | `moodle__site_fullname` | String. This name appears at the top of every page above the navigation bar. | `'Moodle powered by Linuxfabrik'` |
 | `moodle__site_shortname` | String. The short name appears at the beginning of the navigation bar as a link back to your site front page. | `'Moodle'` |
@@ -74,7 +76,8 @@ moodle__database_name: 'moodle'
 moodle__database_port: 3306
 moodle__database_socket: '/var/lib/mysql/mysql.sock'
 moodle__database_table_prefix: 'mdl_'
-moodle__install_dir: '/var/www/html/moodle'
+moodle__moosh_download_url: 'https://moodle.org/plugins/download.php/31885/moosh_moodle44_2024050100.zip'
+moodle__moosh_install_dir: '/opt/moosh'
 moodle__on_calendar_cron: 'minutely'
 moodle__site_fullname: 'Moodle powered by Linuxfabrik'
 moodle__site_shortname: 'Moodle'
@@ -83,6 +86,23 @@ moodle__sitepreset: ''
 moodle__supportemail: 'support@example.com'
 moodle__timer_cron_enabled: true
 moodle__upgradekey: ''
+```
+
+
+## Optional Role Variables - Moosh
+
+This role supports the administration of Moodle using Moosh. This is done by defining a list of commands and executing them using the `moodle:moosh:run` tag. Commands can be defined just like on the command line, so you are free to do whatever you want with Moosh.
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| `moodle__moosh_commands` | List of strings. List of commands that Moosh should execute. | See `defaults/main.yml` |
+
+Example:
+```yaml
+# optional
+moodle__moosh_commands:
+  - 'user-create --firstname=Linus --lastname=Löffel --city=Zurich --country=Switzerland linus'
+  - 'user-list --sort'
 ```
 
 

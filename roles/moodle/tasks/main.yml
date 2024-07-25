@@ -47,7 +47,7 @@
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'Copy /tmp/moodle.tar.gz to the server'
+  - name: 'Copy /tmp/moodle-{{ moodle__github_version }}.tar.gz to {{ ansible_facts["hostname"] }}:/tmp/moodle-{{ moodle__github_version }}.tar.gz'
     ansible.builtin.copy:
       src: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
       dest: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
@@ -100,6 +100,14 @@
     # `The configuration file config.php already exists. Please use admin/cli/install_database.php to upgrade Moodle for this site.`
     ignore_errors: true
 
+  - name: 'Security checks > Executable paths: Executable paths only settable in config.php'
+    ansible.builtin.lineinfile:
+      path: '{{ moodle__install_dir }}/config.php'
+      regexp: '^\$CFG->preventexecpath'
+      line: '$CFG->preventexecpath = true;'
+      mode: 0o440
+      state: 'present'
+
   - name: 'find {{ moodle__install_dir }} -type f -exec chmod --changes 0440 {} \;'
     ansible.builtin.command: 'find {{ moodle__install_dir }} -type f -exec chmod --changes 0440 {} \;'
     register: 'moodle__chmod_files_result'
@@ -110,24 +118,6 @@
     ansible.builtin.file:
       path: '{{ moodle__install_dir }}'
       mode: 'g+s'
-
-  - name: 'chown -R apache:apache {{ item }}'
-    ansible.builtin.file:
-      path: '{{ item | quote }}'
-      owner: 'apache'
-      group: 'apache'
-      recurse: true
-    loop:
-      - '{{ moodle__data_dir }}'
-      - '{{ moodle__install_dir }}'
-
-  - name: 'restorecon -Fvr ...'
-    ansible.builtin.command: 'restorecon -Fvr {{ item }}'
-    register: 'moodle__restorecon_moodle_result'
-    changed_when: 'moodle__restorecon_moodle_result["stdout"] | length'
-    loop:
-      - '{{ moodle__data_dir }}'
-      - '{{ moodle__install_dir }}'
 
   tags:
     - 'moodle'
@@ -170,3 +160,95 @@
     - 'moodle'
     - 'moodle:cron'
     - 'moodle:state'
+
+
+- block:
+
+  # download moosh from moodle.org instead of GiHub, because then we don't have to bother with
+  # `composer install` running as user apache to download additional vendor libraries etc;
+  # the moodle.org file has all batteries included.
+  - name: 'curl --location {{ moodle__moosh_download_url }} --output /tmp/moosh.zip'
+    ansible.builtin.get_url:
+      url: '{{ moodle__moosh_download_url }}'
+      dest: '/tmp/moosh.zip'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'mkdir -p /opt/moosh'
+    ansible.builtin.file:
+      path: '/opt/moosh'
+      state: 'directory'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o755
+
+  - name: 'Copy /tmp/moosh.zip to {{ ansible_facts["hostname"] }}:/tmp/moosh.zip'
+    ansible.builtin.copy:
+      src: '/tmp/moosh.zip'
+      dest: '/tmp/moosh.zip'
+      mode: 0o644
+
+  - name: 'cd /opt/moosh && unzip /tmp/moosh.zip'
+    ansible.builtin.unarchive:
+      src: '/tmp/moosh.zip'
+      dest: '/opt'
+      remote_src: true
+
+  - name: 'find /opt/moosh -type f -exec chmod --changes 0440 {} \;'
+    ansible.builtin.command: 'find /opt/moosh -type f -exec chmod --changes 0440 {} \;'
+    register: 'moodle__chmod_files_result'
+    changed_when: 'moodle__chmod_files_result["stdout"] | length'
+
+  tags:
+    - 'moodle'
+    - 'moodle:moosh'
+
+
+- block:
+
+  - name: 'chown -R apache:apache {{ item }}'
+    ansible.builtin.file:
+      path: '{{ item | quote }}'
+      owner: 'apache'
+      group: 'apache'
+      recurse: true
+    loop:
+      - '{{ moodle__data_dir }}'
+      - '{{ moodle__install_dir }}'
+      - '/opt/moosh'
+
+  - name: 'restorecon -Fvr ...'
+    ansible.builtin.command: 'restorecon -Fvr {{ item }}'
+    register: 'moodle__restorecon_moodle_result'
+    changed_when: 'moodle__restorecon_moodle_result["stdout"] | length'
+    loop:
+      - '{{ moodle__data_dir }}'
+      - '{{ moodle__install_dir }}'
+      - '/opt/moosh'
+
+  tags:
+    - 'moodle'
+    - 'moodle:cron'
+    - 'moodle:moosh'
+    - 'moodle:state'
+
+
+- block:
+
+  - name: 'Run Moosh commands...'
+    ansible.builtin.command: |-
+      sudo -u apache php /opt/moosh/moosh.php --user={{ moodle__admin.username }} \
+        {{ item }}
+    loop: '{{ moodle__moosh_commands }}'
+    args:
+      chdir: '{{ moodle__install_dir }}'
+    # if running on existing items, we get errors. in this case, go on.
+    ignore_errors: true
+
+  tags:
+    - 'moodle:moosh:run'
+  when:
+    - 'moodle__moosh_commands is defined'
+    - 'moodle__moosh_commands'

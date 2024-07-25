@@ -35,6 +35,11 @@
       when:
         - 'not setup_moodle__skip_python | default(false)'
 
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: '{{ moodle__apps__apps__dependent_var }}'
+      when:
+        - 'not moodle__skip_apps | default(false)'
+
 
       # === Redis, PHP and PHP-FPM from Remi Repo
     - role: 'linuxfabrik.lfops.repo_remi'
@@ -64,6 +69,7 @@
         - 'not setup_moodle__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
+      mariadb_server__cnf_table_definition_cache__dependent_var: '{{ moodle__mariadb_server__cnf_table_definition_cache__dependent_var | default(400) }}'
       mariadb_server__databases__dependent_var: '{{ moodle__mariadb_server__databases__dependent_var | default([]) }}'
       mariadb_server__users__dependent_var: '{{ moodle__mariadb_server__users__dependent_var }}'
       when:

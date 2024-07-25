@@ -6,6 +6,10 @@ moodle__database_port: 3306
 moodle__database_socket: '/var/lib/mysql/mysql.sock'
 moodle__database_table_prefix: 'mdl_'
 moodle__install_dir: '/var/www/html/moodle'
+moodle__moosh_commands:
+  - 'cache-add-redis-store redis 127.0.0.1:6379'
+  - 'cache-edit-mappings --application=redis --session=redis'
+moodle__moosh_download_url: 'https://moodle.org/plugins/download.php/31885/moosh_moodle44_2024050100.zip'
 moodle__on_calendar_cron: 'minutely'
 moodle__site_fullname: 'Moodle powered by Linuxfabrik'
 moodle__site_shortname: 'Moodle'
@@ -47,6 +51,7 @@ moodle__apache_httpd__vhosts__dependent_var:
       - 'xsl'
     allowed_http_methods:
       - 'GET'
+      - 'HEAD'  # needed for http://moodle/report/security/index.php
       - 'OPTIONS'
       - 'POST'
     virtualhost_port: 80
@@ -54,7 +59,6 @@ moodle__apache_httpd__vhosts__dependent_var:
     conf_directory_index: 'index.php index.html index.htm'
     conf_document_root: '{{ moodle__install_dir }}'
     conf_error_log: 'logs/moodle-error.log'
-    conf_log_level: 'debug'
     conf_server_admin: '{{ apache_httpd__conf_server_admin }}'
     conf_server_name: '{{ moodle__url }}'
     raw: !unsafe |-
@@ -122,7 +126,15 @@ moodle__apache_httpd__vhosts__dependent_var:
       # overrides the http status with 404 instead for better security.
       ErrorDocument 403 /error/index.php?code=404
 
+
+moodle__apps__apps__dependent_var:
+  - name: 'unzip'
+    state: 'present'
+
+
 # https://docs.moodle.org/404/en/MariaDB
+moodle__mariadb_server__cnf_table_definition_cache__dependent_var: 770
+
 moodle__mariadb_server__databases__dependent_var:
   - name: '{{ moodle__database_name }}'
     collation: 'utf8_general_ci'
