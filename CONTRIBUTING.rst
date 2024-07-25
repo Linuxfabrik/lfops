@@ -686,8 +686,8 @@ Releases
 Releases are available on Ansible Galaxy. Changelogs have to be written according to https://keepachangelog.com/en/1.0.0/.
 
 
-Special Roles
--------------
+Roles with Special Features
+---------------------------
 
 Roles with special technical implementations and capabilities:
 
@@ -699,6 +699,9 @@ Roles with special technical implementations and capabilities:
 
 * | `mongodb <https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb>`_
   | The role implements a ``skip`` state that completely ignores the entry.
+
+* | `moodle <https://github.com/Linuxfabrik/lfops/tree/main/roles/moodle>`_
+  | Searches for the latest and most recent specific LTS version of itself on GitHub.
 
 * | `nextcloud <https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud>`_
   | The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs.
