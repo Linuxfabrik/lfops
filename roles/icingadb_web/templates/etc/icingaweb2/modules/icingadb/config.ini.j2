@@ -1,5 +1,8 @@
 ; {{ ansible_managed }}
-; 2023040301
+; 2024072701
 
 [icingadb]
 resource = "{{ icingadb_web__database_name }}"
+
+[settings]
+plugin_output_character_limit = {{ icingadb_web__plugin_output_character_limit }}

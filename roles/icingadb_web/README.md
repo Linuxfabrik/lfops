@@ -42,6 +42,7 @@ icingadb_web__api_user_login:
 | `icingadb_web__redis_host` | The host on which Redis instance is reachable. | `'{{ icingadb__redis_host }}'` |
 | `icingadb_web__redis_password` | The password for the Redis instance, if authentication is enabled. | `'{{ icingadb__redis_password | d() }}'` |
 | `icingadb_web__redis_port` | The port on which Redis instance is reachable. | `'{{ icingadb__redis_port }}'` |
+| `icingadb_web__plugin_output_character_limit` | Number. Sets the maximum number of characters to display in plugin output. | `20000` |
 
 Example:
 ```yaml
@@ -53,6 +54,7 @@ icingadb_web__database_login:
   username: 'icingadb'
   password: 'linuxfabrik'
 icingadb_web__database_name: 'icingadb'
+icingadb_web__plugin_output_character_limit: 20000
 icingadb_web__redis_host: '127.0.0.1'
 icingadb_web__redis_password: 'linuxfabrik'
 icingadb_web__redis_port: 6379
