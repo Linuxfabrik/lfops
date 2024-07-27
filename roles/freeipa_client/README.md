@@ -37,7 +37,7 @@ freeipa_client__ipa_admin_user:
 
 `Joining realm failed: JSON-RPC call failed: Couldn't connect to server`: Check firewall settings, perhaps a port like LDAP or HTTPS is blocked.
 
-Re-join an unprovisioned host: `ansible-playbook ... --extra-vars='ipaclient_force_join=true'`
+`msg: krb5.keytab missing! Retry with ipaclient_force_join=yes to generate a new one`, re-join an unprovisioned host: `ansible-playbook ... --extra-vars='ipaclient_force_join=true'`
 
 `IPA client already installed with a conflicting domain`: Follow [Manually Unconfiguring Client Machines](https://access.redhat.com/documentation/de-de/red_hat_enterprise_linux/6/html/identity_management_guide/manually-unconfig-machines)
 
