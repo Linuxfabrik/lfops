@@ -300,7 +300,6 @@ nextcloud__apache_httpd__mods__dependent_var:
   - filename: 'proxy_fcgi'
     enabled: true
     state: 'present'
-
 nextcloud__apache_httpd__vhosts__dependent_var:
   - by_role: 'nextcloud'
     enabled: true
@@ -327,11 +326,11 @@ nextcloud__apache_httpd__vhosts__dependent_var:
       <IfModule mod_headers.c>
         <IfModule mod_setenvif.c>
           <IfModule mod_fcgid.c>
-             SetEnvIfNoCase ^Authorization$ "(.+)" XAUTHORIZATION=$1
-             RequestHeader set XAuthorization %{XAUTHORIZATION}e env=XAUTHORIZATION
+            SetEnvIfNoCase ^Authorization$ "(.+)" XAUTHORIZATION=$1
+            RequestHeader set XAuthorization %{XAUTHORIZATION}e env=XAUTHORIZATION
           </IfModule>
           <IfModule mod_proxy_fcgi.c>
-             SetEnvIfNoCase Authorization "(.+)" HTTP_AUTHORIZATION=$1
+            SetEnvIfNoCase Authorization "(.+)" HTTP_AUTHORIZATION=$1
           </IfModule>
           <IfModule mod_lsapi.c>
             SetEnvIfNoCase ^Authorization$ "(.+)" XAUTHORIZATION=$1
