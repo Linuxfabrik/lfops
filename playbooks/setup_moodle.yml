@@ -16,7 +16,7 @@
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not moodle__skip_policycoreutils | default(false)'
+        - 'not setup_moodle__skip_policycoreutils | default(false)'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{
@@ -38,20 +38,20 @@
     - role: 'linuxfabrik.lfops.apps'
       apps__apps__dependent_var: '{{ moodle__apps__apps__dependent_var }}'
       when:
-        - 'not moodle__skip_apps | default(false)'
+        - 'not setup_moodle__skip_apps | default(false)'
 
 
       # === Redis, PHP and PHP-FPM from Remi Repo
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
-        - 'not moodle__skip_repo_remi | default(false)'
+        - 'not setup_moodle__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
       php__ini_max_input_vars__dependent_var: '{{ moodle__php__ini_max_input_vars__dependent_var }}'
       php__modules__dependent_var: '{{ moodle__php__modules__dependent_var }}'
       when:
-        - 'not moodle__skip_php | default(false)'
+        - 'not setup_moodle__skip_php | default(false)'
 
     - role: 'linuxfabrik.lfops.redis'
       when:
@@ -83,7 +83,7 @@
         - 'not setup_moodle__skip_apache_httpd | d(false)'
 
 
-      # ====SELinux
+      # === SELinux
     - role: 'linuxfabrik.lfops.selinux'
       selinux__booleans__dependent_var: '{{ moodle__selinux__booleans__dependent_var }}'
       selinux__fcontexts__dependent_var: '{{ moodle__selinux__fcontexts__dependent_var }}'
@@ -92,7 +92,7 @@
         - 'not setup_moodle__skip_selinux | default(false)'
 
 
-      # ====Moodle
+      # === Moodle
     - role: 'linuxfabrik.lfops.moodle'
 
 
