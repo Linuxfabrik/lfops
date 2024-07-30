@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:redis:
+* Dropped support for Redis v6
+
 Playbook:setup_icinga2_master:
 * changed default of `setup_icinga2_master__icingaweb2_module_company__skip_role` from false to true.
 

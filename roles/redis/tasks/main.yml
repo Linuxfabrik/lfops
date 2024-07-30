@@ -18,21 +18,6 @@
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'Get Redis version'
-    ansible.builtin.set_fact:
-      redis__installed_version: '{{ ansible_facts.packages["redis"][0]["version"] | regex_search("\d+\.\d+") }}'
-
-  - name: 'Deploy /etc/redis.conf (v{{ redis__installed_version }})'
-    ansible.builtin.template:
-      src: 'etc/{{ redis__installed_version }}-redis.conf.j2'
-      dest: '/etc/redis.conf'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-    notify: 'redis: restart redis'
-    when:
-      - 'redis__installed_version[:1] | int < 7'
-
   - name: 'Deploy /etc/redis/redis.conf (v{{ redis__installed_version }})'
     ansible.builtin.template:
       src: 'etc/redis/{{ redis__installed_version }}-redis.conf.j2'
@@ -41,15 +26,13 @@
       group: 'root'
       mode: 0o644
     notify: 'redis: restart redis'
-    when:
-      - 'redis__installed_version[:1] | int >= 7'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
       name: 'shared'
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
-      shared__remove_rpmnew_rpmsave_config_file: '/etc/redis.conf'
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/redis/redis.conf'
 
   - name: 'mkdir -p /etc/systemd/system/{{ redis__service_name }}.d/'
     ansible.builtin.file:
