@@ -9,12 +9,7 @@ LFOps is designed to be used within the Linuxfabrik. Nevertheless, we try to kee
 
 ## Installation
 
-To install the **stable** release of the collection:
-```bash
-ansible-galaxy collection install linuxfabrik.lfops
-```
-
-To install the **development** version of the collection (requires ansible >= 2.10):
+Install the current version of the collection (requires ansible >= 2.10):
 ```bash
 # via HTTPS
 ansible-galaxy collection install git+https://github.com/Linuxfabrik/lfops.git
