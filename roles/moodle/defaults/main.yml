@@ -7,9 +7,7 @@ moodle__database_port: 3306
 moodle__database_socket: '/var/lib/mysql/mysql.sock'
 moodle__database_table_prefix: 'mdl_'
 moodle__install_dir: '/var/www/html/moodle'
-moodle__moosh_commands:
-  - 'cache-add-redis-store redis 127.0.0.1:6379'
-  - 'cache-edit-mappings --application=redis --session=redis'
+moodle__moosh_commands: []
 moodle__moosh_download_url: 'https://moodle.org/plugins/download.php/31885/moosh_moodle44_2024050100.zip'
 moodle__on_calendar_cron: 'minutely'
 moodle__site_fullname: 'Moodle powered by Linuxfabrik'
@@ -23,6 +21,9 @@ moodle__upgradekey: ''
 # -----------------------------------------------------------------------------
 
 moodle__apache_httpd__mods__dependent_var:
+  - filename: 'env'
+    enabled: true
+    state: 'present'
   - filename: 'proxy_fcgi'
     enabled: true
     state: 'present'
@@ -60,64 +61,53 @@ moodle__apache_httpd__vhosts__dependent_var:
     conf_directory_index: 'index.php index.html index.htm'
     conf_document_root: '{{ moodle__install_dir }}'
     conf_error_log: 'logs/moodle-error.log'
-    conf_server_admin: '{{ apache_httpd__conf_server_admin }}'
     conf_server_name: '{{ moodle__url | regex_replace("^(http://|https://)", "") }}'
     raw: !unsafe |-
-      <IfModule mod_headers.c>
-        <IfModule mod_env.c>
-          # Add security and privacy related headers
-          SetEnv modHeadersAvailable true
-        </IfModule>
+      # Add security and privacy related headers
+      SetEnv modHeadersAvailable true
 
-        # Add cache control for static resources
-        <FilesMatch "\.(css|gif|ico|jpg|js|png|svg|tflite|wasm)$">
+      # Add cache control for static resources
+      <FilesMatch "\.(css|gif|ico|jpg|js|png|svg|tflite|wasm)$">
           Header set Cache-Control "max-age=15778463"
-        </FilesMatch>
+      </FilesMatch>
 
-        <FilesMatch "\.(css|gif|ico|jpg|js|png|svg|tflite|wasm)(\?v=.*)?$">
+      <FilesMatch "\.(css|gif|ico|jpg|js|png|svg|tflite|wasm)(\?v=.*)?$">
           Header set Cache-Control "max-age=15778463, immutable"
-        </FilesMatch>
+      </FilesMatch>
 
-        # Let browsers cache WOFF files for a week
-        <FilesMatch "\.woff2?$">
+      # Let browsers cache WOFF files for a week
+      <FilesMatch "\.woff2?$">
           Header set Cache-Control "max-age=604800"
-        </FilesMatch>
-      </IfModule>
+      </FilesMatch>
 
-      # PHP 8+
+      # classic PHP (without PHP-FPM)
       <IfModule mod_php.c>
-        php_value mbstring.func_overload 0
-        php_value default_charset 'UTF-8'
-        php_value output_buffering 0
-        <IfModule mod_env.c>
+          php_value mbstring.func_overload 0
+          php_value default_charset 'UTF-8'
+          php_value output_buffering 0
           SetEnv htaccessWorking true
-        </IfModule>
       </IfModule>
 
-      <IfModule mod_mime.c>
-        AddType image/svg+xml svg svgz
-        AddType application/wasm wasm
-        AddEncoding gzip svgz
-      </IfModule>
+      AddType image/svg+xml svg svgz
+      AddType application/wasm wasm
+      AddEncoding gzip svgz
 
-      <IfModule mod_rewrite.c>
-        RewriteEngine on
-        RewriteRule "(\/vendor\/)" - [F]
-        RewriteRule "(\/node_modules\/)" - [F]
-        RewriteRule "(^|/)\.(?!well-known\/)" - [F]
-        RewriteRule "(composer\.json)" - [F]
-        RewriteRule "(\.lock)" - [F]
-        RewriteRule "(\/environment.xml)" - [F]
-        Options -Indexes
-        RewriteRule "(\/install.xml)" - [F]
-        RewriteRule "(\/README)" - [F]
-        RewriteRule "(\/readme)" - [F]
-        RewriteRule "(\/moodle_readme)" - [F]
-        RewriteRule "(\/upgrade\.txt)" - [F]
-        RewriteRule "(phpunit\.xml\.dist)" - [F]
-        RewriteRule "(\/tests\/behat\/)" - [F]
-        RewriteRule "(\/fixtures\/)" - [F]
-      </IfModule>
+      RewriteEngine on
+      RewriteRule "(\/vendor\/)" - [F]
+      RewriteRule "(\/node_modules\/)" - [F]
+      RewriteRule "(^|/)\.(?!well-known\/)" - [F]
+      RewriteRule "(composer\.json)" - [F]
+      RewriteRule "(\.lock)" - [F]
+      RewriteRule "(\/environment.xml)" - [F]
+      Options -Indexes
+      RewriteRule "(\/install.xml)" - [F]
+      RewriteRule "(\/README)" - [F]
+      RewriteRule "(\/readme)" - [F]
+      RewriteRule "(\/moodle_readme)" - [F]
+      RewriteRule "(\/upgrade\.txt)" - [F]
+      RewriteRule "(phpunit\.xml\.dist)" - [F]
+      RewriteRule "(\/tests\/behat\/)" - [F]
+      RewriteRule "(\/fixtures\/)" - [F]
 
       AddDefaultCharset utf-8
 
@@ -174,9 +164,3 @@ moodle__selinux__fcontexts__dependent_var:
   - setype: 'httpd_sys_rw_content_t'
     target: '{{ moodle__data_dir }}(/.*)?'
     state: 'present'
-
-
-# hard-coded for Moodle 4.1 LTS
-# https://moodledev.io/general/development/policies/php
-repo_remi__enabled_php_version: '8.1'
-repo_remi__enabled_redis_version: '7.2'

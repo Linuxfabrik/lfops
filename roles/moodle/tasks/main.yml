@@ -1,9 +1,3 @@
-- name: 'Set platform/version specific variables'
-  ansible.builtin.import_role:
-    name: 'shared'
-    tasks_from: 'platform-variables.yml'
-
-
 - block:
 
   - name: 'mkdir -p {{ moodle__install_dir }}'
@@ -22,17 +16,20 @@
     delegate_to: 'localhost'
     run_once: true
 
-  - name: 'Init moodle__github_version'
-    ansible.builtin.set_fact:
-      moodle__github_version: ''
-
   - name: 'Get the latest v4.1 (LTS) version of moodle'
     ansible.builtin.set_fact:
-      moodle__github_version: "{{ item.name }}"
+      moodle__github_version: '{{ item["name"] }}'
     loop: '{{ moodle__github_release["json"] }}'
+    loop_control:
+      label: '{{ item["name"] }}'
     when:
-      - 'item.name is search("^v4\.1\.")'
-      - 'not moodle__github_version'
+      - 'item["name"] is search("^v4\.1\.")'
+      - 'not moodle__github_version | d()' # stop after the first match
+
+  - name: 'check that moodle__github_version is set'
+    ansible.builtin.assert:
+      that: 'moodle__github_version is defined'
+      fail_msg: 'Could not find the latest Moodle version'
 
   - name: 'moodle__github_version:'
     ansible.builtin.debug:
@@ -47,7 +44,7 @@
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'Copy /tmp/moodle-{{ moodle__github_version }}.tar.gz to {{ ansible_facts["hostname"] }}:/tmp/moodle-{{ moodle__github_version }}.tar.gz'
+  - name: 'Copy /tmp/moodle-{{ moodle__github_version }}.tar.gz to {{ inventory_hostname }}:/tmp/moodle-{{ moodle__github_version }}.tar.gz'
     ansible.builtin.copy:
       src: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
       dest: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
@@ -69,48 +66,47 @@
       mode: 0o755
 
   - name: 'sudo -u apache /usr/bin/php admin/cli/install.php ...'
-    ansible.builtin.command: |-
-      sudo -u apache /usr/bin/php {{ moodle__install_dir }}/admin/cli/install.php \
-        --chmod=2750 \
-        --lang=en \
-        --wwwroot={{ moodle__url }} \
-        --dataroot={{ moodle__data_dir }} \
-        --dbtype=mariadb \
-        --dbhost={{ moodle__database_host }} \
-        --dbname={{ moodle__database_name }} \
-        --dbuser={{ moodle__database_login.username }} \
-        --dbpass={{ moodle__database_login.password }} \
-        --dbport={{ moodle__database_port }} \
-        --dbsocket={{ moodle__database_socket }} \
-        --prefix={{ moodle__database_table_prefix }} \
-        --fullname='{{ moodle__site_fullname }}' \
-        --shortname='{{ moodle__site_shortname }}' \
-        --summary='{{ moodle__site_summary }}' \
-        --adminuser={{ moodle__admin.username }} \
-        --adminpass={{ moodle__admin.password }} \
-        --adminemail={{ moodle__admin.email }} \
-        --sitepreset={{ moodle__sitepreset }} \
-        --supportemail={{ moodle__supportemail }} \
-        --upgradekey={{ moodle__upgradekey }} \
-        --non-interactive \
+    ansible.builtin.command: >
+      php {{ moodle__install_dir }}/admin/cli/install.php
+        --chmod=2750
+        --lang=en
+        --wwwroot={{ moodle__url }}
+        --dataroot={{ moodle__data_dir }}
+        --dbtype=mariadb
+        --dbhost={{ moodle__database_host }}
+        --dbname={{ moodle__database_name }}
+        --dbuser={{ moodle__database_login["username"] }}
+        --dbpass={{ moodle__database_login["password"] }}
+        --dbport={{ moodle__database_port }}
+        --dbsocket={{ moodle__database_socket }}
+        --prefix={{ moodle__database_table_prefix }}
+        --fullname='{{ moodle__site_fullname }}'
+        --shortname='{{ moodle__site_shortname }}'
+        --summary='{{ moodle__site_summary }}'
+        --adminuser={{ moodle__admin["username"] }}
+        --adminpass={{ moodle__admin["password"] }}
+        --adminemail={{ moodle__admin["email"] }}
+        --sitepreset={{ moodle__sitepreset }}
+        --supportemail={{ moodle__supportemail }}
+        --upgradekey={{ moodle__upgradekey }}
+        --non-interactive
         --agree-license
     args:
       chdir: '{{ moodle__install_dir }}'
-    # if running against an already existing moodle instance, we get
-    # `The configuration file config.php already exists. Please use admin/cli/install_database.php to upgrade Moodle for this site.`
-    ignore_errors: true
+      # if running against an already existing moodle instance, we get
+      # `The configuration file config.php already exists. Please use admin/cli/install_database.php to upgrade Moodle for this site.`
+      creates: '{{ moodle__install_dir }}/config.php'
+    become: true
+    become_user: 'apache'
 
   - name: 'Configure Moodle if behind a TLS-terminating reverse proxy ($CFG->sslproxy = true)'
     ansible.builtin.lineinfile:
       path: '{{ moodle__install_dir }}/config.php'
       regexp: '^\$CFG->sslproxy'
-      line: '$CFG->sslproxy = true;'
+      line: '$CFG->sslproxy = {{ moodle__behind_reverse_proxy | lower }};'
       insertbefore: '^require_once'
       mode: 0o440
       state: 'present'
-    when:
-      - 'moodle__behind_reverse_proxy is defined'
-      - 'moodle__behind_reverse_proxy'
 
   - name: 'Security checks > Executable paths: Executable paths only settable in config.php'
     ansible.builtin.lineinfile:
@@ -131,12 +127,6 @@
     ansible.builtin.file:
       path: '{{ moodle__install_dir }}/version.php'
       mode: 'o+r'
-
-  # new files and folders inherit group ownership from the parent folder
-  - name: 'chmod u+s,g+s {{ moodle__install_dir }}'
-    ansible.builtin.file:
-      path: '{{ moodle__install_dir }}'
-      mode: 'g+s'
 
   tags:
     - 'moodle'
@@ -203,7 +193,7 @@
       group: 'apache'
       mode: 0o755
 
-  - name: 'Copy /tmp/moosh.zip to {{ ansible_facts["hostname"] }}:/tmp/moosh.zip'
+  - name: 'Copy /tmp/moosh.zip to {{ inventory_hostname }}:/tmp/moosh.zip'
     ansible.builtin.copy:
       src: '/tmp/moosh.zip'
       dest: '/tmp/moosh.zip'
@@ -229,7 +219,7 @@
 
   - name: 'chown -R apache:apache {{ item }}'
     ansible.builtin.file:
-      path: '{{ item | quote }}'
+      path: '{{ item }}'
       owner: 'apache'
       group: 'apache'
       recurse: true
@@ -247,6 +237,20 @@
       - '{{ moodle__install_dir }}'
       - '/opt/moosh'
 
+  - name: 'Configure Redis via Moosh'
+    ansible.builtin.command: >
+      php /opt/moosh/moosh.php --user={{ moodle__admin["username"] }}
+      {{ item }}
+    loop:
+      - 'cache-add-redis-store redis 127.0.0.1:6379'
+      - 'cache-edit-mappings --application=redis --session=redis'
+    args:
+      chdir: '{{ moodle__install_dir }}'
+    become: true
+    become_user: 'apache'
+    # if running on existing items, we get errors. in this case, go on.
+    ignore_errors: true
+
   tags:
     - 'moodle'
     - 'moodle:cron'
@@ -257,17 +261,17 @@
 - block:
 
   - name: 'Run Moosh commands...'
-    ansible.builtin.command: |-
-      sudo -u apache php /opt/moosh/moosh.php --user={{ moodle__admin.username }} \
-        {{ item }}
+    ansible.builtin.command: >
+      php /opt/moosh/moosh.php --user={{ moodle__admin["username"] }}
+      {{ item }}
     loop: '{{ moodle__moosh_commands }}'
     args:
       chdir: '{{ moodle__install_dir }}'
+    become: true
+    become_user: 'apache'
     # if running on existing items, we get errors. in this case, go on.
     ignore_errors: true
 
   tags:
-    - 'moodle:moosh:run'
-  when:
-    - 'moodle__moosh_commands is defined'
-    - 'moodle__moosh_commands'
+    - 'never'
+    - 'moodle:moosh_run'
