@@ -5,6 +5,6 @@
 Description=Moodle cron.php Service
 
 [Service]
-ExecStart=/usr/bin/php --file /var/www/html/moodle/admin/cli/cron.php
+ExecStart=/usr/bin/php --file {{ moodle__install_dir }}/admin/cli/cron.php
 Type=oneshot
 User=apache
