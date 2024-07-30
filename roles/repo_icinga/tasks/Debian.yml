@@ -21,7 +21,7 @@
   - name: 'deploy the repo file (mirror: {{ repo_icinga__mirror_url | default("") }})'
     ansible.builtin.template:
       src: 'etc/apt/sources.list.d/packages_icinga_com_debian.list.j2'
-      dest: '/etc/apt/sources.list.d/packages_icinga_com_debian.list'
+      dest: '/etc/apt/sources.list.d/packages_icinga_com_{{ ansible_facts["distribution"] | lower }}.list'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -31,7 +31,7 @@
       name: 'shared'
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
-      shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/packages_icinga_com_debian.list'
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/packages_icinga_com_{{ ansible_facts["distribution"] | lower }}.list'
 
   - name: 'apt update # update the cache'
     ansible.builtin.apt:

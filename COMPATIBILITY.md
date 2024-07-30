@@ -126,7 +126,7 @@ repo_gitlab_ce                       |    |    | x |   |       |       |       |
 repo_gitlab_runner                   |    |    | x |   |       |       |       |
 repo_grafana                         |    | x  | x | x |       |       |       |
 repo_graylog                         | x  |    | x |   |       |       |       |
-repo_icinga                          |    | x  | x | x |       |       |       |
+repo_icinga                          |    | x  | x | x |       |   x   |       |
 repo_influxdb                        | x  | x  | x | x |       |       |       |
 repo_mariadb                         |    | x  | x | x |       |       |       |
 repo_mongodb                         | x  |    | x | x |       |       |       |

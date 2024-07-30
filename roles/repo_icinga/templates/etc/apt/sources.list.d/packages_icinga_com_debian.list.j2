@@ -1,10 +1,10 @@
 # {{ ansible_managed }}
-# 2024070401
+# 2024073001
 
 {% if repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length %}
   {% set repo_icinga__baseurl = repo_icinga__mirror_url ~ '/icinga' %}
 {% else %}
-  {% set repo_icinga__baseurl = 'http://packages.icinga.com/debian' %}
+  {% set repo_icinga__baseurl = 'http://packages.icinga.com/' ~ ansible_facts["distribution"] | lower %}
 {% endif %}
 
 deb [signed-by=/etc/apt/keyrings/icinga.asc] {{ repo_icinga__baseurl }} icinga-{{ ansible_facts["distribution_release"] }} main
