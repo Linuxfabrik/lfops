@@ -53,6 +53,7 @@ Roles:
 * The role should support the installation and configuration of multiple major versions of the software. For example, PHP 7.1, 7.2, 7.3 etc. should all be supported by a single role. Upgrades are either done manually or using Ansible, depending on the software and the implementation effort.
 * Do not use role dependencies via ``meta/main.yml``. Dependencies make it harder to maintain a role, especially if it has many complex dependencies.
 * Whenever the role requires a list as an input, use a list of dictionaries, preferably with `state: present/absent`. See "Injections" below.
+* Avoid constructs that could suppress error messages like ``IfModule`` in Apache HTTPd. This makes debugging and troubleshooting a lot easier.
 
 Common:
 
