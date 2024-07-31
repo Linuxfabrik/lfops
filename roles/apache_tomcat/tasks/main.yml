@@ -7,7 +7,7 @@
         - 'tomcat-docs-webapp'  # otherwise some links will be broken on the ROOT startpage
       state: 'present'
     when:
-      - 'not apache_tomcat__skip_root_webapp | d(false)'
+      - 'not apache_tomcat__skip_root_webapp'
 
   - name: 'Install tomcat-admin-webapps'
     ansible.builtin.package:
@@ -15,7 +15,7 @@
         - 'tomcat-admin-webapps'  # installs java and tomcat, too
       state: 'present'
     when:
-      - 'not apache_tomcat__skip_admin_webapps | d(false)'
+      - 'not apache_tomcat__skip_admin_webapps'
 
   - name: 'Install tomcat'
     ansible.builtin.package:
@@ -111,7 +111,7 @@
       mode: 0o664
     notify: 'apache_tomcat: restart tomcat.service'
     when:
-      - 'not apache_tomcat__skip_root_webapp | d(false)'
+      - 'not apache_tomcat__skip_root_webapp'
 
   - name: 'Deploy /var/lib/tomcat/webapps/host-manager/META-INF/context.xml'
     ansible.builtin.template:
@@ -122,7 +122,7 @@
       mode: 0o664
     notify: 'apache_tomcat: restart tomcat.service'
     when:
-      - 'not apache_tomcat__skip_root_webapp | d(false)'
+      - 'not apache_tomcat__skip_root_webapp'
 
   - name: 'Deploy /var/lib/tomcat/webapps/manager/META-INF/context.xml'
     ansible.builtin.template:
@@ -133,7 +133,7 @@
       mode: 0o664
     notify: 'apache_tomcat: restart tomcat.service'
     when:
-      - 'not apache_tomcat__skip_admin_webapps | d(false)'
+      - 'not apache_tomcat__skip_admin_webapps'
 
   - name: 'Deploy /var/lib/tomcat/webapps/manager/WEB-INF/web.xml'
     ansible.builtin.template:
@@ -144,7 +144,7 @@
       mode: 0o664
     notify: 'apache_tomcat: restart tomcat.service'
     when:
-      - 'not apache_tomcat__skip_admin_webapps | d(false)'
+      - 'not apache_tomcat__skip_admin_webapps'
 
   tags:
     - 'apache_tomcat'
