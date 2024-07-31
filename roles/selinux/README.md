@@ -17,7 +17,7 @@ This role
 
 | Tag                  | What it does                                                   |
 | ---                  | ------------                                                   |
-| `selinux`            | * `setenforce ...`<br> * `setsebool -P ...`<br> * `semanage fcontext --add --type ...`<br> * `restorecon -îvr ...` |
+| `selinux`            | * `setenforce ...`<br> * `setsebool -P ...`<br> * `semanage fcontext --add --type ...` |
 | `selinux:fcontext`   | * `semanage fcontext --add --type ...` |
 | `selinux:port`   | * `semanage port --add --type ... --proto ...` |
 | `selinux:setenforce` | * `setenforce ...` |
