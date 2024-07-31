@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   {{ ansible_managed }}
-  # 2022092101
+  # 2024073101
 
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -56,7 +56,7 @@
     </init-param>
     -->
     <multipart-config>
-      <!-- default 50MB max -->
+      <!-- 50MB max -->
       <max-file-size>{{ apache_tomcat__webapps_manager_web_xml_max_file_size | d(52428800) }}</max-file-size>
       <max-request-size>{{ apache_tomcat__webapps_manager_web_xml_max_request_size | d(52428800) }}</max-request-size>
       <file-size-threshold>0</file-size-threshold>

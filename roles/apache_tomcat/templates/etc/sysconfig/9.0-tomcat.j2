@@ -1,0 +1,13 @@
+# Service-specific configuration file for tomcat. This will be sourced by
+# systemd for the default service (tomcat.service)
+# If you want to customize named instance, make a similar file
+# and name it tomcat@instancename.
+
+# You will not need to set this, usually. For default service it equals
+# CATALINA_HOME. For named service, it equals ${TOMCATS_BASE}${NAME}
+#CATALINA_BASE="/usr/share/tomcat"
+
+# Please take a look at /etc/tomcat/tomcat.conf to have an idea what you
+# can override.
+
+CATALINA_OPTS=-Xms{{ apache_tomcat__env_xms | d('1024M') }} -Xmx{{ apache_tomcat__env_xmx | d('1024M') }} -server -XX:{{ apache_tomcat__env_xx | d('+UseParallelGC') }}

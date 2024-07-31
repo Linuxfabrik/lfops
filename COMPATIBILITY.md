@@ -10,7 +10,7 @@ acme_sh                              |    |    | x | x |       |       |       |
 ansible_init                         |    |    |   |   |       |       |       | Fedora 35+
 apache_httpd                         |    | x  | x | x |       |       |       |
 apache_solr                          |    |    | x | x |       |       |       |
-apache_tomcat                        |    |    | x |   |       |       |       |
+apache_tomcat                        |    |    | x | x |       |       |       |
 apps                                 |    |    | x | x |       |       |       |
 at                                   |    |    | x | x |       |       |       | Fedora 35
 audit                                |    |    | x | x |       |       |       |

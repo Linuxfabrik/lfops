@@ -1,13 +1,28 @@
 # Ansible Role linuxfabrik.lfops.apache_tomcat
 
-This role installs and configures one [Apache Tomcat](https://tomcat.apache.org/) instance.
+This role installs and configures an instance of [Apache Tomcat](https://tomcat.apache.org/). The role uses the operating system's package manager, so EPEL is a must on RHEL. Log rotation in Tomcat is disabled and is done by logrotated. This role currently supports Tomcat v9.
 
-It is possible to configure whether the Manager Web GUI should be installed (it is installed by default). When installed, the Manager Web GUI is accessible via http://tomcat:8080/manager/. The role uses the operating system's package manager, so EPEL is a must on RHEL. Logrotation in Tomcat is disabled and is done by logrotated.
+It is possible to configure if you want to install:
 
-Hints:
+* the Manager Web GUIs (default: install). When installed, the Manager Web GUIs are available at
 
-* On RHEL 7 and compatible, it installs Tomcat 7.0.76+ and Java 1.8.0
-* On RHEL 8 and compatible, it installs Tomcat 9.0.65+ and Java 1.8.0
+    * http://tomcat:8080/host-manager/html: Admin Interface (Virtual Host Manager)
+    * http://tomcat:8080/manager/html: Web Application Manager
+    * http://tomcat:8080/manager/status: Server Status
+
+* The home page ("ROOT" web application; default: install). When installed, it is accessible at http://tomcat:8080/.
+
+Notes:
+
+* On RHEL 8 and compatible, it installs Tomcat 9.0.65+ and Java 1.8.0+
+* On RHEL 9 and compatible, it installs Tomcat 9.0.87+ and OpenJDK 11.0.24+ (LTS)
+* If activating AJP, this role currently sets `secretRequired` to `false`.
+
+
+## How to ...
+
+... deploy multiple Tomcat instances on a single server using this role?
+
 
 
 ## Mandatory Requirements
@@ -20,15 +35,16 @@ Hints:
 
 | Tag                       | What it does                                   |
 | ---                       | ------------                                   |
-| `apache_tomcat`           | * Install tomcat-admin-webapps, or install tomcat only<br> * Copy tomcat logrotate template to `/etc/logrotate.d`<br> * `mkdir -p /etc/systemd/system/tomcat.service.d`<br> * Deploy `/etc/systemd/system/tomcat.service.d/override.conf`<br> * Deploy `/etc/tomcat/context.xml`<br> * Deploy `/etc/tomcat/logging.properties`<br> * Deploy `/etc/tomcat/server.xml`<br> * Deploy `/var/lib/tomcat/webapps/manager/META-INF/context.xml`<br> * Deploy `/var/lib/tomcat/webapps/manager/WEB-INF/web.xml`<br> * Deploy `/etc/tomcat/tomcat-users.xml`<br> * `systemctl enable/disable --now tomcat.service` |
-| `apache_tomcat:configure` | * Copy tomcat logrotate template to `/etc/logrotate.d`<br> * `mkdir -p /etc/systemd/system/tomcat.service.d`<br> * Deploy `/etc/systemd/system/tomcat.service.d/override.conf`<br> * Deploy `/etc/tomcat/context.xml`<br> * Deploy `/etc/tomcat/logging.properties`<br> * Deploy `/etc/tomcat/server.xml`<br> * Deploy `/var/lib/tomcat/webapps/manager/META-INF/context.xml`<br> * Deploy `/var/lib/tomcat/webapps/manager/WEB-INF/web.xml`<br> * Deploy `/etc/tomcat/tomcat-users.xml` |
-| `apache_tomcat:users` | * Deploy `/etc/tomcat/tomcat-users.xml` |
-| `apache_tomcat:state`     | * `systemctl enable/disable --now tomcat.service` |
+| `apache_tomcat`           | Install tomcat and optional default web apps, configure Tomcat (`server.xml` and others), configure logrotating, configure access to optional web apps, create users and roles, and enable or disable the default Tomcat service. |
+| `apache_tomcat:configure` | Configure Tomcat (`server.xml` and others), configure logrotating. |
+| `apache_tomcat:webapps`   | Configure access to optional web apps. |
+| `apache_tomcat:users`     | Create users and roles. |
+| `apache_tomcat:state`     | Enable/disable the default Tomcat service. |
 
 
 ## Mandatory Role Variables
 
-Only mandatory if installing the Manager Web GUI.
+Only mandatory if installing the Manager Web GUI and/or the ROOT webapp.
 
 Note that for Tomcat 7 onwards, the roles required to use the manager application were changed from the single `manager` role to the following four roles. You will need to assign the role(s) required for the functionality you wish to access:
 
@@ -41,12 +57,13 @@ The GUI is protected against CSRF, but the text and JMX interfaces are not. To m
 
 | Variable | Description |
 | -------- | ----------- |
-| `apache_tomcat__webapps_manager_context_xml_allow` | String. [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). A regex that describes which IP addresses are allowed to access the manager and host-manager webapps. |
+| `apache_tomcat__webapps_docs_context_xml_allow` | String. A regex that describes which IP addresses are allowed to access the documentation webapp. |
+| `apache_tomcat__webapps_manager_context_xml_allow` | String. A regex that describes which IP addresses are allowed to access the [manager and host-manager](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html) webapps. |
 | `apache_tomcat__users__host_var` / <br> `apache_tomcat__users__group_var`  | List of dictionaries. Users allowed to access the Manager Web GUI. Subkeys: <ul><li>`password`: Mandatory, string.</li><li>`roles`: Mandatory, list. Any of `admin`, `admin-gui`, `admin-script`, `manager`, `manager-gui`, `manager-script`, `manager-jmx`, `manager-status` </li><li>`state`: Optional, string. Either `present` or `absent`.</li><li>`username`: Mandatory, string.</li></ul> |
 
 Example:
 ```yaml
-# only mandatory if installing the Manager Web GUI
+# only mandatory if installing the Manager Web GUI and/or the ROOT webapp
 apache_tomcat__users__host_var:
   - username: 'tomcat-admin'
     password: 'linuxfabrik'
@@ -54,7 +71,8 @@ apache_tomcat__users__host_var:
       - 'admin-gui'
       - 'manager-gui'
     state: 'present'
-apache_tomcat__webapps_manager_context_xml_allow: '|192\.168\.122\.\d+|10\.80\.32\.\d+'
+apache_tomcat__webapps_docs_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\d+'
+apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\d+'
 ```
 
 
@@ -62,6 +80,8 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.168\.122\.\d+|10\.80\.3
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `apache_tomcat__webapps_manager_web_xml_max_file_size` | Number. [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). File size limit for WAR file uploads in bytes. Defaults to 50MB. | `52428800`
+| `apache_tomcat__webapps_manager_web_xml_max_request_size` | Number. [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). Request limit in bytes. Defaults to 50MB. | `52428800`
 | `apache_tomcat__context_xml_cache_max_size` | Number. The maximum size of the static resource cache in kilobytes. If not specified, the default value is `10240` (10 megabytes). This value may be changed while the web application is running (e.g. via JMX). If the cache is using more memory than the new limit the cache will attempt to reduce in size over time to meet the new limit. If necessary, cacheObjectMaxSize will be reduced to ensure that it is no larger than `cacheMaxSize/20`. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/resources.html) | `102400` |
 | `apache_tomcat__env_xms` | Number. `CATALINA_OPTS=-Xms`. Specifies the initial heap size. | `'1024M'` |
 | `apache_tomcat__env_xmx` | Number. `CATALINA_OPTS=-Xmx`. Specifies the maximum heap size. | `'1024M'` |
@@ -77,13 +97,16 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.168\.122\.\d+|10\.80\.3
 | `apache_tomcat__server_xml_shutdown_port` | | `8005` |
 | `apache_tomcat__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
 | `apache_tomcat__service_state` | String. Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `reloaded`<br> * `restarted`<br> * `started`<br> * `stopped` | `'started'` |
-| `apache_tomcat__skip_manager` | Bool. If set to `true`, installation of the Manager Web GUI will be skipped. | `false` |
+| `apache_tomcat__skip_admin_webapps` | Bool. If set to `true`, installation of the Manager Web GUIs will be skipped. | `false` |
+| `apache_tomcat__skip_root_webapp` | Bool. If set to `true`, installation of the ROOT webapp (the tomcat startpage) will be skipped. | `false` |
 | `apache_tomcat__webapps_manager_web_xml_max_file_size` | Number. [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). File size limit for WAR file uploads in bytes. Defaults to 50MB. | `52428800`
 | `apache_tomcat__webapps_manager_web_xml_max_request_size` | Number. [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). Request limit in bytes. Defaults to 50MB. | `52428800`
 
 Example:
 ```yaml
 # optional
+apache_tomcat__webapps_manager_web_xml_max_file_size: 209715200
+apache_tomcat__webapps_manager_web_xml_max_request_size: 209715200
 apache_tomcat__context_xml_cache_max_size: 102400
 apache_tomcat__env_xms: '1024M'
 apache_tomcat__env_xmx: '1024M'
@@ -104,9 +127,8 @@ apache_tomcat__server_xml_connector_port: 8080
 apache_tomcat__server_xml_shutdown_port: 8005
 apache_tomcat__service_enabled: true
 apache_tomcat__service_state: 'started'
-apache_tomcat__skip_manager: false
-apache_tomcat__webapps_manager_web_xml_max_file_size: 209715200
-apache_tomcat__webapps_manager_web_xml_max_request_size: 209715200
+apache_tomcat__skip_admin_webapps: false
+apache_tomcat__skip_root_webapp: false
 ```
 
 

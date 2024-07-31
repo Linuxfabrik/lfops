@@ -24,7 +24,8 @@ apache_tomcat__server_xml_shutdown_port: 8005
 apache_tomcat__service_enabled: true
 apache_tomcat__service_state: 'started'
 
-apache_tomcat__skip_manager: false
+apache_tomcat__skip_admin_webapps: false
+apache_tomcat__skip_root_webapp: false
 
 apache_tomcat__users__dependent_var: []
 apache_tomcat__users__group_var: []

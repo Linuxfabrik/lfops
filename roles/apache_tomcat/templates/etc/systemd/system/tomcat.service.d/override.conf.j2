@@ -1,2 +1,0 @@
-[Service]
-Environment="CATALINA_OPTS=-Xms{{ apache_tomcat__env_xms | d('1024M') }} -Xmx{{ apache_tomcat__env_xmx | d('1024M') }} -server -XX:{{ apache_tomcat__env_xx | d('+UseParallelGC') }}"

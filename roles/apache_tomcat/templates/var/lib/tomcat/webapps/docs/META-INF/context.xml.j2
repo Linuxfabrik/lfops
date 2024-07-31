@@ -18,10 +18,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<Context antiResourceLocking="false" privileged="true" >
-  <CookieProcessor className="org.apache.tomcat.util.http.Rfc6265CookieProcessor"
-                   sameSiteCookies="strict" />
+<Context antiResourceLocking="false" >
   <Valve className="org.apache.catalina.valves.RemoteAddrValve"
-         allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1{{ apache_tomcat__webapps_manager_context_xml_allow }}" />
-  <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.CsrfPreventionFilter\$LruCache(?:\$1)?|java\.util\.(?:Linked)?HashMap"/>
+         allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1{{ apache_tomcat__webapps_docs_context_xml_allow }}" />
 </Context>
