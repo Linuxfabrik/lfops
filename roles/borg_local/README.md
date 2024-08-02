@@ -12,17 +12,6 @@ This role installs and configures [borg](https://www.borgbackup.org/) and sets u
 | `borg_local:state`     | Manages the state of the borg timer     |
 
 
-## Mandatory Role Variables
-
-| Variable | Description |
-| -------- | ----------- |
-
-Example:
-```yaml
-# mandatory
-borg_local__passphrase_mail: 'example@example.com'
-```
-
 ## Optional Role Variables
 
 | Variable | Description | Default Value |
@@ -72,9 +61,9 @@ borg_local__include_files__host_var:
   - file: '/opt'
   - file: '/root'
   - file: '/var/spool/cron'
-borg_local__on_calendar_daily: '*-*-* {{ borg_local__on_calendar_daily_hour }}:{{ 45|random(seed=inventory_hostname) }}'
+borg_local__on_calendar_daily: '*-*-* {{ borg_local__on_calendar_daily_hour }}:{{ 45 | random(seed=inventory_hostname) }}'
 borg_local__on_calendar_daily_hour: 23
-borg_local__on_calendar_hourly: '*-*-* *:{{ 59 |random(start=45) }}'
+borg_local__on_calendar_hourly: '*-*-* *:{{ 59 | random(start=45) }}'
 borg_local__passphrase_mail: 'example@example.com'
 borg_local__retention_daily: '14d'
 borg_local__retention_hourly: '99H'

@@ -51,9 +51,9 @@ borg_local__include_files__combined_var: '{{ (
       borg_local__include_files__host_var
     ) | linuxfabrik.lfops.combine_lod(unique_key="file")
   }}'
-borg_local__on_calendar_daily: '*-*-* {{ borg_local__on_calendar_daily_hour }}:{{ 45|random(seed=inventory_hostname) }}'
+borg_local__on_calendar_daily: '*-*-* {{ borg_local__on_calendar_daily_hour }}:{{ 45 | random(seed=inventory_hostname) }}'
 borg_local__on_calendar_daily_hour: 23
-borg_local__on_calendar_hourly: '*-*-* *:{{ 59 |random(start=45) }}'
+borg_local__on_calendar_hourly: '*-*-* *:{{ 59 | random(start=45) }}'
 borg_local__passphrase_mail: '{{ mailto_root__to[0] }}'
 borg_local__retention_daily: '14d'
 borg_local__retention_hourly: '99H'
