@@ -1,11 +1,5 @@
 - block:
 
-  - name: 'Disable route to the ZEROCONF network that is added to the routing table by the network initscripts'
-    ansible.builtin.lineinfile:
-      path: '/etc/sysconfig/network'
-      line: 'NOZEROCONF=yes'
-      state: 'present'
-
   - name: 'Use fedora.linux_system_roles.network role to configure the network'
     include_role:
       name: 'fedora.linux_system_roles.network'
