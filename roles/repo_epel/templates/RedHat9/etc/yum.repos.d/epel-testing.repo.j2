@@ -1,11 +1,15 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2024080201
 
 [epel-testing]
 name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch
+# It is much more secure to use the metalink, but if you wish to use a local mirror
+# place its address here.
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/testing/9/Everything/x86_64
+#metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
+#baseurl=https://download.example/pub/epel/testing/$releasever/Everything/$basearch/
 metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% endif %}
 enabled=0
@@ -19,9 +23,13 @@ password={{ repo_epel__basic_auth_login["password"] }}
 
 [epel-testing-debuginfo]
 name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch - Debug
+# It is much more secure to use the metalink, but if you wish to use a local mirror
+# place its address here.
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/testing/9/Everything/x86_64/debug
+#metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-debug-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
+#baseurl=https://download.example/pub/epel/testing/$releasever/Everything/$basearch/debug/
 metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-debug-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% endif %}
 enabled=0
@@ -34,9 +42,13 @@ password={{ repo_epel__basic_auth_login["password"] }}
 
 [epel-testing-source]
 name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch - Source
+# It is much more secure to use the metalink, but if you wish to use a local mirror
+# place its address here.
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/testing/9/Everything/source/tree/
+#metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-source-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
+#baseurl=https://download.example/pub/epel/testing/$releasever/Everything/source/tree/
 metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-source-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% endif %}
 enabled=0

@@ -1,17 +1,21 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2024080201
 
 [epel]
 name=Extra Packages for Enterprise Linux $releasever - $basearch
+# It is much more secure to use the metalink, but if you wish to use a local mirror
+# place its address here.
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/9/Everything/x86_64
+#metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
+#baseurl=https://download.example/pub/epel/$releasever/Everything/$basearch/
 metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% endif %}
 enabled=1
 gpgcheck=1
 countme=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever
 {% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
 username={{ repo_epel__basic_auth_login["username"] }}
 password={{ repo_epel__basic_auth_login["password"] }}
@@ -19,13 +23,17 @@ password={{ repo_epel__basic_auth_login["password"] }}
 
 [epel-debuginfo]
 name=Extra Packages for Enterprise Linux $releasever - $basearch - Debug
+# It is much more secure to use the metalink, but if you wish to use a local mirror
+# place its address here.
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/9/Everything/x86_64/debug
+#metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
+#baseurl=https://download.example/pub/epel/$releasever/Everything/$basearch/debug/
 metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% endif %}
 enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever
 gpgcheck=1
 {% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
 username={{ repo_epel__basic_auth_login["username"] }}
@@ -34,13 +42,17 @@ password={{ repo_epel__basic_auth_login["password"] }}
 
 [epel-source]
 name=Extra Packages for Enterprise Linux $releasever - $basearch - Source
+# It is much more secure to use the metalink, but if you wish to use a local mirror
+# place its address here.
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
 baseurl={{ repo_epel__mirror_url }}/epel/9/Everything/source/tree/
+#metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
+#baseurl=https://download.example/pub/epel/$releasever/Everything/source/tree/
 metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% endif %}
 enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever
 gpgcheck=1
 {% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
 username={{ repo_epel__basic_auth_login["username"] }}
