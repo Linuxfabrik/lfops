@@ -18,6 +18,13 @@
 
 - block:
 
+
+  - name: 'install libuser' # required for local variants of tools, eg lgroupmod
+    ansible.builtin.package:
+      name:
+        - 'libuser'
+      state: 'present'
+
   - ansible.builtin.debug:
       msg:
         - 'Combined Users:'
