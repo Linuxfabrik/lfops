@@ -2,7 +2,7 @@
 
 This role installs and configures an instance of [Apache Tomcat](https://tomcat.apache.org/). The role uses the operating system's package manager, so EPEL is a must on RHEL. Log rotation in Tomcat is disabled and is done by logrotated. This role currently supports Tomcat v9.
 
-It is possible to configure if you want to install:
+Optionally this role also installs:
 
 * the Manager Web GUIs (default: install). When installed, the Manager Web GUIs are available at
 
@@ -10,7 +10,7 @@ It is possible to configure if you want to install:
     * http://tomcat:8080/manager/html: Web Application Manager
     * http://tomcat:8080/manager/status: Server Status
 
-* The home page ("ROOT" web application; default: install). When installed, it is accessible at http://tomcat:8080/.
+* the home page ("ROOT" web application; default: install). When installed, it is accessible at http://tomcat:8080/.
 
 Notes:
 
@@ -23,12 +23,15 @@ Notes:
 
 ... deploy multiple Tomcat instances on a single server using this role?
 
+TODO
 
 
 ## Mandatory Requirements
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 * Set SELinux Booleans and Policies properly. This can be done using the [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux) role.
+
+If you use the [Apache Tomcat Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apache_tomcat.yml), this is automatically done for you.
 
 
 ## Tags

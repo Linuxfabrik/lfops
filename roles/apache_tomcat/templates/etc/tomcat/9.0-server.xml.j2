@@ -22,7 +22,7 @@
      define subcomponents such as "Valves" at this level.
      Documentation at /docs/config/server.html
  -->
-<Server port="{{ apache_tomcat__server_xml_shutdown_port | d(8005) }}" shutdown="SHUTDOWN">
+<Server port="{{ apache_tomcat__server_xml_shutdown_port }}" shutdown="SHUTDOWN">
   <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
   <!-- Security listener. Documentation at /docs/config/listeners.html
   <Listener className="org.apache.catalina.security.SecurityListener" />
@@ -69,13 +69,14 @@
          APR (HTTP/AJP) Connector: /docs/apr.html
          Define a non-SSL/TLS HTTP/1.1 Connector on port 8080
     -->
-    <Connector port="{{ apache_tomcat__server_xml_connector_port | d(8080) }}" protocol="HTTP/1.1"
-               connectionTimeout="{{ apache_tomcat__server_xml_connector_connection_timeout | d(20000) }}"
+    <Connector port="{{ apache_tomcat__server_xml_connector_port }}" protocol="HTTP/1.1"
+               connectionTimeout="{{ apache_tomcat__server_xml_connector_connection_timeout }}"
                redirectPort="8443"
                maxParameterCount="1000"
-               maxThreads="{{ apache_tomcat__server_xml_connector_max_threads | d(200) }}"
-               minSpareThreads="{{ apache_tomcat__server_xml_connector_min_spare_threads | d(10) }}"
-               compression="{{ apache_tomcat__server_xml_connector_compression | d('on') }}"
+               maxThreads="{{ apache_tomcat__server_xml_connector_max_threads }}"
+               minSpareThreads="{{ apache_tomcat__server_xml_connector_min_spare_threads }}"
+               compression="{{ apache_tomcat__server_xml_connector_compression  }}"
+                compressableMimeType="{{ apache_tomcat__server_xml_connector_compressable_mime_types }} "
     />
     <!-- A "Connector" using the shared thread pool-->
     <!--
@@ -129,7 +130,7 @@
     {% if apache_tomcat__server_xml_ajp_port is defined and apache_tomcat__server_xml_ajp_port %}
     <Connector protocol="AJP/1.3"
                address="127.0.0.1"
-               port="{{ apache_tomcat__server_xml_ajp_port | d(8009) }}"
+               port="{{ apache_tomcat__server_xml_ajp_port }}"
                redirectPort="8443"
                maxParameterCount="1000"
                secretRequired="false"

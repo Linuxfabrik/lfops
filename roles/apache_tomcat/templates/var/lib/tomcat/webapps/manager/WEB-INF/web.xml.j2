@@ -57,8 +57,8 @@
     -->
     <multipart-config>
       <!-- 50MB max -->
-      <max-file-size>{{ apache_tomcat__webapps_manager_web_xml_max_file_size | d(52428800) }}</max-file-size>
-      <max-request-size>{{ apache_tomcat__webapps_manager_web_xml_max_request_size | d(52428800) }}</max-request-size>
+      <max-file-size>{{ apache_tomcat__webapps_manager_web_xml_max_file_size }}</max-file-size>
+      <max-request-size>{{ apache_tomcat__webapps_manager_web_xml_max_request_size }}</max-request-size>
       <file-size-threshold>0</file-size-threshold>
     </multipart-config>
   </servlet>
