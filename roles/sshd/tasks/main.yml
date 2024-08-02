@@ -2,11 +2,18 @@
 
   - name: 'Deploy /etc/ssh/sshd_config'
     ansible.builtin.template:
-      src: 'etc/ssh/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-sshd_config.j2'
+      src: '{{ lookup("ansible.builtin.first_found", __task_file) }}'
       dest: '/etc/ssh/sshd_config'
       owner: 'root'
       group: 'root'
       mode: 0o600
+    vars:
+      __task_file:
+        files:
+          - 'etc/ssh/{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}-sshd_config.j2'
+          - 'etc/ssh/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-sshd_config.j2'
+        paths:
+          - '{{ role_path }}/templates'
     notify: 'sshd: reload sshd'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'

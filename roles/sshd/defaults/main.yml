@@ -5,7 +5,7 @@ sshd__permit_root_login: 'yes'
 sshd__port: 22
 sshd__service_enabled: true
 sshd__service_state: 'started'
-sshd__sftp_subsystem: '{{ sshd__sftp_subsystem__role_var[ansible_facts["os_family"] ~ ansible_facts["distribution_major_version"]] }}'
+sshd__sftp_subsystem: '/usr/libexec/openssh/sftp-server'
 sshd__use_dns: false
 
 sshd__log_level__dependent_var: ''
@@ -18,7 +18,3 @@ sshd__log_level__combined_var: '{{
     sshd__log_level__dependent_var if (sshd__log_level__dependent_var | string | length) else
     sshd__log_level__role_var
   }}'
-
-sshd__sftp_subsystem__role_var:  # for the future
-  RedHat8: '/usr/libexec/openssh/sftp-server'
-  RedHat9: '/usr/libexec/openssh/sftp-server'
