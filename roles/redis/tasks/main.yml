@@ -18,6 +18,10 @@
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
 
+  - name: 'Get Redis version'
+    ansible.builtin.set_fact:
+      redis__installed_version: '{{ ansible_facts.packages["redis"][0]["version"] | regex_search("\d+\.\d+") }}'
+
   - name: 'Deploy /etc/redis/redis.conf (v{{ redis__installed_version }})'
     ansible.builtin.template:
       src: 'etc/redis/{{ redis__installed_version }}-redis.conf.j2'
