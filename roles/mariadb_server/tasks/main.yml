@@ -122,7 +122,7 @@
       daemon_reload: true
     when: 'mariadb_server__socket_selinux_workaround_result is changed'
 
-  - name: 'Deploy /etc/logrotate.d/mariadb'
+  - name: 'Deploy {{ mariadb_server__logrotate_path }}'
     ansible.builtin.template:
       src: 'etc/logrotate.d/mariadb.j2'
       dest: '{{ mariadb_server__logrotate_path }}'
