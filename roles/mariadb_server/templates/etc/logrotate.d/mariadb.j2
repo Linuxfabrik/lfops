@@ -9,9 +9,7 @@
 # Read https://mariadb.com/kb/en/error-log/ to learn more about logging and
 # https://mariadb.com/kb/en/rotating-logs-on-unix-and-linux/ about rotating logs.
 
-# Note: do not rotate /var/lib/mysql/mysqld.log here as it is managed by /etc/logrotate.d/mysql
-# else leads to "duplicate log entry for /var/lib/mysql/mysqld.log" errors
-/var/lib/mysql/mariadb.log /var/log/mariadb/*.log {
+/var/lib/mysql/mysqld.log /var/lib/mysql/mariadb.log /var/log/mariadb/*.log {
 
   # Depends on a mysql@localhost unix_socket authenticated user with RELOAD privilege
   su mysql mysql

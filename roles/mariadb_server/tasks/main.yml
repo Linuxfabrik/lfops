@@ -125,7 +125,7 @@
   - name: 'Deploy /etc/logrotate.d/mariadb'
     ansible.builtin.template:
       src: 'etc/logrotate.d/mariadb.j2'
-      dest: '/etc/logrotate.d/mariadb'
+      dest: '{{ mariadb_server__logrotate_path }}'
       owner: 'root'
       mode: 0o644
 
