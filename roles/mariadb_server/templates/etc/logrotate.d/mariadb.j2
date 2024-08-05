@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024080501
+# 2024080502
 
 # This is the MariaDB configuration for the logrotate utility
 #
@@ -56,8 +56,8 @@
     if test -x /usr/bin/mariadb-admin
     then
       /usr/bin/mariadb-admin \
-        --user={{ mariadb_server__admin_user['username'] }} \
-        --password={{ mariadb_server__admin_user['password'] }} \
+        --user={{ mariadb_server__admin_user['username'] | quote }} \
+        --password={{ mariadb_server__admin_user['password'] | quote }} \
         $EXTRAPARAM \
         --local=flush-error-log flush-engine-log flush-general-log flush-slow-log
     fi
