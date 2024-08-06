@@ -53,9 +53,12 @@ icingadb__database_login:
 | `icingadb__database_login_host` | The Host-part of the SQL database user. | `127.0.0.1` |
 | `icingadb__database_name` | The name of the IcingaDB SQL database. | `'icingadb'` |
 | `icingadb__logging_level` | The loglevel of IcingaDB. One of` 'fatal'`, `'error'`, `'warn'`, `'info'` or `'debug'`. | `'info'` |
+| `icingadb__redis_ca` | Path to the CA certificate used to check the Redis TLS certificate. | unset |
 | `icingadb__redis_host` | The host on which Redis instance is reachable. | `'127.0.0.1'` |
+| `icingadb__redis_insecure` | Allow insecure connections to Redis via TLS. | `false` |
 | `icingadb__redis_password` | The password for the Redis instance, if authentication is enabled. | unset |
 | `icingadb__redis_port` | The port on which Redis instance is reachable. | `6379` |
+| `icingadb__redis_tls` | Enable TLS when connecting to Redis. | `false` |
 | `icingadb__retention_history_days` | Number of days to retain full historical data. By default, historical data is retained forever. | unset |
 | `icingadb__service_enabled` | Enables or disables the IcingaDB service, analogous to `systemctl enable/disable --now`. | `true` |
 
@@ -66,9 +69,12 @@ icingadb__database_host: '127.0.0.1'
 icingadb__database_login_host: 'localhost'
 icingadb__database_name: 'icingadb'
 icingadb__logging_level: 'debug'
+icingadb__redis_ca: '/etc/pki/tls/certs/rootCA.pem'
 icingadb__redis_host: '127.0.0.1'
+icingadb__redis_insecure: true
 icingadb__redis_password: 'linuxfabrik'
 icingadb__redis_port: 6379
+icingadb__redis_tls: true
 icingadb__retention_history_days: 360
 icingadb__service_enabled: true
 ```

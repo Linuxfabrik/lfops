@@ -72,11 +72,21 @@ redis:
   # Defaults to '6380' since the Redis server provided by the 'icingadb-redis' package listens on that port.
   port: {{ icingadb__redis_port }}
 
-  # Redis password.
 {% if icingadb__redis_password is defined and icingadb__redis_password | length %}
-#  password:
+  # Redis password.
   password: '{{ icingadb__redis_password }}'
 {% endif %}
+
+  # TLS
+  tls: {{ icingadb__redis_tls }}
+
+{% if icingadb__redis_ca is defined and icingadb__redis_ca | length %}
+  # TLS CA
+  ca: {{ icingadb__redis_ca }}
+{% endif %}
+
+  # TLS insecure
+  insecure: {{ icingadb__redis_insecure }}
 
 # Icinga DB logs its activities at various severity levels and any errors that occur either
 # on the console or in systemd's journal. The latter is used automatically when running under systemd.

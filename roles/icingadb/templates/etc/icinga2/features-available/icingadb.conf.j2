@@ -1,9 +1,14 @@
 // {{ ansible_managed }}
-// 2023040601
+// 2024080601
 
 object IcingaDB "icingadb" {
     host = "{{ icingadb__redis_host }}"
     port = {{ icingadb__redis_port }}
+    enable_tls = {{ icingadb__redis_tls | lower }}
+{% if icingadb__redis_ca is defined and icingadb__redis_ca | length %}
+    ca_path = "{{ icingadb__redis_ca }}"
+{% endif %}
+    insecure_noverify = {{ icingadb__redis_insecure | lower }}
     {% if icingadb__redis_password is defined and icingadb__redis_password | length %}
     password = "{{ icingadb__redis_password }}"
     {% endif %}
