@@ -147,7 +147,7 @@
       --noautoconsole
       --nographics
       --noreboot
-      --os-type linux
+      --osinfo '{{ kvm_vm__osinfo }}'
       --rng /dev/urandom
       --serial pty
       --sound none

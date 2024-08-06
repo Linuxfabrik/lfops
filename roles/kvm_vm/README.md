@@ -57,6 +57,7 @@ kvm_vm__vcpus: 2
 | `kvm_vm__max_memory` | The run time maximum memory allocation of the VM. This is the maximum amount of memory that can be hot-plugged. | `'{{ kvm_vm__memory }}'` |
 | `kvm_vm__name` | The domain name of the VM. | `'{{ inventory_hostname }}'` |
 | `kvm_vm__network_connections` | List of dictionaries of network connections to configure. Currently only supports ethernet devices (no bond/bridges/vlans). Subkeys: <br> * `name`: Mandatory, string. Name of the network interface. <br> * `mac`: Optional, string. MAC of the interface. Defaults to a randomly generated MAC starting with `52:54:`. <br> * `addresses`: Optional, list. List of IP addresses to assign. Defaults is unset. <br> * `dhcp4`: Optional, bool. If dhcp for IPv4 should be enabled or not. Defaults to `false`. <br> * `dhcp6`: Optional, bool. If dhcp for IPv6 should be enabled or not. Defaults to `false`. <br> * `gateway4`: Optional, string. IPv4 Gateway. Requires setting `addresses`. Default is unset. <br> * `gateway6`: Optional, string. IPv6 Gateway. Requires setting `addresses`. Default is unset. <br> * `network_type`: Optional, string. Libvirt Network type. Either `'bridge'` or `'network'`. Defaults to `'network'`. <br> * `network_name`: Optional, string. Libvirt Network name. This is either the name of the bridge or of the virtual network. Defaults to `'default'`. | `[]` |
+| `kvm_vm__osinfo` | Set the operating system of the VM, will be used to optimise the guest configuration. Have a look at `man virt-install`. | `'detect=on'` |
 | `kvm_vm__packages` | A list of packages which will be injected into the image using `virt-customize`. | `['cloud-init', 'qemu-guest-agent']` |
 | `kvm_vm__pool` | The KVM storage pool for the base image and disks. | `'default'` |
 | `kvm_vm__root_password` | The root password of the VM. | unset |
@@ -83,6 +84,7 @@ kvm_vm__network_connections:
     addresses:
       - '192.0.2.2'
     gateway4: '192.0.2.1'
+kvm_vm__osinfo: 'detect=on'
 kvm_vm__packages:
   - 'cloud-init'
   - 'qemu-guest-agent'
