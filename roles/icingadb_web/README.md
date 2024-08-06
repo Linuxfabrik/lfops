@@ -43,6 +43,9 @@ icingadb_web__api_user_login:
 | `icingadb_web__redis_host` | The host on which Redis instance is reachable. | `'{{ icingadb__redis_host }}'` |
 | `icingadb_web__redis_password` | The password for the Redis instance, if authentication is enabled. | `'{{ icingadb__redis_password | d() }}'` |
 | `icingadb_web__redis_port` | The port on which Redis instance is reachable. | `'{{ icingadb__redis_port }}'` |
+| `icingadb_web__redis2_host` | The host on which the secondary Redis instance is reachable. | unset |
+| `icingadb_web__redis2_password` | The password for the the secondary Redis instance, if authentication is enabled. | `'{{ icingadb_web__redis_password }}'` |
+| `icingadb_web__redis2_port` | The port on which the secondary Redis instance is reachable. | `'{{ icingadb_web__redis_port }}'` |
 
 Example:
 ```yaml
@@ -58,6 +61,9 @@ icingadb_web__plugin_output_character_limit: 20000
 icingadb_web__redis_host: '127.0.0.1'
 icingadb_web__redis_password: 'linuxfabrik'
 icingadb_web__redis_port: 6379
+icingadb_web__redis2_host: 'master2.example.com'
+icingadb_web__redis2_password: 'linuxfabrik'
+icingadb_web__redis2_port: 6379
 ```
 
 

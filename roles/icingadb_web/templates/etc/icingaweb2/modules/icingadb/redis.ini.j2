@@ -1,9 +1,18 @@
 ; {{ ansible_managed }}
-; 2023040601
+; 2024080601
 
 [redis1]
 host = "{{ icingadb_web__redis_host }}"
 port = {{ icingadb_web__redis_port }}
 {% if icingadb_web__redis_password is defined and icingadb_web__redis_password | length %}
 password = "{{ icingadb_web__redis_password }}"
+{% endif %}
+
+{% if icingadb_web__redis2_host is defined and icingadb_web__redis2_host | length %}
+[redis2]
+host = "{{ icingadb_web__redis2_host }}"
+port = {{ icingadb_web__redis2_port }}
+{% if icingadb_web__redis2_password is defined and icingadb_web__redis2_password | length %}
+password = "{{ icingadb_web__redis2_password }}"
+{% endif %}
 {% endif %}
