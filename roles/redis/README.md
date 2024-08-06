@@ -46,14 +46,19 @@ Variables for `redis.conf` directives and their default values, defined and supp
 | `redis__conf_daemonize`                 | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`         |
 | `redis__conf_databases`                 | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `16`           |
 | `redis__conf_loglevel`                  | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'notice'`     |
-| `redis__conf_maxmemory`                 | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'50M'`       |
+| `redis__conf_maxmemory`                 | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'50M'`        |
 | `redis__conf_maxmemory_policy`          | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'noeviction'` |
-| `redis__conf_port`                      | If port `0` is specified Redis will not listen on a TCP socket. [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `6379`         |
+| `redis__conf_port`                      | If port `0` is specified Redis will not listen on a TCP socket. [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `6379`|
 | `redis__conf_protected_mode`            | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'yes'`        |
 | `redis__conf_replica_serve_stale_data`  | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'yes'`        |
 | `redis__conf_requirepass`               | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `unset`        |
 | `redis__conf_save`                      | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | v6: `['3600 1', '300 100', '60 10000']`<br>v7: `['3600 1', '300 100', '60 10000']` |
-| `redis__conf_supervised`                | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`       |
+| `redis__conf_supervised`                | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`         |
+| `redis__conf_tls_auth_clients`          | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset          |
+| `redis__conf_tls_ca_cert_file`          | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset          |
+| `redis__conf_tls_cert_file`             | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset          |
+| `redis__conf_tls_key_file`              | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset          |
+| `redis__conf_tls_port` | TLS Port. Set `redis__conf_port: 0` to only listen with TLS. [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset |
 
 Example:
 
@@ -74,6 +79,11 @@ redis__conf_save:
   - '3600 1'
   - '300 100'
   - '60 10000'
+redis__conf_tls_auth_clients: 'no'
+redis__conf_tls_ca_cert_file: '/etc/redis/ca.pem'
+redis__conf_tls_cert_file: '/etc/redis/redis.pem'
+redis__conf_tls_key_file: '/etc/redis/redis.key'
+redis__conf_tls_port: 6379
 redis__conf_supervised: 'auto'
 ```
 

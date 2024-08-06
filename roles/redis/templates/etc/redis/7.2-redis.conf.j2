@@ -195,14 +195,26 @@ tcp-keepalive 300
 # default port, use:
 #
 # port 0
-# tls-port {{ redis__conf_port }}
+{% if redis__conf_tls_port is defined and redis__conf_tls_port | string | length %}
+tls-port {{ redis__conf_tls_port }}
+{% else %}
+# tls-port 6379
+{% endif %}
 
 # Configure a X.509 certificate and private key to use for authenticating the
 # server to connected clients, masters or cluster peers.  These files should be
 # PEM formatted.
 #
+{% if redis__conf_tls_cert_file is defined and redis__conf_tls_cert_file | length %}
+tls-cert-file {{ redis__conf_tls_cert_file }}
+{% else %}
 # tls-cert-file redis.crt
+{% endif %}
+{% if redis__conf_tls_key_file is defined and redis__conf_tls_key_file | length %}
+tls-key-file {{ redis__conf_tls_key_file }}
+{% else %}
 # tls-key-file redis.key
+{% endif %}
 #
 # If the key file is encrypted using a passphrase, it can be included here
 # as well.
@@ -236,7 +248,11 @@ tcp-keepalive 300
 # clients and peers.  Redis requires an explicit configuration of at least one
 # of these, and will not implicitly use the system wide configuration.
 #
+{% if redis__conf_tls_ca_cert_file is defined and redis__conf_tls_ca_cert_file | length %}
+tls-ca-cert-file {{ redis__conf_tls_ca_cert_file }}
+{% else %}
 # tls-ca-cert-file ca.crt
+{% endif %}
 # tls-ca-cert-dir /etc/ssl/certs
 
 # By default, clients (including replica servers) on a TLS port are required
@@ -246,8 +262,12 @@ tcp-keepalive 300
 # If "optional" is specified, client certificates are accepted and must be
 # valid if provided, but are not required.
 #
+{% if redis__conf_tls_auth_clients is defined and redis__conf_tls_auth_clients | length %}
+tls-auth-clients {{ redis__conf_tls_auth_clients }}
+{% else %}
 # tls-auth-clients no
 # tls-auth-clients optional
+{% endif %}
 
 # By default, a Redis replica does not attempt to establish a TLS connection
 # with its master.
