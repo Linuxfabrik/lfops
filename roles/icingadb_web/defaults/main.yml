@@ -7,8 +7,10 @@ icingadb_web__plugin_output_character_limit: 20000
 icingadb_web__redis2_password: '{{ icingadb_web__redis_password }}'
 icingadb_web__redis2_port: '{{ icingadb_web__redis_port }}'
 icingadb_web__redis_host: '{{ icingadb__redis_host }}'
+icingadb_web__redis_insecure: '{{ icingadb__redis_insecure }}'
 icingadb_web__redis_password: '{{ icingadb__redis_password | d() }}'
 icingadb_web__redis_port: '{{ icingadb__redis_port }}'
+icingadb_web__redis_tls: '{{ icingadb__redis_tls }}'
 
 # -----------------------------------------------------------------------------
 

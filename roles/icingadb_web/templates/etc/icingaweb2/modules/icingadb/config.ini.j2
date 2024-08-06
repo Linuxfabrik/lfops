@@ -1,8 +1,15 @@
 ; {{ ansible_managed }}
-; 2024072701
+; 2024080601
 
 [icingadb]
 resource = "{{ icingadb_web__database_name }}"
 
 [settings]
 plugin_output_character_limit = {{ icingadb_web__plugin_output_character_limit }}
+
+[redis]
+tls = "{{ icingadb_web__redis_tls | ternary('1', '0') }}"
+{% if icingadb_web__redis_ca is defined and icingadb_web__redis_ca | length %}
+ca = "{{ icingadb_web__redis_ca }}"
+{% endif %}
+insecure = "{{ icingadb_web__redis_insecure | ternary('1', '0') }}"
