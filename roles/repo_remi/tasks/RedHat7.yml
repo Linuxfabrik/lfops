@@ -16,7 +16,7 @@
       mode: 0o644
 
   - name: 'yum-config-manager --enable remi-php{{ repo_remi__enabled_php_version | regex_replace("\.", "") }}'
-    command: 'yum-config-manager --enable remi-php{{ repo_remi__enabled_php_version | regex_replace("\.", "") }}'
+    ansible.builtin.command: 'yum-config-manager --enable remi-php{{ repo_remi__enabled_php_version | regex_replace("\.", "") }}'
     changed_when: false
     when: 'repo_remi__enabled_php_version is defined'
 

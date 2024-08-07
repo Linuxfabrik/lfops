@@ -1,7 +1,7 @@
 - block:
 
   - name: 'Deploy /etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8'
-    copy:
+    ansible.builtin.copy:
       src: 'RedHat8/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8'
       dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8'
   tags:
@@ -11,12 +11,12 @@
 - block:
 
   - name: 'dnf -y module reset php'
-    command: 'dnf -y module reset php'
+    ansible.builtin.command: 'dnf -y module reset php'
     register: 'repo_remi__dnf_module_reset_php_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_reset_php_result.stdout'
 
   - name: "dnf -y module enable php:remi-{{ repo_remi__enabled_php_version }}"
-    command: "dnf -y module enable php:remi-{{ repo_remi__enabled_php_version }}"
+    ansible.builtin.command: "dnf -y module enable php:remi-{{ repo_remi__enabled_php_version }}"
     register: 'repo_remi__dnf_module_enable_php_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_php_result.stdout'
 
@@ -28,12 +28,12 @@
 - block:
 
   - name: 'dnf -y module reset redis'
-    command: 'dnf -y module reset redis'
+    ansible.builtin.command: 'dnf -y module reset redis'
     register: 'repo_remi__dnf_module_enable_redis_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_redis_result.stdout'
 
   - name: 'dnf -y module enable redis:remi-{{ repo_remi__enabled_redis_version }}'
-    command: 'dnf -y module enable redis:remi-{{ repo_remi__enabled_redis_version }}'
+    ansible.builtin.command: 'dnf -y module enable redis:remi-{{ repo_remi__enabled_redis_version }}'
     register: 'repo_remi__dnf_module_enable_redis_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_redis_result.stdout'
 
