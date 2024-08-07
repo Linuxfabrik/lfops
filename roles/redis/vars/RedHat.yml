@@ -1,1 +1,2 @@
+redis__conf_logfile: '/var/log/redis/redis.log'
 redis__service_name: 'redis.service'
