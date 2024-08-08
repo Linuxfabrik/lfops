@@ -42,6 +42,11 @@ files__files__host_var:
   - path: '/data/file2' # content will be taken from `inventory_dir/host_files/inventory_hostname/data/file3`
   - path: '/data/file3'
     state: 'absent'
+  - path: '/etc/hosts'
+    content: '{{ lookup("ansible.builtin.file", inventory_dir ~ "/group_files/all/etc/hosts") }}'
+    mode: 0o644
+    owner: 'root'
+    group: 'root'
 files__symlinks__host_var:
   - src: '/data/file1'
     dest: '/data/file1_link'
