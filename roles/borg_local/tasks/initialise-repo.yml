@@ -1,10 +1,6 @@
-- name: 'Check if repo {{ repo }} is initialised'
-  ansible.builtin.stat:
-    path: '{{ borg_local__backup_dir }}/{{ repo }}/config'
-  register: 'borg_local__repo_init_check'
-
 - name: 'Initialise repo {{ repo }} if needed'
   ansible.builtin.shell: |-
     source /etc/borg/borg.conf
     borg init --encryption=repokey-blake2 '{{ borg_local__backup_dir }}/{{ repo }}'
-  when: 'not borg_local__repo_init_check.stat.exists'
+  args:
+    creates: '{{ borg_local__backup_dir }}/{{ repo }}/config'

@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:borg_local:
+* Added new mandatory variable `borg_local__passphrase`
+
 Role:apache_tomcat:
 * Renamed `apache_tomcat__skip_manager` to `apache_tomcat__skip_admin_webapps`
 

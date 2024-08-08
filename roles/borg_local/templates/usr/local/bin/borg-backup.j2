@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2024012601
+# 2024080802
+
+# no `set -e` because we want to finish writing the log file even if a borg command fails
+function exit_with_first_failed_retc() {
+    for retc in "$@"; do
+        if [ "$retc" -ne 0 ]; then
+            exit "$retc"
+        fi
+    done
+}
 
 systemctl is-active clamd@scan.service --quiet
 if [[ $? -eq 0 ]]; then
@@ -27,30 +36,40 @@ fi
 if [ "$1" == "daily" ]; then
     source /etc/borg/borg.conf
     DATE=$(date +"%Y%m%d")
-    BORG_REPO=$BACKUP_DIR/daily
+    BORG_REPO="$BACKUP_DIR/daily"
     echo "start: $(date +'%Y-%m-%d %H:%M:%S')" > /var/log/borg/borg.log
-    borg prune --list --keep-within=$RETENTION_DAILY $BORG_REPO &> /var/log/borg/borg-prune.log
-    echo "prune_retc: $?" >> /var/log/borg/borg.log
-    borg create $BACKUP_OPTS $FILES_EXCLUDE $BORG_REPO::$DATE $FILES_INCLUDE &> /var/log/borg/borg-create.log
-    echo "create_retc: $?" >> /var/log/borg/borg.log
+    echo "Running borg prune (Retention: $RETENTION_DAILY)"
+    borg prune --list --keep-within=$RETENTION_DAILY "$BORG_REPO"
+    prune_retc=$?
+    echo "prune_retc: $prune_retc" >> /var/log/borg/borg.log
+    echo "Running borg backup"
+    borg create "${BACKUP_OPTS[@]}" "${FILES_EXCLUDE[@]}" "$BORG_REPO"::"$DATE" "${FILES_INCLUDE[@]}"
+    create_retc=$?
+    echo "create_retc: $create_retc" >> /var/log/borg/borg.log
     echo "end: $(date +'%Y-%m-%d %H:%M:%S')" >> /var/log/borg/borg.log
 elif [ "$1" == "hourly" ]; then
     source /etc/borg/borg.conf
     DATE=$(date +"%Y%m%d-%H")
-    BORG_REPO=$BACKUP_DIR/hourly
+    BORG_REPO="$BACKUP_DIR/hourly"
     echo "start: $(date +'%Y-%m-%d %H:%M:%S')" > /var/log/borg/borg.log
-    borg prune --list --keep-within=$RETENTION_HOURLY $BORG_REPO &> /var/log/borg/borg-prune.log
-    echo "prune_retc: $?" >> /var/log/borg/borg.log
-    borg create $BACKUP_OPTS $FILES_EXCLUDE $BORG_REPO::$DATE $FILES_INCLUDE &> /var/log/borg/borg-create.log
-    echo "create_retc: $?" >> /var/log/borg/borg.log
+    echo "Running borg prune (Retention: $RETENTION_HOURLY)"
+    borg prune --list --keep-within=$RETENTION_HOURLY "$BORG_REPO"
+    prune_retc=$?
+    echo "prune_retc: $prune_retc" >> /var/log/borg/borg.log
+    echo "Running borg backup"
+    borg create "${BACKUP_OPTS[@]}" "${FILES_EXCLUDE[@]}" "$BORG_REPO"::"$DATE" "${FILES_INCLUDE[@]}"
+    create_retc=$?
+    echo "create_retc: $create_retc" >> /var/log/borg/borg.log
     echo "end: $(date +'%Y-%m-%d %H:%M:%S')" >> /var/log/borg/borg.log
 else
     # any other parameter: on demand / manual / ad-hoc backup
     source /etc/borg/borg.conf
     DATE=$(date +"%Y%m%d-%H%M%S")
-    BORG_REPO=$BACKUP_DIR/on-demand
-    borg prune --list --keep-within=$RETENTION_ONDEMAND $BORG_REPO
-    borg create $BACKUP_OPTS $FILES_EXCLUDE $BORG_REPO::$DATE $FILES_INCLUDE
+    BORG_REPO="$BACKUP_DIR/on-demand"
+    echo "Running borg prune (Retention: $RETENTION_ONDEMAND)"
+    borg prune --list --keep-within=$RETENTION_ONDEMAND "$BORG_REPO"
+    echo "Running borg backup"
+    borg create "${BACKUP_OPTS[@]}" "${FILES_EXCLUDE[@]}" "$BORG_REPO"::"$DATE" "${FILES_INCLUDE[@]}"
 fi
 
 
@@ -63,3 +82,5 @@ if [[ $start_clamd -eq 1 ]]; then
     curl --insecure --silent --user {{ borg_local__icinga2_api_user_login["username"] }}:{{ borg_local__icinga2_api_user_login["password"] }} --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/remove-downtime' --data "$DATA" 1> /dev/null
 {% endif %}
 fi
+
+exit_with_first_failed_retc $create_retc $prune_retc
