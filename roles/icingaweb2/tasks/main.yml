@@ -43,7 +43,7 @@
     changed_when: false # just gathering info, no actual change
 
   - name: 'Check if the old sql file should be used (icingaweb2 < 2.11.4)'
-    stat:
+    ansible.builtin.stat:
       path: '/usr/share/doc/icingaweb2/schema/mysql.schema.sql'
     register: 'icingaweb2__old_sql_schema_stat_result'
 

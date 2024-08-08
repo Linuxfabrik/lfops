@@ -62,7 +62,7 @@
       - '/usr/share/httpd/.config'
 
   - name: 'SELinux custom policy: Allow soffice.bin (via httpd) setattr access on the directory cache'
-    copy:
+    ansible.builtin.copy:
       dest: "/tmp/selinux-sofficebin.te"
       content: |-
         module selinux-sofficebin 1.0;
@@ -82,7 +82,7 @@
         allow httpd_t usr_t:file write;
 
   - name: 'SELinux custom policy: Allow jre/bin/java (via httpd) read access on sys/fs/cgroup'
-    copy:
+    ansible.builtin.copy:
       dest: "/tmp/selinux-java.te"
       content: |-
         module selinux-java 1.0;

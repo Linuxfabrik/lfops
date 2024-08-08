@@ -1,7 +1,7 @@
 - block:
 
   - name: 'Use fedora.linux_system_roles.network role to configure the network'
-    include_role:
+    ansible.builtin.include_role:
       name: 'fedora.linux_system_roles.network'
 
   - name: 'Remove hc-utils # hetzner cloud utilities - they cause problems with NetworkManager'

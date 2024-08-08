@@ -1,7 +1,7 @@
 - block:
 
   - name: 'disable unattended upgrades'
-    lineinfile:
+    ansible.builtin.lineinfile:
       dest: '/etc/apt/apt.conf.d/20auto-upgrades'
       regexp: '{{ item.regexp }}'
       line: '{{ item.line }}'

@@ -2,7 +2,7 @@
 - block:
 
   - name: 'install module SUSE Linux Enterprise Software Development Kit 12 SP3 x86_64'
-    command:
+    ansible.builtin.command:
       cmd: 'SUSEConnect -p sle-sdk/12.3/x86_64'
       creates: '/etc/zypp/repos.d/*SLE-SDK12-SP3*'
     when:
@@ -10,7 +10,7 @@
       - 'ansible_facts["distribution_release"] in ["3"]'
 
   - name: 'install module SUSE Package Hub (PackageHub/15.1/x86_64)'
-    command:
+    ansible.builtin.command:
       cmd: 'SUSEConnect --product PackageHub/15.1/x86_64'
       creates: '/etc/zypp/repos.d/*SUSE-PackageHub-15-SP1*'
     when:

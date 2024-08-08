@@ -152,7 +152,7 @@
 
   # magnitudes faster than using the ansible.builtin.file module
   - name: 'Ensure the Rocket.Chat application data permissions are correct'
-    command: 'chown rocketchat:rocketchat -R {{ rocketchat__application_path | quote }}'
+    ansible.builtin.command: 'chown rocketchat:rocketchat -R {{ rocketchat__application_path | quote }}'
 
   tags:
     - 'rocketchat'

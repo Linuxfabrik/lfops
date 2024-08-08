@@ -216,7 +216,7 @@
       or wordpress__import_result["rc"] != 0'
 
   - name: 'Result of importing the wxr file'
-    debug:
+    ansible.builtin.debug:
       var: 'wordpress__import_result["stdout"]'
     when: 'item["wxr_export"] is defined and item["wxr_export"] | length'
 

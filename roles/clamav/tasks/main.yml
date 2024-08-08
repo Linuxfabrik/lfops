@@ -1,7 +1,7 @@
 - block:
 
   - name: 'install clamav clamav-update clamd'
-    package:
+    ansible.builtin.package:
       name:
         - 'clamav'
         - 'clamav-update' # provides freshclam

@@ -1,7 +1,7 @@
 - block:
 
   - name: 'Test if Grav is already installed'
-    stat:
+    ansible.builtin.stat:
       path: '{{ grav__install_dir | quote }}/index.php'
     register: 'grav__installed'
 
