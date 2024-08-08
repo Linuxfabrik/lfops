@@ -1,6 +1,7 @@
 # vi: ft=yaml
 
 skip_list:
+  - 'key-order[task]'
   - 'name'
   - 'yaml'
 
