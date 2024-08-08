@@ -211,7 +211,7 @@ class Bitwarden(object):
         return self._api_call('sync', method='POST')
 
 
-    def get_items(self, name, username=None, folder_id=None, collection_id=None, organisation_id=None):
+    def get_items(self, name, username=None, folder_id=None, collection_id=None, organization_id=None):
         """Search for items in Bitwarden. Returns a list of the items that *exactly* matches all the parameters.
 
         A complete object:
@@ -244,6 +244,17 @@ class Bitwarden(object):
         }
         """
 
+        # convert empty string to None
+        # else the matching later on fails
+        if isinstance(username, str) and len(username.strip()) == 0:
+            username = None
+        if isinstance(folder_id, str) and len(folder_id.strip()) == 0:
+            folder_id = None
+        if isinstance(collection_id, str) and len(collection_id.strip()) == 0:
+            collection_id = None
+        if isinstance(organization_id, str) and len(organization_id.strip()) == 0:
+            organization_id = None
+
         params = urllib.parse.urlencode(
             {
                 'search': name,
@@ -265,7 +276,7 @@ class Bitwarden(object):
                     or \
                     (collection_id in item.get('collectionIds', [])) \
                 ) \
-                and (item['organizationId'] == organisation_id):
+                and (item['organizationId'] == organization_id):
                 matching_items.append(item)
 
         return matching_items
