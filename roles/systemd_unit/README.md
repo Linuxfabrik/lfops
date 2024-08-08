@@ -33,7 +33,7 @@ systemd_unit__mounts__host_var:
       Type=cifs
       Options=credentials=/root/.smbcreds,domain=example.com,vers=default
     enabled: true
-    state: 'present'
+    state: 'started'
 
 # two services, one with more options, one minimal
 systemd_unit__services__host_var:
@@ -48,7 +48,7 @@ systemd_unit__services__host_var:
       RemainAfterExit=yes
       Type=oneshot
     wanted_by: 'basic.target'
-    state: 'present'
+    state: 'started'
     enabled: true
   - name: 'duba'
     raw_service: |-
