@@ -3,6 +3,7 @@ system_update__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
 system_update__mail_from: '{{ mailto_root__from }}'
 system_update__mail_recipients_new_configfiles: '{{ mailto_root__to }}'
 system_update__mail_recipients_updates: '{{ mailto_root__to }}'
+system_update__mail_subject_hostname: '$(hostname --short)'
 system_update__mail_subject_prefix: ''
 system_update__notify_and_schedule_on_calendar: 'mon 10:00'
 system_update__update_enabled: true

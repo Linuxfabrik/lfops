@@ -57,7 +57,7 @@ post_update_code () {
 }
 {% endif %}
 
-SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}$(hostname --short)"
+SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
 SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ' ) }}"
 
