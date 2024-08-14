@@ -7,6 +7,7 @@
     stdin: '{{ item["stdin"] | d(omit) }}'
     stdin_add_newline: '{{ item["stdin_add_newline"] | d(omit) }}'
   become_user: '{{ item["user"] | d(omit) }}'
+  ignore_errors: '{{ item["ignore_errors"] | d(false) }}'
   when:
     - 'item["state"] | d("present") != "absent"'
   register: 'shell__commands__result'

@@ -326,6 +326,9 @@ Role:redis
 
 ### Changed
 
+Role:shell:
+* add option to ignore errors during command execution
+
 Role:mariadb_server:
 * role:mariadb_server: mariadb-dump checks for the mydumper version and sets parameters accordingly
 
