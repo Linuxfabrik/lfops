@@ -14,7 +14,7 @@ This role installs NFS and CIFS client utilities when necessary and configures m
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mount__mounts__host_var` / <br> `mount__mounts__group_var` | List of directories containing the mounts to create. Subkeys: <ul><li>`path`</li><li>`src`</li><li>`fstype`</li><li>`opts`</li><li>`state`</li></ul>For details, have a look at the [ansible.posix.mount_module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html). | unset |
+| `mount__mounts__host_var` / <br> `mount__mounts__group_var` | List of directories containing the mounts to create. Subkeys: <ul><li>`path`: Mandatory, string. Path to the mount point.</li><li>`src`: Mandatory, string. Device (or NFS volume, or something else) to be mounted on `path`.</li><li>`fstype`: Mandatory, string. Filesystem type.</li><li>`opts`: Optional, string. Mount options, `man fstab`. Defaults to none.</li><li>`state`: Optional, string. Possible options: `absent`, `absent_from_fstab`, `ephemeral`, `mounted`, `present`, `remounted` or `unmounted`. Defaults to `mounted`. For details, have a look at the [ansible.posix.mount module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html).</li></ul> | `[]` |
 
 Example:
 ```yaml

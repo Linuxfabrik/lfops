@@ -35,8 +35,8 @@
     ansible.posix.mount:
       path: '{{ item["path"] }}'
       src: '{{ item["src"] }}'
-      opts: '{{ item["opts"] }}'
-      state: '{{ item["state"] }}'
+      opts: '{{ item["opts"] | d(omit) }}'
+      state: '{{ item["state"] | d("mounted") }}'
       fstype: '{{ item["fstype"] }}'
     loop: '{{ mount__mounts__combined_var }}'
 
