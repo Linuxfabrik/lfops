@@ -5,6 +5,13 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
+  tags:
+    - 'icingaweb2_module_grafana'
+    - 'icingaweb2_module_grafana:monitoring_plugins_graphs'
+
+
+- block:
+
   - name: 'mkdir -p /etc/icingaweb2/modules/grafana'
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/grafana'
