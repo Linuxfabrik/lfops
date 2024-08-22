@@ -83,6 +83,12 @@
     when:
       - 'icingaweb2_module_director__systemd_service_template_result is changed'
 
+  tags:
+    - 'icingaweb2_module_director'
+
+
+- block:
+
   - name: 'Deploy director config files'
     ansible.builtin.template:
       src: 'etc/icingaweb2/modules/director/{{ item }}.j2'
@@ -121,6 +127,7 @@
 
   tags:
     - 'icingaweb2_module_director'
+    - 'icingaweb2_module_director:configure'
 
 
 - block:
