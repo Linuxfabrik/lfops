@@ -42,5 +42,4 @@ icingaweb2_module_director__mariadb_server__users__dependent_var:
     state: 'present'
 
 icingaweb2_module_director__icingaweb2__users__dependent_var:
-  - username: '{{ icingaweb2_module_director__enrolment_user_login["username"] }}'
-    password: '{{ icingaweb2_module_director__enrolment_user_login["password"] }}'
+  - '{{ icingaweb2_module_director__enrolment_user_login }}'
