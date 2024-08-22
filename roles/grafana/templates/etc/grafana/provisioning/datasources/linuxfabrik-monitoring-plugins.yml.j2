@@ -1,16 +1,24 @@
 # {{ ansible_managed }}
-# 2023021001
+# 2024082201
 
 apiVersion: 1
 
-deleteDatasources: []
-
 {% if (grafana__provisioning_datasources__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent")
             + (grafana__provisioning_datasources__combined_var | selectattr("state", "undefined"))) | length %}
+
+# delete the datasources first, to make sure all the settings (eg password) get updated
+deleteDatasources:
+{% for item in grafana__provisioning_datasources__combined_var if item['state'] | d('present') != 'absent' %}
+  - name: {{ item['name'] | quote }}
+    orgId: {{ item['orgId'] | d(1) }}
+{% endfor %}
+
 datasources:
 {% for item in grafana__provisioning_datasources__combined_var if item['state'] | d('present') != 'absent' %}
   - {{ item | to_nice_yaml(indent=2) | indent(4) }}
 {% endfor %}
 {% else %}
+deleteDatasources: []
+
 datasources: []
 {% endif %}
