@@ -160,6 +160,23 @@
     failed_when: "icingaweb2__mysql_user_insert_result.rc != 0 and 'error 1062 (23000)' not in icingaweb2__mysql_user_insert_result.stderr | lower"
     # https://stackoverflow.com/questions/25981863/using-failed-when-on-a-with-items-task-depending-on-return-codes
 
+  - name: 'update users in the icingaweb2 database'
+    ansible.builtin.shell: >
+      mysql
+      --host={{ icingaweb2__database_host | quote }}
+      --user={{ icingaweb2__database_login.username | quote }}
+      --password={{ icingaweb2__database_login.password | quote }}
+      {{ icingaweb2__database_name | quote }}
+      --execute="
+        UPDATE icingaweb_user
+        SET password_hash = '$(php -r 'echo password_hash("{{ item.password }}", PASSWORD_DEFAULT);')'
+        WHERE name = '{{ item.username }}'
+      ;"
+    when:
+      - 'item["state"] | d("present") == "updated"'
+    loop: "{{ icingaweb2__users__combined_var }}"
+    register: 'icingaweb2__mysql_user_insert_result'
+
   - name: 'remove users from the icingaweb2 database'
     community.mysql.mysql_query:
       login_user: '{{ icingaweb2__database_login["username"] }}'
