@@ -3,6 +3,7 @@ icingaweb2_module_director__api_host: 'localhost'
 icingaweb2_module_director__api_port: 5665
 icingaweb2_module_director__database_host: 'localhost'
 icingaweb2_module_director__database_name: 'icinga_director'
+icingaweb2_module_director__force_kickstart: false
 icingaweb2_module_director__monitoring_plugins_version: '{{ lfops__monitoring_plugins_version | default("latest") }}'
 icingaweb2_module_director__service_enabled: true
 icingaweb2_module_director__skip_basket_import: false

@@ -57,10 +57,12 @@ icingaweb2_module_director__version: 'v1.8.1.2021090901'
 | `icingaweb2_module_director__api_port` | The port for accessing the Icinga2 API. | `5665` |
 | `icingaweb2_module_director__database_host` | The host of the SQL database server. | `'localhost'` |
 | `icingaweb2_module_director__database_name` | The name of the Director SQL database. | `'icinga_director'` |
+| `icingaweb2_module_director__force_kickstart` | Force run the kickstart. Sometimes the check if it is required is flawed. | `false` |
 | `icingaweb2_module_director__monitoring_plugins_version` | Which version of the monitoring plugins should be used for generating the Director baskets? Possible options:<ul><li>`latest`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`main`: The development version. Use with care.</li><li>A specific release, for example `2022030201`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li></ul> | `'{{ lfops__monitoring_plugins_version \| default("latest") }}'` |
 | `icingaweb2_module_director__service_enabled` | Enables or disables the director service, analogous to `systemctl enable/disable --now`. | `true` |
 | `icingaweb2_module_director__skip_basket_import` | Bool. Should the Linuxfabrik Monitoring Plugins Basket be generated and imported or not? | `false` |
 | `icingaweb2_module_director__url` | The URL from where to download the Director. Defaults to the Linuxfabrik Fork of the Icinga Director. If using the official Icinga Director, the link is `'https://codeload.github.com/Icinga/icingaweb2-module-director/tar.gz/refs/tags/{{ icingaweb2_module_director__version }}'` | `https://github.com/Linuxfabrik/icingaweb2-module-director/archive/{{ icingaweb2_module_director__version }}.tar.gz` |
+
 
 Example:
 ```yaml
@@ -70,6 +72,7 @@ icingaweb2_module_director__api_host: 'localhost'
 icingaweb2_module_director__api_port: 5665
 icingaweb2_module_director__database_host: 'localhost'
 icingaweb2_module_director__database_name: 'icinga_director'
+icingaweb2_module_director__force_kickstart: true
 icingaweb2_module_director__monitoring_plugins_version: 'latest'
 icingaweb2_module_director__service_enabled: true
 icingaweb2_module_director__skip_basket_import: true
