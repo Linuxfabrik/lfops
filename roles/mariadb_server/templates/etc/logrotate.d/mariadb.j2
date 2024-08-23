@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024080502
+# 2024082301
 
 # This is the MariaDB configuration for the logrotate utility
 #
@@ -59,7 +59,7 @@
         --user={{ mariadb_server__admin_user['username'] | quote }} \
         --password={{ mariadb_server__admin_user['password'] | quote }} \
         $EXTRAPARAM \
-        --local=flush-error-log flush-engine-log flush-general-log flush-slow-log
+        --local flush-error-log flush-engine-log flush-general-log flush-slow-log
     fi
   endscript
 }
