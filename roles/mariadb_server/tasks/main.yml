@@ -127,7 +127,7 @@
       src: 'etc/logrotate.d/mariadb.j2'
       dest: '{{ mariadb_server__logrotate_path }}'
       owner: 'root'
-      mode: 0o644
+      mode: 0o600
 
   tags:
     - 'mariadb_server'
