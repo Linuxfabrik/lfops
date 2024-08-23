@@ -5,6 +5,13 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
+  tags:
+    - 'icingaweb2_module_director'
+    - 'icingaweb2_module_director:configure'
+
+
+- block:
+
   - name: 'mkdir -p /etc/icingaweb2/modules/director'
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/director'
