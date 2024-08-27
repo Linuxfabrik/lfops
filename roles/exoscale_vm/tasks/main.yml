@@ -74,6 +74,7 @@
       {% endfor %}
       --ssh-key '{{ exoscale_vm__ssh_key }}'
       --template '{{ exoscale_vm__template }}'
+      --template-visibility '{{ exoscale_vm__template_visibility }}'
       --zone '{{ exoscale_vm__zone }}'
       --disk-size '{{ exoscale_vm__disk_size }}'
       {% if exoscale_vm__private_instance %}
