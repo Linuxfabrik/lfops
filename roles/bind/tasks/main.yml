@@ -1,9 +1,10 @@
 - block:
 
-  - name: 'Install bind'
+  - name: 'Install bind bind-utils'
     ansible.builtin.package:
       name:
         - 'bind'
+        - 'bind-utils'
       state: 'present'
 
   tags:
