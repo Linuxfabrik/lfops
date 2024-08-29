@@ -1,5 +1,6 @@
 # {{ ansible_managed }}
-# 2023071201
+# 2024082901
+# https://bind9.readthedocs.io/en/latest/reference.html
 
 acl "trusted" {
     localhost;
@@ -12,7 +13,11 @@ acl "trusted" {
 options {
     allow-query-cache { trusted; };
     allow-recursion { trusted; };
-    allow-transfer { none; };
+    allow-transfer {
+        {% for item in bind__allow_transfer %}
+        {{ item }};
+        {% endfor %}
+    };
     directory "/var/named";
     disable-empty-zone yes;
     dnssec-enable no;
@@ -30,7 +35,7 @@ options {
         {{ item }};
         {% endfor %}
     };
-    listen-on-v6 { none; };
+    listen-on-v6 { {{ bind__listen_ipv6 | ternary('any', 'none') }}; };
     managed-keys-directory "/var/named/dynamic";
     memstatistics-file "/var/named/data/named_mem_stats.txt";
     pid-file "/run/named/named.pid";
@@ -59,16 +64,39 @@ include "/etc/named.rfc1912.zones";
 include "/etc/named.root.key";
 
 {% for item in bind__zones %}
-zone "{{ item.name }}" IN {
-    type master;
-    file "{{ item.file }}";
-    # do normal iterative resolution (do not forward)
-    forwarders { };
+zone "{{ item['name'] }}" IN {
+    type {{ item['type'] | d('master') }};
+    file "{{ item['file'] | d(item['name'] ~ '.zone') }}";
+    forwarders {
+        # default: do normal iterative resolution (do not forward)
+        {% for item in item['forwarders'] | d([]) %}
+        {{ item }};
+        {% endfor %}
+    };
     allow-query { trusted; };
-    allow-transfer { none; };
-    allow-update { none; };
+    {% if item['allow_transfer'] | d([]) | length %}
+    allow-transfer {
+        {% for item in item['allow_transfer'] | d(['none']) %}
+        {{ item }};
+        {% endfor %}
+    };
+    {% endif %}
+    {% if item['type'] | d('master') in ['mirror', 'redirect', 'secondary', 'slave', 'stub'] %}
+    masters {
+        {% for item in item['masters'] | d([]) %}
+        {{ item }};
+        {% endfor %}
+    };
+    {% endif %}
 };
 
+{% endfor %}
+
+{% for item in bind__keys %}
+key "{{ item ['name'] }}" {
+  algorithm {{ item['algorithm'] }};
+  secret "{{ item['secret'] | ansible.builtin.b64encode }}";
+};
 {% endfor %}
 
 {% if bind__named_conf_raw is defined and bind__named_conf_raw | length %}

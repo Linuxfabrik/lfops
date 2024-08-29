@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022050901
+# 2024082901
 
 # disable IPv6
-OPTIONS=-4
+OPTIONS='{{ bind__listen_ipv6 | ternary("", "-4") }}'

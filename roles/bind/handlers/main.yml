@@ -1,5 +1,5 @@
 - name: 'bind: named-checkzone ... && reload named'
-  ansible.builtin.command: 'named-checkzone {{ item["name"] }} /var/named/{{ item["file"] }}'
+  ansible.builtin.command: 'named-checkzone {{ item["name"] }} /var/named/{{ item["file"] | d(item["name"] ~ ".zone") }}'
   loop: '{{ bind__zones }}'
   loop_control:
     label: '{{ item["name"] }}'

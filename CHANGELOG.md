@@ -178,6 +178,9 @@ Role:tar
 
 ### Added
 
+Role:bind
+* Added multiple new variables, now allowing a primary-secondary setup
+
 Role:moodle
 * Added
 

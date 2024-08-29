@@ -41,13 +41,15 @@
   - name: 'Deploy the forward and reverse zones'
     ansible.builtin.template:
       src: 'var/named/raw.zone.j2'
-      dest: '/var/named/{{ item.file }}'
+      dest: '/var/named/{{ item["file"] | d(item["name"] ~ ".zone") }}'
       owner: 'root'
       group: 'named'
       mode: 0o640
     loop: '{{ bind__zones }}'
     loop_control:
       label: '{{ item["name"] }}'
+    when:
+      - 'item["type"] | d("master") in ["primary", "master"]'
     notify: 'bind: named-checkzone ... && reload named'
 
   tags:
