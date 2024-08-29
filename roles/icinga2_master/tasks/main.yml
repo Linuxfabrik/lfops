@@ -19,19 +19,6 @@
 
 - block:
 
-  - name: 'systemctl {{ icinga2_master__service_enabled | bool | ternary("enable", "disable") }} --now icinga2.service'
-    ansible.builtin.systemd:
-      name: 'icinga2.service'
-      enabled: '{{ icinga2_master__service_enabled }}'
-      state: '{{ icinga2_master__service_enabled | bool | ternary("started", "stopped") }}'
-
-  tags:
-    - 'icinga2_master'
-    - 'icinga2_master:state'
-
-
-- block:
-
   - name: 'check if the icinga2 tables exist'
     ansible.builtin.command: >
       mysql
@@ -219,6 +206,20 @@
 
   tags:
     - 'icinga2_master'
+
+
+- block:
+
+  - name: 'systemctl {{ icinga2_master__service_enabled | bool | ternary("enable", "disable") }} --now icinga2.service'
+    ansible.builtin.systemd:
+      name: 'icinga2.service'
+      enabled: '{{ icinga2_master__service_enabled }}'
+      state: '{{ icinga2_master__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'icinga2_master'
+    - 'icinga2_master:state'
+
 
 - name: 'Flush handlers so that the Icinga2 master can be used by other roles later'
   ansible.builtin.meta: 'flush_handlers'
