@@ -33,7 +33,8 @@
     # === Security ===
     - role: 'linuxfabrik.lfops.crypto_policy'
       when:
-        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'not setup_basic__skip_crypto_policy | d(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
