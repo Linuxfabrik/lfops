@@ -147,9 +147,11 @@ moodle__php__ini_max_input_vars__dependent_var: 7500
 moodle__php__modules__dependent_var:
   - name: 'php-gd'
     state: 'present'
-  - name: 'php-redis'
+  - name: 'php-ldap'
     state: 'present'
   - name: 'php-mysqlnd'  # MySQL Native Driver for MariaDB - fast, but specific
+    state: 'present'
+  - name: 'php-redis'
     state: 'present'
   - name: 'php-soap'
     state: 'present'
