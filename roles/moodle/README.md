@@ -6,6 +6,10 @@ This role supports the following Moodle versions:
 
 * v4.1 LTS
 
+Setting the version manually:
+
+* `ansible-playbook --inventory=myansinv linuxfabrik.lfops.setup_moodle --tags=moodle --extra-vars="moodle__github_version=v4.1.12"`
+
 
 ## Mandatory Requirements
 
