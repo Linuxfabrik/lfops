@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024051501
+# 2024090401
 
 # The default compiled in settings are fairly paranoid. This sample file
 # loosens things up a bit, to make the ftp daemon more usable.
@@ -126,7 +126,11 @@ listen_ipv6=YES
 pam_service_name=vsftpd
 userlist_enable={{ vsftpd__conf_userlist_enable | ternary('YES', 'NO') }}
 
+# --- Linuxfabrik specific settings from here
+
 allow_writeable_chroot={{ vsftpd__conf_allow_writeable_chroot | ternary('YES', 'NO') }}
+guest_enable={{ vsftpd__conf_guest_enable | ternary('YES', 'NO') }}
+guest_username={{ vsftpd__conf_guest_username }}
 {% if vsftpd__conf_local_root is defined and vsftpd__conf_local_root | length %}
 local_root={{ vsftpd__conf_local_root }}
 {% endif %}
@@ -137,16 +141,20 @@ pasv_address={{ vsftpd__conf_pasv_address }}
 pasv_max_port={{ vsftpd__conf_pasv_max_port }}
 pasv_min_port={{ vsftpd__conf_pasv_min_port }}
 session_support={{ vsftpd__conf_session_support | ternary('YES', 'NO') }}
+{% if vsftpd__conf_user_config_dir is defined and vsftpd__conf_user_config_dir | length %}
+user_config_dir={{ vsftpd__conf_user_config_dir }}
+{% endif %}
+{% if vsftpd__conf_user_sub_token is defined and vsftpd__conf_user_sub_token | length %}
+user_sub_token={{ vsftpd__conf_user_sub_token }}
+{% endif %}
+userlist_deny={{ vsftpd__conf_userlist_deny | ternary('YES', 'NO') }}
 userlist_log={{ vsftpd__conf_userlist_log | ternary('YES', 'NO') }}
+virtual_use_local_privs={{ vsftpd__conf_virtual_use_local_privs | ternary('YES', 'NO') }}
 
 # Logging
 debug_ssl={{ vsftpd__conf_debug_ssl | ternary('YES', 'NO') }}
 dual_log_enable={{ vsftpd__conf_dual_log_enable | ternary('YES', 'NO') }}
 log_ftp_protocol={{ vsftpd__conf_log_ftp_protocol | ternary('YES', 'NO') }}
-
-{% if vsftpd__conf_user_config_dir is defined and vsftpd__conf_user_config_dir | length %}
-user_config_dir={{ vsftpd__conf_user_config_dir }}
-{% endif %}
 
 # FTPS
 rsa_cert_file={{ vsftpd__conf_rsa_cert_file }}

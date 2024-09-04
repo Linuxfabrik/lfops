@@ -2,6 +2,8 @@ vsftpd__conf_allow_writeable_chroot: false
 vsftpd__conf_chroot_local_user: false
 vsftpd__conf_debug_ssl: false
 vsftpd__conf_dual_log_enable: false
+vsftpd__conf_guest_enable: false
+vsftpd__conf_guest_username: 'ftp'
 vsftpd__conf_log_ftp_protocol: false
 vsftpd__conf_pasv_addr_resolve: false
 vsftpd__conf_pasv_max_port: 0
@@ -10,9 +12,12 @@ vsftpd__conf_rsa_cert_file: '/usr/share/ssl/certs/vsftpd.pem'
 vsftpd__conf_session_support: false
 vsftpd__conf_ssl_enable: false
 vsftpd__conf_user_config_dir: '/etc/vsftpd/user_config'
+vsftpd__conf_userlist_deny: true
 vsftpd__conf_userlist_enable: false
 vsftpd__conf_userlist_log: false
+vsftpd__conf_virtual_use_local_privs: false
 vsftpd__conf_xferlog_std_format: false
+
 vsftpd__pam_use_sss: false
 vsftpd__service_enabled: true
 
