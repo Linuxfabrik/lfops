@@ -18,7 +18,7 @@ There are three possible installation methods:
 3. By deploying the python source code from GitHub (`monitoring_plugins__linux_variant == 'python'` / `monitoring_plugins__windows_variant == 'python'`):
 * This method should only be used if there is no package available, or for development / troubleshooting purposes.
 * Deploys the version given in `monitoring_plugins__repo_version`.
-* Also deploys the [Linuxfabrik Plugin Library](https://github.com/Linuxfabrik/monitoring-plugins) as python source code.
+* Also deploys the [Linuxfabrik Plugin Library](https://github.com/Linuxfabrik/lib) as python source code.
 
 Additionally, this role allows you to deploy custom plugins which are placed under `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins` on the Ansible control node.
 
