@@ -50,7 +50,7 @@
   - name: 'Create the user with the given groups and a home directory'
     ansible.builtin.user:
       append: false
-      create_home: true
+      create_home: '{{ item["create_home"] | d(true) }}'
       group: '{{ item["primary_group"] | d(omit) }}'
       groups: '{{ item["additional_groups"] | d([]) }}'
       home: '{{ item["home"] | d(omit) }}'
