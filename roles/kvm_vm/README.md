@@ -48,7 +48,7 @@ kvm_vm__vcpus: 2
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `kvm_vm__additional_disks` | A list of additional disks. They will be created in the `kvm_vm__pool` if they do not exist already. Subkeys:<ul><li>`name`: Mandatory, string. The name of the disk. Will be prepended with the `kvm_vm__name` and suffixed with `.qcow2`.</li><li>* `size`: Mandatory, string. The size of the disk, in the same format as `kvm_vm__boot_disk_size`.</li></ul>| `[]` |
+| `kvm_vm__additional_disks` | A list of additional disks. They will be created in the `kvm_vm__pool` if they do not exist already. Subkeys:<ul><li>`name`: Mandatory, string. The name of the disk. Will be prepended with the `kvm_vm__name` and suffixed with `.qcow2`.</li><li>`size`: Mandatory, string. The size of the disk, in the same format as `kvm_vm__boot_disk_size`.</li></ul>| `[]` |
 | `kvm_vm__autostart` | Whether the VM should be started on host boot up or not. | `true` |
 | `kvm_vm__boot_uefi` | Boot the VM with UEFI. | `false` |
 | `kvm_vm__connect_url` | URL for connecting to the hypervisor on the `kvm_vm__host`. | `'qemu:///system'` |
