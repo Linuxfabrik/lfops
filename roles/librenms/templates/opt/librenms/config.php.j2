@@ -1,6 +1,6 @@
 <?php
 # {{ ansible_managed }}
-# 2022071301
+# 2024091001
 
 ## Have a look in misc/config_definitions.json for examples of settings you can set here. DO NOT EDIT misc/config_definitions.json!
 
@@ -20,7 +20,7 @@ $config['user'] = 'librenms';
 #$config['snmp']['community'] = array('public');
 
 ### Authentication Model
-$config['auth_mechanism'] = "{{ librenms__config_auth_mechanism|default('mysql') }}"; # options: mysql, ldap, http-auth
+$config['auth_mechanism'] = "{{ librenms__config_auth_mechanism | d('mysql') }}"; # options: mysql, ldap, http-auth
 #$config['http_auth_guest'] = "guest"; # remember to configure this user if you use http-auth
 
 ### List of RFC1918 networks to allow scanning-based discovery
@@ -32,7 +32,7 @@ $config['auth_mechanism'] = "{{ librenms__config_auth_mechanism|default('mysql')
 #$config['update'] = 0;
 
 # Number in days of how long to keep old rrd files. 0 disables this feature
-$config['rrd_purge'] = 0;
+$config['rrd_purge'] = {{ librenms__config_rrd_purge | d(0) }};
 
 # Uncomment to submit callback stats via proxy
 #$config['callback_proxy'] = "hostname:port";
@@ -46,4 +46,4 @@ $config['enable_billing'] = 1;
 # Enable the in-built services support (Nagios plugins)
 $config['show_services'] = 1;
 
-$config["update_channel"] = "{{ librenms__config_update_channel|default('master') }}";
+$config["update_channel"] = "{{ librenms__config_update_channel | d('master') }}";
