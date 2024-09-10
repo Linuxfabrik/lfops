@@ -188,14 +188,38 @@
       mode: 0o644
       remote_src: true
 
-  - name: 'cp /opt/librenms/librenms.nonroot.cron /etc/cron.d/librenms'
+  - name: 'cp /opt/librenms/dist/librenms.cron /etc/cron.d/librenms'
     ansible.builtin.copy:
-      src: '/opt/librenms/librenms.nonroot.cron'
+      src: '/opt/librenms/dist/librenms.cron'
       dest: '/etc/cron.d/librenms'
       owner: 'root'
       group: 'root'
       mode: 0o644
       remote_src: true
+
+  - name: 'cp /opt/librenms/dist/librenms-scheduler.service /etc/systemd/system/'
+    ansible.builtin.copy:
+      src: '/opt/librenms/dist/librenms-scheduler.service'
+      dest: '/etc/systemd/system/librenms-scheduler.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+      remote_src: true
+
+  - name: 'cp /opt/librenms/dist/librenms-scheduler.timer /etc/systemd/system/'
+    ansible.builtin.copy:
+      src: '/opt/librenms/dist/librenms-scheduler.timer'
+      dest: '/etc/systemd/system/librenms-scheduler.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+      remote_src: true
+
+  - name: 'systemctl enable --now librenms-scheduler.timer'
+    ansible.builtin.service:
+      name: 'librenms-scheduler.timer'
+      enabled: true
+      state: 'started'
 
   - name: 'Deploy /opt/librenms/config.php'
     ansible.builtin.template:
