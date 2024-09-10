@@ -6,6 +6,7 @@
     removes: '{{ item["removes"] | d(omit) }}'
     stdin: '{{ item["stdin"] | d(omit) }}'
     stdin_add_newline: '{{ item["stdin_add_newline"] | d(omit) }}'
+  become: '{{ "user" in item }}'
   become_user: '{{ item["user"] | d(omit) }}'
   ignore_errors: '{{ item["ignore_errors"] | d(false) }}'
   when:
