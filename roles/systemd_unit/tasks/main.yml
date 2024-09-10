@@ -81,6 +81,7 @@
     - 'systemd_unit'
     - 'systemd_unit:mounts'
 
+
 - block:
 
   - meta: 'flush_handlers' # we want a `systemctl daemon-reload` before managing unit states
@@ -90,6 +91,8 @@
       name: '{{ item["name"] }}.service'
       enabled: '{{ item["enabled"] | d(true) }}'
     loop: '{{ systemd_unit__services__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }} - enabled: {{ item["enabled"] | d(true) }}'
 
   - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}.service'
     ansible.builtin.systemd:
@@ -98,12 +101,16 @@
     when:
       - 'item["state"] | d("started") not in ["present", "absent"]'
     loop: '{{ systemd_unit__services__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }} - state: {{ item["state"] | d("started") }}'
 
   - name: 'systemctl {{ item["enabled"] | d(true) | bool | ternary("enable", "disable") }} {{ item["name"] }}.timer'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.timer'
       enabled: '{{ item["enabled"] | d(true) }}'
     loop: '{{ systemd_unit__timers__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }} - enabled: {{ item["enabled"] | d(true) }}'
 
   - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}.timer'
     ansible.builtin.systemd:
@@ -112,12 +119,16 @@
     when:
       - 'item["state"] | d("started") not in ["present", "absent"]'
     loop: '{{ systemd_unit__timers__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }} - state: {{ item["state"] | d("started") }}'
 
   - name: 'systemctl {{ item["enabled"] | d(true) | bool | ternary("enable", "disable") }} {{ item["name"] }}.mount'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.mount'
       enabled: '{{ item["enabled"] | d(true) }}'
     loop: '{{ systemd_unit__mounts__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }} - enabled: {{ item["enabled"] | d(true) }}'
 
   - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}.mount'
     ansible.builtin.systemd:
@@ -126,6 +137,8 @@
     when:
       - 'item["state"] | d("started") not in ["present", "absent"]'
     loop: '{{ systemd_unit__mounts__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }} - state: {{ item["state"] | d("started") }}'
 
   tags:
     - 'systemd_unit'
