@@ -171,6 +171,13 @@
   #     state: 'started'
   #     enabled: true
   #     daemon_reload: '{{ librenms__rrdcached_systemd_override_result is changed }}'
+  #
+
+  tags:
+    - 'librenms'
+
+
+- block:
 
   - name: 'cp /opt/librenms/misc/librenms.logrotate /etc/logrotate.d/librenms'
     ansible.builtin.copy:
@@ -217,3 +224,4 @@
 
   tags:
     - 'librenms'
+    - 'librenms:configure'
