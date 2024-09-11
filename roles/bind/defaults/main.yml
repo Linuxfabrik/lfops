@@ -9,5 +9,6 @@ bind__listen_ipv6: false
 bind__listen_on_addresses:
   - 'any'
 bind__named_service_enabled: true
+bind__recursion: true
 bind__trusted_networks: []
 bind__zones: []

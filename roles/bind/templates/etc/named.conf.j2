@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024091101
+# 2024091102
 # https://bind9.readthedocs.io/en/latest/reference.html
 
 acl "trusted" {
@@ -40,7 +40,7 @@ options {
     managed-keys-directory "/var/named/dynamic";
     memstatistics-file "/var/named/data/named_mem_stats.txt";
     pid-file "/run/named/named.pid";
-    recursion yes;
+    recursion {{ bind__recursion | ternary('yes', 'no') }};
     {% if bind__rpz_zone is defined and bind__rpz_zone | length %}
     response-policy { zone "{{ bind__rpz_zone }}"; };
     {% endif %}

@@ -22,7 +22,7 @@ Example:
 ```yaml
 # mandatory
 bind__trusted_networks:
-  - '192.0.2.0/24'
+  - 'any'
 bind__zones:
   - name: 'example.com'
     file: 'forward.zone'
@@ -62,13 +62,14 @@ bind__zones:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `bind__allow_new_zones` | If `true`, then zones can be added at runtime via `rndc addzone`.  | `false` |
+| `bind__allow_new_zones` | Boolean. If `true`, then zones can be added at runtime via `rndc addzone`.  | `false` |
 | `bind__allow_transfer` | List of strings. The global [`allow-transfer`](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-allow-transfer) option. Can be overwritten per zone. | `['none']` |
 | `bind__forwarders` | List of DNS servers to which DNS queries to unknown domain names should be forwarded. | `['1.0.0.1', '1.1.1.1']` |
 | `bind__keys` | List of dictionaries. [`key`s](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-key) for use with TSIG or the command channel (`rndc`). Subkeys: <ul><li>`name`: Mandatory, string. Name of the key.</li><li>`algorithm`: Mandatory, string. [`algorithm`](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-algorithm) of the key.</li><li>`secret`: Mandatory, string. The key's [`secret`](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-secret). Will be base64 encoded by the role.</li></ul> | `[]` |
 | `bind__listen_on_addresses` | List of addresses on which the server will listen. This indirectly sets the listening interface(s). | `['any']` |
 | `bind__named_conf_raw` | Multiline string. Raw content which will be appended to the end of `/etc/named.conf` | unset |
 | `bind__named_service_enabled` | Boolean. Enables or disables the named service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
+| `bind__recursion` | Boolean. Defines whether recursion and caching are allowed. Disabling recursion is recommended for authorative name servers. | `true` |
 | `bind__rpz_zone` | String. Name of the RPZ zone. Setting this enables the usage of a reverse-policy zone (have a look at https://dnsrpz.info/, basically acts as a `/etc/hosts` file for all clients). To use this, also create a zone with `name: '{{ bind__rpz_zone }}'` in `bind__zones`. | unset |
 | bind__listen_ipv6 | Boolean. Enables or disables listening on IPv6. | `false` |
 
@@ -92,6 +93,7 @@ bind__named_conf_raw: |-
       inet * port 953 allow { 192.0.2.3; 127.0.0.1; } keys { "rndc-key-192.0.2.3"; };
   };
 bind__named_service_enabled: true
+bind__recursion: false
 bind__rpz_zone: 'rpz'
 bind__zones:
   # make use of the bind__rpz_zone
