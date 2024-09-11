@@ -62,6 +62,7 @@ bind__zones:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `bind__allow_new_zones` | If `true`, then zones can be added at runtime via `rndc addzone`.  | `false` |
 | `bind__allow_transfer` | List of strings. The global [`allow-transfer`](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-allow-transfer) option. Can be overwritten per zone. | `['none']` |
 | `bind__forwarders` | List of DNS servers to which DNS queries to unknown domain names should be forwarded. | `['1.0.0.1', '1.1.1.1']` |
 | `bind__keys` | List of dictionaries. [`key`s](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-key) for use with TSIG or the command channel (`rndc`). Subkeys: <ul><li>`name`: Mandatory, string. Name of the key.</li><li>`algorithm`: Mandatory, string. [`algorithm`](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-algorithm) of the key.</li><li>`secret`: Mandatory, string. The key's [`secret`](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-secret). Will be base64 encoded by the role.</li></ul> | `[]` |
@@ -74,6 +75,7 @@ bind__zones:
 Example:
 ```yaml
 # optional
+bind__allow_new_zones: true
 bind__allow_transfer:
   - '192.0.2.0/24'
 bind__forwarders:

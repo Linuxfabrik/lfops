@@ -1,3 +1,4 @@
+bind__allow_new_zones: false
 bind__allow_transfer:
   - 'none'
 bind__forwarders:
