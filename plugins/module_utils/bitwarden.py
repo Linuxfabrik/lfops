@@ -15,6 +15,7 @@ import email.utils
 import json
 import mimetypes
 import os
+import secrets
 import urllib.parse
 from urllib.error import HTTPError, URLError
 
@@ -290,22 +291,20 @@ class Bitwarden(object):
         return result['data']
 
 
-    def generate(self, password_length=40,
-        password_uppercase=True, password_lowercase=True,
-        password_numeric=True, password_special=False):
-        """Return a generated password.
+    def generate(self, password_length=60, password_choice='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'):
+        """Generates a random password of a given length. If you want to generate a hex-based
+        password, ensure that password_length is positive and even (as hex characters typically
+        come in pairs representing bytes), and that password_choice is set to '0123456789abcdef'.
+
+        We do not use Bitwarden's "generate?mypass" API function, as it can't create more than 128
+        chars, doesn't let you handle the characters in detail, and can't create passwords using hex
+        characters (0-9 and a-f).
         """
-
-        params = 'length=%i%s%s%s%s' % (
-            password_length,
-            '&uppercase' if password_uppercase else '',
-            '&lowercase' if password_lowercase else '',
-            '&number' if password_numeric else '',
-            '&special' if password_special else '',
-        )
-
-        result = self._api_call('generate?%s' % (params))
-        return result['data']['data']
+        if password_length <= 0:
+            raise ValueError('Password length must be a positive integer.')
+        if password_choice.lower() == '0123456789abcdef' and password_length % 2 != 0:
+            raise ValueError('Password length must be an even number to represent full hex bytes.')
+        return ''.join(secrets.choice(password_choice) for _ in range(password_length))
 
 
     def get_template_item_login_uri(self, uris):

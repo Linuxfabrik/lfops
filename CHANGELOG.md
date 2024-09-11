@@ -12,6 +12,10 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Module:bitwarden_item / Lookup Plugin:bitwarden:
+* Removed parameters `password_uppercase`, `password_lowercase`, `password_numeric`, `password_special`
+* Added parameter `password_choice`
+
 Role:borg_local:
 * Added new mandatory variable `borg_local__passphrase`
 
