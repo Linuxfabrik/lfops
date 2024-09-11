@@ -37,6 +37,7 @@ This role is compatible with the following MariaDB versions:
 | `mariadb_server`                     | * `dnf -y install mariadb-server libzstd`<br> * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `mkdir /var/log/mariadb`<br> * `touch /var/log/mariadb/mariadb.log; chown mysql:mysql /var/log/mariadb/mariadb.log`<br> * Deploy /etc/my.cnf.d/z00-linuxfabrik.cnf<br> * `mkdir -p /etc/systemd/system/mariadb.service.d/`<br> * Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf<br> * `systemctl daemon-reload`<br> * Deploy /etc/logrotate.d/mariadb<br> * `systemctl enable/disable mariadb.service`<br> * `systemctl {{ mariadb_server__state[:-2] }} mariadb.service`<br> * Create DBA "{{ mariadb_server__admin_user["username"] }}"<br> * Remove all "root" users<br> * Secure installation: Remove anonymous users<br> * Secure installation: Remove test database<br> * Secure installation: Remove test database (privileges)<br> * Secure installation: Reload privilege tables<br> * `dnf -y install {{ mariadb_server__dump_mydumper_package }}`<br> * Deploy /usr/local/bin/mariadb-dump<br> * Deploy /etc/mariadb-dump.conf<br> * Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost<br> * Deploy /etc/systemd/system/mariadb-dump.service<br> * Deploy /etc/systemd/system/mariadb-dump.timer<br> * `systemctl enable mariadb-dump.timer --now`<br> * Create or delete mariadb databases<br> * Create, update or delete MariaDB users<br> * Show databases<br> * `wget https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz`<br> * `mkdir /tmp/mariadb-sys-schema`<br> * `tar xzvf /tmp/mariadb-sys-schema.tar.gz`<br> * `mysql --user "{{ mariadb_server__admin_user["username"] }}" --password="..." < ./sys_10.sql`<br> * `rm -rf /tmp/mariadb-sys-schema` |
 | `mariadb_server:configure`           | * `dnf -y install mariadb-server libzstd`<br> * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `mkdir /var/log/mariadb`<br> * `touch /var/log/mariadb/mariadb.log; chown mysql:mysql /var/log/mariadb/mariadb.log`<br> * Deploy /etc/my.cnf.d/z00-linuxfabrik.cnf<br> * `mkdir -p /etc/systemd/system/mariadb.service.d/<br> * Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf<br> * `systemctl daemon-reload`<br> * Deploy /etc/logrotate.d/mariadb`<br> * `systemctl enable/disable mariadb.service`<br> * `systemctl {{ mariadb_server__state[:-2] }} mariadb.service`<br> * `dnf -y install {{ mariadb_server__dump_mydumper_package }}`<br> * Deploy /usr/local/bin/mariadb-dump<br> * Deploy /etc/mariadb-dump.conf<br> * Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost<br> * Deploy /etc/systemd/system/mariadb-dump.service<br> * Deploy /etc/systemd/system/mariadb-dump.timer<br> * `systemctl enable mariadb-dump.timer --now` |
 | `mariadb_server:database`            | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Create or delete mariadb databases |
+| `mariadb_server:dare`                | Deploys the keyfile for the [File Key Management Encryption Plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin/) and restarts MariaDB if ncecessary. |
 | `mariadb_server:dump`                | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `dnf -y install {{ mariadb_server__dump_mydumper_package }}`<br> * Deploy /usr/local/bin/mariadb-dump<br> * Deploy /etc/mariadb-dump.conf<br> * Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost<br> * Deploy /etc/systemd/system/mariadb-dump.service<br> * Deploy /etc/systemd/system/mariadb-dump.timer<br> * `systemctl enable mariadb-dump.timer --now` |
 | `mariadb_server:secure_installation` | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Remove all "root" users<br> * Secure installation: Remove anonymous users<br> * Secure installation: Remove test database<br> * Secure installation: Remove test database (privileges)<br> * Secure installation: Reload privilege tables |
 | `mariadb_server:state`               | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `systemctl enable/disable mariadb.service`<br> * `systemctl {{ mariadb_server__state[:-2] }} mariadb.service` |
@@ -132,7 +133,7 @@ mariadb_server__users__host_var:
 
 Variables for `z00-linuxfabrik.cnf` directives and their default values, defined and supported by this role.
 
-| Role Variable                                        | Documentation                                                                                      | Default Value (v10.6)                    |
+| Role Variable                                        | Documentation                                                                                      | Default Value                    |
 | -------------                                        | -------------                                                                                      | -------------                    |
 | `mariadb_server__cnf_bulk_insert_buffer_size__group_var` / `mariadb_server__cnf_bulk_insert_buffer_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bulk_insert_buffer_size) | `8M`                          |
 | `mariadb_server__cnf_character_set_server__group_var` / `mariadb_server__cnf_character_set_server__host_var`           | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#character_set_server) | `'utf8mb4'`                      |
@@ -195,11 +196,59 @@ mariadb_server__cnf_wait_timeout__host_var: 28800
 ```
 
 
+## Optional Role Variables - `mariadb_server__cnf_*` Config Directives for DARE
+
+To enable [Data Encryption at rest](https://mariadb.com/kb/en/data-at-rest-encryption-overview/) (DARE) using the [File Key Management plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin), you have to [define the DARE keys](https://mariadb.com/kb/en/file-key-management-encryption-plugin/#creating-the-key-file) in your inventory like so (every encryption key itself needs to be provided in hex-encoded form using 128-bit/16-byte/32 chars, 192-bit/24-byte/48 chars or 256-bit/32-byte/64 chars):
+
+```yaml
+# using 256-bit/32-byte/64 chars encryption keys
+mariadb_server__dare_keys:
+  - key_id: 1
+    key: 'a7addd9adea9978fda19f21e6be987880e68ac92632ca052e5bb42b1a506939a'
+  - key_id: 2
+    key: '49c16acc2dffe616710c9ba9a10b94944a737de1beccb52dc1560abfdd67388b'
+  - key_id: 100
+    key: '8db1ee74580e7e93ab8cf157f02656d356c2f437d548d5bf16bf2a56932954a3'
+```
+
+Variables for `z00-linuxfabrik.cnf` directives and their default values, defined and supported by this role for DARE.
+
+| Role Variable                                        | Documentation                                                                                      | Default Value                   |
+| -------------                                        | -------------                                                                                      | -------------                    |
+| `mariadb_server__cnf_encrypt_binlog` | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-server-system-variables/#encrypt_binlog) | `'ON'` |
+| `mariadb_server__cnf_encrypt_tmp_files` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#encrypt_tmp_files) | `'ON'` |
+| `mariadb_server__cnf_file_key_management_encryption_algorithm` | [mariadb.com](https://mariadb.com/kb/en/file-key-management-encryption-plugin#file_key_management_encryption_algorithm) | `'AES_CTR'` |
+| `mariadb_server__cnf_file_key_management_filename` | [mariadb.com](https://mariadb.com/kb/en/file-key-management-encryption-plugin#file_key_management_filename) | `'/etc/my.cnf.d/keyfile'` |
+| `mariadb_server__cnf_innodb_default_encryption_key_id` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_default_encryption_key_id) | `1` |
+| `mariadb_server__cnf_innodb_encrypt_log` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_log) | `'ON'` |
+| `mariadb_server__cnf_innodb_encrypt_tables` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_tables) | `'ON'` |
+| `mariadb_server__cnf_innodb_encrypt_temporary_tables` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_temporary_tables) | `'ON'` |
+| `mariadb_server__cnf_innodb_encryption_rotate_key_age` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encryption_rotate_key_age) | `1` |
+| `mariadb_server__cnf_innodb_encryption_threads` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encryption_threads) | `4` |
+| `mariadb_server__cnf_plugin_load_add` | [mariadb.com](https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/plugin-load-add/) | `'file_key_management'` |
+
+Example:
+```yaml
+# optional - cnf directives
+mariadb_server__cnf_encrypt_binlog: 'ON'
+mariadb_server__cnf_encrypt_tmp_files: 'ON'
+mariadb_server__cnf_file_key_management_encryption_algorithm: 'AES_CTR'
+mariadb_server__cnf_file_key_management_filename: '/etc/my.cnf.d/keyfile'
+mariadb_server__cnf_innodb_default_encryption_key_id: 1
+mariadb_server__cnf_innodb_encrypt_log: 'ON'
+mariadb_server__cnf_innodb_encrypt_tables: 'ON'
+mariadb_server__cnf_innodb_encrypt_temporary_tables: 'ON'
+mariadb_server__cnf_innodb_encryption_rotate_key_age: 1
+mariadb_server__cnf_innodb_encryption_threads: 4
+mariadb_server__cnf_plugin_load_add: 'file_key_management'
+```
+
+
 ## Troubleshooting
 
 Q: `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`
 
-A: Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
+A: Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role, or run the full `mariadb_server` playbook, not limited by some tags.
 
 
 ## License

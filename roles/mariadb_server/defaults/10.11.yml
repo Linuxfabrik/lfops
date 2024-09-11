@@ -25,3 +25,16 @@ mariadb_server__cnf_table_definition_cache__role_var: 400
 mariadb_server__cnf_tmp_table_size__role_var: '16M'
 mariadb_server__cnf_wait_timeout__role_var: 28800
 mariadb_server__logrotate_path: '/etc/logrotate.d/mariadb'
+
+# DARE using the File Key Management plugin
+mariadb_server__cnf_plugin_load_add: 'file_key_management'
+mariadb_server__cnf_encrypt_binlog: 'ON'
+mariadb_server__cnf_encrypt_tmp_files: 'ON'
+mariadb_server__cnf_file_key_management_encryption_algorithm: 'AES_CTR'
+mariadb_server__cnf_file_key_management_filename: '/etc/my.cnf.d/keyfile'
+mariadb_server__cnf_innodb_default_encryption_key_id: 1
+mariadb_server__cnf_innodb_encrypt_log: 'ON'
+mariadb_server__cnf_innodb_encrypt_tables: 'ON'
+mariadb_server__cnf_innodb_encrypt_temporary_tables: 'ON'
+mariadb_server__cnf_innodb_encryption_rotate_key_age: 1
+mariadb_server__cnf_innodb_encryption_threads: 4

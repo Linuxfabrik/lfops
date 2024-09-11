@@ -1,0 +1,13 @@
+- block:
+
+  - name: 'Copy etc/my.cnf.d/keyfile.j2 to /etc/my.cnf.d/keyfile'
+    ansible.builtin.template:
+      src: 'etc/my.cnf.d/keyfile.j2'
+      dest: '/etc/my.cnf.d/keyfile'
+      owner: 'mysql'
+      group: 'mysql'
+      mode: 0o400
+  notify:
+    - 'mariadb_server: systemctl restart mariadb'
+
+  when: 'mariadb_server__dare_keys is defined and mariadb_server__dare_keys | length'

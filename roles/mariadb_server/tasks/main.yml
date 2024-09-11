@@ -100,7 +100,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify: 'mariadb_server: restart mariadb'
+    notify: 'mariadb_server: systemctl restart mariadb'
 
   - name: 'mkdir -p /etc/systemd/system/mariadb.service.d/'
     ansible.builtin.file:
@@ -115,7 +115,7 @@
       group: 'root'
       mode: 0o644
     register: 'mariadb_server__socket_selinux_workaround_result'
-    notify: 'mariadb_server: restart mariadb'
+    notify: 'mariadb_server: systemctl restart mariadb'
 
   - name: 'systemctl daemon-reload'
     ansible.builtin.systemd:
@@ -132,6 +132,15 @@
   tags:
     - 'mariadb_server'
     - 'mariadb_server:configure'
+
+
+- block:
+
+  - ansible.builtin.include_tasks: 'configure-dare.yml'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:dare'
 
 
 - block:
