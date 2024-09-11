@@ -1,8 +1,18 @@
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+  tags:
+    - 'repo_mariadb'
+
+
+- block:
+
   - name: 'deploy the repo file (mirror: {{ repo_mariadb__mirror_url | default("") }})'
     ansible.builtin.template:
-      src: 'etc/yum.repos.d/MariaDB.repo.j2'
+      src: '{{ repo_mariadb__repo_file }}'
       dest: '/etc/yum.repos.d/MariaDB.repo'
       owner: 'root'
       group: 'root'
