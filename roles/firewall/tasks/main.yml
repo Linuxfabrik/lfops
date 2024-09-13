@@ -95,6 +95,29 @@
       name: 'iptables'
       state: 'present'
 
+  - name: 'Remove the old fwb repo and clone again'
+    ansible.builtin.file:
+      path: '/tmp/ansible.fwb'
+      state: 'absent'
+    delegate_to: 'localhost'
+
+  - name: 'Clone the fwb git repo to localhost'
+    ansible.builtin.git:
+      repo: 'git@git.linuxfabrik.ch:linuxfabrik-fwbuilder/{{ inventory_dir | basename }}.git'
+      dest: '/tmp/ansible.fwb'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Deploy /etc/fwb.sh'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.fwb/{{ inventory_hostname }}.fw'
+      dest: '/etc/fwb.sh'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    notify: 'firewall: systemctl restart fwb'
+
   - name: 'Deploy fwbuilder systemd service file'
     ansible.builtin.template:
       src: 'etc/systemd/system/fwb.service.j2'
