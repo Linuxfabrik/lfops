@@ -95,7 +95,7 @@
       name: 'iptables'
       state: 'present'
 
-  - name: 'Remove the old fwb repo and clone again'
+  - name: 'Remove any existing local fwb repo'
     ansible.builtin.file:
       path: '/tmp/ansible.fwb'
       state: 'absent'
@@ -115,7 +115,7 @@
       dest: '/etc/fwb.sh'
       owner: 'root'
       group: 'root'
-      mode: 0o755
+      mode: 0o500  # no need for others to read/write this file, just u=rx
     notify: 'firewall: systemctl restart fwb'
 
   - name: 'Deploy fwbuilder systemd service file'
