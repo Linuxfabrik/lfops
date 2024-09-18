@@ -1,4 +1,8 @@
 bind__allow_new_zones: false
+bind__allow_query_cache:
+  - 'trusted'
+bind__allow_recursion:
+  - 'trusted'
 bind__allow_transfer:
   - 'none'
 bind__forwarders:

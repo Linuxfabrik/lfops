@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024091102
+# 2024091801
 # https://bind9.readthedocs.io/en/latest/reference.html
 
 acl "trusted" {
@@ -12,8 +12,16 @@ acl "trusted" {
 
 options {
     allow-new-zones {{ bind__allow_new_zones | ternary('yes', 'no') }};
-    allow-query-cache { trusted; };
-    allow-recursion { trusted; };
+    allow-query-cache {
+        {% for item in bind__allow_query_cache %}
+        {{ item }};
+        {% endfor %}
+    };
+    allow-recursion {
+        {% for item in bind__allow_recursion %}
+        {{ item }};
+        {% endfor %}
+    };
     allow-transfer {
         {% for item in bind__allow_transfer %}
         {{ item }};
