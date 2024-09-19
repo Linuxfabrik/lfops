@@ -1,4 +1,0 @@
-- name: 'firewall: systemctl restart fwb'
-  ansible.builtin.service:
-    name: 'fwb.service'
-    state: 'restarted'

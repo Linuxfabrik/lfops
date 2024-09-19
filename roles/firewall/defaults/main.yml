@@ -1,1 +1,2 @@
 firewall__firewall: 'fwbuilder'
+firewall__fwbuilder_fw_file: '{{ inventory_hostname }}'

@@ -103,20 +103,24 @@
 
   - name: 'Clone the fwb git repo to localhost'
     ansible.builtin.git:
-      repo: 'git@git.linuxfabrik.ch:linuxfabrik-fwbuilder/{{ inventory_dir | basename }}.git'
-      dest: '/tmp/ansible.fwb'
+      repo: '{{ firewall__fwbuilder_repo_url }}'
+      dest: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
+      depth: 1
+      single_branch: true
     delegate_to: 'localhost'
     run_once: true
     check_mode: false # run task even if `--check` is specified
+    when: 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length'
 
   - name: 'Deploy /etc/fwb.sh'
     ansible.builtin.copy:
-      src: '/tmp/ansible.fwb/{{ inventory_hostname }}.fw'
+      src: '/tmp/ansible.fwb-{{ inventory_dir | basename }}/{{ firewall__fwbuilder_fw_file }}.fw'
       dest: '/etc/fwb.sh'
       owner: 'root'
       group: 'root'
       mode: 0o500  # no need for others to read/write this file, just u=rx
-    notify: 'firewall: systemctl restart fwb'
+    register: 'firewall__deploy_fwb_result'
+    when: 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length'
 
   - name: 'Deploy fwbuilder systemd service file'
     ansible.builtin.template:
@@ -124,6 +128,12 @@
       dest: '/etc/systemd/system/fwb.service'
       owner: 'root'
       mode: 0o644
+
+  - name: 'Restart fwb.service'
+    ansible.builtin.systemd:
+      name: 'fwb.service'
+      state: 'restarted'
+    when: 'firewall__deploy_fwb_result is changed'
 
   - name: 'Be sure fwb is enabled and not masked. Reboot the server manually later to start fwb.'
     ansible.builtin.systemd:
