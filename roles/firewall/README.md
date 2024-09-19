@@ -5,8 +5,7 @@ This role configures a firewall on the system. For the currently supported firew
 
 ## Mandatory Requirements
 
-* When using `firewall__firewall == fwbuilder`, you need to manually deploy a Firewall Builder file to `/etc/fwb.sh`.
-
+* When using `firewall__firewall == fwbuilder`, you either need to manually deploy a Firewall Builder file to `/etc/fwb.sh` or use the ``firewall__fwbuilder_repo_url`` variable to clone the Firewall Builder files automatically.
 
 ## Optional Requirements
 
@@ -24,12 +23,17 @@ This role configures a firewall on the system. For the currently supported firew
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `firewall__firewall` | Which firewall should be activated and configured. All other firewalls will be disabled. Possible options:<br> * `'None'`<br> * `'firewalld'`<br> * `'fwbuilder'`<br> * `'iptables'`<br> * `'nftables'`<br> * `'ufw'` | `'fwbuilder'` |
+| `firewall__firewall`           | Which firewall should be activated and configured. All other firewalls will be disabled. Possible options:<br> * `'None'`<br> * `'firewalld'`<br> * `'fwbuilder'`<br> * `'iptables'`<br> * `'nftables'`<br> * `'ufw'` | `'fwbuilder'` |
+| `firewall__fwbuilder_fw_file`  | The GIT repository URL to clone the compiled firewall files from. | `{{ inventory_hostname }}` |
+| `firewall__fwbuilder_repo_url` | The GIT repository URL to clone the compiled firewall files from. | `unset` |
+
 
 Example:
 ```yaml
 # optional
 firewall__firewall: 'fwbuilder'
+firewall__fwbuilder_fw_file: 'example.fw'
+firewall__fwbuilder_repo_url: 'git@git.example.com:fwbuilder/fwb.git'
 ```
 
 
