@@ -18,16 +18,16 @@ This Ansible role does not provide a way to template the blocky configuration fi
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `blocky__config_yml` | String. The local path to the blocky config file to deploy. | unset |
+| `blocky__config_yml`      | String. The blocky config YAML to deploy. | unset |
 | `blocky__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
-| `blocky__version` | String. The version of blocky to install. Possible options: `'latest'`, or any from https://github.com/0xERR0R/blocky/releases. | `'latest'`
+| `blocky__version`         | String. The version of blocky to install. Possible options: `'latest'`, or any from https://github.com/0xERR0R/blocky/releases. | `'latest'` |
 
 Example:
 ```yaml
 # optional
 blocky__config_yml: '{{ lookup("ansible.builtin.file",
     "{{ inventory_dir }}/group_vars/blocky/files/etc/blocky/config.yml")
-  }}'
+  }}'  # example of how to deploy the config as a file
 blocky__service_enabled: true
 blocky__version: 'latest'
 ```
