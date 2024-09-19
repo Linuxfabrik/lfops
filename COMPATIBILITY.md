@@ -15,6 +15,7 @@ apps                                 |    |    | x | x |       |       |       |
 at                                   |    |    | x | x |       |       |       | Fedora 35
 audit                                |    |    | x | x |       |       |       |
 bind                                 |    |    | x | x |       |       |       |
+blocky                               |    |    | x | x |       |       |       |
 borg_local                           |    |    | x |   |       |       |       |
 chrony                               |    |    | x | x |       |       |       |
 clamav                               |    |    | x |   |       |       |       |

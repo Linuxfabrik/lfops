@@ -182,6 +182,9 @@ Role:tar
 
 ### Added
 
+Role:blocky
+* Added
+
 Role:bind
 * Added multiple new variables, now allowing a primary-secondary setup
 

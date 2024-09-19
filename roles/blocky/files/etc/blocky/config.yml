@@ -1,0 +1,22 @@
+# This file is managed by Ansible - do not edit
+# 2024091902
+
+# See https://0xerr0r.github.io/blocky/latest/configuration for details
+
+# This is just a SAMPLE configuration to get blocky up and running. Due to the flexibility of the
+# blocky/config.yml file, we do not press it into a configurable Jinja template - you need to write
+# it from scratch for your use case and put it in your host_files directory.
+
+# upstreams configuration
+upstreams:
+  groups:
+    default:
+      - '1.1.1.1'
+      - '1.0.0.1'
+      - 'tcp-tls:fdns1.dismail.de:853'
+      - 'https://dns.digitale-gesellschaft.ch/dns-query'
+    laptop*:
+      - '123.123.123.123'
+    10.43.8.67/28:
+      - '1.1.1.1'
+      - '9.9.9.9'

@@ -1,0 +1,4 @@
+- name: 'blocky: restart blocky.service'
+  ansible.builtin.service:
+    name: 'blocky.service'
+    state: 'restarted'

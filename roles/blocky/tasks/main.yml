@@ -1,0 +1,142 @@
+# inspiration:
+# * https://0xerr0r.github.io/blocky/latest/installation/
+# * https://0xerr0r.github.io/blocky/latest/configuration/
+# * https://github.com/m0zgen/blocky-installer/blob/master/install.sh
+
+- block:
+
+  - name: 'Store the github release version'
+    ansible.builtin.set_fact:
+      blocky__github_version: '{{ blocky__version }}'
+    when: 'blocky__version != "latest"'
+
+  - block:
+
+    - name: 'Get latest blocky release version'
+      ansible.builtin.uri:
+        url: 'https://api.github.com/repos/0xERR0R/blocky/releases/latest'
+      register: 'blocky__github_release'
+      check_mode: false # run task even if `--check` is specified
+      delegate_to: 'localhost'
+      run_once: true
+
+    - name: 'Store the latest release version'
+      ansible.builtin.set_fact:
+        blocky__github_version: '{{ blocky__github_release["json"]["tag_name"] }}'
+
+    # block
+    when: 'blocky__version == "latest"'
+
+  - name: 'curl --location https://github.com/0xERR0R/blocky/releases/download/{{ blocky__github_version }}/blocky_{{ blocky__github_version }}_Linux_x86_64.tar.gz --output /tmp/ansible.blocky_{{ blocky__github_version }}_Linux_x86_64.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://github.com/0xERR0R/blocky/releases/download/{{ blocky__github_version }}/blocky_{{ blocky__github_version }}_Linux_x86_64.tar.gz'
+      dest: '/tmp/ansible.blocky_{{ blocky__github_version }}_Linux_x86_64.tar.gz'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: '/tmp/ansible.blocky_{{ blocky__github_version }}_Linux_x86_64.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible.blocky_{{ blocky__github_version }}_Linux_x86_64.tar.gz'
+      dest: '/tmp'
+    delegate_to: 'localhost'
+    ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified
+
+  - name: 'scp /tmp/blocky {{ inventory_hostname }}:/usr/local/sbin/blocky'
+    ansible.builtin.copy:
+      src: '/tmp/blocky'
+      dest: '/usr/local/sbin/blocky'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # if you want to use port 53 or 953 on Linux you should add CAP_NET_BIND_SERVICE capability to
+  # the binary
+  - name: 'setcap cap_net_bind_service=ep /usr/local/sbin/blocky'
+    community.general.capabilities:
+      path: '/usr/local/sbin/blocky'
+      capability: 'cap_net_bind_service=ep'
+      state: 'present'
+
+  - name: 'useradd --system --shell /bin/false blocky'
+    ansible.builtin.user:
+      comment: 'blocky Service User'
+      name: 'blocky'
+      create_home: false
+      shell: '/bin/false'
+      state: 'present'
+      system: true
+
+  - name: 'mkdir -p /etc/blocky'
+    ansible.builtin.file:
+      path: '/etc/blocky'
+      state: 'directory'
+      owner: 'blocky'
+      group: 'blocky'
+      mode: 0o755
+
+  - name: 'Check if /etc/blocky/config.yml exists'
+    ansible.builtin.stat:
+      path: '/etc/blocky/config.yml'
+    changed_when: false
+    register: 'blocky__remote_config'
+
+  # copy the sample configuration file
+  - name: 'scp etc/blocky/config.yml {{ inventory_hostname }}:/usr/local/sbin/blocky (the sample config)'
+    ansible.builtin.copy:
+      src: 'etc/blocky/config.yml'
+      dest: '/etc/blocky/config.yml'
+      owner: 'blocky'
+      group: 'blocky'
+      mode: 0o440
+    when: 'not blocky__remote_config.stat.exists'
+
+  tags:
+    - 'blocky'
+
+
+- block:
+
+  - name: 'Deploy /etc/systemd/system/blocky.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/blocky.service.j2'
+      dest: '/etc/systemd/system/blocky.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'blocky__systemd_service_template_result'
+
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - 'blocky__systemd_service_template_result is changed'
+
+  - name: 'systemctl {{ blocky__service_enabled | bool | ternary("enable", "disable") }} --now blocky.service'
+    ansible.builtin.systemd:
+      name: 'blocky.service'
+      enabled: '{{ blocky__service_enabled }}'
+      state: '{{ blocky__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'blocky'
+    - 'blocky:state'
+
+
+- block:
+
+  # copy the user's configuration file
+  - name: "scp user's blocky/config.yml to /etc/blocky/config.yml"
+    ansible.builtin.copy:
+      content: '{{ blocky__config_yml }}'
+      dest: '/etc/blocky/config.yml'
+      owner: 'blocky'
+      group: 'blocky'
+      mode: 0o440
+      backup: true
+    notify: 'blocky: restart blocky.service'
+
+  tags:
+    - 'blocky'
+    - 'blocky:configure'
