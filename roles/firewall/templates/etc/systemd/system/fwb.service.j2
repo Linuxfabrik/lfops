@@ -1,12 +1,13 @@
 # {{ ansible_managed }}
-# 2022033101
+# 2024092001
 
 [Unit]
 Description=Firewall Builder
 After=default.target openvpn-server@server.service fail2ban.service
 
 [Service]
-Type=oneshot
+# when Type=oneshot is used, TimeoutStartSec= is disabled by default - we do not want this
+Type=simple
 ExecStart=/etc/fwb.sh start
 ExecStop=/etc/fwb.sh stop
 ExecReload=/etc/fwb.sh start

@@ -129,18 +129,26 @@
       owner: 'root'
       mode: 0o644
 
-  - name: 'Restart fwb.service'
-    ansible.builtin.systemd:
-      name: 'fwb.service'
-      state: 'restarted'
-    when: 'firewall__deploy_fwb_result is changed'
 
-  - name: 'Be sure fwb is enabled and not masked. Reboot the server manually later to start fwb.'
+  # You can't enable and start fwb.service at the same time - `/etc/fwb.sh start`
+  # always hangs on the first run (only than) on a brand-new machine, and then Ansible also hangs.
+  # The ever-first start of netfilter changes something on Linux (kernel modules or something).
+  # Every subsequent run of `/etc/fwb.sh start` runs flawlessly.
+  # `/etc/fwb.sh stop` doesn't change much, but also involves netfilter. So plit this up, and
+  # first stop the firewall, then start it, no matter what.
+
+  - name: 'Be sure fwb is enabled, stopped and not masked.'
     ansible.builtin.systemd:
       name: 'fwb.service'
+      state: 'stopped'
       enabled: true
       masked: false
       daemon_reload: true
+
+  - name: 'systemctl start fwb.service'
+    ansible.builtin.systemd:
+      name: 'fwb.service'
+      state: 'started'
 
   when: 'firewall__firewall == "fwbuilder"'
   tags:
