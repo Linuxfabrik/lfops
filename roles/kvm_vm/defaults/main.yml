@@ -1,6 +1,6 @@
 kvm_vm__additional_disks: []
 kvm_vm__autostart: true
-kvm_vm__boot_uefi: false
+kvm_vm__boot: ''
 kvm_vm__connect_url: 'qemu:///system'
 kvm_vm__existing_additional_disks: []
 kvm_vm__max_memory: '{{ kvm_vm__memory }}'

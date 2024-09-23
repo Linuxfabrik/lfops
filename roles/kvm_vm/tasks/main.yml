@@ -137,8 +137,8 @@
 
   - name: >
       virt-install
-      {% if kvm_vm__boot_uefi %}
-      --boot uefi
+      {% if kvm_vm__boot is defined and kvm_vm__boot | length %}
+      --boot {{ kvm_vm__boot }}
       {% endif %}
       --import
       --connect {{ kvm_vm__connect_url }}
@@ -173,8 +173,8 @@
       --virt-type kvm
     ansible.builtin.command: >
       virt-install
-      {% if kvm_vm__boot_uefi %}
-      --boot uefi
+      {% if kvm_vm__boot is defined and kvm_vm__boot | length %}
+      --boot {{ kvm_vm__boot }}
       {% endif %}
       --import
       --connect {{ kvm_vm__connect_url }}

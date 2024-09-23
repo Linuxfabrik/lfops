@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:kvm_vm:
+* `kvm_vm__boot_uefi` (bool) changed into `kvm_vm__boot` (string).
+
 Module:bitwarden_item / Lookup Plugin:bitwarden:
 * Removed parameters `password_uppercase`, `password_lowercase`, `password_numeric`, `password_special`
 * Added parameter `password_choice`

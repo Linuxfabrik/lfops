@@ -50,7 +50,7 @@ kvm_vm__vcpus: 2
 | -------- | ----------- | ------------- |
 | `kvm_vm__additional_disks` | A list of additional disks. They will be created in the `kvm_vm__pool` if they do not exist already. Subkeys:<ul><li>`name`: Mandatory, string. The name of the disk. Will be prepended with the `kvm_vm__name` and suffixed with `.qcow2`.</li><li>`size`: Mandatory, string. The size of the disk, in the same format as `kvm_vm__boot_disk_size`.</li></ul>| `[]` |
 | `kvm_vm__autostart` | Whether the VM should be started on host boot up or not. | `true` |
-| `kvm_vm__boot_uefi` | Boot the VM with UEFI. | `false` |
+| `kvm_vm__boot` | String. See `man virt-install` for details on `--boot`. | `''` |
 | `kvm_vm__connect_url` | URL for connecting to the hypervisor on the `kvm_vm__host`. | `'qemu:///system'` |
 | `kvm_vm__existing_additional_disks` | A list of existing additional disks. They will not be modified, only added to the VM during creation. The disk have to be placed in the `kvm_vm__pool` storage pool. | `[]` |
 | `kvm_vm__existing_boot_disk` | This allows to provide an already existing boot image, skipping the usage of a base image, and any modification to the disk. The disk has to be placed in the `kvm_vm__pool` storage pool. | unset |
@@ -71,7 +71,8 @@ kvm_vm__additional_disks:
   - name: 'disk1'
     size: '10G'
 kvm_vm__autostart: true
-kvm_vm__boot_uefi: true
+# a more complex `--boot` parameter: boot using UEFI, but without Secure Boot (paths valid for RHEL)
+kvm_vm__boot: 'loader=/usr/share/OVMF/OVMF_CODE.secboot.fd,loader.readonly=yes,loader.type=pflash,nvram.template=/usr/share/OVMF/OVMF_VARS.fd,loader_secure=no'
 kvm_vm__existing_additional_disks:
   - 'vm1-existing-disk1.qcow2'
   - 'vm1-existing-disk2.qcow2'
