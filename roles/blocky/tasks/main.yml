@@ -1,3 +1,15 @@
+- block:
+
+  - name: 'Install bind-utils'
+    ansible.builtin.package:
+      name:
+        - 'bind-utils'
+      state: 'present'
+
+  tags:
+    - 'blocky'
+
+
 # inspiration:
 # * https://0xerr0r.github.io/blocky/latest/installation/
 # * https://0xerr0r.github.io/blocky/latest/configuration/
