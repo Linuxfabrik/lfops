@@ -128,9 +128,9 @@
 - block:
 
   # waiting prevents errors like `msg="Executing migration failed" id="Add column has_acl in dashboard" error="duplicate column name: has_acl"` during `reset-admin-password`
-  - name: 'wait 5 seconds for grafana to start'
+  - name: 'wait 10 seconds for grafana to start'
     ansible.builtin.pause:
-      seconds: 5
+      seconds: 10
     when: 'grafana__systemctl_result["changed"] | bool'
 
   - name: 'set the password for admin'
