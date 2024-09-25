@@ -68,6 +68,23 @@ systemd_unit__timers__host_var:
   - name: 'duba'
     raw_timer: |-
       OnCalendar=daily
+
+# systemd service for a java application
+systemd_unit__services__host_var:
+  - name: 'myjavaapp'
+    description: 'myjavaapp'
+    raw_unit: |-
+      After=syslog.target network.target
+      Requires=network.target
+    raw_service: |-
+      ExecStart=/usr/bin/java -Xmx1g -XX:MaxPermSize=250M -Djava.awt.headless=true -jar /opt/myjavaapp/myjavaapp.jar 8112
+      Type=simple
+      User=myjavaapp
+      WorkingDirectory=/opt/myjavaapp
+    wanted_by: 'basic.target'
+    state: 'started'
+    enabled: true
+
 ```
 
 
