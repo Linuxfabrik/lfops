@@ -95,8 +95,9 @@ bind__keys:
 bind__listen_on_addresses:
   - '192.0.2.2/32'
 bind__named_conf_raw: |-
+  include "/etc/rndc.key";
   controls {
-      inet * port 953 allow { 192.0.2.3; 127.0.0.1; } keys { "rndc-key-192.0.2.3"; };
+      inet * port 953 allow { localhost; 192.0.2.3; 127.0.0.1; } keys { "rndc-key"; "rndc-key-192.0.2.3"; };
   };
 bind__named_service_enabled: true
 bind__recursion: false
