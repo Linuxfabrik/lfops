@@ -1,0 +1,224 @@
+- block:
+
+  - name: 'Install podman systemd-container'
+    ansible.builtin.package:
+      name:
+        - 'podman'
+        - 'systemd-container'
+      state: 'present'
+
+  tags:
+    - 'podman_containers'
+
+
+- block:
+
+  - name: 'mkdir -p /etc/containers/systemd/'
+    ansible.builtin.file:
+      path: '/etc/containers/systemd/'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Get user UIDs'
+    ansible.builtin.getent:
+      database: 'passwd'
+      key: '{{ item["user"] }}'
+    loop: '{{
+          (podman_containers__containers__combined_var +
+          podman_containers__networks__combined_var +
+          podman_containers__volumes__combined_var)
+          | selectattr("user", "defined")
+      }}'
+    loop_control:
+      label: '{{ item["name"] }} - user: {{ item["user"] }})'
+
+  - name: 'mkdir -p /etc/containers/systemd/users/$UID'
+    ansible.builtin.file:
+      path: '/etc/containers/systemd/users/{{ ansible_facts["getent_passwd"][item["user"]][1] }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    loop: '{{
+          (podman_containers__containers__combined_var +
+          podman_containers__networks__combined_var +
+          podman_containers__volumes__combined_var)
+          | selectattr("user", "defined")
+      }}'
+    loop_control:
+      label: '{{ item["name"] }} - user: {{ item["user"] }})'
+
+  tags:
+    - 'podman_containers'
+    - 'podman_containers:containers'
+
+
+- block:
+  # Note about the handling of the suffixes:
+  # `.volume` & `.network` quadlets always get a `-volume` or `-network` suffix during the conversion to `.service` files.
+  # the name of `.container` quadlets is used as is for the `.service` files.
+  # so for consistency, we always add a `-container` suffix to the `.container` quadlets, so that the unit is `-container.service`
+
+  - name: 'Remove container units'
+    ansible.builtin.file:
+      path: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1] ~ "/",
+        "/etc/containers/systemd"
+        ) }}/{{ item["name"] }}-container.container'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("started") == "absent"'
+    loop: '{{ podman_containers__containers__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    notify: 'podman_containers: systemctl daemon-reload'
+
+  - name: 'Deploy container units'
+    ansible.builtin.template:
+      src: 'etc/containers/systemd/container.j2'
+      dest: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
+        "/etc/containers/systemd"
+        ) }}/{{ item["name"] }}-container.container'
+      owner: '{{ item["user"] | d("root") }}'
+      group: '{{ item["user"] | d("root") }}'
+      mode: 0o600 # could contain secrets
+    when:
+      - 'item["state"] | d("started") != "absent"'
+    loop: '{{ podman_containers__containers__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    notify: 'podman_containers: systemctl daemon-reload'
+
+  tags:
+    - 'podman_containers'
+    - 'podman_containers:containers'
+
+
+- block:
+
+  - name: 'Remove network units'
+    ansible.builtin.file:
+      path: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
+        "/etc/containers/systemd"
+        ) }}/{{ item["name"] }}.network'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("started") == "absent"'
+    loop: '{{ podman_containers__networks__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    notify: 'podman_containers: systemctl daemon-reload'
+
+  - name: 'Deploy network units'
+    ansible.builtin.template:
+      src: 'etc/containers/systemd/network.j2'
+      dest: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
+        "/etc/containers/systemd"
+        ) }}/{{ item["name"] }}.network'
+      owner: '{{ item["user"] | d("root") }}'
+      group: '{{ item["user"] | d("root") }}'
+      mode: 0o600 # could contain secrets
+    when:
+      - 'item["state"] | d("started") != "absent"'
+    loop: '{{ podman_containers__networks__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    notify: 'podman_containers: systemctl daemon-reload'
+
+  tags:
+    - 'podman_containers'
+    - 'podman_containers:networks'
+
+
+- block:
+
+  - name: 'Remove volume units'
+    ansible.builtin.file:
+      path: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
+        "/etc/containers/systemd"
+        ) }}/{{ item["name"] }}.volume'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("started") == "absent"'
+    loop: '{{ podman_containers__volumes__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    notify: 'podman_containers: systemctl daemon-reload'
+
+  - name: 'Deploy volume units'
+    ansible.builtin.template:
+      src: 'etc/containers/systemd/volume.j2'
+      dest: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
+        "/etc/containers/systemd"
+        ) }}/{{ item["name"] }}.volume'
+      owner: '{{ item["user"] | d("root") }}'
+      group: '{{ item["user"] | d("root") }}'
+      mode: 0o600 # could contain secrets
+    when:
+      - 'item["state"] | d("started") != "absent"'
+    loop: '{{ podman_containers__volumes__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    notify: 'podman_containers: systemctl daemon-reload'
+
+  tags:
+    - 'podman_containers'
+    - 'podman_containers:volumes'
+
+
+- block:
+  # Note about enabling / disabling units todo
+  # also, we always do a `daemon_reload`. this is easier here than via a handler, as the daemon needs to be reloaded for the correct users.
+
+  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}-network.service'
+    ansible.builtin.systemd:
+      name: '{{ item["name"] }}-network.service'
+      scope: '{{ (item["user"] is defined and item["user"] | length) | ternary("user", omit) }}'
+      state: '{{ item["state"] | d("started") }}'
+      daemon_reload: true
+    become: true
+    become_user: '{{ item["user"] | d(omit) }}'
+    when:
+      - 'item["state"] | d("started") not in ["present", "absent"]'
+    loop: '{{ podman_containers__networks__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}-volume.service'
+    ansible.builtin.systemd:
+      name: '{{ item["name"] }}-volume.service'
+      scope: '{{ (item["user"] is defined and item["user"] | length) | ternary("user", omit) }}'
+      state: '{{ item["state"] | d("started") }}'
+      daemon_reload: true
+    become: true
+    become_user: '{{ item["user"] | d(omit) }}'
+    when:
+      - 'item["state"] | d("started") not in ["present", "absent"]'
+    loop: '{{ podman_containers__volumes__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}-container.service'
+    ansible.builtin.systemd:
+      name: '{{ item["name"] }}-container.service'
+      scope: '{{ (item["user"] is defined and item["user"] | length) | ternary("user", omit) }}'
+      state: '{{ item["state"] | d("started") }}'
+      daemon_reload: true
+    become: true
+    become_user: '{{ item["user"] | d(omit) }}'
+    when:
+      - 'item["state"] | d("started") not in ["present", "absent"]'
+    loop: '{{ podman_containers__containers__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }} - state: {{ item["state"] | d("started") }}'
+
+  tags:
+    - 'podman_containers'
+    - 'podman_containers:state'

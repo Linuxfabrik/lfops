@@ -1,0 +1,3 @@
+- name: 'podman_containers: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

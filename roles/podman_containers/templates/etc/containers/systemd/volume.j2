@@ -1,0 +1,31 @@
+# {{ ansible_managed }}
+# 2024092501
+
+[Volume]
+{% if 'raw_volume' in item +%}
+# raw
+{{ item['raw_volume'] }}
+{% endif %}
+
+[Unit]
+Description={% if item['description'] is defined and item['description'] %}{{ item['description'] }}{% else %}{{ item['name'] }} Container{% endif %}
+{% if 'raw_unit' in item +%}
+# raw
+{{ item['raw_unit'] }}
+{% endif %}
+
+[Service]
+{% if 'raw_service' in item +%}
+# raw
+{{ item['raw_service'] }}
+{% endif %}
+
+[Install]
+{% if item['enabled'] | d(true) %}
+{# since they are transient (generated) units, `systemctl enable/disable` does not work. instead, setting WantedBy causes the translator to enable the generated service #}
+WantedBy={{ item['wanted_by'] | d('default.target') }}
+{% endif %}
+{% if 'raw_install' in item +%}
+# raw
+{{ item['raw_install'] }}
+{% endif %}

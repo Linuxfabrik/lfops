@@ -1,0 +1,33 @@
+podman_containers__containers__combined_var: '{{ (
+      podman_containers__containers__role_var +
+      podman_containers__containers__dependent_var +
+      podman_containers__containers__group_var +
+      podman_containers__containers__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+podman_containers__containers__dependent_var: []
+podman_containers__containers__group_var: []
+podman_containers__containers__host_var: []
+podman_containers__containers__role_var: []
+podman_containers__networks__combined_var: '{{ (
+      podman_containers__networks__role_var +
+      podman_containers__networks__dependent_var +
+      podman_containers__networks__group_var +
+      podman_containers__networks__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+podman_containers__networks__dependent_var: []
+podman_containers__networks__group_var: []
+podman_containers__networks__host_var: []
+podman_containers__networks__role_var: []
+podman_containers__volumes__combined_var: '{{ (
+      podman_containers__volumes__role_var +
+      podman_containers__volumes__dependent_var +
+      podman_containers__volumes__group_var +
+      podman_containers__volumes__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+podman_containers__volumes__dependent_var: []
+podman_containers__volumes__group_var: []
+podman_containers__volumes__host_var: []
+podman_containers__volumes__role_var: []
