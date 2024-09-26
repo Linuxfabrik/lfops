@@ -113,6 +113,22 @@
 
 - block:
 
+  # Workaround: Prevent
+  # ```
+  # systemctl enable --now grafana-server.service
+  # Synchronizing state of grafana-server.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+  # Executing: /usr/lib/systemd/systemd-sysv-install enable grafana-server
+  # ```
+  # when trying to `systemctl enable --now grafana-server.service` on RHEL 9 (removed by Red Hat
+  # according to https://github.com/redhat-plumbers/systemd-rhel9/blob/main/README)
+  - name: 'install chkconfig'
+    ansible.builtin.package:
+      name:
+        - 'chkconfig'
+      state: 'present'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["9"]'
+
   - name: 'systemctl {{ grafana__service_enabled | bool | ternary("enable", "disable") }} --now grafana-server.service'
     ansible.builtin.systemd:
       name: 'grafana-server.service'
