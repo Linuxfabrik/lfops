@@ -73,6 +73,24 @@
     loop_control:
       label: '{{ item["name"] }}'
 
+  - name: 'loginctl enable-linger {{ item["name"] }}'
+    ansible.builtin.command: 'loginctl enable-linger {{ item["name"] }}'
+    args:
+      creates: '/var/lib/systemd/linger/{{ item["name"] }}'
+    loop: '{{ login__users__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when: 'item["linger"] | d(false)'
+
+  - name: 'loginctl disable-linger {{ item["name"] }}'
+    ansible.builtin.command: 'loginctl disable-linger {{ item["name"] }}'
+    args:
+      removes: '/var/lib/systemd/linger/{{ item["name"] }}'
+    loop: '{{ login__users__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when: 'not (item["linger"] | d(false))'
+
   - name: 'Set up authorized keys'
     ansible.posix.authorized_key:
       user: '{{ item["name"] }}'
