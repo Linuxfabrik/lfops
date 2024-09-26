@@ -1,20 +1,32 @@
-rocketchat__application_path: '/opt/Rocket.Chat'
-
-rocketchat__mongodb_host: 'localhost'
+rocketchat__container_enabled: true
+rocketchat__container_state: 'started'
+rocketchat__mongodb_host: 'host.containers.internal'
 rocketchat__mongodb_port: 27017
 rocketchat__mongodb_repl_set_name: 'rs01'
-
 rocketchat__port: 3000
-rocketchat__service_enabled: true
-rocketchat__service_state: 'started'
-
+rocketchat__user_home_directory: '/opt/rocketchat'
 rocketchat__version: 'latest'
 
 # -----------------------------------------------------------------------------
 
-rocketchat__apps__apps__dependent_var:
-  - name: 'git'
+rocketchat__files__files__dependent_var:
+  - path: '{{ rocketchat__user_home_directory }}/rocketchat.env'
+    mode: 0o600
+    owner: 'rocketchat'
+    group: 'rocketchat'
+    content: |
+      DEPLOY_METHOD=docker
+      MONGO_URL=mongodb://{% if rocketchat__mongodb_login is defined and rocketchat__mongodb_login | length %}{{ rocketchat__mongodb_login['username'] }}:{{ rocketchat__mongodb_login['password'] }}@{% endif %}{{ rocketchat__mongodb_host }}:{{ rocketchat__mongodb_port }}/rocketchat{% if rocketchat__mongodb_repl_set_name is defined and rocketchat__mongodb_repl_set_name | length %}?replicaSet={{ rocketchat__mongodb_repl_set_name }}
+      MONGO_OPLOG_URL=mongodb://{{ rocketchat__mongodb_host }}:{{ rocketchat__mongodb_port }}/local?replicaSet={{ rocketchat__mongodb_repl_set_name }}
+      {% endif %}
+      PORT={{ rocketchat__port }}
+      ROOT_URL={{ rocketchat__root_url }}
+
+rocketchat__login__users__dependent_var:
+  - name: 'rocketchat'
+    home: '{{ rocketchat__user_home_directory }}'
     state: 'present'
+    linger: true
 
 rocketchat__mongodb__conf_replication_repl_set_name__dependent_var: '{{ rocketchat__mongodb_repl_set_name }}'
 rocketchat__mongodb__users__dependent_var:
@@ -27,3 +39,30 @@ rocketchat__mongodb__users__dependent_var:
       - db: 'rocketchat'
         role: 'dbAdmin'
     state: '{{ (rocketchat__mongodb_login is defined and rocketchat__mongodb_login | length) | ternary("present", "skip") }}'
+
+rocketchat__podman_containers__containers__dependent_var:
+  - name: 'rocketchat'
+    raw_container: |
+      AutoUpdate=registry
+      ContainerName=rocketchat
+      EnvironmentFile={{ rocketchat__user_home_directory }}/rocketchat.env
+      # unforunately, there is no curl inside the container. resorting to using node
+      HealthCmd=node --eval "require('http').request({host: '0.0.0.0', port: 3000, timeout: 2000, path: '/health'}, res => {process.exit(res.statusCode === 200 ? 0 : 1);}).on('error', () => process.exit(1)).end();"
+      HealthInterval=30s
+      HealthOnFailure=kill
+      HealthRetries=5
+      HealthStartPeriod=5s
+      HealthTimeout=10s
+      Image=registry.rocket.chat/rocketchat/rocket.chat:{{ rocketchat__version }}
+      LogDriver=journald
+      Network=rocketchat.network
+      PublishPort={{ rocketchat__port }}:{{ rocketchat__port }}/tcp
+      User=rocketchat
+    raw_service: |
+      Restart=always
+    user: 'rocketchat'
+    state: '{{ rocketchat__container_state }}'
+    enabled: '{{ rocketchat__container_enabled }}'
+rocketchat__podman_containers__networks__dependent_var:
+  - name: 'rocketchat'
+    user: 'rocketchat'

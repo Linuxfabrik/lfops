@@ -12,26 +12,15 @@
 
   roles:
 
-    - role: 'linuxfabrik.lfops.repo_epel'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
-        - 'not setup_rocketchat__skip_repo_epel | default(false)'
-
-    - role: 'linuxfabrik.lfops.apps'
-      apps__apps__dependent_var: '{{
-          rocketchat__apps__apps__dependent_var
-        }}'
-      when:
-        - 'not rocketchat__skip_apps | default(false)'
-
-    - role: 'linuxfabrik.lfops.nodejs'
-      when:
-        - 'not setup_rocketchat__skip_nodejs | default(false)'
-
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__transparent_hugepages__dependent_var: "{{ mongodb__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
       when:
         - 'not setup_rocketchat__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'not setup_rocketchat__skip_repo_epel | default(false)'
 
     - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var: '{{
@@ -51,6 +40,37 @@
         }}'
       when:
         - 'not setup_rocketchat__skip_mongodb | default(false)'
+
+    - role: 'linuxfabrik.lfops.python'
+      python__modules__dependent_var: '{{
+          login__python__modules__dependent_var
+        }}'
+      when:
+        - 'not setup_rocketchat__skip_python | d(false)'
+
+    - role: 'linuxfabrik.lfops.login'
+      login__users__dependent_var: '{{
+          rocketchat__login__users__dependent_var
+        }}'
+      when:
+        - 'not setup_rocketchat__skip_login | d(false)'
+
+    - role: 'linuxfabrik.lfops.files'
+      files__files__dependent_var: '{{
+          rocketchat__files__files__dependent_var
+        }}'
+      when:
+        - 'not setup_rocketchat__skip_files | d(false)'
+
+    - role: 'linuxfabrik.lfops.podman_containers'
+      podman_containers__containers__dependent_var: '{{
+          rocketchat__podman_containers__containers__dependent_var
+        }}'
+      podman_containers__networks__dependent_var: '{{
+          rocketchat__podman_containers__networks__dependent_var
+        }}'
+      when:
+        - 'not setup_rocketchat__skip_podman_containers | d(false)'
 
     - role: 'linuxfabrik.lfops.rocketchat'
 

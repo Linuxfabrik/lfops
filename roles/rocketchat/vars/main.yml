@@ -1,3 +1,0 @@
-rocketchat__node_path: "{{ rocketchat__node_prefix }}/bin/node"
-rocketchat__node_prefix: '/usr/local/n/versions/node/{{ rocketchat__node_version }}'
-rocketchat__npm_path: "{{ rocketchat__node_prefix }}/bin/npm"

@@ -12,6 +12,15 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:rocketchat:
+* Switched deployment method from native installation to Podman container
+* Removed `rocketchat__npm_version` variable
+* Renamed and slightly altered:
+    * `rocketchat__application_path` to `rocketchat__user_home_directory`, and changed default to `'/opt/rocketchat'`.
+    * `rocketchat__service_enabled` to `rocketchat__container_enabled`
+    * `rocketchat__service_state` to `rocketchat__container_state`
+* Changed default of `rocketchat__mongodb_host` to `'host.containers.internal'`
+
 Role:kvm_vm:
 * `kvm_vm__boot_uefi` (bool) changed into `kvm_vm__boot` (string).
 
