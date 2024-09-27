@@ -35,7 +35,7 @@ Example:
 icingaweb2_module_x509__database_login:
   username: 'icinga_x509_user'
   password: 'linuxfabrik'
-icingaweb2_module_x509__version: 'v1.3.1'
+icingaweb2_module_x509__version: 'v1.3.2'
 ```
 
 

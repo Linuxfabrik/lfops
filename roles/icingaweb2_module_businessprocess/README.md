@@ -28,7 +28,7 @@ This role is tested with the following IcingaWeb2 Business Process Module versio
 Example:
 ```yaml
 # mandatory
-icingaweb2_module_businessprocess__version: 'v2.4.0'
+icingaweb2_module_businessprocess__version: 'v2.5.1'
 ```
 
 
