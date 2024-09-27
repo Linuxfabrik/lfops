@@ -38,5 +38,9 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/sury.list'
 
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+
   tags:
     - 'repo_sury'
