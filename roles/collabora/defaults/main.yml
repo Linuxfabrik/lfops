@@ -54,6 +54,7 @@ collabora__coolwsd_storage_wopi__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
+collabora__coolwsd_welcome_enable: false
 collabora__language_packages__dependent_var: []
 collabora__language_packages__group_var: []
 collabora__language_packages__host_var: []

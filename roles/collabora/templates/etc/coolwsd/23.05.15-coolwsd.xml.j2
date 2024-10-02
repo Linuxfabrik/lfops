@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2024072601 -->
+    <!-- 2024100201 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -235,6 +235,9 @@
       <text desc="Watermark text to be displayed on the document if entered" type="string"></text>
     </watermark>
 
+    <welcome>
+      <enable type="bool" desc="Controls whether the welcome screen should be shown to the users on new install and updates." default="false">false</enable>
+    </welcome>
 
     <user_interface>
       <mode type="string" desc="Controls the user interface style. The 'default' means: Take the value from ui_defaults, or decide for one of compact or tabbed (default|compact|tabbed)" default="default">default</mode>

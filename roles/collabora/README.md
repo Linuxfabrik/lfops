@@ -38,6 +38,7 @@ If you use the ["Collabora" Playbook](https://github.com/Linuxfabrik/lfops/blob/
 | `collabora__coolwsd_ssl_settings_ssl_verification` | Enable or disable SSL verification of hosts remote to coolwsd. If true SSL verification will be strict, otherwise certs of hosts will not be verified. | `false` |
 | `collabora__coolwsd_ssl_termination` | Enable if coolwsd is behind a SSL-terminating proxy and therefore should act as if its using https but actually receives http. | `true` |
 | `collabora__coolwsd_storage_wopi__host_var` / <br> `collabora__coolwsd_storage_wopi__group_var` | List of dictionaries containing regex pattern of hostname to allow access to the backend storage. Ususally the hostname application that uses Collabora CODE, for example Nextcloud. Subkeys: <ul><li>`name`: Mandatory, string. Regex pattern.</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
+| `collabora__coolwsd_welcome_enable` | Controls whether the welcome screen should be shown to the users on new install and updates. | `false` |
 | `collabora__language_packages__host_var` / <br> `collabora__language_packages__group_var` | A list of dictionaries containing additional packages to be installed for language support (spell checking, thesaurus, etc). Subkeys: <ul><li>`name`: Mandatory, string. Name of the package</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | `dict`, `mythes` and `hunspell` for de, en, fr, it |
 | `collabora__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
 | `collabora__service_enabled` | Enables or disables the coolwsd service, analogous to `systemctl enable/disable --now`. | `true` |
@@ -70,6 +71,7 @@ collabora__coolwsd_storage_wopi__group_var: []
 collabora__coolwsd_storage_wopi__host_var:
   - name: 'cloud\.example\.com'
     state: 'present'
+collabora__coolwsd_welcome_enable: true
 collabora__language_packages__group_var: []
 collabora__language_packages__host_var:
   - name: 'collaboraoffice-dict-de'
