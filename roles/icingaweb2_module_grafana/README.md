@@ -22,6 +22,7 @@ If you use the [Setup Icinga2 Master Playbook](https://github.com/Linuxfabrik/lf
 | Tag                                                       | What it does                                                                                                                         |
 | ---                                                       | ------------                                                                                                                         |
 | `icingaweb2_module_grafana`                               | Installs and configures the IcingaWeb2 Grafana Module                                                                                |
+| `icingaweb2_module_grafana:configure`                     | Configures the IcingaWeb2 Grafana Module, excluding the graph configs.                                                               |
 | `icingaweb2_module_grafana:monitoring_plugins_graphs`     | Deploys the configuration for the graphs for the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) |
 
 

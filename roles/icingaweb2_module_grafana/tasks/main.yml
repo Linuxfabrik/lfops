@@ -7,6 +7,7 @@
 
   tags:
     - 'icingaweb2_module_grafana'
+    - 'icingaweb2_module_grafana:configure'
     - 'icingaweb2_module_grafana:monitoring_plugins_graphs'
 
 
@@ -59,6 +60,12 @@
     args:
       creates: '/etc/icingaweb2/enabledModules/grafana'
 
+  tags:
+    - 'icingaweb2_module_grafana'
+
+
+- block:
+
   - name: 'Deploy /etc/icingaweb2/modules/grafana/config.ini'
     ansible.builtin.template:
       src: 'etc/icingaweb2/modules/grafana/config.ini.j2'
@@ -69,6 +76,7 @@
 
   tags:
     - 'icingaweb2_module_grafana'
+    - 'icingaweb2_module_grafana:configure'
 
 
 - block:
