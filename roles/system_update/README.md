@@ -39,6 +39,7 @@ If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blo
 | `system_update__mail_subject_prefix` | This will set a prefix that will be showed in front of the hostname. Can be used to separate servers by environment or customer. | `''` |
 | `system_update__notify_and_schedule_on_calendar` | When the notification for the expected updates should be sent. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'mon 10:00'` |
 | `system_update__post_update_code` | This codeblock will be executed after the updates have been installed and before a potential reboot. | unset |
+| `system_update__pre_update_code` | This codeblock will be executed before the update process is started. Can be used to check pre-conditions for updating, for example for checking cluster nodes. | unset |
 | `system_update__rocketchat_msg_suffix` | A suffix to the Rocket.Chat notifications. This can be used to mention other users. | unset |
 | `system_update__rocketchat_url` | The URL to a potential Rocket.Chat server to send notifications about the updates to. | unset |
 | `system_update__update_enabled` | Enables or disables the system-update timer, analogous to `systemctl enable/disable --now`.  | `true` |
@@ -61,10 +62,22 @@ system_update__mail_recipients_updates:
   - 'support@example.com'
 system_update__mail_subject_hostname: '$(hostname --long)'
 system_update__mail_subject_prefix: '001-'
-system_update__notify_and_schedule_on_calendar: 'mon 10:00'
+system_update__notify_and_schedule_on_calendar: 'mon *-*-01..07 10:00' # first monday of the month
 system_update__post_update_code: |-
   VAR='hello world'
   echo $VAR
+system_update__pre_update_code: |-
+  check_dns() {
+    local DNS_SERVER=$1
+    if ! dig @$DNS_SERVER linuxfabrik.ch +short > /dev/null; then
+        SUBJECT="$SUBJECT_PREFIX - System update failed"
+        MSGBODY="DNS Server $DNS_SERVER failed to respond. Aborting update."
+        send_msg
+        exit 1
+    fi
+  }
+  check_dns 192.0.2.10
+  check_dns 192.0.2.11
 system_update__rocketchat_msg_suffix: '@administrator'
 system_update__rocketchat_url: 'https://chat.example.com/hooks/abcd1234'
 system_update__update_enabled: true
