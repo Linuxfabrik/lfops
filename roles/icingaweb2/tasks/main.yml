@@ -75,6 +75,12 @@
       - 'icingaweb2__table_exists_result["stdout"] == ""'
       - 'not icingaweb2__old_sql_schema_stat_result["stat"]["exists"]'
 
+  tags:
+    - 'icingaweb2'
+
+
+- block:
+
   - name: 'Create directory/etc/icingaweb2/navigation'
     ansible.builtin.file:
       path: '/etc/icingaweb2/navigation'
@@ -113,6 +119,7 @@
 
   tags:
     - 'icingaweb2'
+    - 'icingaweb2:configure'
 
 
 - block:
@@ -127,6 +134,7 @@
 
   tags:
     - 'icingaweb2'
+    - 'icingaweb2:configure'
     - 'icingaweb2:resources'
 
 
