@@ -11,19 +11,17 @@ This role enables relaying all mail that is sent to the root user (or other serv
 
 ## Tags
 
-| Tag                     | What it does                                         |
-| ---                     | ------------                                         |
-| `mailto_root`           | Configures mailto_root                               |
-| `mailto_root:configure` | Configures mailto_root without sending any test mail |
-| `mailto_root:testmail`  | Sends 2 test mails to root                           |
+| Tag           | What it does           |
+| ---           | ------------           |
+| `mailto_root` | Configures mailto_root |
 
 
 ## Mandatory Role Variables
 
-| Variable            | Description                                                     |
-| --------            | -----------                                                     |
-| `mailto_root__from` | The sender address from which the relayed mail should be sent.  |
-| `mailto_root__to`   | List recipient addresses to which the mails should be relayed.  |
+| Variable            | Description                                                    |
+| --------            | -----------                                                    |
+| `mailto_root__from` | The sender address from which the relayed mail should be sent. |
+| `mailto_root__to`   | List recipient addresses to which the mails should be relayed. |
 
 Example:
 ```yaml

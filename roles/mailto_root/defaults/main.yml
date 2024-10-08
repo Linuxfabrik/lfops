@@ -1,0 +1,8 @@
+mailto_root__postfix__aliases__dependent_var:
+  - name: 'root'
+    value: '{{ mailto_root__to | join(",") }}'
+    state: 'present'
+mailto_root__postfix__sender_canonicals__dependent_var:
+  - pattern: '/^.+@{{ ansible_facts["nodename"] }}(\.local.*)?$/'
+    address: '{{ mailto_root__from }}'
+    state: 'present'

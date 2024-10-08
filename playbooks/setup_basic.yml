@@ -141,6 +141,12 @@
         - 'not setup_basic__skip_mailx | d(false)'
 
     - role: 'linuxfabrik.lfops.postfix'
+      postfix__aliases__dependent_var: '{{
+          mailto_root__postfix__aliases__dependent_var
+        }}'
+      postfix__sender_canonicals__dependent_var: '{{
+          mailto_root__postfix__sender_canonicals__dependent_var
+        }}'
       when:
         - 'not setup_basic__skip_postfix | d(false)'
 
