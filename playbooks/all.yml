@@ -7,6 +7,7 @@
 - import_playbook: 'at.yml'
 - import_playbook: 'audit.yml'
 - import_playbook: 'bind.yml'
+- import_playbook: 'blocky.yml'
 - import_playbook: 'chrony.yml'
 - import_playbook: 'clamav.yml'
 - import_playbook: 'cloud_init.yml'
