@@ -65,6 +65,7 @@
         owner: 'root'
         group: 'root'
         mode: 0o600
+      ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified, as the file could not exist yet
 
     when:
       - 'postfix__relayhost_username is defined and postfix__relayhost_username | length'

@@ -12,6 +12,10 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.mailx'
+      when:
+        - 'not postfix__skip_mailx | default(false)'
+
     - role: 'linuxfabrik.lfops.postfix'
 
 
