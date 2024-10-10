@@ -36,6 +36,7 @@ postfix__relayhost: 'mail.example.com:587'
 | `postfix__mailbox_size_limit` | See https://www.postfix.org/postconf.5.html#mailbox_size_limit | `51200000` |
 | `postfix__maximal_queue_lifetime` | See https://www.postfix.org/postconf.5.html#maximal_queue_lifetime | `'5d'` |
 | `postfix__message_size_limit` | See https://www.postfix.org/postconf.5.html#message_size_limit | `10240000` |
+| `postfix__mynetworks` | See https://www.postfix.org/postconf.5.html#mynetworks | `[]` |
 | `postfix__raw` | Multiline string. Raw content which will be appended to the `/etc/postfix/main.cf`. | unset |
 | `postfix__recipient_delimiter` | See https://www.postfix.org/postconf.5.html#recipient_delimiter | `''` |
 | `postfix__relayhost_password` | Password for the specified user | `''` |
@@ -64,6 +65,8 @@ postfix__inet_protocols: 'all'
 postfix__mailbox_size_limit: 51200000
 postfix__maximal_queue_lifetime: '5d'
 postfix__message_size_limit: 10240000
+postfix__mynetworks:
+  - '192.0.2.0/24'
 postfix__raw: |-
   todo
 postfix__recipient_delimiter: ''

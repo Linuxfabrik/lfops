@@ -285,7 +285,11 @@ unknown_local_recipient_reject_code = 550
 # of listing the patterns here. Specify type:table for table-based lookups
 # (the value on the table right-hand side is not used).
 #
+{% if postfix__mynetworks is defined and postfix__mynetworks | length > 0 %}
+mynetworks = {{ postfix__mynetworks | join(', ') }}
+{% else %}
 #mynetworks = 168.100.189.0/28, 127.0.0.0/8
+{% endif %}
 #mynetworks = $config_directory/mynetworks
 #mynetworks = hash:/etc/postfix/network_table
 
