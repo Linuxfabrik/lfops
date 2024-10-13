@@ -17,6 +17,12 @@
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
 
     - role: 'linuxfabrik.lfops.postfix'
+      postfix__aliases__dependent_var: '{{
+          mailto_root__postfix__aliases__dependent_var
+        }}'
+      postfix__sender_canonicals__dependent_var: '{{
+          mailto_root__postfix__sender_canonicals__dependent_var
+        }}'
       when:
         - 'not mailto_root__skip_postfix | d(false)'
 

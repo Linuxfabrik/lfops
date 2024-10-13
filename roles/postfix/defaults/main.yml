@@ -1,6 +1,28 @@
+postfix__aliases__combined_var: '{{ (
+      postfix__aliases__role_var +
+      postfix__aliases__dependent_var +
+      postfix__aliases__group_var +
+      postfix__aliases__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+postfix__aliases__dependent_var: []
+postfix__aliases__group_var: []
+postfix__aliases__host_var: []
+postfix__aliases__role_var: []
 postfix__biff: false
 postfix__bounce_queue_lifetime: '5d'
-postfix__inet_interfaces: '127.0.0.1'
+postfix__sender_canonicals__combined_var: '{{ (
+      postfix__sender_canonicals__role_var +
+      postfix__sender_canonicals__dependent_var +
+      postfix__sender_canonicals__group_var +
+      postfix__sender_canonicals__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="pattern")
+  }}'
+postfix__sender_canonicals__dependent_var: []
+postfix__sender_canonicals__group_var: []
+postfix__sender_canonicals__host_var: []
+postfix__sender_canonicals__role_var: []
+postfix__inet_interfaces: '127.0.0.1' # fails on machines without IPv6 if set to 'localhost', so set explicitely to the IPv4 localhost address
 postfix__inet_protocols: 'all'
 postfix__mailbox_size_limit: 51200000
 postfix__maximal_queue_lifetime: '5d'
@@ -15,4 +37,5 @@ postfix__smtp_destination_recipient_limit: 50
 postfix__smtp_sasl_auth_enable: true
 postfix__smtp_sasl_security_options:
   - 'noanonymous'
+postfix__smtp_tls_security_level: 'may'
 postfix__smtp_tls_wrappermode: false

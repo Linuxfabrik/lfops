@@ -1,4 +1,12 @@
-- name: 'postfix: restart postfix'
+- name: 'postfix: newaliases'
+  ansible.builtin.command: '/usr/bin/newaliases'
+  notify: 'postfix: reload postfix'
+
+- name: 'postfix: postmap /etc/postfix/canonical'
+  ansible.builtin.command: '/usr/sbin/postmap /etc/postfix/canonical'
+  notify: 'postfix: reload postfix'
+
+- name: 'postfix: reload postfix'
   ansible.builtin.systemd:
     name: 'postfix'
-    state: 'restarted'
+    state: 'reloaded'

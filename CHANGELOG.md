@@ -12,6 +12,12 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:postfix:
+* now completely templates the whole config file. beware when running against existing hosts
+
+Role:mailto_root:
+* moved most functionality to role:postfix, and therefore removed the `mailto_root:configure` and `mailto_root:testmail` tags
+
 Role:rocketchat:
 * Switched deployment method from native installation to Podman container
 * Removed `rocketchat__npm_version` variable
