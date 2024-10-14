@@ -19,11 +19,78 @@ Notes:
 * If activating AJP, this role currently sets `secretRequired` to `false`.
 
 
-## How to ...
+## Multiple Tomcat Instances
 
-... deploy multiple Tomcat instances on a single server using this role?
+How to deploy multiple Tomcat instances on a single server using this and other roles? Imagine you want to run an 'author' and a 'public' instance. Place your config files in `host_files` (for example `host_files/{{ inventory_hostname }}/var/lib/tomcats/{author,public}/conf/{context,server}.xml` and deploy like this:
 
-TODO
+```yaml
+
+files__directories__host_var:
+  - path: '/var/lib/tomcats/author/conf'
+    owner: 'tomcat'
+    group: 'tomcat'
+  - path: '/var/lib/tomcats/author/lib'
+    owner: 'tomcat'
+    group: 'tomcat'
+  - path: '/var/lib/tomcats/author/logs'
+    owner: 'tomcat'
+    group: 'tomcat'
+  - path: '/var/lib/tomcats/author/webapps'
+    owner: 'tomcat'
+    group: 'tomcat'
+  - path: '/var/lib/tomcats/author/work'
+    owner: 'tomcat'
+    group: 'tomcat'
+  - path: '/var/lib/tomcats/public/conf'
+    owner: 'tomcat'
+    group: 'tomcat'
+  - path: '/var/lib/tomcats/public/lib'
+    owner: 'tomcat'
+    group: 'tomcat'
+  - path: '/var/lib/tomcats/public/logs'
+    owner: 'tomcat'
+    group: 'tomcat'
+  - path: '/var/lib/tomcats/public/webapps'
+    owner: 'tomcat'
+    group: 'tomcat'
+  - path: '/var/lib/tomcats/public/work'
+    owner: 'tomcat'
+    group: 'tomcat'
+files__files__host_var:
+  - path: '/var/lib/tomcats/author/conf/context.xml'
+  - path: '/var/lib/tomcats/author/conf/server.xml'
+  - path: '/var/lib/tomcats/public/conf/context.xml'
+  - path: '/var/lib/tomcats/public/conf/server.xml'
+
+shell__commands__host_var:
+  - name: '100-prepare-tomcat-instances'
+    commands: |
+      cp --archive --no-clobber /etc/tomcat/* /var/lib/tomcats/author/conf/
+      cp --archive --no-clobber /etc/tomcat/* /var/lib/tomcats/public/conf/
+      restorecon -Fvr /var/lib/tomcats
+      chown -R tomcat:tomcat /var/lib/tomcats
+    creates: '/var/lib/tomcats/author/conf/server.xml'
+  - name: '110-enable-tomcat-services'
+    commands: |
+      systemctl enable --now tomcat@author.service
+      systemctl enable --now tomcat@public.service
+```
+
+If you are running multiple instances, and there is no need for the main `tomcat.service`, you can simply disable it:
+
+```yaml
+# we only run sub-tomcat's
+apache_tomcat__service_enabled: false
+apache_tomcat__service_state: 'stopped'
+```
+
+The deployment:
+
+```bash
+ansible-playbook --inventory=myinv linuxfabrik.lfops.apache_tomcat
+ansible-playbook --inventory=myinv linuxfabrik.lfops.files
+ansible-playbook --inventory=myinv linuxfabrik.lfops.shell
+```
 
 
 ## Mandatory Requirements
