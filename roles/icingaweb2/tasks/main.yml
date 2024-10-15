@@ -101,10 +101,26 @@
       - 'config.ini'
       - 'groups.ini'
 
+  - name: 'Deploy /etc/icingaweb2/navigation/host-actions.ini'
+    ansible.builtin.template:
+      src: 'etc/icingaweb2/navigation/host-actions.ini.j2'
+      dest: '/etc/icingaweb2/navigation/host-actions.ini'
+      owner: '{{ icingaweb2__webserver_owner }}'
+      group: 'icingaweb2'
+      mode: 0o660
+
   - name: 'Deploy /etc/icingaweb2/navigation/menu.ini'
     ansible.builtin.template:
       src: 'etc/icingaweb2/navigation/menu.ini.j2'
       dest: '/etc/icingaweb2/navigation/menu.ini'
+      owner: '{{ icingaweb2__webserver_owner }}'
+      group: 'icingaweb2'
+      mode: 0o660
+
+  - name: 'Deploy /etc/icingaweb2/navigation/service-actions.ini'
+    ansible.builtin.template:
+      src: 'etc/icingaweb2/navigation/service-actions.ini.j2'
+      dest: '/etc/icingaweb2/navigation/service-actions.ini'
       owner: '{{ icingaweb2__webserver_owner }}'
       group: 'icingaweb2'
       mode: 0o660
