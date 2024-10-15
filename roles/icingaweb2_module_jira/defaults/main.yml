@@ -1,0 +1,11 @@
+icingaweb2_module_jira__api_path: ''
+icingaweb2_module_jira__api_port: ''
+icingaweb2_module_jira__api_scheme: ''
+icingaweb2_module_jira__deployment_legacy: true
+icingaweb2_module_jira__deployment_type: 'cloud'
+icingaweb2_module_jira__icingaweb2_url: ''
+icingaweb2_module_jira__key_fields_icinga_key: 'icingaKey'
+icingaweb2_module_jira__key_fields_icinga_status: 'icingaStatus'
+icingaweb2_module_jira__ui_issuetype: ''
+icingaweb2_module_jira__ui_project: ''
+icingaweb2_module_jira__url: 'https://github.com/Icinga/icingaweb2-module-jira/archive/{{ icingaweb2_module_jira__version }}.tar.gz'

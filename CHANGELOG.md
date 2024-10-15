@@ -200,6 +200,9 @@ Role:tar
 
 ### Added
 
+Role:icingaweb2_module_jira
+* Added
+
 Role:podman_containers
 * Added
 

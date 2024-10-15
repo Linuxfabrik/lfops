@@ -1,0 +1,25 @@
+; {{ ansible_managed }}
+; 2024101501
+
+[api]
+host = "{{ icingaweb2_module_jira__api_host }}"
+username = "{{ icingaweb2_module_jira__api_username }}"
+password = "{{ icingaweb2_module_jira__api_password }}
+port = "{{ icingaweb2_module_jira__api_port }}"
+path = "{{ icingaweb2_module_jira__api_path }}"
+scheme = "{{ icingaweb2_module_jira__api_scheme }}"
+
+[deployment]
+type = "{{ icingaweb2_module_jira__deployment_type }}"
+legacy = "{{ icingaweb2_module_jira__deployment_legacy | ternary('1', '0') }}"
+
+[key_fields]
+icingaKey = "{{ icingaweb2_module_jira__key_fields_icinga_key }}"
+icingaStatus = "{{ icingaweb2_module_jira__key_fields_icinga_status }}"
+
+[ui]
+project = "{{ icingaweb2_module_jira__ui_project }}"
+issuetype = "{{ icingaweb2_module_jira__ui_issuetype }}"
+
+[icingaweb]
+url = "{{ icingaweb2_module_jira__icingaweb2_url }}"
