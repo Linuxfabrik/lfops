@@ -200,6 +200,9 @@ Role:tar
 
 ### Added
 
+Role:glpi_agent
+* Added
+
 Role:icingaweb2_module_jira
 * Added
 

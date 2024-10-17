@@ -1,0 +1,82 @@
+- block:
+
+  - name: 'Store the github release version'
+    ansible.builtin.set_fact:
+      glpi_agent__github_version: '{{ glpi_agent__version }}'
+    when: 'glpi_agent__version != "latest"'
+
+  - block:
+
+    - name: 'Get latest glpi_agent release version'
+      ansible.builtin.uri:
+        url: 'https://api.github.com/repos/glpi-project/glpi-agent/releases/latest'
+      register: 'glpi_agent__github_release'
+      check_mode: false # run task even if `--check` is specified
+      delegate_to: 'localhost'
+      run_once: true
+
+    - name: 'Store the latest release version'
+      ansible.builtin.set_fact:
+        glpi_agent__github_version: '{{ glpi_agent__github_release["json"]["tag_name"] }}'
+
+    # block
+    when: 'glpi_agent__version == "latest"'
+
+  - name: 'curl --location https://github.com/glpi-project/glpi-agent/releases/download/{{ glpi_agent__github_version }}/glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
+    ansible.builtin.get_url:
+      url: 'https://github.com/glpi-project/glpi-agent/releases/download/{{ glpi_agent__github_version }}/glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
+      dest: '/tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm to remote server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
+      dest: '/tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'dnf install /tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
+    ansible.builtin.dnf:
+      name: '/tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
+      disable_gpg_check: true # rpm is not signed
+
+  - name: 'rm /tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
+    ansible.builtin.file:
+      path: '/tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
+      state: 'absent'
+
+  tags:
+    - 'glpi_agent'
+
+
+- block:
+
+  - name: 'Deploy /etc/glpi-agent/conf.d/z00-linuxfabrik.cfg'
+    ansible.builtin.template:
+      src: 'etc/glpi-agent/conf.d/z00-linuxfabrik.cfg.j2'
+      dest: '/etc/glpi-agent/conf.d/z00-linuxfabrik.cfg'
+      owner: 'root'
+      group: 'root'
+      mode: 0o640
+    notify: 'glpi_agent: restart glpi-agent'
+
+  tags:
+    - 'glpi_agent'
+    - 'glpi_agent:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ glpi_agent__service_enabled | bool | ternary("enable", "disable") }} --now glpi-agent.service'
+    ansible.builtin.systemd:
+      name: 'glpi-agent.service'
+      enabled: '{{ glpi_agent__service_enabled }}'
+      state: '{{ glpi_agent__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'glpi_agent'
+    - 'glpi_agent:state'

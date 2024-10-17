@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# 2024101701
+
+local = {{ glpi_agent__conf_local }}
+no-ssl-check = {{ glpi_agent__conf_no_ssl_check | ternary('1', '0') }}
+server = {{ glpi_agent__conf_server }}
+{% if glpi_agent__conf_ssl_fingerprint is defined and glpi_agent__conf_ssl_fingerprint | length %}
+ssl-fingerprint = {{ glpi_agent__conf_ssl_fingerprint }}
+{% endif %}
