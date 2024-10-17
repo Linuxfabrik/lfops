@@ -1,0 +1,9 @@
+- name: 'squid: squid -k parse # and then reload'
+  ansible.builtin.command: 'squid -k parse'
+  notify:
+    - 'squid: reload squid'
+
+- name: 'squid: reload squid'
+  ansible.builtin.service:
+    state: 'reloaded'
+    name: 'squid'

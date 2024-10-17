@@ -1,0 +1,46 @@
+- block:
+
+  - name: 'Install squid'
+    ansible.builtin.package:
+      name:
+        - 'squid'
+      state: 'present'
+
+  tags:
+    - 'squid'
+
+
+- block:
+
+  - name: 'Deploy /etc/squid/squid.conf'
+    ansible.builtin.template:
+      src: 'etc/squid/squid.conf.j2'
+      dest: '/etc/squid/squid.conf'
+      owner: 'root'
+      group: 'squid'
+      mode: 0o640
+    notify: 'squid: squid -k parse # and then reload'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/squid/squid.conf'
+
+  tags:
+    - 'squid'
+    - 'squid:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ squid__service_enabled | bool | ternary("enable", "disable") }} --now squid.service'
+    ansible.builtin.systemd:
+      name: 'squid.service'
+      enabled: '{{ squid__service_enabled }}'
+      state: '{{ squid__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'squid'
+    - 'squid:state'
