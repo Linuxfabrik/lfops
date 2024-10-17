@@ -38,6 +38,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o755
+    changed_when: false # not an actual config change on the server
 
   - name: 'dnf install /tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
     ansible.builtin.dnf:
@@ -48,6 +49,7 @@
     ansible.builtin.file:
       path: '/tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
       state: 'absent'
+    changed_when: false # not an actual config change on the server
 
   tags:
     - 'glpi_agent'
