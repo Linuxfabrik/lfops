@@ -1,0 +1,4 @@
+- name: 'glpi_agent: restart glpi-agent'
+  ansible.builtin.service:
+    name: 'glpi-agent'
+    state: 'restarted'
