@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2024100401 -->
+    <!-- 2024101801 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -235,7 +235,7 @@
     </security>
 
     <certificates>
-      <database_path type="string" desc="Path to the NSS certificates that are used for signing documents" default=""></database_path>
+      <database_path type="string" desc="Path to the NSS certificates that are available to all users" default=""></database_path>
     </certificates>
 
     <watermark>
@@ -359,5 +359,8 @@
         <enable desc="Enable WASM support" type="bool" default="false"></enable>
         <force desc="When enabled, all requests are redirected to WASM." type="bool" default="false"></force>
     </wasm>
+    <document_signing desc="Document signing settings">
+        <enable desc="Enable document signing" type="bool" default="true">true</enable>
+    </document_signing>
 
 </config>
