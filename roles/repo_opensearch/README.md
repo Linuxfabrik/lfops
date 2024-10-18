@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.repo_opensearch
 
-This role deploys the [Opensearch Package Repository](https://opensearch.org/docs/2.3/opensearch/install/rpm/).
+This role deploys the [Opensearch Package Repository](https://opensearch.org/docs/latest/opensearch/install/rpm/).
 
 
 ## Tags
