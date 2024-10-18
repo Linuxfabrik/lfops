@@ -107,7 +107,7 @@ hetzner_vm__ssh_keys:
 hetzner_vm__state: 'started'
 hetzner_vm__upgrade_disk: false
 hetzner_vm__volumes:
-  - name: 'data'
+  - name: '{{ inventory_hostname }}-data'
     size: '100'
 ```
 
