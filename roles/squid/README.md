@@ -4,11 +4,11 @@ This role installs and configures [bind](https://www.isc.org/bind/) as a DNS ser
 
 ## Tags
 
-| Tag              | What it does                                   |
-| ---              | ------------                                   |
-| `bind`           | Installs and configures bind                   |
-| `bind:configure` | Manages the main named config and the zones    |
-| `bind:state`     | Manages the state of the named systemd service |
+| Tag               | What it does                                   |
+|-------------------|------------------------------------------------|
+| `squid`           | Installs and configures squid                  |
+| `squid:configure` | Manages the main squid config                  |
+| `squid:state`     | Manages the state of the squid systemd service |
 
 
 ## Mandatory Role Variables
@@ -17,16 +17,6 @@ This role installs and configures [bind](https://www.isc.org/bind/) as a DNS ser
 | -------- | ----------- |
 | `bind__trusted_networks` | List of networks from which DNS queries are allowed. Results in the `trusted` ACL in the config. |
 | `bind__zones` | List of dictionaries defining the zone files with the DNS records. Subkeys:<ul><li>`name`: Mandatory, string. The name of the zone. Suffix with `in-addr.arpa` (IPv4) / `ip6.arpa` (IPv6) for reverse zones.</li><li>`file`: Optional, string. The filename for the zone file under `/var/named/`. Defaults to `name` with `.zone` suffix.</li><li>`type`: Optional, string. [type](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-type) of the zone. Defaults to `master`.</li><li>`forwarders`: Optional, list of strings. [forwarders](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-forwarders) of the zone. Defaults to `[]`, as this is generally not useful for `type: 'master'`.</li><li>`allow_transfer`: Optional, list of strings. [allow-transfer](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-allow-transfer) of the zone to a secondary. Defaults to `[]`.</li><li>`masters`: Optional, list of strings. [masters](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-primaries) of from which to fetch the zone. Defaults to `[]`.</li><li>`raw`: Optional, multiline string. The raw content of the zone file.</li></ul> |
-
-squid__conf_acl_localnet
-squid__conf_acl_SSL_ports
-squid__conf_acl_Safe_ports
-squid__conf_acl_raw
-squid__conf_coredump_dir
-squid__conf_http_access
-squid__conf_http_port
-squid__conf_refresh_pattern
-squid__service_enabled
 
 Example:
 ```yaml
@@ -72,18 +62,16 @@ bind__zones:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `bind__allow_new_zones` | Boolean. If `true`, then zones can be added at runtime via `rndc addzone`.  | `false` |
-| `bind__allow_query_cache` | List of ACLs (use `'trusted'` for the `bind__trusted_networks`) or [Address Match Lists](https://bind9.readthedocs.io/en/latest/reference.html#address-match-lists) which are allowed to query the cache. This effectively controls who can use recursion. When setting `bind__recursion: false`, it makes sense to set this to `'none'` to prevent any answer. | `['trusted']`
-| `bind__allow_recursion` | List of ACLs (use `'trusted'` for the `bind__trusted_networks`) or [Address Match Lists](https://bind9.readthedocs.io/en/latest/reference.html#address-match-lists) which are allowed to initiate recursive queries. When setting `bind__recursion: false`, it makes sense to set this to `'none'` to prevent any answer. | `['trusted']`
-| `bind__allow_transfer` | List of strings. The global [`allow-transfer`](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-allow-transfer) option. Can be overwritten per zone. | `['none']` |
-| `bind__forwarders` | List of DNS servers to which DNS queries to unknown domain names should be forwarded. | `['1.0.0.1', '1.1.1.1']` |
-| `bind__keys` | List of dictionaries. [`key`s](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-key) for use with TSIG or the command channel (`rndc`). Subkeys: <ul><li>`name`: Mandatory, string. Name of the key.</li><li>`algorithm`: Mandatory, string. [`algorithm`](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-algorithm) of the key.</li><li>`secret`: Mandatory, string. The key's [`secret`](https://bind9.readthedocs.io/en/latest/reference.html#namedconf-statement-secret). Will be base64 encoded by the role.</li></ul> | `[]` |
-| `bind__listen_on_addresses` | List of addresses on which the server will listen. This indirectly sets the listening interface(s). | `['any']` |
-| `bind__named_conf_raw` | Multiline string. Raw content which will be appended to the end of `/etc/named.conf` | unset |
-| `bind__named_service_enabled` | Boolean. Enables or disables the named service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
-| `bind__recursion` | Boolean. Defines whether recursion and caching are allowed. Disabling recursion is recommended for authorative name servers. | `true` |
-| `bind__rpz_zone` | String. Name of the RPZ zone. Setting this enables the usage of a reverse-policy zone (have a look at https://dnsrpz.info/, basically acts as a `/etc/hosts` file for all clients). To use this, also create a zone with `name: '{{ bind__rpz_zone }}'` in `bind__zones`. | unset |
-| bind__listen_ipv6 | Boolean. Enables or disables listening on IPv6. | `false` |
+| `squid__conf_acl_localnet` | | `['0.0.0.1-0.255.255.255', '10.0.0.0/8', '100.64.0.0/10', '169.254.0.0/16', '172.16.0.0/12', '192.168.0.0/16', 'fc00::/7', 'fe80::/10']`
+| `squid__conf_acl_SSL_ports` | | `['443']` |
+| `squid__conf_acl_Safe_ports` | | `['80', '21', '443', '70', '210', '1025-65535', '280', '488', '591', '777']` |
+| `squid__conf_acl_raw` | | unset |
+| `squid__conf_coredump_dir` | String. Directory where Squid should leave coredumps. | `'/var/spool/squid'` |
+| `squid__conf_http_access` | List of additional access control list rules. | `[]` |
+| `squid__conf_http_port` | List of socket addresses where Squid will listen for HTTP client requests. | `['3128']` |
+| `squid__conf_raw` | Multiline string. Raw content which will be appended to the end of `/etc/squid/squid.conf`. | unset |
+| `squid__conf_refresh_pattern` | List of refresh patterns. | `['^ftp: 1440 20% 10080', '-i (/cgi-bin/\|\?) 0 0% 0', '. 0 20% 4320']` |
+| `squid__service_enabled` | Boolean. Enables or disables the squid service, analogous to `systemctl enable/disable --now`. | `true` |
 
 Example:
 ```yaml

@@ -8,15 +8,16 @@
 # Example rule allowing access from your local networks.
 # Adapt to list your (internal) IP networks from where browsing
 # should be allowed
-{% for item in squid__conf_acl_localnet %}
-acl localnet src {{ item }}
+{% for item in squid__conf_acl_localnet__combined_var if item['state'] | d('present') != 'absent' %}
+acl localnet src {{ item['src'] }}
 {% endfor %}
 
-{% for item in squid__conf_acl_SSL_ports %}
-acl SSL_ports port {{ item }}
+{% for item in squid__conf_acl_SSL_ports__combined_var if item['state'] | d('present') != 'absent' %}
+acl SSL_ports port {{ item['port'] }}
 {% endfor %}
-{% for item in squid__conf_acl_Safe_ports %}
-acl Safe_ports port {{ item }}
+
+{% for item in squid__conf_acl_Safe_ports__combined_var if item['state'] | d('present') != 'absent' %}
+acl Safe_ports port {{ item['port'] }}
 {% endfor %}
 
 {% if squid__conf_acl_raw is defined and squid__conf_acl_raw | length %}
