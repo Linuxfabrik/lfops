@@ -1,0 +1,85 @@
+# {{ ansible_managed }}
+# 2024102201
+# 11.4
+
+# https://mariadb.com/kb/en/library/server-system-variables/
+
+[server]
+bulk_insert_buffer_size                        = {{ mariadb_server__cnf_bulk_insert_buffer_size__combined_var }}
+character_set_server                           = {{ mariadb_server__cnf_character_set_server__combined_var }}
+collation_server                               = {{ mariadb_server__cnf_collation_server__combined_var }}
+expire_logs_days                               = {{ mariadb_server__cnf_expire_logs_days__combined_var }}
+innodb_buffer_pool_size                        = {{ mariadb_server__cnf_innodb_buffer_pool_size__combined_var }}
+innodb_flush_log_at_trx_commit                 = {{ mariadb_server__cnf_innodb_flush_log_at_trx_commit__combined_var }}
+innodb_io_capacity                             = {{ mariadb_server__cnf_innodb_io_capacity__combined_var }}
+innodb_log_file_size                           = {{ mariadb_server__cnf_innodb_log_file_size__combined_var }}
+interactive_timeout                            = {{ mariadb_server__cnf_interactive_timeout__combined_var }}
+join_buffer_size                               = {{ mariadb_server__cnf_join_buffer_size__combined_var }}
+log_error                                      = {{ mariadb_server__cnf_log_error__combined_var }}
+lower_case_table_names                         = {{ mariadb_server__cnf_lower_case_table_names__combined_var }}
+max_allowed_packet                             = {{ mariadb_server__cnf_max_allowed_packet__combined_var }}
+max_connections                                = {{ mariadb_server__cnf_max_connections__combined_var }}
+max_heap_table_size                            = {{ mariadb_server__cnf_max_heap_table_size__combined_var }}
+performance_schema                             = {{ mariadb_server__cnf_performance_schema__combined_var }}
+query_cache_limit                              = {{ mariadb_server__cnf_query_cache_limit__combined_var }}
+query_cache_size                               = {{ mariadb_server__cnf_query_cache_size__combined_var }}
+query_cache_type                               = {{ mariadb_server__cnf_query_cache_type__combined_var }}
+skip_name_resolve                              = {{ mariadb_server__cnf_skip_name_resolve__combined_var }}
+slow_query_log                                 = {{ mariadb_server__cnf_slow_query_log__combined_var }}
+slow_query_log_file                            = {{ mariadb_server__cnf_slow_query_log_file__combined_var }}
+sql_mode                                       = {{ mariadb_server__cnf_sql_mode__combined_var }}
+table_definition_cache                         = {{ mariadb_server__cnf_table_definition_cache__combined_var }}
+tmp_table_size                                 = {{ mariadb_server__cnf_tmp_table_size__combined_var }}
+wait_timeout                                   = {{ mariadb_server__cnf_wait_timeout__combined_var }}
+
+{% if mariadb_server__dare_keys is defined and mariadb_server__dare_keys %}
+# File Key Management
+plugin_load_add                                = {{ mariadb_server__cnf_plugin_load_add }}
+loose_file_key_management_filename             = {{ mariadb_server__cnf_file_key_management_filename }}
+loose_file_key_management_encryption_algorithm = {{ mariadb_server__cnf_file_key_management_encryption_algorithm }}
+
+# Basic Encryption Configuration
+encrypt_binlog                                 = {{ mariadb_server__cnf_encrypt_binlog }}
+encrypt_tmp_files                              = {{ mariadb_server__cnf_encrypt_tmp_files }}
+
+# InnoDB Encryption
+innodb_default_encryption_key_id               = {{ mariadb_server__cnf_innodb_default_encryption_key_id }}
+innodb_encrypt_log                             = {{ mariadb_server__cnf_innodb_encrypt_log }}
+innodb_encrypt_tables                          = {{ mariadb_server__cnf_innodb_encrypt_tables }}
+innodb_encrypt_temporary_tables                = {{ mariadb_server__cnf_innodb_encrypt_temporary_tables }}
+innodb_encryption_rotate_key_age               = {{ mariadb_server__cnf_innodb_encryption_rotate_key_age }}
+innodb_encryption_threads                      = {{ mariadb_server__cnf_innodb_encryption_threads }}
+{% endif %}
+
+
+[mysqld]
+
+[galera]
+
+[embedded]
+
+[mariadb]
+
+[mariadb-10.0]
+
+[mariadb-10.1]
+
+[mariadb-10.2]
+
+[mariadb-10.3]
+
+[mariadb-10.4]
+
+[mariadb-10.5]
+
+[mariadb-10.6]
+
+[mariadb-10.11]
+
+[mariadb-11.1]
+
+[mariadb-11.2]
+
+[mariadb-11.3]
+
+[mariadb-11.4]
