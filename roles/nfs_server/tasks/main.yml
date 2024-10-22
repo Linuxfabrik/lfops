@@ -3,7 +3,8 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'nfs_server'
+    - 'always'
+    - 'nfs_server'  # for --skip-tags
 
 - block:
 
