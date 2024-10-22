@@ -16,6 +16,13 @@
       state: 'restarted'
     ignore_errors: true # fails if tuned is not installed yet (installation will be done by fedora.linux_system_roles.kernel_settings)
 
+  # prevent errors like "Failed to read sysctl parameter 'sunrpc.tcp_slot_table_entries', the parameter does not exist" on RHEL
+  - name: 'modprobe sunrpc'
+    community.general.modprobe:
+      name: 'sunrpc'
+      state: 'present'
+    when: 'kernel_settings__sysctl__combined_var | selectattr("name", "match", "^sunrpc\.") | list | length > 0'  # if there is at least one key starting with "sunrpc."
+
   - name: 'Use fedora.linux_system_roles.kernel_settings role to configure the kernel settings'
     ansible.builtin.include_role:
       name: 'fedora.linux_system_roles.kernel_settings'
