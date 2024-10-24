@@ -3,14 +3,8 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
+    - 'always'
     - 'mariadb_server'
-    - 'mariadb_server:configure'
-    - 'mariadb_server:database'
-    - 'mariadb_server:dump'
-    - 'mariadb_server:secure_installation'
-    - 'mariadb_server:state'
-    - 'mariadb_server:sys_schema'
-    - 'mariadb_server:user'
 
 
 - name: 'Perform platform/version specific tasks'
@@ -28,8 +22,50 @@
         - '{{ role_path }}/tasks'
   ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
+    - 'always'
     - 'mariadb_server'
-    - 'mariadb_server:dump'
+
+
+- block:
+
+  - name: 'systemctl disable --now mariadb.service'
+    ansible.builtin.service:
+      name: 'mariadb.service'
+      state: 'stopped'
+      enabled: false
+
+  - name: 'Remove old mariadb-server package'
+    ansible.builtin.package:
+      name:
+        - 'MariaDB-server'
+        - 'mariadb-server'
+      state: 'absent'
+
+  - name: 'Install latest mariadb-server'
+    ansible.builtin.package:
+      name:
+        - 'mariadb-server'
+      state: 'latest'
+
+  - name: 'Update mariadb-client, mariadb-common, mariadb-shared (RedHat)'
+    ansible.builtin.dnf:
+      # `mariadb-*` sadly does not work with update_only
+      name:
+        - 'MariaDB-client'
+        - 'MariaDB-common'
+        - 'MariaDB-shared'
+        - 'mariadb-client'
+        - 'mariadb-common'
+        - 'mariadb-shared'
+      update_only: true # only update already installed packages
+      state: 'latest'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      # Debian already upgrades the other packages during the installation of mariadb-server
+
+  tags:
+    - 'mariadb_server:upgrade'
+    - 'never'
 
 
 - block:
@@ -65,6 +101,7 @@
     - 'mariadb_server:secure_installation'
     - 'mariadb_server:state'
     - 'mariadb_server:sys_schema'
+    - 'mariadb_server:upgrade'
     - 'mariadb_server:user'
 
 
@@ -132,6 +169,7 @@
   tags:
     - 'mariadb_server'
     - 'mariadb_server:configure'
+    - 'mariadb_server:upgrade'
 
 
 - block:
@@ -159,6 +197,41 @@
     - 'mariadb_server'
     - 'mariadb_server:configure'
     - 'mariadb_server:state'
+    - 'mariadb_server:upgrade'
+
+
+- block:
+
+  - name: 'deploy temporary defaults file to /tmp/lfops-mariadb-defaults.cnf'
+    ansible.builtin.copy:
+      dest: '/tmp/lfops-mariadb-defaults.cnf'
+      content: |-
+        [client]
+        user = '{{ mariadb_server__admin_user["username"] }}'
+        password = '{{ mariadb_server__admin_user["password"] }}'
+        host = localhost
+      owner: 'root'
+      group: 'root'
+      mode: 0o600 # contains secrets
+
+  - name: 'mysql_upgrade --defaults-file=/tmp/lfops-mariadb-defaults.cnf'
+    ansible.builtin.command: 'mysql_upgrade --defaults-file=/tmp/lfops-mariadb-defaults.cnf'
+    register: 'mariadb_server__mysql_upgrade_result'
+
+  - name: 'rm /tmp/lfops-mariadb-defaults.cnf'
+    ansible.builtin.file:
+      dest: '/tmp/lfops-mariadb-defaults.cnf'
+      state: 'absent'
+
+  - name: 'print mysql_upgrade output'
+    ansible.builtin.debug:
+      msg:
+        - '{{ mariadb_server__mysql_upgrade_result }}'
+        - 'Make sure to manually check the logfile at {{ mariadb_server__cnf_log_error__combined_var }} for errors.'
+
+  tags:
+    - 'never'
+    - 'mariadb_server:upgrade'
 
 
 - block:
@@ -391,7 +464,7 @@
       dest: '/tmp/mariadb-sys-schema'
       remote_src: true
 
-  - name: 'mysql --user "{{ mariadb_server__admin_user["username"] }}" --password="..." < ./sys_10.sql'
+  - name: 'mysql --user "{{ mariadb_server__admin_user["username"] }}" --password < ./sys_10.sql'
     community.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
@@ -423,4 +496,5 @@
     - 'mariadb_server:secure_installation'
     - 'mariadb_server:state'
     - 'mariadb_server:sys_schema'
+    - 'mariadb_server:upgrade'
     - 'mariadb_server:user'
