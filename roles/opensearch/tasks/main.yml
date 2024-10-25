@@ -5,7 +5,8 @@
       name:
         - 'opensearch{{ (opensearch__version__combined_var | length) | ternary("-" ~ opensearch__version__combined_var, "") }}'
       state: 'present'
-
+    environment:
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: '{{ opensearch__opensearch_initial_admin_password }}'
   tags:
     - 'opensearch'
 
@@ -126,33 +127,29 @@
       - 'esnode.pem'
       - 'kirk-key.pem'
       - 'kirk.pem'
-    when:
-      - 'not opensearch__plugins_security_allow_unsafe_democertificates'
+
+  when:
+    - 'not opensearch__plugins_security_allow_unsafe_democertificates'
 
 
-  - block:
+- block:
 
-    - name: 'Generate hashed passwords for the internal users'
-      ansible.builtin.command: '/usr/share/opensearch/plugins/opensearch-security/tools/hash.sh -p {{ item["password"] }}'
-      environment:
-        JAVA_HOME: '/usr/share/opensearch/jdk'
-      loop: '{{ opensearch__internal_users__combined_var }}'
-      register: 'opensearch__internal_users__hashed_result'
-      changed_when: false # no actual config change
-      check_mode: false # run task even if `--check` is specified
+  - name: 'Generate hashed passwords for the internal users'
+    ansible.builtin.command: '/usr/share/opensearch/plugins/opensearch-security/tools/hash.sh -p {{ item["password"] }}'
+    environment:
+      JAVA_HOME: '/usr/share/opensearch/jdk'
+    loop: '{{ opensearch__internal_users__combined_var }}'
+    register: 'opensearch__internal_users__hashed_result'
+    changed_when: false # no actual config change
+    check_mode: false # run task even if `--check` is specified
 
-    - name: 'Deploy /etc/opensearch/opensearch-security/internal_users.yml'
-      ansible.builtin.template:
-        src: 'etc/opensearch/opensearch-security/internal_users.yml.j2'
-        dest: '/etc/opensearch/opensearch-security/internal_users.yml'
-        owner: 'opensearch'
-        group: 'opensearch'
-        mode: 0o600
-
-    tags:
-      - 'opensearch'
-      - 'opensearch:configure'
-      - 'opensearch:user'
+  - name: 'Deploy /etc/opensearch/opensearch-security/internal_users.yml'
+    ansible.builtin.template:
+      src: 'etc/opensearch/opensearch-security/internal_users.yml.j2'
+      dest: '/etc/opensearch/opensearch-security/internal_users.yml'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o600
 
   notify: 'opensearch: /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh ...'
   when:
@@ -160,6 +157,7 @@
   tags:
     - 'opensearch'
     - 'opensearch:configure'
+    - 'opensearch:user'
 
 
 - block:
@@ -174,8 +172,12 @@
     - 'opensearch'
     - 'opensearch:state'
 
-- name: 'make sure opensearch is restarted and securityadmin.sh ran if necessary, so that the roles afterwards can use opensearch'
-  ansible.builtin.meta: 'flush_handlers'
+
+- block:
+
+  - name: 'make sure opensearch is restarted and securityadmin.sh ran if necessary, so that the roles afterwards can use opensearch'
+    ansible.builtin.meta: 'flush_handlers'
+
   tags:
     - 'opensearch'
     - 'opensearch:configure'

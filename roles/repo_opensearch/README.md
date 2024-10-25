@@ -19,7 +19,7 @@ This role deploys the [Opensearch Package Repository](https://opensearch.org/doc
 Example:
 ```yaml
 # mandatory
-repo_opensearch__version__host_var: '1.x'
+repo_opensearch__version__host_var: '2.x'  # or '1.x'
 ```
 
 
