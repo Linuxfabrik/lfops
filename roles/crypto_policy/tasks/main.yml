@@ -10,6 +10,12 @@
     with_fileglob:
       - 'templates/etc/crypto-policies/policies/modules/*.pmod.j2'
 
+  # prevent "AlgorithmClassUnknownError: Unknown policy property: `etm`"
+  - name: 'dnf -y update crypto-policies-scripts'
+    ansible.builtin.package:
+      name: 'crypto-policies-scripts'
+      state: 'latest'
+
   - name: 'update-crypto-policies --show'
     ansible.builtin.command: 'update-crypto-policies --show'
     register: 'crypto_policy__current_policy_result'
