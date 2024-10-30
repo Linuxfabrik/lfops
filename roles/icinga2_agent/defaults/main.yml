@@ -18,3 +18,4 @@ icinga2_agent__service_enabled: true
 icinga2_agent__validate_certs: true
 icinga2_agent__windows_download_path: 'C:'
 icinga2_agent__windows_service_user: 'NT AUTHORITY\SYSTEM'
+icinga2_agent__zone: '{{ icinga2_agent__cn }}'

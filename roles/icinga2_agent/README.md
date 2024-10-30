@@ -54,6 +54,7 @@ icinga2_agent__windows_version: 'v2.12.8'
 | `icinga2_agent__validate_certs` | If false, TLS certificates offered by the Icinga Master will not be validated. This should only set to false used on personally controlled sites using self-signed certificates. | `false` |
 | `icinga2_agent__windows_download_path` | The path where the Icinga2.exe will be downloaded to. Certain Windows versions disallow the creation of files in `C:` which requires one to adjust this setting. Note that the path has to exist. | `C:` |
 | `icinga2_agent__windows_service_user` | The Windows user account under which the Icinga2 service will be run. | `'NT AUTHORITY\SYSTEM'` |
+| `icinga2_agent__zone` | The zone of the agent (endpoint). Change this if you are installing a satellite. | `'{{ icinga2_agent__cn }}'` |
 
 Example:
 ```yaml
@@ -80,6 +81,7 @@ icinga2_agent__service_enabled: true
 icinga2_agent__validate_certs: true
 icinga2_agent__windows_download_path: 'D:\Downloads'
 icinga2_agent__windows_service_user: 'Icinga Service User'
+icinga2_agent__zone: 'satellite'
 ```
 
 
