@@ -222,33 +222,35 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 | Role Variable                                        | Documentation                                                                                      | Default Value                   |
 | -------------                                        | -------------                                                                                      | -------------                    |
-| `mariadb_server__cnf_encrypt_binlog` | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-server-system-variables/#encrypt_binlog) | `'ON'` |
-| `mariadb_server__cnf_encrypt_tmp_files` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#encrypt_tmp_files) | `'ON'` |
-| `mariadb_server__cnf_file_key_management_encryption_algorithm` | [mariadb.com](https://mariadb.com/kb/en/file-key-management-encryption-plugin#file_key_management_encryption_algorithm) | `'AES_CTR'` |
-| `mariadb_server__cnf_file_key_management_filename` | [mariadb.com](https://mariadb.com/kb/en/file-key-management-encryption-plugin#file_key_management_filename) | `'/etc/my.cnf.d/keyfile'` |
-| `mariadb_server__cnf_innodb_default_encryption_key_id` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_default_encryption_key_id) | `1` |
-| `mariadb_server__cnf_innodb_encrypt_log` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_log) | `'ON'` |
-| `mariadb_server__cnf_innodb_encrypt_tables` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_tables) | `'ON'` |
-| `mariadb_server__cnf_innodb_encrypt_temporary_tables` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_temporary_tables) | `'ON'` |
-| `mariadb_server__cnf_innodb_encryption_rotate_key_age` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encryption_rotate_key_age) | `1` |
-| `mariadb_server__cnf_innodb_encryption_threads` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encryption_threads) | `4` |
-| `mariadb_server__cnf_plugin_load_add` | [mariadb.com](https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/plugin-load-add/) | `'file_key_management'` |
+| `mariadb_server__cnf_encrypt_binlog__group_var` / `mariadb_server__cnf_encrypt_binlog__host_var` | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-server-system-variables/#encrypt_binlog) | `'ON'` |
+| `mariadb_server__cnf_encrypt_tmp_files__group_var` / `mariadb_server__cnf_encrypt_tmp_files__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#encrypt_tmp_files) | `'ON'` |
+| `mariadb_server__cnf_file_key_management_encryption_algorithm__group_var` / `mariadb_server__cnf_file_key_management_encryption_algorithm__host_var` | [mariadb.com](https://mariadb.com/kb/en/file-key-management-encryption-plugin#file_key_management_encryption_algorithm) | `'AES_CTR'` |
+| `mariadb_server__cnf_file_key_management_filename__group_var` / `mariadb_server__cnf_file_key_management_filename__host_var` | [mariadb.com](https://mariadb.com/kb/en/file-key-management-encryption-plugin#file_key_management_filename) | `'/etc/my.cnf.d/keyfile'` |
+| `mariadb_server__cnf_innodb_default_encryption_key_id__group_var` / `mariadb_server__cnf_innodb_default_encryption_key_id__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_default_encryption_key_id) | `1` |
+| `mariadb_server__cnf_innodb_encrypt_log__group_var` / `mariadb_server__cnf_innodb_encrypt_log__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_log) | `'ON'` |
+| `mariadb_server__cnf_innodb_encrypt_tables__group_var` / `mariadb_server__cnf_innodb_encrypt_tables__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_tables) | `'ON'` |
+| `mariadb_server__cnf_innodb_encrypt_temporary_tables__group_var` / `mariadb_server__cnf_innodb_encrypt_temporary_tables__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_temporary_tables) | `'ON'` |
+| `mariadb_server__cnf_innodb_encryption_rotate_key_age__group_var` / `mariadb_server__cnf_innodb_encryption_rotate_key_age__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encryption_rotate_key_age) | `1` |
+| `mariadb_server__cnf_innodb_encryption_threads__group_var` / `mariadb_server__cnf_innodb_encryption_threads__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encryption_threads) | `4` |
+| `mariadb_server__cnf_plugin_load_add__group_var` / `mariadb_server__cnf_plugin_load_add__host_var` | [mariadb.com](https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/plugin-load-add/) | `'file_key_management'` |
 
 Example:
 ```yaml
 # optional - cnf directives
-mariadb_server__cnf_encrypt_binlog: 'ON'
-mariadb_server__cnf_encrypt_tmp_files: 'ON'
-mariadb_server__cnf_file_key_management_encryption_algorithm: 'AES_CTR'
-mariadb_server__cnf_file_key_management_filename: '/etc/my.cnf.d/keyfile'
-mariadb_server__cnf_innodb_default_encryption_key_id: 1
-mariadb_server__cnf_innodb_encrypt_log: 'ON'
-mariadb_server__cnf_innodb_encrypt_tables: 'ON'
-mariadb_server__cnf_innodb_encrypt_temporary_tables: 'ON'
-mariadb_server__cnf_innodb_encryption_rotate_key_age: 1
-mariadb_server__cnf_innodb_encryption_threads: 4
-mariadb_server__cnf_plugin_load_add: 'file_key_management'
+mariadb_server__cnf_encrypt_binlog__host_var: 'ON'
+mariadb_server__cnf_encrypt_tmp_files__host_var: 'ON'
+mariadb_server__cnf_file_key_management_encryption_algorithm__host_var: 'AES_CTR'
+mariadb_server__cnf_file_key_management_filename__host_var: '/etc/my.cnf.d/keyfile'
+mariadb_server__cnf_innodb_default_encryption_key_id__host_var: 1
+mariadb_server__cnf_innodb_encrypt_log__host_var: 'ON'
+mariadb_server__cnf_innodb_encrypt_tables__host_var: 'ON'
+mariadb_server__cnf_innodb_encrypt_temporary_tables__host_var: 'ON'
+mariadb_server__cnf_innodb_encryption_rotate_key_age__host_var: 1
+mariadb_server__cnf_innodb_encryption_threads__host_var: 4
+mariadb_server__cnf_plugin_load_add__host_var: 'file_key_management'
 ```
+
+
 
 
 ## Troubleshooting

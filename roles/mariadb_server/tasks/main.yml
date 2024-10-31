@@ -91,7 +91,7 @@
       mariadb_server__installed_version: '{{ (ansible_facts["packages"]["MariaDB-server"][0]["version"] | d(ansible_facts["packages"]["mariadb-server"][0]["version"])) | regex_search("\d+\.\d+") }}'
 
   - name: 'Load default values for {{ mariadb_server__installed_version }}'
-    ansible.builtin.include_vars: 'defaults/{{ mariadb_server__installed_version }}.yml'
+    ansible.builtin.include_vars: 'vars/{{ mariadb_server__installed_version }}.yml'
 
   tags:
     - 'mariadb_server'

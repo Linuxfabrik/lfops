@@ -40,6 +40,28 @@ mariadb_server__cnf_collation_server__combined_var: '{{
     mariadb_server__cnf_collation_server__role_var
   }}'
 
+mariadb_server__cnf_encrypt_binlog__dependent_var: ''
+mariadb_server__cnf_encrypt_binlog__group_var: ''
+mariadb_server__cnf_encrypt_binlog__host_var: ''
+mariadb_server__cnf_encrypt_binlog__role_var: ''
+mariadb_server__cnf_encrypt_binlog__combined_var: '{{
+    mariadb_server__cnf_encrypt_binlog__host_var if (mariadb_server__cnf_encrypt_binlog__host_var | string | length) else
+    mariadb_server__cnf_encrypt_binlog__group_var if (mariadb_server__cnf_encrypt_binlog__group_var | string | length) else
+    mariadb_server__cnf_encrypt_binlog__dependent_var if (mariadb_server__cnf_encrypt_binlog__dependent_var | string | length) else
+    mariadb_server__cnf_encrypt_binlog__role_var
+  }}'
+
+mariadb_server__cnf_encrypt_tmp_files__dependent_var: ''
+mariadb_server__cnf_encrypt_tmp_files__group_var: ''
+mariadb_server__cnf_encrypt_tmp_files__host_var: ''
+mariadb_server__cnf_encrypt_tmp_files__role_var: ''
+mariadb_server__cnf_encrypt_tmp_files__combined_var: '{{
+    mariadb_server__cnf_encrypt_tmp_files__host_var if (mariadb_server__cnf_encrypt_tmp_files__host_var | string | length) else
+    mariadb_server__cnf_encrypt_tmp_files__group_var if (mariadb_server__cnf_encrypt_tmp_files__group_var | string | length) else
+    mariadb_server__cnf_encrypt_tmp_files__dependent_var if (mariadb_server__cnf_encrypt_tmp_files__dependent_var | string | length) else
+    mariadb_server__cnf_encrypt_tmp_files__role_var
+  }}'
+
 mariadb_server__cnf_expire_logs_days__dependent_var: ''
 mariadb_server__cnf_expire_logs_days__group_var: ''
 mariadb_server__cnf_expire_logs_days__host_var: ''
@@ -50,6 +72,28 @@ mariadb_server__cnf_expire_logs_days__combined_var: '{{
     mariadb_server__cnf_expire_logs_days__role_var
   }}'
 
+mariadb_server__cnf_file_key_management_encryption_algorithm__dependent_var: ''
+mariadb_server__cnf_file_key_management_encryption_algorithm__group_var: ''
+mariadb_server__cnf_file_key_management_encryption_algorithm__host_var: ''
+mariadb_server__cnf_file_key_management_encryption_algorithm__role_var: ''
+mariadb_server__cnf_file_key_management_encryption_algorithm__combined_var: '{{
+    mariadb_server__cnf_file_key_management_encryption_algorithm__host_var if (mariadb_server__cnf_file_key_management_encryption_algorithm__host_var | string | length) else
+    mariadb_server__cnf_file_key_management_encryption_algorithm__group_var if (mariadb_server__cnf_file_key_management_encryption_algorithm__group_var | string | length) else
+    mariadb_server__cnf_file_key_management_encryption_algorithm__dependent_var if (mariadb_server__cnf_file_key_management_encryption_algorithm__dependent_var | string | length) else
+    mariadb_server__cnf_file_key_management_encryption_algorithm__role_var
+  }}'
+
+mariadb_server__cnf_file_key_management_filename__dependent_var: ''
+mariadb_server__cnf_file_key_management_filename__group_var: ''
+mariadb_server__cnf_file_key_management_filename__host_var: ''
+mariadb_server__cnf_file_key_management_filename__role_var: ''
+mariadb_server__cnf_file_key_management_filename__combined_var: '{{
+    mariadb_server__cnf_file_key_management_filename__host_var if (mariadb_server__cnf_file_key_management_filename__host_var | string | length) else
+    mariadb_server__cnf_file_key_management_filename__group_var if (mariadb_server__cnf_file_key_management_filename__group_var | string | length) else
+    mariadb_server__cnf_file_key_management_filename__dependent_var if (mariadb_server__cnf_file_key_management_filename__dependent_var | string | length) else
+    mariadb_server__cnf_file_key_management_filename__role_var
+  }}'
+
 mariadb_server__cnf_innodb_buffer_pool_size__dependent_var: ''
 mariadb_server__cnf_innodb_buffer_pool_size__group_var: ''
 mariadb_server__cnf_innodb_buffer_pool_size__host_var: ''
@@ -58,6 +102,72 @@ mariadb_server__cnf_innodb_buffer_pool_size__combined_var: '{{
     mariadb_server__cnf_innodb_buffer_pool_size__group_var if (mariadb_server__cnf_innodb_buffer_pool_size__group_var | string | length) else
     mariadb_server__cnf_innodb_buffer_pool_size__dependent_var if (mariadb_server__cnf_innodb_buffer_pool_size__dependent_var | string | length) else
     mariadb_server__cnf_innodb_buffer_pool_size__role_var
+  }}'
+
+mariadb_server__cnf_innodb_default_encryption_key_id__dependent_var: ''
+mariadb_server__cnf_innodb_default_encryption_key_id__group_var: ''
+mariadb_server__cnf_innodb_default_encryption_key_id__host_var: ''
+mariadb_server__cnf_innodb_default_encryption_key_id__role_var: ''
+mariadb_server__cnf_innodb_default_encryption_key_id__combined_var: '{{
+    mariadb_server__cnf_innodb_default_encryption_key_id__host_var if (mariadb_server__cnf_innodb_default_encryption_key_id__host_var | string | length) else
+    mariadb_server__cnf_innodb_default_encryption_key_id__group_var if (mariadb_server__cnf_innodb_default_encryption_key_id__group_var | string | length) else
+    mariadb_server__cnf_innodb_default_encryption_key_id__dependent_var if (mariadb_server__cnf_innodb_default_encryption_key_id__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_default_encryption_key_id__role_var
+  }}'
+
+mariadb_server__cnf_innodb_encrypt_log__dependent_var: ''
+mariadb_server__cnf_innodb_encrypt_log__group_var: ''
+mariadb_server__cnf_innodb_encrypt_log__host_var: ''
+mariadb_server__cnf_innodb_encrypt_log__role_var: ''
+mariadb_server__cnf_innodb_encrypt_log__combined_var: '{{
+    mariadb_server__cnf_innodb_encrypt_log__host_var if (mariadb_server__cnf_innodb_encrypt_log__host_var | string | length) else
+    mariadb_server__cnf_innodb_encrypt_log__group_var if (mariadb_server__cnf_innodb_encrypt_log__group_var | string | length) else
+    mariadb_server__cnf_innodb_encrypt_log__dependent_var if (mariadb_server__cnf_innodb_encrypt_log__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_encrypt_log__role_var
+  }}'
+
+mariadb_server__cnf_innodb_encrypt_tables__dependent_var: ''
+mariadb_server__cnf_innodb_encrypt_tables__group_var: ''
+mariadb_server__cnf_innodb_encrypt_tables__host_var: ''
+mariadb_server__cnf_innodb_encrypt_tables__role_var: ''
+mariadb_server__cnf_innodb_encrypt_tables__combined_var: '{{
+    mariadb_server__cnf_innodb_encrypt_tables__host_var if (mariadb_server__cnf_innodb_encrypt_tables__host_var | string | length) else
+    mariadb_server__cnf_innodb_encrypt_tables__group_var if (mariadb_server__cnf_innodb_encrypt_tables__group_var | string | length) else
+    mariadb_server__cnf_innodb_encrypt_tables__dependent_var if (mariadb_server__cnf_innodb_encrypt_tables__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_encrypt_tables__role_var
+  }}'
+
+mariadb_server__cnf_innodb_encrypt_temporary_tables__dependent_var: ''
+mariadb_server__cnf_innodb_encrypt_temporary_tables__group_var: ''
+mariadb_server__cnf_innodb_encrypt_temporary_tables__host_var: ''
+mariadb_server__cnf_innodb_encrypt_temporary_tables__role_var: ''
+mariadb_server__cnf_innodb_encrypt_temporary_tables__combined_var: '{{
+    mariadb_server__cnf_innodb_encrypt_temporary_tables__host_var if (mariadb_server__cnf_innodb_encrypt_temporary_tables__host_var | string | length) else
+    mariadb_server__cnf_innodb_encrypt_temporary_tables__group_var if (mariadb_server__cnf_innodb_encrypt_temporary_tables__group_var | string | length) else
+    mariadb_server__cnf_innodb_encrypt_temporary_tables__dependent_var if (mariadb_server__cnf_innodb_encrypt_temporary_tables__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_encrypt_temporary_tables__role_var
+  }}'
+
+mariadb_server__cnf_innodb_encryption_rotate_key_age__dependent_var: ''
+mariadb_server__cnf_innodb_encryption_rotate_key_age__group_var: ''
+mariadb_server__cnf_innodb_encryption_rotate_key_age__host_var: ''
+mariadb_server__cnf_innodb_encryption_rotate_key_age__role_var: ''
+mariadb_server__cnf_innodb_encryption_rotate_key_age__combined_var: '{{
+    mariadb_server__cnf_innodb_encryption_rotate_key_age__host_var if (mariadb_server__cnf_innodb_encryption_rotate_key_age__host_var | string | length) else
+    mariadb_server__cnf_innodb_encryption_rotate_key_age__group_var if (mariadb_server__cnf_innodb_encryption_rotate_key_age__group_var | string | length) else
+    mariadb_server__cnf_innodb_encryption_rotate_key_age__dependent_var if (mariadb_server__cnf_innodb_encryption_rotate_key_age__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_encryption_rotate_key_age__role_var
+  }}'
+
+mariadb_server__cnf_innodb_encryption_threads__dependent_var: ''
+mariadb_server__cnf_innodb_encryption_threads__group_var: ''
+mariadb_server__cnf_innodb_encryption_threads__host_var: ''
+mariadb_server__cnf_innodb_encryption_threads__role_var: ''
+mariadb_server__cnf_innodb_encryption_threads__combined_var: '{{
+    mariadb_server__cnf_innodb_encryption_threads__host_var if (mariadb_server__cnf_innodb_encryption_threads__host_var | string | length) else
+    mariadb_server__cnf_innodb_encryption_threads__group_var if (mariadb_server__cnf_innodb_encryption_threads__group_var | string | length) else
+    mariadb_server__cnf_innodb_encryption_threads__dependent_var if (mariadb_server__cnf_innodb_encryption_threads__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_encryption_threads__role_var
   }}'
 
 mariadb_server__cnf_innodb_file_per_table__dependent_var: ''
@@ -178,6 +288,17 @@ mariadb_server__cnf_performance_schema__combined_var: '{{
     mariadb_server__cnf_performance_schema__group_var if (mariadb_server__cnf_performance_schema__group_var | string | length) else
     mariadb_server__cnf_performance_schema__dependent_var if (mariadb_server__cnf_performance_schema__dependent_var | string | length) else
     mariadb_server__cnf_performance_schema__role_var
+  }}'
+
+mariadb_server__cnf_plugin_load_add__dependent_var: ''
+mariadb_server__cnf_plugin_load_add__group_var: ''
+mariadb_server__cnf_plugin_load_add__host_var: ''
+mariadb_server__cnf_plugin_load_add__role_var: ''
+mariadb_server__cnf_plugin_load_add__combined_var: '{{
+    mariadb_server__cnf_plugin_load_add__host_var if (mariadb_server__cnf_plugin_load_add__host_var | string | length) else
+    mariadb_server__cnf_plugin_load_add__group_var if (mariadb_server__cnf_plugin_load_add__group_var | string | length) else
+    mariadb_server__cnf_plugin_load_add__dependent_var if (mariadb_server__cnf_plugin_load_add__dependent_var | string | length) else
+    mariadb_server__cnf_plugin_load_add__role_var
   }}'
 
 mariadb_server__cnf_query_cache_limit__dependent_var: ''
@@ -303,6 +424,7 @@ mariadb_server__users__combined_var: '{{ (
       mariadb_server__users__host_var
     ) | linuxfabrik.lfops.combine_lod(unique_key=["username", "host"])
   }}'
+
 
 # -----------------------------------------------------------------------------
 
