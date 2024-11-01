@@ -1,3 +1,4 @@
+# note: only use `__role_var`s in here, to allow the user to change the values
 php__ini_date_timezone__role_var: 'Europe/Zurich'
 php__ini_default_socket_timeout__role_var: 10
 php__ini_display_errors__role_var: 'Off'

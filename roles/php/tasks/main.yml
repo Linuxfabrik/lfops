@@ -67,7 +67,7 @@
 - block:
 
   - name: 'Load default values for {{ php__installed_version }}'
-    ansible.builtin.include_vars: 'defaults/{{ php__installed_version }}.yml'
+    ansible.builtin.include_vars: 'vars/{{ php__installed_version }}.yml'
 
   - name: 'Deploy the PHP configs'
     ansible.builtin.template:
