@@ -2,3 +2,16 @@
   ansible.builtin.service:
     name: 'mariadb.service'
     state: 'restarted'
+  notify: 'mariadb_server: wait for port 3306 (for galera cluster)'
+  when:
+    - 'mariadb_server__run_galera_new_cluster is false'
+
+- name: 'mariadb_server: wait for port 3306 (for galera cluster)'
+  ansible.builtin.wait_for:
+    host: '127.0.0.1'
+    port: 3306
+    delay: 15
+    sleep: 5
+    timeout: 60
+  when:
+    - 'mariadb_server__cnf_wsrep_on is true'

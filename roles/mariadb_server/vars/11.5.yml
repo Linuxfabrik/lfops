@@ -1,9 +1,14 @@
 # note: only use `__role_var`s in here, to allow the user to change the values
+mariadb_server__cnf_bind_address__role_var: ''
+mariadb_server__cnf_binlog_format__role_var: 'MIXED'
 mariadb_server__cnf_bulk_insert_buffer_size__role_var: '8M'
 mariadb_server__cnf_character_set_server__role_var: 'utf8mb4'  # default: latin1
 mariadb_server__cnf_collation_server__role_var: 'utf8mb4_uca1400_ai_ci'  # default: latin1_swedish_ci
+mariadb_server__cnf_default_storage_engine__role_var: 'InnoDB'
 mariadb_server__cnf_expire_logs_days__role_var: 0.000000
+mariadb_server__cnf_innodb_autoinc_lock_mode__role_var: 1
 mariadb_server__cnf_innodb_buffer_pool_size__role_var: '128M'
+mariadb_server__cnf_innodb_doublewrite__role_var: 'ON'
 mariadb_server__cnf_innodb_file_per_table__role_var: 'ON'
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__role_var: 1
 mariadb_server__cnf_innodb_io_capacity__role_var: 200

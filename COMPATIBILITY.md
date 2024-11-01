@@ -83,7 +83,7 @@ login                                |    |    | x | x |       |       |       |
 logrotate                            |    |    | x | x |       |       |       | Fedora
 mailto_root                          |    |    | x | x |       |       |       |
 mailx                                | x  | x  | x | x |       |       |       | Fedora
-mariadb_server                       |    | x  | x | x |       |       |       |
+mariadb_server                       |    | x  | x | x |       |       |       | Galera on Debian is untested
 maxmind_geoip                        |    |    | x |   |       |       |       |
 minio_client                         |    |    | x |   |       |       |       |
 mirror                               |    |    | x | x |       |       |       |

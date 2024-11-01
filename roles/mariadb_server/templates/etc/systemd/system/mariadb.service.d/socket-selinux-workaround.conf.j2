@@ -1,7 +1,12 @@
 # {{ ansible_managed }}
-# 2024062102
+# 2024103101
 
 [Service]
+{# changing the context of mariadbd does not seem to work with galera.
+`WSREP: Failed to start mysqld for wsrep recovery: '... [Warning] Can't create test file '/var/lib/mysql/example.com.lower-test' (Errcode: 13 "Permission denied")`
+and `/usr/sbin/mariadbd: Cannot change uid/gid (errno: 1)`
+during systemctl start, causes the mariadb.service to fail #}
+{% if mariadb_server__cnf_wsrep_on is false %}
 ExecStartPre=-/bin/chcon -t mysqld_exec_t /usr/sbin/mariadbd
 # SELinux incorrectly labeled mariadbd (see https://jira.mariadb.org/browse/MDEV-30520)
 # The bug is present in the MariaDB Repo (here, SELinux rules are missing in the SELinux database), not at Red Hat.
@@ -9,6 +14,7 @@ ExecStartPre=-/bin/chcon -t mysqld_exec_t /usr/sbin/mariadbd
 # ls -Z /usr/sbin/mariadbd
 # Wrong: system_u:object_r:bin_t:s0 /usr/sbin/mariadbd
 # Correct: system_u:object_r:mysqld_exec_t:s0 /usr/sbin/mariadbd
+{% endif %}
 
 ExecStartPost=-/bin/chcon -t mysqld_var_run_t /var/lib/mysql/mysql.sock
 # This is a workaround for https://jira.mariadb.org/browse/MDEV-24941. This only occurs when using the official MariaDB Repository.

@@ -45,6 +45,7 @@ The role provides the `mariadb_server:upgrade` tag to update the MariaDB server.
 | `mariadb_server:dare`                | Deploys the keyfile for the [File Key Management Encryption Plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin/) and restarts MariaDB if ncecessary. |
 | `mariadb_server:database`            | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Create or delete mariadb databases |
 | `mariadb_server:dump`                | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `dnf -y install {{ mariadb_server__dump_mydumper_package }}`<br> * Deploy /usr/local/bin/mariadb-dump<br> * Deploy /etc/mariadb-dump.conf<br> * Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost<br> * Deploy /etc/systemd/system/mariadb-dump.service<br> * Deploy /etc/systemd/system/mariadb-dump.timer<br> * `systemctl enable mariadb-dump.timer --now` |
+| `mariadb_server:galera_new_cluster`  | Runs `galera_new_cluster`, but only if `mariadb_server__run_galera_new_cluster` is true. Use in combination with `--extra-vars='{"mariadb_server__run_galera_new_cluster": true}'` |
 | `mariadb_server:secure_installation` | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Remove all "root" users<br> * Secure installation: Remove anonymous users<br> * Secure installation: Remove test database<br> * Secure installation: Remove test database (privileges)<br> * Secure installation: Reload privilege tables |
 | `mariadb_server:state`               | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `systemctl enable/disable mariadb.service`<br> * `systemctl {{ mariadb_server__state[:-2] }} mariadb.service` |
 | `mariadb_server:sys_schema`          | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Show databases<br> * `wget https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz`<br> * `mkdir /tmp/mariadb-sys-schema`<br> * `tar xzvf /tmp/mariadb-sys-schema.tar.gz`<br> * `mysql --user "{{ mariadb_server__admin_user["username"] }}" --password="..." < ./sys_10.sql`<br> * `rm -rf /tmp/mariadb-sys-schema` |
@@ -142,11 +143,16 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 | Role Variable                                        | Documentation                                                                                      | Default Value                    |
 | -------------                                        | -------------                                                                                      | -------------                    |
+| `mariadb_server__cnf_bind_address__group_var` / `mariadb_server__cnf_bind_address__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bind_address) | `''` |
+| `mariadb_server__cnf_binlog_format__group_var` / `mariadb_server__cnf_binlog_format__host_var` | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#binlog_format) | `'MIXED'` |
 | `mariadb_server__cnf_bulk_insert_buffer_size__group_var` / `mariadb_server__cnf_bulk_insert_buffer_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bulk_insert_buffer_size) | `8M`                          |
 | `mariadb_server__cnf_character_set_server__group_var` / `mariadb_server__cnf_character_set_server__host_var`           | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#character_set_server) | 10.11-: `'utf8mb4'`, 11.1+: `'uca1400'`                      |
 | `mariadb_server__cnf_collation_server__group_var` / `mariadb_server__cnf_collation_server__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#collation_server) | 10.11-: `'utf8mb4_unicode_ci'`, 11.1+: `'utf8mb3=utf8mb3_uca1400_ai_ci,ucs2=ucs2_uca1400_ai_ci,utf8mb4=utf8mb4_uca1400_ai_ci,utf16=utf16_uca1400_ai_ci,utf32=utf32_uca1400_ai_ci'`           |
+| `mariadb_server__cnf_default_storage_engine__group_var` / `mariadb_server__cnf_default_storage_engine__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#default_storage_engine) | `'InnoDB'` |
 | `mariadb_server__cnf_expire_logs_days__group_var` / `mariadb_server__cnf_expire_logs_days__host_var`               | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#expire_logs_days) | `0.000000`                              |
+| `mariadb_server__cnf_innodb_autoinc_lock_mode__group_var` / `mariadb_server__cnf_innodb_autoinc_lock_mode__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_autoinc_lock_mode) | `1` |
 | `mariadb_server__cnf_innodb_buffer_pool_size__group_var` / `mariadb_server__cnf_innodb_buffer_pool_size__host_var`        | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_size) | `'128M'`                         |
+| `mariadb_server__cnf_innodb_doublewrite__group_var` / `mariadb_server__cnf_innodb_doublewrite__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_doublewrite) | `ON` |
 | `mariadb_server__cnf_innodb_file_per_table__group_var` / `mariadb_server__cnf_innodb_file_per_table__host_var`          | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table) | `'ON'` (Deprecated: MariaDB 11.0.1 )                           |
 | `mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var` / `mariadb_server__cnf_innodb_flush_log_at_trx_commit__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit) | `1`                              |
 | `mariadb_server__cnf_innodb_io_capacity__group_var` / `mariadb_server__cnf_innodb_io_capacity__host_var`             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_io_capacity) | `200`                            |
@@ -173,11 +179,16 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 Example:
 ```yaml
 # optional - cnf directives
+mariadb_server__cnf_bind_address__host_var: '0.0.0.0'
+mariadb_server__cnf_binlog_format__host_var: 'ROW'
 mariadb_server__cnf_bulk_insert_buffer_size__host_var: '8M'
 mariadb_server__cnf_character_set_server__host_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__host_var: 'utf8mb4_unicode_ci'
+mariadb_server__cnf_default_storage_engine__host_var: 'InnoDB'
 mariadb_server__cnf_expire_logs_days__host_var: 0.000000
+mariadb_server__cnf_innodb_autoinc_lock_mode__host_var: 2
 mariadb_server__cnf_innodb_buffer_pool_size__host_var: '128M'
+mariadb_server__cnf_innodb_doublewrite__host_var: 1
 mariadb_server__cnf_innodb_file_per_table__host_var: 'ON'
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__host_var: 1
 mariadb_server__cnf_innodb_io_capacity__host_var: 200
@@ -236,7 +247,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 Example:
 ```yaml
-# optional - cnf directives
+# optional - DARE directives
 mariadb_server__cnf_encrypt_binlog__host_var: 'ON'
 mariadb_server__cnf_encrypt_tmp_files__host_var: 'ON'
 mariadb_server__cnf_file_key_management_encryption_algorithm__host_var: 'AES_CTR'
@@ -251,6 +262,44 @@ mariadb_server__cnf_plugin_load_add__host_var: 'file_key_management'
 ```
 
 
+## Optional Role Variables - `mariadb_server__cnf_*` Config Directives for Galera
+
+Install the first node with `--extra-vars='{"mariadb_server__run_galera_new_cluster": true}'` to bootstrap the cluster. Then run the role against the remaining nodes to add them to the cluster.
+
+Set `mariadb_server__admin_user` to the same value for all nodes. Once the nodes are joined, users and databases will be shared, so they only need to be created on one of the nodes.
+
+For Galera to work, also set the following variables:
+```yaml
+mariadb_server__cnf_bind_address__group_var: '0.0.0.0'
+mariadb_server__cnf_binlog_format__group_var: 'ROW'
+mariadb_server__cnf_default_storage_engine__group_var: 'InnoDB'
+mariadb_server__cnf_innodb_autoinc_lock_mode__group_var: 2 # ensure the InnoDB locking mode for generating auto-increment values is set to interleaved lock mode
+mariadb_server__cnf_innodb_doublewrite__group_var: 'ON' # this is the default value, and should not be changed
+mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0 #  inconsistencies can always be fixed by recovering from another node
+```
+
+| Role Variable   | Documentation   | Default Value   |
+| -------------   | -------------   | -------------   |
+| `mariadb_server__cnf_wsrep_cluster_addresses` | List of strings. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_cluster_address). DNS names work as well, IPs are preferred for performance. | unset |
+| `mariadb_server__cnf_wsrep_cluster_name` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_cluster_name) | `'lfops_galera_cluster'` |
+| `mariadb_server__cnf_wsrep_node_address` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_node_address) | `'{{ ansible_facts["default_ipv4"]["address"] }}'` |
+| `mariadb_server__cnf_wsrep_on` | Boolean. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_on). Also installs the packages required for Galera. | `false` |
+| `mariadb_server__cnf_wsrep_provider_options` | [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_provider_options) | `'gcache.size=300M; gcache.page_size=300M'` |
+| `mariadb_server__cnf_wsrep_slave_threads` | Integer. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_slave_threads). Four slave threads can typically saturate one CPU core. | `'{{ 1 if ansible_facts["processor_nproc"] == 1 else (ansible_facts["processor_nproc"] - 1) * 4 }}'` |
+| `mariadb_server__run_galera_new_cluster` | Boolean. [mariadb.com](https://mariadb.com/kb/en/mariadbd-options/#-wsrep-new-cluster). Do not set in the inventory, use via `--extra-vars`. This bootstraps the Galera cluster. Only set this to `true` during the deployment of the first node, or when recovering / restarting a stopped cluster. | `false` |
+
+```yaml
+# optional - Galera directives
+mariadb_server__cnf_wsrep_cluster_addresses:
+  - 'node1.example.com'
+  - 'node2.example.com'
+  - 'node3.example.com'
+mariadb_server__cnf_wsrep_cluster_name: 'lfops_galera_cluster'
+mariadb_server__cnf_wsrep_node_address: '192.0.2.10'
+mariadb_server__cnf_wsrep_on: true
+mariadb_server__cnf_wsrep_provider_options: 'gcache.size=300M; gcache.page_size=300M'
+mariadb_server__cnf_wsrep_slave_threads: 4
+```
 
 
 ## Troubleshooting

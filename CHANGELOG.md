@@ -206,6 +206,9 @@ Role:tar
 
 ### Added
 
+Role:mariadb_server:
+* Added Galera cluster installation
+
 Role:glpi_agent
 * Added
 

@@ -41,7 +41,7 @@
         - 'mariadb-server'
       state: 'absent'
 
-  - name: 'Install latest mariadb-server'
+  - name: 'Install latest mariadb-server' # noqa package-latest (latest is necessary for upgrade)
     ansible.builtin.package:
       name:
         - 'mariadb-server'
@@ -75,6 +75,15 @@
       name:
         - 'mariadb-server'
       state: 'present'
+
+  - name: 'Optionally install galera-4 and rsync'
+    ansible.builtin.package:
+      name:
+        - 'galera-4'
+        - 'rsync'
+      state: 'present'
+    when:
+      - 'mariadb_server__cnf_wsrep_on is true'
 
   tags:
     - 'mariadb_server'
@@ -130,6 +139,13 @@
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 
+  - name: 'Temporarily disable wsrep_on during initial setup'
+    ansible.builtin.set_fact:
+      mariadb_server__cnf_wsrep_on_original_value: '{{ mariadb_server__cnf_wsrep_on }}'
+      mariadb_server__cnf_wsrep_on: false
+    when:
+      - 'mariadb_server__run_galera_new_cluster is true'
+
   - name: 'Deploy {{ mariadb_server__config_file }}'
     ansible.builtin.template:
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
@@ -138,6 +154,12 @@
       group: 'root'
       mode: 0o644
     notify: 'mariadb_server: systemctl restart mariadb'
+
+  - name: 'Reset value of wsrep_on'
+    ansible.builtin.set_fact:
+      mariadb_server__cnf_wsrep_on: '{{ mariadb_server__cnf_wsrep_on_original_value }}'
+    when:
+      - 'mariadb_server__run_galera_new_cluster is true'
 
   - name: 'mkdir -p /etc/systemd/system/mariadb.service.d/'
     ansible.builtin.file:
@@ -368,6 +390,29 @@
     - 'mariadb_server'
     - 'mariadb_server:configure'
     - 'mariadb_server:dump'
+
+
+# galera
+- block:
+
+  - name: 'Deploy {{ mariadb_server__config_file }}'
+    ansible.builtin.template:
+      src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
+      dest: '{{ mariadb_server__config_file }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Run galera_new_cluster' # noqa no-changed-when
+    ansible.builtin.command: 'galera_new_cluster'
+    tags:
+      - 'mariadb_server'
+      - 'mariadb_server:galera_new_cluster'
+
+  when:
+    - 'mariadb_server__run_galera_new_cluster is true'
+  tags:
+    - 'mariadb_server'
 
 
 # database management
