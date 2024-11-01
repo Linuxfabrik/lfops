@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024022301
+# 2024110101
 
 ### Welcome to the InfluxDB configuration file.
 
@@ -70,6 +70,12 @@ reporting-disabled = true
   # log any sensitive data contained within a query.
   # query-log-enabled = true
 
+  # It is possible to collect statistics of points written per-measurement and/or per-login.
+  # These can be accessed via the monitoring subsystem.
+  # ingress-metric-by-measurement-enabled = false
+  # ingress-metric-by-login-enabled = false
+
+
   # Provides more error checking. For example, SELECT INTO will err out inserting an +/-Inf value
   # rather than silently failing.
   # strict-error-handling = false
@@ -107,6 +113,10 @@ reporting-disabled = true
   # than 0 limits compactions to that value.  This setting does not apply
   # to cache snapshotting.
   # max-concurrent-compactions = 0
+
+  # MaxConcurrentDeletes is the maximum number of simultaneous DELETE calls on a shard
+  # The default is 1, and should be left unchanged for most users
+  # MaxConcurrentDeletes = 1
 
   # CompactThroughput is the rate limit in bytes per second that we
   # will allow TSM compactions to write to disk. Note that short bursts are allowed
@@ -178,6 +188,9 @@ reporting-disabled = true
   # discover slow or resource intensive queries.  Setting the value to 0 disables the slow query logging.
   log-queries-after = "{{ influxdb__conf_log_queries_after }}"
 
+  # Enables the logging of queries that are killed as a result of exceeding `query-timeout`
+  # log-timedout-queries = false
+
   # The maximum number of points a SELECT can process.  A value of 0 will make
   # the maximum point count unlimited.  This will only be checked every second so queries will not
   # be aborted immediately when hitting the limit.
@@ -190,6 +203,10 @@ reporting-disabled = true
   # The maximum number of group by time bucket a SELECT can create.  A value of zero will max the maximum
   # number of buckets unlimited.
   # max-select-buckets = 0
+
+  # Whether to print a list of running queries when a data node receives a SIGTERM (sent when a process
+  # exceeds a container memory limit, or by the kill command.
+  # termination-query-log = false
 
 ###
 ### [retention]
@@ -308,6 +325,10 @@ reporting-disabled = true
   # endpoints. This setting has no effect if auth-enabled is set to false.
   # ping-auth-enabled = false
 
+  # Enables authentication on prometheus remote read api. This setting has no
+  # effect if auth-enabled is set to false.
+  # prom-read-auth-enabled = false
+
   # Determines whether HTTPS is enabled.
   https-enabled = {{ (influxdb__conf_https is defined and influxdb__conf_https | length > 1) | string | lower }}
   {% if influxdb__conf_https is defined and influxdb__conf_https | length %}
@@ -371,7 +392,7 @@ reporting-disabled = true
 
 [logging]
   # Determines which log encoder to use for logs. Available options
-  # are auto, logfmt, and json. auto will use a more a more user-friendly
+  # are auto, logfmt, and json. auto will use a more user-friendly
   # output format if the output terminal is a TTY, but the format is not as
   # easily machine-readable. When the output is a non-TTY, auto will use
   # logfmt.
