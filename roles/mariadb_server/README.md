@@ -315,6 +315,11 @@ Q: `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, 
 A: Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role, or run the full `mariadb_server` playbook, not limited by some tags.
 
 
+Q: I always get `[Warning] Access denied for user 'root'@'localhost'` in mariadb.log when running this role.
+
+A: This is due to `check_implicit_admin: true`. This checks if MariaDB allows login as root/nopassword before trying the supplied credentials. If successful, the login_user/login_password passed will be ignored. This is especially needed for the first run of this role.
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)
