@@ -51,7 +51,7 @@ tags:
 # L(specifiers,https://python-semanticversion.readthedocs.io/en/latest/#requirement-specification). Multiple version
 # range specifiers can be set and are separated by ','
 dependencies:
-  - ansible.utils
+  'ansible.utils': '*'  # note: "*" selects the highest version available
 
 # The URL of the originating SCM repository
 repository: 'https://github.com/linuxfabrik/lfops'
