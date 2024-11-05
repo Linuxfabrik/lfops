@@ -1,5 +1,6 @@
 mariadb_server__cnf_wsrep_cluster_name: 'lfops_galera_cluster'
 mariadb_server__cnf_wsrep_node_address: '{{ ansible_facts["default_ipv4"]["address"] }}'
+mariadb_server__cnf_wsrep_node_name: '{{ ansible_facts["nodename"] }}'
 mariadb_server__cnf_wsrep_on: false
 mariadb_server__cnf_wsrep_provider_options: 'gcache.size=300M; gcache.page_size=300M'
 mariadb_server__cnf_wsrep_slave_threads: '{{ 1 if ansible_facts["processor_nproc"] == 1 else (ansible_facts["processor_nproc"] - 1) * 4 }}'

@@ -22,6 +22,8 @@ This role is compatible with the following MariaDB versions:
 
 The role provides the `mariadb_server:upgrade` tag to update the MariaDB server. The tag upgrades to the newest available version, therefore make sure to switch the module stream or update the repository (optionally using the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) role).
 
+By default, Ansible runs each task on all hosts affected by a play before starting the next task on any host, using 5 forks. This role manages one MariaDB host at a time (serially), e.g. to make cluster management as reliable and save as possible.
+
 
 ## Mandatory Requirements
 
@@ -283,6 +285,7 @@ mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0 #  inconsistenc
 | `mariadb_server__cnf_wsrep_cluster_addresses` | List of strings. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_cluster_address). DNS names work as well, IPs are preferred for performance. | unset |
 | `mariadb_server__cnf_wsrep_cluster_name` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_cluster_name) | `'lfops_galera_cluster'` |
 | `mariadb_server__cnf_wsrep_node_address` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_node_address) | `'{{ ansible_facts["default_ipv4"]["address"] }}'` |
+| `mariadb_server__cnf_wsrep_node_name` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_node_name) | `'{{ ansible_facts["nodename"] }}'` |
 | `mariadb_server__cnf_wsrep_on` | Boolean. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_on). Also installs the packages required for Galera. | `false` |
 | `mariadb_server__cnf_wsrep_provider_options` | [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_provider_options) | `'gcache.size=300M; gcache.page_size=300M'` |
 | `mariadb_server__cnf_wsrep_slave_threads` | Integer. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_slave_threads). Four slave threads can typically saturate one CPU core. | `'{{ 1 if ansible_facts["processor_nproc"] == 1 else (ansible_facts["processor_nproc"] - 1) * 4 }}'` |
@@ -291,11 +294,12 @@ mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0 #  inconsistenc
 ```yaml
 # optional - Galera directives
 mariadb_server__cnf_wsrep_cluster_addresses:
-  - 'node1.example.com'
-  - 'node2.example.com'
-  - 'node3.example.com'
+  - '192.0.2.10'
+  - '192.0.2.20'
+  - '192.0.2.30'
 mariadb_server__cnf_wsrep_cluster_name: 'lfops_galera_cluster'
 mariadb_server__cnf_wsrep_node_address: '192.0.2.10'
+mariadb_server__cnf_wsrep_node_name: 'db10'
 mariadb_server__cnf_wsrep_on: true
 mariadb_server__cnf_wsrep_provider_options: 'gcache.size=300M; gcache.page_size=300M'
 mariadb_server__cnf_wsrep_slave_threads: 4
