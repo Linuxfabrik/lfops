@@ -58,9 +58,11 @@ icingaweb2__url_host: 'monitoring.example.com'
 | `icingaweb2__database_name` | The name of the SQL database. | `'icingaweb2'` |
 | `icingaweb2__default_theme` | The application-wide default theme for the web interface. | `'Icinga'` |
 | `icingaweb2__groups__host_var` /<br> `icingaweb2__groups__group_var` | A list of dictionaries defining the available user groups for IcingaWeb2. Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/05-Authentication/#groups. Subkeys:<br> * `name`: Mandatory, string. The name of the user group.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `icingaweb2__navigation_host_actions_entries__host_var` /<br> `icingaweb2__navigation_host_actions_entries__group_var` | A list of dictionaries defining additional actions entries in the IcingaWeb2 host view. Subkeys:<br> * `name`: Mandatory, string. The name of the action.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `icingaweb2__navigation_host_actions_entries__host_var` /<br> `icingaweb2__navigation_host_actions_entries__group_var` | A list of dictionaries defining additional actions entries in the deprecated IcingaWeb2 Monitoring host view. Use `icingaweb2__navigation_icingadb_host_actions_entries__*_var` with IcingaDB. Subkeys:<br> * `name`: Mandatory, string. The name of the action.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `icingaweb2__navigation_icingadb_host_actions_entries__host_var` /<br> `icingaweb2__navigation_icingadb_host_actions_entries__group_var` | A list of dictionaries defining additional actions entries in the IcingaWeb2 IcingaDB host view. Subkeys:<br> * `name`: Mandatory, string. The name of the action.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `icingaweb2__navigation_icingadb_service_actions_entries__host_var` /<br> `icingaweb2__navigation_icingadb_service_actions_entries__group_var` | A list of dictionaries defining additional actions entries in the IcingaWeb2 IcingaDB service view. Subkeys:<br> * `name`: Mandatory, string. The name of the action.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `service_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `icingaweb2__navigation_menu_entries__host_var` /<br> `icingaweb2__navigation_menu_entries__group_var` | A list of dictionaries defining additional menu entries in the IcingaWeb2 navigation bar. Subkeys:<br> * `name`: Mandatory, string. The name of the navigation entry.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | IcingaWeb2 Database |
-| `icingaweb2__navigation_service_actions_entries__service_var` /<br> `icingaweb2__navigation_service_actions_entries__group_var` | A list of dictionaries defining additional actions entries in the IcingaWeb2 service view. Subkeys:<br> * `name`: Mandatory, string. The name of the action.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `service_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `icingaweb2__navigation_service_actions_entries__host_var` /<br> `icingaweb2__navigation_service_actions_entries__group_var` | A list of dictionaries defining additional actions entries in the IcingaWeb2 service view. Use `icingaweb2__navigation_icingadb_service_actions_entries__*_var` with IcingaDB. Subkeys:<br> * `name`: Mandatory, string. The name of the action.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `service_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `icingaweb2__resources__host_var` /<br> `icingaweb2__resources__group_var` | A list of dictionaries defining the resources for IcingaWeb2 (entities that provide data to IcingaWeb2). Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/04-Resources/#resources. Subkeys:<br> * `name`: Mandatory, string. The name of the resource.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `icingaweb2__roles__host_var` /<br> `icingaweb2__roles__group_var` | A list of dictionaries defining the user roles for IcingaWeb2. Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/06-Security/#security-roles. Subkeys:<br> * `name`: Mandatory, string. The name of the user role.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `icingaweb2__url_port` | The port of the URL for IcingaWeb2. Will be used for the Apache HTTPd vHost. | `80` |
@@ -86,7 +88,6 @@ icingaweb2__groups__host_var:
     resource: 'ldap'
     nested_group_search: '1'
     base_dn: 'DC=ad,DC=example,DC=com'
-icingaweb2__groups__group_var: []
 icingaweb2__navigation_host_actions_entries__host_var:
   - name: 'vSphereDB VM'
     type: 'host-action'
@@ -113,6 +114,62 @@ icingaweb2__navigation_host_actions_entries__host_var:
     users: '*'
     groups: '*'
     owner: 'admin-user'
+icingaweb2__navigation_icingadb_host_actions_entries__host_var:
+  - name: 'vSphereDB VM'
+    type: 'icingadb-host-action'
+    target: '_next'
+    url: 'vspheredb/vm?uuid=$host.vars.uuid$'
+    filter: 'host.vars.uuid~*'
+    icon: 'cloud'
+    users: '*'
+    groups: '*'
+    owner: 'admin-user'
+  - name: 'vSphereDB Host'
+    type: 'icingadb-host-action'
+    target: '_next'
+    url: 'vspheredb/host?uuid=$host.vars.esx_uuid$'
+    filter: 'host.vars.esx_uuid~*'
+    icon: 'cloud'
+    users: '*'
+    groups: '*'
+    owner: 'admin-user'
+  - name: 'LibreNMS'
+    type: 'icingadb-host-action'
+    target: '_blank'
+    url: 'https://librenms.example.com/device/$host.vars.librenms_device_id$'
+    filter: 'host.vars.librenms_device_id~*'
+    icon: 'librenms-alerts.png'
+    users: '*'
+    groups: '*'
+    owner: 'admin-user'
+icingaweb2__navigation_icingadb_service_actions_entries__host_var:
+  - name: 'vSphereDB VM'
+    type: 'icingadb-service-action'
+    target: '_next'
+    url: 'vspheredb/vm?uuid=$host.vars.uuid$'
+    filter: 'host.vars.uuid~*'
+    icon: 'cloud'
+    users: '*'
+    groups: '*'
+    owner: 'admin-user'
+  - name: 'vSphereDB Host'
+    type: 'icingadb-service-action'
+    target: '_next'
+    url: 'vspheredb/host?uuid=$host.vars.esx_uuid$'
+    filter: 'host.vars.esx_uuid~*'
+    icon: 'cloud'
+    users: '*'
+    groups: '*'
+    owner: 'admin-user'
+  - name: 'LibreNMS'
+    type: 'icingadb-service-action'
+    target: '_blank'
+    url: 'https://librenms.example.com/device/$host.vars.librenms_device_id$'
+    filter: 'host.vars.librenms_device_id~*'
+    icon: 'librenms-alerts.png'
+    users: '*'
+    groups: '*'
+    owner: 'admin-user'
 icingaweb2__navigation_menu_entries__host_var:
   - name: 'New link'
     users: '*'
@@ -122,7 +179,7 @@ icingaweb2__navigation_menu_entries__host_var:
     url: 'https://example.com/'
     icon: 'globe'
     owner: 'admin-user'
-icingaweb2__navigation_service_actions_entries__service_var:
+icingaweb2__navigation_service_actions_entries__host_var:
   - name: 'vSphereDB VM'
     type: 'service-action'
     target: '_next'

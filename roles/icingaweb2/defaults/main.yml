@@ -84,6 +84,30 @@ icingaweb2__navigation_host_actions_entries__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
+icingaweb2__navigation_icingadb_host_actions_entries__dependent_var: []
+icingaweb2__navigation_icingadb_host_actions_entries__group_var: []
+icingaweb2__navigation_icingadb_host_actions_entries__host_var: []
+icingaweb2__navigation_icingadb_host_actions_entries__role_var: []
+icingaweb2__navigation_icingadb_host_actions_entries__combined_var: '{{ (
+      icingaweb2__navigation_icingadb_host_actions_entries__role_var +
+      icingaweb2__navigation_icingadb_host_actions_entries__dependent_var +
+      icingaweb2__navigation_icingadb_host_actions_entries__group_var +
+      icingaweb2__navigation_icingadb_host_actions_entries__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+icingaweb2__navigation_icingadb_service_actions_entries__dependent_var: []
+icingaweb2__navigation_icingadb_service_actions_entries__group_var: []
+icingaweb2__navigation_icingadb_service_actions_entries__host_var: []
+icingaweb2__navigation_icingadb_service_actions_entries__role_var: []
+icingaweb2__navigation_icingadb_service_actions_entries__combined_var: '{{ (
+      icingaweb2__navigation_icingadb_service_actions_entries__role_var +
+      icingaweb2__navigation_icingadb_service_actions_entries__dependent_var +
+      icingaweb2__navigation_icingadb_service_actions_entries__group_var +
+      icingaweb2__navigation_icingadb_service_actions_entries__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
 icingaweb2__navigation_menu_entries__dependent_var: []
 icingaweb2__navigation_menu_entries__group_var: []
 icingaweb2__navigation_menu_entries__host_var: []
