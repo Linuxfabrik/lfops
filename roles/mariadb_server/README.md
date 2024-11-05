@@ -270,6 +270,8 @@ Install the first node with `--extra-vars='{"mariadb_server__run_galera_new_clus
 
 Set `mariadb_server__admin_user` to the same value for all nodes. Once the nodes are joined, users and databases will be shared, so they only need to be created on one of the nodes.
 
+It is easily possible to add further nodes at a later date (e.g. two additional nodes to an existing 3-node system).
+
 For Galera to work, also set the following variables:
 ```yaml
 mariadb_server__cnf_bind_address__group_var: '0.0.0.0'
