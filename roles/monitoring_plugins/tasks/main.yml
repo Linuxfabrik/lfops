@@ -194,11 +194,14 @@
 
   - name: 'Copy the custom plugins to /usr/lib64/nagios/plugins'
     ansible.builtin.copy:
-      src: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
-      dest: '/usr/lib64/nagios/'
+      src: '{{ item }}'
+      dest: '/usr/lib64/nagios/plugins/'
       mode: 'preserve'
       backup: true
     when: 'monitoring_plugins__custom_plugins.stat.exists'
+    # use loop for nicer diff
+    with_fileglob:
+      - '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins/*'
 
   # block
   when: 'ansible_facts["os_family"] != "Windows"'
