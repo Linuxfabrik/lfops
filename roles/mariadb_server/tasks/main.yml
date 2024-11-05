@@ -188,15 +188,6 @@
       owner: 'root'
       mode: 0o600
 
-  # prevent:
-  # /etc/cron.daily/logrotate:
-  # error: mysql:12 duplicate log entry for /var/log/mariadb/mariadb.log
-  # error: found error in file mysql, skipping
-  - name: 'rm -f /etc/logrotate.d/mysql'
-    ansible.builtin.file:
-      path: 'etc/logrotate.d/mysql'
-      state: 'absent'
-
   tags:
     - 'mariadb_server'
     - 'mariadb_server:configure'
