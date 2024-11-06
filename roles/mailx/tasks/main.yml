@@ -5,7 +5,7 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
-  - name: 'Install mailx package'
+  - name: 'Install {{ mailx__package }} package'
     ansible.builtin.package:
       name: '{{ mailx__package }}'
       state: 'present'
