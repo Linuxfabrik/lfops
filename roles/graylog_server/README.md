@@ -3,7 +3,6 @@
 This role installs and configures a [Graylog](https://www.graylog.org) server. Optionally, it allows the creation of a cluster setup.
 
 Currently supported versions:
-* 6.1
 * 5.0
 
 You can choose between `opensearch` (default) and `elasticsearch` for the searchengine. If you choose to use `opensearch`, Graylog Server 4.3+ is required.
@@ -22,7 +21,7 @@ Sizing of disks:
 
 If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_graylog_server.yml), the following is automatically done for you:
 
-* Install Java 17. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
+* Install Java. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
 * Install MongoDB. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
 * Install Opensearch (recommended) or Elasticsearch as a search engine. This can be done using the [linuxfabrik.lfops.opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/opensearch) or [linuxfabrik.lfops.elasticsearch_oss](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch_oss) role.
 * Enable the official [Graylog repository](https://docs.graylog.org/docs/centos). This can be done using the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) role.
@@ -42,7 +41,6 @@ If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/
 | Variable | Description |
 | -------- | ----------- |
 | `graylog_server__admin_user` | The main user account for the graylog administrator. Subkeys:<ul><li>`username`: Mandatory, string. Username</li><li>`password`: Mandatory, string. Password</li><li>`email`: Optional, string. Email. Defaults to `''`.</li></ul> |
-| `graylog_server__opensearch_login` | User account for accessing OpenSearch. Subkeys:<ul><li>`username`: Mandatory, string. Username</li><li>`password`: Mandatory, string. Password</li></ul> |
 | `graylog_server__password_secret` | You MUST set a secret that is used for password encryption and salting. The server refuses to start if this value is not set. The minimum length for `password_secret` is 16 characters. Use at least 64 characters. If you run multiple graylog-server nodes, make sure you use the same password_secret for all of them. |
 
 Example:
@@ -52,10 +50,7 @@ graylog_server__admin_user:
   username: 'graylog-admin'
   password: 'linuxfabrik'
   email: 'webmaster@example.com'
-graylog_server__opensearch_login:
-  username: 'graylog-user'
-  password: 'linuxfabrik'
-graylog_server__password_secret: 'linuxfabrik'  # The minimum length for `password_secret` is 16 characters :-)
+graylog_server__password_secret: 'linuxfabrik'
 ```
 
 

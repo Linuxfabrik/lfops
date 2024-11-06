@@ -31,19 +31,6 @@ If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/m
 | `opensearch:configure` | Deploys the config files and configures the security plugin |
 
 
-## Mandatory Role Variables
-
-| Variable | Description |
-| -------- | ----------- |
-| `opensearch__opensearch_initial_admin_password` | Mandatory, string. For new installations of OpenSearch 2.12 and later, you must define a custom admin password in order to set up an OpenSearch instance. |
-
-Example:
-```yaml
-# mandatory
-opensearch__opensearch_initial_admin_password: 'linuxfabrik'
-```
-
-
 ## Optional Role Variables - General
 
 | Variable | Description | Default Value |
@@ -110,7 +97,7 @@ opensearch__plugins_security_transport_certificate_key: '{{ lookup("ansible.buil
 opensearch__plugins_security_transport_enforce_hostname_verification: false
 opensearch__plugins_security_transport_resolve_hostname: true
 opensearch__service_enabled: false
-opensearch__version__host_var: '2.15.0'
+opensearch__version__host_var: '2.5.0'
 ```
 
 ## Optional Role Variables - TLS Certificate Generation

@@ -12,12 +12,6 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
-Role:mariadb_server:
-* Fixed bug where the DARE variables were always overwritten by their default. Due to this, the variables now need to be suffixed with `__host_var` or `__group_var`. Have a look at the role's README.
-
-Role:opensearch
-* For new installations of OpenSearch 2.12 and later, you must define a custom admin password in `opensearch__opensearch_initial_admin_password` in order to set up an OpenSearch instance.
-
 Role:postfix:
 * now completely templates the whole config file. beware when running against existing hosts
 
