@@ -1,0 +1,2 @@
+icingaweb2_module_reporting__icingaweb2_owner: 'apache'
+icingaweb2_module_reporting__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'

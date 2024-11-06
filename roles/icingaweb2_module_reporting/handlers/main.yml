@@ -1,0 +1,3 @@
+- name: 'icingaweb2_module_reporting: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

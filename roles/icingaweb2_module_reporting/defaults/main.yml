@@ -1,0 +1,30 @@
+icingaweb2_module_reporting__database_host: 'localhost'
+icingaweb2_module_reporting__database_name: 'icinga_reporting'
+icingaweb2_module_reporting__service_enabled: true
+
+# -----------------------------------------------------------------------------
+
+icingaweb2_module_reporting__icingaweb2__resources__dependent_var:
+  - name: '{{ icingaweb2_module_reporting__database_name }}'
+    type: 'db'
+    db: 'mysql'
+    host: '{{ icingaweb2_module_reporting__database_host }}'
+    port: 3306
+    dbname: '{{ icingaweb2_module_reporting__database_name }}'
+    username: '{{ icingaweb2_module_reporting__database_login["username"] }}'
+    password: '{{ icingaweb2_module_reporting__database_login["password"] }}'
+    charset: 'utf8mb4'
+
+icingaweb2_module_reporting__mariadb_server__databases__dependent_var:
+  - name: '{{ icingaweb2_module_reporting__database_name }}'
+    collation: 'utf8_general_ci'
+    encoding: 'utf8'
+    state: 'present'
+
+icingaweb2_module_reporting__mariadb_server__users__dependent_var:
+  - username: '{{ icingaweb2_module_reporting__database_login["username"] }}'
+    password: '{{ icingaweb2_module_reporting__database_login["password"] }}'
+    host: '{{ icingaweb2_module_reporting__database_host }}'
+    priv:
+      - '{{ icingaweb2_module_reporting__database_name | replace("_", "\_") | replace("%", "\%") }}.*:SELECT,INSERT,UPDATE,DELETE,DROP,CREATE,ALTER,CREATE VIEW,INDEX,EXECUTE'
+    state: 'present'

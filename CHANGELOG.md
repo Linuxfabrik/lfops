@@ -200,6 +200,9 @@ Role:tar
 
 ### Added
 
+Role:icingaweb2_module_reporting
+* Added
+
 Role:mariadb_server:
 * Added Galera cluster installation
 

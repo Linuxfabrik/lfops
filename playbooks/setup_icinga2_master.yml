@@ -33,6 +33,8 @@
     setup_icinga2_master__icingaweb2_module_jira__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_jira__skip_role | d(true) }}'
     setup_icinga2_master__icingaweb2_module_monitoring__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2_module_monitoring__skip_injections | d(setup_icinga2_master__icingaweb2_module_monitoring__skip_role__internal_var) }}'
     setup_icinga2_master__icingaweb2_module_monitoring__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_monitoring__skip_role | d(true) }}'
+    setup_icinga2_master__icingaweb2_module_reporting__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2_module_reporting__skip_injections | d(setup_icinga2_master__icingaweb2_module_reporting__skip_role__internal_var) }}'
+    setup_icinga2_master__icingaweb2_module_reporting__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_reporting__skip_role | d(true) }}'
     setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections | d(setup_icinga2_master__icingaweb2_module_vspheredb__skip_role__internal_var) }}'
     setup_icinga2_master__icingaweb2_module_vspheredb__skip_role__internal_var: '{{ setup_icinga2_master__icingaweb2_module_vspheredb__skip_role | d(true) }}'
     setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var: '{{ setup_icinga2_master__icingaweb2_module_x509__skip_injections | d(setup_icinga2_master__icingaweb2_module_x509__skip_role__internal_var) }}'
@@ -101,6 +103,7 @@
       mariadb_server__databases__dependent_var: '{{
           (not setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections__internal_var) | ternary(icingaweb2_module_vspheredb__mariadb_server__databases__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__mariadb_server__databases__dependent_var, []) +
+          (not setup_icinga2_master__icingaweb2_module_reporting__skip_injections__internal_var) | ternary(icingaweb2_module_reporting__mariadb_server__databases__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var) | ternary(icingaweb2_module_director__mariadb_server__databases__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__mariadb_server__databases__dependent_var, []) +
           (not setup_icinga2_master__icingadb__skip_injections__internal_var) | ternary(icingadb__mariadb_server__databases__dependent_var, []) +
@@ -109,6 +112,7 @@
       mariadb_server__users__dependent_var: '{{
           (not setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections__internal_var) | ternary(icingaweb2_module_vspheredb__mariadb_server__users__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__mariadb_server__users__dependent_var, []) +
+          (not setup_icinga2_master__icingaweb2_module_reporting__skip_injections__internal_var) | ternary(icingaweb2_module_reporting__mariadb_server__users__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var) | ternary(icingaweb2_module_director__mariadb_server__users__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__mariadb_server__users__dependent_var, []) +
           (not setup_icinga2_master__icingadb__skip_injections__internal_var) | ternary(icingadb__mariadb_server__users__dependent_var, []) +
@@ -207,6 +211,7 @@
           (not setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections__internal_var) | ternary(icingaweb2_module_vspheredb__icingaweb2__resources__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__icingaweb2__resources__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_monitoring__skip_injections__internal_var) | ternary(icingaweb2_module_monitoring__icingaweb2__resources__dependent_var, []) +
+          (not setup_icinga2_master__icingaweb2_module_reporting__skip_injections__internal_var) | ternary(icingaweb2_module_reporting__icingaweb2__resources__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var) | ternary(icingaweb2_module_director__icingaweb2__resources__dependent_var, []) +
           (not setup_icinga2_master__icingadb_web__skip_injections__internal_var) | ternary(icingadb_web__icingaweb2__resources__dependent_var, [])
         }}'
@@ -273,6 +278,10 @@
     - role: 'linuxfabrik.lfops.icingaweb2_module_monitoring'
       when:
         - 'not setup_icinga2_master__icingaweb2_module_monitoring__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.icingaweb2_module_reporting'
+      when:
+        - 'not setup_icinga2_master__icingaweb2_module_reporting__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_businessprocess'
       when:

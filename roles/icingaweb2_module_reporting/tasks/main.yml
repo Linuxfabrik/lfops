@@ -1,0 +1,101 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  - name: 'mkdir -p /etc/icingaweb2/modules/reporting'
+    ansible.builtin.file:
+      path: '/etc/icingaweb2/modules/reporting'
+      state: 'directory'
+      owner: '{{ icingaweb2_module_reporting__icingaweb2_owner }}'
+      group: 'icingaweb2'
+      mode: 0o2770
+
+  - name: 'mkdir -p /usr/share/icingaweb2/modules/reporting'
+    ansible.builtin.file:
+      path: '/usr/share/icingaweb2/modules/reporting'
+      state: 'directory'
+      owner: '{{ icingaweb2_module_reporting__icingaweb2_owner }}'
+      group: 'icingaweb2'
+      mode: 0o755
+
+  - name: 'curl https://github.com/Icinga/icingaweb2-module-reporting/archive/{{ icingaweb2_module_reporting__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://github.com/Icinga/icingaweb2-module-reporting/archive/{{ icingaweb2_module_reporting__version }}.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz to /tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+
+  - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/reporting /tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+      dest: '/usr/share/icingaweb2/modules/reporting'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'rm -f /tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+    ansible.builtin.file:
+      path: '/tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+      state: 'absent'
+
+  - name: 'icingacli module enable reporting'
+    ansible.builtin.command: 'icingacli module enable reporting'
+    args:
+      creates: '/etc/icingaweb2/enabledModules/reporting'
+
+  - name: 'Deploy /etc/icingaweb2/modules/reporting/config.ini'
+    ansible.builtin.template:
+      src: 'etc/icingaweb2/modules/reporting/config.ini.j2'
+      dest: '/etc/icingaweb2/modules/reporting/config.ini'
+      owner: '{{ icingaweb2_module_reporting__icingaweb2_owner }}'
+      group: 'icingaweb2'
+      mode: 0o664
+
+  - name: 'Check if the reporting tables exist'
+    community.mysql.mysql_query:
+      login_user: '{{ icingaweb2_module_reporting__database_login["username"] }}'
+      login_password: '{{ icingaweb2_module_reporting__database_login["password"] }}'
+      login_host: '{{ icingaweb2_module_reporting__database_host }}'
+      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary(icingaweb2_module_reporting__mysql_login_unix_socket, omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      login_db: '{{ icingaweb2_module_reporting__database_name }}'
+      query: 'SHOW TABLES LIKE "config";'
+    register: 'icingaweb2_module_reporting__table_exists_result'
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'import schema for reporting database'
+    community.mysql.mysql_db:
+      login_user: '{{ icingaweb2_module_reporting__database_login["username"] }}'
+      login_password: '{{ icingaweb2_module_reporting__database_login["password"] }}'
+      login_host: '{{ icingaweb2_module_reporting__database_host }}'
+      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary(icingaweb2_module_reporting__mysql_login_unix_socket, omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      name: '{{ icingaweb2_module_reporting__database_name }}'
+      state: 'import'
+      target: '/usr/share/icingaweb2/modules/reporting/schema/mysql.schema.sql'
+    when:
+      # this module is not idempotent when state is import, and will import the dump file each time if run more than once. therefore, we check the existence manually before
+      - 'icingaweb2_module_reporting__table_exists_result["rowcount"][0] == 0'
+
+  - name: 'cp /usr/share/icingaweb2/modules/reporting/config/systemd/icinga-reporting.service /etc/systemd/system/'
+    ansible.builtin.copy:
+      src: '/usr/share/icingaweb2/modules/reporting/config/systemd/icinga-reporting.service'
+      dest: '/etc/systemd/system/'
+      remote_src: true
+    notify: 'icingaweb2_module_reporting: systemctl daemon-reload'
+
+  - name: 'systemctl {{ icingaweb2_module_reporting__service_enabled | bool | ternary("enable", "disable") }} --now icinga-reporting.service'
+    ansible.builtin.service:
+      name: 'icinga-reporting.service'
+      enabled: '{{ icingaweb2_module_reporting__service_enabled }}'
+      state: '{{ icingaweb2_module_reporting__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'icingaweb2_module_reporting'

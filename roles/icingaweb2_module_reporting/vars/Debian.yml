@@ -1,0 +1,2 @@
+icingaweb2_module_reporting__icingaweb2_owner: 'www-data'
+icingaweb2_module_reporting__mysql_login_unix_socket: '/run/mysqld/mysqld.sock'
