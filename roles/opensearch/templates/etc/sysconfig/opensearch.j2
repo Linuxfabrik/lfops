@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023031901
+# 2024110601
 
 ################################
 # OpenSearch
@@ -22,7 +22,7 @@ OPENSEARCH_PATH_CONF=/etc/opensearch
 PID_DIR=/var/run/opensearch
 
 # Additional Java OPTS
-OPENSEARCH_JAVA_OPTS="-Djava.io.tmpdir=/usr/share/opensearch"
+OPENSEARCH_JAVA_OPTS="-Djava.io.tmpdir=/tmp"
 
 # Configure restart on package upgrade (true, every other setting will lead to not restarting)
 #RESTART_ON_UPGRADE=true

@@ -5,7 +5,8 @@
       name:
         - 'opensearch{{ (opensearch__version__combined_var | length) | ternary("-" ~ opensearch__version__combined_var, "") }}'
       state: 'present'
-
+    environment:
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: '{{ opensearch__opensearch_initial_admin_password }}'
   tags:
     - 'opensearch'
 
@@ -219,7 +220,12 @@
       path: '/tmp/opensearch-certs/output-{{ inventory_hostname }}'
       state: 'directory'
 
-  - name: '/tmp/opensearch-certs/tools/sgtlstool.sh ...'
+  - name: >-
+      /tmp/opensearch-certs/tools/sgtlstool.sh
+      --config /tmp/opensearch-certs//config/{{ inventory_hostname }}-tlsconfig.yml
+      --create-ca
+      --create-cert
+      --target /tmp/opensearch-certs/output-{{ inventory_hostname }}
     ansible.builtin.command: >-
       /tmp/opensearch-certs/tools/sgtlstool.sh
       --config /tmp/opensearch-certs//config/{{ inventory_hostname }}-tlsconfig.yml
