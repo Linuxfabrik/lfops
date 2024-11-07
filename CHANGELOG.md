@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:graylog_server
+* Only supports Graylog 6.1+ (Graylog Data Node based installations). Currently no more suppport für dedicated OpenSearch or Elasticsearch. Renamed `graylog_server__admin_user` to `graylog_server__root_user`.
+
 Role:opensearch
 * For new installations of OpenSearch 2.12 and later, you must define a custom admin password in `opensearch__opensearch_initial_admin_password` in order to set up an OpenSearch instance.
 
@@ -202,6 +205,9 @@ Role:tar
 
 
 ### Added
+
+Role:graylog_datanode
+* Added
 
 Role:icingaweb2_module_reporting
 * Added
