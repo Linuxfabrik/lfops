@@ -1,0 +1,57 @@
+- name: 'Playbook linuxfabrik.lfops.setup_graylog_datanode'
+  hosts:
+    - 'lfops_setup_graylog_datanode'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_graylog_datanode__skip_policycoreutils | default(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+
+    - role: 'linuxfabrik.lfops.python_venv'
+      python_venv__venvs__dependent_var: '{{
+          mongodb__python_venv__venvs__dependent_var
+        }}'
+      when:
+        - 'not setup_graylog_datanode__skip_python_venv | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_mongodb'
+      when:
+        - 'not setup_graylog_datanode__skip_repo_mongodb | d(false)'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ graylog_datanode__kernel_settings__sysctl__dependent_var | d([]) }}'
+      kernel_settings__transparent_hugepages__dependent_var: "{{ graylog_datanode__kernel_settings__transparent_hugepages__dependent_var | d('never') }}"
+      when:
+        - 'not setup_graylog_datanode__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.mongodb'
+      when:
+        - 'not setup_graylog_datanode__skip_mongodb | default(false)'
+
+    - role: 'linuxfabrik.lfops.repo_graylog'
+      when:
+        - 'not setup_graylog_datanode__skip_repo_graylog | d(false)'
+
+    - role: 'linuxfabrik.lfops.graylog_datanode'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

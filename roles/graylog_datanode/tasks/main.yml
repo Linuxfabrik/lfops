@@ -1,0 +1,82 @@
+- block:
+
+  - name: 'Install graylog-datanode'
+    ansible.builtin.package:
+      name:
+        - 'graylog-datanode'
+      state: 'present'
+
+  tags:
+    - 'graylog_datanode'
+
+
+- block:
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get Graylog Data Node version'
+    ansible.builtin.set_fact:
+      graylog_datanode__installed_version: '{{ ansible_facts["packages"]["graylog-datanode"][0]["version"] | regex_replace("\.\d+$", "") }}'
+
+  - name: 'Deploy /etc/graylog/datanode/datanode.conf (version: {{ graylog_datanode__installed_version[:3] }})'
+    ansible.builtin.template:
+      src: 'etc/graylog/datanode/{{ graylog_datanode__installed_version[:3] }}-datanode.conf.j2'
+      dest: '/etc/graylog/datanode/datanode.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'graylog: restart graylog-datanode'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/graylog/datanode/datanode.conf'
+
+  - name: 'Deploy /etc/graylog/datanode/jvm.options'
+    ansible.builtin.template:
+      src: 'etc/graylog/datanode/jvm.options.j2'
+      dest: '/etc/graylog/datanode/jvm.options'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'graylog: restart graylog-datanode'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/graylog/datanode/jvm.options'
+
+  tags:
+    - 'graylog_datanode'
+    - 'graylog_datanode:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ graylog_datanode__service_enabled | bool | ternary("enable", "disable") }} --now graylog-datanode.service'
+    ansible.builtin.systemd:
+      name: 'graylog-datanode.service'
+      enabled: '{{ graylog_datanode__service_enabled }}'
+      state: '{{ graylog_datanode__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'graylog_datanode'
+    - 'graylog_datanode:state'
+
+
+- block:
+
+  - name: 'Wait for port {{ graylog_datanode__datanode_http_port }} to become open on the host'
+    ansible.builtin.wait_for:
+      host: '{{ graylog_datanode__bind_address }}'
+      port: '{{ graylog_datanode__datanode_http_port }}'
+      delay: 5
+
+  tags:
+    - 'graylog_datanode'
