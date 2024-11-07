@@ -1,4 +1,5 @@
 # Ansible Role linuxfabrik.lfops.dnf_versionlock
+
 This role installs and configures the [dnf versionlock plugin](https://dnf-plugins-core.readthedocs.io/en/latest/versionlock.html).
 
 Hints:
@@ -23,7 +24,7 @@ Example:
 ```yaml
 # mandatory
 dnf_versionlock__versionlocks:
-  - 'enterprise-search-0:8.7.*' # pin to 8.7.x, only allowing patch updates. only works on RHEL8
+  - 'enterprise-search-0:8.7.*' # pin to 8.7.x, only allowing patch updates; only works on RHEL8
 ```
 
 
