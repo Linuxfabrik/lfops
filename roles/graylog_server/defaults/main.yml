@@ -8,24 +8,55 @@ graylog_server__service_enabled: true
 graylog_server__stale_leader_timeout_ms: 2000
 graylog_server__timezone: 'Europe/Zurich'
 
+graylog_server__system_default_index_set:
+  can_be_default: true
+  creation_date: '{{ ansible_date_time.iso8601 }}'
+  description: 'One index per day; 365 indices max'
+  field_type_refresh_interval: 5000
+  index_analyzer: 'standard'
+  index_optimization_disabled: false
+  index_optimization_max_num_segments: 1
+  index_prefix: 'lfops-default'
+  replicas: 0
+  retention_strategy:
+    max_number_of_indices: 365
+    type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
+  retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
+  rotation_strategy:
+    rotation_period: 'P1D'
+    rotate_empty_index_set: false
+    type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
+  rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
+  shards: 4
+  title: 'Linuxfabrik Index Set (managed by Ansible - do not edit)'
+  writable: true
+
 graylog_server__system_inputs:
   - configuration:
       bind_address: '0.0.0.0'
       number_worker_threads: 4
+      override_source: ''
       port: 5044
       recv_buffer_size: 1048576
+      tcp_keepalive: false
+      tls_cert_file: ''
+      tls_client_auth: 'disabled'
+      tls_client_auth_cert_file: ''
+      tls_enable: false
+      tls_key_file: ''
+      tls_key_password: ''
     global: true
-    title: 'Beats (5044/UDP - managed by Ansible - do not edit)'
-    type: 'org.graylog2.inputs.gelf.udp.GELFUDPInput'
+    title: 'Beats (5044/TCP - managed by Ansible - do not edit)'
+    type: 'org.graylog.plugins.beats.Beats2Input'
   - configuration:
       bind_address: '0.0.0.0'
       decompress_size_limit: 8388608
       max_message_size: 2097152
-      number_worker_threads: 2
+      number_worker_threads: 4
       override_source: ''
       port: 12201
       recv_buffer_size: 1048576
-      tcp_keepalive: true
+      tcp_keepalive: false
       tls_cert_file: ''
       tls_client_auth: 'disabled'
       tls_client_auth_cert_file: ''
@@ -39,7 +70,7 @@ graylog_server__system_inputs:
   - configuration:
       bind_address: '0.0.0.0'
       decompress_size_limit: 8388608
-      number_worker_threads: 2
+      number_worker_threads: 4
       override_source: ''
       port: 12201
       recv_buffer_size: 1048576
@@ -52,7 +83,7 @@ graylog_server__system_inputs:
       decompress_size_limit: 8388608
       expand_structured_data: false
       force_rdns: false
-      number_worker_threads: 2
+      number_worker_threads: 4
       override_source: ''
       port: 1514
       recv_buffer_size: 1048576
@@ -60,29 +91,6 @@ graylog_server__system_inputs:
     global: true
     title: 'Syslog (1514/UDP - managed by Ansible - do not edit)'
     type: 'org.graylog2.inputs.syslog.udp.SyslogUDPInput'
-
-graylog_server__system_default_index_set:
-  can_be_default: true
-  creation_date: '{{ ansible_date_time.iso8601 }}'
-  description: 'One index per day; 365 indices max'
-  field_type_refresh_interval: 5000
-  index_analyzer: 'standard'
-  index_optimization_disabled: false
-  index_optimization_max_num_segments: 1
-  index_prefix: 'lfops-default'
-  replicas: 0
-  retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
-  retention_strategy:
-    max_number_of_indices: 365
-    type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
-  rotation_strategy:
-    rotation_period: 'P1D'
-    rotate_empty_index_set: false
-    type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
-  rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
-  shards: 4
-  title: 'Linuxfabrik Index Set (managed by Ansible - do not edit)'
-  writable: true
 
 # ---------------------------------------------------
 
