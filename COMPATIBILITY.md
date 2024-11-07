@@ -43,6 +43,7 @@ glances                              |    |    | x | x |       |       |       |
 grafana                              |    |    | x | x |       |       |       |
 grafana_grizzly                      |    |    | x | x |       |       |       |
 grav                                 |    |    | x |   |       |       |       |
+graylog_datanode                     |    |    | x | x |       |       |       |
 graylog_server                       | x  |    | x |   |       |       |       |
 haveged                              |    |    | x | x |       |       |       |
 hetzner_vm                           |    |    |   |   |       |       |       | Fedora 35+
