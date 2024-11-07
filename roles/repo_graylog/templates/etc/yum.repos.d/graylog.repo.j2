@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024050101
+# 2024110701
 
 # https://docs.graylog.org/docs/operating-system-packages
 [graylog-{{ repo_graylog__version }}]
@@ -7,11 +7,10 @@ name=graylog-{{ repo_graylog__version }}
 {% if repo_graylog__mirror_url is defined and repo_graylog__mirror_url | length %}
 baseurl={{ repo_graylog__mirror_url }}/graylog/repo/el/stable/{{ repo_graylog__version }}/$basearch/
 {% else %}
-baseurl=https://packages.graylog2.org/repo/el/stable/{{ repo_graylog__version }}/$basearch/
+baseurl=https://downloads.graylog.org/repo/el/stable/{{ repo_graylog__version }}/$basearch/
 {% endif %}
 gpgcheck=1
 repo_gpgcheck=0
-#gpgkey=https://raw.githubusercontent.com/Graylog2/fpm-recipes/{{ repo_graylog__version }}/recipes/graylog-repository/files/rpm/RPM-GPG-KEY-graylog
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-graylog
 {% if repo_graylog__basic_auth_login is defined and repo_graylog__basic_auth_login | length %}
 username={{ repo_graylog__basic_auth_login["username"] }}
