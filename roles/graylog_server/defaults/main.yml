@@ -1,21 +1,7 @@
-graylog_server__cacerts_imports__dependent_var: []
-graylog_server__cacerts_imports__group_var: []
-graylog_server__cacerts_imports__host_var: []
-graylog_server__cacerts_imports__role_var: []
-graylog_server__cacerts_imports__combined_var: '{{ (
-      graylog_server__cacerts_imports__role_var +
-      graylog_server__cacerts_imports__dependent_var +
-      graylog_server__cacerts_imports__group_var +
-      graylog_server__cacerts_imports__host_var
-    ) | linuxfabrik.lfops.combine_lod
-  }}'
-
-graylog_server__elasticsearch_hosts:
-  - 'http://127.0.0.1:9200'
 graylog_server__http_bind_address: '127.0.0.1'
 graylog_server__http_bind_port: 9000
 graylog_server__is_leader: true
-graylog_server__mongodb_uri: 'mongodb://localhost/graylog'
+graylog_server__mongodb_uri: 'mongodb://127.0.0.1/graylog'
 graylog_server__opts: '-Xms1g -Xmx1g -server -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow'
 graylog_server__plugins: []
 graylog_server__service_enabled: true
@@ -100,21 +86,7 @@ graylog_server__system_default_index_set:
 
 # ---------------------------------------------------
 
-graylog_server__apps__apps__dependent_var:
-  - name: 'tar'
-
 graylog_server__kernel_settings__transparent_hugepages__dependent_var: 'never'
-
-graylog_server__elasticsearch_oss__action_auto_create_index__dependent_var: false
-graylog_server__elasticsearch_oss__cluster_name__dependent_var: 'graylog'
-
-graylog_server__opensearch__action_auto_create_index__dependent_var: false
-graylog_server__opensearch__cluster_name__dependent_var: 'graylog'
-graylog_server__opensearch__internal_users__dependent_var:
-  - username: '{{ graylog_server__opensearch_login["username"] }}'
-    password: '{{ graylog_server__opensearch_login["password"] }}'
-    backend_roles:
-      - 'admin' # could maybe be refined in the future, but there is no documentation on the required permissions
 
 graylog_server__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'

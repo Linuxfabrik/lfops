@@ -29,11 +29,6 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
 
-    - role: 'linuxfabrik.lfops.apps'
-      apps__apps__dependent_var: "{{ graylog_server__apps__apps__dependent_var }}"
-      when:
-        - 'not setup_graylog_server__skip_java | default(false)'
-
     - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var: '{{
           mongodb__python_venv__venvs__dependent_var
@@ -54,37 +49,11 @@
       when:
         - 'not setup_graylog_server__skip_mongodb | default(false)'
 
-    - role: 'linuxfabrik.lfops.repo_elasticsearch_oss'
-      when:
-        - 'not setup_graylog_server__skip_repo_elasticsearch_oss | default(true)'
-
-    - role: 'linuxfabrik.lfops.elasticsearch_oss'
-      elasticsearch_oss__cluster_name__dependent_var: '{{ graylog_server__elasticsearch_oss__cluster_name__dependent_var }}'
-      elasticsearch_oss__action_auto_create_index__dependent_var: '{{ graylog_server__elasticsearch_oss__action_auto_create_index__dependent_var }}'
-      when:
-        - 'not setup_graylog_server__skip_elasticsearch_oss | default(true)'
-
-    - role: 'linuxfabrik.lfops.repo_opensearch'
-      when:
-        - 'not setup_graylog_server__skip_repo_opensearch | default(false)'
-
-    - role: 'linuxfabrik.lfops.opensearch'
-      opensearch__action_auto_create_index__dependent_var: '{{ graylog_server__opensearch__action_auto_create_index__dependent_var }}'
-      opensearch__cluster_name__dependent_var: '{{ graylog_server__opensearch__cluster_name__dependent_var }}'
-      opensearch__internal_users__dependent_var: '{{
-          graylog_server__opensearch__internal_users__dependent_var
-        }}'
-      when:
-        - 'not setup_graylog_server__skip_opensearch | default(false)'
-
     - role: 'linuxfabrik.lfops.repo_graylog'
       when:
         - 'not setup_graylog_server__skip_repo_graylog | d(false)'
 
     - role: 'linuxfabrik.lfops.graylog_server'
-      graylog_server__cacerts_imports__dependent_var: '{{
-          opensearch__graylog_server__cacerts_imports__dependent_var
-        }}'
 
 
   post_tasks:

@@ -1,4 +1,1 @@
-graylog_server__apps__apps__dependent_var:
-  - name: 'java-17-openjdk'
-  - name: 'tar'
 graylog_server__opts_file: '/etc/sysconfig/graylog-server'
