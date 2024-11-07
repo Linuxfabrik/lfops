@@ -66,7 +66,7 @@ opensearch__generate_certs_nodes:
     ip: '192.0.2.10'
 ```
 
-Run: `ansible-playbook --inventory=131 linuxfabrik.lfops.setup_graylog_server --tags=opensearch:generate_certs --limit=...`
+Run: `ansible-playbook --inventory=myinv linuxfabrik.lfops.setup_graylog_server --tags=opensearch:generate_certs`
 
 
 ## Optional Role Variables - General
