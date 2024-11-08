@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024110601
+# 2024110801
 # 6.1
 #####################################
 # GRAYLOG DATANODE CONFIGURATION FILE
@@ -136,7 +136,7 @@ datanode_http_port = {{ graylog_datanode__datanode_http_port }}
 opensearch_location = /usr/share/graylog-datanode/dist
 
 opensearch_config_location = /var/lib/graylog-datanode/opensearch/config
-opensearch_data_location = /var/lib/graylog-datanode/opensearch/data
+opensearch_data_location = {{ graylog_datanode__opensearch_data_location }}
 opensearch_logs_location = /var/log/graylog-datanode/opensearch
 
 #### OpenSearch Certificate bundles for transport and http layer security

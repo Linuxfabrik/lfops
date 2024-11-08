@@ -41,7 +41,7 @@ If you use the ["Setup Graylog Data Node" Playbook](https://github.com/Linuxfabr
 
 | Variable | Description |
 | -------- | ----------- |
-| `graylog_datanode__password_secret` | You MUST set a secret that is used for password encryption and salting. The server refuses to start if this value is not set. The minimum length for `password_secret` is 16 characters. Use at least 64 characters. If you run multiple Graylog Data Nodes, make sure you use the same password_secret for all of them. |
+| `graylog_datanode__password_secret` | String. You MUST set a secret that is used for password encryption and salting. The server refuses to start if this value is not set. The minimum length for `password_secret` is 16 characters. Use at least 64 characters. If you run multiple Graylog Data Nodes, make sure you use the same password_secret for all of them. |
 
 Example:
 ```yaml
@@ -54,9 +54,10 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `graylog_datanode__bind_address` | The network interface used by the Graylog DataNode to bind all services. | `'127.0.0.1'` |
-| `graylog_datanode__http_port`    | The port where the DataNode REST api is listening. | `8999` |
-| `graylog_datanode__mongodb_uri`  | MongoDB connection string. See https://docs.mongodb.com/manual/reference/connection-string/ for details. | `'mongodb://127.0.0.1/graylog'` |
+| `graylog_datanode__bind_address` | String. The network interface used by the Graylog DataNode to bind all services. | `'127.0.0.1'` |
+| `graylog_datanode__http_port`    | Number. The port where the DataNode REST api is listening. | `8999` |
+| `graylog_datanode__mongodb_uri`  | String. MongoDB connection string. See https://docs.mongodb.com/manual/reference/connection-string/ for details. | `'mongodb://127.0.0.1/graylog'` |
+| `graylog_datanode__opensearch_data_location` | String. Set this OpenSearch folder if you need OpenSearch to be located in a special place. | `/var/lib/graylog-datanode/opensearch/data` |
 
 Example:
 ```yaml
@@ -64,6 +65,7 @@ Example:
 graylog_datanode__bind_address: '127.0.0.1'
 graylog_datanode__datanode_http_port: 8999
 graylog_datanode__mongodb_uri: 'mongodb://127.0.0.1/graylog'
+graylog_datanode__opensearch_data_location: '/data/opensearch'
 ```
 
 

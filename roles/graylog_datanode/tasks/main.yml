@@ -52,6 +52,14 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/graylog/datanode/jvm.options'
 
+  - name: 'mkdir -p {{ graylog_datanode__opensearch_data_location }}; chown graylog-datanode:graylog-datanode {{ graylog_datanode__opensearch_data_location }}'
+    ansible.builtin.file:
+      path: '{{ graylog_datanode__opensearch_data_location }}'
+      state: 'directory'
+      owner: 'graylog-datanode'
+      group: 'graylog-datanode'
+      mode: 0o755
+
   tags:
     - 'graylog_datanode'
     - 'graylog_datanode:configure'

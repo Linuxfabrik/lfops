@@ -70,6 +70,12 @@
 
 - block:
 
+  - name: 'Wait for port {{ graylog_server__http_bind_port }} to become open on the host'
+    ansible.builtin.wait_for:
+      host: '{{ graylog_server__http_bind_address }}'
+      port: '{{ graylog_server__http_bind_port }}'
+      delay: 5
+
   - name: 'Check for Graylog first-time startup message in server.log'
     ansible.builtin.command: 'grep -A 2 "Initial configuration is accessible" /var/log/graylog-server/server.log'
     register: 'graylog_startup_check'
