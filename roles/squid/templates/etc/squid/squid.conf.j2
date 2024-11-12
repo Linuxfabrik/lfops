@@ -1,0 +1,83 @@
+# {{ ansible_managed }}
+# 2024101701
+
+#
+# Recommended minimum configuration:
+#
+
+# Example rule allowing access from your local networks.
+# Adapt to list your (internal) IP networks from where browsing
+# should be allowed
+{% for item in squid__conf_acl_localnet__combined_var if item['state'] | d('present') != 'absent' %}
+acl localnet src {{ item['src'] }}
+{% endfor %}
+
+{% for item in squid__conf_acl_SSL_ports__combined_var if item['state'] | d('present') != 'absent' %}
+acl SSL_ports port {{ item['port'] }}
+{% endfor %}
+
+{% for item in squid__conf_acl_Safe_ports__combined_var if item['state'] | d('present') != 'absent' %}
+acl Safe_ports port {{ item['port'] }}
+{% endfor %}
+
+{% if squid__conf_acl_raw is defined and squid__conf_acl_raw | length %}
+# raw
+{{ squid__conf_acl_raw }}
+{% endif %}
+
+#
+# Recommended minimum Access Permission configuration:
+#
+# Deny requests to certain unsafe ports
+http_access deny !Safe_ports
+
+# Deny CONNECT to other than secure SSL ports
+http_access deny CONNECT !SSL_ports
+
+# Only allow cachemgr access from localhost
+http_access allow localhost manager
+http_access deny manager
+
+# We strongly recommend the following be uncommented to protect innocent
+# web applications running on the proxy server who think the only
+# one who can access services on "localhost" is a local user
+#http_access deny to_localhost
+
+#
+# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
+#
+
+{% for item in squid__conf_http_access %}
+http_access {{ item }}
+{% endfor %}
+
+# Example rule allowing access from your local networks.
+# Adapt localnet in the ACL section to list your (internal) IP networks
+# from where browsing should be allowed
+http_access allow localnet
+http_access allow localhost
+
+# And finally deny all other access to this proxy
+http_access deny all
+
+# Squid normally listens to port 3128
+{% for item in squid__conf_http_port %}
+http_port {{ item }}
+{% endfor %}
+
+# Uncomment and adjust the following to add a disk cache directory.
+#cache_dir ufs /var/spool/squid 100 16 256
+
+# Leave coredumps in the first cache dir
+coredump_dir {{ squid__conf_coredump_dir }}
+
+#
+# Add any of your own refresh_pattern entries above these.
+#
+{% for item in squid__conf_refresh_pattern %}
+refresh_pattern {{ item }}
+{% endfor %}
+
+{% if squid__conf_raw is defined and squid__conf_raw %}
+# raw
+{% endif %}
