@@ -53,6 +53,10 @@
       when:
         - 'not setup_graylog_server__skip_repo_graylog | d(false)'
 
+    - role: 'linuxfabrik.lfops.graylog_datanode'
+      when:
+        - 'not setup_graylog_server__skip_graylog_datanode | d(false)'
+
     - role: 'linuxfabrik.lfops.graylog_server'
 
 

@@ -99,7 +99,7 @@
       password: '{{ graylog_server__root_user["password"] }}'
       method: 'GET'
       force_basic_auth: true
-      status_code: 200
+      # status_code: 200
     register: 'graylog_server__input_result'
     changed_when: false # no actual config change
     check_mode: false # run task even if `--check` is specified
@@ -145,7 +145,7 @@
       password: '{{ graylog_server__root_user["password"] }}'
       method: 'GET'
       force_basic_auth: true
-      status_code: 200
+      # status_code: 200
     register: 'graylog_server__get_index_sets_result'
     changed_when: false # no actual config change
     check_mode: false # run task even if `--check` is specified
@@ -158,7 +158,7 @@
       method: 'POST'
       body: '{{ graylog_server__system_default_index_set | to_json }}'
       force_basic_auth: true
-      status_code: 200
+      # status_code: 200
       body_format: 'json'
       headers:
         Accept: 'application/json'
@@ -172,7 +172,7 @@
       password: '{{ graylog_server__root_user["password"] }}'
       method: 'GET'
       force_basic_auth: true
-      status_code: 200
+      # status_code: 200
     register: 'graylog_server__get_index_sets_result'
     changed_when: false # no actual config change
     check_mode: false # run task even if `--check` is specified
@@ -184,7 +184,7 @@
       password: '{{ graylog_server__root_user["password"] }}'
       method: 'PUT'
       force_basic_auth: true
-      status_code: 200
+      # status_code: 200
       headers:
         X-Requested-By: 'cli'
     when: "graylog_server__get_index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length > 0"
