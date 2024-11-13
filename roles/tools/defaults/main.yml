@@ -1,3 +1,4 @@
 tools__editor: 'nano'
 tools__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
 tools__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
+tools__prompt_use_fqdn: false
