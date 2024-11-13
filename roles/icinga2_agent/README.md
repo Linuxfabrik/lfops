@@ -14,6 +14,7 @@ Currently, this role only works if the host can reach the Icinga2 master API.
 | ---                   | ------------                               |
 | `icinga2_agent`       | Installs and configures icinga2 as an agent |
 | `icinga2_agent:state` | Manages the state of the Icinga2 service   |
+| `icinga2_agent:update` | Linux only. Updates the Icinga2 package and restarts the service |
 
 
 ## Mandatory Role Variables

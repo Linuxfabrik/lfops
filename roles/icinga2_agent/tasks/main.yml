@@ -10,6 +10,26 @@
     - 'icinga2_agent'
 
 
+- block:
+
+  - name: 'update icinga2' # noqa package-latest (we explicitly want latest here)
+    ansible.builtin.package:
+      name: 'icinga2'
+      state: 'latest'
+    register: 'icinga2_agent__update_result'
+
+  - name: 'systemctl restart icinga2' # noqa no-handler (would require a flush_handlers anyway)
+    ansible.builtin.systemd:
+      name: 'icinga2'
+      state: 'restarted'
+    when: 'icinga2_agent__update_result is changed'
+
+  when: 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'never'
+    - 'icinga2_agent:update'
+
+
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
   vars:
@@ -26,6 +46,7 @@
   ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
     - 'icinga2_agent'
+    - 'icinga2_agent:update'
 
 
 - block:
@@ -40,6 +61,7 @@
   tags:
     - 'icinga2_agent'
     - 'icinga2_agent:state'
+    - 'icinga2_agent:update'
 
 
 - block:

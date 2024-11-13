@@ -206,6 +206,9 @@ Role:tar
 
 ### Added
 
+Role:icinga2_agent
+* Added `icinga2_agent:update` tag
+
 Role:tools
 * Added `tools__prompt_use_fqdn` variable
 

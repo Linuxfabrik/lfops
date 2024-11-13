@@ -20,3 +20,4 @@
 
   tags:
     - 'icinga2_agent'
+    - 'icinga2_agent:update'
