@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024101701
+# 2024111301
 
 #
 # Recommended minimum configuration:
@@ -78,6 +78,7 @@ coredump_dir {{ squid__conf_coredump_dir }}
 refresh_pattern {{ item }}
 {% endfor %}
 
-{% if squid__conf_raw is defined and squid__conf_raw %}
+{% if squid__conf_raw is defined and squid__conf_raw | length %}
 # raw
+{{ squid__conf_raw }}
 {% endif %}
