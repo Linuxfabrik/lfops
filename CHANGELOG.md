@@ -206,6 +206,9 @@ Role:tar
 
 ### Added
 
+Role:tools
+* Added `tools__prompt_use_fqdn` variable
+
 Role:graylog_datanode
 * Added
 
