@@ -94,6 +94,12 @@ graylog_server__system_inputs:
 
 # ---------------------------------------------------
 
+graylog_server__kernel_settings__sysctl__dependent_var:
+  # prevent
+  # `WARN  [UdpTransport] receiveBufferSize (SO_RCVBUF) for input ... should be >= 1048576 but is 425984`
+  # this warning is related to how the operating system is configured (udp receive buffer size)
+  - name: 'net.core.rmem_max'
+    value: 1048576  # default: 212992
 graylog_server__kernel_settings__transparent_hugepages__dependent_var: 'never'
 
 graylog_server__selinux__booleans__dependent_var:
