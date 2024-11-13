@@ -676,9 +676,10 @@ Handling default values
 Git Commits
 -----------
 
-* Commit messages must start with "role:role_name: ", "plugin:plugin_name: ", or "module:module_name: " and clearly and precisely state what has changed. Example: ``role:duplicity: adjust name_email of gpg key to allow differentation``.
-* If there is an issue, the commit message must consist of the issue title followed by "(fix #issueno)", for example: ``role:duplicity: adjust encryption to use a master gpg key (fix #12)``.
-* For the first commit, use the message ``add <name>``.
+* | Since 2024-11-13, commit messages follow the `Conventional Commits specification <https://www.conventionalcommits.org/en/v1.0.0/>`_
+  | Example: ``fix(roles/graylog_server): prevent warn on receiveBufferSize``.
+* If there is an issue, the commit message must consist of the issue title followed by "(fix #issueno)", for example: ``fix(roles/graylog_server): prevent warn on receiveBufferSize (fix #341)``.
+* For the first commit, use the message ``Add roles/<role-name>`` or ``Add playbooks/<playbook-name>``.
 
 
 Releases
