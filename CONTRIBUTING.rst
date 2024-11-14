@@ -676,10 +676,21 @@ Handling default values
 Git Commits
 -----------
 
-* | Since 2024-11-13, commit messages follow the `Conventional Commits specification <https://www.conventionalcommits.org/en/v1.0.0/>`_
+* | Since 2024-11-13, commit messages follow the `Conventional Commits specification <https://www.conventionalcommits.org/en/v1.0.0/>`_ (``<type>(<scope>): <subject>``)
   | Example: ``fix(roles/graylog_server): prevent warn on receiveBufferSize``.
 * If there is an issue, the commit message must consist of the issue title followed by "(fix #issueno)", for example: ``fix(roles/graylog_server): prevent warn on receiveBufferSize (fix #341)``.
 * For the first commit, use the message ``Add roles/<role-name>`` or ``Add playbooks/<playbook-name>``.
+
+``<type>`` must be one of the following:
+
+* chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
+* docs: Documentation only changes
+* feat: A new feature
+* fix: A bug fix
+* perf: A code change that improves performance
+* refactor: A code change that neither fixes a bug nor adds a feature
+* style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+* test: Adding missing tests
 
 
 Releases
