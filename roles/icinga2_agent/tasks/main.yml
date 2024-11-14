@@ -151,3 +151,4 @@
   when: 'ansible_facts["os_family"] != "Windows"'
   tags:
     - 'icinga2_agent'
+    - 'icinga2_agent:node_setup'

@@ -22,6 +22,12 @@
       path: '{{ icinga2_agent__windows_download_path }}\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
       state: 'absent'
 
+  tags:
+    - 'icinga2_agent'
+
+
+- block:
+
   # '&' -> https://ss64.com/ps/call.html
   - name: 'icinga2 PKI save cert against {{ icinga2_agent__icinga2_master_host }}'
     ansible.windows.win_shell: >
@@ -105,3 +111,4 @@
 
   tags:
     - 'icinga2_agent'
+    - 'icinga2_agent:node_setup'
