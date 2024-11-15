@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2024110101 -->
+    <!-- 2024111501 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -203,7 +203,7 @@
         <!-- switches from https:// + wss:// to http:// + ws:// -->
         <enable type="bool" desc="Controls whether SSL encryption between coolwsd and the network is enabled (do not disable for production deployment). If default is false, must first be compiled with SSL support to enable." default="true">{{ collabora__coolwsd_ssl_enable | d('true') | string | lower }}</enable>
         <!-- SSL off-load can be done in a proxy, if so disable SSL, and enable termination below in production -->
-        <termination desc="Connection via proxy where coolwsd acts as working via https, but actually uses http." type="bool" default="true">{{ collabora__coolwsd_ssl_termination | d('true') | string | lower }}</termination>
+        <termination desc="Connection via proxy where coolwsd acts as working via https, but actually uses http." type="bool" default="false">{{ collabora__coolwsd_ssl_termination | d('true') | string | lower }}</termination>
         <cert_file_path desc="Path to the cert file" relative="false">{{ collabora__coolwsd_ssl_settings_cert_file_path | d('/etc/coolwsd/cert.pem') }}</cert_file_path>
         <key_file_path desc="Path to the key file" relative="false">{{ collabora__coolwsd_ssl_settings_key_file_path | d('/etc/coolwsd/key.pem') }}</key_file_path>
         <ca_file_path desc="Path to the ca file" relative="false">{{ collabora__coolwsd_ssl_settings_ca_file_path | d('/etc/coolwsd/ca-chain.cert.pem') }}</ca_file_path>
@@ -234,6 +234,7 @@
       <macro_security_level desc="Level of Macro security. 1 (Medium) Confirmation required before executing macros from untrusted sources. 0 (Low, not recommended) All macros will be executed without confirmation." type="int" default="1">1</macro_security_level>
       <enable_websocket_urp desc="Should we enable URP (UNO remote protocol) communication over the websocket. This allows full control of the Kit child server to anyone with access to the websocket including executing macros without confirmation or running arbitrary shell commands in the jail." type="bool" default="false">false</enable_websocket_urp>
       <enable_metrics_unauthenticated desc="When enabled, the /cool/getMetrics endpoint will not require authentication." type="bool" default="false">false</enable_metrics_unauthenticated>
+      <server_signature desc="Whether to send server signature in HTTP response headers" type="bool" default="false">false</server_signature>
     </security>
 
     <certificates>
@@ -364,7 +365,7 @@
     <help_url desc="The Help root URL, or empty for no help (hides the Help buttons)" type="string" default="https://help.collaboraoffice.com/help.html?">https://help.collaboraoffice.com/help.html?</help_url>
 
     <overwrite_mode>
-        <enable desc="Enable overwrite mode (user can use insert key)" type="bool" default="true">true</enable>
+        <enable desc="Enable overwrite mode (user can use insert key)" type="bool" default="false">false</enable>
     </overwrite_mode>
 
     <wasm desc="WASM-specific settings">
