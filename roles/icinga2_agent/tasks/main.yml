@@ -46,6 +46,7 @@
   ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
   tags:
     - 'icinga2_agent'
+    - 'icinga2_agent:note_setup'
     - 'icinga2_agent:update'
 
 
