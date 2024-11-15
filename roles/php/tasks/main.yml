@@ -8,6 +8,7 @@
     - 'php:ini'
     - 'php:modules'
     - 'php:state'
+    - 'php:update'
 
 
 - block:
@@ -26,6 +27,22 @@
 
 - block:
 
+  - name: 'Update php php-fpm composer' # noqa package-latest (we explicitly want latest here)
+    ansible.builtin.package:
+      name:
+        - 'php'
+        - 'php-fpm'
+        - 'composer'
+      state: 'latest'
+    notify: 'php: restart php-fpm'
+
+  tags:
+    - 'never'
+    - 'php:update'
+
+
+- block:
+
   - name: 'Get the list of installed packages'
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
@@ -38,6 +55,7 @@
     - 'php'
     - 'php:ini'
     - 'php:modules'
+    - 'php:update'
 
 
 - block:
@@ -66,6 +84,25 @@
 
 - block:
 
+  - name: 'Combined Modules:'
+    ansible.builtin.debug:
+      var: 'php__modules__combined_var'
+
+  - name: 'Update PHP modules' # noqa package-latest (we explicitly want latest here)
+    # providing the packages as a list is much more faster than looping for each
+    ansible.builtin.package:
+      name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+          + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
+      state: 'latest'
+    notify: 'php: restart php-fpm'
+
+  tags:
+    - 'never'
+    - 'php:update'
+
+
+- block:
+
   - name: 'Load default values for {{ php__installed_version }}'
     ansible.builtin.include_vars: 'vars/{{ php__installed_version }}.yml'
 
@@ -82,6 +119,7 @@
   tags:
     - 'php'
     - 'php:ini'
+    - 'php:update'
 
 
 - block:

@@ -36,6 +36,7 @@ This role never exposes to the world that PHP is installed on the server, no mat
 | `php:fpm` | Only affects PHP-FPM: <ul><li>Remove absent pools from /etc/php-fpm.d</li><li>Deploy the pools to /etc/php-fpm.d/</li></ul> |
 | `php:ini` | <ul><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the `/etc/php.d/z00-linuxfabrik.ini`</li></ul> |
 | `php:state` | Only affects PHP-FPM: <ul><li>`systemctl {{ php__fpm_service_enabled \| bool \| ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> |
+| `php:update` | Updates the PHP Packages and the configuration. Do not forget to update the repo beforehand. |
 
 
 ## Optional Role Variables
