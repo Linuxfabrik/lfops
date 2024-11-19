@@ -1,6 +1,7 @@
 icingaweb2_module_x509__database_host: 'localhost'
 icingaweb2_module_x509__database_name: 'icinga_x509'
 icingaweb2_module_x509__service_enabled: true
+icingaweb2_module_x509__url: 'https://github.com/Icinga/icingaweb2-module-x509/archive/{{ icingaweb2_module_x509__version }}.tar.gz'
 
 # -----------------------------------------------------------------------------
 

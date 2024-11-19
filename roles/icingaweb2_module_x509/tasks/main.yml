@@ -21,9 +21,9 @@
       group: 'icingaweb2'
       mode: 0o755
 
-  - name: 'curl https://github.com/Icinga/icingaweb2-module-x509/archive/{{ icingaweb2_module_x509__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-x509-{{ icingaweb2_module_x509__version }}.tar.gz'
+  - name: 'curl {{ icingaweb2_module_x509__url }} --output /tmp/ansible.icingaweb2-module-x509-{{ icingaweb2_module_x509__version }}.tar.gz'
     ansible.builtin.get_url:
-      url: 'https://github.com/Icinga/icingaweb2-module-x509/archive/{{ icingaweb2_module_x509__version }}.tar.gz'
+      url: '{{ icingaweb2_module_x509__url }}'
       dest: '/tmp/ansible.icingaweb2-module-x509-{{ icingaweb2_module_x509__version }}.tar.gz'
     delegate_to: 'localhost'
     run_once: true

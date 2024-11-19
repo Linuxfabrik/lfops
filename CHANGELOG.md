@@ -206,6 +206,9 @@ Role:tar
 
 ### Added
 
+Role:icingaweb2_module_x509
+* Added `icingaweb2_module_x509__url` variable
+
 Role:icinga2_agent
 * Added `icinga2_agent:update` tag
 
