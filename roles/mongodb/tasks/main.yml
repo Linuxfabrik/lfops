@@ -232,6 +232,12 @@
 
 - block:
 
+  - name: 'install tar'
+    ansible.builtin.package:
+      name:
+        - 'tar'
+      state: 'present'
+
   - name: 'Deploy /etc/mongodb-dump.conf'
     ansible.builtin.template:
       src: 'etc/mongodb-dump.conf.j2'
