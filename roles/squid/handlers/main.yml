@@ -1,4 +1,4 @@
-- name: 'squid: squid -k parse # and then reload'
+- name: 'squid: squid -k parse # and then restart'
   ansible.builtin.command: 'squid -k parse'
   notify:
     - 'squid: reload squid'
