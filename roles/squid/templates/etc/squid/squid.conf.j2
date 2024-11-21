@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024111301
+# 2024112101
 
 #
 # Recommended minimum configuration:
@@ -12,18 +12,19 @@
 acl localnet src {{ item['src'] }}
 {% endfor %}
 
-{% for item in squid__conf_acl_SSL_ports__combined_var if item['state'] | d('present') != 'absent' %}
+{% for item in squid__conf_acl_ssl_ports__combined_var if item['state'] | d('present') != 'absent' %}
 acl SSL_ports port {{ item['port'] }}
 {% endfor %}
 
-{% for item in squid__conf_acl_Safe_ports__combined_var if item['state'] | d('present') != 'absent' %}
+{% for item in squid__conf_acl_safe_ports__combined_var if item['state'] | d('present') != 'absent' %}
 acl Safe_ports port {{ item['port'] }}
 {% endfor %}
 
 {% if squid__conf_acl_raw is defined and squid__conf_acl_raw | length %}
-# raw
+# raw ACLs
 {{ squid__conf_acl_raw }}
 {% endif %}
+# end of raw ACLs
 
 #
 # Recommended minimum Access Permission configuration:
@@ -79,6 +80,6 @@ refresh_pattern {{ item }}
 {% endfor %}
 
 {% if squid__conf_raw is defined and squid__conf_raw | length %}
-# raw
+# raw config
 {{ squid__conf_raw }}
 {% endif %}

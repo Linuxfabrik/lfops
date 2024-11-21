@@ -19,7 +19,7 @@
       owner: 'root'
       group: 'squid'
       mode: 0o640
-    notify: 'squid: squid -k parse # and then reload'
+    notify: 'squid: squid -k parse # and then restart' # certain config changes need a restart, eg the http_port
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:

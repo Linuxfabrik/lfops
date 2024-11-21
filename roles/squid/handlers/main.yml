@@ -3,7 +3,7 @@
   notify:
     - 'squid: reload squid'
 
-- name: 'squid: reload squid'
+- name: 'squid: restart squid'
   ansible.builtin.service:
-    state: 'reloaded'
+    state: 'restarted'
     name: 'squid'
