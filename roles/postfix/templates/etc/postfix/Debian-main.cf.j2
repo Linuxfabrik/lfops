@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024100401
+# 2024112101
 # note: adapted from /etc/postfix/main.cf.proto as /etc/postfix/main.cf is dynamically generated via debconf
 
 # Global Postfix configuration file. This file lists only a subset
@@ -105,6 +105,9 @@ data_directory = /var/lib/postfix
 #
 #myhostname = host.domain.tld
 #myhostname = virtual.domain.tld
+{% if postfix__myhostname is defined and postfix__myhostname | length %}
+myhostname = {{ postfix__myhostname }}
+{% endif %}
 
 # The mydomain parameter specifies the local internet domain name.
 # The default is to use $myhostname minus the first component.
@@ -133,6 +136,7 @@ data_directory = /var/lib/postfix
 #myorigin = /etc/mailname
 #myorigin = $myhostname
 #myorigin = $mydomain
+myorigin = {{ postfix__myorigin }}
 
 # RECEIVING MAIL
 
@@ -194,6 +198,7 @@ inet_interfaces = {{ postfix__inet_interfaces }}
 #
 # See also below, section "REJECTING MAIL FOR UNKNOWN LOCAL USERS".
 #
+mydestination = {{ postfix__mydestination }}
 #mydestination = $myhostname, localhost.$mydomain, localhost
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain,
@@ -709,11 +714,11 @@ setgid_group = postdrop
 inet_protocols = {{ postfix__inet_protocols }}
 
 # TLS parameters (note: taken from /etc/postfix/main.cf)
-smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
-smtpd_tls_security_level=may
+smtpd_tls_cert_file = {{ postfix__smtpd_tls_cert_file }}
+smtpd_tls_key_file = {{ postfix__smtpd_tls_key_file }}
+smtpd_tls_security_level = {{ postfix__smtpd_tls_security_level }}
 smtp_tls_CApath=/etc/ssl/certs
-smtp_tls_security_level=may
+smtp_tls_security_level = {{ postfix__smtp_tls_security_level }}
 smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 
 
@@ -727,7 +732,7 @@ sender_canonical_maps = regexp:/etc/postfix/canonical
 smtp_destination_concurrency_limit = {{ postfix__smtp_destination_concurrency_limit }}
 smtp_destination_recipient_limit = {{ postfix__smtp_destination_recipient_limit }}
 smtp_sasl_auth_enable = {{ postfix__smtp_sasl_auth_enable | bool | ternary("yes", "no") }}
-smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_password_maps = {{ postfix__smtp_sasl_password_maps }}
 smtp_sasl_security_options = {{ postfix__smtp_sasl_security_options | join(', ') }}
 smtp_tls_wrappermode = {{ postfix__smtp_tls_wrappermode | bool | ternary("yes", "no") }}
 

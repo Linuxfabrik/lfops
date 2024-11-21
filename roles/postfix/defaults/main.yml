@@ -11,6 +11,16 @@ postfix__aliases__host_var: []
 postfix__aliases__role_var: []
 postfix__biff: false
 postfix__bounce_queue_lifetime: '5d'
+postfix__inet_interfaces: '127.0.0.1' # fails on machines without IPv6 if set to 'localhost', so set explicitely to the IPv4 localhost address
+postfix__inet_protocols: 'all'
+postfix__mailbox_size_limit: 51200000
+postfix__maximal_queue_lifetime: '5d'
+postfix__message_size_limit: 10240000
+postfix__mydestination: '$myhostname, localhost.$mydomain, localhost'
+postfix__myorigin: '$myhostname'
+postfix__recipient_delimiter: ''
+postfix__relayhost_password: ''
+postfix__relayhost_username: '{{ mailto_root__from }}'
 postfix__sender_canonicals__combined_var: '{{ (
       postfix__sender_canonicals__role_var +
       postfix__sender_canonicals__dependent_var +
@@ -22,20 +32,16 @@ postfix__sender_canonicals__dependent_var: []
 postfix__sender_canonicals__group_var: []
 postfix__sender_canonicals__host_var: []
 postfix__sender_canonicals__role_var: []
-postfix__inet_interfaces: '127.0.0.1' # fails on machines without IPv6 if set to 'localhost', so set explicitely to the IPv4 localhost address
-postfix__inet_protocols: 'all'
-postfix__mailbox_size_limit: 51200000
-postfix__maximal_queue_lifetime: '5d'
-postfix__message_size_limit: 10240000
-postfix__recipient_delimiter: ''
-postfix__relayhost_password: ''
-postfix__relayhost_username: '{{ mailto_root__from }}'
 postfix__service_enabled: true
 postfix__service_state: 'started'
 postfix__smtp_destination_concurrency_limit: 20
 postfix__smtp_destination_recipient_limit: 50
 postfix__smtp_sasl_auth_enable: true
+postfix__smtp_sasl_password_maps: 'hash:/etc/postfix/sasl_passwd'
 postfix__smtp_sasl_security_options:
   - 'noanonymous'
 postfix__smtp_tls_security_level: 'may'
 postfix__smtp_tls_wrappermode: false
+postfix__smtpd_tls_cert_file: '/etc/pki/tls/certs/postfix.pem'
+postfix__smtpd_tls_key_file: '/etc/pki/tls/private/postfix.key'
+postfix__smtpd_tls_security_level: 'may'

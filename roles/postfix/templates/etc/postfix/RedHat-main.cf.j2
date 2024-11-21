@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024100401
+# 2024112101
 
 # Global Postfix configuration file. This file lists only a subset
 # of all parameters. For the syntax, and for a complete parameter
@@ -96,6 +96,9 @@ mail_owner = postfix
 #
 #myhostname = host.domain.tld
 #myhostname = virtual.domain.tld
+{% if postfix__myhostname is defined and postfix__myhostname | length %}
+myhostname = {{ postfix__myhostname }}
+{% endif %}
 
 # The mydomain parameter specifies the local internet domain name.
 # The default is to use $myhostname minus the first component.
@@ -119,6 +122,7 @@ mail_owner = postfix
 #
 #myorigin = $myhostname
 #myorigin = $mydomain
+myorigin = {{ postfix__myorigin }}
 
 # RECEIVING MAIL
 
@@ -185,7 +189,7 @@ inet_protocols = {{ postfix__inet_protocols }}
 #
 # See also below, section "REJECTING MAIL FOR UNKNOWN LOCAL USERS".
 #
-mydestination = $myhostname, localhost.$mydomain, localhost
+mydestination = {{ postfix__mydestination }}
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain,
 #	mail.$mydomain, www.$mydomain, ftp.$mydomain
@@ -717,18 +721,18 @@ readme_directory = /usr/share/doc/postfix/README_FILES
 # in PEM format. Intermediate certificates should be included in general,
 # the server certificate first, then the issuing CA(s) (bottom-up order).
 #
-smtpd_tls_cert_file = /etc/pki/tls/certs/postfix.pem
+smtpd_tls_cert_file = {{ postfix__smtpd_tls_cert_file }}
 
 # The full pathname of a file with the Postfix SMTP server RSA private key
 # in PEM format. The private key must be accessible without a pass-phrase,
 # i.e. it must not be encrypted.
 #
-smtpd_tls_key_file = /etc/pki/tls/private/postfix.key
+smtpd_tls_key_file = {{ postfix__smtpd_tls_key_file }}
 
 # Announce STARTTLS support to remote SMTP clients, but do not require that
 # clients use TLS encryption (opportunistic TLS inbound).
 #
-smtpd_tls_security_level = may
+smtpd_tls_security_level = {{ postfix__smtpd_tls_security_level }}
 
 # Directory with PEM format Certification Authority certificates that the
 # Postfix SMTP client uses to verify a remote SMTP server certificate.
@@ -759,7 +763,7 @@ sender_canonical_maps = regexp:/etc/postfix/canonical
 smtp_destination_concurrency_limit = {{ postfix__smtp_destination_concurrency_limit }}
 smtp_destination_recipient_limit = {{ postfix__smtp_destination_recipient_limit }}
 smtp_sasl_auth_enable = {{ postfix__smtp_sasl_auth_enable | bool | ternary("yes", "no") }}
-smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_password_maps = {{ postfix__smtp_sasl_password_maps }}
 smtp_sasl_security_options = {{ postfix__smtp_sasl_security_options | join(', ') }}
 smtp_tls_wrappermode = {{ postfix__smtp_tls_wrappermode | bool | ternary("yes", "no") }}
 
