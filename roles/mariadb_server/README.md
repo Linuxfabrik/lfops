@@ -264,6 +264,49 @@ mariadb_server__cnf_plugin_load_add__host_var: 'file_key_management'
 ```
 
 
+## Optional Role Variables - `mariadb_server__cnf_*` Config Directives for MariaDB Audit Plugin
+
+This are a several options and system variables related to the [MariaDB Audit Plugin](https://mariadb.com/kb/en/server_audit-mariadb-audit-plugin/).
+
+`server_audit` is set to `FORCE_PLUS_PERMANENT`, which always enables the plugin. If the plugin cannot be initialized, then the server will fail to start with an error. In addition, the plugin cannot be uninstalled with `UNINSTALL SONAME` or `UNINSTALL PLUGIN` while the server is running.
+
+| Role Variable   | Documentation   | Default Value   |
+| -------------   | -------------   | -------------   |
+| `mariadb_server__cnf_server_audit_events` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_events) | `'CONNECT,QUERY_DDL'` |
+| `mariadb_server__cnf_server_audit_excl_users` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_excl_users) | `''` |
+| `mariadb_server__cnf_server_audit_file_path` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_file_path) | `'/var/log/mariadb/server_audit.log'` |
+| `mariadb_server__cnf_server_audit_file_rotate_now` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_file_rotate_now) | `'OFF'` |
+| `mariadb_server__cnf_server_audit_file_rotate_size` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_file_rotate_size) | `'10M'` |
+| `mariadb_server__cnf_server_audit_file_rotations` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_file_rotations) | `9` |
+| `mariadb_server__cnf_server_audit_incl_users` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_incl_users) | `''` |
+| `mariadb_server__cnf_server_audit_logging` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_logging) | `'ON'` |
+| `mariadb_server__cnf_server_audit_output_type` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_output_type) | `'file'` |
+| `mariadb_server__cnf_server_audit_query_log_limit` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_query_log_limit) | `1024` |
+| `mariadb_server__cnf_server_audit_syslog_facility` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_syslog_facility) | `'LOG_USER'` |
+| `mariadb_server__cnf_server_audit_syslog_ident` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_syslog_ident) | `'mysql-server_auditing'` |
+| `mariadb_server__cnf_server_audit_syslog_info` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_syslog_info) | `''` |
+| `mariadb_server__cnf_server_audit_syslog_priority` | [mariadb.com](https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_syslog_priority) | `'LOG_INFO'` |
+
+Example:
+```yaml
+# optional - MariaDB Audit Plugin directives
+mariadb_server__cnf_server_audit_events: 'CONNECT,QUERY_DDL'
+mariadb_server__cnf_server_audit_excl_users: ''
+mariadb_server__cnf_server_audit_file_path: '/var/log/mariadb/server_audit.log'
+mariadb_server__cnf_server_audit_file_rotate_now: 'OFF'
+mariadb_server__cnf_server_audit_file_rotate_size: '10M'
+mariadb_server__cnf_server_audit_file_rotations: '9'
+mariadb_server__cnf_server_audit_incl_users: ''
+mariadb_server__cnf_server_audit_logging: 'ON'
+mariadb_server__cnf_server_audit_output_type: 'FILE'
+mariadb_server__cnf_server_audit_query_log_limit: '1024'
+mariadb_server__cnf_server_audit_syslog_facility: 'LOG_USER'
+mariadb_server__cnf_server_audit_syslog_ident: 'mysql-server_auditing'
+mariadb_server__cnf_server_audit_syslog_info: ''
+mariadb_server__cnf_server_audit_syslog_priority: 'LOG_INFO'
+```
+
+
 ## Optional Role Variables - `mariadb_server__cnf_*` Config Directives for Galera
 
 Install the first node with `--extra-vars='{"mariadb_server__run_galera_new_cluster": true}'` to bootstrap the cluster. Then run the role against the remaining nodes to add them to the cluster.
@@ -293,6 +336,7 @@ mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0 #  inconsistenc
 | `mariadb_server__cnf_wsrep_slave_threads` | Integer. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_slave_threads). Four slave threads can typically saturate one CPU core. | `'{{ 1 if ansible_facts["processor_nproc"] == 1 else (ansible_facts["processor_nproc"] - 1) * 4 }}'` |
 | `mariadb_server__run_galera_new_cluster` | Boolean. [mariadb.com](https://mariadb.com/kb/en/mariadbd-options/#-wsrep-new-cluster). Do not set in the inventory, use via `--extra-vars`. This bootstraps the Galera cluster. Only set this to `true` during the deployment of the first node, or when recovering / restarting a stopped cluster. | `false` |
 
+Example:
 ```yaml
 # optional - Galera directives
 mariadb_server__cnf_wsrep_cluster_addresses:

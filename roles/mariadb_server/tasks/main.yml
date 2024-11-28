@@ -269,7 +269,7 @@
 # mysql_secure_installation
 - block:
 
-  - name: 'Remove all "root" users'
+  - name: 'Secure installation (Linuxfabrik): Remove all "root" users'
     community.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
@@ -318,6 +318,14 @@
         and (`proxied_host` = '')
         and (`proxied_user` = '');
     when: 'mariadb_server__cnf_skip_name_resolve__combined_var == "ON"'
+
+  - name: 'Secure installation (Linuxfabrik): Ensure "server_audit_file_path" has appropriate permissions'
+    ansible.builtin.file:
+      path: '{{ mariadb_server__cnf_server_audit_file_path }}'
+      state: 'file'
+      mode: 0o660
+      owner: 'mysql'
+      group: 'mysql'
 
   tags:
     - 'mariadb_server'

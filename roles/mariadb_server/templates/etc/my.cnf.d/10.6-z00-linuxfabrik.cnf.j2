@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024110501
+# 2024112801
 # 10.6
 
 # https://mariadb.com/kb/en/library/server-system-variables/
@@ -39,6 +39,26 @@ sql_mode                       = {{ mariadb_server__cnf_sql_mode__combined_var }
 table_definition_cache         = {{ mariadb_server__cnf_table_definition_cache__combined_var }}
 tmp_table_size                 = {{ mariadb_server__cnf_tmp_table_size__combined_var }}
 wait_timeout                   = {{ mariadb_server__cnf_wait_timeout__combined_var }}
+
+# MariaDB Audit Plugin Options and System Variables
+# https://mariadb.com/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_file_path
+plugin_load_add                                = server_audit
+server_audit                                   = FORCE_PLUS_PERMANENT  # Prohibiting Uninstallation
+server_audit_events                            = "{{ mariadb_server__cnf_server_audit_events }}"
+server_audit_excl_users                        = "{{ mariadb_server__cnf_server_audit_excl_users }}"
+server_audit_file_path                         = "{{ mariadb_server__cnf_server_audit_file_path }}"
+server_audit_file_rotate_now                   = {{ mariadb_server__cnf_server_audit_file_rotate_now }}
+server_audit_file_rotate_size                  = {{ mariadb_server__cnf_server_audit_file_rotate_size }}
+server_audit_file_rotations                    = {{ mariadb_server__cnf_server_audit_file_rotations }}
+server_audit_incl_users                        = "{{ mariadb_server__cnf_server_audit_incl_users }}"
+server_audit_logging                           = {{ mariadb_server__cnf_server_audit_logging }}
+server_audit_mode                              = 0
+server_audit_output_type                       = {{ mariadb_server__cnf_server_audit_output_type }}
+server_audit_query_log_limit                   = {{ mariadb_server__cnf_server_audit_query_log_limit }}
+server_audit_syslog_facility                   = {{ mariadb_server__cnf_server_audit_syslog_facility }}
+server_audit_syslog_ident                      = {{ mariadb_server__cnf_server_audit_syslog_ident }}
+server_audit_syslog_info                       = {{ mariadb_server__cnf_server_audit_syslog_info }}
+server_audit_syslog_priority                   = {{ mariadb_server__cnf_server_audit_syslog_priority }}
 
 
 [mysqld]
