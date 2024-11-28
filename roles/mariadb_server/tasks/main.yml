@@ -319,6 +319,11 @@
         and (`proxied_user` = '');
     when: 'mariadb_server__cnf_skip_name_resolve__combined_var == "ON"'
 
+  - name: 'Secure installation (Linuxfabrik): Ensure interactive login is disabled'
+    ansible.builtin.user:
+      name: 'mysql'
+      shell: '/sbin/nologin'
+
   - name: 'Secure installation (Linuxfabrik): Ensure "server_audit_file_path" has appropriate permissions'
     ansible.builtin.file:
       path: '{{ mariadb_server__cnf_server_audit_file_path }}'
