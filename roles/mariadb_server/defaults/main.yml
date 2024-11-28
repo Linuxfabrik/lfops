@@ -442,6 +442,16 @@ mariadb_server__cnf_table_definition_cache__combined_var: '{{
     mariadb_server__cnf_table_definition_cache__role_var
   }}'
 
+mariadb_server__cnf_tls_version__dependent_var: ''
+mariadb_server__cnf_tls_version__group_var: ''
+mariadb_server__cnf_tls_version__host_var: ''
+mariadb_server__cnf_tls_version__combined_var: '{{
+    mariadb_server__cnf_tls_version__host_var if (mariadb_server__cnf_tls_version__host_var | string | length) else
+    mariadb_server__cnf_tls_version__group_var if (mariadb_server__cnf_tls_version__group_var | string | length) else
+    mariadb_server__cnf_tls_version__dependent_var if (mariadb_server__cnf_tls_version__dependent_var | string | length) else
+    mariadb_server__cnf_tls_version__role_var
+  }}'
+
 mariadb_server__cnf_tmp_table_size__dependent_var: ''
 mariadb_server__cnf_tmp_table_size__group_var: ''
 mariadb_server__cnf_tmp_table_size__host_var: ''

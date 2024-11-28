@@ -29,6 +29,7 @@ mariadb_server__cnf_slow_query_log__role_var: 0
 mariadb_server__cnf_slow_query_log_file__role_var: '/var/log/mariadb/mariadb-slowquery.log'
 mariadb_server__cnf_sql_mode__role_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__role_var: 400
+mariadb_server__cnf_tls_version__role_var: 'TLSv1.2,TLSv1.3'
 mariadb_server__cnf_tmp_table_size__role_var: '16M'
 mariadb_server__cnf_wait_timeout__role_var: 28800
 
