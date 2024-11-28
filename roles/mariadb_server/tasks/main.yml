@@ -324,6 +324,14 @@
       name: 'mysql'
       shell: '/sbin/nologin'
 
+  - name: 'Secure installation (Linuxfabrik): Ensure "log_error" has appropriate permissions'
+    ansible.builtin.file:
+      path: '{{ mariadb_server__cnf_log_error__combined_var }}'
+      state: 'file'
+      mode: 0o600
+      owner: 'mysql'
+      group: 'mysql'
+
   - name: 'Secure installation (Linuxfabrik): Ensure "server_audit_file_path" has appropriate permissions'
     ansible.builtin.file:
       path: '{{ mariadb_server__cnf_server_audit_file_path }}'
