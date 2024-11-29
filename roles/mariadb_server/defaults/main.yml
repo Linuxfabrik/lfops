@@ -25,6 +25,7 @@ mariadb_server__dump_directory: '/backup/mariadb-dump'
 mariadb_server__dump_long_query_guard: 60  # set long query timer in seconds
 mariadb_server__dump_mydumper_package: 'mydumper'
 mariadb_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
+mariadb_server__dump_raw: ''
 mariadb_server__dump_threads: 0  # 0 means to use number of CPUs
 
 mariadb_server__enabled: true
