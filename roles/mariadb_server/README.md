@@ -3,13 +3,15 @@
 This role installs and configures a [MariaDB](https://mariadb.org/) server.
 
 It also tunes the following Kernel settings:
-* `fs.aio-max-nr`: `1048576`
-* `sunrpc.tcp_slot_table_entries`: 128
-* `vm.swapiness`: `10`
+
+* `fs.aio-max-nr = 1048576`
+* `sunrpc.tcp_slot_table_entries = 128`
+* `vm.swapiness = 10`
 
 Note that this role does NOT let you specify a particular MariaDB server version. It simply installs the latest available MariaDB server version from the repos configured in the system. If you want or need to install a specific MariaDB server version, use the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) beforehand.
 
 This role is compatible with the following MariaDB versions:
+
 * 10.3
 * 10.4
 * 10.5
@@ -42,17 +44,17 @@ By default, Ansible runs each task on all hosts affected by a play before starti
 
 | Tag                                  | What it does                                                                                                                     |
 | ---                                  | ------------                                                                                                                     |
-| `mariadb_server`                     | * `dnf -y install mariadb-server libzstd`<br> * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `mkdir /var/log/mariadb`<br> * `touch /var/log/mariadb/mariadb.log; chown mysql:mysql /var/log/mariadb/mariadb.log`<br> * Deploy /etc/my.cnf.d/z00-linuxfabrik.cnf<br> * `mkdir -p /etc/systemd/system/mariadb.service.d/`<br> * Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf<br> * `systemctl daemon-reload`<br> * Deploy /etc/logrotate.d/mariadb<br> * `systemctl enable/disable mariadb.service`<br> * `systemctl {{ mariadb_server__state[:-2] }} mariadb.service`<br> * Create DBA "{{ mariadb_server__admin_user["username"] }}"<br> * Remove all "root" users<br> * Secure installation: Remove anonymous users<br> * Secure installation: Remove test database<br> * Secure installation: Remove test database (privileges)<br> * Secure installation: Reload privilege tables<br> * `dnf -y install {{ mariadb_server__dump_mydumper_package }}`<br> * Deploy /usr/local/bin/mariadb-dump<br> * Deploy /etc/mariadb-dump.conf<br> * Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost<br> * Deploy /etc/systemd/system/mariadb-dump.service<br> * Deploy /etc/systemd/system/mariadb-dump.timer<br> * `systemctl enable mariadb-dump.timer --now`<br> * Create or delete mariadb databases<br> * Create, update or delete MariaDB users<br> * Show databases<br> * `wget https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz`<br> * `mkdir /tmp/mariadb-sys-schema`<br> * `tar xzvf /tmp/mariadb-sys-schema.tar.gz`<br> * `mysql --user "{{ mariadb_server__admin_user["username"] }}" --password="..." < ./sys_10.sql`<br> * `rm -rf /tmp/mariadb-sys-schema` |
-| `mariadb_server:configure`           | * `dnf -y install mariadb-server libzstd`<br> * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `mkdir /var/log/mariadb`<br> * `touch /var/log/mariadb/mariadb.log; chown mysql:mysql /var/log/mariadb/mariadb.log`<br> * Deploy /etc/my.cnf.d/z00-linuxfabrik.cnf<br> * `mkdir -p /etc/systemd/system/mariadb.service.d/<br> * Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf<br> * `systemctl daemon-reload`<br> * Deploy /etc/logrotate.d/mariadb`<br> * `systemctl enable/disable mariadb.service`<br> * `systemctl {{ mariadb_server__state[:-2] }} mariadb.service`<br> * `dnf -y install {{ mariadb_server__dump_mydumper_package }}`<br> * Deploy /usr/local/bin/mariadb-dump<br> * Deploy /etc/mariadb-dump.conf<br> * Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost<br> * Deploy /etc/systemd/system/mariadb-dump.service<br> * Deploy /etc/systemd/system/mariadb-dump.timer<br> * `systemctl enable mariadb-dump.timer --now` |
-| `mariadb_server:dare`                | Deploys the keyfile for the [File Key Management Encryption Plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin/) and restarts MariaDB if ncecessary. |
-| `mariadb_server:database`            | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Create or delete mariadb databases |
-| `mariadb_server:dump`                | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `dnf -y install {{ mariadb_server__dump_mydumper_package }}`<br> * Deploy /usr/local/bin/mariadb-dump<br> * Deploy /etc/mariadb-dump.conf<br> * Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost<br> * Deploy /etc/systemd/system/mariadb-dump.service<br> * Deploy /etc/systemd/system/mariadb-dump.timer<br> * `systemctl enable mariadb-dump.timer --now` |
-| `mariadb_server:galera_new_cluster`  | Runs `galera_new_cluster`, but only if `mariadb_server__run_galera_new_cluster` is true. Use in combination with `--extra-vars='{"mariadb_server__run_galera_new_cluster": true}'` |
-| `mariadb_server:secure_installation` | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Remove all "root" users<br> * Secure installation: Remove anonymous users<br> * Secure installation: Remove test database<br> * Secure installation: Remove test database (privileges)<br> * Secure installation: Reload privilege tables |
-| `mariadb_server:state`               | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `systemctl enable/disable mariadb.service`<br> * `systemctl {{ mariadb_server__state[:-2] }} mariadb.service` |
-| `mariadb_server:sys_schema`          | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * Show databases<br> * `wget https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz`<br> * `mkdir /tmp/mariadb-sys-schema`<br> * `tar xzvf /tmp/mariadb-sys-schema.tar.gz`<br> * `mysql --user "{{ mariadb_server__admin_user["username"] }}" --password="..." < ./sys_10.sql`<br> * `rm -rf /tmp/mariadb-sys-schema` |
-| `mariadb_server:upgrade`                | Upgrades the MariaDB server. |
-| `mariadb_server:user`                | * Get the list of installed packages<br> * Get mariadb-server version<br> * Load default values for {{ mariadb_server__installed_version }}<br> * `mkdir /var/log/mariadb`<br> * `touch /var/log/mariadb/mariadb.log; chown mysql:mysql /var/log/mariadb/mariadb.log`<br> * Create DBA "{{ mariadb_server__admin_user["username"] }}"<br> * Create, update or delete MariaDB users |
+| `mariadb_server`                     | * Install mariadb-server<br> * Optionally install galera-4 and rsync<br> * Plus all of the tags below, except `mariadb_server:galera_new_cluster` and `mariadb_server:upgrade` |
+| `mariadb_server:configure`           | * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer` |
+| `mariadb_server:dare`                | * Deploys the keyfile for the [File Key Management Encryption Plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin/) and restarts MariaDB if ncecessary. |
+| `mariadb_server:database`            | * Create or delete mariadb databases |
+| `mariadb_server:dump`                | * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer`  |
+| `mariadb_server:galera_new_cluster`  | * Runs `galera_new_cluster`, but only if `mariadb_server__run_galera_new_cluster` is true. Use in combination with `--extra-vars='{"mariadb_server__run_galera_new_cluster": true}'` |
+| `mariadb_server:secure_installation` | * Remove all "root" users<br> * Run `mariadb-secure-installation`<br> * Apply some universal CIS hardenings |
+| `mariadb_server:state`               | * Enable/Disable `mariadb.service`  |
+| `mariadb_server:sys_schema`          | * Install sys schema from https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz |
+| `mariadb_server:upgrade`             | * Remove old mariadb-server package<br> * Install latest mariadb-server<br> * Update mariadb-client, mariadb-common, mariadb-shared on Red Hat<br> * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Run `mysql_upgrade`<br> * Must be explicitly called |
+| `mariadb_server:user`                | * Create DBA<br> * Create, update or delete MariaDB users |
 
 
 ## Mandatory Role Variables
@@ -75,7 +77,7 @@ mariadb_server__admin_user:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mariadb_server__dump_user` | User to whom backup privileges are granted to. Setting this user automatically enables daily MariaDB-Dumps. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `["*.*:event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options: `'present'`, `'absent'` | unset |
+| `mariadb_server__dump_user` | String. For mydumper: User to whom backup privileges are granted to. Setting this user automatically enables daily MariaDB-Dumps. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `["*.*:event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options: `'present'`, `'absent'` | unset |
 
 Example:
 ```yaml
@@ -92,14 +94,15 @@ mariadb_server__dump_user:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | List of dictionaries of databases to create. Subkeys:<br> * `name`: Mandatory, string. Name of the databse schema. <br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `mariadb_server__dump_compress` | Compress output files. One of `''` or `false` (no compression, extremely fast), `'ZSTD'` or `'GZIP'` (both very slow). | `''` (no compression) |
-| `mariadb_server__dump_directory` | Dump output directory name. | `'/backup/mariadb-dump'`|
-| `mariadb_server__dump_long_query_guard` | Set long query timer in seconds. | `60` |
-| `mariadb_server__dump_mydumper_package` | Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
-| `mariadb_server__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 \| random(start=0, seed=inventory_hostname) }}:00'`|
-| `mariadb_server__dump_threads` | The number of threads to use for dumping data. `0` means to use number of CPUs. | `0`|
+| `mariadb_server__dump_compress` | String/Bool. For mydumper: Compress output files. One of `''` or `false` (no compression, extremely fast), `'ZSTD'` or `'GZIP'` (both very slow). | `''` (no compression) |
+| `mariadb_server__dump_directory` | String. For mydumper: Dump output directory name. | `'/backup/mariadb-dump'`|
+| `mariadb_server__dump_long_query_guard` | Integer. For mydumper: Set long query timer in seconds. | `60` |
+| `mariadb_server__dump_mydumper_package` | String. For mydumper: Name of the "mydumper" package. Also takes an URL to GitHub if no repo server is available, see the example below. | `'mydumper'` |
+| `mariadb_server__dump_on_calendar` | String. For mydumper: The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 \| random(start=0, seed=inventory_hostname) }}:00'`|
+| `mariadb_server__dump_raw` | String. For mydumper: Any additional parameters you want to add. | `''` |
+| `mariadb_server__dump_threads` | Integer. For mydumper: The number of threads to use for dumping data. `0` means to use number of CPUs. | `0`|
 | `mariadb_server__enabled`| Enables or disables the Systemd unit. | `true` |
-| `mariadb_server__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
+| `mariadb_server__logrotate` | Integer. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
 | `mariadb_server__state`| Controls the Systemd service. One of<br> * `started`<br> * `stopped`<br> * `reloaded` | `'started'` |
 | `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_user`). Subkeys:<br> * `username`: Mandatory, String. Username. <br> * `host`: Mandatory, String. Host. <br> * `password`<br> * `priv`<br> * `state`<br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
@@ -117,6 +120,7 @@ mariadb_server__dump_directory: '/backup/mariadb-dump'
 mariadb_server__dump_long_query_guard: 60
 mariadb_server__dump_mydumper_package: 'https://github.com/mydumper/mydumper/releases/download/v0.12.6-1/mydumper-0.12.6-1.el8.x86_64.rpm'
 mariadb_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
+mariadb_server__dump_raw: ''
 mariadb_server__dump_threads: 4
 mariadb_server__enabled: true
 mariadb_server__logrotate: 7
@@ -127,7 +131,7 @@ mariadb_server__users__host_var:
     host: 'localhost'
     password: 'linuxfabrik'
     priv:
-      - '{{ icingaweb2_db }}.*:SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
+      - '{{ icingaweb2_db }}.*:create view,delete,drop,execute,index,insert,select,update'
       - 'wiki.*:ALL'
     state: 'present'
   - username: 'mariadb-dump'
@@ -338,7 +342,7 @@ mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0 #  inconsistenc
 | `mariadb_server__cnf_wsrep_node_address` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_node_address) | `'{{ ansible_facts["default_ipv4"]["address"] }}'` |
 | `mariadb_server__cnf_wsrep_node_name` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_node_name) | `'{{ ansible_facts["nodename"] }}'` |
 | `mariadb_server__cnf_wsrep_on` | Boolean. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_on). Also installs the packages required for Galera. | `false` |
-| `mariadb_server__cnf_wsrep_provider_options` | [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_provider_options) | `'gcache.size=300M; gcache.page_size=300M'` |
+| `mariadb_server__cnf_wsrep_provider_options` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_provider_options) | `'gcache.size=300M; gcache.page_size=300M'` |
 | `mariadb_server__cnf_wsrep_slave_threads` | Integer. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_slave_threads). Four slave threads can typically saturate one CPU core. | `'{{ 1 if ansible_facts["processor_nproc"] == 1 else (ansible_facts["processor_nproc"] - 1) * 4 }}'` |
 | `mariadb_server__run_galera_new_cluster` | Boolean. [mariadb.com](https://mariadb.com/kb/en/mariadbd-options/#-wsrep-new-cluster). Do not set in the inventory, use via `--extra-vars`. This bootstraps the Galera cluster. Only set this to `true` during the deployment of the first node, or when recovering / restarting a stopped cluster. | `false` |
 
