@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # This file is managed by Ansible - do not edit
-# 2024112901
+# 2024112902
 
 
 # no `set -e` because we change some things at the beginning of the script
@@ -26,10 +26,20 @@ umask 027
 
 source /etc/mariadb-dump.conf
 
+# mysql: Deprecated program name. It will be removed in a future release, use '/usr/bin/mariadb' instead
+# so `mariadb` or `mysql`?
+MYSQL=$(which mariadb 2> /dev/null)
+if [ -z "$MYSQL" ]; then
+    MYSQL=$(which mysql 2> /dev/null)
+fi
+if [ -z "$MYSQL" ]; then
+    exit 42
+fi
+
 rm -rf "$BACKUP_DIR"
 mkdir -p "$BACKUP_DIR"
 
-mysql --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
+$MYSQL --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
     --execute='SET GLOBAL innodb_buffer_pool_dump_now = ON;'
 mysql_table_lock_retc=$?
 
@@ -68,7 +78,7 @@ mydumper_retc=$?
 
 umask "$old_umask"
 
-mysql --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
+$MYSQL --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
     --execute='SET GLOBAL innodb_buffer_pool_load_now = ON;'
 mysql_table_unlock_retc=$?
 
