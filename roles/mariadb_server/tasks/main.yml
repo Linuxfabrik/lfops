@@ -47,7 +47,7 @@
         - 'mariadb-server'
       state: 'latest'
 
-  - name: 'Update mariadb-client, mariadb-common, mariadb-shared (RedHat)'
+  - name: 'Update mariadb-client, mariadb-common, mariadb-shared on Red Hat'
     ansible.builtin.dnf:
       # `mariadb-*` sadly does not work with update_only
       name:
@@ -224,7 +224,7 @@
 
 - block:
 
-  - name: 'deploy temporary defaults file to /tmp/lfops-mariadb-defaults.cnf'
+  - name: 'Deploy temporary defaults file to /tmp/lfops-mariadb-defaults.cnf'
     ansible.builtin.copy:
       dest: '/tmp/lfops-mariadb-defaults.cnf'
       content: |-
@@ -252,8 +252,8 @@
         - 'Make sure to manually check the logfile at {{ mariadb_server__cnf_log_error__combined_var }} for errors.'
 
   tags:
-    - 'never'
     - 'mariadb_server:upgrade'
+    - 'never'
 
 
 - block:
