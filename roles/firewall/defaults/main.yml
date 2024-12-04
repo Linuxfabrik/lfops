@@ -1,2 +1,24 @@
 firewall__firewall: 'fwbuilder'
+firewall__firewalld_ports__combined_var: '{{ (
+      firewall__firewalld_ports__role_var +
+      firewall__firewalld_ports__dependent_var +
+      firewall__firewalld_ports__group_var +
+      firewall__firewalld_ports__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="port")
+  }}'
+firewall__firewalld_ports__dependent_var: []
+firewall__firewalld_ports__group_var: []
+firewall__firewalld_ports__host_var: []
+firewall__firewalld_ports__role_var: []
+firewall__firewalld_services__combined_var: '{{ (
+      firewall__firewalld_services__role_var +
+      firewall__firewalld_services__dependent_var +
+      firewall__firewalld_services__group_var +
+      firewall__firewalld_services__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="service")
+  }}'
+firewall__firewalld_services__dependent_var: []
+firewall__firewalld_services__group_var: []
+firewall__firewalld_services__host_var: []
+firewall__firewalld_services__role_var: []
 firewall__fwbuilder_fw_file: '{{ inventory_hostname }}'

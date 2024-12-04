@@ -206,6 +206,9 @@ Role:tar
 
 ### Added
 
+Role:firewall:
+* Added `firewall__firewalld_ports__*_var` and `firewall__firewalld_services__*_var` variables
+
 Role:icingaweb2_module_x509
 * Added `icingaweb2_module_x509__url` variable
 

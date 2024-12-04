@@ -83,9 +83,29 @@
       enabled: true
       masked: false
 
+  - name: 'Apply port configuration'
+    ansible.posix.firewalld:
+      port: '{{ item["port"] }}'
+      state: '{{ item["state"] | d("enabled") }}'
+      permanent: true
+    loop: '{{ firewall__firewalld_ports__combined_var }}'
+    notify: 'firewall: reload firewalld'
+
+  - name: 'Apply service configuration'
+    ansible.posix.firewalld:
+      service: '{{ item["service"] }}'
+      state: '{{ item["state"] | d("enabled") }}'
+      permanent: true
+    loop: '{{ firewall__firewalld_services__combined_var }}'
+    notify: 'firewall: reload firewalld'
+
+  - name: 'Flush handlers to activate changes to FirewallD'
+    ansible.builtin.meta: 'flush_handlers'
+
   when: 'firewall__firewall == "firewalld"'
   tags:
     - 'firewall'
+    - 'firewall:firewalld'
 
 
 - block:
