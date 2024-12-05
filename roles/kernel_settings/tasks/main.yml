@@ -10,12 +10,6 @@
         - 'Combined transparent_hugepages: {{ kernel_settings__transparent_hugepages__combined_var }}'
         - 'Combined transparent_hugepages_defrag: {{ kernel_settings__transparent_hugepages_defrag__combined_var }}'
 
-  - name: 'systemctl restart tuned # this prevents errors later on'
-    ansible.builtin.systemd:
-      name: 'tuned.service'
-      state: 'restarted'
-    ignore_errors: true # fails if tuned is not installed yet (installation will be done by fedora.linux_system_roles.kernel_settings)
-
   # prevent errors like "Failed to read sysctl parameter 'sunrpc.tcp_slot_table_entries', the parameter does not exist" on RHEL
   - name: 'modprobe sunrpc'
     community.general.modprobe:
@@ -27,10 +21,10 @@
     ansible.builtin.include_role:
       name: 'fedora.linux_system_roles.kernel_settings'
     vars:
-      kernel_settings_sysctl: '{{ kernel_settings__sysctl__combined_var }}'
-      kernel_settings_sysfs: '{{ kernel_settings__sysfs__combined_var }}'
-      kernel_settings_transparent_hugepages: '{{ kernel_settings__transparent_hugepages__combined_var }}'
-      kernel_settings_transparent_hugepages_defrag: '{{ kernel_settings__transparent_hugepages_defrag__combined_var }}'
+      kernel_settings_sysctl: '{{ kernel_settings__sysctl__combined_var }}' # noqa var-naming[pattern]
+      kernel_settings_sysfs: '{{ kernel_settings__sysfs__combined_var }}' # noqa var-naming[pattern]
+      kernel_settings_transparent_hugepages: '{{ kernel_settings__transparent_hugepages__combined_var }}' # noqa var-naming[pattern]
+      kernel_settings_transparent_hugepages_defrag: '{{ kernel_settings__transparent_hugepages_defrag__combined_var }}' # noqa var-naming[pattern]
 
   - ansible.builtin.debug:
       msg: 'Please restart the server manually to apply new kernel settings.'
