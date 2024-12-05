@@ -164,6 +164,9 @@
   - name: 'mkdir -p /etc/systemd/system/mariadb.service.d/'
     ansible.builtin.file:
       path: '/etc/systemd/system/mariadb.service.d/'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
       state: 'directory'
 
   - name: 'Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf'
@@ -176,7 +179,7 @@
     register: 'mariadb_server__socket_selinux_workaround_result'
     notify: 'mariadb_server: systemctl restart mariadb'
 
-  - name: 'systemctl daemon-reload'
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
     ansible.builtin.systemd:
       daemon_reload: true
     when: 'mariadb_server__socket_selinux_workaround_result is changed'
@@ -236,7 +239,7 @@
       group: 'root'
       mode: 0o600 # contains secrets
 
-  - name: 'mysql_upgrade --defaults-file=/tmp/lfops-mariadb-defaults.cnf'
+  - name: 'mysql_upgrade --defaults-file=/tmp/lfops-mariadb-defaults.cnf' # noqa no-changed-when will always be changed for upgrades
     ansible.builtin.command: 'mysql_upgrade --defaults-file=/tmp/lfops-mariadb-defaults.cnf'
     register: 'mariadb_server__mysql_upgrade_result'
 
@@ -527,7 +530,7 @@
 
 - block:
 
-  - name: 'curl https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz --output /tmp/ansible.mariadb-sys-schema.tar.gz'
+  - name: 'curl https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz --output /tmp/ansible.mariadb-sys-schema.tar.gz' # noqa risky-file-permissions file on localhost
     ansible.builtin.get_url:
       url: 'https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz'
       dest: '/tmp/ansible.mariadb-sys-schema.tar.gz'
@@ -535,12 +538,12 @@
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.mariadb-sys-schema.tar.gz to the server'
+  - name: 'copy /tmp/ansible.mariadb-sys-schema.tar.gz to the server' # noqa risky-file-permissions temporary file
     ansible.builtin.copy:
       src: '/tmp/ansible.mariadb-sys-schema.tar.gz'
       dest: '/tmp/ansible.mariadb-sys-schema.tar.gz'
 
-  - name: 'mkdir /tmp/mariadb-sys-schema'
+  - name: 'mkdir /tmp/mariadb-sys-schema' # noqa risky-file-permissions temporary dir
     ansible.builtin.file:
       path: '/tmp/mariadb-sys-schema'
       state: 'directory'
