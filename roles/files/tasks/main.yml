@@ -55,6 +55,9 @@
       src: '{{ (item["state"] | d("present") != "absent") | ternary(item["src"], omit) }}'
       path: '{{ item["dest"] }}'
       state: '{{ (item["state"] | d("present") == "present") | ternary("link", "absent") }}'
+      mode: '{{ item["mode"] | d("0o644") }}'
+      owner: '{{ item["owner"] | d("root") }}'
+      group: '{{ item["group"] | d("root") }}'
     loop: '{{ files__symlinks__combined_var }}'
     loop_control:
       label: 'src={{ item["src"] }}, dest={{ item["dest"] }}, state={{ item["state"] | d("present") }}'
