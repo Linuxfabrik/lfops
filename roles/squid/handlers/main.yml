@@ -1,7 +1,7 @@
-- name: 'squid: squid -k parse # and then restart'
+- name: 'squid: squid -k parse # and then restart' # noqa no-changed-when no config change
   ansible.builtin.command: 'squid -k parse'
   notify:
-    - 'squid: reload squid'
+    - 'squid: restart squid'
 
 - name: 'squid: restart squid'
   ansible.builtin.service:
