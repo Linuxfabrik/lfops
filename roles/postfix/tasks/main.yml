@@ -1,7 +1,9 @@
 - name: 'Perform platform/version specific tasks'
-  ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+  ansible.builtin.include_tasks: '{{ __task_file }}'
+  when: '__task_file | length'
   vars:
-    __task_file:
+    __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
+    __first_found_options:
       files:
         - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
         - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
@@ -11,9 +13,9 @@
         - '{{ ansible_facts["os_family"] }}.yml'
       paths:
         - '{{ role_path }}/tasks'
-  ignore_errors: true # TODO: this probably is a bug in the first_found lookup, according to the doc skip=true should work. else improve the ignore_errors statement
+      skip: true
   tags:
-    - 'postfix'
+    - 'always'
 
 
 - block:

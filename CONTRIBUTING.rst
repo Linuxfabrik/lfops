@@ -317,9 +317,11 @@ Include the OS-specific tasks in the ``tasks/main.yml`` like this, and set the t
 .. code-block:: yaml
 
     - name: 'Perform platform/version specific tasks'
-      ansible.builtin.include_tasks: '{{ lookup("first_found", __task_file) }}'
+      ansible.builtin.include_tasks: '{{ __task_file }}'
+      when: '__task_file | length'
       vars:
-        __task_file:
+        __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
+        __first_found_options:
           files:
             - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
             - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
@@ -329,9 +331,10 @@ Include the OS-specific tasks in the ``tasks/main.yml`` like this, and set the t
             - '{{ ansible_facts["os_family"] }}.yml'
           paths:
             - '{{ role_path }}/tasks'
+          skip: true
       tags:
-        - 'role'
-        - 'role:tag1' # for example, this tag could only be present in RedHat.yml
+        - 'always'
+
 
 Make sure to set the tags directly on the `include_tasks` task, and not on a surrounding block. Setting it on a block causes the tag to be inherited to all tasks in that block, therefore also to included tasks. See the following example for details:
 
