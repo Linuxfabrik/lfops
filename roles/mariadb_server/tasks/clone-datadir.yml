@@ -7,7 +7,7 @@
   register: 'mariadb_server__datadir_result'
 
 - name: 'Extract "msg" from mariadb_server__datadir_result and remove trailing `/` from {{ mariadb_server__datadir_result.msg }}'
-  set_fact:
+  ansible.builtin.set_fact:
     mariadb_server__datadir_result: '{{ mariadb_server__datadir_result.msg[:-1] if mariadb_server__datadir_result.msg.endswith("/") else mariadb_server__datadir_result.msg }}'
 
 - name: 'mariadb_server__datadir_result:'
