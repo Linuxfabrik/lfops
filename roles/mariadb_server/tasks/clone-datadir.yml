@@ -1,0 +1,51 @@
+- name: 'Get current datadir'
+  community.mysql.mysql_variables:
+    login_user: '{{ mariadb_server__admin_user["username"] }}'
+    login_password: '{{ mariadb_server__admin_user["password"] }}'
+    login_unix_socket: '{{ mariadb_server__mysql_login_unix_socket }}'
+    variable: 'datadir'
+  register: 'mariadb_server__datadir_result'
+
+- name: 'Extract "msg" from mariadb_server__datadir_result and remove trailing `/` from {{ mariadb_server__datadir_result.msg }}'
+  set_fact:
+    mariadb_server__datadir_result: '{{ mariadb_server__datadir_result.msg[:-1] if mariadb_server__datadir_result.msg.endswith("/") else mariadb_server__datadir_result.msg }}'
+
+- name: 'mariadb_server__datadir_result:'
+  ansible.builtin.debug:
+    var: 'mariadb_server__datadir_result'
+
+
+# if current_datadir <> datadir_in_inventory:
+#     systemctl stop mariadb
+#     cp --archive current_datadir/. datadir_in_inventory/)
+#     systemctl start mariadb
+
+- block:
+
+  - name: 'systemctl stop mariadb.service'
+    ansible.builtin.service:
+      name: 'mariadb.service'
+      state: 'stopped'
+
+    # cp: The . at the end of the source directory explicitly includes all files, including hidden
+    # ones (like .my.cnf or .hidden_file).
+  - name: 'cp --archive {{ mariadb_server__datadir_result }}/. {{ mariadb_server__cnf_datadir__combined_var }}/'
+    ansible.builtin.command:
+      cmd: 'cp --archive {{ mariadb_server__datadir_result }}/. {{ mariadb_server__cnf_datadir__combined_var }}/'
+      creates: '{{ mariadb_server__cnf_datadir__combined_var }}/ibdata1'
+
+  - name: 'Deploy {{ mariadb_server__config_file_01 }}'
+    ansible.builtin.template:
+      src: 'etc/my.cnf.d/z01-linuxfabrik.cnf.j2'
+      dest: '{{ mariadb_server__config_file_01 }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'systemctl start mariadb.service'
+    ansible.builtin.service:
+      name: 'mariadb.service'
+      state: 'started'
+
+  when:
+    - 'mariadb_server__datadir_result != mariadb_server__cnf_datadir__combined_var'

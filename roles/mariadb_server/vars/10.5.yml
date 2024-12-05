@@ -4,6 +4,7 @@ mariadb_server__cnf_binlog_format__role_var: 'MIXED'
 mariadb_server__cnf_bulk_insert_buffer_size__role_var: '8M'
 mariadb_server__cnf_character_set_server__role_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__role_var: 'utf8mb4_unicode_ci'
+mariadb_server__cnf_datadir__role_var: '/var/lib/mysql/'
 mariadb_server__cnf_default_storage_engine__role_var: 'InnoDB'
 mariadb_server__cnf_expire_logs_days__role_var: 0
 mariadb_server__cnf_general_log__role_var: 'OFF'

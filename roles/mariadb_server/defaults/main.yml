@@ -83,6 +83,16 @@ mariadb_server__cnf_collation_server__combined_var: '{{
     mariadb_server__cnf_collation_server__role_var
   }}'
 
+mariadb_server__cnf_datadir__dependent_var: ''
+mariadb_server__cnf_datadir__group_var: ''
+mariadb_server__cnf_datadir__host_var: ''
+mariadb_server__cnf_datadir__combined_var: '{{
+    mariadb_server__cnf_datadir__host_var if (mariadb_server__cnf_datadir__host_var | string | length) else
+    mariadb_server__cnf_datadir__group_var if (mariadb_server__cnf_datadir__group_var | string | length) else
+    mariadb_server__cnf_datadir__dependent_var if (mariadb_server__cnf_datadir__dependent_var | string | length) else
+    mariadb_server__cnf_datadir__role_var
+  }}'
+
 mariadb_server__cnf_default_storage_engine__dependent_var: ''
 mariadb_server__cnf_default_storage_engine__group_var: ''
 mariadb_server__cnf_default_storage_engine__host_var: ''

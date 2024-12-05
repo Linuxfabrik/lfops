@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024112803
+# 2024120501
 # 11.1
 
 # https://mariadb.com/kb/en/library/server-system-variables/
@@ -12,6 +12,7 @@ binlog_format                                  = {{ mariadb_server__cnf_binlog_f
 bulk_insert_buffer_size                        = {{ mariadb_server__cnf_bulk_insert_buffer_size__combined_var }}
 character_set_server                           = {{ mariadb_server__cnf_character_set_server__combined_var }}
 collation_server                               = {{ mariadb_server__cnf_collation_server__combined_var }}
+datadir                                        = /var/lib/mysql
 default_storage_engine                         = {{ mariadb_server__cnf_default_storage_engine__combined_var }}
 expire_logs_days                               = {{ mariadb_server__cnf_expire_logs_days__combined_var }}
 general_log                                    = {{ mariadb_server__cnf_general_log__combined_var }}

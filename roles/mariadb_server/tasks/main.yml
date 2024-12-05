@@ -105,6 +105,7 @@
 
   tags:
     - 'mariadb_server'
+    - 'mariadb_server:clone_datadir'
     - 'mariadb_server:configure'
     - 'mariadb_server:database'
     - 'mariadb_server:dump'
@@ -117,6 +118,60 @@
 
 - block:
 
+  - name: 'Remove trailing `/` from {{ mariadb_server__cnf_datadir__combined_var }}'
+    set_fact:
+      mariadb_server__cnf_datadir__combined_var: '{{ mariadb_server__cnf_datadir__combined_var[:-1] }}'
+    when:
+      - 'mariadb_server__cnf_datadir__combined_var.endswith("/")'
+
+  - name: 'mariadb_server__cnf_datadir__combined_var:'
+    ansible.builtin.debug:
+      var: 'mariadb_server__cnf_datadir__combined_var'
+
+  - name: |-
+      mkdir -p {{ mariadb_server__cnf_datadir__combined_var }}
+      chown mysql:mysql {{ mariadb_server__cnf_datadir__combined_var }}
+      chmod 750 {{ mariadb_server__cnf_datadir__combined_var }}
+    ansible.builtin.file:
+      path: '{{ mariadb_server__cnf_datadir__combined_var }}'
+      state: 'directory'
+      owner: 'mysql'
+      group: 'mysql'
+      mode: 0o750
+
+  # /var/lib/mysql(-files|-keyring)?(/.*)?             all files          system_u:object_r:mysqld_db_t:s0
+  - name: 'semanage fcontext --add --type mysqld_db_t {{ mariadb_server__cnf_datadir__combined_var }}(-files|-keyring)?(/.*)?'
+    community.general.sefcontext:
+      setype: 'mysqld_db_t'
+      target: '{{ mariadb_server__cnf_datadir__combined_var }}(-files|-keyring)?(/.*)?'
+      state: 'present'
+
+  # /var/lib/mysql/mysql\.sock                         socket             system_u:object_r:mysqld_var_run_t:s0
+  - name: 'semanage fcontext --add --type mysqld_var_run_t {{ mariadb_server__cnf_datadir__combined_var }}/mysql\.sock'
+    community.general.sefcontext:
+      setype: 'mysqld_var_run_t'
+      target: '{{ mariadb_server__cnf_datadir__combined_var }}/mysql\.sock'
+      ftype: 's'  # for socket files
+      state: 'present'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+
+  - name: 'restorecon -Fvr {{ mariadb_server__cnf_datadir__combined_var }}'
+    ansible.builtin.command: 'restorecon -Fvr {{ mariadb_server__cnf_datadir__combined_var }}'
+    register: 'mariadb_server__restorecon_result'
+    changed_when: 'mariadb_server__restorecon_result["stdout"] | length'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:clone_datadir'
+    - 'mariadb_server:configure'
+    - 'mariadb_server:secure_installation'
+
+
+- block:
+
   - name: 'mkdir /var/log/mariadb'
     ansible.builtin.file:
       path: '/var/log/mariadb'
@@ -125,7 +180,9 @@
       group: 'mysql'
       mode: 0o755
 
-  - name: 'touch /var/log/mariadb/mariadb.log; chown mysql:mysql /var/log/mariadb/mariadb.log'
+  - name: |-
+      touch /var/log/mariadb/mariadb.log
+      chown mysql:mysql /var/log/mariadb/mariadb.log
     ansible.builtin.file:
       path: '/var/log/mariadb/mariadb.log'
       state: 'touch'
@@ -135,8 +192,8 @@
 
   - name: 'restorecon -Fvr /var/log/mariadb/mariadb.log'
     ansible.builtin.command: 'restorecon -Fvr /var/log/mariadb/mariadb.log'
-    register: 'var_log_mariadb__restorecon_result'
-    changed_when: 'var_log_mariadb__restorecon_result["stdout"] | length'
+    register: 'mariadb_server__restorecon_result'
+    changed_when: 'mariadb_server__restorecon_result["stdout"] | length'
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 
@@ -147,10 +204,10 @@
     when:
       - 'mariadb_server__run_galera_new_cluster is true'
 
-  - name: 'Deploy {{ mariadb_server__config_file }}'
+  - name: 'Deploy {{ mariadb_server__config_file_00 }}'
     ansible.builtin.template:
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
-      dest: '{{ mariadb_server__config_file }}'
+      dest: '{{ mariadb_server__config_file_00 }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -194,6 +251,7 @@
 
   tags:
     - 'mariadb_server'
+    - 'mariadb_server:clone_datadir'
     - 'mariadb_server:configure'
     - 'mariadb_server:upgrade'
 
@@ -441,10 +499,10 @@
 # galera
 - block:
 
-  - name: 'Deploy {{ mariadb_server__config_file }}'
+  - name: 'Deploy {{ mariadb_server__config_file_00 }}'
     ansible.builtin.template:
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
-      dest: '{{ mariadb_server__config_file }}'
+      dest: '{{ mariadb_server__config_file_00 }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -575,6 +633,15 @@
   tags:
     - 'mariadb_server'
     - 'mariadb_server:sys_schema'
+
+
+- block:
+
+  - ansible.builtin.include_tasks: 'clone-datadir.yml'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:clone_datadir'
 
 
 - name: 'Flush handlers so that the mariadb can be used by other roles later'

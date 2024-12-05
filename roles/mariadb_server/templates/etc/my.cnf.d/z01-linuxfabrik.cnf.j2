@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2024120501
+# any version of MariaDB
+
+# https://mariadb.com/kb/en/library/server-system-variables/
+
+[server]
+datadir                                        = {{ mariadb_server__cnf_datadir__combined_var }}
