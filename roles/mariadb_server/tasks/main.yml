@@ -180,6 +180,11 @@
       group: 'mysql'
       mode: 0o755
 
+  - name: 'Check if /var/log/mariadb/mariadb.log exists'
+    ansible.builtin.stat:
+      path: '/var/log/mariadb/mariadb.log'
+    register: 'mariadb_server__logfile_exists_result'
+
   - name: |-
       touch /var/log/mariadb/mariadb.log
       chown mysql:mysql /var/log/mariadb/mariadb.log
@@ -189,6 +194,7 @@
       owner: 'mysql'
       group: 'mysql'
       mode: 0o660
+    when: 'not mariadb_server__logfile_exists_result["stat"]["exists"]'
 
   - name: 'restorecon -Fvr /var/log/mariadb/mariadb.log'
     ansible.builtin.command: 'restorecon -Fvr /var/log/mariadb/mariadb.log'
