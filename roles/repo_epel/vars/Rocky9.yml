@@ -4,4 +4,3 @@ repo_epel__repo_files:
   - 'RedHat9/etc/yum.repos.d/epel-cisco-openh264.repo'
   - 'RedHat9/etc/yum.repos.d/epel-testing.repo'
   - 'RedHat9/etc/yum.repos.d/epel.repo'
-  - 'Rocky9/etc/yum.repos.d/rocky-crb.repo'
