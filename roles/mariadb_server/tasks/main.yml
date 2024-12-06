@@ -119,7 +119,7 @@
 - block:
 
   - name: 'Remove trailing `/` from {{ mariadb_server__cnf_datadir__combined_var }}'
-    set_fact:
+    ansible.builtin.set_fact:
       mariadb_server__cnf_datadir__combined_var: '{{ mariadb_server__cnf_datadir__combined_var[:-1] }}'
     when:
       - 'mariadb_server__cnf_datadir__combined_var.endswith("/")'
