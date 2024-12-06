@@ -227,6 +227,7 @@ Role:icingaweb2_module_reporting
 Role:mariadb_server:
 * Added Galera cluster installation
 * Make datadir configurable, including copy of old one to the new location
+* Make socket configurable
 
 Role:glpi_agent
 * Added

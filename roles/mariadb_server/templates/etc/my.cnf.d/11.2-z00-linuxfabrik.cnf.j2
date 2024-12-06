@@ -1,6 +1,9 @@
 # {{ ansible_managed }}
-# 2024120501
+# 2024120601
 # 11.2
+
+[client]
+socket                                         = {{ mariadb_server__cnf_socket__combined_var }}
 
 # https://mariadb.com/kb/en/library/server-system-variables/
 
@@ -37,6 +40,7 @@ query_cache_type                               = {{ mariadb_server__cnf_query_ca
 skip_name_resolve                              = {{ mariadb_server__cnf_skip_name_resolve__combined_var }}
 slow_query_log                                 = {{ mariadb_server__cnf_slow_query_log__combined_var }}
 slow_query_log_file                            = {{ mariadb_server__cnf_slow_query_log_file__combined_var }}
+socket                                         = {{ mariadb_server__cnf_socket__combined_var }}
 sql_mode                                       = {{ mariadb_server__cnf_sql_mode__combined_var }}
 table_definition_cache                         = {{ mariadb_server__cnf_table_definition_cache__combined_var }}
 tls_version                                    = {{ mariadb_server__cnf_tls_version__combined_var }}

@@ -1,3 +1,3 @@
+mariadb_server__cnf_socket__role_var: '{{ mariadb_server__cnf_datadir__combined_var }}/mysql.sock'
 mariadb_server__config_file_00: '/etc/my.cnf.d/z00-linuxfabrik.cnf'
 mariadb_server__config_file_01: '/etc/my.cnf.d/z01-linuxfabrik.cnf'
-mariadb_server__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'

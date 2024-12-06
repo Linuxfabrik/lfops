@@ -140,17 +140,17 @@
       mode: 0o750
 
   # /var/lib/mysql(-files|-keyring)?(/.*)?             all files          system_u:object_r:mysqld_db_t:s0
-  - name: 'semanage fcontext --add --type mysqld_db_t {{ mariadb_server__cnf_datadir__combined_var }}(-files|-keyring)?(/.*)?'
+  - name: 'semanage fcontext --add --type mysqld_db_t {{ mariadb_server__cnf_datadir__combined_var | ansible.builtin.regex_escape }}(-files|-keyring)?(/.*)?'
     community.general.sefcontext:
       setype: 'mysqld_db_t'
-      target: '{{ mariadb_server__cnf_datadir__combined_var }}(-files|-keyring)?(/.*)?'
+      target: '{{ mariadb_server__cnf_datadir__combined_var | ansible.builtin.regex_escape }}(-files|-keyring)?(/.*)?'
       state: 'present'
 
   # /var/lib/mysql/mysql\.sock                         socket             system_u:object_r:mysqld_var_run_t:s0
-  - name: 'semanage fcontext --add --type mysqld_var_run_t {{ mariadb_server__cnf_datadir__combined_var }}/mysql\.sock'
+  - name: 'semanage fcontext --add --type mysqld_var_run_t {{ mariadb_server__cnf_socket__combined_var | ansible.builtin.regex_escape }}'
     community.general.sefcontext:
       setype: 'mysqld_var_run_t'
-      target: '{{ mariadb_server__cnf_datadir__combined_var }}/mysql\.sock'
+      target: '{{ mariadb_server__cnf_socket__combined_var | ansible.builtin.regex_escape }}'
       ftype: 's'  # for socket files
       state: 'present'
     when:
@@ -282,6 +282,9 @@
     ansible.builtin.service:
       name: 'mariadb.service'
       state: '{{ mariadb_server__state }}'
+
+  - name: 'Flush handlers to make sure that MariaDB is using the correct socket from here on'
+    ansible.builtin.meta: 'flush_handlers'
 
   tags:
     - 'mariadb_server'
