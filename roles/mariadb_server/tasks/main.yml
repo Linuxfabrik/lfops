@@ -107,6 +107,7 @@
     - 'mariadb_server'
     - 'mariadb_server:clone_datadir'
     - 'mariadb_server:configure'
+    - 'mariadb_server:dare'
     - 'mariadb_server:database'
     - 'mariadb_server:dump'
     - 'mariadb_server:secure_installation'
