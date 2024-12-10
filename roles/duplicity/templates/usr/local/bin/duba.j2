@@ -19,7 +19,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2023033001'
+__version__ = '2024112801'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -54,284 +54,289 @@ def parse_args():
 
     return parser.parse_args()
 
+class Duba:
 
-def init_logging():
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    def __init__(self, config_file='/etc/duba/duba.json'):
+        self.config = self.load_config(config_file)
+        self.logger = self.init_logging()
+        self.duplicity_version = self.get_duplicity_version()
+        # self.use_concurrency = self.duplicity_version >= (3, 0, 0)
 
-    console_logger = logging.StreamHandler()
-    console_logger.setLevel(logging.DEBUG)
-    console_logger.setFormatter(logging.Formatter(
+
+    def init_logging(self):
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
+
+        console_logger = logging.StreamHandler()
+        console_logger.setLevel(logging.DEBUG)
+        console_logger.setFormatter(logging.Formatter(
             '%(asctime)s %(levelname)s: duba - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'
-    ))
-    logger.addHandler(console_logger)
+        ))
+        logger.addHandler(console_logger)
 
-    return logger
+        # try creating logfile directory for duplicity
+        try:
+            os.mkdir(self.config.get('logdir', '/var/log/duplicity'), 0o640)
+        except OSError:
+            pass
 
-
-def load_config(config_file='/etc/duba/duba.json'):
-    logger = logging.getLogger()
-    # load config file
-    try:
-        with open(config_file, 'r') as f:
-            config = f.read()
-    except IOError as e:
-        logger.error(f'I/O error: {e.strerror} while opening or reading {config_file}')
-        sys.exit(201)
-    except:
-        logger.error(f'Unknown error opening or reading {config_file}')
-        sys.exit(202)
-    # interpret config
-    try:
-        return json.loads(config)
-    except json.JSONDecodeError as e:
-        logger.error(f'JSON decode error: {e}')
-        sys.exit(203)
+        return logger
 
 
-def set_env(config, env=os.environ.copy()):
-    # enrich the environment variables
-    env['LC_ALL'] = 'C' # set cmd output to English, no matter what the user has choosen
-    for key, value in config.items():
-        env[key] = value
-    return env
+    def load_config(self, config_file):
+        # load config file
+        try:
+            with open(config_file, 'r') as f:
+                config = f.read()
+        except IOError as e:
+            self.logger.exception(f'I/O error: {e.strerror} while opening or reading {config_file}')
+            sys.exit(201)
+        except:
+            self.logger.exception(f'Unknown error opening or reading {config_file}')
+            sys.exit(202)
+
+        # interpret config
+        try:
+            return json.loads(config)
+        except json.JSONDecodeError as e:
+            self.logger.exception(f'JSON decode error: {e}')
+            sys.exit(203)
 
 
-def do_backup(config):
-    """Do a massive parallel backup using duplicity and swift as backend. After that, delete
-       all backups older than the given retention time.
-       This function works and is fast, but the code is not very good and could be improved later.
-    """
-    logger = logging.getLogger()
-    logger.info('Starting backup...')
+    def get_duplicity_version(self):
+        try:
+            # result = subprocess.run(['duplicity', '--version'], capture_output=True, text=True, check=True)
+            p = subprocess.Popen(['duplicity', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+            stdout, _ = p.communicate()
+            version_line = stdout.decode('utf-8').strip()
+            version_match = re.search(r'(\d+\.\d+\.\d+)', version_line)
+            if version_match:
+                return tuple(map(int, version_match.group(1).split('.')))
+            else:
+                raise ValueError(f"Could not parse duplicity version from output: {version_line}")
+        except Exception as e:
+            self.logger.exception(f"Error fetching duplicity version: {e}")
+            sys.exit(250)
 
-    # count the number of logical processors to limit number of processes (code taken from psutil)
-    cpu_count = min(os.sysconf('SC_NPROCESSORS_ONLN'), 6)
-    running_procs = []
-    env = set_env(config.get('env', {}))
-    global_retc = 0
 
-    # iterate over backup dirs and spawn processes
-    for src in config.get('backup_sources', []):
-        filelist = []
-        if src.get('divide', False):
-            # divide the source dir:
-            # do not backup the whole dir, but every item on the first level individually
-            logger.debug(f"Dividing the source dir {src.get('path')}")
-            for root, dirs, files in os.walk(src.get('path')):
-                for f in files:
-                    filelist.append(os.path.join(root, f))
-                for f in dirs:
-                    filelist.append(os.path.join(root, f))
-                # break at first directory level
-                break
+    def set_env(self, env_config, env=os.environ.copy()):
+        # enrich the environment variables
+        env['LC_ALL'] = 'C' # set cmd output to English, no matter what the user has choosen
+        env.update(env_config)
+        return env
+
+
+    def build_duplicity_backup_command(self, backup_path, backup_options):
+        # build the duplicity backup command line
+        cmd = ['ionice', '--class', '3']
+        cmd += ['nice', '--adjustment', '19']
+        cmd += ['duplicity']
+        if self.duplicity_version >= (2, 0, 0):
+            cmd += ['backup']
+
+        if self.duplicity_version >= (3, 0, 0):
+            cmd += ['--concurrency', '2']
         else:
-            filelist.append(src.get('path'))
-
-        for f in filelist:
-            # build the duplicity backup command line
-            cmd = ['ionice', '--class', '3']
-            cmd += ['nice', '--adjustment', '19']
-            cmd += ['duplicity']
             cmd += ['--asynchronous-upload']
-            cmd += ['--backend-retry-delay', '60']
-            cmd += ['--cf-backend', f"{config.get('backend', 'swift')}"]
-            cmd += ['--encrypt-key', f"{config.get('gpg_encrypt_local_key', '')}"]
-            cmd += ['--encrypt-key', f"{config.get('gpg_encrypt_master_key', '')}"]
-            # global excludes
-            for exclude in config.get('backup_excludes', []):
-                cmd += ['--exclude', f"{exclude}"]
-            # excludes for this directory
-            for exclude in src.get('excludes', []):
-                cmd += ['--exclude', f"{exclude}"]
-            cmd += ['--exclude-other-filesystems']
-            cmd += ['--full-if-older-than', f"{config.get('full_if_older_than', '30D')}"]
-            logfile = re.sub(r'[^A-Za-z0-9]+', '-', f)
-            if logfile[0] == '-':
-                # cut the first "-"
-                logfile = logfile[1:]
-            cmd += ['--log-file', f"{config.get('logdir', '/var/log/duplicity')}/{logfile}.log"]
-            cmd += ['--log-timestamp']
-            cmd += ['--num-retries', '5']
-            cmd += ['--verbosity', f"{config.get('loglevel', 'notice')}"]
-            cmd += ['--volsize', '200']
-            cmd += [f"{f}"]
-            cmd += [f"{config.get('backup_dest')}{f}"]
+        cmd += ['--backend-retry-delay', '60']
+        cmd += ['--cf-backend', f"{self.config.get('backend', 'swift')}"]
+        cmd += ['--encrypt-key', f"{self.config.get('gpg_encrypt_local_key', '')}"]
+        cmd += ['--encrypt-key', f"{self.config.get('gpg_encrypt_master_key', '')}"]
 
-            logger.info(f"Running: {' '.join(cmd)}")
+        # global excludes
+        for exclude in self.config.get('backup_excludes', []):
+            cmd += ['--exclude', f"{exclude}"]
 
-            # start duplicity in the background
-            # * start n processes: start up to (cpu-cores + 1) nice processes to backup as
-            #   much as possible
-            # * be as nice as possible: only when the machine is busy, the script is slower
-            # * be asynchronous: uploading volumes while packaging new ones saves a lot of time
-            # * use compression: saves money on external storages; bottleneck is always your uplink
-            # and return immediately
-            try:
-                running_procs.append(subprocess.Popen(cmd, env=env))
-            except OSError as e:
-                logger.error(f'OS Error "{e.errno} {e.strerror}" calling command "{cmd}"')
-                sys.exit(205)
-            except ValueError as e:
-                logger.error(f'Value Error "{e}" calling command "{cmd}"')
-                sys.exit(206)
-            except Exception as e:
-                logger.error(f'Unknown error "{e}" while calling command "{cmd}"')
-                sys.exit(207)
+        # excludes for this directory
+        for exclude in backup_options.get('excludes', []):
+            cmd += ['--exclude', f"{exclude}"]
 
-            # don't start more than max cpu processes
-            # https://stackoverflow.com/questions/16807603/python-non-blocking-non-defunct-process
-            # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.poll
-            while True:
-                time.sleep(1)
-                for proc in running_procs:
-                    retc = proc.poll()
-                    if retc is not None:
-                        # there is a retc, so process has finished
-                        proc.terminate()
-                        try:
-                            proc.communicate(timeout=30)
-                        except subprocess.TimeoutExpired:
-                            proc.kill()
-                            proc.communicate()
-                        running_procs.remove(proc)
-                        if retc not in (0, 13):
-                            # just ignore missing directories (backup_dir_doesnt_exist = 13)
-                            global_retc = retc
-                        logger.debug('Process terminated')
-                if len(running_procs) <= cpu_count:
-                    # continue in outer for loop and launch another process
-                    break
+        cmd += ['--exclude-other-filesystems']
+        cmd += ['--full-if-older-than', f"{self.config.get('full_if_older_than', '30D')}"]
 
-    # wait here for all processes to finish
-    logger.debug('All duplicity processes started, waiting for them to finish.')
-    while True:
-        time.sleep(1)
-        for proc in running_procs:
-            retc = proc.poll()
-            if retc is not None:
-                # there is a retc, so process has finished
-                proc.terminate()
-                try:
-                    proc.communicate(timeout=30)
-                except subprocess.TimeoutExpired:
-                    proc.kill()
-                    proc.communicate()
-                running_procs.remove(proc)
+        logfile = re.sub(r'[^A-Za-z0-9]+', '-', backup_path).lstrip('-')
+        cmd += ['--log-file', f"{self.config.get('logdir', '/var/log/duplicity')}/{logfile}.log"]
+
+        cmd += ['--log-timestamp']
+        cmd += ['--num-retries', '5']
+        cmd += ['--verbosity', f"{self.config.get('loglevel', 'notice')}"]
+        cmd += ['--volsize', '200']
+
+        cmd += [f"{backup_path}"]
+        cmd += [f"{self.config.get('backup_dest')}{backup_path}"]
+
+        return cmd
+
+
+    def build_duplicity_cleanup_command(self, backup_path):
+        # build the duplicity command line
+        cmd = ['nice', '--adjustment', '19']
+        cmd += ['duplicity']
+
+        cmd += ['remove-older-than', f"{self.config.get('retention_time', '30D')}"]
+
+        cmd += ['--backend-retry-delay', '60']
+        cmd += ['--force']
+
+        logfile = re.sub(r'[^A-Za-z0-9]+', '-', backup_path).lstrip('-')
+        cmd += ['--log-file', f"{self.config.get('logdir', '/var/log/duplicity')}/{logfile}.log"]
+        cmd += ['--log-timestamp']
+
+        cmd += ['--num-retries', '5']
+        cmd += ['--verbosity', f"{self.config.get('loglevel', 'notice')}"]
+
+        cmd += [f"{self.config.get('backup_dest')}{backup_path}"]
+
+        return cmd
+
+
+    def run_cmd_in_background(self, cmd, env, running_procs, max_procs):
+        # start duplicity in the background
+        # * start n processes: start up to (cpu-cores + 1) nice processes to backup as
+        #   much as possible
+        # * be as nice as possible: only when the machine is busy, the script is slower
+        # * be asynchronous: uploading volumes while packaging new ones saves a lot of time
+        # * use compression: saves money on external storages; bottleneck is always your uplink
+        # and return immediately
+        try:
+            running_procs.append(subprocess.Popen(cmd, env=env))
+        except OSError as e:
+            self.logger.exception(f'OS Error "{e.errno} {e.strerror}" calling command "{cmd}"')
+            sys.exit(205)
+        except ValueError as e:
+            self.logger.exception(f'Value Error "{e}" calling command "{cmd}"')
+            sys.exit(206)
+        except Exception as e:
+            self.logger.exception(f'Unknown error "{e}" while calling command "{cmd}"')
+            sys.exit(207)
+
+        # don't start more than max cpu processes
+        # https://stackoverflow.com/questions/16807603/python-non-blocking-non-defunct-process
+        # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.poll
+        retc = 0
+        while True:
+            time.sleep(0.5)
+            for proc in running_procs:
+                retc = proc.poll()
+                if retc is not None:
+                    # there is a retc, so process has finished
+                    proc.terminate()
+                    try:
+                        proc.communicate(timeout=30)
+                    except subprocess.TimeoutExpired:
+                        proc.kill()
+                        proc.communicate()
+                    running_procs.remove(proc)
+                    self.logger.debug('Process terminated')
+            if len(running_procs) <= max_procs:
+                # allow launching of another process
+                break
+        return retc
+
+
+    def wait_for_running_procs(self, running_procs):
+        retc = 0
+        while True:
+            time.sleep(0.5)
+            for proc in running_procs:
+                retc = proc.poll()
+                if retc is not None:
+                    # there is a retc, so process has finished
+                    proc.terminate()
+                    try:
+                        proc.communicate(timeout=30)
+                    except subprocess.TimeoutExpired:
+                        proc.kill()
+                        proc.communicate()
+                    running_procs.remove(proc)
+                    self.logger.debug('Process terminated')
+            if not running_procs:
+                # all processes finished, exit loop
+                break
+        return retc
+
+
+    def divide_source_dir(self, src_path):
+        filelist = []
+        try:
+            with os.scandir(src_path) as entries:
+                for entry in entries:
+                    filelist.append(entry.path)
+        except Exception as e:
+            self.logger.exception(f"Error reading source directory {src_path}: {e}")
+        return filelist
+
+
+    def do_backup(self):
+        """Do a massive parallel backup using duplicity and swift as backend. After that, delete
+           all backups older than the given retention time.
+           This function works and is fast, but the code is not very good and could be improved later.
+        """
+        self.logger.info('Starting backup...')
+
+        # count the number of logical processors to limit number of processes (code taken from psutil)
+        cpu_count = min(os.sysconf('SC_NPROCESSORS_ONLN'), 6)
+        env = self.set_env(self.config.get('env', {}))
+        global_retc = 0
+
+        # iterate over backup dirs and spawn processes
+        running_procs = []
+        for src in self.config.get('backup_sources', []):
+            if not os.path.exists(src.get('path')):
+                # be tolerant. skip non-existing paths to prevent duplicity error 23
+                continue
+
+            if src.get('divide', False):
+                # divide the source dir:
+                # do not backup the whole dir, but every item on the first level individually
+                self.logger.debug(f"Dividing the source dir {src.get('path')}")
+                src['filelist'] = self.divide_source_dir(src.get('path'))
+            else:
+                src['filelist'] = [src.get('path')]
+
+            for f in src['filelist']:
+                cmd = self.build_duplicity_backup_command(f, src)
+                self.logger.info(f"Running: {' '.join(cmd)}")
+
+                retc = self.run_cmd_in_background(cmd, env, running_procs, cpu_count)
                 if retc not in (0, 13):
                     # just ignore missing directories (backup_dir_doesnt_exist = 13)
                     global_retc = retc
-                logger.debug('Process terminated')
-        if not running_procs:
-            # all processes finished, exit loop
-            break
 
-    logger.info('Starting cleanup...')
-    # Delete all backup sets older than the given time. Old backup sets will not be deleted if
-    # backup sets newer than time depend on them. Note, this action cannot be combined with backup
-    # or other actions, such as cleanup. Note also that --force will be needed to delete the files
-    # instead of just listing them.
+        # wait here for all processes to finish
+        self.logger.debug('All duplicity processes started, waiting for them to finish.')
+        retc = self.wait_for_running_procs(running_procs)
+        if retc not in (0, 13):
+            # just ignore missing directories (backup_dir_doesnt_exist = 13)
+            global_retc = retc
 
-    # iterate over backup dirs and spawn processes
-    for src in config.get('backup_sources', []):
-        filelist = []
-        if src.get('divide', False):
-            # divide the source dir:
-            # do not backup the whole dir, but every item on the first level individually
-            logger.debug(f"Dividing the source dir {src.get('path')}")
-            for root, dirs, files in os.walk(src.get('path')):
-                for f in files:
-                    filelist.append(os.path.join(root, f))
-                for f in dirs:
-                    filelist.append(os.path.join(root, f))
-                # break at first directory level
-                break
-        else:
-            filelist.append(src.get('path'))
+        self.logger.info('Backup done.')
+        self.logger.info('Starting cleanup...')
+        # Delete all backup sets older than the given time. Old backup sets will not be deleted if
+        # backup sets newer than time depend on them. Note, this action cannot be combined with backup
+        # or other actions, such as cleanup. Note also that --force will be needed to delete the files
+        # instead of just listing them.
 
-        for f in filelist:
-            # build the duplicity command line
-            cmd = ['nice', '--adjustment', '19']
-            cmd += ['duplicity']
-            cmd += ['remove-older-than', f"{config.get('retention_time', '30D')}"]
-            cmd += ['--backend-retry-delay', '60']
-            cmd += ['--force']
-            logfile = re.sub(r'[^A-Za-z0-9]+', '-', f)
-            if logfile[0] == '-':
-                # cut the first "-"
-                logfile = logfile[1:]
-            cmd += ['--log-file', f"{config.get('logdir', '/var/log/duplicity')}/{logfile}.log"]
-            cmd += ['--log-timestamp']
-            cmd += ['--num-retries', '5']
-            cmd += ['--verbosity', f"{config.get('loglevel', 'notice')}"]
-            cmd += [f"{config.get('backup_dest')}{f}"]
+        # iterate over backup dirs and spawn processes
+        running_procs = []
+        for src in self.config.get('backup_sources', []):
+            if not os.path.exists(src.get('path')):
+                # be tolerant. skip non-existing paths to prevent duplicity error 23
+                continue
 
-            logger.info(f"Running: {' '.join(cmd)}")
+            for f in src['filelist']:
+                cmd = self.build_duplicity_cleanup_command(f)
+                self.logger.info(f"Running: {' '.join(cmd)}")
 
-            # start duplicity in the background
-            # * start n processes: start up to (cpu-cores + 1) nice processes to backup as
-            #   much as possible
-            # * be as nice as possible: only when the machine is busy, the script is slower
-            # * be asynchronous: uploading volumes while packaging new ones saves a lot of time
-            # * use compression: saves money on external storages; bottleneck is always your uplink
-            # and return immediately
-            try:
-                running_procs.append(subprocess.Popen(cmd, env=env))
-            except OSError as e:
-                logger.error(f'OS Error "{e.errno} {e.strerror}" calling command "{cmd}"')
-                sys.exit(205)
-            except ValueError as e:
-                logger.error(f'Value Error "{e}" calling command "{cmd}"')
-                sys.exit(206)
-            except Exception as e:
-                logger.error(f'Unknown error "{e}" while calling command "{cmd}"')
-                sys.exit(207)
+                self.run_cmd_in_background(cmd, env, running_procs, cpu_count)
 
-            # don't start more than max cpu processes
-            # https://stackoverflow.com/questions/16807603/python-non-blocking-non-defunct-process
-            # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.poll
-            while True:
-                time.sleep(0.5)
-                for proc in running_procs:
-                    retc = proc.poll()
-                    if retc is not None:
-                        # there is a retc, so process has finished
-                        proc.terminate()
-                        try:
-                            proc.communicate(timeout=30)
-                        except subprocess.TimeoutExpired:
-                            proc.kill()
-                            proc.communicate()
-                        running_procs.remove(proc)
-                        logger.debug('Process terminated')
-                if len(running_procs) <= cpu_count:
-                    # continue in outer for loop and launch another process
-                    break
 
-    # wait here for all processes to finish
-    logger.debug('All duplicity processes started, waiting for them to finish.')
-    while True:
-        time.sleep(0.5)
-        for proc in running_procs:
-            retc = proc.poll()
-            if retc is not None:
-                # there is a retc, so process has finished
-                proc.terminate()
-                try:
-                    proc.communicate(timeout=30)
-                except subprocess.TimeoutExpired:
-                    proc.kill()
-                    proc.communicate()
-                running_procs.remove(proc)
-                logger.debug('Process terminated')
-        if not running_procs:
-            # all processes finished, exit loop
-            break
+        # wait here for all processes to finish
+        self.logger.debug('All duplicity processes started, waiting for them to finish.')
+        self.wait_for_running_procs(running_procs)
 
-    logger.info('Backup done.')
-
-    # return last exit code
-    sys.exit(global_retc)
+        self.logger.info('Cleanup done.')
+        sys.exit(global_retc)
 
 
 def main():
@@ -344,16 +349,9 @@ def main():
     except SystemExit:
         sys.exit(221)
 
-    config = load_config(args.CONFIG_FILE)
-    logger = init_logging()
-
-    try:
-        os.mkdir(config.get('logdir', '/var/log/duplicity'), 0o640)
-    except OSError:
-        pass
-
+    duba = Duba(args.CONFIG_FILE)
     if args.COMMAND == 'backup':
-        do_backup(config)
+        duba.do_backup()
 
 
 if __name__ == '__main__':
