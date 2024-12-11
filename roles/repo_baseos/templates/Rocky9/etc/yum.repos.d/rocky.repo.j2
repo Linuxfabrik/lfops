@@ -125,7 +125,7 @@ mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=CRB-$re
 {% endif %}
 #baseurl=http://dl.rockylinux.org/$contentdir/$releasever/CRB/$basearch/os/
 gpgcheck=1
-enabled=0
+enabled={{ repo_baseos__rocky9_enable_crb__combined_var }}
 countme=1
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
