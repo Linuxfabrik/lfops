@@ -19,6 +19,9 @@
 
     # === Basic repositories ===
     - role: 'linuxfabrik.lfops.repo_baseos'
+      repo_baseos__crb_repo_enabled__dependent_var: '{{
+          repo_epel__repo_baseos__crb_repo_enabled__dependent_var
+        }}'
       when:
         - '(ansible_facts["distribution"] == "CentOS" and ansible_facts["distribution_major_version"] in ["7", "8", "9"])
           or (ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] in ["8", "9"])
