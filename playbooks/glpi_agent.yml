@@ -18,7 +18,7 @@
         }}'
       # Since the CRB repository is included in Rocky9 default repo file now, this will be done on Rocky9 Systems only. Formerly it came from epel repository.
       when:
-        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] is "9"'
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] == "9"'
         - 'not glpi_agent__skip_repo_baseos | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_epel'
