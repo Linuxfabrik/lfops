@@ -16,7 +16,7 @@ ExecStartPre=-/bin/chcon -t mysqld_exec_t /usr/sbin/mariadbd
 # Correct: system_u:object_r:mysqld_exec_t:s0 /usr/sbin/mariadbd
 {% endif %}
 
-ExecStartPost=-/bin/chcon -t mysqld_var_run_t /var/lib/mysql/mysql.sock
+ExecStartPost=-/bin/chcon -t mysqld_var_run_t {{ mariadb_server__cnf_socket__combined_var }}
 # This is a workaround for https://jira.mariadb.org/browse/MDEV-24941. This only occurs when using the official MariaDB Repository.
 # After restarting the mariadb service, the socket /var/lib/mysql/mysql.sock has the mysqld_db_t SELinux file type, instead of mysqld_var_run_t
 # This can be reproduced by restarting the service, either taking a look at the file type using `ll -Z /var/lib/mysql/mysql.sock`, or by running `restorecon -Fv /var/lib/mysql/mysql.sock`.
