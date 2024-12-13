@@ -1,9 +1,9 @@
 repo_baseos__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
 repo_baseos__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
 
-repo_baseos__crb_repo_enabled__dependent_var: false
-repo_baseos__crb_repo_enabled__group_var: false
-repo_baseos__crb_repo_enabled__host_var: false
+repo_baseos__crb_repo_enabled__dependent_var: ''
+repo_baseos__crb_repo_enabled__group_var: ''
+repo_baseos__crb_repo_enabled__host_var: ''
 repo_baseos__crb_repo_enabled__role_var: false
 repo_baseos__crb_repo_enabled__combined_var: '{{
     repo_baseos__crb_repo_enabled__host_var if (repo_baseos__crb_repo_enabled__host_var | bool) else
