@@ -26,6 +26,33 @@ The role provides the `mariadb_server:upgrade` tag to update the MariaDB server.
 
 By default, Ansible runs each task on all hosts affected by a play before starting the next task on any host, using 5 forks. This role manages one MariaDB host at a time (serially), e.g. to make cluster management as reliable and save as possible.
 
+Hardenings that can be covered by this role:
+
+* Backup Policy in Place
+* Do Not Reuse Usernames
+* Enable data-at-rest encryption in MariaDB
+* Ensure 'datadir' Has Appropriate Permissions
+* Ensure 'general_log_file' Has Appropriate Permissions
+* Ensure 'log_error' Has Appropriate Permissions
+* Ensure 'log_error' is configured correctly
+* Ensure 'server_audit_file_path' Has Appropriate Permissions
+* Ensure 'slow_query_log' Has Appropriate Permissions
+* Ensure 'sql_mode' Contains 'STRICT_ALL_TABLES'
+* Ensure Audit Logging Is Enabled
+* Ensure Binary and Relay Logs are Encrypted
+* Ensure Example or Test Databases are Not Installed on Production Servers
+* Ensure File Key Management Encryption Plugin files have appropriate permissions
+* Ensure Interactive Login is Disabled
+* Ensure MariaDB is Bound to One or More Specific IP Addresses
+* Ensure MariaDB is Run Under a Sandbox Environment (package default)
+* Ensure No Anonymous Accounts Exist
+* Ensure the Audit Plugin Can't be Unloaded
+* Limit Accepted Transport Layer Security (TLS) Versions
+* Place Databases on Non-System Partitions
+* Secure Backup Credentials
+* The Backups Should be Properly Secured
+* Use Dedicated Least Privileged Account for MariaDB Daemon/Service (package default)
+
 
 ## Mandatory Requirements
 
