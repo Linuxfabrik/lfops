@@ -207,7 +207,7 @@ nextcloud__sysconfig__role_var:
     value: '?'
     state: 'present'
   - key: 'forbidden_chars 5'
-    value: "'"
+    value: '"'
     state: 'present'
   - key: 'forbidden_chars 6'
     value: '\n'
