@@ -339,7 +339,7 @@
     - 'mariadb_server:user'
 
 
-# mysql_secure_installation
+# mysql_secure_installation including some CIS hardenings
 - block:
 
   - name: 'Secure installation (Linuxfabrik): Remove all "root" users'
