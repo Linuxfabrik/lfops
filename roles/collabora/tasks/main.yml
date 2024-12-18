@@ -36,7 +36,7 @@
     ansible.builtin.set_fact:
       collabora__installed_version: '{{ ansible_facts["packages"]["coolwsd"][0]["version"] | regex_search("\d+\.\d+\.\d+") }}'
 
-  - name: 'deploy /etc/coolwsd/coolwsd.xml'
+  - name: 'deploy /etc/coolwsd/coolwsd.xml (v{{ collabora__installed_version }}{{ collabora__use_code | bool | ternary("-code", "") }})'
     ansible.builtin.template:
       src: 'etc/coolwsd/{{ collabora__installed_version }}-coolwsd{{ collabora__use_code | bool | ternary("-code", "") }}.xml.j2'
       dest: '/etc/coolwsd/coolwsd.xml'
