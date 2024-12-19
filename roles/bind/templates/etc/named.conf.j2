@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024121901
+# 2024121902
 # https://bind9.readthedocs.io/en/latest/reference.html
 
 acl "trusted" {
@@ -82,7 +82,7 @@ zone "{{ item['name'] }}" IN {
 
     {% if item['type'] | d('master') in ['forward', 'primary', 'master', 'secondary', 'slave', 'static-stub', 'stub'] %}
     forwarders {
-        # default: do normal iterative resolution (do not forward)
+        {# default: do normal iterative resolution (do not forward) #}
         {% for item in item['forwarders'] | d([]) %}
         {{ item }};
         {% endfor %}
