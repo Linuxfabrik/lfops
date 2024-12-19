@@ -138,7 +138,7 @@
       state: 'directory'
       owner: 'mysql'
       group: 'mysql'
-      mode: 0o750
+      mode: '{{ mariadb_server__datadir_mode__combined_var }}'
 
   # /var/lib/mysql(-files|-keyring)?(/.*)?             all files          system_u:object_r:mysqld_db_t:s0
   - name: 'semanage fcontext --add --type mysqld_db_t {{ mariadb_server__cnf_datadir__combined_var | ansible.builtin.regex_escape }}(-files|-keyring)?(/.*)?'

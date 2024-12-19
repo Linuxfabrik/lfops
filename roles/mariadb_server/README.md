@@ -31,7 +31,7 @@ Hardenings that can be covered by this role:
 * Backup Policy in Place
 * Do Not Reuse Usernames
 * Enable data-at-rest encryption in MariaDB
-* Ensure 'datadir' Has Appropriate Permissions
+* Ensure 'datadir' Has Appropriate Permissions if `mariadb_server__datadir_mode__host_var: 0o750` is set. Make sure that the socket is not inside the datadir in that case, else other users (eg apache) cannot reach it.
 * Ensure 'general_log_file' Has Appropriate Permissions
 * Ensure 'log_error' Has Appropriate Permissions
 * Ensure 'log_error' is configured correctly
@@ -122,6 +122,7 @@ mariadb_server__dump_user:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | List of dictionaries of databases to create. Subkeys:<br> * `name`: Mandatory, string. Name of the databse schema. <br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__datadir_mode__host_var` / `mariadb_server__datadir_mode__group_var` | Octal. Mode (permissions) of the MariaDB `datadir`. Use `0o750` for CIS, but make sure that the socket is not inside the datadir in that case, else other users (eg apache) cannot reach it. | `0o755` |
 | `mariadb_server__dump_compress` | String/Bool. For mydumper: Compress output files. One of `''` or `false` (no compression, extremely fast), `'ZSTD'` or `'GZIP'` (both very slow). | `''` (no compression) |
 | `mariadb_server__dump_directory` | String. For mydumper: Dump output directory name. | `'/backup/mariadb-dump'`|
 | `mariadb_server__dump_long_query_guard` | Integer. For mydumper: Set long query timer in seconds. | `60` |
@@ -143,6 +144,7 @@ mariadb_server__databases__host_var:
     collation: 'utf8mb4_unicode_ci'
     encoding: 'utf8mb4'
     state: 'present'
+mariadb_server__datadir_mode__host_var: 0o750
 mariadb_server__dump_compress: 'GZIP'
 mariadb_server__dump_directory: '/backup/mariadb-dump'
 mariadb_server__dump_long_query_guard: 60
