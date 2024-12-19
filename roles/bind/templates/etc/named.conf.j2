@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024091801
+# 2024121901
 # https://bind9.readthedocs.io/en/latest/reference.html
 
 acl "trusted" {
@@ -75,21 +75,32 @@ include "/etc/named.root.key";
 {% for item in bind__zones %}
 zone "{{ item['name'] }}" IN {
     type {{ item['type'] | d('master') }};
+
+    {% if item['type'] | d('master') in ['hint', 'master', 'mirror', 'primary', 'redirect', 'secondary', 'stub'] %}
     file "{{ item['file'] | d(item['name'] ~ '.zone') }}";
+    {% endif %}
+
+    {% if item['type'] | d('master') in ['forward', 'primary', 'master', 'secondary', 'slave', 'static-stub', 'stub'] %}
     forwarders {
         # default: do normal iterative resolution (do not forward)
         {% for item in item['forwarders'] | d([]) %}
         {{ item }};
         {% endfor %}
     };
+    {% endif %}
+
+    {% if item['type'] | d('master') in ['master', 'mirror', 'primary', 'redirect', 'secondary', 'slave', 'static-stub', 'stub'] %}
     allow-query { trusted; };
-    {% if item['allow_transfer'] | d([]) | length %}
+    {% endif %}
+
+    {% if item['allow_transfer'] | d([]) | length and item['type'] | d('master') in ['mirror', 'primary', 'master', 'secondary', 'slave'] %}
     allow-transfer {
         {% for item in item['allow_transfer'] | d(['none']) %}
         {{ item }};
         {% endfor %}
     };
     {% endif %}
+
     {% if item['type'] | d('master') in ['mirror', 'redirect', 'secondary', 'slave', 'stub'] %}
     masters {
         {% for item in item['masters'] | d([]) %}
