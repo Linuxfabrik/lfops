@@ -277,6 +277,8 @@ username:
     sample: 'root'
 '''
 
+import time
+
 from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
 from ansible.utils.display import Display
@@ -288,6 +290,8 @@ display = Display() # lfbwlp = Linuxfabrik Bitwarden Lookup Plugin
 # https://docs.ansible.com/ansible/latest/dev_guide/developing_plugins.html#developing-lookup-plugins
 # inspired by the lookup plugins lastpass (same topic) and redis (more modern)
 
+SYNC_INTERVAL = 60 # seconds
+SYNC_TIMESTAMP_FILE = '/tmp/lfops_bitwarden_sync_time'
 
 class LookupModule(LookupBase):
 
@@ -298,8 +302,23 @@ class LookupModule(LookupBase):
             raise AnsibleError('Not logged into Bitwarden, or Bitwarden Vault is locked. Please run `bw login` and `bw unlock` first.')
         display.vvv('lfbwlp - run - bitwarden vault is unlocked')
 
-        # to be sure we are up to date
-        bw.sync()
+        timestamp = 0
+        try:
+            with open(SYNC_TIMESTAMP_FILE, 'r') as f:
+                timestamp = float(f.read().strip())
+        except (ValueError, IOError):
+            pass # we just sync if an error occurs
+
+        if time.time() - timestamp >= SYNC_INTERVAL:
+            display.vvv('lfbwlp - run - syncing the vault')
+            bw.sync()
+            timestamp = time.time()
+
+            try:
+                with open(SYNC_TIMESTAMP_FILE, 'w') as f:
+                    f.write(str(timestamp))
+            except IOError:
+                display.vvv('lfbwlp - run - failed to write last sync time')
 
         ret = []
         for term in terms:
