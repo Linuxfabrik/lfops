@@ -16,6 +16,8 @@ mirrorlist=http://cdn.remirepo.net/enterprise/8/remi/$basearch/mirror
 {% endif %}
 enabled=1
 gpgcheck=1
+# can be enabled if not behind a proxy because of possible cache issue
+repo_gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8
 {% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
 username={{ repo_remi__basic_auth_login["username"] }}
@@ -34,6 +36,7 @@ mirrorlist=http://cdn.remirepo.net/enterprise/8/test/$basearch/mirror
 # WARNING: If you enable this repository, you must also enable "remi"
 enabled=0
 gpgcheck=1
+repo_gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8
 {% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
 username={{ repo_remi__basic_auth_login["username"] }}
@@ -49,6 +52,7 @@ baseurl=http://rpms.remirepo.net/enterprise/8/debug-remi/$basearch/
 {% endif %}
 enabled=0
 gpgcheck=1
+repo_gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8
 {% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
 username={{ repo_remi__basic_auth_login["username"] }}
@@ -64,6 +68,7 @@ baseurl=http://rpms.remirepo.net/enterprise/8/debug-test/$basearch/
 {% endif %}
 enabled=0
 gpgcheck=1
+repo_gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8
 {% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
 username={{ repo_remi__basic_auth_login["username"] }}

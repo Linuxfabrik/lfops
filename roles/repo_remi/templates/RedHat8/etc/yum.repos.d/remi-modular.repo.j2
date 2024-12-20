@@ -16,11 +16,27 @@ mirrorlist=http://cdn.remirepo.net/enterprise/8/modular/$basearch/mirror
 {% endif %}
 enabled=1
 gpgcheck=1
+# can be enabled if not behind a proxy because of possible cache issue
+repo_gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8
 {% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
 username={{ repo_remi__basic_auth_login["username"] }}
 password={{ repo_remi__basic_auth_login["password"] }}
 {% endif %}
+
+[remi-modular-debuginfo]
+name=Remi's Modular repository for Enterprise Linux $releasever - $basearch - debuginfo
+{% if repo_remi__mirror_url is defined and repo_remi__mirror_url | length %}
+baseurl={{ repo_remi__mirror_url }}/remi/enterprise/8/debug-modular/x86_64/
+{% else %}
+#baseurl=http://rpms.remirepo.net/enterprise/8/debug-modular/$basearch/
+#mirrorlist=https://rpms.remirepo.net/enterprise/8/debug-modular/$basearch/httpsmirror
+mirrorlist=http://cdn.remirepo.net/enterprise/8/debug-modular/$basearch/mirror
+{% endif %}
+enabled=0
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el$releasever
 
 [remi-modular-test]
 name=Remi's Modular testing repository for Enterprise Linux 8 - $basearch
@@ -33,6 +49,7 @@ mirrorlist=http://cdn.remirepo.net/enterprise/8/modular-test/$basearch/mirror
 {% endif %}
 enabled=0
 gpgcheck=1
+repo_gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el8
 {% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}
 username={{ repo_remi__basic_auth_login["username"] }}
