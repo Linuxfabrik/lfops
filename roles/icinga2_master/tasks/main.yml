@@ -106,7 +106,14 @@
   # icinga2 (primary) master setup
 
   - name: 'Execute icinga2 node setup'
-    ansible.builtin.command: 'icinga2 node setup --master --disable-confd --cn {{ icinga2_master__cn }}'
+    ansible.builtin.command: >-
+      icinga2 node setup
+      --master
+      --disable-confd
+      --cn {{ icinga2_master__cn }}
+      {% if icinga2_master__bind_host is defined and icinga2_master__bind_host | length %}
+      --listen {{ icinga2_master__bind_host }},5665
+      {% endif %}
     args:
       creates: '/var/lib/icinga2/certs/{{ icinga2_master__cn }}.crt'
     register: 'icinga2_master__node_setup_result'

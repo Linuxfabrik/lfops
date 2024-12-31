@@ -206,6 +206,9 @@ Role:tar
 
 ### Added
 
+Role:icinga2_master:
+* Added `icinga2_master__bind_host` variable
+
 Role:firewall:
 * Added `firewall__firewalld_ports__*_var` and `firewall__firewalld_services__*_var` variables
 
