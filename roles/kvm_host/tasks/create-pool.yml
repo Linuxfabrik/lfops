@@ -12,12 +12,14 @@
         </target>
       </pool>
   when:
-    - '"{{ pool.name }}" not in kvm_host__list_pools_result'
+    - 'pool.name not in kvm_host__list_pools_result["list_pools"]'
 
 - name: 'build storage pool if it does not exist'
   community.libvirt.virt_pool:
     command: 'build'
     name: '{{ pool.name }}'
+  when:
+    - 'pool.name not in kvm_host__list_pools_result["list_pools"]'
 
 - name: 'ensure storage pool is active'
   community.libvirt.virt_pool:
