@@ -166,3 +166,8 @@ moodle__selinux__fcontexts__dependent_var:
   - setype: 'httpd_sys_rw_content_t'
     target: '{{ moodle__data_dir }}(/.*)?'
     state: 'present'
+  # allow rw for the installation of plugins via the webgui
+  # allow all files, as the plugins use different directories for each plugintype
+  - setype: 'httpd_sys_rw_content_t'
+    target: '{{ moodle__install_dir }}(/.*)?'
+    state: 'present'
