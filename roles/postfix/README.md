@@ -34,6 +34,7 @@ postfix__relayhost: 'mail.example.com:587'
 | `postfix__inet_interfaces` | The local network interface addresses that this mail system receives mail on. | `'127.0.0.1'` |
 | `postfix__inet_protocols` | The Internet protocols Postfix will attempt to use when making or accepting connections. Specify one or more of `ipv4` or `ipv6`, separated by whitespace or commas. The form `all` is equivalent to `ipv4, ipv6` or `ipv4`, depending on whether the operating system implements IPv6. | `'all'` |
 | `postfix__mailbox_size_limit` | See https://www.postfix.org/postconf.5.html#mailbox_size_limit | `51200000` |
+| `postfix__mastercf_options__host_var` / <br> `postfix__mastercf_options__group_var` | See https://www.postfix.org/master.5.html | `[]` |
 | `postfix__maximal_queue_lifetime` | See https://www.postfix.org/postconf.5.html#maximal_queue_lifetime | `'5d'` |
 | `postfix__message_size_limit` | See https://www.postfix.org/postconf.5.html#message_size_limit | `10240000` |
 | `postfix__mydestination` | See [postfix.org](https://www.postfix.org/postconf.5.html#mydestination) | '$myhostname, localhost.$mydomain, localhost' |
@@ -70,6 +71,17 @@ postfix__bounce_queue_lifetime: '5d'
 postfix__inet_interfaces: 'all'
 postfix__inet_protocols: 'all'
 postfix__mailbox_size_limit: 51200000
+postfix__mastercf_options__host_var:
+  - service: 'smtp'
+    type: 'inet'
+    options:
+      - 'smtpd_tls_security_level=none'
+  - service: 'smtps'
+    type: 'inet'
+    options:
+      - 'syslog_name=postfix/smtps'
+      - 'smtpd_tls_wrappermode=yes'
+      - 'smtpd_reject_unlisted_recipient=no'
 postfix__maximal_queue_lifetime: '5d'
 postfix__message_size_limit: 10240000
 postfix__mydestination: '$myhostname, localhost.$mydomain, localhost'

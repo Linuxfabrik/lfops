@@ -29,6 +29,15 @@
       mode: 0o644
     notify: 'postfix: reload postfix'
 
+  - name: 'Deploy /etc/postfix/master.cf'
+    ansible.builtin.template:
+      src: 'etc/postfix/{{ ansible_facts["os_family"] }}-master.cf.j2'
+      dest: '/etc/postfix/master.cf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'postfix: reload postfix'
+
   - name: 'Deploy /etc/aliases'
     ansible.builtin.template:
       src: 'etc/aliases.j2'
