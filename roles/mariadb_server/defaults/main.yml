@@ -536,6 +536,11 @@ mariadb_server__datadir_mode__combined_var: '{{
     mariadb_server__datadir_mode__role_var
   }}'
 
+mariadb_server__service_limit_memlock: 524288
+mariadb_server__service_limit_nofile: 32768
+mariadb_server__service_timeout_start_sec: '15min'
+mariadb_server__service_timeout_stop_sec: '15min'
+
 mariadb_server__users__dependent_var: []
 mariadb_server__users__group_var: []
 mariadb_server__users__host_var: []

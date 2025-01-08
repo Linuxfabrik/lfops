@@ -246,6 +246,22 @@
     register: 'mariadb_server__socket_selinux_workaround_result'
     notify: 'mariadb_server: systemctl restart mariadb'
 
+  - name: 'Deploy /etc/systemd/system/mariadb.service.d/z00-linuxfabrik.conf'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/mariadb.service.d/z00-linuxfabrik.conf.j2'
+      dest: '/etc/systemd/system/mariadb.service.d/z00-linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'mariadb_server__z00_linuxfabrik_result'
+    notify: 'mariadb_server: systemctl restart mariadb'
+
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - 'mariadb_server__socket_selinux_workaround_result is changed or mariadb_server__z00_linuxfabrik_result is changed'
+
   - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
     ansible.builtin.systemd:
       daemon_reload: true

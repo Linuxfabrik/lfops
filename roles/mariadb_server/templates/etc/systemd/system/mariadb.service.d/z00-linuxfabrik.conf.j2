@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# 2025010801
+
+[Service]
+
+# Set an explicit Start and Stop timeout
+# this is the same value as used in SysV init scripts in the past
+# Galera might need a longer timeout, check the KB if you want to change this:
+# https://mariadb.com/kb/en/library/systemd/#configuring-the-systemd-service-timeout
+TimeoutStartSec={{ mariadb_server__service_timeout_start_sec }}
+TimeoutStopSec={{ mariadb_server__service_timeout_stop_sec }}
+
+# Number of files limit. previously [mysqld_safe] open-files-limit
+LimitNOFILE={{ mariadb_server__service_limit_nofile }}
+# For liburing and io_uring_setup()
+LimitMEMLOCK={{ mariadb_server__service_limit_memlock }}
