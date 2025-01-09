@@ -1,0 +1,55 @@
+- block:
+
+  # https://proxysql.com/documentation/installing-proxysql/
+  - name: 'apt install gnupg # required for apt-key add'
+    ansible.builtin.package:
+      name:
+        - 'gnupg'
+      state: 'present'
+
+  - name: 'curl https://repo.proxysql.com/ProxySQL/proxysql-{{ repo_proxysql__version__combined_var }}.x/repo_pub_key --output /tmp/ansible.proxysql.pgp'
+    ansible.builtin.get_url:
+      url: 'https://repo.proxysql.com/ProxySQL/proxysql-{{ repo_proxysql__version__combined_var }}.x/repo_pub_key'
+      dest: '/tmp/ansible.proxysql.pgp'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.proxysql.pgp to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.proxysql.pgp'
+      dest: '/tmp/ansible.proxysql.pgp'
+      mode: 0o644
+
+  - name: 'apt-key add /tmp/ansible.proxysql.pgp'
+    ansible.builtin.apt_key:
+      file: '/tmp/ansible.proxysql.pgp'
+      state: 'present'
+
+  - name: 'rm /tmp/ansible.proxysql.pgp'
+    ansible.builtin.file:
+      path: '/tmp/ansible.proxysql.pgp'
+      state: 'absent'
+
+  - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: 'etc/apt/sources.list.d/proxysql.list.j2'
+      dest: '/etc/apt/sources.list.d/proxysql.list'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/proxysql.list'
+
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+
+  tags:
+    - 'repo_proxysql'

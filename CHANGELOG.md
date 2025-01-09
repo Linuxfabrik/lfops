@@ -206,6 +206,9 @@ Role:tar
 
 ### Added
 
+Role:repo_proxysql
+* Added
+
 Role:icinga2_master:
 * Added `icinga2_master__bind_host` variable
 

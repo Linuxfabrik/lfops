@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2025010901
+
+{% if repo_proxysql__mirror_url is defined and repo_proxysql__mirror_url | length %}
+deb {{ repo_proxysql__mirror_url }}/proxysql/{{ repo_proxysql__version__combined_var }}.x/$(lsb_release -sc)/ ./
+{% else %}
+deb https://repo.proxysql.com/ProxySQL/proxysql-{{ repo_proxysql__version__combined_var }}.x/$(lsb_release -sc)/ ./
+{% endif %}
