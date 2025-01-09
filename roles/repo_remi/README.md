@@ -19,7 +19,7 @@ This role deploys the [Remi's RPM repository](https://rpms.remirepo.net/).
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `repo_baseos__basic_auth_login` | Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles. | `{{ lfops__repo_basic_auth_login \| default("") }}` |
+| `repo_remi__basic_auth_login` | Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles. | `{{ lfops__repo_basic_auth_login \| default("") }}` |
 | `repo_remi__enabled_php_version` | The major version of php for which the repository should be enabled. If variable is unset, none of the remi-repo versions will be activated. | unset |
 | `repo_remi__enabled_redis_version` | The major version of redis for which the repository should be enabled. If variable is unset, none of the remi-repo versions will be activated. | unset |
 | `repo_remi__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used. | `'{{ lfops__repo_mirror_url | default("") }}'` |
