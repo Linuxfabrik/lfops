@@ -5,6 +5,7 @@ ansible_init__ansible_collections:
   - name: 'freeipa.ansible_freeipa'
   - name: 'hetzner.hcloud'
   - name: 'ngine_io.cloudstack'
+  - name: 'openstack.cloud'
 ansible_init__ansinv_path: '{{ inventory_dir }}/../'
 ansible_init__inventories: []
 ansible_init__lfops_url: 'https://github.com/Linuxfabrik/lfops.git'
