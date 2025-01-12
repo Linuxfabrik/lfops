@@ -44,10 +44,10 @@
       qemu-img create -f qcow2 ...
     ansible.builtin.command: >
       qemu-img create -f qcow2
-      {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-' ~ item["name"] ~ '.qcow2') | quote }}
+      {{ (kvm_vm__pool_info_result["pools"][item["pool"] | d(kvm_vm__pool)]["path"] ~ '/' ~ kvm_vm__name ~ '-' ~ item["name"] ~ '.qcow2') | quote }}
       {{ item["size"] }}
     args:
-      creates: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ item["name"] ~ ".qcow2" }}'
+      creates: '{{ kvm_vm__pool_info_result["pools"][item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ item["name"] ~ ".qcow2" }}'
     loop: '{{ kvm_vm__additional_disks }}'
 
 
@@ -152,7 +152,7 @@
       --disk {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2,bus=virtio') | quote }}
       {% endif %}
       {% for item in kvm_vm__additional_disks %}
-      --disk {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ item["name"] ~ ".qcow2,bus=virtio") | quote }}
+      --disk {{ (kvm_vm__pool_info_result["pools"][item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ item["name"] ~ ".qcow2,bus=virtio") | quote }}
       {% endfor %}
       {% for item in kvm_vm__existing_additional_disks %}
       --disk {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ item ~ ",bus=virtio") | quote }}
@@ -190,7 +190,7 @@
       {% endif %}
 
       {% for item in kvm_vm__additional_disks %}
-      --disk {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ item["name"] ~ ".qcow2,bus=virtio") | quote }}
+      --disk {{ (kvm_vm__pool_info_result["pools"][item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ item["name"] ~ ".qcow2,bus=virtio") | quote }}
       {% endfor %}
 
       {% for item in kvm_vm__existing_additional_disks %}
