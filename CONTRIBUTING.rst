@@ -702,6 +702,23 @@ Releases
 Releases are available on Ansible Galaxy. Changelogs have to be written according to https://keepachangelog.com/en/1.0.0/.
 
 
+Handling of GPG Keys under Debian (APT Keyring)
+-----------------------------------------------
+
+Adding a key to ``/etc/apt/trusted.gpg.d`` is insecure because it adds the key for all repositories. Therefore, ``apt-key`` (and the ``ansible.builtin.apt_key`` module) were deprecated.
+
+The new and secure workflow is:
+
+1. Store the GPG key in ``/etc/apt/keyrings/``. The file extension **has** to match the file format. Use the ``file`` utility to determine the format:
+
+    * ``PGP public key block Public-Key (old)``: ASCII-armored key. Use ``.asc`` extension.
+    * ``OpenPGP Public Key``: Binary GPG key. Use ``.gpg`` extension.
+
+2. Explicitly specify the path to the key in the ``/etc/apt/sources.list.d/`` file, for example: ``deb [signed-by=/etc/apt/keyrings/icinga.asc] https://...``.
+
+Have a look at the `repo_icinga/tasks/Debian.yml <https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga/tasks/Debian.yml>`__ (ASCII armored key) or `repo_mariadb/tasks/Debian.yml <https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb/tasks/Debian.yml>`(binary GPG key) roles.
+
+
 Roles with Special Features
 ---------------------------
 
