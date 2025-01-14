@@ -1,6 +1,7 @@
 ansible_init__ansible_collections:
   - name: 'ansible.utils'
   - name: 'community.crypto'
+  - name: 'community.grafana'
   - name: 'community.mysql'
   - name: 'fedora.linux_system_roles'
   - name: 'freeipa.ansible_freeipa'
