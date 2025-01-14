@@ -53,6 +53,12 @@
     loop: '{{ ansible_init__roles }}'
     ignore_errors: true
 
+  tags:
+    - 'ansible_init'
+
+
+- block:
+
   - name: 'Install ansible collections'
     community.general.ansible_galaxy_install:
       name: '{{ item["name"] }}'
@@ -64,3 +70,4 @@
 
   tags:
     - 'ansible_init'
+    - 'ansible_init:collections'
