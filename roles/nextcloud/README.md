@@ -159,7 +159,7 @@ nextcloud__sysconfig__host_var:
     value: 'https://cloud.example.com'
     state: 'present'
   - key: 'overwritecondaddr '
-    value: '^192\\.0\\.2\\.7$' # IP of the reverse proxy
+    value: '^192\.0\.2\.7$' # IP of the reverse proxy
     state: 'present'
   - key: 'overwritehost '
     value: 'cloud.example.com'
