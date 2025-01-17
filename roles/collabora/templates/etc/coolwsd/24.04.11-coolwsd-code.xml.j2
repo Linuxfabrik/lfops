@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2025011001 -->
+    <!-- 2025011701 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -219,9 +219,9 @@
         <enable type="bool" desc="Controls whether SSL encryption between coolwsd and the network is enabled (do not disable for production deployment). If default is false, must first be compiled with SSL support to enable." default="true">{{ collabora__coolwsd_ssl_enable | d('true') | string | lower }}</enable>
         <!-- SSL off-load can be done in a proxy, if so disable SSL, and enable termination below in production -->
         <termination desc="Connection via proxy where coolwsd acts as working via https, but actually uses http." type="bool" default="false">{{ collabora__coolwsd_ssl_termination | d('true') | string | lower }}</termination>
-        <cert_file_path desc="Path to the cert file" relative="false">{{ collabora__coolwsd_ssl_settings_cert_file_path | d('/etc/coolwsd/cert.pem') }}</cert_file_path>
-        <key_file_path desc="Path to the key file" relative="false">{{ collabora__coolwsd_ssl_settings_key_file_path | d('/etc/coolwsd/key.pem') }}</key_file_path>
-        <ca_file_path desc="Path to the ca file" relative="false">{{ collabora__coolwsd_ssl_settings_ca_file_path | d('/etc/coolwsd/ca-chain.cert.pem') }}</ca_file_path>
+        <cert_file_path desc="Path to the cert file" type="path" relative="false">{{ collabora__coolwsd_ssl_settings_cert_file_path | d('/etc/coolwsd/cert.pem') }}</cert_file_path>
+        <key_file_path desc="Path to the key file" type="path" relative="false">{{ collabora__coolwsd_ssl_settings_key_file_path | d('/etc/coolwsd/key.pem') }}</key_file_path>
+        <ca_file_path desc="Path to the ca file" type="path" relative="false">{{ collabora__coolwsd_ssl_settings_ca_file_path | d('/etc/coolwsd/ca-chain.cert.pem') }}</ca_file_path>
         <ssl_verification desc="Enable or disable SSL verification of hosts remote to coolwsd. If true SSL verification will be strict, otherwise certs of hosts will not be verified. You may have to disable it in test environments with self-signed certificates." type="string" default="false">false</ssl_verification>
         <cipher_list desc="List of OpenSSL ciphers to accept" type="string" default="ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH"></cipher_list>
         <hpkp desc="Enable HTTP Public key pinning" enable="false" report_only="false">
