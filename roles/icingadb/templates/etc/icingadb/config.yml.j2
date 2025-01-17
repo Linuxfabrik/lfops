@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024052701
+# 2025011701
 
 # This is the configuration file for Icinga DB.
 
@@ -65,17 +65,23 @@ database:
 # High availability setups require a dedicated Redis® server per Icinga 2 node and
 # therefore a dedicated Icinga DB instance that connects to it.
 redis:
-  # Redis host or absolute Unix socket path.
+  # Host name or address, or absolute Unix socket path.
   host: '{{ icingadb__redis_host }}'
 
-  # Redis port.
-  # Defaults to '6380' since the Redis server provided by the 'icingadb-redis' package listens on that port.
+  # TCP port.
+  # Defaults to '6380' as the Redis® open source server provided by the 'icingadb-redis' package listens on that port.
   port: {{ icingadb__redis_port }}
 
+  # Authentication username, requires a `password` being set as well.
+#  username:
+
 {% if icingadb__redis_password is defined and icingadb__redis_password | length %}
-  # Redis password.
+  # Authentication password. May be used alone or together with a `username`.
   password: '{{ icingadb__redis_password }}'
 {% endif %}
+
+  # Numerical database identifier, defaults to `0`.
+#  database: 0
 
   # TLS
   tls: {{ icingadb__redis_tls }}
