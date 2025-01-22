@@ -22,16 +22,14 @@ If you use the [Fangfrisch Playbook](https://github.com/Linuxfabrik/lfops/blob/m
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `fangfrisch__malwarepatrol_receipt` | Set this to enable downloading signatures from [MalwarePatrol](https://www.malwarepatrol.net). Requires an [MalwarePatrol account](https://www.malwarepatrol.net/my-account/). | unset |
 | `fangfrisch__securiteinfo_customer_id` | Set this to enable downloading signatures from [SecuriteInfo](https://www.securiteinfo.com/). Requires an [SecuriteInfo account](https://www.securiteinfo.com/clients/customers/account). | unset |
-| `fangfrisch_timer_enabled` | Enables or disables the hourly fangfrisch timer to automatically update the signatures, analogous to `systemctl enable/disable`. | `true` |
+| `fangfrisch__timer_enabled` | Enables or disables the hourly fangfrisch timer to automatically update the signatures, analogous to `systemctl enable/disable`. | `true` |
 
 Example:
 ```yaml
 # optional
-fangfrisch__malwarepatrol_receipt: 'wtNJNBPsNJN'
 fangfrisch__securiteinfo_customer_id: 'IVQyhw7Yszua6pzUhlGPVowucenHt2wQe9iXDfwsMOfheeOUakB28irj5JyDsKF4e81LkLbNUtMHcUGL9EVKOJ9WxSSv4ySjBhY0vngBDunEPlixtGTBB6f1mvaTqXzz'
-fangfrisch_timer_enabled: false
+fangfrisch__timer_enabled: false
 ```
 
 

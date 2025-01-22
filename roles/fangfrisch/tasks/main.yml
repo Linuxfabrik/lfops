@@ -44,11 +44,11 @@
 
 - block:
 
-  - name: 'systemctl {{ fangfrisch_timer_enabled | bool | ternary("enable", "disable") }} --now fangfrisch.timer'
+  - name: 'systemctl {{ fangfrisch__timer_enabled | bool | ternary("enable", "disable") }} --now fangfrisch.timer'
     ansible.builtin.service:
       name: 'fangfrisch.timer'
-      enabled: '{{ fangfrisch_timer_enabled }}'
-      state: '{{ fangfrisch_timer_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ fangfrisch__timer_enabled }}'
+      state: '{{ fangfrisch__timer_enabled | bool | ternary("started", "stopped") }}'
       daemon_reload: '{{ fangfrisch__systemd_timer_result is changed }}'
 
   tags:

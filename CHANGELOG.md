@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:fangfrisch:
+* Remove malwarepatrol as it is discontinued (see https://malwareblocklist.org/)
+
 Role:graylog_server
 * Only supports Graylog 6.1+ (Graylog Data Node based installations). Currently no more suppport für dedicated OpenSearch or Elasticsearch. Renamed `graylog_server__admin_user` to `graylog_server__root_user`.
 
