@@ -8,7 +8,3 @@ fangfrisch__python_venv__venvs__dependent_var:
       - 'fangfrisch'
     exposed_binaries:
       - 'fangfrisch'
-    package_requirements:
-      - 'python39'
-      - 'python39-devel'
-    python_executable: 'python3.9'

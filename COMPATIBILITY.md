@@ -18,7 +18,7 @@ bind                                 |    |    | x | x |       |       |       |
 blocky                               |    |    | x | x |       |       |       |
 borg_local                           |    |    | x |   |       |       |       |
 chrony                               |    |    | x | x |       |       |       |
-clamav                               |    |    | x |   |       |       |       |
+clamav                               |    |    | x | x |       |       |       |
 cloud_init                           |    |    | x | x |       |       |       |
 cockpit                              |    |    | x | x |       |       |       | Fedora 35
 collabora                            |    |    | x | x |       |       |       |
@@ -32,7 +32,7 @@ duplicity                            |    |    | x | x |       |       |       |
 elasticsearch_oss                    |    |    | x |   |       |       |       |
 exoscale_vm                          |    |    |   |   |       |       |       | Fedora 35+
 fail2ban                             |    |    | x | x |       |       |       |
-fangfrisch                           |    |    | x |   |       |       |       |
+fangfrisch                           |    |    |   | x |       |       |       |
 files                                |    |    | x | x |       |       |       |
 firewall                             |    |    | x | x |       |       |       |
 freeipa_client                       |    |    | x | x |       |       |       |
