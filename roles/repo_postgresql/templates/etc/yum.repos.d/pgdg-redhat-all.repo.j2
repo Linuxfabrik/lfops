@@ -1,10 +1,10 @@
 # {{ ansible_managed }}
-# 2024020101
+# 2025012001
 {# taken from the RPM package at https://yum.postgresql.org/repopackages/ #}
 
-#######################################################
-# PGDG Red Hat Enterprise Linux / Rocky repositories  #
-#######################################################
+#########################################################################
+# PGDG Red Hat Enterprise Linux / Rocky / AlmaLinux repositories.	#
+#########################################################################
 
 # PGDG Red Hat Enterprise Linux / Rocky stable common repository for all PostgreSQL versions
 
@@ -24,13 +24,17 @@ username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
 
-# Red Hat recently breaks compatibility between 8.n and 8.n+1. PGDG repo is
+# Red Hat recently breaks compatibility between 9.n and 9.n+1. PGDG repo is
 # affected with the LLVM packages. This is a band aid repo for the llvmjit users
 # whose installations cannot be updated.
 
-[pgdg-centos8-sysupdates]
+[pgdg-rhel9-sysupdates]
 name=PostgreSQL Supplementary ucommon RPMs for RHEL / Rocky / AlmaLinux $releasever - $basearch
-baseurl=https://download.postgresql.org/pub/repos/yum/common/pgdg-centos8-sysupdates/redhat/rhel-$releasever-$basearch
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length %}
+baseurl={{ repo_postgresql__mirror_url }}/pgdg/repos/yum/common/pgdg-rocky9-sysupdates/redhat/rhel-$releasever-$basearch
+{% else %}
+baseurl=https://download.postgresql.org/pub/repos/yum/common/pgdg-rocky9-sysupdates/redhat/rhel-$releasever-$basearch
+{% endif %}
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
@@ -43,9 +47,13 @@ password={{ repo_postgresql__basic_auth_login["password"] }}
 # We provide extra package to support some RPMs in the PostgreSQL RPM repo, like
 # consul, haproxy, etc.
 
-[pgdg-rhel8-extras]
+[pgdg-rhel9-extras]
 name=Extra packages to support some RPMs in the PostgreSQL RPM repo RHEL / Rocky / AlmaLinux $releasever - $basearch
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length %}
+baseurl={{ repo_postgresql__mirror_url }}/pgdg/repos/yum/common/pgdg-rhel$releasever-extras/redhat/rhel-$releasever-$basearch
+{% else %}
 baseurl=https://download.postgresql.org/pub/repos/yum/common/pgdg-rhel$releasever-extras/redhat/rhel-$releasever-$basearch
+{% endif %}
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
@@ -56,6 +64,22 @@ password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
 
 # PGDG Red Hat Enterprise Linux / Rocky stable repositories:
+
+[pgdg17]
+name=PostgreSQL 17 for RHEL / Rocky / AlmaLinux $releasever - $basearch
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length %}
+baseurl={{ repo_postgresql__mirror_url }}/pgdg/repos/yum/17/redhat/rhel-$releasever-$basearch
+{% else %}
+baseurl=https://download.postgresql.org/pub/repos/yum/17/redhat/rhel-$releasever-$basearch
+{% endif %}
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
+repo_gpgcheck = 1
+{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+username={{ repo_postgresql__basic_auth_login["username"] }}
+password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 
 [pgdg16]
 name=PostgreSQL 16 for RHEL / Rocky / AlmaLinux $releasever - $basearch
@@ -137,7 +161,7 @@ username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
 
-# PGDG RHEL / Rocky / AlmaLinux Updates Testing common repository.
+# PGDG RHEL / Rocky / AlmaLinux Updates Testing common repositories.
 
 [pgdg-common-testing]
 name=PostgreSQL common testing RPMs for RHEL / Rocky / AlmaLinux $releasever - $basearch
@@ -146,19 +170,23 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 # PGDG RHEL / Rocky / AlmaLinux Updates Testing repositories. (These packages should not be used in production)
 # Available for 12 and above.
+
+[pgdg18-updates-testing]
+name=PostgreSQL 18 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Updates testing
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/18/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
+repo_gpgcheck = 1
 
 [pgdg17-updates-testing]
 name=PostgreSQL 17 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Updates testing
 baseurl=https://download.postgresql.org/pub/repos/yum/testing/17/redhat/rhel-$releasever-$basearch
 enabled=0
-gpgcheck=0
+gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
 
@@ -169,10 +197,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg15-updates-testing]
 name=PostgreSQL 15 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Updates testing
@@ -181,10 +205,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg14-updates-testing]
 name=PostgreSQL 14 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Updates testing
@@ -193,10 +213,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg13-updates-testing]
 name=PostgreSQL 13 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Updates testing
@@ -205,10 +221,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg12-updates-testing]
 name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Updates testing
@@ -217,10 +229,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 # PGDG Red Hat Enterprise Linux / Rocky SRPM testing common repository
 
@@ -231,10 +239,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 # PGDG RHEL / Rocky / AlmaLinux testing common SRPM repository for all PostgreSQL versions
 
@@ -245,18 +249,30 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
-# PGDG Source RPMs (SRPM), and their testing repositories:
+# PGDG Source RPMs (SRPMS), and their testing repositories:
+
+[pgdg18-source-updates-testing]
+name=PostgreSQL 18 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source updates testing
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/testing/18/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
+repo_gpgcheck = 1
+
+[pgdg17-source]
+name=PostgreSQL 17 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/17/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
+repo_gpgcheck = 1
 
 [pgdg17-source-updates-testing]
 name=PostgreSQL 17 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source updates testing
 baseurl=https://download.postgresql.org/pub/repos/yum/srpms/testing/17/redhat/rhel-$releasever-$basearch
 enabled=0
-gpgcheck=0
+gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
 
@@ -283,10 +299,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg15-source-updates-testing]
 name=PostgreSQL 15 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source updates testing
@@ -295,10 +307,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg14-source]
 name=PostgreSQL 14 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source
@@ -307,10 +315,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg14-source-updates-testing]
 name=PostgreSQL 14 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source updates testing
@@ -319,10 +323,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg13-source]
 name=PostgreSQL 13 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source
@@ -331,10 +331,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg13-source-updates-testing]
 name=PostgreSQL 13 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source updates testing
@@ -343,10 +339,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg12-source]
 name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source
@@ -355,10 +347,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg12-source-updates-testing]
 name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source update testing
@@ -367,16 +355,30 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
+
+# Debuginfo/debugsource repositories for the common repo
+
+[pgdg-common-debuginfo]
+name=PostgreSQL common RPMs for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
+baseurl=https://dnf-debuginfo.postgresql.org/debug/common/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
+repo_gpgcheck = 1
 
 # Debuginfo/debugsource packages for stable repos
 
+[pgdg17-debuginfo]
+name=PostgreSQL 17 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
+baseurl=https://dnf-debuginfo.postgresql.org/debug/17/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
+repo_gpgcheck = 1
+
 [pgdg16-debuginfo]
 name=PostgreSQL 16 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/debug/16/redhat/rhel-$releasever-$basearch
+baseurl=https://dnf-debuginfo.postgresql.org/debug/16/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
@@ -384,66 +386,58 @@ repo_gpgcheck = 1
 
 [pgdg15-debuginfo]
 name=PostgreSQL 15 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/debug/15/redhat/rhel-$releasever-$basearch
+baseurl=https://dnf-debuginfo.postgresql.org/debug/15/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg14-debuginfo]
 name=PostgreSQL 14 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/debug/14/redhat/rhel-$releasever-$basearch
+baseurl=https://dnf-debuginfo.postgresql.org/debug/14/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg13-debuginfo]
 name=PostgreSQL 13 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/debug/13/redhat/rhel-$releasever-$basearch
+baseurl=https://dnf-debuginfo.postgresql.org/debug/13/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg12-debuginfo]
 name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/debug/12/redhat/rhel-$releasever-$basearch
+baseurl=https://dnf-debuginfo.postgresql.org/debug/12/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 # Debuginfo/debugsource packages for testing repos
 # Available for 12 and above.
 
-[pgdg17-updates-testing-debuginfo]
-name=PostgreSQL 17 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/17/redhat/rhel-$releasever-$basearch
+[pgdg18-updates-testing-debuginfo]
+name=PostgreSQL 18 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
+baseurl=https://dnf-debuginfo.postgresql.org/testing/debug/18/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
 
+[pgdg17-updates-testing-debuginfo]
+name=PostgreSQL 17 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
+baseurl=https://dnf-debuginfo.postgresql.org/testing/debug/17/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
+repo_gpgcheck = 1
+
 [pgdg16-updates-testing-debuginfo]
 name=PostgreSQL 16 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/16/redhat/rhel-$releasever-$basearch
+baseurl=https://dnf-debuginfo.postgresql.org/testing/debug/16/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
@@ -451,46 +445,32 @@ repo_gpgcheck = 1
 
 [pgdg15-updates-testing-debuginfo]
 name=PostgreSQL 15 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/15/redhat/rhel-$releasever-$basearch
+baseurl=https://dnf-debuginfo.postgresql.org/testing/debug/15/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg14-updates-testing-debuginfo]
 name=PostgreSQL 14 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/14/redhat/rhel-$releasever-$basearch
+baseurl=https://dnf-debuginfo.postgresql.org/testing/debug/14/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg13-updates-testing-debuginfo]
 name=PostgreSQL 13 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/13/redhat/rhel-$releasever-$basearch
+baseurl=https://dnf-debuginfo.postgresql.org/testing/debug/13/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
 
 [pgdg12-updates-testing-debuginfo]
 name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
-baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/12/redhat/rhel-$releasever-$basearch
+baseurl=https://dnf-debuginfo.postgresql.org/testing/debug/12/redhat/rhel-$releasever-$basearch
 enabled=0
 gpgcheck=1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
-username={{ repo_postgresql__basic_auth_login["username"] }}
-password={{ repo_postgresql__basic_auth_login["password"] }}
-{% endif %}
+gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
+repo_gpgcheck = 1

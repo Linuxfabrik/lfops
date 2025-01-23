@@ -135,7 +135,7 @@ repo_mongodb                         | x  |    | x | x |       |       |       |
 repo_monitoring_plugins              | x  |    | x | x |   x   |   x   |       |
 repo_mydumper                        |    |    | x | x |       |       |       |
 repo_opensearch                      | x  |    | x |   |       |       |       |
-repo_postgresql                      |    |    | x |   |       |       |       |
+repo_postgresql                      |    |    |   | x |       |       |       |
 repo_proxysql                        |    |    | x | x |       |       |       |
 repo_redis                           |    | x  |   |   |       |       |       |
 -------------------------------------+----+----+---+---+-------+-------+-------+-----------
