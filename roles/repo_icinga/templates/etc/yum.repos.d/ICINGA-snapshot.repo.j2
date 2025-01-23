@@ -9,13 +9,8 @@
 
 {% if ansible_facts["distribution"] == "Fedora" %}
   {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/fedora' %}
-
 {% elif ansible_facts["os_family"] == "RedHat" %}
-  {% if repo_icinga__use_subscription_url %}
     {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/subscription/rhel' %}
-  {% else %}
-    {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/epel' %}
-  {% endif %}
 {% endif %}
 
 {% set repo_icinga__baseurl = repo_icinga__baseurl ~ '/$releasever/snapshot/' %}

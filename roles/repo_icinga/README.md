@@ -3,6 +3,11 @@
 This role deploys the [Icinga Package Repository](https://packages.icinga.com/).
 
 
+## Mandatory Requirements
+
+* For RHEL (and compatible) hosts an [Icinga Repo Subscription](https://www.linuxfabrik.ch/en/products/icinga-subscriptions) is required.
+
+
 ## Tags
 
 | Tag           | What it does                          |
@@ -16,7 +21,7 @@ This role deploys the [Icinga Package Repository](https://packages.icinga.com/).
 | -------- | ----------- | ------------- |
 | `repo_icinga__basic_auth_login` | Use HTTP basic auth to login to the repository. Use this if you have an [Icinga Subscription](https://icinga.com/subscription/). Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles. | `{{ lfops__repo_basic_auth_login \| default("") }}` |
 | `repo_icinga__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used. | `'{{ lfops__repo_mirror_url \| default("") }}'` |
-| `repo_icinga__use_subscription_url` | Boolean. Set this to `true` if you are using an [Icinga Subscription](https://icinga.com/subscription/). Changes all rpm repository URLs to point to `/subscription/rhel`. Also works in conjunction with `repo_icinga__mirror_url`. | `false` |
+| `repo_icinga__use_subscription_url` | Boolean. Only relevant for OpenSUSE & SLES. Set this to `true` if you are using an [Icinga Subscription](https://icinga.com/subscription/). Changes the repository URLs to point to `/subscription/sles`. Also works in conjunction with `repo_icinga__mirror_url`. | `false` |
 
 Example:
 ```yaml
