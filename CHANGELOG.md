@@ -215,6 +215,9 @@ Role:tar
 
 ### Added
 
+Role:mariadb_server
+* Added support for client and server TLS
+
 Role:repo_proxysql
 * Added
 

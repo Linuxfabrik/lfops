@@ -4,6 +4,10 @@ mariadb_server__cnf_binlog_format__role_var: 'MIXED'
 mariadb_server__cnf_bulk_insert_buffer_size__role_var: '8M'
 mariadb_server__cnf_character_set_server__role_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__role_var: 'utf8mb4_unicode_ci'
+mariadb_server__cnf_client_ssl_ca__role_var: '{{ mariadb_server__cnf_ssl_ca__combined_var }}'
+mariadb_server__cnf_client_ssl_cert__role_var: ''
+mariadb_server__cnf_client_ssl_key__role_var: ''
+mariadb_server__cnf_client_ssl_verify_server_cert__role_var: true
 mariadb_server__cnf_datadir__role_var: '/var/lib/mysql/'
 mariadb_server__cnf_default_storage_engine__role_var: 'InnoDB'
 mariadb_server__cnf_expire_logs_days__role_var: 0
@@ -27,10 +31,14 @@ mariadb_server__cnf_performance_schema__role_var: 'ON'
 mariadb_server__cnf_query_cache_limit__role_var: '1M'
 mariadb_server__cnf_query_cache_size__role_var: 0
 mariadb_server__cnf_query_cache_type__role_var: 'OFF'
+mariadb_server__cnf_require_secure_transport__role_var: 'OFF' # default: 'OFF'
 mariadb_server__cnf_skip_name_resolve__role_var: 'ON'
 mariadb_server__cnf_slow_query_log__role_var: 0
 mariadb_server__cnf_slow_query_log_file__role_var: '/var/log/mariadb/mariadb-slowquery.log'
 mariadb_server__cnf_sql_mode__role_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
+mariadb_server__cnf_ssl_ca__role_var: ''
+mariadb_server__cnf_ssl_cert__role_var: ''
+mariadb_server__cnf_ssl_key__role_var: ''
 mariadb_server__cnf_table_definition_cache__role_var: 400
 mariadb_server__cnf_tls_version__role_var: 'TLSv1.2,TLSv1.3'
 mariadb_server__cnf_tmp_table_size__role_var: '16M'

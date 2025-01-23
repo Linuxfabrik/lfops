@@ -136,7 +136,7 @@ mariadb_server__dump_user:
 | `mariadb_server__service_timeout_stop_sec` | String. Systemd: First, it configures the time to wait for the ExecStop= command. Second, it configures the time to wait for the MariaDB server itself to stop. If the MariaDB server doesn't terminate in the specified time, it will be forcibly terminated by SIGKILL. | `'15min'` |
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
 | `mariadb_server__state`| Controls the Systemd service. One of<br> * `started`<br> * `stopped`<br> * `reloaded` | `'started'` |
-| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_user`). Subkeys:<br> * `username`: Mandatory, String. Username. <br> * `host`: Mandatory, String. Host. <br> * `password`<br> * `priv`<br> * `state`<br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_user`). Subkeys:<br> * `username`: Mandatory, String. Username. <br> * `host`: Mandatory, String. Host. <br> * `password`<br> * `tls_requires`: Note: Make sure to include the CN in the SAN of the certificate.<br> * `priv`<br> * `state`<br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 
 Example:
 ```yaml
@@ -175,6 +175,14 @@ mariadb_server__users__host_var:
     password: 'linuxfabrik'
     priv:
       - '*.*:event,lock tables,reload,select,show view,super,trigger'
+    state: 'present'
+  # user with client TLS auth
+  - username: 'admin1'
+    host: 'localhost'
+    tls_requires:
+      subject: '/CN=admin1'
+    priv:
+      - '*.*:ALL'
     state: 'present'
 ```
 
@@ -261,6 +269,37 @@ mariadb_server__cnf_table_definition_cache__host_var: 400
 mariadb_server__cnf_tls_version__host_var: 'TLSv1.2,TLSv1.3'
 mariadb_server__cnf_tmp_table_size__host_var: '16M'
 mariadb_server__cnf_wait_timeout__host_var: 28800
+```
+
+
+## Optional Role Variables - `mariadb_server__cnf_*` Config Directives for SSL/TLS
+
+This are a several options and system variables related to [SSL/TLS Connections](https://mariadb.com/kb/en/securing-connections-for-client-and-server).
+
+Variables for `z00-linuxfabrik.cnf` directives and their default values, defined and supported by this role for SSL/TLS.
+
+| Role Variable | Documentation | Default Value |
+| ------------- | ------------- | ------------- |
+| `mariadb_server__cnf_client_ssl_ca__group_var` / `mariadb_server__cnf_client_ssl_ca__host_var` | Client configuration. Path to the SSL CA file. Will be used to verify the server cert.          | `'{{ mariadb_server__cnf_ssl_ca__combined_var }}'` |
+| `mariadb_server__cnf_client_ssl_cert__group_var` / `mariadb_server__cnf_client_ssl_cert__host_var` | Client configuration. Path to an SSL cert that will be used to authenticate against the server. | `''` |
+| `mariadb_server__cnf_client_ssl_key__group_var` / `mariadb_server__cnf_client_ssl_key__host_var` | Client configuration. Path to an SSL key that will be used to authenticate against the server.  | `''` |
+| `mariadb_server__cnf_client_ssl_verify_server_cert__group_var` / `mariadb_server__cnf_client_ssl_verify_server_cert__host_var` | Boolean. Client configuration. Enables/disables verification of the server cert. | `true` |
+| `mariadb_server__cnf_require_secure_transport__group_var` / `mariadb_server__cnf_require_secure_transport__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#require_secure_transport) | `'OFF'` |
+| `mariadb_server__cnf_ssl_ca__group_var` / `mariadb_server__cnf_ssl_ca__host_var` | [mariadb.com](https://mariadb.com/kb/en/ssltls-system-variables/#ssl_ca). Note: the CA should be world-readable (e.g. so that both the server & client can access it). | `''` |
+| `mariadb_server__cnf_ssl_cert__group_var` / `mariadb_server__cnf_ssl_cert__host_var` | [mariadb.com](https://mariadb.com/kb/en/ssltls-system-variables/#ssl_cert). Note: the role changes the owner to `mysql` to make sure that mariadb can read the file. | `''` |
+| `mariadb_server__cnf_ssl_key__group_var` / `mariadb_server__cnf_ssl_key__host_var` | [mariadb.com](https://mariadb.com/kb/en/ssltls-system-variables/#ssl_key). Note: the role changes the owner to `mysql` to make sure that mariadb can read the file. | `''` |
+
+Example:
+```yaml
+# optional - SSL/TLS directives
+mariadb_server__cnf_client_ssl_ca__host_var: '/etc/pki/tls/certs/ca.crt'
+mariadb_server__cnf_client_ssl_cert__host_var: '/etc/pki/tls/certs/admin1.crt'
+mariadb_server__cnf_client_ssl_key__host_var: '/etc/pki/tls/private/admin1.key'
+mariadb_server__cnf_client_ssl_verify_server_cert__host_var: true
+mariadb_server__cnf_require_secure_transport__host_var: 'ON'
+mariadb_server__cnf_ssl_ca__host_var: '/etc/pki/tls/certs/ca.crt'
+mariadb_server__cnf_ssl_cert__host_var: '/etc/pki/tls/certs/mariadb-server.crt'
+mariadb_server__cnf_ssl_key__host_var: '/etc/pki/tls/private/mariadb-server.key'
 ```
 
 

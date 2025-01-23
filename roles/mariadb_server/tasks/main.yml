@@ -222,6 +222,24 @@
       mode: 0o644
     notify: 'mariadb_server: systemctl restart mariadb'
 
+  - name: 'Make sure mariadb can read the SSL cert'
+    ansible.builtin.file:
+      path: '{{ mariadb_server__cnf_ssl_cert__combined_var }}'
+      owner: 'mysql'
+      group: 'root'
+      mode: 0o644
+    when:
+      - 'mariadb_server__cnf_ssl_key__combined_var | length'
+
+  - name: 'Make sure mariadb can read the SSL key'
+    ansible.builtin.file:
+      path: '{{ mariadb_server__cnf_ssl_key__combined_var }}'
+      owner: 'mysql'
+      group: 'root'
+      mode: 0o600
+    when:
+      - 'mariadb_server__cnf_ssl_key__combined_var | length'
+
   - name: 'Reset value of wsrep_on'
     ansible.builtin.set_fact:
       mariadb_server__cnf_wsrep_on: '{{ mariadb_server__cnf_wsrep_on_original_value }}'
@@ -364,6 +382,7 @@
     community.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       name: 'root'
       host_all: true
       state: 'absent'
@@ -372,6 +391,7 @@
     community.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       name: ''
       host_all: true
       state: 'absent'
@@ -380,6 +400,7 @@
     community.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       name: 'test'
       state: 'absent'
 
@@ -387,18 +408,21 @@
     community.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       query: 'delete from mysql.db where db="test" or db="test\\_%";'
 
   - name: 'Secure installation: Reload privilege tables'
     community.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       query: 'flush privileges;'
 
   - name: 'Secure installation (Linuxfabrik): Remove users ignored in --skip-name-resolve mode'
     community.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       query: |-
         delete
         from
@@ -486,6 +510,7 @@
     community.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       name: '{{ mariadb_server__dump_user["username"] }}'
       host: 'localhost'
       password: '{{ mariadb_server__dump_user["password"] }}'
@@ -559,6 +584,7 @@
     community.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       name: '{{ item["name"] }}'
       collation: '{{ item["collation"] | default("utf8_general_ci") }}'
       encoding: '{{ item["encoding"] | default("utf8") }}'
@@ -583,9 +609,11 @@
     community.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       name: '{{ item["username"] }}'
       host: '{{ item["host"] | default("localhost") }}'
       password: '{{ item["password"] | default(omit) }}'
+      tls_requires: '{{ item["tls_requires"] | default(omit) }}'
       priv: '{{ (item["priv"] | join("/")) | default(omit) }}'
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ mariadb_server__users__combined_var }}'
@@ -604,6 +632,7 @@
     community.mysql.mysql_info:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       filter:
         - 'databases'
       return_empty_dbs: false
@@ -646,6 +675,7 @@
     community.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__role_var }}'
       name: 'sys'
       state: 'import'
       target: './sys_10.sql'
