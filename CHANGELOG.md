@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:mariadb_server:
+* Removed support for EOL versions 10.3 and 10.4
+
 Role:repo_icinga
 * Removed `repo_icinga__use_subscription_url` for RHEL (and compatibles) as the packages without a subscription are outdated. The variable is now only effective for OpenSUSE and SLES.
 

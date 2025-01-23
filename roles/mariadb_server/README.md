@@ -12,8 +12,6 @@ Note that this role does NOT let you specify a particular MariaDB server version
 
 This role is compatible with the following MariaDB versions:
 
-* 10.3
-* 10.4
 * 10.5
 * 10.6 LTS
 * 10.11 LTS
