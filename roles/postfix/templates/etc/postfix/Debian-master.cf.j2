@@ -11,11 +11,9 @@
 # service type  private unpriv  chroot  wakeup  maxproc command + args
 #               (yes)   (yes)   (no)    (never) (100)
 # ==========================================================================
-{% if postfix__mastercf_entries__combined_var is defined and postfix__mastercf_entries__combined_var | length > 0 %}
-{% for item in postfix__mastercf_entries__combined_var %}
-{{ item.service }}      {{ item.type}}   {{ item.private}}       {{ item.unpriv}}       {{ item.chroot }}      {{ item.wakeup }}      {{ item.maxproc }}      {{ item.command }}
-{% for argument in item.arguments %}
+{% for item in postfix__mastercf_entries__combined_var if item['state'] | d('present') != 'absent' %}
+{{ item.service }}    {{ item.type }}    {{ item.private }}    {{ item.unpriv }}    {{ item.chroot }}    {{ item.wakeup }}    {{ item.maxproc }}    {{ item.command }}
+{% for argument in item['arguments'] %}
   {{ argument }}
 {% endfor %}
 {% endfor %}
-{% endif %}
