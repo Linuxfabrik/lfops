@@ -14,16 +14,17 @@ postfix__bounce_queue_lifetime: '5d'
 postfix__inet_interfaces: '127.0.0.1' # fails on machines without IPv6 if set to 'localhost', so set explicitely to the IPv4 localhost address
 postfix__inet_protocols: 'all'
 postfix__mailbox_size_limit: 51200000
-postfix__mastercf_options__combined_var: '{{
-    postfix__mastercf_options__host_var if (postfix__mastercf_options__host_var | string | length) else
-    postfix__mastercf_options__group_var if (postfix__mastercf_options__group_var | string | length) else
-    postfix__mastercf_options__dependent_var if (postfix__mastercf_options__dependent_var | string | length) else
-    postfix__mastercf_options__role_var
+postfix__mastercf_entries__combined_var: '{{ (
+      postfix__mastercf_entries__role_var +
+      postfix__mastercf_entries__dependent_var +
+      postfix__mastercf_entries__group_var +
+      postfix__mastercf_entries__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["service", "type", "command"])
   }}'
-postfix__mastercf_options__dependent_var: []
-postfix__mastercf_options__group_var: []
-postfix__mastercf_options__host_var: []
-postfix__mastercf_options__role_var: []
+postfix__mastercf_entries__dependent_var: []
+postfix__mastercf_entries__group_var: []
+postfix__mastercf_entries__host_var: []
+
 postfix__maximal_queue_lifetime: '5d'
 postfix__message_size_limit: 10240000
 postfix__mydestination: '$myhostname, localhost.$mydomain, localhost'

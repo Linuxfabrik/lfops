@@ -34,13 +34,13 @@ postfix__relayhost: 'mail.example.com:587'
 | `postfix__inet_interfaces` | The local network interface addresses that this mail system receives mail on. | `'127.0.0.1'` |
 | `postfix__inet_protocols` | The Internet protocols Postfix will attempt to use when making or accepting connections. Specify one or more of `ipv4` or `ipv6`, separated by whitespace or commas. The form `all` is equivalent to `ipv4, ipv6` or `ipv4`, depending on whether the operating system implements IPv6. | `'all'` |
 | `postfix__mailbox_size_limit` | See https://www.postfix.org/postconf.5.html#mailbox_size_limit | `51200000` |
-| `postfix__mastercf_options__host_var` / <br> `postfix__mastercf_options__group_var` | See https://www.postfix.org/master.5.html | `[]` |
+| `postfix__mastercf_entries__host_var` / <br> `postfix__mastercf_entries__group_var` | See https://www.postfix.org/master.5.html <br> Subkeys: <ul><li>`service`: Mandatory, string. The service name syntax depends on the service type as described next.</li><li>`type`: Mandatory, string. Specify one of the service types found in the above link.</li><li>`private`: Mandatory, string. Whether a service is internal to Postfix (pathname starts with private/), or exposed through Postfix command-line tools (path-name starts with public/). Internet (type inet) services can't be private.</li><li>`unpriv`: Mandatory, string. Whether the service runs with root privileges or as the owner of the Postfix system (the owner name is controlled by the mail_owner configuration variable in the main.cf file).</li><li>`chroot`: Mandatory, string. Whether or not the service runs chrooted to the mail queue directory (pathname is controlled by the queue_directory configuration variable in the main.cf file).</li><li>`wakeup`: Mandatory, string. Automatically wake up the named service after the specified number of seconds. The wake up is implemented by connecting to the service and sending a wake up request. A ? at the end of the wake-up time field requests that no wake up events be sent before the first time a service is used. Specify 0 for no automatic wake up.</li><li>`maxproc`: Mandatory, string. The maximum number of processes that may execute this service simultaneously. Specify 0 for no process count limit.</li><li>`command`: Mandatory, string. The command to be executed.</li><li>`arguments`: Mandatory, list. The arguments to execute the commend with.</li></ul> | `[]` |
 | `postfix__maximal_queue_lifetime` | See https://www.postfix.org/postconf.5.html#maximal_queue_lifetime | `'5d'` |
 | `postfix__message_size_limit` | See https://www.postfix.org/postconf.5.html#message_size_limit | `10240000` |
 | `postfix__mydestination` | See [postfix.org](https://www.postfix.org/postconf.5.html#mydestination) | '$myhostname, localhost.$mydomain, localhost' |
-| `postfix__myhostname` | See [postfix.org](https://www.postfix.org/postconf.5.html#myhostname)  | unset |
+| `postfix__myhostname` | See [postfix.org](https://www.postfix.org/postconf.5.html#myhostname) | unset |
 | `postfix__mynetworks` | See https://www.postfix.org/postconf.5.html#mynetworks | `[]` |
-| `postfix__myorigin` | See [postfix.org](https://www.postfix.org/postconf.5.html#myorigin)  | '$myhostname' |
+| `postfix__myorigin` | See [postfix.org](https://www.postfix.org/postconf.5.html#myorigin) | '$myhostname' |
 | `postfix__raw` | Multiline string. Raw content which will be appended to the `/etc/postfix/main.cf`. | unset |
 | `postfix__recipient_delimiter` | See https://www.postfix.org/postconf.5.html#recipient_delimiter | `''` |
 | `postfix__relayhost_password` | Password for the specified user | `''` |
@@ -51,13 +51,13 @@ postfix__relayhost: 'mail.example.com:587'
 | `postfix__smtp_destination_concurrency_limit` | See https://www.postfix.org/postconf.5.html#smtp_destination_concurrency_limit | `20` |
 | `postfix__smtp_destination_recipient_limit` | See https://www.postfix.org/postconf.5.html#smtp_destination_recipient_limit | `50` |
 | `postfix__smtp_sasl_auth_enable` | Enable SASL authentication in the Postfix SMTP client. By default, the Postfix SMTP client uses no authentication. | `true` |
-| `postfix__smtp_sasl_password_maps` | See [postfix.org](https://www.postfix.org/postconf.5.html#smtp_sasl_password_maps)  | 'hash:/etc/postfix/sasl_passwd' |
+| `postfix__smtp_sasl_password_maps` | See [postfix.org](https://www.postfix.org/postconf.5.html#smtp_sasl_password_maps) | 'hash:/etc/postfix/sasl_passwd' |
 | `postfix__smtp_sasl_security_options` | List of Postfix SMTP client SASL security options, separated by commas. Possible options:<br>* `noplaintext`<br>* `noactive`<br>* `nodictionary`<br>* `noanonymous`<br>* `mutual_auth` | `['noplaintext', 'noanonymous']` |
 | `postfix__smtp_tls_security_level`| The default SMTP TLS security level for the Postfix SMTP client. When a non-empty value is specified, this overrides the obsolete parameters `smtp_use_tls`, `smtp_enforce_tls`, and `smtp_tls_enforce_peername`; when no value is specified for `smtp_tls_enforce_peername` or the obsolete parameters, the default SMTP TLS security level is `none`. Set this to `'encrypt'` (or stronger) for SMTPS wrappermode (TCP port 465). | `'may'` |
 | `postfix__smtp_tls_wrappermode` | Request that the Postfix SMTP client connects using the SUBMISSIONS/SMTPS protocol instead of using the STARTTLS command. This mode requires `postfix__smtp_tls_security_level: 'encrypt'` or stronger. | `false` |
-| `postfix__smtpd_tls_cert_file` | See [postfix.org](https://www.postfix.org/postconf.5.html#smtpd_tls_cert_file)  | '/etc/pki/tls/certs/postfix.pem' |
-| `postfix__smtpd_tls_key_file` | See [postfix.org](https://www.postfix.org/postconf.5.html#smtpd_tls_key_file)  | '/etc/pki/tls/private/postfix.key' |
-| `postfix__smtpd_tls_security_level` | See [postfix.org](https://www.postfix.org/postconf.5.html#smtpd_tls_security_level)  | 'may' |
+| `postfix__smtpd_tls_cert_file` | See [postfix.org](https://www.postfix.org/postconf.5.html#smtpd_tls_cert_file) | '/etc/pki/tls/certs/postfix.pem' |
+| `postfix__smtpd_tls_key_file` | See [postfix.org](https://www.postfix.org/postconf.5.html#smtpd_tls_key_file) | '/etc/pki/tls/private/postfix.key' |
+| `postfix__smtpd_tls_security_level` | See [postfix.org](https://www.postfix.org/postconf.5.html#smtpd_tls_security_level) | 'may' |
 
 Example:
 ```yaml
@@ -71,17 +71,29 @@ postfix__bounce_queue_lifetime: '5d'
 postfix__inet_interfaces: 'all'
 postfix__inet_protocols: 'all'
 postfix__mailbox_size_limit: 51200000
-postfix__mastercf_options__host_var:
-  - service: 'smtp'
-    type: 'inet'
-    options:
-      - 'smtpd_tls_security_level=none'
+postfix__mastercf_entries__host_var:
   - service: 'smtps'
     type: 'inet'
-    options:
-      - 'syslog_name=postfix/smtps'
-      - 'smtpd_tls_wrappermode=yes'
-      - 'smtpd_reject_unlisted_recipient=no'
+    private: 'n'
+    unpriv: '-'
+    chroot: 'n'
+    wakeup: '-'
+    maxproc: '-'
+    command: 'smtpd'
+    arguments:
+      - '-o syslog_name=postfix/smtps'
+      - '-o smtpd_tls_wrappermode=yes'
+      - '-o smtpd_reject_unlisted_recipient=no'
+  - service: 'maildrop'
+    type: 'unix'
+    private: '-'
+    unpriv: 'n'
+    chroot: 'n'
+    wakeup: '-'
+    maxproc: '-'
+    command: 'pipe'
+    arguments:
+      - 'flags=DRXhu user=vmail argv=/usr/bin/maildrop -d ${recipient}'
 postfix__maximal_queue_lifetime: '5d'
 postfix__message_size_limit: 10240000
 postfix__mydestination: '$myhostname, localhost.$mydomain, localhost'
