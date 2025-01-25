@@ -5,7 +5,7 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
-  - name: 'deploy the repo files (mirror: {{ repo_baseos__mirror_url | default("") }})'
+  - name: 'Deploy the repo files (mirror: {{ repo_baseos__mirror_url | default("") }})'
     ansible.builtin.template:
       src: '{{ item }}.j2'
       dest: '/etc/yum.repos.d/{{ item | basename }}'
