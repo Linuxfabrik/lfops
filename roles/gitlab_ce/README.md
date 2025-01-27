@@ -1,6 +1,9 @@
 # Ansible Role linuxfabrik.lfops.gitlab_ce
 
-This role installs and configures [GitLab CE](https://about.gitlab.com/), including regular backups. After installation, the password for the first user "root" can be found in `/etc/gitlab/initial_root_password`.
+This role installs and configures [GitLab CE](https://about.gitlab.com/), including regular backups.
+
+* After installation, the password for the first user "root" can be found in `/etc/gitlab/initial_root_password`.
+* One of the first steps after that would be to deactivate the registration form: In the left sidebar, select Admin > Settings > General, and expand "Sign-up restrictions". Clear the "Sign-up enabled" checkbox, then select "Save changes" (you can't disable signups without using the UI).
 
 
 ## Mandatory Requirements
