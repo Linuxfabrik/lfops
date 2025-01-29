@@ -148,6 +148,7 @@
       state: 'present'
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
 
   # /var/lib/mysql/mysql\.sock                         socket             system_u:object_r:mysqld_var_run_t:s0
   - name: 'semanage fcontext --add --type mysqld_var_run_t {{ mariadb_server__cnf_socket__combined_var | ansible.builtin.regex_escape }}'
@@ -158,6 +159,7 @@
       state: 'present'
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
 
   - name: 'restorecon -Fvr {{ mariadb_server__cnf_datadir__combined_var }}'
     ansible.builtin.command: 'restorecon -Fvr {{ mariadb_server__cnf_datadir__combined_var }}'
