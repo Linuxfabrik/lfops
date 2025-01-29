@@ -15,6 +15,7 @@ Note: Always add new entries to the top of the section, even if this results in 
 Role:mariadb_server:
 * Removed support for EOL versions 10.3 and 10.4
 * Removed support for non-LTS versions
+* Changed default of `mariadb_server__cnf_client_ssl_verify_server_cert__*_var` for versions lower than 10.11 from `true` to `false` to prevent errors when SSL is disabled
 
 Role:repo_icinga
 * Removed `repo_icinga__use_subscription_url` for RHEL (and compatibles) as the packages without a subscription are outdated. The variable is now only effective for OpenSUSE and SLES.
