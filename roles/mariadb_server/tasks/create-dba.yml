@@ -14,6 +14,11 @@
 
   rescue:
 
+  - name: 'Fail the rescue without old_password'
+    ansible.builtin.fail:
+      msg: 'DBA user creation failed and `old_password` is not set. Have a look at the error message of the previous task.'
+    when: 'mariadb_server__admin_user["old_password"] is not defined or not mariadb_server__admin_user["old_password"] | length'
+
   - name: 'Create DBA "{{ mariadb_server__admin_user["username"] }}" (with old_password)'
     community.mysql.mysql_user:
       check_implicit_admin: true
