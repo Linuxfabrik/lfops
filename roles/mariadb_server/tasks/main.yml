@@ -388,6 +388,8 @@
       name: 'root'
       host_all: true
       state: 'absent'
+    when:
+      - 'mariadb_server__admin_user["username"] != "root"'
 
   - name: 'Secure installation: Remove anonymous users'
     community.mysql.mysql_user:
