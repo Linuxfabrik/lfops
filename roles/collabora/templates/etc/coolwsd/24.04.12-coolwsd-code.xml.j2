@@ -47,8 +47,8 @@
 
     <memproportion desc="The maximum percentage of available memory consumed by all of the Collabora Online Development Edition processes, after which we start cleaning up idle documents. If cgroup memory limits are set, this is the maximum percentage of that limit to consume." type="double" default="80.0"></memproportion>
     <num_prespawn_children desc="Number of child processes to keep started in advance and waiting for new clients." type="uint" default="4">4</num_prespawn_children>
-    <!-- <fetch_update_check desc="Every number of hours will fetch latest version data. Defaults to 10 hours." type="uint" default="10">10</fetch_update_check> -->
-    <!-- <allow_update_popup desc="Allows notification about an update in the editor" type="bool" default="true">true</allow_update_popup> -->
+    <fetch_update_check desc="Every number of hours will fetch latest version data. Defaults to 10 hours." type="uint" default="10">10</fetch_update_check>
+    <allow_update_popup desc="Allows notification about an update in the editor" type="bool" default="true">true</allow_update_popup>
     <per_document desc="Document-specific settings, including LO Core settings.">
         <max_concurrency desc="The maximum number of threads to use while processing a document." type="uint" default="4">4</max_concurrency>
         <batch_priority desc="A (lower) priority for use by batch eg. convert-to processes to avoid starving interactive ones" type="uint" default="5">5</batch_priority>
@@ -132,7 +132,7 @@
         <merge type="bool" desc="If true, repeated commands after each other will be merged into 1 line. If false, every command will be 1 new line." default="true">true</merge>
         <merge_display_end_time type="bool" desc="If true, the duration of the merged command will also be logged." default="false">false</merge_display_end_time>
         <file enable="false">
-            <!-- If you use other path than /var/log and you run coolwsd from systemd, make sure that you enable that path in coolwsd.service (ReadWritePaths). -->
+            <!-- If you use other path than /var/log and you run coolwsd from systemd, make sure that you enable that path in coolwsd.service (ReadWritePaths). Also the log file path must be writable by the 'cool' user. -->
             <property name="path" desc="Log file path.">/var/log/coolwsd-ui-cmd.log</property>
             <property name="purgeCount" desc="The maximum number of log archives to preserve. Use 'none' to disable purging. See Poco FileChannel.">10</property>
             <property name="rotateOnOpen" desc="Enable/disable log file rotation on opening.">true</property>
