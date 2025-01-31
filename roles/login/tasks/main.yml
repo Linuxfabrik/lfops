@@ -35,7 +35,10 @@
   - name: 'Get list of required groups'
     ansible.builtin.set_fact:
       login__required_groups: '{{ ((login__users__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="additional_groups", default="None"))
-            + (login__users__combined_var | selectattr("state", "undefined") | map(attribute="additional_groups", default="None"))) | flatten | unique }}'
+            + (login__users__combined_var | selectattr("state", "undefined") | map(attribute="additional_groups", default="None"))
+            + (login__users__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="primary_group", default="None"))
+            + (login__users__combined_var | selectattr("state", "undefined") | map(attribute="primary_group", default="None")))
+            | flatten | unique }}'
 
   - ansible.builtin.debug:
       msg:
