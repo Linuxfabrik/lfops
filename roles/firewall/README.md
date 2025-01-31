@@ -18,6 +18,8 @@ This role configures a firewall on the system. For the currently supported firew
 | Tag        | What it does                        |
 | ---        | ------------                        |
 | `firewall` | Configures a firewall on the system |
+| `firewall:deploy_fwb_sh` | Deploys the `/etc/fwb.sh` file for Firewall Builder |
+| `firewall:firewalld` | Manages firewalld |
 
 
 ## Optional Role Variables

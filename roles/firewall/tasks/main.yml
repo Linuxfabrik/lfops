@@ -114,11 +114,6 @@
 
 - block:
 
-  - name: 'Make sure iptables is installed (required for fwb)'
-    ansible.builtin.package:
-      name: 'iptables'
-      state: 'present'
-
   - name: 'Remove any existing local fwb repo'
     ansible.builtin.file:
       path: '/tmp/ansible.fwb'
@@ -153,6 +148,18 @@
       owner: 'root'
       mode: 0o644
 
+  when: 'firewall__firewall == "fwbuilder"'
+  tags:
+    - 'firewall'
+    - 'firewall:deploy_fwb_sh'
+
+
+- block:
+
+  - name: 'Make sure iptables is installed (required for fwb)'
+    ansible.builtin.package:
+      name: 'iptables'
+      state: 'present'
 
   # You can't enable and start fwb.service at the same time - `/etc/fwb.sh start`
   # always hangs on the first run (only than) on a brand-new machine, and then Ansible also hangs.
@@ -160,7 +167,6 @@
   # Every subsequent run of `/etc/fwb.sh start` runs flawlessly.
   # `/etc/fwb.sh stop` doesn't change much, but also involves netfilter. So plit this up, and
   # first stop the firewall, then start it, no matter what.
-
   - name: 'Be sure fwb is enabled, stopped and not masked.'
     ansible.builtin.systemd:
       name: 'fwb.service'
