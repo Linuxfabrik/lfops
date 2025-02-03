@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2024080802
+# 2025020301
 
 # no `set -e` because we want to finish writing the log file even if a borg command fails
 function exit_with_first_failed_retc() {
@@ -32,44 +32,55 @@ EOF
     start_clamd=1
 fi
 
+source /etc/borg/borg.conf
+
+# remove non-existent directories to prevent non zero exit codes during `borg create`
+for i in "${!FILES_INCLUDE[@]}"; do
+    [[ ! -d "${FILES_INCLUDE[$i]}" ]] && unset 'FILES_INCLUDE[i]'
+done
 
 if [ "$1" == "daily" ]; then
-    source /etc/borg/borg.conf
     DATE=$(date +"%Y%m%d")
     BORG_REPO="$BACKUP_DIR/daily"
     echo "start: $(date +'%Y-%m-%d %H:%M:%S')" > /var/log/borg/borg.log
     echo "Running borg prune (Retention: $RETENTION_DAILY)"
-    borg prune --list --keep-within=$RETENTION_DAILY "$BORG_REPO"
+    borg prune --list --keep-within="$RETENTION_DAILY" "$BORG_REPO"
     prune_retc=$?
+    echo "prune_retc: $prune_retc"
     echo "prune_retc: $prune_retc" >> /var/log/borg/borg.log
     echo "Running borg backup"
     borg create "${BACKUP_OPTS[@]}" "${FILES_EXCLUDE[@]}" "$BORG_REPO"::"$DATE" "${FILES_INCLUDE[@]}"
     create_retc=$?
+    echo "create_retc: $create_retc"
     echo "create_retc: $create_retc" >> /var/log/borg/borg.log
     echo "end: $(date +'%Y-%m-%d %H:%M:%S')" >> /var/log/borg/borg.log
 elif [ "$1" == "hourly" ]; then
-    source /etc/borg/borg.conf
     DATE=$(date +"%Y%m%d-%H")
     BORG_REPO="$BACKUP_DIR/hourly"
     echo "start: $(date +'%Y-%m-%d %H:%M:%S')" > /var/log/borg/borg.log
     echo "Running borg prune (Retention: $RETENTION_HOURLY)"
-    borg prune --list --keep-within=$RETENTION_HOURLY "$BORG_REPO"
+    borg prune --list --keep-within="$RETENTION_HOURLY" "$BORG_REPO"
     prune_retc=$?
+    echo "prune_retc: $prune_retc"
     echo "prune_retc: $prune_retc" >> /var/log/borg/borg.log
     echo "Running borg backup"
     borg create "${BACKUP_OPTS[@]}" "${FILES_EXCLUDE[@]}" "$BORG_REPO"::"$DATE" "${FILES_INCLUDE[@]}"
     create_retc=$?
+    echo "create_retc: $create_retc"
     echo "create_retc: $create_retc" >> /var/log/borg/borg.log
     echo "end: $(date +'%Y-%m-%d %H:%M:%S')" >> /var/log/borg/borg.log
 else
     # any other parameter: on demand / manual / ad-hoc backup
-    source /etc/borg/borg.conf
     DATE=$(date +"%Y%m%d-%H%M%S")
     BORG_REPO="$BACKUP_DIR/on-demand"
     echo "Running borg prune (Retention: $RETENTION_ONDEMAND)"
-    borg prune --list --keep-within=$RETENTION_ONDEMAND "$BORG_REPO"
+    borg prune --list --keep-within="$RETENTION_ONDEMAND" "$BORG_REPO"
+    prune_retc=$?
+    echo "prune_retc: $prune_retc"
     echo "Running borg backup"
     borg create "${BACKUP_OPTS[@]}" "${FILES_EXCLUDE[@]}" "$BORG_REPO"::"$DATE" "${FILES_INCLUDE[@]}"
+    create_retc=$?
+    echo "create_retc: $create_retc"
 fi
 
 
