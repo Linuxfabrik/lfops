@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:openvpn_server:
+* The role now checks for a CRL file and only deploys the file if it does NOT exist, so it is never accidentally overwritten.
+
 Role:mariadb_server:
 * Removed support for EOL versions 10.3 and 10.4
 * Removed support for non-LTS versions
