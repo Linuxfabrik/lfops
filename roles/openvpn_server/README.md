@@ -44,9 +44,10 @@ For details see `man openvpn`.
 
 | Variable                          | Description                                                                                             | Default Value     |
 | --------                          | -----------                                                                                             | -------------     |
-| `openvpn_server__client_configs`  | List of Dictionaries (client configs, CCD). Can be used to limit a client to a certain IP, which then can be used during firewalling. Subkeys <ul><li>`name`: Mandatory, string. Name of hte client's X509 common name.</li><li>`raw`: Mandatory, string. Raw config for this client.</li><li>`state`: Optional, string. If the config should be `present` or `absent`. Defaults to `present`.</li></ul> | `[]`|
+| `openvpn_server__client_configs`  | List of Dictionaries (client configs). Can be used to limit a client to a certain IP, which then can be used during firewalling. Subkeys <ul><li>`name`: Mandatory, string. Name of hte client's X509 common name.</li><li>`raw`: Mandatory, string. Raw config for this client.</li><li>`state`: Optional, string. If the config should be `present` or `absent`. Defaults to `present`.</li></ul> | `[]`|
 | `openvpn_server__client_netmask`  | String. The netmask that will be used with `openvpn_server__client_network` to allocate client addresses. | `'255.255.255.0'` |
-| `openvpn_server__crl_verify`      | String. Check a peer's certificate against a Certificate Revocation List. The role checks if the file exists and only runs the task if the file does NOT exist, so it is never accidentally overwritten. | `'/etc/openvpn/server/crl.pem'` |
+| `openvpn_server__crl_verify`      | String. Check peer certificate against a Certificate Revocation List.                                   | `'/etc/openvpn/server/crl.pem'` |
+| `openvpn_server__crl_verify_skip_deploy` | Boolean. If false (the default), it expects the file `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc{{ openvpn_server__crl_verify }}` on the Ansible control node and will copy that file to the remote host. If true, it expects this file to already exist on the remote host in the specified location. | `false` |
 | `openvpn_server__dh`              | String. File containing Diffie Hellman parameters in .pem format (required for `--tls-server` only). The file will be created automatically. | `'/etc/openvpn/dh2048.pem'` |
 | `openvpn_server__dh_skip_deploy`  | Boolean. Skip the creation of the Diffie Hellman file.                                                  | `false` (file will be created) |
 | `openvpn_server__pkcs12`          | String. Specify a PKCS #12 file containing local private key, local certificate, and root CA certificate. This option can be used instead of `--ca`, `--cert`, and `--key`. Not available with mbed TLS. |
@@ -66,6 +67,7 @@ openvpn_server__client_configs:
     state: 'present'
 openvpn_server__client_netmask: '255.255.255.0'
 openvpn_server__crl_verify: '/etc/openvpn/server/crl.pem'
+openvpn_server__crl_verify_skip_deploy: false
 openvpn_server__dh: '/etc/openvpn/dh2048.pem'
 openvpn_server__dh_skip_deploy: false
 openvpn_server__pkcs12: '/etc/openvpn/server/server.p12'
