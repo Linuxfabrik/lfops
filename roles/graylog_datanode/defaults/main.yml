@@ -1,18 +1,15 @@
 graylog_datanode__bind_address: '127.0.0.1'
 graylog_datanode__datanode_http_port: 8999
 graylog_datanode__opensearch_data_location: '/var/lib/graylog-datanode/opensearch/data'
+graylog_datanode__mongodb_uri: 'mongodb://127.0.0.1/graylog'
+graylog_datanode__service_enabled: true
+
+# ------
 
 graylog_datanode__kernel_settings__transparent_hugepages__dependent_var: 'never'
 graylog_datanode__kernel_settings__sysctl__dependent_var:
   - name: 'vm.max_map_count'
     value: 262144
-
-graylog_datanode__mongodb_uri: 'mongodb://127.0.0.1/graylog'
-
-graylog_datanode__service_enabled: true
-
-# ------
-
 graylog_datanode__selinux__fcontexts__dependent_var:
   - setype: 'var_lib_t'
     target: '{{ graylog_datanode__opensearch_data_location }}(/.*)?'
