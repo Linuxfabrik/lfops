@@ -60,7 +60,6 @@ graylog_server__password_secret: 'Linuxfabrik_GmbH'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `graylog_server__elasticsearch_hosts` | List of Elasticsearch hosts URLs Graylog should connect to. | `['http://127.0.0.1:9200']` |
 | `graylog_server__http_bind_address` | The network interface used by the Graylog HTTP interface. | `'127.0.0.1'` |
 | `graylog_server__http_bind_port` | The port used by the Graylog HTTP interface. | `9000` |
 | `graylog_server__is_leader` | This should be set to `true` for a single node in the cluster. The leader will perform some periodical tasks that non-leaders won't perform. | `true` |
@@ -73,8 +72,6 @@ graylog_server__password_secret: 'Linuxfabrik_GmbH'
 Example:
 ```yaml
 # optional
-graylog_server__elasticsearch_hosts:
-  - 'http://127.0.0.1:9200'
 graylog_server__http_bind_address: '192.0.2.1'
 graylog_server__http_bind_port: 9000
 graylog_server__is_leader: true
