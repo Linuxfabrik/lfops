@@ -522,6 +522,7 @@ nextcloud__systemd_unit__services__dependent_var:
     raw_service: |-
       Environment=NEXTCLOUD_URL=https://{{ nextcloud__fqdn }}
       Environment=PORT=7867
+      ExecStartPre=-/bin/chcon --type bin_t /var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push
       ExecStart=/var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push /var/www/html/nextcloud/config/config.php
       User=apache
     enabled: true
