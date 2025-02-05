@@ -1,3 +1,5 @@
+graylog_server__elasticsearch_hosts:
+  - 'http://127.0.0.1:9200'
 graylog_server__http_bind_address: '127.0.0.1'
 graylog_server__http_bind_port: 9000
 graylog_server__is_leader: true
