@@ -1,0 +1,10 @@
+- name: 'icinga_kubernetes: restart icinga-kubernetes'
+  ansible.builtin.service:
+    name: 'icinga-kubernetes'
+    state: 'restarted'
+
+- name: 'icinga_kubernetes: systemctl daemon reload && restart icinga-kubernetes'
+  ansible.builtin.systemd:
+    daemon_reload: true
+  changed_when: true # else the next handler does not get called
+  notify: 'icinga_kubernetes: restart icinga-kubernetes'

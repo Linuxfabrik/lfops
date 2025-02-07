@@ -1,0 +1,17 @@
+icinga_kubernetes_web__database_host: '{{ icinga_kubernetes__database_host }}'
+icinga_kubernetes_web__database_login: '{{ icinga_kubernetes__database_login }}'
+icinga_kubernetes_web__database_name: '{{ icinga_kubernetes__database_name }}'
+icinga_kubernetes_web__url: 'https://github.com/Icinga/icinga-kubernetes-web/archive/{{ icinga_kubernetes_web__version }}.tar.gz'
+
+# -----------------------------------------------------------------------------
+
+icinga_kubernetes_web__icingaweb2__resources__dependent_var:
+  - name: '{{ icinga_kubernetes_web__database_name }}'
+    type: 'db'
+    db: 'mysql'
+    host: '{{ icinga_kubernetes_web__database_host }}'
+    port: 3306
+    dbname: '{{ icinga_kubernetes_web__database_name }}'
+    username: '{{ icinga_kubernetes_web__database_login.username }}'
+    password: '{{ icinga_kubernetes_web__database_login.password }}'
+    charset: 'utf8mb4'

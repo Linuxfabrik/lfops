@@ -12,6 +12,10 @@
     setup_icinga2_master__grafana_grizzly__skip_role__internal_var: '{{ setup_icinga2_master__grafana_grizzly__skip_role | d(false) }}'
     setup_icinga2_master__icinga2_master__skip_injections__internal_var: '{{ setup_icinga2_master__icinga2_master__skip_injections | d(setup_icinga2_master__icinga2_master__skip_role__internal_var) }}'
     setup_icinga2_master__icinga2_master__skip_role__internal_var: '{{ setup_icinga2_master__icinga2_master__skip_role | d(false) }}'
+    setup_icinga2_master__icinga_kubernetes__skip_injections__internal_var: '{{ setup_icinga2_master__icinga_kubernetes__skip_injections | d(setup_icinga2_master__icinga_kubernetes__skip_role__internal_var) }}'
+    setup_icinga2_master__icinga_kubernetes__skip_role__internal_var: '{{ setup_icinga2_master__icinga_kubernetes__skip_role | d(true) }}'
+    setup_icinga2_master__icinga_kubernetes_web__skip_injections__internal_var: '{{ setup_icinga2_master__icinga_kubernetes_web__skip_injections | d(setup_icinga2_master__icinga_kubernetes_web__skip_role__internal_var) }}'
+    setup_icinga2_master__icinga_kubernetes_web__skip_role__internal_var: '{{ setup_icinga2_master__icinga_kubernetes_web__skip_role | d(true) }}'
     setup_icinga2_master__icingadb__skip_injections__internal_var: '{{ setup_icinga2_master__icingadb__skip_injections | d(setup_icinga2_master__icingadb__skip_role__internal_var) }}'
     setup_icinga2_master__icingadb__skip_role__internal_var: '{{ setup_icinga2_master__icingadb__skip_role | d(false) }}'
     setup_icinga2_master__icingadb_web__skip_injections__internal_var: '{{ setup_icinga2_master__icingadb_web__skip_injections | d(setup_icinga2_master__icingadb_web__skip_role__internal_var) }}'
@@ -116,6 +120,7 @@
           (not setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var) | ternary(icingaweb2_module_director__mariadb_server__databases__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__mariadb_server__databases__dependent_var, []) +
           (not setup_icinga2_master__icingadb__skip_injections__internal_var) | ternary(icingadb__mariadb_server__databases__dependent_var, []) +
+          (not setup_icinga2_master__icinga_kubernetes__skip_injections__internal_var) | ternary(icinga_kubernetes__mariadb_server__databases__dependent_var, []) +
           (not setup_icinga2_master__icinga2_master__skip_injections__internal_var) | ternary(icinga2_master__mariadb_server__databases__dependent_var, [])
         }}'
       mariadb_server__users__dependent_var: '{{
@@ -125,6 +130,7 @@
           (not setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var) | ternary(icingaweb2_module_director__mariadb_server__users__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__mariadb_server__users__dependent_var, []) +
           (not setup_icinga2_master__icingadb__skip_injections__internal_var) | ternary(icingadb__mariadb_server__users__dependent_var, []) +
+          (not setup_icinga2_master__icinga_kubernetes__skip_injections__internal_var) | ternary(icinga_kubernetes__mariadb_server__users__dependent_var, []) +
           (not setup_icinga2_master__icinga2_master__skip_injections__internal_var) | ternary(icinga2_master__mariadb_server__users__dependent_var, [])
         }}'
       when:
@@ -222,7 +228,8 @@
           (not setup_icinga2_master__icingaweb2_module_monitoring__skip_injections__internal_var) | ternary(icingaweb2_module_monitoring__icingaweb2__resources__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_reporting__skip_injections__internal_var) | ternary(icingaweb2_module_reporting__icingaweb2__resources__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var) | ternary(icingaweb2_module_director__icingaweb2__resources__dependent_var, []) +
-          (not setup_icinga2_master__icingadb_web__skip_injections__internal_var) | ternary(icingadb_web__icingaweb2__resources__dependent_var, [])
+          (not setup_icinga2_master__icingadb_web__skip_injections__internal_var) | ternary(icingadb_web__icingaweb2__resources__dependent_var, []) +
+          (not setup_icinga2_master__icinga_kubernetes_web__skip_injections__internal_var) | ternary(icinga_kubernetes_web__icingaweb2__resources__dependent_var, [])
         }}'
       icingaweb2__users__dependent_var: '{{
           (not setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var) | ternary(icingaweb2_module_director__icingaweb2__users__dependent_var, [])
@@ -263,6 +270,14 @@
     - role: 'linuxfabrik.lfops.icingadb'
       when:
         - 'not setup_icinga2_master__icingadb__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.icinga_kubernetes'
+      when:
+        - 'not setup_icinga2_master__icinga_kubernetes__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.icinga_kubernetes_web'
+      when:
+        - 'not setup_icinga2_master__icinga_kubernetes_web__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.icingadb_web'
       when:

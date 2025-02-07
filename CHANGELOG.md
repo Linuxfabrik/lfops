@@ -217,6 +217,12 @@ Role:tar
 
 ### Added
 
+Role:icinga_kubernetes
+* Added
+
+Role:icinga_kubernetes_web
+* Added
+
 Role:mariadb_server
 * Added support for client and server TLS
 

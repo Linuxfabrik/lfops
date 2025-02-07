@@ -1,0 +1,30 @@
+# {{ ansible_managed }}
+# 2025020701
+
+# This is the configuration file for Icinga for Kubernetes.
+
+# Connection configuration for the database to which Icinga for Kubernetes synchronizes data.
+# This is also the database used in Icinga for Kubernetes Web to view and work with the data.
+database:
+  # Database type. Only 'mysql' is supported yet which is the default.
+#  type: mysql
+
+  # Database host or absolute Unix socket path.
+  host: '{{ icinga_kubernetes__database_host }}'
+
+  # Database port. By default, the MySQL port.
+#  port:
+
+  # Database name.
+  database: '{{ icinga_kubernetes__database_name }}'
+
+  # Database user.
+  user: '{{ icinga_kubernetes__database_login["username"] }}'
+
+  # Database password.
+  password: '{{ icinga_kubernetes__database_login["password"] }}'
+
+# Configuration for Prometheus metrics API.
+prometheus:
+  # Prometheus server URL.
+#  url: http://localhost:9090
