@@ -28,6 +28,10 @@ If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/
 * If you're not using a versioned MongoDB repository, don't forget to protect MongoDB from being updated with newer minor and major versions. This can be done using the [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock) role.
 * Enable the official [Graylog repository](https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm). This can be done using the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) role.
 
+Properly setting hostnames and ensuring that communication via DNS among all participating hosts works:
+
+* This especially affects clustered systems, because the datanode instance registers itself to the mongodb database with its hostname.
+
 
 ## Tags
 
