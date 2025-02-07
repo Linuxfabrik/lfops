@@ -17,6 +17,8 @@ Note that this role does NOT let you specify a particular Graylog Server version
 
 ## Mandatory Requirements
 
+Properly set hostnames and ensure that communication via DNS among all participating hosts works. This especially affects clustered systems, because the datanode instance registers itself to the mongodb database with its hostname.
+
 Sizing of disks:
 
 * `/`: at least 4 GB free disk space (create a 8+ GB partition).
@@ -27,10 +29,6 @@ If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/
 * Install MongoDB. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
 * If you're not using a versioned MongoDB repository, don't forget to protect MongoDB from being updated with newer minor and major versions. This can be done using the [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock) role.
 * Enable the official [Graylog repository](https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm). This can be done using the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) role.
-
-Properly setting hostnames and ensuring that communication via DNS among all participating hosts works:
-
-* This especially affects clustered systems, because the datanode instance registers itself to the mongodb database with its hostname.
 
 
 ## Tags
