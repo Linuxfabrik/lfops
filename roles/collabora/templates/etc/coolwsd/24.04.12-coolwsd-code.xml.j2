@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2025012901 -->
+    <!-- 2025020701 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -107,7 +107,7 @@
              See also: https://docs.libreoffice.org/sal/html/sal_log.html -->
         <lokit_sal_log type="string" desc="Fine tune log messages from LOKit. Default is to suppress log messages from LOKit." default="-INFO-WARN">-INFO-WARN</lokit_sal_log>
         <file enable="{{ collabora__coolwsd_logging_file_enable | d ('false') | string | lower }}">
-            <!-- If you use other path than /var/log and you run coolwsd from systemd, make sure that you enable that path in coolwsd.service (ReadWritePaths). -->
+            <!-- If you use other path than /var/log and you run coolwsd from systemd, make sure that you enable that path in coolwsd.service (ReadWritePaths). Also the log file path must be writable by the 'cool' user. -->
             <property name="path" desc="Log file path.">/var/log/coolwsd.log</property>
             <property name="rotation" desc="Log file rotation strategy. See Poco FileChannel.">never</property>
             <property name="archive" desc="Append either timestamp or number to the archived log filename.">timestamp</property>
@@ -330,6 +330,10 @@
         <expiry_min desc="Time in mins after quarantined files will be deleted." type="int" default="3000">3000</expiry_min>
     </quarantine_files>
 
+    <cache_files desc="Files are cached here to speed up config support.">
+        <path desc="Absolute path of the directory under which cached files will be stored. Do not use a relative path." type="path" relative="false"></path>
+        <expiry_min desc="Time in mins after disuse at which cache files will be deleted." type="int" default="3000">1000</expiry_min>
+    </cache_files>
     <extra_export_formats desc="Enable various extra export formats for additional compatibility. Note that disabling options here *only* disables them visually: these are all 'safe' to export, it might just be undesirable to show them, so you can't disable exporting these server-side">
         <impress_swf desc="Enable exporting Adobe flash .swf files from presentations" type="bool" default="false">false</impress_swf>
         <impress_bmp desc="Enable exporting .bmp bitmap files from presentation slides" type="bool" default="false">false</impress_bmp>
@@ -338,6 +342,9 @@
         <impress_svg desc="Enable exporting interactive .svg image files from presentations" type="bool" default="false">false</impress_svg>
         <impress_tiff desc="Enable exporting .tiff image files from presentation slides" type="bool" default="false">false</impress_tiff>
     </extra_export_formats>
+    <serverside_config>
+        <idle_timeout_secs desc="The maximum number of seconds before unloading an idle sub forkit. Defaults to 1 hour." type="uint" default="3600">3600</idle_timeout_secs>
+    </serverside_config>
 
     <remote_config>
         <remote_url desc="remote server to which you will send request to get remote config in response" type="string" default=""></remote_url>
