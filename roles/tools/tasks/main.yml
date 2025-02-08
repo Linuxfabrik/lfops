@@ -13,7 +13,7 @@
     ansible.builtin.package:
       name:
         - 'bash-completion'
-        - 'cloud-utils-growpart'
+        - "{{ 'cloud-guest-utils' if ansible_distribution == 'Debian' else 'cloud-utils-growpart' }}"
         - 'jq'
         - 'lsof'
         - 'nano'
