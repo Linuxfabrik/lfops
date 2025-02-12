@@ -5,9 +5,7 @@ Additionally, it deploys the the graph configuration for the [Linuxfabrik Monito
 
 This role is tested with the following IcingaWeb2 Grafana Module versions:
 
-* [1.4.2](https://github.com/Mikesch-mp/icingaweb2-module-grafana)
-* [2.0.3](https://github.com/Mikesch-mp/icingaweb2-module-grafana)
-* [3.0.1](https://github.com/NETWAYS/icingaweb2-module-grafana)
+* 3.0.1
 
 
 ## Mandatory Requirements
