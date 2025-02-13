@@ -25,7 +25,7 @@ disable_ssl_verify_server_cert
 {% if mariadb_server__cnf_bind_address__combined_var | length %}
 bind_address                                   = {{ mariadb_server__cnf_bind_address__combined_var }}
 {% endif %}
-{% if 'on' == (mariadb_server__cnf_log_bin__combined_var | lower) %}
+{% if mariadb_server__cnf_log_bin__combined_var | lower != 'off' %}
 binlog_format                                  = {{ mariadb_server__cnf_binlog_format__combined_var }}
 {% endif %}
 bulk_insert_buffer_size                        = {{ mariadb_server__cnf_bulk_insert_buffer_size__combined_var }}
