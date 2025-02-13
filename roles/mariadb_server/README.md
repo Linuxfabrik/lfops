@@ -209,6 +209,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_innodb_log_file_size__group_var` / `mariadb_server__cnf_innodb_log_file_size__host_var`           | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_log_file_size) | `'96M'`                          |
 | `mariadb_server__cnf_interactive_timeout__group_var` / `mariadb_server__cnf_interactive_timeout__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#interactive_timeout) | `28800`                          |
 | `mariadb_server__cnf_join_buffer_size__group_var` / `mariadb_server__cnf_join_buffer_size__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#join_buffer_size) | `'256K'`                         |
+| `mariadb_server__cnf_log_bin__group_var` / `mariadb_server__cnf_log_bin__host_var`                      | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#log_bin) | `'OFF'` |
 | `mariadb_server__cnf_log_error__group_var` / `mariadb_server__cnf_log_error__host_var`                      | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#log_error) | `'/var/log/mariadb/mariadb.log'` |
 | `mariadb_server__cnf_lower_case_table_names__group_var` / `mariadb_server__cnf_lower_case_table_names__host_var`         | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#lower_case_table_names) | `0`                              |
 | `mariadb_server__cnf_max_allowed_packet__group_var` / `mariadb_server__cnf_max_allowed_packet__host_var`             | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#max_allowed_packet) | `'16M'`                          |
@@ -231,7 +232,7 @@ Example:
 ```yaml
 # optional - cnf directives
 mariadb_server__cnf_bind_address__host_var: '0.0.0.0'
-mariadb_server__cnf_binlog_format__host_var: 'ROW'
+mariadb_server__cnf_binlog_format__host_var: 'MIXED'
 mariadb_server__cnf_bulk_insert_buffer_size__host_var: '8M'
 mariadb_server__cnf_character_set_server__host_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__host_var: 'utf8mb4_unicode_ci'
@@ -249,6 +250,7 @@ mariadb_server__cnf_innodb_io_capacity__host_var: 200
 mariadb_server__cnf_innodb_log_file_size__host_var: '96M'
 mariadb_server__cnf_interactive_timeout__host_var: 28800
 mariadb_server__cnf_join_buffer_size__host_var: '256K'
+mariadb_server__cnf_log_bin__host_var: 'ON'
 mariadb_server__cnf_log_error__host_var: '/var/log/mariadb/mariadb.log'
 mariadb_server__cnf_lower_case_table_names__host_var: 0
 mariadb_server__cnf_max_allowed_packet__host_var: '16M'
