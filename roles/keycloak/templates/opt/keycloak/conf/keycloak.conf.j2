@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023032301
+# 2025021401
 
 # Basic settings for running in production. Change accordingly before deploying the server.
 
@@ -17,6 +17,9 @@ db-username={{ keycloak__db_login.username }}
 
 # The password of the database user.
 db-password={{ keycloak__db_login.password }}
+
+# The full database JDBC URL. If not provided, a default URL is set based on the selected database vendor.
+#db-url=jdbc:postgresql://localhost/keycloak
 
 db-url-database={{ keycloak__db_url_database }}
 
@@ -38,15 +41,17 @@ metrics-enabled={{ keycloak__expose_metrics_endpoints | string | lower }}
 
 {% if keycloak__proxy_mode is not defined or keycloak__proxy_mode | length == 0 or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough" %}
 # The file path to a server certificate or certificate chain in PEM format.
-https-certificate-file=${kc.home.dir}conf/keycloak.crt.pem
+https-certificate-file=${kc.home.dir}/conf/keycloak.crt.pem
 
 # The file path to a private key in PEM format.
-https-certificate-key-file=${kc.home.dir}conf/keycloak.key.pem
+https-certificate-key-file=${kc.home.dir}/conf/keycloak.key.pem
 {%endif%}
 
-{% if keycloak__proxy_mode is defined and keycloak__proxy_mode | length %}
 # The proxy address forwarding mode if the server is behind a reverse proxy.
+{% if keycloak__proxy_mode is defined and keycloak__proxy_mode | length %}
 proxy={{ keycloak__proxy_mode }}
+{% else %}
+#proxy=reencrypt
 {% endif %}
 
 # Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy

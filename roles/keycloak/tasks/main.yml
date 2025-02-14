@@ -54,8 +54,9 @@
 
 - block:
 
-  - name: "Create keycloak config file"
+  - name: 'Create keycloak config file'
     ansible.builtin.template:
+      backup: true
       src: 'opt/keycloak/conf/keycloak.conf.j2'
       dest: '/opt/keycloak/conf/keycloak.conf'
       owner: 'keycloak'
@@ -89,8 +90,9 @@
       provider: 'selfsigned'
     when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode | length == 0 or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
 
-  - name: "Configure sysconfig file for keycloak service"
+  - name: 'Configure sysconfig file for keycloak service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/sysconfig/keycloak-sysconfig.j2'
       dest: '/etc/sysconfig/keycloak'
       owner: 'root'
@@ -99,6 +101,7 @@
 
   - name: 'Create keycloak.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/keycloak.service.j2'
       dest: '/etc/systemd/system/keycloak.service'
       owner: 'root'
