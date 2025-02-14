@@ -217,6 +217,8 @@ Deploying files to the remote server
 
 * Always use the ``ansible.builtin.template`` module instead of the ``ansible.builtin.copy`` module, even if there are currently no variables in the file. This makes it easier to extend later on, and allows the usage of an automatically generated header.
 
+* Always create a backup file including the timestamp information (e.g. ``keycloak.conf.23875.2025-02-14@15:19:16~``) so you can get the original file back if you somehow clobbered it incorrectly, by using ``backup: true``.
+
 * Always add the following to the top of templates, using the appropriate comment syntax:
 
     .. code-block::
