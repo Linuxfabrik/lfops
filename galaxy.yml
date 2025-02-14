@@ -52,6 +52,17 @@ tags:
 # range specifiers can be set and are separated by ','
 dependencies:
   'ansible.utils': '*'  # note: "*" selects the highest version available
+  'community.crypto': '*'
+  'community.grafana': '*'
+  'community.libvirt': '*'
+  'community.mongodb': '*'
+  'community.mysql': '*'
+  'community.postgresql': '*'
+  'fedora.linux_system_roles': '*'
+  'freeipa.ansible_freeipa': '*'
+  'hetzner.hcloud': '*'
+  'ngine_io.cloudstack': '*'
+  'openstack.cloud': '*'
 
 # The URL of the originating SCM repository
 repository: 'https://github.com/linuxfabrik/lfops'
