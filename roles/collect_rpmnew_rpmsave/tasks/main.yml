@@ -19,6 +19,9 @@
     loop_control:
       label: '{{ item.path }}'
     changed_when: false
+    failed_when:
+      - 'package_info["rc"] != 0'
+      - '"No such file or directory" not in package_info["stderr"]'
     when:
       - 'found_files.files'
 
@@ -36,6 +39,18 @@
       label: '{{ item.item.path }}'
     when:
       - 'found_files.files'
+      - 'item["rc"] == 0' # skip files which do not belong to a package anymore
+
+  - name: 'Delete orphaned files'
+    ansible.builtin.file:
+      path: '{{ item["item"]["path"] }}'
+      state: 'absent'
+    loop: '{{ package_info.results }}'
+    loop_control:
+      label: '{{ item.item.path }}'
+    when:
+      - 'found_files.files'
+      - 'item["rc"] != 0'
 
   - name: 'Download rpmnew/rpmsave files to control node'
     ansible.builtin.fetch:
@@ -47,6 +62,7 @@
       label: '{{ item.key }}'
     when:
       - 'found_files.files'
+      - 'package_file_mappings is defined'
 
   - name: 'Download original files to control node'
     ansible.builtin.fetch:
@@ -58,6 +74,7 @@
       label: '{{ item.key }}'
     when:
       - 'found_files.files'
+      - 'package_file_mappings is defined'
 
   tags:
     - 'collect_rpmnew_rpmsave'
