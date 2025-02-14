@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025021401
+# 2025021402
 
 # Basic settings for running in production. Change accordingly before deploying the server.
 
@@ -39,12 +39,18 @@ metrics-enabled={{ keycloak__expose_metrics_endpoints | string | lower }}
 
 # HTTP
 
-{% if keycloak__proxy_mode is not defined or keycloak__proxy_mode | length == 0 or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough" %}
 # The file path to a server certificate or certificate chain in PEM format.
-https-certificate-file=${kc.home.dir}/conf/keycloak.crt.pem
+{% if keycloak__mode == 'production' or (keycloak__proxy_mode is defined and (keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough")) %}
+https-certificate-file={{ keycloak__https_certificate_file }}
+{% else %}
+#https-certificate-file=${kc.home.dir}conf/server.crt.pem
+{% endif %}
 
 # The file path to a private key in PEM format.
-https-certificate-key-file=${kc.home.dir}/conf/keycloak.key.pem
+{% if keycloak__mode == 'production' or (keycloak__proxy_mode is defined and (keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough")) %}
+https-certificate-key-file={{ keycloak__https_certificate_key_file }}
+{% else %}
+#https-certificate-key-file=${kc.home.dir}conf/server.key.pem
 {%endif%}
 
 # The proxy address forwarding mode if the server is behind a reverse proxy.
@@ -57,21 +63,20 @@ proxy={{ keycloak__proxy_mode }}
 # Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy
 spi-sticky-session-encoder-infinispan-should-attach-route={{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route | string | lower }}
 
-# The list of protocols to explicitly enable.
-https-protocols={{ keycloak__https_protocols }}
-
-{% if keycloak__https_cipher_suites is defined and keycloak__https_cipher_suites | length %}
-# The cipher suites to use.
-https-cipher-suites={{ keycloak__https_cipher_suites }}
-{% endif %}
-
-
-# Hostname
-
 # Hostname for the Keycloak server.
 hostname={{ keycloak__hostname }}
 
-# By default backchannel URLs are dynamically resolved from request headers to allow internal and external applications. (default false)
+# ---
+
+# The list of protocols to explicitly enable.
+https-protocols={{ keycloak__https_protocols }}
+
+# The cipher suites to use.
+{% if keycloak__https_cipher_suites is defined and keycloak__https_cipher_suites | length %}
+https-cipher-suites={{ keycloak__https_cipher_suites }}
+{% endif %}
+
+# By default backchannel URLs are dynamically resolved from request headers to allow internal and external applications. (default: false)
 hostname-strict-backchannel={{ keycloak__hostname_strict_backchannel | string | lower }}
 
 

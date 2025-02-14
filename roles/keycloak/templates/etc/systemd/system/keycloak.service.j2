@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023032301
+# 2025021401
 
 [Unit]
 Description=Keycloak Service
@@ -9,8 +9,11 @@ After=network.target
 User=keycloak
 Group=keycloak
 EnvironmentFile=/etc/sysconfig/keycloak
-ExecStart=/opt/keycloak/bin/kc.sh {% if keycloak__mode == 'development' %}start-dev{% else %}start{% endif %}
-
+{% if keycloak__mode == 'production' %}
+ExecStart=/opt/keycloak/bin/kc.sh start
+{% else %}
+ExecStart=/opt/keycloak/bin/kc.sh start-dev
+{% endif %}
 WorkingDirectory=/opt/keycloak
 
 [Install]
