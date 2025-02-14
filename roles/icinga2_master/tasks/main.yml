@@ -20,18 +20,15 @@
 - block:
 
   - name: 'check if the icinga2 tables exist'
-    ansible.builtin.command: >
-      mysql
-      --execute="show tables like 'icinga_dbversion'"
-      --host={{ icinga2_master__database_host | quote }}
-      --password={{ icinga2_master__database_login.password | quote }}
-      --silent
-      --skip-column-names
-      --user={{ icinga2_master__database_login.username | quote }}
-      {{ icinga2_master__database_name | quote }}
+    community.mysql.mysql_query:
+      login_user: '{{ icinga2_master__database_login.username }}'
+      login_password: '{{ icinga2_master__database_login.password }}'
+      login_host: '{{ icinga2_master__database_host }}'
+      login_unix_socket: '{{ (icinga2_master__database_host == "localhost") | ternary(icinga2_master__mysql_login_unix_socket, omit) }}' # https://github.com/pymysql/pymysql/issues/509#issuecomment-244072354
+      login_db: '{{ icinga2_master__database_name }}'
+      query: 'SHOW TABLES LIKE "icinga_dbversion"'
     register: 'icinga2_master__table_exists_result'
-    check_mode: false # run task even if `--check` is specified
-    changed_when: false # just gathering info, no actual change
+    check_mode: false
 
   - name: 'import schema for icinga2 database'
     community.mysql.mysql_db:
@@ -42,8 +39,9 @@
       name: '{{ icinga2_master__database_name }}'
       state: 'import'
       target: '/usr/share/icinga2-ido-mysql/schema/mysql.sql'
-    # this module is not idempotent when state is import, and will import the dump file each time if run more than once.
-    when: 'icinga2_master__table_exists_result.stdout == ""'
+    when:
+      # this module is not idempotent when state is import, and will import the dump file each time if run more than once. therefore, we check the existence manually before
+      - 'icinga2_master__table_exists_result["rowcount"][0] == 0'
 
   - name: 'deploy /etc/icinga2/features-available/ido-mysql.conf'
     ansible.builtin.template:
