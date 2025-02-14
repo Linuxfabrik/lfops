@@ -3,56 +3,44 @@
   - name: 'Get the list of services'
     ansible.builtin.service_facts: # yamllint disable-line rule:empty-values
 
-  - name: 'Be sure firewalld is stopped, disabled and masked'
+  - name: 'Be sure {{ item["service"] }} is stopped and disabled'
     ansible.builtin.systemd:
-      name: 'firewalld.service'
+      name: '{{ item["service"] }}'
       state: 'stopped'
       enabled: false
-      masked: true
     when:
-      - 'firewall__firewall != "firewalld"'
-      - '"firewalld.service" in ansible_facts["services"]'
+      - 'firewall__firewall != item["name"]'
+      - 'item["service"] ~ ".service" in ansible_facts["services"]'
+    loop:
+      - name: 'firewalld'
+        service: 'firewalld'
+      - name: 'fwbuilder'
+        service: 'fwb'
+      - name: 'iptables'
+        service: 'iptables'
+      - name: 'nftables'
+        service: 'nftables'
+      - name: 'ufw'
+        service: 'ufw'
 
-  - name: 'Be sure fwb is stopped, disabled and masked'
+  - name: 'Be sure {{ item["service"] }} is masked, even if it is not installed yet'
+    # prevents the service from starting even if it is installed later on
     ansible.builtin.systemd:
-      name: 'fwb.service'
-      state: 'stopped'
-      enabled: false
+      name: '{{ item["service"] }}'
       masked: true
     when:
-      - 'firewall__firewall != "fwbuilder"'
-      - '"fwb.service" in ansible_facts["services"]'
-
-  - name: 'Be sure iptables is stopped, disabled and masked'
-    ansible.builtin.systemd:
-      name: 'iptables.service'
-      state: 'stopped'
-      enabled: false
-      masked: true
-    ignore_errors: true   # If iptables.service does not exist, e.g. on Debian like systems
-    when:
-      - 'firewall__firewall != "iptables"'
-      - '"iptables.service" in ansible_facts["services"]'
-
-  - name: 'Be sure nftables is stopped, disabled and masked'
-    ansible.builtin.systemd:
-      name: 'nftables.service'
-      state: 'stopped'
-      enabled: false
-      masked: true
-    when:
-      - 'firewall__firewall != "nftables"'
-      - '"nftables.service" in ansible_facts["services"]'
-
-  - name: 'Be sure ufw is stopped, disabled and masked'
-    ansible.builtin.systemd:
-      name: 'ufw.service'
-      state: 'stopped'
-      enabled: false
-      masked: true
-    when:
-      - 'firewall__firewall != "ufw"'
-      - '"ufw.service" in ansible_facts["services"]'
+      - 'firewall__firewall != item["name"]'
+    loop:
+      - name: 'firewalld'
+        service: 'firewalld'
+      - name: 'fwbuilder'
+        service: 'fwb'
+      - name: 'iptables'
+        service: 'iptables'
+      - name: 'nftables'
+        service: 'nftables'
+      - name: 'ufw'
+        service: 'ufw'
 
   tags:
     - 'firewall'
