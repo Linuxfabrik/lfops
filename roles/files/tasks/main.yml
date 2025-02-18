@@ -21,6 +21,7 @@
 
   - name: 'Deploy files'
     ansible.builtin.copy:
+      backup: true
       content: '{{ item["content"] | d(omit) }}'
       src: '{{ (item["content"] is defined and item["content"] | length) | ternary(
           omit,
