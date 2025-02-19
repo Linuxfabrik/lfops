@@ -153,7 +153,7 @@
   # always hangs on the first run (only than) on a brand-new machine, and then Ansible also hangs.
   # The ever-first start of netfilter changes something on Linux (kernel modules or something).
   # Every subsequent run of `/etc/fwb.sh start` runs flawlessly.
-  # `/etc/fwb.sh stop` doesn't change much, but also involves netfilter. So plit this up, and
+  # `/etc/fwb.sh stop` doesn't change much, but also involves netfilter. So split this up, and
   # first stop the firewall, then start it, no matter what.
   - name: 'Be sure fwb is enabled, stopped and not masked.'
     ansible.builtin.systemd:
