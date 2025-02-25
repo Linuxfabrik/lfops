@@ -106,7 +106,7 @@ This role supports the administration of Moodle using Moosh. This is done by def
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `moodle__moosh_commands` | List of strings. List of commands that Moosh should execute. | `[]` |
-| `moodle__moosh_download_url` | String. Moosh download URL on moodle.org. | `'https://moodle.org/plugins/download.php/31885/moosh_moodle44_2024050100.zip'` |
+| `moodle__moosh_download_url` | String. Moosh download URL on moodle.org. | `'https://moodle.org/plugins/download.php/34835/moosh_moodle45_2025020800.zip'` |
 
 Example:
 ```yaml
@@ -114,7 +114,7 @@ Example:
 moodle__moosh_commands:
   - 'user-create --firstname=Linus --lastname=Löffel --city=Zurich --country=Switzerland linus'
   - 'user-list --sort'
-moodle__moosh_download_url: 'https://moodle.org/plugins/download.php/31885/moosh_moodle44_2024050100.zip'
+moodle__moosh_download_url: 'https://moodle.org/plugins/download.php/34835/moosh_moodle45_2025020800.zip'
 ```
 
 
