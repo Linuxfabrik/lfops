@@ -1,0 +1,4 @@
+- name: 'keycloak: systemctl restart keycloak'
+  ansible.builtin.service:
+    name: 'keycloak.service'
+    state: 'restarted'

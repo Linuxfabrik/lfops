@@ -22,12 +22,15 @@ If you want to use production mode (default) or run Keycloak in any `keycloak__p
 
 If you use the ["Setup Keycloak" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_keycloak.yml), this installation is automatically done for you (you still have to take care of providing the required versions).
 
+All Keycloak config settings are described here: https://www.keycloak.org/server/all-config
+
 
 ## Tags
 
 | Tag        | What it does      |
 | ---        | ------------      |
 | `keycloak` | Installs Keycloak |
+| `keycloak:configure` | Deploy Keycloak config and sysconfig file, and create keycloak service |
 
 
 ## Mandatory Role Variables
@@ -66,13 +69,15 @@ keycloak__version: '26.1.2'
 | `keycloak__expose_healthcheck_endpoints` | Bool. If the server should expose healthcheck endpoints. | `true` |
 | `keycloak__expose_metrics_endpoints` | Bool. If the server should expose metrics endpoints. | `true` |
 | `keycloak__hostname_strict_backchannel` | Bool. By default backchannel URLs are dynamically resolved from request headers to allow internal and external applications. | `false` |
-| `keycloak__https_certificate_file` | String. The file path to a server certificate or certificate chain in PEM format. | `'/etc/pki/tls/certs/www.example.com-chain.crt'` |
-| `keycloak__https_certificate_key_file` | String. The file path to a private key in PEM format. | `'/etc/pki/tls/private/www.example.com.key'` |
+| `keycloak__https_certificate_file` | String. The file path to a server certificate or certificate chain in PEM format. If you don't want to provide key material to setup HTTPS, set this to an empty string. | `'/etc/pki/tls/certs/www.example.com-chain.crt'` |
+| `keycloak__https_certificate_key_file` | String. The file path to a private key in PEM format.  If you don't want to provide key material to setup HTTPS, set this to an empty string. | `'/etc/pki/tls/private/www.example.com.key'` |
 | `keycloak__https_cipher_suites` | String. The cipher suites to use. If none is given, a reasonable default is selected. | `unset` |
 | `keycloak__https_protocols` | String. The cipher suites Keycloak is supposed to be using. | `TLSv1.3,TLSv1.2` |
 | `keycloak__log` | String. Enable one or more log handlers in a comma-separated list. | `file` |
 | `keycloak__log_file` | String. Set the log file path and filename. | `/var/log/keycloak/keycloak.log` |
 | `keycloak__mode` | String. The mode to start Keycloak in. The development mode is targeted for people trying out Keycloak the first time and get it up and running quickly. It also offers convenient defaults for developers, for example to develop a new Keycloak theme.<br>Possible options:<br> * `production`<br> * `development` | `production` |
+| `keycloak__proxy_headers` | String. The proxy headers that should be accepted by the server. | `'xforwarded'` |
+| `keycloak__proxy_trusted_addresses` | String. A comma separated list of trusted proxy addresses. | `'127.0.0.1,::1'` |
 | `keycloak__proxy_mode` | String. The proxy address forwarding mode if the server is behind a reverse proxy.<br>* `edge`: Enables communication through HTTP between the proxy and Keycloak. This mode is suitable for deployments with a highly secure internal network where the reverse proxy keeps a secure connection (HTTP over TLS) with clients while communicating with Keycloak using HTTP.<br>* `reencrypt`: Requires communication through HTTPS between the proxy and Keycloak. This mode is suitable for deployments where internal communication between the reverse proxy and Keycloak should also be protected. Different keys and certificates are used on the reverse proxy as well as on Keycloak.<br>* `passthrough`: Enables communication through HTTP or HTTPS between the proxy and Keycloak. This mode is suitable for deployments where the reverse proxy is not terminating TLS. The proxy instead is forwarding requests to the Keycloak server so that secure connections between the server and clients are based on the keys and certificates used by the Keycloak server. | `unset` |
 | `keycloak__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
 | `keycloak__spi_sticky_session_encoder_infinispan_should_attach_route` | Bool. Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy. | `false` |

@@ -16,6 +16,8 @@
         keycloak__log: {{ keycloak__log }}
         keycloak__log_file: {{ keycloak__log_file }}
         keycloak__mode: {{ keycloak__mode }}
+        keycloak__proxy_headers: {{ keycloak__proxy_headers }}
+        keycloak__proxy_trusted_addresses: {{ keycloak__proxy_trusted_addresses }}
         keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: {{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route }}
         keycloak__state: {{ keycloak__state }}
 
@@ -72,7 +74,7 @@
 
 - block:
 
-  - name: 'Create keycloak config file'
+  - name: 'Create Keycloak config file'
     ansible.builtin.template:
       backup: true
       src: 'opt/keycloak/conf/keycloak.conf.j2'
@@ -80,8 +82,9 @@
       owner: 'keycloak'
       group: 'keycloak'
       mode: 0o640
+    notify: 'keycloak: systemctl restart keycloak'
 
-  - name: 'Configure sysconfig file for keycloak service'
+  - name: 'Configure sysconfig file for Keycloak service'
     ansible.builtin.template:
       backup: true
       src: 'etc/sysconfig/keycloak-sysconfig.j2'

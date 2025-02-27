@@ -15,6 +15,8 @@ keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
 keycloak__log: 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
 keycloak__mode: 'production'
+keycloak__proxy_headers: 'xforwarded'
+keycloak__proxy_trusted_addresses: '127.0.0.1,::1'
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
 keycloak__state: 'started'
 

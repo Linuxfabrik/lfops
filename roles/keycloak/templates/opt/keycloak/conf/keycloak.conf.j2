@@ -1,89 +1,75 @@
 # {{ ansible_managed }}
-# 2025021402
+# 2025022704
 
 # Basic settings for running in production. Change accordingly before deploying the server.
+# https://www.keycloak.org/server/all-config
 
 
 # Database
-
-# The database vendor.
+# https://www.keycloak.org/server/all-config#category-database
 db={{ keycloak__db_vendor }}
-
-# Sets the hostname of the default JDBC URL of the chosen vendor.
-db-url-host={{ keycloak__db_url_host }}
-
-# The username of the database user.
-db-username={{ keycloak__db_login.username }}
-
-# The password of the database user.
 db-password={{ keycloak__db_login.password }}
-
-# The full database JDBC URL. If not provided, a default URL is set based on the selected database vendor.
-#db-url=jdbc:postgresql://localhost/keycloak
-
-db-url-database={{ keycloak__db_url_database }}
-
 {% if keycloak__db_url is defined and keycloak__db_url | length %}
-# The full database JDBC URL. If not provided, a default URL is set based on the selected database vendor.
 db-url={{ keycloak__db_url }}
 {% endif %}
+db-url-database={{ keycloak__db_url_database }}
+db-url-host={{ keycloak__db_url_host }}
+db-username={{ keycloak__db_login.username }}
 
-# Observability
 
-# If the server should expose healthcheck endpoints.
+# Health
+# https://www.keycloak.org/server/all-config#category-health
 health-enabled={{ keycloak__expose_healthcheck_endpoints | string | lower }}
 
-# If the server should expose metrics endpoints.
+
+# Metrics
+# https://www.keycloak.org/server/all-config#category-metrics
 metrics-enabled={{ keycloak__expose_metrics_endpoints | string | lower }}
 
 
-# HTTP
-
-# The file path to a server certificate or certificate chain in PEM format.
+# HTTP(S)
+# https://www.keycloak.org/server/all-config#category-http
+{% if keycloak__mode == 'production' and (keycloak__https_certificate_file is not defined or keycloak__https_certificate_file == "") %}
+http-enabled=true
+{% endif %}
 {% if keycloak__mode == 'production' or (keycloak__proxy_mode is defined and (keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough")) %}
 https-certificate-file={{ keycloak__https_certificate_file }}
 {% else %}
 #https-certificate-file=${kc.home.dir}conf/server.crt.pem
 {% endif %}
-
-# The file path to a private key in PEM format.
 {% if keycloak__mode == 'production' or (keycloak__proxy_mode is defined and (keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough")) %}
 https-certificate-key-file={{ keycloak__https_certificate_key_file }}
 {% else %}
 #https-certificate-key-file=${kc.home.dir}conf/server.key.pem
 {%endif%}
+{% if keycloak__https_cipher_suites is defined and keycloak__https_cipher_suites | length %}
+https-cipher-suites={{ keycloak__https_cipher_suites }}
+{% endif %}
+https-protocols={{ keycloak__https_protocols }}
 
-# The proxy address forwarding mode if the server is behind a reverse proxy.
+
+# Proxy
+# https://www.keycloak.org/server/all-config#category-proxy
 {% if keycloak__proxy_mode is defined and keycloak__proxy_mode | length %}
 proxy={{ keycloak__proxy_mode }}
+proxy-headers={{ keycloak__proxy_headers }}
+proxy-trusted-addresses={{ keycloak__proxy_trusted_addresses }}
 {% else %}
 #proxy=reencrypt
 {% endif %}
 
-# Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy
-spi-sticky-session-encoder-infinispan-should-attach-route={{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route | string | lower }}
 
-# Hostname for the Keycloak server.
+# Hostname v2
+# https://www.keycloak.org/server/all-config#category-hostname_v2
 hostname={{ keycloak__hostname }}
-
-# ---
-
-# The list of protocols to explicitly enable.
-https-protocols={{ keycloak__https_protocols }}
-
-# The cipher suites to use.
-{% if keycloak__https_cipher_suites is defined and keycloak__https_cipher_suites | length %}
-https-cipher-suites={{ keycloak__https_cipher_suites }}
-{% endif %}
-
-# By default backchannel URLs are dynamically resolved from request headers to allow internal and external applications. (default: false)
-hostname-strict-backchannel={{ keycloak__hostname_strict_backchannel | string | lower }}
 
 
 # Logging
-
-# Enable one or more log handlers in a comma-separated list.
+# https://www.keycloak.org/server/all-config#category-logging
 log={{ keycloak__log }}
-
-# Set the log file path and filename.
 log-file={{ keycloak__log_file }}
+
+
+# https://www.keycloak.org/server/reverseproxy#_enable_sticky_sessions
+# Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy
+spi-sticky-session-encoder-infinispan-should-attach-route={{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route | string | lower }}

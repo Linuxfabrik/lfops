@@ -1,5 +1,7 @@
 # {{ ansible_managed }}
-# 2023032301
+# 2025022701
 
-KEYCLOAK_ADMIN={{ keycloak__admin_login.username }}
-KEYCLOAK_ADMIN_PASSWORD={{ keycloak__admin_login.password }}
+# WARN: Environment variable 'KEYCLOAK_ADMIN' is deprecated, use 'KC_BOOTSTRAP_ADMIN_USERNAME' instead
+# WARN: Environment variable 'KEYCLOAK_ADMIN_PASSWORD' is deprecated, use 'KC_BOOTSTRAP_ADMIN_PASSWORD' instead
+KC_BOOTSTRAP_ADMIN_USERNAME={{ keycloak__admin_login.username }}
+KC_BOOTSTRAP_ADMIN_PASSWORD={{ keycloak__admin_login.password }}
