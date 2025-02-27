@@ -26,7 +26,7 @@ Hardenings that can be covered by this role:
 * Backup Policy in Place
 * Do Not Reuse Usernames
 * Enable data-at-rest encryption in MariaDB
-* Ensure 'datadir' Has Appropriate Permissions
+* Ensure 'datadir' Has Appropriate Permissions if `mariadb_server__datadir_mode__host_var: 0o750` is set. Make sure that the socket is not inside the datadir in that case, else other users (eg apache) cannot reach it.
 * Ensure 'general_log_file' Has Appropriate Permissions
 * Ensure 'log_error' Has Appropriate Permissions
 * Ensure 'log_error' is configured correctly
@@ -264,7 +264,7 @@ mariadb_server__cnf_query_cache_type__host_var: 'OFF'
 mariadb_server__cnf_skip_name_resolve__host_var: 'ON'
 mariadb_server__cnf_slow_query_log__host_var: 'OFF'
 mariadb_server__cnf_slow_query_log_file__host_var: '/var/log/mariadb/mariadb-slowquery.log'
-mariadb_server__cnf_socket__host_var: '/var/lib/mysql/mysql.sock'
+mariadb_server__cnf_socket__host_var: '/var/run/mariadb/mariadb.sock' # use /var/run instead of /run to avoid collisions with selinux fcontexts (`File spec /run/mariadb/mariadb\.sock conflicts with equivalency rule '/run /var/run'`)
 mariadb_server__cnf_sql_mode__host_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__host_var: 400
 mariadb_server__cnf_tls_version__host_var: 'TLSv1.2,TLSv1.3'
