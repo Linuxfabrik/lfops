@@ -45,6 +45,13 @@
         - 'ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
         - 'not fail2ban__skip_repo_epel | d(false)'
 
+
+    # === Firewalling ===
+    - role: 'linuxfabrik.lfops.firewall'
+      when:
+        - 'not setup_basic__skip_firewall | d(false)'
+
+
     - role: 'linuxfabrik.lfops.fail2ban'
 
 
