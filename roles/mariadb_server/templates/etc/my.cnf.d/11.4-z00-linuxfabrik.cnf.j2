@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025021303
+# 2025022701
 # 11.4
 
 [client]
@@ -25,7 +25,7 @@ disable_ssl_verify_server_cert
 {% if mariadb_server__cnf_bind_address__combined_var | length %}
 bind_address                                   = {{ mariadb_server__cnf_bind_address__combined_var }}
 {% endif %}
-{% if mariadb_server__cnf_log_bin__combined_var | lower != 'off' %}
+{% if mariadb_server__cnf_log_bin__combined_var | length and mariadb_server__cnf_log_bin__combined_var | lower != 'off' %}
 binlog_format                                  = {{ mariadb_server__cnf_binlog_format__combined_var }}
 {% endif %}
 bulk_insert_buffer_size                        = {{ mariadb_server__cnf_bulk_insert_buffer_size__combined_var }}
@@ -44,7 +44,10 @@ innodb_io_capacity                             = {{ mariadb_server__cnf_innodb_i
 innodb_log_file_size                           = {{ mariadb_server__cnf_innodb_log_file_size__combined_var }}
 interactive_timeout                            = {{ mariadb_server__cnf_interactive_timeout__combined_var }}
 join_buffer_size                               = {{ mariadb_server__cnf_join_buffer_size__combined_var }}
+{% if mariadb_server__cnf_log_bin__combined_var | length and mariadb_server__cnf_log_bin__combined_var | lower != 'off' %}
+{# note: the behaviour of log_bin differs from other booleans. to enable, log_bin needs to exist and be set to the name of the binary log, to disable the variable *cannot* exist at all #}
 log_bin                                        = {{ mariadb_server__cnf_log_bin__combined_var }}
+{% endif %}
 log_error                                      = {{ mariadb_server__cnf_log_error__combined_var }}
 lower_case_table_names                         = {{ mariadb_server__cnf_lower_case_table_names__combined_var }}
 max_allowed_packet                             = {{ mariadb_server__cnf_max_allowed_packet__combined_var }}
