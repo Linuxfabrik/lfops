@@ -150,6 +150,14 @@
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
+  - name: 'Make sure the socket path exists'
+    ansible.builtin.file:
+      path: '{{ mariadb_server__cnf_socket__combined_var | ansible.builtin.dirname }}'
+      state: 'directory'
+      owner: 'mysql'
+      group: 'mysql'
+      mode: 0o755
+
   # /var/lib/mysql/mysql\.sock                         socket             system_u:object_r:mysqld_var_run_t:s0
   - name: 'semanage fcontext --add --type mysqld_var_run_t {{ mariadb_server__cnf_socket__combined_var | ansible.builtin.regex_escape }}'
     community.general.sefcontext:
