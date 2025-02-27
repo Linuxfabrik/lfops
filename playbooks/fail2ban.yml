@@ -49,7 +49,7 @@
     # === Firewalling ===
     - role: 'linuxfabrik.lfops.firewall'
       when:
-        - 'not setup_basic__skip_firewall | d(false)'
+        - 'not fail2ban__skip_firewall | d(false)'
 
 
     - role: 'linuxfabrik.lfops.fail2ban'
