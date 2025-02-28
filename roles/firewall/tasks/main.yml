@@ -10,18 +10,19 @@
       enabled: false
     when:
       - 'firewall__firewall != item["name"]'
-      - 'item["service"] ~ ".service" in ansible_facts["services"]'
+      - 'item["service"] in ansible_facts["services"]'
+      - 'ansible_facts["services"][item["service"]]["status"] != "not-found"'
     loop:
       - name: 'firewalld'
-        service: 'firewalld'
+        service: 'firewalld.service'
       - name: 'fwbuilder'
         service: 'fwb'
-      - name: 'iptables'
+      - name: 'iptables.service'
         service: 'iptables'
       - name: 'nftables'
-        service: 'nftables'
+        service: 'nftables.service'
       - name: 'ufw'
-        service: 'ufw'
+        service: 'ufw.service'
 
   - name: 'Be sure {{ item["service"] }} is masked, even if it is not installed yet'
     # prevents the service from starting even if it is installed later on
@@ -32,15 +33,15 @@
       - 'firewall__firewall != item["name"]'
     loop:
       - name: 'firewalld'
-        service: 'firewalld'
+        service: 'firewalld.service'
       - name: 'fwbuilder'
-        service: 'fwb'
+        service: 'fwb.service'
       - name: 'iptables'
-        service: 'iptables'
+        service: 'iptables.service'
       - name: 'nftables'
-        service: 'nftables'
+        service: 'nftables.service'
       - name: 'ufw'
-        service: 'ufw'
+        service: 'ufw.service'
 
   tags:
     - 'firewall'
