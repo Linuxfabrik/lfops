@@ -114,6 +114,7 @@
       dest: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
       depth: 1
       single_branch: true
+    changed_when: false # not a config change on the server
     delegate_to: 'localhost'
     run_once: true
     check_mode: false # run task even if `--check` is specified
@@ -127,6 +128,7 @@
       group: 'root'
       mode: 0o500  # no need for others to read/write this file, just u=rx
     register: 'firewall__deploy_fwb_result'
+    notify: 'firewall: restart fwb'
     when: 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length'
 
   - name: 'Deploy fwbuilder systemd service file'
@@ -155,10 +157,11 @@
   # Every subsequent run of `/etc/fwb.sh start` runs flawlessly.
   # `/etc/fwb.sh stop` doesn't change much, but also involves netfilter. So split this up, and
   # first stop the firewall, then start it, no matter what.
-  - name: 'Be sure fwb is enabled, stopped and not masked.'
+  - name: 'Be sure fwb is enabled and not masked'
     ansible.builtin.systemd:
       name: 'fwb.service'
-      state: 'stopped'
+      # state: 'stopped' 2025-02-28: let's try if splitting the enabling and starting is enough without stopping, to prevent service distruptions during deployment
+      # we use the handler to restart the fwb in case of changes
       enabled: true
       masked: false
       daemon_reload: true
