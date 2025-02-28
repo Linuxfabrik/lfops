@@ -123,6 +123,7 @@
 
   - name: 'Deploy /etc/fwb.sh'
     ansible.builtin.copy:
+      backup: true
       src: '/tmp/ansible.fwb-{{ inventory_dir | basename }}/{{ firewall__fwbuilder_fw_file }}.fw'
       dest: '/etc/fwb.sh'
       owner: 'root'
@@ -186,6 +187,7 @@
 
   - name: 'Copy iptables definition to /etc/sysconfig/iptables'
     ansible.builtin.copy:
+      backup: true
       src: "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables"
       dest: '/etc/sysconfig/'
       owner: 'root'
