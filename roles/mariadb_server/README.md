@@ -243,7 +243,7 @@ mariadb_server__cnf_expire_logs_days__host_var: 0.000000
 mariadb_server__cnf_general_log__host_var: 'OFF'
 mariadb_server__cnf_general_log_file__host_var: '/var/log/mariadb/mariadb-general.log'
 mariadb_server__cnf_innodb_autoinc_lock_mode__host_var: 2
-mariadb_server__cnf_innodb_buffer_pool_size__host_var: '128M'
+mariadb_server__cnf_innodb_buffer_pool_size__host_var: '{{ (ansible_facts["memtotal_mb"] * 0.8) | int }}M'
 mariadb_server__cnf_innodb_doublewrite__host_var: 1
 mariadb_server__cnf_innodb_file_per_table__host_var: 'ON'
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__host_var: 1
