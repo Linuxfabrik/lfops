@@ -305,7 +305,7 @@ Example:
 ```yaml
 # optional - mod_security
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '4.4.0'
+apache_httpd__mod_security_coreruleset_version: '4.12.0'
 apache_httpd__skip_mod_security_coreruleset: true
 ```
 
