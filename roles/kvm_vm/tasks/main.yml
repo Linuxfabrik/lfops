@@ -134,6 +134,7 @@
     community.libvirt.virt:
       command: 'list_vms'
     register: 'kvm_vm__virt_info_result'
+    check_mode: false # run task even if `--check` is specified
 
   - name: >
       virt-install
