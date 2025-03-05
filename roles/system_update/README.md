@@ -41,7 +41,7 @@ If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blo
 | `system_update__notify_and_schedule_on_calendar` | When the notification for the expected updates should be sent. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'mon 10:00'` |
 | `system_update__post_update_code` | This codeblock will be executed after the updates have been installed and before a potential reboot. | unset |
 | `system_update__pre_update_code` | This codeblock will be executed before the update process is started. Can be used to check pre-conditions for updating, for example for checking cluster nodes. | unset |
-| `system_update__rocketchat_msg_suffix` | A suffix to the Rocket.Chat notifications. This can be used to mention other users. | unset |
+| `system_update__rocketchat_msg_suffix` | A suffix to the Rocket.Chat notifications. This can be used to mention other users. | `''` |
 | `system_update__rocketchat_url` | The URL to a potential Rocket.Chat server to send notifications about the updates to. | unset |
 | `system_update__update_enabled` | Enables or disables the system-update timer, analogous to `systemctl enable/disable --now`.  | `true` |
 | `system_update__update_time` | The time when to actually execute the updates (and automatically reboot if necessary), relative to `system_update__notify_and_schedule_on_calendar`. | `04:00 + 1 days'` |
