@@ -29,6 +29,7 @@ If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blo
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `system_update__cache_only` | Whether to install updates from cache only. This implies to have the cache built beforehand. | `false` |
 | `system_update__icinga2_api_url` | The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `reboot` alias. | `'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'` |
 | `system_update__icinga2_api_user_login` | The Icinga2 API User to set the downtime for the corresponding host and all its services. | unset |
 | `system_update__icinga2_hostname` | The hostname of the Icinga2 host on which the downtime should be set. |  `'{{ ansible_facts["nodename"] }}'` |
@@ -48,6 +49,7 @@ If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blo
 Example:
 ```yaml
 # optional
+system_update__cache_only: true
 system_update__icinga2_api_url: 'https://icinga.example.com:5665'
 system_update__icinga2_api_user_login:
   username: 'downtime-user'
