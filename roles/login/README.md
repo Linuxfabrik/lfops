@@ -7,6 +7,10 @@ IMPORTANT:
 
 * The default behavior of this role is that it distributes SSH keys that it knows from the host/group variables and deletes any other keys that already exist on the target system in `.ssh/authorized_keys`. This might break things. Set `remove_other_sshd_authorized_keys` accordingly.
 
+## Mandatory Requirements
+
+* Install the `passlib` Python module on the Ansible Controller (`dnf install python3-passlib` on Fedora).
+
 
 ## Tags
 
@@ -48,6 +52,11 @@ login__users__host_var:
     system: true
 login__users__group_var: []
 ```
+
+
+## Troubleshooting
+
+`[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library for continued encryption functionality. This feature will be removed in version 2.17.`: Make sure to install the `passlib` Python module on the Ansible Controller (`dnf install python3-passlib` on Fedora).
 
 
 ## License

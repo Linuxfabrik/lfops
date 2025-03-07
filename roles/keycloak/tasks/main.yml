@@ -1,96 +1,92 @@
-- name: 'Ensure group keycloak exists'
-  ansible.builtin.group:
-    name: 'keycloak'
-    state: 'present'
-  tags:
-    - 'keycloak'
+- block:
 
-- name: 'Add the user keycloak with primary group of keycloak'
-  ansible.builtin.user:
-    name: 'keycloak'
-    comment: 'User for Keycloak service'
-    group: 'keycloak'
-  tags:
-    - 'keycloak'
+  - name: 'Debug Variables:'
+    ansible.builtin.debug:
+      msg: |
+        keycloak__db_url_database: {{ keycloak__db_url_database }}
+        keycloak__db_url_host: {{ keycloak__db_url_host }}
+        keycloak__db_vendor: {{ keycloak__db_vendor }}
+        keycloak__enabled: {{ keycloak__enabled }}
+        keycloak__expose_healthcheck_endpoints: {{ keycloak__expose_healthcheck_endpoints }}
+        keycloak__expose_metrics_endpoints: {{ keycloak__expose_metrics_endpoints }}
+        keycloak__hostname_strict_backchannel: {{ keycloak__hostname_strict_backchannel }}
+        keycloak__https_certificate_file: {{ keycloak__https_certificate_file }}
+        keycloak__https_certificate_key_file: {{ keycloak__https_certificate_key_file }}
+        keycloak__https_protocols: {{ keycloak__https_protocols }}
+        keycloak__log: {{ keycloak__log }}
+        keycloak__log_file: {{ keycloak__log_file }}
+        keycloak__mode: {{ keycloak__mode }}
+        keycloak__proxy_headers: {{ keycloak__proxy_headers }}
+        keycloak__proxy_trusted_addresses: {{ keycloak__proxy_trusted_addresses }}
+        keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: {{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route }}
+        keycloak__state: {{ keycloak__state }}
 
-- name: 'Create log directory "/var/log/keycloak"'
-  ansible.builtin.file:
-    path: '/var/log/keycloak'
-    state: 'directory'
-    owner: 'keycloak'
-    group: 'keycloak'
   tags:
-    - 'keycloak'
+    - 'always'
 
-- name: 'mkdir /opt/keycloak'
-  ansible.builtin.file:
-    path: '/opt/keycloak'
-    state: 'directory'
-    owner: 'keycloak'
-    group: 'keycloak'
-  tags:
-    - 'keycloak'
 
-- name: 'Download and unpack archive'
-  ansible.builtin.unarchive:
-    src: 'https://github.com/keycloak/keycloak/releases/download/{{ keycloak__version }}/keycloak-{{ keycloak__version }}.tar.gz'
-    dest: '/opt/keycloak'
-    remote_src: true
-    extra_opts:
-      - '--strip-components=1'
-  tags:
-    - 'keycloak'
+- block:
 
-- name: 'chown -R keycloak:keycloak /opt/keycloak'
-  ansible.builtin.file:
-    path: '/opt/keycloak'
-    state: 'directory'
-    recurse: true
-    owner: 'keycloak'
-    group: 'keycloak'
+  - name: 'Ensure group keycloak exists'
+    ansible.builtin.group:
+      name: 'keycloak'
+      state: 'present'
+
+  - name: 'Add the user keycloak with primary group of keycloak'
+    ansible.builtin.user:
+      name: 'keycloak'
+      comment: 'User for Keycloak service'
+      group: 'keycloak'
+
+  - name: 'Create log directory "/var/log/keycloak"'
+    ansible.builtin.file:
+      path: '/var/log/keycloak'
+      state: 'directory'
+      owner: 'keycloak'
+      group: 'keycloak'
+
+  - name: 'mkdir /opt/keycloak'
+    ansible.builtin.file:
+      path: '/opt/keycloak'
+      state: 'directory'
+      owner: 'keycloak'
+      group: 'keycloak'
+
+  - name: 'Download and unpack archive'
+    ansible.builtin.unarchive:
+      src: 'https://github.com/keycloak/keycloak/releases/download/{{ keycloak__version }}/keycloak-{{ keycloak__version }}.tar.gz'
+      dest: '/opt/keycloak'
+      remote_src: true
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'chown -R keycloak:keycloak /opt/keycloak'
+    ansible.builtin.file:
+      path: '/opt/keycloak'
+      state: 'directory'
+      recurse: true
+      owner: 'keycloak'
+      group: 'keycloak'
+
   tags:
     - 'keycloak'
 
 
 - block:
 
-  - name: "Create keycloak config file"
+  - name: 'Create Keycloak config file'
     ansible.builtin.template:
+      backup: true
       src: 'opt/keycloak/conf/keycloak.conf.j2'
       dest: '/opt/keycloak/conf/keycloak.conf'
       owner: 'keycloak'
       group: 'keycloak'
       mode: 0o640
+    notify: 'keycloak: systemctl restart keycloak'
 
-  - name: 'Create private key (RSA, 4096 bits)'
-    community.crypto.openssl_privatekey:
-      path: '/opt/keycloak/conf/keycloak.key.pem'
-      owner: 'keycloak'
-      group: 'keycloak'
-    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode | length == 0 or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
-
-  - name: 'Create certificate signing request (CSR) for self-signed certificate'
-    community.crypto.openssl_csr_pipe:
-      privatekey_path: '/opt/keycloak/conf/keycloak.key.pem'
-      common_name: 'linuxfabrik.ch'
-      organization_name: 'Linuxfabrik GmbH'
-      subject_alt_name:
-        - "DNS:keycloak.local"
-    register: 'csr'
-    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode | length == 0 or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
-
-  - name: 'Create simple self-signed certificate'
-    community.crypto.x509_certificate:
-      path: '/opt/keycloak/conf/keycloak.crt.pem'
-      owner: 'keycloak'
-      group: 'keycloak'
-      privatekey_path: '/opt/keycloak/conf/keycloak.key.pem'
-      csr_content: "{{ csr.csr }}"
-      provider: 'selfsigned'
-    when: 'keycloak__proxy_mode is not defined or keycloak__proxy_mode | length == 0 or keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough"'
-
-  - name: "Configure sysconfig file for keycloak service"
+  - name: 'Configure sysconfig file for Keycloak service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/sysconfig/keycloak-sysconfig.j2'
       dest: '/etc/sysconfig/keycloak'
       owner: 'root'
@@ -99,6 +95,7 @@
 
   - name: 'Create keycloak.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/keycloak.service.j2'
       dest: '/etc/systemd/system/keycloak.service'
       owner: 'root'
@@ -114,11 +111,14 @@
     - 'keycloak:configure'
 
 
-- name: 'Change the working directory to /opt/keycloak and bin/kc.sh build --db {{ keycloak__db_vendor }}'
-  ansible.builtin.shell: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
-  args:
-    chdir: '/opt/keycloak'
-  when: 'keycloak__mode == "production"'
+- block:
+
+  - name: 'Change the working directory to /opt/keycloak and bin/kc.sh build --db {{ keycloak__db_vendor }}'
+    ansible.builtin.shell: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
+    args:
+      chdir: '/opt/keycloak'
+    when: 'keycloak__mode == "production"'
+
   tags:
     - 'keycloak'
 

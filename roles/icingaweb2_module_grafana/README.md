@@ -1,12 +1,11 @@
 # Ansible Role linuxfabrik.lfops.icingaweb2_module_grafana
 
-This role installs and configures the [IcingaWeb2 Grafana Module](https://github.com/Mikesch-mp/icingaweb2-module-grafana).
+This role installs and configures the [IcingaWeb2 Grafana Module](https://github.com/NETWAYS/icingaweb2-module-grafana).
 Additionally, it deploys the the graph configuration for the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This can be disabled using `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config`.
 
 This role is tested with the following IcingaWeb2 Grafana Module versions:
 
-* 1.4.2
-* 2.0.3
+* 3.0.1
 
 
 ## Mandatory Requirements
@@ -30,7 +29,7 @@ If you use the [Setup Icinga2 Master Playbook](https://github.com/Linuxfabrik/lf
 
 | Variable                             | Description                                                                                                        |
 | --------                             | -----------                                                                                                        |
-| `icingaweb2_module_grafana__version` | The module version to install. Possible options: https://github.com/Mikesch-mp/icingaweb2-module-grafana/releases. |
+| `icingaweb2_module_grafana__version` | The module version to install. Possible options: https://github.com/NETWAYS/icingaweb2-module-grafana/releases. |
 
 Example:
 ```yaml

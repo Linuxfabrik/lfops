@@ -418,6 +418,9 @@ Role:redis
 
 ### Changed
 
+Role:icingaweb2_module_grafana:
+* change github repo from Mikesch-mp to NETWAYS
+
 Role:shell:
 * add option to ignore errors during command execution
 

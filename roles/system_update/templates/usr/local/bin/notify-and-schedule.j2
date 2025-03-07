@@ -17,7 +17,7 @@ send_msg () {
         "text=${SUBJECT}
 
         ${MSGBODY}
-        {{ system_update__rocketchat_msg_suffix | default('') }}" \
+        {{ system_update__rocketchat_msg_suffix }}" \
         --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
         "{{ system_update__rocketchat_url }}"
 {% endif %}

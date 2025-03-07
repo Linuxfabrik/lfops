@@ -150,6 +150,20 @@
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
+  - name: 'Deploy /etc/tmpfiles.d/mariadb.conf for the socket path'
+    ansible.builtin.template:
+      src: 'etc/tmpfiles.d/mariadb.conf.j2'
+      dest: '/etc/tmpfiles.d/mariadb.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'mariadb_server__deploy_tmpfiles_result'
+
+  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb.conf' # noqa no-handler no-changed-when (sadly no easy way to detect changes)
+    ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb.conf'
+    when:
+      - 'mariadb_server__deploy_tmpfiles_result is changed'
+
   # /var/lib/mysql/mysql\.sock                         socket             system_u:object_r:mysqld_var_run_t:s0
   - name: 'semanage fcontext --add --type mysqld_var_run_t {{ mariadb_server__cnf_socket__combined_var | ansible.builtin.regex_escape }}'
     community.general.sefcontext:

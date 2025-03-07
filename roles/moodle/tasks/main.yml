@@ -176,6 +176,7 @@
   # download moosh from moodle.org instead of GiHub, because then we don't have to bother with
   # `composer install` running as user apache to download additional vendor libraries etc;
   # the moodle.org file has all batteries included.
+  # Source: https://moodle.org/plugins/view.php?id=522
   - name: 'curl --location {{ moodle__moosh_download_url }} --output /tmp/moosh.zip'
     ansible.builtin.get_url:
       url: '{{ moodle__moosh_download_url }}'

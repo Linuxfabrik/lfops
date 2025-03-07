@@ -1,23 +1,28 @@
-keycloak__enabled: true
-keycloak__state: 'started'
+keycloak__apps__apps__dependent_var:
+  - name: '{{ keycloak__java_package_name }}'
+    state: 'present'
+
+keycloak__db_url_database: 'keycloak'
 keycloak__db_url_host: 'localhost'
 keycloak__db_vendor: 'mariadb'
-keycloak__db_url_database: 'keycloak'
-keycloak__expose_metrics_endpoints: true
+keycloak__enabled: true
 keycloak__expose_healthcheck_endpoints: true
+keycloak__expose_metrics_endpoints: true
 keycloak__hostname_strict_backchannel: false
+keycloak__https_certificate_file: '/etc/pki/tls/certs/www.example.com-chain.crt'
+keycloak__https_certificate_key_file: '/etc/pki/tls/private/www.example.com.key'
 keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
 keycloak__log: 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
+keycloak__mode: 'production'
+keycloak__proxy_headers: 'xforwarded'
+keycloak__proxy_trusted_addresses: '127.0.0.1,::1'
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
+keycloak__state: 'started'
 
 # -----------------------------------------------------------------------------
 # no need to document the variables in the README below this line, as they
 # are internally for this role
-
-keycloak__apps__apps__dependent_var:
-  - name: '{{ keycloak__java_package_name }}'
-    state: 'present'
 
 keycloak__mariadb_server__databases__dependent_var:
   - name: '{{ keycloak__db_url_database }}'

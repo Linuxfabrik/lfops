@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2025022701
+
+# have a look at /usr/lib/tmpfiles.d/mariadb.conf
+
+{% if (mariadb_server__cnf_socket__combined_var | ansible.builtin.dirname) != mariadb_server__cnf_datadir__combined_var %}
+d {{ mariadb_server__cnf_socket__combined_var | ansible.builtin.dirname }} 0755 mysql mysql -
+{% endif %}

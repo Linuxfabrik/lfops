@@ -8,7 +8,7 @@ moodle__database_socket: '/var/lib/mysql/mysql.sock'
 moodle__database_table_prefix: 'mdl_'
 moodle__install_dir: '/var/www/html/moodle'
 moodle__moosh_commands: []
-moodle__moosh_download_url: 'https://moodle.org/plugins/download.php/31885/moosh_moodle44_2024050100.zip'
+moodle__moosh_download_url: 'https://moodle.org/plugins/download.php/34835/moosh_moodle45_2025020800.zip'
 moodle__on_calendar_cron: 'minutely'
 moodle__site_fullname: 'Moodle powered by Linuxfabrik'
 moodle__site_shortname: 'Moodle'

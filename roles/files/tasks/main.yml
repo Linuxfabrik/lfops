@@ -19,8 +19,9 @@
     ansible.builtin.debug:
       var: 'files__files__combined_var'
 
-  - name: 'Deploy files'
+  - name: 'Deploy files (plain files)'
     ansible.builtin.copy:
+      backup: true
       content: '{{ item["content"] | d(omit) }}'
       src: '{{ (item["content"] is defined and item["content"] | length) | ternary(
           omit,
@@ -32,6 +33,22 @@
       group: '{{ item["group"] | d("root") }}'
     when:
       - 'item["state"] | d("present") != "absent"'
+      - 'item["template"] | d(false) is false'
+    loop: '{{ files__files__combined_var }}'
+    loop_control:
+      label: 'path={{ item["path"] }}, state={{ item["state"] | d("present") }}'
+
+  - name: 'Deploy files (Jinja templates)'
+    ansible.builtin.template:
+      backup: true
+      src: '{{ inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/" ~ item["path"] }}'
+      dest: '{{ item["path"] }}'
+      mode: '{{ item["mode"] | d("0o644") }}'
+      owner: '{{ item["owner"] | d("root") }}'
+      group: '{{ item["group"] | d("root") }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["template"] | d(false) is true'
     loop: '{{ files__files__combined_var }}'
     loop_control:
       label: 'path={{ item["path"] }}, state={{ item["state"] | d("present") }}'

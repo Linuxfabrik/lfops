@@ -63,10 +63,22 @@
       delegate_to: 'localhost'
       check_mode: false # run task even if `--check` is specified
 
+    - name: 'mkdir -p /usr/lib64/nagios/plugins/notifications/'
+      ansible.builtin.file:
+        path: '/usr/lib64/nagios/plugins/notifications/'
+        state: 'directory'
+        mode: 0o755
+
+    - name: 'ln -s /usr/lib64/nagios/plugins/lib /usr/lib64/nagios/plugins/notifications/lib'
+      ansible.builtin.file:
+        src: '/usr/lib64/nagios/plugins/lib'
+        dest: '/usr/lib64/nagios/plugins/notifications/lib'
+        state: 'link'
+
     - name: 'Copy the Linuxfabrik notification plugins (Linux)'
       ansible.builtin.copy:
         src: '/tmp/ansible.monitoring-plugins-repo/notification-plugins/{{ item }}/{{ item }}'
-        dest: '/usr/lib64/nagios/plugins/{{ item }}'
+        dest: '/usr/lib64/nagios/plugins/notifications/{{ item }}'
         owner: 'root'
         mode: 0o755
       loop: '{{ monitoring_plugins__notification_plugin_list }}'

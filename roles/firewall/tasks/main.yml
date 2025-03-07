@@ -3,56 +3,45 @@
   - name: 'Get the list of services'
     ansible.builtin.service_facts: # yamllint disable-line rule:empty-values
 
-  - name: 'Be sure firewalld is stopped, disabled and masked'
+  - name: 'Be sure {{ item["service"] }} is stopped and disabled'
     ansible.builtin.systemd:
-      name: 'firewalld.service'
+      name: '{{ item["service"] }}'
       state: 'stopped'
       enabled: false
-      masked: true
     when:
-      - 'firewall__firewall != "firewalld"'
-      - '"firewalld.service" in ansible_facts["services"]'
+      - 'firewall__firewall != item["name"]'
+      - 'item["service"] in ansible_facts["services"]'
+      - 'ansible_facts["services"][item["service"]]["status"] != "not-found"'
+    loop:
+      - name: 'firewalld'
+        service: 'firewalld.service'
+      - name: 'fwbuilder'
+        service: 'fwb'
+      - name: 'iptables.service'
+        service: 'iptables'
+      - name: 'nftables'
+        service: 'nftables.service'
+      - name: 'ufw'
+        service: 'ufw.service'
 
-  - name: 'Be sure fwb is stopped, disabled and masked'
+  - name: 'Be sure {{ item["service"] }} is masked, even if it is not installed yet'
+    # prevents the service from starting even if it is installed later on
     ansible.builtin.systemd:
-      name: 'fwb.service'
-      state: 'stopped'
-      enabled: false
+      name: '{{ item["service"] }}'
       masked: true
     when:
-      - 'firewall__firewall != "fwbuilder"'
-      - '"fwb.service" in ansible_facts["services"]'
-
-  - name: 'Be sure iptables is stopped, disabled and masked'
-    ansible.builtin.systemd:
-      name: 'iptables.service'
-      state: 'stopped'
-      enabled: false
-      masked: true
-    ignore_errors: true   # If iptables.service does not exist, e.g. on Debian like systems
-    when:
-      - 'firewall__firewall != "iptables"'
-      - '"iptables.service" in ansible_facts["services"]'
-
-  - name: 'Be sure nftables is stopped, disabled and masked'
-    ansible.builtin.systemd:
-      name: 'nftables.service'
-      state: 'stopped'
-      enabled: false
-      masked: true
-    when:
-      - 'firewall__firewall != "nftables"'
-      - '"nftables.service" in ansible_facts["services"]'
-
-  - name: 'Be sure ufw is stopped, disabled and masked'
-    ansible.builtin.systemd:
-      name: 'ufw.service'
-      state: 'stopped'
-      enabled: false
-      masked: true
-    when:
-      - 'firewall__firewall != "ufw"'
-      - '"ufw.service" in ansible_facts["services"]'
+      - 'firewall__firewall != item["name"]'
+    loop:
+      - name: 'firewalld'
+        service: 'firewalld.service'
+      - name: 'fwbuilder'
+        service: 'fwb.service'
+      - name: 'iptables'
+        service: 'iptables.service'
+      - name: 'nftables'
+        service: 'nftables.service'
+      - name: 'ufw'
+        service: 'ufw.service'
 
   tags:
     - 'firewall'
@@ -126,6 +115,7 @@
       dest: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
       depth: 1
       single_branch: true
+    changed_when: false # not a config change on the server
     delegate_to: 'localhost'
     run_once: true
     check_mode: false # run task even if `--check` is specified
@@ -133,12 +123,14 @@
 
   - name: 'Deploy /etc/fwb.sh'
     ansible.builtin.copy:
+      backup: true
       src: '/tmp/ansible.fwb-{{ inventory_dir | basename }}/{{ firewall__fwbuilder_fw_file }}.fw'
       dest: '/etc/fwb.sh'
       owner: 'root'
       group: 'root'
       mode: 0o500  # no need for others to read/write this file, just u=rx
     register: 'firewall__deploy_fwb_result'
+    notify: 'firewall: restart fwb'
     when: 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length'
 
   - name: 'Deploy fwbuilder systemd service file'
@@ -165,12 +157,13 @@
   # always hangs on the first run (only than) on a brand-new machine, and then Ansible also hangs.
   # The ever-first start of netfilter changes something on Linux (kernel modules or something).
   # Every subsequent run of `/etc/fwb.sh start` runs flawlessly.
-  # `/etc/fwb.sh stop` doesn't change much, but also involves netfilter. So plit this up, and
+  # `/etc/fwb.sh stop` doesn't change much, but also involves netfilter. So split this up, and
   # first stop the firewall, then start it, no matter what.
-  - name: 'Be sure fwb is enabled, stopped and not masked.'
+  - name: 'Be sure fwb is enabled and not masked'
     ansible.builtin.systemd:
       name: 'fwb.service'
-      state: 'stopped'
+      # state: 'stopped' 2025-02-28: let's try if splitting the enabling and starting is enough without stopping, to prevent service distruptions during deployment
+      # we use the handler to restart the fwb in case of changes
       enabled: true
       masked: false
       daemon_reload: true
@@ -194,6 +187,7 @@
 
   - name: 'Copy iptables definition to /etc/sysconfig/iptables'
     ansible.builtin.copy:
+      backup: true
       src: "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables"
       dest: '/etc/sysconfig/'
       owner: 'root'

@@ -2,3 +2,8 @@
   ansible.builtin.systemd:
     name: 'firewalld'
     state: 'reloaded'
+
+- name: 'firewall: restart fwb'
+  ansible.builtin.systemd:
+    name: 'fwb'
+    state: 'restarted'
