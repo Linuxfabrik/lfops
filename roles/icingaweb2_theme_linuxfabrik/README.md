@@ -23,7 +23,7 @@ This role installs and enables [Linuxfabrik's IcingaWeb2 Theme](https://github.c
 Example:
 ```yaml
 # mandatory
-icingaweb2_theme_linuxfabrik__version: 'v1.0.0'
+icingaweb2_theme_linuxfabrik__version: 'v1.1.0'
 ```
 
 
