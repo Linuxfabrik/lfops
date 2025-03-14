@@ -30,7 +30,7 @@ Note that the role does not make use of `/etc/ssh/sshd_config.d/` since not all 
 | `sshd__raw` | Raw (user-defined) SSH-Config. Will be placed at the end of the `/etc/ssh/sshd_config` file. Useful for `Match` directives. | unset |
 | `sshd__service_enabled` | Enables or disables the sshd service, analogous to `systemctl enable/disable`. | `true` |
 | `sshd__service_state` | Changes the state of the sshd service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
-| `sshd__sftp_subsystem` | Which command should be used for the sftp subsystem. | `'/usr/libexec/openssh/sftp-server'` |
+| `sshd__sftp_subsystem` | Which command should be used for the sftp subsystem. | RHEL: `'/usr/libexec/openssh/sftp-server'`, Debian: `/usr/lib/openssh/sftp-server` |
 | `sshd__use_dns` | Specifies whether sshd should look up the remote hostname, and to check that the resolved host name for the remote IP address maps back to the very same IP address. | `false` |
 
 Example:
