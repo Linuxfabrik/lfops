@@ -130,7 +130,7 @@
 
     <logging_ui_cmd>
         <merge type="bool" desc="If true, repeated commands after each other will be merged into 1 line. If false, every command will be 1 new line." default="true">true</merge>
-        <merge_display_end_time type="bool" desc="If true, the duration of the merged command will also be logged." default="false">false</merge_display_end_time>
+        <merge_display_end_time type="bool" desc="If true, the duration of the merged command will also be logged." default="false">true</merge_display_end_time>
         <file enable="false">
             <!-- If you use other path than /var/log and you run coolwsd from systemd, make sure that you enable that path in coolwsd.service (ReadWritePaths). Also the log file path must be writable by the 'cool' user. -->
             <property name="path" desc="Log file path.">/var/log/coolwsd-ui-cmd.log</property>
@@ -334,6 +334,7 @@
         <path desc="Absolute path of the directory under which cached files will be stored. Do not use a relative path." type="path" relative="false"></path>
         <expiry_min desc="Time in mins after disuse at which cache files will be deleted." type="int" default="3000">1000</expiry_min>
     </cache_files>
+
     <extra_export_formats desc="Enable various extra export formats for additional compatibility. Note that disabling options here *only* disables them visually: these are all 'safe' to export, it might just be undesirable to show them, so you can't disable exporting these server-side">
         <impress_swf desc="Enable exporting Adobe flash .swf files from presentations" type="bool" default="false">false</impress_swf>
         <impress_bmp desc="Enable exporting .bmp bitmap files from presentation slides" type="bool" default="false">false</impress_bmp>
@@ -342,6 +343,7 @@
         <impress_svg desc="Enable exporting interactive .svg image files from presentations" type="bool" default="false">false</impress_svg>
         <impress_tiff desc="Enable exporting .tiff image files from presentation slides" type="bool" default="false">false</impress_tiff>
     </extra_export_formats>
+
     <serverside_config>
         <idle_timeout_secs desc="The maximum number of seconds before unloading an idle sub forkit. Defaults to 1 hour." type="uint" default="3600">3600</idle_timeout_secs>
     </serverside_config>
