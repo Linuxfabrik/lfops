@@ -43,10 +43,11 @@
       api_token: '{{ hetzner_vm__api_token }}'
       name: '{{ hetzner_vm__name }}' # name of the firewall. we use the name of the vm for this
       rules: '{{ hetzner_vm__firewall_rules }}'
-      state: '{{ (hetzner_vm__state == "absent") | ternary("absent", "present") }}'
+      state: 'present'
     delegate_to: 'localhost'
     when:
       - 'hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length'
+      - 'hetzner_vm__state != "absent"' # cannot remove the firewall here, as it is still in use
     tags: 'hetzner_vm:firewalls'
 
   - name: 'Manage the VMs at Hetzner'
@@ -65,6 +66,17 @@
       firewalls: '{{ (hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length) | ternary([hetzner_vm__name], []) }}'
       state: '{{ hetzner_vm__state }}'
     delegate_to: 'localhost'
+
+  - name: 'Manage the firewall of the VM'
+    hetzner.hcloud.hcloud_firewall:
+      api_token: '{{ hetzner_vm__api_token }}'
+      name: '{{ hetzner_vm__name }}' # name of the firewall. we use the name of the vm for this
+      state: 'absent'
+    delegate_to: 'localhost'
+    when:
+      - 'hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length'
+      - 'hetzner_vm__state == "absent"' # cannot remove the firewall here, as it is still in use
+    tags: 'hetzner_vm:firewalls'
 
   - name: 'Attach the networks to the VM'
     hetzner.hcloud.hcloud_server_network:
