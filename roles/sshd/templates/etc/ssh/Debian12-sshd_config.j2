@@ -1,7 +1,5 @@
 # {{ ansible_managed }}
-# 2024050901
-
-#	$OpenBSD: sshd_config,v 1.104 2021/07/02 05:11:21 dtucker Exp $
+# 2025031401
 
 # This is the sshd server system-wide configuration file.  See
 # sshd_config(5) for more information.
@@ -42,7 +40,7 @@ PermitRootLogin {{ sshd__permit_root_login }}
 #PubkeyAuthentication yes
 
 # Expect .ssh/authorized_keys2 to be disregarded by default in future.
-AuthorizedKeysFile .ssh/authorized_keys
+#AuthorizedKeysFile	.ssh/authorized_keys .ssh/authorized_keys2
 
 #AuthorizedPrincipalsFile none
 
@@ -116,14 +114,14 @@ UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}
 AcceptEnv LANG LC_*
 
 # override default of no subsystems
-Subsystem sftp {{ sshd__sftp_subsystem }}
+Subsystem	sftp	{{ sshd__sftp_subsystem }}
 
 # Example of overriding settings on a per-user basis
 #Match User anoncvs
-#       X11Forwarding no
-#       AllowTcpForwarding no
-#       PermitTTY no
-#       ForceCommand cvs server
+#	X11Forwarding no
+#	AllowTcpForwarding no
+#	PermitTTY no
+#	ForceCommand cvs server
 
 {% if sshd__raw is defined and sshd__raw | length %}
 # raw content

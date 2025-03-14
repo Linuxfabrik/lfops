@@ -1,0 +1,1 @@
+sshd__sftp_subsystem: '/usr/lib/openssh/sftp-server'

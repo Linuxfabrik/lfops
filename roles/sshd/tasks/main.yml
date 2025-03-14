@@ -1,5 +1,10 @@
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
   - name: 'Deploy /etc/ssh/sshd_config'
     ansible.builtin.template:
       src: '{{ lookup("ansible.builtin.first_found", __task_file) }}'
@@ -28,12 +33,8 @@
       ports: '{{ sshd__port }}'
       proto: 'tcp'
       setype: 'ssh_port_t'
-    register: 'sshd__seport_result'
-    # ignore errors if selinux is disabled
-    failed_when:
-      - 'sshd__seport_result["failed"] is defined'
-      - 'sshd__seport_result["failed"]'
-      - 'not "SELinux is disabled on this host." in sshd__seport_result["msg"]'
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
 
   tags:
     - 'sshd'
