@@ -6,6 +6,7 @@
     - 'apache_httpd'
     - 'apache_httpd:config'
     - 'apache_httpd:htpasswd'
+    - 'apache_httpd:matomo'
     - 'apache_httpd:mod_security_coreruleset'
     - 'apache_httpd:mods'
     - 'apache_httpd:state'
