@@ -95,17 +95,13 @@
 - block:
 
   - name: 'Set Nextcloud system settings'
-    # note: do not quote the key, that is how occ accesses array subkeys, eg 'redis timeout'
-    ansible.builtin.command: >-
-      php occ config:system:set
-      {{ item["key"] }}
-      --value={{ item["value"] | quote }}
-      --type={{ item["type"] | d("string") | quote }}
-    args:
-      chdir: '/var/www/html/nextcloud/'
+    linuxfabrik.lfops.nextcloud_occ_system_config:
+      name: '{{ item["key"] }}'
+      value: '{{ item["value"] }}'
+      type: '{{ item["type"] | d("string") | quote }}'
+      state: '{{ item["state"] | d("present") }}'
     become: true
     become_user: 'apache'
-    # changed_when: there is no easy way to check for changes
     loop: '{{ nextcloud__sysconfig__combined_var }}'
 
   # do this straight after the installation to get NC up and running
@@ -184,28 +180,15 @@
     changed_when: 'nextcloud__apps_enable_result["rc"] == 0 and "already enabled" not in nextcloud__apps_enable_result["stdout"]'
     failed_when: 'nextcloud__apps_enable_result["rc"] != 0 and "already enabled" not in nextcloud__apps_enable_result["stdout"]'
 
-  - name: 'Delete Nextcloud app settings'
-    # note: do not quote the key, that is how occ accesses array subkeys, eg 'redis timeout'
-    ansible.builtin.command: |
-      php occ config:app:delete {{ item["key"] }} --value={{ item["value"] | quote }}
-    args:
-      chdir: '/var/www/html/nextcloud/'
-    become: true
-    become_user: 'apache'
-    when:
-      - 'item["state"] | d("present") == "absent"'
-    loop: '{{ nextcloud__app_configs__combined_var }}'
-
   - name: 'Set Nextcloud app settings'
-    # note: do not quote the key, that is how occ accesses array subkeys, eg 'redis timeout'
-    ansible.builtin.command: |
-      php occ config:app:set {{ item["key"] }} --value={{ item["value"] | quote }}
-    args:
-      chdir: '/var/www/html/nextcloud/'
+    linuxfabrik.lfops.nextcloud_occ_app_config:
+      app: '{{ (item["key"] | split)[0] }}'
+      name: '{{ (item["key"] | split)[1:] | join(" ") }}'
+      value: '{{ item["value"] }}'
+      type: '{{ item["type"] | d("string") | quote }}'
+      state: '{{ item["state"] | d("present") }}'
     become: true
     become_user: 'apache'
-    when:
-      - 'item["state"] | d("present") != "absent"'
     loop: '{{ nextcloud__app_configs__combined_var }}'
 
   - name: 'restart php-fpm'

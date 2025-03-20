@@ -9,16 +9,19 @@ nextcloud__app_configs__role_var:
     value: 'no'
     state: 'present'
   - key: 'core shareapi_expire_after_n_days'
-    value: '90'
+    value: 90
+    type: 'integer'
     state: 'present'
   - key: 'dav buildCalendarSearchIndex'
     value: 'yes'
     state: 'present'
   - key: 'password_policy enforceHaveIBeenPwned'
-    value: '1'
+    value: 1
+    type: 'integer'
     state: 'present'
   - key: 'password_policy minLength'
-    value: '12'
+    value: 12
+    type: 'integer'
     state: 'present'
   - key: 'privacy readableLocation'
     value: 'ch'
@@ -27,7 +30,8 @@ nextcloud__app_configs__role_var:
     value: 'yes'
     state: 'present'
   - key: 'text workspace_available'
-    value: '0'
+    value: 0
+    type: 'integer'
     state: 'present'
   - key: 'theming imprintUrl'
     value: 'https://www.linuxfabrik.ch/ueber-uns/agb/'
