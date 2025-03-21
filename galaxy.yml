@@ -52,12 +52,14 @@ tags:
 # range specifiers can be set and are separated by ','
 dependencies:
   'ansible.utils': '*'  # note: "*" selects the highest version available
+  'ansible.windows': '*'
   'community.crypto': '*'
   'community.grafana': '*'
   'community.libvirt': '*'
   'community.mongodb': '*'
   'community.mysql': '*'
   'community.postgresql': '*'
+  'community.windows': '*'
   'fedora.linux_system_roles': '*'
   'freeipa.ansible_freeipa': '*'
   'hetzner.hcloud': '*'
