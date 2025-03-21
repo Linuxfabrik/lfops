@@ -114,7 +114,18 @@
   tags:
     - 'monitoring_plugins'
 
-  # todo: auf windows: programfiles\icinga2.... löschen
+
+- block:
+
+  - name: 'Make sure the linuxfabrik plugin cache is removed'
+    ansible.windows.win_file:
+      path: 'C:\ProgramData\icinga2\usr\lib64\nagios\plugins'
+      state: 'absent'
+
+  when:
+    - 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'monitoring_plugins'
 
 
 # Pimp local software
