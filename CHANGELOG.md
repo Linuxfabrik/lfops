@@ -12,6 +12,17 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:monitoring_plugins:
+* Content of `lfops__monitoring_plugins_version` changes to `dev` or `stable`
+* Renamed `monitoring_plugins__linux_variant` to `monitoring_plugins__install_method`:
+
+    * `monitoring_plugins__install_method: 'python'` becomes `monitoring_plugins__install_method: 'source'`
+
+* Renamed `monitoring_plugins__repo_version` to `monitoring_plugins__version`:
+
+    * `monitoring_plugins__version: 'main'` becomes `monitoring_plugins__version: 'stable'`
+    * `monitoring_plugins__version: 'latest'` becomes `monitoring_plugins__version: 'dev'`
+
 Role:mariadb_server:
 * Removed support for EOL versions 10.3 and 10.4
 * Removed support for non-LTS versions

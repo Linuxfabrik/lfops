@@ -54,3 +54,66 @@
       delegate_to: 'localhost'
       run_once: true
       check_mode: false # run task even if `--check` is specified
+
+
+- block:
+
+  - name: 'Ensure local flattened directory exists'
+    ansible.builtin.file:
+      path: '/tmp/ansible.monitoring-plugins-repo-flattened/check-plugins'
+      state: 'directory'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Flatten check-plugins locally using shell'
+    ansible.builtin.shell: |
+      mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins
+      find /tmp/ansible.monitoring-plugins-repo/check-plugins -mindepth 2 -maxdepth 2 -type f | while read file; do
+        base=$(basename "$file")
+        parent=$(basename "$(dirname "$file")")
+        if [ "$base" = "$parent" ]; then
+          cp "$file" /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/"$base"
+        fi
+      done
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Flatten notification-plugins locally using shell'
+    ansible.builtin.shell: |
+      mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins
+      find /tmp/ansible.monitoring-plugins-repo/notification-plugins -mindepth 2 -maxdepth 2 -type f | while read file; do
+        base=$(basename "$file")
+        parent=$(basename "$(dirname "$file")")
+        if [ "$base" = "$parent" ]; then
+          cp "$file" /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/"$base"
+        fi
+      done
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Flatten asset files from plugin assets directories'
+    ansible.builtin.shell: |
+      mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets
+      find /tmp/ansible.monitoring-plugins-repo/check-plugins/*/assets -type f -exec cp {} /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets/ \;
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Flatten icon files from plugin directories'
+    ansible.builtin.shell: |
+      mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/icons
+      find /tmp/ansible.monitoring-plugins-repo/check-plugins -name *.svg -exec cp {} /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/icons/ \;
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Flatten Grafana ini files from plugin directories'
+    ansible.builtin.shell: |
+      mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/icingaweb2-module-grafana
+      find /tmp/ansible.monitoring-plugins-repo/check-plugins -name *.ini -exec cp {} /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/icingaweb2-module-grafana/ \;
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified

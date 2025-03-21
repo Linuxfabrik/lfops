@@ -1,0 +1,60 @@
+- block:
+
+  - name: 'install {{ monitoring_plugins__versionlock_package }}'
+    ansible.builtin.package:
+      name:
+        - '{{ monitoring_plugins__versionlock_package }}'
+      state: 'present'
+    when: 'monitoring_plugins__versionlock_package is defined'
+
+  - name: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins'
+    ansible.builtin.command: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins'
+    ignore_errors: true
+
+  - name: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins'
+    ansible.builtin.command: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins'
+    ignore_errors: true
+    when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
+
+  # block
+  when:
+    - 'not monitoring_plugins__skip_package_versionlock'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'install linuxfabrik-monitoring-plugins{{ (internal_monitoring_plugins_version != "latest") | ternary("-" ~ internal_monitoring_plugins_version, "") }}'
+    ansible.builtin.package:
+      name:
+        - 'linuxfabrik-monitoring-plugins{{ (internal_monitoring_plugins_version != "latest") | ternary("-" ~ internal_monitoring_plugins_version, "") }}'
+      state: 'latest' # use latest for the versionlock after
+
+  - name: 'install linuxfabrik-notification-plugins{{ (internal_monitoring_plugins_version != "latest") | ternary("-" ~ internal_monitoring_plugins_version, "") }}'
+    ansible.builtin.package:
+      name:
+        - 'linuxfabrik-notification-plugins{{ (internal_monitoring_plugins_version != "latest") | ternary("-" ~ internal_monitoring_plugins_version, "") }}'
+      state: 'latest' # use latest for the versionlock after
+    when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: '{{ monitoring_plugins__versionlock_lock_command }} linuxfabrik-monitoring-plugins'
+    ansible.builtin.command: '{{ monitoring_plugins__versionlock_lock_command }} linuxfabrik-monitoring-plugins'
+
+  - name: '{{ monitoring_plugins__versionlock_lock_command }} linuxfabrik-notification-plugins'
+    ansible.builtin.command: '{{ monitoring_plugins__versionlock_lock_command }} linuxfabrik-notification-plugins'
+    when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
+
+  # block
+  when:
+    - 'not monitoring_plugins__skip_package_versionlock'
+
+  tags:
+    - 'monitoring_plugins'

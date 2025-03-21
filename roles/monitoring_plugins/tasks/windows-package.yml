@@ -1,0 +1,23 @@
+- block:
+
+  - ansible.builtin.include_tasks: 'windows-download.yml'
+    vars:
+      file_type: 'packaged'
+      unzip_path: 'C:\Temp'
+
+  - name: 'install C:\Temp\linuxfabrik-monitoring-plugins.msi'
+    ansible.windows.win_package:
+      path: 'C:\Temp\linuxfabrik-monitoring-plugins.msi'
+
+  - name: 'rm -f C:\Temp\linuxfabrik-monitoring-plugins.msi'
+    ansible.windows.win_file:
+      path: 'C:\Temp\linuxfabrik-monitoring-plugins.msi'
+      state: 'absent'
+
+  - name: 'rm -f C:\Temp\linuxfabrik-monitoring-plugins.wixpdb'
+    ansible.windows.win_file:
+      path: 'C:\Temp\linuxfabrik-monitoring-plugins.wixpdb'
+      state: 'absent'
+
+  tags:
+    - 'monitoring_plugins'

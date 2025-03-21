@@ -9,26 +9,10 @@
     - 'monitoring_plugins'
     - 'monitoring_plugins:custom'
 
-- name: 'Clone the monitoring plugins repo'
-  ansible.builtin.import_role:
-    name: 'shared'
-    tasks_from: 'clone-monitoring-plugins-repo.yml'
-  vars:
-    shared__monitoring_plugins_repo_version: '{{ monitoring_plugins__repo_version }}'
-  when:
-    - 'ansible_facts["os_family"] != "Windows"
-      or monitoring_plugins__windows_variant == "python"'
-  tags:
-    - 'monitoring_plugins'
-
-- name: 'Generate the monitoring plugins list'
-  ansible.builtin.import_tasks: 'generate-monitoring-plugins-list.yml'
-  tags:
-    - 'monitoring_plugins'
-
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ __task_file }}'
-  when: '__task_file | length'
+  when:
+    - '__task_file | length'
   vars:
     __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
     __first_found_options:
@@ -48,82 +32,92 @@
 
 - block:
 
+  - name: 'Translate user-friendly monitoring_plugins__version to internal version'
+    set_fact:
+      # Returns the corresponding mapped value if it exists, otherwise it returns the original value:
+      # * If monitoring_plugins__version is "stable", it will map to "latest", and if it's "dev",
+      #   it will map to "main".
+      # * If the user sets a version number like "1.2.0.11", it is set to "v1.2.0.11" if installing
+      #   from source (according to GitHub tag), otherwise remains unchanged.
+      internal_monitoring_plugins_version: >-
+        {{
+          {
+            'stable': 'latest',
+            'dev': 'main',
+            'latest': 'latest',
+            'main': 'main',
+          }.get(
+            monitoring_plugins__version,
+            (("v" + monitoring_plugins__version)
+              if (monitoring_plugins__install_method == 'source')
+              else monitoring_plugins__version)
+          )
+        }}
 
-  - block:
-
-    - name: 'install {{ monitoring_plugins__versionlock_package }}'
-      ansible.builtin.package:
-        name:
-          - '{{ monitoring_plugins__versionlock_package }}'
-        state: 'present'
-      when: 'monitoring_plugins__versionlock_package is defined'
-
-    - name: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins'
-      ansible.builtin.command: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins'
-      ignore_errors: true
-
-    - name: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins'
-      ansible.builtin.command: '{{ monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins'
-      ignore_errors: true
-      when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
-
-    # block
-    when:
-      - 'not monitoring_plugins__skip_package_versionlock'
-
-
-  - name: 'install linuxfabrik-monitoring-plugins{{ (monitoring_plugins__repo_version != "latest") | ternary("-" ~ monitoring_plugins__repo_version, "") }}'
-    ansible.builtin.package:
-      name:
-        - 'linuxfabrik-monitoring-plugins{{ (monitoring_plugins__repo_version != "latest") | ternary("-" ~ monitoring_plugins__repo_version, "") }}'
-      state: 'latest' # use latest for the versionlock after
-
-  - name: 'install linuxfabrik-notification-plugins{{ (monitoring_plugins__repo_version != "latest") | ternary("-" ~ monitoring_plugins__repo_version, "") }}'
-    ansible.builtin.package:
-      name:
-        - 'linuxfabrik-notification-plugins{{ (monitoring_plugins__repo_version != "latest") | ternary("-" ~ monitoring_plugins__repo_version, "") }}'
-      state: 'latest' # use latest for the versionlock after
-    when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
-
-
-  - block:
-
-    - name: '{{ monitoring_plugins__versionlock_lock_command }} linuxfabrik-monitoring-plugins'
-      ansible.builtin.command: '{{ monitoring_plugins__versionlock_lock_command }} linuxfabrik-monitoring-plugins'
-
-    - name: '{{ monitoring_plugins__versionlock_lock_command }} linuxfabrik-notification-plugins'
-      ansible.builtin.command: '{{ monitoring_plugins__versionlock_lock_command }} linuxfabrik-notification-plugins'
-      when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
-
-    # block
-    when:
-      - 'not monitoring_plugins__skip_package_versionlock'
-
-
-  # block
-  when:
-    - 'ansible_facts["os_family"] != "Windows"'
-    - 'monitoring_plugins__linux_variant == "package"'
-  tags:
-    - 'monitoring_plugins'
-
-
-- name: 'Install the Linux Python Variant'
-  ansible.builtin.include_tasks: 'linux-python-variant.yml'
-  when:
-    - 'ansible_facts["os_family"] != "Windows"'
-    - 'monitoring_plugins__linux_variant == "python"'
   tags:
     - 'monitoring_plugins'
 
 
 - block:
 
-  - name: 'Copy the /etc/sudoers.d/monitoring-plugins file to the server (Linux)'
-    ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}.sudoers'
-      dest: '/etc/sudoers.d/monitoring-plugins'
-      mode: 0o640
+  - name: 'Debug:'
+    ansible.builtin.debug:
+      msg:
+        - 'Target OS: {{ ansible_facts["os_family"] }}'
+        - 'monitoring_plugins__install_method: {{ monitoring_plugins__install_method }}'
+        - 'monitoring_plugins__version: {{ monitoring_plugins__version }}'
+        - 'internal_monitoring_plugins_version: {{ internal_monitoring_plugins_version }}'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Make sure sudo is installed (sometimes missing on Debian)'
+    ansible.builtin.package:
+      name: 'sudo'
+      state: 'present'
+  when:
+    - 'ansible_facts["os_family"] != "Windows"'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Linux: Install Linuxfabrik Monitoring Plugins from package (rpm, deb)'
+    ansible.builtin.include_tasks: 'linux-package.yml'
+    when:
+      - 'ansible_facts["os_family"] != "Windows"'
+      - 'monitoring_plugins__install_method == "package"'
+
+  - name: 'Linux: Install Linuxfabrik Monitoring Plugins from source'
+    ansible.builtin.include_tasks: 'linux-source.yml'
+    when:
+      - 'ansible_facts["os_family"] != "Windows"'
+      - 'monitoring_plugins__install_method == "source"'
+
+
+  - name: 'Windows: Install Linuxfabrik Monitoring Plugins from package'
+    ansible.builtin.include_tasks: 'windows-package.yml'
+    when:
+      - 'ansible_facts["os_family"] == "Windows"'
+      - 'monitoring_plugins__install_method == "package"'
+
+  - name: 'Windows: Install Linuxfabrik Monitoring Plugins from archive'
+    ansible.builtin.include_tasks: 'windows-archive.yml'
+    when:
+      - 'ansible_facts["os_family"] == "Windows"'
+      - 'monitoring_plugins__install_method == "archive"'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+# Housekeeping, remove legacy stuff
+- block:
 
   - name: 'Make sure the legacy sudoers file is absent'
     ansible.builtin.file:
@@ -135,52 +129,49 @@
       path: '/tmp/linuxfabrik-plugin-cache.db'
       state: 'absent'
 
-  - name: 'Make sure the database of the check plugin is removed'
-    ansible.builtin.command: 'rm -f --{% for item in monitoring_plugins__plugin_list %} /tmp/{{ item }}.db{% endfor %}'
-    # this is much faster than using the file module and looping over monitoring_plugins__plugin_list
-
-  # block
-  when: 'ansible_facts["os_family"] != "Windows"'
+  when:
+    - 'ansible_facts["os_family"] != "Windows"'
   tags:
     - 'monitoring_plugins'
 
+  # todo: auf windows: programfiles\icinga2.... löschen
 
+
+# Pimp local software
 - block:
 
-  - name: 'mkdir /usr/lib64/nagios/plugins/assets (monitoring.php for php-status)'
-    ansible.builtin.file:
-      path: '/usr/lib64/nagios/plugins/assets'
-      state: 'directory'
-      owner: 'root'
-      group: 'root'
-      mode: 0o755
-
-  - name: 'deploy /usr/lib64/nagios/plugins/assets/monitoring.php (monitoring.php for php-status)'
-    ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/php-status/assets/monitoring.php'
-      dest: '/usr/lib64/nagios/plugins/assets/monitoring.php'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-
-  - name: 'check if /var/www/html/localhost exists (monitoring.php for php-status)'
+  - name: 'Check if /var/www/html/localhost exists (monitoring.php for php-status)'
     ansible.builtin.stat:
       path: '/var/www/html/localhost'
     register: 'monitoring_plugins__stat_var_www_html_localhost_result'
 
-  - name: 'deploy /var/www/html/localhost/monitoring.php (monitoring.php for php-status)'
+  - name: 'Deploy /var/www/html/localhost/monitoring.php (monitoring.php for php-status)'
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/php-status/assets/monitoring.php'
       dest: '/var/www/html/localhost/monitoring.php'
       owner: '{{ monitoring_plugins__webserver_user }}'
       group: '{{ monitoring_plugins__webserver_user }}'
       mode: 0o644
-    when: 'monitoring_plugins__stat_var_www_html_localhost_result["stat"]["exists"]'
+    when:
+      - 'monitoring_plugins__stat_var_www_html_localhost_result["stat"]["exists"]'
+
+
+  - name: 'Check if /usr/share/icingaweb2/public/img/icons exists'
+    ansible.builtin.stat:
+      path: '/usr/share/icingaweb2/public/img/icons'
+    register: 'monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result'
+
+  - name: 'rsync icons to IcingaWeb2'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/icons/'
+      dest: '/usr/share/icingaweb2/public/img/icons'
+      mode: 'push'
+    when:
+      - 'monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]'
 
   # block
   when:
     - 'ansible_facts["os_family"] != "Windows"'
-    - '"php-status" in monitoring_plugins__plugin_list'
   tags:
     - 'monitoring_plugins'
 
@@ -200,13 +191,15 @@
       dest: '/usr/lib64/nagios/plugins/'
       mode: 'preserve'
       backup: true
-    when: 'monitoring_plugins__custom_plugins.stat.exists'
+    when:
+      - 'monitoring_plugins__custom_plugins.stat.exists'
     # use loop for nicer diff
     with_fileglob:
       - '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins/*'
 
   # block
-  when: 'ansible_facts["os_family"] != "Windows"'
+  when:
+    - 'ansible_facts["os_family"] != "Windows"'
   tags:
     - 'monitoring_plugins'
     - 'monitoring_plugins:custom'

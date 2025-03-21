@@ -1,7 +1,7 @@
 monitoring_plugins_grafana_dashboard__influxdb_database_name: '{{ icinga2_master__influxdb_database_name }}'
 monitoring_plugins_grafana_dashboard__influxdb_host: '{{ icinga2_master__influxdb_host }}'
 monitoring_plugins_grafana_dashboards__grafana_url: '{{ grafana__api_url }}'
-monitoring_plugins_grafana_dashboards__repo_version: '{{ lfops__monitoring_plugins_version | default("latest") }}'
+monitoring_plugins_grafana_dashboards__repo_version: '{{ lfops__monitoring_plugins_version | default("stable") }}'
 
 # -----------------------------------------------------------------------------
 

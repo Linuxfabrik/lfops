@@ -45,7 +45,7 @@ monitoring_plugins_grafana_dashboard__influxdb_login:
 | `monitoring_plugins_grafana_dashboard__director_database_name` | The name of the Director SQL database. | `'{{ icingaweb2_module_director__database_name }}'` |
 | `monitoring_plugins_grafana_dashboard__influxdb_database_name` | The name of the InfluxDB database. | `'{{ icinga2_master__influxdb_database_name }}'` |
 | `monitoring_plugins_grafana_dashboard__influxdb_host` | The host of the InfluxDB database. | `'{{ icinga2_master__influxdb_host }}'` |
-| `monitoring_plugins_grafana_dashboards__repo_version` | The version of the monitoring plugins that will be used for the grafana dashboards. Possible options: * `latest`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).<br> * `main`: The development version. Use with care.<br> * A specific release, for example `2022030201`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases). | `'{{ lfops__monitoring_plugins_version \| default("latest") }}'` |
+| `monitoring_plugins_grafana_dashboards__repo_version` | The version of the monitoring plugins that will be used for the grafana dashboards. Possible options: * `stable`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).<br> * `dev`: The development version. Use with care.<br> * A specific release, for example `1.2.0.11`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases). | `'{{ lfops__monitoring_plugins_version \| default("stable") }}'` |
 | `monitoring_plugins_grafana_dashboards__grafana_url` | The URL under which Grafana is reachable | `'{{ grafana__api_url }}'` |
 
 Example:

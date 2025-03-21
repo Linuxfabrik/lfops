@@ -1,0 +1,90 @@
+- block:
+
+  - name: 'Clone and flatten the monitoring-plugins repo'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'clone-monitoring-plugins-repo.yml'
+    vars:
+      shared__monitoring_plugins_repo_version: '{{ internal_monitoring_plugins_version }}'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Install python3-pip'
+    ansible.builtin.package:
+      name: 'python3-pip'  # this also installs python
+      state: 'present'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'rsync requirements.txt to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.monitoring-plugins-repo/requirements.txt'
+      dest: '/tmp'
+      mode: 'push'
+
+  # needed for plugins that run with "sudo"
+  - name: 'Install packages from requirements.txt with require-hashes for root'
+    ansible.builtin.pip:
+      requirements: '/tmp/requirements.txt'
+      extra_args: '--user --require-hashes'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Install packages from requirements.txt with require-hashes for user {{ monitoring_plugins__icinga_user }}'
+    ansible.builtin.pip:
+      requirements: '/tmp/requirements.txt'
+      extra_args: '--user --require-hashes'
+    become: true
+    become_user: '{{ monitoring_plugins__icinga_user }}'
+
+  when:
+    - 'monitoring_plugins__icinga_user is defined'
+    - 'monitoring_plugins__icinga_user | length'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'mkdir -p /usr/lib64/nagios/plugins/{assets,notification-plugins}/'
+    ansible.builtin.file:
+      path: '/usr/lib64/nagios/plugins/{{ item }}/'
+      state: 'directory'
+      mode: 0o755
+    loop:
+      - 'assets'
+      - 'notification-plugins'
+
+  - name: 'rsync flattened check-plugins to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/'
+      dest: '/usr/lib64/nagios/plugins/'
+      mode: 'push'
+
+  - name: 'rsync flattened notification-plugins to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/'
+      dest: '/usr/lib64/nagios/plugins/notification-plugins/'
+      mode: 'push'
+
+  - name: 'Copy the /etc/sudoers.d/monitoring-plugins file to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}.sudoers'
+      dest: '/etc/sudoers.d/monitoring-plugins'
+      mode: 0o640
+
+  tags:
+    - 'monitoring_plugins'

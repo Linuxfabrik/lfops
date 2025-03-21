@@ -1,17 +1,5 @@
 - block:
 
-  - name: 'Clone the monitoring plugins repo'
-    ansible.builtin.import_role:
-      name: 'shared'
-      tasks_from: 'clone-monitoring-plugins-repo.yml'
-    vars:
-      shared__monitoring_plugins_repo_version: '{{ monitoring_plugins_grafana_dashboards__repo_version }}'
-
-  - name: 'Generate list of monitoring plugins'
-    ansible.builtin.import_role:
-      name: 'monitoring_plugins'
-      tasks_from: 'generate-monitoring-plugins-list.yml'
-
   - name: 'mkdir -p /tmp/ansible.monitoring_plugins_grafana_dashboards'
     ansible.builtin.file:
       path: '/tmp/ansible.monitoring_plugins_grafana_dashboards'
