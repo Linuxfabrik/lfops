@@ -59,14 +59,11 @@
 
 - block:
 
-  - name: 'mkdir -p /usr/lib64/nagios/plugins/{assets,notification-plugins}/'
+  - name: 'mkdir -p /usr/lib64/nagios/plugins/notifications/'
     ansible.builtin.file:
-      path: '/usr/lib64/nagios/plugins/{{ item }}/'
+      path: '/usr/lib64/nagios/plugins/notifications/'
       state: 'directory'
       mode: 0o755
-    loop:
-      - 'assets'
-      - 'notification-plugins'
 
   - name: 'rsync flattened check-plugins to remote host'
     ansible.posix.synchronize:
@@ -77,7 +74,7 @@
   - name: 'rsync flattened notification-plugins to remote host'
     ansible.posix.synchronize:
       src: '/tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/'
-      dest: '/usr/lib64/nagios/plugins/notification-plugins/'
+      dest: '/usr/lib64/nagios/plugins/notifications/'
       mode: 'push'
 
   - name: 'Copy the /etc/sudoers.d/monitoring-plugins file to the server'
