@@ -68,6 +68,7 @@
 
   - name: 'Flatten check-plugins locally using shell'
     ansible.builtin.shell: |
+      set -o pipefail
       mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins
       find /tmp/ansible.monitoring-plugins-repo/check-plugins -mindepth 2 -maxdepth 2 -type f | while read file; do
         base=$(basename "$file")
@@ -82,6 +83,7 @@
 
   - name: 'Flatten notification-plugins locally using shell'
     ansible.builtin.shell: |
+      set -o pipefail
       mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins
       find /tmp/ansible.monitoring-plugins-repo/notification-plugins -mindepth 2 -maxdepth 2 -type f | while read file; do
         base=$(basename "$file")
