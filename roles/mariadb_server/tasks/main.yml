@@ -631,6 +631,7 @@
       name: '{{ item["username"] }}'
       host: '{{ item["host"] | default("localhost") }}'
       password: '{{ item["password"] | default(omit) }}'
+      plugin: '{{ item["plugin"] | default(omit) }}'
       tls_requires: '{{ item["tls_requires"] | default(omit) }}'
       priv: '{{ item["priv"] | join("/") if item["priv"] is defined else omit }}'
       state: '{{ item["state"] | default("present") }}'

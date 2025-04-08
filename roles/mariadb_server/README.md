@@ -108,7 +108,8 @@ mariadb_server__dump_user:
 | `mariadb_server__service_timeout_stop_sec` | String. Systemd: First, it configures the time to wait for the ExecStop= command. Second, it configures the time to wait for the MariaDB server itself to stop. If the MariaDB server doesn't terminate in the specified time, it will be forcibly terminated by SIGKILL. | `'15min'` |
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
 | `mariadb_server__state`| Controls the Systemd service. One of<br> * `started`<br> * `stopped`<br> * `reloaded` | `'started'` |
-| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_user`). Subkeys:<br> * `username`: Mandatory, String. Username. <br> * `host`: Mandatory, String. Host. <br> * `password`<br> * `tls_requires`: Note: Make sure to include the CN in the SAN of the certificate.<br> * `priv`<br> * `state`<br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - use `mariadb_server__admin_user` for that). Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`host`: Mandatory, string. Host-part.</li><li>`password`: Optional, string. Password. Defaults to unset.</li><li>`plugin`: Optional, string. Plugin to authenticate the user with. Defaults to unset.</li><li>`tls_requires`: Optional, dict. Specify for client TLS auth. Have a look at the example. Defaults to unset.</li><li>`priv`: Optional, list of dicts. List of privileges for the user. Defaults to unset. Note: Never set to `[]`, the least privileges are `['*.*:USAGE']`.</li><li>`state`: Optional, string. Possible Options: `'present'`, `'absent'`. Defaults to `'present'`. </li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+
 
 Example:
 ```yaml
@@ -152,9 +153,14 @@ mariadb_server__users__host_var:
   - username: 'admin1'
     host: 'localhost'
     tls_requires:
-      subject: '/CN=admin1'
+      subject: '/CN=admin1' # Note: Make sure to include the CN in the SAN of the certificate.
     priv:
       - '*.*:ALL'
+    state: 'present'
+  # user with `unix_socket` auth
+  - username: 'mariadb_admin'
+    host: 'localhost'
+    plugin: 'unix_socket'
     state: 'present'
 ```
 
@@ -425,6 +431,10 @@ A: Install the `python3-PyMySQL` library. This can be done using the [linuxfabri
 Q: I always get `[Warning] Access denied for user 'root'@'localhost'` in mariadb.log when running this role.
 
 A: This is due to `check_implicit_admin: true`. This checks if MariaDB allows login as root/nopassword before trying the supplied credentials. If successful, the login_user/login_password passed will be ignored. This is especially needed for the first run of this role.
+
+Q: I get `IndexError: list index out of range` during "Create, update or delete MariaDB users".
+
+A: Check that the user's `priv` is not set to `[]`. The lowest privileges allowed are `['*.*:USAGE']`.
 
 
 ## License
