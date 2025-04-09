@@ -102,13 +102,14 @@ mariadb_server__dump_user:
 | `mariadb_server__dump_threads` | Integer. For mydumper: The number of threads to use for dumping data. `0` means to use number of CPUs. | `0`|
 | `mariadb_server__enabled`| Enables or disables the Systemd unit. | `true` |
 | `mariadb_server__logrotate` | Integer. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
+| `mariadb_server__roles__group_var` / `mariadb_server__roles__host_var` | List of dictionaries of MariaDB roles. Subkeys: <ul><li>`name`: Mandatory, string. Role name.</li><li>`priv`: Mandatory, list of dicts. List of privileges for the role.</li><li>`state`: Optional, string. Possible Options: `'present'`, `'absent'`. Defaults to `'present'`. </li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `mariadb_server__service_limit_memlock` | Integer. Systemd: LimitMEMLOCK setting. | `524288` |
 | `mariadb_server__service_limit_nofile` | Integer. Systemd: Resource limit directive for the number of file descriptors. | `32768` |
 | `mariadb_server__service_timeout_start_sec` | String. Systemd: Configures the time to wait for start-up. If the MariaDB server does not signal start-up completion within the configured time, the service will be considered failed and will be shut down again. | `'15min'` |
 | `mariadb_server__service_timeout_stop_sec` | String. Systemd: First, it configures the time to wait for the ExecStop= command. Second, it configures the time to wait for the MariaDB server itself to stop. If the MariaDB server doesn't terminate in the specified time, it will be forcibly terminated by SIGKILL. | `'15min'` |
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
 | `mariadb_server__state`| Controls the Systemd service. One of<br> * `started`<br> * `stopped`<br> * `reloaded` | `'started'` |
-| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - use `mariadb_server__admin_user` for that). Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`host`: Mandatory, string. Host-part.</li><li>`password`: Optional, string. Password. Defaults to unset.</li><li>`plugin`: Optional, string. Plugin to authenticate the user with. Defaults to unset.</li><li>`tls_requires`: Optional, dict. Specify for client TLS auth. Have a look at the example. Defaults to unset.</li><li>`priv`: Optional, list of dicts. List of privileges for the user. Defaults to unset. Note: Never set to `[]`, the least privileges are `['*.*:USAGE']`.</li><li>`state`: Optional, string. Possible Options: `'present'`, `'absent'`. Defaults to `'present'`. </li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - use `mariadb_server__admin_user` for that). Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`host`: Optional, string. Host-part. Defaults to `'localhost'`.</li><li>`password`: Optional, string. Password. Defaults to unset.</li><li>`plugin`: Optional, string. Plugin to authenticate the user with. Defaults to unset.</li><li>`tls_requires`: Optional, dict. Specify for client TLS auth. Have a look at the example. Defaults to unset.</li><li>`priv`: Optional, list of dicts. List of privileges for the user. Defaults to unset. Note: Never set to `[]`, the least privileges are `['*.*:USAGE']`.</li><li>`roles`: Optional, list. List of roles. Defaults to `[]`.</li><li>`default_role`: Optional, string. Default role for the user, will be activated upon login. Defaults to unset.</li><li>`state`: Optional, string. Possible Options: `'present'`, `'absent'`. Defaults to `'present'`. </li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 
 
 Example:
@@ -129,6 +130,15 @@ mariadb_server__dump_raw: ''
 mariadb_server__dump_threads: 4
 mariadb_server__enabled: true
 mariadb_server__logrotate: 7
+mariadb_server__roles__host_var:
+  - name: 'dba'
+    priv:
+      - '*.*:ALL'
+    state: 'present'
+  - name: 'read_only'
+    priv:
+      - '*.*:SELECT'
+    state: 'present'
 mariadb_server__service_limit_memlock: 524288
 mariadb_server__service_limit_nofile: 32768
 mariadb_server__service_timeout_start_sec: '15min'
@@ -161,6 +171,14 @@ mariadb_server__users__host_var:
   - username: 'mariadb_admin'
     host: 'localhost'
     plugin: 'unix_socket'
+    state: 'present'
+  # user with roles
+  - username: 'user2'
+    password: 'linuxfabrik'
+    roles:
+      - 'dba'
+      - 'read_only'
+    default_role: 'read_only'
     state: 'present'
 ```
 

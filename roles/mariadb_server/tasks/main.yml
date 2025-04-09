@@ -639,6 +639,53 @@
     loop_control:
       label: '{{ item["username"] }}@{{ item["host"] | default("localhost") }}'
 
+  - name: 'Combined Roles'
+    ansible.builtin.debug:
+      var: 'mariadb_server__roles__combined_var'
+
+  - name: 'Build role to members mapping'
+    ansible.builtin.set_fact:
+      __mariadb_server__roles2members: '{{ __mariadb_server__roles2members | default({}) | combine({ item["name"]: __mariadb_server__members }) }}'
+    vars:
+      __mariadb_server__members: >-
+        {%- set members = [] -%}
+        {%- for user in mariadb_server__users__combined_var -%}
+          {%- if (user['state'] | d('present') != 'absent') and (item['name'] in user['roles']) -%}
+            {%- set _ = members.append(user['username'] ~ '@' ~ user['host'] | default('localhost')) -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {{ members }}
+    loop: '{{ mariadb_server__roles__combined_var }}'
+
+  - name: 'Role to Members mapping'
+    ansible.builtin.debug:
+      var: '__mariadb_server__roles2members'
+
+  - name: 'Create, update or delete MariaDB roles'
+    community.mysql.mysql_role:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
+      name: '{{ item["name"] }}'
+      priv: '{{ (item["priv"] | join("/")) }}'
+      members: '{{ __mariadb_server__roles2members[item["name"]] }}'
+      state: '{{ item["state"] | default("present") }}'
+    loop: '{{ mariadb_server__roles__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'SET DEFAULT ROLE `{{ item["default_role"] }}` FOR `{{ item["username"] }}`@`{{ item["host"] | default("localhost") }}`'
+    community.mysql.mysql_query:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
+      query: 'SET DEFAULT ROLE `{{ item["default_role"] }}` FOR `{{ item["username"] }}`@`{{ item["host"] | default("localhost") }}`'
+    loop: '{{ mariadb_server__users__combined_var }}'
+    loop_control:
+      label: '{{ item["username"] }}@{{ item["host"] | default("localhost") }}'
+    when: 'item["default_role"] is defined and item["default_role"] | length'
+    changed_when: true # too hard to detect right now, so always report a change
+
   tags:
     - 'mariadb_server'
     - 'mariadb_server:user'

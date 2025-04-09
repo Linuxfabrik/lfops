@@ -627,6 +627,18 @@ mariadb_server__datadir_mode__combined_var: '{{
     mariadb_server__datadir_mode__role_var
   }}'
 
+mariadb_server__roles__dependent_var: []
+mariadb_server__roles__group_var: []
+mariadb_server__roles__host_var: []
+mariadb_server__roles__role_var: []
+mariadb_server__roles__combined_var: '{{ (
+      mariadb_server__roles__role_var +
+      mariadb_server__roles__dependent_var +
+      mariadb_server__roles__group_var +
+      mariadb_server__roles__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["name", "host"])
+  }}'
+
 mariadb_server__service_limit_memlock: 524288
 mariadb_server__service_limit_nofile: 32768
 mariadb_server__service_timeout_start_sec: '15min'
