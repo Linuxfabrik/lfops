@@ -37,8 +37,10 @@ automatically after updating your components.
 EOF
 
 {% if ansible_facts['os_family'] == 'RedHat' %}
+{% if not system_update__cache_only | bool %}
 yum clean all 1> /dev/null 2>&1
-yum -y check-update >> /tmp/check-update 2> /tmp/system-update-check-stderr
+{% endif %}
+yum check-update {{ system_update__cache_only | bool | ternary("--cacheonly", "") }} >> /tmp/check-update 2> /tmp/system-update-check-stderr
 retc=$?
 
 if [ "$retc" -eq 100 ]; then
@@ -56,8 +58,10 @@ fi
 
 
 {% if ansible_facts['os_family'] == 'Debian' %}
+{% if not system_update__cache_only | bool %}
 apt clean 1> /dev/null 2>&1
 apt update 1> /dev/null 2>&1
+{% endif %}
 apt list --upgradable >> /tmp/check-update
 
 if [ $(grep upgradable /tmp/check-update | wc -l) -gt 0 ]; then
