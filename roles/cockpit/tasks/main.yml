@@ -1,9 +1,42 @@
 - block:
 
+  - name: 'install cockpit'
+    ansible.builtin.package:
+      name: 'cockpit'
+      state: 'present'
+
+  - name: 'install {{ cockpit__additional_packages }}'
+    ansible.builtin.package:
+      name: '{{ cockpit__additional_packages }}'
+      state: 'present'
+    when: 'cockpit__additional_packages is defined and cockpit__additional_packages | length'
+
+  when: 'cockpit__state == "present"'
+  tags:
+    - 'cockpit'
+
+
+- block:
+
+  - name: 'systemctl {{ cockpit__socket_enabled | bool | ternary("enable", "disable") }} --now cockpit.socket'
+    ansible.builtin.systemd:
+      name: 'cockpit.socket'
+      enabled: '{{ cockpit__socket_enabled }}'
+      state: '{{ cockpit__socket_enabled | bool | ternary("started", "stopped") }}'
+
+  when: 'cockpit__state == "present"'
+  tags:
+    - 'cockpit'
+    - 'cockpit:state'
+
+
+- block:
+
   - name: "dnf -y remove 'cockpit*'"
     ansible.builtin.package:
       name: 'cockpit*'
       state: 'absent'
 
+  when: 'cockpit__state == "absent"'
   tags:
     - 'cockpit'
