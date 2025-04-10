@@ -5,7 +5,7 @@
       name: 'cockpit'
       state: 'present'
 
-  - name: 'install {{ cockpit__additional_packages }}'
+  - name: 'install {{ cockpit__additional_packages | join (" ") }}'
     ansible.builtin.package:
       name: '{{ cockpit__additional_packages }}'
       state: 'present'

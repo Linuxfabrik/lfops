@@ -22,7 +22,7 @@ Example:
 ```yaml
 # optional
 cockpit__additional_packages:
-- 'cockpit-machines' # for KVM administration
+  - 'cockpit-machines' # for KVM administration
 cockpit__socket_enabled: true
 cockpit__state: 'present'
 ```
