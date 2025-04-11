@@ -1,4 +1,5 @@
 monitoring_plugins__icinga2_cn: '{{ ansible_facts["nodename"] }}'
+monitoring_plugins__icinga_user: '{{ __monitoring_plugins__icinga_user }}' # Take OS-dependant default from vars
 monitoring_plugins__install_method: 'package'
 monitoring_plugins__python__modules__dependent_var:
   - name: 'python3-psutil'

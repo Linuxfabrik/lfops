@@ -1,4 +1,4 @@
+__monitoring_plugins__icinga_user: 'nagios'
 monitoring_plugins__versionlock_lock_command: 'apt-mark hold'
-
 monitoring_plugins__versionlock_unlock_command: 'apt-mark unhold'
 monitoring_plugins__webserver_user: 'www-data'

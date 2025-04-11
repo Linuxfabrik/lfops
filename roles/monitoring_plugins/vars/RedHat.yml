@@ -1,3 +1,4 @@
+__monitoring_plugins__icinga_user: 'icinga'
 monitoring_plugins__versionlock_lock_command: 'dnf versionlock add'
 monitoring_plugins__versionlock_package: 'dnf-command(versionlock)'
 monitoring_plugins__versionlock_unlock_command: 'dnf versionlock delete'
