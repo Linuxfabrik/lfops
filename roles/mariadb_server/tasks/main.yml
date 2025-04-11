@@ -650,7 +650,7 @@
       __mariadb_server__members: >-
         {%- set members = [] -%}
         {%- for user in mariadb_server__users__combined_var -%}
-          {%- if (user['state'] | d('present') != 'absent') and (item['name'] in user['roles']) -%}
+          {%- if (user['state'] | d('present') != 'absent') and (item['name'] in user['roles'] | d([])) -%}
             {%- set _ = members.append(user['username'] ~ '@' ~ user['host'] | default('localhost')) -%}
           {%- endif -%}
         {%- endfor -%}
