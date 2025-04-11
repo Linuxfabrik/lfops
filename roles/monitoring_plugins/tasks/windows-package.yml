@@ -2,8 +2,8 @@
 
   - ansible.builtin.include_tasks: 'windows-download.yml'
     vars:
-      file_type: 'packaged'
-      unzip_path: 'C:\Temp'
+      __monitoring_plugins__file_type: 'packaged'
+      __monitoring_plugins__unzip_path: 'C:\Temp'
 
   - name: 'install C:\Temp\linuxfabrik-monitoring-plugins.msi'
     ansible.windows.win_package:

@@ -19,7 +19,7 @@
       #   it will map to "main".
       # * If the user sets a version number like "1.2.0.11", it is set to "v1.2.0.11" if installing
       #   from source (according to GitHub tag), otherwise remains unchanged.
-      internal_monitoring_plugins_version: >-
+      __monitoring_plugins__version: >-
         {{
           {
             'stable': 'latest',
@@ -40,13 +40,13 @@
 
 - block:
 
-  - name: 'Debug:'
+  - name: 'Debug'
     ansible.builtin.debug:
       msg:
         - 'Target OS: {{ ansible_facts["os_family"] }}'
         - 'monitoring_plugins__install_method: {{ monitoring_plugins__install_method }}'
         - 'monitoring_plugins__version: {{ monitoring_plugins__version }}'
-        - 'internal_monitoring_plugins_version: {{ internal_monitoring_plugins_version }}'
+        - '__monitoring_plugins__version: {{ __monitoring_plugins__version }}'
 
   tags:
     - 'monitoring_plugins'
@@ -140,8 +140,8 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/php-status/assets/monitoring.php'
       dest: '/var/www/html/localhost/monitoring.php'
-      owner: '{{ monitoring_plugins__webserver_user }}'
-      group: '{{ monitoring_plugins__webserver_user }}'
+      owner: '{{ __monitoring_plugins__webserver_user }}'
+      group: '{{ __monitoring_plugins__webserver_user }}'
       mode: 0o644
     when:
       - 'monitoring_plugins__stat_var_www_html_localhost_result["stat"]["exists"]'
@@ -149,7 +149,7 @@
   - name: 'Check if /usr/share/icingaweb2/public/img/icons exists'
     ansible.builtin.stat:
       path: '/usr/share/icingaweb2/public/img/icons'
-    register: 'monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result'
+    register: '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result'
 
   - name: 'rsync icons to IcingaWeb2'
     ansible.posix.synchronize:
@@ -157,7 +157,7 @@
       dest: '/usr/share/icingaweb2/public/img/icons'
       mode: 'push'
     when:
-      - 'monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]'
+      - '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]'
 
   # block
   when:
@@ -173,7 +173,7 @@
       path: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
     delegate_to: 'localhost'
     changed_when: false
-    register: 'monitoring_plugins__custom_plugins'
+    register: '__monitoring_plugins__custom_plugins'
 
   - name: 'Copy the custom plugins to /usr/lib64/nagios/plugins'
     ansible.builtin.copy:
@@ -182,7 +182,7 @@
       mode: 'preserve'
       backup: true
     when:
-      - 'monitoring_plugins__custom_plugins.stat.exists'
+      - '__monitoring_plugins__custom_plugins.stat.exists'
     # use loop for nicer diff
     with_fileglob:
       - '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins/*'

@@ -1,6 +1,6 @@
 # Example of an MSI package: https://download.linuxfabrik.ch/monitoring-plugins/lfmp-1.2.0.11-1.signed-packaged.windows.x86_64.zip
 # Example of an ZIP archive: https://download.linuxfabrik.ch/monitoring-plugins/lfmp-1.2.0.11-1.signed-compiled.windows.x86_64.zip
-# Therefore "file_type" is "packaged" or "compiled"
+# Therefore "__monitoring_plugins__file_type" is "packaged" or "compiled"
 
 - block:
 
@@ -10,51 +10,51 @@
       method: 'GET'
       return_content: true
     delegate_to: 'localhost'
-    register: 'github_release'
+    register: '__monitoring_plugins__github_release'
     when:
-      - 'internal_monitoring_plugins_version == "latest"'
+      - '__monitoring_plugins__version == "latest"'
 
-  - name: 'Set download_monitoring_plugins_version from GitHub release'
+  - name: 'Set __monitoring_plugins__download_version from GitHub release'
     ansible.builtin.set_fact:
-      download_monitoring_plugins_version: '{{ github_release.json.tag_name }}'         # user provides "stable"
+      __monitoring_plugins__download_version: '{{ __monitoring_plugins__github_release.json.tag_name }}' # user provides "stable"
     when:
-      - 'internal_monitoring_plugins_version == "latest"'
+      - '__monitoring_plugins__version == "latest"'
 
-  - name: 'Set download_monitoring_plugins_version from GitHub release'
+  - name: 'Set __monitoring_plugins__download_version from GitHub release'
     ansible.builtin.set_fact:
-      download_monitoring_plugins_version: '{{ internal_monitoring_plugins_version }}'  # user provides "1.2.0.11"
+      __monitoring_plugins__download_version: '{{ __monitoring_plugins__version }}' # user provides "1.2.0.11"
     when:
-      - 'internal_monitoring_plugins_version != "latest"'
+      - '__monitoring_plugins__version != "latest"'
 
-  - name: 'Set download_url for zipped MSI package'
+  - name: 'Set __monitoring_plugins__download_url for zipped MSI package'
     ansible.builtin.set_fact:
-      download_url: 'https://download.linuxfabrik.ch/monitoring-plugins/lfmp-{{ download_monitoring_plugins_version | regex_replace("^v", "") }}-1.signed-{{ file_type }}.windows.x86_64.zip'
+      __monitoring_plugins__download_url: 'https://download.linuxfabrik.ch/monitoring-plugins/lfmp-{{ __monitoring_plugins__download_version | regex_replace("^v", "") }}-1.signed-{{ __monitoring_plugins__file_type }}.windows.x86_64.zip'
 
-  - name: 'Debug:'
+  - name: 'Debug'
     ansible.builtin.debug:
       msg:
-        - 'download_monitoring_plugins_version: {{ download_monitoring_plugins_version }}'
-        - 'download_url: {{ download_url }}'
-        - 'file_type: {{ file_type }}'
-        - 'unzip_path: {{ unzip_path }}'
+        - '__monitoring_plugins__download_url: {{ __monitoring_plugins__download_url }}'
+        - '__monitoring_plugins__download_version: {{ __monitoring_plugins__download_version }}'
+        - '__monitoring_plugins__file_type: {{ __monitoring_plugins__file_type }}'
+        - '__monitoring_plugins__unzip_path: {{ __monitoring_plugins__unzip_path }}'
 
-  - name: 'curl {{ download_url }} --output /tmp/ansible.{{ download_url | basename }}'
+  - name: 'curl {{ __monitoring_plugins__download_url }} --output /tmp/ansible.{{ __monitoring_plugins__download_url | basename }}'
     ansible.builtin.get_url:
-      url: '{{ download_url }}'
-      dest: '/tmp/ansible.{{ download_url | basename }}'
+      url: '{{ __monitoring_plugins__download_url }}'
+      dest: '/tmp/ansible.{{ __monitoring_plugins__download_url | basename }}'
     delegate_to: 'localhost'
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'Copy zip file from "/tmp/ansible.{{ download_url | basename }}" to "C:\Temp\{{ download_url | basename }}"'
+  - name: 'Copy zip file from "/tmp/ansible.{{ __monitoring_plugins__download_url | basename }}" to "C:\Temp\{{ __monitoring_plugins__download_url | basename }}"'
     ansible.windows.win_copy:
-      src: '/tmp/ansible.{{ download_url | basename }}'
+      src: '/tmp/ansible.{{ __monitoring_plugins__download_url | basename }}'
       dest: 'C:\Temp\'
 
-  - name: 'unzip C:\Temp\ansible.{{ download_url | basename }} to {{ unzip_path }}'
+  - name: 'unzip C:\Temp\ansible.{{ __monitoring_plugins__download_url | basename }} to {{ __monitoring_plugins__unzip_path }}'
     community.windows.win_unzip:
-      src: 'C:\Temp\ansible.{{ download_url | basename }}'
-      dest: '{{ unzip_path }}'
+      src: 'C:\Temp\ansible.{{ __monitoring_plugins__download_url | basename }}'
+      dest: '{{ __monitoring_plugins__unzip_path }}'
       delete_archive: true
 
   tags:
