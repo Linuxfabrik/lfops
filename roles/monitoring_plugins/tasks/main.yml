@@ -138,8 +138,9 @@
 
   - name: 'Deploy /var/www/html/localhost/monitoring.php (monitoring.php for php-status)'
     ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/php-status/assets/monitoring.php'
+      src: '/usr/lib64/nagios/plugins/assets/monitoring.php'
       dest: '/var/www/html/localhost/monitoring.php'
+      remote_src: true
       owner: '{{ __monitoring_plugins__webserver_user }}'
       group: '{{ __monitoring_plugins__webserver_user }}'
       mode: 0o644
