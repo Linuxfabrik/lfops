@@ -79,11 +79,18 @@
       dest: '/usr/lib64/nagios/plugins/notifications/'
       mode: 'push'
 
+  - name: 'restorecon -Fvr /usr/lib64/nagios/plugins/'
+    ansible.builtin.command: 'restorecon -Fvr /usr/lib64/nagios/plugins/'
+    register: '__monitoring_plugins__restorecon_result'
+    changed_when: '__monitoring_plugins__restorecon_result["stdout"] | length'
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+
   - name: 'Copy the /etc/sudoers.d/monitoring-plugins file to the server'
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}.sudoers'
       dest: '/etc/sudoers.d/monitoring-plugins'
-      mode: 0o640
+      mode: 0o440
 
   tags:
     - 'monitoring_plugins'
