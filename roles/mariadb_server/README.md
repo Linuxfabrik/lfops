@@ -422,6 +422,8 @@ mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0 #  inconsistenc
 | `mariadb_server__cnf_wsrep_provider_options` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_provider_options) | `'gcache.size=300M; gcache.page_size=300M'` |
 | `mariadb_server__cnf_wsrep_slave_threads` | Integer. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_slave_threads). Four slave threads can typically saturate one CPU core. | `'{{ 1 if ansible_facts["processor_nproc"] == 1 else (ansible_facts["processor_nproc"] - 1) * 4 }}'` |
 | `mariadb_server__run_galera_new_cluster` | Boolean. [mariadb.com](https://mariadb.com/kb/en/mariadbd-options/#-wsrep-new-cluster). Do not set in the inventory, use via `--extra-vars`. This bootstraps the Galera cluster. Only set this to `true` during the deployment of the first node, or when recovering / restarting a stopped cluster. | `false` |
+| `mariadb_server__cnf_wsrep_sst_auth` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_sst_auth) | `''` |
+| `mariadb_server__cnf_wsrep_sst_method` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_sst_method). Use `'mariabackup'` to prevent blocking of the donor. | `'rsync'` |
 
 Example:
 ```yaml
@@ -436,6 +438,8 @@ mariadb_server__cnf_wsrep_node_name: 'db10'
 mariadb_server__cnf_wsrep_on: true
 mariadb_server__cnf_wsrep_provider_options: 'gcache.size=300M; gcache.page_size=300M'
 mariadb_server__cnf_wsrep_slave_threads: 4
+mariadb_server__cnf_wsrep_sst_auth: 'sst_user:linuxfabrik'
+mariadb_server__cnf_wsrep_sst_method: 'mariabackup'
 ```
 
 

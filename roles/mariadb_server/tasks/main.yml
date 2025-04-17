@@ -77,11 +77,12 @@
         - 'mariadb-server'
       state: 'present'
 
-  - name: 'Optionally install galera-4 and rsync'
+  - name: 'Optionally install galera-4, rsync and socat'
     ansible.builtin.package:
       name:
         - 'galera-4'
-        - 'rsync'
+        - 'rsync' # required for `wsrep_sst_method='rsync'`
+        - 'socat' # required for `wsrep_sst_method='mariabackup'`
       state: 'present'
     when:
       - 'mariadb_server__cnf_wsrep_on is true'
