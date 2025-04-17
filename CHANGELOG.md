@@ -228,6 +228,9 @@ Role:tar
 
 ### Added
 
+Role:mariadb_server
+* Added `mariadb_server__cnf_wsrep_sst_auth` and `mariadb_server__cnf_wsrep_sst_method` variables
+
 Role:icinga_kubernetes
 * Added
 
