@@ -13,9 +13,9 @@
 
 - block:
 
-  - name: 'Install python3-pip'
+  - name: 'Install {{ monitoring_plugins__pip_package }}'
     ansible.builtin.package:
-      name: 'python3-pip'  # this also installs python
+      name: '{{ monitoring_plugins__pip_package }}'  # this also installs python
       state: 'present'
 
   tags:
@@ -35,6 +35,7 @@
     ansible.builtin.pip:
       requirements: '/tmp/requirements.txt'
       extra_args: '--user --require-hashes'
+      executable: '{{ monitoring_plugins__pip_executable }}'
 
   tags:
     - 'monitoring_plugins'
@@ -46,6 +47,7 @@
     ansible.builtin.pip:
       requirements: '/tmp/requirements.txt'
       extra_args: '--user --require-hashes'
+      executable: '{{ monitoring_plugins__pip_executable }}'
     become: true
     become_user: '{{ monitoring_plugins__icinga_user }}'
 

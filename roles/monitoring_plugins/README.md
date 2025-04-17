@@ -43,6 +43,8 @@ See table above.
 | `monitoring_plugins__icinga2_cn` | String. The common name / host name. Will be used to schedule a downtime for Windows hosts. | `'{{ ansible_facts["nodename"] }}'` |
 | `monitoring_plugins__icinga_user` | String. The user running the Monitoring Plugins. The role installs the pip packages from the requirements.yml for this user. Only relevant if `monitoring_plugins__install_method: 'source'`.  | `'icinga'` on RHEL, `'nagios'` on Debian |
 | `monitoring_plugins__install_method` | String. Which variant of the monitoring plugins should be deployed? Possible options:<ul><li>`package`: Deploy the install package with the compiled checks. This does not require Python on the system.</li><li>`source`: Deploy the plugins as source code. This requires Python to be installed. Currently for Linux only.</li><li>`archive`: Deploy the compiled binaries from a zip file downloaded from [download.linuxfabrik.ch](https://download.linuxfabrik.ch). Currently for Windows only.</li></ul> | `'package'` |
+| `monitoring_plugins__pip_executable` | String. Pip executable for installing Python requirements. | `'pip'` |
+| `monitoring_plugins__pip_package` | String. OS package for Pip | `'python3-pip'` |
 | `monitoring_plugins__skip_notification_plugins__host_var` / `monitoring_plugins__skip_notification_plugins__group_var` | Skips the deployment of the notification-plugins (in addition to the check-plugins). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `true` |
 | `monitoring_plugins__skip_package_versionlock` | By default, the version of the `linuxfabrik-monitoring-plugins` (and `linuxfabrik-notification-plugins`) is locked after installation. Setting this to `true` skips this step (and never unlocks the version pinning again). | `false` |
 | `monitoring_plugins__version` | String. Which version of the monitoring plugins should be deployed? Possible options: <ul><li>`stable`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`dev`: The development version. Use with care.</li><li>A specific release, for example `1.2.0.11`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li></ul> | `'{{ lfops__monitoring_plugins_version \| default("stable") }}'` |
@@ -56,6 +58,8 @@ monitoring_plugins__icinga2_api_user: 'downtime-api-user'
 monitoring_plugins__icinga2_cn: 'windows1.example.com'
 monitoring_plugins__icinga_user: 'icinga'
 monitoring_plugins__install_method: 'source'
+monitoring_plugins__pip_executable: 'pip3.9'
+monitoring_plugins__pip_package: 'python39-pip'
 monitoring_plugins__skip_notification_plugins__host_var: true
 monitoring_plugins__skip_package_versionlock: false
 monitoring_plugins__version: 'stable'
