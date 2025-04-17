@@ -8,7 +8,6 @@
 
 - block:
 
-  # key is the same for RedHat 7 and 8
   - name: 'wget https://www.collaboraoffice.com/repos/CollaboraOnline/{{ repo_collabora__version }}/{{ repo_collabora__baseurl_part }}-{{ repo_collabora__customer_token }}/repodata/repomd.xml.key && rpm --import repomd.xml.key'
     ansible.builtin.rpm_key:
       key: 'https://www.collaboraoffice.com/repos/CollaboraOnline/{{ repo_collabora__version }}/{{ repo_collabora__baseurl_part }}-{{ repo_collabora__customer_token }}/repodata/repomd.xml.key'
@@ -16,7 +15,7 @@
 
   - name: 'deploy /etc/yum.repos.d/Collabora.repo (mirror: {{ repo_collabora__mirror_url | default(default) }})'
     ansible.builtin.template:
-      src: 'etc/yum.repos.d/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-CollaboraOnline.repo.j2'
+      src: 'etc/yum.repos.d/CollaboraOnline.repo.j2'
       dest: '/etc/yum.repos.d/Collabora.repo'
       owner: 'root'
       group: 'root'
