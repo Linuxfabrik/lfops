@@ -211,6 +211,11 @@
 
 - block:
 
+  - name: 'Make sure nftables is installed'
+    ansible.builtin.package:
+      name: 'nftables'
+      state: 'present'
+
   - name: 'Be sure nftables is started, enabled and not masked'
     ansible.builtin.systemd:
       name: 'nftables.service'
