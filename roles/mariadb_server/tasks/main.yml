@@ -239,6 +239,12 @@
       mode: 0o644
     notify: 'mariadb_server: systemctl restart mariadb'
 
+  - name: 'Reset value of wsrep_on'
+    ansible.builtin.set_fact:
+      mariadb_server__cnf_wsrep_on: '{{ mariadb_server__cnf_wsrep_on_original_value }}'
+    when:
+      - 'mariadb_server__run_galera_new_cluster is true'
+
   - name: 'Make sure mariadb can read the SSL cert'
     ansible.builtin.file:
       path: '{{ mariadb_server__cnf_ssl_cert__combined_var }}'
@@ -256,12 +262,6 @@
       mode: 0o600
     when:
       - 'mariadb_server__cnf_ssl_key__combined_var | length'
-
-  - name: 'Reset value of wsrep_on'
-    ansible.builtin.set_fact:
-      mariadb_server__cnf_wsrep_on: '{{ mariadb_server__cnf_wsrep_on_original_value }}'
-    when:
-      - 'mariadb_server__run_galera_new_cluster is true'
 
   - name: 'mkdir -p /etc/systemd/system/mariadb.service.d/'
     ansible.builtin.file:

@@ -46,6 +46,13 @@
     ansible.builtin.service:
       name: 'mariadb.service'
       state: 'started'
+    when:
+      - 'mariadb_server__run_galera_new_cluster is false'
+
+  - name: 'Run galera_new_cluster' # noqa no-changed-when
+    ansible.builtin.command: 'galera_new_cluster'
+    when:
+      - 'mariadb_server__run_galera_new_cluster is true'
 
   when:
     - 'mariadb_server__datadir_result != mariadb_server__cnf_datadir__combined_var'
