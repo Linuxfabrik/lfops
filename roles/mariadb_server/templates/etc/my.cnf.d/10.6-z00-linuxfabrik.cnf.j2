@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025041701
+# 2025042201
 # 10.6
 
 [client]
@@ -34,12 +34,14 @@ collation_server               = {{ mariadb_server__cnf_collation_server__combin
 datadir                        = /var/lib/mysql
 default_storage_engine         = {{ mariadb_server__cnf_default_storage_engine__combined_var }}
 expire_logs_days               = {{ mariadb_server__cnf_expire_logs_days__combined_var }}
+extra_max_connections          = {{ mariadb_server__cnf_extra_max_connections__combined_var }}
+extra_port                     = {{ mariadb_server__cnf_extra_port__combined_var }}
 general_log                    = {{ mariadb_server__cnf_general_log__combined_var }}
 general_log_file               = {{ mariadb_server__cnf_general_log_file__combined_var }}
 innodb_autoinc_lock_mode       = {{ mariadb_server__cnf_innodb_autoinc_lock_mode__combined_var }}
 innodb_buffer_pool_size        = {{ mariadb_server__cnf_innodb_buffer_pool_size__combined_var }}
 innodb_doublewrite             = {{ mariadb_server__cnf_innodb_doublewrite__combined_var }}
-innodb_file_per_table          = {{ mariadb_server__cnf_innodb_file_per_table__combined_var }}
+= {{ mariadb_server__cnf_innodb_file_per_table__combined_var }}
 innodb_flush_log_at_trx_commit = {{ mariadb_server__cnf_innodb_flush_log_at_trx_commit__combined_var }}
 innodb_io_capacity             = {{ mariadb_server__cnf_innodb_io_capacity__combined_var }}
 innodb_log_file_size           = {{ mariadb_server__cnf_innodb_log_file_size__combined_var }}
