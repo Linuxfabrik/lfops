@@ -230,6 +230,7 @@ Role:tar
 
 Role:mariadb_server
 * Added `mariadb_server__cnf_wsrep_sst_auth` and `mariadb_server__cnf_wsrep_sst_method` variables
+* Added `mariadb_server__cnf_extra_max_connections__*_var` and `mariadb_server__cnf_extra_port__*_var` variables
 
 Role:icinga_kubernetes
 * Added
@@ -422,6 +423,11 @@ Role:systemd_update
 
 
 ### Fixed
+
+Role:mariadb_server
+* Fixed handler when bind_address is not localhost
+* Add installation of missing package for mariabackup galera SST
+* Fixed clone-datadir against new galera cluster
 
 Role:influxdb
 * Fix wrong systemd service name, which was preventing influxdb dumps from being scheduled
