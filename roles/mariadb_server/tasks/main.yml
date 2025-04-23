@@ -81,6 +81,7 @@
     ansible.builtin.package:
       name:
         - 'galera-4'
+        - 'mariadb-backup' # required for `wsrep_sst_method='mariabackup'`
         - 'rsync' # required for `wsrep_sst_method='rsync'`
         - 'socat' # required for `wsrep_sst_method='mariabackup'`
       state: 'present'
