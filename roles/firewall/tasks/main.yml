@@ -105,9 +105,12 @@
 
   - name: 'Remove any existing local fwb repo'
     ansible.builtin.file:
-      path: '/tmp/ansible.fwb'
+      path: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
       state: 'absent'
+    changed_when: false # not a config change on the server
+    check_mode: false # run task even if `--check` is specified
     delegate_to: 'localhost'
+    when: 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length'
 
   - name: 'Clone the fwb git repo to localhost'
     ansible.builtin.git:
