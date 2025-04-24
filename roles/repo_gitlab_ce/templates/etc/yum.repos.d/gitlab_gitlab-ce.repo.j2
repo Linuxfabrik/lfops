@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2025042401
 
 [gitlab_gitlab-ce]
 name=gitlab_gitlab-ce
@@ -10,6 +10,7 @@ baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/$releasever/$basearch
 {% endif %}
 gpgkey=https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey
        https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey/gitlab-gitlab-ce-3D645A26AB9FBD22.pub.gpg
+       https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey/gitlab-gitlab-ce-CB947AD886C8E8FD.pub.gpg
 repo_gpgcheck=1
 gpgcheck=1
 enabled=1
@@ -30,6 +31,7 @@ baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/$releasever/SRPMS
 {% endif %}
 gpgkey=https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey
        https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey/gitlab-gitlab-ce-3D645A26AB9FBD22.pub.gpg
+       https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey/gitlab-gitlab-ce-CB947AD886C8E8FD.pub.gpg
 repo_gpgcheck=1
 gpgcheck=1
 enabled=1

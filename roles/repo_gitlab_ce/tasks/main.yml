@@ -1,5 +1,6 @@
 - block:
 
+    # Repo file taken from https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/config_file.repo?os=rocky&dist=9&source=script
   - name: 'deploy the GitLab CE repo (mirror: {{ repo_gitlab_ce__mirror_url }})'
     ansible.builtin.template:
       src: 'etc/yum.repos.d/gitlab_gitlab-ce.repo.j2'
