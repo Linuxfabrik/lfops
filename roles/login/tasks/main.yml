@@ -104,6 +104,7 @@
       exclusive: '{{ item["remove_other_sshd_authorized_keys"] | d(false) }}'
     when: 'item["state"] | d("present") == "present"'
     loop: '{{ login__users__combined_var }}'
+    ignore_errors: '{{ ansible_check_mode }}' # ignore errors such as `Either user must exist or you must provide full path to key file in check mode`
     loop_control:
       label: '{{ item["name"] }}'
 
