@@ -1,0 +1,46 @@
+name: 'Linuxfabrik: Build Execution Environment'
+
+on:
+  workflow_dispatch: # yamllint disable-line rule:empty-values
+
+# modify the default permissions granted to the GITHUB_TOKEN
+permissions:
+  contents: 'read' # to checkout the code
+  packages: 'write' # to push to GitHub Container Registry
+
+jobs:
+  build-ee:
+    runs-on:
+      - 'ubuntu-latest'
+
+    steps:
+      - name: 'git clone https://github.com/Linuxfabrik/THIS-REPO'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Log in to GitHub Container Registry'
+        uses: 'redhat-actions/podman-login@v1'
+        with:
+          registry: 'ghcr.io'
+          username: '${{ github.actor }}'
+          password: '${{ secrets.GITHUB_TOKEN }}'
+
+      - name: 'Install Ansible Builder'
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install ansible-builder
+
+      - name: 'Build Execution Environment'
+        run: |
+          ansible-builder build \
+            --tag 'ghcr.io/${{ github.repository_owner }}/lfops_ee:${{ github.sha }}'
+
+      - name: 'Push to GitHub Container Registry'
+        id: 'push-to-ghcr'
+        uses: 'redhat-actions/push-to-registry@v2'
+        with:
+          registry: 'ghcr.io'
+          image: '${{ github.repository_owner }}/lfops_ee'
+          tags: '${{ github.sha }}'
+
+      - name: 'Show pushed image path'
+        run: 'echo "LFOps Execution Environment published to ${{ steps.push-to-ghcr.outputs.registry-path }}"'
