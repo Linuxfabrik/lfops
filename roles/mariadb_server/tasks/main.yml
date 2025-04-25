@@ -77,7 +77,7 @@
         - 'mariadb-server'
       state: 'present'
 
-  - name: 'Optionally install galera-4, rsync and socat'
+  - name: 'Optionally install galera-4, mariadb-backup, rsync and socat'
     ansible.builtin.package:
       name:
         - 'galera-4'
