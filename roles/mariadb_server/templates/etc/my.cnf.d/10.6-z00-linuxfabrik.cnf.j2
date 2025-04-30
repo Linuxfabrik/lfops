@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025042201
+# 2025043001
 # 10.6
 
 [client]
@@ -41,7 +41,7 @@ general_log_file               = {{ mariadb_server__cnf_general_log_file__combin
 innodb_autoinc_lock_mode       = {{ mariadb_server__cnf_innodb_autoinc_lock_mode__combined_var }}
 innodb_buffer_pool_size        = {{ mariadb_server__cnf_innodb_buffer_pool_size__combined_var }}
 innodb_doublewrite             = {{ mariadb_server__cnf_innodb_doublewrite__combined_var }}
-= {{ mariadb_server__cnf_innodb_file_per_table__combined_var }}
+innodb_file_per_table          = {{ mariadb_server__cnf_innodb_file_per_table__combined_var }}
 innodb_flush_log_at_trx_commit = {{ mariadb_server__cnf_innodb_flush_log_at_trx_commit__combined_var }}
 innodb_io_capacity             = {{ mariadb_server__cnf_innodb_io_capacity__combined_var }}
 innodb_log_file_size           = {{ mariadb_server__cnf_innodb_log_file_size__combined_var }}
