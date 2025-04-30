@@ -1,7 +1,7 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 2025030701 -->
+    <!-- 2025043001 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -272,16 +272,12 @@
     <storage desc="Backend storage">
         <filesystem allow="false" />
         <wopi desc="Allow/deny wopi storage." allow="true">
-            {% for item in collabora__coolwsd_storage_wopi__combined_var if item['state'] | d('present') != 'absent' %}
-            <host desc="Regex pattern of hostname to allow or deny." allow="true">{{ item['name'] }}</host>
-            {% endfor %}
-            <host desc="Regex pattern of hostname to allow or deny." allow="true">localhost</host>
             <max_file_size desc="Maximum document size in bytes to load. 0 for unlimited." type="uint">0</max_file_size>
             <locking desc="Locking settings">
                 <refresh desc="How frequently we should re-acquire a lock with the storage server, in seconds (default 15 mins) or 0 for no refresh" type="int" default="900">900</refresh>
             </locking>
 
-            <alias_groups desc="default mode is 'first' it allows only the first host when groups are not defined. set mode to 'groups' and define group to allow multiple host and its aliases" mode="first">
+            <alias_groups desc="default mode is 'first' it allows only the first host when groups are not defined. set mode to 'groups' and define group to allow multiple host and its aliases" mode="groups">
             <!-- If you need to use multiple wopi hosts, please change the mode to "groups" and
                     add the hosts below.  If one host is accessible under multiple ip addresses
                     or names, add them as aliases. -->
@@ -292,6 +288,14 @@
 
             </group>-->
             <!-- More "group"s possible here -->
+            {% for item in collabora__coolwsd_storage_wopi__combined_var if item['state'] | d('present') != 'absent' %}
+            <group>
+                <host desc="Regex pattern of hostname to allow or deny." allow="true">{{ item['name'] }}</host>
+            </group>
+            {% endfor %}
+            <group>
+                <host desc="Regex pattern of hostname to allow or deny." allow="true">localhost</host>
+            </group>
             </alias_groups>
 
             <is_legacy_server desc="Set to true for legacy server that need deprecated headers." type="bool" default="false">false</is_legacy_server>
