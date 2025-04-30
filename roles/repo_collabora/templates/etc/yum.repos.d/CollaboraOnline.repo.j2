@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2025041701
+# 2025043001
 
 [CollaboraOnline_{{ repo_collabora__version }}_customer]
 name = Collabora Office Customer repo
 {% if repo_collabora__mirror_url is defined and repo_collabora__mirror_url|length %}
-baseurl={{ repo_collabora__mirror_url }}/CollaboraOnline/{{ repo_collabora__version }}/{{ repo_collabora__baseurl_part }}-{{ repo_collabora__customer_token }}
+baseurl={{ repo_collabora__mirror_url }}/CollaboraOnline/{{ repo_collabora__version }}/customer-rpm-{{ repo_collabora__customer_token }}
 {% else %}
-baseurl=https://www.collaboraoffice.com/repos/CollaboraOnline/{{ repo_collabora__version }}/{{ repo_collabora__baseurl_part }}-{{ repo_collabora__customer_token }}
+baseurl=https://www.collaboraoffice.com/repos/CollaboraOnline/{{ repo_collabora__version }}/customer-rpm-{{ repo_collabora__customer_token }}
 {% endif %}
 enabled=1
 {% if repo_collabora__basic_auth_login is defined and repo_collabora__basic_auth_login | length %}

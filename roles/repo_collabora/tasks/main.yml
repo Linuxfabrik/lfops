@@ -1,16 +1,8 @@
-- name: 'Set platform/version specific variables'
-  ansible.builtin.import_role:
-    name: 'shared'
-    tasks_from: 'platform-variables.yml'
-  tags:
-    - 'repo_collabora'
-
-
 - block:
 
-  - name: 'wget https://www.collaboraoffice.com/repos/CollaboraOnline/{{ repo_collabora__version }}/{{ repo_collabora__baseurl_part }}-{{ repo_collabora__customer_token }}/repodata/repomd.xml.key && rpm --import repomd.xml.key'
+  - name: 'wget https://www.collaboraoffice.com/repos/CollaboraOnline/{{ repo_collabora__version }}/customer-rpm-{{ repo_collabora__customer_token }}/repodata/repomd.xml.key && rpm --import repomd.xml.key'
     ansible.builtin.rpm_key:
-      key: 'https://www.collaboraoffice.com/repos/CollaboraOnline/{{ repo_collabora__version }}/{{ repo_collabora__baseurl_part }}-{{ repo_collabora__customer_token }}/repodata/repomd.xml.key'
+      key: 'https://www.collaboraoffice.com/repos/CollaboraOnline/{{ repo_collabora__version }}/customer-rpm-{{ repo_collabora__customer_token }}/repodata/repomd.xml.key'
       state: 'present'
 
   - name: 'deploy /etc/yum.repos.d/Collabora.repo (mirror: {{ repo_collabora__mirror_url | default(default) }})'
