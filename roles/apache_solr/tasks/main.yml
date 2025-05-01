@@ -110,7 +110,7 @@
 
   - name: 'chmod -R 0755 {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}/bin'
     ansible.builtin.file:
-      mode: 0o0755
+      mode: 0o755
       path: '{{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}/bin'
       recurse: true
       state: 'directory'
