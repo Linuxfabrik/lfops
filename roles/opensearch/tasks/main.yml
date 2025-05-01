@@ -208,7 +208,7 @@
   - name: 'chmod +x /tmp/opensearch-certs/tools/sgtlstool.sh'
     ansible.builtin.file:
       path: '/tmp/opensearch-certs/tools/sgtlstool.sh'
-      mode: 0o0755
+      mode: 0o755
 
   - name: 'Deploy /tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml'
     ansible.builtin.template:
