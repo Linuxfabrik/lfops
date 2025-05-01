@@ -13,6 +13,13 @@ Note: Always add new entries to the top of the section, even if this results in 
 ### Breaking Changes
 
 Role:monitoring_plugins:
+* Removed variables:
+
+    * monitoring_plugins__pip_executable
+    * monitoring_plugins__pip_package
+    * monitoring_plugins__python__modules
+    * monitoring_plugins__windows_variant
+
 * Content of `lfops__monitoring_plugins_version` changes to `dev` or `stable`
 * Renamed `monitoring_plugins__linux_variant` to `monitoring_plugins__install_method`:
 

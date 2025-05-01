@@ -7,22 +7,10 @@
     vars:
       shared__monitoring_plugins_repo_version: '{{ __monitoring_plugins__version }}'
 
-  tags:
-    - 'monitoring_plugins'
-
-
-- block:
-
-  - name: 'Install {{ monitoring_plugins__pip_package }}'
+  - name: 'Make sure rsync is installed'
     ansible.builtin.package:
-      name: '{{ monitoring_plugins__pip_package }}'  # this also installs python
+      name: 'rsync'
       state: 'present'
-
-  tags:
-    - 'monitoring_plugins'
-
-
-- block:
 
   - name: 'rsync requirements.txt to remote host'
     ansible.posix.synchronize:
@@ -30,12 +18,18 @@
       dest: '/tmp'
       mode: 'push'
 
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
   # needed for plugins that run with "sudo"
-  - name: 'Install packages from requirements.txt with require-hashes for root'
+  - name: '`pip3 install --requirement=/tmp/requirements.txt --user --require-hashes` for user root'
     ansible.builtin.pip:
       requirements: '/tmp/requirements.txt'
       extra_args: '--user --require-hashes'
-      executable: '{{ monitoring_plugins__pip_executable }}'
+      executable: 'pip3'
 
   tags:
     - 'monitoring_plugins'
@@ -43,17 +37,26 @@
 
 - block:
 
-  - name: 'Install packages from requirements.txt with require-hashes for user {{ monitoring_plugins__icinga_user }}'
+  - name: 'Check if user {{ monitoring_plugins__icinga_user }} exists'
+    ansible.builtin.getent:
+      database: 'passwd'
+      key: "{{ monitoring_plugins__icinga_user }}"
+    register: 'icinga_user_check'
+    changed_when: false
+    failed_when: false
+
+  - name: '`pip3 install --requirement=/tmp/requirements.txt --user --require-hashes` for user {{ monitoring_plugins__icinga_user }}'
     ansible.builtin.pip:
       requirements: '/tmp/requirements.txt'
       extra_args: '--user --require-hashes'
-      executable: '{{ monitoring_plugins__pip_executable }}'
+      executable: 'pip3'
     become: true
     become_user: '{{ monitoring_plugins__icinga_user }}'
-
-  when:
-    - 'monitoring_plugins__icinga_user is defined'
-    - 'monitoring_plugins__icinga_user | length'
+    when:
+      - 'icinga_user_check is defined'
+      - 'icinga_user_check.getent is defined'
+      - 'icinga_user_check.getent.passwd is defined'
+      - 'icinga_user_check.getent.passwd[monitoring_plugins__icinga_user] is defined'
 
   tags:
     - 'monitoring_plugins'
@@ -82,7 +85,8 @@
   - name: 'restorecon -Fvr /usr/lib64/nagios/plugins/'
     ansible.builtin.command: 'restorecon -Fvr /usr/lib64/nagios/plugins/'
     register: '__monitoring_plugins__restorecon_result'
-    changed_when: '__monitoring_plugins__restorecon_result["stdout"] | length'
+    changed_when:
+      - '__monitoring_plugins__restorecon_result["stdout"] | length'
     when:
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 

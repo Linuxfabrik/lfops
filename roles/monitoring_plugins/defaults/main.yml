@@ -1,12 +1,7 @@
 monitoring_plugins__icinga2_cn: '{{ ansible_facts["nodename"] }}'
 monitoring_plugins__icinga_user: '{{ __monitoring_plugins__icinga_user }}' # Take OS-dependant default from vars
 monitoring_plugins__install_method: 'package'
-monitoring_plugins__pip_executable: 'pip'
-monitoring_plugins__pip_package: 'python3-pip'
-monitoring_plugins__python__modules__dependent_var:
-  - name: 'python3-psutil'
 monitoring_plugins__version: '{{ lfops__monitoring_plugins_version | default("stable") }}'
-monitoring_plugins__windows_variant: 'nuitka'
 
 
 monitoring_plugins__skip_notification_plugins__combined_var: '{{

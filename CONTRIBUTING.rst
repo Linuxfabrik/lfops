@@ -735,6 +735,9 @@ Roles with special technical implementations and capabilities:
 * | `mongodb <https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb>`_
   | The role implements a ``skip`` state that completely ignores the entry.
 
+* | `monitoring_plugins <https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins>`_
+  | Implements install & maintenance as well as uninstall/remove on Linux and Windows.
+
 * | `moodle <https://github.com/Linuxfabrik/lfops/tree/main/roles/moodle>`_
   | Searches for the latest and most recent specific LTS version of itself on GitHub.
 

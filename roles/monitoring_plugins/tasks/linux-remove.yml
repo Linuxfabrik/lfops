@@ -1,0 +1,443 @@
+- block:
+
+  - name: 'Gather service facts'
+    ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+  - name: 'systemctl stop icinga2.service'
+    ansible.builtin.service:
+      name: 'icinga2.service'
+      state: 'stopped'
+    when:
+      - '"icinga2.service" in ansible_facts.services'
+
+  - name: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins'
+    ansible.builtin.command: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins'
+
+  - name: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins'
+    ansible.builtin.command: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins'
+    when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
+
+  - name: 'Remove linuxfabrik-monitoring-plugins'
+    ansible.builtin.package:
+      name:
+        - 'linuxfabrik-monitoring-plugins*'
+      state: 'absent' # to save disk space
+
+  - name: 'Remove linuxfabrik-notification-plugins'
+    ansible.builtin.package:
+      name:
+        - 'linuxfabrik-notification-plugins*'
+      state: 'absent' # to save disk space
+    when:
+      - 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
+
+  - name: 'Create cleanup script'
+    ansible.builtin.copy:
+      content: |
+        #!/bin/bash
+        set -e
+        rm -rf \
+          /usr/lib64/nagios/plugins/.mypy_cache \
+          /usr/lib64/nagios/plugins/_blake2.so \
+          /usr/lib64/nagios/plugins/_bz2.so \
+          /usr/lib64/nagios/plugins/_cffi_backend.so \
+          /usr/lib64/nagios/plugins/_codecs_cn.so \
+          /usr/lib64/nagios/plugins/_codecs_hk.so \
+          /usr/lib64/nagios/plugins/_codecs_iso2022.so \
+          /usr/lib64/nagios/plugins/_codecs_jp.so \
+          /usr/lib64/nagios/plugins/_codecs_kr.so \
+          /usr/lib64/nagios/plugins/_codecs_tw.so \
+          /usr/lib64/nagios/plugins/_contextvars.so \
+          /usr/lib64/nagios/plugins/_csv.so \
+          /usr/lib64/nagios/plugins/_ctypes.so \
+          /usr/lib64/nagios/plugins/_curses.so \
+          /usr/lib64/nagios/plugins/_datetime.so \
+          /usr/lib64/nagios/plugins/_decimal.so \
+          /usr/lib64/nagios/plugins/_elementtree.so \
+          /usr/lib64/nagios/plugins/_hashlib.so \
+          /usr/lib64/nagios/plugins/_heapq.so \
+          /usr/lib64/nagios/plugins/_internal \
+          /usr/lib64/nagios/plugins/_lzma.so \
+          /usr/lib64/nagios/plugins/_multibytecodec.so \
+          /usr/lib64/nagios/plugins/_multiprocessing.so \
+          /usr/lib64/nagios/plugins/_opcode.so \
+          /usr/lib64/nagios/plugins/_pickle.so \
+          /usr/lib64/nagios/plugins/_posixshmem.so \
+          /usr/lib64/nagios/plugins/_posixsubprocess.so \
+          /usr/lib64/nagios/plugins/_queue.so \
+          /usr/lib64/nagios/plugins/_random.so \
+          /usr/lib64/nagios/plugins/_socket.so \
+          /usr/lib64/nagios/plugins/_sqlite3.so \
+          /usr/lib64/nagios/plugins/_ssl.so \
+          /usr/lib64/nagios/plugins/_statistics.so \
+          /usr/lib64/nagios/plugins/_struct.so \
+          /usr/lib64/nagios/plugins/_uuid.so \
+          /usr/lib64/nagios/plugins/_zoneinfo.so \
+          /usr/lib64/nagios/plugins/about-me \
+          /usr/lib64/nagios/plugins/apache-httpd-status \
+          /usr/lib64/nagios/plugins/apache-httpd-version \
+          /usr/lib64/nagios/plugins/apache-solr-version \
+          /usr/lib64/nagios/plugins/array.so \
+          /usr/lib64/nagios/plugins/assets \
+          /usr/lib64/nagios/plugins/atlassian-confluence-version \
+          /usr/lib64/nagios/plugins/atlassian-jira-version \
+          /usr/lib64/nagios/plugins/axenita-stats \
+          /usr/lib64/nagios/plugins/binascii.so \
+          /usr/lib64/nagios/plugins/borgbackup \
+          /usr/lib64/nagios/plugins/by-ssh \
+          /usr/lib64/nagios/plugins/certifi \
+          /usr/lib64/nagios/plugins/charset_normalizer \
+          /usr/lib64/nagios/plugins/check_disk \
+          /usr/lib64/nagios/plugins/check_dns \
+          /usr/lib64/nagios/plugins/check_lf_about_me \
+          /usr/lib64/nagios/plugins/check_lf_smartctl \
+          /usr/lib64/nagios/plugins/check_load \
+          /usr/lib64/nagios/plugins/check_mysql \
+          /usr/lib64/nagios/plugins/check_mysql_query \
+          /usr/lib64/nagios/plugins/check_nscp_api \
+          /usr/lib64/nagios/plugins/check_ping \
+          /usr/lib64/nagios/plugins/check_selinux_status \
+          /usr/lib64/nagios/plugins/check_service \
+          /usr/lib64/nagios/plugins/check_swap \
+          /usr/lib64/nagios/plugins/check_uptime \
+          /usr/lib64/nagios/plugins/cloudflare-security-level \
+          /usr/lib64/nagios/plugins/cometsystem \
+          /usr/lib64/nagios/plugins/composer-version \
+          /usr/lib64/nagios/plugins/countdown \
+          /usr/lib64/nagios/plugins/cpu-usage \
+          /usr/lib64/nagios/plugins/crypto-policy \
+          /usr/lib64/nagios/plugins/cryptography-* \
+          /usr/lib64/nagios/plugins/csv-values \
+          /usr/lib64/nagios/plugins/deb-lastactivity \
+          /usr/lib64/nagios/plugins/debtcollector-* \
+          /usr/lib64/nagios/plugins/dhcp-relayed \
+          /usr/lib64/nagios/plugins/dhcp-scope-usage \
+          /usr/lib64/nagios/plugins/diacos \
+          /usr/lib64/nagios/plugins/disk \
+          /usr/lib64/nagios/plugins/disk-io \
+          /usr/lib64/nagios/plugins/disk-smart \
+          /usr/lib64/nagios/plugins/disk-usage \
+          /usr/lib64/nagios/plugins/dmesg \
+          /usr/lib64/nagios/plugins/dns \
+          /usr/lib64/nagios/plugins/docker-container \
+          /usr/lib64/nagios/plugins/docker-info \
+          /usr/lib64/nagios/plugins/docker-stats \
+          /usr/lib64/nagios/plugins/dummy \
+          /usr/lib64/nagios/plugins/eventhandlers \
+          /usr/lib64/nagios/plugins/example \
+          /usr/lib64/nagios/plugins/fah-stats \
+          /usr/lib64/nagios/plugins/fail2ban \
+          /usr/lib64/nagios/plugins/fcntl.so \
+          /usr/lib64/nagios/plugins/fedora-version \
+          /usr/lib64/nagios/plugins/feed \
+          /usr/lib64/nagios/plugins/file-age \
+          /usr/lib64/nagios/plugins/file-count \
+          /usr/lib64/nagios/plugins/file-descriptors \
+          /usr/lib64/nagios/plugins/file-ownership \
+          /usr/lib64/nagios/plugins/file-size \
+          /usr/lib64/nagios/plugins/fortios-cpu-usage \
+          /usr/lib64/nagios/plugins/fortios-firewall-stats \
+          /usr/lib64/nagios/plugins/fortios-ha-stats \
+          /usr/lib64/nagios/plugins/fortios-memory-usage \
+          /usr/lib64/nagios/plugins/fortios-network-io \
+          /usr/lib64/nagios/plugins/fortios-sensor \
+          /usr/lib64/nagios/plugins/fortios-version \
+          /usr/lib64/nagios/plugins/fs-file-usage \
+          /usr/lib64/nagios/plugins/fs-inodes \
+          /usr/lib64/nagios/plugins/fs-ro \
+          /usr/lib64/nagios/plugins/fs-xfs-stats \
+          /usr/lib64/nagios/plugins/getent \
+          /usr/lib64/nagios/plugins/githubstatus \
+          /usr/lib64/nagios/plugins/gitlab-health \
+          /usr/lib64/nagios/plugins/gitlab-liveness \
+          /usr/lib64/nagios/plugins/gitlab-readiness \
+          /usr/lib64/nagios/plugins/gitlab-version \
+          /usr/lib64/nagios/plugins/grafana-version \
+          /usr/lib64/nagios/plugins/grassfish-licenses \
+          /usr/lib64/nagios/plugins/grassfish-players \
+          /usr/lib64/nagios/plugins/grassfish-screens \
+          /usr/lib64/nagios/plugins/graylog-version \
+          /usr/lib64/nagios/plugins/grp.so \
+          /usr/lib64/nagios/plugins/haproxy-status \
+          /usr/lib64/nagios/plugins/hin-status \
+          /usr/lib64/nagios/plugins/hostname-fqdn \
+          /usr/lib64/nagios/plugins/huawei-dorado-backup-power \
+          /usr/lib64/nagios/plugins/huawei-dorado-controller \
+          /usr/lib64/nagios/plugins/huawei-dorado-disk \
+          /usr/lib64/nagios/plugins/huawei-dorado-enclosure \
+          /usr/lib64/nagios/plugins/huawei-dorado-fan \
+          /usr/lib64/nagios/plugins/huawei-dorado-host \
+          /usr/lib64/nagios/plugins/huawei-dorado-hypermetrodomain \
+          /usr/lib64/nagios/plugins/huawei-dorado-hypermetropair \
+          /usr/lib64/nagios/plugins/huawei-dorado-interface \
+          /usr/lib64/nagios/plugins/huawei-dorado-power \
+          /usr/lib64/nagios/plugins/huawei-dorado-system \
+          /usr/lib64/nagios/plugins/icinga-topflap-services \
+          /usr/lib64/nagios/plugins/icingaweb2-module-grafana \
+          /usr/lib64/nagios/plugins/icons \
+          /usr/lib64/nagios/plugins/influx-inspect \
+          /usr/lib64/nagios/plugins/infomaniak-events \
+          /usr/lib64/nagios/plugins/infomaniak-swiss-backup-devices \
+          /usr/lib64/nagios/plugins/infomaniak-swiss-backup-products \
+          /usr/lib64/nagios/plugins/ipmi-sel \
+          /usr/lib64/nagios/plugins/ipmi-sensor \
+          /usr/lib64/nagios/plugins/jaraco \
+          /usr/lib64/nagios/plugins/jitsi-videobridge-stats \
+          /usr/lib64/nagios/plugins/jitsi-videobridge-status \
+          /usr/lib64/nagios/plugins/journald-query \
+          /usr/lib64/nagios/plugins/journald-usage \
+          /usr/lib64/nagios/plugins/json \
+          /usr/lib64/nagios/plugins/json-values \
+          /usr/lib64/nagios/plugins/kemp-services \
+          /usr/lib64/nagios/plugins/keycloak-memory-usage \
+          /usr/lib64/nagios/plugins/keycloak-stats \
+          /usr/lib64/nagios/plugins/keycloak-version \
+          /usr/lib64/nagios/plugins/kubectl-get-pods \
+          /usr/lib64/nagios/plugins/kvm-vm \
+          /usr/lib64/nagios/plugins/lib \
+          /usr/lib64/nagios/plugins/lib-dynload \
+          /usr/lib64/nagios/plugins/lib2to3 \
+          /usr/lib64/nagios/plugins/libbz2.so.* \
+          /usr/lib64/nagios/plugins/libcrypto.so.* \
+          /usr/lib64/nagios/plugins/libexpat.so.* \
+          /usr/lib64/nagios/plugins/libffi.so.* \
+          /usr/lib64/nagios/plugins/libgcc_s.so.* \
+          /usr/lib64/nagios/plugins/liblzma.so.* \
+          /usr/lib64/nagios/plugins/libmpdec.so.* \
+          /usr/lib64/nagios/plugins/libncursesw.so.* \
+          /usr/lib64/nagios/plugins/libpython3.12.so.* \
+          /usr/lib64/nagios/plugins/libpython3.9.so.* \
+          /usr/lib64/nagios/plugins/libreadline.so.* \
+          /usr/lib64/nagios/plugins/librenms-alerts \
+          /usr/lib64/nagios/plugins/librenms-health \
+          /usr/lib64/nagios/plugins/librenms-version \
+          /usr/lib64/nagios/plugins/libsqlite3.so.* \
+          /usr/lib64/nagios/plugins/libssl.so.* \
+          /usr/lib64/nagios/plugins/libtinfo.so.* \
+          /usr/lib64/nagios/plugins/libuuid.so.* \
+          /usr/lib64/nagios/plugins/linuxfabrik-monitoring-plugins.pp \
+          /usr/lib64/nagios/plugins/load \
+          /usr/lib64/nagios/plugins/logfile \
+          /usr/lib64/nagios/plugins/lxml \
+          /usr/lib64/nagios/plugins/mailq \
+          /usr/lib64/nagios/plugins/markupsafe \
+          /usr/lib64/nagios/plugins/mastodon-version \
+          /usr/lib64/nagios/plugins/math.so \
+          /usr/lib64/nagios/plugins/matomo-reporting \
+          /usr/lib64/nagios/plugins/matomo-version \
+          /usr/lib64/nagios/plugins/mediawiki-version \
+          /usr/lib64/nagios/plugins/memory \
+          /usr/lib64/nagios/plugins/memory-usage \
+          /usr/lib64/nagios/plugins/metabase-stats \
+          /usr/lib64/nagios/plugins/mmap.so \
+          /usr/lib64/nagios/plugins/mod-qos-stats \
+          /usr/lib64/nagios/plugins/monitoring.php \
+          /usr/lib64/nagios/plugins/moodle-version \
+          /usr/lib64/nagios/plugins/mydumper-version \
+          /usr/lib64/nagios/plugins/mysql-aria \
+          /usr/lib64/nagios/plugins/mysql-binlog-cache \
+          /usr/lib64/nagios/plugins/mysql-connections \
+          /usr/lib64/nagios/plugins/mysql-database-metrics \
+          /usr/lib64/nagios/plugins/mysql-innodb-buffer-pool-instances \
+          /usr/lib64/nagios/plugins/mysql-innodb-buffer-pool-size \
+          /usr/lib64/nagios/plugins/mysql-innodb-log-waits \
+          /usr/lib64/nagios/plugins/mysql-joins \
+          /usr/lib64/nagios/plugins/mysql-logfile \
+          /usr/lib64/nagios/plugins/mysql-memory \
+          /usr/lib64/nagios/plugins/mysql-open-files \
+          /usr/lib64/nagios/plugins/mysql-perf-metrics \
+          /usr/lib64/nagios/plugins/mysql-query \
+          /usr/lib64/nagios/plugins/mysql-replica-status \
+          /usr/lib64/nagios/plugins/mysql-slow-queries \
+          /usr/lib64/nagios/plugins/mysql-sorts \
+          /usr/lib64/nagios/plugins/mysql-stats \
+          /usr/lib64/nagios/plugins/mysql-storage-engines \
+          /usr/lib64/nagios/plugins/mysql-system \
+          /usr/lib64/nagios/plugins/mysql-table-cache \
+          /usr/lib64/nagios/plugins/mysql-table-definition-cache \
+          /usr/lib64/nagios/plugins/mysql-table-indexes \
+          /usr/lib64/nagios/plugins/mysql-table-locks \
+          /usr/lib64/nagios/plugins/mysql-temp-tables \
+          /usr/lib64/nagios/plugins/mysql-thread-cache \
+          /usr/lib64/nagios/plugins/mysql-traffic \
+          /usr/lib64/nagios/plugins/mysql-user-security \
+          /usr/lib64/nagios/plugins/mysql-version \
+          /usr/lib64/nagios/plugins/needs-restarting \
+          /usr/lib64/nagios/plugins/negate \
+          /usr/lib64/nagios/plugins/netifaces.so \
+          /usr/lib64/nagios/plugins/network-bonding \
+          /usr/lib64/nagios/plugins/network-connections \
+          /usr/lib64/nagios/plugins/network-io \
+          /usr/lib64/nagios/plugins/network-port-tcp \
+          /usr/lib64/nagios/plugins/nextcloud-security-scan \
+          /usr/lib64/nagios/plugins/nextcloud-stats \
+          /usr/lib64/nagios/plugins/nextcloud-version \
+          /usr/lib64/nagios/plugins/nginx-status \
+          /usr/lib64/nagios/plugins/nodebb-cache \
+          /usr/lib64/nagios/plugins/nodebb-database \
+          /usr/lib64/nagios/plugins/nodebb-errors \
+          /usr/lib64/nagios/plugins/nodebb-events \
+          /usr/lib64/nagios/plugins/nodebb-groups \
+          /usr/lib64/nagios/plugins/nodebb-info \
+          /usr/lib64/nagios/plugins/nodebb-stats \
+          /usr/lib64/nagios/plugins/nodebb-status \
+          /usr/lib64/nagios/plugins/nodebb-users \
+          /usr/lib64/nagios/plugins/nodebb-version \
+          /usr/lib64/nagios/plugins/notifications \
+          /usr/lib64/nagios/plugins/notify-host \
+          /usr/lib64/nagios/plugins/notify-host-mail \
+          /usr/lib64/nagios/plugins/notify-host-rocketchat-telegram \
+          /usr/lib64/nagios/plugins/notify-host-zoom \
+          /usr/lib64/nagios/plugins/notify-service \
+          /usr/lib64/nagios/plugins/notify-service-mail \
+          /usr/lib64/nagios/plugins/notify-service-rocketchat-telegram \
+          /usr/lib64/nagios/plugins/notify-service-zoom \
+          /usr/lib64/nagios/plugins/ntp-chronyd \
+          /usr/lib64/nagios/plugins/ntp-ntpd \
+          /usr/lib64/nagios/plugins/ntp-offset \
+          /usr/lib64/nagios/plugins/ntp-systemd-timesyncd \
+          /usr/lib64/nagios/plugins/ntp-w32tm \
+          /usr/lib64/nagios/plugins/onlyoffice-stats \
+          /usr/lib64/nagios/plugins/openjdk-redhat-version \
+          /usr/lib64/nagios/plugins/openstack-nova-list \
+          /usr/lib64/nagios/plugins/openstack-swift-stat \
+          /usr/lib64/nagios/plugins/openvpn-client-list \
+          /usr/lib64/nagios/plugins/openvpn-version \
+          /usr/lib64/nagios/plugins/ownership \
+          /usr/lib64/nagios/plugins/path-rw-test \
+          /usr/lib64/nagios/plugins/php-fpm-ping \
+          /usr/lib64/nagios/plugins/php-fpm-status \
+          /usr/lib64/nagios/plugins/php-status \
+          /usr/lib64/nagios/plugins/php-version \
+          /usr/lib64/nagios/plugins/ping \
+          /usr/lib64/nagios/plugins/pip-updates \
+          /usr/lib64/nagios/plugins/pip-version \
+          /usr/lib64/nagios/plugins/postfix-version \
+          /usr/lib64/nagios/plugins/postgresql-version \
+          /usr/lib64/nagios/plugins/procs \
+          /usr/lib64/nagios/plugins/psutil \
+          /usr/lib64/nagios/plugins/pyexpat.so \
+          /usr/lib64/nagios/plugins/python-version \
+          /usr/lib64/nagios/plugins/python_swiftclient-* \
+          /usr/lib64/nagios/plugins/pytz \
+          /usr/lib64/nagios/plugins/qts-cpu-usage \
+          /usr/lib64/nagios/plugins/qts-disk-smart \
+          /usr/lib64/nagios/plugins/qts-memory-usage \
+          /usr/lib64/nagios/plugins/qts-temperatures \
+          /usr/lib64/nagios/plugins/qts-uptime \
+          /usr/lib64/nagios/plugins/qts-version \
+          /usr/lib64/nagios/plugins/readline.so \
+          /usr/lib64/nagios/plugins/redfish-drives \
+          /usr/lib64/nagios/plugins/redfish-sel \
+          /usr/lib64/nagios/plugins/redfish-sensor \
+          /usr/lib64/nagios/plugins/redis \
+          /usr/lib64/nagios/plugins/redis-status \
+          /usr/lib64/nagios/plugins/redis-version \
+          /usr/lib64/nagios/plugins/resource.so \
+          /usr/lib64/nagios/plugins/restic-check \
+          /usr/lib64/nagios/plugins/restic-snapshots \
+          /usr/lib64/nagios/plugins/restic-stats \
+          /usr/lib64/nagios/plugins/rhel-version \
+          /usr/lib64/nagios/plugins/rocket.chat-stats \
+          /usr/lib64/nagios/plugins/rocket.chat-version \
+          /usr/lib64/nagios/plugins/rocketchat-stats \
+          /usr/lib64/nagios/plugins/rocketchat-version \
+          /usr/lib64/nagios/plugins/rpm-lastactivity \
+          /usr/lib64/nagios/plugins/safenet-hsm-state \
+          /usr/lib64/nagios/plugins/sap-open-concur-com \
+          /usr/lib64/nagios/plugins/scanrootkit \
+          /usr/lib64/nagios/plugins/scheduled-task \
+          /usr/lib64/nagios/plugins/select.so \
+          /usr/lib64/nagios/plugins/selinux-mode \
+          /usr/lib64/nagios/plugins/sensors \
+          /usr/lib64/nagios/plugins/sensors-battery \
+          /usr/lib64/nagios/plugins/sensors-fans \
+          /usr/lib64/nagios/plugins/sensors-temperatures \
+          /usr/lib64/nagios/plugins/service \
+          /usr/lib64/nagios/plugins/setuptools-* \
+          /usr/lib64/nagios/plugins/snmp \
+          /usr/lib64/nagios/plugins/starface-account-stats \
+          /usr/lib64/nagios/plugins/starface-backup-status \
+          /usr/lib64/nagios/plugins/starface-channel-status \
+          /usr/lib64/nagios/plugins/starface-database-stats \
+          /usr/lib64/nagios/plugins/starface-java-memory-usage \
+          /usr/lib64/nagios/plugins/starface-peer-stats \
+          /usr/lib64/nagios/plugins/starface-status \
+          /usr/lib64/nagios/plugins/statusiq \
+          /usr/lib64/nagios/plugins/statuspal \
+          /usr/lib64/nagios/plugins/strongswan-connections \
+          /usr/lib64/nagios/plugins/swap \
+          /usr/lib64/nagios/plugins/swap-usage \
+          /usr/lib64/nagios/plugins/systemd-timedate-status \
+          /usr/lib64/nagios/plugins/systemd-unit \
+          /usr/lib64/nagios/plugins/systemd-units-failed \
+          /usr/lib64/nagios/plugins/termios.so \
+          /usr/lib64/nagios/plugins/top3-most-memory-consuming-processes \
+          /usr/lib64/nagios/plugins/top3-processes-opening-more-file-descriptors \
+          /usr/lib64/nagios/plugins/top3-processes-which-caused-the-most-io \
+          /usr/lib64/nagios/plugins/top3-processes-which-consumed-the-most-cpu-time \
+          /usr/lib64/nagios/plugins/tuned-profile \
+          /usr/lib64/nagios/plugins/tzdata \
+          /usr/lib64/nagios/plugins/unicodedata.so \
+          /usr/lib64/nagios/plugins/updates \
+          /usr/lib64/nagios/plugins/uptime \
+          /usr/lib64/nagios/plugins/uptimerobot \
+          /usr/lib64/nagios/plugins/urlize \
+          /usr/lib64/nagios/plugins/users \
+          /usr/lib64/nagios/plugins/utils.sh \
+          /usr/lib64/nagios/plugins/utils_lf \
+          /usr/lib64/nagios/plugins/utilslf.sh \
+          /usr/lib64/nagios/plugins/veeam-status \
+          /usr/lib64/nagios/plugins/wheel-* \
+          /usr/lib64/nagios/plugins/whmcs-status \
+          /usr/lib64/nagios/plugins/wildfly-deployment-status \
+          /usr/lib64/nagios/plugins/wildfly-gc-status \
+          /usr/lib64/nagios/plugins/wildfly-memory-pool-usage \
+          /usr/lib64/nagios/plugins/wildfly-memory-usage \
+          /usr/lib64/nagios/plugins/wildfly-non-xa-datasource-stats \
+          /usr/lib64/nagios/plugins/wildfly-server-status \
+          /usr/lib64/nagios/plugins/wildfly-thread-usage \
+          /usr/lib64/nagios/plugins/wildfly-uptime \
+          /usr/lib64/nagios/plugins/wildfly-xa-datasource-stats \
+          /usr/lib64/nagios/plugins/wordpress-version \
+          /usr/lib64/nagios/plugins/wrapt \
+          /usr/lib64/nagios/plugins/xca-cert \
+          /usr/lib64/nagios/plugins/xml \
+          /usr/lib64/nagios/plugins/yaml \
+          /usr/lib64/nagios/plugins/zlib.so \
+          /usr/lib64/nagios/plugins/zstandard
+      dest: '/tmp/linuxfabrik-remove-plugins.sh'
+      mode: 0o755
+
+  - name: 'Remove legacy plugins and remnant files via cleanup script'
+    ansible.builtin.command: '/tmp/linuxfabrik-remove-plugins.sh'
+
+  - name: 'Remove cleanup script'
+    ansible.builtin.file:
+      path: '/tmp/linuxfabrik-remove-plugins.sh'
+      state: 'absent'
+
+  - name: 'Make sure the legacy sudoers file is absent'
+    ansible.builtin.file:
+      path: '/etc/sudoers.d/icinga2-plugins'
+      state: 'absent'
+
+  - name: 'Make sure the backup sudoers file is absent'
+    ansible.builtin.file:
+      path: '/etc/sudoers.d/monitoring-plugins.bak'
+      state: 'absent'
+
+  - name: 'Make sure the legacy Linuxfabrik plugin cache is removed'
+    ansible.builtin.file:
+      path: '/tmp/linuxfabrik-plugin-cache.db'
+      state: 'absent'
+
+  - name: 'systemctl start icinga2.service'
+    ansible.builtin.service:
+      name: 'icinga2.service'
+      state: 'started'
+    when:
+      - '"icinga2.service" in ansible_facts.services'
+
+  tags:
+    - 'monitoring_plugins:remove'

@@ -15,6 +15,7 @@
     - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
       when:
         - 'ansible_facts["os_family"] != "Windows"'
+        - 'monitoring_plugins__install_method == "package"'
         - 'not monitoring_plugins__skip_repo_monitoring_plugins | d(false)'
 
     - role: 'linuxfabrik.lfops.monitoring_plugins'

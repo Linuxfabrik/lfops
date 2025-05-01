@@ -2,27 +2,29 @@
 
 This role deploys the [Linuxfabik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins), allowing them to be easily executed by a monitoring system.
 
+Notes:
+
+* Best practice is to put the affected hosts into downtime or disable them in Icinga before applying this role. This role can do that for you.
+* This role allows you to deploy custom plugins which are placed under `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins` on the Ansible control node.
+
 
 ## Installation Methods
 
  Taken from the Linuxfabrik Monitoring Plugins [INSTALL](https://github.com/Linuxfabrik/monitoring-plugins/blob/main/INSTALL.rst) document:
 
-| Platform | Install | Implemented by | Requirements |
+| Platform | Install | Implemented by | Mandatory Requirements |
 |----------|---------|----------------|--------------|
 | Linux    | Binaries from rpm/deb package (**default**) | `monitoring_plugins__install_method: 'package'` | Deploy the [Repository for the Monitoring Plugins](https://repo.linuxfabrik.ch/monitoring-plugins/). This can be done using the [linuxfabrik.lfops.repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins) role. If you use the [monitoring_plugins Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/monitoring_plugins.yml), this is automatically done for you.<br/><br/>By default, this role installs the latest available package from the repository. It enables version lock / version pinning for the installed package. This prevents automatic updates from causing inconsistencies between the installed plugins and the configuration of the monitoring system (e.g. outdated Icinga Director configuration). Updating plugins should be done in a controlled manner along with updating the monitoring server configuration. See `monitoring_plugins__skip_package_versionlock` for details. |
 | Linux    | Binaries from zip | Currently not supported by this role | |
-| Linux    | Source Code | `monitoring_plugins__install_method: 'source'` | |
+| Linux    | Source Code | `monitoring_plugins__install_method: 'source'` | Ensure that Python 3.9+ including associated pip is installed and activated by default. On Debian 12, a virtual environment is mandatory. |
 | Windows  | Binaries from msi (**default**) | `monitoring_plugins__install_method: 'package'` | Icinga2 Agent is required. |
 | Windows  | Binaries from zip | `monitoring_plugins__install_method: 'archive'` | Since you cannot change files that are currently used by a process in Windows, when running against a Windows host, this role first stops the Icinga2 service, deploys the plugins and starts the service again. Optionally, it sets a downtime for each host. Have a look at the optional role variables below for this. |
 | Windows  | Source Code | Currently not supported by this role | |
 
 
-Additionally, this role allows you to deploy custom plugins which are placed under `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins` on the Ansible control node.
-
-
 ## Mandatory Requirements
 
-See table above.
+* See table above (depends on the use case).
 
 
 ## Tags
@@ -31,6 +33,7 @@ See table above.
 | ---                                 | ------------                                                                                |
 | `monitoring_plugins`                | Deploys the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins |
 | `monitoring_plugins:custom`         | Only deploys the custom plugins                                                             |
+| `monitoring_plugins:remove`         | Removes the Linuxfabrik Monitoring Plugins                                                  |
 
 
 ## Optional Role Variables
@@ -43,11 +46,9 @@ See table above.
 | `monitoring_plugins__icinga2_cn` | String. The common name / host name. Will be used to schedule a downtime for Windows hosts. | `'{{ ansible_facts["nodename"] }}'` |
 | `monitoring_plugins__icinga_user` | String. The user running the Monitoring Plugins. The role installs the pip packages from the requirements.yml for this user. Only relevant if `monitoring_plugins__install_method: 'source'`.  | `'icinga'` on RHEL, `'nagios'` on Debian |
 | `monitoring_plugins__install_method` | String. Which variant of the monitoring plugins should be deployed? Possible options:<ul><li>`package`: Deploy the install package with the compiled checks. This does not require Python on the system.</li><li>`source`: Deploy the plugins as source code. This requires Python to be installed. Currently for Linux only.</li><li>`archive`: Deploy the compiled binaries from a zip file downloaded from [download.linuxfabrik.ch](https://download.linuxfabrik.ch). Currently for Windows only.</li></ul> | `'package'` |
-| `monitoring_plugins__pip_executable` | String. Pip executable for installing Python requirements. | `'pip'` |
-| `monitoring_plugins__pip_package` | String. OS package for Pip | `'python3-pip'` |
 | `monitoring_plugins__skip_notification_plugins__host_var` / `monitoring_plugins__skip_notification_plugins__group_var` | Skips the deployment of the notification-plugins (in addition to the check-plugins). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `true` |
-| `monitoring_plugins__skip_package_versionlock` | By default, the version of the `linuxfabrik-monitoring-plugins` (and `linuxfabrik-notification-plugins`) is locked after installation. Setting this to `true` skips this step (and never unlocks the version pinning again). | `false` |
-| `monitoring_plugins__version` | String. Which version of the monitoring plugins should be deployed? Possible options: <ul><li>`stable`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`dev`: The development version. Use with care.</li><li>A specific release, for example `1.2.0.11`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li></ul> | `'{{ lfops__monitoring_plugins_version \| default("stable") }}'` |
+| `monitoring_plugins__skip_package_versionlock` | By default, the version of the `linuxfabrik-monitoring-plugins` and `linuxfabrik-notification-plugins` are locked after installation. Setting this to `true` skips this step (and never unlocks the version pinning again). | `false` |
+| `monitoring_plugins__version` | String. Which version of the monitoring plugins should be deployed? Possible options: <ul><li>`stable`: The **latest stable** release. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`dev`: The development version (main branch). Use with care.</li><li>A specific release, for example `1.2.0.11`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li></ul> | `'stable'` |
 
 Example:
 ```yaml
@@ -58,8 +59,6 @@ monitoring_plugins__icinga2_api_user: 'downtime-api-user'
 monitoring_plugins__icinga2_cn: 'windows1.example.com'
 monitoring_plugins__icinga_user: 'icinga'
 monitoring_plugins__install_method: 'source'
-monitoring_plugins__pip_executable: 'pip3.9'
-monitoring_plugins__pip_package: 'python39-pip'
 monitoring_plugins__skip_notification_plugins__host_var: true
 monitoring_plugins__skip_package_versionlock: false
 monitoring_plugins__version: 'stable'

@@ -1,0 +1,312 @@
+- block:
+
+  - name: 'Translate user-friendly monitoring_plugins__version to internal version'
+    ansible.builtin.set_fact:
+      # Returns the corresponding mapped value if it exists, otherwise it returns the original value:
+      # * If monitoring_plugins__version is "stable", it will map to "latest", and if it's "dev",
+      #   it will map to "main".
+      # * If the user sets a version number like "1.2.0.11", it is set to "v1.2.0.11" if installing
+      #   from source (according to GitHub tag), otherwise remains unchanged.
+      __monitoring_plugins__version: >-
+        {{
+          {
+            'stable': 'latest',
+            'dev': 'main',
+            'latest': 'latest',
+            'main': 'main',
+          }.get(
+            monitoring_plugins__version,
+            (("v" + monitoring_plugins__version)
+              if (monitoring_plugins__install_method == 'source')
+              else monitoring_plugins__version)
+          )
+        }}
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Debug'
+    ansible.builtin.debug:
+      msg:
+        - 'Target OS: {{ ansible_facts["os_family"] }}'
+        - 'monitoring_plugins__install_method: {{ monitoring_plugins__install_method }}'
+        - 'monitoring_plugins__version: {{ monitoring_plugins__version }}'
+        - '__monitoring_plugins__version: {{ __monitoring_plugins__version }}'
+        - '__monitoring_plugins__icinga_user: {{ __monitoring_plugins__icinga_user }}'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Get current python3 version'
+    ansible.builtin.command: 'python3 --version'
+    register: 'current_python'
+    changed_when: false
+    failed_when:
+      - 'current_python.rc != 0'
+
+  - name: 'Extract python3 version number'
+    ansible.builtin.set_fact:
+      current_python_version: '{{ current_python.stdout.split()[1] }}'
+
+  - name: 'Fail if python3 is older than 3.9'
+    ansible.builtin.assert:
+      that:
+        - 'current_python_version is version("3.9",">=")'
+      fail_msg: 'Active python3 version {{ current_python_version }} is less than 3.9'
+
+  - name: 'Get current pip3 version'
+    ansible.builtin.command: 'pip3 --version'
+    register: 'current_pip'
+    changed_when: false
+    failed_when:
+      - 'current_pip.rc != 0'
+
+  - name: 'Extract linked Python version from pip3'
+    ansible.builtin.set_fact:
+      pip_linked_python_version: '{{ current_pip.stdout.split("python ")[1].split(")")[0] }}'
+
+  - name: 'Fail if pip3 is linked to Python older than 3.9'
+    ansible.builtin.assert:
+      that:
+        - 'pip_linked_python_version is version("3.9",">=")'
+      fail_msg: 'Active pip3 is linked to Python {{ pip_linked_python_version }}, which is less than 3.9'
+
+  - name: 'Debug'
+    ansible.builtin.debug:
+      msg:
+        - 'Current Python version: {{ current_python_version }}'
+        - 'Current pip version: {{ pip_linked_python_version }}'
+
+  when:
+    - 'monitoring_plugins__install_method == "source"'
+    - 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Set a downtime for the host (Windows)' # noqa ignore-errors (it is possible that the host does not yet exist in icinga2)
+    ansible.builtin.uri:
+      url: '{{ monitoring_plugins__icinga2_api_url }}/actions/schedule-downtime'
+      validate_certs: false
+      user: '{{ monitoring_plugins__icinga2_api_user }}'
+      password: '{{ monitoring_plugins__icinga2_api_password }}'
+      force_basic_auth: true
+      method: 'POST'
+      body: >
+        {
+          "type": "Host",
+          "filter": "host.name==\"{{ monitoring_plugins__icinga2_cn }}\"",
+          "start_time": "{{ lookup('pipe', 'date +%s') }}",
+          "end_time": "{{ lookup('pipe', 'date +%s') | int + 3600 }}",
+          "author": "Ansible Role linuxfabrik.lfops.monitoring_plugins",
+          "comment": "Downtime during deployment of the monitoring-plugins",
+          "all_services": true
+        }
+      body_format: 'json'
+      status_code: 200
+      headers:
+        Accept: 'application/json'
+    when:
+      - 'monitoring_plugins__icinga2_api_url is defined and monitoring_plugins__icinga2_api_url | length'
+      - 'monitoring_plugins__icinga2_api_user is defined and monitoring_plugins__icinga2_api_user | length'
+      - 'monitoring_plugins__icinga2_api_password is defined and monitoring_plugins__icinga2_api_password | length'
+    delegate_to: 'localhost'
+    ignore_errors: true
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Make sure sudo is installed (sometimes missing on Debian)'
+    ansible.builtin.package:
+      name: 'sudo'
+      state: 'present'
+
+  - name: 'Gather service facts'
+    ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+  - name: 'systemctl stop icinga2.service'
+    ansible.builtin.service:
+      name: 'icinga2.service'
+      state: 'stopped'
+    when:
+      - '"icinga2.service" in ansible_facts.services'
+
+  - name: 'Install Linuxfabrik Monitoring Plugins from package (rpm, deb)'
+    ansible.builtin.include_tasks: 'linux-package.yml'
+    when:
+      - 'monitoring_plugins__install_method == "package"'
+
+  - name: 'Install Linuxfabrik Monitoring Plugins from source'
+    ansible.builtin.include_tasks: 'linux-source.yml'
+    when:
+      - 'monitoring_plugins__install_method == "source"'
+
+  - name: 'systemctl start icinga2.service'
+    ansible.builtin.service:
+      name: 'icinga2.service'
+      state: 'started'
+    when:
+      - '"icinga2.service" in ansible_facts.services'
+
+  when:
+    - 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Stop the Icinga2 service'
+    ansible.windows.win_service:
+      name: 'Icinga 2'
+      state: 'stopped'
+    register: '__monitoring_plugins__icinga2_service_stop_result'
+    # ignore errors if the service does not exist
+    failed_when:
+      - '__monitoring_plugins__icinga2_service_stop_result["failed"] is defined'
+      - '__monitoring_plugins__icinga2_service_stop_result["failed"]'
+      - 'not "is not installed" in __monitoring_plugins__icinga2_service_stop_result["msg"]'
+
+  - name: 'Install Linuxfabrik Monitoring Plugins from package'
+    ansible.builtin.include_tasks: 'windows-package.yml'
+    when:
+      - 'monitoring_plugins__install_method == "package"'
+
+  - name: 'Install Linuxfabrik Monitoring Plugins from archive'
+    ansible.builtin.include_tasks: 'windows-archive.yml'
+    when:
+      - 'monitoring_plugins__install_method == "archive"'
+
+  - name: 'Start the Icinga2 service'
+    ansible.windows.win_service:
+      name: 'Icinga 2'
+      state: 'started'
+    register: '__monitoring_plugins__icinga2_service_start_result'
+    # ignore errors if the service does not exist
+    failed_when:
+      - '__monitoring_plugins__icinga2_service_start_result["failed"] is defined'
+      - '__monitoring_plugins__icinga2_service_start_result["failed"]'
+      - 'not "is not installed" in __monitoring_plugins__icinga2_service_start_result["msg"]'
+    when:
+      - 'monitoring_plugins__install_method == "archive"'
+
+  when:
+    - 'ansible_facts["os_family"] == "Windows"'
+  tags:
+    - 'monitoring_plugins'
+
+
+# Pimp local software
+- block:
+
+  - name: 'Check if /var/www/html/localhost exists (monitoring.php for php-status)'
+    ansible.builtin.stat:
+      path: '/var/www/html/localhost'
+    register: 'monitoring_plugins__stat_var_www_html_localhost_result'
+
+  - name: 'Deploy /var/www/html/localhost/monitoring.php (monitoring.php for php-status)'
+    ansible.builtin.copy:
+      src: '/usr/lib64/nagios/plugins/assets/monitoring.php'
+      dest: '/var/www/html/localhost/monitoring.php'
+      remote_src: true
+      owner: '{{ __monitoring_plugins__webserver_user }}'
+      group: '{{ __monitoring_plugins__webserver_user }}'
+      mode: 0o644
+    when:
+      - 'monitoring_plugins__stat_var_www_html_localhost_result["stat"]["exists"]'
+
+  - name: 'Check if /usr/share/icingaweb2/public/img/icons exists'
+    ansible.builtin.stat:
+      path: '/usr/share/icingaweb2/public/img/icons'
+    register: '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result'
+
+  - name: 'Make sure rsync is installed'
+    ansible.builtin.package:
+      name: 'rsync'
+      state: 'present'
+    when:
+      - '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]'
+
+  - name: 'rsync icons to IcingaWeb2'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/icons/'
+      dest: '/usr/share/icingaweb2/public/img/icons'
+      mode: 'push'
+    when:
+      - '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]'
+
+  # block
+  when:
+    - 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Check if custom plugins exist'
+    ansible.builtin.stat:
+      path: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
+    delegate_to: 'localhost'
+    changed_when: false
+    register: '__monitoring_plugins__custom_plugins'
+
+  - name: 'Copy the custom plugins to /usr/lib64/nagios/plugins'
+    ansible.builtin.copy:
+      src: '{{ item }}'
+      dest: '/usr/lib64/nagios/plugins/'
+      mode: 'preserve'
+      backup: true
+    when:
+      - '__monitoring_plugins__custom_plugins.stat.exists'
+    # use loop for nicer diff
+    with_fileglob:
+      - '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins/*'
+
+  # block
+  when:
+    - 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'monitoring_plugins'
+    - 'monitoring_plugins:custom'
+
+
+- block:
+
+  - name: 'Remove the downtime for the host (Windows)'
+    ansible.builtin.uri:
+      url: '{{ monitoring_plugins__icinga2_api_url }}/actions/remove-downtime'
+      validate_certs: false
+      user: '{{ monitoring_plugins__icinga2_api_user }}'
+      password: '{{ monitoring_plugins__icinga2_api_password }}'
+      force_basic_auth: true
+      method: 'POST'
+      body: >
+        {
+          "type": "Downtime",
+          "filter": "host.name==\"{{ monitoring_plugins__icinga2_cn }}\" && downtime.author==\"Ansible Role linuxfabrik.lfops.monitoring_plugins\""
+        }
+      body_format: 'json'
+      status_code: 200
+      headers:
+        Accept: 'application/json'
+    when:
+      - 'monitoring_plugins__icinga2_api_url is defined and monitoring_plugins__icinga2_api_url | length'
+      - 'monitoring_plugins__icinga2_api_user is defined and monitoring_plugins__icinga2_api_user | length'
+      - 'monitoring_plugins__icinga2_api_password is defined and monitoring_plugins__icinga2_api_password | length'
+    delegate_to: 'localhost'
+    ignore_errors: true # we still want to start the icinga2 service again
+
+  tags:
+    - 'monitoring_plugins'
