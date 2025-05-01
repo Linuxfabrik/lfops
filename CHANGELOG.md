@@ -235,6 +235,9 @@ Role:tar
 
 ### Added
 
+Role:alternatives
+* Added
+
 Role:mariadb_server
 * Added `mariadb_server__cnf_wsrep_sst_auth` and `mariadb_server__cnf_wsrep_sst_method` variables
 * Added `mariadb_server__cnf_extra_max_connections__*_var` and `mariadb_server__cnf_extra_port__*_var` variables
