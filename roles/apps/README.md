@@ -14,7 +14,7 @@ This role manages a list of applications using the OS's package manager.
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `apps__apps__host_var` /<br> `apps__apps__group_var` | List of apps to remove or to deploy. Subkeys:<ul><li>`name`: Mandatory, string. Name of the application package.</li><li>`state`: Optinal, string. Possible options: `present` (default), `absent`. You can use other states like `latest` ONLY if they are supported by the underlying package module(s) executed.</ul> | `[]` |
+| `apps__apps__host_var` /<br> `apps__apps__group_var` | List of apps to remove or to deploy. Subkeys:<ul><li>`name`: Mandatory, string. Name of the application package.</li><li>`state`: Optional, string. Possible options: `present` (default), `absent`. You can use other states like `latest` ONLY if they are supported by the underlying package module(s) executed.</li></ul> | `[]` |
 
 Example:
 ```yaml
