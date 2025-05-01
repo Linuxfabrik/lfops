@@ -10,6 +10,13 @@
     when:
       - '"icinga2.service" in ansible_facts.services'
 
+  - name: 'install {{ __monitoring_plugins__versionlock_package }}'
+    ansible.builtin.package:
+      name:
+        - '{{ __monitoring_plugins__versionlock_package }}'
+      state: 'present'
+    when: '__monitoring_plugins__versionlock_package is defined'
+
   - name: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins'
     ansible.builtin.command: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins'
 
