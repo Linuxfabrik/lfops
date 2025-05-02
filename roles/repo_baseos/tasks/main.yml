@@ -22,5 +22,10 @@
       shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/{{ item | basename }}'
     loop: '{{ repo_baseos__repo_files }}'
 
+  - name: 'rm /etc/yum.repos.d/rocky-crb.repo # crb now included in rocky.repo'
+    ansible.builtin.file:
+      path: '/etc/yum.repos.d/rocky-crb.repo'
+      state: 'absent'
+
   tags:
     - 'repo_baseos'
