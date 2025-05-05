@@ -98,7 +98,6 @@
     # === Various tools / dependencies ===
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
-          monitoring_plugins__python__modules__dependent_var +
           login__python__modules__dependent_var
         }}'
       when:
