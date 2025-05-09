@@ -34,7 +34,7 @@ If you use the [Setup Icinga2 Master Playbook](https://github.com/Linuxfabrik/lf
 Example:
 ```yaml
 # mandatory
-icingaweb2_module_grafana__version: 'v1.4.2'
+icingaweb2_module_grafana__version: 'v3.1.1'
 ```
 
 
