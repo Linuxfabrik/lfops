@@ -22,6 +22,35 @@ disable_ssl_verify_server_cert
 # https://mariadb.com/kb/en/library/server-system-variables/
 
 [server]
+binlog_cache_size              = {{ mariadb_server__cnf_binlog_cache_size__combined_var }}
+eq_range_index_dive_limit      = {{ mariadb_server__cnf_eq_range_index_dive_limit__combined_var }}
+innodb_adaptive_hash_index     = {{ mariadb_server__cnf_innodb_adaptive_hash_index__combined_var }}
+innodb_adaptive_hash_index_parts = {{ mariadb_server__cnf_innodb_adaptive_hash_index_parts__combined_var }}
+innodb_max_dirty_pages_pct     = {{ mariadb_server__cnf_innodb_max_dirty_pages_pct__combined_var }}
+innodb_max_purge_lag           = {{ mariadb_server__cnf_innodb_max_purge_lag__combined_var }}
+{% if mariadb_server__cnf_innodb_monitor_disable__combined_var is defined and mariadb_server__cnf_innodb_monitor_disable__combined_var | length %}
+innodb_monitor_disable         = {{ mariadb_server__cnf_innodb_monitor_disable__combined_var }}
+{% endif %}
+innodb_open_files              = {{ mariadb_server__cnf_innodb_open_files__combined_var }}
+innodb_print_all_deadlocks     = {{ mariadb_server__cnf_innodb_print_all_deadlocks__combined_var }}
+innodb_purge_batch_size        = {{ mariadb_server__cnf_innodb_purge_batch_size__combined_var }}
+innodb_read_io_threads         = {{ mariadb_server__cnf_innodb_read_io_threads__combined_var }}
+innodb_strict_mode             = {{ mariadb_server__cnf_innodb_strict_mode__combined_var }}
+innodb_sync_spin_loops         = {{ mariadb_server__cnf_innodb_sync_spin_loops__combined_var }}
+innodb_write_io_threads        = {{ mariadb_server__cnf_innodb_write_io_threads__combined_var }}
+local_infile                   = {{ mariadb_server__cnf_local_infile__combined_var }}
+lock_wait_timeout              = {{ mariadb_server__cnf_lock_wait_timeout__combined_var }}
+log_bin_trust_function_creators = {{ mariadb_server__cnf_log_bin_trust_function_creators__combined_var }}
+long_query_time                = {{ mariadb_server__cnf_long_query_time__combined_var }}
+net_read_timeout               = {{ mariadb_server__cnf_net_read_timeout__combined_var }}
+net_write_timeout              = {{ mariadb_server__cnf_net_write_timeout__combined_var }}
+{% if mariadb_server__cnf_plugin_maturity__combined_var | length %}
+plugin_maturity                = {{ mariadb_server__cnf_plugin_maturity__combined_var }}
+{% endif %}
+server_id                      = {{ mariadb_server__cnf_server_id__combined_var }}
+table_open_cache               = {{ mariadb_server__cnf_table_open_cache__combined_var }}
+
+
 {% if mariadb_server__cnf_bind_address__combined_var | length %}
 bind_address                                   = {{ mariadb_server__cnf_bind_address__combined_var }}
 {% endif %}
