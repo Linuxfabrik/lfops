@@ -59,7 +59,7 @@ Hardenings that can be covered by this role: See [STIGs](https://github.com/Linu
 
 | Variable | Description |
 | -------- | ----------- |
-| `mariadb_server__admin_user` | The main user account for the database administrator. To create additional ones, use the `mariadb_server__users__*` variables. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password</li><li>`host`: Optional, list. Defaults to `["localhost", "127.0.0.1", "::1"]`. Host-part(s).</li><li>`old_password`: String, optional. The old password. Set this when changing the password.</li></ul> |
+| `mariadb_server__admin_user` | The main user account for the database administrator. To create additional ones, use the `mariadb_server__users__*` variables. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password</li><li>`host`: Optional, list. Defaults to `["localhost", "127.0.0.1", "::1"]`. Host-part(s).</li><li>`old_password`: String, optional. The old password. Set this when changing the password.</li><li>`plugin`: String, optional. Authentication plugin to use for the admin user (e.g. `mysql_native_password`, `unix_socket`).</li></ul> |
 
 Example:
 ```yaml
@@ -67,6 +67,7 @@ Example:
 mariadb_server__admin_user:
   username: 'mariadb-admin'
   password: 'linuxfabrik'
+  plugin: 'unix_socket'  # optional, e.g. for socket authentication
   # old_password: 'previous-linuxfabrik'
 ```
 
@@ -92,7 +93,7 @@ mariadb_server__dump_user:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `mariadb_server__databases__host_var` / `mariadb_server__databases__group_var` | List of dictionaries of databases to create. Subkeys:<br> * `name`: Mandatory, string. Name of the databse schema. <br> * `collation`: DB collation<br> * `encoding`: DB encoding<br> * `state`: `present` or `absent` <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `mariadb_server__datadir_mode__host_var` / `mariadb_server__datadir_mode__group_var` | Octal. Mode (permissions) of the MariaDB `datadir`. Use `0o750` for CIS, but make sure that the socket is not inside the datadir in that case, else other users (eg apache) cannot reach it. | `0o750` |
+| `mariadb_server__datadir_mode__host_var` / `mariadb_server__datadir_mode__group_var` | Octal. Mode (permissions) of the MariaDB `datadir`. Use `0o750` for CIS, but make sure that the socket is not inside the datadir in that case, else other users (eg apache) cannot reach it. | `0o755` |
 | `mariadb_server__dump_compress` | String/Bool. For mydumper: Compress output files. One of `''` or `false` (no compression, extremely fast), `'ZSTD'` or `'GZIP'` (both very slow). | `''` (no compression) |
 | `mariadb_server__dump_directory` | String. For mydumper: Dump output directory name. | `'/backup/mariadb-dump'`|
 | `mariadb_server__dump_long_query_guard` | Integer. For mydumper: Set long query timer in seconds. | `60` |
@@ -153,12 +154,7 @@ mariadb_server__users__host_var:
       - '{{ icingaweb2_db }}.*:create view,delete,drop,execute,index,insert,select,update'
       - 'wiki.*:ALL'
     state: 'present'
-  - username: 'mariadb-dump'
-    host: '127.0.0.1'
-    password: 'linuxfabrik'
-    priv:
-      - '*.*:event,lock tables,reload,select,show view,super,trigger'
-    state: 'present'
+
   # user with client TLS auth
   - username: 'admin1'
     host: 'localhost'
@@ -208,7 +204,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_innodb_file_per_table__group_var` / `mariadb_server__cnf_innodb_file_per_table__host_var`          | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table) | `'ON'` (Deprecated: MariaDB 11.0.1 )                           |
 | `mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var` / `mariadb_server__cnf_innodb_flush_log_at_trx_commit__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit) | `1`                              |
 | `mariadb_server__cnf_innodb_io_capacity__group_var` / `mariadb_server__cnf_innodb_io_capacity__host_var`             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_io_capacity) | `200`                            |
-| `mariadb_server__cnf_innodb_log_file_size__group_var` / `mariadb_server__cnf_innodb_log_file_size__host_var`           | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_log_file_size) | `'96M'`                          |
+| `mariadb_server__cnf_innodb_log_file_size__group_var` / `mariadb_server__cnf_innodb_log_file_size__host_var`           | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_log_file_size) | `'32M'`                          |
 | `mariadb_server__cnf_interactive_timeout__group_var` / `mariadb_server__cnf_interactive_timeout__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#interactive_timeout) | `28800`                          |
 | `mariadb_server__cnf_join_buffer_size__group_var` / `mariadb_server__cnf_join_buffer_size__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#join_buffer_size) | `'256K'`                         |
 | `mariadb_server__cnf_log_bin__group_var` / `mariadb_server__cnf_log_bin__host_var`                      | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#log_bin). Attention: the variable is *not* a boolean! Instead it either requires a string to enable it, or has to be unset. For convenience this role unsets the variable if it is set to `'OFF'`. | `''` |
