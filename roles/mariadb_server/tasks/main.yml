@@ -119,6 +119,23 @@
     - 'mariadb_server:user'
 
 
+# Create a Linux user for the admin user if it uses unix_socket authentication
+- block:
+
+  - name: 'Create Linux user {{ mariadb_server__admin_user["username"] }} for unix_socket authentication'
+    ansible.builtin.user:
+      name: '{{ mariadb_server__admin_user["username"] }}'
+      shell: '/bin/bash'
+      create_home: true
+      system: true
+
+  when:
+    - 'mariadb_server__admin_user["plugin"] | default("") == "unix_socket"'
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:user'
+
+
 - block:
 
   - name: 'Remove trailing `/` from {{ mariadb_server__cnf_datadir__combined_var }}'
@@ -366,7 +383,9 @@
       content: |-
         [client]
         user = '{{ mariadb_server__admin_user["username"] }}'
+        {% if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" %}
         password = '{{ mariadb_server__admin_user["password"] }}'
+        {% endif %}
         host = localhost
       owner: 'root'
       group: 'root'
@@ -408,49 +427,59 @@
   - name: 'Secure installation (Linuxfabrik): Remove all "root" users'
     community.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: 'root'
       host_all: true
       state: 'absent'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
     when:
       - 'mariadb_server__admin_user["username"] != "root"'
 
   - name: 'Secure installation: Remove anonymous users'
     community.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: ''
       host_all: true
       state: 'absent'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
 
   - name: 'Secure installation: Remove test database'
     community.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: 'test'
       state: 'absent'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
 
   - name: 'Secure installation: Remove test database (privileges)'
     community.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       query: 'delete from mysql.db where db="test" or db="test\\_%";'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
 
   - name: 'Secure installation: Reload privilege tables'
     community.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       query: 'flush privileges;'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
 
   - name: 'Secure installation (Linuxfabrik): Remove users ignored in --skip-name-resolve mode'
     community.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       query: |-
         delete
@@ -461,6 +490,8 @@
         and (`user` = 'mysql')
         and (`proxied_host` = '')
         and (`proxied_user` = '');
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
     when:
       - 'mariadb_server__cnf_skip_name_resolve__combined_var == "ON"'
 
@@ -538,13 +569,15 @@
   - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost'
     community.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: '{{ mariadb_server__dump_user["username"] }}'
       host: 'localhost'
-      password: '{{ mariadb_server__dump_user["password"] }}'
+      plugin: 'unix_socket'
       priv: '{{ mariadb_server__dump_user["priv"] | default(["*.*:event,execute,lock tables,process,reload,replica monitor,select,show databases,show view,slave monitor,super,trigger"]) | join("/") }}'
       state: '{{ mariadb_server__dump_user["state"] | default("present") }}'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
 
   - name: 'Deploy /etc/systemd/system/mariadb-dump.service'
     ansible.builtin.template:
@@ -612,12 +645,14 @@
   - name: 'Create or delete mariadb databases'
     community.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: '{{ item["name"] }}'
       collation: '{{ item["collation"] | default("utf8_general_ci") }}'
       encoding: '{{ item["encoding"] | default("utf8") }}'
       state: '{{ item["state"] | default("present") }}'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
     loop: '{{ mariadb_server__databases__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}'
@@ -637,15 +672,17 @@
   - name: 'Create, update or delete MariaDB users'
     community.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: '{{ item["username"] }}'
       host: '{{ item["host"] | default("localhost") }}'
-      password: '{{ item["password"] | default(omit) }}'
+      password: '{{ item["password"] | default(omit) if (item["plugin"] | default("")) != "unix_socket" else omit }}'
       plugin: '{{ item["plugin"] | default(omit) }}'
       tls_requires: '{{ item["tls_requires"] | default(omit) }}'
       priv: '{{ item["priv"] | join("/") if item["priv"] is defined else omit }}'
       state: '{{ item["state"] | default("present") }}'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
     loop: '{{ mariadb_server__users__combined_var }}'
     loop_control:
       label: '{{ item["username"] }}@{{ item["host"] | default("localhost") }}'
@@ -675,12 +712,14 @@
   - name: 'Create, update or delete MariaDB roles'
     community.mysql.mysql_role:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: '{{ item["name"] }}'
       priv: '{{ (item["priv"] | join("/")) }}'
       members: '{{ __mariadb_server__roles2members[item["name"]] }}'
       state: '{{ item["state"] | default("present") }}'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
     loop: '{{ mariadb_server__roles__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}'
@@ -688,9 +727,11 @@
   - name: 'SET DEFAULT ROLE `{{ item["default_role"] }}` FOR `{{ item["username"] }}`@`{{ item["host"] | default("localhost") }}`'
     community.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       query: 'SET DEFAULT ROLE `{{ item["default_role"] }}` FOR `{{ item["username"] }}`@`{{ item["host"] | default("localhost") }}`'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
     loop: '{{ mariadb_server__users__combined_var }}'
     loop_control:
       label: '{{ item["username"] }}@{{ item["host"] | default("localhost") }}'
@@ -708,11 +749,13 @@
   - name: 'Show databases'
     community.mysql.mysql_info:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       filter:
         - 'databases'
       return_empty_dbs: false
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
     register: 'mariadb_server__info'
 
   when:
@@ -751,12 +794,14 @@
   - name: 'mysql --user "{{ mariadb_server__admin_user["username"] }}" --password < ./sys_10.sql'
     community.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] if (mariadb_server__admin_user["plugin"] | default("")) != "unix_socket" else omit }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: 'sys'
       state: 'import'
       target: './sys_10.sql'
       chdir: '/tmp/mariadb-sys-schema/mariadb-sys-master/'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
 
   - name: 'rm -rf /tmp/mariadb-sys-schema'
     ansible.builtin.file:
