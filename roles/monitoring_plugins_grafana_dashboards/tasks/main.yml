@@ -1,25 +1,44 @@
 - block:
 
-  - name: 'mkdir -p /tmp/ansible.monitoring_plugins_grafana_dashboards'
-    ansible.builtin.file:
-      path: '/tmp/ansible.monitoring_plugins_grafana_dashboards'
-      state: 'directory'
+  - name: 'Clone the monitoring plugins repo'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'clone-monitoring-plugins-repo.yml'
+    vars:
+      shared__monitoring_plugins_repo_version: '{{ monitoring_plugins_grafana_dashboards__repo_version }}'
 
-  - name: 'Copy the global grafana assets to /tmp/ansible.monitoring_plugins_grafana_dashboards'
-    ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/assets/grafana/{{ item }}.yml'
-      dest: '/tmp/ansible.monitoring_plugins_grafana_dashboards/{{ item }}.yml'
-    loop:
-      - 'dashboard-default'
-      - 'dashboard-icinga'
-      - 'folder'
+  - name: 'Flatten Grafana dashboards locally using shell'
+    ansible.builtin.shell:
+      cmd: |
+        set -euo pipefail
+        shopt -s nullglob
 
-  - name: 'Copy grafana check plugin dashboards to /tmp/ansible.monitoring_plugins_grafana_dashboards'
-    ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/check-plugins/{{ item }}/grafana/{{ item }}.yml'
-      dest: '/tmp/ansible.monitoring_plugins_grafana_dashboards/{{ item }}.yml'
-    when: '("/tmp/ansible.monitoring-plugins-repo/check-plugins/" ~ item ~ "/grafana/" ~ item ~ ".yml") is file'
-    loop: '{{ monitoring_plugins__plugin_list }}'
+        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/grafana
+        for dir in "/tmp/ansible.monitoring-plugins-repo/check-plugins"/*/; do
+            # dir ends in a slash, so basename drops it and gives you the plugin name
+            plugin=$(basename "$dir")
+            # if there's a file named exactly like the directory, copy it
+            if [[ -f "$dir/grafana/$plugin.yml" ]]; then
+                cp -- "$dir/grafana/$plugin.yml" "/tmp/ansible.monitoring-plugins-repo-flattened/grafana/$plugin.yml"
+            fi
+        done
+
+        cp -- /tmp/ansible.monitoring-plugins-repo/assets/grafana/*.yml /tmp/ansible.monitoring-plugins-repo-flattened/grafana/
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # no change on the remote host
+
+  - name: 'Make sure rsync is installed'
+    ansible.builtin.package:
+      name: 'rsync'
+      state: 'present'
+
+  - name: 'rsync dashboards to /tmp/ansible.monitoring_plugins_grafana_dashboards/'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.monitoring-plugins-repo-flattened/grafana/'
+      dest: '/tmp/ansible.monitoring_plugins_grafana_dashboards/'
+      mode: 'push'
 
   - name: '/usr/local/bin/grr apply ... # global assets'
     ansible.builtin.command: '/usr/local/bin/grr apply /tmp/ansible.monitoring_plugins_grafana_dashboards/{{ item }}.yml'
@@ -28,8 +47,8 @@
       GRAFANA_USER: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["username"] }}'
       GRAFANA_TOKEN: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["password"] }}'
       GODEBUG: 'x509ignoreCN=0'
-    register: 'monitoring_plugins_grafana_dashboards__grr_apply_result'
-    changed_when: '"added" in monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"] or "updated" in monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"]'
+    register: '__monitoring_plugins_grafana_dashboards__grr_apply_result'
+    changed_when: '"added" in __monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"] or "updated" in __monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"]'
     loop:
       # note that "folder" needs to be the first
       - 'folder'
@@ -37,16 +56,22 @@
       - 'dashboard-icinga'
 
   - name: '/usr/local/bin/grr apply /tmp/ansible.monitoring_plugins_grafana_dashboards/*.yml'
-    ansible.builtin.command: '/usr/local/bin/grr apply /tmp/ansible.monitoring_plugins_grafana_dashboards/{{ item }}.yml'
+    ansible.builtin.shell: |
+      set -euo pipefail
+      for f in /tmp/ansible.monitoring_plugins_grafana_dashboards/*.yml; do
+          name=$(basename "$f")
+          if [[ "$name" == 'folder.yml' ]]; then
+              continue
+          fi
+          /usr/local/bin/grr apply "$f"
+      done
     environment:
       GRAFANA_URL: '{{ monitoring_plugins_grafana_dashboards__grafana_url }}'
       GRAFANA_USER: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["username"] }}'
       GRAFANA_TOKEN: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["password"] }}'
       GODEBUG: 'x509ignoreCN=0'
-    register: 'monitoring_plugins_grafana_dashboards__grr_apply_result'
-    changed_when: '"added" in monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"] or "updated" in monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"]'
-    when: '("/tmp/ansible.monitoring-plugins-repo/check-plugins/" ~ item ~ "/grafana/" ~ item ~ ".yml") is file'
-    loop: '{{ monitoring_plugins__plugin_list }}'
+    register: '__monitoring_plugins_grafana_dashboards__grr_apply_result'
+    changed_when: '"added" in __monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"] or "updated" in __monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"]'
 
   - name: 'rm -rf /tmp/ansible.monitoring_plugins_grafana_dashboards'
     ansible.builtin.file:
