@@ -1,11 +1,55 @@
 - block:
 
-  - name: 'Clone and flatten the monitoring-plugins repo'
+  - name: 'Clone the monitoring-plugins repo'
     ansible.builtin.import_role:
       name: 'shared'
       tasks_from: 'clone-monitoring-plugins-repo.yml'
     vars:
       shared__monitoring_plugins_repo_version: '{{ __monitoring_plugins__version }}'
+
+  - name: 'Flatten check-plugins locally using shell'
+    ansible.builtin.shell:
+      cmd: |
+        set -o pipefail
+        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins
+        find /tmp/ansible.monitoring-plugins-repo/check-plugins -mindepth 2 -maxdepth 2 -type f | while read file; do
+          base=$(basename "$file")
+          parent=$(basename "$(dirname "$file")")
+          if [ "$base" = "$parent" ]; then
+            cp -- "$file" /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/"$base"
+          fi
+        done
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # no change on the remote host
+
+  - name: 'Flatten notification-plugins locally using shell'
+    ansible.builtin.shell:
+      cmd: |
+        set -o pipefail
+        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins
+        find /tmp/ansible.monitoring-plugins-repo/notification-plugins -mindepth 2 -maxdepth 2 -type f | while read file; do
+          base=$(basename "$file")
+          parent=$(basename "$(dirname "$file")")
+          if [ "$base" = "$parent" ]; then
+            cp -- "$file" /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/"$base"
+          fi
+        done
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # no change on the remote host
+
+  - name: 'Flatten asset files from plugin assets directories'
+    ansible.builtin.shell:
+      cmd: |
+        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets
+        find /tmp/ansible.monitoring-plugins-repo/check-plugins/*/assets -type f -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets/ \;
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # no change on the remote host
 
   - name: 'Make sure rsync is installed'
     ansible.builtin.package:
