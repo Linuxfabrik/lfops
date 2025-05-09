@@ -238,11 +238,31 @@
     when:
       - '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]'
 
-  - name: 'rsync icons to IcingaWeb2'
-    ansible.posix.synchronize:
-      src: '/tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/icons/'
-      dest: '/usr/share/icingaweb2/public/img/icons'
-      mode: 'push'
+  - block:
+
+    - name: 'Clone the monitoring-plugins repo'
+      ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'clone-monitoring-plugins-repo.yml'
+      vars:
+        shared__monitoring_plugins_repo_version: '{{ __monitoring_plugins__version }}'
+
+    - name: 'Flatten icon files from plugin directories'
+      ansible.builtin.shell: |
+        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/icons
+        find /tmp/ansible.monitoring-plugins-repo/check-plugins -name *.svg -exec cp {} /tmp/ansible.monitoring-plugins-repo-flattened/icons/ \;
+        cp -- /tmp/ansible.monitoring-plugins-repo/assets/icons/*.svg /tmp/ansible.monitoring-plugins-repo-flattened/icons/
+      delegate_to: 'localhost'
+      run_once: true
+      check_mode: false # run task even if `--check` is specified
+      changed_when: false # no change on the remote host
+
+    - name: 'rsync icons to IcingaWeb2'
+      ansible.posix.synchronize:
+        src: '/tmp/ansible.monitoring-plugins-repo-flattened/icons/'
+        dest: '/usr/share/icingaweb2/public/img/icons'
+        mode: 'push'
+
     when:
       - '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]'
 
