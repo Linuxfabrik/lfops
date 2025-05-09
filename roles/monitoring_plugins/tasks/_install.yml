@@ -45,43 +45,45 @@
 
   - name: 'Get current python3 version'
     ansible.builtin.command: 'python3 --version'
-    register: 'current_python'
+    register: '__monitoring_plugins__current_python_version_result'
     changed_when: false
     failed_when:
-      - 'current_python.rc != 0'
+      - '__monitoring_plugins__current_python_version_result["rc"] != 0'
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'Extract python3 version number'
     ansible.builtin.set_fact:
-      current_python_version: '{{ current_python.stdout.split()[1] }}'
+      __monitoring_plugins__current_python_version: '{{ __monitoring_plugins__current_python_version_result["stdout"].split()[1] }}'
 
   - name: 'Fail if python3 is older than 3.9'
     ansible.builtin.assert:
       that:
-        - 'current_python_version is version("3.9",">=")'
-      fail_msg: 'Active python3 version {{ current_python_version }} is less than 3.9'
+        - '__monitoring_plugins__current_python_version is version("3.9",">=")'
+      fail_msg: 'Active python3 version {{ __monitoring_plugins__current_python_version }} is less than 3.9'
 
   - name: 'Get current pip3 version'
     ansible.builtin.command: 'pip3 --version'
-    register: 'current_pip'
+    register: '__monitoring_plugins__current_pip_result'
     changed_when: false
     failed_when:
-      - 'current_pip.rc != 0'
+      - '__monitoring_plugins__current_pip_result["rc"] != 0'
+    check_mode: false # run task even if `--check` is specified
 
   - name: 'Extract linked Python version from pip3'
     ansible.builtin.set_fact:
-      pip_linked_python_version: '{{ current_pip.stdout.split("python ")[1].split(")")[0] }}'
+      __monitoring_plugins__pip_linked_python_version: '{{ __monitoring_plugins__current_pip_result["stdout"].split("python ")[1].split(")")[0] }}'
 
   - name: 'Fail if pip3 is linked to Python older than 3.9'
     ansible.builtin.assert:
       that:
-        - 'pip_linked_python_version is version("3.9",">=")'
-      fail_msg: 'Active pip3 is linked to Python {{ pip_linked_python_version }}, which is less than 3.9'
+        - '__monitoring_plugins__pip_linked_python_version is version("3.9",">=")'
+      fail_msg: 'Active pip3 is linked to Python {{ __monitoring_plugins__pip_linked_python_version }}, which is less than 3.9'
 
   - name: 'Debug'
     ansible.builtin.debug:
       msg:
-        - 'Current Python version: {{ current_python_version }}'
-        - 'Current pip version: {{ pip_linked_python_version }}'
+        - 'Current Python version: {{ __monitoring_plugins__current_python_version }}'
+        - 'Current pip version: {{ __monitoring_plugins__pip_linked_python_version }}'
 
   when:
     - 'monitoring_plugins__install_method == "source"'
@@ -304,7 +306,7 @@
 
 - block:
 
-  - name: 'Remove the downtime for the host (Windows)'
+  - name: 'Remove the downtime for the host (Windows)' # noqa ignore-errors
     ansible.builtin.uri:
       url: '{{ monitoring_plugins__icinga2_api_url }}/actions/remove-downtime'
       validate_certs: false

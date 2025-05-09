@@ -85,7 +85,7 @@
     ansible.builtin.getent:
       database: 'passwd'
       key: "{{ monitoring_plugins__icinga_user }}"
-    register: 'icinga_user_check'
+    register: '__monitoring_plugins__icinga_user_check'
     changed_when: false
     failed_when: false
 
@@ -97,10 +97,10 @@
     become: true
     become_user: '{{ monitoring_plugins__icinga_user }}'
     when:
-      - 'icinga_user_check is defined'
-      - 'icinga_user_check.getent is defined'
-      - 'icinga_user_check.getent.passwd is defined'
-      - 'icinga_user_check.getent.passwd[monitoring_plugins__icinga_user] is defined'
+      - '__monitoring_plugins__icinga_user_check is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"] is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"] is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"][monitoring_plugins__icinga_user] is defined'
 
   tags:
     - 'monitoring_plugins'
