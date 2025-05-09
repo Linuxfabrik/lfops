@@ -7,7 +7,7 @@ Description=mariadbdump Service
 [Service]
 ExecStart=/usr/local/bin/mariadb-dump
 Type=oneshot
-User=root
+User={{ mariadb_server__dump_user["username"] }}
 
 [Install]
 WantedBy=basic.target

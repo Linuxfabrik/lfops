@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024091301
+# 2025050901
 
 # This is the MariaDB configuration for the logrotate utility
 #
@@ -11,7 +11,7 @@
 
 /var/lib/mysql/mysqld.log /var/lib/mysql/mariadb.log /var/log/mariadb/*.log {
 
-  # Depends on a mysql@localhost unix_socket authenticated user with RELOAD privilege
+  # Using the MariaDB admin user with appropriate privileges for log rotation
   su mysql mysql
 
   # If any of the files listed above is missing, skip them silently without
@@ -46,10 +46,7 @@
   # run it only once if one or more files were rotated
   sharedscripts
 
-  # After each rotation, run this custom script to flush the logs. Note that
-  # this assumes that the mariadb-admin command has database access, which it
-  # has thanks to the default use of Unix socket authentication for the 'mysql'
-  # (or root on Debian) account used everywhere since MariaDB 10.4.
+  # After each rotation, run this custom script to flush the logs
   postrotate
     if test -r /etc/mysql/debian.cnf
     then
@@ -58,11 +55,20 @@
 
     if test -x /usr/bin/mariadb-admin
     then
+{% if (mariadb_server__admin_user['plugin'] | default('')) == 'unix_socket' %}
+      # For unix_socket authentication, we need to run as the admin user
+      /bin/sudo --user {{ mariadb_server__admin_user['username'] | quote }} /usr/bin/mariadb-admin \
+        --user={{ mariadb_server__admin_user['username'] | quote }} \
+        $EXTRAPARAM \
+        --local flush-error-log flush-engine-log flush-general-log flush-slow-log
+{% else %}
+      # For password authentication, we need to provide the password
       /usr/bin/mariadb-admin \
         --user={{ mariadb_server__admin_user['username'] | quote }} \
         --password={{ mariadb_server__admin_user['password'] | quote }} \
         $EXTRAPARAM \
         --local flush-error-log flush-engine-log flush-general-log flush-slow-log
+{% endif %}
     fi
   endscript
 }
