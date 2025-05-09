@@ -65,7 +65,7 @@
 
   - name: 'Remove Jails'
     ansible.builtin.file:
-      path: '/etc/fail2ban/jail.d/z10-{{ item["filename"] }}.conf'
+      path: '/etc/fail2ban/jail.d/{{ item["filename"] }}.conf'
       state: 'absent'
     when:
       - 'item["state"] | d("present") == "absent"'
