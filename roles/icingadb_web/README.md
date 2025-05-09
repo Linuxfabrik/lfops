@@ -40,10 +40,10 @@ icingadb_web__api_user_login:
 | `icingadb_web__database_login` | The user account for accessing the IcingaDB SQL database. Currently, only MySQL is supported. | `'{{ icingadb__database_login }}'` |
 | `icingadb_web__database_name` | The name of the IcingaDB SQL database. | `'{{ icingadb__database_name }}'` |
 | `icingadb_web__plugin_output_character_limit` | Number. Sets the maximum number of characters to display in plugin output. | `20000` |
-| `icingadb_web__redis_ca` | Path to the CA certificate used to check the Redis TLS certificate. | unset |
+| `icingadb_web__redis_ca` | Path to the CA certificate used to check the Redis TLS certificate. | `{{ icingadb__redis_ca \| d() }}` |
 | `icingadb_web__redis_host` | The host on which Redis instance is reachable. | `'{{ icingadb__redis_host }}'` |
 | `icingadb_web__redis_insecure` | Allow insecure connections to Redis via TLS. | `'{{ icingadb__redis_insecure }}'` |
-| `icingadb_web__redis_password` | The password for the Redis instance, if authentication is enabled. | `'{{ icingadb__redis_password | d() }}'` |
+| `icingadb_web__redis_password` | The password for the Redis instance, if authentication is enabled. | `'{{ icingadb__redis_password \| d() }}'` |
 | `icingadb_web__redis_port` | The port on which Redis instance is reachable. | `'{{ icingadb__redis_port }}'` |
 | `icingadb_web__redis_tls` | Enable TLS when connecting to Redis. | `'{{ icingadb__redis_tls }}'` |
 | `icingadb_web__redis2_host` | The host on which the secondary Redis instance is reachable. | unset |

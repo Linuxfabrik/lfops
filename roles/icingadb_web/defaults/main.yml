@@ -6,6 +6,7 @@ icingadb_web__database_name: '{{ icingadb__database_name }}'
 icingadb_web__plugin_output_character_limit: 20000
 icingadb_web__redis2_password: '{{ icingadb_web__redis_password }}'
 icingadb_web__redis2_port: '{{ icingadb_web__redis_port }}'
+icingadb_web__redis_ca: '{{ icingadb__redis_ca | d() }}'
 icingadb_web__redis_host: '{{ icingadb__redis_host }}'
 icingadb_web__redis_insecure: '{{ icingadb__redis_insecure }}'
 icingadb_web__redis_password: '{{ icingadb__redis_password | d() }}'
