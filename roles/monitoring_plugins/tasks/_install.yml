@@ -233,13 +233,6 @@
       path: '/usr/share/icingaweb2/public/img/icons'
     register: '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result'
 
-  - name: 'Make sure rsync is installed'
-    ansible.builtin.package:
-      name: 'rsync'
-      state: 'present'
-    when:
-      - '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]'
-
   - block:
 
     - name: 'Clone the monitoring-plugins repo'
@@ -258,6 +251,11 @@
       run_once: true
       check_mode: false # run task even if `--check` is specified
       changed_when: false # no change on the remote host
+
+    - name: 'Make sure rsync is installed'
+      ansible.builtin.package:
+        name: 'rsync'
+        state: 'present'
 
     - name: 'rsync icons to IcingaWeb2'
       ansible.posix.synchronize:
