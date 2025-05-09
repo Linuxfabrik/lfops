@@ -5,6 +5,7 @@
     login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
     variable: 'datadir'
   register: 'mariadb_server__datadir_result'
+  check_mode: false # run task even if `--check` is specified
 
 - name: 'Extract "msg" from mariadb_server__datadir_result and remove trailing `/` from {{ mariadb_server__datadir_result.msg }}'
   ansible.builtin.set_fact:
