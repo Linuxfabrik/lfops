@@ -21,6 +21,7 @@ Role:monitoring_plugins:
     * `monitoring_plugins__windows_variant`
 
 * The `lfops__monitoring_plugins_version` variable (and all the `*.monitoring_plugin.*_version` variables) now only accepts a specific release or the value `dev`. `stable` or `latest` are no longer supported.
+* The `lfops__monitoring_plugins_version` variable is now mandatory.
 * Renamed `monitoring_plugins__linux_variant` to `monitoring_plugins__install_method`:
 
     * `monitoring_plugins__linux_variant: 'python'` becomes `monitoring_plugins__install_method: 'source'`
