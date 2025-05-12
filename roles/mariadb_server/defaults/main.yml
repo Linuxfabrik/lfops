@@ -678,6 +678,235 @@ mariadb_server__users__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod(unique_key=["username", "host"])
   }}'
 
+mariadb_server__cnf_binlog_cache_size__dependent_var: ''
+mariadb_server__cnf_binlog_cache_size__group_var: ''
+mariadb_server__cnf_binlog_cache_size__host_var: ''
+mariadb_server__cnf_binlog_cache_size__combined_var: '{{
+    mariadb_server__cnf_binlog_cache_size__host_var if (mariadb_server__cnf_binlog_cache_size__host_var | string | length) else
+    mariadb_server__cnf_binlog_cache_size__group_var if (mariadb_server__cnf_binlog_cache_size__group_var | string | length) else
+    mariadb_server__cnf_binlog_cache_size__dependent_var if (mariadb_server__cnf_binlog_cache_size__dependent_var | string | length) else
+    mariadb_server__cnf_binlog_cache_size__role_var
+  }}'
+
+mariadb_server__cnf_eq_range_index_dive_limit__dependent_var: ''
+mariadb_server__cnf_eq_range_index_dive_limit__group_var: ''
+mariadb_server__cnf_eq_range_index_dive_limit__host_var: ''
+mariadb_server__cnf_eq_range_index_dive_limit__combined_var: '{{
+    mariadb_server__cnf_eq_range_index_dive_limit__host_var if (mariadb_server__cnf_eq_range_index_dive_limit__host_var | string | length) else
+    mariadb_server__cnf_eq_range_index_dive_limit__group_var if (mariadb_server__cnf_eq_range_index_dive_limit__group_var | string | length) else
+    mariadb_server__cnf_eq_range_index_dive_limit__dependent_var if (mariadb_server__cnf_eq_range_index_dive_limit__dependent_var | string | length) else
+    mariadb_server__cnf_eq_range_index_dive_limit__role_var
+  }}'
+
+mariadb_server__cnf_innodb_adaptive_hash_index__dependent_var: ''
+mariadb_server__cnf_innodb_adaptive_hash_index__group_var: ''
+mariadb_server__cnf_innodb_adaptive_hash_index__host_var: ''
+mariadb_server__cnf_innodb_adaptive_hash_index__combined_var: '{{
+    mariadb_server__cnf_innodb_adaptive_hash_index__host_var if (mariadb_server__cnf_innodb_adaptive_hash_index__host_var | string | length) else
+    mariadb_server__cnf_innodb_adaptive_hash_index__group_var if (mariadb_server__cnf_innodb_adaptive_hash_index__group_var | string | length) else
+    mariadb_server__cnf_innodb_adaptive_hash_index__dependent_var if (mariadb_server__cnf_innodb_adaptive_hash_index__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_adaptive_hash_index__role_var
+  }}'
+
+mariadb_server__cnf_innodb_adaptive_hash_index_parts__dependent_var: ''
+mariadb_server__cnf_innodb_adaptive_hash_index_parts__group_var: ''
+mariadb_server__cnf_innodb_adaptive_hash_index_parts__host_var: ''
+mariadb_server__cnf_innodb_adaptive_hash_index_parts__combined_var: '{{
+    mariadb_server__cnf_innodb_adaptive_hash_index_parts__host_var if (mariadb_server__cnf_innodb_adaptive_hash_index_parts__host_var | string | length) else
+    mariadb_server__cnf_innodb_adaptive_hash_index_parts__group_var if (mariadb_server__cnf_innodb_adaptive_hash_index_parts__group_var | string | length) else
+    mariadb_server__cnf_innodb_adaptive_hash_index_parts__dependent_var if (mariadb_server__cnf_innodb_adaptive_hash_index_parts__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_adaptive_hash_index_parts__role_var
+  }}'
+
+mariadb_server__cnf_innodb_max_dirty_pages_pct__dependent_var: ''
+mariadb_server__cnf_innodb_max_dirty_pages_pct__group_var: ''
+mariadb_server__cnf_innodb_max_dirty_pages_pct__host_var: ''
+mariadb_server__cnf_innodb_max_dirty_pages_pct__combined_var: '{{
+    mariadb_server__cnf_innodb_max_dirty_pages_pct__host_var if (mariadb_server__cnf_innodb_max_dirty_pages_pct__host_var | string | length) else
+    mariadb_server__cnf_innodb_max_dirty_pages_pct__group_var if (mariadb_server__cnf_innodb_max_dirty_pages_pct__group_var | string | length) else
+    mariadb_server__cnf_innodb_max_dirty_pages_pct__dependent_var if (mariadb_server__cnf_innodb_max_dirty_pages_pct__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_max_dirty_pages_pct__role_var
+  }}'
+
+mariadb_server__cnf_innodb_max_purge_lag__dependent_var: ''
+mariadb_server__cnf_innodb_max_purge_lag__group_var: ''
+mariadb_server__cnf_innodb_max_purge_lag__host_var: ''
+mariadb_server__cnf_innodb_max_purge_lag__combined_var: '{{
+    mariadb_server__cnf_innodb_max_purge_lag__host_var if (mariadb_server__cnf_innodb_max_purge_lag__host_var | string | length) else
+    mariadb_server__cnf_innodb_max_purge_lag__group_var if (mariadb_server__cnf_innodb_max_purge_lag__group_var | string | length) else
+    mariadb_server__cnf_innodb_max_purge_lag__dependent_var if (mariadb_server__cnf_innodb_max_purge_lag__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_max_purge_lag__role_var
+  }}'
+
+mariadb_server__cnf_innodb_monitor_disable__dependent_var: ''
+mariadb_server__cnf_innodb_monitor_disable__group_var: ''
+mariadb_server__cnf_innodb_monitor_disable__host_var: ''
+mariadb_server__cnf_innodb_monitor_disable__combined_var: '{{
+    mariadb_server__cnf_innodb_monitor_disable__host_var if (mariadb_server__cnf_innodb_monitor_disable__host_var | string | length) else
+    mariadb_server__cnf_innodb_monitor_disable__group_var if (mariadb_server__cnf_innodb_monitor_disable__group_var | string | length) else
+    mariadb_server__cnf_innodb_monitor_disable__dependent_var if (mariadb_server__cnf_innodb_monitor_disable__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_monitor_disable__role_var
+  }}'
+
+mariadb_server__cnf_innodb_open_files__dependent_var: ''
+mariadb_server__cnf_innodb_open_files__group_var: ''
+mariadb_server__cnf_innodb_open_files__host_var: ''
+mariadb_server__cnf_innodb_open_files__combined_var: '{{
+    mariadb_server__cnf_innodb_open_files__host_var if (mariadb_server__cnf_innodb_open_files__host_var | string | length) else
+    mariadb_server__cnf_innodb_open_files__group_var if (mariadb_server__cnf_innodb_open_files__group_var | string | length) else
+    mariadb_server__cnf_innodb_open_files__dependent_var if (mariadb_server__cnf_innodb_open_files__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_open_files__role_var
+  }}'
+
+mariadb_server__cnf_innodb_print_all_deadlocks__dependent_var: ''
+mariadb_server__cnf_innodb_print_all_deadlocks__group_var: ''
+mariadb_server__cnf_innodb_print_all_deadlocks__host_var: ''
+mariadb_server__cnf_innodb_print_all_deadlocks__combined_var: '{{
+    mariadb_server__cnf_innodb_print_all_deadlocks__host_var if (mariadb_server__cnf_innodb_print_all_deadlocks__host_var | string | length) else
+    mariadb_server__cnf_innodb_print_all_deadlocks__group_var if (mariadb_server__cnf_innodb_print_all_deadlocks__group_var | string | length) else
+    mariadb_server__cnf_innodb_print_all_deadlocks__dependent_var if (mariadb_server__cnf_innodb_print_all_deadlocks__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_print_all_deadlocks__role_var
+  }}'
+
+mariadb_server__cnf_innodb_purge_batch_size__dependent_var: ''
+mariadb_server__cnf_innodb_purge_batch_size__group_var: ''
+mariadb_server__cnf_innodb_purge_batch_size__host_var: ''
+mariadb_server__cnf_innodb_purge_batch_size__combined_var: '{{
+    mariadb_server__cnf_innodb_purge_batch_size__host_var if (mariadb_server__cnf_innodb_purge_batch_size__host_var | string | length) else
+    mariadb_server__cnf_innodb_purge_batch_size__group_var if (mariadb_server__cnf_innodb_purge_batch_size__group_var | string | length) else
+    mariadb_server__cnf_innodb_purge_batch_size__dependent_var if (mariadb_server__cnf_innodb_purge_batch_size__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_purge_batch_size__role_var
+  }}'
+
+mariadb_server__cnf_innodb_read_io_threads__dependent_var: ''
+mariadb_server__cnf_innodb_read_io_threads__group_var: ''
+mariadb_server__cnf_innodb_read_io_threads__host_var: ''
+mariadb_server__cnf_innodb_read_io_threads__combined_var: '{{
+    mariadb_server__cnf_innodb_read_io_threads__host_var if (mariadb_server__cnf_innodb_read_io_threads__host_var | string | length) else
+    mariadb_server__cnf_innodb_read_io_threads__group_var if (mariadb_server__cnf_innodb_read_io_threads__group_var | string | length) else
+    mariadb_server__cnf_innodb_read_io_threads__dependent_var if (mariadb_server__cnf_innodb_read_io_threads__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_read_io_threads__role_var
+  }}'
+
+mariadb_server__cnf_innodb_strict_mode__dependent_var: ''
+mariadb_server__cnf_innodb_strict_mode__group_var: ''
+mariadb_server__cnf_innodb_strict_mode__host_var: ''
+mariadb_server__cnf_innodb_strict_mode__combined_var: '{{
+    mariadb_server__cnf_innodb_strict_mode__host_var if (mariadb_server__cnf_innodb_strict_mode__host_var | string | length) else
+    mariadb_server__cnf_innodb_strict_mode__group_var if (mariadb_server__cnf_innodb_strict_mode__group_var | string | length) else
+    mariadb_server__cnf_innodb_strict_mode__dependent_var if (mariadb_server__cnf_innodb_strict_mode__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_strict_mode__role_var
+  }}'
+
+mariadb_server__cnf_innodb_sync_spin_loops__dependent_var: ''
+mariadb_server__cnf_innodb_sync_spin_loops__group_var: ''
+mariadb_server__cnf_innodb_sync_spin_loops__host_var: ''
+mariadb_server__cnf_innodb_sync_spin_loops__combined_var: '{{
+    mariadb_server__cnf_innodb_sync_spin_loops__host_var if (mariadb_server__cnf_innodb_sync_spin_loops__host_var | string | length) else
+    mariadb_server__cnf_innodb_sync_spin_loops__group_var if (mariadb_server__cnf_innodb_sync_spin_loops__group_var | string | length) else
+    mariadb_server__cnf_innodb_sync_spin_loops__dependent_var if (mariadb_server__cnf_innodb_sync_spin_loops__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_sync_spin_loops__role_var
+  }}'
+
+mariadb_server__cnf_innodb_write_io_threads__dependent_var: ''
+mariadb_server__cnf_innodb_write_io_threads__group_var: ''
+mariadb_server__cnf_innodb_write_io_threads__host_var: ''
+mariadb_server__cnf_innodb_write_io_threads__combined_var: '{{
+    mariadb_server__cnf_innodb_write_io_threads__host_var if (mariadb_server__cnf_innodb_write_io_threads__host_var | string | length) else
+    mariadb_server__cnf_innodb_write_io_threads__group_var if (mariadb_server__cnf_innodb_write_io_threads__group_var | string | length) else
+    mariadb_server__cnf_innodb_write_io_threads__dependent_var if (mariadb_server__cnf_innodb_write_io_threads__dependent_var | string | length) else
+    mariadb_server__cnf_innodb_write_io_threads__role_var
+  }}'
+
+mariadb_server__cnf_local_infile__dependent_var: ''
+mariadb_server__cnf_local_infile__group_var: ''
+mariadb_server__cnf_local_infile__host_var: ''
+mariadb_server__cnf_local_infile__combined_var: '{{
+    mariadb_server__cnf_local_infile__host_var if (mariadb_server__cnf_local_infile__host_var | string | length) else
+    mariadb_server__cnf_local_infile__group_var if (mariadb_server__cnf_local_infile__group_var | string | length) else
+    mariadb_server__cnf_local_infile__dependent_var if (mariadb_server__cnf_local_infile__dependent_var | string | length) else
+    mariadb_server__cnf_local_infile__role_var
+  }}'
+
+mariadb_server__cnf_lock_wait_timeout__dependent_var: ''
+mariadb_server__cnf_lock_wait_timeout__group_var: ''
+mariadb_server__cnf_lock_wait_timeout__host_var: ''
+mariadb_server__cnf_lock_wait_timeout__combined_var: '{{
+    mariadb_server__cnf_lock_wait_timeout__host_var if (mariadb_server__cnf_lock_wait_timeout__host_var | string | length) else
+    mariadb_server__cnf_lock_wait_timeout__group_var if (mariadb_server__cnf_lock_wait_timeout__group_var | string | length) else
+    mariadb_server__cnf_lock_wait_timeout__dependent_var if (mariadb_server__cnf_lock_wait_timeout__dependent_var | string | length) else
+    mariadb_server__cnf_lock_wait_timeout__role_var
+  }}'
+
+mariadb_server__cnf_log_bin_trust_function_creators__dependent_var: ''
+mariadb_server__cnf_log_bin_trust_function_creators__group_var: ''
+mariadb_server__cnf_log_bin_trust_function_creators__host_var: ''
+mariadb_server__cnf_log_bin_trust_function_creators__combined_var: '{{
+    mariadb_server__cnf_log_bin_trust_function_creators__host_var if (mariadb_server__cnf_log_bin_trust_function_creators__host_var | string | length) else
+    mariadb_server__cnf_log_bin_trust_function_creators__group_var if (mariadb_server__cnf_log_bin_trust_function_creators__group_var | string | length) else
+    mariadb_server__cnf_log_bin_trust_function_creators__dependent_var if (mariadb_server__cnf_log_bin_trust_function_creators__dependent_var | string | length) else
+    mariadb_server__cnf_log_bin_trust_function_creators__role_var
+  }}'
+
+mariadb_server__cnf_long_query_time__dependent_var: ''
+mariadb_server__cnf_long_query_time__group_var: ''
+mariadb_server__cnf_long_query_time__host_var: ''
+mariadb_server__cnf_long_query_time__combined_var: '{{
+    mariadb_server__cnf_long_query_time__host_var if (mariadb_server__cnf_long_query_time__host_var | string | length) else
+    mariadb_server__cnf_long_query_time__group_var if (mariadb_server__cnf_long_query_time__group_var | string | length) else
+    mariadb_server__cnf_long_query_time__dependent_var if (mariadb_server__cnf_long_query_time__dependent_var | string | length) else
+    mariadb_server__cnf_long_query_time__role_var
+  }}'
+
+mariadb_server__cnf_net_read_timeout__dependent_var: ''
+mariadb_server__cnf_net_read_timeout__group_var: ''
+mariadb_server__cnf_net_read_timeout__host_var: ''
+mariadb_server__cnf_net_read_timeout__combined_var: '{{
+    mariadb_server__cnf_net_read_timeout__host_var if (mariadb_server__cnf_net_read_timeout__host_var | string | length) else
+    mariadb_server__cnf_net_read_timeout__group_var if (mariadb_server__cnf_net_read_timeout__group_var | string | length) else
+    mariadb_server__cnf_net_read_timeout__dependent_var if (mariadb_server__cnf_net_read_timeout__dependent_var | string | length) else
+    mariadb_server__cnf_net_read_timeout__role_var
+  }}'
+
+mariadb_server__cnf_net_write_timeout__dependent_var: ''
+mariadb_server__cnf_net_write_timeout__group_var: ''
+mariadb_server__cnf_net_write_timeout__host_var: ''
+mariadb_server__cnf_net_write_timeout__combined_var: '{{
+    mariadb_server__cnf_net_write_timeout__host_var if (mariadb_server__cnf_net_write_timeout__host_var | string | length) else
+    mariadb_server__cnf_net_write_timeout__group_var if (mariadb_server__cnf_net_write_timeout__group_var | string | length) else
+    mariadb_server__cnf_net_write_timeout__dependent_var if (mariadb_server__cnf_net_write_timeout__dependent_var | string | length) else
+    mariadb_server__cnf_net_write_timeout__role_var
+  }}'
+
+mariadb_server__cnf_plugin_maturity__dependent_var: ''
+mariadb_server__cnf_plugin_maturity__group_var: ''
+mariadb_server__cnf_plugin_maturity__host_var: ''
+mariadb_server__cnf_plugin_maturity__combined_var: '{{
+    mariadb_server__cnf_plugin_maturity__host_var if (mariadb_server__cnf_plugin_maturity__host_var | string | length) else
+    mariadb_server__cnf_plugin_maturity__group_var if (mariadb_server__cnf_plugin_maturity__group_var | string | length) else
+    mariadb_server__cnf_plugin_maturity__dependent_var if (mariadb_server__cnf_plugin_maturity__dependent_var | string | length) else
+    mariadb_server__cnf_plugin_maturity__role_var
+  }}'
+
+mariadb_server__cnf_server_id__dependent_var: ''
+mariadb_server__cnf_server_id__group_var: ''
+mariadb_server__cnf_server_id__host_var: ''
+mariadb_server__cnf_server_id__combined_var: '{{
+    mariadb_server__cnf_server_id__host_var if (mariadb_server__cnf_server_id__host_var | string | length) else
+    mariadb_server__cnf_server_id__group_var if (mariadb_server__cnf_server_id__group_var | string | length) else
+    mariadb_server__cnf_server_id__dependent_var if (mariadb_server__cnf_server_id__dependent_var | string | length) else
+    mariadb_server__cnf_server_id__role_var
+  }}'
+
+mariadb_server__cnf_table_open_cache__dependent_var: ''
+mariadb_server__cnf_table_open_cache__group_var: ''
+mariadb_server__cnf_table_open_cache__host_var: ''
+mariadb_server__cnf_table_open_cache__combined_var: '{{
+    mariadb_server__cnf_table_open_cache__host_var if (mariadb_server__cnf_table_open_cache__host_var | string | length) else
+    mariadb_server__cnf_table_open_cache__group_var if (mariadb_server__cnf_table_open_cache__group_var | string | length) else
+    mariadb_server__cnf_table_open_cache__dependent_var if (mariadb_server__cnf_table_open_cache__dependent_var | string | length) else
+    mariadb_server__cnf_table_open_cache__role_var
+  }}'
 
 # -----------------------------------------------------------------------------
 
