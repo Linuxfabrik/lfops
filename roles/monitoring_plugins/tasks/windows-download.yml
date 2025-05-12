@@ -12,19 +12,19 @@
     delegate_to: 'localhost'
     register: '__monitoring_plugins__github_release'
     when:
-      - '__monitoring_plugins__version == "latest"'
+      - 'monitoring_plugins__version == "stable"'
 
   - name: 'Set __monitoring_plugins__download_version from GitHub release'
     ansible.builtin.set_fact:
       __monitoring_plugins__download_version: '{{ __monitoring_plugins__github_release.json.tag_name }}' # user provides "stable"
     when:
-      - '__monitoring_plugins__version == "latest"'
+      - 'monitoring_plugins__version == "stable"'
 
   - name: 'Set __monitoring_plugins__download_version from GitHub release'
     ansible.builtin.set_fact:
-      __monitoring_plugins__download_version: '{{ __monitoring_plugins__version }}' # user provides "1.2.0.11"
+      __monitoring_plugins__download_version: '{{ monitoring_plugins__version }}' # user provides "1.2.0.11"
     when:
-      - '__monitoring_plugins__version != "latest"'
+      - 'monitoring_plugins__version != "stable"'
 
   - name: 'Set __monitoring_plugins__download_url for zipped MSI package'
     ansible.builtin.set_fact:

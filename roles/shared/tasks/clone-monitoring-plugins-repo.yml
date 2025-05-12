@@ -1,15 +1,22 @@
-# if the shared__monitoring_plugins_repo_version is not set to latest, we just use that value.
-# if not, we fetch the latest version from the github api.
-
-- name: 'If a specific version is given, simply store it'
+- name: 'Translate shared__monitoring_plugins_repo_version'
+  vars:
+    __shared__monitoring_plugins_version_map:
+      stable: 'stable' # canonical “use latest release”
+      latest: 'stable' # back-compat
+      dev: 'main' # canonical “use main”
+      main: 'main' # back-compat
   ansible.builtin.set_fact:
-    shared__monitoring_plugins_github_version: '{{ shared__monitoring_plugins_repo_version }}'
-  when: 'shared__monitoring_plugins_repo_version != "latest"'
-
+    __shared__monitoring_plugins_version: >-
+      {{ __shared__monitoring_plugins_version_map.get(
+           shared__monitoring_plugins_repo_version,
+           shared__monitoring_plugins_repo_version.startswith('v')
+             | ternary(shared__monitoring_plugins_repo_version, 'v' ~ shared__monitoring_plugins_repo_version)
+         )
+      }}
 
 - block:
 
-  - name: 'Else get the latest release version from GitHub'
+  - name: 'Get the stable release version from GitHub if required'
     ansible.builtin.uri:
       url: 'https://api.github.com/repos/linuxfabrik/monitoring-plugins/releases/latest'
     register: 'shared__monitoring_plugins_github_release'
@@ -17,21 +24,21 @@
     delegate_to: 'localhost'
     run_once: true
 
-  - name: 'Store the latest release version'
+  - name: 'Store the stable release version'
     ansible.builtin.set_fact:
-      shared__monitoring_plugins_github_version: '{{ shared__monitoring_plugins_github_release["json"]["tag_name"] }}'
+      __shared__monitoring_plugins_version: '{{ shared__monitoring_plugins_github_release["json"]["tag_name"] }}'
 
   # block
-  when: 'shared__monitoring_plugins_repo_version == "latest"'
+  when: '__shared__monitoring_plugins_version == "stable"'
 
 
 - block:
 
-  - name: 'Clone the monitoring plugins git repo to localhost (version: {{ shared__monitoring_plugins_github_version }})'
+  - name: 'Clone the monitoring plugins git repo to localhost (version: {{ __shared__monitoring_plugins_version }})'
     ansible.builtin.git:
       repo: 'https://github.com/Linuxfabrik/monitoring-plugins.git'
       dest: '/tmp/ansible.monitoring-plugins-repo'
-      version: '{{ shared__monitoring_plugins_github_version }}'
+      version: '{{ __shared__monitoring_plugins_version }}'
       depth: 1
     delegate_to: 'localhost'
     run_once: true
@@ -44,12 +51,13 @@
         path: '/tmp/ansible.monitoring-plugins-repo'
         state: 'absent'
       delegate_to: 'localhost'
+      changed_when: false # no change on the remote host
 
-    - name: 'Clone the monitoring plugins git repo to localhost (version: {{ shared__monitoring_plugins_github_version }})'
+    - name: 'Clone the monitoring plugins git repo to localhost (version: {{ __shared__monitoring_plugins_version }})'
       ansible.builtin.git:
         repo: 'https://github.com/Linuxfabrik/monitoring-plugins.git'
         dest: '/tmp/ansible.monitoring-plugins-repo'
-        version: '{{ shared__monitoring_plugins_github_version }}'
+        version: '{{ __shared__monitoring_plugins_version }}'
         depth: 1
       delegate_to: 'localhost'
       run_once: true
