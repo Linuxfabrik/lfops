@@ -12,6 +12,10 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:icingaweb2_module_director:
+
+* The `icingaweb2_module_director:basket` only runs if explicitly called to prevent accidental config overwrites.
+
 Role:monitoring_plugins:
 * Removed variables:
 

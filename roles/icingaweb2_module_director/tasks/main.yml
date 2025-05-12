@@ -9,8 +9,8 @@
   when:
     - 'not icingaweb2_module_director__skip_basket_import'
   tags:
-    - 'icingaweb2_module_director'
     - 'icingaweb2_module_director:basket'
+    - 'never'
 
 
 - block:
@@ -195,5 +195,5 @@
   when:
     - 'not icingaweb2_module_director__skip_basket_import'
   tags:
-    - 'icingaweb2_module_director'
     - 'icingaweb2_module_director:basket'
+    - 'never'
