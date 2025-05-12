@@ -1,35 +1,10 @@
 - name: 'Translate shared__monitoring_plugins_repo_version'
-  vars:
-    __shared__monitoring_plugins_version_map:
-      stable: 'stable' # canonical “use latest release”
-      latest: 'stable' # back-compat
-      dev: 'main' # canonical “use main”
-      main: 'main' # back-compat
   ansible.builtin.set_fact:
     __shared__monitoring_plugins_version: >-
-      {{ __shared__monitoring_plugins_version_map.get(
-           shared__monitoring_plugins_repo_version,
-           shared__monitoring_plugins_repo_version.startswith('v')
-             | ternary(shared__monitoring_plugins_repo_version, 'v' ~ shared__monitoring_plugins_repo_version)
-         )
+      {{ 'main' if shared__monitoring_plugins_version == 'dev'
+         else shared__monitoring_plugins_version if shared__monitoring_plugins_version.startswith('v')
+         else 'v' ~ shared__monitoring_plugins_version
       }}
-
-- block:
-
-  - name: 'Get the stable release version from GitHub if required'
-    ansible.builtin.uri:
-      url: 'https://api.github.com/repos/linuxfabrik/monitoring-plugins/releases/latest'
-    register: 'shared__monitoring_plugins_github_release'
-    check_mode: false # run task even if `--check` is specified
-    delegate_to: 'localhost'
-    run_once: true
-
-  - name: 'Store the stable release version'
-    ansible.builtin.set_fact:
-      __shared__monitoring_plugins_version: '{{ shared__monitoring_plugins_github_release["json"]["tag_name"] }}'
-
-  # block
-  when: '__shared__monitoring_plugins_version == "stable"'
 
 
 - block:

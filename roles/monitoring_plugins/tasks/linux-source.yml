@@ -5,7 +5,7 @@
       name: 'shared'
       tasks_from: 'clone-monitoring-plugins-repo.yml'
     vars:
-      shared__monitoring_plugins_repo_version: '{{ monitoring_plugins__version }}'
+      shared__monitoring_plugins_version: '{{ monitoring_plugins__version }}'
 
   - name: 'Flatten check-plugins locally using shell'
     ansible.builtin.shell:

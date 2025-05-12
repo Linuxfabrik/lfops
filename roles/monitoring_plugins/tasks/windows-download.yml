@@ -4,41 +4,18 @@
 
 - block:
 
-  - name: 'Fetch latest release from GitHub if version is "stable"'
-    ansible.builtin.uri:
-      url: 'https://api.github.com/repos/Linuxfabrik/monitoring-plugins/releases/latest'
-      method: 'GET'
-      return_content: true
-    delegate_to: 'localhost'
-    register: '__monitoring_plugins__github_release'
-    when:
-      - 'monitoring_plugins__version == "stable"'
-
-  - name: 'Set __monitoring_plugins__download_version from GitHub release'
-    ansible.builtin.set_fact:
-      __monitoring_plugins__download_version: '{{ __monitoring_plugins__github_release.json.tag_name }}' # user provides "stable"
-    when:
-      - 'monitoring_plugins__version == "stable"'
-
-  - name: 'Set __monitoring_plugins__download_version from GitHub release'
-    ansible.builtin.set_fact:
-      __monitoring_plugins__download_version: '{{ monitoring_plugins__version }}' # user provides "1.2.0.11"
-    when:
-      - 'monitoring_plugins__version != "stable"'
-
   - name: 'Set __monitoring_plugins__download_url for zipped MSI package'
     ansible.builtin.set_fact:
-      __monitoring_plugins__download_url: 'https://download.linuxfabrik.ch/monitoring-plugins/lfmp-{{ __monitoring_plugins__download_version | regex_replace("^v", "") }}-1.signed-{{ __monitoring_plugins__file_type }}.windows.x86_64.zip'
+      __monitoring_plugins__download_url: 'https://download.linuxfabrik.ch/monitoring-plugins/lfmp-{{ monitoring_plugins__version }}-1.signed-{{ __monitoring_plugins__file_type }}.windows.x86_64.zip'
 
   - name: 'Debug'
     ansible.builtin.debug:
       msg:
         - '__monitoring_plugins__download_url: {{ __monitoring_plugins__download_url }}'
-        - '__monitoring_plugins__download_version: {{ __monitoring_plugins__download_version }}'
         - '__monitoring_plugins__file_type: {{ __monitoring_plugins__file_type }}'
         - '__monitoring_plugins__unzip_path: {{ __monitoring_plugins__unzip_path }}'
 
-  - name: 'curl {{ __monitoring_plugins__download_url }} --output /tmp/ansible.{{ __monitoring_plugins__download_url | basename }}'
+  - name: 'curl {{ __monitoring_plugins__download_url }} --output /tmp/ansible.{{ __monitoring_plugins__download_url | basename }}' # noqa risky-file-permissions (temp file)
     ansible.builtin.get_url:
       url: '{{ __monitoring_plugins__download_url }}'
       dest: '/tmp/ansible.{{ __monitoring_plugins__download_url | basename }}'

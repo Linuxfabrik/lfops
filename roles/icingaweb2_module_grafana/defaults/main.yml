@@ -1,6 +1,6 @@
 icingaweb2_module_grafana__custom_graphs_config: ''
 icingaweb2_module_grafana__default_dashboard: 'Default'
-icingaweb2_module_grafana__monitoring_plugins_version: '{{ lfops__monitoring_plugins_version | default("stable") }}'
+icingaweb2_module_grafana__monitoring_plugins_version: '{{ lfops__monitoring_plugins_version | default() }}'
 icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config: false
 icingaweb2_module_grafana__theme: 'light'
 icingaweb2_module_grafana__url: '{{ grafana__root_url }}'

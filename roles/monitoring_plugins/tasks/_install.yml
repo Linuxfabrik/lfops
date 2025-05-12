@@ -1,5 +1,17 @@
 - block:
 
+  - name: 'Make sure that `monitoring_plugins__version` is set'
+    ansible.builtin.assert:
+      that:
+        - 'monitoring_plugins__version | length'
+      fail_msg: 'monitoring_plugins__version is unset. Make sure to either set `monitoring_plugins__version` or `lfops__monitoring_plugins_version`.'
+
+  - name: 'Make sure that `monitoring_plugins__version` does not start with a "v"'
+    ansible.builtin.assert:
+      that:
+        - 'not monitoring_plugins__version.startswith("v")'
+      fail_msg: '`monitoring_plugins__version` must be given without the leading `v`. Example: use `1.2.3`, not `v1.2.3`.'
+
   - name: 'Debug'
     ansible.builtin.debug:
       msg:
@@ -71,7 +83,7 @@
 
 - block:
 
-  - name: 'Set a downtime for the host (Windows)' # noqa ignore-errors (it is possible that the host does not yet exist in icinga2)
+  - name: 'Set a downtime for the host' # noqa ignore-errors (it is possible that the host does not yet exist in icinga2)
     ansible.builtin.uri:
       url: '{{ monitoring_plugins__icinga2_api_url }}/actions/schedule-downtime'
       validate_certs: false
@@ -146,6 +158,12 @@
 
 - block:
 
+  - name: 'Fail if monitoring_plugins__version is "dev" on Windows hosts'
+    ansible.builtin.assert:
+      that:
+        - 'monitoring_plugins__version != "dev"'
+      fail_msg: 'Installing the dev version on Windows hosts is not currently supported.'
+
   - name: 'Stop the Icinga2 service'
     ansible.windows.win_service:
       name: 'Icinga 2'
@@ -217,7 +235,7 @@
         name: 'shared'
         tasks_from: 'clone-monitoring-plugins-repo.yml'
       vars:
-        shared__monitoring_plugins_repo_version: '{{ monitoring_plugins__version }}'
+        shared__monitoring_plugins_version: '{{ monitoring_plugins__version }}'
 
     - name: 'Flatten icon files from plugin directories'
       ansible.builtin.shell: |

@@ -26,16 +26,16 @@
 
 - block:
 
-  - name: 'install linuxfabrik-monitoring-plugins{{ (monitoring_plugins__version != "stable") | ternary("-" ~ monitoring_plugins__version, "") }}' # noqa package-latest
+  - name: 'install linuxfabrik-monitoring-plugins{{ (monitoring_plugins__version | length) | ternary("-" ~ monitoring_plugins__version, "") }}' # noqa package-latest
     ansible.builtin.package:
       name:
-        - 'linuxfabrik-monitoring-plugins{{ (monitoring_plugins__version != "stable") | ternary("-" ~ monitoring_plugins__version, "") }}'
+        - 'linuxfabrik-monitoring-plugins{{ (monitoring_plugins__version | length) | ternary("-" ~ monitoring_plugins__version, "") }}'
       state: 'latest' # use latest for the versionlock after
 
-  - name: 'install linuxfabrik-notification-plugins{{ (monitoring_plugins__version != "stable") | ternary("-" ~ monitoring_plugins__version, "") }}' # noqa package-latest
+  - name: 'install linuxfabrik-notification-plugins{{ (monitoring_plugins__version | length) | ternary("-" ~ monitoring_plugins__version, "") }}' # noqa package-latest
     ansible.builtin.package:
       name:
-        - 'linuxfabrik-notification-plugins{{ (monitoring_plugins__version != "stable") | ternary("-" ~ monitoring_plugins__version, "") }}'
+        - 'linuxfabrik-notification-plugins{{ (monitoring_plugins__version | length) | ternary("-" ~ monitoring_plugins__version, "") }}'
       state: 'latest' # use latest for the versionlock after
     when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
 

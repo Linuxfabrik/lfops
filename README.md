@@ -208,7 +208,7 @@ There are a handful of variables that are used across roles. It is still possibl
 
 ### `lfops__monitoring_plugins_version`
 
-This variable is used as the default whenever the version of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) repo is required. Have a look at the [monitoring_plugins role README](https://github.com/Linuxfabrik/lfops/blob/main/roles/monitoring_plugins/README.md) for details on `monitoring_plugins__version`.
+This variable is used as the default whenever the version of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) is required. Have a look at the  `monitoring_plugins__version` variable in the [monitoring_plugins role README](https://github.com/Linuxfabrik/lfops/blob/main/roles/monitoring_plugins/README.md) for details.
 
 Example:
 ```yaml
