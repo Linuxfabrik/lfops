@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025051201
+# 2025051301
 # 10.5
 
 [client]
@@ -43,6 +43,7 @@ general_log_file               = {{ mariadb_server__cnf_general_log_file__combin
 innodb_adaptive_hash_index     = {{ mariadb_server__cnf_innodb_adaptive_hash_index__combined_var }}
 innodb_adaptive_hash_index_parts = {{ mariadb_server__cnf_innodb_adaptive_hash_index_parts__combined_var }}
 innodb_autoinc_lock_mode       = {{ mariadb_server__cnf_innodb_autoinc_lock_mode__combined_var }}
+innodb_buffer_pool_chunk_size  = {{ mariadb_server__cnf_innodb_buffer_pool_chunk_size__combined_var }}
 innodb_buffer_pool_size        = {{ mariadb_server__cnf_innodb_buffer_pool_size__combined_var }}
 innodb_doublewrite             = {{ mariadb_server__cnf_innodb_doublewrite__combined_var }}
 innodb_file_per_table          = {{ mariadb_server__cnf_innodb_file_per_table__combined_var }}
@@ -55,6 +56,7 @@ innodb_max_purge_lag           = {{ mariadb_server__cnf_innodb_max_purge_lag__co
 innodb_monitor_disable         = {{ mariadb_server__cnf_innodb_monitor_disable__combined_var }}
 {% endif %}
 innodb_open_files              = {{ mariadb_server__cnf_innodb_open_files__combined_var }}
+innodb_print_all_deadlocks     = {{ mariadb_server__cnf_innodb_print_all_deadlocks__combined_var }}
 innodb_purge_batch_size        = {{ mariadb_server__cnf_innodb_purge_batch_size__combined_var }}
 innodb_read_io_threads         = {{ mariadb_server__cnf_innodb_read_io_threads__combined_var }}
 innodb_strict_mode             = {{ mariadb_server__cnf_innodb_strict_mode__combined_var }}

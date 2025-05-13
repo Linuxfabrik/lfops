@@ -21,6 +21,7 @@ mariadb_server__cnf_general_log_file__role_var: '/var/log/mariadb/mariadb-genera
 mariadb_server__cnf_innodb_adaptive_hash_index__role_var: 'OFF'
 mariadb_server__cnf_innodb_adaptive_hash_index_parts__role_var: '8'
 mariadb_server__cnf_innodb_autoinc_lock_mode__role_var: 1
+mariadb_server__cnf_innodb_buffer_pool_chunk_size__role_var: '0' # autosized
 mariadb_server__cnf_innodb_buffer_pool_size__role_var: '128M'
 mariadb_server__cnf_innodb_doublewrite__role_var: 'ON'
 mariadb_server__cnf_innodb_file_per_table__role_var: 'ON'

@@ -202,6 +202,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_general_log__group_var` / `mariadb_server__cnf_general_log__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#general_log) | `'OFF'` |
 | `mariadb_server__cnf_general_log_file__group_var` / `mariadb_server__cnf_general_log_file__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#general_log_file) | `'/var/log/mariadb/mariadb-general.log'` |
 | `mariadb_server__cnf_innodb_autoinc_lock_mode__group_var` / `mariadb_server__cnf_innodb_autoinc_lock_mode__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_autoinc_lock_mode) | `1` |
+| `mariadb_server__cnf_innodb_buffer_pool_chunk_size__group_var` / `mariadb_server__cnf_innodb_buffer_pool_chunk_size__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_chunk_size) | 10.08-: `'128M'`, 10.8+: `0` (autosize) |
 | `mariadb_server__cnf_innodb_buffer_pool_size__group_var` / `mariadb_server__cnf_innodb_buffer_pool_size__host_var`        | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_size) | `'128M'`                         |
 | `mariadb_server__cnf_innodb_doublewrite__group_var` / `mariadb_server__cnf_innodb_doublewrite__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_doublewrite) | `ON` |
 | `mariadb_server__cnf_innodb_file_per_table__group_var` / `mariadb_server__cnf_innodb_file_per_table__host_var`          | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table) | `'ON'` (Deprecated: MariaDB 11.0.1 )                           |
@@ -246,6 +247,7 @@ mariadb_server__cnf_extra_port__host_var: 3308
 mariadb_server__cnf_general_log__host_var: 'OFF'
 mariadb_server__cnf_general_log_file__host_var: '/var/log/mariadb/mariadb-general.log'
 mariadb_server__cnf_innodb_autoinc_lock_mode__host_var: 2
+mariadb_server__cnf_innodb_buffer_pool_chunk_size__host_var: '{{ (mariadb_server__cnf_innodb_buffer_pool_size__host_var / 64 ) | int }}'
 mariadb_server__cnf_innodb_buffer_pool_size__host_var: '{{ (ansible_facts["memtotal_mb"] * 0.8) | int }}M'
 mariadb_server__cnf_innodb_doublewrite__host_var: 1
 mariadb_server__cnf_innodb_file_per_table__host_var: 'ON'
