@@ -12,6 +12,9 @@
       priv: '*.*:ALL,GRANT'
       plugin: '{{ mariadb_server__admin_user["plugin"] | default(omit) }}'
       state: 'present'
+      # become the admin linux user if the plugin is unix_socket
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
 
   rescue:
 
@@ -33,7 +36,5 @@
       plugin: '{{ mariadb_server__admin_user["plugin"] | default(omit) }}'
       state: 'present'
     when: 'mariadb_server__admin_user["old_password"] is defined and mariadb_server__admin_user["old_password"] | length'
-
-  # become the admin linux user if the plugin is unix_socket
-  become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
-  become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'
+    become: '{{ (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" }}'
+    become_user: '{{ mariadb_server__admin_user["username"] if (mariadb_server__admin_user["plugin"] | default("")) == "unix_socket" else omit }}'

@@ -59,7 +59,7 @@ Hardenings that can be covered by this role: See [STIGs](https://github.com/Linu
 
 | Variable | Description |
 | -------- | ----------- |
-| `mariadb_server__admin_user` | The main user account for the database administrator. To create additional ones, use the `mariadb_server__users__*` variables. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password</li><li>`host`: Optional, list. Defaults to `["localhost", "127.0.0.1", "::1"]`. Host-part(s).</li><li>`old_password`: String, optional. The old password. Set this when changing the password.</li><li>`plugin`: String, optional. Authentication plugin to use for the admin user (e.g. `mysql_native_password`, `unix_socket`).</li></ul> |
+| `mariadb_server__admin_user` | The main user account for the database administrator. To create additional ones, use the `mariadb_server__users__*` variables. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password</li><li>`host`: Optional, list. Defaults to `["localhost", "127.0.0.1", "::1"]`. Host-part(s).</li><li>`old_password`: String, optional. The old password. Set this when changing the password.</li><li>`plugin`: String, optional. Authentication plugin to use for the admin user (e.g. `unix_socket`).</li></ul> |
 
 Example:
 ```yaml
@@ -76,14 +76,13 @@ mariadb_server__admin_user:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mariadb_server__dump_user` | String. For mydumper: User to whom backup privileges are granted to. Setting this user automatically enables daily MariaDB-Dumps. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `["*.*:event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options: `'present'`, `'absent'` | unset |
+| `mariadb_server__dump_user` | String. For mydumper: User to whom backup privileges are granted to. Automatically uses unix_socket authentication. Setting this user automatically enables daily MariaDB-Dumps. Subkeys:<br> * `username`: Username<br> * `priv`: Optional, list. Defaults to `["*.*:event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options: `'present'`, `'absent'` | unset |
 
 Example:
 ```yaml
 # recommended
 mariadb_server__dump_user:
   username: 'mariadb-backup'
-  password: 'linuxfabrik'
   state: 'present'
 ```
 

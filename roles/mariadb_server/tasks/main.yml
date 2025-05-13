@@ -119,18 +119,18 @@
     - 'mariadb_server:user'
 
 
-# Create a Linux user for the admin user if it uses unix_socket authentication
+# Create a Linux user for the dump user and the admin user if it uses unix_socket authentication
 - block:
 
   - name: 'Create Linux user {{ mariadb_server__admin_user["username"] }} for unix_socket authentication'
     ansible.builtin.user:
       name: '{{ mariadb_server__admin_user["username"] }}'
       shell: '/bin/bash'
-      create_home: true
+      create_home: false
       system: true
+    when:
+      - 'mariadb_server__admin_user["plugin"] | default("") == "unix_socket"'
 
-  when:
-    - 'mariadb_server__admin_user["plugin"] | default("") == "unix_socket"'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:user'
@@ -528,10 +528,15 @@
     when:
       - 'mariadb_server__cnf_general_log__combined_var == "ON"'
 
+  - name: 'Check if "server_audit_file_path" exists'
+    ansible.builtin.stat:
+      path: '{{ mariadb_server__cnf_server_audit_file_path }}'
+    register: '__mariadb_server__server_audit_file_path_stat'
+
   - name: 'Secure installation (Linuxfabrik): Ensure "server_audit_file_path" has appropriate permissions'
     ansible.builtin.file:
       path: '{{ mariadb_server__cnf_server_audit_file_path }}'
-      state: 'file'
+      state: '{{ __mariadb_server__server_audit_file_path_stat["stat"]["exists"] | ternary("file", "touch") }}'
       mode: 0o660
       owner: 'mysql'
       group: 'mysql'
@@ -543,6 +548,21 @@
 
 # configure backup (mariadb-dump user, scripts and timer)
 - block:
+
+  - name: 'Create Linux user {{ mariadb_server__dump_user["username"] }} for dump user'
+    ansible.builtin.user:
+      name: '{{ mariadb_server__dump_user["username"] }}'
+      shell: '/bin/bash'
+      create_home: false
+      system: true
+
+  - name: 'Create the backup dir for the dump user'
+    ansible.builtin.file:
+      path: '{{ mariadb_server__dump_directory | quote }}'
+      state: 'directory'
+      owner: '{{ mariadb_server__dump_user["username"] }}'
+      group: '{{ mariadb_server__dump_user["username"] }}'
+      mode: 0o700
 
   - name: 'Install {{ mariadb_server__dump_mydumper_package }} libzstd zstd'
     ansible.builtin.package:
@@ -562,8 +582,8 @@
     ansible.builtin.template:
       src: 'etc/mariadb-dump.conf.j2'
       dest: '/etc/mariadb-dump.conf'
-      owner: 'root'
-      group: 'root'
+      owner: '{{ mariadb_server__dump_user["username"] }}'
+      group: '{{ mariadb_server__dump_user["username"] }}'
       mode: 0o600
 
   - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost'
