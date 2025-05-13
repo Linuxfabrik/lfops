@@ -564,6 +564,14 @@
       group: '{{ mariadb_server__dump_user["username"] }}'
       mode: 0o700
 
+  - name: 'Change permissions of the backup dir to make it writable by the dump user'
+    ansible.builtin.file:
+      path: '/backup'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o751
+
   - name: 'Install {{ mariadb_server__dump_mydumper_package }} libzstd zstd'
     ansible.builtin.package:
       name:
