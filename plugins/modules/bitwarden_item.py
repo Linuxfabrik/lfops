@@ -348,7 +348,7 @@ def run_module():
         current_items = bw.get_items(name, username, folder_id, collection_id, organization_id)
 
         if len(current_items) > 1:
-            module.fail_json(msg='Found multiple items with the same name/title and username, cannot decide which one to use. Aborting.')
+            module.fail_json(msg='Found multiple Bitwarden items with the same name/title and username, cannot decide which one to use. Aborting.')
 
         try:
             current_item = current_items[0]

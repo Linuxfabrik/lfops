@@ -357,7 +357,7 @@ class LookupModule(LookupBase):
             result = bw.get_items(name, username, folder_id, collection_id, organization_id)
 
             if len(result) > 1:
-                raise AnsibleError('Found multiple items with the same name/title and username, cannot decide which one to use. Aborting.')
+                raise AnsibleError('Found multiple Bitwarden items with the same name/title and username, cannot decide which one to use. Aborting.')
 
             if len(result) == 1:
                 display.vvv('lfbwlp - run - found existing item')
