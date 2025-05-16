@@ -243,22 +243,22 @@ lfops__repo_mirror_url: 'https://mirror.example.com'
 
 ## Tips, Tricks & Troubleshooting
 
-### ansible_become: true
+Q: **ansible_become: true**
 
-Don't use `become: true` or `ansible_become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars ONLY (not in `all.yml` - `localhost` must not be part of the group. Otherwise you'll get errors like `sudo: a password is required`).
+A: Don't use `become: true` or `ansible_become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars ONLY (not in `all.yml` - `localhost` must not be part of the group. Otherwise you'll get errors like `sudo: a password is required`).
 
 
-### Finding all groups a host belongs to
+Q: **Finding all groups a host belongs to**
 
-When running playbooks against a host it might be useful to know all the group memberships.
+A: When running playbooks against a host it might be useful to know all the group memberships.
 
 ```bash
 ansible --inventory path/to/inventory myhost -m debug -a "var=group_names"
 ```
 
-### Connecting as an unprivileged user, correct sudoers config
+Q: **Connecting as an unprivileged user, correct sudoers config**
 
-When connecting as an unprivileged user, you must make sure that the user is allowed to change to all other user accounts, not just root.
+A: When connecting as an unprivileged user, you must make sure that the user is allowed to change to all other user accounts, not just root.
 Otherwise it will be impossible to run tasks as other unprivileged users, for example `become_user: 'apache'`.
 This means that the Runas_Spec in sudoers must be `(ALL)`, for example:
 
@@ -270,11 +270,16 @@ or
 ansible-user ALL=(ALL) ALL
 ```
 
-### Finding out which playbooks ran against a host
+Q: **Finding out which playbooks ran against a host**
 
-All playbooks log every run to `/var/log/linuxfabrik-lfops.log` on the host. For example:
+A: All playbooks log every run to `/var/log/linuxfabrik-lfops.log` on the host. For example:
 
 ```
 2024-05-23 11:15:26.604794 - Playbook linuxfabrik.lfops.apps: START
 2024-05-23 11:15:32.877064 - Playbook linuxfabrik.lfops.apps: END
 ```
+
+
+Q: **Debian: fatal: [walle]: FAILED! => changed=false - msg: No package matching '...' is available**
+
+A: Run `apt update` before running the specific role.

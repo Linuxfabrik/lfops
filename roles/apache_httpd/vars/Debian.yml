@@ -28,6 +28,11 @@ apache_httpd__mods__role_var:
     state: 'present'
     template: 'authn_file'
 
+  - filename: 'auth_openidc'
+    enable: false
+    state: 'present'
+    template: 'auth_openidc'
+
   - filename: 'authz_core'
     enabled: true
     state: 'present'
@@ -42,6 +47,11 @@ apache_httpd__mods__role_var:
     enabled: true
     state: 'present'
     template: 'authz_user'
+
+  - filename: 'autoindex'
+    enable: false
+    state: 'present'
+    template: 'autoindex'
 
   - filename: 'cgi'
     enabled: false
@@ -63,15 +73,20 @@ apache_httpd__mods__role_var:
     state: 'present'
     template: 'dir'
 
-  - filename: 'filter'
-    enabled: false
+  - filename: 'env'
+    enable: false
     state: 'present'
-    template: 'filter'
+    template: 'env'
 
   - filename: 'expires'
     enabled: true
     state: 'present'
     template: 'expires'
+
+  - filename: 'filter'
+    enabled: false
+    state: 'present'
+    template: 'filter'
 
   - filename: 'headers'
     enabled: true
@@ -92,6 +107,26 @@ apache_httpd__mods__role_var:
     enabled: true
     state: 'present'
     template: 'info'
+
+  - filename: 'lbmethod_bybusyness'
+    enable: false
+    state: 'present'
+    template: 'lbmethod_bybusyness'
+
+  - filename: 'lbmethod_byrequests'
+    enable: false
+    state: 'present'
+    template: 'lbmethod_byrequests'
+
+  - filename: 'lbmethod_bytraffic'
+    enable: false
+    state: 'present'
+    template: 'lbmethod_bytraffic'
+
+  - filename: 'lbmethod_heartbeat'
+    enable: false
+    state: 'present'
+    template: 'lbmethod_heartbeat'
 
   - filename: 'log_config'
     enabled: false # module ... is built-in and can''t be loaded'
@@ -148,6 +183,11 @@ apache_httpd__mods__role_var:
     state: 'present'
     template: 'proxy'
 
+  - filename: 'proxy_balancer'
+    enable: false
+    state: 'present'
+    template: 'proxy_balancer'
+
   - filename: 'proxy_fcgi'
     enabled: true
     state: 'present'
@@ -167,6 +207,16 @@ apache_httpd__mods__role_var:
     enabled: false # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1000072
     state: 'absent'
     template: 'qos'
+
+  - filename: 'raw'
+    enable: false
+    state: 'present'
+    template: 'raw'
+
+  - filename: 'remoteip'
+    enable: false
+    state: 'present'
+    template: 'remoteip'
 
   - filename: 'reqtimeout'
     enabled: true
@@ -234,6 +284,9 @@ apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
 apache_httpd__packages__role_var:
   # - name: 'libapache2-mod-qos'
   #   state: 'absent' # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1000072
+
+  - name: 'libapache2-mod-auth-openidc'
+    state: 'present'
 
   - name: 'libapache2-mod-security2'
     state: 'present'
