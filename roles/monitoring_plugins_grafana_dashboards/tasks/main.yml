@@ -76,6 +76,8 @@
       GRAFANA_USER: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["username"] }}'
       GRAFANA_TOKEN: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["password"] }}'
       GODEBUG: 'x509ignoreCN=0'
+    args:
+      executable: '/usr/bin/bash'
     register: '__monitoring_plugins_grafana_dashboards__grr_apply_result'
     changed_when: '"added" in __monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"] or "updated" in __monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"]'
 
