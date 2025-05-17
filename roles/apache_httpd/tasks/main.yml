@@ -63,6 +63,7 @@
 
   tags:
     - 'apache_httpd'
+    - 'apache_httpd:mods'
 
 
 - block:
