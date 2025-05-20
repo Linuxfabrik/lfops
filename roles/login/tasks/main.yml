@@ -107,6 +107,9 @@
     ignore_errors: '{{ ansible_check_mode }}' # ignore errors such as `Either user must exist or you must provide full path to key file in check mode`
     loop_control:
       label: '{{ item["name"] }}'
+    tags:
+      - 'login'
+      - 'login:authorized_keys'
 
   - name: 'Allow "{{ login__passwordless_sudo_group }}" group to have password-less sudo'
     community.general.sudoers:

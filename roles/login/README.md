@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.login
 
-This role creates users, adds them to additional groups, and sets their sshd authorized_keys to allow them to login to the system.
+This role creates users, adds them to additional groups, and sets their SSH authorized_keys to allow them to login to the system.
 Aditionally, a group can be added to the sudoers for password-less `sudo` access.
 
 IMPORTANT:
@@ -16,7 +16,8 @@ IMPORTANT:
 
 | Tag     | What it does                                        |
 | ---     | ------------                                        |
-| `login` | Manages users, their groups and ssh authorized_keys |
+| `login` | Manages users, their groups and SSH authorized_keys |
+| `login:authorized_keys` | Manages SSH authorized_keys |
 
 
 ## Optional Role Variables
