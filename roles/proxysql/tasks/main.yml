@@ -1,0 +1,71 @@
+- block:
+
+  - name: 'Install proxysql'
+    ansible.builtin.package:
+      name:
+        - 'proxysql'
+      state: 'present'
+
+  tags:
+    - 'proxysql'
+
+
+- block:
+
+  - name: 'Deploy /etc/proxysql.cnf'
+    ansible.builtin.template:
+      src: 'etc/proxysql.cnf.j2'
+      dest: '/etc/proxysql.cnf'
+      owner: 'root'
+      group: 'proxysql'
+      mode: 0o640
+    register: '__proxysql__template_proxysql_cnf_result'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/proxysql.cnf'
+
+  tags:
+    - 'proxysql'
+    - 'proxysql:configure'
+
+
+- block: # noqa no-handler (we need to run multiple tasks)
+
+  - name: 'systemctl stop proxysql.service'
+    ansible.builtin.service:
+      name: 'proxysql.service'
+      state: 'stopped'
+
+  - name: 'systemctl stop proxysql-initial.service'
+    ansible.builtin.service:
+      name: 'proxysql-initial.service'
+      state: 'stopped'
+
+  - name: 'proxysql: start proxysql-initial'
+    ansible.builtin.service:
+      # the proxysql-initial.service imports the /etc/proxysql.cnf and then starts the normal proxysql.service
+      name: 'proxysql-initial.service'
+      state: 'started'
+
+  when:
+    - '__proxysql__template_proxysql_cnf_result is changed'
+  tags:
+    - 'proxysql'
+    - 'proxysql:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ proxysql__service_enabled | bool | ternary("enable", "disable") }} --now proxysql.service'
+    ansible.builtin.systemd:
+      name: 'proxysql.service'
+      enabled: '{{ proxysql__service_enabled }}'
+      state: '{{ proxysql__service_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'proxysql'
+    - 'proxysql:state'

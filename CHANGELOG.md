@@ -239,6 +239,9 @@ Role:tar
 
 ### Added
 
+Role:proxysql
+* Added
+
 Role:apache_httpd
 * Add some mods
 
