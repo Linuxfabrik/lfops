@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2025052201
 
 [epel-cisco-openh264]
 name=Extra Packages for Enterprise Linux $releasever openh264 (From Cisco) - $basearch
@@ -9,7 +9,7 @@ baseurl={{ repo_epel__mirror_url }}/epel/9/cisco-openh264/x86_64
 metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-cisco-openh264-$releasever&arch=$basearch
 {% endif %}
 type=rpm
-enabled=1
+enabled={{ repo_epel__epel_cisco_openh264_enabled | ternary(1, 0) }}
 metadata_expire=14d
 repo_gpgcheck=0
 gpgcheck=1

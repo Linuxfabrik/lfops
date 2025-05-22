@@ -239,6 +239,9 @@ Role:tar
 
 ### Added
 
+Role:repo_epel
+* Added `repo_epel__epel_cisco_openh264_enabled` variable
+
 Role:proxysql
 * Added
 
