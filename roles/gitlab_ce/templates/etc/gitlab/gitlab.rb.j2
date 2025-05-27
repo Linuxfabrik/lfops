@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022100701
+# 2025052701
 
 ## GitLab configuration settings
 ##! This file is generated during initial installation and **is not** modified
@@ -639,11 +639,14 @@ gitlab_rails['backup_keep_time'] = {{ gitlab_ce__rb_gitlab_rails_backup_keep_tim
 ###! **If you want to use a single non-default directory to store git data use a
 ###!   path that doesn't contain symlinks.**
 {% if gitlab_ce__rb_git_data_dirs_default_path is defined and gitlab_ce__rb_git_data_dirs_default_path | length %}
-git_data_dirs({
-    "default" => {
-        "path" => "{{ gitlab_ce__rb_git_data_dirs_default_path }}"
-    }
-})
+gitaly['configuration'] = {
+  storage: [
+      {
+          name: 'default',
+          path: '{{ gitlab_ce__rb_git_data_dirs_default_path }}/repositories',
+      },
+  ],
+}
 {% endif %}
 
 ### Gitaly settings
