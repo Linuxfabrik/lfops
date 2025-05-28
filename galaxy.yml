@@ -7,8 +7,9 @@ namespace: 'linuxfabrik'
 # The name of the collection. Has the same character restrictions as 'namespace'
 name: 'lfops'
 
-# The version of the collection. Must be compatible with semantic versioning
-version: '2.0.1'
+# The version of the collection. Must be compatible with semantic versioning.
+# Note: "main" is invalid but will be automatically set correctly during the GitHub Actions.
+version: 'main'
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: 'README.md'
@@ -51,7 +52,7 @@ tags:
 # L(specifiers,https://python-semanticversion.readthedocs.io/en/latest/#requirement-specification). Multiple version
 # range specifiers can be set and are separated by ','
 dependencies:
-  'ansible.utils': '*'  # note: "*" selects the highest version available
+  'ansible.utils': '*' # note: "*" selects the highest version available
   'ansible.windows': '*'
   'community.crypto': '*'
   'community.grafana': '*'
@@ -84,3 +85,5 @@ issues: 'https://github.com/linuxfabrik/lfops/issues'
 # and '.git' are always filtered
 build_ignore:
   - '.git*'
+  - 'build'
+  - 'context'

@@ -1,9 +1,9 @@
+venv/*
 **/.DS_Store
-**/.cache/*
-**/__pycache__/*
 *.tar.gz
-.ansible/
+tests/output/*
+**/__pycache__/*
+**/.cache/*
 playbooks/test.yml
 roles/test
-tests/output/*
-venv/*
+context/

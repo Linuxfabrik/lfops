@@ -1,5 +1,5 @@
 # build with
-# ansible-builder build --tag lfops_ee -vvv
+# ansible-builder build --tag lfops_ee:local -vvv
 # takes around 3 mins
 
 # https://ansible.readthedocs.io/projects/builder/en/stable/definition/#builder-ee-definition
@@ -16,7 +16,7 @@ dependencies:
   ansible_core:
     package_pip: 'ansible-core>=2.16.0,<2.17.0' # make sure the ansible version works with rhel8
 
-  galaxy: 'requirements.yml'
+  galaxy: 'execution-environment-requirements.yml'
 
   python:
     - 'passlib' # required for ansible.builtin.password_hash filter
@@ -27,3 +27,7 @@ dependencies:
 
   system:
     - 'git-core' # required for ansible.builtin.git module
+
+additional_build_files:
+  - src: 'linuxfabrik-lfops.tar.gz'
+    dest: '.'
