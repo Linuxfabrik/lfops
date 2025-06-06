@@ -15,31 +15,35 @@
       mode: 0o640
     notify: 'icinga_kubernetes: restart icinga-kubernetes'
 
-  - name: 'mkdir -p /etc/systemd/system/icinga-kubernetes.service.d/'
-    ansible.builtin.file:
-      path: '/etc/systemd/system/icinga-kubernetes.service.d/'
-      owner: 'root'
-      group: 'root'
-      mode: 0o755
-      state: 'directory'
-
-  - name: 'Deploy /etc/systemd/system/icinga-kubernetes.service.d/kubeconfig.conf'
+  - name: 'Deploy /etc/icinga-kubernetes/*.env'
     ansible.builtin.template:
-      src: 'etc/systemd/system/icinga-kubernetes.service.d/kubeconfig.conf.j2'
-      dest: '/etc/systemd/system/icinga-kubernetes.service.d/kubeconfig.conf'
+      src: 'etc/icinga-kubernetes/cluster.env.j2'
+      dest: '/etc/icinga-kubernetes/{{ item["name"] }}.env'
       owner: 'root'
       group: 'root'
       mode: 0o644
     notify: 'icinga_kubernetes: systemctl daemon reload && restart icinga-kubernetes'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ icinga_kubernetes__clusters__combined_var }}'
+
+  - name: 'Remove /etc/icinga-kubernetes configs'
+    ansible.builtin.file:
+      path: '/etc/icinga-kubernetes/{{ item["name"] }}.env'
+      state: 'absent'
+    notify: 'icinga_kubernetes: systemctl daemon reload && restart icinga-kubernetes'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ icinga_kubernetes__clusters__combined_var }}'
+
+  - name: 'Flush handlers'
+    ansible.builtin.meta: 'flush_handlers'
 
   - name: 'systemctl {{ icinga_kubernetes__service_enabled | bool | ternary("enable", "disable") }} --now icinga-kubernetes.service'
     ansible.builtin.systemd:
       name: 'icinga-kubernetes.service'
       enabled: '{{ icinga_kubernetes__service_enabled }}'
       state: '{{ icinga_kubernetes__service_enabled | bool | ternary("started", "stopped") }}'
-
-  - name: 'Flush handlers'
-    ansible.builtin.meta: 'flush_handlers'
 
   tags:
     - 'icinga_kubernetes'

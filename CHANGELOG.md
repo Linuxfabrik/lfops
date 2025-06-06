@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:icinga_kubernetes
+* Switched config to v0.3.0 multi-cluster format, removed `icinga_kubernetes__kubeconfig_path`
+
 Role:icingaweb2_module_director:
 
 * The `icingaweb2_module_director:basket` only runs if explicitly called to prevent accidental config overwrites.
