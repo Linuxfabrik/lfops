@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025051301
+# 2025060601
 # 10.6
 
 [client]
@@ -144,6 +144,17 @@ wsrep_provider_options = {{ mariadb_server__cnf_wsrep_provider_options }}
 wsrep_slave_threads    = {{ mariadb_server__cnf_wsrep_slave_threads }}
 wsrep_sst_auth         = {{ mariadb_server__cnf_wsrep_sst_auth }}
 wsrep_sst_method       = {{ mariadb_server__cnf_wsrep_sst_method }}
+
+[sst]
+{% if mariadb_server__cnf_sst_encrypt is defined and mariadb_server__cnf_sst_encrypt | string | length %}
+encrypt = {{ mariadb_server__cnf_sst_encrypt }}
+{% endif %}
+{% if mariadb_server__cnf_sst_tcert is defined and mariadb_server__cnf_sst_tcert | length %}
+tcert   = {{ mariadb_server__cnf_sst_tcert }}
+{% endif %}
+{% if mariadb_server__cnf_sst_tkey is defined and mariadb_server__cnf_sst_tkey | length %}
+tkey    = {{ mariadb_server__cnf_sst_tkey }}
+{% endif %}
 
 [embedded]
 
