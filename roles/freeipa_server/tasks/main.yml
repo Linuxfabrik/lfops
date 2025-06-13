@@ -11,6 +11,17 @@
       that: 'ansible_facts["domain"] is defined and ansible_facts["domain"] | length'
       fail_msg: 'DNS reverse lookup for "{{ ansible_facts["fqdn"] }}" failed. This is required for FreeIPA to work.'
 
+  - name: 'Running freeipa.ansible_freeipa.ipaserver with following vars'
+    ansible.builtin.debug:
+      msg:
+        ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+        ipaclient_mkhomedir: true
+        ipaclient_no_ntp: true
+        ipadm_password: '{{ freeipa_server__directory_manager_password }}'
+        ipaserver_domain: '{{ freeipa_server__domain }}'
+        ipaserver_realm: '{{ freeipa_server__realm }}'
+        ipaserver_setup_firewalld: false
+
   - name: 'Use freeipa.ansible_freeipa.ipaserver role to install and configure FreeIPA as a server'
     ansible.builtin.include_role:
       name: 'freeipa.ansible_freeipa.ipaserver'
