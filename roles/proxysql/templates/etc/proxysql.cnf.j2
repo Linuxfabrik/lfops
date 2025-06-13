@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025051401
+# 2025061302
 
 #file proxysql.cfg
 
@@ -39,7 +39,7 @@ errorlog="/var/lib/proxysql/proxysql.log"
 
 admin_variables=
 {
-    admin_credentials="{% for item in proxysql__admin_users %}{{ item["username"] }}:{{ item["password"] }};{% endfor %}"
+    admin_credentials="{% for item in proxysql__admin_users %}{{ item["username"] }}:{{ item["password"] }};{% endfor %}{% if proxysql__cluster_user is defined and proxysql__cluster_user | length %}{{ proxysql__cluster_user["username"] }}:{{ proxysql__cluster_user["password"] }}{% endif %}"
 #	mysql_ifaces="127.0.0.1:6032;/tmp/proxysql_admin.sock"
     {% if proxysql__cluster_user is defined and proxysql__cluster_user | length %}
     cluster_username="{{ proxysql__cluster_user["username"] }}"
@@ -57,6 +57,7 @@ mysql_variables=
 	default_query_delay=0
 	default_query_timeout=36000000
 	have_compress=true
+    have_ssl=true
 	poll_timeout=2000
 #	interfaces="0.0.0.0:6033;/tmp/proxysql.sock"
     interfaces="0.0.0.0:6033"
