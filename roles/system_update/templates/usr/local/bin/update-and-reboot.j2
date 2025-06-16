@@ -73,7 +73,7 @@ fi
 
 # do the update, and print only critical errors about which we must be told
 {% if ansible_facts['os_family'] == 'RedHat' %}
-yum -y update {{ system_update__cache_only | bool | ternary("--cacheonly", "") }} 1> /dev/null 2> /tmp/system-update-stderr
+yum -y update {{ system_update__cache_only | bool | ternary("--cacheonly --setopt=metadata_timer_sync=0", "") }} 1> /dev/null 2> /tmp/system-update-stderr
 if [ $? -ne 0 ]; then
     SUBJECT="$SUBJECT_PREFIX - System update failed"
     MSGBODY=$(</tmp/system-update-stderr)
