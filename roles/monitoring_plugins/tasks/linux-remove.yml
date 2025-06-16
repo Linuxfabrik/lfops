@@ -113,7 +113,7 @@
           /usr/lib64/nagios/plugins/countdown \
           /usr/lib64/nagios/plugins/cpu-usage \
           /usr/lib64/nagios/plugins/crypto-policy \
-          /usr/lib64/nagios/plugins/cryptography-* \
+          /usr/lib64/nagios/plugins/cryptography* \
           /usr/lib64/nagios/plugins/csv-values \
           /usr/lib64/nagios/plugins/deb-lastactivity \
           /usr/lib64/nagios/plugins/debtcollector-* \
@@ -413,15 +413,17 @@
           /usr/lib64/nagios/plugins/yaml \
           /usr/lib64/nagios/plugins/zlib.so \
           /usr/lib64/nagios/plugins/zstandard
-      dest: '/tmp/linuxfabrik-remove-plugins.sh'
+      dest: '/root/linuxfabrik-remove-plugins.sh'
       mode: 0o755
+      owner: 'root'
+      group: 'root'
 
   - name: 'Remove legacy plugins and remnant files via cleanup script'
-    ansible.builtin.command: '/tmp/linuxfabrik-remove-plugins.sh'
+    ansible.builtin.command: '/root/linuxfabrik-remove-plugins.sh'
 
   - name: 'Remove cleanup script'
     ansible.builtin.file:
-      path: '/tmp/linuxfabrik-remove-plugins.sh'
+      path: '/root/linuxfabrik-remove-plugins.sh'
       state: 'absent'
 
   - name: 'Make sure the legacy sudoers file is absent'
