@@ -6,8 +6,8 @@
         - 'Target OS: {{ ansible_facts["os_family"] }}'
         - 'monitoring_plugins__install_method: {{ monitoring_plugins__install_method }}'
         - 'monitoring_plugins__version: {{ monitoring_plugins__version }}'
-        - '__monitoring_plugins__versionlock_lock_command: {{ __monitoring_plugins__versionlock_lock_command }}'
-        - '__monitoring_plugins__versionlock_unlock_command: {{ __monitoring_plugins__versionlock_unlock_command }}'
+        - '__monitoring_plugins__versionlock_lock_command: {{ __monitoring_plugins__versionlock_lock_command | d("*unset*") }}'
+        - '__monitoring_plugins__versionlock_unlock_command: {{ __monitoring_plugins__versionlock_unlock_command | d("*unset*") }}'
 
   tags:
     - 'monitoring_plugins'
