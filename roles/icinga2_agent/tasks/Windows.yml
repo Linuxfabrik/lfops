@@ -24,6 +24,7 @@
 
   tags:
     - 'icinga2_agent'
+    - 'icinga2_agent:update'
 
 
 - block:
@@ -86,6 +87,8 @@
       name: 'Icinga 2'
       state: 'restarted'
       username: '{{ icinga2_agent__windows_service_user }}'
+    tags:
+      - 'icinga2_agent:update'
 
   - name: 'add host to icinga director'
     ansible.windows.win_uri:
