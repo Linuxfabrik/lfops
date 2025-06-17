@@ -1,9 +1,9 @@
 - block:
 
   # https://www.opensearch.com/docs/v6.0/tutorial/install-opensearch-on-debian/
-  - name: 'curl https://artifacts.opensearch.org/publickeys/opensearch.pgp --output /tmp/ansible.opensearch.pgp'
+  - name: 'curl https://artifacts.opensearch.org/publickeys/opensearch-release.pgp --output /tmp/ansible.opensearch.pgp'
     ansible.builtin.get_url:
-      url: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
+      url: 'https://artifacts.opensearch.org/publickeys/opensearch-release.pgp'
       dest: '/tmp/ansible.opensearch.pgp'
       mode: 0o644
     delegate_to: 'localhost'
