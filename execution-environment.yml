@@ -19,8 +19,8 @@ dependencies:
   galaxy: 'execution-environment-requirements.yml'
 
   python:
-    - 'jmespath'
-    - 'netaddr'
+    - 'jmespath' # required for community.general.json_query
+    - 'netaddr' # required for ansible.utils.ipaddr
     - 'passlib' # required for ansible.builtin.password_hash filter
     - 'pywinrm'
 
