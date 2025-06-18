@@ -433,7 +433,7 @@
 
   - name: 'Make sure the backup sudoers file is absent'
     ansible.builtin.file:
-      path: '/etc/sudoers.d/monitoring-plugins.bak'
+      path: '/etc/sudoers.d/monitoring-plugins'
       state: 'absent'
 
   - name: 'Make sure the legacy Linuxfabrik plugin cache is removed'
