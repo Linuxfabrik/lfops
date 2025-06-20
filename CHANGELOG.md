@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:mastodon
+* Added
+
 Role:icingaweb2_module_pdfexport
 * Added
 
