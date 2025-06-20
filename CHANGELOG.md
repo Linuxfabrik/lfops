@@ -10,7 +10,10 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order)
 
-tbd
+### Added
+
+Role:elasticsearch_oss
+* Added `elasticsearch_oss__discovery_type`, `elasticsearch_oss__network_host` variables; reset jvm tmp directory
 
 
 ## [v3.0.0] - 2025-06-13

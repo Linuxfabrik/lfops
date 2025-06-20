@@ -26,6 +26,8 @@ If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blo
 | -------- | ----------- | ------------- |
 | `elasticsearch_oss__action_auto_create_index__host_var` / <br> `elasticsearch_oss__action_auto_create_index__group_var` | Automatic index creation allows any index to be created automatically. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `true` |
 | `elasticsearch_oss__cluster_name__host_var` / <br> `elasticsearch_oss__cluster_name__group_var` | A descriptive name for your cluster. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
+| `elasticsearch_oss__discovery_type` | Specifies whether Elasticsearch should form a multiple-node cluster where Elasticsearch discovers other nodes when forming a cluster and allows other nodes to join the cluster later. If set to `single-node`, Elasticsearch forms a single-node cluster where the node will elect itself master and will not join a cluster with any other node. | `unset` |
+| `elasticsearch_oss__network_host` | Sets the address for both HTTP and transport traffic. Accepts an IP address, a hostname, or a [special value](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/modules-network.html#network-interface-values). | `'_local_'` |
 | `elasticsearch_oss__service_enabled` | Enables or disables the elasticsearch oss service, analogous to `systemctl enable/disable --now`. | `true` |
 
 
