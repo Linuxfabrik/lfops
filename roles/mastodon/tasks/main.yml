@@ -1,0 +1,49 @@
+- block:
+
+  - name: 'Migrate PostgreSQL database'
+    ansible.builtin.command: 'bundle exec rails db:migrate'
+    register: '__mastodon__migrate'
+    changed_when: '"migrated" in __mastodon__migrate["stdout"]'
+    failed_when: '__mastodon__migrate["rc"] != 0'
+    become: true
+    become_user: 'mastodon'
+  tags:
+    - 'mastodon'
+    - 'mastodon:migrate'
+
+
+- block:
+
+  - name: 'Deploy Elasticsearch indices'
+    ansible.builtin.command: 'podman exec mastodon-web tootctl search deploy --no-import'
+    register: '__mastodon__deploy_search'
+    changed_when: '"Upgrading" in __mastodon__deploy_search["stdout"]'
+    failed_when: '__mastodon__deploy_search["rc"] != 0'
+    become: true
+    become_user: 'mastodon'
+  tags:
+    - 'mastodon'
+    - 'mastodon:deploy_search'
+
+
+- block:
+
+  - name: 'Create Mastodon users'
+    ansible.builtin.command: >
+      podman exec mastodon-web tootctl accounts create
+      {{ item["approve"] | d("False") | bool | ternary("--approve", "") }}
+      {{ item["confirmed"] | d("False") | bool | ternary("--confirmed", "") }}
+      --email {{ item["email"] }}
+      {% if item["role"] is defined and item["role"] | length %}
+      --role {{ item["role"] }}
+      {% endif %}
+      {{ item["name"] }}
+    register: '__mastodon__new_user'
+    changed_when: '"OK" in __mastodon__new_user["stdout"]'
+    failed_when: '__mastodon__new_user["rc"] != 0 and not __mastodon__new_user["stderr"] | regex_search("account.username\s+taken")'
+    become: true
+    become_user: 'mastodon'
+    loop: '{{ mastodon__users__combined_var }}'
+  tags:
+    - 'mastodon'
+    - 'mastodon:users'
