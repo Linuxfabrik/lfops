@@ -1,5 +1,5 @@
 systemd_journald__conf_storage: 'persistent'
-systemd_journald__conf_system_keep_free: '15%'
+systemd_journald__conf_system_keep_free: '70%'
 systemd_journald__conf_system_max_use: '5G'
 
 systemd_journald__service_enabled: true

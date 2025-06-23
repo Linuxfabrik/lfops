@@ -1,0 +1,72 @@
+# {{ ansible_managed }}
+# 2025062301 - taken from Rocky 9.3
+
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it under the
+#  terms of the GNU Lesser General Public License as published by the Free
+#  Software Foundation; either version 2.1 of the License, or (at your option)
+#  any later version.
+#
+# Entries in this file show the compile time defaults. Local configuration
+# should be created by either modifying this file, or by creating "drop-ins" in
+# the journald.conf.d/ subdirectory. The latter is generally recommended.
+# Defaults can be restored by simply deleting this file and all drop-ins.
+#
+# Use 'systemd-analyze cat-config systemd/journald.conf' to display the full config.
+#
+# See journald.conf(5) for details.
+
+{% set systemd_journald__conf_system_max_use = systemd_journald__conf_system_max_use | string %}
+{% if systemd_journald__conf_system_max_use.endswith('%') %}
+    {% set journal_mb = systemd_journald_var_log_journal_df_result.stdout_lines[1] | trim | replace('M','') | int %}
+    {% set pct = systemd_journald__conf_system_max_use[:-1] | int %}
+    {% set systemd_journald__conf_system_max_use = (
+         (journal_mb * pct / 100)
+         | int
+       ) ~ 'M'
+    %}
+{% endif %}
+
+{% set systemd_journald__conf_system_keep_free = systemd_journald__conf_system_keep_free | string %}
+{% if systemd_journald__conf_system_keep_free.endswith('%') %}
+    {% set journal_mb = systemd_journald_var_log_journal_df_result.stdout_lines[1] | trim | replace('M','') | int %}
+    {% set pct = systemd_journald__conf_system_keep_free[:-1] | int %}
+    {% set systemd_journald__conf_system_keep_free = (
+         (journal_mb * pct / 100)
+         | int
+       ) ~ 'M'
+    %}
+{% endif %}
+
+[Journal]
+Storage={{ systemd_journald__conf_storage }}
+#Compress=yes
+#Seal=yes
+#SplitMode=uid
+#SyncIntervalSec=5m
+#RateLimitIntervalSec=30s
+#RateLimitBurst=10000
+SystemMaxUse={{ systemd_journald__conf_system_max_use }}
+SystemKeepFree={{ systemd_journald__conf_system_keep_free }}
+#SystemMaxFileSize=
+#SystemMaxFiles=100
+#RuntimeMaxUse=
+#RuntimeKeepFree=
+#RuntimeMaxFileSize=
+#RuntimeMaxFiles=100
+#MaxRetentionSec=
+#MaxFileSec=1month
+#ForwardToSyslog=no
+#ForwardToKMsg=no
+#ForwardToConsole=no
+#ForwardToWall=yes
+#TTYPath=/dev/console
+#MaxLevelStore=debug
+#MaxLevelSyslog=debug
+#MaxLevelKMsg=notice
+#MaxLevelConsole=info
+#MaxLevelWall=emerg
+#LineMax=48K
+#ReadKMsg=yes
+Audit=

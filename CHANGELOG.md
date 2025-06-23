@@ -16,6 +16,12 @@ Role:elasticsearch_oss
 * Added `elasticsearch_oss__discovery_type`, `elasticsearch_oss__network_host` variables; reset jvm tmp directory
 
 
+### Changed
+
+Role:systemd_journald
+* Move config file to /etc/systemd/journald.conf.d/z00-linuxfabrik.conf, improve calculations and default values
+
+
 ## [v3.0.0] - 2025-06-13
 
 ### Breaking Changes
