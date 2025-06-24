@@ -19,6 +19,12 @@ Role:elasticsearch_oss
 * Added `elasticsearch_oss__discovery_type`, `elasticsearch_oss__network_host` variables; reset jvm tmp directory
 
 
+### Fixed
+
+Role:elasticsearch_oss
+* Moved tmpdir to a location with exec permissions specified by CIS hardening
+
+
 ## [v3.0.0] - 2025-06-13
 
 ### Breaking Changes

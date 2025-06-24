@@ -23,3 +23,8 @@ elasticsearch_oss__action_auto_create_index__combined_var: '{{
     elasticsearch_oss__action_auto_create_index__dependent_var if (elasticsearch_oss__action_auto_create_index__dependent_var | string | length) else
     elasticsearch_oss__action_auto_create_index__role_var
   }}'
+
+elasticsearch_oss__files__directories__dependent_var:
+  - path: '/var/lib/elasticsearch/tmp'
+    owner: 'elasticsearch'
+    group: 'elasticsearch'

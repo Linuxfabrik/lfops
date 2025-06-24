@@ -12,6 +12,13 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.files'
+      files__directories__dependent_var: '{{
+          elasticsearch_oss__files__directories__dependent_var
+        }}'
+      when:
+        - 'not elasticsearch_oss__skip_files | d(false)'
+
     - role: 'linuxfabrik.lfops.repo_elasticsearch_oss'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
