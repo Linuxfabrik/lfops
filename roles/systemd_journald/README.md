@@ -4,14 +4,14 @@ This role configures Systemd's logging service "journald".
 
 From `man journald.conf`:
 
-* SystemKeepFree= control how much disk space systemd-journald shall leave free for other uses.
-* SystemMaxUse= control how much disk space the journal may use up at most.
-* systemd-journald will respect both limits and use the smaller of the two values.
+* `SystemKeepFree=` control how much disk space systemd-journald shall leave free for other uses.
+* `SystemMaxUse=` control how much disk space the journal may use up at most.
+* `systemd-journald` will respect both limits and use the smaller of the two values.
 
 Example with numbers on a 100G disk:
 
-* SystemKeepFree=10G means that journald may use at most 100G - 10G = 90G
-* SystemMaxUse=20G
+* `SystemKeepFree=10G` means that journald may use at most `100G - 10G = 90G`
+* `SystemMaxUse=20G`
 
 Whenever journald needs to free space, it computes `min(90G, 20G)`, and then deletes archived journal files until usage <= that value. Here, journald will grow the journal up to about 20G, then start deleting archived files to stay under that cap.
 

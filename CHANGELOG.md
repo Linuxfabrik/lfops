@@ -19,7 +19,7 @@ Role:elasticsearch_oss
 ### Changed
 
 Role:systemd_journald
-* Move config file to /etc/systemd/journald.conf.d/z00-linuxfabrik.conf, improve calculations and default values
+* Move config file to `/etc/systemd/journald.conf.d/z00-linuxfabrik.conf`, improve calculations and default values
 
 
 ## [v3.0.0] - 2025-06-13
