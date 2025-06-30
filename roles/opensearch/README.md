@@ -46,7 +46,7 @@ opensearch__opensearch_initial_admin_password: 'linuxfabrik'
 
 ## TLS Certificate Generation
 
-Completely unrelated to the rest of the tasks, just a convenience feature to help the admin generate TLS certificates: Use the following variables to easily generate self-signed certificates. These tasks run against the ansible controller. Internally, the [SecureGuard TLS Tool](https://docs.search-guard.com/latest/offline-tls-tool) is used for this, with the generated config at `/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml`.
+Just a convenience feature to help the admin generate TLS certificates: Use the following variables to easily generate self-signed certificates before installing Opensearch. These tasks run against the ansible controller. Internally, the [SecureGuard TLS Tool](https://docs.search-guard.com/latest/offline-tls-tool) is used for this, with the generated config at `/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml`.
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
@@ -66,7 +66,7 @@ opensearch__generate_certs_nodes:
     ip: '192.0.2.10'
 ```
 
-Run: `ansible-playbook --inventory=myinv linuxfabrik.lfops.setup_graylog_server --tags=opensearch:generate_certs`
+Run: `ansible-playbook --inventory=myinv linuxfabrik.lfops.opensearch --tags=opensearch:generate_certs`
 
 
 ## Optional Role Variables - General

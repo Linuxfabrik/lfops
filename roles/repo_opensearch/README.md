@@ -14,12 +14,12 @@ This role deploys the [Opensearch Package Repository](https://opensearch.org/doc
 
 | Variable | Description |
 | -------- | ----------- |
-| `repo_opensearch__version__host_var` / <br> `repo_opensearch__version__group_var` | The version of the Opensearch repository which should be installed.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). |
+| `repo_opensearch__version__host_var` / <br> `repo_opensearch__version__group_var` | The version of the Opensearch repository which should be installed. One of `'1.x'`, `'2.x'` or `'3.x'`.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). |
 
 Example:
 ```yaml
 # mandatory
-repo_opensearch__version__host_var: '2.x'  # or '1.x'
+repo_opensearch__version__host_var: '2.x'
 ```
 
 
