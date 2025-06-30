@@ -16,6 +16,12 @@ Role:elasticsearch_oss
 * Added `elasticsearch_oss__discovery_type`, `elasticsearch_oss__network_host` variables; reset jvm tmp directory
 
 
+### Fixed
+
+Role:repo_opensearch
+* Fix GPG key
+
+
 ### Changed
 
 Role:systemd_journald
