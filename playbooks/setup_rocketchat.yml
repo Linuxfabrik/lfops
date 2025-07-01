@@ -64,13 +64,6 @@
       when:
         - 'not setup_rocketchat__skip_login | d(false)'
 
-    - role: 'linuxfabrik.lfops.files'
-      files__files__dependent_var: '{{
-          rocketchat__files__files__dependent_var
-        }}'
-      when:
-        - 'not setup_rocketchat__skip_files | d(false)'
-
     - role: 'linuxfabrik.lfops.podman_containers'
       podman_containers__containers__dependent_var: '{{
           rocketchat__podman_containers__containers__dependent_var

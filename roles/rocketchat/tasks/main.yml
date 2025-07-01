@@ -1,0 +1,13 @@
+- block:
+
+  - name: 'Deploy {{ rocketchat__user_home_directory }}/rocketchat.env'
+    ansible.builtin.template:
+      src: 'opt/rocketchat/rocketchat.env.j2'
+      dest: '{{ rocketchat__user_home_directory }}/rocketchat.env'
+      owner: 'rocketchat'
+      group: 'rocketchat'
+      mode: 0o600
+    notify: 'systemctl --user restart rocketchat-container.service'
+
+  tags:
+    - 'rocketchat'

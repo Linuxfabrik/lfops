@@ -1,0 +1,7 @@
+- name: 'systemctl --user restart rocketchat-container.service'
+  ansible.builtin.systemd:
+    name: 'rocketchat-container.service'
+    scope: 'user'
+    state: 'restarted'
+  become: true
+  become_user: 'rocketchat'
