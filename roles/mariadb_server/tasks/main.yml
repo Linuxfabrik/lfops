@@ -198,6 +198,7 @@
     - 'mariadb_server:clone_datadir'
     - 'mariadb_server:configure'
     - 'mariadb_server:secure_installation'
+    - 'mariadb_server:upgrade'
 
 
 - block:
