@@ -5,6 +5,7 @@ This role installs [Moodle](https://moodle.org/), an open source Learning Manage
 This role supports the following Moodle versions:
 
 * v4.1 LTS
+* v4.5 LTS
 
 Setting the version manually:
 
