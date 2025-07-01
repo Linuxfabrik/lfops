@@ -24,6 +24,9 @@ Role:repo_opensearch
 
 ### Changed
 
+Role:moodle
+* Add `moodle__version` variable to select the major and minor version
+
 Role:systemd_journald
 * Move config file to `/etc/systemd/journald.conf.d/z00-linuxfabrik.conf`, improve calculations and default values
 
