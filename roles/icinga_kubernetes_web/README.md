@@ -41,7 +41,7 @@ icinga_kubernetes_web__version: 'v0.2.0'
 Example:
 ```yaml
 # optional
-icinga_kubernetes_web__url: 'https://github.com/Linuxfabrik/icingaweb2-module-businessprocess/archive/{{ icinga_kubernetes_web__version }}.tar.gz'
+icinga_kubernetes_web__url: 'https://github.com/Linuxfabrik/icingaweb2-module-kubernetes-web/archive/{{ icinga_kubernetes_web__version }}.tar.gz'
 ```
 
 
