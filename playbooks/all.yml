@@ -47,6 +47,7 @@
 - import_playbook: 'icingaweb2_module_doc.yml'
 - import_playbook: 'icingaweb2_module_incubator.yml'
 - import_playbook: 'icingaweb2_module_monitoring.yml'
+- import_playbook: 'icingaweb2_module_pdfexport.yml'
 - import_playbook: 'influxdb.yml'
 - import_playbook: 'infomaniak_vm.yml'
 - import_playbook: 'kdump.yml'

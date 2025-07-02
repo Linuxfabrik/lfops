@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:icingaweb2_module_pdfexport
+* Added
+
 Role:elasticsearch_oss
 * Added `elasticsearch_oss__discovery_type`, `elasticsearch_oss__network_host` variables; reset jvm tmp directory
 

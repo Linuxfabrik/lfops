@@ -1,0 +1,48 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  - name: 'mkdir -p /usr/share/icingaweb2/modules/pdfexport'
+    ansible.builtin.file:
+      path: '/usr/share/icingaweb2/modules/pdfexport'
+      state: 'directory'
+      owner: '{{ icingaweb2_module_pdfexport__icingaweb2_owner }}'
+      group: 'icingaweb2'
+      mode: 0o755
+
+  - name: 'curl https://github.com/Icinga/icingaweb2-module-pdfexport/archive/{{ icingaweb2_module_pdfexport__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://github.com/Icinga/icingaweb2-module-pdfexport/archive/{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+      dest: '/tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+
+  - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/pdfexport /tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+      dest: '/usr/share/icingaweb2/modules/pdfexport'
+      remote_src: false
+      extra_opts:
+        - '--strip-components=1'
+
+  - name: 'rm -f /tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+    ansible.builtin.file:
+      path: '/tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+      state: 'absent'
+
+  - name: 'icingacli module enable pdfexport'
+    ansible.builtin.command: 'icingacli module enable pdfexport'
+    args:
+      creates: '/etc/icingaweb2/enabledModules/pdfexport'
+
+  tags:
+    - 'icingaweb2_module_pdfexport'
