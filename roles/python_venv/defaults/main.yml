@@ -1,3 +1,5 @@
+python_venv__pip_conf_global_retries: 0
+
 python_venv__venvs__dependent_var: []
 python_venv__venvs__group_var: []
 python_venv__venvs__host_var: []

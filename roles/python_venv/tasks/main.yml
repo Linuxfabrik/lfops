@@ -14,6 +14,14 @@
       name: '{{ python_venv__required_packages }}'
       state: 'present'
 
+  - name: 'Deploy /etc/pip.conf'
+    ansible.builtin.template:
+      src: 'etc/pip.conf.j2'
+      dest: '/etc/pip.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
   # - name: 'Deploy /etc/systemd/system/python-venv-update.service'
   #   ansible.builtin.template:
   #     src: 'etc/systemd/system/python-venv-update.service.j2'
