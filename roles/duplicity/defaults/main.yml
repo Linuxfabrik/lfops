@@ -57,6 +57,8 @@ duplicity__python_venv__venvs__dependent_var:
     package_requirements:
       - 'gcc'
       - 'librsync-devel'
+      - 'python3.11-devel'
+    python_executable: 'python3.11'
     exposed_binaries:
       - 'duplicity'
 
