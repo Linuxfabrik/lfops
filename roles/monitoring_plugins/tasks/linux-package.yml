@@ -11,11 +11,6 @@
     ansible.builtin.command: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins*'
     ignore_errors: true
 
-  - name: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins*'
-    ansible.builtin.command: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins*'
-    ignore_errors: true
-    when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
-
   # block
   when:
     - 'not monitoring_plugins__skip_package_versionlock'
@@ -40,13 +35,6 @@
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 
-  # - name: 'install linuxfabrik-notification-plugins{{ (monitoring_plugins__version | length) | ternary("-" ~ monitoring_plugins__version, "") }}' # noqa package-latest
-  #   ansible.builtin.package:
-  #     name:
-  #       - 'linuxfabrik-notification-plugins{{ (monitoring_plugins__version | length) | ternary("-" ~ monitoring_plugins__version, "") }}'
-  #     state: 'latest' # use latest for the versionlock after
-  #   when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
-
   tags:
     - 'monitoring_plugins'
 
@@ -55,10 +43,6 @@
 
   - name: '{{ __monitoring_plugins__versionlock_lock_command }} linuxfabrik-monitoring-plugins*'
     ansible.builtin.command: '{{ __monitoring_plugins__versionlock_lock_command }} linuxfabrik-monitoring-plugins*'
-
-  - name: '{{ __monitoring_plugins__versionlock_lock_command }} linuxfabrik-notification-plugins*'
-    ansible.builtin.command: '{{ __monitoring_plugins__versionlock_lock_command }} linuxfabrik-notification-plugins*'
-    when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
 
   # block
   when:

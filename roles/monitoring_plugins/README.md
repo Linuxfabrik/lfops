@@ -59,8 +59,7 @@ monitoring_plugins__version: '1.2.0.11'
 | `monitoring_plugins__icinga2_cn` | String. The common name / host name. Will be used to schedule a downtime for Windows hosts. | `'{{ ansible_facts["nodename"] }}'` |
 | `monitoring_plugins__icinga_user` | String. The user running the Monitoring Plugins. The role installs the pip packages from the requirements.yml for this user. Only relevant if `monitoring_plugins__install_method: 'source'`.  | `'icinga'` on RHEL, `'nagios'` on Debian |
 | `monitoring_plugins__install_method` | String. Which variant of the monitoring plugins should be deployed? Possible options:<ul><li>`package`: Deploy the install package with the compiled checks. This does not require Python on the system.</li><li>`source`: Deploy the plugins as source code. This requires Python to be installed. Currently for Linux only.</li><li>`archive`: Deploy the compiled binaries from a zip file downloaded from [download.linuxfabrik.ch](https://download.linuxfabrik.ch). Currently for Windows only.</li></ul> | `'package'` |
-| `monitoring_plugins__skip_notification_plugins__host_var` / `monitoring_plugins__skip_notification_plugins__group_var` | Skips the deployment of the notification-plugins (in addition to the check-plugins). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `true` |
-| `monitoring_plugins__skip_package_versionlock` | By default, the version of the `linuxfabrik-monitoring-plugins` and `linuxfabrik-notification-plugins` are locked after installation. Setting this to `true` skips this step (and never unlocks the version pinning again). | `false` |
+| `monitoring_plugins__skip_package_versionlock` | By default, the version of the `linuxfabrik-monitoring-plugins` are locked after installation. Setting this to `true` skips this step (and never unlocks the version pinning again). | `false` |
 
 Example:
 ```yaml
@@ -71,7 +70,6 @@ monitoring_plugins__icinga2_api_user: 'downtime-api-user'
 monitoring_plugins__icinga2_cn: 'windows1.example.com'
 monitoring_plugins__icinga_user: 'icinga'
 monitoring_plugins__install_method: 'source'
-monitoring_plugins__skip_notification_plugins__host_var: true
 monitoring_plugins__skip_package_versionlock: false
 ```
 

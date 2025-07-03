@@ -27,6 +27,9 @@ Role:repo_opensearch
 
 ### Changed
 
+Role:monitoring_plugins:
+* Removed `monitoring_plugins__skip_notification_plugins__*_var` variables as they are now always installed
+
 Role:moodle
 * Add `moodle__version` variable to select the major and minor version
 

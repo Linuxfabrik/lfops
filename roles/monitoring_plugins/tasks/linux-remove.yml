@@ -22,7 +22,6 @@
 
   - name: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins'
     ansible.builtin.command: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-notification-plugins'
-    when: 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
 
   - name: 'Remove linuxfabrik-monitoring-plugins'
     ansible.builtin.package:
@@ -34,9 +33,7 @@
     ansible.builtin.package:
       name:
         - 'linuxfabrik-notification-plugins*'
-      state: 'absent' # to save disk space
-    when:
-      - 'not monitoring_plugins__skip_notification_plugins__combined_var | bool'
+      state: 'absent'
 
   - name: 'Create cleanup script'
     ansible.builtin.copy:
