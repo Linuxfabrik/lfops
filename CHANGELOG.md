@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:mastodon
+* Added
+
 Role:icingaweb2_module_pdfexport
 * Added
 
@@ -20,6 +23,9 @@ Role:elasticsearch_oss
 
 
 ### Fixed
+
+Role:elasticsearch_oss
+* Moved tmpdir to a location with exec permissions specified by CIS hardening
 
 Role:repo_opensearch
 * Fix GPG key

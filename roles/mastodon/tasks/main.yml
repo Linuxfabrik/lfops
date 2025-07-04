@@ -1,0 +1,79 @@
+- block:
+
+  - name: |-
+      mkdir -p {{ mastodon__user_home_directory }}/public/system
+      chown mastodon:mastodon {{ mastodon__user_home_directory }}/public/system
+      chmod 755 {{ mastodon__user_home_directory }}/public/system
+    ansible.builtin.file:
+      path: '{{ mastodon__user_home_directory }}/public/system'
+      state: 'directory'
+      owner: 'mastodon'
+      group: 'mastodon'
+      mode: 0o755
+
+  - name: 'Deploy {{ mastodon__user_home_directory }}/mastodon.env'
+    ansible.builtin.template:
+      src: 'opt/mastodon/mastodon.env.j2'
+      dest: '{{ mastodon__user_home_directory }}/mastodon.env'
+      owner: 'mastodon'
+      group: 'mastodon'
+      mode: 0o600
+
+  tags:
+    - 'mastodon'
+    - 'mastodon:configure'
+
+
+- block:
+
+  - name: 'Use linuxfabrik.lfops.podman_containers to deploy Mastodon containers'
+    ansible.builtin.include_role:
+      name: 'linuxfabrik.lfops.podman_containers'
+    vars:
+      podman_containers__containers__dependent_var: '{{ mastodon__podman_containers__containers__dependent_var }}'
+      podman_containers__networks__dependent_var: '{{ mastodon__podman_containers__networks__dependent_var }}'
+
+  tags:
+    - 'mastodon'
+    - 'mastodon:containers'
+
+
+- block:
+
+  - name: 'Deploy Elasticsearch indices'
+    ansible.builtin.command: 'podman exec mastodon-web tootctl search deploy --no-import'
+    register: '__mastodon__deploy_search'
+    changed_when: '"Upgrading" in __mastodon__deploy_search["stdout"]'
+    failed_when: '__mastodon__deploy_search["rc"] != 0'
+    become: true
+    become_user: 'mastodon'
+
+  tags:
+    - 'mastodon'
+    - 'mastodon:deploy_search'
+  when:
+    - 'not setup_mastodon__skip_elasticsearch_oss | d(false)'
+
+
+- block:
+
+  - name: 'Create Mastodon users'
+    ansible.builtin.command: >
+      podman exec mastodon-web tootctl accounts create
+      {{ item["approve"] | d(false) | ternary("--approve", "") }}
+      {{ item["confirmed"] | d(false) | ternary("--confirmed", "") }}
+      --email {{ item["email"] }}
+      {% if item["role"] is defined and item["role"] | length %}
+      --role {{ item["role"] }}
+      {% endif %}
+      {{ item["name"] }}
+    register: '__mastodon__new_user'
+    changed_when: '"OK" in __mastodon__new_user["stdout"]'
+    failed_when: '__mastodon__new_user["rc"] != 0 and not __mastodon__new_user["stderr"] | regex_search("account.username\s+taken")'
+    become: true
+    become_user: 'mastodon'
+    loop: '{{ mastodon__users__combined_var }}'
+
+  tags:
+    - 'mastodon'
+    - 'mastodon:users'

@@ -30,6 +30,17 @@
       mode: 0o664
     notify: 'elasticsearch_oss: restart elasticsearch'
 
+  - name: |-
+      mkdir -p /var/lib/elasticsearch/tmp
+      chown elasticsearch:elasticsearch /var/lib/elasticsearch/tmp
+      chmod 755 /var/lib/elasticsearch/tmp
+    ansible.builtin.file:
+      path: '/var/lib/elasticsearch/tmp'
+      state: 'directory'
+      owner: 'elasticsearch'
+      group: 'elasticsearch'
+      mode: 0o755
+
   tags:
     - 'elasticsearch_oss'
 

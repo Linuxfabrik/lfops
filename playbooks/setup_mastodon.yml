@@ -1,0 +1,124 @@
+- name: 'Playbook linuxfabrik.lfops.setup_mastodon'
+  hosts:
+    - 'lfops_setup_mastodon'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.python'
+      python__modules__dependent_var: '{{
+          login__python__modules__dependent_var +
+          postgresql_server__python__modules__dependent_var
+        }}'
+      when:
+        - 'not setup_mastodon__skip_python | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_postgresql'
+      when:
+        - 'not setup_mastodon__skip_repo_postgresql | d(false)'
+
+    - role: 'linuxfabrik.lfops.postgresql_server'
+      postgresql_server__databases__dependent_var: '{{
+          mastodon__postgresql_server__databases__dependent_var
+        }}'
+      postgresql_server__users__dependent_var: '{{
+          mastodon__postgresql_server__users__dependent_var
+        }}'
+      when:
+        - 'not setup_mastodon__skip_postgresql_server | d(false)'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ redis__kernel_settings__sysctl__dependent_var | d([]) }}'
+      kernel_settings__transparent_hugepages__dependent_var: "{{ redis__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      when:
+        - 'not setup_mastodon__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_remi'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_mastodon__skip_repo_remi | default(false)'
+
+    - role: 'linuxfabrik.lfops.repo_redis'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"' # not available for RedHat, instead using repo_remi there
+        - 'not setup_mastodon__skip_repo_redis'
+
+    - role: 'linuxfabrik.lfops.redis'
+      when:
+        - 'not setup_mastodon__skip_redis | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_elasticsearch_oss'
+      repo_elasticsearch_oss__version__dependent_var: '{{
+          mastodon__repo_elasticsearch_oss__version__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_mastodon__skip_repo_elasticsearch_oss | default(false)'
+
+    - role: 'linuxfabrik.lfops.elasticsearch_oss'
+      elasticsearch_oss__cluster_name__dependent_var: '{{
+         mastodon__elasticsearch_oss__cluster_name__dependent_var
+        }}'
+      when:
+        - 'not setup_mastodon__skip_elasticsearch_oss | d(false)'
+
+    - role: 'linuxfabrik.lfops.login'
+      login__users__dependent_var: '{{
+          mastodon__login__users__dependent_var
+        }}'
+      when:
+        - 'not setup_mastodon__skip_login | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_baseos'
+      repo_baseos__crb_repo_enabled__dependent_var: '{{
+          repo_epel__repo_baseos__crb_repo_enabled__dependent_var
+        }}'
+      # Since the CRB repository is included in Rocky9 default repo file now, this will be done on Rocky9 Systems only. Formerly it came from epel repository.
+      when:
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] == "9"'
+        - 'not setup_mastodon__skip_repo_baseos | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'not setup_mastodon__skip_repo_epel | default(false)'
+
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_mastodon__skip_policycoreutils | default(false)'
+
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var: '{{
+          apache_httpd__selinux__booleans__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_mastodon__skip_selinux | default(false)'
+
+    - role: 'linuxfabrik.lfops.apache_httpd'
+      apache_httpd__mods__host_var: '{{
+          mastodon__apache_httpd__mods__host_var
+        }}'
+      apache_httpd__vhosts__dependent_var: '{{
+          mastodon__apache_httpd__vhosts__dependent_var
+        }}'
+      when:
+        - 'not setup_mastodon__skip_apache_httpd | default(false)'
+
+    - role: 'linuxfabrik.lfops.mastodon'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'
