@@ -2,7 +2,7 @@
 
 This role installs and enables the [IcingaWeb2 pdfexport Module](https://github.com/Icinga/icingaweb2-module-pdfexport).
 
-This role is tested with the following IcingaWeb2 Grafana Module versions:
+This role is tested with the following IcingaWeb2 PDF Export Module versions:
 
 * 0.11.0
 
