@@ -123,6 +123,7 @@ duplicity__timer_enabled: true
 
 If the `gpg --import /tmp/public-master-key` task fails with `gpg: invalid armor header` in `stderr`, make sure your `duplicity__gpg_encrypt_master_key_block` is correct and has an empty line after the `-----BEGIN PGP PUBLIC KEY BLOCK-----`.
 
+If `duplicity` fails with `AttributeError: module 'collections' has no attribute 'Mapping'` in `/opt/python-venv/duplicity/lib64/python3.11/site-packages/oslo_config/cfg.py`, manually install `'oslo.config>=9'`, e.g. `/opt/python-venv/duplicity/bin/pip install 'oslo.config>=9'`.
 
 ## License
 
