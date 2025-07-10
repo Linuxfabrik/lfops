@@ -44,8 +44,8 @@ glances                              |    |    | x | x |       |       |       |
 grafana                              |    |    | x | x |       |       |       |
 grafana_grizzly                      |    |    | x | x |       |       |       |
 grav                                 |    |    | x |   |       |       |       |
-graylog_datanode                     |    |    | x | x |       |       |       |
-graylog_server                       | x  |    | x |   |       |       |       |
+graylog_datanode                     |    | x  | x | x |       |       |       |
+graylog_server                       | x  | x  | x |   |       |       |       |
 haveged                              |    |    | x | x |       |       |       |
 hetzner_vm                           |    |    |   |   |       |       |       | Fedora 35+
 hostname                             |    |    | x | x |       |       |       |
@@ -91,7 +91,7 @@ maxmind_geoip                        |    |    | x |   |       |       |       |
 minio_client                         |    |    | x |   |       |       |       |
 mirror                               |    |    | x | x |       |       |       |
 mod_maxminddb                        |    |    | x |   |       |       |       |
-mongodb                              | x  |    | x | x |       |       |       |
+mongodb                              | x  | x  | x | x |       |       |       |
 monitoring_plugins                   |    |    | x | x |       |       |       | Debian 9, Fedora, Suse, Windows
 monitoring_plugins_grafana_dashboards|    |    | x | x |       |       |       |
 -------------------------------------+----+----+---+---+-------+-------+-------+-----------
@@ -129,11 +129,11 @@ repo_epel                            |    |    | x | x |       |       |       |
 repo_gitlab_ce                       |    |    | x |   |       |       |       |
 repo_gitlab_runner                   |    |    | x |   |       |       |       |
 repo_grafana                         |    | x  | x | x |       |       |       |
-repo_graylog                         | x  |    | x |   |       |       |       |
+repo_graylog                         | x  | x  | x |   |       |       |       |
 repo_icinga                          |    | x  | x | x |       |   x   |       |
 repo_influxdb                        | x  | x  | x | x |       |       |       |
 repo_mariadb                         |    | x  | x | x |       |       |       |
-repo_mongodb                         | x  |    | x | x |       |       |       |
+repo_mongodb                         | x  | x  | x | x |       |       |       |
 repo_monitoring_plugins              | x  |    | x | x |   x   |   x   |       |
 repo_mydumper                        |    |    | x | x |       |       |       |
 repo_opensearch                      | x  |    | x |   |       |       |       |
