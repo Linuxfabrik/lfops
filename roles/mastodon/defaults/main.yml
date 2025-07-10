@@ -1,0 +1,200 @@
+mastodon__container_enabled: true
+mastodon__container_state: 'started'
+mastodon__elasticsearch_enabled: true
+mastodon__elasticsearch_host: 'host.containers.internal'
+mastodon__elasticsearch_port: 9200
+mastodon__ip_retention_period: 31556952
+mastodon__ldap_base: ''
+mastodon__ldap_bind_dn: ''
+mastodon__ldap_enabled: false
+mastodon__ldap_host: ''
+mastodon__ldap_mail: 'mail'
+mastodon__ldap_method: 'start_tls'
+mastodon__ldap_password: ''
+mastodon__ldap_port: 389
+mastodon__ldap_search_filter: '(|(%<uid>s=%<email>s)(%<mail>s=%<email>s))'
+mastodon__ldap_tls_no_verify: true
+mastodon__ldap_uid: 'uid'
+mastodon__ldap_uid_conversion_enabled: true
+mastodon__postgresql_db_name: 'mastodon_production'
+mastodon__postgresql_host: 'host.containers.internal'
+mastodon__postgresql_port: 5432
+mastodon__redis_host: 'host.containers.internal'
+mastodon__redis_password: ''
+mastodon__redis_port: 6379
+mastodon__session_retention_period: 31556952
+mastodon__smtp_auth_method: 'none'
+mastodon__smtp_from_address: ''
+mastodon__smtp_login: ''
+mastodon__smtp_openssl_verify_mode: 'none'
+mastodon__smtp_password: ''
+mastodon__smtp_port: 25
+mastodon__smtp_server: 'host.containers.internal'
+mastodon__streaming_port: 4000
+mastodon__user_home_directory: '/opt/mastodon'
+mastodon__version: 'latest'
+mastodon__web_port: 3000
+mastodon__users__combined_var: '{{ (
+      mastodon__users__role_var +
+      mastodon__users__dependent_var +
+      mastodon__users__group_var +
+      mastodon__users__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+mastodon__users__dependent_var: []
+mastodon__users__group_var: []
+mastodon__users__host_var: []
+mastodon__users__role_var: []
+
+# -----------------------------------------------------------------------------
+
+mastodon__apache_httpd__mods__host_var:
+  - filename: 'deflate'
+    enabled: true
+    state: 'present'
+    template: 'deflate'
+  - filename: 'filter'
+    enabled: true
+    state: 'present'
+    template: 'filter'
+  - filename: 'proxy_http'
+    enabled: true
+    state: 'present'
+    template: 'proxy_http'
+mastodon__apache_httpd__vhosts__dependent_var:
+  - template: 'proxy'
+    conf_server_name: '{{ mastodon__domain }}'
+    comment: 'vHost for Mastodon'
+    enabled: true
+    state: 'present'
+    virtualhost_port: 80
+    conf_proxy_preserve_host: 'On'
+    conf_keep_alive_timeout: 70 # Mastodon recommendation
+    allowed_http_methods:
+      - 'DELETE'
+      - 'GET'
+      - 'OPTIONS'
+      - 'POST'
+      - 'PUT'
+    raw: |
+      DocumentRoot {{ mastodon__user_home_directory }}/public
+      
+      EnableSendfile on
+      
+      # Mastodon recommendation
+      LimitRequestBody 104857600
+      
+      # Mastodon recommendation
+      AddOutputFilterByType DEFLATE text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript image/svg+xml image/x-icon
+      DeflateCompressionLevel 6
+      DeflateBuffersize 8096
+      DeflateFilterNote Input instream
+      DeflateFilterNote Output outstream
+      
+      <Location "/system">
+          # Assets from here are directly served by Apache for better performance
+          Header set Cache-Control "public, max-age=2419200, immutable"
+          Header set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+          Header set X-Content-Type-Options nosniff
+          Header set Content-Security-Policy "default-src 'none'; form-action 'none'"
+      </Location>
+
+      ProxyPass /api/v1/streaming http://127.0.0.1:4000/api/v1/streaming flushpackets=on upgrade=websocket
+      ProxyPassReverse /api/v1/streaming http://127.0.0.1:4000/api/v1/streaming
+      ProxyPass / http://127.0.0.1:3000/
+      ProxyPassReverse / http://127.0.0.1:3000/
+
+mastodon__elasticsearch_oss__cluster_name__dependent_var: 'es-mastodon'
+
+mastodon__login__users__dependent_var:
+  - name: 'mastodon'
+    home: '{{ mastodon__user_home_directory }}'
+    state: 'present'
+    linger: true
+
+# Adapted from https://github.com/mastodon/mastodon/blob/main/docker-compose.yml
+mastodon__podman_containers__containers__dependent_var:
+  - name: 'mastodon-sidekiq'
+    raw_container: |
+      AutoUpdate=registry
+      ContainerName=mastodon-sidekiq
+      Environment=RAILS_ENV=production
+      EnvironmentFile={{ mastodon__user_home_directory }}/mastodon.env
+      Exec=bundle exec sidekiq
+      HealthCmd=ps aux | grep 'sidekiq [[:digit:]]\+\(\.[[:digit:]]\+\)* mastodon'
+      HealthInterval=30s
+      HealthOnFailure=kill
+      HealthRetries=5
+      HealthStartPeriod=5s
+      HealthTimeout=10s
+      Image=ghcr.io/mastodon/mastodon:{{ mastodon__version }}
+      LogDriver=journald
+      Network=mastodon.network
+      User=mastodon
+      UserNS=keep-id:uid=991,gid=991
+      Volume={{ mastodon__user_home_directory }}/public/system:/mastodon/public/system:z
+    raw_service: |
+      Restart=always
+    user: 'mastodon'
+    state: '{{ mastodon__container_state }}'
+    enabled: '{{ mastodon__container_enabled }}'
+  - name: 'mastodon-streaming'
+    raw_container: |
+      AutoUpdate=registry
+      ContainerName=mastodon-streaming
+      Environment=RAILS_ENV=production
+      EnvironmentFile={{ mastodon__user_home_directory }}/mastodon.env
+      Exec=node ./streaming/index.js
+      HealthCmd=curl --fail --show-error --silent --max-time 2 http://localhost:{{ mastodon__streaming_port}}/api/v1/streaming/health
+      HealthInterval=30s
+      HealthOnFailure=kill
+      HealthRetries=5
+      HealthStartPeriod=5s
+      HealthTimeout=10s
+      Image=ghcr.io/mastodon/mastodon-streaming:{{ mastodon__version }}
+      LogDriver=journald
+      Network=mastodon.network
+      PublishPort={{ mastodon__streaming_port }}:{{ mastodon__streaming_port }}/tcp
+      User=mastodon
+      UserNS=keep-id:uid=991,gid=991
+    raw_service: |
+      Restart=always
+    user: 'mastodon'
+    state: '{{ mastodon__container_state }}'
+    enabled: '{{ mastodon__container_enabled }}'
+  - name: 'mastodon-web'
+    raw_container: |
+      AutoUpdate=registry
+      ContainerName=mastodon-web
+      Environment=RAILS_ENV=production
+      EnvironmentFile={{ mastodon__user_home_directory }}/mastodon.env
+      Exec=bash -c "bundle exec rails db:migrate && bundle exec puma -C config/puma.rb"
+      HealthCmd=curl --fail --show-error --silent --max-time 2 http://localhost:{{ mastodon__web_port}}/health
+      HealthInterval=30s
+      HealthOnFailure=kill
+      HealthRetries=5
+      HealthStartPeriod=5s
+      HealthTimeout=10s
+      Image=ghcr.io/mastodon/mastodon:{{ mastodon__version }}
+      LogDriver=journald
+      Network=mastodon.network
+      PublishPort={{ mastodon__web_port }}:{{ mastodon__web_port }}/tcp
+      User=mastodon
+      UserNS=keep-id:uid=991,gid=991
+      Volume={{ mastodon__user_home_directory }}/public/system:/mastodon/public/system:z
+    raw_service: |
+      Restart=always
+    user: 'mastodon'
+    state: '{{ mastodon__container_state }}'
+    enabled: '{{ mastodon__container_enabled }}'
+mastodon__podman_containers__networks__dependent_var:
+  - name: 'mastodon'
+    user: 'mastodon'
+
+mastodon__postgresql_server__databases__dependent_var:
+  - name: '{{ mastodon__postgresql_db_name }}'
+    lc_collate: 'C.UTF-8'
+    lc_ctype: 'C.UTF-8'
+    owner: '{{ mastodon__postgresql_login["username"] }}'
+mastodon__postgresql_server__users__dependent_var:
+  - '{{ mastodon__postgresql_login }}'
