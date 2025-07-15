@@ -2,9 +2,6 @@
 
 This role installs and configures a [Graylog](https://www.graylog.org) Data Node.
 
-Currently supported versions:
-* 6.1
-
 Note that this role does NOT let you specify a particular Graylog Data Node version. It simply installs the latest available Graylog Data Node version from the repos configured in the system.
 
 
