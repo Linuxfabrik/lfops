@@ -1,8 +1,8 @@
 <!-- -*- nxml-child-indent: 4; tab-width: 4; indent-tabs-mode: nil -*- -->
 <config>
     <!-- {{ ansible_managed }} -->
-    <!-- 24.04.11 -->
-    <!-- 2025011701 -->
+    <!-- 25.04.4 -->
+    <!-- 2025071701 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -48,13 +48,13 @@
 
     <memproportion desc="The maximum percentage of available memory consumed by all of the Collabora Online Development Edition processes, after which we start cleaning up idle documents. If cgroup memory limits are set, this is the maximum percentage of that limit to consume." type="double" default="80.0"></memproportion>
     <num_prespawn_children desc="Number of child processes to keep started in advance and waiting for new clients." type="uint" default="4">4</num_prespawn_children>
-    <!-- <fetch_update_check desc="Every number of hours will fetch latest version data. Defaults to 10 hours." type="uint" default="10">10</fetch_update_check> -->
-    <!-- <allow_update_popup desc="Allows notification about an update in the editor" type="bool" default="true">true</allow_update_popup> -->
+    <fetch_update_check desc="Every number of hours will fetch latest version data. Defaults to 10 hours." type="uint" default="10">10</fetch_update_check>
+    <allow_update_popup desc="Allows notification about an update in the editor" type="bool" default="true">true</allow_update_popup>
     <per_document desc="Document-specific settings, including LO Core settings.">
         <max_concurrency desc="The maximum number of threads to use while processing a document." type="uint" default="4">4</max_concurrency>
         <batch_priority desc="A (lower) priority for use by batch eg. convert-to processes to avoid starving interactive ones" type="uint" default="5">5</batch_priority>
         <bgsave_priority desc="A (lower) priority for use by background save processes to free time for interactive ones" type="uint" default="5">5</bgsave_priority>
-        <bgsave_timeout_secs desc="The default maximum number of seconds to wait for the background save processes to finish before giving up and reverting to synchronous saving" type="uint" default="60">60</bgsave_timeout_secs>
+        <bgsave_timeout_secs desc="The default maximum number of seconds to wait for the background save processes to finish before giving up and reverting to synchronous saving" type="uint" default="120">120</bgsave_timeout_secs>
         <redlining_as_comments desc="If true show red-lines as comments" type="bool" default="false">false</redlining_as_comments>
         <pdf_resolution_dpi desc="The resolution, in DPI, used to render PDF documents as image. Memory consumption grows proportionally. Must be a positive value less than 385. Defaults to 96." type="uint" default="96">96</pdf_resolution_dpi>
         <idle_timeout_secs desc="The maximum number of seconds before unloading an idle document. Defaults to 1 hour." type="uint" default="3600">3600</idle_timeout_secs>
@@ -108,7 +108,7 @@
              See also: https://docs.libreoffice.org/sal/html/sal_log.html -->
         <lokit_sal_log type="string" desc="Fine tune log messages from LOKit. Default is to suppress log messages from LOKit." default="-INFO-WARN">-INFO-WARN</lokit_sal_log>
         <file enable="{{ collabora__coolwsd_logging_file_enable | d ('false') | string | lower }}">
-            <!-- If you use other path than /var/log and you run coolwsd from systemd, make sure that you enable that path in coolwsd.service (ReadWritePaths). -->
+            <!-- If you use other path than /var/log and you run coolwsd from systemd, make sure that you enable that path in coolwsd.service (ReadWritePaths). Also the log file path must be writable by the 'cool' user. -->
             <property name="path" desc="Log file path.">/var/log/coolwsd.log</property>
             <property name="rotation" desc="Log file rotation strategy. See Poco FileChannel.">never</property>
             <property name="archive" desc="Append either timestamp or number to the archived log filename.">timestamp</property>
@@ -131,9 +131,9 @@
 
     <logging_ui_cmd>
         <merge type="bool" desc="If true, repeated commands after each other will be merged into 1 line. If false, every command will be 1 new line." default="true">true</merge>
-        <merge_display_end_time type="bool" desc="If true, the duration of the merged command will also be logged." default="false">false</merge_display_end_time>
+        <merge_display_end_time type="bool" desc="If true, the duration of the merged command will also be logged." default="false">true</merge_display_end_time>
         <file enable="false">
-            <!-- If you use other path than /var/log and you run coolwsd from systemd, make sure that you enable that path in coolwsd.service (ReadWritePaths). -->
+            <!-- If you use other path than /var/log and you run coolwsd from systemd, make sure that you enable that path in coolwsd.service (ReadWritePaths). Also the log file path must be writable by the 'cool' user. -->
             <property name="path" desc="Log file path.">/var/log/coolwsd-ui-cmd.log</property>
             <property name="purgeCount" desc="The maximum number of log archives to preserve. Use 'none' to disable purging. See Poco FileChannel.">10</property>
             <property name="rotateOnOpen" desc="Enable/disable log file rotation on opening.">true</property>
@@ -268,21 +268,20 @@
       <mode type="string" desc="Controls the user interface style. The 'default' means: Take the value from ui_defaults, or decide for one of compact or tabbed (default|compact|tabbed)" default="default">default</mode>
       <use_integration_theme desc="Use theme from the integrator" type="bool" default="true">true</use_integration_theme>
       <statusbar_save_indicator desc="Show saving status indicator in the statusbar" type="bool" default="true">true</statusbar_save_indicator>
+
+
+
     </user_interface>
 
     <storage desc="Backend storage">
         <filesystem allow="false" />
         <wopi desc="Allow/deny wopi storage." allow="true">
-            {% for item in collabora__coolwsd_storage_wopi__combined_var if item['state'] | d('present') != 'absent' %}
-            <host desc="Regex pattern of hostname to allow or deny." allow="true">{{ item['name'] }}</host>
-            {% endfor %}
-            <host desc="Regex pattern of hostname to allow or deny." allow="true">localhost</host>
             <max_file_size desc="Maximum document size in bytes to load. 0 for unlimited." type="uint">0</max_file_size>
             <locking desc="Locking settings">
                 <refresh desc="How frequently we should re-acquire a lock with the storage server, in seconds (default 15 mins) or 0 for no refresh" type="int" default="900">900</refresh>
             </locking>
 
-            <alias_groups desc="default mode is 'first' it allows only the first host when groups are not defined. set mode to 'groups' and define group to allow multiple host and its aliases" mode="first">
+            <alias_groups desc="default mode is 'first' it allows only the first host when groups are not defined. set mode to 'groups' and define group to allow multiple host and its aliases" mode="groups">
             <!-- If you need to use multiple wopi hosts, please change the mode to "groups" and
                     add the hosts below.  If one host is accessible under multiple ip addresses
                     or names, add them as aliases. -->
@@ -293,6 +292,14 @@
 
             </group>-->
             <!-- More "group"s possible here -->
+            {% for item in collabora__coolwsd_storage_wopi__combined_var if item['state'] | d('present') != 'absent' %}
+            <group>
+                <host desc="Regex pattern of hostname to allow or deny." allow="true">{{ item['name'] }}</host>
+            </group>
+            {% endfor %}
+            <group>
+                <host desc="Regex pattern of hostname to allow or deny." allow="true">localhost</host>
+            </group>
             </alias_groups>
 
             <is_legacy_server desc="Set to true for legacy server that need deprecated headers." type="bool" default="false">false</is_legacy_server>
@@ -331,6 +338,11 @@
         <expiry_min desc="Time in mins after quarantined files will be deleted." type="int" default="3000">3000</expiry_min>
     </quarantine_files>
 
+    <cache_files desc="Files are cached here to speed up config support.">
+        <path desc="Absolute path of the directory under which cached files will be stored. Do not use a relative path." type="path" relative="false"></path>
+        <expiry_min desc="Time in mins after disuse at which cache files will be deleted." type="int" default="3000">1000</expiry_min>
+    </cache_files>
+
     <extra_export_formats desc="Enable various extra export formats for additional compatibility. Note that disabling options here *only* disables them visually: these are all 'safe' to export, it might just be undesirable to show them, so you can't disable exporting these server-side">
         <impress_swf desc="Enable exporting Adobe flash .swf files from presentations" type="bool" default="false">false</impress_swf>
         <impress_bmp desc="Enable exporting .bmp bitmap files from presentation slides" type="bool" default="false">false</impress_bmp>
@@ -339,6 +351,10 @@
         <impress_svg desc="Enable exporting interactive .svg image files from presentations" type="bool" default="false">false</impress_svg>
         <impress_tiff desc="Enable exporting .tiff image files from presentation slides" type="bool" default="false">false</impress_tiff>
     </extra_export_formats>
+
+    <serverside_config>
+        <idle_timeout_secs desc="The maximum number of seconds before unloading an idle sub forkit. Defaults to 1 hour." type="uint" default="3600">3600</idle_timeout_secs>
+    </serverside_config>
 
     <remote_config>
         <remote_url desc="remote server to which you will send request to get remote config in response" type="string" default=""></remote_url>
@@ -350,10 +366,6 @@
         <url desc="URL of optional JSON file that lists fonts to be included in Online" type="string" default=""></url>
     </remote_font_config>
 
-    <remote_asset_config>
-        <url desc="URL of optional JSON file that lists fonts and impress template to be included in Online" type="string" default=""></url>
-    </remote_asset_config>
-
     <fonts_missing>
         <handling desc="How to handle fonts missing in a document: 'report', 'log', 'both', or 'ignore'" type="string" default="log">log</handling>
     </fonts_missing>
@@ -364,6 +376,9 @@
       <geolocation_setup>
         <enable desc="Enable geolocation_setup when using indirection server with geolocation configuration" type="bool" default="false">false</enable>
         <timezone desc="IANA timezone of server. For example: Europe/Berlin" type="string"></timezone>
+        <allowed_websocket_origins desc="Origin header to get accepted during websocket upgrade">
+          <!-- <origin></origin> -->
+        </allowed_websocket_origins>
       </geolocation_setup>
       <server_name desc="server name to show in cluster overview admin panel" type="string" default=""></server_name>
     </indirection_endpoint>
