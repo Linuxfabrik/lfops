@@ -1,3 +1,6 @@
+__mariadb_server__dump_mydumper_dependencies:
+  - 'libzstd1'
+  - 'zstd'
 mariadb_server__cnf_socket__role_var: '/run/mysqld/mysqld.sock'
 mariadb_server__config_file_00: '/etc/mysql/mariadb.conf.d/z00-linuxfabrik.cnf'
 mariadb_server__config_file_01: '/etc/mysql/mariadb.conf.d/z01-linuxfabrik.cnf'

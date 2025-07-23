@@ -27,6 +27,9 @@ Role:elasticsearch_oss
 
 ### Fixed
 
+Role:mariadb_server
+* Correct mydumper dependency packages for Debian-based systems
+
 Role:elasticsearch_oss
 * Moved tmpdir to a location with exec permissions specified by CIS hardening
 

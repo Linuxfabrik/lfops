@@ -519,12 +519,15 @@
 # configure backup (mariadb-dump user, scripts and timer)
 - block:
 
-  - name: 'Install {{ mariadb_server__dump_mydumper_package }} libzstd zstd'
+  - name: 'Install {{ mariadb_server__dump_mydumper_package }}'
     ansible.builtin.package:
       name:
         - '{{ mariadb_server__dump_mydumper_package }}'
-        - 'libzstd'
-        - 'zstd'
+      state: 'present'
+
+  - name: 'Install {{ __mariadb_server__dump_mydumper_dependencies }}'
+    ansible.builtin.package:
+      name: '{{ __mariadb_server__dump_mydumper_dependencies }}'
       state: 'present'
 
   - name: 'Deploy /usr/local/bin/mariadb-dump'
