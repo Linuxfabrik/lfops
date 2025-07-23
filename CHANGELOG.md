@@ -8,9 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Note: Always add new entries to the top of the section, even if this results in multiple paragraphs for the same role. Otherwise the user will have to read through all the breaking changes every time they update LFOps. This way they can just read the new entries at the top, making it much easier for users to follow the CHANGELOG.
 
 
-## [Unreleased] (in chronological order)
+## [Unreleased] (in chronological order, newest first)
 
 ### Added
+
+Role:repo_mydumper
+* Added official repos for Debian-based systems
 
 Role:mastodon
 * Added

@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2025070101
+
+{% if repo_mydumper__mirror_url is defined and repo_mydumper__mirror_url | length %}
+deb [signed-by=/etc/apt/keyrings/mydumper.asc] {{ repo_mydumper__mirror_url }}/mydumper/ {{ ansible_facts["distribution_release"] }} main
+{% else %}
+deb [signed-by=/etc/apt/keyrings/mydumper.asc] https://mydumper.github.io/mydumper/repo/apt/{{ ansible_distribution | lower }}/ {{ ansible_facts["distribution_release"] }} main
+{% endif %}

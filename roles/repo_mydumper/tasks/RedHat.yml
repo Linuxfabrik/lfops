@@ -1,0 +1,12 @@
+- block:
+
+  - name: "Deploy the mydumper repo"
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/mydumper.repo.j2'
+      dest: '/etc/yum.repos.d/mydumper.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'repo_mydumper'
