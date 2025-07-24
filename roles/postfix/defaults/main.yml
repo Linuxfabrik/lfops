@@ -24,7 +24,6 @@ postfix__mastercf_entries__combined_var: '{{ (
 postfix__mastercf_entries__dependent_var: []
 postfix__mastercf_entries__group_var: []
 postfix__mastercf_entries__host_var: []
-
 postfix__maximal_queue_lifetime: '5d'
 postfix__message_size_limit: 10240000
 postfix__mydestination: '$myhostname, localhost.$mydomain, localhost'
@@ -48,6 +47,7 @@ postfix__service_state: 'started'
 postfix__smtp_destination_concurrency_limit: 20
 postfix__smtp_destination_recipient_limit: 50
 postfix__smtp_sasl_auth_enable: true
+postfix__smtp_sasl_mechanism_filter: []
 postfix__smtp_sasl_password_maps: 'hash:/etc/postfix/sasl_passwd'
 postfix__smtp_sasl_security_options:
   - 'noanonymous'

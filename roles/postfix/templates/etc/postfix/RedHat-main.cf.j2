@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024112101
+# 2025072401
 
 # Global Postfix configuration file. This file lists only a subset
 # of all parameters. For the syntax, and for a complete parameter
@@ -763,6 +763,7 @@ sender_canonical_maps = regexp:/etc/postfix/canonical
 smtp_destination_concurrency_limit = {{ postfix__smtp_destination_concurrency_limit }}
 smtp_destination_recipient_limit = {{ postfix__smtp_destination_recipient_limit }}
 smtp_sasl_auth_enable = {{ postfix__smtp_sasl_auth_enable | bool | ternary("yes", "no") }}
+smtp_sasl_mechanism_filter = {{ postfix__smtp_sasl_mechanism_filter | join (', ') }}
 smtp_sasl_password_maps = {{ postfix__smtp_sasl_password_maps }}
 smtp_sasl_security_options = {{ postfix__smtp_sasl_security_options | join(', ') }}
 smtp_tls_wrappermode = {{ postfix__smtp_tls_wrappermode | bool | ternary("yes", "no") }}

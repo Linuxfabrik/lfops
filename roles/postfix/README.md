@@ -51,6 +51,7 @@ postfix__relayhost: 'mail.example.com:587'
 | `postfix__smtp_destination_concurrency_limit` | See https://www.postfix.org/postconf.5.html#smtp_destination_concurrency_limit | `20` |
 | `postfix__smtp_destination_recipient_limit` | See https://www.postfix.org/postconf.5.html#smtp_destination_recipient_limit | `50` |
 | `postfix__smtp_sasl_auth_enable` | Enable SASL authentication in the Postfix SMTP client. By default, the Postfix SMTP client uses no authentication. | `true` |
+| `postfix__smtp_sasl_mechanism_filter` | List. If non-empty, a Postfix SMTP client filter for the remote SMTP server's list of offered SASL mechanisms. | `[]` |
 | `postfix__smtp_sasl_password_maps` | See [postfix.org](https://www.postfix.org/postconf.5.html#smtp_sasl_password_maps) | 'hash:/etc/postfix/sasl_passwd' |
 | `postfix__smtp_sasl_security_options` | List of Postfix SMTP client SASL security options, separated by commas. Possible options:<br>* `noplaintext`<br>* `noactive`<br>* `nodictionary`<br>* `noanonymous`<br>* `mutual_auth` | `['noplaintext', 'noanonymous']` |
 | `postfix__smtp_tls_security_level`| The default SMTP TLS security level for the Postfix SMTP client. When a non-empty value is specified, this overrides the obsolete parameters `smtp_use_tls`, `smtp_enforce_tls`, and `smtp_tls_enforce_peername`; when no value is specified for `smtp_tls_enforce_peername` or the obsolete parameters, the default SMTP TLS security level is `none`. Set this to `'encrypt'` (or stronger) for SMTPS wrappermode (TCP port 465). | `'may'` |
@@ -138,6 +139,8 @@ postfix__service_state: 'started'
 postfix__smtp_destination_concurrency_limit: 20
 postfix__smtp_destination_recipient_limit: 50
 postfix__smtp_sasl_auth_enable: true
+postfix__smtp_sasl_mechanism_filter:
+  - 'xoauth2'
 postfix__smtp_sasl_password_maps: 'hash:/etc/postfix/sasl_passwd'
 postfix__smtp_sasl_security_options:
   - 'noplaintext'
