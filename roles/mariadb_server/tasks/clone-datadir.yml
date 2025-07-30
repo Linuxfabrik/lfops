@@ -18,7 +18,7 @@
 
 # if current_datadir <> datadir_in_inventory:
 #     systemctl stop mariadb
-#     cp --archive current_datadir/. datadir_in_inventory/)
+#     cp --archive current_datadir/. datadir_in_inventory/
 #     systemctl start mariadb
 
 - block:
