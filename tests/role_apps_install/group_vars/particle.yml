@@ -1,0 +1,4 @@
+ansible_become: true
+
+particle__command: 'ansible-playbook linuxfabrik.lfops.apps'
+particle__idempotence_test: true

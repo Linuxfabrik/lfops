@@ -1,0 +1,722 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
+
+"""
+Particle is a tool to test Ansible roles against ephemeral virtual machines backed by Vagrant.
+
+A Vagrantfile with machine definitions in the 'particle' directory (also see `--particle-dir-name`)
+describes the virtual machines that Particle can test on.
+
+A test scenario is defined as any Ansible inventory (any possible format)
+in the 'tests' directory (also see `--test-dir-name`).
+Particle will run the command string specified in the `particle__command` variable
+inside the inventory against all hosts specified in the `particle` group.
+It will also take care of adding the inventory and limit parameters for `ansible-playbook`
+and any SSH configuration necessary to connect to the Vagrant VMs.
+
+Additionally, Ansible roles can also be tested for idempotency by setting
+the `particle__idempotence_test` variable to true.
+"""
+
+import argparse
+import atexit
+import fnmatch
+import functools
+import json
+import logging
+import pathlib
+import re
+import shutil
+import sys
+import tempfile
+import time
+
+import lib.base
+import lib.shell
+
+__author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
+__version__ = '2025073001'
+
+DESCRIPTION = '''\
+Particle is a tool to test Ansible roles against ephemeral virtual machines backed by Vagrant.
+'''
+
+DEFAULT_BATCH_SIZE = 1
+DEFAULT_TEST_DIR_NAME = 'tests'
+DEFAULT_PARTICLE_DIR_NAME = 'particle'
+
+VAGRANT_SNAPSHOT_NAME = 'particle_initial'
+
+logger = logging.getLogger(__name__)
+
+
+def setup_logging(log_level):
+    """Sets up logging for particle.
+    """
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(log_level)
+    console_handler.setFormatter(logging.Formatter('--> %(levelname)s %(message)s'))
+    logger.addHandler(console_handler)
+
+    logger.setLevel(log_level)
+
+
+def find_command(command):
+    """Find the absolute path of an executable command.
+    """
+
+    logger.info('Discovering `%s`...', command)
+
+    cmd_path = shutil.which(command)
+
+    if cmd_path is None:
+        logger.error('`%s` is not installed', command)
+        sys.exit(1)
+
+    logger.info('Found `%s` at %s', command, cmd_path)
+    return cmd_path
+
+
+def parse_ansible_recap(recap_text):
+    """
+    Parse the recap section from an `ansible-playbook` run and return its details as a dictionary.
+
+    NOTE: Does *not* convert numbers from their string representation to Python objects.
+    """
+
+    recap_pattern = re.compile(r'PLAY RECAP \*+\n(.*)\n\n', re.DOTALL)
+    line_pattern = re.compile(
+        r'^(\S+)\s+:.*ok=(\d+).*changed=(\d+).*unreachable=(\d+).*failed=(\d+).*skipped=(\d+).*rescued=(\d+).*ignored=(\d+)',
+        re.MULTILINE,
+    )
+
+    recap_match = recap_pattern.search(recap_text)
+
+    if not recap_match or len(recap_match.groups()) != 1:
+        return False, 'Could not parse an Ansible recap section'
+
+    line_matches = line_pattern.findall(recap_match.group(1))
+
+    if len(line_matches) == 0:
+        return False, None
+
+    return True, [
+        {
+            'host': host,
+            'ok': ok,
+            'changed': changed,
+            'unreachable': unreachable,
+            'failed': failed,
+            'skipped': skipped,
+            'rescued': rescued,
+            'ignored': ignored,
+        }
+        for host, ok, changed, unreachable, failed, skipped, rescued, ignored in line_matches
+    ]
+
+
+def ansible_inventory_list(cmd_ansible_inventory, inventory):
+    """List an Ansible inventory and return it as a dictionary.
+    """
+
+    success, result = lib.shell.shell_exec(
+        f'{cmd_ansible_inventory} --inventory={inventory} --list',
+        lc_all='C.UTF-8',
+    )
+
+    stdout, _, retc = result
+
+    if not success or retc != 0:
+        return False, result
+
+    return True, json.loads(stdout)
+
+
+def vagrant_ssh_config(cmd_vagrant, workdir, virtual_machines=None):
+    """Retrieve the SSH configuration for all or a group of virtual machines from Vagrant.
+    """
+
+    vm_list = ' '.join(virtual_machines) if virtual_machines is not None else ''
+
+    logger.info('Retrieving SSH config(s) from Vagrant')
+    return lib.shell.shell_exec(
+        f'{cmd_vagrant} ssh-config {vm_list}',
+        cwd=workdir,
+    )
+
+
+def vagrant_status(cmd_vagrant, workdir, virtual_machines=None):
+    """Retrieve the status for all or a group of virtual machines from Vagrant.
+    """
+
+    vm_list = ' '.join(virtual_machines) if virtual_machines is not None else ''
+
+    logger.info('Parsing Vagrant status')
+    success, result = lib.shell.shell_exec(
+        f'{cmd_vagrant} status {vm_list}',
+        cwd=workdir,
+    )
+
+    if not success:
+        return False, result
+
+    vm_list_pattern = re.compile(r'Current machine states:\n\n(.*)\n\n', re.DOTALL)
+    vm_list = vm_list_pattern.match(result[0])
+
+    vm_status_pattern = re.compile(r'^(\S+)\s+(.*)\s+\(', re.MULTILINE)
+    vm_status = vm_status_pattern.findall(vm_list.group(1))
+
+    return True, dict(vm_status)
+
+
+def vagrant_up(cmd_vagrant, workdir, virtual_machines=None):
+    """Provision all or a group of virtual machines using Vagrant
+    """
+
+    vm_list = ' '.join(virtual_machines) if virtual_machines is not None else ''
+
+    logger.info(
+        'Bringing up %s (this may take a while)',
+        f'"{vm_list}"' if vm_list else 'all machines',
+    )
+    return lib.shell.shell_exec(
+        f'{cmd_vagrant} up {vm_list}',
+        cwd=workdir,
+    )
+
+
+def vagrant_restore(cmd_vagrant, workdir, virtual_machines):
+    """Restore a group of virtual machines to previously saved snapshots using Vagrant.
+    """
+
+    vm_list = ' '.join(virtual_machines)
+
+    logger.info(
+        'Restoring "%s" (this may take a while)',
+        vm_list,
+    )
+    return lib.shell.shell_exec(
+        f'{cmd_vagrant} restore {vm_list} {VAGRANT_SNAPSHOT_NAME}',
+        cwd=workdir,
+    )
+
+
+def vagrant_save(cmd_vagrant, workdir, virtual_machines):
+    """Save snapshots for a group of virtual machines using Vagrant
+    """
+    vm_list = ' '.join(virtual_machines)
+
+    logger.info(
+        'Saving "%s" snapshot(s) for subsequent runs',
+        vm_list,
+    )
+    return lib.shell.shell_exec(
+        f'{cmd_vagrant} save {vm_list} {VAGRANT_SNAPSHOT_NAME}',
+        cwd=workdir,
+    )
+
+
+def vagrant_destroy(cmd_vagrant, workdir, virtual_machines=None):
+    """Destroy all or a group of virtual machines using Vagrant
+    """
+
+    vm_list = ', '.join(virtual_machines) if virtual_machines is not None else ''
+
+    logger.info(
+        'Destroying %s',
+        f'"{vm_list}"' if vm_list else 'all machines',
+    )
+
+    return lib.shell.shell_exec(
+        f'{cmd_vagrant} destroy --force {vm_list}',
+        cwd=workdir,
+    )
+
+
+def vagrant_halt(cmd_vagrant, workdir, virtual_machines=None):
+    """Halt all or a group of virtual machines using Vagrant
+    """
+
+    vm_list = ', '.join(virtual_machines) if virtual_machines is not None else ''
+
+    logger.info(
+        'Halting %s',
+        f'"{vm_list}"' if vm_list else 'all machines',
+    )
+    return lib.shell.shell_exec(
+        f'{cmd_vagrant} halt {vm_list}',
+        cwd=workdir,
+    )
+
+
+def vagrant_up_or_restore(
+        cmd_vagrant,
+        workdir,
+        virtual_machines,
+        virtual_machines_status,
+        ssh_config_path,
+):
+    """Provision virtual machines (if no clean snapshot exists) or restore them to a clean snapshot using Vagrant.
+    """
+    vms_to_create = [
+        vm
+        for vm in virtual_machines
+        if virtual_machines_status.get(vm) == 'not created'
+    ]
+
+    vms_to_restore = [
+        vm
+        for vm in virtual_machines
+        if virtual_machines_status.get(vm) == 'running'
+    ]
+
+    if len(vms_to_create) > 0:
+        create_success, create_result = vagrant_up(cmd_vagrant, workdir, vms_to_create)
+
+        if not create_success:
+            return False, create_result
+
+    if len(vms_to_restore) > 0:
+        restore_success, restore_result = vagrant_restore(cmd_vagrant, workdir, vms_to_restore)
+
+        if not restore_success:
+            return False, restore_result
+
+    logger.info('Give the VM(s) a few more seconds to get ready for SSH connections')
+    time.sleep(3)
+
+    ssh_config_success, ssh_config_result = vagrant_ssh_config(
+        cmd_vagrant,
+        workdir,
+        virtual_machines,
+    )
+
+    if not ssh_config_success:
+        return False, ssh_config_result
+
+    with open(ssh_config_path, mode='w', encoding='utf-8') as ssh_config:
+        ssh_config.write(ssh_config_result[0])
+
+    save_success, save_result = vagrant_restore(cmd_vagrant, workdir, vms_to_create)
+
+    if not save_success:
+        return False, save_result
+
+    return True, None
+
+
+def parse_args():
+    """Parse command line arguments using argparse.
+    """
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
+
+    parser.add_argument(
+        '-V', '--version',
+        action='version',
+        version=f'%(prog)s: v{__version__} by {__author__}',
+    )
+
+    parser.add_argument(
+        '--batch-size',
+        help='How many virtual machines to start in parallel. '
+             'Default: %(default)d',
+        dest='BATCH_SIZE',
+        default=DEFAULT_BATCH_SIZE,
+        type=int,
+    )
+
+    parser.add_argument(
+        '--test-filter',
+        help='Fnmatch (Unix shell-style wildcard) filter to restrict which tests are to be run.',
+        dest='TEST_FILTER',
+        type=str,
+    )
+
+    parser.add_argument(
+        '--vm-filter',
+        help='Fnmatch (Unix shell-style wildcard) filter to restrict on which virtual machines to test.',
+        dest='VM_FILTER',
+        type=str,
+    )
+
+    parser.add_argument(
+        '--test-dir-name',
+        help='The test directory name. '
+             'Default: %(default)s',
+        dest='TEST_DIR_NAME',
+        default=DEFAULT_TEST_DIR_NAME,
+        type=str,
+    )
+
+    parser.add_argument(
+        '--particle-dir-name',
+        help='The particle configuration directory name. '
+             'This is where the Vagrantfile is located. '
+             'Default: %(default)s',
+        dest='PARTICLE_DIR_NAME',
+        default=DEFAULT_PARTICLE_DIR_NAME,
+        type=str,
+    )
+
+    parser.add_argument(
+        '--keep-vm',
+        help='Do not destroy virtual machines at end of test. '
+             'Primarily intended for debugging.'
+             'Only available if exactly ONE test is run. '
+             'Use the `--test-filter` to restrict which test is run '
+             '(and optionally `--vm-filter` to only start relevant virtual machines). ',
+        dest='KEEP_VM',
+        action='store_true',
+    )
+
+    parser.add_argument(
+        '--clean',
+        help='Explicitly clean up virtual machines before running any tests. '
+             'Useful if `--keep-vm` was used in a previous run.',
+        dest='CLEAN',
+        action='store_true',
+    )
+
+    parser.add_argument(
+        '--verbose',
+        help='Also output debug messages.',
+        dest='VERBOSE',
+        action='store_true',
+    )
+
+    return parser.parse_args()
+
+
+def main():  # pylint: disable=R0912,R0914,R0915
+    """The main function. Hier spielt die Musik.
+    """
+
+    try:
+        args = parse_args()
+    except SystemExit:
+        sys.exit(1)
+
+    setup_logging(logging.DEBUG if args.VERBOSE else logging.INFO)
+
+    tmp_dir = tempfile.TemporaryDirectory(prefix='particle-')  # pylint: disable=R1732
+
+    working_dir = pathlib.Path.cwd()
+    particle_dir = working_dir / args.PARTICLE_DIR_NAME
+
+    test_dir = working_dir / args.TEST_DIR_NAME
+
+    cmd_vagrant = find_command('vagrant')
+    cmd_ansible_inventory = find_command('ansible-inventory')
+
+    logger.info('Discovering test scenarios...')
+    discovered_scenarios = sorted(
+        [
+            path
+            for path in test_dir.iterdir()
+            if path.is_dir() or path.suffix in ('.yml', '.yaml')
+        ],
+    )
+
+    if args.TEST_FILTER:
+        scenarios = [
+            scenario
+            for scenario in discovered_scenarios
+            if fnmatch.fnmatch(scenario.name, args.TEST_FILTER)
+        ]
+    else:
+        scenarios = discovered_scenarios
+
+    logger.info(
+        'Found %d test scenarios',
+        len(scenarios),
+    )
+
+    if len(scenarios) == 0:
+        logger.info('Nothing to do. Exiting.')
+        sys.exit(0)
+
+    if args.CLEAN:
+        logger.info('Cleaning up any leftover virtual machines...')
+        clean_success, clean_result = vagrant_destroy(cmd_vagrant, particle_dir)
+
+        if not clean_success:
+            logger.error(clean_result)
+            sys.exit(1)
+
+    machine_status_success, dicovered_virtual_machines = vagrant_status(cmd_vagrant, particle_dir)
+
+    if not machine_status_success:
+        logger.error('Failed to retrieve virtual machine status.')
+        sys.exit(1)
+
+    if args.VM_FILTER:
+        virtual_machines = {
+            vm: status
+            for vm, status in dicovered_virtual_machines.items()
+            if fnmatch.fnmatch(vm, args.VM_FILTER)
+        }
+    else:
+        virtual_machines = dicovered_virtual_machines
+
+    logger.info(
+        'Testing on %d machine(s) in batches of %d',
+        len(virtual_machines),
+        args.BATCH_SIZE,
+    )
+
+    if len(virtual_machines) == 0:
+        logger.info('Nothing to do. Exiting.')
+        sys.exit(0)
+
+    batches = [
+        list(virtual_machines.keys())[i:i + args.BATCH_SIZE]
+        for i in range(0, len(virtual_machines), args.BATCH_SIZE)
+    ]
+
+    results = {}
+
+    results_col_names = ['Scenario'] + list(virtual_machines.keys())
+
+    results_row_template = {
+        vm: '' for vm in virtual_machines.keys()
+    }
+
+    if args.KEEP_VM and len(scenarios) == 1:
+        logger.info('Not cleaning up virtual machines at end of test since `--keep-vm` option is set.')
+
+        atexit.register(
+            functools.partial(
+                logger.warning,
+                'Not cleaning up virtual machines since `--keep-vm` option was set. '
+                'Virtual machines MUST be cleaned up manually before next run!',
+            )
+        )
+    else:
+        if args.KEEP_VM:
+            logger.info('Ignoring `--keep-vm` option since more than one scenario will be run.')
+
+        # Regardless of how the tests run, register a tear-down handler that destroys all existing VM(s)
+        # to run at exit to ensure no stale VM(s) exists after this script is done.
+        def teardown_handler():
+            teardown_success, teardown_result = vagrant_destroy(cmd_vagrant, particle_dir)
+
+            if not teardown_success:
+                logger.error(teardown_result)
+                sys.exit(1)
+
+        atexit.register(teardown_handler)
+
+    for i, batch in enumerate(batches):
+
+        for scenario in scenarios:
+
+            # Prepare and start VM(s) (in batches)
+
+            ssh_config_path = pathlib.Path(tmp_dir.name) / f'batch{i}_config.ssh'
+
+            up_or_restore_success, up_or_restore_result = vagrant_up_or_restore(
+                cmd_vagrant,
+                particle_dir,
+                batch,
+                virtual_machines,
+                ssh_config_path,
+            )
+
+            if not up_or_restore_success:
+                logger.error(up_or_restore_result)
+                continue
+
+            # Prepopulate row for result table if needed
+            results[scenario.name] = results.get(
+                scenario.name,
+                {'Scenario': scenario.name} | results_row_template.copy(),
+            )
+
+            inventory_success, inventory_result = ansible_inventory_list(
+                cmd_ansible_inventory,
+                scenario,
+            )
+
+            if not inventory_success:
+                logger.error(inventory_result)
+                continue
+
+            particle_hosts = inventory_result.get('particle', {}).get('hosts', [])
+
+            batch_hosts = set(batch) & set(particle_hosts)
+
+            unknown_hosts = set(particle_hosts) - set(virtual_machines.keys())
+
+            if len(unknown_hosts) > 0:
+                logger.warning(
+                    'No virtual machine(s) is/are available to test on "%s"',
+                    ', '.join(unknown_hosts),
+                )
+
+            logger.info('=== Processing: "%s" on "%s" ===', scenario.name, ', '.join(batch_hosts))
+
+            # Group same commands for a single ansible run
+            particle_commands = {}
+            for host in batch_hosts:
+                particle_command = inventory_result['_meta']['hostvars'].get(
+                    host,
+                    {},
+                ).get(
+                    'particle__command',
+                )
+
+                particle_commands[particle_command] = particle_commands.get(
+                    particle_command,
+                    [],
+                ) + [host]
+
+            for particle_command, test_hosts in particle_commands.items():
+
+                if particle_command is None:
+                    logger.error('No particle command was provided for "%s"', ', '.join(test_hosts))
+                    results[scenario.name].update(
+                        {
+                            host: 'fail'
+                            for host in test_hosts
+                        },
+                    )
+                    continue
+
+                test_command = f'{particle_command} --ssh-extra-args "-F {ssh_config_path.absolute()}" --inventory="{scenario}" --limit={",".join(test_hosts)}'
+
+                logger.info('Testing; running command `%s`', test_command)
+                test_success, test_result = lib.shell.shell_exec(
+                    test_command,
+                    lc_all='C.UTF-8',
+                )
+
+                logger.debug(test_result[0])
+                logger.debug(test_result[1])
+
+                # Not checking Ansible's return code here as it can be ambiguous,
+                # especially when running against multiple hosts.
+                # However, if stdout is None, something definitely went wrong.
+                if not test_success or test_result[0] is None:
+                    logger.error(
+                        'Test "%s" on "%s" failed: Test command call failed.',
+                        scenario,
+                        ', '.join(batch_hosts),
+                    )
+                    results[scenario.name].update(
+                        {
+                            host: 'error'
+                            for host in test_hosts
+                        },
+                    )
+                    continue
+
+                test_recap_success, test_recap_result = parse_ansible_recap(test_result[0])
+
+                if not test_recap_success:
+                    logger.error(test_recap_result)
+                    results[scenario.name].update(
+                        {
+                            host: 'error'
+                            for host in test_hosts
+                        },
+                    )
+                    continue
+
+                results[scenario.name].update(
+                    {
+                        host_recap['host']: 'pass' if host_recap['failed'] == '0' and host_recap['unreachable'] == '0' else 'fail'
+                        for host_recap in test_recap_result
+                    },
+                )
+
+                # Only run idempotence on hosts that actually passed the (first) test
+                idempotence_hosts = [
+                    host
+                    for host in batch_hosts
+                    if results[scenario.name][host] == 'pass' and inventory_result['_meta']['hostvars'][host].get(
+                        'particle__idempotence_test',
+                        False,
+                    )
+                ]
+
+                if len(idempotence_hosts) > 0:
+                    logger.info(
+                        'Testing for idempotence; running same command again against hosts that passed',
+                    )
+
+                    idempotence_command = f'{particle_command} --ssh-extra-args "-F {ssh_config_path.absolute()}" --inventory={scenario} --limit={",".join(idempotence_hosts)}'
+                    logger.info('Running `%s`', idempotence_command)
+
+                    idempotence_success, idempotence_result = lib.shell.shell_exec(
+                        idempotence_command,
+                        lc_all='C.UTF-8',
+                    )
+
+                    logger.debug(idempotence_result[0])
+                    logger.debug(idempotence_result[1])
+
+                    # Not checking Ansible's return code here as it can be ambiguous,
+                    # especially when running against multiple hosts.
+                    # However, if stdout is None, something definitely went wrong.
+                    if not idempotence_success or idempotence_result[0] is None:
+                        logger.error(
+                            'Idempotence test "%s" on "%s" failed: Test command call failed',
+                            scenario,
+                            ', '.join(batch_hosts),
+                        )
+                        results[scenario.name].update(
+                            {
+                                host: 'error'
+                                for host in idempotence_hosts
+                            },
+                        )
+                        continue
+
+                    idempotence_recap_success, idempotence_recap_result = parse_ansible_recap(
+                        idempotence_result[0],
+                    )
+
+                    if not idempotence_recap_success:
+                        logger.error(idempotence_recap_result)
+                        results[scenario.name].update(
+                            {
+                                host: 'error'
+                                for host in idempotence_hosts
+                            },
+                        )
+                        continue
+
+                    results[scenario.name].update(
+                        {
+                            host_recap['host']: 'pass' if host_recap['changed'] == '0' else 'idem'
+                            for host_recap in idempotence_recap_result
+                        },
+                    )
+
+        vagrant_halt(cmd_vagrant, particle_dir, batch)
+
+    logger.info('All done!')
+
+    logger.info(
+        'Results:\n%s',
+        lib.base.get_table(
+            list(results.values()),
+            results_col_names,
+            header=results_col_names,
+        ),
+    )
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception:  # pylint: disable=W0703
+        lib.base.cu()
+    except KeyboardInterrupt:
+        logger.info('Shutting down')

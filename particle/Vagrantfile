@@ -1,0 +1,57 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # Vagrantfile for the 'particle' test runner.
+  #
+  # Virtual machines must be declared in this file for particle to be able to detect them.
+  # Multiple machines can be declared by using the mult-machine format: https://developer.hashicorp.com/vagrant/docs/multi-machine.
+  #
+  # For documentation about the Vagrantfile itself see https://docs.vagrantup.com,
+  # for available boxes refer to https://vagrantcloud.com/search.
+
+  config.vm.define "debian11", autostart: false do |debian11|
+    debian11.vm.box = "debian/bullseye64"
+  end
+
+  config.vm.define "debian12", autostart: false do |debian12|
+    debian12.vm.box = "debian/bookworm64"
+  end
+
+  config.vm.define "rocky8", autostart: false do |rocky8|
+    rocky8.vm.box = "generic/rocky8" # "rockylinux/8" BIOS booting is broken (and vagrant-libvirt only partially supports UEFI)
+  end
+
+  config.vm.define "rocky9", autostart: false do |rocky9|
+    rocky9.vm.box = "rockylinux/9"
+  end
+
+  # "rockylinux/10" does not work yet
+  #config.vm.define "rocky10", autostart: false do |rocky10|
+  #  rocky10.vm.box = "rockylinux/10"
+  #end
+
+  config.vm.define "ubuntu2204", autostart: false do |ubuntu2204|
+    ubuntu2204.vm.box = "generic/ubuntu2204"
+  end
+
+  config.vm.define "ubuntu2404", autostart: false do |ubuntu2404|
+    ubuntu2404.vm.box = "bento/ubuntu-24.04"
+  end
+
+  # Global configuration
+
+  config.nfs.verify_installed = false
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.memory = 4096
+    libvirt.cpus = 2
+
+    # Better defaults than `vagrant-libvirt` provides; for improved performance
+    libvirt.machine_type = "q35"
+    libvirt.graphics_type = "spice"
+    libvirt.video_type = "virtio"
+  end
+
+end
