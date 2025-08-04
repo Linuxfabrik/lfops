@@ -525,7 +525,7 @@
         - '{{ mariadb_server__dump_mydumper_package }}'
       state: 'present'
 
-  - name: 'Install {{ __mariadb_server__dump_mydumper_dependencies }}'
+  - name: 'Install {{ __mariadb_server__dump_mydumper_dependencies | join (" ") }}'
     ansible.builtin.package:
       name: '{{ __mariadb_server__dump_mydumper_dependencies }}'
       state: 'present'
