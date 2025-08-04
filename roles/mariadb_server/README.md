@@ -208,6 +208,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_innodb_file_per_table__group_var` / `mariadb_server__cnf_innodb_file_per_table__host_var`          | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table) | `'ON'` (Deprecated: MariaDB 11.0.1 )                           |
 | `mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var` / `mariadb_server__cnf_innodb_flush_log_at_trx_commit__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit) | `1`                              |
 | `mariadb_server__cnf_innodb_io_capacity__group_var` / `mariadb_server__cnf_innodb_io_capacity__host_var`             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_io_capacity) | `200`                            |
+| `mariadb_server__cnf_innodb_log_buffer_size__group_var` / `mariadb_server__cnf_innodb_log_buffer_size__host_var` | [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_log_buffer_size) | `'16M'` |
 | `mariadb_server__cnf_innodb_log_file_size__group_var` / `mariadb_server__cnf_innodb_log_file_size__host_var`           | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_log_file_size) | `'96M'`                          |
 | `mariadb_server__cnf_innodb_strict_mode__group_var` / `mariadb_server__cnf_innodb_strict_mode__host_var` | [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_strict_mode) | `ON` |
 | `mariadb_server__cnf_interactive_timeout__group_var` / `mariadb_server__cnf_interactive_timeout__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#interactive_timeout) | `28800`                          |
@@ -255,6 +256,7 @@ mariadb_server__cnf_innodb_doublewrite__host_var: 1
 mariadb_server__cnf_innodb_file_per_table__host_var: 'ON'
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__host_var: 1
 mariadb_server__cnf_innodb_io_capacity__host_var: 200
+mariadb_server__cnf_innodb_log_buffer_size__host_var: '20M'
 mariadb_server__cnf_innodb_log_file_size__host_var: '96M'
 mariadb_server__cnf_interactive_timeout__host_var: 28800
 mariadb_server__cnf_join_buffer_size__host_var: '256K'

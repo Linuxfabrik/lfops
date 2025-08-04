@@ -27,6 +27,7 @@ mariadb_server__cnf_innodb_doublewrite__role_var: 'ON'
 mariadb_server__cnf_innodb_file_per_table__role_var: 'ON'
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__role_var: 1
 mariadb_server__cnf_innodb_io_capacity__role_var: 200
+mariadb_server__cnf_innodb_log_buffer_size__role_var: '16M'
 mariadb_server__cnf_innodb_log_file_size__role_var: '32M'  # default: '96M'
 mariadb_server__cnf_innodb_max_dirty_pages_pct__role_var: '90'
 mariadb_server__cnf_innodb_max_purge_lag__role_var: '0'
