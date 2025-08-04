@@ -228,6 +228,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_socket__group_var` / `mariadb_server__cnf_socket__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#socket) | RHEL: `'/run/mariadb/mariadb.sock'`, Debian: `'/run/mysqld/mysqld.sock'` |
 | `mariadb_server__cnf_sql_mode__group_var` / `mariadb_server__cnf_sql_mode__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#sql_mode) | `'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'` |
 | `mariadb_server__cnf_table_definition_cache__group_var` / `mariadb_server__cnf_table_definition_cache__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#table_definition_cache) | 400
+| `mariadb_server__cnf_table_open_cache__group_var` / `mariadb_server__cnf_table_open_cache__host_var` | [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#table_open_cache) | `2000` |
 | `mariadb_server__cnf_tls_version__group_var` / `mariadb_server__cnf_tls_version__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#tls_version) | `'TLSv1.2,TLSv1.3'`                          |
 | `mariadb_server__cnf_tmp_table_size__group_var` / `mariadb_server__cnf_tmp_table_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#tmp_table_size) | `'16M'`                          |
 | `mariadb_server__cnf_wait_timeout__group_var` / `mariadb_server__cnf_wait_timeout__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#wait_timeout) | `28800`                          |
@@ -273,6 +274,7 @@ mariadb_server__cnf_slow_query_log_file__host_var: '/var/log/mariadb/mariadb-slo
 mariadb_server__cnf_socket__host_var: '/var/run/mariadb/mariadb.sock' # use /var/run instead of /run to avoid collisions with selinux fcontexts (`File spec /run/mariadb/mariadb\.sock conflicts with equivalency rule '/run /var/run'`)
 mariadb_server__cnf_sql_mode__host_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__host_var: 400
+mariadb_server__cnf_table_open_cache__host_var: 3000
 mariadb_server__cnf_tls_version__host_var: 'TLSv1.2,TLSv1.3'
 mariadb_server__cnf_tmp_table_size__host_var: '16M'
 mariadb_server__cnf_wait_timeout__host_var: 28800
