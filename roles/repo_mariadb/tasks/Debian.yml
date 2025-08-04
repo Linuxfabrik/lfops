@@ -1,9 +1,9 @@
 - block:
 
-  # https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/
-  - name: 'curl https://supplychain.mariadb.com/mariadb-keyring-2019.gpg --output /tmp/ansible.mariadb.gpg'
+  # https://mariadb.org/download/?t=repo-config&d=Debian+12+%22Bookworm%22&v=10.11
+  - name: 'curl https://mariadb.org/mariadb_release_signing_key.pgp --output /tmp/ansible.mariadb.gpg'
     ansible.builtin.get_url:
-      url: 'https://supplychain.mariadb.com/mariadb-keyring-2019.gpg'
+      url: 'https://mariadb.org/mariadb_release_signing_key.pgp'
       dest: '/tmp/ansible.mariadb.gpg'
       mode: 0o644
     delegate_to: 'localhost'
