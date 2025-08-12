@@ -204,11 +204,11 @@ Imagine that you want to deploy an updated MariaDB dump script to all hosts that
 
 ## LFOps-wide Variables
 
-There are a handful of variables that are used across roles. It is still possible to overwrite the LFOps-wide variable with the role-specific one.
+It would sometimes be convenient to allow the user to set a default for multiple roles. However, since we strictly prefix all our variables with the role name, this is not that straightforward. Instead, we provide a handful of variables prefixed with `lfops__` that act as the default for multiple roles. It is, of course, still possible to overwrite the LFOps-wide variable with the role-specific one (for example, the value of `icingaweb2_module_director__monitoring_plugins_version` takes precedence over that of `lfops__monitoring_plugins_version`).
 
 ### `lfops__monitoring_plugins_version`
 
-This variable is used as the default whenever the version of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) is required. Have a look at the  `monitoring_plugins__version` variable in the [monitoring_plugins role README](https://github.com/Linuxfabrik/lfops/blob/main/roles/monitoring_plugins/README.md) for details.
+This variable is used as the default whenever the version of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) is required. For example, it is used to deploy the correct version of the Director Basket and Grafana Dashboards in the `icingaweb2_module_director` and `icingaweb2_module_grafana` roles, respectively. For documentation of the value, have a look at the  `monitoring_plugins__version` variable in the [monitoring_plugins role README](https://github.com/Linuxfabrik/lfops/blob/main/roles/monitoring_plugins/README.md).
 
 Example:
 ```yaml
