@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025081301
+# 2025081401
 # 10.11
 
 [client]
@@ -108,6 +108,9 @@ table_definition_cache                         = {{ mariadb_server__cnf_table_de
 table_open_cache                               = {{ mariadb_server__cnf_table_open_cache__combined_var }}
 tls_version                                    = {{ mariadb_server__cnf_tls_version__combined_var }}
 tmp_table_size                                 = {{ mariadb_server__cnf_tmp_table_size__combined_var }}
+{% if mariadb_server__cnf_tmpdir__combined_var is defined and mariadb_server__cnf_tmpdir__combined_var | length %}
+tmpdir                                         = {{ mariadb_server__cnf_tmpdir__combined_var }}
+{% endif %}
 wait_timeout                                   = {{ mariadb_server__cnf_wait_timeout__combined_var }}
 
 {% if mariadb_server__dare_keys is defined and mariadb_server__dare_keys %}

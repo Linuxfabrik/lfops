@@ -71,6 +71,7 @@ mariadb_server__cnf_table_definition_cache__role_var: 400
 mariadb_server__cnf_table_open_cache__role_var: '2000'
 mariadb_server__cnf_tls_version__role_var: 'TLSv1.2,TLSv1.3'
 mariadb_server__cnf_tmp_table_size__role_var: '16M'
+mariadb_server__cnf_tmpdir__role_var: ''
 mariadb_server__cnf_wait_timeout__role_var: 28800
 
 # ===

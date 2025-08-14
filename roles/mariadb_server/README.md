@@ -233,6 +233,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_table_open_cache__group_var` / `mariadb_server__cnf_table_open_cache__host_var` | [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#table_open_cache) | `2000` |
 | `mariadb_server__cnf_tls_version__group_var` / `mariadb_server__cnf_tls_version__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#tls_version) | `'TLSv1.2,TLSv1.3'`                          |
 | `mariadb_server__cnf_tmp_table_size__group_var` / `mariadb_server__cnf_tmp_table_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#tmp_table_size) | `'16M'`                          |
+| `mariadb_server__cnf_tmpdir__group_var` / `mariadb_server__cnf_tmpdir__host_var` | [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#tmpdir) | `''` (means it defaults either to `$TMPDIR` or `/tmp`) |
 | `mariadb_server__cnf_wait_timeout__group_var` / `mariadb_server__cnf_wait_timeout__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#wait_timeout) | `28800`                          |
 
 Example:
@@ -281,6 +282,7 @@ mariadb_server__cnf_table_definition_cache__host_var: 400
 mariadb_server__cnf_table_open_cache__host_var: 3000
 mariadb_server__cnf_tls_version__host_var: 'TLSv1.2,TLSv1.3'
 mariadb_server__cnf_tmp_table_size__host_var: '16M'
+mariadb_server__cnf_tmpdir__host_var: '/data/tmpdir'
 mariadb_server__cnf_wait_timeout__host_var: 28800
 ```
 
