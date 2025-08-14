@@ -190,6 +190,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | Role Variable                                        | Documentation                                                                                      | Default Value                    |
 | -------------                                        | -------------                                                                                      | -------------                    |
 | `mariadb_server__cnf_bind_address__group_var` / `mariadb_server__cnf_bind_address__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bind_address) | `''` |
+| `mariadb_server__cnf_binlog_expire_logs_seconds__group_var` / `mariadb_server__cnf_binlog_expire_logs_seconds__host_var` | [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#binlog_expire_logs_seconds) | `0` |
 | `mariadb_server__cnf_binlog_format__group_var` / `mariadb_server__cnf_binlog_format__host_var` | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#binlog_format) | `'MIXED'` |
 | `mariadb_server__cnf_bulk_insert_buffer_size__group_var` / `mariadb_server__cnf_bulk_insert_buffer_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bulk_insert_buffer_size) | `8M`                          |
 | `mariadb_server__cnf_character_set_server__group_var` / `mariadb_server__cnf_character_set_server__host_var`           | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#character_set_server) | 10.11-: `'utf8mb4'`, 11.1+: `'uca1400'`                      |
@@ -238,6 +239,7 @@ Example:
 ```yaml
 # optional - cnf directives
 mariadb_server__cnf_bind_address__host_var: '0.0.0.0'
+mariadb_server__cnf_binlog_expire_logs_seconds__host_var: '9000' # 2.5hrs
 mariadb_server__cnf_binlog_format__host_var: 'MIXED'
 mariadb_server__cnf_bulk_insert_buffer_size__host_var: '8M'
 mariadb_server__cnf_character_set_server__host_var: 'utf8mb4'
