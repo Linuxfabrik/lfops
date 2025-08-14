@@ -312,16 +312,11 @@
     register: 'mariadb_server__z00_linuxfabrik_result'
     notify: 'mariadb_server: systemctl restart mariadb'
 
-  - name: 'systemctl daemon-reload'
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
     ansible.builtin.systemd:
       daemon_reload: true
     when:
       - 'mariadb_server__socket_selinux_workaround_result is changed or mariadb_server__z00_linuxfabrik_result is changed'
-
-  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
-    ansible.builtin.systemd:
-      daemon_reload: true
-    when: 'mariadb_server__socket_selinux_workaround_result is changed'
 
   - name: 'Deploy {{ mariadb_server__logrotate_path }}'
     ansible.builtin.template:
