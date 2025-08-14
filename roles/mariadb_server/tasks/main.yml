@@ -256,7 +256,33 @@
     when:
       - 'mariadb_server__run_galera_new_cluster is true'
 
-  - name: 'Make sure the tmpdir exists and the permissions are correct'
+  - name: 'Compute parent directory for log_bin'
+    set_fact:
+      __mariadb_server__cnf_log_bin_parent_dir: >-
+        {%- set path = (mariadb_server__cnf_log_bin__combined_var | trim) -%}
+        {%- if path | length and '/' in path -%}
+          {%- if path.startswith('/') -%}
+            {# absolute path: take its dirname #}
+            {{ path | dirname }}
+          {%- else -%}
+            {# relative path: join datadir with the dirname of the relative path #}
+            {{ (mariadb_server__cnf_datadir__combined_var, (path | dirname)) | ansible.builtin.path_join }}
+          {%- endif -%}
+        {%- else -%}
+          {{ '' }}
+        {%- endif -%}
+
+  - name: 'Make sure the log_bin parent dir exists with the correct permissions'
+    ansible.builtin.file:
+      path: '{{ __mariadb_server__cnf_log_bin_parent_dir | trim }}'
+      owner: 'mysql'
+      group: 'mysql'
+      mode: 0o750
+      state: 'directory'
+    when:
+      - '(__mariadb_server__cnf_log_bin_parent_dir | trim) | length'
+
+  - name: 'Make sure the tmpdir exists with the correct permissions'
     ansible.builtin.file:
       path: '{{ mariadb_server__cnf_tmpdir__combined_var }}'
       owner: 'mysql'
