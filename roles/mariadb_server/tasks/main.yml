@@ -392,6 +392,11 @@
       dest: '/tmp/lfops-mariadb-defaults.cnf'
       state: 'absent'
 
+  - name: 'Restart mariadb after running mysql_upgrade'
+    ansible.builtin.service:
+      name: 'mariadb.service'
+      state: 'restarted'
+
   - name: 'print mysql_upgrade output'
     ansible.builtin.debug:
       msg:
