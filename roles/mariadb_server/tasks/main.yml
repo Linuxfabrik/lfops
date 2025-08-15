@@ -257,7 +257,7 @@
       - 'mariadb_server__run_galera_new_cluster is true'
 
   - name: 'Compute parent directory for log_bin'
-    set_fact:
+    ansible.builtin.set_fact:
       __mariadb_server__cnf_log_bin_parent_dir: >-
         {%- set path = (mariadb_server__cnf_log_bin__combined_var | trim) -%}
         {%- if path | length and '/' in path -%}
