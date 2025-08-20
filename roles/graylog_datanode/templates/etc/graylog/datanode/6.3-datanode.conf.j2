@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024110801
+# 2025082001
 # 6.3
 #####################################
 # GRAYLOG DATANODE CONFIGURATION FILE
@@ -160,3 +160,5 @@ opensearch_logs_location = /var/log/graylog-datanode/opensearch
 #
 # indexer_jwt_auth_token_caching_duration = 60s
 # indexer_jwt_auth_token_expiration_duration = 180s
+
+opensearch_heap = {{ graylog_datanode__opensearch_heap }}
