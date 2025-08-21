@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   {{ ansible_managed }}
-  2024073001
+  2025082101
 
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -178,9 +178,10 @@
         <!-- Access log processes all example.
              Documentation at: /docs/config/valve.html
              Note: The pattern used is equivalent to using pattern="common" -->
-        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"
-               prefix="localhost_access_log" suffix=".txt"
-               pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+        <!-- disabling rotatable since we use logrotate -->
+        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" rotatable="false"
+                prefix="localhost_access" suffix=".log"
+                pattern="%h %l %u %t &quot;%r&quot; %s %b" />
 
       </Host>
     </Engine>
