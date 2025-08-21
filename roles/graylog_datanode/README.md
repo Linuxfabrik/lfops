@@ -55,7 +55,7 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 | `graylog_datanode__http_port`    | Number. The port where the DataNode REST api is listening. | `8999` |
 | `graylog_datanode__mongodb_uri`  | String. MongoDB connection string. See https://docs.mongodb.com/manual/reference/connection-string/ for details. | `'mongodb://127.0.0.1/graylog'` |
 | `graylog_datanode__opensearch_data_location` | String. Set this OpenSearch folder if you need OpenSearch to be located in a special place. | `/var/lib/graylog-datanode/opensearch/data` |
-| `graylog_datanode__opensearch_heap` | String. Ensure the heap settings are set to half your system memory, up to a max of 31 GB. | `50% of system memory, e.g. 8g` |
+| `graylog_datanode__opensearch_heap` | String. Ensure the heap settings are set to half your system memory, up to a max of 31 GB. | 50% of system memory, e.g. 8g |
 
 Example:
 ```yaml
