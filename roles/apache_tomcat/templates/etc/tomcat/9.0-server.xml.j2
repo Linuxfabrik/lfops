@@ -178,7 +178,7 @@
         <!-- Access log processes all example.
              Documentation at: /docs/config/valve.html
              Note: The pattern used is equivalent to using pattern="common" -->
-        <!-- disabling rotatable since we use logrotate -->
+        <!-- disabling rotatable since we use logrotate. the "logs" directory points to /usr/share/tomcat/logs, which is a symbolic link to /var/log/tomcat -->
         <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" rotatable="false"
                 prefix="localhost_access" suffix=".log"
                 pattern="%h %l %u %t &quot;%r&quot; %s %b" />
