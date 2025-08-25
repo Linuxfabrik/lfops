@@ -1,0 +1,56 @@
+# {{ ansible_managed }}
+# 2025082501
+
+# mongod.conf
+
+# for documentation of all options, see:
+#   http://docs.mongodb.org/manual/reference/configuration-options/
+
+# where to write logging data.
+systemLog:
+  destination: file
+  logAppend: true
+  path: /var/log/mongodb/mongod.log
+
+# Where and how to store data.
+storage:
+  dbPath: /var/lib/mongo
+  journal:
+    commitIntervalMs: {{ mongodb__conf_storage_journal_commit_interval_ms }}
+  directoryPerDB: {{ mongodb__conf_storage_directory_per_db | string | lower }}
+#  engine:
+{% if mongodb__conf_storage_engine_raw is defined and mongodb__conf_storage_engine_raw | length %}
+  {{ mongodb__conf_storage_engine_raw }}
+{% endif %}
+
+# how the process runs
+processManagement:
+  timeZoneInfo: /usr/share/zoneinfo
+
+# network interfaces
+net:
+  port: {{ mongodb__conf_net_port }}
+  bindIp: {{ mongodb__conf_net_bind_ip | join(",") }}
+
+
+security:
+  authorization: {{ mongodb__conf_security_authorization | ternary('enabled', 'disabled') }}
+{% if mongodb__keyfile_content is defined and mongodb__keyfile_content | length %}
+  keyFile: /etc/mongod.key
+{% endif %}
+
+#operationProfiling:
+
+{% if mongodb__conf_replication_repl_set_name__combined_var is defined and mongodb__conf_replication_repl_set_name__combined_var | length %}
+replication:
+  replSetName: "{{ mongodb__conf_replication_repl_set_name__combined_var }}"
+{% if mongodb__conf_replication_oplog_size_mb is defined %}
+  oplogSizeMB: {{ mongodb__conf_replication_oplog_size_mb }}
+{% endif %}
+{% endif %}
+
+#sharding:
+
+## Enterprise-Only Options
+
+#auditLog:
