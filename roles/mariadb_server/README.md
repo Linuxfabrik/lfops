@@ -12,7 +12,6 @@ Note that this role does NOT let you specify a particular MariaDB server version
 
 This role is compatible with the following MariaDB versions:
 
-* 10.5
 * 10.6 LTS
 * 10.11 LTS
 * 11.4 LTS
@@ -197,7 +196,6 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_collation_server__group_var` / `mariadb_server__cnf_collation_server__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#collation_server) | 10.11-: `'utf8mb4_unicode_ci'`, 11.1+: `'utf8mb3=utf8mb3_uca1400_ai_ci,ucs2=ucs2_uca1400_ai_ci,utf8mb4=utf8mb4_uca1400_ai_ci,utf16=utf16_uca1400_ai_ci,utf32=utf32_uca1400_ai_ci'`           |
 | `mariadb_server__cnf_datadir__group_var` / `mariadb_server__cnf_datadir__host_var` | String. [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#datadir) | `'/var/lib/mysql/'` |
 | `mariadb_server__cnf_default_storage_engine__group_var` / `mariadb_server__cnf_default_storage_engine__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#default_storage_engine) | `'InnoDB'` |
-| `mariadb_server__cnf_expire_logs_days__group_var` / `mariadb_server__cnf_expire_logs_days__host_var`               | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#expire_logs_days) | `0.000000`                              |
 | `mariadb_server__cnf_extra_max_connections__group_var` / `mariadb_server__cnf_extra_max_connections__host_var` | [mariadb.com](https://mariadb.com/kb/en/thread-pool-system-status-variables/#extra_max_connections) | `3` |
 | `mariadb_server__cnf_extra_port__group_var` / `mariadb_server__cnf_extra_port__host_var` | [mariadb.com](https://mariadb.com/kb/en/thread-pool-system-status-variables/#extra_port) | `3307` |
 | `mariadb_server__cnf_general_log__group_var` / `mariadb_server__cnf_general_log__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#general_log) | `'OFF'` |
@@ -247,7 +245,6 @@ mariadb_server__cnf_character_set_server__host_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__host_var: 'utf8mb4_unicode_ci'
 mariadb_server__cnf_datadir__host_var: '/data/mariadb'
 mariadb_server__cnf_default_storage_engine__host_var: 'InnoDB'
-mariadb_server__cnf_expire_logs_days__host_var: 0.000000
 mariadb_server__cnf_extra_max_connections__host_var: 10
 mariadb_server__cnf_extra_port__host_var: 3308
 mariadb_server__cnf_general_log__host_var: 'OFF'

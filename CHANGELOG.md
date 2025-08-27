@@ -10,6 +10,13 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
+### Breaking Changes
+
+Role:mariadb_server
+* Removed support for EOL version 10.5
+* Removed `mariadb_server__cnf_expire_logs_days__group_var` / `mariadb_server__cnf_expire_logs_days__host_var`, use `mariadb_server__cnf_binlog_expire_logs_seconds__group_var` / `mariadb_server__cnf_binlog_expire_logs_seconds__host_var` instead
+
+
 ### Added
 
 Tools:particle
