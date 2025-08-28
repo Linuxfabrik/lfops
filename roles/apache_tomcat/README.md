@@ -24,8 +24,10 @@ Notes:
 How to deploy multiple Tomcat instances on a single server using this and other roles? Imagine you want to run an 'author' and a 'public' instance. Place your config files in `host_files` (for example `host_files/{{ inventory_hostname }}/var/lib/tomcats/{author,public}/conf/{context,server}.xml` and deploy like this:
 
 ```yaml
-
 files__directories__host_var:
+  - path: '/usr/share/tomcat/logs'
+    owner: 'tomcat'
+    group: 'tomcat'
   - path: '/var/lib/tomcats/author/conf'
     owner: 'tomcat'
     group: 'tomcat'
@@ -57,10 +59,32 @@ files__directories__host_var:
     owner: 'tomcat'
     group: 'tomcat'
 files__files__host_var:
+  - path: '/etc/sysconfig/tomcat@author'
+    mode: 0o644
+  - path: '/etc/sysconfig/tomcat@public'
+    mode: 0o644
   - path: '/var/lib/tomcats/author/conf/context.xml'
   - path: '/var/lib/tomcats/author/conf/server.xml'
   - path: '/var/lib/tomcats/public/conf/context.xml'
   - path: '/var/lib/tomcats/public/conf/server.xml'
+files__symlinks__host_var:
+  # use symlinks to place the logs beneath /var/log/tomcat
+  # this prevents problems with logrotate and SELinux
+  - src: '/usr/share/tomcat/logs'
+    dest: '/var/log/tomcat'
+    owner: 'tomcat'
+    group: 'tomcat'
+    mode: 0o770
+  - src: '/var/lib/tomcats/author/logs'
+    dest: '/var/log/tomcat/author'
+    owner: 'tomcat'
+    group: 'tomcat'
+    mode: 0o770
+  - src: '/var/lib/tomcats/public/logs'
+    dest: '/var/log/tomcat/public'
+    owner: 'tomcat'
+    group: 'tomcat'
+    mode: 0o770
 
 shell__commands__host_var:
   - name: '100-prepare-tomcat-instances'
