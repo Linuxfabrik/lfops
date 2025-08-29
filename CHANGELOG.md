@@ -49,6 +49,9 @@ Role:repo_opensearch
 
 ### Changed
 
+Role:repo_postgresql
+* Set repo_gpgcheck from 1 to 0
+
 Role:monitoring_plugins:
 * Removed `monitoring_plugins__skip_notification_plugins__*_var` variables as they are now always installed
 
