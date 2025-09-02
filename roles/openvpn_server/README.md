@@ -82,6 +82,21 @@ openvpn_server__service_enabled: true
 ```
 
 
+## Troubleshooting
+
+```
+TASK [linuxfabrik.lfops.openvpn_server : Generate DH Parameters with 2048 bits size]
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: SyntaxError: future feature annotations is not defined
+fatal: [host1]: FAILED! => changed=false
+  module_stderr: |-
+    Traceback (most recent call last):
+    ...
+    SyntaxError: future feature annotations is not defined
+```
+This occurs when running against a host with Python <=3.6, which is not supported in community.crypto >=3.0.0 (see their [CHANGELOG](https://github.com/ansible-collections/community.crypto/blob/main/CHANGELOG.md#v300)).
+As a workaround the collection can be downgraded: `ansible-galaxy collection install --force 'community.crypto:<3.0.0'`
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)
