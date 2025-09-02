@@ -54,7 +54,7 @@ tags:
 dependencies:
   'ansible.utils': '*' # note: "*" selects the highest version available
   'ansible.windows': '*'
-  'community.crypto': '*'
+  'community.crypto': '<3.0.0' # we need python 3.6 support to run against rhel8
   'community.grafana': '*'
   'community.libvirt': '*'
   'community.mongodb': '*'
