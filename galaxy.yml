@@ -87,3 +87,4 @@ build_ignore:
   - '.git*'
   - 'build'
   - 'context'
+  - 'tools'
