@@ -37,6 +37,9 @@ Role:elasticsearch_oss
 
 ### Fixed
 
+Role:nextcloud
+* Add missing "env" module
+
 Role:mariadb_server
 * Correct mydumper dependency packages for Debian-based systems
 
