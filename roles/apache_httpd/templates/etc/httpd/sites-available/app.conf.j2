@@ -18,8 +18,9 @@
     ErrorLog "{{ item['conf_error_log'] | d('logs/' ~ item['conf_server_name'] ~ '-error.log') }}"
     LogLevel {{ item['conf_log_level'] | d('notice core:info') }}
     # log_config_module
-{% if item['conf_custom_log'] | d('logs/' ~ item['conf_server_name'] ~ '-access.log linuxfabrikio') is defined and item['conf_custom_log'] | d('logs/' ~ item['conf_server_name'] ~ '-access.log linuxfabrikio') | length %}
-    CustomLog {{ item['conf_custom_log'] | d('logs/' ~ item['conf_server_name'] ~ '-access.log linuxfabrikio') }}
+{% set __conf_custom_log = item['conf_custom_log'] | d('logs/' ~ item['conf_server_name'] ~ '-access.log linuxfabrikio') %}
+{% if __conf_custom_log | length %}
+    CustomLog {{ __conf_custom_log }}
 {% endif %}
 
     KeepAliveTimeout {{ item['conf_keep_alive_timeout'] | d(5) }}

@@ -37,8 +37,11 @@ Role:elasticsearch_oss
 
 ### Fixed
 
+Role:apache_httpd
+* Allowed unsetting the CustomLog directive
+
 Role:nextcloud
-* Add missing "env" module
+* Added missing "env" module
 
 Role:mariadb_server
 * Correct mydumper dependency packages for Debian-based systems
