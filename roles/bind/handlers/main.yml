@@ -3,6 +3,8 @@
   loop: '{{ bind__zones }}'
   loop_control:
     label: '{{ item["name"] }}'
+  when:
+    - 'item["type"] | d("master") in ["primary", "master"]'
   notify:
     - 'bind: reload named'
 
