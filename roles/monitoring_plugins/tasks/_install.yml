@@ -241,7 +241,6 @@
         find /tmp/ansible.monitoring-plugins-repo/check-plugins -name *.svg -exec cp {} /tmp/ansible.monitoring-plugins-repo-flattened/icons/ \;
         cp -- /tmp/ansible.monitoring-plugins-repo/assets/icons/*.svg /tmp/ansible.monitoring-plugins-repo-flattened/icons/
       delegate_to: 'localhost'
-      run_once: true
       check_mode: false # run task even if `--check` is specified
       changed_when: false # no change on the remote host
 
