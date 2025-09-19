@@ -58,7 +58,7 @@ Variables for `redis.conf` directives and their default values, defined and supp
 | `redis__conf_protected_mode`            | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'yes'`        |
 | `redis__conf_replica_serve_stale_data`  | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'yes'`        |
 | `redis__conf_requirepass`               | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `unset`        |
-| `redis__conf_save`                      | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | v6: `['3600 1', '300 100', '60 10000']`<br>v7: `['3600 1', '300 100', '60 10000']` |
+| `redis__conf_save__group_var` / `redis__conf_save__host_var` | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | v6: `['3600 1', '300 100', '60 10000']`<br>v7: `['3600 1', '300 100', '60 10000']` |
 | `redis__conf_supervised`                | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`         |
 | `redis__conf_tls_auth_clients`          | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset          |
 | `redis__conf_tls_ca_cert_file`          | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset          |
@@ -81,7 +81,7 @@ redis__conf_port: 6379  # If port 0 is specified Redis will not listen on a TCP 
 redis__conf_protected_mode: 'yes'
 redis__conf_replica_serve_stale_data: 'yes'
 redis__conf_requirepass: 'password'
-redis__conf_save:
+redis__conf_save__host_var:
   - '3600 1'
   - '300 100'
   - '60 10000'

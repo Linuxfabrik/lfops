@@ -1,0 +1,3 @@
+# note: only use `__role_var`s in here, to allow the user to change the values
+
+redis__conf_save__role_var: ['3600 1', '300 100', '60 10000']

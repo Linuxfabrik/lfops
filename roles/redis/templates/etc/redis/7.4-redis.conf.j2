@@ -466,7 +466,7 @@ locale-collate ""
 # You can set these explicitly by uncommenting the following line.
 #
 # save 3600 1 300 100 60 10000
-save {{ redis__conf_save | d(['3600 1', '300 100', '60 10000']) | join(' ') }}
+save {{ redis__conf_save__combined_var | join(' ') }}
 
 # By default Redis will stop accepting writes if RDB snapshots are enabled
 # (at least one save point) and the latest background save failed.

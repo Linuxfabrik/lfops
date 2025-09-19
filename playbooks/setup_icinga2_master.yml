@@ -281,6 +281,7 @@
         - 'not setup_icinga2_master__repo_redis__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.redis'
+      redis__conf_save__dependent_var: '{{ icinga2_master__redis__conf_save__dependent_var if (not setup_icinga2_master__redis__skip_injections__internal_var) else none }}'
       when:
         - 'not setup_icinga2_master__redis__skip_role__internal_var'
 

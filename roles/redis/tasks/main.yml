@@ -22,6 +22,15 @@
     ansible.builtin.set_fact:
       redis__installed_version: '{{ ansible_facts.packages["redis"][0]["version"] | regex_search("\d+\.\d+") }}'
 
+  - name: 'Load default values for {{ redis__installed_version }}'
+    ansible.builtin.include_vars: 'vars/{{ redis__installed_version }}.yml'
+
+  - debug:
+      msg:
+        - '{{ redis__conf_save__host_var }}'
+        - '{{ redis__conf_save__host_var | type_debug}}'
+        - '{{ redis__conf_save__dependent_var }}'
+        - '{{ redis__conf_save__dependent_var | type_debug}}'
   - name: 'Deploy /etc/redis/redis.conf (v{{ redis__installed_version }})'
     ansible.builtin.template:
       src: 'etc/redis/{{ redis__installed_version }}-redis.conf.j2'

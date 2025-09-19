@@ -55,6 +55,7 @@ icinga2_master__influxdb_login:
 | `icinga2_master__influxdb_database_name` | The name of the InfluxDB database. | `'icinga2'` |
 | `icinga2_master__influxdb_host` | The host on which the InfluxDB database is reachable. | `'localhost'` |
 | `icinga2_master__influxdb_retention` | Determines how long InfluxDB should keep the Icinga2 data. If specified, it should be `INF` or at least one hour. | `'216d'` |
+| `icinga2_master__redis__conf_save` | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `['3600 1', '900 100000']` (as recommended by [Icinga](https://icinga.com/docs/icinga-db/latest/doc/07-Operations/#huge-memory-footprint-and-io-usage-in-large-setups)) |
 | `icinga2_master__service_enabled` | Enables or disables the Icinga2 service, analogous to `systemctl enable/disable --now`. | `true` |
 
 Example:
@@ -106,6 +107,7 @@ icinga2_master__database_name: 'icinga2_ido'
 icinga2_master__influxdb_database_name: 'icinga2'
 icinga2_master__influxdb_host: 'localhost'
 icinga2_master__influxdb_retention: '216d'
+icinga2_master__redis__conf_save: ['3600 1', '900 100000']
 icinga2_master__service_enabled: true
 ```
 
