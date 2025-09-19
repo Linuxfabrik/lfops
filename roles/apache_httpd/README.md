@@ -72,6 +72,11 @@ If you want to check Apache with [our STIG audit script](https://github.com/Linu
 | `apache_httpd:state` | * Ensures that httpd service is in a desired state |
 | `apache_httpd:vhosts` | * Removes sites-available vHosts<br> * Creates sites-available vHosts<br> * Creates DocumentRoot for all vHosts<br> * Disables vHosts<br> * Enables vHosts |
 
+Tipp:
+
+* To deploy a single vHost only, supplement the `apache_httpd:vhosts` tag with the extra variable `--extra-vars=apache_httpd__limit_vhosts=www.example.com`. See [Optional Role Variables - Specific to this role](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd#optional-role-variables---specific-to-this-role).
+
+
 
 ## Mandatory Role Variables - Global Apache Config (core)
 
