@@ -305,8 +305,8 @@
     ansible.builtin.file:
       path: '{{ mariadb_server__cnf_ssl_key__combined_var }}'
       owner: 'mysql'
-      group: 'root'
-      mode: 0o600
+      group: 'mysql'
+      mode: 0o400
     when:
       - 'mariadb_server__cnf_ssl_key__combined_var | length'
 
