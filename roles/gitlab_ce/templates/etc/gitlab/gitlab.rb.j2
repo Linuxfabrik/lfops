@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025091901
+# 2025092301
 
 ## GitLab configuration settings
 ##! This file is generated during initial installation and **is not** modified
@@ -1062,7 +1062,9 @@ registry_external_url '{{ gitlab_ce__rb_registry_external_url }}'
 # gitlab_rails['registry_enabled'] = true
 # gitlab_rails['registry_host'] = "registry.gitlab.example.com"
 # gitlab_rails['registry_port'] = "5005"
-# gitlab_rails['registry_path'] = "/var/opt/gitlab/gitlab-rails/shared/registry"
+{% if gitlab_ce__rb_gitlab_rails_registry_path is defined and gitlab_ce__rb_gitlab_rails_registry_path | length %}
+gitlab_rails['registry_path'] = "{{ gitlab_ce__rb_gitlab_rails_registry_path }}"
+{% endif %}
 
 ###! Notification secret, it's used to authenticate notification requests to GitLab application
 ###! You only need to change this when you use external Registry service, otherwise
@@ -1103,7 +1105,7 @@ registry_external_url '{{ gitlab_ce__rb_registry_external_url }}'
 
 ### Registry backend storage
 ###! Docs: https://docs.gitlab.com/ee/administration/packages/container_registry.html#configure-storage-for-the-container-registry
-# registry['storage'] = {
+registry['storage'] = {
 #   's3' => {
 #     'accesskey' => 's3-access-key',
 #     'secretkey' => 's3-secret-key-for-access-key',
@@ -1114,13 +1116,23 @@ registry_external_url '{{ gitlab_ce__rb_registry_external_url }}'
 #   'redirect' => {
 #     'disable' => false
 #   }
-# }
+  'filesystem' => {
+{% if gitlab_ce__rb_registry_storage_filesystem_rootdirectory is defined and gitlab_ce__rb_registry_storage_filesystem_rootdirectory | length %}
+    'rootdirectory' => '{{ gitlab_ce__rb_registry_storage_filesystem_rootdirectory }}'
+{% endif %}
+  },
+  'maintenance' => {
+    'readonly' => {
+      'enabled' => {{ gitlab_ce__rb_registry_storage_maintenance_readonly_enabled | string | lower }}
+    }
+  }
+}
 
 ### Registry database
 ###! Docs: https://docs.gitlab.com/ee/administration/packages/container_registry_metadata_database.html#new-installations
 # registry['auto_migrate'] = true
-# registry['database'] = {
-#   'enabled' => false,
+registry['database'] = {
+  'enabled' => {{ gitlab_ce__rb_registry_database_enabled | string | lower }}
 #   'host' => 'localhost',
 #   'port' => 5432,
 #   'user' => 'registry',
@@ -1139,7 +1151,7 @@ registry_external_url '{{ gitlab_ce__rb_registry_external_url }}'
 #       'maxopen' => 25,
 #       'maxlifetime' => '5m'
 #   }
-# }
+}
 
 ### Registry garbage collection
 ###! Docs: https://gitlab.com/gitlab-org/container-registry/-/blob/master/docs/configuration.md?ref_type=heads#gc
