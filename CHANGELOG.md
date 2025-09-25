@@ -19,6 +19,9 @@ Role:mariadb_server
 
 ### Added
 
+Role:apache_httpd
+* Added support for Debian/Ubuntu
+
 Tools:particle
 * Added
 

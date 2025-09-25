@@ -7,7 +7,7 @@ Which Ansible role is proven to run on which OS?
                                      |  Debian |    RHEL    |         Ubuntu        | other
 Role                                 | 11 | 12 | 8 | 9 | 10 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+---+---+----+-------+-------+-------+-----------
-acme_sh                              |    |    | x | x |    |       |       |       |
+acme_sh                              |    | x  | x | x |    |       |       |   x   |
 alternatives                         |  x | x  | x | x |    |   x   |   x   |   x   |
 ansible_init                         |    |    |   |   |    |       |       |       | Fedora 35+
 apache_httpd                         |    | x  | x | x |    |       |       |   x   |

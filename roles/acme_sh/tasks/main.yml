@@ -1,3 +1,13 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'acme_sh'
+    - 'acme_sh:certificates'
+    - 'acme_sh:state'
+
+
 - block:
 
   - name: 'curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online ...'
@@ -37,16 +47,16 @@
     ansible.builtin.file:
       path: '/var/www/html/letsencrypt/.well-known/acme-challenge'
       state: 'directory'
-      owner: 'apache'
-      group: 'apache'
+      owner: '{{ acme_sh__apache_httpd_user }}'
+      group: '{{ acme_sh__apache_httpd_group }}'
       mode: 0o755
 
   - name: "echo 'it works' > /var/www/html/letsencrypt/.well-known/acme-challenge/index.html"
     ansible.builtin.copy:
       content: 'it works'
       dest: '/var/www/html/letsencrypt/.well-known/acme-challenge/index.html'
-      owner: 'apache'
-      group: 'apache'
+      owner: '{{ acme_sh__apache_httpd_user }}'
+      group: '{{ acme_sh__apache_httpd_group }}'
       mode: 0o644
 
   tags:
