@@ -38,6 +38,7 @@ Role:elasticsearch_oss
 ### Fixed
 
 Role:apache_httpd
+* Use platform specific group for htpasswd files
 * Allowed unsetting the CustomLog directive
 
 Role:nextcloud
