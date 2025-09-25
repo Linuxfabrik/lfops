@@ -49,6 +49,7 @@ Role:nextcloud
 
 Role:mariadb_server
 * Correct mydumper dependency packages for Debian-based systems
+* Fixed failing dumps after mydumper update to v0.20.1
 
 Role:elasticsearch_oss
 * Moved tmpdir to a location with exec permissions specified by CIS hardening

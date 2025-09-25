@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # This file is managed by Ansible - do not edit
-# 2024112902
+# 2025092401
 
 
 # no `set -e` because we change some things at the beginning of the script
@@ -69,6 +69,7 @@ mydumper_params+="--outputdir=$BACKUP_DIR "
 mydumper_params+="--routines "
 mydumper_params+="--threads=$THREADS "
 mydumper_params+="--triggers "
+mydumper_params+="--trx-tables=0 "
 mydumper_params+="--verbose 3 "
 mydumper_params+="$RAW "
 
