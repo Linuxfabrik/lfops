@@ -55,6 +55,9 @@ Role:repo_opensearch
 
 ### Changed
 
+Role:mariadb_server:
+* Create a backup file of the most important config files before applying new versions
+
 Role:monitoring_plugins:
 * Removed `monitoring_plugins__skip_notification_plugins__*_var` variables as they are now always installed
 

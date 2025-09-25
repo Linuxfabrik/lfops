@@ -243,6 +243,7 @@
 
   - name: 'Deploy {{ mariadb_server__config_file_00 }}'
     ansible.builtin.template:
+      backup: true
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
       dest: '{{ mariadb_server__config_file_00 }}'
       owner: 'root'
@@ -574,6 +575,7 @@
 
   - name: 'Deploy /etc/mariadb-dump.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/mariadb-dump.conf.j2'
       dest: '/etc/mariadb-dump.conf'
       owner: 'root'
@@ -629,6 +631,7 @@
 
   - name: 'Deploy {{ mariadb_server__config_file_00 }}'
     ansible.builtin.template:
+      backup: true
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
       dest: '{{ mariadb_server__config_file_00 }}'
       owner: 'root'
