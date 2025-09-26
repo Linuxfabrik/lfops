@@ -38,20 +38,20 @@ Hardenings that can be covered by this role: See [STIGs](https://github.com/Linu
 
 ## Tags
 
-| Tag                                  | What it does                                                                                                                     |
-| ---                                  | ------------                                                                                                                     |
-| `mariadb_server`                     | * Install mariadb-server<br> * Optionally install galera-4 and rsync<br> * Plus all of the tags below, except `mariadb_server:galera_new_cluster` and `mariadb_server:upgrade` |
-| `mariadb_server:clone_datadir`       | * If the current `datadir` directory (dir1) on the MariaDB server is different from the one in the Ansible inventory (dir2), copy dir1 to dir2 and configure MariaDB accordingly. MariaDB must be up and running to perform this task. For disaster recovery purposes, you will need to remove dir1 yourself. |
-| `mariadb_server:configure`           | * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer` |
-| `mariadb_server:dare`                | * Deploys the keyfile for the [File Key Management Encryption Plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin/) and restarts MariaDB if ncecessary. |
-| `mariadb_server:database`            | * Create or delete mariadb databases |
-| `mariadb_server:dump`                | * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer`  |
-| `mariadb_server:galera_new_cluster`  | * Runs `galera_new_cluster`, but only if `mariadb_server__run_galera_new_cluster` is true. Use in combination with `--extra-vars='{"mariadb_server__run_galera_new_cluster": true}'` |
-| `mariadb_server:secure_installation` | * Remove all "root" users<br> * Run `mariadb-secure-installation`<br> * Apply some universal CIS hardenings |
-| `mariadb_server:state`               | * Enable/Disable `mariadb.service`  |
-| `mariadb_server:sys_schema`          | * Install sys schema from https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz |
-| `mariadb_server:upgrade`             | * Remove old mariadb-server package<br> * Install latest mariadb-server<br> * Update mariadb-client, mariadb-common, mariadb-shared on Red Hat<br> * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Run `mysql_upgrade`<br> * Must be explicitly called |
-| `mariadb_server:user`                | * Create DBA<br> * Create, update or delete MariaDB users |
+| Tag                                  | What it does                                                                                                                     | Restart/Reload |
+| ---                                  | ------------                                                                                                                     | Restarts mariadb.service |
+| `mariadb_server`                     | * Install mariadb-server<br> * Optionally install galera-4 and rsync<br> * Plus all of the tags below, except `mariadb_server:galera_new_cluster` and `mariadb_server:upgrade` | Restarts mariadb.service |
+| `mariadb_server:clone_datadir`       | * If the current `datadir` directory (dir1) on the MariaDB server is different from the one in the Ansible inventory (dir2), copy dir1 to dir2 and configure MariaDB accordingly. MariaDB must be up and running to perform this task. For disaster recovery purposes, you will need to remove dir1 yourself. | Restarts mariadb.service |
+| `mariadb_server:configure`           | * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer` | Restarts mariadb.service |
+| `mariadb_server:dare`                | * Deploys the keyfile for the [File Key Management Encryption Plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin/) and restarts MariaDB if ncecessary. | Restarts mariadb.service |
+| `mariadb_server:database`            | * Create or delete mariadb databases | - |
+| `mariadb_server:dump`                | * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer`  | - |
+| `mariadb_server:galera_new_cluster`  | * Runs `galera_new_cluster`, but only if `mariadb_server__run_galera_new_cluster` is true. Use in combination with `--extra-vars='{"mariadb_server__run_galera_new_cluster": true}'` | - |
+| `mariadb_server:secure_installation` | * Remove all "root" users<br> * Run `mariadb-secure-installation`<br> * Apply some universal CIS hardenings | - |
+| `mariadb_server:state`               | * Enable/Disable `mariadb.service`  | - |
+| `mariadb_server:sys_schema`          | * Install sys schema from https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz | - |
+| `mariadb_server:upgrade`             | * Remove old mariadb-server package<br> * Install latest mariadb-server<br> * Update mariadb-client, mariadb-common, mariadb-shared on Red Hat<br> * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Run `mysql_upgrade`<br> * Must be explicitly called | Restarts mariadb.service |
+| `mariadb_server:user`                | * Create DBA<br> * Create, update or delete MariaDB users | - |
 
 
 ## Mandatory Role Variables
