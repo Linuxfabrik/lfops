@@ -74,7 +74,7 @@ mariadb_server__admin_user:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mariadb_server__dump_user` | String. For mydumper: User to whom backup privileges are granted to. Setting this user automatically enables daily MariaDB-Dumps. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `["*.*:event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options: `'present'`, `'absent'` | unset |
+| `mariadb_server__dump_user` | String. For mydumper: User to whom backup privileges are granted to. Setting this user automatically enables daily MariaDB-Dumps. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `["*.*:binlog monitor,event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options: `'present'`, `'absent'` | unset |
 
 Example:
 ```yaml
