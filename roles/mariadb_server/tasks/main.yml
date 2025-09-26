@@ -590,7 +590,7 @@
       name: '{{ mariadb_server__dump_user["username"] }}'
       host: 'localhost'
       password: '{{ mariadb_server__dump_user["password"] }}'
-      priv: '{{ mariadb_server__dump_user["priv"] | default(["*.*:event,execute,lock tables,process,reload,replica monitor,select,show databases,show view,slave monitor,super,trigger"]) | join("/") }}'
+      priv: '{{ mariadb_server__dump_user["priv"] | default(["*.*:binlog monitor,event,execute,lock tables,process,reload,replica monitor,select,show databases,show view,slave monitor,super,trigger"]) | join("/") }}'
       state: '{{ mariadb_server__dump_user["state"] | default("present") }}'
 
   - name: 'Deploy /etc/systemd/system/mariadb-dump.service'
