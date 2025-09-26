@@ -39,7 +39,7 @@ Hardenings that can be covered by this role: See [STIGs](https://github.com/Linu
 ## Tags
 
 | Tag                                  | What it does                                                                                                                     | Restart/Reload |
-| ---                                  | ------------                                                                                                                     | Restarts mariadb.service |
+| ---                                  | ------------                                                                                                                     | -------------- |
 | `mariadb_server`                     | * Install mariadb-server<br> * Optionally install galera-4 and rsync<br> * Plus all of the tags below, except `mariadb_server:galera_new_cluster` and `mariadb_server:upgrade` | Restarts mariadb.service |
 | `mariadb_server:clone_datadir`       | * If the current `datadir` directory (dir1) on the MariaDB server is different from the one in the Ansible inventory (dir2), copy dir1 to dir2 and configure MariaDB accordingly. MariaDB must be up and running to perform this task. For disaster recovery purposes, you will need to remove dir1 yourself. | Restarts mariadb.service |
 | `mariadb_server:configure`           | * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer` | Restarts mariadb.service |
