@@ -11,11 +11,11 @@ This role creates and manages instances (virtual machines) on [Infomaniak](https
 
 ## Tags
 
-| Tag                       | What it does                               |
-| ---                       | ------------                               |
-| `infomaniak_vm`           | Creates and manages the instance           |
-| `infomaniak_vm:networks`  | Manage the networks of the host.           |
-| `infomaniak_vm:firewalls` | Manage the provider security groups (basically the firewall policies) of the host. |
+| Tag                       | What it does                               | Reload / Restart |
+| ---                       | ------------                               | ---------------- |
+| `infomaniak_vm`           | Creates and manages the instance           | - |
+| `infomaniak_vm:networks`  | Manage the networks of the host.           | - |
+| `infomaniak_vm:firewalls` | Manage the provider security groups (basically the firewall policies) of the host. | - |
 
 
 ## Mandatory Role Variables

@@ -24,13 +24,13 @@ If you use the ["Setup Moodle" Playbook](https://github.com/Linuxfabrik/lfops/bl
 
 ## Tags
 
-| Tag         | What it does                 |
-| ---         | ------------                 |
-| `moodle`      | Download tar.gz locally, put it on the host, run the Moodle installer, fix file permissions, set up Moodle's cron job, enable/disable it, and set up Moosh. |
-| `moodle:cron` | Set up Moodle's cron job. |
-| `moodle:moosh` | Set up Moosh. |
-| `moodle:moosh_run` | Runs user-defined Moosh commands. Does not run automatically, manually call with `--tags moodle:moosh_run`. |
-| `moodle:state` | Enable/disable Moodle's cron job. |
+| Tag         | What it does                 | Reload / Restart |
+| ---         | ------------                 | ---------------- |
+| `moodle`      | Download tar.gz locally, put it on the host, run the Moodle installer, fix file permissions, set up Moodle's cron job, enable/disable it, and set up Moosh. | - |
+| `moodle:cron` | Set up Moodle's cron job. | - |
+| `moodle:moosh` | Set up Moosh. | - |
+| `moodle:moosh_run` | Runs user-defined Moosh commands. Does not run automatically, manually call with `--tags moodle:moosh_run`. | - |
+| `moodle:state` | Enable/disable Moodle's cron job. | - |
 
 
 ## Mandatory Role Variables

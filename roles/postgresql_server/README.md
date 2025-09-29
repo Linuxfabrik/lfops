@@ -19,14 +19,14 @@ If you use the [postgresql_server Playbook](https://github.com/Linuxfabrik/lfops
 
 ## Tags
 
-| Tag                           | What it does                                       |
-| ---                           | ------------                                       |
-| `postgresql_server`           | Installs and configures PostgreSQL                 |
-| `postgresql_server:state`     | Manages the state of the PostgreSQL service        |
-| `postgresql_server:users`     | Creates, updates and deletes PostgreSQL users      |
-| `postgresql_server:databases` | Creates, updates and deletes PostgreSQL databases  |
-| `postgresql_server:privs`     | Creates, updates and deletes PostgreSQL privileges |
-| `postgresql_server:dump`      | Configures database dumping (backups) |
+| Tag                           | What it does                                       | Reload / Restart |
+| ---                           | ------------                                       | ---------------- |
+| `postgresql_server`           | Installs and configures PostgreSQL                 | Restarts posgresql.service |
+| `postgresql_server:state`     | Manages the state of the PostgreSQL service        | - |
+| `postgresql_server:users`     | Creates, updates and deletes PostgreSQL users      | - | 
+| `postgresql_server:databases` | Creates, updates and deletes PostgreSQL databases  | - |
+| `postgresql_server:privs`     | Creates, updates and deletes PostgreSQL privileges | - |
+| `postgresql_server:dump`      | Configures database dumping (backups) | - |
 
 
 ## Optional Role Variables

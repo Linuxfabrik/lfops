@@ -15,9 +15,9 @@ This role is tested with the following IcingaWeb2 Grafana Module versions:
 
 ## Tags
 
-| Tag                           | What it does                                         |
-| ---                           | ------------                                         |
-| `icingaweb2_module_incubator` | Installs and enables the IcingaWeb2 Incubator Module |
+| Tag                           | What it does                                         | Reload / Restart |
+| ---                           | ------------                                         | ---------------- |
+| `icingaweb2_module_incubator` | Installs and enables the IcingaWeb2 Incubator Module | - |
 
 
 ## Mandatory Role Variables

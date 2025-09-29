@@ -5,9 +5,9 @@ This role simply sets the hostname of the server.
 
 ## Tags
 
-| Tag        | What it does                    |
-| ---        | ------------                    |
-| `hostname` | Sets the hostname of the server |
+| Tag        | What it does                    | Reload / Restart |
+| ---        | ------------                    | ---------------- |
+| `hostname` | Sets the hostname of the server | - |
 
 
 ## Optional Role Variables

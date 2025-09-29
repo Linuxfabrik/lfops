@@ -11,13 +11,13 @@ This role installs and configures [InfluxDB](https://www.influxdata.com/products
 
 ## Tags
 
-| Tag                 | What it does                                      |
-| ---                 | ------------                                      |
-| `influxdb`          | Installs and configures InfluxDB                  |
-| `influxdb:database` | Creates or deletes InfluxDB databases             |
-| `influxdb:dump`     | Configures dumps (backups) of the InfluxDB server |
-| `influxdb:state`    | Manages the state of the InfluxDB service         |
-| `influxdb:user`     | Creates, updates or deletes InfluxDB users        |
+| Tag                 | What it does                                      | Reload / Restart |
+| ---                 | ------------                                      | ---------------- |
+| `influxdb`          | Installs and configures InfluxDB                  | Restarts influxdb.service |
+| `influxdb:database` | Creates or deletes InfluxDB databases             | - |
+| `influxdb:dump`     | Configures dumps (backups) of the InfluxDB server | - |
+| `influxdb:state`    | Manages the state of the InfluxDB service         | - |
+| `influxdb:user`     | Creates, updates or deletes InfluxDB users        | - |
 
 
 ## Mandatory Role Variables

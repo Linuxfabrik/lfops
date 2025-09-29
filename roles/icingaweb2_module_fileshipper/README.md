@@ -14,9 +14,9 @@ This role is tested with the following IcingaWeb2 Fileshipper Module versions:
 
 ## Tags
 
-| Tag                             | What it does                                              |
-| ---                             | ------------                                              |
-| `icingaweb2_module_fileshipper` | Installs and configures the IcingaWeb2 Fileshipper Module |
+| Tag                             | What it does                                              | Reload / Restart |
+| ---                             | ------------                                              | ---------------- |
+| `icingaweb2_module_fileshipper` | Installs and configures the IcingaWeb2 Fileshipper Module | - |
 
 
 ## Mandatory Role Variables

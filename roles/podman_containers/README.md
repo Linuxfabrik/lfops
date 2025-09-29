@@ -17,13 +17,13 @@ login__users__host_var:
 
 ## Tags
 
-| Tag                   | What it does                                 |
-| ---                   | ------------                                 |
-| `podman_containers`             | Installs Podman, deploys Quadlets and manages their state |
-| `podman_containers:containers`   | Deploys and removes container Quadlets |
-| `podman_containers:networks`   | Deploys and removes network Quadlets |
-| `podman_containers:state`   | Manages the state of the containers, networks and volumes |
-| `podman_containers:volumes`   | Deploys and removes volume Quadlets |
+| Tag                   | What it does                                 | Reload / Restart |
+| ---                   | ------------                                 | ---------------- |
+| `podman_containers`             | Installs Podman, deploys Quadlets and manages their state | - |
+| `podman_containers:containers`   | Deploys and removes container Quadlets | - |
+| `podman_containers:networks`   | Deploys and removes network Quadlets | - |
+| `podman_containers:state`   | Manages the state of the containers, networks and volumes | - |
+| `podman_containers:volumes`   | Deploys and removes volume Quadlets | - |
 
 
 ## Optional Role Variables

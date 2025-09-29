@@ -5,13 +5,13 @@ This role installs and manages systemd unit files. A unit file is a plain text i
 
 ## Tags
 
-| Tag           | What it does                                 |
-| ---           | ------------                                 |
-| `systemd_unit` | <ul><li>Remove service units from `/etc/systemd/system`</li><li>Deploy the service units to `/etc/systemd/system`</li><li>Remove timer units from `/etc/systemd/system`</li><li>Deploy the timer units to `/etc/systemd/system`</li></ul> |
-| `systemd_unit:mounts` | Manages systemd mount units. |
-| `systemd_unit:services` | <ul><li>Remove service units from `/etc/systemd/system`</li><li>Deploy the service units to `/etc/systemd/system`</li></ul> |
-| `systemd_unit:state` | Manages the state of the unit file |
-| `systemd_unit:timers` | <ul><li>Remove timer units from `/etc/systemd/system`</li><li>Deploy the timer units to `/etc/systemd/system`</li></ul> |
+| Tag           | What it does                                 | Reload / Restart |
+| ---           | ------------                                 | ---------------- |
+| `systemd_unit` | <ul><li>Remove service units from `/etc/systemd/system`</li><li>Deploy the service units to `/etc/systemd/system`</li><li>Remove timer units from `/etc/systemd/system`</li><li>Deploy the timer units to `/etc/systemd/system`</li></ul> | - |
+| `systemd_unit:mounts` | Manages systemd mount units. | - |
+| `systemd_unit:services` | <ul><li>Remove service units from `/etc/systemd/system`</li><li>Deploy the service units to `/etc/systemd/system`</li></ul> | - |
+| `systemd_unit:state` | Manages the state of the unit file | - |
+| `systemd_unit:timers` | <ul><li>Remove timer units from `/etc/systemd/system`</li><li>Deploy the timer units to `/etc/systemd/system`</li></ul> | - |
 
 
 ## Optional Role Variables

@@ -5,9 +5,9 @@ This role sets the desired timezone.
 
 ## Tags
 
-| Tag        | What it does      |
-| ---        | ------------      |
-| `timezone` | Sets the timezone |
+| Tag        | What it does      | Reload / Restart |
+| ---        | ------------      | ---------------- |
+| `timezone` | Sets the timezone | - |
 
 
 ## Optional Role Variables

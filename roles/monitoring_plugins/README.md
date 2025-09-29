@@ -29,11 +29,11 @@ Notes:
 
 ## Tags
 
-| Tag                                 | What it does                                                                                |
-| ---                                 | ------------                                                                                |
-| `monitoring_plugins`                | Deploys the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins |
-| `monitoring_plugins:custom`         | Only deploys the custom plugins                                                             |
-| `monitoring_plugins:remove`         | Removes the Linuxfabrik Monitoring Plugins                                                  |
+| Tag                                 | What it does                                                                                | Reload / Restart |
+| ---                                 | ------------                                                                                | ---------------- |
+| `monitoring_plugins`                | Deploys the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins | - |
+| `monitoring_plugins:custom`         | Only deploys the custom plugins                                                             | - |
+| `monitoring_plugins:remove`         | Removes the Linuxfabrik Monitoring Plugins                                                  | - |
 
 
 ## Mandatory Role Variables

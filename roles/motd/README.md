@@ -5,9 +5,9 @@ This role ensures that login warning banners are configured properly (according 
 
 ## Tags
 
-| Tag   | What it does |
-| ---   | ------------ |
-| `motd` | Installs login warning banners. |
+| Tag   | What it does | Reload / Restart |
+| ---   | ------------ | ---------------- |
+| `motd` | Installs login warning banners. | - |
 
 
 ## Optional Role Variables

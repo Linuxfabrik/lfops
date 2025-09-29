@@ -5,9 +5,9 @@ This role installs the [Open VM Tools](https://github.com/vmware/open-vm-tools/)
 
 ## Tags
 
-| Tag       | What it does                    |
-| ---       | ------------                    |
-| `open_vm_tools` | Install open-vm-tools     |
+| Tag       | What it does                    | Reload / Restart |
+| ---       | ------------                    | ---------------- |
+| `open_vm_tools` | Install open-vm-tools     | - |
 
 
 

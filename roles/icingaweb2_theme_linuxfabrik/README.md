@@ -9,9 +9,9 @@ This role installs and enables [Linuxfabrik's IcingaWeb2 Theme](https://github.c
 
 ## Tags
 
-| Tag                            | What it does                                           |
-| ---                            | ------------                                           |
-| `icingaweb2_theme_linuxfabrik` | Installs and configures Linuxfabrik's IcingaWeb2 Theme |
+| Tag                            | What it does                                           | Reload / Restart |
+| ---                            | ------------                                           | ---------------- |
+| `icingaweb2_theme_linuxfabrik` | Installs and configures Linuxfabrik's IcingaWeb2 Theme | - |
 
 
 ## Mandatory Role Variables

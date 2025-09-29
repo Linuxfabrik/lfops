@@ -5,9 +5,9 @@ This role deploys the MongoDB repository.
 
 ## Tags
 
-| Tag            | What it does                   |
-| ---            | ------------                   |
-| `repo_mongodb` | Deploys the MongoDB repository |
+| Tag            | What it does                   | Reload / Restart |
+| ---            | ------------                   | ---------------- |
+| `repo_mongodb` | Deploys the MongoDB repository | - |
 
 
 ## Mandatory Role Variables

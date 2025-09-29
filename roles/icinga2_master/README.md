@@ -13,11 +13,11 @@ If you use the ["Setup Icinga2 Master" Playbook](https://github.com/Linuxfabrik/
 
 ## Tags
 
-| Tag                        | What it does                                |
-| ---                        | ------------                                |
-| `icinga2_master`           | Installs and configures Icinga2 as a master |
-| `icinga2_master:api_users` | Manages the Icinga2 API users               |
-| `icinga2_master:state`     | Manages the state of the Icinga2 service    |
+| Tag                        | What it does                                | Reload / Restart |
+| ---                        | ------------                                | ---------------- |
+| `icinga2_master`           | Installs and configures Icinga2 as a master | Restarts icinga2.service |
+| `icinga2_master:api_users` | Manages the Icinga2 API users               | Restarts icinga2.service |
+| `icinga2_master:state`     | Manages the state of the Icinga2 service    | - |
 
 
 ## Mandatory Role Variables

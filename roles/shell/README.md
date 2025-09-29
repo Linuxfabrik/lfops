@@ -7,9 +7,9 @@ Note that this role is not idempotent by default, consider setting `creates`, `r
 
 ## Tags
 
-| Tag     | What it does             |
-| ---     | ------------             |
-| `shell` | Executes shell commands. |
+| Tag     | What it does             | Reload / Restart |
+| ---     | ------------             | ---------------- |
+| `shell` | Executes shell commands. | - |
 
 
 ## Optional Role Variables

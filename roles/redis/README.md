@@ -15,10 +15,10 @@ This role is compatible with the following Redis versions:
 
 ## Tags
 
-| Tag           | What it does                           |
-| ---           | ------------                           |
-| `redis`       | Installs and configures Redis          |
-| `redis:state` | Manages the state of the Redis service |
+| Tag           | What it does                           | Reload / Restart |
+| ---           | ------------                           | ---------------- |
+| `redis`       | Installs and configures Redis          | Restarts redis.service |
+| `redis:state` | Manages the state of the Redis service | - |
 
 
 ## Optional Role Variables

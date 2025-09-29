@@ -5,9 +5,9 @@ This role installs the SELinux policy core python utilities.
 
 ## Tags
 
-| Tag               | What it does                                  |
-| ---               | ------------                                  |
-| `policycoreutils` | Installs SELinux policy core python utilities |
+| Tag               | What it does                                  | Reload / Restart |
+| ---               | ------------                                  | ---------------- |
+| `policycoreutils` | Installs SELinux policy core python utilities | - |
 
 
 ## License

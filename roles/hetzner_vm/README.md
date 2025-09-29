@@ -29,10 +29,10 @@ This role does not configure the VM's network interfaces.
 
 ## Tags
 
-| Tag          | What it does                   |
-| ---          | ------------                   |
-| `hetzner_vm` | Creates and manages the server |
-| `hetzner_vm:firewalls` | Manages the provider firewalls of the host |
+| Tag          | What it does                   | Reload / Restart |
+| ---          | ------------                   | ---------------- |
+| `hetzner_vm` | Creates and manages the server | - |
+| `hetzner_vm:firewalls` | Manages the provider firewalls of the host | - |
 
 
 ## Mandatory Role Variables

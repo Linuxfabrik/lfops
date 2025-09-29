@@ -12,10 +12,11 @@ If you use the ["Collabora" Playbook](https://github.com/Linuxfabrik/lfops/blob/
 
 ## Tags
 
-| Tag              | What it does                           |
-| ---              | ------------                           |
-| `collabora` | Installs and configures either Collabora CODE or Collabora Enterprise |
-| `collabora:spell_check` | Installs spell checking tools |
+| Tag              | What it does                           | Reload / Restart |
+| ---              | ------------                           | ---------------- |
+| `collabora` | Installs and configures either Collabora CODE or Collabora Enterprise | Restarts coolwsd.service |
+| `collabora:spell_check` | Installs spell checking tools | - |
+| `collabora:state` | Manages the state of the coolwsd systemd service | - |
 
 
 ## Optional Role Variables

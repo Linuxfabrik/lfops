@@ -127,13 +127,13 @@ If you use the [Apache Tomcat Playbook](https://github.com/Linuxfabrik/lfops/blo
 
 ## Tags
 
-| Tag                       | What it does                                   |
-| ---                       | ------------                                   |
-| `apache_tomcat`           | Install tomcat and optional default web apps, configure Tomcat (`server.xml` and others), configure logrotating, configure access to optional web apps, create users and roles, and enable or disable the default Tomcat service. |
-| `apache_tomcat:configure` | Configure Tomcat (`server.xml` and others), configure logrotating. |
-| `apache_tomcat:webapps`   | Configure access to optional web apps. |
-| `apache_tomcat:users`     | Create users and roles. |
-| `apache_tomcat:state`     | Enable/disable the default Tomcat service. |
+| Tag                       | What it does                                   | Reload / Restart |
+| ---                       | ------------                                   | ---------------- |
+| `apache_tomcat`           | Install tomcat and optional default web apps, configure Tomcat (`server.xml` and others), configure logrotating, configure access to optional web apps, create users and roles, and enable or disable the default Tomcat service. | Restarts tomcat.service |
+| `apache_tomcat:configure` | Configure Tomcat (`server.xml` and others), configure logrotating. | Restarts tomcat.service |
+| `apache_tomcat:webapps`   | Configure access to optional web apps. | Restarts tomcat.service |
+| `apache_tomcat:users`     | Create users and roles. | Restarts tomcat.service |
+| `apache_tomcat:state`     | Enable/disable the default Tomcat service. | - |
 
 
 ## Mandatory Role Variables

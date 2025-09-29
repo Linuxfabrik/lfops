@@ -18,12 +18,12 @@ This role installs and configures [IcingaWeb2](https://icinga.com/docs/icinga-we
 
 ## Tags
 
-| Tag                | What it does                                      |
-| ---                | ------------                                      |
-| `icingaweb2`       | Installs and configures IcingaWeb2                |
-| `icingaweb2:configure` | Configures Authentication, Resources, Navigation and IcingaWeb2 settings. |
-| `icingaweb2:resources` | Deploys `/etc/icingaweb2/resources.ini`       |
-| `icingaweb2:user`  | Creates user accounts and deploys the role config |
+| Tag                | What it does                                      | Reload / Restart |
+| ---                | ------------                                      | ---------------- |
+| `icingaweb2`       | Installs and configures IcingaWeb2                | - |
+| `icingaweb2:configure` | Configures Authentication, Resources, Navigation and IcingaWeb2 settings. | - |
+| `icingaweb2:resources` | Deploys `/etc/icingaweb2/resources.ini`       | - |
+| `icingaweb2:user`  | Creates user accounts and deploys the role config | - |
 
 
 ## Mandatory Role Variables

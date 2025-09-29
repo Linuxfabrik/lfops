@@ -12,10 +12,10 @@ Note that the role does not make use of `/etc/ssh/sshd_config.d/` since not all 
 
 ## Tags
 
-| Tag         | What it does                                  |
-| ---         | ------------                                  |
-| `sshd`       | Configures sshd                               |
-| `sshd:state` | Manages the state of the sshd systemd service |
+| Tag         | What it does                                  | Reload / Restart |
+| ---         | ------------                                  | ---------------- |
+| `sshd`       | Configures sshd                               | Reloads sshd.service |
+| `sshd:state` | Manages the state of the sshd systemd service | - |
 
 
 ## Optional Role Variables

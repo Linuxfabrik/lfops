@@ -5,9 +5,9 @@ This role deploys the official [PostgreSQL Repo](https://www.postgresql.org/down
 
 ## Tags
 
-| Tag         | What it does                |
-| ---         | ------------                |
-| `repo_postgresql` | Deploys the PostgreSQL Repository |
+| Tag         | What it does                | Reload / Restart |
+| ---         | ------------                | ---------------- |
+| `repo_postgresql` | Deploys the PostgreSQL Repository | - |
 
 
 ## Optional Role Variables

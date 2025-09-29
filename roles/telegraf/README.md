@@ -10,10 +10,10 @@ This role installs and configures [Telegraf](https://www.influxdata.com/time-ser
 
 ## Tags
 
-| Tag                  | What it does                           |
-| ---                  | ------------                           |
-| `telegraf`           | Installs and configures telegraf server |
-| `telegraf:state`     | Manages the state of the telegraf server    |
+| Tag                  | What it does                           | Reload / Restart |
+| ---                  | ------------                           | ---------------- |
+| `telegraf`           | Installs and configures telegraf server | Restarts telegraf.service |
+| `telegraf:state`     | Manages the state of the telegraf server    | - |
 
 
 ## Optional Role Variables

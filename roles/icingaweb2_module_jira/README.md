@@ -15,9 +15,9 @@ This role is tested with the following IcingaWeb2 Jira Module versions:
 
 ## Tags
 
-| Tag                      | What it does                                       |
-| ---                      | ------------                                       |
-| `icingaweb2_module_jira` | Installs and configures the IcingaWeb2 Jira Module |
+| Tag                      | What it does                                       | Reload / Restart |
+| ---                      | ------------                                       | ---------------- |
+| `icingaweb2_module_jira` | Installs and configures the IcingaWeb2 Jira Module | - |
 
 
 ## Mandatory Role Variables

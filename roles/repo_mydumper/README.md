@@ -6,9 +6,9 @@ Note that Linuxfabrik currently uses its [own repository server](https://repo.li
 
 ## Tags
 
-| Tag             | What it does                    |
-| ---             | ------------                    |
-| `repo_mydumper` | Deploys the mydumper repository |
+| Tag             | What it does                    | Reload / Restart |
+| ---             | ------------                    | ---------------- |
+| `repo_mydumper` | Deploys the mydumper repository | - |
 
 
 ## Optional Role Variables

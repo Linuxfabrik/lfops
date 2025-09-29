@@ -14,9 +14,9 @@ This role is tested with the following IcingaWeb2 PDF Export Module versions:
 
 ## Tags
 
-| Tag                           | What it does                                         |
-| ---                           | ------------                                         |
-| `icingaweb2_module_pdfexport` | Installs and enables the IcingaWeb2 pdfexport Module |
+| Tag                           | What it does                                         | Reload / Restart |
+| ---                           | ------------                                         | ---------------- |
+| `icingaweb2_module_pdfexport` | Installs and enables the IcingaWeb2 pdfexport Module | - |
 
 
 ## Mandatory Role Variables

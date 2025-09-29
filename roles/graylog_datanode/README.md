@@ -27,11 +27,11 @@ If you use the ["Setup Graylog Data Node" Playbook](https://github.com/Linuxfabr
 
 ## Tags
 
-| Tag                           | What it does                                    |
-| ---                           | ------------                                    |
-| `graylog_datanode`            | Installs and configures Graylog Data Node          |
-| `graylog_datanode:configure`  | Deploys the config files |
-| `graylog_datanode:state`      | Manages the state of the Graylog Data Node service |
+| Tag                           | What it does                                    | Reload / Restart |
+| ---                           | ------------                                    | ---------------- |
+| `graylog_datanode`            | Installs and configures Graylog Data Node          | Restarts graylog-datanode.service |
+| `graylog_datanode:configure`  | Deploys the config files | Restarts graylog-datanode.service |
+| `graylog_datanode:state`      | Manages the state of the Graylog Data Node service | - |
 
 
 ## Mandatory Role Variables

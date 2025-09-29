@@ -30,12 +30,12 @@ To start a backup, simply call `duba` (or `duba --config=/etc/duba/duba.json --c
 
 ## Tags
 
-| Tag                   | What it does                                 |
-| ---                   | ------------                                 |
-| `duplicity`           | Installs and configures duplicity            |
-| `duplicity:configure` | Deploys the configuration for duplicity      |
-| `duplicity:script`    | Just deploys the `duba` script               |
-| `duplicity:state`     | Manages the state of the daily systemd timer |
+| Tag                   | What it does                                 | Reload / Restart |
+| ---                   | ------------                                 | ---------------- |
+| `duplicity`           | Installs and configures duplicity            | - |
+| `duplicity:configure` | Deploys the configuration for duplicity      | - |
+| `duplicity:script`    | Just deploys the `duba` script               | - |
+| `duplicity:state`     | Manages the state of the daily systemd timer | - |
 
 
 ## Mandatory Role Variables

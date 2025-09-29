@@ -14,9 +14,9 @@ This role is tested with the following IcingaWeb2 Cube Module versions:
 
 ## Tags
 
-| Tag                      | What it does                                       |
-| ---                      | ------------                                       |
-| `icingaweb2_module_cube` | Installs and configures the IcingaWeb2 Cube Module |
+| Tag                      | What it does                                       | Reload / Restart |
+| ---                      | ------------                                       | ---------------- |
+| `icingaweb2_module_cube` | Installs and configures the IcingaWeb2 Cube Module | - |
 
 
 ## Mandatory Role Variables

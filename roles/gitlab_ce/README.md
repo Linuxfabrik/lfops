@@ -15,10 +15,10 @@ If you use the [gitlab_ce Playbook](https://github.com/Linuxfabrik/lfops/blob/ma
 
 ## Tags
 
-| Tag                   | What it does                           |
-| ---                   | ------------                           |
-| `gitlab_ce`           | * `install tar gitlab-ce`<br> * `mkdir -p /backup/gitlab`<br> * Deploy `/etc/systemd/system/gitlab-dump.service`<br> * Deploy `/etc/systemd/system/gitlab-dump.timer`<br> * `systemctl enable gitlab-dump.timer --now`<br> * Deploy `/etc/gitlab/gitlab.rb`<br> * `gitlab-ctl reconfigure`<br> * `gitlab-ctl restart`
-| `gitlab_ce:configure` | Same as above, but without install. |
+| Tag                   | What it does                           | Reload / Restart |
+| ---                   | ------------                           | ---------------- |
+| `gitlab_ce`           | * `install tar gitlab-ce`<br> * `mkdir -p /backup/gitlab`<br> * Deploy `/etc/systemd/system/gitlab-dump.service`<br> * Deploy `/etc/systemd/system/gitlab-dump.timer`<br> * `systemctl enable gitlab-dump.timer --now`<br> * Deploy `/etc/gitlab/gitlab.rb`<br> * `gitlab-ctl reconfigure`<br> * `gitlab-ctl restart` | `gitlab-ctl restart` |
+| `gitlab_ce:configure` | Same as above, but without install. | `gitlab-ctl restart` |
 
 
 ## Mandatory Role Variables

@@ -23,11 +23,11 @@ umount /mnt/borg
 
 ## Tags
 
-| Tag                    | What it does                            |
-| ---                    | ------------                            |
-| `borg_local`           | Installs and configures borg            |
-| `borg_local:configure` | Configures borg                         |
-| `borg_local:state`     | Manages the state of the borg timer     |
+| Tag                    | What it does                            | Reload / Restart |
+| ---                    | ------------                            | ---------------- |
+| `borg_local`           | Installs and configures borg            | - |
+| `borg_local:configure` | Configures borg                         | - |
+| `borg_local:state`     | Manages the state of the borg timer     | - |
 
 
 ## Mandatory Role Variables

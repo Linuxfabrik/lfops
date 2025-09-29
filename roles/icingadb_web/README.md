@@ -10,9 +10,9 @@
 
 ## Tags
 
-| Tag            | What it does                          |
-| ---            | ------------                          |
-| `icingadb_web` | Installs and configures IcingaDB Web. |
+| Tag            | What it does                          | Reload / Restart |
+| ---            | ------------                          | ---------------- |
+| `icingadb_web` | Installs and configures IcingaDB Web. | - |
 
 
 ## Mandatory Role Variables

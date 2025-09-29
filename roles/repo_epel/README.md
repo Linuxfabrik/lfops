@@ -5,9 +5,9 @@ This role deploys the [Extra Packages for Enterprise Linux (EPEL) Repository](ht
 
 ## Tags
 
-| Tag         | What it does                |
-| ---         | ------------                |
-| `repo_epel` | Deploys the EPEL Repository |
+| Tag         | What it does                | Reload / Restart |
+| ---         | ------------                | ---------------- |
+| `repo_epel` | Deploys the EPEL Repository | - |
 
 
 ## Optional Role Variables

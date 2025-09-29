@@ -5,9 +5,9 @@ This role installs NFS and CIFS client utilities when necessary and configures m
 
 ## Tags
 
-| Tag                  | What it does                           |
-| ---                  | ------------                           |
-| `mount`              | Installs nfs-utils/cifs on RedHat-Based systems or nfs-common/cifs-utils on Debian-Based systems, creates the corresponding directories for the mount points, alters `/etc/fstab` und mounts the volumes |
+| Tag                  | What it does                           | Reload / Restart |
+| ---                  | ------------                           | ---------------- |
+| `mount`              | Installs nfs-utils/cifs on RedHat-Based systems or nfs-common/cifs-utils on Debian-Based systems, creates the corresponding directories for the mount points, alters `/etc/fstab` und mounts the volumes | - |
 
 
 ## Optional Role Variables

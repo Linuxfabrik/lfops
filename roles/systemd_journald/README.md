@@ -18,10 +18,10 @@ Whenever journald needs to free space, it computes `min(90G, 20G)`, and then del
 
 ## Tags
 
-| Tag                      | What it does                              |
-| ---                      | ------------                              |
-| `systemd_journald`       | Manages the journald config               |
-| `systemd_journald:state` | Manages the state of the journald service |
+| Tag                      | What it does                              | Reload / Restart |
+| ---                      | ------------                              | ---------------- |
+| `systemd_journald`       | Manages the journald config               | Restarts systemd-journald.service |
+| `systemd_journald:state` | Manages the state of the journald service | - |
 
 
 ## Optional Role Variables

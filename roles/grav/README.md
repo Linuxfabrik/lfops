@@ -16,12 +16,12 @@ If you use the ["Grav" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/
 
 ## Tags
 
-| Tag         | What it does                 |
-| ---         | ------------                 |
-| `grav`      | * Install unzip<br> * Test if Grav is already installed<br> * `composer create-project getgrav/grav {{ grav__install_dir }}`<br> * `chown -R apache:apache {{ grav__install_dir }}`<br> * `find {{ grav__install_dir }} -type f -exec chmod --changes 664 {} \;`<br> * `find {{ grav__install_dir }}/bin -type f -exec chmod --changes 775 {} \;`<br> * `find {{ grav__install_dir }} -type d -exec chmod --changes 775 {} \;`<br> * `find {{ grav__install_dir }} -type d -exec chmod --changes +s {} \;`<br> * Deploy `/etc/systemd/system/grav-selfupgrade.service`<br> * Deploy `/etc/systemd/system/grav-selfupgrade.timer`<br> * Deploy `/etc/systemd/system/grav-update.service`<br> * Deploy `/etc/systemd/system/grav-update.timer`<br> * `systemctl enable/disable grav-selfupgrade.timer --now`<br> * `systemctl enable/disable grav-update.timer --now`<br> * Install the Administration Panel plugin for Grav<br> * Create Grav User Accounts |
-| `grav:cron` | * Deploy `/etc/systemd/system/grav-selfupgrade.service`<br> * Deploy `/etc/systemd/system/grav-selfupgrade.timer`<br> * Deploy `/etc/systemd/system/grav-update.service`<br> * Deploy `/etc/systemd/system/grav-update.timer`<br> * `systemctl enable/disable grav-selfupgrade.timer --now`<br> * `systemctl enable/disable grav-update.timer --now` |
-| `grav:state` | * `systemctl enable/disable grav-selfupgrade.timer --now`<br> * `systemctl enable/disable grav-update.timer --now` |
-| `grav:user` | * Install the Administration Panel plugin for Grav<br> * Create Grav User Accounts |
+| Tag         | What it does                 | Reload / Restart |
+| ---         | ------------                 | ---------------- |
+| `grav`      | * Install unzip<br> * Test if Grav is already installed<br> * `composer create-project getgrav/grav {{ grav__install_dir }}`<br> * `chown -R apache:apache {{ grav__install_dir }}`<br> * `find {{ grav__install_dir }} -type f -exec chmod --changes 664 {} \;`<br> * `find {{ grav__install_dir }}/bin -type f -exec chmod --changes 775 {} \;`<br> * `find {{ grav__install_dir }} -type d -exec chmod --changes 775 {} \;`<br> * `find {{ grav__install_dir }} -type d -exec chmod --changes +s {} \;`<br> * Deploy `/etc/systemd/system/grav-selfupgrade.service`<br> * Deploy `/etc/systemd/system/grav-selfupgrade.timer`<br> * Deploy `/etc/systemd/system/grav-update.service`<br> * Deploy `/etc/systemd/system/grav-update.timer`<br> * `systemctl enable/disable grav-selfupgrade.timer --now`<br> * `systemctl enable/disable grav-update.timer --now`<br> * Install the Administration Panel plugin for Grav<br> * Create Grav User Accounts | - |
+| `grav:cron` | * Deploy `/etc/systemd/system/grav-selfupgrade.service`<br> * Deploy `/etc/systemd/system/grav-selfupgrade.timer`<br> * Deploy `/etc/systemd/system/grav-update.service`<br> * Deploy `/etc/systemd/system/grav-update.timer`<br> * `systemctl enable/disable grav-selfupgrade.timer --now`<br> * `systemctl enable/disable grav-update.timer --now` | - |
+| `grav:state` | * `systemctl enable/disable grav-selfupgrade.timer --now`<br> * `systemctl enable/disable grav-update.timer --now` | - |
+| `grav:user` | * Install the Administration Panel plugin for Grav<br> * Create Grav User Accounts | - |
 
 
 ## Mandatory Role Variables

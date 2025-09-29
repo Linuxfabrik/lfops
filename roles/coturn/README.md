@@ -10,9 +10,10 @@ This role installs and configures [coturn](https://github.com/coturn/coturn).
 
 ## Tags
 
-| Tag      | What it does                   |
-| ---      | ------------                   |
-| `coturn` | Installs and configures coturn |
+| Tag      | What it does                   | Reload / Restart |
+| ---      | ------------                   | ---------------- |
+| `coturn` | Installs and configures coturn | Restarts coturn.service |
+| `coturn:sate` | Manages the state of the coturn systemd service | - |
 
 
 ## Mandatory Role Variables

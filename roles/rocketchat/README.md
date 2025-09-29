@@ -30,9 +30,9 @@ mongodb__repl_set_members:
 
 ## Tags
 
-| Tag          | What it does                       |
-| ---          | ------------                       |
-| `rocketchat` | Installs and configure Rocket.Chat |
+| Tag          | What it does                       | Reload / Restart |
+| ---          | ------------                       | ---------------- |
+| `rocketchat` | Installs and configure Rocket.Chat | Restarts rocketchat-container.service |
 
 
 ## Mandatory Role Variables

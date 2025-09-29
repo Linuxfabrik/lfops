@@ -27,10 +27,11 @@ All Keycloak config settings are described here: https://www.keycloak.org/server
 
 ## Tags
 
-| Tag        | What it does      |
-| ---        | ------------      |
-| `keycloak` | Installs Keycloak |
-| `keycloak:configure` | Deploy Keycloak config and sysconfig file, and create keycloak service |
+| Tag        | What it does      | Reload / Restart |
+| ---        | ------------      | ---------------- |
+| `keycloak` | Installs Keycloak | Restarts keycloak.service |
+| `keycloak:configure` | Deploy Keycloak config and sysconfig file, and create keycloak service | Restarts keycloak.service |
+| `keycloak:state` | Manages the state of the systemd service | - |
 
 
 ## Mandatory Role Variables

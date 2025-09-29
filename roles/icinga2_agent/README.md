@@ -10,12 +10,12 @@ Currently, this role only works if the host can reach the Icinga2 master API.
 * Enable the [Icinga Package Repository](https://packages.icinga.com/). This can be done using the [linuxfabrik.lfops.repo_icinga](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga) role.
 * A configured Icinga2 Master.  This can be done using the [linuxfabrik.lfops.icinga2_master](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_master) role.
 
-| Tag                        | What it does                                                         |
-| ---                        | ------------                                                         |
-| `icinga2_agent`            | Installs and configures icinga2 as an agent                          |
-| `icinga2_agent:node_setup` | Runs the `icinga2 node setup` and registers the host in the Director |
-| `icinga2_agent:state`      | Manages the state of the Icinga2 service                             |
-| `icinga2_agent:update`     | Updates the Icinga2 package and restarts the service                 |
+| Tag                        | What it does                                                         | Reload / Restart |
+| ---                        | ------------                                                         | ---------------- |
+| `icinga2_agent`            | Installs and configures icinga2 as an agent                          | Restarts icinga2.service |
+| `icinga2_agent:node_setup` | Runs the `icinga2 node setup` and registers the host in the Director | Restarts icinga2.service |
+| `icinga2_agent:state`      | Manages the state of the Icinga2 service                             | - |
+| `icinga2_agent:update`     | Updates the Icinga2 package and restarts the service                 | Restarts icinga2.service |
 
 
 ## Mandatory Role Variables

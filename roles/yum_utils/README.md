@@ -5,9 +5,9 @@ This role simply installs `yum-utils` package.
 
 ## Tags
 
-| Tag         | What it does                            |
-| ---         | ------------                            |
-| `yum_utils` | Installs yum-utils or dnf-utils package |
+| Tag         | What it does                            | Reload / Restart |
+| ---         | ------------                            | ---------------- |
+| `yum_utils` | Installs yum-utils or dnf-utils package | - |
 
 
 ## License

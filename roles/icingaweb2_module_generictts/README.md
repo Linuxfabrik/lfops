@@ -14,9 +14,9 @@ This role is tested with the following IcingaWeb2 GenericTTS Module versions:
 
 ## Tags
 
-| Tag                            | What it does                                             |
-| ---                            | ------------                                             |
-| `icingaweb2_module_generictts` | Installs and configures the IcingaWeb2 GenericTTS Module |
+| Tag                            | What it does                                             | Reload / Restart |
+| ---                            | ------------                                             | ---------------- |
+| `icingaweb2_module_generictts` | Installs and configures the IcingaWeb2 GenericTTS Module | - |
 
 
 ## Mandatory Role Variables

@@ -17,10 +17,10 @@ The role does not currently support resizing the VM.
 
 ## Tags
 
-| Tag            | What it does                            |
-| ---            | ------------                            |
-| `kvm_vm`       | Creates and manages the virtual machine |
-| `kvm_vm:state` | Sets the state of the VM                |
+| Tag            | What it does                            | Reload / Restart |
+| ---            | ------------                            | ---------------- |
+| `kvm_vm`       | Creates and manages the virtual machine | - |
+| `kvm_vm:state` | Sets the state of the VM                | - |
 
 
 ## Mandatory Role Variables

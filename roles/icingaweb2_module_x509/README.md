@@ -17,9 +17,9 @@ If you use the [Setup Icinga2 Master Playbook](https://github.com/Linuxfabrik/lf
 
 ## Tags
 
-| Tag                      | What it does                                       |
-| ---                      | ------------                                       |
-| `icingaweb2_module_x509` | Installs and configures the IcingaWeb2 x509 Module |
+| Tag                      | What it does                                       | Reload / Restart |
+| ---                      | ------------                                       | ---------------- |
+| `icingaweb2_module_x509` | Installs and configures the IcingaWeb2 x509 Module | - |
 
 
 ## Mandatory Role Variables

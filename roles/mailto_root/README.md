@@ -11,9 +11,9 @@ This role enables relaying all mail that is sent to the root user (or other serv
 
 ## Tags
 
-| Tag           | What it does           |
-| ---           | ------------           |
-| `mailto_root` | Configures mailto_root |
+| Tag           | What it does           | Reload / Restart |
+| ---           | ------------           | ---------------- |
+| `mailto_root` | Configures mailto_root | - |
 
 
 ## Mandatory Role Variables

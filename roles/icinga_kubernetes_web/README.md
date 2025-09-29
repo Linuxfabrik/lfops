@@ -14,9 +14,9 @@ This role is tested with the following Icinga for Kubernetes Web versions:
 
 ## Tags
 
-| Tag                     | What it does                                                 |
-| ---                     | ------------                                                 |
-| `icinga_kubernetes_web` | Installs and configures the Icinga for Kubernetes Web Module |
+| Tag                     | What it does                                                 | Reload / Restart |
+| ---                     | ------------                                                 | ---------------- |
+| `icinga_kubernetes_web` | Installs and configures the Icinga for Kubernetes Web Module | - |
 
 
 ## Mandatory Role Variables

@@ -14,11 +14,11 @@ This role:
 
 ## Tags
 
-| Tag            | What it does                                                                                                                                   |
-| ---            | ------------                                                                                                                                   |
-| `ansible_init` | * Update ansible_init (ansinv) itself<br> * Update ../lfops<br> * Load repo list<br> * Clone the inventories<br> * Install ansible collections |
-| `ansible_init:collections` | Install ansible collections |
-| `ansible_init:command` | Load repo list |
+| Tag            | What it does                                                                                                                                   | Reload / Restart |
+| ---            | ------------                                                                                                                                   | ---------------- |
+| `ansible_init` | * Update ansible_init (ansinv) itself<br> * Update ../lfops<br> * Load repo list<br> * Clone the inventories<br> * Install ansible collections | - |
+| `ansible_init:collections` | Install ansible collections | - |
+| `ansible_init:command` | Load repo list | - |
 
 
 ## Mandatory Role Variables

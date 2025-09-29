@@ -5,10 +5,10 @@ This role installs the [QEMU Guest Agent](https://wiki.qemu.org/Features/GuestAg
 
 ## Tags
 
-| Tag       | What it does                    |
-| ---       | ------------                    |
-| `qemu_guest_agent` | * Install qemu-guest-agent<br> * `systemctl enable/disable --now qemu-guest-agent.service` |
-| `qemu_guest_agent:state`       | * `systemctl enable/disable --now qemu-guest-agent.service` |
+| Tag       | What it does                    | Reload / Restart |
+| ---       | ------------                    | ---------------- |
+| `qemu_guest_agent` | * Install qemu-guest-agent<br> * `systemctl enable/disable --now qemu-guest-agent.service` | - |
+| `qemu_guest_agent:state`       | * `systemctl enable/disable --now qemu-guest-agent.service` | - |
 
 
 

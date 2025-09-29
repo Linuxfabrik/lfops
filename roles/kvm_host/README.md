@@ -10,9 +10,9 @@ This role installs the required packages and configures the host as a KVM host.
 
 ## Tags
 
-| Tag        | What it does                                                       |
-| ---        | ------------                                                       |
-| `kvm_host` | Install the required packages and configure the host as a KVM host |
+| Tag        | What it does                                                       | Reload / Restart |
+| ---        | ------------                                                       | ---------------- |
+| `kvm_host` | Install the required packages and configure the host as a KVM host | - |
 
 
 ## Optional Role Variables

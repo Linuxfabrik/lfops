@@ -14,10 +14,10 @@ IMPORTANT:
 
 ## Tags
 
-| Tag     | What it does                                        |
-| ---     | ------------                                        |
-| `login` | Manages users, their groups and SSH authorized_keys |
-| `login:authorized_keys` | Manages SSH authorized_keys |
+| Tag     | What it does                                        | Reload / Restart |
+| ---     | ------------                                        | ---------------- |
+| `login` | Manages users, their groups and SSH authorized_keys | - |
+| `login:authorized_keys` | Manages SSH authorized_keys | - |
 
 
 ## Optional Role Variables

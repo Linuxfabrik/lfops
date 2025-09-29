@@ -7,9 +7,9 @@ This role deploys the [Elasticsearch Repository](https://www.elastic.co/guide/en
 
 ## Tags
 
-| Tag                  | What it does                         |
-| ---                  | ------------                         |
-| `repo_elasticsearch` | Deploys the Elasticsearch Repository |
+| Tag                  | What it does                         | Reload / Restart |
+| ---                  | ------------                         | ---------------- |
+| `repo_elasticsearch` | Deploys the Elasticsearch Repository | - |
 
 
 ## Mandatory Role Variables

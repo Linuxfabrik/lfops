@@ -5,9 +5,9 @@ This role installs Python 2 or Python 3 on the system, optionally with additiona
 
 ## Tags
 
-| Tag      | What it does                                                                 |
-| ---      | ------------                                                                 |
-| `python` | This role installs Python on the system, optionally with additional modules. |
+| Tag      | What it does                                                                 | Reload / Restart |
+| ---      | ------------                                                                 | ---------------- |
+| `python` | This role installs Python on the system, optionally with additional modules. | - |
 
 
 ## Optional Role Variables

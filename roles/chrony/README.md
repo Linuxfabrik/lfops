@@ -8,10 +8,10 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 
 ## Tags
 
-| Tag            | What it does                            |
-| ---            | ------------                            |
-| `chrony`       | Installs and configures chrony          |
-| `chrony:state` | Manages the state of the chrony service |
+| Tag            | What it does                            | Reload / Restart |
+| ---            | ------------                            | ---------------- |
+| `chrony`       | Installs and configures chrony          | Restarts chronyd.service |
+| `chrony:state` | Manages the state of the chrony service | - |
 
 
 ## Mandatory Role Variables

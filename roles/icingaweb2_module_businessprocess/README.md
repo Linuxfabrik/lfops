@@ -14,9 +14,9 @@ This role is tested with the following IcingaWeb2 Business Process Module versio
 
 ## Tags
 
-| Tag                                 | What it does                                                   |
-| ---                                 | ------------                                                   |
-| `icingaweb2_module_businessprocess` | Installs and configures the IcingaWeb2 Business Process Module |
+| Tag                                 | What it does                                                   | Reload / Restart |
+| ---                                 | ------------                                                   | ---------------- |
+| `icingaweb2_module_businessprocess` | Installs and configures the IcingaWeb2 Business Process Module | - |
 
 
 ## Mandatory Role Variables

@@ -5,11 +5,11 @@ This role installs and configures [ProxySQL](https://proxysql.com/). Note that r
 
 ## Tags
 
-| Tag                  | What it does                             |
-| ---                  | ------------                             |
-| `proxysql`           | Installs and configures ProxySQL         |
-| `proxysql:configure` | Manages the config file                  |
-| `proxysql:state`     | Manages the state of the systemd service |
+| Tag                  | What it does                             | Reload / Restart |
+| ---                  | ------------                             | ---------------- |
+| `proxysql`           | Installs and configures ProxySQL         | Restarts proxysql-initial.service |
+| `proxysql:configure` | Manages the config file                  | Restarts proxysql-initial.service |
+| `proxysql:state`     | Manages the state of the systemd service | - |
 
 
 ## Mandatory Role Variables

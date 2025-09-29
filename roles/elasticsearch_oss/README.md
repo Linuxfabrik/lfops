@@ -14,10 +14,10 @@ If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blo
 
 ## Tags
 
-| Tag             | What it does                            |
-| ---             | ------------                            |
-| `elasticsearch_oss`       | Installs and configures Elasticsearch OSS         |
-| `elasticsearch_oss:state` | Manages the state of the Elasticsearch OSS service |
+| Tag             | What it does                            | Reload / Restart |
+| ---             | ------------                            | ---------------- |
+| `elasticsearch_oss`       | Installs and configures Elasticsearch OSS         | Restarts elasticsearch.service |
+| `elasticsearch_oss:state` | Manages the state of the Elasticsearch OSS service | - |
 
 
 ## Optional Role Variables

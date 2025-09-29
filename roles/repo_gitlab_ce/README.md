@@ -5,9 +5,9 @@ This role deploys the GitLab CE Repository.
 
 ## Tags
 
-| Tag            | What it does                       |
-| ---            | ------------                       |
-| `repo_gitlab_ce`  | Deploys the GitLab CE Repository   |
+| Tag            | What it does                       | Reload / Restart |
+| ---            | ------------                       | ---------------- |
+| `repo_gitlab_ce`  | Deploys the GitLab CE Repository   | - |
 
 
 ## Optional Role Variables

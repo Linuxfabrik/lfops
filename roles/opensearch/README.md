@@ -24,11 +24,11 @@ If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/m
 
 ## Tags
 
-| Tag             | What it does                            |
-| ---             | ------------                            |
-| `opensearch`       | <ul><li>Install opensearch-`{{ opensearch__version__combined_var }}`</li><li>Deploy `/etc/opensearch/opensearch.yml`</li><li>Deploy `/etc/sysconfig/opensearch`</li><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> |
-| `opensearch:state` | <ul><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> |
-| `opensearch:configure` | Deploys the config files and configures the security plugin |
+| Tag             | What it does                            | Reload / Restart |
+| ---             | ------------                            | ---------------- |
+| `opensearch`       | <ul><li>Install opensearch-`{{ opensearch__version__combined_var }}`</li><li>Deploy `/etc/opensearch/opensearch.yml`</li><li>Deploy `/etc/sysconfig/opensearch`</li><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> | Restarts opensearch.service |
+| `opensearch:state` | <ul><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> | - |
+| `opensearch:configure` | Deploys the config files and configures the security plugin | Restarts opensearch.service |
 
 
 ## Mandatory Role Variables

@@ -30,11 +30,11 @@ If you use the [acme.sh Playbook](https://github.com/Linuxfabrik/lfops/blob/main
 
 ## Tags
 
-| Tag                    | What it does                                  |
-| ---                    | ------------                                  |
-| `acme_sh`              | Installs acme.sh and issues certificates      |
-| `acme_sh:certificates` | Issues certificates                           |
-| `acme_sh:state`        | Manages the state of the weekly acme.sh timer |
+| Tag                    | What it does                                  | Reload / Restart |
+| ---                    | ------------                                  | ---------------- |
+| `acme_sh`              | Installs acme.sh and issues certificates      | - |
+| `acme_sh:certificates` | Issues certificates                           | - |
+| `acme_sh:state`        | Manages the state of the weekly acme.sh timer | - |
 
 
 ## Mandatory Role Variables

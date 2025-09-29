@@ -8,9 +8,9 @@ OSS is an alternative package which contains only features that are available un
 
 ## Tags
 
-| Tag                 		| What it does                         		|
-| ---                 		| ------------                         		|
-| `repo_elasticsearch_oss` 	| Deploys the Elasticsearch OSS Repository 	|
+| Tag                 		| What it does                         		| Reload / Restart |
+| ---                 		| ------------                         		| ---------------- |
+| `repo_elasticsearch_oss` 	| Deploys the Elasticsearch OSS Repository 	| - |
 
 
 ## Mandatory Role Variables

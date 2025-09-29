@@ -5,9 +5,9 @@ This role sets the crypto policy for the system. In addition, it implements and 
 
 ## Tags
 
-| Tag             | What it does                  |
-| ---             | ------------                  |
-| `crypto_policy` | Sets the system crypto policy |
+| Tag             | What it does                  | Reload / Restart |
+| ---             | ------------                  | ---------------- |
+| `crypto_policy` | Sets the system crypto policy | - |
 
 
 ## Optional Role Variables

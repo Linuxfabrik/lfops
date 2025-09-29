@@ -5,9 +5,9 @@ This role deploys the Grafana OSS Repository.
 
 ## Tags
 
-| Tag            | What it does                       |
-| ---            | ------------                       |
-| `repo_grafana` | Deploys the Grafana OSS Repository |
+| Tag            | What it does                       | Reload / Restart |
+| ---            | ------------                       | ---------------- |
+| `repo_grafana` | Deploys the Grafana OSS Repository | - |
 
 
 ## Optional Role Variables

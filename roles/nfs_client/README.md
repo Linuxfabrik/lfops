@@ -5,9 +5,9 @@ This role installs NFS client utilities and controls active and configured NFS m
 
 ## Tags
 
-| Tag                  | What it does                           |
-| ---                  | ------------                           |
-| `nfs_client`         | <ul><li>Install nfs-utils on RedHat-Based systems or nfs-common on Debian-Based systems</li><li>`mkdir -p nfs-mount-point`</li><li>Mount NFS volumes</li></ul> |
+| Tag                  | What it does                           | Reload / Restart |
+| ---                  | ------------                           | ---------------- |
+| `nfs_client`         | <ul><li>Install nfs-utils on RedHat-Based systems or nfs-common on Debian-Based systems</li><li>`mkdir -p nfs-mount-point`</li><li>Mount NFS volumes</li></ul> | - |
 
 
 ## Optional Role Variables

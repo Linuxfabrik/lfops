@@ -5,9 +5,9 @@ This role deploys the BaseOS repositories, which can be used to set a custom mir
 
 ## Tags
 
-| Tag           | What it does                    |
-| ---           | ------------                    |
-| `repo_baseos` | Deploys the BaseOS repositories |
+| Tag           | What it does                    | Reload / Restart |
+| ---           | ------------                    | ---------------- |
+| `repo_baseos` | Deploys the BaseOS repositories | - |
 
 
 ## Optional Role Variables

@@ -10,9 +10,9 @@ This role installs and configures [FreeIPA](https://www.freeipa.org/) as a clien
 
 ## Tags
 
-| Tag              | What it does                                |
-| ---              | ------------                                |
-| `freeipa_client` | Installs and configures FreeIPA as a client |
+| Tag              | What it does                                | Reload / Restart |
+| ---              | ------------                                | ---------------- |
+| `freeipa_client` | Installs and configures FreeIPA as a client | - |
 
 
 ## Optional Role Variables

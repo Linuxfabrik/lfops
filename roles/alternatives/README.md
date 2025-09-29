@@ -11,9 +11,9 @@ Hints:
 
 ## Tags
 
-| Tag       | What it does                         |
-| ---       | ------------                         |
-| `alternatives` | Manages alternative programs for common commands. |
+| Tag       | What it does                         | Reload / Restart |
+| ---       | ------------                         | ---------------- |
+| `alternatives` | Manages alternative programs for common commands. | - |
 
 
 ## Mandatory Role Variables

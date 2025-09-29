@@ -5,9 +5,9 @@ This role deploys the InfluxDB repository.
 
 ## Tags
 
-| Tag             | What it does                    |
-| ---             | ------------                    |
-| `repo_influxdb` | Deploys the InfluxDB Repository |
+| Tag             | What it does                    | Reload / Restart |
+| ---             | ------------                    | ---------------- |
+| `repo_influxdb` | Deploys the InfluxDB Repository | - |
 
 
 ## Optional Role Variables

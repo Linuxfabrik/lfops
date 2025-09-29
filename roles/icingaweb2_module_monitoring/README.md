@@ -10,9 +10,9 @@ This role installs and configures the [IcingaWeb2 Monitoring Module](https://ici
 
 ## Tags
 
-| Tag                            | What it does                                             |
-| ---                            | ------------                                             |
-| `icingaweb2_module_monitoring` | Installs and configures the IcingaWeb2 Monitoring Module |
+| Tag                            | What it does                                             | Reload / Restart |
+| ---                            | ------------                                             | ---------------- |
+| `icingaweb2_module_monitoring` | Installs and configures the IcingaWeb2 Monitoring Module | - |
 
 
 ## Optional Role Variables

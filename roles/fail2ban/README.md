@@ -18,10 +18,10 @@ If you use the ["Fail2Ban" Playbook](https://github.com/Linuxfabrik/lfops/blob/m
 
 ## Tags
 
-| Tag              | What it does                              |
-| ---              | ------------                              |
-| `fail2ban`       | Installs and configures fail2ban          |
-| `fail2ban:state` | Manages the state of the fail2ban service |
+| Tag              | What it does                              | Reload / Restart |
+| ---              | ------------                              | ---------------- |
+| `fail2ban`       | Installs and configures fail2ban          | Restarts fail2ban.service |
+| `fail2ban:state` | Manages the state of the fail2ban service | - |
 
 
 ## Optional Role Variables

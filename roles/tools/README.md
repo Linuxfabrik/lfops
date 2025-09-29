@@ -34,9 +34,9 @@ Bash:
 
 ## Tags
 
-| Tag     | What it does                       |
-| ---     | ------------                       |
-| `tools` | Installs and configures some tools |
+| Tag     | What it does                       | Reload / Restart |
+| ---     | ------------                       | ---------------- |
+| `tools` | Installs and configures some tools | - |
 
 
 ## Optional Role Variables

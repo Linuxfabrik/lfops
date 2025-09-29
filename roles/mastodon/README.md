@@ -39,13 +39,13 @@ elasticsearch_oss__network_host: 'fqdn.example.com' # Allow access from containe
 
 ## Tags
 
-| Tag        | What it does                     |
-| ---        | ------------                     |
-| `mastodon` | Installs and configures Mastodon |
-| `mastodon:configure` | Deploys Mastodon configuration files |
-| `mastodon:containers` | Deploys Mastodon containers |
-| `mastodon:deploy_search` | Deploys the Elasticsearch indices |
-| `mastodon:users` | Creates Mastodon users |
+| Tag        | What it does                     | Reload / Restart |
+| ---        | ------------                     | ---------------- |
+| `mastodon` | Installs and configures Mastodon | - |
+| `mastodon:configure` | Deploys Mastodon configuration files | - |
+| `mastodon:containers` | Deploys Mastodon containers | - |
+| `mastodon:deploy_search` | Deploys the Elasticsearch indices | - |
+| `mastodon:users` | Creates Mastodon users | - |
 
 
 ## Mandatory Role Variables

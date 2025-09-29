@@ -19,10 +19,10 @@ This role does not configure OpenVPN logging via `log-append /var/log/openvpn.lo
 
 ## Tags
 
-| Tag                    | What it does                             |
-| ---                    | ------------                             |
-| `openvpn_server`       | Installs and configures OpenVPN          |
-| `openvpn_server:state` | Manages the state of the OpenVPN service |
+| Tag                    | What it does                             | Reload / Restart |
+| ---                    | ------------                             | ---------------- |
+| `openvpn_server`       | Installs and configures OpenVPN          | - |
+| `openvpn_server:state` | Manages the state of the OpenVPN service | - |
 
 
 ## Mandatory Role Variables

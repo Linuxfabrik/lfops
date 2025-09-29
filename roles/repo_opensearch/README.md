@@ -5,9 +5,9 @@ This role deploys the [Opensearch Package Repository](https://opensearch.org/doc
 
 ## Tags
 
-| Tag            | What it does                           |
-| ---            | ------------                           |
-| `repo_opensearch` | Deploys the Opensearch Package Repository |
+| Tag            | What it does                           | Reload / Restart |
+| ---            | ------------                           | ---------------- |
+| `repo_opensearch` | Deploys the Opensearch Package Repository | - |
 
 
 ## Mandatory Role Variables

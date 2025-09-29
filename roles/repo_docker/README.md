@@ -5,9 +5,9 @@ This role deploys the Docker CE Repository.
 
 ## Tags
 
-| Tag           | What it does                     |
-| ---           | ------------                     |
-| `repo_docker` | Deploys the Docker CE Repository |
+| Tag           | What it does                     | Reload / Restart |
+| ---           | ------------                     | ---------------- |
+| `repo_docker` | Deploys the Docker CE Repository | - |
 
 
 ## Optional Role Variables

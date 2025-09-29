@@ -5,9 +5,9 @@ This role manages a list of applications using the OS's package manager.
 
 ## Tags
 
-| Tag           | What it does                                 |
-| ---           | ------------                                 |
-| `apps` | <ul><li>Remove apps using the package manager</li><li>Deploy apps using the package manager</li></ul> |
+| Tag           | What it does                                 | Reload / Restart |
+| ---           | ------------                                 | ---------------- |
+| `apps` | <ul><li>Remove apps using the package manager</li><li>Deploy apps using the package manager</li></ul> | - |
 
 
 ## Optional Role Variables

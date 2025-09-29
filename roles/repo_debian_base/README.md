@@ -5,9 +5,9 @@ This role deploys the basic Debian repositories, which can be used to set a cust
 
 ## Tags
 
-| Tag           | What it does                    |
-| ---           | ------------                    |
-| `repo_debian_base` | Deploys the basic Debian repositories |
+| Tag           | What it does                    | Reload / Restart |
+| ---           | ------------                    | ---------------- |
+| `repo_debian_base` | Deploys the basic Debian repositories | - |
 
 
 ## Optional Role Variables

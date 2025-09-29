@@ -16,11 +16,11 @@ This role is tested with the following IcingaWeb2 Director Module versions:
 
 ## Tags
 
-| Tag                                    | What it does                                                                                                      |
-| ---                                    | ------------                                                                                                      |
-| `icingaweb2_module_director`           | Installs and configures the IcingaWeb2 Director Module                                                            |
-| `icingaweb2_module_director:basket`    | Only runs if explicitly called. Deploys the baskets from the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). |
-| `icingaweb2_module_director:configure` | Configures the IcingaWeb2 Director Module.                                                                         |
+| Tag                                    | What it does                                                                                                      | Reload / Restart |
+| ---                                    | ------------                                                                                                      | ---------------- |
+| `icingaweb2_module_director`           | Installs and configures the IcingaWeb2 Director Module                                                            | - |
+| `icingaweb2_module_director:basket`    | Only runs if explicitly called. Deploys the baskets from the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). | - |
+| `icingaweb2_module_director:configure` | Configures the IcingaWeb2 Director Module.                                                                         | - |
 
 
 ## Mandatory Role Variables

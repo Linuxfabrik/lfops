@@ -13,9 +13,9 @@ If you use the ["Monitoring Plugins Grafana Dashboards" Playbook](https://github
 
 ## Tags
 
-| Tag           | What it does                                 |
-| ---           | ------------                                 |
-| `monitoring_plugins_grafana_dashboards` | Deploys the Monitoring Plugins Grafana Dashboards. |
+| Tag           | What it does                                 | Reload / Restart |
+| ---           | ------------                                 | ---------------- |
+| `monitoring_plugins_grafana_dashboards` | Deploys the Monitoring Plugins Grafana Dashboards. | - |
 
 
 ## Mandatory Role Variables

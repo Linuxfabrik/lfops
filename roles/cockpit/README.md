@@ -5,9 +5,10 @@ This role can either install or remove all cockpit packages from the system (for
 
 ## Tags
 
-| Tag       | What it does                         |
-| ---       | ------------                         |
-| `cockpit` | Installs or removes cockpit packages |
+| Tag       | What it does                         | Reload / Restart |
+| ---       | ------------                         | ---------------- |
+| `cockpit` | Installs or removes cockpit packages | - |
+| `cockpit:state` | Manages the state of the systemd socket | - |
 
 
 ## Optional Role Variables

@@ -11,9 +11,9 @@ This role creates and manages various [Python 3 virtual environments (venv)](htt
 
 ## Tags
 
-| Tag           | What it does                                 |
-| ---           | ------------                                 |
-| `python_venv` | Creates and manages the virtual environments |
+| Tag           | What it does                                 | Reload / Restart |
+| ---           | ------------                                 | ---------------- |
+| `python_venv` | Creates and manages the virtual environments | - |
 
 
 ## Optional Role Variables

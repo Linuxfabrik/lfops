@@ -10,9 +10,9 @@ Supported Versions:
 
 ## Tags
 
-| Tag                   | What it does                          |
-| ---                   | ------------                          |
-| `repo_collabora` | Deploys the Collabora Enterprise Repository |
+| Tag                   | What it does                          | Reload / Restart |
+| ---                   | ------------                          | ---------------- |
+| `repo_collabora` | Deploys the Collabora Enterprise Repository | - |
 
 
 ## Mandatory Role Variables

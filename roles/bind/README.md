@@ -4,11 +4,11 @@ This role installs and configures [bind](https://www.isc.org/bind/) as a DNS ser
 
 ## Tags
 
-| Tag              | What it does                                   |
-| ---              | ------------                                   |
-| `bind`           | Installs and configures bind                   |
-| `bind:configure` | Manages the main named config and the zones    |
-| `bind:state`     | Manages the state of the named systemd service |
+| Tag              | What it does                                   | Reload / Restart 				|
+| ---              | ------------                                   | ---------------- 				|
+| `bind`           | Installs and configures bind                   | Restarts named.service		|
+| `bind:configure` | Manages the main named config and the zones    | Restarts named.service		|
+| `bind:state`     | Manages the state of the named systemd service | - |
 
 
 ## Mandatory Role Variables

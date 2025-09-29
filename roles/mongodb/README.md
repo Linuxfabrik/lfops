@@ -19,13 +19,12 @@ This role is only compatible with the following MongoDB versions:
 
 ## Tags
 
-| Tag             | What it does                              |
-| ---             | ------------                              |
-| `mongodb`       | Installs and configures MongoDB           |
-| `mongodb:dump`  | Configures the database dumping (backups) |
-| `mongodb:state` | Manages the state of the mongod service   |
-| `mongodb:user`  | Manages the MongoDB users                 |
-
+| Tag             | What it does                              | Reload / Restart |
+| ---             | ------------                              | ---------------- |
+| `mongodb`       | Installs and configures MongoDB           | Restarts mongod.service |
+| `mongodb:dump`  | Configures the database dumping (backups) | - |
+| `mongodb:state` | Manages the state of the mongod service   | - |
+| `mongodb:user`  | Manages the MongoDB users                 | - |
 
 ## Recommended Role Variables
 

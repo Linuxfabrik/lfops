@@ -5,10 +5,10 @@ This role installs the MinIO client binary, including bash completion and sets c
 
 ## Tags
 
-| Tag            | What it does                         |
-| ---            | ------------                         |
-| `minio_client` | Installs and configures MinIO client |
-| `minio_client` | Configures MinIO client              |
+| Tag            | What it does                         | Reload / Restart |
+| ---            | ------------                         | ---------------- |
+| `minio_client` | Installs and configures MinIO client | - |
+| `minio_client` | Configures MinIO client              | - |
 
 
 ## Optional Role Variables

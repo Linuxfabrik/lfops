@@ -10,9 +10,9 @@ This role deploys the [Remi's RPM repository](https://rpms.remirepo.net/).
 
 ## Tags
 
-| Tag         | What it does                |
-| ---         | ------------                |
-| `repo_remi` | Deploys the Remi Repository |
+| Tag         | What it does                | Reload / Restart |
+| ---         | ------------                | ---------------- |
+| `repo_remi` | Deploys the Remi Repository | - |
 
 
 ## Optional Role Variables

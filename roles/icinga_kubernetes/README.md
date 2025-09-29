@@ -14,9 +14,9 @@ This role is tested with the following Icinga for Kubernetes versions:
 
 ## Tags
 
-| Tag        | What it does                                 |
-| ---        | ------------                                 |
-| `icinga_kubernetes` | Installs and configures Icinga for Kubernetes. |
+| Tag        | What it does                                 | Reload / Restart |
+| ---        | ------------                                 | ---------------- |
+| `icinga_kubernetes` | Installs and configures Icinga for Kubernetes. | Restarts icinga-kubernetes.service |
 
 
 ## Mandatory Role Variables

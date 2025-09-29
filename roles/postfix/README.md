@@ -5,10 +5,10 @@ This role installs and configures [postfix](https://www.postfix.org/).
 
 ## Tags
 
-| Tag             | What it does                                     |
-| ---             | ------------                                     |
-| `postfix`       | Installs and configures postfix                  |
-| `postfix:state` | Manages the state of the postfix systemd service |
+| Tag             | What it does                                     | Reload / Restart |
+| ---             | ------------                                     | ---------------- |
+| `postfix`       | Installs and configures postfix                  | Reloads postfix.service |
+| `postfix:state` | Manages the state of the postfix systemd service | - |
 
 
 ## Mandatory Role Variables

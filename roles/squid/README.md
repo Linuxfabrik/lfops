@@ -5,11 +5,11 @@ This role installs and configures [squid](https://www.squid-cache.org/) as a cac
 
 ## Tags
 
-| Tag                 | What it does                                     |
-| ------------------- | ------------------------------------------------ |
-| `squid`             | Installs and configures squid                    |
-| `squid:configure`   | Manages the squid config                         |
-| `squid:state`       | Manages the state of the squid systemd service   |
+| Tag                 | What it does                                     | Reload / Restart |
+| ------------------- | ------------------------------------------------ | ---------------- |
+| `squid`             | Installs and configures squid                    | Restarts squid.service |
+| `squid:configure`   | Manages the squid config                         | Restarts squid.service |
+| `squid:state`       | Manages the state of the squid systemd service   | - |
 
 
 ## Optional Role Variables

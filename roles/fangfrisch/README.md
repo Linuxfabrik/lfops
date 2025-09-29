@@ -12,10 +12,10 @@ If you use the [Fangfrisch Playbook](https://github.com/Linuxfabrik/lfops/blob/m
 
 ## Tags
 
-| Tag                | What it does                              |
-| ---                | ------------                              |
-| `fangfrisch`       | Installs and configures Fangfrisch        |
-| `fangfrisch:state` | Manages the state of the Fangfrisch timer |
+| Tag                | What it does                              | Reload / Restart |
+| ---                | ------------                              | ---------------- |
+| `fangfrisch`       | Installs and configures Fangfrisch        | - |
+| `fangfrisch:state` | Manages the state of the Fangfrisch timer | - |
 
 
 ## Optional Role Variables

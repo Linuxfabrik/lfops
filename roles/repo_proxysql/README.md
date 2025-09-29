@@ -5,9 +5,9 @@ This role deploys the [ProxySQL Package Repository](https://proxysql.com/documen
 
 ## Tags
 
-| Tag            | What it does                           |
-| ---            | ------------                           |
-| `repo_proxysql` | Deploys the ProxySQL Package Repository |
+| Tag            | What it does                           | Reload / Restart |
+| ---            | ------------                           | ---------------- |
+| `repo_proxysql` | Deploys the ProxySQL Package Repository | - |
 
 
 ## Mandatory Role Variables

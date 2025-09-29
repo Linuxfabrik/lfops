@@ -22,9 +22,9 @@ Ideally, the FreeIPA should be installed on a separate server. If that is not po
 
 ## Tags
 
-| Tag              | What it does                    |
-| ---              | ------------                    |
-| `freeipa_server` | Installs and configures FreeIPA as a server |
+| Tag              | What it does                    | Reload / Restart |
+| ---              | ------------                    | ---------------- |
+| `freeipa_server` | Installs and configures FreeIPA as a server | - |
 
 
 ## Mandatory Role Variables

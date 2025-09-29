@@ -15,13 +15,13 @@ This role
 
 ## Tags
 
-| Tag                  | What it does                                                   |
-| ---                  | ------------                                                   |
-| `selinux`            | * `setenforce ...`<br> * `setsebool -P ...`<br> * `semanage fcontext --add --type ...` |
-| `selinux:fcontext`   | * `semanage fcontext --add --type ...` |
-| `selinux:port`   | * `semanage port --add --type ... --proto ...` |
-| `selinux:setenforce` | * `setenforce ...` |
-| `selinux:setsebool`  | * `setsebool -P ...` |
+| Tag                  | What it does                                                   | Reload / Restart |
+| ---                  | ------------                                                   | ---------------- |
+| `selinux`            | * `setenforce ...`<br> * `setsebool -P ...`<br> * `semanage fcontext --add --type ...` | - |
+| `selinux:fcontext`   | * `semanage fcontext --add --type ...` | - |
+| `selinux:port`   | * `semanage port --add --type ... --proto ...` | - |
+| `selinux:setenforce` | * `setenforce ...` | - |
+| `selinux:setsebool`  | * `setsebool -P ...` | - |
 
 
 ## Optional Role Variables

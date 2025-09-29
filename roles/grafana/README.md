@@ -10,13 +10,14 @@ This role installs and configures [Grafana](https://grafana.com/).
 
 ## Tags
 
-| Tag                        | What it does                                  |
-| ---                        | ------------                                  |
-| `grafana`                  | Installs and configures Grafana               |
-| `grafana:configure`        | Deploys the Grafana config files              |
-| `grafana:plugins`          | Manages Grafana Plugins                       |
-| `grafana:provisioning`     | Deploys the Grafana provisioning config files |
-| `grafana:service_accounts` | Creates Service Accounts and their tokens     |
+| Tag                        | What it does                                  | Reload / Restart |
+| ---                        | ------------                                  | ---------------- |
+| `grafana`                  | Installs and configures Grafana               | Restarts grafana-server.service |
+| `grafana:configure`        | Deploys the Grafana config files              | Restarts grafana-server.service |
+| `grafana:plugins`          | Manages Grafana Plugins                       | Restarts grafana-server.service |
+| `grafana:provisioning`     | Deploys the Grafana provisioning config files | Restarts grafana-server.service |
+| `grafana:service_accounts` | Creates Service Accounts and their tokens     | - |
+| `grafana:state` | Manages the state of the systemd service | - |
 
 
 ## Mandatory Role Variables

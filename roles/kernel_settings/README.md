@@ -12,9 +12,9 @@ The role does nothing on its own and relies on the [linux_system_roles.kernel_se
 
 ## Tags
 
-| Tag               | What it does               |
-| ---               | ------------               |
-| `kernel_settings` | Configures kernel settings |
+| Tag               | What it does               | Reload / Restart |
+| ---               | ------------               | ---------------- |
+| `kernel_settings` | Configures kernel settings | - |
 
 
 ## Optional Role Variables
