@@ -52,6 +52,9 @@ Role:elasticsearch_oss
 
 ### Fixed
 
+Role:keycloak
+* Set `keycloak__proxy_trusted_addresses` to '127.0.0.1' due to FD leak if using '127.0.0.1,::1'
+
 Role:apache_httpd
 * Use platform specific group for htpasswd files
 * Allowed unsetting the CustomLog directive

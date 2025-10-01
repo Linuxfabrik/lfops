@@ -16,7 +16,12 @@ keycloak__log: 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
 keycloak__mode: 'production'
 keycloak__proxy_headers: 'xforwarded'
-keycloak__proxy_trusted_addresses: '127.0.0.1,::1'
+
+# do NOT set this to '127.0.0.1,::1' - if you do so, lots of UDP sockets are left open by the
+# Java/Keycloak process (FD leak), and either can exhaust some limit (file-descriptor limit on
+# the box, or conntrack entries on the firewall) and make the machine look “out of connections”.
+keycloak__proxy_trusted_addresses: '127.0.0.1'
+
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
 keycloak__state: 'started'
 
