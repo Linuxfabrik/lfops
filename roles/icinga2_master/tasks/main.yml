@@ -19,45 +19,6 @@
 
 - block:
 
-  - name: 'check if the icinga2 tables exist'
-    community.mysql.mysql_query:
-      login_user: '{{ icinga2_master__database_login.username }}'
-      login_password: '{{ icinga2_master__database_login.password }}'
-      login_host: '{{ icinga2_master__database_host }}'
-      login_unix_socket: '{{ (icinga2_master__database_host == "localhost") | ternary(icinga2_master__mysql_login_unix_socket, omit) }}' # https://github.com/pymysql/pymysql/issues/509#issuecomment-244072354
-      login_db: '{{ icinga2_master__database_name }}'
-      query: 'SHOW TABLES LIKE "icinga_dbversion"'
-    register: 'icinga2_master__table_exists_result'
-    check_mode: false
-
-  - name: 'import schema for icinga2 database'
-    community.mysql.mysql_db:
-      login_user: "{{ icinga2_master__database_login.username }}"
-      login_password: "{{ icinga2_master__database_login.password }}"
-      login_host: "{{ icinga2_master__database_host }}"
-      login_unix_socket: '{{ (icinga2_master__database_host == "localhost") | ternary(icinga2_master__mysql_login_unix_socket, omit) }}' # https://github.com/pymysql/pymysql/issues/509#issuecomment-244072354
-      name: '{{ icinga2_master__database_name }}'
-      state: 'import'
-      target: '/usr/share/icinga2-ido-mysql/schema/mysql.sql'
-    when:
-      # this module is not idempotent when state is import, and will import the dump file each time if run more than once. therefore, we check the existence manually before
-      - 'icinga2_master__table_exists_result["rowcount"][0] == 0'
-
-  - name: 'deploy /etc/icinga2/features-available/ido-mysql.conf'
-    ansible.builtin.template:
-      src: 'etc/icinga2/features-available/ido-mysql.conf.j2'
-      dest: '/etc/icinga2/features-available/ido-mysql.conf'
-      owner: '{{ icinga2_master__icinga_user }}'
-      group: '{{ icinga2_master__icinga_user }}'
-      mode: 0o640
-    notify: 'icinga2_master: restart icinga2'
-
-  - name: 'icinga2 feature enable ido-mysql'
-    community.general.icinga2_feature:
-      name: 'ido-mysql'
-      state: 'present'
-    notify: 'icinga2_master: restart icinga2'
-
   - name: 'deploy /etc/icinga2/conf.d/api-users.conf'
     ansible.builtin.template:
       src: 'etc/icinga2/conf.d/api-users.conf.j2'

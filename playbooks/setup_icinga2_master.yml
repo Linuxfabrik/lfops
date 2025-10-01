@@ -101,8 +101,7 @@
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
-          (not setup_icinga2_master__apache_httpd__skip_injections__internal_var) | ternary(apache_httpd__python__modules__dependent_var, []) +
-          (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__python__modules__dependent_var[ansible_facts["os_family"]], [])
+          (not setup_icinga2_master__apache_httpd__skip_injections__internal_var) | ternary(apache_httpd__python__modules__dependent_var, [])
         }}'
       when:
         - 'not setup_icinga2_master__python__skip_role__internal_var'
@@ -124,8 +123,7 @@
           (not setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var) | ternary(icingaweb2_module_director__mariadb_server__databases__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__mariadb_server__databases__dependent_var, []) +
           (not setup_icinga2_master__icingadb__skip_injections__internal_var) | ternary(icingadb__mariadb_server__databases__dependent_var, []) +
-          (not setup_icinga2_master__icinga_kubernetes__skip_injections__internal_var) | ternary(icinga_kubernetes__mariadb_server__databases__dependent_var, []) +
-          (not setup_icinga2_master__icinga2_master__skip_injections__internal_var) | ternary(icinga2_master__mariadb_server__databases__dependent_var, [])
+          (not setup_icinga2_master__icinga_kubernetes__skip_injections__internal_var) | ternary(icinga_kubernetes__mariadb_server__databases__dependent_var, [])
         }}'
       mariadb_server__users__dependent_var: '{{
           (not setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections__internal_var) | ternary(icingaweb2_module_vspheredb__mariadb_server__users__dependent_var, []) +
@@ -134,8 +132,7 @@
           (not setup_icinga2_master__icingaweb2_module_director__skip_injections__internal_var) | ternary(icingaweb2_module_director__mariadb_server__users__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__mariadb_server__users__dependent_var, []) +
           (not setup_icinga2_master__icingadb__skip_injections__internal_var) | ternary(icingadb__mariadb_server__users__dependent_var, []) +
-          (not setup_icinga2_master__icinga_kubernetes__skip_injections__internal_var) | ternary(icinga_kubernetes__mariadb_server__users__dependent_var, []) +
-          (not setup_icinga2_master__icinga2_master__skip_injections__internal_var) | ternary(icinga2_master__mariadb_server__users__dependent_var, [])
+          (not setup_icinga2_master__icinga_kubernetes__skip_injections__internal_var) | ternary(icinga_kubernetes__mariadb_server__users__dependent_var, [])
         }}'
       when:
         - 'not setup_icinga2_master__mariadb_server__skip_role__internal_var'
@@ -265,7 +262,6 @@
 
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{
-          (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__kernel_settings__sysctl__dependent_var, []) | d([]) +
           (not setup_icinga2_master__redis__skip_injections__internal_var) | ternary(redis__kernel_settings__sysctl__dependent_var, []) | d([])
         }}'
       kernel_settings__transparent_hugepages__dependent_var: '{{ (not setup_icinga2_master__redis__skip_injections__internal_var) | ternary(redis__kernel_settings__transparent_hugepages__dependent_var, "") }}'

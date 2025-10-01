@@ -2,5 +2,4 @@ icinga2_master__icinga_user: 'nagios'
 icinga2_master__mysql_login_unix_socket: '/run/mysqld/mysqld.sock'
 icinga2_master__required_packages:
   - 'icinga2'
-  - 'icinga2-ido-mysql'
   - 'vim-icinga2'

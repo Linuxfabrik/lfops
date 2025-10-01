@@ -20,6 +20,14 @@ Role:icingaweb2_module_monitoring
 * Removed, as it is deprecated in favor of IcingaDB
 * All variables starting with `icingaweb2_module_monitoring__` can be removed from the inventory
 
+Role:icinga2_master
+* Removed support for IDO, as it is deprecated in favor of IcingaDB
+* The following variables can be removed from the inventory:
+    * `icinga2_master__database_enable_ha`
+    * `icinga2_master__database_host`
+    * `icinga2_master__database_login`
+    * `icinga2_master__database_name`
+
 
 ### Added
 

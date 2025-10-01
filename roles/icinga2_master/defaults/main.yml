@@ -18,9 +18,6 @@ icinga2_master__api_users__combined_var: '{{ (
   }}'
 
 icinga2_master__cn: '{{ ansible_facts["nodename"] }}'
-icinga2_master__database_enable_ha: false
-icinga2_master__database_host: 'localhost'
-icinga2_master__database_name: 'icinga2_ido'
 icinga2_master__influxdb_database_name: 'icinga2'
 icinga2_master__influxdb_enable_ha: false
 icinga2_master__influxdb_host: 'localhost'
@@ -31,20 +28,6 @@ icinga2_master__primary_port: 5665
 icinga2_master__service_enabled: true
 
 # -----------------------------------------------------------------------------
-
-icinga2_master__mariadb_server__databases__dependent_var:
-  - name: '{{ icinga2_master__database_name }}'
-    collation: 'utf8_general_ci'
-    encoding: 'utf8'
-    state: 'present'
-
-icinga2_master__mariadb_server__users__dependent_var:
-  - username: '{{ icinga2_master__database_login.username }}'
-    password: '{{ icinga2_master__database_login.password }}'
-    host: '{{ icinga2_master__database_host }}'
-    priv:
-      - '{{ icinga2_master__database_name | replace("_", "\_") | replace("%", "\%") }}.*:CREATE,ALTER,SELECT,INSERT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE'
-    state: 'present'
 
 icinga2_master__influxdb__databases__dependent_var:
   - name: '{{ icinga2_master__influxdb_database_name }}'
