@@ -69,7 +69,6 @@ icingaweb2_module_generictts         |    | x  | x | x |    |       |       |   
 icingaweb2_module_grafana            |    | x  | x | x |    |       |       |       |
 icingaweb2_module_incubator          |    | x  | x | x |    |       |       |       |
 icingaweb2_module_pdfexport          |    | x  | x | x |    |       |       |       |
-icingaweb2_module_monitoring         |    | x  | x | x |    |       |       |       |
 icingaweb2_module_vspheredb          |    | x  | x | x |    |       |       |       |
 icingaweb2_module_x509               |    | x  | x | x |    |       |       |       |
 influxdb                             |    | x  | x | x |    |       |       |       |

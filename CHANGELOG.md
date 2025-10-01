@@ -16,6 +16,10 @@ Role:mariadb_server
 * Removed support for EOL version 10.5
 * Removed `mariadb_server__cnf_expire_logs_days__group_var` / `mariadb_server__cnf_expire_logs_days__host_var`, use `mariadb_server__cnf_binlog_expire_logs_seconds__group_var` / `mariadb_server__cnf_binlog_expire_logs_seconds__host_var` instead
 
+Role:icingaweb2_module_monitoring
+* Removed, as it is deprecated in favor of IcingaDB
+* All variables starting with `icingaweb2_module_monitoring__` can be removed from the inventory
+
 
 ### Added
 
