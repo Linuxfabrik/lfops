@@ -145,6 +145,7 @@ username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
 
+{% if ansible_facts["distribution_major_version"] | int < 9 %}
 [pgdg12]
 name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch
 {% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length %}
@@ -159,6 +160,7 @@ repo_gpgcheck = 1
 {% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
+{% endif %}
 {% endif %}
 
 # PGDG RHEL / Rocky / AlmaLinux Updates Testing common repositories.
@@ -222,6 +224,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
 
+{% if ansible_facts["distribution_major_version"] | int < 9 %}
 [pgdg12-updates-testing]
 name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Updates testing
 baseurl=https://download.postgresql.org/pub/repos/yum/testing/12/redhat/rhel-$releasever-$basearch
@@ -229,6 +232,7 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
+{% endif %}
 
 # PGDG Red Hat Enterprise Linux / Rocky SRPM testing common repository
 
@@ -340,6 +344,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
 
+{% if ansible_facts["distribution_major_version"] | int < 9 %}
 [pgdg12-source]
 name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Source
 baseurl=https://download.postgresql.org/pub/repos/yum/srpms/12/redhat/rhel-$releasever-$basearch
@@ -355,6 +360,7 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
+{% endif %}
 
 # Debuginfo/debugsource repositories for the common repo
 
@@ -408,6 +414,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
 
+{% if ansible_facts["distribution_major_version"] | int < 9 %}
 [pgdg12-debuginfo]
 name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
 baseurl=https://dnf-debuginfo.postgresql.org/debug/12/redhat/rhel-$releasever-$basearch
@@ -415,6 +422,7 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
+{% endif %}
 
 # Debuginfo/debugsource packages for testing repos
 # Available for 12 and above.
@@ -467,6 +475,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
 
+{% if ansible_facts["distribution_major_version"] | int < 9 %}
 [pgdg12-updates-testing-debuginfo]
 name=PostgreSQL 12 for RHEL / Rocky / AlmaLinux $releasever - $basearch - Debuginfo
 baseurl=https://dnf-debuginfo.postgresql.org/testing/debug/12/redhat/rhel-$releasever-$basearch
@@ -474,3 +483,4 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
+{% endif %}
