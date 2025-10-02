@@ -31,6 +31,9 @@ Role:icinga2_master
 
 ### Added
 
+Role:kvm_host:
+* Added support for Ubuntu 24.04
+
 Role:apache_httpd
 * Added support for Debian/Ubuntu
 

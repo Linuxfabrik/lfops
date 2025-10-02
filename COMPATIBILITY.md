@@ -77,8 +77,8 @@ kdump                                |    |    | x | x |    |       |       |   
 keepalived                           |    |    | x |   |    |       |       |       |
 kernel_settings                      | -  | x  | x | x |    |   -   |       |       |
 keycloak                             |    |    | x |   |    |       |       |       |
-kvm_host                             |    |    | x |   |    |       |       |       |
-kvm_vm                               |    |    | x |   |    |       |       |       |
+kvm_host                             |    |    | x |   |    |       |       |   x   |
+kvm_vm                               |    |    | x |   |    |       |       |   x   |
 libmaxminddb                         |    |    | x |   |    |       |       |       |
 librenms                             |    |    | x |   |    |       |       |       |
 libreoffice                          |    |    | x |   |    |       |       |       |
