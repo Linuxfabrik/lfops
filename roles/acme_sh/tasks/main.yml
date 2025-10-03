@@ -91,7 +91,7 @@
       --cert-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}.crt' \
       --fullchain-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}-fullchain.crt' \
       --key-file '{{ __acme_sh__key_path }}/{{ item["name"] }}.key' \
-      --reloadcmd '{{ item["reload_cmd"] | d("systemctl reload httpd") }}'
+      --reloadcmd '{{ acme_sh__reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
     loop: '{{ acme_sh__certificates }}'
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy ...'

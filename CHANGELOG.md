@@ -10,6 +10,12 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
+### Added
+
+Role:acme_sh
+* Added `acme_sh__reload_cmd` to allow setting the local reload command globally for all certificates
+
+
 ### Fixed
 
 Role:acme_sh
