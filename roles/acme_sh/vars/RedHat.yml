@@ -1,2 +1,4 @@
-acme_sh__apache_httpd_user: 'apache'
-acme_sh__apache_httpd_group: 'apache'
+__acme_sh__apache_httpd_user: 'apache'
+__acme_sh__apache_httpd_group: 'apache'
+__acme_sh__cert_path: '/etc/pki/tls/certs'
+__acme_sh__key_path: '/etc/pki/tls/private'

@@ -10,7 +10,10 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
-tbd
+### Fixed
+
+Role:acme_sh
+* Fixed certificate paths for Ubuntu and Debian
 
 
 ## [v4.0.0] - 2025-10-03
