@@ -10,6 +10,11 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
+tbd
+
+
+## [v4.0.0] - 2025-10-03
+
 ### Breaking Changes
 
 Role:mariadb_server
@@ -31,7 +36,7 @@ Role:icinga2_master
 
 ### Added
 
-Role:kvm_host:
+Role:kvm_host
 * Added support for Ubuntu 24.04
 
 Role:apache_httpd
@@ -63,7 +68,7 @@ Role:apache_httpd
 * Allowed unsetting the CustomLog directive
 
 Role:nextcloud
-* Added missing "env" module
+* Added missing `env` module
 
 Role:mariadb_server
 * Correct mydumper dependency packages for Debian-based systems
@@ -847,7 +852,8 @@ Bug fixes:
 * Module Util: gnupg
 
 
-[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v4.0.0...HEAD
+[v4.0.0]: https://github.com/Linuxfabrik/lfops/compare/v3.0.0...v4.0.0
 [v3.0.0]: https://github.com/Linuxfabrik/lfops/compare/v2.0.1...v3.0.0
 [v2.0.1]: https://github.com/Linuxfabrik/lfops/compare/v2.0.0...v2.0.1
 [v2.0.0]: https://github.com/Linuxfabrik/lfops/compare/v1.0.1...v2.0.0
