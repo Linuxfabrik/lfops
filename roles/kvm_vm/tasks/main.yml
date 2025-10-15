@@ -206,6 +206,9 @@
       {% for item in kvm_vm__network_connections %}
       --network {{ item["network_type"] | d("network") }}={{ item["network_name"] | d("default") }},model=virtio,mac={{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=inventory_hostname)) }}
       {% endfor %}
+      {% if kvm_vm__machine is defined and kvm_vm__machine | length %}
+      --machine '{{ kvm_vm__machine }}'
+      {% endif %}
       --noautoconsole
       --nographics
       --noreboot
