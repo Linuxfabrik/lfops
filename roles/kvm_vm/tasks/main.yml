@@ -276,7 +276,7 @@
 
   - name: 'additional disks: rm -f ...'
     ansible.builtin.file:
-      path: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-" }}{{ item["name"] }}".qcow2"'
+      path: '{{ kvm_vm__pool_info_result["pools"][item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" }}{{ item["name"] }}.qcow2'
       state: 'absent'
     loop: '{{ kvm_vm__additional_disks }}'
 
