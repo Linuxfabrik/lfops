@@ -252,9 +252,11 @@
       - 'kvm_vm__destroy_result["failed"]'
       - 'not ("not found" in kvm_vm__destroy_result["msg"] or "domain is not running" in kvm_vm__destroy_result["msg"])'
 
-  - name: 'virsh undefine --domain {{ kvm_vm__name }}'
+  - name: 'virsh undefine --domain {{ kvm_vm__name }} --nvram'
     community.libvirt.virt:
       command: 'undefine'
+      flags:
+        - 'nvram'
       name: '{{ kvm_vm__name }}'
     register: 'kvm_vm__undefine_result'
     # ignore errors if vm is already undefined
