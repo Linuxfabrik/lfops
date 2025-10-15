@@ -5,9 +5,12 @@ This role ensures that some additional tools are installed and the Bash environm
 Tools that this role installs:
 
 * bash-completion
+* cloud-guest-utils on Debian, cloud-utils-growpart on RHEL
+* jq
 * lsof
 * nano
 * rsync
+* sudo
 * tmux
 * vim
 * wget
