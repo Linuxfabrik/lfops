@@ -18,6 +18,9 @@ Role:acme_sh
 
 ### Fixed
 
+Role:repo_opensearch
+* Deploy correct gpg key for selected Opensearch version
+
 Role:acme_sh
 * Fixed certificate paths for Ubuntu and Debian
 

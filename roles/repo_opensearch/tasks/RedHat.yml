@@ -1,8 +1,8 @@
 - block:
 
-  - name: 'curl https://artifacts.opensearch.org/publickeys/opensearch.pgp --output /tmp/ansible.RPM-GPG-KEY-opensearch'
+  - name: 'curl {{ __repo_opensearch__gpgkey_url[repo_opensearch__version__combined_var] }} --output /tmp/ansible.RPM-GPG-KEY-opensearch'
     ansible.builtin.get_url:
-      url: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
+      url: '{{ __repo_opensearch__gpgkey_url[repo_opensearch__version__combined_var] }}'
       dest: '/tmp/ansible.RPM-GPG-KEY-opensearch'
       mode: 0o644
     delegate_to: 'localhost'
