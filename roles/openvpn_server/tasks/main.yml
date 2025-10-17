@@ -23,6 +23,7 @@
   - name: 'Remove client-configs from /etc/openvpn/ccd'
     ansible.builtin.file:
       path: '/etc/openvpn/ccd/{{ item["name"] }}'
+      state: 'absent'
     when:
       - 'item["state"] | d("present") == "absent"'
     loop: '{{ openvpn_server__client_configs }}'
