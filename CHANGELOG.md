@@ -18,6 +18,9 @@ Role:acme_sh
 
 ### Fixed
 
+Role:keycloak
+* Install correct java version inside the role, removing the `keycloak__java_package_name` variable
+
 Role:apache_solr
 * Automatically install the correct java version for solr
 

@@ -1,5 +1,5 @@
 keycloak__apps__apps__dependent_var:
-  - name: '{{ keycloak__java_package_name }}'
+  - name: 'java-21-openjdk-headless' # adjust as soon as we know which java version is required for which keycloak version. see roles/apache_solr for implementation
     state: 'present'
 
 keycloak__db_url_database: 'keycloak'

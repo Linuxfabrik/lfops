@@ -41,7 +41,6 @@ All Keycloak config settings are described here: https://www.keycloak.org/server
 | `keycloak__admin_login` | Dict. The *temporary* Keycloak Admin login credentials. To harden security, create a permanent admin account after logging in as a temporary admin user, and delete the temporary one. Subkeys:<br> * `username`: Mandatory, string. Username.<br> * `password`: Mandatory, string. Password. |
 | `keycloak__db_login` | Dict. The database login credentials for keycloak. Subkeys:<br> * `username`: Mandatory, string. Username.<br> * `password`: Mandatory, string. Password. |
 | `keycloak__hostname` | String. The hostname where keycloak is reachable. |
-| `keycloak__java_package_name` | String. The name of the [OpenJDK](https://openjdk.java.net/) version that should be installed. Correlates with `keycloak__version`. |
 | `keycloak__version` | String. The version of Keycloak that should be installed. |
 
 Example:
@@ -54,7 +53,6 @@ keycloak__db_login:
   password: 'password'
   username: 'keycloak'
 keycloak__hostname: 'keycloak.local'
-keycloak__java_package_name: 'java-21-openjdk'
 keycloak__version: '26.1.2'
 ```
 
