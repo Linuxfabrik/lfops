@@ -18,6 +18,9 @@ Role:acme_sh
 
 ### Fixed
 
+Role:apache_solr
+* Automatically install the correct java version for solr
+
 Role:repo_opensearch
 * Deploy correct gpg key for selected Opensearch version
 
