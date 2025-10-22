@@ -1,8 +1,8 @@
 - block:
 
-  - name: 'install {{ __apache_solr__java_package[apache_solr__version[0]] }}'
+  - name: 'install {{ __apache_solr__java_package[apache_solr__version.split(".")[0]] }}'
     ansible.builtin.package:
-      name: '{{ __apache_solr__java_package[apache_solr__version[0]] }}'
+      name: '{{ __apache_solr__java_package[apache_solr__version.split(".")[0]] }}'
       state: 'present'
 
   - name: 'Download and verify Apache Solr {{ apache_solr__version }} from Solr archive (the full binary package, for all operating systems)'
