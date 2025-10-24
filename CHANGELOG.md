@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:postfix
+* Added `postfix__lookup_tables__*_var` to allow easy deployment of lookup tables
+
 Role:acme_sh
 * Added `acme_sh__reload_cmd` to allow setting the local reload command globally for all certificates
 

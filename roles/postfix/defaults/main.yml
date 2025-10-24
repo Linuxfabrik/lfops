@@ -13,6 +13,17 @@ postfix__biff: false
 postfix__bounce_queue_lifetime: '5d'
 postfix__inet_interfaces: '127.0.0.1' # fails on machines without IPv6 if set to 'localhost', so set explicitely to the IPv4 localhost address
 postfix__inet_protocols: 'all'
+postfix__lookup_tables__combined_var: '{{ (
+      postfix__lookup_tables__role_var +
+      postfix__lookup_tables__dependent_var +
+      postfix__lookup_tables__group_var +
+      postfix__lookup_tables__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
+postfix__lookup_tables__dependent_var: []
+postfix__lookup_tables__group_var: []
+postfix__lookup_tables__host_var: []
+postfix__lookup_tables__role_var: []
 postfix__mailbox_size_limit: 51200000
 postfix__mastercf_entries__combined_var: '{{ (
       postfix__mastercf_entries__role_var +

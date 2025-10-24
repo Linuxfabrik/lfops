@@ -28,11 +28,12 @@ postfix__relayhost: 'mail.example.com:587'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `postfix__aliases__host_var` / <br> `postfix__aliases__role_var` | List of dictionaries for `/etc/aliases`, a system-wide mechanism to redirect mail for local recipients. Subkeys: <ul><li>`name`: Mandatory, string. The local address (no domain part).</li><li>`value`: Mandatory, string. Generally the redirect address. Have a look at `man aliases` for advanced options.</li><li>`state`: Optional, string. State of the entry. Either `'present'` or `'absent'`. Defaults to `'present'`.</li></ul> | `[]` |
+| `postfix__aliases__host_var` / <br> `postfix__aliases__group_var` | List of dictionaries for `/etc/aliases`, a system-wide mechanism to redirect mail for local recipients. Subkeys: <ul><li>`name`: Mandatory, string. The local address (no domain part).</li><li>`value`: Mandatory, string. Generally the redirect address. Have a look at `man aliases` for advanced options.</li><li>`state`: Optional, string. State of the entry. Either `'present'` or `'absent'`. Defaults to `'present'`.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).  | `[]` |
 | `postfix__biff` | Boolean. See https://www.postfix.org/postconf.5.html#biff | `false` |
 | `postfix__bounce_queue_lifetime` | See https://www.postfix.org/postconf.5.html#bounce_queue_lifetime | `'5d'` |
 | `postfix__inet_interfaces` | The local network interface addresses that this mail system receives mail on. | `'127.0.0.1'` |
 | `postfix__inet_protocols` | The Internet protocols Postfix will attempt to use when making or accepting connections. Specify one or more of `ipv4` or `ipv6`, separated by whitespace or commas. The form `all` is equivalent to `ipv4, ipv6` or `ipv4`, depending on whether the operating system implements IPv6. | `'all'` |
+| `postfix__lookup_tables__host_var` / <br> `postfix__lookup_tables__group_var` | List of dictionaries containing [Postfix Lookup Tables](https://www.postfix.org/DATABASE_README.html). The role automatically runs `postmap` if the table changed. Subkeys: <ul><li>`path`: Mandatory, string. Path to the lookup table. Can be used in `postfix__raw`.</li><li>`content`: Mandatory, string. Content of the lookup table.</li><li>`state`: Optional, string. State of the lookup table. Either `'present'` or `'absent'`. Defaults to `'present'`.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).  | `[]` |
 | `postfix__mailbox_size_limit` | See https://www.postfix.org/postconf.5.html#mailbox_size_limit | `51200000` |
 | `postfix__mastercf_entries__host_var` / <br> `postfix__mastercf_entries__group_var` | See https://www.postfix.org/master.5.html <br> Subkeys: <ul><li>`service`: Mandatory, string. The service name syntax depends on the service type as described next.</li><li>`type`: Mandatory, string. Specify one of the service types found in the above link.</li><li>`private`: Mandatory, string. Whether a service is internal to Postfix (pathname starts with private/), or exposed through Postfix command-line tools (path-name starts with public/). Internet (type inet) services can't be private.</li><li>`unpriv`: Mandatory, string. Whether the service runs with root privileges or as the owner of the Postfix system (the owner name is controlled by the mail_owner configuration variable in the main.cf file).</li><li>`chroot`: Mandatory, string. Whether or not the service runs chrooted to the mail queue directory (pathname is controlled by the queue_directory configuration variable in the main.cf file).</li><li>`wakeup`: Mandatory, string. Automatically wake up the named service after the specified number of seconds. The wake up is implemented by connecting to the service and sending a wake up request. A ? at the end of the wake-up time field requests that no wake up events be sent before the first time a service is used. Specify 0 for no automatic wake up.</li><li>`maxproc`: Mandatory, string. The maximum number of processes that may execute this service simultaneously. Specify 0 for no process count limit.</li><li>`command`: Mandatory, string. The command to be executed.</li><li>`arguments`: Mandatory, list. The arguments to execute the commend with.</li>li>`state`: Optional, string. State of the entry. Either `'present'` or `'absent'`. Defaults to `'present'`.</li></ul> | see `vars/` |
 | `postfix__maximal_queue_lifetime` | See https://www.postfix.org/postconf.5.html#maximal_queue_lifetime | `'5d'` |
@@ -71,6 +72,11 @@ postfix__biff: false
 postfix__bounce_queue_lifetime: '5d'
 postfix__inet_interfaces: 'all'
 postfix__inet_protocols: 'all'
+postfix__lookup_tables__host_var:
+  - path: '/etc/postfix/sender_access_blacklist'
+    content: |
+        spam.example.com DISCARD
+    state: 'present'
 postfix__mailbox_size_limit: 51200000
 postfix__mastercf_entries__host_var:
   - service: 'smtps'
@@ -150,7 +156,6 @@ postfix__smtp_tls_wrappermode: true
 postfix__smtpd_tls_cert_file: '/etc/pki/tls/certs/postfix.pem'
 postfix__smtpd_tls_key_file: '/etc/pki/tls/private/postfix.key'
 postfix__smtpd_tls_security_level: 'may'
-
 ```
 
 

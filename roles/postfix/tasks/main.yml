@@ -88,6 +88,9 @@
     when:
       - 'postfix__relayhost_username is defined and postfix__relayhost_username | length'
 
+  - ansible.builtin.include_tasks: 'lookup-table.yml'
+    loop: '{{ postfix__lookup_tables__combined_var }}'
+
   - name: 'flush handlers so that postfix can be used by the later roles'
     ansible.builtin.meta: 'flush_handlers'
 
