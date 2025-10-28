@@ -214,6 +214,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_join_buffer_size__group_var` / `mariadb_server__cnf_join_buffer_size__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#join_buffer_size) | `'256K'`                         |
 | `mariadb_server__cnf_log_bin__group_var` / `mariadb_server__cnf_log_bin__host_var`                      | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#log_bin). Attention: the variable is *not* a boolean! Instead it either requires a string to enable it, or has to be unset. For convenience this role unsets the variable if it is set to `'OFF'`. | `''` |
 | `mariadb_server__cnf_log_error__group_var` / `mariadb_server__cnf_log_error__host_var`                      | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#log_error) | `'/var/log/mariadb/mariadb.log'` |
+| `mariadb_server__cnf_log_slave_updates__host_var` / `mariadb_server__cnf_log_slave_updates__group_var` | [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#log_slave_updates) | `'OFF'` |
 | `mariadb_server__cnf_lower_case_table_names__group_var` / `mariadb_server__cnf_lower_case_table_names__host_var`         | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#lower_case_table_names) | `0`                              |
 | `mariadb_server__cnf_max_allowed_packet__group_var` / `mariadb_server__cnf_max_allowed_packet__host_var`             | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#max_allowed_packet) | `'16M'`                          |
 | `mariadb_server__cnf_max_connections__group_var` / `mariadb_server__cnf_max_connections__host_var`                | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#max_connections) | `64`                             |
@@ -262,6 +263,7 @@ mariadb_server__cnf_interactive_timeout__host_var: 28800
 mariadb_server__cnf_join_buffer_size__host_var: '256K'
 mariadb_server__cnf_log_bin__host_var: 'log_bin'
 mariadb_server__cnf_log_error__host_var: '/var/log/mariadb/mariadb.log'
+mariadb_server__cnf_log_slave_updates__host_var: 'ON'
 mariadb_server__cnf_lower_case_table_names__host_var: 0
 mariadb_server__cnf_max_allowed_packet__host_var: '16M'
 mariadb_server__cnf_max_connections__host_var: 64
@@ -317,7 +319,7 @@ mariadb_server__cnf_ssl_key__host_var: '/etc/pki/tls/private/mariadb-server.key'
 
 ## Optional Role Variables - `mariadb_server__cnf_*` Config Directives for DARE
 
-To enable [Data Encryption at rest](https://mariadb.com/kb/en/data-at-rest-encryption-overview/) (DARE) using the [File Key Management plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin), you have to [define the DARE keys](https://mariadb.com/kb/en/file-key-management-encryption-plugin/#creating-the-key-file) in your inventory like so (every encryption key itself needs to be provided in hex-encoded form using 128-bit/16-byte/32 chars, 192-bit/24-byte/48 chars or 256-bit/32-byte/64 chars):
+To enable [Data Encryption at rest](https://mariadb.com/kb/en/data-at-rest-encryption-overview/) (DARE) using the [File Key Management plugin](https://mariadb.com/docs/server/security/securing-mariadb/encryption/data-at-rest-encryption/key-management-and-encryption-plugins/file-key-management-encryption-plugin), you have to [define the DARE keys](https://mariadb.com/kb/en/file-key-management-encryption-plugin/#creating-the-key-file) in your inventory like so (every encryption key itself needs to be provided in hex-encoded form using 128-bit/16-byte/32 chars, 192-bit/24-byte/48 chars or 256-bit/32-byte/64 chars):
 
 ```yaml
 # using 256-bit/32-byte/64 chars encryption keys

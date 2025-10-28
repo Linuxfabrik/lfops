@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:mariadb_server:
+* Made `log_slave_updates` variable
+
 Role:postfix
 * Added `postfix__lookup_tables__*_var` to allow easy deployment of lookup tables
 
