@@ -223,6 +223,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_query_cache_limit__group_var` / `mariadb_server__cnf_query_cache_limit__host_var`              | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_limit) | `'1M'`                           |
 | `mariadb_server__cnf_query_cache_size__group_var` / `mariadb_server__cnf_query_cache_size__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_size) | `0`                              |
 | `mariadb_server__cnf_query_cache_type__group_var` / `mariadb_server__cnf_query_cache_type__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_type) | `'OFF'`                          |
+| `mariadb_server__cnf_server_raw` | Multiline string. Raw content which will be appended to the `[server]` section of the MariaDB cnf. | unset |
 | `mariadb_server__cnf_skip_name_resolve__group_var` / `mariadb_server__cnf_skip_name_resolve__host_var`              | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#skip_name_resolve) | `'ON'`                           |
 | `mariadb_server__cnf_slow_query_log__group_var` / `mariadb_server__cnf_slow_query_log__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log) | `'OFF'` |
 | `mariadb_server__cnf_slow_query_log_file__group_var` / `mariadb_server__cnf_slow_query_log_file__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log_file) | `'/var/log/mariadb/mariadb-slowquery.log'` |
@@ -272,6 +273,11 @@ mariadb_server__cnf_performance_schema__host_var: 'ON'
 mariadb_server__cnf_query_cache_limit__host_var: '1M'
 mariadb_server__cnf_query_cache_size__host_var: 0
 mariadb_server__cnf_query_cache_type__host_var: 'OFF'
+mariadb_server__cnf_server_raw: |
+  encrypt-binlog
+  encrypt-tmp-disk-tables
+  encrypt-tmp-files
+  innodb-encrypt-log
 mariadb_server__cnf_skip_name_resolve__host_var: 'ON'
 mariadb_server__cnf_slow_query_log__host_var: 'OFF'
 mariadb_server__cnf_slow_query_log_file__host_var: '/var/log/mariadb/mariadb-slowquery.log'

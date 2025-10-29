@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025102801
+# 2025102901
 # 11.4
 
 [client]
@@ -144,6 +144,11 @@ server_audit_syslog_facility                   = {{ mariadb_server__cnf_server_a
 server_audit_syslog_ident                      = {{ mariadb_server__cnf_server_audit_syslog_ident }}
 server_audit_syslog_info                       = {{ mariadb_server__cnf_server_audit_syslog_info }}
 server_audit_syslog_priority                   = {{ mariadb_server__cnf_server_audit_syslog_priority }}
+
+{% if mariadb_server__cnf_server_raw is defined and mariadb_server__cnf_server_raw | length %}
+# raw
+{{ mariadb_server__cnf_server_raw }}
+{% endif %}
 
 
 [mysqld]
