@@ -1,0 +1,27 @@
+# For creating/extending volume groups
+# - PVs are automatically created (pvcreate) and resized (pvresize)
+# - Set growpart: true to auto-resize partitions before pvresize
+lvm__vgs__dependent_var: []
+lvm__vgs__group_var: []
+lvm__vgs__host_var: []
+lvm__vgs__role_var: []
+lvm__vgs__combined_var: '{{ (
+      lvm__vgs__role_var +
+      lvm__vgs__dependent_var +
+      lvm__vgs__group_var +
+      lvm__vgs__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="name")
+  }}'
+
+# For creating/extending logical volumes
+lvm__lvs__dependent_var: []
+lvm__lvs__group_var: []
+lvm__lvs__host_var: []
+lvm__lvs__role_var: []
+lvm__lvs__combined_var: '{{ (
+      lvm__lvs__role_var +
+      lvm__lvs__dependent_var +
+      lvm__lvs__group_var +
+      lvm__lvs__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["vg", "name"])
+  }}'

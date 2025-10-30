@@ -59,6 +59,7 @@
 - import_playbook: 'libreoffice.yml'
 - import_playbook: 'login.yml'
 - import_playbook: 'logrotate.yml'
+- import_playbook: 'lvm.yml'
 - import_playbook: 'mailto_root.yml'
 - import_playbook: 'mailx.yml'
 - import_playbook: 'mariadb_server.yml'

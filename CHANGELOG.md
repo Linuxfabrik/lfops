@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:lvm
+* Add role
+
 Role:logrotate
 * Add support for RHEL10
 
