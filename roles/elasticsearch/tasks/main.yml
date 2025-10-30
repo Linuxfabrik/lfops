@@ -17,6 +17,14 @@
         - 'unzip'
       state: 'present'
 
+  - name: 'mkdir -p {{ elasticsearch__path_data }}'
+    ansible.builtin.file:
+      path: '{{ elasticsearch__path_data }}'
+      state: 'directory'
+      owner: 'elasticsearch'
+      group: 'elasticsearch'
+      mode: 0o755
+
   - name: |-
       mkdir -p /var/lib/elasticsearch/tmp
       chown elasticsearch:elasticsearch /var/lib/elasticsearch/tmp

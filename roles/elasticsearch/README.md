@@ -187,6 +187,7 @@ If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blo
 | `elasticsearch__http_key` | ASCII-armored PEM HTTP private key. | unset |
 | `elasticsearch__network_host` | Sets the address for both HTTP and transport traffic. Accepts an IP address, a hostname, or a [special value](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/modules-network.html#network-interface-values). | `'_local_'` |
 | `elasticsearch__node_name` | A descriptive name for the node | `'{{ ansible_facts["nodename"] }}'` |
+| `elasticsearch__path_data` | Path to the directory where Elasticsearch stores its data. | `'/data'` |
 | `elasticsearch__path_repos` | Paths pointing to [Shared file system repositories](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/shared-file-system-repository) used for snapshots (backups). | `[]` |
 | `elasticsearch__service_enabled` | Enables or disables the elasticsearch service, analogous to `systemctl enable/disable --now`. | `true` |
 | `elasticsearch__service_state` | Controls the state of the elasticsearch service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
@@ -209,6 +210,7 @@ elasticsearch__http_key: '{{ lookup("ansible.builtin.file", "{{ inventory_dir }}
 elasticsearch__network_host: '0.0.0.0'
 elasticsearch__network_host: '_local_'  # or '127.0.0.1' for single node
 elasticsearch__node_name: 'node1'
+elasticsearch__path_data: '/data'
 elasticsearch__path_repos:
   - '/mnt/backups'
   - '/mnt/long_term_backups'

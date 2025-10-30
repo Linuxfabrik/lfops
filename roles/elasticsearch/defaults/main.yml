@@ -20,6 +20,7 @@ elasticsearch__cluster_name__host_var: ''
 elasticsearch__cluster_name__role_var: 'my-application'
 elasticsearch__network_host: '_local_'
 elasticsearch__node_name: '{{ ansible_facts["nodename"] }}'
+elasticsearch__path_data: '/data'
 elasticsearch__path_repos: []
 elasticsearch__service_enabled: true
 elasticsearch__service_state: 'started'
