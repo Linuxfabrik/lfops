@@ -10,7 +10,20 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
+### Breaking Changes
+
+Role:elasticsearch_oss
+* Renamed to `elasticsearch`, as both the free and subscription version are in the same package now
+
+Role:repo_elasticsearch_oss
+* Removed, as both the free and subscription version are in the same package now
+
+
 ### Added
+
+Role:elasticsearch
+* Improved handling of TLS certificates
+* Allows creation of clusters
 
 Role:mariadb_server:
 * Made `log_slave_updates` variable

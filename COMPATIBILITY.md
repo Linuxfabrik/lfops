@@ -31,7 +31,7 @@ dnf_makecache                        |    |    |    | x | x |    |       |      
 dnf_versionlock                      |    |    |    | x | x |    |       |       |       | Fedora 40
 docker                               |    |    |    | x |   |    |       |       |       |
 duplicity                            |    |    |    | x | x |    |       |       |       | Fedora 35
-elasticsearch_oss                    |    |    |    | x |   |    |       |       |       |
+elasticsearch                        |    |    |    | x | x |    |       |       |   x   |
 exoscale_vm                          |    |    |    |   |   |    |       |       |       | Fedora 35+
 fail2ban                             |    |    |    | x | x |    |       |       |       |
 fangfrisch                           |    |    |    |   | x |    |       |       |       |
@@ -123,8 +123,7 @@ repo_collabora                       |    |    |    | x |   |    |       |      
 repo_collabora_code                  |    |    |    | x | x |    |       |       |       |
 repo_debian_base                     | x  |    |    | - | - |    |       |       |       |
 repo_docker                          |    |    |    | x |   |    |       |       |       |
-repo_elasticsearch                   |    |    |    | x |   |    |       |       |       |
-repo_elasticsearch_oss               |    |    |    | x |   |    |       |       |       |
+repo_elasticsearch                   |    |    |    | x | x |    |       |       |   x   |
 repo_epel                            |    |    |    | x | x |    |       |       |       |
 repo_gitlab_ce                       |    |    |    | x |   |    |       |       |       |
 repo_gitlab_runner                   |    |    |    | x |   |    |       |       |       |

@@ -1,4 +1,0 @@
-- name: 'elasticsearch_oss: restart elasticsearch'
-  ansible.builtin.service:
-    name: 'elasticsearch'
-    state: 'restarted'

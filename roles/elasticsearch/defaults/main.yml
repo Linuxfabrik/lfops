@@ -1,0 +1,25 @@
+elasticsearch__action_auto_create_index__combined_var: '{{
+    elasticsearch__action_auto_create_index__host_var if (elasticsearch__action_auto_create_index__host_var | string | length) else
+    elasticsearch__action_auto_create_index__group_var if (elasticsearch__action_auto_create_index__group_var | string | length) else
+    elasticsearch__action_auto_create_index__dependent_var if (elasticsearch__action_auto_create_index__dependent_var | string | length) else
+    elasticsearch__action_auto_create_index__role_var
+  }}'
+elasticsearch__action_auto_create_index__dependent_var: ''
+elasticsearch__action_auto_create_index__group_var: ''
+elasticsearch__action_auto_create_index__host_var: ''
+elasticsearch__action_auto_create_index__role_var: true
+elasticsearch__cluster_name__combined_var: '{{
+    elasticsearch__cluster_name__host_var if (elasticsearch__cluster_name__host_var | string | length) else
+    elasticsearch__cluster_name__group_var if (elasticsearch__cluster_name__group_var | string | length) else
+    elasticsearch__cluster_name__dependent_var if (elasticsearch__cluster_name__dependent_var | string | length) else
+    elasticsearch__cluster_name__role_var
+  }}'
+elasticsearch__cluster_name__dependent_var: ''
+elasticsearch__cluster_name__group_var: ''
+elasticsearch__cluster_name__host_var: ''
+elasticsearch__cluster_name__role_var: 'my-application'
+elasticsearch__network_host: '_local_'
+elasticsearch__node_name: '{{ ansible_facts["nodename"] }}'
+elasticsearch__path_repos: []
+elasticsearch__service_enabled: true
+elasticsearch__service_state: 'started'

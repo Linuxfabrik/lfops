@@ -1,6 +1,6 @@
-- name: 'Playbook linuxfabrik.lfops.repo_elasticsearch_oss'
+- name: 'Playbook linuxfabrik.lfops.elasticsearch'
   hosts:
-    - 'lfops_repo_elasticsearch_oss'
+    - 'lfops_elasticsearch'
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -12,7 +12,11 @@
 
   roles:
 
-    - role: 'linuxfabrik.lfops.repo_elasticsearch_oss'
+    - role: 'linuxfabrik.lfops.repo_elasticsearch'
+      when:
+        - 'not elasticsearch__skip_repo_elasticsearch | default(false)'
+
+    - role: 'linuxfabrik.lfops.elasticsearch'
 
 
   post_tasks:

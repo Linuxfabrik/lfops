@@ -1,6 +1,7 @@
 - block:
 
-  - name: 'Deploy the Elasticsearch OSS repo (mirror: {{ repo_elasticsearch_oss__mirror_url }})'
+  # https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-with-rpm#rpm-repo
+  - name: 'Deploy the Elasticsearch repo (mirror: {{ repo_elasticsearch__mirror_url }})'
     ansible.builtin.template:
       src: 'etc/yum.repos.d/elasticsearch.repo.j2'
       dest: '/etc/yum.repos.d/elasticsearch.repo'
@@ -16,4 +17,4 @@
       shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/elasticsearch.repo'
 
   tags:
-    - 'repo_elasticsearch_oss'
+    - 'repo_elasticsearch'

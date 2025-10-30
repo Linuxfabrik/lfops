@@ -16,7 +16,7 @@ This role deploys the [Elasticsearch Repository](https://www.elastic.co/guide/en
 
 | Variable | Description |
 | -------- | ----------- |
-| `repo_elasticsearch__version` | The Elasticsearch repo version to install. One of `5.x`, `6.x`, `7.x` or `8.x`. [Have a look at the Elasticsearch repository for the list of available releases](https://www.elastic.co/downloads/past-releases#elasticsearch). |
+| `repo_elasticsearch__version` | The Elasticsearch repo version to install. One of `7.x`, `8.x` or `9.x`. [Have a look at the Elasticsearch repository for the list of available releases](https://www.elastic.co/downloads/past-releases#elasticsearch). |
 
 Example:
 ```yaml

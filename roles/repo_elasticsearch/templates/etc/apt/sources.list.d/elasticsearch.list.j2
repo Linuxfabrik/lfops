@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2025101601
+
+{% if repo_elasticsearch__mirror_url is defined and repo_elasticsearch__mirror_url | length %}
+deb [signed-by=/etc/apt/keyrings/elasticsearch.asc] {{ repo_elasticsearch__mirror_url }}/elasticsearch/packages/{{ repo_elasticsearch__version }}/apt stable main
+{% else %}
+deb [signed-by=/etc/apt/keyrings/elasticsearch.asc] https://artifacts.elastic.co/packages/{{ repo_elasticsearch__version }}/apt stable main
+{% endif %}

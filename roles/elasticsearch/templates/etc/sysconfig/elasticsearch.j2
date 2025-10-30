@@ -1,0 +1,29 @@
+# {{ ansible_managed }}
+# 2025101701
+
+################################
+# Elasticsearch
+################################
+
+# Elasticsearch home directory
+#ES_HOME=/usr/share/elasticsearch
+
+# Elasticsearch Java path
+#ES_JAVA_HOME=
+
+# Elasticsearch configuration directory
+# Note: this setting will be shared with command-line tools
+ES_PATH_CONF=/etc/elasticsearch
+
+# Elasticsearch PID directory
+#PID_DIR=/var/run/elasticsearch
+
+# Additional Java OPTS
+# Linuxfabrik: Elasticsearch needs exec permissions on its temp-directory.
+# `/tmp` on CIS-hardened systems is mounted with noexec; therefore, we need to use a different directory.
+# The directory must exist otherwise newer Elasticsearch versions fail to start.
+ES_JAVA_OPTS="-Djava.io.tmpdir=/var/lib/elasticsearch/tmp"
+
+
+# Configure restart on package upgrade (true, every other setting will lead to not restarting)
+#RESTART_ON_UPGRADE=true

@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+# 2025103001
+#
+# reference: https://www.elastic.co/docs/reference/elasticsearch/command-line-tools/certutil#certutil-silent
+
+instances:
+{% for item in elasticsearch__discovery_seed_hosts %}
+  - name: '{{ item }}'
+    ip:
+      - '127.0.0.1'
+      # - '192.0.2.1'
+    dns:
+      - 'localhost'
+      - '{{ item }}' # make sure to always include the Common Name in the Subject Alternative Names as well
+      # - '{{ item }}.example.com'
+
+{% endfor %}
