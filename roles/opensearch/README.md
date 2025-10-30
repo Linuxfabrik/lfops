@@ -153,7 +153,7 @@ curl 'https://localhost:9200/_cat/nodes?v' --user opensearch-admin:linuxfabrik -
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `opensearch__cluster_initial_cluster_manager_nodes` | A list of initial master-eligible nodes. The entries have to match the `opensearch__node_name`. You need to set this once when bootstrapping the cluster (aka the first start of the cluster). Make sure to remove this option after the first start, the nodes should not restart with this option active. Most of the time contains the same value as `opensearch__discovery_seed_hosts`. | unset |
-| `opensearch__discovery_seed_hosts` | A list of IPs or hostnames that point to other master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten using `:9301`, for example. | unset |
+| `opensearch__discovery_seed_hosts` | A list of IPs or hostnames that point to other master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten by appending it to the hostname. | unset |
 | `opensearch__plugins_security_nodes_dns` | List of distinguished names of the other cluster members. | `[]` |
 
 Example:
@@ -166,7 +166,7 @@ opensearch__cluster_initial_cluster_manager_nodes:
 opensearch__discovery_seed_hosts:
   - 'node1.example.com'
   - 'node2.example.com'
-  - 'node3.example.com'
+  - 'node3.example.com:9301'
 opensearch__plugins_security_nodes_dns:
   - 'CN=node1.example.com,OU=ops,O=acme,L=Zuerich,ST=Zuerich,C=CH'
   - 'CN=node2.example.com,OU=ops,O=acme,L=Zuerich,ST=Zuerich,C=CH'
