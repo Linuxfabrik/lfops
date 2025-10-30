@@ -12,6 +12,11 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ elasticsearch__kernel_settings__sysctl__dependent_var | d([]) }}'
+      when:
+        - 'not elasticsearch__skip_kernel_settings | d(false)'
+
     - role: 'linuxfabrik.lfops.repo_elasticsearch'
       when:
         - 'not elasticsearch__skip_repo_elasticsearch | default(false)'

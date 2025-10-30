@@ -24,3 +24,10 @@ elasticsearch__path_data: '/data'
 elasticsearch__path_repos: []
 elasticsearch__service_enabled: true
 elasticsearch__service_state: 'started'
+
+# -----------------------------------------------------------------------------
+
+elasticsearch__kernel_settings__sysctl__dependent_var:
+  # https://www.elastic.co/docs/deploy-manage/deploy/self-managed/setup-configuration-memory#swappiness
+  - name: 'vm.swappiness'
+    value: 1

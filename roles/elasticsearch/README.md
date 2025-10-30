@@ -164,6 +164,13 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml), this is automatically done for you.
 
 
+## Optional Requirements
+
+* Set `vm.swappiness` to 1. This can be done using the [linuxfabrik.lfops.kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings) role.
+
+If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml), this is automatically done for you.
+
+
 ## Tags
 
 | Tag                       | What it does                                   | Reload / Restart               |
