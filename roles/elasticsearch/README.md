@@ -189,10 +189,13 @@ If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blo
 | `elasticsearch__ca_cert` | ASCII-armored PEM CA certificate for TLS. When set, enables manual certificate management mode and disables auto-enrollment. All cluster nodes should use the same CA certificate. | unset |
 | `elasticsearch__cluster_initial_master_nodes` | A list of initial master-eligible nodes. The entries have to match the `elasticsearch__node_name`. **IMPORTANT:** Only use this during initial cluster bootstrap via `--extra-vars`. Never set this permanently in inventory. After the first successful cluster start, all subsequent runs should omit this variable. | unset |
 | `elasticsearch__cluster_name__host_var` / <br> `elasticsearch__cluster_name__group_var` | A descriptive name for your cluster. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
+| `elasticsearch__cluster_routing_allocation_awareness_attributes` | List of awareness attribute names to enable [shard allocation awareness](https://www.elastic.co/docs/deploy-manage/distributed-architecture/shard-allocation-relocation-recovery/shard-allocation-awareness). Distributes replicas across different attribute values to minimize risk of data loss during failures. Configure the same attributes on all master-eligible nodes | `[]` |
+| `elasticsearch__cluster_routing_allocation_awareness_force` | Dictionary for forced awareness to prevent replica overloading when a location fails. Key is the attribute name, value is list of expected attribute values. Elasticsearch will leave replicas unassigned rather than concentrating them in remaining locations. | `{}` |
 | `elasticsearch__discovery_seed_hosts` | A list of IPs or hostnames that point to other master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten using `:9301`, for example. | unset |
 | `elasticsearch__http_cert` | ASCII-armored PEM HTTP certificate. | unset |
 | `elasticsearch__http_key` | ASCII-armored PEM HTTP private key. | unset |
 | `elasticsearch__network_host` | Sets the address for both HTTP and transport traffic. Accepts an IP address, a hostname, or a [special value](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/modules-network.html#network-interface-values). | `'_local_'` |
+| `elasticsearch__node_attributes` | Dictionary of custom node attributes. Can be used for shard allocation awareness. Each attribute identifies a node's physical location or characteristic. | `{}` |
 | `elasticsearch__node_name` | A descriptive name for the node | `'{{ ansible_facts["nodename"] }}'` |
 | `elasticsearch__path_data` | Path to the directory where Elasticsearch stores its data. | `'/data'` |
 | `elasticsearch__path_repos` | Paths pointing to [Shared file system repositories](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/shared-file-system-repository) used for snapshots (backups). | `[]` |
@@ -201,13 +204,20 @@ If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blo
 | `elasticsearch__transport_cert` | ASCII-armored PEM transport certificate. | unset |
 | `elasticsearch__transport_key` | ASCII-armored PEM transport private key. | unset |
 
-Example (Single Node):
+Example:
 ```yaml
 # optional
 elasticsearch__action_auto_create_index__group_var: false
 elasticsearch__ca_cert: '{{ lookup("ansible.builtin.file", "{{ inventory_dir }}/group_files/elasticsearch_cluster/etc/elasticsearch/certs/ca.crt") }}'
 elasticsearch__cluster_name__group_var: 'my-cluster'
 elasticsearch__cluster_name__host_var: 'my-single-node'
+elasticsearch__cluster_routing_allocation_awareness_attributes:
+  - 'datacenter'
+elasticsearch__cluster_routing_allocation_awareness_force:
+  datacenter:
+    - 'dc1'
+    - 'dc2'
+    - 'dc3'
 elasticsearch__discovery_seed_hosts:
   - 'node1.example.com'
   - 'node2.example.com'
@@ -216,6 +226,9 @@ elasticsearch__http_cert: '{{ lookup("ansible.builtin.file", "{{ inventory_dir }
 elasticsearch__http_key: '{{ lookup("ansible.builtin.file", "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/elasticsearch/certs/http.key") }}'
 elasticsearch__network_host: '0.0.0.0'
 elasticsearch__network_host: '_local_'  # or '127.0.0.1' for single node
+elasticsearch__node_attributes:
+  datacenter: 'dc1'
+  host: 'pod01'
 elasticsearch__node_name: 'node1'
 elasticsearch__path_data: '/data'
 elasticsearch__path_repos:

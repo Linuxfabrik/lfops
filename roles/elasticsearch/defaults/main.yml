@@ -18,7 +18,10 @@ elasticsearch__cluster_name__dependent_var: ''
 elasticsearch__cluster_name__group_var: ''
 elasticsearch__cluster_name__host_var: ''
 elasticsearch__cluster_name__role_var: 'my-application'
+elasticsearch__cluster_routing_allocation_awareness_attributes: []
+elasticsearch__cluster_routing_allocation_awareness_force: {}
 elasticsearch__network_host: '_local_'
+elasticsearch__node_attributes: {}
 elasticsearch__node_name: '{{ ansible_facts["nodename"] }}'
 elasticsearch__path_data: '/data'
 elasticsearch__path_repos: []

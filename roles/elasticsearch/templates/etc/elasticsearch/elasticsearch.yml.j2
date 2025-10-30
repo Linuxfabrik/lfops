@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025103001
+# 2025103002
 # ======================== Elasticsearch Configuration =========================
 #
 # NOTE: Elasticsearch comes with reasonable defaults for most settings.
@@ -27,6 +27,9 @@ node.name: {{ elasticsearch__node_name }}
 # Add custom attributes to the node:
 #
 #node.attr.rack: r1
+{% for key, value in elasticsearch__node_attributes.items() %}
+node.attr.{{ key }}: '{{ value }}'
+{% endfor %}
 #
 # ----------------------------------- Paths ------------------------------------
 #
@@ -84,6 +87,20 @@ cluster.initial_master_nodes: {{ elasticsearch__cluster_initial_master_nodes | a
 {% endif %}
 #
 # For more information, consult the discovery and cluster formation module documentation.
+#
+# -------------------------------- Shard Allocation ----------------------------
+#
+# Shard allocation awareness distributes replicas across different attribute values
+# to minimize the risk of data loss during failures.
+#
+{% if elasticsearch__cluster_routing_allocation_awareness_attributes is defined and elasticsearch__cluster_routing_allocation_awareness_attributes | length %}
+cluster.routing.allocation.awareness.attributes: '{{ elasticsearch__cluster_routing_allocation_awareness_attributes | join(",") }}'
+{% endif %}
+{% if elasticsearch__cluster_routing_allocation_awareness_force is defined and elasticsearch__cluster_routing_allocation_awareness_force | length %}
+{% for key, values in elasticsearch__cluster_routing_allocation_awareness_force.items() %}
+cluster.routing.allocation.awareness.force.{{ key }}.values: '{{ values | join(",") }}'
+{% endfor %}
+{% endif %}
 #
 # ---------------------------------- Various -----------------------------------
 #

@@ -22,6 +22,7 @@ Role:repo_elasticsearch_oss
 ### Added
 
 Role:elasticsearch
+* Added variables for allocation awareness
 * Added `elasticsearch__path_data` variable to configure custom data directory
 * Improved handling of TLS certificates
 * Allows creation of clusters
