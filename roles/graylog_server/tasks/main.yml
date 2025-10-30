@@ -140,7 +140,7 @@
 
   tags:
     - 'never'
-    - 'graylog_server:configure_inputs'
+    - 'graylog_server:configure_system_inputs'
 
 
 - block:
@@ -203,4 +203,4 @@
     - 'graylog_server__is_leader | bool' # only run this against one host, else we get duplicate inputs
   tags:
     - 'never'
-    - 'graylog_server:configure_index_sets'
+    - 'graylog_server:configure_system_index_sets'
