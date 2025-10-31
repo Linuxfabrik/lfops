@@ -22,6 +22,7 @@ Role:repo_elasticsearch_oss
 ### Added
 
 Role:elasticsearch
+* Made `node.roles` variable
 * Added variables for allocation awareness
 * Added `elasticsearch__path_data` variable to configure custom data directory
 * Improved handling of TLS certificates

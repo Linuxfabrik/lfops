@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025103002
+# 2025103101
 # ======================== Elasticsearch Configuration =========================
 #
 # NOTE: Elasticsearch comes with reasonable defaults for most settings.
@@ -23,6 +23,10 @@ cluster.name: {{ elasticsearch__cluster_name__combined_var }}
 # Use a descriptive name for the node:
 #
 node.name: {{ elasticsearch__node_name }}
+#
+{% if elasticsearch__node_roles is defined and elasticsearch__node_roles | length %}
+node.roles: {{ elasticsearch__node_roles | ansible.builtin.to_yaml }}
+{% endif %}
 #
 # Add custom attributes to the node:
 #

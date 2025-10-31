@@ -191,12 +191,13 @@ If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blo
 | `elasticsearch__cluster_name__host_var` / <br> `elasticsearch__cluster_name__group_var` | A descriptive name for your cluster. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
 | `elasticsearch__cluster_routing_allocation_awareness_attributes` | List of awareness attribute names to enable [shard allocation awareness](https://www.elastic.co/docs/deploy-manage/distributed-architecture/shard-allocation-relocation-recovery/shard-allocation-awareness). Distributes replicas across different attribute values to minimize risk of data loss during failures. Configure the same attributes on all master-eligible nodes | `[]` |
 | `elasticsearch__cluster_routing_allocation_awareness_force` | Dictionary for forced awareness to prevent replica overloading when a location fails. Key is the attribute name, value is list of expected attribute values. Elasticsearch will leave replicas unassigned rather than concentrating them in remaining locations. | `{}` |
-| `elasticsearch__discovery_seed_hosts` | A list of IPs or hostnames that point to other master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten using `:9301`, for example. | unset |
+| `elasticsearch__discovery_seed_hosts` | A list of IPs or hostnames that point to all master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten using `:9301`, for example. | unset |
 | `elasticsearch__http_cert` | ASCII-armored PEM HTTP certificate. | unset |
 | `elasticsearch__http_key` | ASCII-armored PEM HTTP private key. | unset |
 | `elasticsearch__network_host` | Sets the address for both HTTP and transport traffic. Accepts an IP address, a hostname, or a [special value](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/modules-network.html#network-interface-values). | `'_local_'` |
 | `elasticsearch__node_attributes` | Dictionary of custom node attributes. Can be used for shard allocation awareness. Each attribute identifies a node's physical location or characteristic. | `{}` |
 | `elasticsearch__node_name` | A descriptive name for the node | `'{{ ansible_facts["nodename"] }}'` |
+| `elasticsearch__node_roles` | List of roles for this node. Available roles: `master`, `data`, `data_content`, `data_hot`, `data_warm`, `data_cold`, `data_frozen`, `ingest`, `ml`, `remote_cluster_client`, `transform`, `voting_only`. See [Elasticsearch node roles documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html#node-roles). | unset |
 | `elasticsearch__path_data` | Path to the directory where Elasticsearch stores its data. | `'/data'` |
 | `elasticsearch__path_repos` | Paths pointing to [Shared file system repositories](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/shared-file-system-repository) used for snapshots (backups). | `[]` |
 | `elasticsearch__service_enabled` | Enables or disables the elasticsearch service, analogous to `systemctl enable/disable --now`. | `true` |
@@ -230,6 +231,9 @@ elasticsearch__node_attributes:
   datacenter: 'dc1'
   host: 'pod01'
 elasticsearch__node_name: 'node1'
+elasticsearch__node_roles:
+  - 'master'
+  - 'remote_cluster_client'
 elasticsearch__path_data: '/data'
 elasticsearch__path_repos:
   - '/mnt/backups'
