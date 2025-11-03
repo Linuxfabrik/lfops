@@ -17,6 +17,26 @@
     - 'icinga2_master'
 
 
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ __task_file }}'
+  when: '__task_file | length'
+  vars:
+    __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
+    __first_found_options:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+      skip: true
+  tags:
+    - 'always'
+
+
 - block:
 
   - name: 'deploy /etc/icinga2/conf.d/api-users.conf'
