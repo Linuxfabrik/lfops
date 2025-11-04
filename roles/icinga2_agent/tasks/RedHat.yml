@@ -1,0 +1,12 @@
+- block:
+
+  - name: 'Deploy /etc/logrotate.d/icinga2'
+    ansible.builtin.template:
+      src: 'etc/logrotate.d/icinga2.j2'
+      dest: '/etc/logrotate.d/icinga2'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'icinga2_agent:logrotate'
