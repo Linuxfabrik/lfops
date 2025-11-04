@@ -18,6 +18,7 @@ If you use the ["Setup Icinga2 Master" Playbook](https://github.com/Linuxfabrik/
 | `icinga2_master`           | Installs and configures Icinga2 as a master | Restarts icinga2.service |
 | `icinga2_master:api_users` | Manages the Icinga2 API users               | Restarts icinga2.service |
 | `icinga2_master:state`     | Manages the state of the Icinga2 service    | - |
+| `icinga2_master:logrotate` | Deploys the custom Logrotate Icinga2 Configuration File. Serves as a Hotfix for the following Issue [RLIMIT permission warnings](https://github.com/Icinga/icinga2/issues/10617) | - |
 
 
 ## Mandatory Role Variables
