@@ -2,7 +2,7 @@
 
   - name: 'setenforce {{ selinux__state }}'
     ansible.posix.selinux:
-      policy: 'targeted'
+      policy: '{{ selinux__policy }}'
       state: '{{ selinux__state }}'
 
   tags:

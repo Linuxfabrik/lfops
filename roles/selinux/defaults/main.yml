@@ -1,3 +1,4 @@
+selinux__policy: 'targeted'
 selinux__state: 'enforcing'
 
 selinux__booleans__dependent_var: []
