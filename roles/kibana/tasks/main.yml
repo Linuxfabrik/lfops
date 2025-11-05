@@ -1,0 +1,83 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'kibana'
+    - 'kibana:configure'
+    - 'kibana:state'
+
+- block:
+
+  - name: 'Install kibana'
+    ansible.builtin.package:
+      name:
+        - 'kibana'
+      state: 'present'
+
+  tags:
+    - 'kibana'
+
+
+- block:
+
+  - name: 'mkdir -p /etc/kibana/certs'
+    ansible.builtin.file:
+      path: '/etc/kibana/certs'
+      state: 'directory'
+      owner: 'kibana'
+      group: 'kibana'
+      mode: 0o750
+
+  - name: 'Deploy /etc/kibana/certs/ca.crt'
+    ansible.builtin.copy:
+      dest: '/etc/kibana/certs/ca.crt'
+      content: '{{ kibana__elasticsearch_ca_cert }}'
+      owner: 'kibana'
+      group: 'kibana'
+      mode: 0o640
+    notify: 'kibana: restart kibana'
+
+  # block
+  when:
+    - 'kibana__elasticsearch_ca_cert is defined and kibana__elasticsearch_ca_cert | length'
+  tags:
+    - 'kibana'
+    - 'kibana:configure'
+
+
+- block:
+
+  - name: 'deploy /etc/kibana/kibana.yml'
+    ansible.builtin.template:
+      src: 'etc/kibana/kibana.yml.j2'
+      dest: '/etc/kibana/kibana.yml'
+      owner: 'root'
+      group: 'kibana'
+      mode: 0o660
+      backup: true
+    notify: 'kibana: restart kibana'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/kibana/kibana.yml'
+
+  tags:
+    - 'kibana'
+    - 'kibana:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ kibana__service_enabled | bool | ternary("enable", "disable") }} --now kibana.service'
+    ansible.builtin.systemd:
+      name: 'kibana.service'
+      enabled: '{{ kibana__service_enabled }}'
+      state: '{{ kibana__service_state }}'
+
+  tags:
+    - 'kibana'
+    - 'kibana:state'

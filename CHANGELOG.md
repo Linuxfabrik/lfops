@@ -21,6 +21,12 @@ Role:repo_elasticsearch_oss
 
 ### Added
 
+Role:kibana
+* Added
+
+Role:selinux:
+* Added `selinux__policy` variable
+
 Role:elasticsearch
 * Made `node.roles` variable
 * Added variables for allocation awareness

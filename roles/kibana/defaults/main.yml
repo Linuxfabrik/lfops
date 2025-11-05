@@ -1,0 +1,10 @@
+kibana__csp_strict: true
+kibana__elasticsearch_hosts:
+  - 'https://localhost:9200'
+kibana__elasticsearch_ssl_verification_mode: 'full'
+kibana__server_host: '0.0.0.0'
+kibana__server_name: '{{ ansible_facts["nodename"] }}'
+kibana__server_port: 5601
+kibana__server_security_response_headers_disable_embedding: true
+kibana__service_enabled: true
+kibana__service_state: 'started'

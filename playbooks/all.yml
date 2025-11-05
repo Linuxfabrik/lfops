@@ -52,6 +52,7 @@
 - import_playbook: 'kdump.yml'
 - import_playbook: 'keepalived.yml'
 - import_playbook: 'kernel_settings.yml'
+- import_playbook: 'kibana.yml'
 - import_playbook: 'kvm_host.yml'
 - import_playbook: 'kvm_vm.yml'
 - import_playbook: 'libmaxminddb.yml'
