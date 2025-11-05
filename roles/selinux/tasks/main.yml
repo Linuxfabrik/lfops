@@ -69,3 +69,24 @@
   tags:
     - 'selinux'
     - 'selinux:port'
+
+
+- block:
+
+  - name: 'Combined SELinux restorecons:'
+    ansible.builtin.debug:
+      var: 'selinux__restorecons__combined_var'
+
+  - name: 'restorecon -v ...'
+    ansible.builtin.command:
+      cmd: 'restorecon -v{{ "F" if item["force"] | d(true) else "" }}{{ "r" if item["recursive"] | d(true) else "" }} {{ item["path"] }}'
+    loop: '{{ selinux__restorecons__combined_var }}'
+    when:
+      - 'selinux__state != "disabled"'
+      - 'item["state"] | d("present") == "present"'
+    register: '__selinux__restorecons__result'
+    changed_when: '__selinux__restorecons__result["stdout"] | length'
+
+  tags:
+    - 'selinux'
+    - 'selinux:restorecon'

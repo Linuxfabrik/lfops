@@ -21,6 +21,9 @@ Role:repo_elasticsearch_oss
 
 ### Added
 
+Role:selinux:
+* Added capability to run `restorecon`
+
 Role:kibana
 * Added
 

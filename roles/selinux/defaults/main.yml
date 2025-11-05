@@ -36,3 +36,15 @@ selinux__ports__combined_var: '{{ (
       selinux__ports__host_var
     ) | linuxfabrik.lfops.combine_lod(unique_key=["setype", "port", "proto"])
   }}'
+
+selinux__restorecons__dependent_var: []
+selinux__restorecons__group_var: []
+selinux__restorecons__host_var: []
+selinux__restorecons__role_var: []
+selinux__restorecons__combined_var: '{{ (
+      selinux__restorecons__role_var +
+      selinux__restorecons__dependent_var +
+      selinux__restorecons__group_var +
+      selinux__restorecons__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
