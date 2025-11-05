@@ -23,7 +23,7 @@ elasticsearch__cluster_routing_allocation_awareness_force: {}
 elasticsearch__network_host: '_local_'
 elasticsearch__node_attributes: {}
 elasticsearch__node_name: '{{ ansible_facts["nodename"] }}'
-elasticsearch__path_data: '/data'
+elasticsearch__path_data: '/var/lib/elasticsearch'
 elasticsearch__path_repos: []
 elasticsearch__service_enabled: true
 elasticsearch__service_state: 'started'
