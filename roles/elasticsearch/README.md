@@ -5,6 +5,30 @@ This role installs and configures an Elasticsearch server.
 Note that this role does NOT let you specify a particular Elasticsearch server version. It simply installs the latest available Elasticsearch server version from the repos configured in the system. If you want or need to install a specific version, have a look at the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
 
 
+## Mandatory Requirements
+
+* Enable the official elasticsearch repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
+
+If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml), this is automatically done for you.
+
+
+## Optional Requirements
+
+* Set `vm.swappiness` to 1. This can be done using the [linuxfabrik.lfops.kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings) role.
+
+If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml), this is automatically done for you.
+
+
+## Tags
+
+| Tag                       | What it does                                   | Reload / Restart               |
+| ---                       | ------------                                   | ----------------               |
+| `elasticsearch`           | Installs and configures Elasticsearch          | Restarts elasticsearch.service |
+| `elasticsearch:certs`     | Deploys TLS certificates                       | Restarts elasticsearch.service |
+| `elasticsearch:configure` | Deploys configuration files                    | Restarts elasticsearch.service |
+| `elasticsearch:state`     | Manages the state of the Elasticsearch service | -                              |
+
+
 ## Post-Installation Steps
 
 After setting up a single node or cluster, generate the initial password for the `elastic` user:
@@ -157,30 +181,6 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 6. Roll out the `elasticsearch__discovery_seed_hosts` to all cluster nodes
 
 
-## Mandatory Requirements
-
-* Enable the official elasticsearch repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
-
-If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml), this is automatically done for you.
-
-
-## Optional Requirements
-
-* Set `vm.swappiness` to 1. This can be done using the [linuxfabrik.lfops.kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings) role.
-
-If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml), this is automatically done for you.
-
-
-## Tags
-
-| Tag                       | What it does                                   | Reload / Restart               |
-| ---                       | ------------                                   | ----------------               |
-| `elasticsearch`           | Installs and configures Elasticsearch          | Restarts elasticsearch.service |
-| `elasticsearch:certs`     | Deploys TLS certificates                       | Restarts elasticsearch.service |
-| `elasticsearch:configure` | Deploys configuration files                    | Restarts elasticsearch.service |
-| `elasticsearch:state`     | Manages the state of the Elasticsearch service | -                              |
-
-
 ## Optional Role Variables
 
 | Variable | Description | Default Value |
@@ -198,7 +198,7 @@ If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blo
 | `elasticsearch__node_attributes` | Dictionary of custom node attributes. Can be used for shard allocation awareness. Each attribute identifies a node's physical location or characteristic. | `{}` |
 | `elasticsearch__node_name` | A descriptive name for the node | `'{{ ansible_facts["nodename"] }}'` |
 | `elasticsearch__node_roles` | List of roles for this node. Available roles: `master`, `data`, `data_content`, `data_hot`, `data_warm`, `data_cold`, `data_frozen`, `ingest`, `ml`, `remote_cluster_client`, `transform`, `voting_only`. See [Elasticsearch node roles documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html#node-roles). | unset |
-| `elasticsearch__path_data` | Path to the directory where Elasticsearch stores its data. | `'/data'` |
+| `elasticsearch__path_data` | Path to the directory where Elasticsearch stores its data. | `/var/lib/elasticsearch` |
 | `elasticsearch__path_repos` | Paths pointing to [Shared file system repositories](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/shared-file-system-repository) used for snapshots (backups). | `[]` |
 | `elasticsearch__service_enabled` | Enables or disables the elasticsearch service, analogous to `systemctl enable/disable --now`. | `true` |
 | `elasticsearch__service_state` | Controls the state of the elasticsearch service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |

@@ -32,6 +32,15 @@ If you use the [Example Playbook](https://github.com/Linuxfabrik/lfops/blob/main
 | `example:state`       | * step 1<br> * step 2                        |
 
 
+## Post-Installation Steps
+
+After setting up a single node or cluster, generate the initial password for the `example` user:
+
+```bash
+/usr/share/elasticsearch/bin/elasticsearch-reset-password --username example
+```
+
+
 ## Mandatory Role Variables
 
 | Variable | Description |
