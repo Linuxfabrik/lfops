@@ -9,4 +9,5 @@
       mode: 0o644
 
   tags:
+    - 'icinga2_master'
     - 'icinga2_master:logrotate'
