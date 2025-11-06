@@ -8,11 +8,11 @@
       group: 'root'
       mode: 0o755
 
-  - name: 'Limit shell__commands__combined_var if shell__limit_cmd is set'
+  - name: 'Limit shell__commands__combined_var if shell__limit_cmds is set'
     ansible.builtin.set_fact:
-      shell__commands__combined_var: '{{ shell__commands__combined_var | selectattr("name", "in", shell__limit_cmd) | list }}'
+      shell__commands__combined_var: '{{ shell__commands__combined_var | selectattr("name", "in", shell__limit_cmds) | list }}'
     when:
-      - 'shell__limit_cmd is defined and shell__limit_cmd | length'
+      - 'shell__limit_cmds is defined and shell__limit_cmds | length'
 
   - ansible.builtin.include_tasks: 'run-commands.yml'
     loop: '{{ shell__commands__combined_var | sort(attribute="name") }}'
