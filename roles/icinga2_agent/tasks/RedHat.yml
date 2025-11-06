@@ -9,4 +9,5 @@
       mode: 0o644
 
   tags:
+    - 'icinga2_agent'
     - 'icinga2_agent:logrotate'
