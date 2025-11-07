@@ -50,6 +50,9 @@ Role:acme_sh
 
 ### Fixed
 
+Role:repo_mariadb
+* Fix handling of GPG key for Debian & Ubuntu
+
 Role:keycloak
 * Install correct java version inside the role, removing the `keycloak__java_package_name` variable
 

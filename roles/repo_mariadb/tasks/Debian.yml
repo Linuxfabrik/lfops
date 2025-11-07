@@ -1,19 +1,19 @@
 - block:
 
   # https://mariadb.org/download/?t=repo-config&d=Debian+12+%22Bookworm%22&v=10.11
-  - name: 'curl https://mariadb.org/mariadb_release_signing_key.pgp --output /tmp/ansible.mariadb.gpg'
+  - name: 'curl https://mariadb.org/mariadb_release_signing_key.pgp --output /tmp/ansible.mariadb.asc'
     ansible.builtin.get_url:
       url: 'https://mariadb.org/mariadb_release_signing_key.pgp'
-      dest: '/tmp/ansible.mariadb.gpg'
+      dest: '/tmp/ansible.mariadb.asc'
       mode: 0o644
     delegate_to: 'localhost'
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.mariadb.gpg to remote host'
+  - name: 'copy /tmp/ansible.mariadb.asc to remote host'
     ansible.builtin.copy:
-      src: '/tmp/ansible.mariadb.gpg'
-      dest: '/etc/apt/keyrings/mariadb.gpg'
+      src: '/tmp/ansible.mariadb.asc'
+      dest: '/etc/apt/keyrings/mariadb.asc'
       owner: 'root'
       group: 'root'
       mode: 0o644

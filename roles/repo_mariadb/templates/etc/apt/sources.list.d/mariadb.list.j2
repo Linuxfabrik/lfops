@@ -1,10 +1,10 @@
 # {{ ansible_managed }}
-# 2025080401
+# 2025110701
 
 # MariaDB Server
 # To use a different major version of the server, or to pin to a specific minor version, change URI below.
 {% if repo_mariadb__mirror_url is defined and repo_mariadb__mirror_url | length %}
-deb [signed-by=/etc/apt/keyrings/mariadb.gpg] {{ repo_mariadb__mirror_url }}/MariaDB/mariadb-server/{{ repo_mariadb__version }}/repo/debian {{ ansible_facts["distribution_release"] }} main
+deb [signed-by=/etc/apt/keyrings/mariadb.asc] {{ repo_mariadb__mirror_url }}/MariaDB/mariadb-server/{{ repo_mariadb__version }}/repo/{{ ansible_facts["distribution"] | lower }} {{ ansible_facts["distribution_release"] }} main
 {% else %}
-deb [signed-by=/etc/apt/keyrings/mariadb.gpg] https://deb.mariadb.org/{{ repo_mariadb__version }}/debian {{ ansible_facts["distribution_release"] }} main
+deb [signed-by=/etc/apt/keyrings/mariadb.asc] https://deb.mariadb.org/{{ repo_mariadb__version }}/{{ ansible_facts["distribution"] | lower }} {{ ansible_facts["distribution_release"] }} main
 {% endif %}
