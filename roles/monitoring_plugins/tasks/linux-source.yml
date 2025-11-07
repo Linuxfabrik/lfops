@@ -69,11 +69,23 @@
 - block:
 
   # needed for plugins that run with "sudo"
-  - name: '`pip3 install --requirement=/tmp/requirements.txt --user --require-hashes` for user root'
-    ansible.builtin.pip:
-      requirements: '/tmp/requirements.txt'
-      extra_args: '--user --require-hashes'
-      executable: 'pip3'
+  - block:
+
+      - name: '`pip3 install --requirement=/tmp/requirements.txt --user --require-hashes` for user root'
+        ansible.builtin.pip:
+          requirements: '/tmp/requirements.txt'
+          extra_args: '--user --require-hashes'
+          executable: 'pip3'
+
+    rescue:
+
+      - name: 'Retry pip3 install with --break-system-packages for user root'
+        ansible.builtin.pip:
+          requirements: '/tmp/requirements.txt'
+          extra_args: '--user --require-hashes --break-system-packages'
+          executable: 'pip3'
+        when:
+          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
 
   tags:
     - 'monitoring_plugins'
@@ -89,13 +101,28 @@
     changed_when: false
     failed_when: false
 
-  - name: '`pip3 install --requirement=/tmp/requirements.txt --user --require-hashes` for user {{ monitoring_plugins__icinga_user }}'
-    ansible.builtin.pip:
-      requirements: '/tmp/requirements.txt'
-      extra_args: '--user --require-hashes'
-      executable: 'pip3'
-    become: true
-    become_user: '{{ monitoring_plugins__icinga_user }}'
+  - block:
+
+      - name: '`pip3 install --requirement=/tmp/requirements.txt --user --require-hashes` for user {{ monitoring_plugins__icinga_user }}'
+        ansible.builtin.pip:
+          requirements: '/tmp/requirements.txt'
+          extra_args: '--user --require-hashes'
+          executable: 'pip3'
+        become: true
+        become_user: '{{ monitoring_plugins__icinga_user }}'
+
+    rescue:
+
+      - name: 'Retry pip3 install with --break-system-packages for user {{ monitoring_plugins__icinga_user }}'
+        ansible.builtin.pip:
+          requirements: '/tmp/requirements.txt'
+          extra_args: '--user --require-hashes --break-system-packages'
+          executable: 'pip3'
+        become: true
+        become_user: '{{ monitoring_plugins__icinga_user }}'
+        when:
+          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
+
     when:
       - '__monitoring_plugins__icinga_user_check is defined'
       - '__monitoring_plugins__icinga_user_check["getent"] is defined'
