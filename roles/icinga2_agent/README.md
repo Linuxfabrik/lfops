@@ -13,10 +13,10 @@ Currently, this role only works if the host can reach the Icinga2 master API.
 | Tag                        | What it does                                                         | Reload / Restart |
 | ---                        | ------------                                                         | ---------------- |
 | `icinga2_agent`            | Installs and configures icinga2 as an agent                          | Restarts icinga2.service |
+| `icinga2_agent:logrotate` | Deploys the Icinga2 logrotate config. Serves as a hotfix for the following issue [RLIMIT permission warnings](https://github.com/Icinga/icinga2/issues/10617) | - |
 | `icinga2_agent:node_setup` | Runs the `icinga2 node setup` and registers the host in the Director | Restarts icinga2.service |
 | `icinga2_agent:state`      | Manages the state of the Icinga2 service                             | - |
 | `icinga2_agent:update`     | Updates the Icinga2 package and restarts the service                 | Restarts icinga2.service |
-
 
 ## Mandatory Role Variables
 
