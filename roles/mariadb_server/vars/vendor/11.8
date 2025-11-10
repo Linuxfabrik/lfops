@@ -49,6 +49,7 @@ binlog-format                                                MIXED
 binlog-gtid-index                                            TRUE
 binlog-gtid-index-page-size                                  4096
 binlog-gtid-index-span-min                                   65536
+binlog-large-commit-threshold                                134217728
 binlog-legacy-event-pos                                      FALSE
 binlog-optimize-thread-scheduling                            TRUE
 binlog-row-event-max-size                                    8192
@@ -59,12 +60,12 @@ binlog-stmt-cache-size                                       32768
 block-encryption-mode                                        aes-128-ecb
 bulk-insert-buffer-size                                      8388608
 character-set-client-handshake                               TRUE
-character-set-collations
+character-set-collations                                     utf8mb3=uca1400_ai_ci,utf8mb4=uca1400_ai_ci,ucs2=uca1400_ai_ci,utf16=uca1400_ai_ci,utf32=uca1400_ai_ci
 character-set-filesystem                                     binary
-character-set-server                                         latin1
+character-set-server                                         utf8mb4
 character-sets-dir                                           /usr/share/mariadb/charsets/
 chroot                                                       (No default value)
-collation-server                                             latin1_swedish_ci
+collation-server                                             utf8mb4_uca1400_ai_ci
 column-compression-threshold                                 100
 column-compression-zlib-level                                6
 column-compression-zlib-strategy                             DEFAULT_STRATEGY
@@ -153,6 +154,7 @@ innodb                                                       ON
 innodb-adaptive-flushing                                     TRUE
 innodb-adaptive-flushing-lwm                                 10
 innodb-adaptive-hash-index                                   FALSE
+innodb-adaptive-hash-index-cells                             16381
 innodb-adaptive-hash-index-parts                             8
 innodb-alter-copy-bulk                                       TRUE
 innodb-autoextend-increment                                  64
@@ -266,7 +268,7 @@ innodb-online-alter-log-max-size                             134217728
 innodb-open-files                                            0
 innodb-optimize-fulltext-only                                FALSE
 innodb-page-size                                             16384
-innodb-prefix-index-cluster-optimization                     TRUE
+innodb-prefix-index-cluster-optimization                     FALSE
 innodb-print-all-deadlocks                                   FALSE
 innodb-purge-batch-size                                      127
 innodb-purge-threads                                         4
@@ -276,7 +278,7 @@ innodb-read-io-threads                                       4
 innodb-read-only                                             FALSE
 innodb-read-only-compressed                                  FALSE
 innodb-rollback-on-timeout                                   FALSE
-innodb-snapshot-isolation                                    FALSE
+innodb-snapshot-isolation                                    TRUE
 innodb-sort-buffer-size                                      1048576
 innodb-spin-wait-delay                                       4
 innodb-stats-auto-recalc                                     TRUE
@@ -347,6 +349,7 @@ log-queries-not-using-indexes                                FALSE
 log-short-format                                             FALSE
 log-slave-updates                                            FALSE
 log-slow-admin-statements                                    TRUE
+log-slow-always-query-time                                   31536000
 log-slow-disabled-statements                                 sp
 log-slow-filter                                              admin,filesort,filesort_on_disk,filesort_priority_queue,full_join,full_scan,query_cache,query_cache_miss,tmp_table,tmp_table_on_disk
 log-slow-max-warnings                                        10
@@ -390,11 +393,17 @@ max-session-mem-used                                         9223372036854775807
 max-sort-length                                              1024
 max-sp-recursion-depth                                       0
 max-statement-time                                           0
+max-tmp-session-space-usage                                  1099511627776
+max-tmp-total-space-usage                                    1099511627776
 max-user-connections                                         0
 max-write-lock-count                                         4294967295
 memlock                                                      FALSE
 metadata-locks-cache-size                                    1024
 metadata-locks-hash-instances                                8
+mhnsw-default-distance                                       euclidean
+mhnsw-default-m                                              6
+mhnsw-ef-search                                              20
+mhnsw-max-cache-size                                         16777216
 min-examined-row-limit                                       0
 mrr-buffer-size                                              262144
 myisam-block-size                                            1024
@@ -439,7 +448,7 @@ optimizer-rowid-copy-cost                                    0.002653
 optimizer-scan-setup-cost                                    10
 optimizer-search-depth                                       62
 optimizer-selectivity-sampling-limit                         100
-optimizer-switch                                             index_merge=on,index_merge_union=on,index_merge_sort_union=on,index_merge_intersection=on,index_merge_sort_intersection=off,index_condition_pushdown=on,derived_merge=on,derived_with_keys=on,firstmatch=on,loosescan=on,materialization=on,in_to_exists=on,semijoin=on,partial_match_rowid_merge=on,partial_match_table_scan=on,subquery_cache=on,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=on,semijoin_with_cache=on,join_cache_incremental=on,join_cache_hashed=on,join_cache_bka=on,optimize_join_buffer_size=on,table_elimination=on,extended_keys=on,exists_to_in=on,orderby_uses_equalities=on,condition_pushdown_for_derived=on,split_materialized=on,condition_pushdown_for_subquery=on,rowid_filter=on,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=on,cset_narrowing=off,sargable_casefold=on
+optimizer-switch                                             index_merge=on,index_merge_union=on,index_merge_sort_union=on,index_merge_intersection=on,index_merge_sort_intersection=off,index_condition_pushdown=on,derived_merge=on,derived_with_keys=on,firstmatch=on,loosescan=on,materialization=on,in_to_exists=on,semijoin=on,partial_match_rowid_merge=on,partial_match_table_scan=on,subquery_cache=on,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=on,semijoin_with_cache=on,join_cache_incremental=on,join_cache_hashed=on,join_cache_bka=on,optimize_join_buffer_size=on,table_elimination=on,extended_keys=on,exists_to_in=on,orderby_uses_equalities=on,condition_pushdown_for_derived=on,split_materialized=on,condition_pushdown_for_subquery=on,rowid_filter=on,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=on,cset_narrowing=on,sargable_casefold=on
 optimizer-trace
 optimizer-trace-max-mem-size                                 1048576
 optimizer-use-condition-selectivity                          4
@@ -492,7 +501,7 @@ performance-schema-max-socket-classes                        10
 performance-schema-max-socket-instances                      -1
 performance-schema-max-sql-text-length                       1024
 performance-schema-max-stage-classes                         160
-performance-schema-max-statement-classes                     222
+performance-schema-max-statement-classes                     223
 performance-schema-max-statement-stack                       10
 performance-schema-max-table-handles                         -1
 performance-schema-max-table-instances                       -1
@@ -557,7 +566,7 @@ secure-file-priv                                             (No default value)
 secure-timestamp                                             NO
 sequence                                                     ON
 server-id                                                    1
-server-uid                                                   RQ7K5DbImZjHazX/gLAJOofvbg8=
+server-uid                                                   SQTVDLV86ngTV1L78Va1588n+D0=
 session-track-schema                                         TRUE
 session-track-state-change                                   FALSE
 session-track-system-variables                               autocommit,character_set_client,character_set_connection,character_set_results,redirect_url,time_zone
@@ -569,6 +578,7 @@ skip-name-resolve                                            FALSE
 skip-networking                                              FALSE
 skip-show-database                                           FALSE
 skip-slave-start                                             FALSE
+slave-abort-blocking-timeout                                 31536000
 slave-compressed-protocol                                    FALSE
 slave-connections-needed-for-purge                           1
 slave-ddl-exec-mode                                          IDEMPOTENT
@@ -659,12 +669,12 @@ use-stat-tables                                              PREFERABLY_FOR_QUER
 user-variables                                               ON
 userstat                                                     FALSE
 verbose                                                      TRUE
-version                                                      11.4.9-MariaDB
+version                                                      11.8.4-MariaDB
 version-comment                                              MariaDB Server
 version-compile-machine                                      x86_64
 version-compile-os                                           Linux
 version-malloc-library                                       system
-version-source-revision                                      aa6a2e6bf05d43c3bb44db50566937a5f97a6580
+version-source-revision                                      c21d462e6adb8dfb5925b8a85900550ce1b3f2b6
 version-ssl-library                                          OpenSSL 3.0.7 1 Nov 2022
 wait-timeout                                                 28800
 wsrep-OSU-method                                             TOI
@@ -686,7 +696,6 @@ wsrep-forced-binlog-format                                   NONE
 wsrep-gtid-domain-id                                         0
 wsrep-gtid-mode                                              FALSE
 wsrep-ignore-apply-errors                                    7
-wsrep-load-data-splitting                                    FALSE
 wsrep-log-conflicts                                          FALSE
 wsrep-max-ws-rows                                            0
 wsrep-max-ws-size                                            2147483647

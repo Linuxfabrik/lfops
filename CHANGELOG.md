@@ -21,7 +21,10 @@ Role:repo_elasticsearch_oss
 
 ### Added
 
-Role:selinux:
+Role:mariadb_server
+* Added support for version 11.8 (LTS)
+
+Role:selinux
 * Added capability to run `restorecon`
 
 Role:kibana

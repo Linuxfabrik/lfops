@@ -15,6 +15,7 @@ This role is compatible with the following MariaDB versions:
 * 10.6 LTS
 * 10.11 LTS
 * 11.4 LTS
+* 11.8 LTS
 
 The role provides the `mariadb_server:upgrade` tag to update the MariaDB server. The tag upgrades to the newest available version, therefore make sure to switch the module stream or update the repository (optionally using the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) role).
 
