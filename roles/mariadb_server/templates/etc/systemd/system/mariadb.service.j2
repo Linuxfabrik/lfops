@@ -5,9 +5,54 @@
 # The cause of the problem:
 # MariaDB changed the `Exec=` settings in the service file causing the error, therefore we ship
 # the previous directives (which worked so far without problems).
+# To avoid further problems like
+# `/bin/chcon: cannot access '/var/lib/mysql/mysql.sock': No such file or directory` we simply
+# ship the complete previous service configuration section.
 
 
 [Service]
+
+##############################################################################
+## Core requirements
+##
+
+Type=notify
+
+# Setting this to true can break replication and the Type=notify settings
+# See also bind-address mariadbd option.
+PrivateNetwork=false
+
+##############################################################################
+## Package maintainers
+##
+
+User=mysql
+Group=mysql
+
+# CAP_IPC_LOCK To allow memlock to be used as non-root user
+# These are enabled by default
+AmbientCapabilities=CAP_IPC_LOCK
+
+# PrivateDevices=true implies NoNewPrivileges=true and
+# SUID auth_pam_tool suddenly doesn't do setuid anymore
+PrivateDevices=false
+
+# Prevent writes to /usr, /boot, and /etc
+ProtectSystem=full
+
+
+
+# Doesn't yet work properly with SELinux enabled
+# NoNewPrivileges=true
+
+# Prevent accessing /home, /root and /run/user
+ProtectHome=true
+
+# Execute pre and post scripts as root, otherwise it does it as User=
+PermissionsStartOnly=true
+
+
+
 # Perform automatic wsrep recovery. When server is started without wsrep,
 # galera_recovery simply returns an empty string. In any case, however,
 # the script is not expected to return with a non-zero status.
@@ -18,6 +63,9 @@ ExecStartPre=/bin/sh -c "[ ! -e /usr/bin/galera_recovery ] && VAR= || \
  VAR=`/usr/bin/galera_recovery`; [ $? -eq 0 ] \
  && systemctl set-environment _WSREP_START_POSITION=$VAR || exit 1"
 
+# Needed to create system tables etc.
+# ExecStartPre=/usr/bin/mariadb-install-db -u mysql
+
 # Start main service
 # MYSQLD_OPTS here is for users to set in /etc/systemd/system/mariadb.service.d/MY_SPECIAL.conf
 # Use the [Service] section and Environment="MYSQLD_OPTS=...".
@@ -27,3 +75,83 @@ ExecStart=/usr/sbin/mariadbd $MYSQLD_OPTS $_WSREP_NEW_CLUSTER $_WSREP_START_POSI
 
 # Unset _WSREP_START_POSITION environment variable.
 ExecStartPost=/bin/sh -c "systemctl unset-environment _WSREP_START_POSITION"
+
+
+
+KillSignal=SIGTERM
+
+# Don't want to see an automated SIGKILL ever
+SendSIGKILL=no
+
+# Restart crashed server only, on-failure would also restart, for example, when
+# my.cnf contains unknown option
+Restart=on-abnormal
+RestartSec=5s
+
+UMask=007
+
+##############################################################################
+## USERs can override
+##
+##
+## by creating a file in /etc/systemd/system/mariadb.service.d/MY_SPECIAL.conf
+## and adding/setting the following under [Service] will override this file's
+## settings.
+
+# Useful options not previously available in [mysqld_safe]
+
+# Kernels like killing mariadbd when out of memory because its big.
+# Lets temper that preference a little.
+# OOMScoreAdjust=-600
+
+# Explicitly start with high IO priority
+# BlockIOWeight=1000
+
+# If you don't use the /tmp directory for SELECT ... OUTFILE and
+# LOAD DATA INFILE you can enable PrivateTmp=true for a little more security.
+PrivateTmp=false
+
+# Set an explicit Start and Stop timeout of 900 seconds (15 minutes!)
+# this is the same value as used in SysV init scripts in the past
+# Galera might need a longer timeout, check the KB if you want to change this:
+# https://mariadb.com/kb/en/library/systemd/#configuring-the-systemd-service-timeout
+TimeoutStartSec=900
+TimeoutStopSec=900
+
+# Set the maximium number of tasks (threads) to 99% of what the system can
+# handle as set by the kernel, reserve the 1% for a remote ssh connection,
+# some monitoring, or that backup cron job. Without the directive this would
+# be 15% (see DefaultTasksMax in systemd man pages).
+TasksMax=99%
+
+##
+## Options previously available to be set via [mysqld_safe]
+## that now needs to be set by systemd config files as mysqld_safe
+## isn't executed.
+##
+
+# Number of files limit. previously [mysqld_safe] open-files-limit
+LimitNOFILE=32768
+
+# Maximium core size. previously [mysqld_safe] core-file-size
+# LimitCore=
+
+# Nice priority. previously [mysqld_safe] nice
+# Nice=-5
+
+# Timezone. previously [mysqld_safe] timezone
+# Environment="TZ=UTC"
+
+# Library substitutions. previously [mysqld_safe] malloc-lib with explicit paths
+# (in LD_LIBRARY_PATH) and library name (in LD_PRELOAD).
+# Environment="LD_LIBRARY_PATH=/path1 /path2" "LD_PRELOAD=
+
+# Flush caches. previously [mysqld_safe] flush-caches=1
+# ExecStartPre=sync
+# ExecStartPre=sysctl -q -w vm.drop_caches=3
+
+# numa-interleave=1 equalivant
+# Change ExecStart=numactl --interleave=all /usr/sbin/mariadbd......
+
+# crash-script equalivent
+# FailureAction=
