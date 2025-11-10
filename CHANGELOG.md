@@ -50,6 +50,9 @@ Role:acme_sh
 
 ### Fixed
 
+Role:mariadb_server
+* Fix `/run/mariadb/wsrep-start-position: No such file or directory` after update of MariaDB
+
 Role:repo_mariadb
 * Fix handling of GPG key for Debian & Ubuntu
 
