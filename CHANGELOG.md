@@ -53,6 +53,9 @@ Role:acme_sh
 
 ### Fixed
 
+Role:monitoring_plugin:
+* Changed to also install the `lib` via source if `monitoring_plugins__install_method: 'source'` is set
+
 Role:mariadb_server
 * Fix `/run/mariadb/wsrep-start-position: No such file or directory` after update of MariaDB
 

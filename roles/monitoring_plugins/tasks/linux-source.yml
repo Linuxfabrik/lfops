@@ -7,6 +7,13 @@
     vars:
       shared__monitoring_plugins_version: '{{ monitoring_plugins__version }}'
 
+  - name: 'Clone the lib repo'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'clone-lib-repo.yml'
+    vars:
+      shared__lib_version: '{{ monitoring_plugins__version }}'
+
   - name: 'Flatten check-plugins locally using shell'
     ansible.builtin.shell:
       cmd: |
@@ -62,6 +69,12 @@
       dest: '/tmp'
       mode: 'push'
 
+  - name: 'rsync lib requirements.txt to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.lib-repo/requirements.txt'
+      dest: '/tmp/lib-requirements.txt'
+      mode: 'push'
+
   tags:
     - 'monitoring_plugins'
 
@@ -82,6 +95,24 @@
       - name: 'Retry pip3 install with --break-system-packages for user root'
         ansible.builtin.pip:
           requirements: '/tmp/requirements.txt'
+          extra_args: '--user --require-hashes --break-system-packages'
+          executable: 'pip3'
+        when:
+          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
+
+  - block:
+
+      - name: '`pip3 install --requirement=/tmp/lib-requirements.txt --user --require-hashes` for user root'
+        ansible.builtin.pip:
+          requirements: '/tmp/lib-requirements.txt'
+          extra_args: '--user --require-hashes'
+          executable: 'pip3'
+
+    rescue:
+
+      - name: 'Retry pip3 install lib requirements with --break-system-packages for user root'
+        ansible.builtin.pip:
+          requirements: '/tmp/lib-requirements.txt'
           extra_args: '--user --require-hashes --break-system-packages'
           executable: 'pip3'
         when:
@@ -129,6 +160,34 @@
       - '__monitoring_plugins__icinga_user_check["getent"]["passwd"] is defined'
       - '__monitoring_plugins__icinga_user_check["getent"]["passwd"][monitoring_plugins__icinga_user] is defined'
 
+  - block:
+
+      - name: '`pip3 install --requirement=/tmp/lib-requirements.txt --user --require-hashes` for user {{ monitoring_plugins__icinga_user }}'
+        ansible.builtin.pip:
+          requirements: '/tmp/lib-requirements.txt'
+          extra_args: '--user --require-hashes'
+          executable: 'pip3'
+        become: true
+        become_user: '{{ monitoring_plugins__icinga_user }}'
+
+    rescue:
+
+      - name: 'Retry pip3 install lib requirements with --break-system-packages for user {{ monitoring_plugins__icinga_user }}'
+        ansible.builtin.pip:
+          requirements: '/tmp/lib-requirements.txt'
+          extra_args: '--user --require-hashes --break-system-packages'
+          executable: 'pip3'
+        become: true
+        become_user: '{{ monitoring_plugins__icinga_user }}'
+        when:
+          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
+
+    when:
+      - '__monitoring_plugins__icinga_user_check is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"] is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"] is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"][monitoring_plugins__icinga_user] is defined'
+
   tags:
     - 'monitoring_plugins'
 
@@ -152,6 +211,15 @@
       src: '/tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/'
       dest: '/usr/lib64/nagios/plugins/notifications/'
       mode: 'push'
+
+  - name: 'rsync lib to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.lib-repo/'
+      dest: '/usr/lib64/nagios/plugins/lib/'
+      mode: 'push'
+      rsync_opts:
+        - '--include=*.py'
+        - '--exclude=*'
 
   - name: 'restorecon -Fvr /usr/lib64/nagios/plugins/'
     ansible.builtin.command: 'restorecon -Fvr /usr/lib64/nagios/plugins/'

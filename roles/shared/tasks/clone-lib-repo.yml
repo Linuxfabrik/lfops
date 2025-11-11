@@ -1,0 +1,39 @@
+- name: 'Translate shared__lib_version'
+  ansible.builtin.set_fact:
+    __shared__lib_version: >-
+      {{ 'main' if shared__lib_version == 'dev'
+         else shared__lib_version if shared__lib_version.startswith('v')
+         else 'v' ~ shared__lib_version
+      }}
+
+
+- block:
+
+  - name: 'Clone the lib git repo to localhost (version: {{ __shared__lib_version }})'
+    ansible.builtin.git:
+      repo: 'https://github.com/Linuxfabrik/lib.git'
+      dest: '/tmp/ansible.lib-repo'
+      version: '{{ __shared__lib_version }}'
+      depth: 1
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+
+  rescue:
+
+    - name: 'Remove the old repo and clone again'
+      ansible.builtin.file:
+        path: '/tmp/ansible.lib-repo'
+        state: 'absent'
+      delegate_to: 'localhost'
+      changed_when: false # no change on the remote host
+
+    - name: 'Clone the lib git repo to localhost (version: {{ __shared__lib_version }})'
+      ansible.builtin.git:
+        repo: 'https://github.com/Linuxfabrik/lib.git'
+        dest: '/tmp/ansible.lib-repo'
+        version: '{{ __shared__lib_version }}'
+        depth: 1
+      delegate_to: 'localhost'
+      run_once: true
+      check_mode: false # run task even if `--check` is specified
