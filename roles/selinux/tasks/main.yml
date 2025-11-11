@@ -1,3 +1,17 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'selinux'
+    - 'selinux:fcontext'
+    - 'selinux:modules'
+    - 'selinux:port'
+    - 'selinux:restorecon'
+    - 'selinux:setenforce'
+    - 'selinux:setsebool'
+
+
 - block:
 
   - name: 'setenforce {{ selinux__state }}'
@@ -84,9 +98,87 @@
     when:
       - 'selinux__state != "disabled"'
       - 'item["state"] | d("present") == "present"'
-    register: '__selinux__restorecons__result'
-    changed_when: '__selinux__restorecons__result["stdout"] | length'
+    register: '__selinux__restorecons_result'
+    changed_when: '__selinux__restorecons_result["stdout"] | length'
 
   tags:
     - 'selinux'
     - 'selinux:restorecon'
+
+
+- name: 'Combined SELinux modules:'
+  ansible.builtin.debug:
+    var: 'selinux__modules__combined_var'
+  when: 'selinux__state != "disabled"'
+  tags:
+    - 'selinux'
+    - 'selinux:modules'
+
+
+- block:
+
+  - name: 'Install SELinux module compilation dependencies'
+    ansible.builtin.package:
+      name: '{{ __selinux__module_compilation_packages }}'
+      state: 'present'
+
+  - name: 'Create temporary directory for module compilation'
+    ansible.builtin.tempfile:
+      state: 'directory'
+      suffix: 'selinux__modules'
+    register: '__selinux__temp_dir_result'
+
+  - name: 'Copy SELinux module source directories to target'
+    ansible.builtin.copy:
+      src: '{{ item["src"] }}'
+      dest: '{{ __selinux__temp_dir_result["path"] }}/{{ item["name"] }}/'
+      mode: 0o0755
+    loop: '{{ selinux__modules__combined_var | selectattr("state", "undefined") | list + selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list }}'
+
+  - name: 'Compile SELinux modules using policy devel Makefile'
+    ansible.builtin.command:
+      cmd: 'make -f /usr/share/selinux/devel/Makefile {{ item["name"] }}.pp'
+      chdir: '{{ __selinux__temp_dir_result["path"] }}/{{ item["name"] }}'
+    loop: '{{ selinux__modules__combined_var | selectattr("state", "undefined") | list + selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list }}'
+    register: '__selinux__compile_result'
+    changed_when: false
+
+  - name: 'Install or upgrade SELinux modules'
+    ansible.builtin.command:
+      cmd: 'semodule --install {{ __selinux__temp_dir_result["path"] }}/{{ item["name"] }}/{{ item["name"] }}.pp'
+    loop: '{{ selinux__modules__combined_var | selectattr("state", "undefined") | list + selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list }}'
+    register: '__selinux__install_module_result'
+
+  - name: 'Clean up temporary directory'
+    ansible.builtin.file:
+      path: '{{ __selinux__temp_dir_result["path"] }}'
+      state: 'absent'
+
+  when:
+    - 'selinux__state != "disabled"'
+    - '(selinux__modules__combined_var | selectattr("state", "undefined") | list + selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list) | length'
+  tags:
+    - 'selinux'
+    - 'selinux:modules'
+
+
+- block:
+
+  - name: 'Get currently installed SELinux modules'
+    ansible.builtin.command: 'semodule --list-modules'
+    register: '__selinux__installed_modules_result'
+    changed_when: false
+
+  - name: 'Remove SELinux modules'
+    ansible.builtin.command:
+      cmd: 'semodule --remove {{ item["name"] }}'
+    loop: '{{ selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "absent") | list }}'
+    when: 'item["name"] in __selinux__installed_modules_result["stdout_lines"]'
+    register: '__selinux__remove_module_result'
+
+  when:
+    - 'selinux__state != "disabled"'
+    - '(selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "absent") | list) | length'
+  tags:
+    - 'selinux'
+    - 'selinux:modules'

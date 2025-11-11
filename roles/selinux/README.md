@@ -7,6 +7,7 @@ This role
 * sets SELinux file contexts using `semanage fcontext`. It does NOT automatically apply them using `restorecon` - have a look at `selinux__restorecons__*_var`
 * manages SELinux ports using `semanage port`
 * applies SELinux contexts to files using `restorecon`
+* compiles and installs custom SELinux policy modules from source (.te, .fc, .if files). Note: Module installation is not idempotent - modules with `state: present` will always be compiled and installed on each run
 
 
 ## Mandatory Requirements
@@ -18,8 +19,9 @@ This role
 
 | Tag                  | What it does                                                   | Reload / Restart |
 | ---                  | ------------                                                   | ---------------- |
-| `selinux`            | * `setenforce ...`<br> * `setsebool -P ...`<br> * `semanage fcontext --add --type ...`<br> * `restorecon ...` | - |
+| `selinux`            | * `setenforce ...`<br> * `setsebool -P ...`<br> * `semanage fcontext --add --type ...`<br> * `restorecon ...`<br> * `semodule -i ...` | - |
 | `selinux:fcontext`   | * `semanage fcontext --add --type ...` | - |
+| `selinux:modules`    | * `semodule -i ...`<br> * `semodule -r ...` | - |
 | `selinux:port`   | * `semanage port --add --type ... --proto ...` | - |
 | `selinux:restorecon` | * `restorecon ...` | - |
 | `selinux:setenforce` | * `setenforce ...` | - |
@@ -32,6 +34,7 @@ This role
 | -------- | ----------- | ------------- |
 | `selinux__booleans__host_var` /<br> `selinux__booleans__group_var` | A list of dictionaries containing SELinux booleans to set persistently. Subkeys:<br> * `key`: Mandatory, string. Key of the SELinux boolean.<br> * `value`: Mandatory, string. Value of the SELinux boolean.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `selinux__fcontexts__host_var` /<br> `selinux__fcontexts__group_var` | A list of dictionaries containing SELinux file contexts. Subkeys:<br> * `setype`: Mandatory, string. SELinux file type.<br> * `target`: Mandatory, string. The FILE_SPEC which maps file paths using regular expressions to SELinux labels. Either a fully qualified path, or a Perl compatible regular expression (PCRE).<br> * `state`: Optional, string. Whether the SELinux file context must be `absent` or `present`. Defaults to `'present'`. | `[]` |
+| `selinux__modules__host_var` /<br> `selinux__modules__group_var` | A list of dictionaries containing custom SELinux policy modules to compile and install. Subkeys:<ul><li>`name`: Mandatory, string. Name of the SELinux module.</li><li>`src`: Mandatory, string. Path to directory containing module source files. The directory must contain a `.te` file with the same basename as the module name. Optional `.fc` (file context) and `.if` (interface) files will be included if present.</li><li>`state`: Optional, string. Whether the module must be `absent` or `present`. Defaults to `'present'`.</li></ul>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). Note: Modules with `state: present` will always be compiled and installed on each run to ensure they stay up-to-date with source changes. | `[]` |
 | `selinux__policy` | The name of the SELinux policy to use. | `'targeted'` |
 | `selinux__ports__host_var` /<br> `selinux__ports__group_var` | A list of dictionaries containing SELinux ports. Subkeys:<ul><li>`setype`: Mandatory, string. SELinux port type.</li><li>`port`: Mandatory, string. Port or port range.</li><li>`proto`: Optional, string. Protocol for the specified port (range). Defaults to `'tcp'`.</li><li>`state`: Optional, string. Whether the SELinux port must be `absent` or `present`. Defaults to `'present'`.</li></ul> | `[]` |
 | `selinux__restorecons__host_var` /<br> `selinux__restorecons__group_var` | A list of dictionaries containing paths to run `restorecon` on. Subkeys:<ul><li>`path`: Mandatory, string. Path to restore SELinux context on.</li><li>`force`: Optional, boolean. If `true`, forces complete context replacement (`-F` flag). Defaults to `true`.</li><li>`recursive`: Optional, boolean. If `true`, recursively restores contexts in directories (`-r` flag). Defaults to `true`.</li><li>`state`: Optional, string. Whether restorecon should be run (`present`) or skipped (`absent`). Defaults to `'present'`.</li></ul>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
@@ -56,6 +59,14 @@ selinux__fcontexts__host_var:
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/.htaccess'
     state: 'present'
+selinux__modules__host_var:
+  - name: 'myapp_policy'
+    src: '{{ inventory_dir }}/host_files/selinux/myapp_policy' # directory containing myapp_policy.te, myapp_policy.fc, myapp_policy.if
+    state: 'present'
+  - name: 'custom_httpd'
+    src: '{{ inventory_dir }}/host_files/selinux/custom_httpd'
+  - name: 'old_module'
+    state: 'absent'
 selinux__policy: 'default'
 selinux__ports__host_var:
   - setype: 'http_port_t'

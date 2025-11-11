@@ -21,6 +21,9 @@ Role:repo_elasticsearch_oss
 
 ### Added
 
+Role:selinux
+* Added handling of SELinux modules
+
 Role:mariadb_server
 * Added support for version 11.8 (LTS)
 
