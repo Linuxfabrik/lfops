@@ -9,8 +9,8 @@ This role installs and configures [Mastodon](https://joinmastodon.org/), a feder
 * Install the PostgreSQL server. This can be done using the [linuxfabrik.lfops.postgresql_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/postgresql_server) role.
 * Create a PostgreSQL user for Mastodon. This can be done using the [linuxfabrik.lfops.postgresql_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/postgresql_server) role.
 * Install Redis. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) role.
-* Enable the Elasticsearch repository (optional). This can be done using the [linuxfabrik.lfops.repo_elasticsearch_oss](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch_oss) role.
-* Install Elasticsearch (optional). This can be done using the [linuxfabrik.lfops.elasticsearch_oss](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch_oss) role.
+* Enable the Elasticsearch repository (optional). This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
+* Install Elasticsearch (optional). This can be done using the [linuxfabrik.lfops.elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch) role.
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 * Install Apache HTTPd. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
 
@@ -27,7 +27,7 @@ postgresql_server__conf_listen_addresses:
 redis__conf_bind: 'fqdn.example.com' # Allow access from container. Make sure the DNS entry (or /etc/hosts) points to the correct ip (not 127.)
 
 # Elasticsearch (if needed)
-elasticsearch_oss__network_host: 'fqdn.example.com' # Allow access from container. Make sure the DNS entry (or /etc/hosts) points to the correct ip (not 127.)
+elasticsearch__network_host: 'fqdn.example.com' # Allow access from container. Make sure the DNS entry (or /etc/hosts) points to the correct ip (not 127.)
 ```
 
 

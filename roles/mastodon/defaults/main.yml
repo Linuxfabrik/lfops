@@ -78,19 +78,19 @@ mastodon__apache_httpd__vhosts__dependent_var:
       - 'PUT'
     raw: |
       DocumentRoot {{ mastodon__user_home_directory }}/public
-      
+
       EnableSendfile on
-      
+
       # Mastodon recommendation
       LimitRequestBody 104857600
-      
+
       # Mastodon recommendation
       AddOutputFilterByType DEFLATE text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript image/svg+xml image/x-icon
       DeflateCompressionLevel 6
       DeflateBuffersize 8096
       DeflateFilterNote Input instream
       DeflateFilterNote Output outstream
-      
+
       <Location "/system">
           # Assets from here are directly served by Apache for better performance
           Header set Cache-Control "public, max-age=2419200, immutable"
@@ -104,7 +104,7 @@ mastodon__apache_httpd__vhosts__dependent_var:
       ProxyPass / http://127.0.0.1:3000/
       ProxyPassReverse / http://127.0.0.1:3000/
 
-mastodon__elasticsearch_oss__cluster_name__dependent_var: 'es-mastodon'
+mastodon__elasticsearch__cluster_name__dependent_var: 'es-mastodon'
 
 mastodon__login__users__dependent_var:
   - name: 'mastodon'

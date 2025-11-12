@@ -52,7 +52,7 @@
     - 'mastodon'
     - 'mastodon:deploy_search'
   when:
-    - 'not setup_mastodon__skip_elasticsearch_oss | d(false)'
+    - 'not setup_mastodon__skip_elasticsearch | d(false)'
 
 
 - block:

@@ -54,20 +54,20 @@
       when:
         - 'not setup_mastodon__skip_redis | d(false)'
 
-    - role: 'linuxfabrik.lfops.repo_elasticsearch_oss'
-      repo_elasticsearch_oss__version__dependent_var: '{{
-          mastodon__repo_elasticsearch_oss__version__dependent_var
+    - role: 'linuxfabrik.lfops.repo_elasticsearch'
+      repo_elasticsearch__version__dependent_var: '{{
+          mastodon__repo_elasticsearch__version__dependent_var
         }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_mastodon__skip_repo_elasticsearch_oss | default(false)'
+        - 'not setup_mastodon__skip_repo_elasticsearch | default(false)'
 
-    - role: 'linuxfabrik.lfops.elasticsearch_oss'
-      elasticsearch_oss__cluster_name__dependent_var: '{{
-         mastodon__elasticsearch_oss__cluster_name__dependent_var
+    - role: 'linuxfabrik.lfops.elasticsearch'
+      elasticsearch__cluster_name__dependent_var: '{{
+         mastodon__elasticsearch__cluster_name__dependent_var
         }}'
       when:
-        - 'not setup_mastodon__skip_elasticsearch_oss | d(false)'
+        - 'not setup_mastodon__skip_elasticsearch | d(false)'
 
     - role: 'linuxfabrik.lfops.login'
       login__users__dependent_var: '{{
