@@ -133,6 +133,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    when: 'elasticsearch__discovery_seed_hosts is defined and elasticsearch__discovery_seed_hosts | length'
 
   tags:
     - 'elasticsearch'
