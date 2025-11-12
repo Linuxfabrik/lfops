@@ -21,6 +21,9 @@ Role:repo_elasticsearch_oss
 
 ### Added
 
+Role:podman_containers
+* Added option to enable the `podman-auto-update.timer`
+
 Role:selinux
 * Added handling of SELinux modules
 

@@ -222,3 +222,80 @@
   tags:
     - 'podman_containers'
     - 'podman_containers:state'
+
+
+- block:
+
+  - name: 'mkdir -p /etc/systemd/system/podman-auto-update.timer.d/ # system'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/podman-auto-update.timer.d/'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    when:
+      - 'podman_containers__auto_update__combined_var | selectattr("user", "equalto", "root") | selectattr("on_calendar", "defined") | length'
+
+  - name: 'mkdir -p ~/.config/systemd/user/podman-auto-update.timer.d/ # user'
+    ansible.builtin.file:
+      path: '~{{ item["user"] }}/.config/systemd/user/podman-auto-update.timer.d/'
+      state: 'directory'
+      owner: '{{ item["user"] }}'
+      group: '{{ item["user"] }}'
+      mode: 0o755
+    become: true
+    become_user: '{{ item["user"] }}'
+    when:
+      - 'item["user"] != "root"'
+      - 'item["on_calendar"] is defined'
+    loop: '{{ podman_containers__auto_update__combined_var }}'
+    loop_control:
+      label: '{{ item["user"] }}'
+
+  - name: 'Deploy podman-auto-update.timer.d/z00-linuxfabrik.conf # system'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/podman-auto-update.timer.d/z00-linuxfabrik.conf.j2'
+      dest: '/etc/systemd/system/podman-auto-update.timer.d/z00-linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    vars:
+      __podman_containers__auto_update_on_calendar: '{{ (podman_containers__auto_update__combined_var | selectattr("user", "equalto", "root") | first)["on_calendar"] }}'
+    when:
+      - 'podman_containers__auto_update__combined_var | selectattr("user", "equalto", "root") | selectattr("on_calendar", "defined") | length'
+    notify: 'podman_containers: systemctl daemon-reload'
+
+  - name: 'Deploy podman-auto-update.timer.d/z00-linuxfabrik.conf # user'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/podman-auto-update.timer.d/z00-linuxfabrik.conf.j2'
+      dest: '~{{ item["user"] }}/.config/systemd/user/podman-auto-update.timer.d/z00-linuxfabrik.conf'
+      owner: '{{ item["user"] }}'
+      group: '{{ item["user"] }}'
+      mode: 0o644
+    vars:
+      __podman_containers__auto_update_on_calendar: '{{ item["on_calendar"] }}'
+    become: true
+    become_user: '{{ item["user"] }}'
+    when:
+      - 'item["user"] != "root"'
+      - 'item["on_calendar"] is defined'
+    loop: '{{ podman_containers__auto_update__combined_var }}'
+    loop_control:
+      label: '{{ item["user"] }}'
+
+  - name: 'systemctl enable/disable (--user) --now podman-auto-update.timer'
+    ansible.builtin.systemd:
+      name: 'podman-auto-update.timer'
+      scope: '{{ (item["user"] == "root") | ternary(omit, "user") }}'
+      enabled: '{{ item["state"] | d("present") == "present" }}'
+      state: '{{ (item["state"] | d("present") == "present") | ternary("started", "stopped") }}'
+      daemon_reload: true
+    become: '{{ item["user"] != "root" }}'
+    become_user: '{{ (item["user"] != "root") | ternary(item["user"], omit) }}'
+    loop: '{{ podman_containers__auto_update__combined_var }}'
+    loop_control:
+      label: '{{ item["user"] }} - state: {{ item["state"] | d("present") }}'
+
+  tags:
+    - 'podman_containers'
+    - 'podman_containers:auto_update'
