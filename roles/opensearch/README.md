@@ -94,7 +94,7 @@ Only optional if `opensearch__plugins_security_disabled` is `true`.
 | `opensearch__plugins_security_transport_enforce_hostname_verification` | See https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup | `false` |
 | `opensearch__plugins_security_transport_resolve_hostname` | See https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup | `true` |
 | `opensearch__service_enabled` | Enables or disables the opensearch service, analogous to `systemctl enable/disable --now`. | `true` |
-| `opensearch__version__host_var` / <br> `opensearch__version__group_var` | The version of OpenSearch which should be installed. If unset, latest will be installed.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | unset |
+| `opensearch__version__host_var` / <br> `opensearch__version__group_var` | The version of OpenSearch which should be installed. If unset, latest will be installed. Note that this is OS-dependent. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | unset |
 
 Example:
 ```yaml
@@ -137,7 +137,8 @@ opensearch__plugins_security_transport_certificate_key: '{{ lookup("ansible.buil
 opensearch__plugins_security_transport_enforce_hostname_verification: false
 opensearch__plugins_security_transport_resolve_hostname: true
 opensearch__service_enabled: false
-opensearch__version__host_var: '2.15.0'
+opensearch__version__host_var: '-2.15.0' # rhel
+opensearch__version__host_var: '=2.15.0*' # debian
 ```
 
 ## Optional Role Variables - Cluster Configuration
