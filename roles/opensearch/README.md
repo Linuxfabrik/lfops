@@ -35,7 +35,7 @@ If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/m
 
 | Variable | Description |
 | -------- | ----------- |
-| `opensearch__opensearch_initial_admin_password` | Mandatory, string. For new installations of OpenSearch 2.12 and later, you must define a custom admin password in order to set up an OpenSearch instance. |
+| `opensearch__opensearch_initial_admin_password` | Mandatory, string. For new installations of OpenSearch 2.12 and later, you must define a custom admin password in order to set up an OpenSearch instance. *Attention*: minimum 8 characters, must contain at least one uppercase letter, one lowercase letter, one digit, and one special character. |
 
 Example:
 ```yaml
