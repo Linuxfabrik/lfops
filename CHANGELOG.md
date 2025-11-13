@@ -21,6 +21,9 @@ Role:repo_elasticsearch_oss
 
 ### Added
 
+Role:graylog_server
+* Re-added `graylog_server__elasticsearch_hosts` to allow setups without Graylog Data Node
+
 Role:podman_containers
 * Added option to enable the `podman-auto-update.timer`
 

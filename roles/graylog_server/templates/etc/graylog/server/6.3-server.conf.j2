@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024110601
+# 2025111301
 # 6.3
 ############################
 # GRAYLOG CONFIGURATION FILE
@@ -195,6 +195,9 @@ stream_aware_field_types=false
 #
 # Default: http://127.0.0.1:9200
 #elasticsearch_hosts = http://node1:9200,http://user:password@node2:9200
+{% if graylog_server__elasticsearch_hosts is defined and graylog_server__elasticsearch_hosts | length %}
+elasticsearch_hosts = {{ graylog_server__elasticsearch_hosts | join(',') }}
+{% endif %}
 
 # Maximum number of attempts to connect to elasticsearch on boot for the version probe.
 #
