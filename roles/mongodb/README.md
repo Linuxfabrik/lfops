@@ -117,7 +117,7 @@ To setup a replica set from scratch:
 * Rollout against the secondaries.
 * Set `mongodb__repl_set_members` on the primary (see below).
 * Rollout against the primary to initiate the replica set with the given members.
-* Check the state of the cluster by using `mongosh --username mongodb-admin --password linuxfabrik --eval 'rs.status()'` on any member.
+* Check the state of the cluster by using `mongosh --username mongodb-admin --password --eval 'rs.status()'` on any member. The output should contain all configured members.
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
