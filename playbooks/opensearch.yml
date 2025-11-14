@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.opensearch'
   hosts:
     - 'lfops_opensearch'
+  serial: 1 # required for the handlers to work correctly when managing a galera cluster
 
   pre_tasks:
     - ansible.builtin.import_role:
