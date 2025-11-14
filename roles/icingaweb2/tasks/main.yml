@@ -15,9 +15,9 @@
       name: '{{ icingaweb2__required_packages }}'
       state: 'present'
 
-  - name: 'usermod -a -G icingaweb2 icinga'
+  - name: 'usermod -a -G icingaweb2 {{ __icingaweb2__icinga_user }}'
     ansible.builtin.user:
-      name: 'icinga'
+      name: '{{ __icingaweb2__icinga_user }}'
       groups:
         - 'icingaweb2'
       append: true

@@ -62,7 +62,10 @@ Role:acme_sh
 
 ### Fixed
 
-Role:monitoring_plugin:
+Role:icingaweb2
+* Fixed icinga username for Debian
+
+Role:monitoring_plugin
 * Changed to also install the `lib` via source if `monitoring_plugins__install_method: 'source'` is set
 
 Role:mariadb_server
