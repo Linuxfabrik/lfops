@@ -10,6 +10,11 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
+tbd
+
+
+## [v5.0.0] - 2025-11-14
+
 ### Breaking Changes
 
 Role:elasticsearch_oss
@@ -926,7 +931,8 @@ Bug fixes:
 * Module Util: gnupg
 
 
-[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v5.0.0...HEAD
+[v5.0.0]: https://github.com/Linuxfabrik/lfops/compare/v4.0.0...v5.0.0
 [v4.0.0]: https://github.com/Linuxfabrik/lfops/compare/v3.0.0...v4.0.0
 [v3.0.0]: https://github.com/Linuxfabrik/lfops/compare/v2.0.1...v3.0.0
 [v2.0.1]: https://github.com/Linuxfabrik/lfops/compare/v2.0.0...v2.0.1
