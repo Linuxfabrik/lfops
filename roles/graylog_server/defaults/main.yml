@@ -13,24 +13,22 @@ graylog_server__system_index_sets__group_var: []
 graylog_server__system_index_sets__host_var: []
 graylog_server__system_index_sets__role_var: []
 graylog_server__system_index_sets__combined_var: '{{ (
-      graylog_server__system_index_sets__role_var +
-      graylog_server__system_index_sets__dependent_var +
-      graylog_server__system_index_sets__group_var +
-      graylog_server__system_index_sets__host_var
-    ) | linuxfabrik.lfops.combine_lod
-  }}'
+  graylog_server__system_index_sets__role_var +
+  graylog_server__system_index_sets__dependent_var +
+  graylog_server__system_index_sets__group_var +
+  graylog_server__system_index_sets__host_var
+  ) }}'
 
 graylog_server__system_inputs__dependent_var: []
 graylog_server__system_inputs__group_var: []
 graylog_server__system_inputs__host_var: []
 graylog_server__system_inputs__role_var: []
 graylog_server__system_inputs__combined_var: '{{ (
-      graylog_server__system_inputs__role_var +
-      graylog_server__system_inputs__dependent_var +
-      graylog_server__system_inputs__group_var +
-      graylog_server__system_inputs__host_var
-    ) | linuxfabrik.lfops.combine_lod
-  }}'
+  graylog_server__system_inputs__role_var +
+  graylog_server__system_inputs__dependent_var +
+  graylog_server__system_inputs__group_var +
+  graylog_server__system_inputs__host_var
+  ) }}'
 
 # ---------------------------------------------------
 
@@ -39,7 +37,7 @@ graylog_server__kernel_settings__sysctl__dependent_var:
   # `WARN  [UdpTransport] receiveBufferSize (SO_RCVBUF) for input ... should be >= 1048576 but is 425984`
   # this warning is related to how the operating system is configured (udp receive buffer size)
   - name: 'net.core.rmem_max'
-    value: 1048576  # default: 212992
+    value: 1048576 # default: 212992
 graylog_server__kernel_settings__transparent_hugepages__dependent_var: 'never'
 
 graylog_server__selinux__booleans__dependent_var:
