@@ -43,7 +43,9 @@ Role:acme_sh
 ### Breaking Changes
 
 Role:graylog_server
-* Removed the feature of adding a default index set and inputs
+* Removed the feature of creating a default index set and default input
+* Renamed graylog_server__system_index_sets__host_var & graylog_server__system_inputs__host_var
+* Add state management
 
 Role:mariadb_server
 * Removed support for EOL version 10.5
