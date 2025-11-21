@@ -26,6 +26,9 @@ Role:repo_elasticsearch_oss
 
 ### Added
 
+Role:gitlab_ce
+* Made the gitlab.rb options for default project features, email reply to address, ldap integration and the upload path configurable
+
 Role:graylog_server
 * Re-added `graylog_server__elasticsearch_hosts` to allow setups without Graylog Data Node
 

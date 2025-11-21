@@ -128,7 +128,9 @@ gitlab_rails['time_zone'] = '{{ gitlab_ce__rb_gitlab_rails_time_zone | d("UTC") 
 gitlab_rails['gitlab_email_from'] = '{{ gitlab_ce__rb_gitlab_rails_gitlab_email_from }}'
 gitlab_rails['gitlab_email_display_name'] = '{{ gitlab_ce__rb_gitlab_rails_gitlab_email_display_name }}'
 {% endif %}
-# gitlab_rails['gitlab_email_reply_to'] = 'noreply@example.com'
+{% if gitlab_ce__rb_gitlab_rails_gitlab_email_reply_to is defined and gitlab_ce__rb_gitlab_rails_gitlab_email_reply_to | length %}
+gitlab_rails['gitlab_email_reply_to'] = '{{ gitlab_ce__rb_gitlab_rails_gitlab_email_reply_to }}'
+{% endif %}
 # gitlab_rails['gitlab_email_subject_suffix'] = ''
 # gitlab_rails['gitlab_email_smime_enabled'] = false
 # gitlab_rails['gitlab_email_smime_key_file'] = '/etc/gitlab/ssl/gitlab_smime.key'
@@ -168,12 +170,12 @@ gitlab_rails['gitlab_email_display_name'] = '{{ gitlab_ce__rb_gitlab_rails_gitla
 # gitlab_rails['custom_html_header_tags'] = nil
 
 ### Default project feature settings
-# gitlab_rails['gitlab_default_projects_features_issues'] = true
-# gitlab_rails['gitlab_default_projects_features_merge_requests'] = true
-# gitlab_rails['gitlab_default_projects_features_wiki'] = true
-# gitlab_rails['gitlab_default_projects_features_snippets'] = true
-# gitlab_rails['gitlab_default_projects_features_builds'] = true
-# gitlab_rails['gitlab_default_projects_features_container_registry'] = true
+gitlab_rails['gitlab_default_projects_features_issues'] = {{ gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_issues | string | lower }}
+gitlab_rails['gitlab_default_projects_features_merge_requests'] = {{ gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_merge_requests | string | lower }}
+gitlab_rails['gitlab_default_projects_features_wiki'] = {{ gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_wiki | string | lower }}
+gitlab_rails['gitlab_default_projects_features_snippets'] = {{ gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_snippets | string | lower }}
+gitlab_rails['gitlab_default_projects_features_builds'] = {{ gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_builds | string | lower }}
+gitlab_rails['gitlab_default_projects_features_container_registry'] = {{ gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_container_registry | string | lower }}
 
 ### Automatic issue closing
 ###! See https://docs.gitlab.com/ee/administration/issue_closing_pattern.html for more
@@ -461,7 +463,9 @@ gitlab_rails['gitlab_email_display_name'] = '{{ gitlab_ce__rb_gitlab_rails_gitla
 
 ### GitLab uploads
 ###! Docs: https://docs.gitlab.com/ee/administration/uploads.html
-# gitlab_rails['uploads_directory'] = "/var/opt/gitlab/gitlab-rails/uploads"
+{% if gitlab_ce__rb_gitlab_rails_uploads_directory is defined and gitlab_ce__rb_gitlab_rails_uploads_directory | length %}
+gitlab_rails['uploads_directory'] = "{{ gitlab_ce__rb_gitlab_rails_uploads_directory }}"
+{% endif %}
 # gitlab_rails['uploads_storage_path'] = "/opt/gitlab/embedded/service/gitlab-rails/public"
 # gitlab_rails['uploads_base_dir'] = "uploads/-/system"
 # gitlab_rails['uploads_object_store_enabled'] = false
@@ -553,57 +557,15 @@ gitlab_rails['gitlab_email_display_name'] = '{{ gitlab_ce__rb_gitlab_rails_gitla
 ###! **Be careful not to break the indentation in the ldap_servers block. It is
 ###!   in yaml format and the spaces must be retained. Using tabs will not work.**
 
-# gitlab_rails['ldap_enabled'] = false
+gitlab_rails['ldap_enabled'] = {{ gitlab_ce__rb_gitlab_rails_ldap_enabled | string | lower }}
 # gitlab_rails['prevent_ldap_sign_in'] = false
 
 ###! **remember to close this block with 'EOS' below**
-# gitlab_rails['ldap_servers'] = YAML.load <<-'EOS'
-#   main: # 'main' is the GitLab 'provider ID' of this LDAP server
-#     label: 'LDAP'
-#     host: '_your_ldap_server'
-#     port: 389
-#     uid: 'sAMAccountName'
-#     bind_dn: '_the_full_dn_of_the_user_you_will_bind_with'
-#     password: '_the_password_of_the_bind_user'
-#     encryption: 'plain' # "start_tls" or "simple_tls" or "plain"
-#     verify_certificates: true
-#     smartcard_auth: false
-#     active_directory: true
-#     smartcard_ad_cert_field: 'altSecurityIdentities'
-#     smartcard_ad_cert_format: null # 'issuer_and_serial_number', 'issuer_and_subject' , 'principal_name'
-#     allow_username_or_email_login: false
-#     lowercase_usernames: false
-#     block_auto_created_users: false
-#     base: ''
-#     user_filter: ''
-#     ## EE only
-#     group_base: ''
-#     admin_group: ''
-#     sync_ssh_keys: false
-#
-#   secondary: # 'secondary' is the GitLab 'provider ID' of second LDAP server
-#     label: 'LDAP'
-#     host: '_your_ldap_server'
-#     port: 389
-#     uid: 'sAMAccountName'
-#     bind_dn: '_the_full_dn_of_the_user_you_will_bind_with'
-#     password: '_the_password_of_the_bind_user'
-#     encryption: 'plain' # "start_tls" or "simple_tls" or "plain"
-#     verify_certificates: true
-#     smartcard_auth: false
-#     active_directory: true
-#     smartcard_ad_cert_field: 'altSecurityIdentities'
-#     smartcard_ad_cert_format: null # 'issuer_and_serial_number', 'issuer_and_subject' , 'principal_name'
-#     allow_username_or_email_login: false
-#     lowercase_usernames: false
-#     block_auto_created_users: false
-#     base: ''
-#     user_filter: ''
-#     ## EE only
-#     group_base: ''
-#     admin_group: ''
-#     sync_ssh_keys: false
-# EOS
+{% if gitlab_ce__rb_gitlab_rails_ldap_servers is defined and gitlab_ce__rb_gitlab_rails_ldap_servers | length %}
+gitlab_rails['ldap_servers'] = YAML.load <<-'EOS'
+{{ gitlab_ce__rb_gitlab_rails_ldap_servers | ansible.builtin.to_yaml | indent(2, first=True) }}
+EOS
+{% endif %}
 
 ### Smartcard authentication settings
 ###! Docs: https://docs.gitlab.com/ee/administration/auth/smartcard.html

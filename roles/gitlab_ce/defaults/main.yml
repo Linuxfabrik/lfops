@@ -1,8 +1,15 @@
 gitlab_ce__on_calendar: '*-*-* 23:{{ 59 | random(seed=inventory_hostname) }}'
 gitlab_ce__rb_gitlab_rails_backup_keep_time: 86400
 gitlab_ce__rb_gitlab_rails_backup_path: '/backup/gitlab'
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_builds: true
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_container_registry: true
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_issues: true
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_merge_requests: true
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_snippets: true
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_wiki: true
 gitlab_ce__rb_gitlab_rails_gitlab_email_display_name: 'GitLab@{{ inventory_hostname }}'
 gitlab_ce__rb_gitlab_rails_gitlab_email_from: '{{ mailto_root__from | d("") }}'
+gitlab_ce__rb_gitlab_rails_ldap_enabled: false
 gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_bantime: 3600
 gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled: true
 gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_findtime: 60
@@ -11,6 +18,7 @@ gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_ip_whitelist:
 gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_maxretry: 10
 gitlab_ce__rb_gitlab_rails_registry_path: '/var/opt/gitlab/gitlab-rails/shared/registry'
 gitlab_ce__rb_gitlab_rails_time_zone: 'Europe/Zurich'
+gitlab_ce__rb_gitlab_rails_uploads_directory: '/var/opt/gitlab/gitlab-rails/uploads'
 gitlab_ce__rb_letsencrypt_enable: false
 gitlab_ce__rb_nginx_listen_https: false
 gitlab_ce__rb_nginx_listen_port: 80

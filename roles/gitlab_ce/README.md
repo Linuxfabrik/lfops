@@ -44,8 +44,17 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 | `gitlab_ce__rb_gitlab_rails_backup_path` | Backup Settings. [Docs](https://docs.gitlab.com/omnibus/settings/backups.html) | `'/backup/gitlab'` |
 | `gitlab_ce__rb_gitlab_rails_extra_matomo_site_id` | Extra customization for Matomo | unset |
 | `gitlab_ce__rb_gitlab_rails_extra_matomo_url` | Extra customization for Matomo | unset |
+| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_builds` | Whether builds are enabled by default for projects. | `true` |
+| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_container_registry` | Whether the container registry is enabled by default for projects. | `true` |
+| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_issues` | Whether issues are enabled by default for projects. | `true` |
+| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_merge_requests` | Whether merge requests are enabled by default for projects. | `true` |
+| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_snippets` | Whether snippets are enabled by default for projects. | `true` |
+| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_wiki` | Whether the wiki feature is enabled by default for projects. | `true` |
 | `gitlab_ce__rb_gitlab_rails_gitlab_email_display_name` | | `'GitLab@{{ inventory_hostname }}'` |
 | `gitlab_ce__rb_gitlab_rails_gitlab_email_from` | If your SMTP server does not like the default 'From: gitlab@gitlab.example.com', you can change the 'From' with this setting. | `'{{ mailto_root__from \| d("") }}'` |
+| `gitlab_ce__rb_gitlab_rails_gitlab_email_reply_to` | The 'Reply To' address for emails if it differs from the 'From' address. | unset |
+| `gitlab_ce__rb_gitlab_rails_ldap_enabled` | Whether the LDAP integration is enabled. [Docs](https://docs.gitlab.com/administration/uploads/#using-local-storage) | `false` |
+| `gitlab_ce__rb_gitlab_rails_ldap_servers` | LDAP configuration for one or more servers. [Docs](https://docs.gitlab.com/administration/auth/ldap/?tab=Self-compiled+%28source%29#configure-ldap) | unset |
 | `gitlab_ce__rb_gitlab_rails_omniauth_allow_single_sign_on` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
 | `gitlab_ce__rb_gitlab_rails_omniauth_auto_link_ldap_user` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
 | `gitlab_ce__rb_gitlab_rails_omniauth_block_auto_created_users` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
@@ -58,6 +67,7 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 | `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_ip_whitelist` |  | `['127.0.0.1']` |
 | `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_maxretry` | Limit the number of Git HTTP authentication attempts per IP | `10` |
 | `gitlab_ce__rb_gitlab_rails_time_zone` | [Docs](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/gitlab.yml.md) | `'Europe/Zurich'` |
+| `gitlab_ce__rb_gitlab_rails_uploads_directory` | For setting up a different storage directory for uploads. If missing, the directory will be created by GitLab. [Docs](https://docs.gitlab.com/administration/uploads/#using-local-storage) | `'/var/opt/gitlab/gitlab-rails/uploads'` |
 | `gitlab_ce__rb_letsencrypt_enable` | If GitLab should manage Let's Encrypt certificates itself | `false` |
 | `gitlab_ce__rb_nginx_listen_https` | Set this to `false` only if your reverse proxy internally communicates over HTTP. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl) | `false` |
 | `gitlab_ce__rb_nginx_listen_port` | Override only if you use a reverse proxy. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#setting-the-nginx-listen-port) | `80` |
@@ -81,10 +91,38 @@ gitlab_ce__rb_gitlab_rails_backup_keep_time: 86400
 gitlab_ce__rb_gitlab_rails_backup_path: '/backup/gitlab'
 
 gitlab_ce__rb_gitlab_rails_gitlab_email_display_name: 'My GitLab'
-gitlab_ce__rb_gitlab_rails_gitlab_email_from: 'noreply@example.com'
+gitlab_ce__rb_gitlab_rails_gitlab_email_from: 'vcs@example.com'
+gitlab_ce__rb_gitlab_rails_gitlab_email_reply_to: 'no-reply@example.com'
+
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_builds: false
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_container_registry: false
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_issues: true
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_merge_requests: true
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_snippets: false
+gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_wiki: false
 
 gitlab_ce__rb_gitlab_rails_extra_matomo_site_id: '4711'
 gitlab_ce__rb_gitlab_rails_extra_matomo_url: 'analytics.example.com/'
+
+gitlab_ce__rb_gitlab_rails_ldap_enabled: true
+gitlab_ce__rb_gitlab_rails_ldap_servers:
+  main:
+    label: 'LDAP'
+    host: 'ldap.example.com'
+    port: 636
+    uid: 'sAMAccountName'
+    bind_dn: 'CN=Gitlab,OU=Users,DC=example,DC=com'
+    password: '<bind_user_password>'
+    encryption: 'simple_tls'
+    verify_certificates: true
+    timeout: 10
+    active_directory: false
+    user_filter: '(employeeType=developer)'
+    base: 'dc=example,dc=com'
+    lowercase_usernames: false
+    retry_empty_result_with_codes: [80]
+    allow_username_or_email_login: false
+    block_auto_created_users: false
 
 gitlab_ce__rb_gitlab_rails_omniauth_allow_single_sign_on:
   - 'google_oauth2'
