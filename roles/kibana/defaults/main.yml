@@ -6,5 +6,6 @@ kibana__server_host: '0.0.0.0'
 kibana__server_name: '{{ ansible_facts["nodename"] }}'
 kibana__server_port: 5601
 kibana__server_security_response_headers_disable_embedding: true
+kibana__server_ssl_enabled: false
 kibana__service_enabled: true
 kibana__service_state: 'started'

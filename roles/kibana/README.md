@@ -69,6 +69,9 @@ kibana__xpack_security_encryption_key: '...'
 | `kibana__server_port` | The port on which the Kibana server will listen. | `5601` |
 | `kibana__server_public_base_url` | The publicly available URL that end users will use to access Kibana. This is used for generating links in emails and other places. | unset |
 | `kibana__server_security_response_headers_disable_embedding` | Prevents embedding Kibana in iframes to mitigate clickjacking attacks. Set to `false` if you need to embed Kibana in other applications. | `true` |
+| `kibana__server_ssl_certificate` | Path to the PEM-format SSL certificate file for HTTPS connections from browsers to Kibana. Required when `kibana__server_ssl_enabled: true` is set. The role will set ownership to `kibana:root` and mode to `0644`. | unset |
+| `kibana__server_ssl_enabled` | Boolean. Enables SSL/TLS for incoming connections from browsers to the Kibana server. When enabled, `kibana__server_ssl_certificate` and `kibana__server_ssl_key` must be provided. | `false` |
+| `kibana__server_ssl_key` | Path to the PEM-format SSL private key file for HTTPS connections from browsers to Kibana. Required when `kibana__server_ssl_enabled: true` is set. The role will set ownership to `kibana:kibana` and mode to `0400` for security. | unset |
 | `kibana__service_enabled` | Enables or disables the kibana service, analogous to `systemctl enable/disable --now`. | `true` |
 | `kibana__service_state` | Controls the state of the kibana service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
 
@@ -87,6 +90,9 @@ kibana__server_name: 'kibana-prod-01'
 kibana__server_port: 5601
 kibana__server_public_base_url: 'https://kibana.example.com'
 kibana__server_security_response_headers_disable_embedding: true
+kibana__server_ssl_certificate: '/etc/pki/tls/certs/kibana-server.crt'
+kibana__server_ssl_enabled: true
+kibana__server_ssl_key: '/etc/pki/tls/private/kibana-server.key'
 kibana__service_enabled: true
 kibana__service_state: 'started'
 ```

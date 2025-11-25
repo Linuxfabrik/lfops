@@ -10,6 +10,12 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
+### Added
+
+Role:kibana
+* Make SSL settings variable
+
+
 ### Fixed
 
 Role:rocketchat

@@ -48,6 +48,31 @@
 
 - block:
 
+  - name: 'Make sure kibana can read the SSL cert'
+    ansible.builtin.file:
+      path: '{{ kibana__server_ssl_certificate }}'
+      owner: 'kibana'
+      group: 'root'
+      mode: 0o644
+    when:
+      - 'kibana__server_ssl_certificate | length'
+
+  - name: 'Make sure kibana can read the SSL key'
+    ansible.builtin.file:
+      path: '{{ kibana__server_ssl_key }}'
+      owner: 'kibana'
+      group: 'kibana'
+      mode: 0o400
+    when:
+      - 'kibana__server_ssl_key | length'
+
+  tags:
+    - 'kibana'
+    - 'kibana:configure'
+
+
+- block:
+
   - name: 'deploy /etc/kibana/kibana.yml'
     ansible.builtin.template:
       src: 'etc/kibana/kibana.yml.j2'
