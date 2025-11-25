@@ -236,7 +236,7 @@
 
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{
-          (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__kernel_settings__sysctl__dependent_var, []) | d([])
+          (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__kernel_settings__sysctl__dependent_var, []) | d([]) +
           (not setup_icinga2_master__redis__skip_injections__internal_var) | ternary(redis__kernel_settings__sysctl__dependent_var, []) | d([])
         }}'
       kernel_settings__transparent_hugepages__dependent_var: '{{ (not setup_icinga2_master__redis__skip_injections__internal_var) | ternary(redis__kernel_settings__transparent_hugepages__dependent_var, "") }}'
