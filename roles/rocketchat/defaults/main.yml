@@ -33,7 +33,7 @@ rocketchat__podman_containers__containers__dependent_var:
       AutoUpdate=registry
       ContainerName=rocketchat
       EnvironmentFile={{ rocketchat__user_home_directory }}/rocketchat.env
-      # unforunately, there is no curl inside the container. resorting to using node
+      # unfortunately, there is no curl inside the container. resorting to using node
       HealthCmd=["node", "--eval", "require('http').request({host: '127.0.0.1', port: 3000, timeout: 2000, path: '/health'}, res => {process.exit(res.statusCode === 200 ? 0 : 1);}).on('error', () => process.exit(1)).end();"]
       HealthInterval=30s
       HealthOnFailure=kill

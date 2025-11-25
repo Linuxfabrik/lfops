@@ -10,7 +10,10 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
-tbd
+### Fixed
+
+Role:rocketchat
+* Fix typo and order of calls in playbook
 
 
 ## [v5.0.0] - 2025-11-14
