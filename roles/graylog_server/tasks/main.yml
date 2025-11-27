@@ -99,7 +99,6 @@
       password: '{{ graylog_server__root_user["password"] }}'
       method: 'GET'
       force_basic_auth: true
-      # status_code: 200
     register: 'graylog_server__inputs_result'
     changed_when: false # no actual config change
     check_mode: false # run task even if `--check` is specified
@@ -162,7 +161,6 @@
       password: '{{ graylog_server__root_user["password"] }}'
       method: 'GET'
       force_basic_auth: true
-      # status_code: 200
     register: 'graylog_server__index_sets_result'
     changed_when: false # no actual config change
     check_mode: false # run task even if `--check` is specified
@@ -179,7 +177,6 @@
       method: 'POST'
       body: '{{ item["index"] | to_json }}'
       force_basic_auth: true
-      # status_code: 200
       body_format: 'json'
       headers:
         Accept: 'application/json'
@@ -218,7 +215,6 @@
       password: '{{ graylog_server__root_user["password"] }}'
       method: 'GET'
       force_basic_auth: true
-      # status_code: 200
     register: 'graylog_server__index_sets_result'
     changed_when: false # no actual config change
     check_mode: false # run task even if `--check` is specified
