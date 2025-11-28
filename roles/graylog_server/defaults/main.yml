@@ -17,7 +17,8 @@ graylog_server__system_index_sets__combined_var: '{{ (
   graylog_server__system_index_sets__dependent_var +
   graylog_server__system_index_sets__group_var +
   graylog_server__system_index_sets__host_var
-  ) }}'
+  ) | linuxfabrik.lfops.combine_lod(unique_key="index_prefix")
+  }}'
 
 graylog_server__system_inputs__dependent_var: []
 graylog_server__system_inputs__group_var: []
@@ -28,7 +29,8 @@ graylog_server__system_inputs__combined_var: '{{ (
   graylog_server__system_inputs__dependent_var +
   graylog_server__system_inputs__group_var +
   graylog_server__system_inputs__host_var
-  ) }}'
+  ) | linuxfabrik.lfops.combine_lod(unique_key=["title", "type"])
+  }}'
 
 # ---------------------------------------------------
 

@@ -89,109 +89,102 @@ Use the tags `graylog_server:configure_system_inputs` or `graylog_server:configu
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `graylog_server__system_index_sets__host_var` / `graylog_server__index_sets__group_var` | Creates additional index sets. Subkeys: <ul><li>`index`:<ul><li>`can_be_default`: Mandatory, boolean. Whether this index set can be default.</li><li>`creation_date`: Mandatory, date. Date in iso8601 format.</li><li>`data_tiering`<ul><li>`index_lifetime_min`: Mandatory, string. The earliest age an index must reach before it becomes eligible for lifecycle actions (e.g., migration to a cooler tier, rollover, or deletion). Prevents moving/acting on indices too soon.</li><li>`index_lifetime_max`: Mandatory, string. The latest age an index may remain in its current tier. Once this age is hit, the next lifecycle action is enforced (migrate/rollover/delete), even if other triggers (size, docs) haven’t fired.</li><li>`type`: Mandatory, string. Data-tiering strategy for the index set. It defines which tiers (hot/warm/cold) are eligible and the order/behavior of migrations as indices age.</li></ul></li><li>`description`: Mandatory, string. Description of index set.</li><li>`field_type_refresh_interval`: Mandatory, integer. Refresh interval in milliseconds.</li><li>`index_analyzer`: Mandatory, string. Elasticsearch/Opensearch analyzer for this index set.</li><li>`index_optimization_max_num_segments`: Mandatory, integer. Maximum number of segments per Elasticsearch/Opensearch index after optimization (force merge).</li><li>`index_optimization_disabled`: Mandatory, boolean. Whether Elasticsearch/Opensearch index optimization (force merge) after rotation is disabled.</li><li>`index_prefix`: Mandatory, string. A unique prefix used in Elasticsearch/Opensearch indices belonging to this index set. The prefix must start with a letter or number, and can only contain letters, numbers, `_`, `-` and `+`.</li><li>`replicas`: Mandatory, integer. Number of Elasticsearch/Opensearch replicas used per index in this index set.</li><li>`retention_strategy_class`: Mandatory, string. Retention strategy class to clean up old indices.</li><li>`retention_strategy`<ul><li>`max_number_of_indices`: Mandatory, integer. Maximum number of indices to keep before retention strategy gets triggered.</li><li>`type`: Mandatory, string. Retention strategy type to clean up old indices.</li></ul><li>`rotation_strategy_class`: Mandatory, string. Graylog uses multiple indices to store documents in. You can configure the strategy it uses to determine when to rotate the currently active write index.</li><li>`rotation_strategy`<ul><li>`rotation_period`: Mandatory, string. How long an index gets written to before it is rotated. (i.e. "P1D" for 1 day, "PT6H" for 6 hours).</li><li>`rotate_empty_index_set`: Mandatory, boolean. Apply the rotation strategy even when the index set is empty (not recommended).</li><li>`type`: Mandatory, string. The type of the Rotation Strategy.</li></ul><li>`shards`: Mandatory, integer. Number of Elasticsearch/Opensearch shards used per index in this index set.</li><li>`title`: Mandatory, string. Descriptive name of the index set.</li><li>`use_legacy_rotation`: Mandatory, boolean. Whether to use the legacy rotation method, i.e. "P1D".</li><li>`writable`: Mandatory, boolean. Whether this Index Set is writable.</li></li></ul><li>`state`: Optional, string. State of the index set, one of `present`, `absent`. Defaults to `'present'`</li></ul> | `unset` |
-| `graylog_server__system_inputs__host_var` / `graylog_server__system_inputs__group_var` | Creates system inputs. Subkeys: <ul><li>`input`:<ul><li>`configuration`: Mandatory, dictionay. Specific configuration of corresponding input. Please refer to the [API documentation](https://go2docs.graylog.org/current/setting_up_graylog/rest_api.html).</li><li>`global`: Mandatory, boolean. Whether this input should start on all nodes.</li><li>`title`: Mandatory, string. The title for this input.</li><li>`type`: Mandatory, string. The type of the input.</li></ul></li><li>`state`: Optional, string. State of the index set, one of `present`, `absent`. Defaults to `'present'`</li></ul> | `unset` |
+| `graylog_server__system_index_sets__host_var` / `graylog_server__system_index_sets__group_var` | Creates additional index sets. Subkeys: <ul><li>`index`:<ul><li>`can_be_default`: Mandatory, boolean. Whether this index set can be be set to default via the Graylog GUI.</li><li>`data_tiering` (will be `null` if using legacy rotation)<ul><li>`index_lifetime_min`: Mandatory, string. The earliest age an index must reach before it becomes eligible for lifecycle actions (e.g., migration to a cooler tier, rollover, or deletion). Prevents moving/acting on indices too soon.</li><li>`index_lifetime_max`: Mandatory, string. The latest age an index may remain in its current tier. Once this age is hit, the next lifecycle action is enforced (migrate/rollover/delete), even if other triggers (size, docs) haven’t fired.</li><li>`type`: Mandatory, string. Data-tiering strategy for the index set. It defines which tiers (hot/warm/cold) are eligible and the order/behavior of migrations as indices age.</li></ul></li><li>`field_type_refresh_interval`: Mandatory, integer. Refresh interval in milliseconds.</li><li>`description`: Mandatory, string. Description of index set.</li><li>`field_type_refresh_interval`: Mandatory, integer. Refresh interval in milliseconds.</li><li>`index_analyzer`: Mandatory, string. Elasticsearch/Opensearch analyzer for this index set.</li><li>`index_optimization_max_num_segments`: Mandatory, integer. Maximum number of segments per Elasticsearch/Opensearch index after optimization (force merge).</li><li>`index_optimization_disabled`: Mandatory, boolean. Whether Elasticsearch/Opensearch index optimization (force merge) after rotation is disabled.</li><li>`index_prefix`: Mandatory, string. A unique prefix used in Elasticsearch/Opensearch indices belonging to this index set. The prefix must start with a letter or number, and can only contain letters, numbers, `_`, `-` and `+`. Note: As `index_prefix` must be unique, the index_prefix can not be updated after creation. If updated, a new index set would be created instead. It must not start with the same word, e.g. `linuxfabrik` and `linuxfabrik02` would conflict with each other.</li><li>`replicas`: Mandatory, integer. Number of Elasticsearch/Opensearch replicas used per index in this index set.</li><li>`retention_strategy_class`: Mandatory, string. Retention strategy class to clean up old indices.</li><li>`retention_strategy`<ul><li>`max_number_of_indices`: Mandatory, integer. Maximum number of indices to keep before retention strategy gets triggered.</li><li>`type`: Mandatory, string. Retention strategy type to clean up old indices.</li></ul><li>`rotation_strategy_class`: Mandatory, string. Graylog uses multiple indices to store documents in. You can configure the strategy it uses to determine when to rotate the currently active write index.</li><li>`rotation_strategy`<ul><li>`index_lifetime_max`: Mandatory, string. The maximum number of days the data in this index is kept before it is retained (i.e. "P1D" for 1 day, "PT6H" for 6 hours).</li><li>`index_lifetime_min`: Mandatory, string. The minimum number of days the data in this index is kept before it is retained (i.e. "P1D" for 1 day, "PT6H" for 6 hours).</li><li>`type`: Mandatory, string. The type of the Rotation Strategy.</li></ul><li>`shards`: Mandatory, integer. Number of Elasticsearch/Opensearch shards used per index in this index set.</li><li>`title`: Mandatory, string. Descriptive name of the index set.</li><li>`use_legacy_rotation`: Mandatory, boolean. Whether to use the legacy rotation method, i.e. "P1D".</li><li>`writable`: Mandatory, boolean. Whether this Index Set is writable.</li></li></ul><li>`state`: Optional, string. State of the index set, one of `present`, `absent`. Defaults to `'present'`</li></ul> | `unset` |
+| `graylog_server__system_inputs__host_var` / `graylog_server__system_inputs__group_var` | Creates system inputs. Subkeys: <ul><li>`input`:<ul><li>`configuration`: Mandatory, dictionay. Specific configuration of corresponding input. Please refer to the [API documentation](https://go2docs.graylog.org/current/setting_up_graylog/rest_api.html). Note: As `port` must be unique, the port can not be updated after creation. If updated, a new input would be created instead.</li><li>`global`: Mandatory, boolean. Whether this input should start on all nodes.</li><li>`title`: Mandatory, string. The title for this input.</li><li>`type`: Mandatory, string. The type of the input.</li></ul></li><li>`state`: Optional, string. State of the index set, one of `present`, `absent`. Defaults to `'present'`</li></ul> | `unset` |
 
 Example:
 ```yaml
 # optional
 graylog_server__system_index_sets__host_var:
-  - index:
-      index_prefix: 'linuxfabrik'
-      can_be_default: true
-      creation_date: '{{ ansible_date_time.iso8601 }}'
-      data_tiering:
-        index_lifetime_min: 'P30D'
-        index_lifetime_max: 'P40D'
-        type: 'hot_only'
-      default: false
-      description: 'Another Index Set'
-      field_type_refresh_interval: 5000
-      index_analyzer: 'standard'
-      index_optimization_disabled: false
-      index_optimization_max_num_segments: 1
-      replicas: 0
-      retention_strategy:
-        max_number_of_indices: 20
-        type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
-      retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
-      rotation_strategy:
-        index_lifetime_min: 'P7D'
-        index_lifetime_max: 'P10D'
-        type: 'org.graylog2.indexer.rotation.strategies.TimeBasedSizeOptimizingStrategyConfig'
-      rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedSizeOptimizingStrategy'
-      shards: 1
-      title: 'Linuxfabrik Index Set (managed by Ansible - do not edit)'
-      use_legacy_rotation: false
-      writable: true
+  - index_prefix: 'linuxfabrik' # <-- Must be unique. Must not start with the same phrase, e.g. linuxfabrik and linuxfabrik02 would conflict with each other
+    can_be_default: true
+    data_tiering:
+      index_lifetime_min: 'P30D'
+      index_lifetime_max: 'P40D'
+      type: 'hot_only'
+    description: 'Another Index Set'
+    field_type_refresh_interval: 5000
+    index_analyzer: 'standard'
+    index_optimization_disabled: false
+    index_optimization_max_num_segments: 1
+    replicas: 0
+    retention_strategy:
+      max_number_of_indices: 20
+      type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
+    retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
+    rotation_strategy:
+      index_lifetime_min: 'P7D'
+      index_lifetime_max: 'P10D'
+      type: 'org.graylog2.indexer.rotation.strategies.TimeBasedSizeOptimizingStrategyConfig'
+    rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedSizeOptimizingStrategy'
+    shards: 1
+    title: 'Linuxfabrik Index Set (managed by Ansible - do not edit)'
+    use_legacy_rotation: false
+    writable: true
     state: 'present'
 graylog_server__system_inputs__host_var:
-  - input:
-      configuration:
-        bind_address: '0.0.0.0'
-        number_worker_threads: 4
-        override_source: ''
-        port: 5044
-        recv_buffer_size: 1048576
-        tcp_keepalive: false
-        tls_cert_file: ''
-        tls_client_auth: 'disabled'
-        tls_client_auth_cert_file: ''
-        tls_enable: false
-        tls_key_file: ''
-        tls_key_password: ''
-      global: true
-      title: 'Beats (5044/TCP - managed by Ansible - do not edit)'
-      type: 'org.graylog.plugins.beats.Beats2Input'
+  - title: 'Beats (5044/TCP - managed by Ansible - do not edit)' # <-- Must be unique
+    configuration:
+      bind_address: '0.0.0.0'
+      number_worker_threads: 4
+      override_source: ''
+      port: 5044
+      recv_buffer_size: 1048576
+      tcp_keepalive: false
+      tls_cert_file: ''
+      tls_client_auth: 'disabled'
+      tls_client_auth_cert_file: ''
+      tls_enable: false
+      tls_key_file: ''
+      tls_key_password: ''
+    global: true
+    type: 'org.graylog.plugins.beats.Beats2Input'
     state: 'present'
-  - input:
-      configuration:
-        bind_address: '0.0.0.0'
-        decompress_size_limit: 8388608
-        max_message_size: 2097152
-        number_worker_threads: 4
-        override_source: ''
-        port: 12201
-        recv_buffer_size: 1048576
-        tcp_keepalive: false
-        tls_cert_file: ''
-        tls_client_auth: 'disabled'
-        tls_client_auth_cert_file: ''
-        tls_enable: false
-        tls_key_file: ''
-        tls_key_password: ''
-        use_null_delimiter: true
-      global: true
-      title: 'Gelf (12201/TCP - managed by Ansible - do not edit)'
-      type: 'org.graylog2.inputs.gelf.tcp.GELFTCPInput'
+  - title: 'Gelf (12201/TCP - managed by Ansible - do not edit)' # <-- Must be unique
+    configuration:
+      bind_address: '0.0.0.0'
+      decompress_size_limit: 8388608
+      max_message_size: 2097152
+      number_worker_threads: 4
+      override_source: ''
+      port: 12201
+      recv_buffer_size: 1048576
+      tcp_keepalive: false
+      tls_cert_file: ''
+      tls_client_auth: 'disabled'
+      tls_client_auth_cert_file: ''
+      tls_enable: false
+      tls_key_file: ''
+      tls_key_password: ''
+      use_null_delimiter: true
+    global: true
+    type: 'org.graylog2.inputs.gelf.tcp.GELFTCPInput'
     state: 'present'
-  - input:
-      configuration:
-        bind_address: '0.0.0.0'
-        decompress_size_limit: 8388608
-        number_worker_threads: 4
-        override_source: ''
-        port: 12201
-        recv_buffer_size: 1048576
-      global: true
-      title: 'Gelf (12201/UDP - managed by Ansible - do not edit)'
-      type: 'org.graylog2.inputs.gelf.udp.GELFUDPInput'
+  - title: 'Gelf (12201/UDP - managed by Ansible - do not edit)' # <-- Must be unique
+    configuration:
+      bind_address: '0.0.0.0'
+      decompress_size_limit: 8388608
+      number_worker_threads: 4
+      override_source: ''
+      port: 12201
+      recv_buffer_size: 1048576
+    global: true
+    type: 'org.graylog2.inputs.gelf.udp.GELFUDPInput'
     state: 'present'
-  - input:
-      configuration:
-        allow_override_date: true
-        bind_address: '0.0.0.0'
-        decompress_size_limit: 8388608
-        expand_structured_data: false
-        force_rdns: false
-        number_worker_threads: 4
-        override_source: ''
-        port: 1514
-        recv_buffer_size: 1048576
-        store_full_message: false
-      global: true
-      title: 'Syslog (1514/UDP - managed by Ansible - do not edit)'
-      type: 'org.graylog2.inputs.syslog.udp.SyslogUDPInput'
+  - title: 'Syslog (1514/UDP - managed by Ansible - do not edit)' # <-- Must be unique
+    configuration:
+      allow_override_date: true
+      bind_address: '0.0.0.0'
+      decompress_size_limit: 8388608
+      expand_structured_data: false
+      force_rdns: false
+      number_worker_threads: 4
+      override_source: ''
+      port: 1514
+      recv_buffer_size: 1048576
+      store_full_message: false
+    global: true
+    type: 'org.graylog2.inputs.syslog.udp.SyslogUDPInput'
     state: 'present'
 ```
 
