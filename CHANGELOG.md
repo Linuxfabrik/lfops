@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:apache_httpd:
+* Add nice ErrorDocuments
+
 Role:kibana
 * Make SSL settings variable
 
