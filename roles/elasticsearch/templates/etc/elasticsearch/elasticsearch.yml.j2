@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025103101
+# 2025120301
 # ======================== Elasticsearch Configuration =========================
 #
 # NOTE: Elasticsearch comes with reasonable defaults for most settings.
@@ -160,3 +160,8 @@ xpack.security.transport.ssl:
 {% endif %}
 
 #----------------------- END SECURITY CONFIGURATION -------------------------
+
+{% if elasticsearch__raw is defined and elasticsearch__raw | length %}
+# raw
+{{ elasticsearch__raw }}
+{% endif %}

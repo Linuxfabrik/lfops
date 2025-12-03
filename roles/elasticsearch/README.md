@@ -200,6 +200,7 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 | `elasticsearch__node_roles` | List of roles for this node. Available roles: `master`, `data`, `data_content`, `data_hot`, `data_warm`, `data_cold`, `data_frozen`, `ingest`, `ml`, `remote_cluster_client`, `transform`, `voting_only`. See [Elasticsearch node roles documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html#node-roles). | unset |
 | `elasticsearch__path_data` | Path to the directory where Elasticsearch stores its data. | `/var/lib/elasticsearch` |
 | `elasticsearch__path_repos` | Paths pointing to [Shared file system repositories](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/shared-file-system-repository) used for snapshots (backups). | `[]` |
+| `elasticsearch__raw` | Multiline string. Raw content which will be appended to the `elasticsearch.yml` config file. | unset |
 | `elasticsearch__service_enabled` | Enables or disables the elasticsearch service, analogous to `systemctl enable/disable --now`. | `true` |
 | `elasticsearch__service_state` | Controls the state of the elasticsearch service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
 | `elasticsearch__transport_cert` | ASCII-armored PEM transport certificate. | unset |
@@ -238,6 +239,9 @@ elasticsearch__path_data: '/data'
 elasticsearch__path_repos:
   - '/mnt/backups'
   - '/mnt/long_term_backups'
+elasticsearch__raw: |-
+  http.max_content_length: 200mb
+  indices.recovery.max_bytes_per_sec: 100mb
 elasticsearch__service_enabled: false
 elasticsearch__service_state: 'stopped'
 elasticsearch__transport_cert: '{{ lookup("ansible.builtin.file", "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/elasticsearch/certs/transport.crt") }}'

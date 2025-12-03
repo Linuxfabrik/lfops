@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:elasticsearch:
+* Add `elasticsearch__raw` variable
+
 Role:apache_httpd:
 * Add nice ErrorDocuments
 
