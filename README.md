@@ -290,19 +290,18 @@ Q: **[WARNING]: Collection x.y does not support Ansible version 2.16.xx**
 
 A: Install a newer Ansible version, and update all collections from Ansible Galaxy. For example:
 
-```
+```bash
 python3 -m pip uninstall ansible-core ansible-lint ansible-compat ansible-navigator
 ```
 
-```
+```bash
 python3 -m venv ~/venvs/ansible-2.18
 source ~/venvs/ansible-2.18/bin/activate
 pip install --upgrade pip
 python3 -m pip install ansible-core~=2.18.0
 ```
 
-```
-
+```bash
 ansible-galaxy collection list
 ansible-galaxy collection list \
   | awk '($1 !~ /^#|^Collection|^-+$/ && NF) {print $1}' \
