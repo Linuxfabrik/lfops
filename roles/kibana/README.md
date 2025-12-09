@@ -72,6 +72,7 @@ kibana__xpack_security_encryption_key: '...'
 | `kibana__server_ssl_certificate` | Path to the PEM-format SSL certificate file for HTTPS connections from browsers to Kibana. Required when `kibana__server_ssl_enabled: true` is set. The role will set ownership to `kibana:root` and mode to `0644`. | unset |
 | `kibana__server_ssl_enabled` | Boolean. Enables SSL/TLS for incoming connections from browsers to the Kibana server. When enabled, `kibana__server_ssl_certificate` and `kibana__server_ssl_key` must be provided. | `false` |
 | `kibana__server_ssl_key` | Path to the PEM-format SSL private key file for HTTPS connections from browsers to Kibana. Required when `kibana__server_ssl_enabled: true` is set. The role will set ownership to `kibana:kibana` and mode to `0400` for security. | unset |
+| `kibana__raw` | Multiline string. Raw content which will be appended to the `kibana.yml` config file. | unset |
 | `kibana__service_enabled` | Enables or disables the kibana service, analogous to `systemctl enable/disable --now`. | `true` |
 | `kibana__service_state` | Controls the state of the kibana service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
 
@@ -93,6 +94,9 @@ kibana__server_security_response_headers_disable_embedding: true
 kibana__server_ssl_certificate: '/etc/pki/tls/certs/kibana-server.crt'
 kibana__server_ssl_enabled: true
 kibana__server_ssl_key: '/etc/pki/tls/private/kibana-server.key'
+kibana__raw: |-
+  logging.root.level: debug
+  xpack.fleet.agents.enabled: true
 kibana__service_enabled: true
 kibana__service_state: 'started'
 ```

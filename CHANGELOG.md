@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:kibana:
+* Add `kibana__raw` variable
+
 Role:elasticsearch:
 * Add `elasticsearch__raw` variable
 

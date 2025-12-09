@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025112501
+# 2025120901
 
 # For more configuration options see the configuration guide for Kibana in
 # https://www.elastic.co/guide/index.html
@@ -223,3 +223,8 @@ xpack.reporting.encryptionKey: '{{ kibana__xpack_reporting_encryption_key }}'
 
 # Encryption key for security features (session data, etc.)
 xpack.security.encryptionKey: '{{ kibana__xpack_security_encryption_key }}'
+
+{% if kibana__raw is defined and kibana__raw | length %}
+# raw
+{{ kibana__raw }}
+{% endif %}
