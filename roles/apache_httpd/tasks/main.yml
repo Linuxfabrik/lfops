@@ -80,7 +80,7 @@
 # Manage global Apache config
 - block:
 
-  - name: 'Create or update global Apache configuration'
+  - name: 'Create or update global Apache configuration {{ apache_httpd__config_file }}'
     ansible.builtin.template:
       src: 'etc/httpd/conf/httpd.conf.j2'
       dest: '{{ apache_httpd__config_file }}'
