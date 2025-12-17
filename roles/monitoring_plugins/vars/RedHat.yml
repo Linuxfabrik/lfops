@@ -1,5 +1,6 @@
 __monitoring_plugins__icinga_user: 'icinga'
-__monitoring_plugins__webserver_user: 'apache'
+__monitoring_plugins__package_version_separator: '-'
 __monitoring_plugins__versionlock_lock_command: 'dnf versionlock add'
 __monitoring_plugins__versionlock_package: 'dnf-command(versionlock)'
 __monitoring_plugins__versionlock_unlock_command: 'dnf versionlock delete'
+__monitoring_plugins__webserver_user: 'apache'

@@ -27,6 +27,9 @@ Role:kibana
 
 ### Fixed
 
+Role:monitoring_plugins:
+* Fix installation of package against non-rhel hosts
+
 Role:rocketchat
 * Fix typo and order of calls in playbook
 

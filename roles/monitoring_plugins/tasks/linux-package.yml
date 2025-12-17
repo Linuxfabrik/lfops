@@ -21,16 +21,16 @@
 
 - block:
 
-  - name: 'install linuxfabrik-monitoring-plugins{{ (monitoring_plugins__version | length) | ternary("-" ~ monitoring_plugins__version, "") }}' # noqa package-latest
+  - name: 'install linuxfabrik-monitoring-plugins{{ __monitoring_plugins__package_version_separator }}{{ monitoring_plugins__version }}*' # noqa package-latest
     ansible.builtin.package:
       name:
-        - 'linuxfabrik-monitoring-plugins{{ (monitoring_plugins__version | length) | ternary("-" ~ monitoring_plugins__version, "") }}'
+        - 'linuxfabrik-monitoring-plugins{{ __monitoring_plugins__package_version_separator }}{{ monitoring_plugins__version }}*'
       state: 'latest' # use latest for the versionlock after
 
-  - name: 'install linuxfabrik-monitoring-plugins-selinux{{ (monitoring_plugins__version | length) | ternary("-" ~ monitoring_plugins__version, "") }}' # noqa package-latest
+  - name: 'install linuxfabrik-monitoring-plugins-selinux{{ __monitoring_plugins__package_version_separator }}{{ monitoring_plugins__version }}*' # noqa package-latest
     ansible.builtin.package:
       name:
-        - 'linuxfabrik-monitoring-plugins-selinux{{ (monitoring_plugins__version | length) | ternary("-" ~ monitoring_plugins__version, "") }}'
+        - 'linuxfabrik-monitoring-plugins-selinux{{ __monitoring_plugins__package_version_separator }}{{ monitoring_plugins__version }}*'
       state: 'latest' # use latest for the versionlock after
     when:
       - 'ansible_facts["os_family"] == "RedHat"'

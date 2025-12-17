@@ -1,4 +1,5 @@
 __monitoring_plugins__icinga_user: 'nagios'
-__monitoring_plugins__webserver_user: 'www-data'
+__monitoring_plugins__package_version_separator: '='
 __monitoring_plugins__versionlock_lock_command: 'apt-mark hold'
 __monitoring_plugins__versionlock_unlock_command: 'apt-mark unhold'
+__monitoring_plugins__webserver_user: 'www-data'

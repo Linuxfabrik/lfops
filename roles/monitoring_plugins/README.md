@@ -40,12 +40,12 @@ Notes:
 
 | Variable | Description |
 | -------- | ----------- |
-| `monitoring_plugins__version` | String. Which version of the monitoring plugins should be deployed? Possible options: <ul><li>A specific release, for example `1.2.0.11`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`dev`: The development version (main branch). Use with care. Only works with `monitoring_plugins__install_method: 'source'`.</li></ul> Defaults to `lfops__monitoring_plugins_version` for convenience. |
+| `monitoring_plugins__version` | String. Which version of the monitoring plugins should be deployed? Possible options: <ul><li>A specific release, for example `2.2.1`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`dev`: The development version (main branch). Use with care. Only works with `monitoring_plugins__install_method: 'source'`.</li></ul> Defaults to `lfops__monitoring_plugins_version` for convenience. |
 
 Example:
 ```yaml
 # mandatory
-monitoring_plugins__version: '1.2.0.11'
+monitoring_plugins__version: '2.2.1'
 ```
 
 
