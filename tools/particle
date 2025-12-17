@@ -367,7 +367,7 @@ def parse_args():
     parser.add_argument(
         '--keep-vm',
         help='Do not destroy virtual machines at end of test. '
-             'Primarily intended for debugging.'
+             'Primarily intended for debugging. '
              'Only available if exactly ONE test is run. '
              'Use the `--test-filter` to restrict which test is run '
              '(and optionally `--vm-filter` to only start relevant virtual machines). ',
