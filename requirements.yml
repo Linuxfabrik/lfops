@@ -1,4 +1,6 @@
 collections:
+  - name: 'ansible.general'
+    version: '<9.0.0' # we need python 3.6 support to run against rhel8
   - name: 'ansible.posix'
   - name: 'ansible.utils'
   - name: 'ansible.windows'
