@@ -54,7 +54,7 @@ hostname                             |    |    |    | x | x |    |       |      
                                      |    Debian    |    RHEL    |         Ubuntu        | other
 Role                                 | 11 | 12 | 13 | 8 | 9 | 10 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+----+---+---+----+-------+-------+-------+-----------
-icinga2_agent                        |    |    |    | x | x |    |       |       |       | Fedora 35
+icinga2_agent                        |    |    | x  | x | x |    |       |       |       | Fedora 35
 icinga2_master                       |    | x  | x  | x | x |    |       |       |       |
 icingadb                             |    | x  | x  | x | x |    |       |       |       |
 icingadb_web                         |    | x  | x  | x | x |    |       |       |       |
