@@ -120,6 +120,11 @@ Role:acme_sh
 
 ### Breaking Changes
 
+Role:graylog_server
+* Removed creation a default index set and default input. Take a look at the README for the new intended method.
+* Renamed `graylog_server__system_default_index_set` to `graylog_server__system_index_sets__*_var` & `graylog_server__system_inputs` to `graylog_server__system_inputs__*_var`
+* Add state management for `graylog_server__system_index_sets__host_var` & `graylog_server__system_inputs__host_var`
+
 Role:mariadb_server
 * Removed support for EOL version 10.5
 * Removed `mariadb_server__cnf_expire_logs_days__group_var` / `mariadb_server__cnf_expire_logs_days__host_var`, use `mariadb_server__cnf_binlog_expire_logs_seconds__group_var` / `mariadb_server__cnf_binlog_expire_logs_seconds__host_var` instead
