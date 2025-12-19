@@ -54,8 +54,6 @@
       owner: 'kibana'
       group: 'root'
       mode: 0o644
-    when:
-      - 'kibana__server_ssl_certificate | length'
 
   - name: 'Make sure kibana can read the SSL key'
     ansible.builtin.file:
@@ -63,9 +61,10 @@
       owner: 'kibana'
       group: 'kibana'
       mode: 0o400
-    when:
-      - 'kibana__server_ssl_key | length'
 
+  # block
+  when:
+    - 'kibana__server_ssl_enabled | bool'
   tags:
     - 'kibana'
     - 'kibana:configure'
