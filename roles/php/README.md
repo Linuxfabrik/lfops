@@ -13,6 +13,8 @@ This role is compatible with the following PHP versions:
 * 8.1
 * 8.2
 * 8.3
+* 8.4
+* 8.5
 
 Rules of thumb:
 
