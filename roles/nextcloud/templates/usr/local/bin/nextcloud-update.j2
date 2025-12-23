@@ -1,45 +1,81 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2024010401
+# 2025122101
 
+BASE="/var/www/html/nextcloud"
+LOGDIR="/tmp/nextcloud-$(date --iso-8601)"
+START_TIME=$(date +%s)
+END_TIME=$(( START_TIME + 1800 ))
+
+nc_occ() { sudo -u apache -- php "${BASE}/occ" "$@"; }
+nc_updater() { sudo -u apache -- php "${BASE}/updater/updater.phar" "$@"; }
+
+function move_log_files() {
+    mkdir -p "${LOGDIR}/saved"
+    for f in "${LOGDIR}/*-before-update"; do
+        mv "${f}" "${LOGDIR}/saved/$(basename "${f}")-saved-$(date +"%Y-%m-%d-%H:%M:%S")"
+    done
+}
+
+# Error Handling
 set -e
+trap 'move_log_files' ERR
 
-# TODO
-# echo 'set Icinga downtime'
-# comment='Running Nextcloud update'
-# START_TIME=$(date +%s)
-# END_TIME=$(( $START_TIME + 1800 ))
-# DATA="{ \"type\": \"Host\", \"filter\": \"match(\\\"{{ ansible_facts['fqdn'] }}\\\", host.name)\", \"start_time\": \"$START_TIME\", \"end_time\": \"$END_TIME\", \"author\": \"{{ ansible_facts['fqdn'] }}\", \"comment\": \"$comment\" , \"all_services\": true }"
-# curl --connect-timeout 5 --insecure --silent --user {* icinga2_api_user *}:{* icinga2_api_password *} --header 'Accept: application/json' --request POST 'https://{* icinga2_master *}:5665/v1/actions/schedule-downtime' --data "$DATA" 1> /dev/null
-# sleep 5s
-
+# Set Icinga2 Downtime
+{% if system_update__icinga2_api_user_login is defined and system_update__icinga2_api_user_login | length %}
+echo ' '
+echo ' '
+echo 'Set Icinga downtime'
+curl \
+--connect-timeout 5 \
+--insecure \
+--silent \
+--user "{{ system_update__icinga2_api_user_login["username"] }}:{{ system_update__icinga2_api_user_login["password"] }}" \
+--header 'Accept: application/json' \
+--request POST 'https://{{ icinga2_agent__icinga2_master_cn }}:5665/v1/actions/schedule-downtime' \
+--data-binary @- 1> /dev/null << EOF
+{
+    "type": "Host",
+    "filter": "match(\"{{ ansible_facts['fqdn'] }}\", host.name)",
+    "start_time": "$START_TIME",
+    "end_time": "$END_TIME",
+    "author": "{{ ansible_facts['hostname'] }}",
+    "comment": "Nextcloud Update",
+    "all_services": true
+}
+EOF
+sleep 5
+{% endif %}
 
 # Update Nextcloud
-sudo -u apache php /var/www/html/nextcloud/occ user:list > /tmp/nextcloud-user-list-before-update
-sudo -u apache php /var/www/html/nextcloud/occ config:list > /tmp/nextcloud-config-list-before-update
-sudo -u apache php /var/www/html/nextcloud/occ app:list > /tmp/nextcloud-app-list-before-update
+mkdir -p "$LOGDIR"
+
+nc_occ user:list   > "${LOGDIR}/user-list-before-update"
+nc_occ config:list > "${LOGDIR}/config-list-before-update"
+nc_occ app:list    > "${LOGDIR}/app-list-before-update"
 
 systemctl restart php-fpm.service
 setsebool httpd_unified on
-sudo -u apache php /var/www/html/nextcloud/occ app:update --all --no-interaction
-sudo -u apache php /var/www/html/nextcloud/updater/updater.phar -n
-sudo -u apache php /var/www/html/nextcloud/occ upgrade
+nc_updater --no-interaction
+nc_occ upgrade
+nc_occ app:update --all --no-interaction
 setsebool httpd_unified off
 systemctl restart php-fpm.service
 systemctl restart notify_push.service
 
 sleep 5
 
-sudo -u apache php /var/www/html/nextcloud/occ db:add-missing-indices
-sudo -u apache php /var/www/html/nextcloud/occ db:add-missing-columns
-sudo -u apache php /var/www/html/nextcloud/occ db:convert-filecache-bigint --no-interaction
+nc_occ db:add-missing-columns
+nc_occ db:add-missing-indices
+nc_occ db:add-missing-primary-keys
+nc_occ db:convert-filecache-bigint --no-interaction
 
-chown -R apache:apache /var/www/html/nextcloud
-restorecon -r /var/www/html/nextcloud
+chown -R apache:apache "${BASE}"
+restorecon -r "${BASE}"
 
-sudo -u apache php /var/www/html/nextcloud/occ user:list > /tmp/nextcloud-user-list-after-update
-sudo -u apache php /var/www/html/nextcloud/occ config:list > /tmp/nextcloud-config-list-after-update
-sudo -u apache php /var/www/html/nextcloud/occ app:list > /tmp/nextcloud-app-list-after-update
+nc_occ user:list   > "${LOGDIR}/user-list-after-update"
+nc_occ config:list > "${LOGDIR}/config-list-after-update"
+nc_occ app:list    > "${LOGDIR}/app-list-after-update"
 
 set +e
 
@@ -47,16 +83,39 @@ echo ' '
 echo ' '
 echo 'User List before and after'
 echo '--------------------------'
-diff --side-by-side /tmp/nextcloud-user-list-before-update /tmp/nextcloud-user-list-after-update
+diff --side-by-side "${LOGDIR}/user-list-before-update" "${LOGDIR}/user-list-after-update"
 echo ' '
 echo 'Config List before and after'
 echo '----------------------------'
-diff --side-by-side /tmp/nextcloud-config-list-before-update /tmp/nextcloud-config-list-after-update --ignore-matching-lines='"installed_version":'
+diff --side-by-side "${LOGDIR}/config-list-before-update" "${LOGDIR}/config-list-after-update" --ignore-matching-lines='"installed_version":'
 echo ' '
 echo 'App List before and after'
 echo '-------------------------'
-diff --side-by-side <(cut -d':' -f1 /tmp/nextcloud-app-list-before-update) <(cut -d':' -f1 /tmp/nextcloud-app-list-after-update)
+diff --side-by-side <(cut -d':' -f1 "${LOGDIR}/app-list-before-update") <(cut -d':' -f1 "${LOGDIR}/app-list-after-update")
 
+# Remove Icinga2 Downtime
+{% if system_update__icinga2_api_user_login is defined and system_update__icinga2_api_user_login | length %}
+echo ' '
+echo ' '
+echo 'Remove Icinga downtime'
+curl \
+--connect-timeout 5 \
+--insecure \
+--silent \
+--user '{{ system_update__icinga2_api_user_login["username"] }}:{{ system_update__icinga2_api_user_login["password"] }}' \
+--header 'Accept: application/json' \
+--request POST 'https://{{ icinga2_agent__icinga2_master_cn }}:5665/v1/actions/remove-downtime' \
+--data-binary @- 1> /dev/null << EOF
+{
+    "type": "Host",
+    "filter": "host.name==\"{{ ansible_facts['fqdn'] }}\"",
+    "pretty": true
+}
+EOF
+{% endif %}
 
-# echo 'remove Icinga downtime'
-# TODO
+# Cleanup
+echo ' '
+echo ' '
+echo 'Please run:'
+find /data/updater-*/backups/ -maxdepth 1 -mindepth 1 -type d -printf 'rm --recursive --force %p\n'
