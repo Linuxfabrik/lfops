@@ -27,7 +27,7 @@ graylog_server__system_default_index_set:
     rotate_empty_index_set: false
     type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
   rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
-  shards: 4
+  shards: 3
   title: 'Linuxfabrik Index Set (managed by Ansible - do not edit)'
   writable: true
 
