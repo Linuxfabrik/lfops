@@ -1,3 +1,4 @@
+# note: do not forget to update dependencies in galaxy.yml
 collections:
   - name: 'ansible.posix'
   - name: 'ansible.utils'
