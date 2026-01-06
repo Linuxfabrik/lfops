@@ -10,20 +10,23 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
-tbd
+### Fixed
+
+Role:mariadb_server
+* Fix the root cause of `/run/mariadb/wsrep-start-position: No such file or directory` after update of MariaDB (10.11.14 -> 10.11.15 or 11.4.8 -> 11.4.9)
 
 
 ## [v5.1.0] - 2026-01-06
 
 ### Added
 
-Role:kibana:
+Role:kibana
 * Add `kibana__raw` variable
 
-Role:elasticsearch:
+Role:elasticsearch
 * Add `elasticsearch__raw` variable
 
-Role:apache_httpd:
+Role:apache_httpd
 * Add nice ErrorDocuments
 
 Role:kibana
@@ -32,10 +35,10 @@ Role:kibana
 
 ### Fixed
 
-Role:ansible_init:
+Role:ansible_init
 * Install Ansible Collections from requirements.txt since that file contains the correct versions for running against rhel8
 
-Role:monitoring_plugins:
+Role:monitoring_plugins
 * Fix installation of package against non-rhel hosts
 
 Role:rocketchat
@@ -76,7 +79,7 @@ Role:selinux
 Role:kibana
 * Added
 
-Role:selinux:
+Role:selinux
 * Added `selinux__policy` variable
 
 Role:elasticsearch

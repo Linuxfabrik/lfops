@@ -161,19 +161,32 @@
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
-  - name: 'Deploy /etc/tmpfiles.d/mariadb.conf for the socket path'
+  - name: 'Deploy /etc/tmpfiles.d/mariadb-linuxfabrik.conf for the socket path'
     ansible.builtin.template:
-      src: 'etc/tmpfiles.d/mariadb.conf.j2'
-      dest: '/etc/tmpfiles.d/mariadb.conf'
+      # we need to use a different name than the packaged /usr/lib/tmpfiles.d/mariadb.conf, else it is overwritten completely
+      src: 'etc/tmpfiles.d/mariadb-linuxfabrik.conf.j2'
+      dest: '/etc/tmpfiles.d/mariadb-linuxfabrik.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: 'mariadb_server__deploy_tmpfiles_result'
 
-  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb.conf' # noqa no-handler no-changed-when (sadly no easy way to detect changes)
-    ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb.conf'
+  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb-linuxfabrik.conf' # noqa no-handler no-changed-when (sadly no easy way to detect changes)
+    ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb-linuxfabrik.conf'
     when:
       - 'mariadb_server__deploy_tmpfiles_result is changed'
+
+  # the next 2 tasks can be removed once /etc/tmpfiles.d/mariadb.conf is removed on all hosts
+  - name: 'Remove old /etc/tmpfiles.d/mariadb.conf to prevent packaged `/usr/lib/tmpfiles.d/mariadb.conf` from being overwritten'
+    ansible.builtin.file:
+      path: '/etc/tmpfiles.d/mariadb.conf'
+      state: 'absent'
+    register: 'mariadb_server__remove_old_tmpfiles_result'
+
+  - name: 'systemd-tmpfiles --create /usr/lib/tmpfiles.d/mariadb.conf' # noqa no-handler no-changed-when
+    ansible.builtin.command: 'systemd-tmpfiles --create /usr/lib/tmpfiles.d/mariadb.conf'
+    when:
+      - 'mariadb_server__remove_old_tmpfiles_result is changed'
 
   # /var/lib/mysql/mysql\.sock                         socket             system_u:object_r:mysqld_var_run_t:s0
   - name: 'semanage fcontext --add --type mysqld_var_run_t {{ mariadb_server__cnf_socket__combined_var | ansible.builtin.regex_escape }}'
@@ -311,15 +324,11 @@
     when:
       - 'mariadb_server__cnf_ssl_key__combined_var | length'
 
-  - name: 'Deploy /etc/systemd/system/mariadb.service'
-    ansible.builtin.template:
-      src: 'etc/systemd/system/mariadb.service.j2'
-      dest: '/etc/systemd/system/mariadb.service'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
+  - name: 'Remove old workaround at /etc/systemd/system/mariadb.service'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/mariadb.service'
+      state: 'absent'
     register: 'mariadb_server__service_result'
-    notify: 'mariadb_server: systemctl restart mariadb'
 
   - name: 'mkdir -p /etc/systemd/system/mariadb.service.d/'
     ansible.builtin.file:
