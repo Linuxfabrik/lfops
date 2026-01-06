@@ -27,6 +27,9 @@ Role:kibana
 
 ### Fixed
 
+Role:ansible_init:
+* Install Ansible Collections from requirements.txt since that file contains the correct versions for running against rhel8
+
 Role:monitoring_plugins:
 * Fix installation of package against non-rhel hosts
 

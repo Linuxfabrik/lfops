@@ -59,13 +59,21 @@
 
 - block:
 
+  - name: 'Install ansible collections from requirements.yml'
+    community.general.ansible_galaxy_install:
+      requirements_file: '{{ ansible_init__ansinv_path }}../lfops/requirements.yml'
+      type: 'collection'
+      force: true # from the doc: *Ansible 2.9 and 2.10*: Must be `true' to upgrade roles and collections.
+    ignore_errors: true
+
   - name: 'Install ansible collections'
     community.general.ansible_galaxy_install:
       name: '{{ item["name"] }}'
       # no_deps: '{{ item["no_deps"] | d("False") }}'
       type: '{{ item["type"] | d("collection") }}'
       force: true # from the doc: *Ansible 2.9 and 2.10*: Must be `true' to upgrade roles and collections.
-    loop: "{{ ansible_init__ansible_collections }}"
+    loop: '{{ ansible_init__ansible_collections }}'
+    when: 'ansible_init__ansible_collections | length'
     ignore_errors: true
 
   tags:
