@@ -50,6 +50,14 @@
       mode: 0o644
     notify: 'graylog: restart graylog-server'
 
+  - name: 'mkdir -p {{ graylog_server__message_journal_dir }}'
+    ansible.builtin.file:
+      path: '{{ graylog_server__message_journal_dir }}'
+      state: 'directory'
+      owner: 'graylog'
+      group: 'graylog'
+      mode: 0o755
+
   tags:
     - 'graylog_server'
     - 'graylog_server:configure'

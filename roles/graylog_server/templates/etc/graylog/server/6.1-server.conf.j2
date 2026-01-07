@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025111301
+# 2026010701
 # 6.1
 ############################
 # GRAYLOG CONFIGURATION FILE
@@ -533,7 +533,7 @@ message_journal_enabled = true
 #   in the root directory, you need to create a sub directory for your journal.
 #   Otherwise Graylog will log an error message that the journal is corrupt and Graylog will not start.
 # Default: <data_dir>/journal
-message_journal_dir = /var/lib/graylog-server/journal
+message_journal_dir = {{ graylog_server__message_journal_dir }}
 
 # Journal hold messages before they could be written to Elasticsearch.
 # For a maximum of 12 hours or 5 GB whichever happens first.

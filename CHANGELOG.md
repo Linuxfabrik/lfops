@@ -10,6 +10,11 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
+### Added
+
+Role:graylog_server
+* Make `message_journal_dir` variable
+
 ### Fixed
 
 Role:mariadb_server

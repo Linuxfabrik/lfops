@@ -1,6 +1,7 @@
 graylog_server__http_bind_address: '127.0.0.1'
 graylog_server__http_bind_port: 9000
 graylog_server__is_leader: true
+graylog_server__message_journal_dir: '/var/lib/graylog-server/journal'
 graylog_server__mongodb_uri: 'mongodb://127.0.0.1/graylog'
 graylog_server__opts: '-Xms1g -Xmx1g -server -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow'
 graylog_server__plugins: []
