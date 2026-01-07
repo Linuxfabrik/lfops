@@ -106,3 +106,7 @@ graylog_server__kernel_settings__transparent_hugepages__dependent_var: 'never'
 graylog_server__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
     value: 'on'
+graylog_server__selinux__fcontexts__dependent_var:
+  - setype: 'var_lib_t'
+    target: '{{ graylog_server__message_journal_dir | ansible.builtin.regex_escape }}(/.*)?'
+    state: 'present'
