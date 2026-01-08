@@ -13,5 +13,5 @@ graylog_datanode__kernel_settings__sysctl__dependent_var:
     value: 262144
 graylog_datanode__selinux__fcontexts__dependent_var:
   - setype: 'var_lib_t'
-    target: '{{ graylog_datanode__opensearch_data_location }}(/.*)?'
+    target: '{{ graylog_datanode__opensearch_data_location | ansible.builtin.regex_escape }}(/.*)?'
     state: 'present'
