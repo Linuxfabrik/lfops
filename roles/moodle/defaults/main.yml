@@ -169,5 +169,5 @@ moodle__selinux__fcontexts__dependent_var:
   # allow rw for the installation of plugins via the webgui
   # allow all files, as the plugins use different directories for each plugintype
   - setype: 'httpd_sys_rw_content_t'
-    target: '{{ moodle__install_dir }}(/.*)?'
+    target: '{{ moodle__install_dir | ansible.builtin.regex_escape }}(/.*)?'
     state: 'present'
