@@ -85,7 +85,7 @@ libreoffice                          |    |    |    | x |   |    |       |      
 login                                |    |    |    | x | x |    |       |       |       | Fedora 35+
 logrotate                            |    |    |    | x | x |    |       |       |       | Fedora
 mailto_root                          |    |    |    | x | x |    |       |       |       |
-mailx                                | x  | x  | x  | x | x |    |       |       |       | Fedora
+mailx                                | x  | x  | x  | x | x | x  |       |       |       | Fedora
 mariadb_server                       |    | x  | x  | x | x |    |       |       |       | Galera on Debian is untested
 maxmind_geoip                        |    |    |    | x |   |    |       |       |       |
 minio_client                         |    |    |    | x |   |    |       |       |       |
@@ -118,13 +118,13 @@ python                               |    | x  | x  | x | x |    |       |      
 python_venv                          | x  | x  | x  | x | x |    |       |       |       | Fedora 35
 qemu_guest_agent                     |    |    |    | x | x |    |       |       |       |
 redis                                |    | x  | x  | x | x |    |       |       |       |
-repo_baseos                          |    |    |    | x | x |    |       |       |       |
+repo_baseos                          |    |    |    | x | x | x  |       |       |       |
 repo_collabora                       |    |    |    | x |   |    |       |       |       |
 repo_collabora_code                  |    |    |    | x | x |    |       |       |       |
 repo_debian_base                     | x  |    |    | - | - |    |       |       |       |
 repo_docker                          |    |    |    | x |   |    |       |       |       |
 repo_elasticsearch                   |    |    |    | x | x |    |       |       |   x   |
-repo_epel                            |    |    |    | x | x |    |       |       |       |
+repo_epel                            |    |    |    | x | x | x  |       |       |       |
 repo_gitlab_ce                       |    |    |    | x |   |    |       |       |       |
 repo_gitlab_runner                   |    |    |    | x |   |    |       |       |       |
 repo_grafana                         |    | x  | x  | x | x |    |       |       |       |
