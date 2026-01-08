@@ -111,7 +111,7 @@ opensearch                           | x  |    |    | x |   |    |       |      
 open_vm_tools                        |    |    |    | x | x |    |       |       |       |
 openvpn_server                       |    |    |    | x | x |    |       |       |       |
 php                                  |    | x  | x  | x | x |    |       |       |       |
-policycoreutils                      |    |    |    | x | x |    |       |       |       | Fedora 35
+policycoreutils                      |    |    |    | x | x | x  |       |       |       | Fedora 35
 postfix                              | x  | x  | x  | x | x |    |       |       |       | Fedora 35
 postgresql_server                    |    |    |    | x |   |    |       |       |       |
 python                               |    | x  | x  | x | x |    |       |       |       | Windows

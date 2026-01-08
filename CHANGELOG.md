@@ -12,7 +12,10 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
-Role:mailx:
+Role:policycoreutils
+* Add support for RHEL10
+
+Role:mailx
 * Add support for RHEL10
 
 Role:graylog_server
