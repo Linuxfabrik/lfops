@@ -23,20 +23,18 @@
           repo_epel__repo_baseos__crb_repo_enabled__dependent_var
         }}'
       when:
-        - '(ansible_facts["distribution"] == "CentOS" and ansible_facts["distribution_major_version"] in ["7", "8", "9"])
-          or (ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] in ["8", "9"])
-          or (ansible_facts["distribution"] == "AlmaLinux" and ansible_facts["distribution_major_version"] in ["8"])'
+        - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_repo_baseos | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_repo_epel | d(false)'
 
     # === Security ===
     - role: 'linuxfabrik.lfops.crypto_policy'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_crypto_policy | d(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
@@ -79,8 +77,7 @@
 
     - role: 'linuxfabrik.lfops.dnf_makecache'
       when:
-        - '(ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["8", "9"])
-          or (ansible_facts["distribution"] == "Fedora")'
+        - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_dnf_makecache | d(false)'
 
     - role: 'linuxfabrik.lfops.kdump'
@@ -122,6 +119,8 @@
 
     # === SSH ===
     - role: 'linuxfabrik.lfops.sshd'
+      when:
+        - 'not setup_basic__skip_sshd | d(false)'
 
     - role: 'linuxfabrik.lfops.login'
       when:
