@@ -150,7 +150,7 @@ rocketchat                           |    |    |    | x |   |    |       |      
 rsyslog                              |    |    |    | x | x |    |       |       |       |
 selinux                              |    |    |    | x | x |    |       |       |       |
 snmp                                 |    |    |    | x | x |    |       |       |       |
-sshd                                 |    | x  | x  | x | x |    |       |       |       | Fedora 40
+sshd                                 |    | x  | x  | x | x | x  |       |       |       | Fedora 40
 system_update                        | x  | x  | x  | x | x |    |       |       |       |
 systemd_journald                     |    |    |    | x | x |    |       |       |       |
 systemd_unit                         |    |    |    | x | x |    |       |       |       |
