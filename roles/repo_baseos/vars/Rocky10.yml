@@ -1,0 +1,5 @@
+repo_baseos__repo_files:
+  - 'Rocky10/etc/yum.repos.d/rocky-addons.repo'
+  - 'Rocky10/etc/yum.repos.d/rocky-devel.repo'
+  - 'Rocky10/etc/yum.repos.d/rocky-extras.repo'
+  - 'Rocky10/etc/yum.repos.d/rocky.repo'
