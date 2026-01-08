@@ -83,7 +83,7 @@ libmaxminddb                         |    |    |    | x |   |    |       |      
 librenms                             |    |    |    | x |   |    |       |       |       |
 libreoffice                          |    |    |    | x |   |    |       |       |       |
 login                                |    |    |    | x | x |    |       |       |       | Fedora 35+
-logrotate                            |    |    |    | x | x |    |       |       |       | Fedora
+logrotate                            |    |    |    | x | x | x  |       |       |       | Fedora
 mailto_root                          |    |    |    | x | x |    |       |       |       |
 mailx                                | x  | x  | x  | x | x | x  |       |       |       | Fedora
 mariadb_server                       |    | x  | x  | x | x |    |       |       |       | Galera on Debian is untested
