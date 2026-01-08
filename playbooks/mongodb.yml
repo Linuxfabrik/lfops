@@ -18,11 +18,6 @@
       when:
         - 'not mongodb__skip_kernel_settings | d(false)'
 
-    - role: 'linuxfabrik.lfops.apps'
-      apps__apps__dependent_var: '{{
-          mongodb__apps__apps__dependent_var
-        }}'
-
     - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var: '{{
           mongodb__python_venv__venvs__dependent_var
