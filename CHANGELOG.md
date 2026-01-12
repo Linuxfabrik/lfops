@@ -38,6 +38,9 @@ Role:graylog_server
 
 ### Fixed
 
+Role:repo_postgresql
+* Remove EOL versions, adjust for rhel9 & 10
+
 Role:mariadb_server
 * Fix the root cause of `/run/mariadb/wsrep-start-position: No such file or directory` after update of MariaDB (10.11.14 -> 10.11.15 or 11.4.8 -> 11.4.9)
 
