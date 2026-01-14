@@ -9,7 +9,7 @@ IMPORTANT:
 
 ## Mandatory Requirements
 
-* Install the `passlib` Python module on the Ansible Controller (`dnf install python3-passlib` on Fedora).
+* Install the `passlib` Python module on the Ansible Controller (`dnf install python3-passlib` on Fedora). If you use the [LFOps Execution Environment](https://github.com/Linuxfabrik/lfops/pkgs/container/lfops_ee), this is already done for you.
 
 
 ## Tags

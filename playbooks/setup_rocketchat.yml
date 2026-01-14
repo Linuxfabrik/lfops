@@ -50,13 +50,6 @@
       when:
         - 'not setup_rocketchat__skip_mongodb | default(false)'
 
-    - role: 'linuxfabrik.lfops.python'
-      python__modules__dependent_var: '{{
-          login__python__modules__dependent_var
-        }}'
-      when:
-        - 'not setup_rocketchat__skip_python | d(false)'
-
     - role: 'linuxfabrik.lfops.login'
       login__users__dependent_var: '{{
           rocketchat__login__users__dependent_var
