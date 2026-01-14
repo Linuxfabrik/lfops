@@ -4,6 +4,13 @@ Linuxfabrik's Ansible Development Guidelines
 Rules of Thumb
 --------------
 
+* Do not set defaults for mandatory variables.
+* Always sort variables, tags, etc.
+* All user-facing information should be in the README. Only use comments in other places for technical information.
+* Keep templates as close to the original file as possible. This makes handling of rpmnew files easier.
+* Prefer `item["subkey"]` to `item.subkey`.
+* Always use the long parameter when using shell commands.
+
 Playbooks:
 
 * Each playbook must contain all dependencies to run flawlessly against a newly installed machine.
@@ -113,7 +120,7 @@ Quotes
 * If you must write a long string, we use the "folded scalar" (``>`` converts newlines to spaces, ``|`` keeps newlines) style and omit all special quoting.
 * Do not quote booleans (e.g. ``true``/``false``).
 * Do not quote numbers (e.g. ``42``).
-* Do not quote octal numbers (e.g. ``0755``).
+* Do not quote octal numbers (e.g. ``0755``), use the ``0o`` prefix instead (e.g. ``0o0755``)
 * Do not quote things referencing the local Ansible environment (e.g. boolean logic in ``when:`` statements or names of variables we are assigning values to).
 
 .. code-block:: yml
