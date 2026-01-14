@@ -34,7 +34,7 @@ login__passwordless_sudo_group: 'linuxfabrik'
 login__users__host_var:
   - name: 'test'
     password: 'linuxfabrik'
-    home: '/home/linuxfabrik'
+    home: '/home/test'
     create_home: true
     shell: '/bin/bash'
     linger: true
