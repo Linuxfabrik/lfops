@@ -114,6 +114,12 @@
         - 'not setup_basic__skip_yum_utils | d(false)'
 
 
+    # === LVM ===
+    - role: 'linuxfabrik.lfops.lvm'
+      when:
+        - 'not setup_basic__skip_lvm | d(false)'
+
+
     # === SSH ===
     - role: 'linuxfabrik.lfops.sshd'
       when:

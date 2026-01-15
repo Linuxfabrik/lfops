@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Playbook:setup_basic:
+* Add lvm role
+
 Role:lvm
 * Add role
 
