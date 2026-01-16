@@ -12,6 +12,12 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:graylog_datanode
+* Add template for 7.0
+
+Role:graylog_server
+* Add template for 7.0
+
 Playbook:setup_basic:
 * Add lvm role
 
