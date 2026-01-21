@@ -78,7 +78,9 @@ unzip ca.zip
 Copy the generated certificates to your Ansible inventory (have a look at the Optional Variables below for the paths).
 
 
-### Bootstrap the First Node
+### Bootstrap the First Node(s)
+
+**Important:** The first node(s) bootstrapped with `elasticsearch__cluster_initial_master_nodes` must have both `master` and `data` roles.
 
 ```bash
 ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit node1.example.com --extra-vars='{"elasticsearch__cluster_initial_master_nodes": ["node1.example.com"]}'
