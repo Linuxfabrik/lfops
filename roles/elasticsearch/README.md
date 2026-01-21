@@ -80,7 +80,7 @@ Copy the generated certificates to your Ansible inventory (have a look at the Op
 
 ### Bootstrap the First Node(s)
 
-**Important:** The first node(s) bootstrapped with `elasticsearch__cluster_initial_master_nodes` must have both `master` and `data` roles.
+You can bootstrap one or more nodes - both options work. Starting with a single node makes troubleshooting easier. However, bear in mind that both the `master` and `data` roles are required for bootstrapping. Either the first node must have these roles, or multiple nodes must be bootstrapped.
 
 ```bash
 ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit node1.example.com --extra-vars='{"elasticsearch__cluster_initial_master_nodes": ["node1.example.com"]}'
