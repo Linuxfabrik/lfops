@@ -13,6 +13,7 @@ Note: Always add new entries to the top of the section, even if this results in 
 ### Added
 
 Role:graylog_server
+* Make `http_publish_uri` configurable
 * Make `trusted_proxies` configurable
 
 Role:graylog_datanode

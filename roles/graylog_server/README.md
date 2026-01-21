@@ -62,6 +62,7 @@ graylog_server__password_secret: 'Linuxfabrik_GmbH'
 | `graylog_server__elasticsearch_hosts` | List of Elasticsearch hosts URLs Graylog should connect to. Only set this when not using Graylog Data Nodes. | unset |
 | `graylog_server__http_bind_address` | The network interface used by the Graylog HTTP interface. | `'127.0.0.1'` |
 | `graylog_server__http_bind_port` | The port used by the Graylog HTTP interface. | `9000` |
+| `graylog_server__http_publish_uri` | The HTTP URI of this Graylog node which is used to communicate with the other Graylog nodes in the cluster and by users to access the Graylog web interface. | `''` |
 | `graylog_server__is_leader` | This should be set to `true` for a single node in the cluster. The leader will perform some periodical tasks that non-leaders won't perform. | `true` |
 | `graylog_server__message_journal_dir` | The directory which will be used to store the message journal. The directory must be exclusively used by Graylog and must not contain any other files than the ones created by Graylog itself. The role will create the folder with the required permissions. | `'/var/lib/graylog-server/journal'` |
 | `graylog_server__mongodb_uri` | MongoDB connection string. See https://docs.mongodb.com/manual/reference/connection-string/ for details. | `'mongodb://127.0.0.1/graylog'` |
@@ -80,6 +81,7 @@ graylog_server__elasticsearch_hosts: # TODO doesnt exist anymore
   - 'https://opensearch3.example.com:9200'
 graylog_server__http_bind_address: '192.0.2.1'
 graylog_server__http_bind_port: 9000
+graylog_server__http_publish_uri: 'http://graylog.example.com:9000/'
 graylog_server__is_leader: true
 graylog_server__message_journal_dir: '/data/graylog/journal'
 graylog_server__mongodb_uri: 'mongodb://graylog01.example.com:27017,username:password@graylog02.example.com:27017,graylog03.example.com:27017/graylog?replicaSet=rs01'

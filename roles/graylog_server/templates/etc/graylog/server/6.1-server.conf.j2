@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026012101
+# 2026012102
 # 6.1
 ############################
 # GRAYLOG CONFIGURATION FILE
@@ -123,6 +123,9 @@ http_bind_address = {{ graylog_server__http_bind_address | default('127.0.0.1') 
 #
 # Default: http://$http_bind_address/
 #http_publish_uri = http://192.168.1.1:9000/
+{% if graylog_server__http_publish_uri | length %}
+http_publish_uri = {{ graylog_server__http_publish_uri }}
+{% endif %}
 
 #### External Graylog URI
 #
