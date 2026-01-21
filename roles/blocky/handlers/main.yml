@@ -1,3 +1,9 @@
+- name: 'blocky: validate config & restart blocky.service'
+  ansible.builtin.command: '/usr/local/sbin/blocky validate --config /etc/blocky/config.yml'
+  changed_when: false
+  notify:
+    - 'blocky: restart blocky.service'
+
 - name: 'blocky: restart blocky.service'
   ansible.builtin.service:
     name: 'blocky.service'
