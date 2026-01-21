@@ -69,6 +69,7 @@ graylog_server__password_secret: 'Linuxfabrik_GmbH'
 | `graylog_server__service_enabled` | Enables or disables the Systemd unit. | `true` |
 | `graylog_server__stale_leader_timeout_ms` | Time in milliseconds after which a detected stale leader node is being rechecked on startup. Try increasing this if `NO_LEADER: There was no leader Graylog server node detected in the cluster` appear in the System Messages. | `2000` |
 | `graylog_server__timezone` | The time zone setting of the root user. See [joda.org](http://www.joda.org/joda-time/timezones.html) for a list of valid time zones. | `'Europe/Zurich'` |
+| `graylog_server__trusted_proxies` | List of trusted proxies that are allowed to set the client address with `X-Forwarded-For` header. May be subnets or hosts. | `[]` |
 
 Example:
 ```yaml
@@ -86,6 +87,10 @@ graylog_server__opts: '-Xms2g -Xmx2g -server -XX:+UseG1GC -XX:-OmitStackTraceInF
 graylog_server__service_enabled: false
 graylog_server__stale_leader_timeout_ms: 10000
 graylog_server__timezone: 'Europe/Zurich'
+graylog_server__trusted_proxies:
+  - '127.0.0.1/32'
+  - '0:0:0:0:0:0:0:1/128'
+  - '10.0.0.0/8'
 ```
 
 

@@ -8,6 +8,7 @@ graylog_server__plugins: []
 graylog_server__service_enabled: true
 graylog_server__stale_leader_timeout_ms: 2000
 graylog_server__timezone: 'Europe/Zurich'
+graylog_server__trusted_proxies: []
 
 graylog_server__system_default_index_set:
   can_be_default: true
