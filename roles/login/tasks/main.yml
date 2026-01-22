@@ -67,7 +67,7 @@
       password: '{{ (item["password"] | d(None)) | ternary(
             (
               item["password"] | d()
-              | password_hash("sha512", (65534 | random(seed=inventory_hostname) | string))
+              | ansible.builtin.password_hash("sha512", (65534 | random(seed=inventory_hostname) | string))
             ), omit)
           }}'
       remove: true #  only affects `state=absent`
