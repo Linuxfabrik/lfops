@@ -86,13 +86,14 @@
 
   - name: 'Check for Graylog first-time startup message in server.log'
     ansible.builtin.command: 'grep -A 2 "Initial configuration is accessible" /var/log/graylog-server/server.log'
-    register: 'graylog_startup_check'
+    register: '__graylog_server__startup_message_result'
     ignore_errors: true
+    changed_when: false # no actual config change
 
   - name: 'Graylog first-time startup message:'
     ansible.builtin.debug:
-      var: 'graylog_startup_check.stdout_lines'
-    when: 'graylog_startup_check.rc == 0'
+      var: '__graylog_server__startup_message_result["stdout_lines"]'
+    when: '__graylog_server__startup_message_result["rc"] == 0'
 
   tags:
     - 'graylog_server'
