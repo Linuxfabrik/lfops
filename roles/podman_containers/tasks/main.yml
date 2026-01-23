@@ -24,15 +24,6 @@
   - name: 'Get user UIDs'
     ansible.builtin.getent:
       database: 'passwd'
-      key: '{{ item["user"] }}'
-    loop: '{{
-          (podman_containers__containers__combined_var +
-          podman_containers__networks__combined_var +
-          podman_containers__volumes__combined_var)
-          | selectattr("user", "defined")
-      }}'
-    loop_control:
-      label: '{{ item["name"] }} - user: {{ item["user"] }})'
 
   - name: 'mkdir -p /etc/containers/systemd/users/$UID'
     ansible.builtin.file:
