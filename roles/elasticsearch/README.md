@@ -77,6 +77,8 @@ unzip ca.zip
 
 Copy the generated certificates to your Ansible inventory (have a look at the Optional Variables below for the paths).
 
+The certificates are used for `elasticsearch__{http,transport}_{cert,key}`. It is possible to either use different certificates for http and transport or use the same for both.
+
 
 ### Bootstrap the First Node(s)
 
