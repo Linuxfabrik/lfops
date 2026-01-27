@@ -1,9 +1,12 @@
-- name: 'logstash: validate config and restart logstash'
+- name: 'logstash: validate config and reload logstash'
   ansible.builtin.command: '/usr/share/logstash/bin/logstash --config.test_and_exit --path.settings /etc/logstash'
   become_user: 'logstash'
   become: true
   notify:
-    - 'logstash: restart logstash'
+    - 'logstash: reload logstash'
+
+- name: 'logstash: reload logstash'
+  ansible.builtin.command: 'systemctl kill --signal SIGHUP logstash'
 
 - name: 'logstash: restart logstash'
   ansible.builtin.service:
