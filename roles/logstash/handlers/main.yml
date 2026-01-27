@@ -1,5 +1,7 @@
 - name: 'logstash: validate config and restart logstash'
   ansible.builtin.command: '/usr/share/logstash/bin/logstash --config.test_and_exit'
+  become_user: 'logstash'
+  become: true
   notify:
     - 'logstash: restart logstash'
 
