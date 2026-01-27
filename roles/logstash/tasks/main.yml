@@ -41,8 +41,8 @@
       state: 'directory'
 
   - name: 'Deploy /etc/systemd/system/logstash.service.d/z10-config-reload.conf'
-    ansible.builtin.copy:
-      src: 'etc/systemd/system/logstash.service.d/z10-config-reload.conf'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/logstash.service.d/z10-config-reload.conf.j2'
       dest: '/etc/systemd/system/logstash.service.d/z10-config-reload.conf'
       owner: 'root'
       group: 'root'
