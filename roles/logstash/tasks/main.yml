@@ -1,0 +1,169 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'logstash'
+    - 'logstash:configure'
+    - 'logstash:pipelines'
+    - 'logstash:state'
+
+- block:
+
+  - name: 'Install logstash'
+    ansible.builtin.package:
+      name:
+        - 'logstash'
+      state: 'present'
+
+  - name: 'mkdir -p /etc/logstash/conf.d'
+    ansible.builtin.file:
+      path: '/etc/logstash/conf.d'
+      state: 'directory'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o750
+
+  - name: 'mkdir -p {{ logstash__path_data }}/tmp'
+    ansible.builtin.file:
+      path: '{{ logstash__path_data }}/tmp'
+      state: 'directory'
+      owner: 'logstash'
+      group: 'logstash'
+      mode: 0o755
+
+  tags:
+    - 'logstash'
+
+
+- block:
+
+  - name: 'mkdir -p /etc/logstash/certs'
+    ansible.builtin.file:
+      path: '/etc/logstash/certs'
+      state: 'directory'
+      owner: 'logstash'
+      group: 'logstash'
+      mode: 0o750
+
+  - name: 'Deploy /etc/logstash/certs/ca.crt'
+    ansible.builtin.copy:
+      dest: '/etc/logstash/certs/ca.crt'
+      content: '{{ logstash__elasticsearch_ca_cert }}'
+      owner: 'logstash'
+      group: 'logstash'
+      mode: 0o640
+    notify: 'logstash: validate config and restart logstash'
+
+  # block
+  when:
+    - 'logstash__elasticsearch_ca_cert is defined and logstash__elasticsearch_ca_cert | length'
+  tags:
+    - 'logstash'
+    - 'logstash:configure'
+
+
+- block:
+
+  - name: 'deploy /etc/logstash/logstash.yml'
+    ansible.builtin.template:
+      src: 'etc/logstash/logstash.yml.j2'
+      dest: '/etc/logstash/logstash.yml'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o660
+      backup: true
+    notify: 'logstash: validate config and restart logstash'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/logstash/logstash.yml'
+
+  - name: 'deploy /etc/logstash/pipelines.yml'
+    ansible.builtin.template:
+      src: 'etc/logstash/pipelines.yml.j2'
+      dest: '/etc/logstash/pipelines.yml'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o660
+      backup: true
+    notify: 'logstash: validate config and restart logstash'
+
+  - name: 'Deploy /etc/logstash/jvm.options.d/heap.options'
+    ansible.builtin.template:
+      src: 'etc/logstash/jvm.options.d/heap.options.j2'
+      dest: '/etc/logstash/jvm.options.d/heap.options'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o660
+      backup: true
+    notify: 'logstash: validate config and restart logstash'
+    when: 'logstash__heap_size | length'
+
+  - name: 'Remove /etc/logstash/jvm.options.d/heap.options'
+    ansible.builtin.file:
+      path: '/etc/logstash/jvm.options.d/heap.options'
+      state: 'absent'
+    notify: 'logstash: validate config and restart logstash'
+    when: 'not (logstash__heap_size | length)'
+
+  - name: 'Deploy {{ __logstash__sysconfig_file_path }}'
+    ansible.builtin.template:
+      src: 'etc/sysconfig/logstash.j2'
+      dest: '{{ __logstash__sysconfig_file_path }}'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o664
+      backup: true
+    notify: 'logstash: validate config and restart logstash'
+
+  tags:
+    - 'logstash'
+    - 'logstash:configure'
+
+
+- block:
+
+  - name: 'Deploy pipeline config files'
+    ansible.builtin.copy:
+      dest: '/etc/logstash/conf.d/{{ item["pipeline_id"] }}.conf'
+      content: '{{ item["content"] }}'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o640
+      backup: true
+    loop: '{{ logstash__pipelines__combined_var }}'
+    loop_control:
+      label: '{{ item["pipeline_id"] }}'
+    when: 'item["state"] | default("present") != "absent"'
+    notify: 'logstash: validate config and restart logstash'
+
+  - name: 'Remove absent pipeline config files'
+    ansible.builtin.file:
+      path: '/etc/logstash/conf.d/{{ item["pipeline_id"] }}.conf'
+      state: 'absent'
+    loop: '{{ logstash__pipelines__combined_var }}'
+    loop_control:
+      label: '{{ item["pipeline_id"] }}'
+    when: 'item["state"] | default("present") == "absent"'
+    notify: 'logstash: validate config and restart logstash'
+
+  tags:
+    - 'logstash'
+    - 'logstash:pipelines'
+
+
+- block:
+
+  - name: 'systemctl {{ logstash__service_enabled | bool | ternary("enable", "disable") }} --now logstash.service'
+    ansible.builtin.systemd:
+      name: 'logstash.service'
+      enabled: '{{ logstash__service_enabled }}'
+      state: '{{ logstash__service_state }}'
+
+  tags:
+    - 'logstash'
+    - 'logstash:state'

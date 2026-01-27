@@ -1,0 +1,50 @@
+# {{ ansible_managed }}
+# 2026012201
+
+# This file is where you define your pipelines. You can define multiple.
+# For more information on multiple pipelines, see the documentation:
+# https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html
+
+{% for pipeline in logstash__pipelines__combined_var %}
+{% if pipeline['state'] | d('present') != 'absent' %}
+
+- pipeline.id: '{{ pipeline["pipeline_id"] }}'
+  path.config: '/etc/logstash/conf.d/{{ pipeline["pipeline_id"] }}.conf'
+{% if pipeline['pipeline_workers'] is defined %}
+  pipeline.workers: {{ pipeline['pipeline_workers'] }}
+{% endif %}
+{% if pipeline['pipeline_batch_size'] is defined %}
+  pipeline.batch.size: {{ pipeline['pipeline_batch_size'] }}
+{% endif %}
+{% if pipeline['pipeline_batch_delay'] is defined %}
+  pipeline.batch.delay: {{ pipeline['pipeline_batch_delay'] }}
+{% endif %}
+{% if pipeline['pipeline_ordered'] is defined %}
+  pipeline.ordered: '{{ pipeline["pipeline_ordered"] }}'
+{% endif %}
+{% if pipeline['queue_type'] is defined %}
+  queue.type: '{{ pipeline["queue_type"] }}'
+{% endif %}
+{% if pipeline['queue_max_bytes'] is defined %}
+  queue.max_bytes: '{{ pipeline["queue_max_bytes"] }}'
+{% endif %}
+{% if pipeline['queue_page_capacity'] is defined %}
+  queue.page_capacity: '{{ pipeline["queue_page_capacity"] }}'
+{% endif %}
+{% if pipeline['queue_max_events'] is defined %}
+  queue.max_events: {{ pipeline['queue_max_events'] }}
+{% endif %}
+{% if pipeline['queue_checkpoint_acks'] is defined %}
+  queue.checkpoint.acks: {{ pipeline['queue_checkpoint_acks'] }}
+{% endif %}
+{% if pipeline['queue_checkpoint_writes'] is defined %}
+  queue.checkpoint.writes: {{ pipeline['queue_checkpoint_writes'] }}
+{% endif %}
+{% if pipeline['dead_letter_queue_enable'] is defined %}
+  dead_letter_queue.enable: {{ pipeline['dead_letter_queue_enable'] | string | lower }}
+{% endif %}
+{% if pipeline['dead_letter_queue_max_bytes'] is defined %}
+  dead_letter_queue.max_bytes: '{{ pipeline["dead_letter_queue_max_bytes"] }}'
+{% endif %}
+{% endif %}
+{% endfor %}

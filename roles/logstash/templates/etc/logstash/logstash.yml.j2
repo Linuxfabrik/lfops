@@ -1,0 +1,48 @@
+# {{ ansible_managed }}
+# 2026012201
+# ======================== Logstash Configuration =============================
+#
+# For more information, consult the Logstash settings documentation:
+# https://www.elastic.co/guide/en/logstash/current/logstash-settings-file.html
+#
+# ------------------------------------ Node ------------------------------------
+#
+# Use a descriptive name for the node:
+#
+node.name: '{{ logstash__node_name }}'
+#
+# ----------------------------------- Paths ------------------------------------
+#
+# Path to directory where to store the data:
+#
+path.data: '{{ logstash__path_data }}'
+#
+# Path to log files:
+#
+path.logs: '{{ logstash__path_logs }}'
+#
+# ----------------------------------- Logging ----------------------------------
+#
+# Set the log level:
+#
+log.level: '{{ logstash__log_level }}'
+#
+# ------------------------------------ API -------------------------------------
+#
+# HTTP API settings:
+#
+api.http.host: '{{ logstash__api_http_host }}'
+api.http.port: {{ logstash__api_http_port }}
+#
+{% if logstash__api_ssl_enabled %}
+# API SSL settings:
+#
+api.ssl.enabled: true
+api.ssl.keystore.path: '{{ logstash__api_ssl_keystore_path }}'
+api.ssl.keystore.password: '{{ logstash__api_ssl_keystore_password }}'
+{% endif %}
+#
+{% if logstash__raw | length %}
+# raw
+{{ logstash__raw }}
+{% endif %}

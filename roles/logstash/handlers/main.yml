@@ -1,0 +1,11 @@
+- name: 'logstash: validate config and restart logstash'
+  ansible.builtin.command: '/usr/share/logstash/bin/logstash --config.test_and_exit'
+  notify:
+    - 'logstash: restart logstash'
+
+- name: 'logstash: restart logstash'
+  ansible.builtin.service:
+    name: 'logstash'
+    state: 'restarted'
+  when:
+    - 'logstash__service_state != "stopped"'
