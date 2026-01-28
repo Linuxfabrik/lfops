@@ -1,0 +1,165 @@
+- block:
+
+  - name: 'Install logstash'
+    ansible.builtin.package:
+      name:
+        - 'logstash'
+      state: 'present'
+
+  - name: 'mkdir -p /etc/logstash/conf.d'
+    ansible.builtin.file:
+      path: '/etc/logstash/conf.d'
+      state: 'directory'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o750
+
+  - name: 'mkdir -p {{ logstash__path_data }}/tmp'
+    ansible.builtin.file:
+      path: '{{ logstash__path_data }}/tmp'
+      state: 'directory'
+      owner: 'logstash'
+      group: 'logstash'
+      mode: 0o755
+
+  - name: 'mkdir -p /etc/systemd/system/logstash.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/logstash.service.d/'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+      state: 'directory'
+
+  - name: 'Deploy /etc/systemd/system/logstash.service.d/z10-config-reload.conf'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/logstash.service.d/z10-config-reload.conf.j2'
+      dest: '/etc/systemd/system/logstash.service.d/z10-config-reload.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__logstash__z10_config_reload__result'
+    notify: 'logstash: restart logstash'
+
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon-reload: true
+    when:
+      - '__logstash__z10_config_reload__result is changed'
+
+  tags:
+    - 'logstash'
+
+
+- block:
+
+  - name: 'mkdir -p /etc/logstash/certs'
+    ansible.builtin.file:
+      path: '/etc/logstash/certs'
+      state: 'directory'
+      owner: 'logstash'
+      group: 'logstash'
+      mode: 0o750
+
+  - name: 'Deploy /etc/logstash/certs/ca.crt'
+    ansible.builtin.copy:
+      dest: '/etc/logstash/certs/ca.crt'
+      content: '{{ logstash__elasticsearch_ca_cert }}'
+      owner: 'logstash'
+      group: 'logstash'
+      mode: 0o640
+    notify: 'logstash: validate config and reload logstash'
+
+  # block
+  when:
+    - 'logstash__elasticsearch_ca_cert is defined and logstash__elasticsearch_ca_cert | length'
+  tags:
+    - 'logstash'
+    - 'logstash:configure'
+
+
+- block:
+
+  - name: 'Deploy /etc/logstash/logstash.yml'
+    ansible.builtin.template:
+      src: 'etc/logstash/logstash.yml.j2'
+      dest: '/etc/logstash/logstash.yml'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o660
+      backup: true
+    notify: 'logstash: validate config and reload logstash'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/logstash/logstash.yml'
+
+  - name: 'Deploy /etc/logstash/pipelines.yml'
+    ansible.builtin.template:
+      src: 'etc/logstash/pipelines.yml.j2'
+      dest: '/etc/logstash/pipelines.yml'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o660
+      backup: true
+    notify: 'logstash: validate config and reload logstash'
+
+  - name: 'Deploy /etc/default/logstash'
+    ansible.builtin.template:
+      src: 'etc/default/logstash.j2'
+      dest: '/etc/default/logstash'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o664
+      backup: true
+    notify: 'logstash: restart logstash'
+
+  tags:
+    - 'logstash'
+    - 'logstash:configure'
+
+
+- block:
+
+  - name: 'Deploy pipeline config files'
+    ansible.builtin.copy:
+      dest: '/etc/logstash/conf.d/{{ item["pipeline_id"] }}.conf'
+      content: '{{ item["content"] }}'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o640
+      backup: true
+    loop: '{{ logstash__pipelines__combined_var }}'
+    loop_control:
+      label: '{{ item["pipeline_id"] }}'
+    when: 'item["state"] | default("present") != "absent"'
+    notify: 'logstash: validate config and reload logstash'
+
+  - name: 'Remove absent pipeline config files'
+    ansible.builtin.file:
+      path: '/etc/logstash/conf.d/{{ item["pipeline_id"] }}.conf'
+      state: 'absent'
+    loop: '{{ logstash__pipelines__combined_var }}'
+    loop_control:
+      label: '{{ item["pipeline_id"] }}'
+    when: 'item["state"] | default("present") == "absent"'
+    notify: 'logstash: validate config and reload logstash'
+
+  tags:
+    - 'logstash'
+    - 'logstash:pipelines'
+
+
+- block:
+
+  - name: 'systemctl {{ logstash__service_enabled | bool | ternary("enable", "disable") }} --now logstash.service'
+    ansible.builtin.systemd:
+      name: 'logstash.service'
+      enabled: '{{ logstash__service_enabled }}'
+      state: '{{ logstash__service_state }}'
+
+  tags:
+    - 'logstash'
+    - 'logstash:state'
