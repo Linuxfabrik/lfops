@@ -29,7 +29,7 @@ apache_httpd__mods__role_var:
     template: 'authn_file'
 
   - filename: 'auth_openidc'
-    enable: false
+    enabled: false
     state: 'present'
     template: 'auth_openidc'
 
@@ -49,7 +49,7 @@ apache_httpd__mods__role_var:
     template: 'authz_user'
 
   - filename: 'autoindex'
-    enable: false
+    enabled: false
     state: 'present'
     template: 'autoindex'
 
@@ -74,7 +74,7 @@ apache_httpd__mods__role_var:
     template: 'dir'
 
   - filename: 'env'
-    enable: false
+    enabled: false
     state: 'present'
     template: 'env'
 
@@ -109,22 +109,22 @@ apache_httpd__mods__role_var:
     template: 'info'
 
   - filename: 'lbmethod_bybusyness'
-    enable: false
+    enabled: false
     state: 'present'
     template: 'lbmethod_bybusyness'
 
   - filename: 'lbmethod_byrequests'
-    enable: false
+    enabled: false
     state: 'present'
     template: 'lbmethod_byrequests'
 
   - filename: 'lbmethod_bytraffic'
-    enable: false
+    enabled: false
     state: 'present'
     template: 'lbmethod_bytraffic'
 
   - filename: 'lbmethod_heartbeat'
-    enable: false
+    enabled: false
     state: 'present'
     template: 'lbmethod_heartbeat'
 
@@ -184,7 +184,7 @@ apache_httpd__mods__role_var:
     template: 'proxy'
 
   - filename: 'proxy_balancer'
-    enable: false
+    enabled: false
     state: 'present'
     template: 'proxy_balancer'
 
@@ -209,12 +209,12 @@ apache_httpd__mods__role_var:
     template: 'qos'
 
   - filename: 'raw'
-    enable: false
-    state: 'present'
+    enabled: false
+    state: 'absent'
     template: 'raw'
 
   - filename: 'remoteip'
-    enable: false
+    enabled: false
     state: 'present'
     template: 'remoteip'
 

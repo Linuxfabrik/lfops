@@ -54,6 +54,9 @@ Role:graylog_server
 
 ### Fixed
 
+Role:apache_httpd
+* Prevent deployment of mods that should be disabled
+
 Role:repo_postgresql
 * Remove EOL versions, adjust for rhel9 & 10
 
