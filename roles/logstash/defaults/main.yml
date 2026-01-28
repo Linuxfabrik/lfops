@@ -1,9 +1,4 @@
-logstash__api_http_host: '127.0.0.1'
-logstash__api_http_port: 9600
-logstash__api_ssl_enabled: false
-logstash__api_ssl_keystore_password: ''
-logstash__api_ssl_keystore_path: ''
-logstash__heap_size: ''
+logstash__java_opts: '-Djava.io.tmpdir={{ logstash__path_data }}/tmp'
 logstash__log_level: 'info'
 logstash__node_name: '{{ ansible_facts["nodename"] }}'
 logstash__path_data: '/var/lib/logstash'
@@ -22,4 +17,3 @@ logstash__pipelines__role_var: []
 logstash__raw: ''
 logstash__service_enabled: true
 logstash__service_state: 'started'
-logstash__sysconfig_raw: ''

@@ -1,13 +1,3 @@
-- name: 'Set platform/version specific variables'
-  ansible.builtin.import_role:
-    name: 'shared'
-    tasks_from: 'platform-variables.yml'
-  tags:
-    - 'logstash'
-    - 'logstash:configure'
-    - 'logstash:pipelines'
-    - 'logstash:state'
-
 - block:
 
   - name: 'Install logstash'
@@ -47,14 +37,14 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    register: 'logstash__z10_config_reload__result'
+    register: '__logstash__z10_config_reload__result'
     notify: 'logstash: restart logstash'
 
   - name: 'systemctl daemon-reload'
     ansible.builtin.systemd:
       daemon-reload: true
     when:
-      - 'logstash__z10_config_reload__result is changed'
+      - '__logstash__z10_config_reload__result is changed'
 
   tags:
     - 'logstash'
@@ -89,7 +79,7 @@
 
 - block:
 
-  - name: 'deploy /etc/logstash/logstash.yml'
+  - name: 'Deploy /etc/logstash/logstash.yml'
     ansible.builtin.template:
       src: 'etc/logstash/logstash.yml.j2'
       dest: '/etc/logstash/logstash.yml'
@@ -106,7 +96,7 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/logstash/logstash.yml'
 
-  - name: 'deploy /etc/logstash/pipelines.yml'
+  - name: 'Deploy /etc/logstash/pipelines.yml'
     ansible.builtin.template:
       src: 'etc/logstash/pipelines.yml.j2'
       dest: '/etc/logstash/pipelines.yml'
@@ -116,33 +106,15 @@
       backup: true
     notify: 'logstash: validate config and reload logstash'
 
-  - name: 'Deploy /etc/logstash/jvm.options.d/heap.options'
+  - name: 'Deploy /etc/default/logstash'
     ansible.builtin.template:
-      src: 'etc/logstash/jvm.options.d/heap.options.j2'
-      dest: '/etc/logstash/jvm.options.d/heap.options'
-      owner: 'root'
-      group: 'logstash'
-      mode: 0o660
-      backup: true
-    notify: 'logstash: validate config and reload logstash'
-    when: 'logstash__heap_size | length'
-
-  - name: 'Remove /etc/logstash/jvm.options.d/heap.options'
-    ansible.builtin.file:
-      path: '/etc/logstash/jvm.options.d/heap.options'
-      state: 'absent'
-    notify: 'logstash: validate config and reload logstash'
-    when: 'not (logstash__heap_size | length)'
-
-  - name: 'Deploy {{ __logstash__sysconfig_file_path }}'
-    ansible.builtin.template:
-      src: 'etc/sysconfig/logstash.j2'
-      dest: '{{ __logstash__sysconfig_file_path }}'
+      src: 'etc/default/logstash.j2'
+      dest: '/etc/default/logstash'
       owner: 'root'
       group: 'logstash'
       mode: 0o664
       backup: true
-    notify: 'logstash: validate config and reload logstash'
+    notify: 'logstash: restart logstash'
 
   tags:
     - 'logstash'

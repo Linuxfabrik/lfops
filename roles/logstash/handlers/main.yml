@@ -1,4 +1,4 @@
-- name: 'logstash: validate config and reload logstash'
+- name: 'logstash: validate config and reload logstash' # noqa: no-changed-when - we need the task to always be changed, else the reload handler won't be triggered
   ansible.builtin.command: '/usr/share/logstash/bin/logstash --config.test_and_exit --path.settings /etc/logstash'
   become_user: 'logstash'
   become: true
@@ -6,7 +6,11 @@
     - 'logstash: reload logstash'
 
 - name: 'logstash: reload logstash'
-  ansible.builtin.command: 'systemctl kill --signal SIGHUP logstash'
+  ansible.builtin.service:
+    name: 'logstash'
+    state: 'reloaded'
+  when:
+    - 'logstash__service_state != "stopped"'
 
 - name: 'logstash: restart logstash'
   ansible.builtin.service:

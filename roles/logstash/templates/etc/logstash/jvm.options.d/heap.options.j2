@@ -1,7 +1,0 @@
-# {{ ansible_managed }}
-# 2025120301
-
-# set the minimum and maximum heap size to the same value
-# https://www.elastic.co/guide/en/logstash/current/jvm-settings.html
--Xms{{ logstash__heap_size }}
--Xmx{{ logstash__heap_size }}
