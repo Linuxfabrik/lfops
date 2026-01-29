@@ -119,27 +119,31 @@ Variables for `php.ini` directives and their default values, defined and support
 
 | Role Variable     | Documentation      | Default Value      |
 | -------------     | -------------      | -------------      |
-| `php__fpm_pools__group_var` / `php__fpm_pools__host_var` | List defining pool configuration. Possible options:<ul><li>`name`: Pool name</li><li>`user`</li><li>`group`</li><li>`raw`</li></ul> | `name: 'www'` `user: 'apache'` `group: 'apache'` |
 | `php__fpm_pool_conf_pm__group_var` / `php__fpm_pool_conf_pm__host_var` | Choose how the process manager will control the number of child processes. | `'dynamic'` |
 | `php__fpm_pool_conf_pm_max_children__group_var` / `php__fpm_pool_conf_pm_max_children__host_var` | The number of child processes to be created when pm is set to 'static' and the maximum number of child processes when pm is set to 'dynamic' or 'ondemand'. | `50` |
 | `php__fpm_pool_conf_pm_max_spare_servers__group_var` / `php__fpm_pool_conf_pm_max_spare_servers__host_var` | The desired maximum number of idle server processes. | `35` |
 | `php__fpm_pool_conf_pm_min_spare_servers__group_var` / `php__fpm_pool_conf_pm_min_spare_servers__host_var` | The desired minimum number of idle server processes. | `5` |
-| `php__fpm_pool_conf_pm_start_servers__group_var` / `php__fpm_pool_conf_pm_start_servers__host_var` | The number of child processes created on startup. | `5` |
+| `php__fpm_pool_conf_pm_start_servers__group_var` / `php__fpm_pool_conf_pm_start_servers__host_var` | The number of child processes created on startup. Must be greater than `php__fpm_pool_conf_pm_min_spare_servers__*_var` but less than `php__fpm_pool_conf_pm_max_spare_servers__*_var`  | `5` |
+| `php__fpm_pool_conf_request_slowlog_timeout__group_var` / `php__fpm_pool_conf_request_slowlog_timeout__host_var` | The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). | `0` |
+| `php__fpm_pool_conf_request_terminate_timeout__group_var` / `php__fpm_pool_conf_request_terminate_timeout__host_var` | The timeout for serving a single request after which the worker process will be killed. This option should be used when the `max_execution_time` ini option does not stop script execution for some reason. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). | `0` |
+| `php__fpm_pools__group_var` / `php__fpm_pools__host_var` | List defining pool configuration. Possible options:<ul><li>`name`: Pool name</li><li>`user`</li><li>`group`</li><li>`raw`</li></ul> | `name: 'www'` `user: 'apache'` `group: 'apache'` |
 
 Example:
 ```yaml
 # optional
+php__fpm_pool_conf_pm__host_var: 'dynamic'
+php__fpm_pool_conf_pm_max_children__host_var: 50
+php__fpm_pool_conf_pm_max_spare_servers__host_var: 35
+php__fpm_pool_conf_pm_min_spare_servers__host_var: 5
+php__fpm_pool_conf_pm_start_servers__host_var: 5
+php__fpm_pool_conf_request_slowlog_timeout__host_var: '10s'
+php__fpm_pool_conf_request_terminate_timeout__host_var: '60s'
 php__fpm_pools__host_var:
   - name: 'librenms'
     user: 'librenms'
     group: 'librenms'
     raw: |-
       env[PATH] = /usr/local/bin:/usr/bin:/bin
-php__fpm_pool_conf_pm__host_var: 'dynamic'
-php__fpm_pool_conf_pm_max_children__host_var: 50
-php__fpm_pool_conf_pm_max_spare_servers__host_var: 35
-php__fpm_pool_conf_pm_min_spare_servers__host_var: 5
-php__fpm_pool_conf_pm_start_servers__host_var: 5
 ```
 
 

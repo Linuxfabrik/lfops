@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:php
+* Make `request_slowlog_timeout` and `request_terminate_timeout` configurable
+
 Role:graylog_server
 * Make `http_publish_uri` configurable
 * Make `trusted_proxies` configurable
