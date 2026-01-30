@@ -8,6 +8,7 @@
   delegate_to: '{{ kvm_vm__host }}'
   tags:
     - 'kvm_vm'
+    - 'kvm_vm:additional_disks'
 
 
 - block:
@@ -49,6 +50,8 @@
     args:
       creates: '{{ kvm_vm__pool_info_result["pools"][item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ item["name"] ~ ".qcow2" }}'
     loop: '{{ kvm_vm__additional_disks }}'
+    tags:
+      - 'kvm_vm:additional_disks'
 
 
   # cloud-init

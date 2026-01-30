@@ -20,6 +20,7 @@ The role does not currently support resizing the VM.
 | Tag            | What it does                            | Reload / Restart |
 | ---            | ------------                            | ---------------- |
 | `kvm_vm`       | Creates and manages the virtual machine | - |
+| `kvm_vm:additional_disks` | Creates additional disks. Note that you need to manually attach them to the VM if the VM already exists | - |
 | `kvm_vm:state` | Sets the state of the VM                | - |
 
 
