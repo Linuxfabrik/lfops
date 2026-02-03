@@ -30,7 +30,7 @@ crypto_policy                        |    |    |    | x | x |    |       |      
 dnf_makecache                        |    |    |    | x | x |    |       |       |       |
 dnf_versionlock                      |    |    |    | x | x |    |       |       |       | Fedora 40
 docker                               |    |    |    | x |   |    |       |       |       |
-duplicity                            |    |    |    | x | x |    |       |       |       | Fedora 35
+duplicity                            |    |    |    | x | x | x |       |       |       | Fedora 35
 elasticsearch                        |    |    |    | x | x |    |       |       |   x   |
 exoscale_vm                          |    |    |    |   |   |    |       |       |       | Fedora 35+
 fail2ban                             |    |    |    | x | x |    |       |       |       |

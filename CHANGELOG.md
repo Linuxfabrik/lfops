@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:duplicity
+* Add support for RHEL10
+
 Role:php
 * Make `request_slowlog_timeout` and `request_terminate_timeout` configurable
 
