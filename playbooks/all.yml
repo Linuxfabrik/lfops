@@ -21,6 +21,8 @@
 - import_playbook: 'dnf_versionlock.yml'
 - import_playbook: 'docker.yml'
 - import_playbook: 'duplicity.yml'
+- import_playbook: 'elastic_agent.yml'
+- import_playbook: 'elastic_agent_fleet_server.yml'
 - import_playbook: 'elasticsearch.yml'
 - import_playbook: 'exoscale_vm.yml'
 - import_playbook: 'fail2ban.yml'

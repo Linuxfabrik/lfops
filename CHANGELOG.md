@@ -12,6 +12,12 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:elastic_agent
+* Add role
+
+Role:elastic_agent_fleet_server
+* Add role
+
 Role:duplicity
 * Add support for RHEL10
 

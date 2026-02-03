@@ -1,0 +1,74 @@
+- block:
+
+    - name: 'Install elastic-agent'
+      ansible.builtin.package:
+        name: 'elastic-agent'
+        state: 'present'
+
+  tags:
+    - 'elastic_agent'
+
+
+- block:
+
+    - name: 'mkdir -p /etc/elastic-agent/certs'
+      ansible.builtin.file:
+        path: '/etc/elastic-agent/certs'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    - name: 'Deploy /etc/elastic-agent/certs/fleet-ca.crt'
+      ansible.builtin.copy:
+        dest: '/etc/elastic-agent/certs/fleet-ca.crt'
+        content: '{{ elastic_agent__fleet_ca }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      when:
+        - 'elastic_agent__fleet_ca is defined'
+        - 'elastic_agent__fleet_ca | length'
+
+  tags:
+    - 'elastic_agent'
+    - 'elastic_agent:certs'
+
+
+- block:
+
+    - name: 'Enroll elastic-agent to Fleet Server'
+      ansible.builtin.command:
+        cmd: >-
+          elastic-agent enroll
+          --url={{ elastic_agent__fleet_urls | join(',') | ansible.builtin.quote }}
+          --enrollment-token={{ elastic_agent__enrollment_token | ansible.builtin.quote }}
+          {% if elastic_agent__fleet_ca is defined and elastic_agent__fleet_ca | length %}
+          --certificate-authorities=/etc/elastic-agent/certs/fleet-ca.crt
+          {% endif %}
+          {% if elastic_agent__tags | length %}
+          --tag={{ elastic_agent__tags | join(',') | ansible.builtin.quote }}
+          {% endif %}
+          {% if elastic_agent__insecure %}
+          --insecure
+          {% endif %}
+          --non-interactive
+          --force
+        creates: '/etc/elastic-agent/fleet.enc'
+
+  tags:
+    - 'elastic_agent'
+    - 'elastic_agent:enroll'
+
+
+- block:
+
+    - name: 'systemctl {{ elastic_agent__service_enabled | bool | ternary("enable", "disable") }} elastic-agent.service'
+      ansible.builtin.service:
+        name: 'elastic-agent'
+        enabled: '{{ elastic_agent__service_enabled }}'
+        state: '{{ elastic_agent__service_state }}'
+
+  tags:
+    - 'elastic_agent'
+    - 'elastic_agent:state'

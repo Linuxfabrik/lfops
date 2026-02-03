@@ -1,0 +1,6 @@
+- name: 'elastic_agent: restart elastic-agent'
+  ansible.builtin.service:
+    name: 'elastic-agent'
+    state: 'restarted'
+  when:
+    - 'elastic_agent__service_state != "stopped"'
