@@ -1,0 +1,6 @@
+elastic_agent_fleet_server__host: '0.0.0.0'
+elastic_agent_fleet_server__insecure: false
+elastic_agent_fleet_server__policy_id: 'fleet-server-policy'
+elastic_agent_fleet_server__port: 8220
+elastic_agent_fleet_server__service_enabled: true
+elastic_agent_fleet_server__service_state: 'started'
