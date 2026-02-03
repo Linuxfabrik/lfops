@@ -30,7 +30,7 @@ crypto_policy                        |    |    |    | x | x |    |       |      
 dnf_makecache                        |    |    |    | x | x |    |       |       |       |
 dnf_versionlock                      |    |    |    | x | x |    |       |       |       | Fedora 40
 docker                               |    |    |    | x |   |    |       |       |       |
-duplicity                            |    |    |    | x | x | x |       |       |       | Fedora 35
+duplicity                            |    |    |    | x | x | x  |       |       |       | Fedora 35
 elasticsearch                        |    |    |    | x | x |    |       |       |   x   |
 exoscale_vm                          |    |    |    |   |   |    |       |       |       | Fedora 35+
 fail2ban                             |    |    |    | x | x |    |       |       |       |
@@ -42,6 +42,7 @@ freeipa_server                       |    |    |    | x | x |    |       |      
 github_project_createrepo            |    |    |    | x |   |    |       |       |       |
 gitlab_ce                            |    |    |    | x |   |    |       |       |       |
 glances                              |    |    |    | x | x |    |       |       |       |
+glpi_agent                           |    |    |    | x | x |    |       |       |       |
 grafana                              |    |    |    | x | x |    |       |       |       |
 grafana_grizzly                      |    |    |    | x | x |    |       |       |       |
 grav                                 |    |    |    | x |   |    |       |       |       |
@@ -58,6 +59,8 @@ icinga2_agent                        |    |    | x  | x | x |    |       |      
 icinga2_master                       |    | x  | x  | x | x |    |       |       |       |
 icingadb                             |    | x  | x  | x | x |    |       |       |       |
 icingadb_web                         |    | x  | x  | x | x |    |       |       |       |
+icinga_kubernetes                    |    |    |    |   | x |    |       |       |       |
+icinga_kubernetes_web                |    |    |    |   | x |    |       |       |       |
 icingaweb2                           |    | x  | x  | x | x |    |       |       |       |
 icingaweb2_module_businessprocess    |    | x  | x  | x | x |    |       |       |       |
 icingaweb2_module_company            |    | x  | x  | x | x |    |       |       |       |
@@ -68,15 +71,20 @@ icingaweb2_module_fileshipper        |    | x  | x  | x | x |    |       |      
 icingaweb2_module_generictts         |    | x  | x  | x | x |    |       |       |       |
 icingaweb2_module_grafana            |    | x  | x  | x | x |    |       |       |       |
 icingaweb2_module_incubator          |    | x  | x  | x | x |    |       |       |       |
+icingaweb2_module_jira               |    |    |    | x | x |    |       |       |       |
+icingaweb2_module_monitoring         |    |    |    | x |   |    |       |       |       |
 icingaweb2_module_pdfexport          |    | x  | x  | x | x |    |       |       |       |
+icingaweb2_module_reporting          |    |    |    | x |   |    |       |       |       |
 icingaweb2_module_vspheredb          |    | x  | x  | x | x |    |       |       |       |
 icingaweb2_module_x509               |    | x  | x  | x | x |    |       |       |       |
+icingaweb2_theme_linuxfabrik         |    |    |    | x | x |    |       |       |   x   |
 influxdb                             |    | x  | x  | x | x |    |       |       |       |
 infomaniak_vm                        |    |    |    |   |   |    |       |       |       | Fedora 35+
 kdump                                |    |    |    | x | x |    |       |       |       |
 keepalived                           |    |    |    | x |   |    |       |       |       |
 kernel_settings                      | -  | x  | x  | x | x |    |   -   |       |       |
 keycloak                             |    |    |    | x |   |    |       |       |       |
+kibana                               |    |    |    |   | x |    |       |       |   x   |
 kvm_host                             |    |    |    | x |   |    |       |       |   x   |
 kvm_vm                               |    |    |    | x |   |    |       |       |   x   |
 libmaxminddb                         |    |    |    | x |   |    |       |       |       |
@@ -84,9 +92,12 @@ librenms                             |    |    |    | x |   |    |       |      
 libreoffice                          |    |    |    | x |   |    |       |       |       |
 login                                |    |    |    | x | x |    |       |       |       | Fedora 35+
 logrotate                            |    |    |    | x | x | x  |       |       |       | Fedora
+logstash                             |    |    |    |   | x |    |       |       |   x   |
+lvm                                  |    |    |    |   |   |    |       |       |       |
 mailto_root                          |    |    |    | x | x |    |       |       |       |
 mailx                                | x  | x  | x  | x | x | x  |       |       |       | Fedora
 mariadb_server                       |    | x  | x  | x | x |    |       |       |       | Galera on Debian is untested
+mastodon                             |    |    |    |   | x |    |       |       |       |
 maxmind_geoip                        |    |    |    | x |   |    |       |       |       |
 minio_client                         |    |    |    | x |   |    |       |       |       |
 mirror                               |    |    |    | x | x |    |       |       |       |
@@ -111,9 +122,11 @@ opensearch                           | x  |    |    | x |   |    |       |      
 open_vm_tools                        |    |    |    | x | x |    |       |       |       |
 openvpn_server                       |    |    |    | x | x |    |       |       |       |
 php                                  |    | x  | x  | x | x |    |       |       |       |
+podman_containers                    |    |    |    |   | x |    |       |       |       |
 policycoreutils                      |    |    |    | x | x | x  |       |       |       | Fedora 35
 postfix                              | x  | x  | x  | x | x |    |       |       |       | Fedora 35
 postgresql_server                    |    |    |    | x |   |    |       |       |       |
+proxysql                             |    |    |    | x |   |    |       |       |       |
 python                               |    | x  | x  | x | x |    |       |       |       | Windows
 python_venv                          | x  | x  | x  | x | x |    |       |       |       | Fedora 35
 qemu_guest_agent                     |    |    |    | x | x |    |       |       |       |
@@ -149,7 +162,9 @@ repo_sury                            | x  | x  | x  | - | - |    |       |      
 rocketchat                           |    |    |    | x |   |    |       |       |       | Fedora 35
 rsyslog                              |    |    |    | x | x |    |       |       |       |
 selinux                              |    |    |    | x | x |    |       |       |       |
+shell                                |    |    |    | x | x |    |       |       |       |
 snmp                                 |    |    |    | x | x |    |       |       |       |
+squid                                |    |    |    |   | x |    |       |       |       |
 sshd                                 |    | x  | x  | x | x | x  |       |       |       | Fedora 40
 system_update                        | x  | x  | x  | x | x |    |       |       |       |
 systemd_journald                     |    |    |    | x | x |    |       |       |       |
@@ -163,7 +178,7 @@ wordpress                            |    |    |    | x |   |    |       |      
 yum_utils                            |    |    |    | x | x | x  |       |       |       | Fedora 35
 -------------------------------------+----+----+----+---+---+----+-------+-------+-------+-----------
 ```
-    |
+
 Legend:
 
 * empty: don't know/unproven/untested
