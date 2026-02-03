@@ -1,6 +1,7 @@
-# build with
-# ansible-builder build --tag lfops_ee:local -vvv
-# takes around 3 mins
+# the public [lfops_ee containers](https://github.com/Linuxfabrik/lfops/pkgs/container/lfops_ee) are built
+# via [github actions](https://github.com/Linuxfabrik/lfops/actions/workflows/lf-build.yml).
+# for testing / troubleshooting, the container can be build with `ansible-builder build --tag lfops_ee:local -vvv` locally.
+# this takes around 3 mins.
 
 # https://ansible.readthedocs.io/projects/builder/en/stable/definition/#builder-ee-definition
 version: 3
@@ -19,8 +20,12 @@ dependencies:
   galaxy: 'execution-environment-requirements.yml'
 
   python:
+    - 'ansible-lint'
+    - 'cs' # required for ngine_io.cloudstack
+    - 'hcloud' # required for hetzner.hcloud
     - 'jmespath' # required for community.general.json_query
     - 'netaddr' # required for ansible.utils.ipaddr
+    - 'openstacksdk' # required for openstack.cloud
     - 'passlib' # required for ansible.builtin.password_hash filter
     - 'pywinrm'
 
@@ -30,6 +35,7 @@ dependencies:
 
   system:
     - 'git-core' # required for ansible.builtin.git module
+    - 'rsync' # required for ansible.posix.synchronize module
 
 additional_build_files:
   - src: 'linuxfabrik-lfops.tar.gz'

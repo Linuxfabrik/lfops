@@ -54,9 +54,11 @@ tags:
 #
 # note: do not forget to update collections in requirements.yml
 dependencies:
-  'ansible.utils': '*' # note: "*" selects the highest version available
+  'ansible.posix': '*' # note: "*" selects the highest version available
+  'ansible.utils': '*'
   'ansible.windows': '*'
   'community.crypto': '<3.0.0' # we need python 3.6 support to run against rhel8
+  'community.general': '<9.0.0' # we need python 3.6 support to run against rhel8
   'community.grafana': '*'
   'community.libvirt': '*'
   'community.mongodb': '*'
