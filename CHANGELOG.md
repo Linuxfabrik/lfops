@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:fail2ban
+* Make `bantime` configurable for the sshd and portscan jails
+
 Role:duplicity
 * Add support for RHEL10
 
