@@ -39,6 +39,7 @@ Example:
 # optional
 sshd__address_family: 'inet'
 sshd__gssapi_authentication: false
+sshd__log_level: 'INFO'
 sshd__password_authentication: false
 sshd__permit_root_login: 'yes'
 sshd__port: 22
