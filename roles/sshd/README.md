@@ -24,7 +24,7 @@ Note that the role does not make use of `/etc/ssh/sshd_config.d/` since not all 
 | -------- | ----------- | ------------- |
 | `sshd__address_family` | Specifies which address family should be used. Possible options: `any`, `inet` (use IPv4 only) or `inet6` (use IPv6 only). | `'any'` |
 | `sshd__gssapi_authentication` | Specifies whether user authentication based on GSSAPI is allowed | `true` |
-| `sshd__log_level` | Sets the log level | `INFO` |
+| `sshd__log_level` | Sets the log level | `'INFO'` |
 | `sshd__password_authentication` | Specifies whether password authentication is allowed. | `false` |
 | `sshd__permit_root_login` | Specifies whether root can log in using ssh. Possible options:<br> * `yes`<br> * `prohibit-password`<br> * `forced-commands-only`<br> * `no` | `'yes'` |
 | `sshd__port` | Which port the sshd server should use. | `22` |
