@@ -8,3 +8,4 @@ playbooks/test.yml
 roles/test
 context/
 particle/.vagrant
+stig/stig.db

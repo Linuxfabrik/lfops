@@ -39,11 +39,27 @@ LogLevel {{ sshd__log_level__combined_var }}
 
 # Authentication:
 
-#LoginGraceTime 2m
+LoginGraceTime {{ sshd__login_grace_time }}
 PermitRootLogin {{ sshd__permit_root_login }}
 #StrictModes yes
-#MaxAuthTries 6
-#MaxSessions 10
+MaxAuthTries {{ sshd__max_auth_tries }}
+MaxSessions {{ sshd__max_sessions }}
+{% set allow_users = (sshd__allow_users__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list) + (sshd__allow_users__combined_var | selectattr("state", "undefined") | list) %}
+{% if allow_users | length %}
+AllowUsers {{ allow_users | map(attribute="name") | join(' ') }}
+{% endif %}
+{% set allow_groups = (sshd__allow_groups__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list) + (sshd__allow_groups__combined_var | selectattr("state", "undefined") | list) %}
+{% if allow_groups | length %}
+AllowGroups {{ allow_groups | map(attribute="name") | join(' ') }}
+{% endif %}
+{% set deny_users = (sshd__deny_users__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list) + (sshd__deny_users__combined_var | selectattr("state", "undefined") | list) %}
+{% if deny_users | length %}
+DenyUsers {{ deny_users | map(attribute="name") | join(' ') }}
+{% endif %}
+{% set deny_groups = (sshd__deny_groups__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list) + (sshd__deny_groups__combined_var | selectattr("state", "undefined") | list) %}
+{% if deny_groups | length %}
+DenyGroups {{ deny_groups | map(attribute="name") | join(' ') }}
+{% endif %}
 
 #PubkeyAuthentication yes
 
@@ -57,16 +73,18 @@ AuthorizedKeysFile	.ssh/authorized_keys
 #AuthorizedKeysCommandUser nobody
 
 # For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
-#HostbasedAuthentication no
+# disabling HostbasedAuthentication covers sshd_host_based_authentication STIG
+HostbasedAuthentication no
 # Change to yes if you don't trust ~/.ssh/known_hosts for
 # HostbasedAuthentication
 #IgnoreUserKnownHosts no
 # Don't read the user's ~/.rhosts and ~/.shosts files
-#IgnoreRhosts yes
+# covers sshd_ignore_rhosts STIG
+IgnoreRhosts yes
 
 # To disable tunneled clear text passwords, change to no here!
 PasswordAuthentication {{ sshd__password_authentication | bool | ternary("yes", "no") }}
-#PermitEmptyPasswords no
+PermitEmptyPasswords {{ sshd__permit_empty_passwords | bool | ternary("yes", "no") }}
 
 # Change to no to disable s/key passwords
 #KbdInteractiveAuthentication yes
@@ -96,10 +114,12 @@ GSSAPIAuthentication {{ sshd__gssapi_authentication | bool | ternary("yes", "no"
 # and KbdInteractiveAuthentication to 'no'.
 # WARNING: 'UsePAM no' is not supported in RHEL and may cause several
 # problems.
-#UsePAM no
+# covers sshd_use_pam STIG
+UsePAM yes
 
 #AllowAgentForwarding yes
 #AllowTcpForwarding yes
+DisableForwarding {{ sshd__disable_forwarding | bool | ternary("yes", "no") }}
 #GatewayPorts no
 #X11Forwarding no
 #X11DisplayOffset 10
@@ -108,18 +128,18 @@ GSSAPIAuthentication {{ sshd__gssapi_authentication | bool | ternary("yes", "no"
 #PrintMotd yes
 #PrintLastLog yes
 #TCPKeepAlive yes
-#PermitUserEnvironment no
+PermitUserEnvironment {{ sshd__permit_user_environment | bool | ternary("yes", "no") }}
 #Compression delayed
-#ClientAliveInterval 0
-#ClientAliveCountMax 3
+ClientAliveInterval {{ sshd__client_alive_interval }}
+ClientAliveCountMax {{ sshd__client_alive_count_max }}
 UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}
 #PidFile /var/run/sshd.pid
-#MaxStartups 10:30:100
+MaxStartups {{ sshd__max_startups }}
 #PermitTunnel no
 #ChrootDirectory none
 #VersionAddendum none
 
-# default banner path
+# default banner path. covers sshd_banner STIG
 Banner /etc/issue.net
 
 # override default of no subsystems

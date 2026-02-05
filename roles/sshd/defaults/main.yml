@@ -1,19 +1,67 @@
 sshd__address_family: 'any'
-sshd__gssapi_authentication: true
-sshd__password_authentication: false
-sshd__permit_root_login: 'yes'
-sshd__port: 22
-sshd__service_enabled: true
-sshd__service_state: 'started'
-sshd__use_dns: false
-
-sshd__log_level__dependent_var: ''
-sshd__log_level__group_var: ''
-sshd__log_level__host_var: ''
-sshd__log_level__role_var: 'INFO'
+sshd__allow_groups__combined_var: '{{
+    sshd__allow_groups__role_var +
+    sshd__allow_groups__dependent_var +
+    sshd__allow_groups__group_var +
+    sshd__allow_groups__host_var
+  }}'
+sshd__allow_groups__dependent_var: []
+sshd__allow_groups__group_var: []
+sshd__allow_groups__host_var: []
+sshd__allow_groups__role_var: []
+sshd__allow_users__combined_var: '{{
+    sshd__allow_users__role_var +
+    sshd__allow_users__dependent_var +
+    sshd__allow_users__group_var +
+    sshd__allow_users__host_var
+  }}'
+sshd__allow_users__dependent_var: []
+sshd__allow_users__group_var: []
+sshd__allow_users__host_var: []
+sshd__allow_users__role_var: []
+sshd__client_alive_count_max: '{{ sshd__client_alive_count_max__cis_var | d(3) }}'
+sshd__client_alive_interval: '{{ sshd__client_alive_interval__cis_var | d(15) }}'
+sshd__deny_groups__combined_var: '{{
+    sshd__deny_groups__role_var +
+    sshd__deny_groups__dependent_var +
+    sshd__deny_groups__group_var +
+    sshd__deny_groups__host_var
+  }}'
+sshd__deny_groups__dependent_var: []
+sshd__deny_groups__group_var: []
+sshd__deny_groups__host_var: []
+sshd__deny_groups__role_var: []
+sshd__deny_users__combined_var: '{{
+    sshd__deny_users__role_var +
+    sshd__deny_users__dependent_var +
+    sshd__deny_users__group_var +
+    sshd__deny_users__host_var
+  }}'
+sshd__deny_users__dependent_var: []
+sshd__deny_users__group_var: []
+sshd__deny_users__host_var: []
+sshd__deny_users__role_var: []
+sshd__disable_forwarding: '{{ sshd__disable_forwarding__cis_var | d(true) }}'
+sshd__gssapi_authentication: '{{ sshd__gssapi_authentication__cis_var | d(true) }}'
 sshd__log_level__combined_var: '{{
     sshd__log_level__host_var if (sshd__log_level__host_var | string | length) else
     sshd__log_level__group_var if (sshd__log_level__group_var | string | length) else
     sshd__log_level__dependent_var if (sshd__log_level__dependent_var | string | length) else
-    sshd__log_level__role_var
+    (sshd__log_level__cis_var | d(sshd__log_level__role_var)
   }}'
+sshd__log_level__dependent_var: ''
+sshd__log_level__group_var: ''
+sshd__log_level__host_var: ''
+sshd__log_level__role_var: 'INFO'
+sshd__login_grace_time: '{{ sshd__login_grace_time__cis_var | d(60) }}'
+sshd__max_auth_tries: '{{ sshd__max_auth_tries__cis_var | d(4) }}'
+sshd__max_sessions: '{{ sshd__max_sessions__cis_var | d(10) }}'
+sshd__max_startups: '{{ sshd__max_startups__cis_var | d("10:30:60") }}'
+sshd__password_authentication: false
+sshd__permit_empty_passwords: '{{ sshd__permit_empty_passwords__cis_var | d(false) }}'
+sshd__permit_root_login: '{{ sshd__permit_root_login__cis_var | d("yes") }}'
+sshd__permit_user_environment: '{{ sshd__permit_user_environment__cis_var | d(false) }}'
+sshd__port: 22
+sshd__service_enabled: true
+sshd__service_state: 'started'
+sshd__use_dns: false

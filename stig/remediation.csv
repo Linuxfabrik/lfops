@@ -1,0 +1,31 @@
+id,remediation_variable,mandatory,comment
+sshd_client_alive,sshd__client_alive_count_max__cis_var: 3,0,
+sshd_client_alive,sshd__client_alive_interval__cis_var: 15,0,
+sshd_disable_forwarding,sshd__disable_forwarding__cis_var: true,0,
+sshd_gssapi_authentication,sshd__gssapi_authentication__cis_var: false,0,
+sshd_login_grace_time,sshd__login_grace_time__cis_var: 60,0,
+sshd_log_level,sshd__log_level__cis_var: 'VERBOSE',0,
+sshd_max_auth_tries,sshd__max_auth_tries__cis_var: 4,0,
+sshd_banner,,0,"This also requires the linuxfabrik.lfops.motd role to be run, since this deploys the banner content."
+sshd_access,,1,"Manually set at least one of the following variables: `sshd__allow_groups__*_var`, `sshd__allow_users__*_var`, `sshd__deny_groups__*_var`, `sshd__deny_users__*_var`"
+sshd_max_startups,sshd__max_startups__cis_var: '10:30:60',0,
+sshd_max_sessions,sshd__max_sessions__cis_var: 10,0,
+sshd_permit_empty_passwords,sshd__permit_empty_passwords__cis_var: false,0,
+sshd__permit_root_login,sshd__permit_root_login__cis_var: 'no',0,
+sshd_permit_user_environment,sshd__permit_user_environment__cis_var: false,0,
+sshd_host_based_authentication,,0,"""HostbasedAuthentication no"" is hardcoded in the linuxfabrik.lfops.sshd role."
+sshd_ignore_rhosts,,0,"""IgnoreRhosts yes"" is hardcoded in the linuxfabrik.lfops.sshd role."
+sshd_use_pam,,0,"""UsePAM yes"" is hardcoded in the linuxfabrik.lfops.sshd role."
+sshd_config_permissions,,0,This is done by default in the linuxfabrik.lfops.sshd role.
+sshd_private_host_key_permissions,,0,This is done by default in the linuxfabrik.lfops.sshd role.
+sshd_public_host_key_permissions,,0,This is done by default in the linuxfabrik.lfops.sshd role.
+sshd_ciphers,,0,Handled by linuxfabrik.lfops.crypto_policy with LINUXFABRIK-SSH-NO-CBC and LINUXFABRIK-SSH-NO-CHACHA20 modules.
+sshd_kex_algorithms,,0,Handled by linuxfabrik.lfops.crypto_policy (DEFAULT policy provides secure kex algorithms).
+sshd_macs,,0,Handled by linuxfabrik.lfops.crypto_policy with LINUXFABRIK-NO-WEAKMAC and LINUXFABRIK-SSH-NO-ETM modules.
+crypto_policy_not_legacy,crypto_policy__policy__cis_var: 'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20:LINUXFABRIK-SSH-NO-ETM',0,Do not set `LEGACY` inside `crypto_policy__policy`.
+crypto_policy_not_sshd,,0,"This is the case by default. Note that the `/etc/sysconfig/sshd` path in the CIS document is wrong, the relevant config is `/etc/ssh/sshd_config.d/50-redhat.conf`."
+crypto_policy_disable_sha1,crypto_policy__policy__cis_var: 'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20:LINUXFABRIK-SSH-NO-ETM',0,Do not remove `LINUXFABRIK-NO-SHA1` from `crypto_policy__policy`.
+crypto_policy_disable_mac_128_bits,crypto_policy__policy__cis_var: 'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20:LINUXFABRIK-SSH-NO-ETM',0,Do not remove `LINUXFABRIK-NO-WEAKMAC` from `crypto_policy__policy`.
+crypto_policy_disable_ssh_cbc,crypto_policy__policy__cis_var: 'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20:LINUXFABRIK-SSH-NO-ETM',0,Do not remove `LINUXFABRIK-NO-CBC` from `crypto_policy__policy`.
+crypto_policy_disable_ssh_chacha20_poly1305,crypto_policy__policy__cis_var: 'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20:LINUXFABRIK-SSH-NO-ETM',0,Do not remove `LINUXFABRIK-NO-CHACHA20` from `crypto_policy__policy`.
+crypto_policy_disable_ssh_etm,crypto_policy__policy__cis_var: 'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20:LINUXFABRIK-SSH-NO-ETM',0,Do not remove `LINUXFABRIK-NO-ETM` from `crypto_policy__policy`.

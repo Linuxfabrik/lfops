@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
+# The Unlicense (see LICENSE or https://unlicense.org/)
+
+import argparse
+import csv
+import os
+import sys
+
+import lib.db_sqlite
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Create the STIG database.')
+    parser.add_argument(
+        '--force',
+        action='store_true',
+        help='Remove existing database and re-create it.',
+    )
+    args = parser.parse_args()
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(script_dir, 'stig.db')
+
+    if os.path.exists(db_path):
+        if args.force:
+            os.remove(db_path)
+            print(f'Removed existing database: {db_path}')
+        else:
+            print(f'Database already exists: {db_path}. Use --force to re-create it.')
+            sys.exit(1)
+
+    success, conn = lib.db_sqlite.connect(path=os.path.dirname(db_path), filename=os.path.basename(db_path))
+    if not success:
+        print(f'Failed to connect to database: {conn}')
+        sys.exit(1)
+
+    lib.db_sqlite.create_table(
+        conn,
+        table='profile',
+        definition='''
+            "id"                    TEXT,
+            "profile_name"          TEXT NOT NULL,
+            "profile_version"       TEXT NOT NULL,
+            "control_name"          TEXT NOT NULL,
+            "enabled"               INTEGER DEFAULT 1,
+            "automated"             INTEGER DEFAULT 1,
+            "server_level"          INTEGER DEFAULT 1,
+            "workstation_level"     INTEGER DEFAULT 1,
+            PRIMARY KEY("id")
+        ''',
+    )
+
+    lib.db_sqlite.create_table(
+        conn,
+        table='audit',
+        definition='''
+            "id"            TEXT,
+            "exec_order"    INTEGER DEFAULT NULL,
+            "audit_name"    TEXT DEFAULT NULL,
+            FOREIGN KEY("id") REFERENCES "profile"("id")
+        ''',
+    )
+
+    lib.db_sqlite.create_table(
+        conn,
+        table='remediation',
+        definition='''
+            "id"                    TEXT,
+            "remediation_variable"  TEXT DEFAULT NULL,
+            "mandatory"             INTEGER DEFAULT 0,
+            "comment"               TEXT DEFAULT NULL,
+            FOREIGN KEY("id") REFERENCES "profile"("id")
+        ''',
+    )
+
+    # Import data from CSV files
+    # Note: We don't use lib.db_sqlite.import_csv() here because it creates the table itself,
+    # but we need to create the tables with specific constraints (foreign keys, defaults) first.
+    tables = ['profile', 'audit', 'remediation']
+    for table in tables:
+        csv_path = os.path.join(script_dir, f'{table}.csv')
+        if os.path.exists(csv_path):
+            with open(csv_path, newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    success, result = lib.db_sqlite.insert(conn, row, table=table)
+                    if not success:
+                        print(f'Failed to insert into {table}: {result}')
+                        sys.exit(1)
+            print(f'Imported {csv_path}')
+
+    lib.db_sqlite.commit(conn)
+    lib.db_sqlite.close(conn)
+    print(f'Created database: {db_path}')
+
+
+if __name__ == '__main__':
+    main()

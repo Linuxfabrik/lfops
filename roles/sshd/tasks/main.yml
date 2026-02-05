@@ -11,7 +11,7 @@
       dest: '/etc/ssh/sshd_config'
       owner: 'root'
       group: 'root'
-      mode: 0o600
+      mode: 0o600 # covers sshd_config_permissions STIG
     vars:
       __task_file:
         files:
@@ -20,6 +20,31 @@
         paths:
           - '{{ role_path }}/templates'
     notify: 'sshd: reload sshd'
+
+  - name: 'Find all .conf files in /etc/ssh/sshd_config.d'
+    ansible.builtin.find:
+      paths: '/etc/ssh/sshd_config.d'
+      patterns: '*.conf'
+    register: '__sshd_config_d_conf_files'
+
+  # covers sshd_config_permissions STIG
+  - name: 'Ensure correct permissions on /etc/ssh/sshd_config.d/*.conf files'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o0600
+    loop: '{{ __sshd_config_d_conf_files["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+
+  # covers sshd_private_host_key_permissions STIG
+  - name: 'Ensure correct permissions on SSH private host key files'
+    ansible.builtin.include_tasks: 'private-host-key-permissions.yml'
+
+  # covers sshd_public_host_key_permissions STIG
+  - name: 'Ensure correct permissions on SSH public host key files'
+    ansible.builtin.include_tasks: 'public-host-key-permissions.yml'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
