@@ -46,6 +46,7 @@ Get an enrollment token from Kibana:
 
 Example:
 ```yaml
+# mandatory
 elastic_agent__enrollment_token: 'dGhpcyBpcyBhIHNhbXBsZSBlbnJvbGxtZW50IHRva2Vu...'
 elastic_agent__fleet_urls:
   - 'https://fleet1.example.com:8220'

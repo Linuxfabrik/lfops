@@ -87,6 +87,7 @@ Copy the generated certificates to the Ansible inventory. The certificates are u
 
 Example:
 ```yaml
+# mandatory
 elastic_agent_fleet_server__elasticsearch_hosts:
   - 'https://ingest1.example.com:9200'
   - 'https://ingest2.example.com:9200'
@@ -99,7 +100,6 @@ elastic_agent_fleet_server__service_token: 'AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rv
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `elastic_agent_fleet_server__elasticsearch_ca` | ASCII-armored PEM CA certificate for verifying Elasticsearch TLS (Fleet Server -> Elasticsearch). | unset |
-| `elastic_agent_fleet_server__host` | The IP address on which the Fleet Server listens. | `'0.0.0.0'` |
 | `elastic_agent_fleet_server__insecure` | Skip TLS verification. Only use for testing with self-signed certificates. | `false` |
 | `elastic_agent_fleet_server__policy_id` | The Fleet Server policy ID. Must exist in Kibana Fleet. | `'fleet-server-policy'` |
 | `elastic_agent_fleet_server__port` | The port on which the Fleet Server listens. | `8220` |
@@ -112,7 +112,6 @@ Example:
 ```yaml
 # optional
 elastic_agent_fleet_server__elasticsearch_ca: '{{ lookup("ansible.builtin.file", inventory_dir ~ "/group_files/elasticsearch/ca.crt") }}'
-elastic_agent_fleet_server__host: '0.0.0.0'
 elastic_agent_fleet_server__insecure: false
 elastic_agent_fleet_server__policy_id: 'fleet-server-policy'
 elastic_agent_fleet_server__port: 8220

@@ -4,6 +4,8 @@
       ansible.builtin.package:
         name: 'elastic-agent'
         state: 'present'
+      environment:
+        ELASTIC_AGENT_FLAVOR: 'servers'
 
   tags:
     - 'elastic_agent_fleet_server'
@@ -66,9 +68,9 @@
           --fleet-server-es={{ elastic_agent_fleet_server__elasticsearch_hosts | join(',') | ansible.builtin.quote }}
           --fleet-server-service-token={{ elastic_agent_fleet_server__service_token | ansible.builtin.quote }}
           --fleet-server-policy={{ elastic_agent_fleet_server__policy_id | ansible.builtin.quote }}
-          --fleet-server-host={{ elastic_agent_fleet_server__host | ansible.builtin.quote }}
           --fleet-server-port={{ elastic_agent_fleet_server__port | ansible.builtin.quote }}
           {% if elastic_agent_fleet_server__elasticsearch_ca is defined and elastic_agent_fleet_server__elasticsearch_ca | length %}
+          --certificate-authorities=/etc/elastic-agent/certs/elasticsearch-ca.crt
           --fleet-server-es-ca=/etc/elastic-agent/certs/elasticsearch-ca.crt
           {% endif %}
           {% if elastic_agent_fleet_server__ssl_cert is defined and elastic_agent_fleet_server__ssl_cert | length %}
@@ -80,9 +82,7 @@
           {% if elastic_agent_fleet_server__insecure %}
           --insecure
           {% endif %}
-          --non-interactive
           --force
-        creates: '/etc/elastic-agent/fleet.enc'
 
   tags:
     - 'elastic_agent_fleet_server'

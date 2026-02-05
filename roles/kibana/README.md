@@ -22,7 +22,7 @@ If you use the [kibana playbook](https://github.com/Linuxfabrik/lfops/blob/main/
 | `kibana:state`       | Manages the state of the Kibana service    | -                           |
 
 
-## Post-Installation Steps
+## Pre-Installation Steps
 
 Create a service account token for Kibana on an Elasticsearch node:
 
