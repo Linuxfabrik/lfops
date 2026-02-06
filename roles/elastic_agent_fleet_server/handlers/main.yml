@@ -1,6 +1,0 @@
-- name: 'elastic_agent_fleet_server: restart elastic-agent'
-  ansible.builtin.service:
-    name: 'elastic-agent'
-    state: 'restarted'
-  when:
-    - 'elastic_agent_fleet_server__service_state != "stopped"'
