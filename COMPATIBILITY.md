@@ -31,6 +31,8 @@ dnf_makecache                        |    |    |    | x | x |    |       |      
 dnf_versionlock                      |    |    |    | x | x |    |       |       |       | Fedora 40
 docker                               |    |    |    | x |   |    |       |       |       |
 duplicity                            |    |    |    | x | x | x  |       |       |       | Fedora 35
+elastic_agent                        |    |    |    |   | x |    |       |       |   x   |
+elastic_agent_fleet_server           |    |    |    |   | x |    |       |       |   x   |
 elasticsearch                        |    |    |    | x | x |    |       |       |   x   |
 exoscale_vm                          |    |    |    |   |   |    |       |       |       | Fedora 35+
 fail2ban                             |    |    |    | x | x |    |       |       |       |
