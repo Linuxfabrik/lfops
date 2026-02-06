@@ -82,15 +82,13 @@ Copy the generated certificates to the Ansible inventory. The certificates are u
 
 | Variable | Description |
 | -------- | ----------- |
-| `elastic_agent_fleet_server__elasticsearch_hosts` | List of Elasticsearch URLs. Multiple hosts provide failover. Use nodes with the `ingest` role (recommended, as Fleet data uses ingest pipelines) or coordinating role. |
+| `elastic_agent_fleet_server__elasticsearch_host` | Elasticsearch URL. Will only be used for the initial connection, so the node's role is irrelevant. Afterwards, the output defined in the policy will be used. |
 | `elastic_agent_fleet_server__service_token` | The service token for authenticating the Fleet Server to Elasticsearch. Generate using the Elasticsearch API. |
 
 Example:
 ```yaml
 # mandatory
-elastic_agent_fleet_server__elasticsearch_hosts:
-  - 'https://ingest1.example.com:9200'
-  - 'https://ingest2.example.com:9200'
+elastic_agent_fleet_server__elasticsearch_host: 'https://ingest1.example.com:9200'
 elastic_agent_fleet_server__service_token: 'AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuMTpTTHVuZERNWlJJR...'
 ```
 
@@ -102,11 +100,11 @@ elastic_agent_fleet_server__service_token: 'AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rv
 | `elastic_agent_fleet_server__elasticsearch_ca` | ASCII-armored PEM CA certificate for verifying Elasticsearch TLS (Fleet Server -> Elasticsearch). | unset |
 | `elastic_agent_fleet_server__insecure` | Skip TLS verification. Only use for testing with self-signed certificates. | `false` |
 | `elastic_agent_fleet_server__policy_id` | The Fleet Server policy ID. Must exist in Kibana Fleet. | `'fleet-server-policy'` |
-| `elastic_agent_fleet_server__port` | The port on which the Fleet Server listens. | `8220` |
 | `elastic_agent_fleet_server__service_enabled` | Enables or disables the elastic-agent service, analogous to `systemctl enable/disable`. | `true` |
 | `elastic_agent_fleet_server__service_state` | The state of the elastic-agent service. Possible options: `started`, `stopped`, `restarted`. | `'started'` |
 | `elastic_agent_fleet_server__ssl_cert` | ASCII-armored PEM TLS certificate for the Fleet Server (Fleet Agent -> Fleet Server). | unset |
 | `elastic_agent_fleet_server__ssl_key` | ASCII-armored PEM TLS private key for the Fleet Server (Fleet Agent -> Fleet Server). | unset |
+| `elastic_agent_fleet_server__url` | The URL of the Fleet Server. Used by agents to connect. | `'https://{{ ansible_facts["nodename"] }}:8220'` |
 
 Example:
 ```yaml
@@ -114,11 +112,11 @@ Example:
 elastic_agent_fleet_server__elasticsearch_ca: '{{ lookup("ansible.builtin.file", inventory_dir ~ "/group_files/elasticsearch/ca.crt") }}'
 elastic_agent_fleet_server__insecure: false
 elastic_agent_fleet_server__policy_id: 'fleet-server-policy'
-elastic_agent_fleet_server__port: 8220
 elastic_agent_fleet_server__service_enabled: true
 elastic_agent_fleet_server__service_state: 'started'
 elastic_agent_fleet_server__ssl_cert: '{{ lookup("ansible.builtin.file", inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/fleet-server.crt") }}'
 elastic_agent_fleet_server__ssl_key: '{{ lookup("ansible.builtin.file", inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/fleet-server.key") }}'
+elastic_agent_fleet_server__url: 'https://fleet.example.com:8220'
 ```
 
 

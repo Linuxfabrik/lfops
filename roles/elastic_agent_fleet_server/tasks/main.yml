@@ -61,14 +61,27 @@
 
 - block:
 
+    - name: 'elastic-agent inspect'
+      ansible.builtin.command:
+        cmd: 'elastic-agent inspect'
+      register: '__elastic_agent_fleet_server__inspect_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Set enrollment fact'
+      ansible.builtin.set_fact:
+        __elastic_agent_fleet_server__is_enrolled: '{{ (__elastic_agent_fleet_server__inspect_result["stdout"] | ansible.builtin.from_yaml).get("fleet", {}).get("enabled", false) }}'
+      when:
+        - '__elastic_agent_fleet_server__inspect_result["rc"] == 0'
+
     - name: 'Enroll elastic-agent as Fleet Server'
       ansible.builtin.command:
         cmd: >-
           elastic-agent enroll
-          --fleet-server-es={{ elastic_agent_fleet_server__elasticsearch_hosts | join(',') | ansible.builtin.quote }}
+          --fleet-server-es={{ elastic_agent_fleet_server__elasticsearch_host | ansible.builtin.quote }}
           --fleet-server-service-token={{ elastic_agent_fleet_server__service_token | ansible.builtin.quote }}
           --fleet-server-policy={{ elastic_agent_fleet_server__policy_id | ansible.builtin.quote }}
-          --fleet-server-port={{ elastic_agent_fleet_server__port | ansible.builtin.quote }}
+          --url={{ elastic_agent_fleet_server__url | ansible.builtin.quote }}
           {% if elastic_agent_fleet_server__elasticsearch_ca is defined and elastic_agent_fleet_server__elasticsearch_ca | length %}
           --certificate-authorities=/etc/elastic-agent/certs/elasticsearch-ca.crt
           --fleet-server-es-ca=/etc/elastic-agent/certs/elasticsearch-ca.crt
@@ -83,6 +96,8 @@
           --insecure
           {% endif %}
           --force
+      when:
+        - '__elastic_agent_fleet_server__inspect_result["rc"] != 0 or not (__elastic_agent_fleet_server__is_enrolled | default(false))'
 
   tags:
     - 'elastic_agent_fleet_server'

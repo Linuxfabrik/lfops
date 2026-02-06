@@ -42,15 +42,13 @@ Get an enrollment token from Kibana:
 | Variable | Description |
 | -------- | ----------- |
 | `elastic_agent__enrollment_token` | The enrollment token for registering the agent with Fleet Server. Obtain from Kibana Fleet UI or API. |
-| `elastic_agent__fleet_urls` | List of Fleet Server URLs. Multiple URLs provide failover. |
+| `elastic_agent__fleet_url` | URL of the Fleet Server. Will only be used for the initial connection, afterwards the fleet server defined in the policy will be used. |
 
 Example:
 ```yaml
 # mandatory
 elastic_agent__enrollment_token: 'dGhpcyBpcyBhIHNhbXBsZSBlbnJvbGxtZW50IHRva2Vu...'
-elastic_agent__fleet_urls:
-  - 'https://fleet1.example.com:8220'
-  - 'https://fleet2.example.com:8220'
+elastic_agent__fleet_url: 'https://fleet1.example.com:8220'
 ```
 
 
