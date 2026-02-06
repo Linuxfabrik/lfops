@@ -18,6 +18,9 @@ Role:elastic_agent
 Role:elastic_agent_fleet_server
 * Add role
 
+Role:fail2ban
+* Make `bantime` configurable for the sshd and portscan jails
+
 Role:duplicity
 * Add support for RHEL10
 

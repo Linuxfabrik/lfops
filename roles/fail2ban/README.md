@@ -33,7 +33,9 @@ If you use the ["Fail2Ban" Playbook](https://github.com/Linuxfabrik/lfops/blob/m
 | `fail2ban__jail_default_ignoreip` | List of IP addresses (in CIDR notation) that will be ignored from all jails (assuming the jail does not overwrite it). | `[]` |
 | `fail2ban__jail_default_rocketchat_hook` | The incoming Rocket.Chat hook which will be used to send a notification on bans. For this to work `rocketchat` has to be in the action, have a look at `fail2ban__jail_default_action` (example below). | `''` |
 | `fail2ban__jail_portscan_allowed_ports` | A list of ports which are allowed to be accessed. IPs accessing these ports will not be blocked. Note: This setting is for the portscan jail. | `[22]` |
+| `fail2ban__jail_portscan_bantime` | The ban duration for the portscan jail. | `'8h'` |
 | `fail2ban__jail_portscan_server_ips` | A list of IP addresses of the server. Only traffic destined for these IPs will be considered. This prevents accidental banning due to traffic which is passing by the server, but not destined for it. Note: This setting is for the portscan jail. | `'{{ ansible_facts["all_ipv4_addresses"] }}'` |
+| `fail2ban__jail_sshd_bantime` | The ban duration for the sshd jail. | `'7d'` |
 | `fail2ban__jails__group_var` / `fail2ban__jails__host_var` | The fail2ban jail definition. Subkeys: <ul><li>`template`: Mandatory, string. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban/templates/etc/fail2ban/jail.d), or `raw`.</li> <li>`filename`: Mandatory, string. Destination filename in `jail.d/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.</li> <li>`state`: Mandatory, string. State of the jail. Possible options: `absent`, `present`.</li> <li>`raw`: Optional, string: Raw content for the jail.</li></ul> <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | <ul><li>`z10-portscan`</li><li>`z10-sshd`</li></ul> |
 | `fail2ban__service_enabled` | Enables or disables the fail2ban service, analogous to `systemctl enable/disable --now`. Possible options: | `true` |
 
@@ -49,9 +51,11 @@ fail2ban__jail_default_ignoreip:
 fail2ban__jail_default_rocketchat_hook: ''
 fail2ban__jail_portscan_allowed_ports:
   - 22
+fail2ban__jail_portscan_bantime: '8h'
 fail2ban__jail_portscan_server_ips:
   - '192.0.2.5'
   - '198.51.100.100'
+fail2ban__jail_sshd_bantime: '7d'
 fail2ban__jails__host_var:
   - filename: 'z10-apache-dos'
     state: 'absent'
