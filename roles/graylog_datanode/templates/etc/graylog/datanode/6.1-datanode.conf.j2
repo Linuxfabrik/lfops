@@ -163,3 +163,7 @@ opensearch_logs_location = /var/log/graylog-datanode/opensearch
 # indexer_jwt_auth_token_expiration_duration = 180s
 
 opensearch_heap = {{ graylog_datanode__opensearch_heap }}
+
+#### Data Tiering Properties
+
+path_repo = {{ graylog_datanode__path_repo | join(',') }}
