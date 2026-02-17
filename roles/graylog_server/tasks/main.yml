@@ -1,5 +1,18 @@
 - block:
 
+  - name: 'Validate that graylog_server__password_secret length > 16 characters'
+    ansible.builtin.assert:
+      that:
+        - 'graylog_server__password_secret | length > 16'
+      fail_msg: 'graylog_server__password_secret must be longer than 16 characters'
+      quiet: true
+
+  tags:
+    - 'graylog_server'
+    - 'graylog_server:configure'
+
+- block:
+
   - name: 'Install graylog-server'
     ansible.builtin.package:
       name:
