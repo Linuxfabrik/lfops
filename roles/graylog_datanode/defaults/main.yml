@@ -1,8 +1,9 @@
 graylog_datanode__bind_address: '127.0.0.1'
 graylog_datanode__datanode_http_port: 8999
+graylog_datanode__mongodb_uri: 'mongodb://127.0.0.1/graylog'
 graylog_datanode__opensearch_data_location: '/var/lib/graylog-datanode/opensearch/data'
 graylog_datanode__opensearch_heap: '{{ [((ansible_facts["memtotal_mb"] * 0.5) | int), 31744] | min }}m'
-graylog_datanode__mongodb_uri: 'mongodb://127.0.0.1/graylog'
+graylog_datanode__path_repo: []
 graylog_datanode__service_enabled: true
 
 # ------
