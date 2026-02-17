@@ -90,6 +90,13 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 * Type: String.
 * Default: 50% of system memory, e.g. `'8g'`
 
+`graylog_datanode__path_repo`
+
+* Filesystem paths where searchable snapshots should be stored
+* Type: List of Strings
+* Default: `[]`
+
+
 `graylog_datanode__service_enabled`
 
 * Enables or disables the graylog-datanode service, analogous to `systemctl enable/disable --now`.
