@@ -9,8 +9,8 @@ keycloak__enabled: true
 keycloak__expose_healthcheck_endpoints: true
 keycloak__expose_metrics_endpoints: true
 keycloak__hostname_strict_backchannel: false
-keycloak__https_certificate_file: '/etc/pki/tls/certs/www.example.com-chain.crt'
-keycloak__https_certificate_key_file: '/etc/pki/tls/private/www.example.com.key'
+keycloak__https_certificate_file: ''
+keycloak__https_certificate_key_file: ''
 keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
 keycloak__log: 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
