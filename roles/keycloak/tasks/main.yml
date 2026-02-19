@@ -3,13 +3,15 @@
   - name: 'Debug Variables:'
     ansible.builtin.debug:
       msg: |
+        keycloak__admin_login.username: {{ keycloak__admin_login.username }}
+        keycloak__db_login.username: {{ keycloak__db_login.username }}
         keycloak__db_url_database: {{ keycloak__db_url_database }}
         keycloak__db_url_host: {{ keycloak__db_url_host }}
         keycloak__db_vendor: {{ keycloak__db_vendor }}
-        keycloak__enabled: {{ keycloak__enabled }}
         keycloak__expose_healthcheck_endpoints: {{ keycloak__expose_healthcheck_endpoints }}
         keycloak__expose_metrics_endpoints: {{ keycloak__expose_metrics_endpoints }}
-        keycloak__hostname_strict_backchannel: {{ keycloak__hostname_strict_backchannel }}
+        keycloak__hostname: {{ keycloak__hostname }}
+        keycloak__hostname_backchannel_dynamic: {{ keycloak__hostname_backchannel_dynamic }}
         keycloak__https_certificate_file: {{ keycloak__https_certificate_file }}
         keycloak__https_certificate_key_file: {{ keycloak__https_certificate_key_file }}
         keycloak__https_protocols: {{ keycloak__https_protocols }}
@@ -18,8 +20,10 @@
         keycloak__mode: {{ keycloak__mode }}
         keycloak__proxy_headers: {{ keycloak__proxy_headers }}
         keycloak__proxy_trusted_addresses: {{ keycloak__proxy_trusted_addresses }}
+        keycloak__service_enabled: {{ keycloak__service_enabled }}
         keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: {{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route }}
         keycloak__state: {{ keycloak__state }}
+        keycloak__version: {{ keycloak__version }}
 
   tags:
     - 'always'
@@ -92,6 +96,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o640
+    notify: 'keycloak: systemctl restart keycloak'
 
   - name: 'Create keycloak.service'
     ansible.builtin.template:
@@ -101,6 +106,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'keycloak: systemctl restart keycloak'
 
   - name: 'systemctl daemon-reload'
     ansible.builtin.systemd:
@@ -114,7 +120,7 @@
 - block:
 
   - name: 'Change the working directory to /opt/keycloak and bin/kc.sh build --db {{ keycloak__db_vendor }}'
-    ansible.builtin.shell: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
+    ansible.builtin.command: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
     args:
       chdir: '/opt/keycloak'
     when: 'keycloak__mode == "production"'
@@ -125,12 +131,12 @@
 
 - block:
 
-  - name: 'systemctl {{ keycloak__enabled | bool | ternary("enable", "disable") }} keycloak.service'
+  - name: 'systemctl {{ keycloak__service_enabled | bool | ternary("enable", "disable") }} keycloak.service'
     ansible.builtin.service:
       name: 'keycloak.service'
-      enabled: '{{ keycloak__enabled }}'
+      enabled: '{{ keycloak__service_enabled }}'
 
-  - name: 'systemctl {{ keycloak__state[:-2] }} keycloak.service'
+  - name: 'systemctl {{ keycloak__state | regex_replace("p?ed$", "") }} keycloak.service'
     ansible.builtin.service:
       name: 'keycloak.service'
       state: '{{ keycloak__state }}'
