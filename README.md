@@ -308,3 +308,10 @@ ansible-galaxy collection list \
   | sort -u \
   | xargs -n1 -r ansible-galaxy collection install --upgrade
 ```
+
+
+Q: TASK \[linuxfabrik.lfops.kvm_host : activate network]  
+**fatal: \[myhost]: FAILED! => changed=false
+msg: 'error creating bridge interface long_bridge_name: Numerical result out of range'
+
+A: On Linux an interface name must not exceed 15 characters. Choose a shorter bridge name.
