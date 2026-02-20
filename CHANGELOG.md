@@ -10,6 +10,12 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ## [Unreleased] (in chronological order, newest first)
 
+### Breaking Changes
+
+Role:apache_httpd
+* Changed the default to not install/enable mod_qos by default (it is no longer shipped in EPEL 10)
+
+
 ### Added
 
 Role:crypto_policy

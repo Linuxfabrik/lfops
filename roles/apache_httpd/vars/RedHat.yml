@@ -205,7 +205,7 @@ apache_httpd__mods__role_var:
 
   - filename: 'qos'
     enabled: true
-    state: 'present'
+    state: 'absent'
     template: 'qos'
 
   - filename: 'raw'
@@ -286,7 +286,7 @@ apache_httpd__packages__role_var:
     state: 'present'
 
   - name: 'mod_qos'
-    state: 'present'
+    state: 'absent'
 
   - name: 'mod_security'
     state: 'present'
