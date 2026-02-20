@@ -7,19 +7,19 @@ Which Ansible role is proven to run on which OS?
                                      |    Debian    |    RHEL    |         Ubuntu        | other
 Role                                 | 11 | 12 | 13 | 8 | 9 | 10 | 20.04 | 22.04 | 24.04 |
 -------------------------------------+----+----+----+---+---+----+-------+-------+-------+-----------
-acme_sh                              |    | x  | x  | x | x |    |       |       |   x   |
+acme_sh                              |    | x  | x  | x | x | x  |       |       |   x   |
 alternatives                         |  x | x  | x  | x | x |    |   x   |   x   |   x   |
 ansible_init                         |    |    |    |   |   |    |       |       |       | Fedora 35+
-apache_httpd                         |    | x  | x  | x | x |    |       |       |   x   |
+apache_httpd                         |    | x  | x  | x | x | x  |       |       |   x   |
 apache_solr                          |    |    |    | x | x |    |       |       |       |
 apache_tomcat                        |    |    |    | x | x |    |       |       |       |
-apps                                 |    |    |    | x | x |    |       |       |       |
+apps                                 |    |    |    | x | x | x  |       |       |       |
 at                                   |    |    |    | x | x |    |       |       |       | Fedora 35
 audit                                |    |    |    | x | x |    |       |       |       |
-bind                                 |    |    |    | x | x |    |       |       |       |
+bind                                 |    |    |    | x | x | x  |       |       |       |
 blocky                               |    |    |    | x | x |    |       |       |       |
 borg_local                           |    |    |    | x |   |    |       |       |       |
-chrony                               |    |    |    | x | x |    |       |       |       |
+chrony                               |    |    |    | x | x | x  |       |       |       |
 clamav                               |    |    |    | x | x |    |       |       |       |
 cloud_init                           |    |    |    | x | x |    |       |       |       |
 cockpit                              |    |    |    | x | x |    |       |       |       | Fedora 35
@@ -37,15 +37,15 @@ elasticsearch                        |    |    |    | x | x |    |       |      
 exoscale_vm                          |    |    |    |   |   |    |       |       |       | Fedora 35+
 fail2ban                             |    |    |    | x | x |    |       |       |       |
 fangfrisch                           |    |    |    |   | x |    |       |       |       |
-files                                |    |    |    | x | x |    |       |       |       |
+files                                |    |    |    | x | x | x  |       |       |       |
 firewall                             |    |    |    | x | x |    |       |       |       |
-freeipa_client                       |    |    |    | x | x |    |       |       |       |
-freeipa_server                       |    |    |    | x | x |    |       |       |       |
+freeipa_client                       |    |    |    | x | x | x  |       |       |       |
+freeipa_server                       |    |    |    | x | x | x  |       |       |       |
 github_project_createrepo            |    |    |    | x |   |    |       |       |       |
 gitlab_ce                            |    |    |    | x |   |    |       |       |       |
 glances                              |    |    |    | x | x |    |       |       |       |
 glpi_agent                           |    |    |    | x | x |    |       |       |       |
-grafana                              |    |    |    | x | x |    |       |       |       |
+grafana                              |    |    |    | x | x | x  |       |       |       |
 grafana_grizzly                      |    |    |    | x | x |    |       |       |       |
 grav                                 |    |    |    | x |   |    |       |       |       |
 graylog_datanode                     |    | x  | x  | x | x |    |       |       |       |
@@ -131,7 +131,7 @@ postgresql_server                    |    |    |    | x |   |    |       |      
 proxysql                             |    |    |    | x |   |    |       |       |       |
 python                               |    | x  | x  | x | x |    |       |       |       | Windows
 python_venv                          | x  | x  | x  | x | x |    |       |       |       | Fedora 35
-qemu_guest_agent                     |    |    |    | x | x |    |       |       |       |
+qemu_guest_agent                     |    |    |    | x | x | x  |       |       |       |
 redis                                |    | x  | x  | x | x |    |       |       |       |
 repo_baseos                          |    |    |    | x | x | x  |       |       |       |
 repo_collabora                       |    |    |    | x |   |    |       |       |       |
@@ -164,13 +164,13 @@ repo_sury                            | x  | x  | x  | - | - |    |       |      
 rocketchat                           |    |    |    | x |   |    |       |       |       | Fedora 35
 rsyslog                              |    |    |    | x | x |    |       |       |       |
 selinux                              |    |    |    | x | x |    |       |       |       |
-shell                                |    |    |    | x | x |    |       |       |       |
+shell                                |    |    |    | x | x | x  |       |       |       |
 snmp                                 |    |    |    | x | x |    |       |       |       |
 squid                                |    |    |    |   | x |    |       |       |       |
 sshd                                 |    | x  | x  | x | x | x  |       |       |       | Fedora 40
 system_update                        | x  | x  | x  | x | x |    |       |       |       |
 systemd_journald                     |    |    |    | x | x |    |       |       |       |
-systemd_unit                         |    |    |    | x | x |    |       |       |       |
+systemd_unit                         |    |    |    | x | x | x  |       |       |       |
 telegraf                             |    |    |    | x |   |    |       |       |       |
 timezone                             |    |    |    | x | x |    |       |       |       | Fedora 35
 tools                                |    |    |    | x | x |    |       |       |       | Fedora
