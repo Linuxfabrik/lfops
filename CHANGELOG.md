@@ -18,6 +18,9 @@ Role:apache_httpd
 
 ### Added
 
+Role:infomaniak_vm
+* Add the ability to choose the deployment region/datacentre
+
 Role:crypto_policy
 * Add RHEL 10 support
 

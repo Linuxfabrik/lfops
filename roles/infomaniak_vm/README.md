@@ -47,6 +47,7 @@ infomaniak_vm__api_username: 'PCU-123456'
 | `infomaniak_vm__name` | The name of the instance. By default, it uses the Ansible inventory name. | `'{{ inventory_hostname }}'` |
 | `infomaniak_vm__networks` | A list of dictionaries defining which networks should be attached to this instance. It also allows the creation of new internal networks, or setting a fixed IP for the instance. Subkeys:<br> * `name`: Mandatory, string. The name of an existing network, or the network which should be created.<br> * `cidr`: Optional, string. If this is given, a new network with this cidr is created.<br> * `fixed_ip`: Optional, string. The fixed IP of this instance. This can be used for attach to an existing network, or when creating a new one. | `[]` |
 | `infomaniak_vm__security_group_rules` | A list of dictionaries containing rules for the security group (basically OpenStack firewall rules). Subkeys: <ul><li>`direction`: Mandatory, string. For which direction the rule should apply. Possible options: `ingress`, `egress`.<li>`ethertype`: Optional, string. Choose between `IPv4` and `IPv6`. Defaults to `IPv4`.<li>`port_range_max`: Mandatory, int. The ending port. <li>`port_range_min`: Mandatory, int. The starting port.<li>`protocol`: Mandatory, string. To which IP protocol the rule is applied. Possible options: `any`, `tcp`, `udp`, `icmp`.<li>`remote_ip_prefix`: Optional, string. Source IP address(es) in CIDR notation.<li>`state`: Optional, string. State of the rule. Either `absent` or `present`. Defaults to `present`.</ul> | unset |
+| `infomaniak_vm__region_name` | The region/datacentre where the VM instance should be created. | `'dc3-a'` |
 | `infomaniak_vm__separate_boot_volume_size` | The size of the bootable root-volume in GB. This should only be used if the `infomaniak_vm__flavor` does not include a disk. Resizing currently does not seem to work (should work according to the documentation). Resizing via the WebGUI works without reboot / downtime. | unset |
 | `infomaniak_vm__separate_boot_volume_type` | The type of the bootable root-volume. This only has an effect if `infomaniak_vm__separate_boot_volume_size` is set. Possible Options:<br> * `'perf1'`<br> * `'perf2'`| `'perf2'` |
 | `infomaniak_vm__state` | The state of the instance. Note that setting this to absent also removes all other created compontents, except the networks, which are never deleted since other VMs could still be using them. Possible options:<br> * `present`<br> * `absent` | `'present'` |
@@ -66,6 +67,7 @@ infomaniak_vm__security_group_rules:
     protocol: 'tcp'
     port_range_min: 22
     port_range_max: 22
+infomaniak_vm__region_name: 'dc4-a'
 infomaniak_vm__separate_boot_volume_size: 20
 infomaniak_vm__separate_boot_volume_type: 'perf2'
 infomaniak_vm__state: 'present'
