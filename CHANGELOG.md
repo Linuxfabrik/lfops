@@ -69,6 +69,9 @@ Role:graylog_server
 
 ### Fixed
 
+Role:python_venv
+* Fix venv path in remove venv task
+
 Role:apache_httpd
 * Prevent deployment of mods that should be disabled
 

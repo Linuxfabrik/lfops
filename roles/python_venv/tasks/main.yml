@@ -53,7 +53,7 @@
 
   - name: 'Remove venvs'
     ansible.builtin.file:
-      path: '/opt/python_venv/{{ venv["name"] }}'
+      path: '/opt/python-venv/{{ venv["name"] }}'
       state: 'absent'
     loop: '{{ python_venv__venvs__combined_var }}'
     loop_control:
