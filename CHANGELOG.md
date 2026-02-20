@@ -12,6 +12,9 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Role:crypto_policy
+* Add RHEL 10 support
+
 Role:elastic_agent
 * Add role
 
