@@ -1,11 +1,13 @@
 <network>
   <name>{{ network.name }}</name>
   <mac address='{{ network.mac | default("52:54:00" | community.general.random_mac(seed=inventory_hostname)) }}'/>
+  {% if network.forward_mode is defined and network.forward_mode == 'nat' %}
   <forward mode='nat'>
     <nat>
       <port start='1024' end='65535'/>
     </nat>
   </forward>
+  {% endif %}
 
   {% if network.bridge is defined and network.bridge | length %}
   <bridge name="{{ network.bridge }}"/>

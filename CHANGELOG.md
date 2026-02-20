@@ -12,8 +12,11 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Breaking Changes
 
+Role:kvm_host
+* Change NAT to be explicitly activated for virtual nets
+
 Role:apache_httpd
-* Changed the default to not install/enable mod_qos by default (it is no longer shipped in EPEL 10)
+* Change the default to not install/enable mod_qos by default (it is no longer shipped in EPEL 10)
 
 
 ### Added
