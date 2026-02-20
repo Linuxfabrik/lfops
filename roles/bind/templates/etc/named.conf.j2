@@ -29,7 +29,7 @@ options {
     };
     directory "/var/named";
     disable-empty-zone yes;
-    {% if ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] <= '8' %}
+    {% if ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] | int <= 8 %}
     {# The dnssec-enable option has been obsoleted and no longer has any effect. DNSSEC responses are always enabled if signatures and other DNSSEC data are present. See https://bind9.readthedocs.io/en/v9.16.16/notes.html#removed-features #}
     dnssec-enable no;
     {% endif %}

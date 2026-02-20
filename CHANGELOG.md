@@ -69,6 +69,9 @@ Role:graylog_server
 
 ### Fixed
 
+Role:bind
+* Fix incorrect distribution version comparison in named.conf
+
 Role:python_venv
 * Fix venv path in remove venv task
 
