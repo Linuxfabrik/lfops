@@ -50,6 +50,25 @@
       when:
         - '__elastic_agent__inspect_result["rc"] == 0'
 
+    - name: 'Print enrollment command'
+      ansible.builtin.debug:
+        msg: >-
+          elastic-agent enroll
+          --url={{ elastic_agent__fleet_url | ansible.builtin.quote }}
+          --enrollment-token={{ elastic_agent__enrollment_token | ansible.builtin.quote }}
+          {% if elastic_agent__fleet_ca is defined and elastic_agent__fleet_ca | length %}
+          --certificate-authorities=/etc/elastic-agent/certs/fleet-ca.crt
+          {% endif %}
+          {% if elastic_agent__tags | length %}
+          --tag={{ elastic_agent__tags | join(',') | ansible.builtin.quote }}
+          {% endif %}
+          {% if elastic_agent__insecure %}
+          --insecure
+          {% endif %}
+          --force
+      when:
+        - '__elastic_agent__inspect_result["rc"] != 0 or not (__elastic_agent__is_enrolled | default(false))'
+
     - name: 'Enroll elastic-agent to Fleet Server'
       ansible.builtin.command:
         cmd: >-
