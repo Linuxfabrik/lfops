@@ -6,8 +6,6 @@ By default, this role requires an OS image that has been modified using cloud-in
 
 If you want to create a VM with an existing disk, see the `kvm_vm__existing_boot_disk` variable.
 
-The role does not currently support resizing the VM.
-
 
 ## Mandatory Requirements
 
@@ -21,6 +19,7 @@ The role does not currently support resizing the VM.
 | ---            | ------------                            | ---------------- |
 | `kvm_vm`       | Creates and manages the virtual machine | - |
 | `kvm_vm:additional_disks` | Creates additional disks. Note that you need to manually attach them to the VM if the VM already exists | - |
+| `kvm_vm:resize_disks` | Resizes boot and additional disks. If the VM is running, also performs a live `virsh blockresize` | - |
 | `kvm_vm:state` | Sets the state of the VM                | - |
 
 
@@ -29,7 +28,7 @@ The role does not currently support resizing the VM.
 | Variable | Description |
 | -------- | ----------- |
 | `kvm_vm__base_image` | The base image file which will be used for the VM. Has to be placed in the `kvm_vm__pool` storage pool. |
-| `kvm_vm__boot_disk_size` | The size to which the boot disk will be resized. This is required since we are using a base image. Should either be in bytes, or given using an optional suffix: k or K (kilobyte, 1024), M (megabyte, 1024k) and G (gigabyte, 1024M) and T (terabyte, 1024G) are supported. b is ignored. |
+| `kvm_vm__boot_disk_size` | The size of the boot disk. On initial creation this is required since we are using a base image. On subsequent runs the boot disk will be grown to this size if it is currently smaller (live resize via `virsh blockresize` is performed when the VM is running). Shrinking is never attempted. Should either be in bytes, or given using an optional suffix: k or K (kilobyte, 1024), M (megabyte, 1024k) and G (gigabyte, 1024M) and T (terabyte, 1024G) are supported. b is ignored. |
 | `kvm_vm__host` | The KVM host. Will be used in `delegate_to` statements, meaning the host should either be in the ansible inventory or reachable via the given value. |
 | `kvm_vm__memory` | Memory to allocate for the VM, in MiB. |
 | `kvm_vm__vcpus` | Number of virtual cpus to configure for the VM. |
@@ -49,7 +48,7 @@ kvm_vm__vcpus: 2
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `kvm_vm__additional_disks` | A list of additional disks. They will be created in the `kvm_vm__pool` if they do not exist already. Note: the disk will only be attached to the VM during VM creation, not during subsequent runs. Subkeys:<ul><li>`name`: Mandatory, string. The name of the disk. Will be prepended with the `kvm_vm__name` and suffixed with `.qcow2`.</li><li>`size`: Mandatory, string. The size of the disk, in the same format as `kvm_vm__boot_disk_size`.</li><li>`pool`: Optional, string. Storage pool of the disk. </li></ul>| `[]` |
+| `kvm_vm__additional_disks` | A list of additional disks. They will be created in the `kvm_vm__pool` if they do not exist already. Note: the disk will only be attached to the VM during VM creation, not during subsequent runs. On subsequent runs, existing disks will be grown if `size` is larger than the current size (live resize via `virsh blockresize` is performed when the VM is running). Shrinking is never attempted. Subkeys:<ul><li>`name`: Mandatory, string. The name of the disk. Will be prepended with the `kvm_vm__name` and suffixed with `.qcow2`.</li><li>`size`: Mandatory, string. The size of the disk, in the same format as `kvm_vm__boot_disk_size`.</li><li>`pool`: Optional, string. Storage pool of the disk. </li></ul>| `[]` |
 | `kvm_vm__autostart` | Whether the VM should be started on host boot up or not. | `true` |
 | `kvm_vm__boot` | String. See `man virt-install` for details on `--boot`. | `''` |
 | `kvm_vm__connect_url` | URL for connecting to the hypervisor on the `kvm_vm__host`. | `'qemu:///system'` |

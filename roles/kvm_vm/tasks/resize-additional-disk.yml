@@ -1,0 +1,36 @@
+- name: >-
+    additional disk {{ kvm_vm__resize_disk_item["name"] }}: qemu-img info --force-share --output=json
+    {{ (kvm_vm__pool_info_result["pools"][kvm_vm__resize_disk_item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ kvm_vm__resize_disk_item["name"] ~ ".qcow2") | quote }}
+  ansible.builtin.command:
+    cmd: >-
+      qemu-img info --force-share --output=json
+      {{ (kvm_vm__pool_info_result["pools"][kvm_vm__resize_disk_item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ kvm_vm__resize_disk_item["name"] ~ ".qcow2") | quote }}
+  register: '__kvm_vm__additional_disk_info_result'
+  changed_when: false
+  check_mode: false
+
+- name: >-
+    additional disk {{ kvm_vm__resize_disk_item["name"] }}: qemu-img resize
+    {{ (kvm_vm__pool_info_result["pools"][kvm_vm__resize_disk_item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ kvm_vm__resize_disk_item["name"] ~ ".qcow2") | quote }}
+    {{ kvm_vm__resize_disk_item["size"] }}
+  ansible.builtin.command:
+    cmd: >-
+      qemu-img resize
+      {{ (kvm_vm__pool_info_result["pools"][kvm_vm__resize_disk_item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ kvm_vm__resize_disk_item["name"] ~ ".qcow2") | quote }}
+      {{ kvm_vm__resize_disk_item["size"] }}
+  when:
+    - 'kvm_vm__state != "running"'
+    - '(__kvm_vm__additional_disk_info_result["stdout"] | from_json)["virtual-size"] < kvm_vm__resize_disk_item["size"] | ansible.builtin.human_to_bytes'
+
+- name: >-
+    additional disk {{ kvm_vm__resize_disk_item["name"] }}: virsh blockresize {{ kvm_vm__name }}
+    {{ (kvm_vm__pool_info_result["pools"][kvm_vm__resize_disk_item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ kvm_vm__resize_disk_item["name"] ~ ".qcow2") | quote }}
+    {{ kvm_vm__resize_disk_item["size"] }}
+  ansible.builtin.command:
+    cmd: >-
+      virsh blockresize {{ kvm_vm__name }}
+      {{ (kvm_vm__pool_info_result["pools"][kvm_vm__resize_disk_item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ kvm_vm__resize_disk_item["name"] ~ ".qcow2") | quote }}
+      {{ kvm_vm__resize_disk_item["size"] }}
+  when:
+    - 'kvm_vm__state == "running"'
+    - '(__kvm_vm__additional_disk_info_result["stdout"] | from_json)["virtual-size"] < kvm_vm__resize_disk_item["size"] | ansible.builtin.human_to_bytes'
