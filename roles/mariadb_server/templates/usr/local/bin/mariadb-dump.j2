@@ -69,7 +69,7 @@ mydumper_params+="--outputdir=$BACKUP_DIR "
 mydumper_params+="--routines "
 mydumper_params+="--threads=$THREADS "
 mydumper_params+="--triggers "
-mydumper_params+="--trx-tables=0 "
+mydumper_params+="--no-trx-tables "
 mydumper_params+="--verbose 3 "
 mydumper_params+="$RAW "
 
