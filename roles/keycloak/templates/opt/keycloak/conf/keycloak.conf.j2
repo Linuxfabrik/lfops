@@ -29,33 +29,25 @@ metrics-enabled={{ keycloak__expose_metrics_endpoints | string | lower }}
 
 # HTTP(S)
 # https://www.keycloak.org/server/all-config#category-http
-{% if keycloak__mode == 'production' and (keycloak__https_certificate_file is not defined or keycloak__https_certificate_file == "") %}
+{% if keycloak__mode == 'production' %}
+{% if keycloak__https_certificate_file | default('') | length == 0 %}
 http-enabled=true
-{% endif %}
-{% if keycloak__mode == 'production' or (keycloak__proxy_mode is defined and (keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough")) %}
+{% else %}
 https-certificate-file={{ keycloak__https_certificate_file }}
-{% else %}
-#https-certificate-file=${kc.home.dir}conf/server.crt.pem
-{% endif %}
-{% if keycloak__mode == 'production' or (keycloak__proxy_mode is defined and (keycloak__proxy_mode == "reencrypt" or keycloak__proxy_mode == "passthrough")) %}
 https-certificate-key-file={{ keycloak__https_certificate_key_file }}
-{% else %}
-#https-certificate-key-file=${kc.home.dir}conf/server.key.pem
-{%endif%}
 {% if keycloak__https_cipher_suites is defined and keycloak__https_cipher_suites | length %}
 https-cipher-suites={{ keycloak__https_cipher_suites }}
 {% endif %}
 https-protocols={{ keycloak__https_protocols }}
+{% endif %}
+{% endif %}
 
 
 # Proxy
 # https://www.keycloak.org/server/all-config#category-proxy
-{% if keycloak__proxy_mode is defined and keycloak__proxy_mode | length %}
-proxy={{ keycloak__proxy_mode }}
+{% if keycloak__proxy_headers is defined and keycloak__proxy_headers | length %}
 proxy-headers={{ keycloak__proxy_headers }}
 proxy-trusted-addresses={{ keycloak__proxy_trusted_addresses }}
-{% else %}
-#proxy=reencrypt
 {% endif %}
 
 
