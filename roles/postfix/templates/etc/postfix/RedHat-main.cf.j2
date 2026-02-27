@@ -416,7 +416,7 @@ relayhost = {{ postfix__relayhost }}
 # "postfix reload" to eliminate the delay.
 #
 #alias_maps = dbm:/etc/aliases
-alias_maps = hash:/etc/aliases
+alias_maps = {{ __postfix__map_type }}:/etc/aliases
 #alias_maps = hash:/etc/aliases, nis:mail.aliases
 #alias_maps = netinfo:/aliases
 
@@ -427,7 +427,7 @@ alias_maps = hash:/etc/aliases
 #
 #alias_database = dbm:/etc/aliases
 #alias_database = dbm:/etc/mail/aliases
-alias_database = hash:/etc/aliases
+alias_database = {{ __postfix__map_type }}:/etc/aliases
 #alias_database = hash:/etc/aliases, hash:/opt/majordomo/aliases
 
 # ADDRESS EXTENSIONS (e.g., user+foo)

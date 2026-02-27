@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:postfix**: Add RHEL 10 support
 * **role:kvm_vm**: Add the ability to resize disks
 * **role:infomaniak_vm**: Add the ability to choose the deployment region/datacenter
 * **role:crypto_policy**: Add RHEL 10 support

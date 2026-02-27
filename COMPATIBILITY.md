@@ -126,7 +126,7 @@ openvpn_server                       |    |    |    | x | x |    |       |      
 php                                  |    | x  | x  | x | x |    |       |       |       |
 podman_containers                    |    |    |    |   | x |    |       |       |       |
 policycoreutils                      |    |    |    | x | x | x  |       |       |       | Fedora 35
-postfix                              | x  | x  | x  | x | x |    |       |       |       | Fedora 35
+postfix                              | x  | x  | x  | x | x | x  |       |       |       | Fedora 35
 postgresql_server                    |    |    |    | x |   |    |       |       |       |
 proxysql                             |    |    |    | x |   |    |       |       |       |
 python                               |    | x  | x  | x | x |    |       |       |       | Windows

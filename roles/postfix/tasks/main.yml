@@ -72,14 +72,14 @@
         mode: 0o600
       register: 'postfix__deploy_sasl_password_result'
 
-    - name: 'postmap /etc/postfix/sasl_passwd'
-      ansible.builtin.command: 'postmap /etc/postfix/sasl_passwd'
+    - name: 'postmap {{ __postfix__map_type }}:/etc/postfix/sasl_passwd'
+      ansible.builtin.command: 'postmap {{ __postfix__map_type }}:/etc/postfix/sasl_passwd'
       when: 'postfix__deploy_sasl_password_result is changed'
       notify: 'postfix: reload postfix'
 
-    - name: 'chmod 0600 /etc/postfix/sasl_passwd.db'
+    - name: 'chmod 0600 /etc/postfix/sasl_passwd.{{ (__postfix__map_type == "lmdb") | ternary("lmdb", "db") }}'
       ansible.builtin.file:
-        path: '/etc/postfix/sasl_passwd.db'
+        path: '/etc/postfix/sasl_passwd.{{ (__postfix__map_type == "lmdb") | ternary("lmdb", "db") }}'
         owner: 'root'
         group: 'root'
         mode: 0o600
