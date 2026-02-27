@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:systemd_unit**: Correct the removal of units
 * **role:bind**: Fix incorrect distribution version comparison in named.conf
 * **role:python_venv**: Fix venv path in remove venv task
 * **role:apache_httpd**: Prevent deployment of mods that should be disabled

@@ -1,13 +1,15 @@
 - block:
 
-  - name: 'Remove service units from /etc/systemd/system'
-    ansible.builtin.file:
-      path: '/etc/systemd/system/{{ item["name"] }}.service'
-      state: 'absent'
-    when:
-      - 'item["state"] | d("present") == "absent"'
-    loop: '{{ systemd_unit__services__combined_var }}'
-    notify: 'systemd_unit: systemctl daemon-reload'
+  - name: 'Remove service units'
+    ansible.builtin.include_tasks: 'remove-unit.yml'
+    vars:
+      __systemd_unit__unit_type: 'service'
+    loop: '{{ systemd_unit__services__combined_var
+        | selectattr("state", "defined")
+        | selectattr("state", "eq", "absent")
+        | list }}'
+    loop_control:
+      label: '{{ item["name"] }}.service'
 
   - name: 'Deploy the service units to /etc/systemd/system'
     ansible.builtin.template:
@@ -28,14 +30,16 @@
 
 - block:
 
-  - name: 'Remove timer units from /etc/systemd/system'
-    ansible.builtin.file:
-      path: '/etc/systemd/system/{{ item["name"] }}.timer'
-      state: 'absent'
-    when:
-      - 'item["state"] | d("present") == "absent"'
-    loop: '{{ systemd_unit__timers__combined_var }}'
-    notify: 'systemd_unit: systemctl daemon-reload'
+  - name: 'Remove timer units'
+    ansible.builtin.include_tasks: 'remove-unit.yml'
+    vars:
+      __systemd_unit__unit_type: 'timer'
+    loop: '{{ systemd_unit__timers__combined_var
+        | selectattr("state", "defined")
+        | selectattr("state", "eq", "absent")
+        | list }}'
+    loop_control:
+      label: '{{ item["name"] }}.timer'
 
   - name: 'Deploy the timer units to /etc/systemd/system'
     ansible.builtin.template:
@@ -56,14 +60,16 @@
 
 - block:
 
-  - name: 'Remove mount units from /etc/systemd/system'
-    ansible.builtin.file:
-      path: '/etc/systemd/system/{{ item["name"] }}.mount'
-      state: 'absent'
-    when:
-      - 'item["state"] | d("present") == "absent"'
-    loop: '{{ systemd_unit__mounts__combined_var }}'
-    notify: 'systemd_unit: systemctl daemon-reload'
+  - name: 'Remove mount units'
+    ansible.builtin.include_tasks: 'remove-unit.yml'
+    vars:
+      __systemd_unit__unit_type: 'mount'
+    loop: '{{ systemd_unit__mounts__combined_var
+        | selectattr("state", "defined")
+        | selectattr("state", "eq", "absent")
+        | list }}'
+    loop_control:
+      label: '{{ item["name"] }}.mount'
 
   - name: 'Deploy the mount units to /etc/systemd/system'
     ansible.builtin.template:
@@ -90,6 +96,8 @@
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.service'
       enabled: '{{ item["enabled"] | d(true) }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
     loop: '{{ systemd_unit__services__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}.service - enabled: {{ item["enabled"] | d(true) }}'
@@ -108,6 +116,8 @@
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.timer'
       enabled: '{{ item["enabled"] | d(true) }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
     loop: '{{ systemd_unit__timers__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}.timer - enabled: {{ item["enabled"] | d(true) }}'
@@ -126,6 +136,8 @@
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.mount'
       enabled: '{{ item["enabled"] | d(true) }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
     loop: '{{ systemd_unit__mounts__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}.mount - enabled: {{ item["enabled"] | d(true) }}'

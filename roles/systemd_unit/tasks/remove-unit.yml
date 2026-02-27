@@ -1,0 +1,15 @@
+- name: 'systemctl stop {{ item["name"] }}.{{ __systemd_unit__unit_type }}'
+  ansible.builtin.systemd:
+    name: '{{ item["name"] }}.{{ __systemd_unit__unit_type }}'
+    state: 'stopped'
+
+- name: 'systemctl disable {{ item["name"] }}.{{ __systemd_unit__unit_type }}'
+  ansible.builtin.systemd:
+    name: '{{ item["name"] }}.{{ __systemd_unit__unit_type }}'
+    enabled: false
+
+- name: 'Remove {{ item["name"] }}.{{ __systemd_unit__unit_type }} from /etc/systemd/system'
+  ansible.builtin.file:
+    path: '/etc/systemd/system/{{ item["name"] }}.{{ __systemd_unit__unit_type }}'
+    state: 'absent'
+  notify: 'systemd_unit: systemctl daemon-reload'
