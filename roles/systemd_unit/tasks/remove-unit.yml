@@ -2,11 +2,19 @@
   ansible.builtin.systemd:
     name: '{{ item["name"] }}.{{ __systemd_unit__unit_type }}'
     state: 'stopped'
+  register: '__systemd_unit__stop_result'
+  failed_when:
+    - '__systemd_unit__stop_result is failed'
+    - '"Could not find the requested service" not in __systemd_unit__stop_result["msg"] | d("")'
 
 - name: 'systemctl disable {{ item["name"] }}.{{ __systemd_unit__unit_type }}'
   ansible.builtin.systemd:
     name: '{{ item["name"] }}.{{ __systemd_unit__unit_type }}'
     enabled: false
+  register: '__systemd_unit__disable_result'
+  failed_when:
+    - '__systemd_unit__disable_result is failed'
+    - '"Could not find the requested service" not in __systemd_unit__disable_result["msg"] | d("")'
 
 - name: 'Remove {{ item["name"] }}.{{ __systemd_unit__unit_type }} from /etc/systemd/system'
   ansible.builtin.file:
