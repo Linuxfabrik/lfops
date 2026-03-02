@@ -1,3 +1,4 @@
+duplicity__backup_backend: 'swift'
 duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | regex_replace("/$", "") }}'
 duplicity__backup_dest_container: '{{ ansible_nodename }}'
 duplicity__backup_full_if_older_than: '30D'

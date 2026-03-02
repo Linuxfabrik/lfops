@@ -66,6 +66,7 @@ duplicity__swift_login:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `duplicity__backup_backend` | The backup backend being used. Available values: `swift`, `sftp` | `swift` |
 | `duplicity__backup_dest_container` | The Swift container. This can be used to separate backups on the destination. By default, this will be used in `duplicity__backup_dest`. | `'{{ ansible_nodename }}'` |
 | `duplicity__backup_dest` | The backup destination. This will be used in combination with the backup source path to create the target URL for `duplicity`. | `duplicity__backup_dest_container \| regex_replace("/$", "") }}'` |
 | `duplicity__backup_full_if_older_than` | After how long a full backup instead of a incremental one should be done. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`. | `'30D'` |
@@ -76,6 +77,7 @@ duplicity__swift_login:
 | `duplicity__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `'{{ logrotate__rotate \| d(14) }}'` |
 | `duplicity__on_calendar_hour` | A shorthand to set the hour of `duplicity__on_calendar`. | `'23'` |
 | `duplicity__on_calendar` | The `OnCalendar` definition for the daily systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* {{ duplicity__on_calendar_hour }}:{{ 59 \| random(seed=inventory_hostname) }}'` |
+| `duplicity__ftp_password` | Password for SSH User that is used by SFTP connection. |
 | `duplicity__swift_authurl` | The Authentication URL for Swift. Usually, this is given by the provider of the Swift Storage. | `'swiss-backup02.infomaniak.com/identity/v3'` |
 | `duplicity__swift_authversion` | The Authentication Version for Swift. Usually, this is given by the provider of the Swift Storage. | `'3'` |
 | `duplicity__swift_tenantname` | The Swift Tenantname. Usually, this is given by the provider of the Swift Storage. | `'sb_project_{{ duplicity__swift_login["username"] }}'` |
