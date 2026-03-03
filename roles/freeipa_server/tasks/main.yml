@@ -52,3 +52,23 @@
 
   tags:
     - 'freeipa_server'
+
+
+- block:
+
+  - name: 'ensures /etc/systemd/system/pki-tomcatd@.service.d dir exists'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/pki-tomcatd@.service.d'
+      state: directory
+
+  - name: 'deploy /etc/systemd/system/pki-tomcatd@.service.d/override.conf'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/pki-tomcatd@.service.d/override.conf.j2'
+      dest: '/etc/systemd/system/pki-tomcatd@.service.d/override.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:systemd_override'
