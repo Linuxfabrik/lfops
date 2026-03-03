@@ -22,7 +22,7 @@
         "SWIFT_AUTHVERSION": "{{ duplicity__swift_authversion }}",
         "SWIFT_TENANTNAME": "{{ duplicity__swift_tenantname }}",
 {% elif duplicity__backup_backend == "sftp" %}
-        "FTP_PASSWORD": "{{ duplicity__ftp_password }}",
+        "FTP_PASSWORD": "{{ duplicity__sftp_password }}",
 {% endif %}
         "PASSPHRASE": ""
     }
