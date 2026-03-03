@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **role:repo_remi**: Install Composer from `remi-modular` repository
 * **role:icingadb**: Enhance `config.yml` template
-* **role:apache_httpd**: Improve output; bump Core Rule Set to 4.21.0
+* **role:apache_httpd**: Improve output; bump Core Rule Set to 4.24.0
 
 ### Fixed
 
