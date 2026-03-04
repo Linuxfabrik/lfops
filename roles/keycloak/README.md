@@ -5,10 +5,14 @@ This role installs [Keycloak](https://www.keycloak.org/guides#getting-started).
 
 ## Mandatory Requirements
 
+Minimum supported Keycloak version:
+
+* Keycloak 24.0.0
+
 Make sure you have OpenJDK installed.
 
 * Keycloak 25+: OpenJDK 21
-* Keycloak 20+: OpenJDK 17
+* Keycloak 24+: OpenJDK 17
 
 Install one of the following database servers and create a database and a user for said database. For MariaDB, this can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
 
@@ -98,6 +102,8 @@ keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
 keycloak__log: 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
 keycloak__mode: 'production'
+keycloak__proxy_headers: 'xforwarded'
+keycloak__proxy_trusted_addresses: '127.0.0.1'
 keycloak__service_enabled: true
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
 keycloak__state: 'started'
