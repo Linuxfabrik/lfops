@@ -198,6 +198,7 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 | `elasticsearch__discovery_seed_hosts` | A list of IPs or hostnames that point to all master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten using `:9301`, for example. | unset |
 | `elasticsearch__http_cert` | ASCII-armored PEM HTTP certificate. | unset |
 | `elasticsearch__http_key` | ASCII-armored PEM HTTP private key. | unset |
+| `elasticsearch__log4j2_retention_days` | Number of days to retain rotated Elasticsearch log files (server, deprecation, slowlog, audit). All log appenders rotate daily and delete files older than this value. | `3` |
 | `elasticsearch__network_host` | Sets the address for both HTTP and transport traffic. Accepts an IP address, a hostname, or a [special value](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/modules-network.html#network-interface-values). | `'_local_'` |
 | `elasticsearch__node_attributes` | Dictionary of custom node attributes. Can be used for shard allocation awareness. Each attribute identifies a node's physical location or characteristic. | `{}` |
 | `elasticsearch__node_name` | A descriptive name for the node | `'{{ ansible_facts["nodename"] }}'` |
@@ -230,6 +231,7 @@ elasticsearch__discovery_seed_hosts:
   - 'node3.example.com:9301'
 elasticsearch__http_cert: '{{ lookup("ansible.builtin.file", "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/elasticsearch/certs/http.crt") }}'
 elasticsearch__http_key: '{{ lookup("ansible.builtin.file", "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/elasticsearch/certs/http.key") }}'
+elasticsearch__log4j2_retention_days: 7
 elasticsearch__network_host: '0.0.0.0'
 elasticsearch__network_host: '_local_'  # or '127.0.0.1' for single node
 elasticsearch__node_attributes:

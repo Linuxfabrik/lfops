@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:elasticsearch**: Add logrotate config for daily rotation
 * **role:freeipa_server**: Add the ability to specify the systemd unit start timeout
 * **role:postfix**: Add RHEL 10 support
 * **role:kvm_vm**: Add the ability to resize disks

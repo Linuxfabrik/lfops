@@ -117,6 +117,23 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/elasticsearch/elasticsearch.yml'
 
+  - name: 'deploy /etc/elasticsearch/log4j2.properties'
+    ansible.builtin.template:
+      src: 'etc/elasticsearch/log4j2.properties.j2'
+      dest: '/etc/elasticsearch/log4j2.properties'
+      owner: 'root'
+      group: 'elasticsearch'
+      mode: 0o660
+      backup: true
+    notify: 'elasticsearch: restart elasticsearch'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/elasticsearch/log4j2.properties'
+
   - name: 'deploy {{ __elasticsearch__sysconfig_file_path }}'
     ansible.builtin.template:
       src: 'etc/sysconfig/elasticsearch.j2'

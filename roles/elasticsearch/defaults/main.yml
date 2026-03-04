@@ -25,6 +25,7 @@ elasticsearch__node_attributes: {}
 elasticsearch__node_name: '{{ ansible_facts["nodename"] }}'
 elasticsearch__path_data: '/var/lib/elasticsearch'
 elasticsearch__path_repos: []
+elasticsearch__log4j2_retention_days: 3
 elasticsearch__service_enabled: true
 elasticsearch__service_state: 'started'
 
