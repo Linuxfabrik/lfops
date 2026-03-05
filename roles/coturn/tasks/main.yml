@@ -7,6 +7,7 @@
 
   - name: 'Deploy /etc/coturn/turnserver.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/coturn/turnserver.conf.j2'
       dest: '/etc/coturn/turnserver.conf'
       owner: 'root'

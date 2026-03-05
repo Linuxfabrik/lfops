@@ -16,6 +16,7 @@
 
   - name: 'Deploy /etc/pip.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/pip.conf.j2'
       dest: '/etc/pip.conf'
       owner: 'root'

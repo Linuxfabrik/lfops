@@ -26,6 +26,7 @@
 
   - name: 'Deploy actions'
     ansible.builtin.template:
+      backup: true
       src: 'etc/fail2ban/action.d/{{ item }}.conf.j2'
       dest: '/etc/fail2ban/action.d/{{ item }}.conf'
       owner: 'root'
@@ -38,6 +39,7 @@
 
   - name: 'Deploy filters'
     ansible.builtin.template:
+      backup: true
       src: 'etc/fail2ban/filter.d/{{ item }}.conf.j2'
       dest: '/etc/fail2ban/filter.d/{{ item }}.conf'
       owner: 'root'
@@ -51,6 +53,7 @@
 
   - name: 'Deploy /etc/fail2ban/jail.d/z00-defaults.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/fail2ban/jail.d/z00-defaults.conf.j2'
       dest: '/etc/fail2ban/jail.d/z00-defaults.conf'
       owner: 'root'
@@ -75,6 +78,7 @@
 
   - name: 'Create Jails'
     ansible.builtin.template:
+      backup: true
       src: 'etc/fail2ban/jail.d/z10-{{ item["template"] }}.conf.j2'
       dest: '/etc/fail2ban/jail.d/{{ item["filename"] }}.conf'
       owner: 'root'

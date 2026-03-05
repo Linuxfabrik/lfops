@@ -35,6 +35,7 @@
 
   - name: 'Deploy /etc/borg/borg-passphrase'
     ansible.builtin.template:
+      backup: true
       src: 'etc/borg/borg-passphrase.j2'
       dest: '/etc/borg/borg-passphrase'
       owner: 'root'
@@ -43,6 +44,7 @@
 
   - name: 'Deploy /etc/borg/borg.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/borg/borg.conf.j2'
       dest: '/etc/borg/borg.conf'
       owner: 'root'

@@ -12,6 +12,7 @@
 
   - name: 'Deploy bash wrapper script that make sending mail easier to /root/send-mail'
     ansible.builtin.template:
+      backup: true
       src: 'root/send-mail.j2'
       dest: '/root/send-mail'
       owner: 'root'

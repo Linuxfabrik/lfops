@@ -242,6 +242,7 @@
 
   - name: 'Deploy /etc/mongodb-dump.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/mongodb-dump.conf.j2'
       dest: '/etc/mongodb-dump.conf'
       owner: 'root'

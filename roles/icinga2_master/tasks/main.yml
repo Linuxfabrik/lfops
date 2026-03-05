@@ -41,6 +41,7 @@
 
   - name: 'deploy /etc/icinga2/conf.d/api-users.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icinga2/conf.d/api-users.conf.j2'
       dest: '/etc/icinga2/conf.d/api-users.conf'
       owner: 'root'
@@ -64,6 +65,7 @@
 
   - name: 'Deploy /etc/icinga2/features-available/influxdb.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icinga2/features-available/influxdb.conf.j2'
       dest: '/etc/icinga2/features-available/influxdb.conf'
       owner: '{{ icinga2_master__icinga_user }}'
@@ -183,6 +185,7 @@
   # do this after the node setup
   - name: 'Deploy /etc/icinga2/zones.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icinga2/zones.conf.j2'
       dest: '/etc/icinga2/zones.conf'
       owner: '{{ icinga2_master__icinga_user }}'

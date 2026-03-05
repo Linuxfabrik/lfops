@@ -24,6 +24,7 @@
 
   - name: 'Deploy /etc/redis/redis.conf (v{{ redis__installed_version }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/redis/{{ redis__installed_version }}-redis.conf.j2'
       dest: '/etc/redis/redis.conf'
       owner: 'root'
@@ -45,6 +46,7 @@
 
   - name: 'Deploy /etc/systemd/system/{{ redis__service_name }}.d/z00-linuxfabrik.conf.j2'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/redis.service.d/z00-linuxfabrik.conf.j2'
       dest: '/etc/systemd/system/{{ redis__service_name }}.d/z00-linuxfabrik.conf'
       owner: 'root'

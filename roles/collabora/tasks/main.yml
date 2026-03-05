@@ -38,6 +38,7 @@
 
   - name: 'deploy /etc/coolwsd/coolwsd.xml (v{{ collabora__installed_version }}{{ collabora__use_code | bool | ternary("-code", "") }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/coolwsd/{{ collabora__installed_version }}-coolwsd{{ collabora__use_code | bool | ternary("-code", "") }}.xml.j2'
       dest: '/etc/coolwsd/coolwsd.xml'
       owner: 'cool'
@@ -54,6 +55,7 @@
 
   - name: 'Deploy /etc/logrotate.d/coolwsd'
     ansible.builtin.template:
+      backup: true
       src: 'etc/logrotate.d/coolwsd.j2'
       dest: '/etc/logrotate.d/coolwsd'
       owner: 'root'

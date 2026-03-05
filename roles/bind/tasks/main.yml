@@ -15,6 +15,7 @@
 
   - name: 'Deploy /etc/sysconfig/named'
     ansible.builtin.template:
+      backup: true
       src: 'etc/sysconfig/named.j2'
       dest: '/etc/sysconfig/named'
       owner: 'root'
@@ -24,6 +25,7 @@
 
   - name: 'Deploy /etc/named.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/named.conf.j2'
       dest: '/etc/named.conf'
       owner: 'root'
@@ -40,6 +42,7 @@
 
   - name: 'Deploy the forward and reverse zones'
     ansible.builtin.template:
+      backup: true
       src: 'var/named/raw.zone.j2'
       dest: '/var/named/{{ item["file"] | d(item["name"] ~ ".zone") }}'
       owner: 'root'

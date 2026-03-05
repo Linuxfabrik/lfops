@@ -113,6 +113,7 @@
 
   - name: 'Deploy director config files'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/modules/director/{{ item }}.j2'
       dest: '/etc/icingaweb2/modules/director/{{ item }}'
       owner: '{{ icingaweb2_module_director__icingaweb2_owner }}'

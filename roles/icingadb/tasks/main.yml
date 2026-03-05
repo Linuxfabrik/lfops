@@ -24,6 +24,7 @@
 
   - name: 'deploy /etc/icinga2/features-available/icingadb.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icinga2/features-available/icingadb.conf.j2'
       dest: '/etc/icinga2/features-available/icingadb.conf'
       owner: '{{ icingadb__icinga_user }}'
@@ -80,6 +81,7 @@
 
   - name: 'deploy /etc/icingadb/config.yml'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingadb/config.yml.j2'
       dest: '/etc/icingadb/config.yml'
       owner: 'icingadb'
@@ -123,6 +125,7 @@
 
   - name: 'deploy /tmp/icingadb-migration.yml'
     ansible.builtin.template:
+      backup: true
       src: 'tmp/icingadb-migration.yml.j2'
       dest: '/tmp/icingadb-migration.yml'
       mode: 0o600 # contains secrets

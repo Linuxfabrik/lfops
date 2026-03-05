@@ -54,6 +54,7 @@
 
   - name: 'Deploy /etc/icingaweb2/modules/reporting/config.ini'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/modules/reporting/config.ini.j2'
       dest: '/etc/icingaweb2/modules/reporting/config.ini'
       owner: '{{ icingaweb2_module_reporting__icingaweb2_owner }}'

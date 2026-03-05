@@ -54,6 +54,7 @@
 
   - name: 'Deploy /etc/icingaweb2/modules/kubernetes/config.ini'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/modules/kubernetes/config.ini.j2'
       dest: '/etc/icingaweb2/modules/kubernetes/config.ini'
       owner: '{{ icinga_kubernetes_web__icingaweb2_owner }}'

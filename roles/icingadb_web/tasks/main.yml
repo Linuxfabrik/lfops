@@ -22,6 +22,7 @@
 
   - name: 'Generate icingadb-web config files'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/modules/icingadb/{{ item }}.j2'
       dest: '/etc/icingaweb2/modules/icingadb/{{ item }}'
       owner: '{{ icingadb_web__icingaweb2_owner }}'
