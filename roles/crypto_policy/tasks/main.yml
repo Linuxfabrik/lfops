@@ -2,6 +2,7 @@
 
   - name: 'Deploy /etc/crypto-policies/policies/modules/*.pmod'
     ansible.builtin.template:
+      backup: true
       src: '{{ item }}'
       dest: '/etc/crypto-policies/policies/modules/{{ item | basename | split(".") | first }}.pmod'
       owner: 'root'

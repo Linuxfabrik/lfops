@@ -617,6 +617,7 @@ The handling of the state in the role can look something like this, assuming the
 
     - name: 'Create sites-available vHosts'
       ansible.builtin.template:
+        backup: true
         src: '...'
         dest: '...'
       when:

@@ -18,6 +18,7 @@
 
   - name: 'deploy {{ __kvm_host__libvirt_guests_path }}'
     ansible.builtin.template:
+      backup: true
       src: 'etc/sysconfig/libvirt-guests.j2'
       dest: '{{ __kvm_host__libvirt_guests_path }}'
       owner: 'root'

@@ -54,6 +54,7 @@
 
   - name: 'Deploy /etc/icingaweb2/modules/jira/config.ini'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/modules/jira/config.ini.j2'
       dest: '/etc/icingaweb2/modules/jira/config.ini'
       owner: '{{ icingaweb2_module_jira__icingaweb2_owner }}'

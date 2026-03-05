@@ -7,6 +7,7 @@
 
   - name: 'Deploy /etc/telegraf/telegraf.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/telegraf/telegraf.conf.j2'
       dest: '/etc/telegraf/telegraf.conf'
       owner: 'root'
@@ -23,6 +24,7 @@
 
   - name: 'Deploy /etc/telegraf/telegraf.d configs'
     ansible.builtin.template:
+      backup: true
       src: 'etc/telegraf/telegraf.d/{{ item["template"] }}.conf.j2'
       dest: '/etc/telegraf/telegraf.d/{{ item["filename"] }}.conf'
       owner: 'root'

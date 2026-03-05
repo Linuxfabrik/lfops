@@ -47,6 +47,7 @@
 
   - name: 'Deploy /etc/aliases'
     ansible.builtin.template:
+      backup: true
       src: 'etc/aliases.j2'
       dest: '/etc/aliases'
       owner: 'root'
@@ -56,6 +57,7 @@
 
   - name: 'Deploy /etc/postfix/canonical'
     ansible.builtin.template:
+      backup: true
       src: 'etc/postfix/canonical.j2'
       dest: '/etc/postfix/canonical'
       mode: 0o644
@@ -65,6 +67,7 @@
 
     - name: 'Deploy /etc/postfix/sasl_passwd'
       ansible.builtin.template:
+      backup: true
         src: 'etc/postfix/sasl_passwd.j2'
         dest: '/etc/postfix/sasl_passwd'
         owner: 'root'

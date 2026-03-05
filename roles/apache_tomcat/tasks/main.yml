@@ -52,6 +52,8 @@
 
   - name: 'Deploy /etc/tomcat/server.xml'
     ansible.builtin.template:
+      backup: true      
+      src: 'etc/tomcat/{{ tomcat__installed_version }}-server.xml.j2'
       src: 'etc/tomcat/{{ tomcat__installed_version }}-server.xml.j2'
       dest: '/etc/tomcat/server.xml'
       owner: 'root'
@@ -61,6 +63,7 @@
 
   - name: 'Copy tomcat config /etc/sysconfig'
     ansible.builtin.template:
+      backup: true      
       src: 'etc/sysconfig/{{ tomcat__installed_version }}-tomcat.j2'
       dest: '/etc/sysconfig/tomcat'
       owner: 'root'
@@ -69,6 +72,7 @@
 
   - name: 'Deploy /etc/tomcat/context.xml'
     ansible.builtin.template:
+      backup: true      
       src: 'etc/tomcat/{{ tomcat__installed_version }}-context.xml.j2'
       dest: '/etc/tomcat/context.xml'
       owner: 'root'
@@ -78,6 +82,7 @@
 
   - name: 'Deploy /etc/tomcat/logging.properties'
     ansible.builtin.template:
+      backup: true      
       src: 'etc/tomcat/{{ tomcat__installed_version }}-logging.properties.j2'
       dest: '/etc/tomcat/logging.properties'
       owner: 'root'
@@ -87,6 +92,7 @@
 
   - name: 'Copy tomcat logrotate template to /etc/logrotate.d'
     ansible.builtin.template:
+      backup: true      
       src: 'etc/logrotate.d/tomcat.j2'
       dest: '/etc/logrotate.d/tomcat'
       owner: 'root'
@@ -104,6 +110,7 @@
 
   - name: 'Deploy /var/lib/tomcat/webapps/docs/META-INF/context.xml'
     ansible.builtin.template:
+      backup: true      
       src: 'var/lib/tomcat/webapps/docs/META-INF/context.xml.j2'
       dest: '/var/lib/tomcat/webapps/docs/META-INF/context.xml'
       owner: 'root'
@@ -115,6 +122,7 @@
 
   - name: 'Deploy /var/lib/tomcat/webapps/host-manager/META-INF/context.xml'
     ansible.builtin.template:
+      backup: true      
       src: 'var/lib/tomcat/webapps/host-manager/META-INF/context.xml.j2'
       dest: '/var/lib/tomcat/webapps/host-manager/META-INF/context.xml'
       owner: 'root'
@@ -126,6 +134,7 @@
 
   - name: 'Deploy /var/lib/tomcat/webapps/manager/META-INF/context.xml'
     ansible.builtin.template:
+      backup: true      
       src: 'var/lib/tomcat/webapps/manager/META-INF/context.xml.j2'
       dest: '/var/lib/tomcat/webapps/manager/META-INF/context.xml'
       owner: 'root'
@@ -137,6 +146,7 @@
 
   - name: 'Deploy /var/lib/tomcat/webapps/manager/WEB-INF/web.xml'
     ansible.builtin.template:
+      backup: true      
       src: 'var/lib/tomcat/webapps/manager/WEB-INF/web.xml.j2'
       dest: '/var/lib/tomcat/webapps/manager/WEB-INF/web.xml'
       owner: 'root'
@@ -159,6 +169,7 @@
 
   - name: 'Deploy /etc/tomcat/tomcat-users.xml'
     ansible.builtin.template:
+      backup: true      
       src: 'etc/tomcat/{{ tomcat__installed_version }}-tomcat-users.xml.j2'
       dest: '/etc/tomcat/tomcat-users.xml'
       owner: 'root'

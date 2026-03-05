@@ -40,6 +40,7 @@
 
   - name: 'Deploy /etc/systemd/system/logstash.service.d/z10-config-reload.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/logstash.service.d/z10-config-reload.conf.j2'
       dest: '/etc/systemd/system/logstash.service.d/z10-config-reload.conf'
       owner: 'root'
@@ -81,6 +82,7 @@
 
   - name: 'Deploy /etc/logstash/logstash.yml'
     ansible.builtin.template:
+      backup: true
       src: 'etc/logstash/logstash.yml.j2'
       dest: '/etc/logstash/logstash.yml'
       owner: 'root'
@@ -98,6 +100,7 @@
 
   - name: 'Deploy /etc/logstash/pipelines.yml'
     ansible.builtin.template:
+      backup: true
       src: 'etc/logstash/pipelines.yml.j2'
       dest: '/etc/logstash/pipelines.yml'
       owner: 'root'
@@ -108,6 +111,7 @@
 
   - name: 'Deploy /etc/default/logstash'
     ansible.builtin.template:
+      backup: true
       src: 'etc/default/logstash.j2'
       dest: '/etc/default/logstash'
       owner: 'root'

@@ -191,6 +191,7 @@
 
   - name: 'Deploy /etc/postgresql-dump.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/postgresql-dump.conf.j2'
       dest: '/etc/postgresql-dump.conf'
       owner: 'root'

@@ -22,6 +22,7 @@
 
   - name: 'Deploy /etc/graylog/datanode/datanode.conf (version: {{ graylog_datanode__installed_version[:3] }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/graylog/datanode/{{ graylog_datanode__installed_version[:3] }}-datanode.conf.j2'
       dest: '/etc/graylog/datanode/datanode.conf'
       owner: 'root'
@@ -38,6 +39,7 @@
 
   - name: 'Deploy /etc/graylog/datanode/jvm.options'
     ansible.builtin.template:
+      backup: true
       src: 'etc/graylog/datanode/jvm.options.j2'
       dest: '/etc/graylog/datanode/jvm.options'
       owner: 'root'

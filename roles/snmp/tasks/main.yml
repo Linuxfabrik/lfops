@@ -10,6 +10,7 @@
 
   - name: 'Deploy /etc/snmp/snmpd.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/snmp/snmpd.conf.j2'
       dest: '/etc/snmp/snmpd.conf'
       owner: 'root'
