@@ -1,0 +1,11 @@
+aide__check_time_on_calendar: '05:00:00' #5 AM
+
+#vars for aide.conf
+aide__include_rules: 
+  - '/srv CONTENT_EX' # Extended content + file type + access.
+  - '/opt/venv CONTENT' # Content + file type.
+
+#for excluding paths prefixing path with ! is necessary
+aide__exclude_rules: 
+  - '!/srv/app/tmp'
+  - '!/srv/app/cache'

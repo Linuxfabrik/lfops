@@ -1,0 +1,89 @@
+    # CIS_Rocky_Linux_9_Benchmark_v2.0.0 
+- block:
+
+  - name: '6.1.1 Ensure AIDE is installed'
+    ansible.builtin.package:
+      name: 
+        - 'aide'
+      state: 'present'
+
+  - name: 'Initialize AIDE database'
+    ansible.builtin.command: 'aide --init --before "database_out=file:/var/lib/aide/aide.db.gz"'
+    args:
+      creates: '/var/lib/aide/aide.db.gz'
+
+  tags: 
+    - 'aide'
+    - 'aide:install'
+
+
+  # CIS_Rocky_Linux_9_Benchmark_v2.0.0 
+- block:
+
+  - name: '6.1.3 Ensure cryptographic mechanisms are used to protect the integrity of audit tools'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/aide.conf.j2'
+      dest: '/etc/aide.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'aide'
+    - 'aide:configure'
+
+
+  # CIS_Rocky_Linux_9_Benchmark_v2.0.0 
+- block:
+
+  - name: 'Update AIDE database'
+    ansible.builtin.command: "aide --init --before 'database_out=file:/var/lib/aide/aide.db.gz'"
+    
+  tags:
+    - 'never'
+    - 'aide:update_db'
+
+
+  # 6.1.2 Ensure filesystem integrity is regularly checked
+    # CIS_Rocky_Linux_9_Benchmark_v2.0.0 
+- block:
+
+  - name: 'Create /etc/systemd/system/aide-check.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/aide-check.service.j2'
+      dest: '/etc/systemd/system/aide-check.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__aide__service_unit_result'
+
+  - name: 'Create /etc/systemd/system/aide-check.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/aide-check.timer.j2'
+      dest: '/etc/systemd/system/aide-check.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__aide__timer_unit_result'
+
+  - name: 'Reload systemd'
+    ansible.builtin.systemd:
+      daemon_reload: true 
+    when:   
+      - '__aide__service_unit_result is changed or __aide__timer_unit_result is changed'
+
+  - name: 'Enable aide-check.service'
+    ansible.builtin.systemd:
+      name: 'aide-check.service'
+      enabled: true
+      
+  - name: 'Enable aide-check.timer'
+    ansible.builtin.systemd:
+      name: 'aide-check.timer'
+      state: 'started'
+      enabled: true
+
+  tags: 
+    - 'aide'
+    - 'aide:state'
