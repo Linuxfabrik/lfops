@@ -1,0 +1,7 @@
+- name: 'aide: init db'
+  ansible.builtin.service:
+    name: 
+
+- name: 'aide: enable aidecheck.service'
+  ansible.builtin.service:
+    name: 'aidecheck.service'
