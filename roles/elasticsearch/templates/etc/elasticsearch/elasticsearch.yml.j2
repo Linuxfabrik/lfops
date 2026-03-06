@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025120301
+# 2026030601
 # ======================== Elasticsearch Configuration =========================
 #
 # NOTE: Elasticsearch comes with reasonable defaults for most settings.
@@ -107,6 +107,7 @@ cluster.routing.allocation.awareness.force.{{ key }}.values: '{{ values | join("
 {% endif %}
 #
 cluster.routing.allocation.disk.watermark.low: {{ elasticsearch__cluster_routing_allocation_disk_watermark_low }}
+cluster.routing.allocation.disk.watermark.high: {{ elasticsearch__cluster_routing_allocation_disk_watermark_high }}
 #
 # ---------------------------------- Various -----------------------------------
 #

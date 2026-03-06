@@ -21,6 +21,7 @@ elasticsearch__cluster_name__role_var: 'my-application'
 elasticsearch__cluster_routing_allocation_awareness_attributes: []
 elasticsearch__cluster_routing_allocation_awareness_force: {}
 elasticsearch__cluster_routing_allocation_disk_watermark_low: 0.85
+elasticsearch__cluster_routing_allocation_disk_watermark_high: 0.9
 elasticsearch__network_host: '_local_'
 elasticsearch__node_attributes: {}
 elasticsearch__node_name: '{{ ansible_facts["nodename"] }}'
