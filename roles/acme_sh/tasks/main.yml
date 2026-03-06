@@ -29,6 +29,7 @@
 
   - name: 'Deploy /etc/systemd/system/acme-sh.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/acme-sh.service.j2'
       dest: '/etc/systemd/system/acme-sh.service'
       owner: 'root'
@@ -37,6 +38,7 @@
 
   - name: 'Deploy /etc/systemd/system/acme-sh.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/acme-sh.timer.j2'
       dest: '/etc/systemd/system/acme-sh.timer'
       owner: 'root'
