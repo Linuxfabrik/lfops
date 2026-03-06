@@ -118,6 +118,7 @@
 - import_playbook: 'repo_remi.yml'
 - import_playbook: 'repo_rpmfusion.yml'
 - import_playbook: 'repo_sury.yml'
+- import_playbook: 'rl9_cis.yml
 - import_playbook: 'rsyslog.yml'
 - import_playbook: 'selinux.yml'
 - import_playbook: 'setup_basic.yml'
