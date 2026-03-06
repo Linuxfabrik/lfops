@@ -101,6 +101,14 @@
 
 - block:
 
+  - name: 'ensure  0 <= elasticsearch__cluster_routing_allocation_disk_watermark_low <= 1'
+    ansible.builtin.assert:
+      that: >
+        elasticsearch__cluster_routing_allocation_disk_watermark_low is number and
+        elasticsearch__cluster_routing_allocation_disk_watermark_low >= 0 and
+        elasticsearch__cluster_routing_allocation_disk_watermark_low <= 1
+      fail_msg: 'elasticsearch__cluster_routing_allocation_disk_watermark_low must be a number between 0 and 1'
+
   - name: 'deploy /etc/elasticsearch/elasticsearch.yml'
     ansible.builtin.template:
       src: 'etc/elasticsearch/elasticsearch.yml.j2'

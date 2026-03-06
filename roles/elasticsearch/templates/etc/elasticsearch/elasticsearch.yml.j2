@@ -106,6 +106,8 @@ cluster.routing.allocation.awareness.force.{{ key }}.values: '{{ values | join("
 {% endfor %}
 {% endif %}
 #
+cluster.routing.allocation.disk.watermark.low: {{ elasticsearch__cluster_routing_allocation_disk_watermark_low }}
+#
 # ---------------------------------- Various -----------------------------------
 #
 # Allow wildcard deletion of indices:
