@@ -1,3 +1,14 @@
+logstash__grok_patterns__combined_var: '{{ (
+      logstash__grok_patterns__role_var +
+      logstash__grok_patterns__dependent_var +
+      logstash__grok_patterns__group_var +
+      logstash__grok_patterns__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="name")
+  }}'
+logstash__grok_patterns__dependent_var: []
+logstash__grok_patterns__group_var: []
+logstash__grok_patterns__host_var: []
+logstash__grok_patterns__role_var: []
 logstash__java_opts: '-Djava.io.tmpdir={{ logstash__path_data }}/tmp'
 logstash__log_level: 'info'
 logstash__node_name: '{{ ansible_facts["nodename"] }}'

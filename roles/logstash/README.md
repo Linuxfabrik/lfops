@@ -18,8 +18,9 @@ If you use the [logstash playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 | ---                  | ------------                              | ----------------          |
 | `logstash`           | Installs and configures Logstash          | Restarts logstash.service |
 | `logstash:configure` | Deploys configuration files and TLS certs | Reloads logstash.service  |
-| `logstash:pipelines` | Deploys pipeline configuration files      | Reloads logstash.service  |
-| `logstash:state`     | Manages the state of the Logstash service | -                         |
+| `logstash:grok_patterns` | Deploys custom grok pattern files      | Reloads logstash.service  |
+| `logstash:pipelines`     | Deploys pipeline configuration files  | Reloads logstash.service  |
+| `logstash:state`         | Manages the state of the Logstash service | -                     |
 
 
 ## Optional Role Variables
@@ -27,6 +28,7 @@ If you use the [logstash playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `logstash__elasticsearch_ca_cert` | ASCII-armored PEM CA certificate for TLS connections to Elasticsearch. Should match the CA used by Elasticsearch. | unset |
+| `logstash__grok_patterns__host_var` / <br> `logstash__grok_patterns__group_var` | List of custom grok pattern file definitions. Subkeys: <ul><li>`name`: Mandatory, string. Filename in `/etc/logstash/patterns/`.</li><li>`content`: Mandatory, multiline string. Pattern definitions (format: `PATTERN_NAME regex`).</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
 | `logstash__java_opts` | Additional Java options passed to Logstash via `LS_JAVA_OPTS`. By default, sets the temp directory to `{{ logstash__path_data }}/tmp` because `/tmp` on CIS-hardened systems is mounted with noexec. | `'-Djava.io.tmpdir={{ logstash__path_data }}/tmp'` |
 | `logstash__log_level` | The log level. Valid values are: `fatal`, `error`, `warn`, `info`, `debug`, `trace`. | `'info'` |
 | `logstash__node_name` | A descriptive name for the node. | `'{{ ansible_facts["nodename"] }}'` |
@@ -41,6 +43,14 @@ Example:
 ```yaml
 # optional
 logstash__elasticsearch_ca_cert: '{{ lookup("ansible.builtin.file", "{{ inventory_dir }}/group_files/elasticsearch/ca.crt") }}'
+logstash__grok_patterns__host_var:
+  - name: 'custom_app'
+    content: |
+      CUSTOM_TIMESTAMP %{YEAR}-%{MONTHNUM}-%{MONTHDAY}T%{HOUR}:%{MINUTE}:%{SECOND}
+      CUSTOM_LOGLEVEL (DEBUG|INFO|WARN|ERROR|FATAL)
+      CUSTOM_APPLOG %{CUSTOM_TIMESTAMP:timestamp} %{CUSTOM_LOGLEVEL:level} %{GREEDYDATA:message}
+  - name: 'old_patterns'
+    state: 'absent'
 logstash__java_opts: '-Djava.io.tmpdir={{ logstash__path_data }}/tmp'
 logstash__log_level: 'info'
 logstash__node_name: '{{ ansible_facts["nodename"] }}'
@@ -58,6 +68,7 @@ logstash__pipelines__host_var:
       filter {
         if [fields][type] == "syslog" {
           grok {
+            patterns_dir => ["/etc/logstash/patterns"]
             match => { "message" => "%{SYSLOGLINE}" }
           }
         }

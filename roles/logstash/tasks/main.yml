@@ -154,6 +154,44 @@
 
 - block:
 
+  - name: 'mkdir -p /etc/logstash/patterns'
+    ansible.builtin.file:
+      path: '/etc/logstash/patterns'
+      state: 'directory'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o750
+
+  - name: 'Deploy grok pattern files'
+    ansible.builtin.copy:
+      dest: '/etc/logstash/patterns/{{ item["name"] }}'
+      content: '{{ item["content"] }}'
+      owner: 'root'
+      group: 'logstash'
+      mode: 0o640
+    loop: '{{ logstash__grok_patterns__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when: 'item["state"] | default("present") != "absent"'
+    notify: 'logstash: validate config and reload logstash'
+
+  - name: 'Remove absent grok pattern files'
+    ansible.builtin.file:
+      path: '/etc/logstash/patterns/{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ logstash__grok_patterns__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when: 'item["state"] | default("present") == "absent"'
+    notify: 'logstash: validate config and reload logstash'
+
+  tags:
+    - 'logstash'
+    - 'logstash:grok_patterns'
+
+
+- block:
+
   - name: 'systemctl {{ logstash__service_enabled | bool | ternary("enable", "disable") }} --now logstash.service'
     ansible.builtin.systemd:
       name: 'logstash.service'
