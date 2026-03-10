@@ -45,14 +45,14 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    register: 'gitlab_ce___systemd_service_template_result'
+    register: 'gitlab_ce__systemd_service_template_result'
 
   - name: 'systemctl enable gitlab-dump.timer --now'
     ansible.builtin.systemd:
       name: 'gitlab-dump.timer'
       state: 'started'
       enabled: true
-      daemon_reload: '{{ gitlab_ce___systemd_service_template_result is changed }}'
+      daemon_reload: '{{ gitlab_ce__systemd_service_template_result is changed }}'
 
   - name: 'Deploy /etc/gitlab/gitlab.rb'
     ansible.builtin.template:
