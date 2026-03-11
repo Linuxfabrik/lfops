@@ -36,6 +36,7 @@
       state: '{{ item["state"] }}'
       fstype: 'nfs'
     loop: '{{ nfs_client__mounts }}'
+    notify: 'nfs_client: systemctl daemon-reload'
 
   when:
     - 'nfs_client__mounts is defined'
