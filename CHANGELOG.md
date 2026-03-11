@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:nfs_client**: Add optional `owner`, `group` and `mode` subkeys for mount point directories
 * **role:logstash**: Add support for deploying custom grok pattern files to `/etc/logstash/patterns/`
 * **role:mount**: Add optional `owner` and `group` subkeys for mount point directories
 * **role:elasticsearch**: Add logrotate config for daily rotation

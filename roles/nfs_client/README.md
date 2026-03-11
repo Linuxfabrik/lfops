@@ -14,7 +14,7 @@ This role installs NFS client utilities and controls active and configured NFS m
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `nfs_client__mounts` | List of NFS mounts to create. Subkeys: <ul><li>`src`</li><li>`path`</li><li>`opts`</li><li>`state`</li></ul>For details, have a look at the [ansible.posix.mount_module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html#parameter-state). | unset |
+| `nfs_client__mounts` | List of NFS mounts to create. Subkeys: <ul><li>`src`</li><li>`path`</li><li>`opts`</li><li>`state`</li><li>`owner`: Optional, string. Owner of the mount point directory. Defaults to `'root'`.</li><li>`group`: Optional, string. Group of the mount point directory. Defaults to `'root'`.</li><li>`mode`: Optional, string. Mode of the mount point directory. Defaults to `'0o755'`.</li></ul>For details, have a look at the [ansible.posix.mount_module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html#parameter-state). | unset |
 
 Example:
 ```yaml
@@ -24,6 +24,9 @@ nfs_client__mounts:
     path: '/mnt/nfs/data'
     opts: 'defaults'
     state: 'mounted'
+    owner: 'root'
+    group: 'root'
+    mode: '0o755'
 ```
 
 

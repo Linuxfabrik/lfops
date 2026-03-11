@@ -23,9 +23,9 @@
     ansible.builtin.file:
       path: '{{ item["path"] }}'
       state: 'directory'
-      owner: 'root'
-      group: 'root'
-      mode: 0o755
+      owner: '{{ item["owner"] | default("root") }}'
+      group: '{{ item["group"] | default("root") }}'
+      mode: '{{ item["mode"] | default("0o755") }}'
     loop: '{{ nfs_client__mounts }}'
 
   - name: 'Mount NFS volumes'
