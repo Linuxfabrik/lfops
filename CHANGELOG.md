@@ -217,6 +217,21 @@ Role:tar
 
 ### Added
 
+Module:nextcloud_occ_app
+* Added. Manages Nextcloud apps (install, enable, disable, remove) with check mode and diff support.
+
+Module:nextcloud_occ_app_config
+* Added `installed_config_json` parameter to avoid repeated occ calls in loops.
+* Fixed boolean coercion to match Nextcloud's storage format (`1`/`0`).
+
+Module:nextcloud_occ_system_config
+* Added `installed_config_json` parameter to avoid repeated occ calls in loops.
+* Fixed boolean coercion to match Nextcloud's expected format (`true`/`false`).
+
+Role:nextcloud
+* Replaced `ansible.builtin.command` tasks for app management with the new `nextcloud_occ_app` module, adding check mode and diff support.
+* Added pre-fetch tasks for `app:list` and `config:list` to avoid repeated occ invocations in loops.
+
 Role:icinga_kubernetes
 * Added
 

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2022, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
+# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 # The Unlicense (see LICENSE or https://unlicense.org/)
 
 from __future__ import absolute_import, division, print_function
@@ -41,8 +41,8 @@ options:
     description:
       - The desired value for the configuration key.
       - Must be a valid JSON array if C(type) is set to C(array).
+      - Required when C(state=present).
     type: str
-    required: true
   type:
     description:
       - The data type of the configuration value.
@@ -66,6 +66,14 @@ options:
       - The full path to the PHP binary to use.
     type: str
     default: 'php'
+  installed_config_json:
+    description:
+      - Pre-fetched JSON output from C(occ config:list --output=json --private).
+      - When provided, the module skips calling C(config:app:get) itself,
+        avoiding repeated occ invocations in a loop.
+      - Type comparison is skipped when using cached data since
+        C(config:list) does not include type information.
+    type: raw
 '''
 
 EXAMPLES = r'''
@@ -117,11 +125,12 @@ def main():
     module_args = dict(
             app=dict(type='str', required=True),
             name=dict(type='str', required=True),
-            value=dict(type='str', required=True),
+            value=dict(type='str'),
             type=dict(type='str', choices=['string', 'integer', 'float', 'boolean', 'array'], default='string'),
             state=dict(type='str', choices=['absent', 'present'], default='present'),
             occ_path=dict(type='str', default='/var/www/html/nextcloud/occ'),
             php_path=dict(type='str', default='php'),
+            installed_config_json=dict(type='raw'),
     )
 
     # the AnsibleModule object will be our abstraction working with Ansible
@@ -131,6 +140,9 @@ def main():
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True,
+        required_if=[
+            ('state', 'present', ('value',)),
+        ],
     )
 
     # extract the variables to make the code more readable
@@ -142,10 +154,12 @@ def main():
     occ_path = module.params['occ_path']
     php_path = module.params['php_path']
 
-    # ansible will convert all yaml boolean values to True/False
-    # however, nextcloud always uses lowercase booleans
-    if value_type == 'boolean':
-        value = value.lower()
+    # nextcloud stores app config booleans as 1/0 in the database.
+    # ConfigManager::convertToBool() accepts: true/1/on/yes and false/0/off/no
+    if value_type == 'boolean' and value is not None:
+        value = '1' if value.lower() in ('true', '1', 'on', 'yes') else '0'
+
+    installed_config_json = module.params['installed_config_json']
 
     # we promised to always return these keys
     result = {
@@ -154,33 +168,60 @@ def main():
         'current_value': '',
     }
 
-    # build the occ get command
-    get_cmd = [
-        php_path,
-        occ_path,
-        '--no-interaction',
-        '--details',
-        '--output=json',
-        'config:app:get',
-        app,
-    ] + name.split() # occ expects each part of the name as a separate argument
+    # get the current value, either from cache or by running occ
+    if installed_config_json:
+        if isinstance(installed_config_json, str):
+            try:
+                installed_config_json = json.loads(installed_config_json)
+            except (json.JSONDecodeError, ValueError):
+                module.fail_json(msg=f'Failed to parse installed_config_json')
 
-    try:
-        get_rc, get_stdout, _ = module.run_command(get_cmd)
-    except Exception as e:
-        module.fail_json(msg=to_native(e), exception=traceback.format_exc())
+        app_configs = installed_config_json.get('apps', {}).get(app, {})
+        key_exists = name in app_configs
+        if key_exists:
+            raw = app_configs[name]
+            # config:list returns JSON booleans (true/false),
+            # but config:app:get returns 1/0 for booleans
+            if isinstance(raw, bool):
+                current_value = '1' if raw else '0'
+            else:
+                current_value = str(raw)
+        else:
+            current_value = ''
+        # config:list does not include type information
+        current_type = ''
+    else:
+        get_cmd = [
+            php_path,
+            occ_path,
+            '--no-interaction',
+            '--details',
+            '--output=json',
+            'config:app:get',
+            app,
+        ] + name.split() # occ expects each part of the name as a separate argument
 
-    current = json.loads(get_stdout) if get_rc == 0 else {}
-    current_type = current.get('type', '')
-    current_value = current.get('value', '')
+        try:
+            get_rc, get_stdout, _ = module.run_command(get_cmd)
+        except Exception as e:
+            module.fail_json(msg=to_native(e), exception=traceback.format_exc())
+
+        try:
+            current = json.loads(get_stdout) if get_rc == 0 else {}
+        except (json.JSONDecodeError, ValueError):
+            module.fail_json(msg=f'Failed to parse JSON from occ config:app:get output: {get_stdout}')
+
+        key_exists = get_rc == 0
+        current_type = current.get('type', '')
+        current_value = current.get('value', '')
 
     result['current_type'] = current_type
     result['current_value'] = current_value
 
     if state == 'present':
-        # check if the current value and type matches the desired settings
-        if current_value == value and \
-            current_type == value_type:
+        # check if the current value matches the desired settings
+        # when using cache, type info is not available so we only compare values
+        if current_value == value and (current_type == value_type or current_type == ''):
             module.exit_json(**result)
 
         # else, the value will be changed
@@ -188,22 +229,9 @@ def main():
 
         # add diff if required
         if module._diff:
-            # result['diff'] = dict(
-            #     before=f'{current_value}\n',
-            #     after=f'{value}\n',
-            # )
-
-            diff_msg = []
-
-            if current_value != value:
-                diff_msg.append(f'* "{app} {name}" value changed from "{current_value}" to "{value}"')
-
-            if current_type != value_type:
-                diff_msg.append(f'* "{app} {name}" type changed from "{current_type}" to "{value_type}"')
-
-            # sadly we cannot easily color this output, as we cannot import ansible.utils.color from modules
             result['diff'] = dict(
-                prepared='\n'.join(diff_msg),
+                before=f'{app} {name}: value={current_value}, type={current_type}\n',
+                after=f'{app} {name}: value={value}, type={value_type}\n',
             )
 
         # in check mode, exit here, indicating that a change would occur
@@ -233,9 +261,8 @@ def main():
 
 
     elif state == 'absent':
-        # the return code is 1 if the config does not exist
-        if get_rc == 1:
-            # so there is no change
+        if not key_exists:
+            # config does not exist, so there is no change
             module.exit_json(**result)
 
         # else, there will be a change
@@ -243,14 +270,9 @@ def main():
 
         # add diff if required
         if module._diff:
-            # result['diff'] = dict(
-            #     before=f'{current_value}\n',
-            #     after=f'{value}\n',
-            # )
-
-            # sadly we cannot easily color this output, as we cannot import ansible.utils.color in here
             result['diff'] = dict(
-                prepared=f'* deleted "{app} {name}" with value "{current_value}"',
+                before=f'{app} {name}: value={current_value}, type={current_type}\n',
+                after='',
             )
 
         # in check mode, exit here, indicating that a change would occur

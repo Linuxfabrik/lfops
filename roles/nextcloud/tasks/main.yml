@@ -94,12 +94,21 @@
 
 - block:
 
+  - name: 'Get Nextcloud config list'
+    ansible.builtin.command: 'php /var/www/html/nextcloud/occ --no-interaction --output=json config:list --private'
+    become: true
+    become_user: 'apache'
+    changed_when: false
+    check_mode: false
+    register: 'nextcloud__config_list_result'
+
   - name: 'Set Nextcloud system settings'
     linuxfabrik.lfops.nextcloud_occ_system_config:
       name: '{{ item["key"] }}'
       value: '{{ item["value"] }}'
-      type: '{{ item["type"] | d("string") | quote }}'
+      type: '{{ item["type"] | d("string") }}'
       state: '{{ item["state"] | d("present") }}'
+      installed_config_json: '{{ nextcloud__config_list_result["stdout"] | from_json }}'
     become: true
     become_user: 'apache'
     loop: '{{ nextcloud__sysconfig__combined_var }}'
@@ -118,75 +127,40 @@
 
 - block:
 
-  - name: 'Disable Nextcloud apps'
-    ansible.builtin.command: |
-      php occ app:disable {{ item['name'] | quote }}
-    args:
-      chdir: '/var/www/html/nextcloud/'
+  - name: 'Get Nextcloud app list'
+    ansible.builtin.command: 'php /var/www/html/nextcloud/occ --no-interaction --output=json app:list'
     become: true
     become_user: 'apache'
-    when:
-      - 'item["state"] | d("enabled") == "disabled"'
-    loop: '{{ nextcloud__apps__combined_var }}'
-    register: 'nextcloud__apps_disable_result'
-    changed_when: '"disabled" in nextcloud__apps_disable_result["stdout"]'
-    failed_when: 'nextcloud__apps_disable_result["rc"] != 0 and "No such app enabled:" not in nextcloud__apps_disable_result["stdout"]'
+    changed_when: false
+    check_mode: false
+    register: 'nextcloud__app_list_result'
 
-  - name: 'Remove Nextcloud apps'
-    ansible.builtin.command: |
-      php occ app:remove {{ item['name'] | quote }}
-    args:
-      chdir: '/var/www/html/nextcloud/'
+  - name: 'Manage Nextcloud apps'
+    linuxfabrik.lfops.nextcloud_occ_app:
+      name: '{{ item["name"] }}'
+      state: '{{ item["state"] | d("enabled") }}'
+      force: '{{ item["force"] | d(false) }}'
+      installed_apps_json: '{{ nextcloud__app_list_result["stdout"] | from_json }}'
     become: true
     become_user: 'apache'
-    when:
-      - 'item["state"] | d("enabled") == "absent"'
     loop: '{{ nextcloud__apps__combined_var }}'
-    register: 'nextcloud__apps_remove_result'
-    changed_when: '"removed" in nextcloud__apps_remove_result["stdout"]'
-    failed_when: 'nextcloud__apps_remove_result["rc"] != 0 and "is not installed" not in nextcloud__apps_remove_result["stdout"]'
 
-  - name: 'Install Nextcloud apps'
-    # using `--keep-disabled` so that the apps are not instantly enabled, as that is done anyway in the next task
-    ansible.builtin.command: >-
-      php occ app:install
-      --keep-disabled
-      {{ (item['force'] | d(false)) | ternary("--force", "") }}
-      {{ item['name'] | quote }}
-    args:
-      chdir: '/var/www/html/nextcloud/'
+  - name: 'Get Nextcloud config list'
+    ansible.builtin.command: 'php /var/www/html/nextcloud/occ --no-interaction --output=json config:list --private'
     become: true
     become_user: 'apache'
-    when:
-      - 'item["state"] | d("enabled") in ["present", "enabled"]'
-    loop: '{{ nextcloud__apps__combined_var }}'
-    register: 'nextcloud__apps_install_result'
-    changed_when: 'nextcloud__apps_install_result["rc"] == 0 and "already installed" not in nextcloud__apps_install_result["stdout"]'
-    failed_when: 'nextcloud__apps_install_result["rc"] != 0 and "already installed" not in nextcloud__apps_install_result["stdout"]'
-
-  - name: 'Enable Nextcloud apps'
-    ansible.builtin.command: |
-      php occ app:enable
-      {{ (item['force'] | d(false)) | ternary("--force", "") }}
-      {{ item['name'] | quote }}
-    args:
-      chdir: '/var/www/html/nextcloud/'
-    become: true
-    become_user: 'apache'
-    when:
-      - 'item["state"] | d("enabled") == "enabled"'
-    loop: '{{ nextcloud__apps__combined_var }}'
-    register: 'nextcloud__apps_enable_result'
-    changed_when: 'nextcloud__apps_enable_result["rc"] == 0 and "already enabled" not in nextcloud__apps_enable_result["stdout"]'
-    failed_when: 'nextcloud__apps_enable_result["rc"] != 0 and "already enabled" not in nextcloud__apps_enable_result["stdout"]'
+    changed_when: false
+    check_mode: false
+    register: 'nextcloud__config_list_result'
 
   - name: 'Set Nextcloud app settings'
     linuxfabrik.lfops.nextcloud_occ_app_config:
       app: '{{ (item["key"] | split)[0] }}'
       name: '{{ (item["key"] | split)[1:] | join(" ") }}'
       value: '{{ item["value"] }}'
-      type: '{{ item["type"] | d("string") | quote }}'
+      type: '{{ item["type"] | d("string") }}'
       state: '{{ item["state"] | d("present") }}'
+      installed_config_json: '{{ nextcloud__config_list_result["stdout"] | from_json }}'
     become: true
     become_user: 'apache'
     loop: '{{ nextcloud__app_configs__combined_var }}'

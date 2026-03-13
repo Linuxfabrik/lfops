@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2022, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
+# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 # The Unlicense (see LICENSE or https://unlicense.org/)
 
 from __future__ import absolute_import, division, print_function
@@ -35,8 +35,8 @@ options:
   value:
     description:
       - The desired value for the configuration key.
+      - Required when C(state=present).
     type: str
-    required: true
   type:
     description:
       - The data type of the configuration value.
@@ -60,12 +60,17 @@ options:
       - The full path to the PHP binary to use.
     type: str
     default: 'php'
+  installed_config_json:
+    description:
+      - Pre-fetched JSON output from C(occ config:list --output=json --private).
+      - When provided, the module skips calling C(config:system:get) itself,
+        avoiding repeated occ invocations in a loop.
+    type: raw
 '''
 
 EXAMPLES = r'''
 - name: 'Set a system configuration value'
   linuxfabrik.lfops.nextcloud_occ_system_config:
-    config_type: 'system'
     name: 'check_for_working_wellknown_setup'
     value: true
     type: 'boolean'
@@ -99,6 +104,7 @@ stdout:
   type: str
 '''
 
+import json
 import traceback
 
 from ansible.module_utils.basic import AnsibleModule
@@ -108,11 +114,12 @@ def main():
     # define available arguments/parameters a user can pass to this module
     module_args = dict(
             name=dict(type='str', required=True),
-            value=dict(type='str', required=True),
+            value=dict(type='str'),
             type=dict(type='str', choices=['string', 'integer', 'double', 'boolean'], default='string'),
             state=dict(type='str', choices=['absent', 'present'], default='present'),
             occ_path=dict(type='str', default='/var/www/html/nextcloud/occ'),
             php_path=dict(type='str', default='php'),
+            installed_config_json=dict(type='raw'),
     )
 
     # the AnsibleModule object will be our abstraction working with Ansible
@@ -122,6 +129,9 @@ def main():
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True,
+        required_if=[
+            ('state', 'present', ('value',)),
+        ],
     )
 
     # extract the variables to make the code more readable
@@ -132,10 +142,12 @@ def main():
     occ_path = module.params['occ_path']
     php_path = module.params['php_path']
 
-    # ansible will convert all yaml boolean values to True/False
-    # however, nextcloud always uses lowercase booleans
-    if value_type == 'boolean':
-        value = value.lower()
+    installed_config_json = module.params['installed_config_json']
+
+    # nextcloud's CastHelper only accepts 'true'/'false' for config:system:set.
+    # coerce all truthy/falsy representations to what nextcloud expects.
+    if value_type == 'boolean' and value is not None:
+        value = 'true' if value.lower() in ('true', '1', 'on', 'yes') else 'false'
 
     # we promised to always return these keys
     result = {
@@ -143,20 +155,57 @@ def main():
         'current_value': '',
     }
 
-    # build the occ get command
-    get_cmd = [
-        php_path,
-        occ_path,
-        '--no-interaction',
-        'config:system:get',
-    ] + name.split() # occ expects each part of the name as a separate argument
+    # get the current value, either from cache or by running occ
+    if installed_config_json:
+        if isinstance(installed_config_json, str):
+            try:
+                installed_config_json = json.loads(installed_config_json)
+            except (json.JSONDecodeError, ValueError):
+                module.fail_json(msg=f'Failed to parse installed_config_json')
 
-    try:
-        get_rc, get_stdout, _ = module.run_command(get_cmd)
-    except Exception as e:
-        module.fail_json(msg=to_native(e), exception=traceback.format_exc())
+        # navigate nested config by path parts (e.g. "trusted_domains 0")
+        current = installed_config_json.get('system', {})
+        key_exists = True
+        for part in name.split():
+            if isinstance(current, dict):
+                if part in current:
+                    current = current[part]
+                else:
+                    key_exists = False
+                    break
+            elif isinstance(current, list):
+                try:
+                    current = current[int(part)]
+                except (ValueError, IndexError):
+                    key_exists = False
+                    break
+            else:
+                key_exists = False
+                break
 
-    current_value = get_stdout.strip() if get_rc == 0 else ''
+        if key_exists:
+            if isinstance(current, bool):
+                current_value = str(current).lower()
+            else:
+                current_value = str(current)
+        else:
+            current_value = ''
+    else:
+        get_cmd = [
+            php_path,
+            occ_path,
+            '--no-interaction',
+            'config:system:get',
+        ] + name.split() # occ expects each part of the name as a separate argument
+
+        try:
+            get_rc, get_stdout, _ = module.run_command(get_cmd)
+        except Exception as e:
+            module.fail_json(msg=to_native(e), exception=traceback.format_exc())
+
+        key_exists = get_rc == 0
+        current_value = get_stdout.strip() if key_exists else ''
+
     result['current_value'] = current_value
 
     if state == 'present':
@@ -169,14 +218,9 @@ def main():
 
         # add diff if required
         if module._diff:
-            # result['diff'] = dict(
-            #     before=f'{current_value}\n',
-            #     after=f'{value}\n',
-            # )
-
-            # sadly we cannot easily color this output, as we cannot import ansible.utils.color from modules
             result['diff'] = dict(
-                prepared=f'* "{name}" changed from "{current_value}" to "{value}"',
+                before=f'{name}: {current_value}\n',
+                after=f'{name}: {value}\n',
             )
 
         # in check mode, exit here, indicating that a change would occur
@@ -205,9 +249,8 @@ def main():
 
 
     elif state == 'absent':
-        # the return code is 1 if the config does not exist
-        if get_rc == 1:
-            # so there is no change
+        if not key_exists:
+            # config does not exist, so there is no change
             module.exit_json(**result)
 
         # else, there will be a change
@@ -215,14 +258,9 @@ def main():
 
         # add diff if required
         if module._diff:
-            # result['diff'] = dict(
-            #     before=f'{current_value}\n',
-            #     after=f'{value}\n',
-            # )
-
-            # sadly we cannot easily color this output, as we cannot import ansible.utils.color in here
             result['diff'] = dict(
-                prepared=f'* deleted "{name}" with value "{current_value}"',
+                before=f'{name}: {current_value}\n',
+                after='',
             )
 
         # in check mode, exit here, indicating that a change would occur
