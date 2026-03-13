@@ -71,7 +71,7 @@
             ), omit)
           }}'
       remove: true #  only affects `state=absent`
-      shell: '{{ item["shell"] | d(omit) }}'
+      shell: '{{ item["shell"] | d("/bin/bash") }}'
       state: '{{ item["state"] | d("present") }}'
       system: '{{ item["system"] | d(false) }}'
     loop: '{{ login__users__combined_var }}'
