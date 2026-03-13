@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:sshd**: Validate sshd config with `sshd -t` before reloading the service
 * **role:nfs_client**: Fix systemd not being aware of new or removed NFS mount units
 * **role:keycloak**: Fix issues preventing Keycloak from starting
 * **role:systemd_unit**: Correct the removal of units

@@ -19,7 +19,7 @@
           - 'etc/ssh/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-sshd_config.j2'
         paths:
           - '{{ role_path }}/templates'
-    notify: 'sshd: reload sshd'
+    notify: 'sshd: sshd -t; reload sshd'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
