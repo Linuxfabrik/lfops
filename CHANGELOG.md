@@ -341,6 +341,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:nextcloud**: Add nextcloud_occ_*_config modules with diff and check mode support
 * **role:alternatives**: Add new role
 * **role:apache_httpd**:
   * Add some mods
