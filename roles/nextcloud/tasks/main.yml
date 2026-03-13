@@ -100,7 +100,7 @@
     become_user: 'apache'
     changed_when: false
     check_mode: false
-    register: 'nextcloud__config_list_result'
+    register: '__nextcloud__config_list_result'
 
   - name: 'Set Nextcloud system settings'
     linuxfabrik.lfops.nextcloud_occ_system_config:
@@ -108,7 +108,7 @@
       value: '{{ item["value"] }}'
       type: '{{ item["type"] | d("string") }}'
       state: '{{ item["state"] | d("present") }}'
-      installed_config_json: '{{ nextcloud__config_list_result["stdout"] | from_json }}'
+      installed_config_json: '{{ __nextcloud__config_list_result["stdout"] | from_json }}'
     become: true
     become_user: 'apache'
     loop: '{{ nextcloud__sysconfig__combined_var }}'
@@ -133,14 +133,14 @@
     become_user: 'apache'
     changed_when: false
     check_mode: false
-    register: 'nextcloud__app_list_result'
+    register: '__nextcloud__app_list_result'
 
   - name: 'Manage Nextcloud apps'
     linuxfabrik.lfops.nextcloud_occ_app:
       name: '{{ item["name"] }}'
       state: '{{ item["state"] | d("enabled") }}'
       force: '{{ item["force"] | d(false) }}'
-      installed_apps_json: '{{ nextcloud__app_list_result["stdout"] | from_json }}'
+      installed_apps_json: '{{ __nextcloud__app_list_result["stdout"] | from_json }}'
     become: true
     become_user: 'apache'
     loop: '{{ nextcloud__apps__combined_var }}'
@@ -151,7 +151,7 @@
     become_user: 'apache'
     changed_when: false
     check_mode: false
-    register: 'nextcloud__config_list_result'
+    register: '__nextcloud__config_list_result'
 
   - name: 'Set Nextcloud app settings'
     linuxfabrik.lfops.nextcloud_occ_app_config:
@@ -160,7 +160,7 @@
       value: '{{ item["value"] }}'
       type: '{{ item["type"] | d("string") }}'
       state: '{{ item["state"] | d("present") }}'
-      installed_config_json: '{{ nextcloud__config_list_result["stdout"] | from_json }}'
+      installed_config_json: '{{ __nextcloud__config_list_result["stdout"] | from_json }}'
     become: true
     become_user: 'apache'
     loop: '{{ nextcloud__app_configs__combined_var }}'
