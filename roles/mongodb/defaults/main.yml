@@ -41,10 +41,6 @@ mongodb__users__combined_var: '{{ (
 
 # -----------------------------------------------------------------------------
 
-mongodb__apps__apps__dependent_var:
-  - name: 'tar'
-    state: 'present'
-
 # https://docs.mongodb.com/manual/administration/production-notes/
 mongodb__kernel_settings__sysctl__dependent_var:
   - name: 'vm.swappiness'

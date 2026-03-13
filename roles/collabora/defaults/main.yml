@@ -28,6 +28,7 @@ collabora__coolwsd_allowed_languages__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
+collabora__coolwsd_content_security_policy: []
 collabora__coolwsd_deepl_api_url: 'https://api-free.deepl.com/v2/translate'
 collabora__coolwsd_deepl_auth_key: ''
 collabora__coolwsd_deepl_enabled: false

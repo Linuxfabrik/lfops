@@ -19,13 +19,12 @@ This role is only compatible with the following MongoDB versions:
 
 ## Tags
 
-| Tag             | What it does                              |
-| ---             | ------------                              |
-| `mongodb`       | Installs and configures MongoDB           |
-| `mongodb:dump`  | Configures the database dumping (backups) |
-| `mongodb:state` | Manages the state of the mongod service   |
-| `mongodb:user`  | Manages the MongoDB users                 |
-
+| Tag             | What it does                              | Reload / Restart |
+| ---             | ------------                              | ---------------- |
+| `mongodb`       | Installs and configures MongoDB           | Restarts mongod.service |
+| `mongodb:dump`  | Configures the database dumping (backups) | - |
+| `mongodb:state` | Manages the state of the mongod service   | - |
+| `mongodb:user`  | Manages the MongoDB users                 | - |
 
 ## Recommended Role Variables
 
@@ -64,7 +63,7 @@ mongodb__dump_user:
 | `mongodb__dump_method_mongodump_backup_dir` | Where to store the `mongodump`-based backup. | `'/backup/mongodb-dump'` |
 | `mongodb__dump_method_mongodump` | Use `mongodump` to create database dumps. This is recommended since it allows the most flexible restores. | `true` |
 | `mongodb__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'` |
-| `mongodb__dump_only_if_hidden` | Use this to only run the backup if the instance is hidden. This is useful in a MongoDB cluster setupp. | `false` |
+| `mongodb__dump_only_if_hidden` | Use this to only run the backup if the instance is hidden. This is useful in a MongoDB cluster setup. | `false` |
 | `mongodb__dump_use_oplog` | Use this to capture incoming write operations during the dump operation to ensure that the backups reflect a consistent data state. Note that this only works on cluster setups or with replica sets. | `false` |
 | `mongodb__repl_set_skip_init` | Set this to skip the initiation of the replica set. Note: Set this on all secondaries when setting up a replica set across members. | `false` |
 | `mongodb__service_enabled`| Enables or disables the service, analogous to `systemctl enable/disable`. | `true` |
@@ -118,7 +117,7 @@ To setup a replica set from scratch:
 * Rollout against the secondaries.
 * Set `mongodb__repl_set_members` on the primary (see below).
 * Rollout against the primary to initiate the replica set with the given members.
-* Check the state of the cluster by using `mongosh --username mongodb-admin --password linuxfabrik --eval 'rs.status()'` on any member.
+* Check the state of the cluster by using `mongosh --username mongodb-admin --password --eval 'rs.status()'` on any member. The output should contain all configured members.
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |

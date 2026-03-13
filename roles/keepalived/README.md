@@ -5,10 +5,10 @@ This role installs and configures [keepalived](https://www.keepalived.org/).
 
 ## Tags
 
-| Tag                 | What it does                                      |
-| ---                 | ------------                                      |
-| `keepalived`          | Installs and configures keepalived                  |
-| `keepalived:state`    | Manages the state of the keepalived service         |
+| Tag                 | What it does                                      | Reload / Restart |
+| ---                 | ------------                                      | ---------------- |
+| `keepalived`          | Installs and configures keepalived                  | Restarts keepalived.service |
+| `keepalived:state`    | Manages the state of the keepalived service         | - |
 
 
 ## Mandatory Role Variables

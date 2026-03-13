@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025020701
+# 2025060601
 
 # This is the configuration file for Icinga for Kubernetes.
 
@@ -28,3 +28,17 @@ database:
 prometheus:
   # Prometheus server URL.
 #  url: http://localhost:9090
+
+# Configuration for Icinga Notifications daemon.
+notifications:
+  # Icinga Notifications daemon URL.
+#  url: http://localhost:5680
+
+  # Username for authenticating the Icinga for Kubernetes source in Icinga Notifications.
+#  username: source-\d+
+
+  # Password for authenticating the Icinga for Kubernetes source in Icinga Notifications.
+#  password: password
+
+  # The base URL of Icinga for Kubernetes Web used in generated Icinga Notification events.
+#  kubernetes_web_url: http://localhost/icingaweb2/kubernetes

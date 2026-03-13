@@ -22,10 +22,10 @@ Ideally, the FreeIPA should be installed on a separate server. If that is not po
 
 ## Tags
 
-| Tag              | What it does                    |
-| ---              | ------------                    |
-| `freeipa_server` | Installs and configures FreeIPA as a server |
-
+| Tag              | What it does                    | Reload / Restart |
+| ---              | ------------                    | ---------------- |
+| `freeipa_server` | Installs and configures FreeIPA as a server | - |
+| `freeipa_server:systemd_override` | Deploys `/etc/systemd/system/pki-tomcatd@.service.d/override.conf` | - |
 
 ## Mandatory Role Variables
 
@@ -58,6 +58,7 @@ freeipa_server__config_default_shell: '/bin/bash'
 freeipa_server__config_password_expiration_notification: 10
 freeipa_server__domain: 'example.com'
 freeipa_server__realm: 'EXAMPLE.COM'
+freeipa_server__systemd_timeoutstartsec: 300
 ```
 
 

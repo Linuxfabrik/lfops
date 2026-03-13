@@ -1,0 +1,9 @@
+__kvm_host__libvirt_guests_path: '/etc/sysconfig/libvirt-guests'
+__kvm_host__packages:
+  - '@Virtualization Host'
+  - 'genisoimage'
+  - 'libguestfs-tools-c'
+  - 'libosinfo'
+  - 'libvirt-client'
+  - 'qemu-img'
+  - 'virt-install'

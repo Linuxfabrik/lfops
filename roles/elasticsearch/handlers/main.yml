@@ -1,0 +1,6 @@
+- name: 'elasticsearch: restart elasticsearch'
+  ansible.builtin.service:
+    name: 'elasticsearch'
+    state: 'restarted'
+  when:
+    - 'elasticsearch__service_state != "stopped"'

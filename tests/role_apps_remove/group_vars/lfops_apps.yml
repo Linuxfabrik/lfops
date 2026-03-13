@@ -1,0 +1,3 @@
+apps__apps__group_var:
+  - name: 'less' # A package that is installed by default on all test distros.
+    state: 'absent'

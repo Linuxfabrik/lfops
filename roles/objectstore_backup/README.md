@@ -12,9 +12,9 @@ If you use the [Objectstore Backup Playbook](https://github.com/Linuxfabrik/lfop
 
 ## Tags
 
-| Tag                  | What it does                                   |
-| ---                  | ------------                                   |
-| `objectstore_backup` | Installs and configures the objectstore backup |
+| Tag                  | What it does                                   | Reload / Restart |
+| ---                  | ------------                                   | ---------------- |
+| `objectstore_backup` | Installs and configures the objectstore backup | - |
 
 
 ## Mandatory Role Variables

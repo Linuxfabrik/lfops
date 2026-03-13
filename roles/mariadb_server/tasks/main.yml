@@ -77,11 +77,13 @@
         - 'mariadb-server'
       state: 'present'
 
-  - name: 'Optionally install galera-4 and rsync'
+  - name: 'Optionally install galera-4, mariadb-backup, rsync and socat'
     ansible.builtin.package:
       name:
         - 'galera-4'
-        - 'rsync'
+        - 'mariadb-backup' # required for `wsrep_sst_method='mariabackup'`
+        - 'rsync' # required for `wsrep_sst_method='rsync'`
+        - 'socat' # required for `wsrep_sst_method='mariabackup'`
       state: 'present'
     when:
       - 'mariadb_server__cnf_wsrep_on is true'
@@ -150,19 +152,41 @@
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
-  - name: 'Deploy /etc/tmpfiles.d/mariadb.conf for the socket path'
+  - name: 'semanage port --add --type mysqld_port_t --proto udp {{ mariadb_server__cnf_extra_port__combined_var }} # adjust SELinux for MariaDB extra port'
+    community.general.seport:
+      ports: '{{ mariadb_server__cnf_extra_port__combined_var }}'
+      proto: 'tcp'
+      setype: 'mysqld_port_t'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+  - name: 'Deploy /etc/tmpfiles.d/mariadb-linuxfabrik.conf for the socket path'
     ansible.builtin.template:
-      src: 'etc/tmpfiles.d/mariadb.conf.j2'
-      dest: '/etc/tmpfiles.d/mariadb.conf'
+      # we need to use a different name than the packaged /usr/lib/tmpfiles.d/mariadb.conf, else it is overwritten completely
+      src: 'etc/tmpfiles.d/mariadb-linuxfabrik.conf.j2'
+      dest: '/etc/tmpfiles.d/mariadb-linuxfabrik.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: 'mariadb_server__deploy_tmpfiles_result'
 
-  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb.conf' # noqa no-handler no-changed-when (sadly no easy way to detect changes)
-    ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb.conf'
+  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb-linuxfabrik.conf' # noqa no-handler no-changed-when (sadly no easy way to detect changes)
+    ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb-linuxfabrik.conf'
     when:
       - 'mariadb_server__deploy_tmpfiles_result is changed'
+
+  # the next 2 tasks can be removed once /etc/tmpfiles.d/mariadb.conf is removed on all hosts
+  - name: 'Remove old /etc/tmpfiles.d/mariadb.conf to prevent packaged `/usr/lib/tmpfiles.d/mariadb.conf` from being overwritten'
+    ansible.builtin.file:
+      path: '/etc/tmpfiles.d/mariadb.conf'
+      state: 'absent'
+    register: 'mariadb_server__remove_old_tmpfiles_result'
+
+  - name: 'systemd-tmpfiles --create /usr/lib/tmpfiles.d/mariadb.conf' # noqa no-handler no-changed-when
+    ansible.builtin.command: 'systemd-tmpfiles --create /usr/lib/tmpfiles.d/mariadb.conf'
+    when:
+      - 'mariadb_server__remove_old_tmpfiles_result is changed'
 
   # /var/lib/mysql/mysql\.sock                         socket             system_u:object_r:mysqld_var_run_t:s0
   - name: 'semanage fcontext --add --type mysqld_var_run_t {{ mariadb_server__cnf_socket__combined_var | ansible.builtin.regex_escape }}'
@@ -187,6 +211,7 @@
     - 'mariadb_server:clone_datadir'
     - 'mariadb_server:configure'
     - 'mariadb_server:secure_installation'
+    - 'mariadb_server:upgrade'
 
 
 - block:
@@ -231,12 +256,55 @@
 
   - name: 'Deploy {{ mariadb_server__config_file_00 }}'
     ansible.builtin.template:
+      backup: true
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
       dest: '{{ mariadb_server__config_file_00 }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
     notify: 'mariadb_server: systemctl restart mariadb'
+
+  - name: 'Reset value of wsrep_on'
+    ansible.builtin.set_fact:
+      mariadb_server__cnf_wsrep_on: '{{ mariadb_server__cnf_wsrep_on_original_value }}'
+    when:
+      - 'mariadb_server__run_galera_new_cluster is true'
+
+  - name: 'Compute parent directory for log_bin'
+    ansible.builtin.set_fact:
+      __mariadb_server__cnf_log_bin_parent_dir: >-
+        {%- set path = (mariadb_server__cnf_log_bin__combined_var | trim) -%}
+        {%- if path | length and '/' in path -%}
+          {%- if path.startswith('/') -%}
+            {# absolute path: take its dirname #}
+            {{ path | dirname }}
+          {%- else -%}
+            {# relative path: join datadir with the dirname of the relative path #}
+            {{ (mariadb_server__cnf_datadir__combined_var, (path | dirname)) | ansible.builtin.path_join }}
+          {%- endif -%}
+        {%- else -%}
+          {{ '' }}
+        {%- endif -%}
+
+  - name: 'Make sure the log_bin parent dir exists with the correct permissions'
+    ansible.builtin.file:
+      path: '{{ __mariadb_server__cnf_log_bin_parent_dir | trim }}'
+      owner: 'mysql'
+      group: 'mysql'
+      mode: 0o750
+      state: 'directory'
+    when:
+      - '(__mariadb_server__cnf_log_bin_parent_dir | trim) | length'
+
+  - name: 'Make sure the tmpdir exists with the correct permissions'
+    ansible.builtin.file:
+      path: '{{ mariadb_server__cnf_tmpdir__combined_var }}'
+      owner: 'mysql'
+      group: 'mysql'
+      mode: 0o750
+      state: 'directory'
+    when:
+      - 'mariadb_server__cnf_tmpdir__combined_var | length'
 
   - name: 'Make sure mariadb can read the SSL cert'
     ansible.builtin.file:
@@ -251,16 +319,16 @@
     ansible.builtin.file:
       path: '{{ mariadb_server__cnf_ssl_key__combined_var }}'
       owner: 'mysql'
-      group: 'root'
-      mode: 0o600
+      group: 'mysql'
+      mode: 0o400
     when:
       - 'mariadb_server__cnf_ssl_key__combined_var | length'
 
-  - name: 'Reset value of wsrep_on'
-    ansible.builtin.set_fact:
-      mariadb_server__cnf_wsrep_on: '{{ mariadb_server__cnf_wsrep_on_original_value }}'
-    when:
-      - 'mariadb_server__run_galera_new_cluster is true'
+  - name: 'Remove old workaround at /etc/systemd/system/mariadb.service'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/mariadb.service'
+      state: 'absent'
+    register: 'mariadb_server__service_result'
 
   - name: 'mkdir -p /etc/systemd/system/mariadb.service.d/'
     ansible.builtin.file:
@@ -290,16 +358,13 @@
     register: 'mariadb_server__z00_linuxfabrik_result'
     notify: 'mariadb_server: systemctl restart mariadb'
 
-  - name: 'systemctl daemon-reload'
-    ansible.builtin.systemd:
-      daemon_reload: true
-    when:
-      - 'mariadb_server__socket_selinux_workaround_result is changed or mariadb_server__z00_linuxfabrik_result is changed'
-
   - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
     ansible.builtin.systemd:
       daemon_reload: true
-    when: 'mariadb_server__socket_selinux_workaround_result is changed'
+    when: >-
+      mariadb_server__socket_selinux_workaround_result is changed
+      or mariadb_server__z00_linuxfabrik_result is changed
+      or mariadb_server__service_result is changed
 
   - name: 'Deploy {{ mariadb_server__logrotate_path }}'
     ansible.builtin.template:
@@ -369,6 +434,11 @@
     ansible.builtin.file:
       dest: '/tmp/lfops-mariadb-defaults.cnf'
       state: 'absent'
+
+  - name: 'Restart mariadb after running mysql_upgrade'
+    ansible.builtin.service:
+      name: 'mariadb.service'
+      state: 'restarted'
 
   - name: 'print mysql_upgrade output'
     ansible.builtin.debug:
@@ -486,10 +556,15 @@
     when:
       - 'mariadb_server__cnf_general_log__combined_var == "ON"'
 
+  - name: 'Check if "server_audit_file_path" exists'
+    ansible.builtin.stat:
+      path: '{{ mariadb_server__cnf_server_audit_file_path }}'
+    register: '__mariadb_server__server_audit_file_path_stat'
+
   - name: 'Secure installation (Linuxfabrik): Ensure "server_audit_file_path" has appropriate permissions'
     ansible.builtin.file:
       path: '{{ mariadb_server__cnf_server_audit_file_path }}'
-      state: 'file'
+      state: '{{ __mariadb_server__server_audit_file_path_stat["stat"]["exists"] | ternary("file", "touch") }}'
       mode: 0o660
       owner: 'mysql'
       group: 'mysql'
@@ -502,12 +577,15 @@
 # configure backup (mariadb-dump user, scripts and timer)
 - block:
 
-  - name: 'Install {{ mariadb_server__dump_mydumper_package }} libzstd zstd'
+  - name: 'Install {{ mariadb_server__dump_mydumper_package }}'
     ansible.builtin.package:
       name:
         - '{{ mariadb_server__dump_mydumper_package }}'
-        - 'libzstd'
-        - 'zstd'
+      state: 'present'
+
+  - name: 'Install {{ __mariadb_server__dump_mydumper_dependencies | join (" ") }}'
+    ansible.builtin.package:
+      name: '{{ __mariadb_server__dump_mydumper_dependencies }}'
       state: 'present'
 
   - name: 'Deploy /usr/local/bin/mariadb-dump'
@@ -518,6 +596,7 @@
 
   - name: 'Deploy /etc/mariadb-dump.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/mariadb-dump.conf.j2'
       dest: '/etc/mariadb-dump.conf'
       owner: 'root'
@@ -532,7 +611,7 @@
       name: '{{ mariadb_server__dump_user["username"] }}'
       host: 'localhost'
       password: '{{ mariadb_server__dump_user["password"] }}'
-      priv: '{{ mariadb_server__dump_user["priv"] | default(["*.*:event,execute,lock tables,process,reload,replica monitor,select,show databases,show view,slave monitor,super,trigger"]) | join("/") }}'
+      priv: '{{ mariadb_server__dump_user["priv"] | default(["*.*:binlog monitor,event,execute,lock tables,process,reload,replica monitor,select,show databases,show view,slave monitor,super,trigger"]) | join("/") }}'
       state: '{{ mariadb_server__dump_user["state"] | default("present") }}'
 
   - name: 'Deploy /etc/systemd/system/mariadb-dump.service'
@@ -573,6 +652,7 @@
 
   - name: 'Deploy {{ mariadb_server__config_file_00 }}'
     ansible.builtin.template:
+      backup: true
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
       dest: '{{ mariadb_server__config_file_00 }}'
       owner: 'root'
@@ -631,12 +711,60 @@
       name: '{{ item["username"] }}'
       host: '{{ item["host"] | default("localhost") }}'
       password: '{{ item["password"] | default(omit) }}'
+      plugin: '{{ item["plugin"] | default(omit) }}'
       tls_requires: '{{ item["tls_requires"] | default(omit) }}'
-      priv: '{{ (item["priv"] | join("/")) | default(omit) }}'
+      priv: '{{ item["priv"] | join("/") if item["priv"] is defined else omit }}'
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ mariadb_server__users__combined_var }}'
     loop_control:
       label: '{{ item["username"] }}@{{ item["host"] | default("localhost") }}'
+
+  - name: 'Combined Roles'
+    ansible.builtin.debug:
+      var: 'mariadb_server__roles__combined_var'
+
+  - name: 'Build role to members mapping'
+    ansible.builtin.set_fact:
+      __mariadb_server__roles2members: '{{ __mariadb_server__roles2members | default({}) | combine({ item["name"]: __mariadb_server__members }) }}'
+    vars:
+      __mariadb_server__members: >-
+        {%- set members = [] -%}
+        {%- for user in mariadb_server__users__combined_var -%}
+          {%- if (user['state'] | d('present') != 'absent') and (item['name'] in user['roles'] | d([])) -%}
+            {%- set _ = members.append(user['username'] ~ '@' ~ user['host'] | default('localhost')) -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {{ members }}
+    loop: '{{ mariadb_server__roles__combined_var }}'
+
+  - name: 'Role to Members mapping'
+    ansible.builtin.debug:
+      var: '__mariadb_server__roles2members'
+
+  - name: 'Create, update or delete MariaDB roles'
+    community.mysql.mysql_role:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
+      name: '{{ item["name"] }}'
+      priv: '{{ (item["priv"] | join("/")) }}'
+      members: '{{ __mariadb_server__roles2members[item["name"]] }}'
+      state: '{{ item["state"] | default("present") }}'
+    loop: '{{ mariadb_server__roles__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'SET DEFAULT ROLE `{{ item["default_role"] }}` FOR `{{ item["username"] }}`@`{{ item["host"] | default("localhost") }}`'
+    community.mysql.mysql_query:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
+      query: 'SET DEFAULT ROLE `{{ item["default_role"] }}` FOR `{{ item["username"] }}`@`{{ item["host"] | default("localhost") }}`'
+    loop: '{{ mariadb_server__users__combined_var }}'
+    loop_control:
+      label: '{{ item["username"] }}@{{ item["host"] | default("localhost") }}'
+    when: 'item["default_role"] is defined and item["default_role"] | length'
+    changed_when: true # too hard to detect right now, so always report a change
 
   tags:
     - 'mariadb_server'

@@ -5,9 +5,10 @@ This role installs [haveged](https://github.com/jirka-h/haveged).
 
 ## Tags
 
-| Tag       | What it does     |
-| ---       | ------------     |
-| `haveged` | Installs haveged |
+| Tag       | What it does     | Reload / Restart |
+| ---       | ------------     | ---------------- |
+| `haveged` | Installs haveged | - |
+| `haveged:state` | Manages the state of the systemd service | - |
 
 
 ## Optional Role Variables

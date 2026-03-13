@@ -1,0 +1,272 @@
+# {{ ansible_managed }}
+# 2026010801
+
+# rocky-addons.repo
+#
+# The mirrorlist system uses the connecting IP address of the client and the
+# update status of each mirror to pick current mirrors that are geographically
+# close to the client.  You should use this for Rocky updates unless you are
+# manually picking other mirrors.
+#
+# If the mirrorlist does not work for you, you can try the commented out
+# baseurl line instead.
+
+[highavailability]
+name=Rocky Linux $releasever - High Availability
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/HighAvailability/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=HighAvailability-$releasever$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/HighAvailability/$basearch/os/
+{% endif %}
+gpgcheck=1
+enabled=0
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[highavailability-debuginfo]
+name=Rocky Linux $releasever - High Availability - Debug
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/HighAvailability/x86_64/debug/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=HighAvailability-$releasever-debug$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/HighAvailability/$basearch/debug/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[highavailability-source]
+name=Rocky Linux $releasever - High Availability - Source
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/HighAvailability/source/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=source&repo=HighAvailability-$releasever-source$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/HighAvailability/source/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[nfv]
+name=Rocky Linux $releasever - NFV
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/NFV/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=NFV-$releasever$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/NFV/$basearch/os/
+{% endif %}
+gpgcheck=1
+enabled=0
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[nfv-debuginfo]
+name=Rocky Linux $releasever - NFV Debug
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/NFV/x86_64/debug/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=RT-$releasever-debug$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/NFV/$basearch/debug/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[nfv-source]
+name=Rocky Linux $releasever - NFV Source
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/NFV/source/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=RT-$releasever-source$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/NFV/source/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[rt]
+name=Rocky Linux $releasever - Realtime
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/RT/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=RT-$releasever$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/RT/$basearch/os/
+{% endif %}
+gpgcheck=1
+enabled=0
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[rt-debuginfo]
+name=Rocky Linux $releasever - Realtime Debug
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/RT/x86_64/debug/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=RT-$releasever-debug$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/RT/$basearch/debug/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[rt-source]
+name=Rocky Linux $releasever - Realtime Source
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/RT/source/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=RT-$releasever-source$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/RT/source/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[sap]
+name=Rocky Linux $releasever - SAP
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/SAP/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=SAP-$releasever$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/SAP/$basearch/os/
+{% endif %}
+gpgcheck=1
+enabled=0
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[sap-debuginfo]
+name=Rocky Linux $releasever - SAP Debug
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/SAP/x86_64/debug/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=SAP-$releasever-debug$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/SAP/$basearch/debug/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[sap-source]
+name=Rocky Linux $releasever - SAP Source
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/SAP/source/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=SAP-$releasever-source$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/SAP/source/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[saphana]
+name=Rocky Linux $releasever - SAPHANA
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/SAPHANA/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=SAPHANA-$releasever$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/SAPHANA/$basearch/os/
+{% endif %}
+gpgcheck=1
+enabled=0
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[saphana-debuginfo]
+name=Rocky Linux $releasever - SAPHANA Debug
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/SAPHANA/x86_64/debug/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=SAPHANA-$releasever-debug$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/SAPHANA/$basearch/debug/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[saphana-source]
+name=Rocky Linux $releasever - SAPHANA Source
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/SAPHANA/source/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=SAPHANA-$releasever-source$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/SAPHANA/source/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}

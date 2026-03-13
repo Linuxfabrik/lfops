@@ -1,0 +1,6 @@
+- name: 'kibana: restart kibana'
+  ansible.builtin.service:
+    name: 'kibana'
+    state: 'restarted'
+  when:
+    - 'kibana__service_state != "stopped"'

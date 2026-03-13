@@ -147,7 +147,7 @@
       group: 'blocky'
       mode: 0o440
       backup: true
-    notify: 'blocky: restart blocky.service'
+    notify: 'blocky: validate config & restart blocky.service'
 
   tags:
     - 'blocky'

@@ -5,7 +5,6 @@
   tags:
     - 'icingaweb2'
     - 'icingaweb2:configure'
-    - 'icingaweb2:icons'
     - 'icingaweb2:resources'
     - 'icingaweb2:user'
 
@@ -16,9 +15,9 @@
       name: '{{ icingaweb2__required_packages }}'
       state: 'present'
 
-  - name: 'usermod -a -G icingaweb2 icinga'
+  - name: 'usermod -a -G icingaweb2 {{ __icingaweb2__icinga_user }}'
     ansible.builtin.user:
-      name: 'icinga'
+      name: '{{ __icingaweb2__icinga_user }}'
       groups:
         - 'icingaweb2'
       append: true
@@ -233,24 +232,3 @@
   tags:
     - 'icingaweb2'
     - 'icingaweb2:user'
-
-
-- block:
-
-  - name: 'download the linuxfabrik icon assets'
-    ansible.builtin.get_url:
-      url: 'https://download.linuxfabrik.ch/monitoring-plugins/icons/icons.tar.gz'
-      dest: '/tmp/ansible.assets-icons.tar.gz'
-    delegate_to: 'localhost'
-    check_mode: false # run task even if `--check` is specified
-    changed_when: false # just gathering info, no actual change
-
-  - name: 'Unarchive /tmp/ansible.assets-icons.tar.gz'
-    ansible.builtin.unarchive:
-      src: '/tmp/ansible.assets-icons.tar.gz'
-      dest: '/usr/share/icingaweb2/public/img/icons/'
-      remote_src: false
-
-  tags:
-    - 'icingaweb2'
-    - 'icingaweb2:icons'

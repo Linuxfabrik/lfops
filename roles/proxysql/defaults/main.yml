@@ -1,0 +1,67 @@
+proxysql__mysql_galera_hostgroups__combined_var: '{{ (
+      proxysql__mysql_galera_hostgroups__role_var +
+      proxysql__mysql_galera_hostgroups__dependent_var +
+      proxysql__mysql_galera_hostgroups__group_var +
+      proxysql__mysql_galera_hostgroups__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["writer_hostgroup", "backup_writer_hostgroup", "reader_hostgroup", "offline_hostgroup"])
+  }}'
+proxysql__mysql_galera_hostgroups__dependent_var: []
+proxysql__mysql_galera_hostgroups__group_var: []
+proxysql__mysql_galera_hostgroups__host_var: []
+proxysql__mysql_galera_hostgroups__role_var: []
+proxysql__mysql_query_rules__combined_var: '{{ (
+      proxysql__mysql_query_rules__role_var +
+      proxysql__mysql_query_rules__dependent_var +
+      proxysql__mysql_query_rules__group_var +
+      proxysql__mysql_query_rules__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="rule_id")
+  }}'
+proxysql__mysql_query_rules__dependent_var: []
+proxysql__mysql_query_rules__group_var: []
+proxysql__mysql_query_rules__host_var: []
+proxysql__mysql_query_rules__role_var: []
+proxysql__mysql_replication_hostgroups__combined_var: '{{ (
+      proxysql__mysql_replication_hostgroups__role_var +
+      proxysql__mysql_replication_hostgroups__dependent_var +
+      proxysql__mysql_replication_hostgroups__group_var +
+      proxysql__mysql_replication_hostgroups__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["writer_hostgroup", "reader_hostgroup"])
+  }}'
+proxysql__mysql_replication_hostgroups__dependent_var: []
+proxysql__mysql_replication_hostgroups__group_var: []
+proxysql__mysql_replication_hostgroups__host_var: []
+proxysql__mysql_replication_hostgroups__role_var: []
+proxysql__mysql_servers__combined_var: '{{ (
+      proxysql__mysql_servers__role_var +
+      proxysql__mysql_servers__dependent_var +
+      proxysql__mysql_servers__group_var +
+      proxysql__mysql_servers__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["hostgroup", "hostname", "port"])
+  }}'
+proxysql__mysql_servers__dependent_var: []
+proxysql__mysql_servers__group_var: []
+proxysql__mysql_servers__host_var: []
+proxysql__mysql_servers__role_var: []
+proxysql__mysql_users__combined_var: '{{ (
+      proxysql__mysql_users__role_var +
+      proxysql__mysql_users__dependent_var +
+      proxysql__mysql_users__group_var +
+      proxysql__mysql_users__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+  }}'
+proxysql__mysql_users__dependent_var: []
+proxysql__mysql_users__group_var: []
+proxysql__mysql_users__host_var: []
+proxysql__mysql_users__role_var: []
+proxysql__proxysql_servers__combined_var: '{{ (
+      proxysql__proxysql_servers__role_var +
+      proxysql__proxysql_servers__dependent_var +
+      proxysql__proxysql_servers__group_var +
+      proxysql__proxysql_servers__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["hostname", "port"])
+  }}'
+proxysql__proxysql_servers__dependent_var: []
+proxysql__proxysql_servers__group_var: []
+proxysql__proxysql_servers__host_var: []
+proxysql__proxysql_servers__role_var: []
+proxysql__service_enabled: true

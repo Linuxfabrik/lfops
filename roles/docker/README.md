@@ -12,10 +12,10 @@ If you use the ["docker" Playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 
 ## Tags
 
-| Tag            | What it does                            |
-| ---            | ------------                            |
-| `docker`       | Installs and configures docker          |
-| `docker:state` | Manages the state of the docker service |
+| Tag            | What it does                            | Reload / Restart |
+| ---            | ------------                            | ---------------- |
+| `docker`       | Installs and configures docker          | Restarts docker.service |
+| `docker:state` | Manages the state of the docker service | - |
 
 
 ## Optional Role Variables

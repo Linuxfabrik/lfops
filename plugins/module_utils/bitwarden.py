@@ -269,15 +269,15 @@ class Bitwarden(object):
         matching_items = []
         for item in result['data']['data']:
             if item['name'] == name \
-                and (item['login']['username'] == username) \
-                and (item['folderId'] == folder_id) \
-                and (
-                    # cover case if collectionIds is an empty list
-                    (collection_id is None and not item.get('collectionIds')) \
-                    or \
-                    (collection_id in item.get('collectionIds', [])) \
-                ) \
-                and (item['organizationId'] == organization_id):
+            and (item['login']['username'] == username) \
+            and (item.get('folderId') == folder_id) \
+            and (
+                # cover case if collectionIds is an empty list
+                (collection_id is None and not item.get('collectionIds')) \
+                or \
+                (collection_id in item.get('collectionIds', [])) \
+            ) \
+            and (item.get('organizationId') == organization_id):
                 matching_items.append(item)
 
         return matching_items

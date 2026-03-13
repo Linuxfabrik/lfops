@@ -23,11 +23,11 @@ If you use the [ClamAV Playbook](https://github.com/Linuxfabrik/lfops/blob/main/
 
 ## Tags
 
-| Tag                | What it does                                             |
-| ---                | ------------                                             |
-| `clamav`           | Installs and configures ClamAV                           |
-| `clamav:state`     | Manages the states of various ClamAV services and timers |
-| `clamav:configure` | Manages the various ClamAV config files                  |
+| Tag                | What it does                                             | Reload / Restart |
+| ---                | ------------                                             | ---------------- |
+| `clamav`           | Installs and configures ClamAV                           | Restarts clamav-clamonacc.service |
+| `clamav:state`     | Manages the states of various ClamAV services and timers | - |
+| `clamav:configure` | Manages the various ClamAV config files                  | Restarts clamav-clamonacc.service, clamd@scan.service |
 
 
 ## Optional Role Variables

@@ -14,10 +14,10 @@ If you use the [`github_project_createrepo` Playbook](https://github.com/Linuxfa
 
 ## Tags
 
-| Tag           | What it does                                 |
-| ---           | ------------                                 |
-| `github_project_createrepo` | Installs and configures github_project_createrepo |
-| `github_project_createrepo:configure` | Deploys `/etc/github_project_createrepo.yml` |
+| Tag           | What it does                                 | Reload / Restart |
+| ---           | ------------                                 | ---------------- |
+| `github_project_createrepo` | Installs and configures github_project_createrepo | - |
+| `github_project_createrepo:configure` | Deploys `/etc/github_project_createrepo.yml` | - |
 
 
 ## Mandatory Role Variables

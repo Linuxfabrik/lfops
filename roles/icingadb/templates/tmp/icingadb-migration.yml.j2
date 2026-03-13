@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023060701
+# 2025092501
 
 # https://icinga.com/docs/icinga-db/latest/doc/06-Migration/#preparing-the-configuration
 
@@ -10,11 +10,11 @@ icinga2:
 # IDO database
 ido:
   type: 'mysql' # or "pgsql" for PostgreSQL
-  host: '{{ ((icinga2_master__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", icinga2_master__database_host)) | d("replace-me") }}'
+  host: 'replace-me'
   # port: 3306
-  database: '{{ icinga2_master__database_name | d("replace-me") }}'
-  user: '{{ icinga2_master__database_login["username"] | d("replace-me") }}'
-  password: '{{ icinga2_master__database_login["password"] | d("replace-me") }}'
+  database: 'replace-me'
+  user: 'replace-me'
+  password: 'replace-me'
 
   # Input time range
   #from: 0

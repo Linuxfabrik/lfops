@@ -26,8 +26,8 @@
     ansible.builtin.file:
       path: '{{ item["path"] }}'
       state: 'directory'
-      owner: 'root'
-      group: 'root'
+      owner: '{{ item["owner"] | d("root") }}'
+      group: '{{ item["group"] | d("root") }}'
       mode: 0o755
     loop: '{{ mount__mounts__combined_var }}'
 

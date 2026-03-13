@@ -11,7 +11,7 @@
       dest: '/etc/coturn/turnserver.conf'
       owner: 'root'
       group: 'coturn'
-      mode: 0o0640
+      mode: 0o640
     notify: 'coturn: restart coturn'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'

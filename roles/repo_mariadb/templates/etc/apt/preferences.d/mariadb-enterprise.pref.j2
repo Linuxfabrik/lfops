@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024070301
+# 2025080401
 {# makes sure that the official repo is used in preference. check with `apt-cache policy` and `apt-cache policy mariadb-server` #}
 
 {% if repo_mariadb__mirror_url is defined and repo_mariadb__mirror_url | length %}
@@ -8,7 +8,7 @@ Pin: origin {{ repo_mariadb__mirror_url | ansible.builtin.urlsplit("hostname") }
 Pin-Priority: 1000
 {% else %}
 Package: *
-Pin: origin dlm.mariadb.com
+Pin: origin deb.mariadb.org
 Pin-Priority: 1000
 {% endif %}
 

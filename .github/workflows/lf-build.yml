@@ -1,0 +1,116 @@
+name: 'Linuxfabrik: Build Collection and EE'
+
+on:
+  # pre-release
+  workflow_dispatch: # yamllint disable-line rule:empty-values
+    inputs:
+      prerelease_version:
+        description: 'Pre-release version (semver, no leading "v", e.g. 1.4.0-beta)'
+        required: true
+        type: 'string'
+
+  # release
+  push:
+    tags:
+      - 'v*'
+
+# modify the default permissions granted to the GITHUB_TOKEN
+permissions:
+  contents: 'read' # to checkout the code
+  packages: 'write' # to push to GitHub Container Registry
+
+jobs:
+
+  build:
+    runs-on: 'ubuntu-latest'
+
+    steps:
+
+      - name: 'git clone https://github.com/Linuxfabrik/lfops'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Log in to GitHub Container Registry'
+        uses: 'redhat-actions/podman-login@v1'
+        with:
+          registry: 'ghcr.io'
+          username: '${{ github.actor }}'
+          password: '${{ secrets.GITHUB_TOKEN }}'
+
+      - name: 'Determine image tags and adjust version in galaxy.yml'
+        run: |
+          set -x
+
+          if [[ "${GITHUB_REF}" =~ ^refs/tags/ ]]; then
+              # On a Git‐tag push: semver & "latest"
+              TAG1="${GITHUB_REF#refs/tags/v}"
+              TAG2="latest"
+          else
+              # On any other run: user-defined version & "dev"
+              TAG1="${{ github.event.inputs.prerelease_version }}"
+              TAG2="dev"
+          fi
+
+          # store to GITHUB_ENV
+          echo "TAG1=$TAG1" >> $GITHUB_ENV
+          echo "TAG2=$TAG2" >> $GITHUB_ENV
+
+          sed --in-place --regexp-extended "s/version: '[^']*'/version: '$TAG1'/" galaxy.yml
+          # helpful for debugging
+          grep '^version' galaxy.yml
+
+      - name: 'Store the lowercase repository name'
+        run: |
+          echo "GITHUB_REPOSITORY_OWNER_LOWERCASE=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+
+      - name: 'Install Ansible Builder'
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install ansible-builder
+
+      - name: 'Build Collection'
+        run: |
+          ansible-galaxy collection build
+          cp --verbose linuxfabrik-lfops-${{ env.TAG1 }}.tar.gz linuxfabrik-lfops.tar.gz
+
+      - name: 'Publish to Galaxy (Prod)'
+        if: "${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}"
+        env:
+          ANSIBLE_GALAXY_TOKEN: '${{ secrets.GALAXY_API_KEY_PROD }}'
+        run: |
+          ansible-galaxy collection publish \
+            linuxfabrik-lfops-${{ env.TAG1 }}.tar.gz \
+            --server https://galaxy.ansible.com \
+            --api-key "$ANSIBLE_GALAXY_TOKEN"
+
+      - name: 'Publish to Galaxy (Dev)'
+        if: "${{ github.event_name == 'workflow_dispatch' }}"
+        env:
+          ANSIBLE_GALAXY_TOKEN: '${{ secrets.GALAXY_API_KEY_DEV }}'
+        run: |
+          ansible-galaxy collection publish \
+            linuxfabrik-lfops-${{ env.TAG1 }}.tar.gz \
+            --server https://galaxy-dev.ansible.com \
+            --api-key "$ANSIBLE_GALAXY_TOKEN"
+
+      - name: 'Build Execution Environment'
+        run: |
+          ansible-builder build \
+            --tag 'ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee:${{ env.TAG1 }}' \
+            -vvv
+
+      - name: 'Re-tag the image'
+        run: |
+          podman tag \
+            'ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee:${{ env.TAG1 }}' \
+            'ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee:${{ env.TAG2 }}'
+
+      - name: 'Push to GitHub Container Registry'
+        id: 'push-to-ghcr'
+        uses: 'redhat-actions/push-to-registry@v2'
+        with:
+          registry: 'ghcr.io'
+          image: '${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee'
+          tags: '${{ env.TAG1 }} ${{ env.TAG2 }}'
+
+      - name: 'Show pushed image path'
+        run: 'echo "LFOps Execution Environment published to ${{ steps.push-to-ghcr.outputs.registry-path }}"'

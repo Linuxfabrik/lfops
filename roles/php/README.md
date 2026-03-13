@@ -13,6 +13,8 @@ This role is compatible with the following PHP versions:
 * 8.1
 * 8.2
 * 8.3
+* 8.4
+* 8.5
 
 Rules of thumb:
 
@@ -31,13 +33,13 @@ This role never exposes to the world that PHP is installed on the server, no mat
 
 ## Tags
 
-| Tag         | What it does                                                                   |
-| ---         | ------------                                                                   |
-| `php`       | <ul><li>Install php php-fpm composer</li><li>Get the list of installed packages</li><li>Ensure PHP modules are absent</li><li>Ensure PHP modules are present</li><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the /etc/php.d/z00-linuxfabrik.ini</li><li>`systemctl {{ php__fpm_service_enabled \| bool \| ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> |
-| `php:fpm` | Only affects PHP-FPM: <ul><li>Remove absent pools from /etc/php-fpm.d</li><li>Deploy the pools to /etc/php-fpm.d/</li></ul> |
-| `php:ini` | <ul><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the `/etc/php.d/z00-linuxfabrik.ini`</li></ul> |
-| `php:state` | Only affects PHP-FPM: <ul><li>`systemctl {{ php__fpm_service_enabled \| bool \| ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> |
-| `php:update` | Updates the PHP Packages and the configuration. Do not forget to update the repo beforehand. |
+| Tag         | What it does                                                                   | Reload / Restart |
+| ---         | ------------                                                                   | ---------------- |
+| `php`       | <ul><li>Install php php-fpm composer</li><li>Get the list of installed packages</li><li>Ensure PHP modules are absent</li><li>Ensure PHP modules are present</li><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the /etc/php.d/z00-linuxfabrik.ini</li><li>`systemctl {{ php__fpm_service_enabled \| bool \| ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> | Restarts php-fpm.service |
+| `php:fpm` | Only affects PHP-FPM: <ul><li>Remove absent pools from /etc/php-fpm.d</li><li>Deploy the pools to /etc/php-fpm.d/</li></ul> | Restarts php-fpm.service |
+| `php:ini` | <ul><li>Get PHP version</li><li>Load default values for `{{ php__installed_version }}`</li><li>Deploy the `/etc/php.d/z00-linuxfabrik.ini`</li></ul> | Restarts php-fpm.service |
+| `php:state` | Only affects PHP-FPM: <ul><li>`systemctl {{ php__fpm_service_enabled \| bool \| ternary("enable", "disable") }} --now php-fpm`</li><li>Remove absent pools from `/etc/php-fpm.d`</li><li>Deploy the pools to `/etc/php-fpm.d/`</li></ul> | - |
+| `php:update` | Updates the PHP Packages and the configuration. Do not forget to update the repo beforehand. | Restarts php-fpm.service |
 
 
 ## Optional Role Variables
@@ -117,27 +119,31 @@ Variables for `php.ini` directives and their default values, defined and support
 
 | Role Variable     | Documentation      | Default Value      |
 | -------------     | -------------      | -------------      |
-| `php__fpm_pools__group_var` / `php__fpm_pools__host_var` | List defining pool configuration. Possible options:<ul><li>`name`: Pool name</li><li>`user`</li><li>`group`</li><li>`raw`</li></ul> | `name: 'www'` `user: 'apache'` `group: 'apache'` |
 | `php__fpm_pool_conf_pm__group_var` / `php__fpm_pool_conf_pm__host_var` | Choose how the process manager will control the number of child processes. | `'dynamic'` |
 | `php__fpm_pool_conf_pm_max_children__group_var` / `php__fpm_pool_conf_pm_max_children__host_var` | The number of child processes to be created when pm is set to 'static' and the maximum number of child processes when pm is set to 'dynamic' or 'ondemand'. | `50` |
 | `php__fpm_pool_conf_pm_max_spare_servers__group_var` / `php__fpm_pool_conf_pm_max_spare_servers__host_var` | The desired maximum number of idle server processes. | `35` |
 | `php__fpm_pool_conf_pm_min_spare_servers__group_var` / `php__fpm_pool_conf_pm_min_spare_servers__host_var` | The desired minimum number of idle server processes. | `5` |
-| `php__fpm_pool_conf_pm_start_servers__group_var` / `php__fpm_pool_conf_pm_start_servers__host_var` | The number of child processes created on startup. | `5` |
+| `php__fpm_pool_conf_pm_start_servers__group_var` / `php__fpm_pool_conf_pm_start_servers__host_var` | The number of child processes created on startup. Must be greater than `php__fpm_pool_conf_pm_min_spare_servers__*_var` but less than `php__fpm_pool_conf_pm_max_spare_servers__*_var`  | `5` |
+| `php__fpm_pool_conf_request_slowlog_timeout__group_var` / `php__fpm_pool_conf_request_slowlog_timeout__host_var` | The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). | `0` |
+| `php__fpm_pool_conf_request_terminate_timeout__group_var` / `php__fpm_pool_conf_request_terminate_timeout__host_var` | The timeout for serving a single request after which the worker process will be killed. This option should be used when the `max_execution_time` ini option does not stop script execution for some reason. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). | `0` |
+| `php__fpm_pools__group_var` / `php__fpm_pools__host_var` | List defining pool configuration. Possible options:<ul><li>`name`: Pool name</li><li>`user`</li><li>`group`</li><li>`raw`</li></ul> | `name: 'www'` `user: 'apache'` `group: 'apache'` |
 
 Example:
 ```yaml
 # optional
+php__fpm_pool_conf_pm__host_var: 'dynamic'
+php__fpm_pool_conf_pm_max_children__host_var: 50
+php__fpm_pool_conf_pm_max_spare_servers__host_var: 35
+php__fpm_pool_conf_pm_min_spare_servers__host_var: 5
+php__fpm_pool_conf_pm_start_servers__host_var: 5
+php__fpm_pool_conf_request_slowlog_timeout__host_var: '10s'
+php__fpm_pool_conf_request_terminate_timeout__host_var: '60s'
 php__fpm_pools__host_var:
   - name: 'librenms'
     user: 'librenms'
     group: 'librenms'
     raw: |-
       env[PATH] = /usr/local/bin:/usr/bin:/bin
-php__fpm_pool_conf_pm__host_var: 'dynamic'
-php__fpm_pool_conf_pm_max_children__host_var: 50
-php__fpm_pool_conf_pm_max_spare_servers__host_var: 35
-php__fpm_pool_conf_pm_min_spare_servers__host_var: 5
-php__fpm_pool_conf_pm_start_servers__host_var: 5
 ```
 
 

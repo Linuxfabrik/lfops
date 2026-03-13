@@ -17,11 +17,11 @@ If you use the [Apache Solr Playbook](https://github.com/Linuxfabrik/lfops/blob/
 
 ## Tags
 
-| Tag                      | What it does                                    |
-| ---                      | ------------                                    |
-| `apache_solr`            | Installs and configures the whole Apache Solr server and deploys `bin/solr.in.sh`, `log4j.xml.j2` and `security.json` |
-| `apache_solr:state`      | Manages the state of `solr.service` |
-| `apache_solr:user`       | Generates hashed passwords and deploys `security.json` |
+| Tag                      | What it does                                    | Reload / Restart |
+| ---                      | ------------                                    | ---------------- |
+| `apache_solr`            | Installs and configures the whole Apache Solr server and deploys `bin/solr.in.sh`, `log4j.xml.j2` and `security.json` | Restarts solr.service |
+| `apache_solr:state`      | Manages the state of `solr.service` | -  |
+| `apache_solr:user`       | Generates hashed passwords and deploys `security.json` | Restarts solr.service |
 
 
 ## Mandatory Role Variables

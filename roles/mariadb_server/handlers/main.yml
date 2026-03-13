@@ -8,7 +8,10 @@
 
 - name: 'mariadb_server: wait for port 3306 (for galera cluster)'
   ansible.builtin.wait_for:
-    host: '127.0.0.1'
+    host: '{{ mariadb_server__cnf_bind_address__combined_var if
+        (mariadb_server__cnf_bind_address__combined_var | length
+          and mariadb_server__cnf_bind_address__combined_var != "0.0.0.0")
+        else "127.0.0.1" }}'
     port: 3306
     delay: 15
     sleep: 5

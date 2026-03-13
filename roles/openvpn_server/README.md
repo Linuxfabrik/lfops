@@ -2,7 +2,7 @@
 
 This role installs and configures [OpenVPN](https://openvpn.net/) as a server. Currently, the only supported configuration is a multi-client server. A corresponding client config will be generated to `/tmp/` on the ansible control node.
 
-This role does not configure OpenVPN logging via `log-append /var/log/openvpn.log`. Instead it configures OpenVPN to use Journald, because there we get log entries including timestamps etc. To inspect the logs, use `journalctl --unit=openvpn-server@server -f` for example.
+This role does not configure OpenVPN logging via `log-append /var/log/openvpn.log`. Instead it configures OpenVPN to use Journald, because there we get log entries including timestamps etc. To inspect the logs, use `journalctl --unit=openvpn-server@server --follow` for example.
 
 
 ## Mandatory Requirements
@@ -19,10 +19,10 @@ This role does not configure OpenVPN logging via `log-append /var/log/openvpn.lo
 
 ## Tags
 
-| Tag                    | What it does                             |
-| ---                    | ------------                             |
-| `openvpn_server`       | Installs and configures OpenVPN          |
-| `openvpn_server:state` | Manages the state of the OpenVPN service |
+| Tag                    | What it does                             | Reload / Restart |
+| ---                    | ------------                             | ---------------- |
+| `openvpn_server`       | Installs and configures OpenVPN          | - |
+| `openvpn_server:state` | Manages the state of the OpenVPN service | - |
 
 
 ## Mandatory Role Variables
@@ -80,6 +80,21 @@ openvpn_server__raw: |-
   plugin /usr/lib64/openvpn/plugins/openvpn-plugin-auth-pam.so "openvpn login USERNAME password PASSWORD pin OTP"
 openvpn_server__service_enabled: true
 ```
+
+
+## Troubleshooting
+
+```
+TASK [linuxfabrik.lfops.openvpn_server : Generate DH Parameters with 2048 bits size]
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: SyntaxError: future feature annotations is not defined
+fatal: [host1]: FAILED! => changed=false
+  module_stderr: |-
+    Traceback (most recent call last):
+    ...
+    SyntaxError: future feature annotations is not defined
+```
+This occurs when running against a host with Python <=3.6, which is not supported in community.crypto >=3.0.0 (see their [CHANGELOG](https://github.com/ansible-collections/community.crypto/blob/main/CHANGELOG.md#v300)).
+As a workaround the collection can be downgraded: `ansible-galaxy collection install --force 'community.crypto:<3.0.0'`
 
 
 ## License

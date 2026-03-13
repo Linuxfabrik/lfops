@@ -5,9 +5,9 @@ This role deploys the [Sury repository](https://deb.sury.org/).
 
 ## Tags
 
-| Tag         | What it does                |
-| ---         | ------------                |
-| `repo_sury` | Deploys the Sury Repository |
+| Tag         | What it does                | Reload / Restart |
+| ---         | ------------                | ---------------- |
+| `repo_sury` | Deploys the Sury Repository | - |
 
 ## Mandatory Role Variables
 

@@ -28,6 +28,7 @@ icingaweb2__apache_httpd__vhosts__dependent_var:
     conf_directory_index: 'index.php'
     conf_document_root: '/usr/share/icingaweb2/public'
     conf_options: 'FollowSymLinks'
+    conf_timeout: 30  # the default of 10 seconds are too short to generate an Icinga Director Basket
     raw: |-
       <LocationMatch "^/+$">
           Redirect / /icingaweb2

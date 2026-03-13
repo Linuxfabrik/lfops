@@ -204,15 +204,15 @@ Imagine that you want to deploy an updated MariaDB dump script to all hosts that
 
 ## LFOps-wide Variables
 
-There are a handful of variables that are used across roles. It is still possible to overwrite the LFOps-wide variable with the role-specific one.
+It would sometimes be convenient to allow the user to set a default for multiple roles. However, since we strictly prefix all our variables with the role name, this is not that straightforward. Instead, we provide a handful of variables prefixed with `lfops__` that act as the default for multiple roles. It is, of course, still possible to overwrite the LFOps-wide variable with the role-specific one (for example, the value of `icingaweb2_module_director__monitoring_plugins_version` takes precedence over that of `lfops__monitoring_plugins_version`).
 
 ### `lfops__monitoring_plugins_version`
 
-This variable is used as the default whenever the version of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) repo is required. Have a look at the [monitoring_plugins Role README](https://github.com/Linuxfabrik/lfops/blob/main/roles/monitoring_plugins/README.md) for details.
+This variable is used as the default whenever the version of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) is required. For example, it is used to deploy the correct version of the Director Basket and Grafana Dashboards in the `icingaweb2_module_director` and `icingaweb2_module_grafana` roles, respectively. For documentation of the value, have a look at the  `monitoring_plugins__version` variable in the [monitoring_plugins role README](https://github.com/Linuxfabrik/lfops/blob/main/roles/monitoring_plugins/README.md).
 
 Example:
 ```yaml
-lfops__monitoring_plugins_version: 'main'
+lfops__monitoring_plugins_version: 'dev'
 ```
 
 ### `lfops__remove_rpmnew_rpmsave`
@@ -243,22 +243,22 @@ lfops__repo_mirror_url: 'https://mirror.example.com'
 
 ## Tips, Tricks & Troubleshooting
 
-### ansible_become: true
+Q: **ansible_become: true**
 
-Don't use `become: true` or `ansible_become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars ONLY (not in `all.yml` - `localhost` must not be part of the group. Otherwise you'll get errors like `sudo: a password is required`).
+A: Don't use `become: true` or `ansible_become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars ONLY (not in `all.yml` - `localhost` must not be part of the group. Otherwise you'll get errors like `sudo: a password is required`).
 
 
-### Finding all groups a host belongs to
+Q: **Finding all groups a host belongs to**
 
-When running playbooks against a host it might be useful to know all the group memberships.
+A: When running playbooks against a host it might be useful to know all the group memberships.
 
 ```bash
 ansible --inventory path/to/inventory myhost -m debug -a "var=group_names"
 ```
 
-### Connecting as an unprivileged user, correct sudoers config
+Q: **Connecting as an unprivileged user, correct sudoers config**
 
-When connecting as an unprivileged user, you must make sure that the user is allowed to change to all other user accounts, not just root.
+A: When connecting as an unprivileged user, you must make sure that the user is allowed to change to all other user accounts, not just root.
 Otherwise it will be impossible to run tasks as other unprivileged users, for example `become_user: 'apache'`.
 This means that the Runas_Spec in sudoers must be `(ALL)`, for example:
 
@@ -270,11 +270,48 @@ or
 ansible-user ALL=(ALL) ALL
 ```
 
-### Finding out which playbooks ran against a host
 
-All playbooks log every run to `/var/log/linuxfabrik-lfops.log` on the host. For example:
+Q: **Finding out which playbooks ran against a host**
+
+A: All playbooks log every run to `/var/log/linuxfabrik-lfops.log` on the host. For example:
 
 ```
 2024-05-23 11:15:26.604794 - Playbook linuxfabrik.lfops.apps: START
 2024-05-23 11:15:32.877064 - Playbook linuxfabrik.lfops.apps: END
 ```
+
+
+Q: **Debian: fatal: [myhost]: FAILED! => changed=false - msg: No package matching '...' is available**
+
+A: Run `apt update` before running the specific role.
+
+
+Q: **[WARNING]: Collection x.y does not support Ansible version 2.16.xx**
+
+A: Install a newer Ansible version, and update all collections from Ansible Galaxy. For example:
+
+```bash
+python3 -m pip uninstall ansible-core ansible-lint ansible-compat ansible-navigator
+```
+
+```bash
+python3 -m venv ~/venvs/ansible-2.18
+source ~/venvs/ansible-2.18/bin/activate
+pip install --upgrade pip
+python3 -m pip install ansible-core~=2.18.0
+```
+
+```bash
+ansible-galaxy collection list
+ansible-galaxy collection list \
+  | awk '($1 !~ /^#|^Collection|^-+$/ && NF) {print $1}' \
+  | sort -u \
+  | xargs -n1 -r ansible-galaxy collection install --upgrade
+```
+
+
+Q: TASK \[linuxfabrik.lfops.kvm_host : activate network]  
+**fatal: \[myhost]: FAILED! => changed=false
+msg: 'error creating bridge interface long_bridge_name: Numerical result out of range'
+
+A: On Linux an interface name must not exceed 15 characters. Choose a shorter bridge name.

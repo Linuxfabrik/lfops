@@ -1,8 +1,0 @@
-# vi: ft=yaml
-
-skip_list:
-  - 'key-order[task]'
-  - 'name'
-  - 'yaml'
-
-var_naming_pattern: '^([a-z][a-z0-9_]*)?__[a-z0-9_]*$'

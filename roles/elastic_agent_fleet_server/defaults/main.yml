@@ -1,0 +1,5 @@
+elastic_agent_fleet_server__insecure: false
+elastic_agent_fleet_server__policy_id: 'fleet-server-policy'
+elastic_agent_fleet_server__service_enabled: true
+elastic_agent_fleet_server__service_state: 'started'
+elastic_agent_fleet_server__url: 'https://{{ ansible_facts["nodename"] }}:8220'

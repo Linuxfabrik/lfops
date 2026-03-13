@@ -1,0 +1,39 @@
+elasticsearch__action_auto_create_index__combined_var: '{{
+    elasticsearch__action_auto_create_index__host_var if (elasticsearch__action_auto_create_index__host_var | string | length) else
+    elasticsearch__action_auto_create_index__group_var if (elasticsearch__action_auto_create_index__group_var | string | length) else
+    elasticsearch__action_auto_create_index__dependent_var if (elasticsearch__action_auto_create_index__dependent_var | string | length) else
+    elasticsearch__action_auto_create_index__role_var
+  }}'
+elasticsearch__action_auto_create_index__dependent_var: ''
+elasticsearch__action_auto_create_index__group_var: ''
+elasticsearch__action_auto_create_index__host_var: ''
+elasticsearch__action_auto_create_index__role_var: true
+elasticsearch__cluster_name__combined_var: '{{
+    elasticsearch__cluster_name__host_var if (elasticsearch__cluster_name__host_var | string | length) else
+    elasticsearch__cluster_name__group_var if (elasticsearch__cluster_name__group_var | string | length) else
+    elasticsearch__cluster_name__dependent_var if (elasticsearch__cluster_name__dependent_var | string | length) else
+    elasticsearch__cluster_name__role_var
+  }}'
+elasticsearch__cluster_name__dependent_var: ''
+elasticsearch__cluster_name__group_var: ''
+elasticsearch__cluster_name__host_var: ''
+elasticsearch__cluster_name__role_var: 'my-application'
+elasticsearch__cluster_routing_allocation_awareness_attributes: []
+elasticsearch__cluster_routing_allocation_awareness_force: {}
+elasticsearch__cluster_routing_allocation_disk_watermark_low: 0.85
+elasticsearch__cluster_routing_allocation_disk_watermark_high: 0.9
+elasticsearch__network_host: '_local_'
+elasticsearch__node_attributes: {}
+elasticsearch__node_name: '{{ ansible_facts["nodename"] }}'
+elasticsearch__path_data: '/var/lib/elasticsearch'
+elasticsearch__path_repos: []
+elasticsearch__log4j2_retention_days: 3
+elasticsearch__service_enabled: true
+elasticsearch__service_state: 'started'
+
+# -----------------------------------------------------------------------------
+
+elasticsearch__kernel_settings__sysctl__dependent_var:
+  # https://www.elastic.co/docs/deploy-manage/deploy/self-managed/setup-configuration-memory#swappiness
+  - name: 'vm.swappiness'
+    value: 1

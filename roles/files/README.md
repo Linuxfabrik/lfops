@@ -10,9 +10,9 @@ This role manages file system entities such as files, directories and symlinks.
 
 ## Tags
 
-| Tag     | What it does                             |
-| ---     | ------------                             |
-| `files` | Manages files, directories and symlinks. |
+| Tag     | What it does                             | Reload / Restart |
+| ---     | ------------                             | ---------------- |
+| `files` | Manages files, directories and symlinks. | - |
 
 
 ## Optional Role Variables

@@ -8,6 +8,8 @@
   delegate_to: '{{ kvm_vm__host }}'
   tags:
     - 'kvm_vm'
+    - 'kvm_vm:additional_disks'
+    - 'kvm_vm:resize_disks'
 
 
 - block:
@@ -49,6 +51,8 @@
     args:
       creates: '{{ kvm_vm__pool_info_result["pools"][item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ item["name"] ~ ".qcow2" }}'
     loop: '{{ kvm_vm__additional_disks }}'
+    tags:
+      - 'kvm_vm:additional_disks'
 
 
   # cloud-init
@@ -206,6 +210,9 @@
       {% for item in kvm_vm__network_connections %}
       --network {{ item["network_type"] | d("network") }}={{ item["network_name"] | d("default") }},model=virtio,mac={{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=inventory_hostname)) }}
       {% endfor %}
+      {% if kvm_vm__machine is defined and kvm_vm__machine | length %}
+      --machine '{{ kvm_vm__machine }}'
+      {% endif %}
       --noautoconsole
       --nographics
       --noreboot
@@ -238,6 +245,67 @@
     - 'kvm_vm:state'
 
 
+# resize disks
+- block:
+
+  - name: >-
+      boot disk: qemu-img info --force-share --output=json
+      {{ __kvm_vm__boot_disk_path | quote }}
+    ansible.builtin.command:
+      cmd: >-
+        qemu-img info --force-share --output=json
+        {{ __kvm_vm__boot_disk_path | quote }}
+    register: 'kvm_vm__boot_disk_info_result'
+    changed_when: false
+    check_mode: false
+
+  - name: >-
+      boot disk: qemu-img resize
+      {{ __kvm_vm__boot_disk_path | quote }}
+      {{ kvm_vm__boot_disk_size }}
+    ansible.builtin.command:
+      cmd: >-
+        qemu-img resize
+        {{ __kvm_vm__boot_disk_path | quote }}
+        {{ kvm_vm__boot_disk_size }}
+    when:
+      - 'kvm_vm__state != "running"'
+      - '(kvm_vm__boot_disk_info_result["stdout"] | from_json)["virtual-size"] < kvm_vm__boot_disk_size | ansible.builtin.human_to_bytes'
+
+  - name: >-
+      boot disk: virsh blockresize {{ kvm_vm__name }}
+      {{ __kvm_vm__boot_disk_path | quote }}
+      {{ kvm_vm__boot_disk_size }}
+    ansible.builtin.command:
+      cmd: >-
+        virsh blockresize {{ kvm_vm__name }}
+        {{ __kvm_vm__boot_disk_path | quote }}
+        {{ kvm_vm__boot_disk_size }}
+    when:
+      - 'kvm_vm__state == "running"'
+      - '(kvm_vm__boot_disk_info_result["stdout"] | from_json)["virtual-size"] < kvm_vm__boot_disk_size | ansible.builtin.human_to_bytes'
+
+  - name: 'resize additional disks'
+    ansible.builtin.include_tasks: 'resize-additional-disk.yml'
+    loop: '{{ kvm_vm__additional_disks }}'
+    loop_control:
+      loop_var: 'kvm_vm__resize_disk_item'
+      label: '{{ kvm_vm__resize_disk_item["name"] }}'
+
+  # block
+  vars:
+    __kvm_vm__boot_disk_path: >-
+      {{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/"
+          ~ (kvm_vm__existing_boot_disk
+              if (kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length)
+              else kvm_vm__name ~ "-boot.qcow2") }}
+  when: 'kvm_vm__state != "absent"'
+  delegate_to: '{{ kvm_vm__host }}'
+  tags:
+    - 'kvm_vm'
+    - 'kvm_vm:resize_disks'
+
+
 # cleanup
 - block:
 
@@ -252,9 +320,11 @@
       - 'kvm_vm__destroy_result["failed"]'
       - 'not ("not found" in kvm_vm__destroy_result["msg"] or "domain is not running" in kvm_vm__destroy_result["msg"])'
 
-  - name: 'virsh undefine --domain {{ kvm_vm__name }}'
+  - name: 'virsh undefine --domain {{ kvm_vm__name }} --nvram'
     community.libvirt.virt:
       command: 'undefine'
+      flags:
+        - 'nvram'
       name: '{{ kvm_vm__name }}'
     register: 'kvm_vm__undefine_result'
     # ignore errors if vm is already undefined
@@ -271,7 +341,7 @@
 
   - name: 'additional disks: rm -f ...'
     ansible.builtin.file:
-      path: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-" }}{{ item["name"] }}".qcow2"'
+      path: '{{ kvm_vm__pool_info_result["pools"][item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" }}{{ item["name"] }}.qcow2'
       state: 'absent'
     loop: '{{ kvm_vm__additional_disks }}'
 

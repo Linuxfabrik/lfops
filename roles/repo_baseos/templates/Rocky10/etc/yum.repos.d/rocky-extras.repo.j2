@@ -1,0 +1,116 @@
+# {{ ansible_managed }}
+# 2026010801
+
+# rocky-extras.repo
+#
+# The mirrorlist system uses the connecting IP address of the client and the
+# update status of each mirror to pick current mirrors that are geographically
+# close to the client.  You should use this for Rocky updates unless you are
+# manually picking other mirrors.
+#
+# If the mirrorlist does not work for you, you can try the commented out
+# baseurl line instead.
+
+[extras]
+name=Rocky Linux $releasever - Extras
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/extras/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=extras-$releasever$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/extras/$basearch/os/
+{% endif %}
+gpgcheck=1
+enabled=1
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[extras-debuginfo]
+name=Rocky Linux $releasever - Extras Debug
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/extras/x86_64/debug/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=extras-$releasever-debug$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/extras/$basearch/debug/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[extras-source]
+name=Rocky Linux $releasever - Extras Source
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/extras/source/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=extras-$releasever-source$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/extras/source/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[plus]
+name=Rocky Linux $releasever - Plus
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/plus/x86_64/os/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=plus-$releasever$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/plus/$basearch/os/
+{% endif %}
+gpgcheck=1
+enabled=0
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[plus-debuginfo]
+name=Rocky Linux $releasever - Plus - Debug
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/plus/x86_64/debug/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=plus-$releasever-debug$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/plus/$basearch/debug/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}
+
+[plus-source]
+name=Rocky Linux $releasever - Plus - Source
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+baseurl={{ repo_baseos__mirror_url }}/rocky/10/plus/source/tree/
+{% else %}
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=source&repo=plus-$releasever-source$rltype
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/plus/source/tree/
+{% endif %}
+gpgcheck=1
+enabled=0
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
+{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+username={{ repo_baseos__basic_auth_login["username"] }}
+password={{ repo_baseos__basic_auth_login["password"] }}
+{% endif %}

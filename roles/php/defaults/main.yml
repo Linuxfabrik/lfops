@@ -68,6 +68,28 @@ php__fpm_pool_conf_pm_start_servers__combined_var: '{{
     php__fpm_pool_conf_pm_start_servers__role_var
   }}'
 
+php__fpm_pool_conf_request_slowlog_timeout__dependent_var: ''
+php__fpm_pool_conf_request_slowlog_timeout__group_var: ''
+php__fpm_pool_conf_request_slowlog_timeout__host_var: ''
+php__fpm_pool_conf_request_slowlog_timeout__role_var: 0
+php__fpm_pool_conf_request_slowlog_timeout__combined_var: '{{
+    php__fpm_pool_conf_request_slowlog_timeout__host_var if (php__fpm_pool_conf_request_slowlog_timeout__host_var | string | length) else
+    php__fpm_pool_conf_request_slowlog_timeout__group_var if (php__fpm_pool_conf_request_slowlog_timeout__group_var | string | length) else
+    php__fpm_pool_conf_request_slowlog_timeout__dependent_var if (php__fpm_pool_conf_request_slowlog_timeout__dependent_var | string | length) else
+    php__fpm_pool_conf_request_slowlog_timeout__role_var
+  }}'
+
+php__fpm_pool_conf_request_terminate_timeout__dependent_var: ''
+php__fpm_pool_conf_request_terminate_timeout__group_var: ''
+php__fpm_pool_conf_request_terminate_timeout__host_var: ''
+php__fpm_pool_conf_request_terminate_timeout__role_var: 0
+php__fpm_pool_conf_request_terminate_timeout__combined_var: '{{
+    php__fpm_pool_conf_request_terminate_timeout__host_var if (php__fpm_pool_conf_request_terminate_timeout__host_var | string | length) else
+    php__fpm_pool_conf_request_terminate_timeout__group_var if (php__fpm_pool_conf_request_terminate_timeout__group_var | string | length) else
+    php__fpm_pool_conf_request_terminate_timeout__dependent_var if (php__fpm_pool_conf_request_terminate_timeout__dependent_var | string | length) else
+    php__fpm_pool_conf_request_terminate_timeout__role_var
+  }}'
+
 php__fpm_service_enabled: true
 
 php__ini_date_timezone__dependent_var: ''

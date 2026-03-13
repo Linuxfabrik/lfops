@@ -5,6 +5,7 @@ This role installs [Moodle](https://moodle.org/), an open source Learning Manage
 This role supports the following Moodle versions:
 
 * v4.1 LTS
+* v4.5 LTS
 
 Setting the version manually:
 
@@ -13,7 +14,7 @@ Setting the version manually:
 
 ## Mandatory Requirements
 
-* Attention: Moodle v4.1 has very specific version requirements regarding PHP and Redis. See https://moodledev.io/general/development/policies/php.
+* Attention: Moodle has very specific version requirements regarding PHP and Redis. See https://moodledev.io/general/development/policies/php.
 * Install a web server (for example Apache httpd), and configure a virtual host for Moodle. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
 * Install PHP v8.1. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
 * Install Redis v7.2. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) role.
@@ -23,13 +24,13 @@ If you use the ["Setup Moodle" Playbook](https://github.com/Linuxfabrik/lfops/bl
 
 ## Tags
 
-| Tag         | What it does                 |
-| ---         | ------------                 |
-| `moodle`      | Search for the most recent LTS version on GitHub, download tar.gz locally, put it on the host, run the Moodle installer, fix file permissions, set up Moodle's cron job, enable/disable it, and set up Moosh. |
-| `moodle:cron` | Set up Moodle's cron job. |
-| `moodle:moosh` | Set up Moosh. |
-| `moodle:moosh_run` | Runs user-defined Moosh commands. Does not run automatically, manually call with `--tags moodle:moosh_run`. |
-| `moodle:state` | Enable/disable Moodle's cron job. |
+| Tag         | What it does                 | Reload / Restart |
+| ---         | ------------                 | ---------------- |
+| `moodle`      | Download tar.gz locally, put it on the host, run the Moodle installer, fix file permissions, set up Moodle's cron job, enable/disable it, and set up Moosh. | - |
+| `moodle:cron` | Set up Moodle's cron job. | - |
+| `moodle:moosh` | Set up Moosh. | - |
+| `moodle:moosh_run` | Runs user-defined Moosh commands. Does not run automatically, manually call with `--tags moodle:moosh_run`. | - |
+| `moodle:state` | Enable/disable Moodle's cron job. | - |
 
 
 ## Mandatory Role Variables
@@ -39,6 +40,7 @@ If you use the ["Setup Moodle" Playbook](https://github.com/Linuxfabrik/lfops/bl
 | `moodle__admin` | Dictionary. The admin account to create. Subkeys: <ul><li>`username`: Mandatory, string. Username for the Moodle admin account.</li><li>`password`: Mandatory, string. Password for the Moodle admin account.</li><li>`email`: Email address for the Moodle admin account. Visible for everyone.</li></ul> |
 | `moodle__database_login` | Dictionary. The user account for accessing the Moodle SQL database. Currently, only MySQL/MariaDB is supported. Subkeys: <ul><li>`username`: Mandatory, string. Username for the Moodle database account.</li><li>`password`: Mandatory, string. Password for the Moodle database account.</li></ul> |
 | `moodle__url` | String. The public facing Moodle URL, including `http://` or `https://` (the latter if you are behind a TLS-terminating Reverse Proxy). |
+| `moodle__version` | The major and minor of the Moodle version to install. The patch version is automatically gathered, but can be overwritten using `--extra-vars="moodle__github_version=v4.1.12"`. Recommended to set this to a LTS version, see https://endoflife.date/moodle. |
 
 Example:
 ```yaml
@@ -51,6 +53,7 @@ moodle__database_login:
   username: 'moodle'
   password: 'linuxfabrik'
 moodle__url: 'https://learning.example.com'
+moodle__version: '4.5'
 ```
 
 

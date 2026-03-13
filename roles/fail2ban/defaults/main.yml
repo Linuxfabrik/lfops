@@ -3,24 +3,11 @@ fail2ban__jail_default_action: |-
 fail2ban__jail_default_banaction: 'iptables-multiport'
 fail2ban__jail_default_ignoreip: []
 fail2ban__jail_default_rocketchat_hook: ''
-fail2ban__service_enabled: true
-
-
 fail2ban__jail_portscan_allowed_ports:
   - 22
+fail2ban__jail_portscan_bantime: '8h'
 fail2ban__jail_portscan_server_ips: '{{ ansible_facts["all_ipv4_addresses"] }}'
-
-
-fail2ban__jails__role_var:
-  - filename: 'z10-portscan'
-    state: 'present'
-    template: 'portscan'
-  - filename: 'z10-sshd'
-    state: 'present'
-    template: 'sshd'
-fail2ban__jails__dependent_var: []
-fail2ban__jails__group_var: []
-fail2ban__jails__host_var: []
+fail2ban__jail_sshd_bantime: '7d'
 fail2ban__jails__combined_var: '{{ (
       fail2ban__jails__role_var +
       fail2ban__jails__dependent_var +
@@ -28,6 +15,17 @@ fail2ban__jails__combined_var: '{{ (
       fail2ban__jails__host_var
     ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
   }}'
+fail2ban__jails__dependent_var: []
+fail2ban__jails__group_var: []
+fail2ban__jails__host_var: []
+fail2ban__jails__role_var:
+  - filename: 'z10-portscan'
+    state: 'present'
+    template: 'portscan'
+  - filename: 'z10-sshd'
+    state: 'present'
+    template: 'sshd'
+fail2ban__service_enabled: true
 
 # -----------------------------------------------------------------------------
 

@@ -16,9 +16,9 @@ You need a (free) Maxmind license key.
 
 ## Tags
 
-| Tag                   | What it does                                 |
-| ---                   | ------------                                 |
-| `maxmind_geoip`       | Deploy `/usr/local/sbin/update-maxmind`      |
+| Tag                   | What it does                                 | Reload / Restart |
+| ---                   | ------------                                 | ---------------- |
+| `maxmind_geoip`       | Deploy `/usr/local/sbin/update-maxmind`      | - |
 
 
 ## Mandatory Role Variables

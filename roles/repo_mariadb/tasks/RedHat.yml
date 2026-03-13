@@ -12,7 +12,7 @@
 
   - name: 'deploy the repo file (mirror: {{ repo_mariadb__mirror_url | default("") }})'
     ansible.builtin.template:
-      src: '{{ repo_mariadb__repo_file }}'
+      src: 'etc/yum.repos.d/RedHat-MariaDB.repo.j2'
       dest: '/etc/yum.repos.d/MariaDB.repo'
       owner: 'root'
       group: 'root'
@@ -25,16 +25,20 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/MariaDB.repo'
 
-  - ansible.builtin.include_tasks: 'download-gpg-key.yml'
-    loop:
-      - url: 'https://downloads.mariadb.com/MariaDB/MariaDB-Server-GPG-KEY'
-        dest: '/etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY'
-      - url: 'https://downloads.mariadb.com/MaxScale/MariaDB-MaxScale-GPG-KEY'
-        dest: '/etc/pki/rpm-gpg/MariaDB-MaxScale-GPG-KEY'
-      - url: 'https://downloads.mariadb.com/Tools/MariaDB-Enterprise-GPG-KEY'
-        dest: '/etc/pki/rpm-gpg/MariaDB-Enterprise-GPG-KEY'
-    loop_control:
-      loop_var: 'gpg_key'
+  - name: 'curl https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB --output /tmp/ansible.MariaDB-Server-GPG-KEY'
+    ansible.builtin.get_url:
+      url: 'https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB'
+      dest: '/tmp/ansible.MariaDB-Server-GPG-KEY'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.MariaDB-Server-GPG-KEY to /etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.MariaDB-Server-GPG-KEY'
+      dest: '/etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY'
+      mode: 0o644
 
   - name: 'dnf -y module disable mariadb # prevent the default module stream from being used'
     ansible.builtin.command: 'dnf -y module disable mariadb'

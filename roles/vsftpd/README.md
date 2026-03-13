@@ -5,11 +5,11 @@ This role installs and configures [vsftpd](https://security.appspot.com/vsftpd.h
 
 ## Tags
 
-| Tag                | What it does                                                  |
-| ---                | ------------                                                  |
-| `vsftpd`           | Installs and configures vsftpd                                |
-| `vsftpd:configure` | Configues `/etc/vsftpd/vsftpd.conf` and user-specific configs |
-| `vsftpd:state`     | Manages the state of the `vsftpd.service`                     |
+| Tag                | What it does                                                  | Reload / Restart |
+| ---                | ------------                                                  | ---------------- |
+| `vsftpd`           | Installs and configures vsftpd                                | Restarts vsftpd.service |
+| `vsftpd:configure` | Configues `/etc/vsftpd/vsftpd.conf` and user-specific configs | Restarts vsftpd.service |
+| `vsftpd:state`     | Manages the state of the `vsftpd.service`                     | - |
 
 
 ## Optional Role Variables

@@ -29,10 +29,10 @@ This role does not configure the VM's network interfaces.
 
 ## Tags
 
-| Tag          | What it does                   |
-| ---          | ------------                   |
-| `hetzner_vm` | Creates and manages the server |
-| `hetzner_vm:firewalls` | Manages the provider firewalls of the host |
+| Tag          | What it does                   | Reload / Restart |
+| ---          | ------------                   | ---------------- |
+| `hetzner_vm` | Creates and manages the server | - |
+| `hetzner_vm:firewalls` | Manages the provider firewalls of the host | - |
 
 
 ## Mandatory Role Variables
@@ -80,7 +80,7 @@ hetzner_vm__networks:
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `hetzner_vm__backups` | Choose if Hetzner itself should make backups of the volumes. Note that backups cost an additional 20% of the server price. Volumes are not included in backups. Possible options: `true`, `false`. | `false` |
-| `hetzner_vm__firewall_rules` | List of firewall rules that should be applied to the server. Subkeys:<br> * `direction`: Mandatory, string. Either `in` or `out`.<br> * `port`: Mandatory, int. Port.<br> * `protocol`: Mandatory, string. Either `tcp`, `udp`, `icmp`.<br> * `source_ips`: Mandatory, list. List of allowed CIDR source addresses. | `[]` |
+| `hetzner_vm__firewall_rules` | List of firewall rules that should be applied to the server. Subkeys:<br> * `direction`: Mandatory, string. Either `in` or `out`.<br> * `port`: Mandatory, int or string. Single port or range, in the form of `1024-5000`.<br> * `protocol`: Mandatory, string. Either `tcp`, `udp`, `icmp`.<br> * `source_ips`: Mandatory, list. List of allowed CIDR source addresses. | `[]` |
 | `hetzner_vm__force` | Force the update of the server. This may power off the server. The rescaling process will usually take just a few minutes. Also have a look at `hetzner_vm__upgrade_disk`. | `false` |
 | `hetzner_vm__name` | The name of the server. By default, it uses the Ansible inventory name. | `'{{ inventory_hostname }}'` |
 | `hetzner_vm__ssh_keys` | List of SSH-key names that should be placed on the server. The names have to match the SSH-keys depoisted in Hetzner. | `[]` |
@@ -114,7 +114,11 @@ hetzner_vm__volumes:
 
 ## Known Limitations
 
-Creating a server with only an internal network *and* a fixed IP is currently not possible. See https://github.com/ansible-collections/hetzner.hcloud/issues/172. As a workaround, you need to assign a public IP as well, preferabably `hetzner_vm__enable_public_ipv6: true` as these are free. After running ansible, you can shutdown the VM via the WebGUI, go to Networking and Disable public network.
+It is currently not possible to start a server with only an internal network *and* a fixed IP (see https://github.com/ansible-collections/hetzner.hcloud/issues/172). As a workaround, the server can be created with `hetzner_vm__state: 'stopped'` and then started:
+```bash
+ansible-playbook --inventory=inventory linuxfabrik.lfops.hetzner_vm --extra-vars="hetzner_vm__state='stopped'"
+ansible-playbook --inventory=inventory linuxfabrik.lfops.hetzner_vm --extra-vars="hetzner_vm__state='started'"
+```
 
 
 ## License

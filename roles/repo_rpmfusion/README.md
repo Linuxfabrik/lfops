@@ -12,9 +12,9 @@ If you use the ["Repo RPM Fusion" Playbook](https://github.com/Linuxfabrik/lfops
 
 ## Tags
 
-| Tag                  | What it does                         |
-| ---                  | ------------                         |
-| `repo_rpmfusion`     | Deploys the RPM Fusion Repository    |
+| Tag                  | What it does                         | Reload / Restart |
+| ---                  | ------------                         | ---------------- |
+| `repo_rpmfusion`     | Deploys the RPM Fusion Repository    | - |
 
 
 ## Optional Role Variables

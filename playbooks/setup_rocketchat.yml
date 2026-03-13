@@ -50,13 +50,6 @@
       when:
         - 'not setup_rocketchat__skip_mongodb | default(false)'
 
-    - role: 'linuxfabrik.lfops.python'
-      python__modules__dependent_var: '{{
-          login__python__modules__dependent_var
-        }}'
-      when:
-        - 'not setup_rocketchat__skip_python | d(false)'
-
     - role: 'linuxfabrik.lfops.login'
       login__users__dependent_var: '{{
           rocketchat__login__users__dependent_var
@@ -64,12 +57,7 @@
       when:
         - 'not setup_rocketchat__skip_login | d(false)'
 
-    - role: 'linuxfabrik.lfops.files'
-      files__files__dependent_var: '{{
-          rocketchat__files__files__dependent_var
-        }}'
-      when:
-        - 'not setup_rocketchat__skip_files | d(false)'
+    - role: 'linuxfabrik.lfops.rocketchat'
 
     - role: 'linuxfabrik.lfops.podman_containers'
       podman_containers__containers__dependent_var: '{{
@@ -80,8 +68,6 @@
         }}'
       when:
         - 'not setup_rocketchat__skip_podman_containers | d(false)'
-
-    - role: 'linuxfabrik.lfops.rocketchat'
 
 
   post_tasks:

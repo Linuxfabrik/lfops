@@ -10,9 +10,9 @@ This role deploys the [Icinga Package Repository](https://packages.icinga.com/).
 
 ## Tags
 
-| Tag           | What it does                          |
-| ---           | ------------                          |
-| `repo_icinga` | Deploys the Icinga Package Repository |
+| Tag           | What it does                          | Reload / Restart |
+| ---           | ------------                          | ---------------- |
+| `repo_icinga` | Deploys the Icinga Package Repository | - |
 
 
 ## Optional Role Variables

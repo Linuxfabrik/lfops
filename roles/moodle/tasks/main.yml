@@ -16,14 +16,14 @@
     delegate_to: 'localhost'
     run_once: true
 
-  - name: 'Get the latest v4.1 (LTS) version of moodle'
+  - name: 'Get the latest patch version of moodle v{{ moodle__version }}'
     ansible.builtin.set_fact:
       moodle__github_version: '{{ item["name"] }}'
     loop: '{{ moodle__github_release["json"] }}'
     loop_control:
       label: '{{ item["name"] }}'
     when:
-      - 'item["name"] is search("^v4\.1\.")'
+      - 'item["name"] is search("^v" ~ (moodle__version | ansible.builtin.regex_escape))'
       - 'not moodle__github_version | d()' # stop after the first match
 
   - name: 'check that moodle__github_version is set'
@@ -31,7 +31,7 @@
       that: 'moodle__github_version is defined'
       fail_msg: 'Could not find the latest Moodle version'
 
-  - name: 'moodle__github_version:'
+  - name: 'moodle__github_version'
     ansible.builtin.debug:
       var: 'moodle__github_version'
 

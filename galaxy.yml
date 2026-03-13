@@ -7,8 +7,9 @@ namespace: 'linuxfabrik'
 # The name of the collection. Has the same character restrictions as 'namespace'
 name: 'lfops'
 
-# The version of the collection. Must be compatible with semantic versioning
-version: '2.0.1'
+# The version of the collection. Must be compatible with semantic versioning.
+# Note: "main" is invalid but will be automatically set correctly during the GitHub Actions.
+version: 'main'
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: 'README.md'
@@ -50,14 +51,20 @@ tags:
 # collection label 'namespace.name'. The value is a version range
 # L(specifiers,https://python-semanticversion.readthedocs.io/en/latest/#requirement-specification). Multiple version
 # range specifiers can be set and are separated by ','
+#
+# note: do not forget to update collections in requirements.yml
 dependencies:
-  'ansible.utils': '*'  # note: "*" selects the highest version available
-  'community.crypto': '*'
+  'ansible.posix': '*' # note: "*" selects the highest version available
+  'ansible.utils': '*'
+  'ansible.windows': '*'
+  'community.crypto': '<3.0.0' # we need python 3.6 support to run against rhel8
+  'community.general': '<9.0.0' # we need python 3.6 support to run against rhel8
   'community.grafana': '*'
   'community.libvirt': '*'
   'community.mongodb': '*'
   'community.mysql': '*'
   'community.postgresql': '*'
+  'community.windows': '*'
   'fedora.linux_system_roles': '*'
   'freeipa.ansible_freeipa': '*'
   'hetzner.hcloud': '*'
@@ -82,3 +89,6 @@ issues: 'https://github.com/linuxfabrik/lfops/issues'
 # and '.git' are always filtered
 build_ignore:
   - '.git*'
+  - 'build'
+  - 'context'
+  - 'tools'

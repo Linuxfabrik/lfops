@@ -11,9 +11,9 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
 
 ## Tags
 
-| Tag                   | What it does                                 |
-| ---                   | ------------                                 |
-| `libmaxminddb`        | <ul><li>install gcc httpd-devel</li><li>curl https://github.com/maxmind/libmaxminddb/releases/download/{{ libmaxminddb__version }}/libmaxminddb-{{ libmaxminddb__version }}.tar.gz --output /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz</li><li>copy /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz to the server</li><li>mkdir -p /tmp/libmaxminddb-{{ libmaxminddb__version }}</li><li>tar xfz --strip-components 1 -C /tmp/libmaxminddb-{{ libmaxminddb__version }} /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz</li><li>rm -f /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz</li><li>./configure</li><li>make</li><li>make check</li><li>make install</li><li>Configure Dynamic Linker Run Time Bindings</li><li>ldconfig</li></ul> |
+| Tag                   | What it does                                 | Reload / Restart |
+| ---                   | ------------                                 | ---------------- |
+| `libmaxminddb`        | <ul><li>install gcc httpd-devel</li><li>curl https://github.com/maxmind/libmaxminddb/releases/download/{{ libmaxminddb__version }}/libmaxminddb-{{ libmaxminddb__version }}.tar.gz --output /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz</li><li>copy /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz to the server</li><li>mkdir -p /tmp/libmaxminddb-{{ libmaxminddb__version }}</li><li>tar xfz --strip-components 1 -C /tmp/libmaxminddb-{{ libmaxminddb__version }} /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz</li><li>rm -f /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz</li><li>./configure</li><li>make</li><li>make check</li><li>make install</li><li>Configure Dynamic Linker Run Time Bindings</li><li>ldconfig</li></ul> | - |
 
 
 ## Optional Role Variables

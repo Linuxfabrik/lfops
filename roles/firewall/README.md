@@ -15,18 +15,18 @@ This role configures a firewall on the system. For the currently supported firew
 
 ## Tags
 
-| Tag        | What it does                        |
-| ---        | ------------                        |
-| `firewall` | Configures a firewall on the system |
-| `firewall:deploy_fwb_sh` | Deploys the `/etc/fwb.sh` file for Firewall Builder |
-| `firewall:firewalld` | Manages firewalld |
+| Tag        | What it does                        | Reload / Restart |
+| ---        | ------------                        | ---------------- |
+| `firewall` | Configures a firewall on the system | Stops and masks: <ul><li>firewalld.service</li><li>fwb.service</li><li>iptables.service</li><li>nftables.service</li><li>ufw.service</li></ul> Starts and unmasks the firewall which is defined in `firewall__firewall` |
+| `firewall:deploy_fwb_sh` | Deploys the `/etc/fwb.sh` file for Firewall Builder | Restarts fwb.service |
+| `firewall:firewalld` | Manages firewalld | Reloads firewalld.service |
 
 
 ## Optional Role Variables
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `firewall__firewall`           | Which firewall should be activated and configured. All other firewalls will be disabled. Possible options:<br> * `'None'`<br> * `'firewalld'`<br> * `'fwbuilder'`<br> * `'iptables'`<br> * `'nftables'`<br> * `'ufw'` | `'fwbuilder'` |
+| `firewall__firewall`           | Which firewall should be activated and configured. All other firewalls will be disabled. Possible options:<ul><li>`'None'`</li><li>`'firewalld'`</li><li>`'fwbuilder'`</li><li>`'iptables'`</li><li>`'nftables'`</li><li>`'ufw'`</li></ul>  | `'fwbuilder'` |
 | `firewall__firewalld_ports__group_var` / <br> `firewall__firewalld_ports__host_var` | List of dictionaries defining the FirewallD ports. Subkeys: <ul><li>`port`: Mandatory, string. Port or port range.</li><li>`state`: Optional, string. State of the port. Either `enabled` or `disabled`. Defaults to `enabled.</li></ul> | `[]` |
 | `firewall__firewalld_services__group_var` / <br> `firewall__firewalld_services__host_var` | List of dictionaries defining the FirewallD services. Subkeys: <ul><li>`port`: Mandatory, string. Name of the service.</li><li>`state`: Optional, string. State of the service. Either `enabled` or `disabled`. Defaults to `enabled.</li></ul> | `[]` |
 | `firewall__fwbuilder_fw_file`  | The name of the Firewall Builder file which will be created when compiling the firewall in Firewall Builder. Needed if ``firewall__fwbuilder_repo_url`` is used and if the Firewall name within Firewall Builder differs from ``{{ inventory_hostname }}`` | `{{ inventory_hostname }}` |

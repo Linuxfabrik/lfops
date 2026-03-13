@@ -6,6 +6,12 @@
         - 'influxdb'
       state: 'present'
 
+  tags:
+    - 'influxdb'
+
+
+- block:
+
   - name: 'make sure the certificate file exists'
     ansible.builtin.file:
       path: '{{ influxdb__conf_https["certificate_path"] }}'
@@ -39,9 +45,9 @@
   - name: 'Run all handlers immediately so we can create user and databases later on'
     ansible.builtin.meta: 'flush_handlers'
 
-
   tags:
     - 'influxdb'
+    - 'influxdb:configure'
 
 
 - block:

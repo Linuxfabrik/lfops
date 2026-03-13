@@ -1,0 +1,3 @@
+__selinux__module_compilation_packages:
+  - 'make'
+  - 'selinux-policy-devel'

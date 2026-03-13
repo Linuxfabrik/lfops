@@ -13,13 +13,17 @@
     "full_if_older_than": "{{ duplicity__backup_full_if_older_than }}",
     "loglevel": "{{ duplicity__loglevel | d('notice') }}",
     "logdir": "{{ duplicity__logdir | d('/var/log/duplicity') }}",
-    "backend": "{{ duplicity__backup_backend | d('swift') }}",
+    "backend": "{{ duplicity__backup_backend }}",
     "env": {
+{% if duplicity__backup_backend == "swift"  %}
         "SWIFT_AUTHURL": "{{ duplicity__swift_authurl }}",
         "SWIFT_USERNAME": "{{ duplicity__swift_login["username"] }}",
-    "SWIFT_PASSWORD": "{{ duplicity__swift_login["password"] }}",
-    "SWIFT_AUTHVERSION": "{{ duplicity__swift_authversion }}",
-    "SWIFT_TENANTNAME": "{{ duplicity__swift_tenantname }}",
-    "PASSPHRASE": ""
+        "SWIFT_PASSWORD": "{{ duplicity__swift_login["password"] }}",
+        "SWIFT_AUTHVERSION": "{{ duplicity__swift_authversion }}",
+        "SWIFT_TENANTNAME": "{{ duplicity__swift_tenantname }}",
+{% elif duplicity__backup_backend == "sftp" %}
+        "FTP_PASSWORD": "{{ duplicity__sftp_password }}",
+{% endif %}
+        "PASSPHRASE": ""
     }
 }

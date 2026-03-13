@@ -1,0 +1,196 @@
+- ansible.builtin.import_tasks: 'info.yml'
+  tags:
+    - 'never'
+    - 'lvm:info'
+
+
+- block:
+
+  - name: 'Combined volume groups'
+    ansible.builtin.debug:
+      var: 'lvm__vgs__combined_var'
+
+  - name: 'Remove volume groups'
+    community.general.lvg:
+      vg: '{{ item["name"] }}'
+      state: 'absent'
+      force: '{{ item["force"] | d(false) }}'
+    loop: '{{ lvm__vgs__combined_var }}'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+
+  - name: 'growpart ...'
+    ansible.builtin.command:
+      # we need the `[p]` inside the regex to correctly match `/dev/nvme0n1p1`
+      cmd: 'growpart {{ "--dry-run" if ansible_check_mode else "" }} {{ item[1] | ansible.builtin.regex_replace("[p]?[0-9]+$", "") }} {{ item[1] | ansible.builtin.regex_replace(".*[p]?([0-9]+)$", "\1") }}'
+    # always run, since growpart supports `--dry-run`
+    check_mode: false
+    loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs") }}'
+    # subelements converts
+    #   - name: 'rl'
+    #     pvs:
+    #       - '/dev/vda'
+    #       - '/dev/vdX'
+    # to:
+    #   - - name: 'rl'
+    #       pvs:
+    #         - '/dev/vda'
+    #         - '/dev/vdX'
+    #     - '/dev/vda'
+    #
+    #   - - name: 'rl'
+    #       pvs:
+    #         - '/dev/vda'
+    #         - '/dev/vdX'
+    #     - '/dev/vdX'
+    loop_control:
+      label: '{{ item[1] }}'
+    when:
+      - 'item[0]["growpart"] | d(false)'
+      - 'item[0]["state"] | d("present") != "absent"'
+      # check that it is a partition and not the whole disk
+      # NVMe partitions require 'p' prefix (/dev/nvme0n1p1), standard partitions just end with number (/dev/vda3)
+      - '(item[1] is ansible.builtin.regex("nvme") and item[1] is ansible.builtin.regex("p[0-9]+$")) or
+         (item[1] is not ansible.builtin.regex("nvme") and item[1] is ansible.builtin.regex("[0-9]+$"))'
+    register: '__lvm__growpart_result'
+    changed_when: '__lvm__growpart_result["stdout"] | ansible.builtin.regex_search("^CHANGED:", multiline=true)'
+    failed_when:
+      - '__lvm__growpart_result["rc"] != 0'
+      - 'not __lvm__growpart_result["stdout"] | ansible.builtin.regex_search("^NOCHANGE:", multiline=true)'
+
+  - name: 'pvcreate / pvresize {{ item[1] }}'
+    # we copied the upstream https://github.com/ansible-collections/community.general/blob/28b16eab66c56e69794fbf8fb3b7bd4486f7505b/plugins/modules/lvm_pv.py because it is only available in community.general collection version 12.2.0
+    # we have to us an older version because we still need to support rhel8
+    linuxfabrik.lfops.lvm_pv:
+      device: '{{ item[1] }}'
+      state: 'present'
+      resize: true
+    loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs") }}'
+    loop_control:
+      label: '{{ item[1] }}'
+    when:
+      - 'item[0]["state"] | d("present") != "absent"'
+
+  - name: 'vgcreate / vgextend {{ item["name"] }}'
+    community.general.lvg:
+      vg: '{{ item["name"] }}'
+      pvs: '{{ item["pvs"] }}'
+      state: 'present'
+      pesize: '{{ item["pesize"] | d(4) }}'
+    loop: '{{ lvm__vgs__combined_var }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  when: 'lvm__vgs__combined_var | length'
+  tags:
+    - 'lvm'
+    - 'lvm:vg'
+
+
+- block:
+
+  - name: 'Combined logical volumes:'
+    ansible.builtin.debug:
+      var: 'lvm__lvs__combined_var'
+
+  - name: 'Remove logical volumes'
+    community.general.lvol:
+      vg: '{{ item["vg"] }}'
+      lv: '{{ item["name"] }}'
+      state: 'absent'
+      force: '{{ item["force"] | d(false) }}'
+    loop: '{{ lvm__lvs__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+
+  - name: 'Validate size does not start with + or -'
+    ansible.builtin.assert:
+      that:
+        - 'not item["size"] | string | ansible.builtin.regex_search("^[+-]")'
+      fail_msg: 'size must be an absolute value, not relative (+ or -): {{ item["size"] }}'
+      quiet: true
+    loop: '{{ lvm__lvs__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}: {{ item["size"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  - name: 'lvcreate / lvextend {{ item["name"] }}'
+    community.general.lvol:
+      vg: '{{ item["vg"] }}'
+      lv: '{{ item["name"] }}'
+      size: '{{ item["size"] }}'
+      state: 'present'
+      resizefs: '{{ item["resizefs"] | d(true) }}'
+      shrink: '{{ item["shrink"] | d(false) }}'
+    loop: '{{ lvm__lvs__combined_var }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  when: 'lvm__lvs__combined_var | length'
+  tags:
+    - 'lvm'
+    - 'lvm:lv'
+
+
+- block:
+
+  - name: 'mkfs --type {{ item["fstype"] | d("xfs") }} /dev/{{ item["vg"] }}/{{ item["name"] }}'
+    community.general.filesystem:
+      dev: '/dev/{{ item["vg"] }}/{{ item["name"] }}'
+      fstype: '{{ item["fstype"] | d("xfs") }}'
+      resizefs: '{{ item["resizefs"] | d(true) }}'
+    loop: '{{ lvm__lvs__combined_var }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  when: 'lvm__lvs__combined_var | length'
+  tags:
+    - 'lvm'
+    - 'lvm:filesystem'
+
+
+- block:
+
+  - name: 'mkdir --parents {{ item["mount_path"] }}'
+    ansible.builtin.file:
+      path: '{{ item["mount_path"] }}'
+      state: 'directory'
+      owner: '{{ item["mount_owner"] | d("root") }}'
+      group: '{{ item["mount_group"] | d("root") }}'
+      mode: '{{ item["mount_mode"] | d("0o0755") }}'
+    loop: '{{ lvm__lvs__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["mount_path"] is defined'
+
+  - name: 'Mount /dev/{{ item["vg"] }}/{{ item["name"] }} to {{ item["mount_path"] }}'
+    ansible.posix.mount:
+      src: '/dev/{{ item["vg"] }}/{{ item["name"] }}'
+      path: '{{ item["mount_path"] }}'
+      fstype: '{{ item["fstype"] | d("xfs") }}'
+      opts: '{{ item["mount_opts"] | d("defaults") }}'
+      state: 'mounted'
+    loop: '{{ lvm__lvs__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["mount_path"] is defined'
+    register: '__lvm__mount_result'
+
+  - name: 'restorecon -Frv {{ item["item"]["mount_path"] }}'
+    ansible.builtin.command:
+      cmd: 'restorecon -Frv {{ item["item"]["mount_path"] }}'
+    loop: '{{ __lvm__mount_result["results"] | selectattr("changed", "eq", true) | list }}'
+    loop_control:
+      label: '{{ item["item"]["mount_path"] }}'
+    changed_when: false
+
+  tags:
+    - 'lvm'
+    - 'lvm:mount'

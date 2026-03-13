@@ -5,9 +5,9 @@ This role stops and disables the `kdump` service. Since most of the time, kdump 
 
 ## Tags
 
-| Tag     | What it does                           |
-| ---     | ------------                           |
-| `kdump` | Stops and disables the `kdump` service |
+| Tag     | What it does                           | Reload / Restart |
+| ---     | ------------                           | ---------------- |
+| `kdump` | Stops and disables the `kdump` service | - |
 
 
 ## Optional Role Variables

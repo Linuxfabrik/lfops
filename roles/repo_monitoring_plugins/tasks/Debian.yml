@@ -10,7 +10,15 @@
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.linuxfabrik.key to remote host'
+  - name: 'Ensure /etc/apt/keyrings directory exists'
+    ansible.builtin.file:
+      path: '/etc/apt/keyrings'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Copy /tmp/ansible.linuxfabrik.key to remote host'
     ansible.builtin.copy:
       src: '/tmp/ansible.linuxfabrik.key'
       dest: '/etc/apt/keyrings/linuxfabrik.asc' # use asc for ASCII-armored keys

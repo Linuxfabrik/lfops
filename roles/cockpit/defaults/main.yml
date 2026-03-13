@@ -1,0 +1,2 @@
+cockpit__socket_enabled: true
+cockpit__state: 'absent'

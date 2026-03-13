@@ -11,14 +11,16 @@ This role is compatible with the following Redis versions:
 * 7.0
 * 7.2
 * 7.4 (note: not available in the Remi Repo as of 2025-03-05)
+* 8.0
+* 8.2
 
 
 ## Tags
 
-| Tag           | What it does                           |
-| ---           | ------------                           |
-| `redis`       | Installs and configures Redis          |
-| `redis:state` | Manages the state of the Redis service |
+| Tag           | What it does                           | Reload / Restart |
+| ---           | ------------                           | ---------------- |
+| `redis`       | Installs and configures Redis          | Restarts redis.service |
+| `redis:state` | Manages the state of the Redis service | - |
 
 
 ## Optional Role Variables

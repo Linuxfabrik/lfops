@@ -3,7 +3,7 @@
   notify: 'postfix: reload postfix'
 
 - name: 'postfix: postmap /etc/postfix/canonical'
-  ansible.builtin.command: '/usr/sbin/postmap /etc/postfix/canonical'
+  ansible.builtin.command: '/usr/sbin/postmap {{ __postfix__map_type }}:/etc/postfix/canonical'
   notify: 'postfix: reload postfix'
 
 - name: 'postfix: reload postfix'

@@ -6,17 +6,26 @@
       state: 'directory'
       # not touching permissions, as they are managed by /usr/lib/tmpfiles.d/systemd.conf
 
-  - name: 'get size of /var/log/journal filesystem'
+  - name: 'Get size of /var/log/journal filesystem'
     ansible.builtin.shell:
-      cmd: 'df --output=size /var/log/journal'
+      cmd: 'df --output=size --block-size=M /var/log/journal'
     register: 'systemd_journald_var_log_journal_df_result'
     check_mode: false # run task even if `--check` is specified
     changed_when: false # not an actual config change on the server
 
-  - name: 'Deploy /etc/systemd/journald.conf'
+  - name: 'Debug'
+    ansible.builtin.debug:
+      var: 'systemd_journald_var_log_journal_df_result'
+
+  - name: 'mkdir -p /etc/systemd/journald.conf.d'
+    ansible.builtin.file:
+      path: '/etc/systemd/journald.conf.d'
+      state: 'directory'
+
+  - name: 'Deploy /etc/systemd/journald.conf.d/'
     ansible.builtin.template:
-      src: 'etc/systemd/journald.conf.j2'
-      dest: '/etc/systemd/journald.conf'
+      src: 'etc/systemd/journald.conf.d/z00-linuxfabrik.conf.j2'
+      dest: '/etc/systemd/journald.conf.d/z00-linuxfabrik.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644

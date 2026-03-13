@@ -5,9 +5,9 @@ This role installs LibreOffice on a server, so it is intended for headless opera
 
 ## Tags
 
-| Tag           | What it does     |
-| ---           | ------------     |
-| `libreoffice` | Installs LibreOffice |
+| Tag           | What it does     | Reload / Restart |
+| ---           | ------------     | ---------------- |
+| `libreoffice` | Installs LibreOffice | - |
 
 
 ## Optional Role Variables

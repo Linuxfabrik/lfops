@@ -13,9 +13,11 @@
       group: 'root'
       mode: 0o755
 
-  - name: 'install mongodb-org'
+  - name: 'install mongodb-org tar'
     ansible.builtin.package:
-      name: 'mongodb-org'
+      name:
+        - 'mongodb-org'
+        - 'tar'
       state: 'present'
 
   - name: 'Get the list of installed packages'

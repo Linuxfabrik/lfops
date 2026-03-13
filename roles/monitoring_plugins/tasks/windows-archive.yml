@@ -1,0 +1,9 @@
+- block:
+
+  - ansible.builtin.include_tasks: 'windows-download.yml'
+    vars:
+      __monitoring_plugins__file_type: 'compiled'
+      __monitoring_plugins__unzip_path: 'C:\Program Files\icinga2\sbin\linuxfabrik\'
+
+  tags:
+    - 'monitoring_plugins'

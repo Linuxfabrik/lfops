@@ -5,9 +5,9 @@ This role deploys the official [Collabora CODE Repository](https://docs.fedorapr
 
 ## Tags
 
-| Tag                   | What it does                          |
-| ---                   | ------------                          |
-| `repo_collabora_code` | Deploys the Collabora CODE Repository |
+| Tag                   | What it does                          | Reload / Restart |
+| ---                   | ------------                          | ---------------- |
+| `repo_collabora_code` | Deploys the Collabora CODE Repository | - |
 
 
 ## Optional Role Variables

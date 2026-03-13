@@ -12,10 +12,10 @@ Note that this role does NOT let you specify a particular MariaDB server version
 
 This role is compatible with the following MariaDB versions:
 
-* 10.5
 * 10.6 LTS
 * 10.11 LTS
 * 11.4 LTS
+* 11.8 LTS
 
 The role provides the `mariadb_server:upgrade` tag to update the MariaDB server. The tag upgrades to the newest available version, therefore make sure to switch the module stream or update the repository (optionally using the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) role).
 
@@ -39,20 +39,20 @@ Hardenings that can be covered by this role: See [STIGs](https://github.com/Linu
 
 ## Tags
 
-| Tag                                  | What it does                                                                                                                     |
-| ---                                  | ------------                                                                                                                     |
-| `mariadb_server`                     | * Install mariadb-server<br> * Optionally install galera-4 and rsync<br> * Plus all of the tags below, except `mariadb_server:galera_new_cluster` and `mariadb_server:upgrade` |
-| `mariadb_server:clone_datadir`       | * If the current `datadir` directory (dir1) on the MariaDB server is different from the one in the Ansible inventory (dir2), copy dir1 to dir2 and configure MariaDB accordingly. MariaDB must be up and running to perform this task. For disaster recovery purposes, you will need to remove dir1 yourself. |
-| `mariadb_server:configure`           | * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer` |
-| `mariadb_server:dare`                | * Deploys the keyfile for the [File Key Management Encryption Plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin/) and restarts MariaDB if ncecessary. |
-| `mariadb_server:database`            | * Create or delete mariadb databases |
-| `mariadb_server:dump`                | * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer`  |
-| `mariadb_server:galera_new_cluster`  | * Runs `galera_new_cluster`, but only if `mariadb_server__run_galera_new_cluster` is true. Use in combination with `--extra-vars='{"mariadb_server__run_galera_new_cluster": true}'` |
-| `mariadb_server:secure_installation` | * Remove all "root" users<br> * Run `mariadb-secure-installation`<br> * Apply some universal CIS hardenings |
-| `mariadb_server:state`               | * Enable/Disable `mariadb.service`  |
-| `mariadb_server:sys_schema`          | * Install sys schema from https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz |
-| `mariadb_server:upgrade`             | * Remove old mariadb-server package<br> * Install latest mariadb-server<br> * Update mariadb-client, mariadb-common, mariadb-shared on Red Hat<br> * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Run `mysql_upgrade`<br> * Must be explicitly called |
-| `mariadb_server:user`                | * Create DBA<br> * Create, update or delete MariaDB users |
+| Tag                                  | What it does                                                                                                                     | Restart/Reload |
+| ---                                  | ------------                                                                                                                     | -------------- |
+| `mariadb_server`                     | * Install mariadb-server<br> * Optionally install galera-4 and rsync<br> * Plus all of the tags below, except `mariadb_server:galera_new_cluster` and `mariadb_server:upgrade` | Restarts mariadb.service |
+| `mariadb_server:clone_datadir`       | * If the current `datadir` directory (dir1) on the MariaDB server is different from the one in the Ansible inventory (dir2), copy dir1 to dir2 and configure MariaDB accordingly. MariaDB must be up and running to perform this task. For disaster recovery purposes, you will need to remove dir1 yourself. | Restarts mariadb.service |
+| `mariadb_server:configure`           | * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer` | Restarts mariadb.service |
+| `mariadb_server:dare`                | * Deploys the keyfile for the [File Key Management Encryption Plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin/) and restarts MariaDB if ncecessary. | Restarts mariadb.service |
+| `mariadb_server:database`            | * Create or delete mariadb databases | - |
+| `mariadb_server:dump`                | * Install mydumper/myloader<br> * Grant backup privileges on dbs.tables<br> * Deploy `mariadb-dump.service`<br> * Enable `mariadb-dump.timer`  | - |
+| `mariadb_server:galera_new_cluster`  | * Runs `galera_new_cluster`, but only if `mariadb_server__run_galera_new_cluster` is true. Use in combination with `--extra-vars='{"mariadb_server__run_galera_new_cluster": true}'` | - |
+| `mariadb_server:secure_installation` | * Remove all "root" users<br> * Run `mariadb-secure-installation`<br> * Apply some universal CIS hardenings | - |
+| `mariadb_server:state`               | * Enable/Disable `mariadb.service`  | - |
+| `mariadb_server:sys_schema`          | * Install sys schema from https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz | - |
+| `mariadb_server:upgrade`             | * Remove old mariadb-server package<br> * Install latest mariadb-server<br> * Update mariadb-client, mariadb-common, mariadb-shared on Red Hat<br> * Deploy MariaDB server configuration file<br> * Deploy MariaDB logrotate configuration file<br> * Enable/Disable `mariadb.service`<br> * Run `mysql_upgrade`<br> * Must be explicitly called | Restarts mariadb.service |
+| `mariadb_server:user`                | * Create DBA<br> * Create, update or delete MariaDB users | - |
 
 
 ## Mandatory Role Variables
@@ -75,7 +75,7 @@ mariadb_server__admin_user:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `mariadb_server__dump_user` | String. For mydumper: User to whom backup privileges are granted to. Setting this user automatically enables daily MariaDB-Dumps. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `["*.*:event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options: `'present'`, `'absent'` | unset |
+| `mariadb_server__dump_user` | String. For mydumper: User to whom backup privileges are granted to. Setting this user automatically enables daily MariaDB-Dumps. Subkeys:<br> * `username`: Username<br> * `password`: Password<br> * `priv`: Optional, list. Defaults to `["*.*:binlog monitor,event,lock tables,reload,select,show view,super,trigger"]`. User privileges.<br> * `state`: Optional, string. Defaults to `'present'`. Possible Options: `'present'`, `'absent'` | unset |
 
 Example:
 ```yaml
@@ -102,13 +102,15 @@ mariadb_server__dump_user:
 | `mariadb_server__dump_threads` | Integer. For mydumper: The number of threads to use for dumping data. `0` means to use number of CPUs. | `0`|
 | `mariadb_server__enabled`| Enables or disables the Systemd unit. | `true` |
 | `mariadb_server__logrotate` | Integer. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
+| `mariadb_server__roles__group_var` / `mariadb_server__roles__host_var` | List of dictionaries of MariaDB roles. Subkeys: <ul><li>`name`: Mandatory, string. Role name.</li><li>`priv`: Mandatory, list of dicts. List of privileges for the role.</li><li>`state`: Optional, string. Possible Options: `'present'`, `'absent'`. Defaults to `'present'`. </li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
 | `mariadb_server__service_limit_memlock` | Integer. Systemd: LimitMEMLOCK setting. | `524288` |
 | `mariadb_server__service_limit_nofile` | Integer. Systemd: Resource limit directive for the number of file descriptors. | `32768` |
 | `mariadb_server__service_timeout_start_sec` | String. Systemd: Configures the time to wait for start-up. If the MariaDB server does not signal start-up completion within the configured time, the service will be considered failed and will be shut down again. | `'15min'` |
 | `mariadb_server__service_timeout_stop_sec` | String. Systemd: First, it configures the time to wait for the ExecStop= command. Second, it configures the time to wait for the MariaDB server itself to stop. If the MariaDB server doesn't terminate in the specified time, it will be forcibly terminated by SIGKILL. | `'15min'` |
 | `mariadb_server__skip_sys_schema` | Skip the deployment of the MariaDB sys schema (a collection of views, functions and procedures to help MariaDB administrators get insight in to MariaDB Database usage). If a `sys` schema exists, it will never be overwritten.| `false` |
 | `mariadb_server__state`| Controls the Systemd service. One of<br> * `started`<br> * `stopped`<br> * `reloaded` | `'started'` |
-| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mariadb_server__admin_user`). Subkeys:<br> * `username`: Mandatory, String. Username. <br> * `host`: Mandatory, String. Host. <br> * `password`<br> * `tls_requires`: Note: Make sure to include the CN in the SAN of the certificate.<br> * `priv`<br> * `state`<br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+| `mariadb_server__users__host_var` / `mariadb_server__users__group_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - use `mariadb_server__admin_user` for that). Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`host`: Optional, string. Host-part. Defaults to `'localhost'`.</li><li>`password`: Optional, string. Password. Defaults to unset.</li><li>`plugin`: Optional, string. Plugin to authenticate the user with. Defaults to unset.</li><li>`tls_requires`: Optional, dict. Specify for client TLS auth. Have a look at the example. Defaults to unset.</li><li>`priv`: Optional, list of dicts. List of privileges for the user. Defaults to unset. Note: Never set to `[]`, the least privileges are `['*.*:USAGE']`.</li><li>`roles`: Optional, list. List of roles. Defaults to `[]`.</li><li>`default_role`: Optional, string. Default role for the user, will be activated upon login. Defaults to unset.</li><li>`state`: Optional, string. Possible Options: `'present'`, `'absent'`. Defaults to `'present'`. </li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+
 
 Example:
 ```yaml
@@ -128,6 +130,15 @@ mariadb_server__dump_raw: ''
 mariadb_server__dump_threads: 4
 mariadb_server__enabled: true
 mariadb_server__logrotate: 7
+mariadb_server__roles__host_var:
+  - name: 'dba'
+    priv:
+      - '*.*:ALL'
+    state: 'present'
+  - name: 'read_only'
+    priv:
+      - '*.*:SELECT'
+    state: 'present'
 mariadb_server__service_limit_memlock: 524288
 mariadb_server__service_limit_nofile: 32768
 mariadb_server__service_timeout_start_sec: '15min'
@@ -152,9 +163,22 @@ mariadb_server__users__host_var:
   - username: 'admin1'
     host: 'localhost'
     tls_requires:
-      subject: '/CN=admin1'
+      subject: '/CN=admin1' # Note: Make sure to include the CN in the SAN of the certificate.
     priv:
       - '*.*:ALL'
+    state: 'present'
+  # user with `unix_socket` auth
+  - username: 'mariadb_admin'
+    host: 'localhost'
+    plugin: 'unix_socket'
+    state: 'present'
+  # user with roles
+  - username: 'user2'
+    password: 'linuxfabrik'
+    roles:
+      - 'dba'
+      - 'read_only'
+    default_role: 'read_only'
     state: 'present'
 ```
 
@@ -166,26 +190,32 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | Role Variable                                        | Documentation                                                                                      | Default Value                    |
 | -------------                                        | -------------                                                                                      | -------------                    |
 | `mariadb_server__cnf_bind_address__group_var` / `mariadb_server__cnf_bind_address__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bind_address) | `''` |
+| `mariadb_server__cnf_binlog_expire_logs_seconds__group_var` / `mariadb_server__cnf_binlog_expire_logs_seconds__host_var` | Only available in MariaDB 10.6+. [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#binlog_expire_logs_seconds) | `0` |
 | `mariadb_server__cnf_binlog_format__group_var` / `mariadb_server__cnf_binlog_format__host_var` | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#binlog_format) | `'MIXED'` |
 | `mariadb_server__cnf_bulk_insert_buffer_size__group_var` / `mariadb_server__cnf_bulk_insert_buffer_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bulk_insert_buffer_size) | `8M`                          |
 | `mariadb_server__cnf_character_set_server__group_var` / `mariadb_server__cnf_character_set_server__host_var`           | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#character_set_server) | 10.11-: `'utf8mb4'`, 11.1+: `'uca1400'`                      |
 | `mariadb_server__cnf_collation_server__group_var` / `mariadb_server__cnf_collation_server__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#collation_server) | 10.11-: `'utf8mb4_unicode_ci'`, 11.1+: `'utf8mb3=utf8mb3_uca1400_ai_ci,ucs2=ucs2_uca1400_ai_ci,utf8mb4=utf8mb4_uca1400_ai_ci,utf16=utf16_uca1400_ai_ci,utf32=utf32_uca1400_ai_ci'`           |
 | `mariadb_server__cnf_datadir__group_var` / `mariadb_server__cnf_datadir__host_var` | String. [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#datadir) | `'/var/lib/mysql/'` |
 | `mariadb_server__cnf_default_storage_engine__group_var` / `mariadb_server__cnf_default_storage_engine__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#default_storage_engine) | `'InnoDB'` |
-| `mariadb_server__cnf_expire_logs_days__group_var` / `mariadb_server__cnf_expire_logs_days__host_var`               | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#expire_logs_days) | `0.000000`                              |
+| `mariadb_server__cnf_extra_max_connections__group_var` / `mariadb_server__cnf_extra_max_connections__host_var` | [mariadb.com](https://mariadb.com/kb/en/thread-pool-system-status-variables/#extra_max_connections) | `3` |
+| `mariadb_server__cnf_extra_port__group_var` / `mariadb_server__cnf_extra_port__host_var` | [mariadb.com](https://mariadb.com/kb/en/thread-pool-system-status-variables/#extra_port) | `3307` |
 | `mariadb_server__cnf_general_log__group_var` / `mariadb_server__cnf_general_log__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#general_log) | `'OFF'` |
 | `mariadb_server__cnf_general_log_file__group_var` / `mariadb_server__cnf_general_log_file__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#general_log_file) | `'/var/log/mariadb/mariadb-general.log'` |
 | `mariadb_server__cnf_innodb_autoinc_lock_mode__group_var` / `mariadb_server__cnf_innodb_autoinc_lock_mode__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_autoinc_lock_mode) | `1` |
+| `mariadb_server__cnf_innodb_buffer_pool_chunk_size__group_var` / `mariadb_server__cnf_innodb_buffer_pool_chunk_size__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_chunk_size) | 10.08-: `'128M'`, 10.8+: `0` (autosize) |
 | `mariadb_server__cnf_innodb_buffer_pool_size__group_var` / `mariadb_server__cnf_innodb_buffer_pool_size__host_var`        | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_size) | `'128M'`                         |
 | `mariadb_server__cnf_innodb_doublewrite__group_var` / `mariadb_server__cnf_innodb_doublewrite__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_doublewrite) | `ON` |
 | `mariadb_server__cnf_innodb_file_per_table__group_var` / `mariadb_server__cnf_innodb_file_per_table__host_var`          | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table) | `'ON'` (Deprecated: MariaDB 11.0.1 )                           |
 | `mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var` / `mariadb_server__cnf_innodb_flush_log_at_trx_commit__host_var` | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit) | `1`                              |
 | `mariadb_server__cnf_innodb_io_capacity__group_var` / `mariadb_server__cnf_innodb_io_capacity__host_var`             | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_io_capacity) | `200`                            |
-| `mariadb_server__cnf_innodb_log_file_size__group_var` / `mariadb_server__cnf_innodb_log_file_size__host_var`           | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_log_file_size) | `'96M'`                          |
+| `mariadb_server__cnf_innodb_log_buffer_size__group_var` / `mariadb_server__cnf_innodb_log_buffer_size__host_var` | [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_log_buffer_size) | `'16M'` |
+| `mariadb_server__cnf_innodb_log_file_size__group_var` / `mariadb_server__cnf_innodb_log_file_size__host_var`           | [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_log_file_size) | `'32M'`                          |
+| `mariadb_server__cnf_innodb_strict_mode__group_var` / `mariadb_server__cnf_innodb_strict_mode__host_var` | [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_strict_mode) | `ON` |
 | `mariadb_server__cnf_interactive_timeout__group_var` / `mariadb_server__cnf_interactive_timeout__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#interactive_timeout) | `28800`                          |
 | `mariadb_server__cnf_join_buffer_size__group_var` / `mariadb_server__cnf_join_buffer_size__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#join_buffer_size) | `'256K'`                         |
 | `mariadb_server__cnf_log_bin__group_var` / `mariadb_server__cnf_log_bin__host_var`                      | [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#log_bin). Attention: the variable is *not* a boolean! Instead it either requires a string to enable it, or has to be unset. For convenience this role unsets the variable if it is set to `'OFF'`. | `''` |
 | `mariadb_server__cnf_log_error__group_var` / `mariadb_server__cnf_log_error__host_var`                      | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#log_error) | `'/var/log/mariadb/mariadb.log'` |
+| `mariadb_server__cnf_log_slave_updates__host_var` / `mariadb_server__cnf_log_slave_updates__group_var` | [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#log_slave_updates) | `'OFF'` |
 | `mariadb_server__cnf_lower_case_table_names__group_var` / `mariadb_server__cnf_lower_case_table_names__host_var`         | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#lower_case_table_names) | `0`                              |
 | `mariadb_server__cnf_max_allowed_packet__group_var` / `mariadb_server__cnf_max_allowed_packet__host_var`             | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#max_allowed_packet) | `'16M'`                          |
 | `mariadb_server__cnf_max_connections__group_var` / `mariadb_server__cnf_max_connections__host_var`                | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#max_connections) | `64`                             |
@@ -194,40 +224,48 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 | `mariadb_server__cnf_query_cache_limit__group_var` / `mariadb_server__cnf_query_cache_limit__host_var`              | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_limit) | `'1M'`                           |
 | `mariadb_server__cnf_query_cache_size__group_var` / `mariadb_server__cnf_query_cache_size__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_size) | `0`                              |
 | `mariadb_server__cnf_query_cache_type__group_var` / `mariadb_server__cnf_query_cache_type__host_var`               | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_type) | `'OFF'`                          |
+| `mariadb_server__cnf_server_raw` | Multiline string. Raw content which will be appended to the `[server]` section of the MariaDB cnf. | unset |
 | `mariadb_server__cnf_skip_name_resolve__group_var` / `mariadb_server__cnf_skip_name_resolve__host_var`              | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#skip_name_resolve) | `'ON'`                           |
 | `mariadb_server__cnf_slow_query_log__group_var` / `mariadb_server__cnf_slow_query_log__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log) | `'OFF'` |
 | `mariadb_server__cnf_slow_query_log_file__group_var` / `mariadb_server__cnf_slow_query_log_file__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#slow_query_log_file) | `'/var/log/mariadb/mariadb-slowquery.log'` |
 | `mariadb_server__cnf_socket__group_var` / `mariadb_server__cnf_socket__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#socket) | RHEL: `'/run/mariadb/mariadb.sock'`, Debian: `'/run/mysqld/mysqld.sock'` |
 | `mariadb_server__cnf_sql_mode__group_var` / `mariadb_server__cnf_sql_mode__host_var` | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#sql_mode) | `'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'` |
 | `mariadb_server__cnf_table_definition_cache__group_var` / `mariadb_server__cnf_table_definition_cache__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#table_definition_cache) | 400
+| `mariadb_server__cnf_table_open_cache__group_var` / `mariadb_server__cnf_table_open_cache__host_var` | [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#table_open_cache) | `2000` |
 | `mariadb_server__cnf_tls_version__group_var` / `mariadb_server__cnf_tls_version__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#tls_version) | `'TLSv1.2,TLSv1.3'`                          |
 | `mariadb_server__cnf_tmp_table_size__group_var` / `mariadb_server__cnf_tmp_table_size__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#tmp_table_size) | `'16M'`                          |
+| `mariadb_server__cnf_tmpdir__group_var` / `mariadb_server__cnf_tmpdir__host_var` | [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#tmpdir) | `''` (means it defaults either to `$TMPDIR` or `/tmp`) |
 | `mariadb_server__cnf_wait_timeout__group_var` / `mariadb_server__cnf_wait_timeout__host_var`                 | [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#wait_timeout) | `28800`                          |
 
 Example:
 ```yaml
 # optional - cnf directives
 mariadb_server__cnf_bind_address__host_var: '0.0.0.0'
+mariadb_server__cnf_binlog_expire_logs_seconds__host_var: '9000' # 2.5hrs
 mariadb_server__cnf_binlog_format__host_var: 'MIXED'
 mariadb_server__cnf_bulk_insert_buffer_size__host_var: '8M'
 mariadb_server__cnf_character_set_server__host_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__host_var: 'utf8mb4_unicode_ci'
 mariadb_server__cnf_datadir__host_var: '/data/mariadb'
 mariadb_server__cnf_default_storage_engine__host_var: 'InnoDB'
-mariadb_server__cnf_expire_logs_days__host_var: 0.000000
+mariadb_server__cnf_extra_max_connections__host_var: 10
+mariadb_server__cnf_extra_port__host_var: 3308
 mariadb_server__cnf_general_log__host_var: 'OFF'
 mariadb_server__cnf_general_log_file__host_var: '/var/log/mariadb/mariadb-general.log'
 mariadb_server__cnf_innodb_autoinc_lock_mode__host_var: 2
+mariadb_server__cnf_innodb_buffer_pool_chunk_size__host_var: '{{ (mariadb_server__cnf_innodb_buffer_pool_size__host_var / 64 ) | int }}'
 mariadb_server__cnf_innodb_buffer_pool_size__host_var: '{{ (ansible_facts["memtotal_mb"] * 0.8) | int }}M'
 mariadb_server__cnf_innodb_doublewrite__host_var: 1
 mariadb_server__cnf_innodb_file_per_table__host_var: 'ON'
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__host_var: 1
 mariadb_server__cnf_innodb_io_capacity__host_var: 200
+mariadb_server__cnf_innodb_log_buffer_size__host_var: '20M'
 mariadb_server__cnf_innodb_log_file_size__host_var: '96M'
 mariadb_server__cnf_interactive_timeout__host_var: 28800
 mariadb_server__cnf_join_buffer_size__host_var: '256K'
 mariadb_server__cnf_log_bin__host_var: 'log_bin'
 mariadb_server__cnf_log_error__host_var: '/var/log/mariadb/mariadb.log'
+mariadb_server__cnf_log_slave_updates__host_var: 'ON'
 mariadb_server__cnf_lower_case_table_names__host_var: 0
 mariadb_server__cnf_max_allowed_packet__host_var: '16M'
 mariadb_server__cnf_max_connections__host_var: 64
@@ -236,14 +274,21 @@ mariadb_server__cnf_performance_schema__host_var: 'ON'
 mariadb_server__cnf_query_cache_limit__host_var: '1M'
 mariadb_server__cnf_query_cache_size__host_var: 0
 mariadb_server__cnf_query_cache_type__host_var: 'OFF'
+mariadb_server__cnf_server_raw: |
+  encrypt-binlog
+  encrypt-tmp-disk-tables
+  encrypt-tmp-files
+  innodb-encrypt-log
 mariadb_server__cnf_skip_name_resolve__host_var: 'ON'
 mariadb_server__cnf_slow_query_log__host_var: 'OFF'
 mariadb_server__cnf_slow_query_log_file__host_var: '/var/log/mariadb/mariadb-slowquery.log'
 mariadb_server__cnf_socket__host_var: '/var/run/mariadb/mariadb.sock' # use /var/run instead of /run to avoid collisions with selinux fcontexts (`File spec /run/mariadb/mariadb\.sock conflicts with equivalency rule '/run /var/run'`)
 mariadb_server__cnf_sql_mode__host_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__host_var: 400
+mariadb_server__cnf_table_open_cache__host_var: 3000
 mariadb_server__cnf_tls_version__host_var: 'TLSv1.2,TLSv1.3'
 mariadb_server__cnf_tmp_table_size__host_var: '16M'
+mariadb_server__cnf_tmpdir__host_var: '/data/tmpdir'
 mariadb_server__cnf_wait_timeout__host_var: 28800
 ```
 
@@ -281,7 +326,7 @@ mariadb_server__cnf_ssl_key__host_var: '/etc/pki/tls/private/mariadb-server.key'
 
 ## Optional Role Variables - `mariadb_server__cnf_*` Config Directives for DARE
 
-To enable [Data Encryption at rest](https://mariadb.com/kb/en/data-at-rest-encryption-overview/) (DARE) using the [File Key Management plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin), you have to [define the DARE keys](https://mariadb.com/kb/en/file-key-management-encryption-plugin/#creating-the-key-file) in your inventory like so (every encryption key itself needs to be provided in hex-encoded form using 128-bit/16-byte/32 chars, 192-bit/24-byte/48 chars or 256-bit/32-byte/64 chars):
+To enable [Data Encryption at rest](https://mariadb.com/kb/en/data-at-rest-encryption-overview/) (DARE) using the [File Key Management plugin](https://mariadb.com/docs/server/security/securing-mariadb/encryption/data-at-rest-encryption/key-management-and-encryption-plugins/file-key-management-encryption-plugin), you have to [define the DARE keys](https://mariadb.com/kb/en/file-key-management-encryption-plugin/#creating-the-key-file) in your inventory like so (every encryption key itself needs to be provided in hex-encoded form using 128-bit/16-byte/32 chars, 192-bit/24-byte/48 chars or 256-bit/32-byte/64 chars):
 
 ```yaml
 # using 256-bit/32-byte/64 chars encryption keys
@@ -390,6 +435,9 @@ mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0 #  inconsistenc
 
 | Role Variable   | Documentation   | Default Value   |
 | -------------   | -------------   | -------------   |
+| `mariadb_server__cnf_sst_encrypt` | Integer. [mariadb.com](https://mariadb.com/kb/en/mariabackup-sst-method/#tls) | unset |
+| `mariadb_server__cnf_sst_tcert` | String. [mariadb.com](https://mariadb.com/kb/en/mariabackup-sst-method/#tls) | unset |
+| `mariadb_server__cnf_sst_tkey` | String. [mariadb.com](https://mariadb.com/kb/en/mariabackup-sst-method/#tls) | unset |
 | `mariadb_server__cnf_wsrep_cluster_addresses` | List of strings. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_cluster_address). DNS names work as well, IPs are preferred for performance. | unset |
 | `mariadb_server__cnf_wsrep_cluster_name` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_cluster_name) | `'lfops_galera_cluster'` |
 | `mariadb_server__cnf_wsrep_node_address` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_node_address) | `'{{ ansible_facts["default_ipv4"]["address"] }}'` |
@@ -402,6 +450,9 @@ mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0 #  inconsistenc
 Example:
 ```yaml
 # optional - Galera directives
+mariadb_server__cnf_sst_encrypt: 3 # TLS using OpenSSL encryption with Galera-compatible certificates and keys
+mariadb_server__cnf_sst_tcert: '{{ mariadb_server__cnf_ssl_cert__combined_var }}'
+mariadb_server__cnf_sst_tkey: '{{ mariadb_server__cnf_ssl_key__combined_var }}'
 mariadb_server__cnf_wsrep_cluster_addresses:
   - '192.0.2.10'
   - '192.0.2.20'
@@ -412,6 +463,8 @@ mariadb_server__cnf_wsrep_node_name: 'db10'
 mariadb_server__cnf_wsrep_on: true
 mariadb_server__cnf_wsrep_provider_options: 'gcache.size=300M; gcache.page_size=300M'
 mariadb_server__cnf_wsrep_slave_threads: 4
+mariadb_server__cnf_wsrep_sst_auth: 'sst_user:linuxfabrik'
+mariadb_server__cnf_wsrep_sst_method: 'mariabackup'
 ```
 
 
@@ -425,6 +478,10 @@ A: Install the `python3-PyMySQL` library. This can be done using the [linuxfabri
 Q: I always get `[Warning] Access denied for user 'root'@'localhost'` in mariadb.log when running this role.
 
 A: This is due to `check_implicit_admin: true`. This checks if MariaDB allows login as root/nopassword before trying the supplied credentials. If successful, the login_user/login_password passed will be ignored. This is especially needed for the first run of this role.
+
+Q: I get `IndexError: list index out of range` during "Create, update or delete MariaDB users".
+
+A: Check that the user's `priv` is not set to `[]`. The lowest privileges allowed are `['*.*:USAGE']`.
 
 
 ## License

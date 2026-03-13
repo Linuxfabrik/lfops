@@ -1,12 +1,15 @@
 graylog_server__http_bind_address: '127.0.0.1'
 graylog_server__http_bind_port: 9000
+graylog_server__http_publish_uri: ''
 graylog_server__is_leader: true
+graylog_server__message_journal_dir: '/var/lib/graylog-server/journal'
 graylog_server__mongodb_uri: 'mongodb://127.0.0.1/graylog'
 graylog_server__opts: '-Xms1g -Xmx1g -server -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow'
 graylog_server__plugins: []
 graylog_server__service_enabled: true
 graylog_server__stale_leader_timeout_ms: 2000
 graylog_server__timezone: 'Europe/Zurich'
+graylog_server__trusted_proxies: []
 
 graylog_server__system_default_index_set:
   can_be_default: true
@@ -27,7 +30,7 @@ graylog_server__system_default_index_set:
     rotate_empty_index_set: false
     type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
   rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
-  shards: 4
+  shards: 3
   title: 'Linuxfabrik Index Set (managed by Ansible - do not edit)'
   writable: true
 
@@ -105,3 +108,7 @@ graylog_server__kernel_settings__transparent_hugepages__dependent_var: 'never'
 graylog_server__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
     value: 'on'
+graylog_server__selinux__fcontexts__dependent_var:
+  - setype: 'var_lib_t'
+    target: '{{ graylog_server__message_journal_dir | ansible.builtin.regex_escape }}(/.*)?'
+    state: 'present'

@@ -1,22 +1,27 @@
 keycloak__apps__apps__dependent_var:
-  - name: '{{ keycloak__java_package_name }}'
+  - name: 'java-21-openjdk-headless' # adjust as soon as we know which java version is required for which keycloak version. see roles/apache_solr for implementation
     state: 'present'
 
 keycloak__db_url_database: 'keycloak'
 keycloak__db_url_host: 'localhost'
 keycloak__db_vendor: 'mariadb'
-keycloak__enabled: true
+keycloak__service_enabled: true
 keycloak__expose_healthcheck_endpoints: true
 keycloak__expose_metrics_endpoints: true
-keycloak__hostname_strict_backchannel: false
-keycloak__https_certificate_file: '/etc/pki/tls/certs/www.example.com-chain.crt'
-keycloak__https_certificate_key_file: '/etc/pki/tls/private/www.example.com.key'
+keycloak__hostname_backchannel_dynamic: false
+keycloak__https_certificate_file: ''
+keycloak__https_certificate_key_file: ''
 keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
 keycloak__log: 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
 keycloak__mode: 'production'
 keycloak__proxy_headers: 'xforwarded'
-keycloak__proxy_trusted_addresses: '127.0.0.1,::1'
+
+# do NOT set this to '127.0.0.1,::1' - if you do so, lots of UDP sockets are left open by the
+# Java/Keycloak process (FD leak), and either can exhaust some limit (file-descriptor limit on
+# the box, or conntrack entries on the firewall) and make the machine look “out of connections”.
+keycloak__proxy_trusted_addresses: '127.0.0.1'
+
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
 keycloak__state: 'started'
 

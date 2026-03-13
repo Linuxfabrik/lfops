@@ -24,10 +24,10 @@ Notes on high availability / Icinga2 Master clusters:
 
 ## Tags
 
-| Tag        | What it does                                 |
-| ---        | ------------                                 |
-| `icingadb` | Installs and configures IcingaDB. |
-| `icingadb:migration` | Only executed on demand. Prepares the migration of the history from the IDO feature to Icinga DB. |
+| Tag        | What it does                                 | Reload / Restart |
+| ---        | ------------                                 | ---------------- |
+| `icingadb` | Installs and configures IcingaDB. | Restarts icinga2.service, icingadb.service |
+| `icingadb:migration` | Only executed on demand. Prepares the migration of the history from the IDO feature to Icinga DB. | - |
 
 
 ## Mandatory Role Variables

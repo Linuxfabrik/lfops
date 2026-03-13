@@ -1,0 +1,24 @@
+name: 'Linuxfabrik: Release'
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+# modify the default permissions granted to the GITHUB_TOKEN
+permissions:
+  contents: 'write' # to push to the repo and create the release
+
+jobs:
+  release:
+    runs-on: 'ubuntu-latest'
+
+    steps:
+
+      - name: 'Create GitHub Release for ${{ github.ref_name }}'
+        uses: 'softprops/action-gh-release@v2'
+        with:
+          tag_name: '${{ github.ref_name }}'
+          body: |
+            Release Notes/CHANGELOG at https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md
+          prerelease: false

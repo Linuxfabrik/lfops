@@ -7,9 +7,9 @@ Additionally, this role allows you to deploy custom logrotate configs which are 
 
 ## Tags
 
-| Tag         | What it does                         |
-| ---         | ------------                         |
-| `logrotate` | <ul><li>Set platform/version specific variables</li><li>Install logrotate</li><li>Copy logrotate.conf template to /etc</li><li>Copy system logrotate templates to /etc/logrotate.d</li><li>Check if custom logrotate configs for {{ inventory_hostname }} exist</li><li>Copy the custom logrotate configs to /etc/logrotate.d</li></ul> |
+| Tag         | What it does                         | Reload / Restart |
+| ---         | ------------                         | ---------------- |
+| `logrotate` | <ul><li>Set platform/version specific variables</li><li>Install logrotate</li><li>Copy logrotate.conf template to /etc</li><li>Copy system logrotate templates to /etc/logrotate.d</li><li>Check if custom logrotate configs for {{ inventory_hostname }} exist</li><li>Copy the custom logrotate configs to /etc/logrotate.d</li></ul> | - |
 
 
 ## Optional Role Variables

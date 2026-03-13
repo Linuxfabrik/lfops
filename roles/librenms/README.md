@@ -16,10 +16,10 @@ If you use the ["Setup LibreNMS" Playbook](https://github.com/Linuxfabrik/lfops/
 
 ## Tags
 
-| Tag                  | What it does                     |
-| ---                  | ------------                     |
-| `librenms`           | Installs and configures LibreNMS |
-| `librenms:configure` | Configures LibreNMS              |
+| Tag                  | What it does                     | Reload / Restart |
+| ---                  | ------------                     | ---------------- |
+| `librenms`           | Installs and configures LibreNMS | - |
+| `librenms:configure` | Configures LibreNMS              | - |
 
 
 ## Mandatory Role Variables

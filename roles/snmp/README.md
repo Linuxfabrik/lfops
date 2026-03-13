@@ -5,10 +5,10 @@ This role installs and configures snmp.
 
 ## Tags
 
-| Tag           | What it does                               |
-| ---           | ------------                               |
-| `snmp`        | Installs and configures snmp               |
-| `snmp:state`  | Starts, stops or restarts the snmp daemon  |
+| Tag           | What it does                               | Reload / Restart |
+| ---           | ------------                               | ---------------- |
+| `snmp`        | Installs and configures snmp               | Restarts snmpd.service |
+| `snmp:state`  | Starts, stops or restarts the snmp daemon  | - |
 
 
 ## Optional Role Variables

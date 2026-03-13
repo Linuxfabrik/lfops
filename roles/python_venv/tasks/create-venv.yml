@@ -17,7 +17,7 @@
     group: 'root'
     mode: 0o755 # executable for all users and groups, as they might need to execute the installed python packages
 
-- name: 'pip install -U pip wheel setuptools'
+- name: 'pip install -U pip wheel setuptools' # noqa package-latest latest pip is required for installing some modules
   ansible.builtin.pip:
     name:
       - 'pip'

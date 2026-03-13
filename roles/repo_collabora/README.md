@@ -2,12 +2,17 @@
 
 This role deploys the official Collabora Enterprise Repository.
 
+Supported Versions:
+
+* 23.05
+* 24.04
+
 
 ## Tags
 
-| Tag                   | What it does                          |
-| ---                   | ------------                          |
-| `repo_collabora` | Deploys the Collabora Enterprise Repository |
+| Tag                   | What it does                          | Reload / Restart |
+| ---                   | ------------                          | ---------------- |
+| `repo_collabora` | Deploys the Collabora Enterprise Repository | - |
 
 
 ## Mandatory Role Variables
@@ -21,7 +26,7 @@ Example:
 ```yaml
 # mandatory
 repo_collabora__customer_token: 'Example-Company-eragf35eb18692b7c0ufd3f03199a39i2233h5k8'
-repo_collabora__version: '22.05'
+repo_collabora__version: '24.04'
 ```
 
 

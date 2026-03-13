@@ -27,6 +27,23 @@
 
 - block:
 
+  - name: 'dnf -y module reset composer'
+    ansible.builtin.command: 'dnf -y module reset composer'
+    register: 'repo_remi__dnf_module_reset_composer_result'
+    changed_when: '"Nothing to do" not in repo_remi__dnf_module_reset_composer_result.stdout'
+
+  - name: "dnf -y module enable composer"
+    ansible.builtin.command: "dnf -y module enable composer"
+    register: 'repo_remi__dnf_module_enable_composer_result'
+    changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_composer_result.stdout'
+
+  when: 'repo_remi__enabled_php_version is defined'
+  tags:
+    - 'repo_remi'
+
+
+- block:
+
   - name: 'dnf -y module reset redis'
     ansible.builtin.command: 'dnf -y module reset redis'
     register: 'repo_remi__dnf_module_enable_redis_result'

@@ -69,6 +69,11 @@
 
 - block:
 
+  - name: 'install firewalld'
+    ansible.builtin.package:
+      name: 'firewalld'
+      state: 'present'
+
   - name: 'Be sure firewalld is started, enabled and not masked'
     ansible.builtin.systemd:
       name: 'firewalld.service'
@@ -105,9 +110,12 @@
 
   - name: 'Remove any existing local fwb repo'
     ansible.builtin.file:
-      path: '/tmp/ansible.fwb'
+      path: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
       state: 'absent'
+    changed_when: false # not a config change on the server
+    check_mode: false # run task even if `--check` is specified
     delegate_to: 'localhost'
+    when: 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length'
 
   - name: 'Clone the fwb git repo to localhost'
     ansible.builtin.git:
@@ -210,6 +218,11 @@
 
 
 - block:
+
+  - name: 'Make sure nftables is installed'
+    ansible.builtin.package:
+      name: 'nftables'
+      state: 'present'
 
   - name: 'Be sure nftables is started, enabled and not masked'
     ansible.builtin.systemd:

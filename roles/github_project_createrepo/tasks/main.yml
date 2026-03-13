@@ -52,7 +52,7 @@
       recursive: true
       state: 'present'
 
-  - name: 'setfacl --recursive --modify user:{{ github_project_createrepo__webserver_user }}:rwx {{ github_project_createrepo__base_path }}'
+  - name: 'setfacl --default --recursive --modify user:{{ github_project_createrepo__webserver_user }}:rwx {{ github_project_createrepo__base_path }}'
     ansible.posix.acl:
       default: true
       entity: '{{ github_project_createrepo__webserver_user }}'
@@ -71,7 +71,7 @@
       recursive: true
       state: 'present'
 
-  - name: 'setfacl --recursive --modify group:{{ github_project_createrepo__webserver_user }}:rx {{ github_project_createrepo__base_path }}'
+  - name: 'setfacl --default --recursive --modify group:{{ github_project_createrepo__webserver_user }}:rx {{ github_project_createrepo__base_path }}'
     ansible.posix.acl:
       default: true
       entity: '{{ github_project_createrepo__webserver_user }}'
@@ -90,7 +90,7 @@
       recursive: true
       state: 'present'
 
-  - name: 'setfacl --recursive --modify user:github-project-createrepo:rwx --default {{ github_project_createrepo__base_path }}'
+  - name: 'setfacl --default --recursive --modify user:github-project-createrepo:rwx --default {{ github_project_createrepo__base_path }}'
     ansible.posix.acl:
       default: true
       entity: 'github-project-createrepo'

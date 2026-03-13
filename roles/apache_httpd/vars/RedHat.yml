@@ -28,6 +28,11 @@ apache_httpd__mods__role_var:
     state: 'present'
     template: 'authn_file'
 
+  - filename: 'auth_openidc'
+    enabled: false
+    state: 'present'
+    template: 'auth_openidc'
+
   - filename: 'authz_core'
     enabled: true
     state: 'present'
@@ -42,6 +47,11 @@ apache_httpd__mods__role_var:
     enabled: true
     state: 'present'
     template: 'authz_user'
+
+  - filename: 'autoindex'
+    enabled: false
+    state: 'present'
+    template: 'autoindex'
 
   - filename: 'cgi'
     enabled: false
@@ -63,15 +73,20 @@ apache_httpd__mods__role_var:
     state: 'present'
     template: 'dir'
 
-  - filename: 'filter'
+  - filename: 'env'
     enabled: false
     state: 'present'
-    template: 'filter'
+    template: 'env'
 
   - filename: 'expires'
     enabled: true
     state: 'present'
     template: 'expires'
+
+  - filename: 'filter'
+    enabled: false
+    state: 'present'
+    template: 'filter'
 
   - filename: 'headers'
     enabled: true
@@ -92,6 +107,26 @@ apache_httpd__mods__role_var:
     enabled: true
     state: 'present'
     template: 'info'
+
+  - filename: 'lbmethod_bybusyness'
+    enabled: false
+    state: 'present'
+    template: 'lbmethod_bybusyness'
+
+  - filename: 'lbmethod_byrequests'
+    enabled: false
+    state: 'present'
+    template: 'lbmethod_byrequests'
+
+  - filename: 'lbmethod_bytraffic'
+    enabled: false
+    state: 'present'
+    template: 'lbmethod_bytraffic'
+
+  - filename: 'lbmethod_heartbeat'
+    enabled: false
+    state: 'present'
+    template: 'lbmethod_heartbeat'
 
   - filename: 'log_config'
     enabled: true
@@ -148,6 +183,11 @@ apache_httpd__mods__role_var:
     state: 'present'
     template: 'proxy'
 
+  - filename: 'proxy_balancer'
+    enabled: false
+    state: 'present'
+    template: 'proxy_balancer'
+
   - filename: 'proxy_fcgi'
     enabled: true
     state: 'present'
@@ -165,8 +205,18 @@ apache_httpd__mods__role_var:
 
   - filename: 'qos'
     enabled: true
-    state: 'present'
+    state: 'absent'
     template: 'qos'
+
+  - filename: 'raw'
+    enabled: false
+    state: 'absent'
+    template: 'raw'
+
+  - filename: 'remoteip'
+    enabled: false
+    state: 'present'
+    template: 'remoteip'
 
   - filename: 'reqtimeout'
     enabled: true
@@ -232,8 +282,11 @@ apache_httpd__openssl_certificate_path: '/etc/pki/tls/certs'
 apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'
 apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
 apache_httpd__packages__role_var:
-  - name: 'mod_qos'
+  - name: 'mod_auth_openidc'
     state: 'present'
+
+  - name: 'mod_qos'
+    state: 'absent'
 
   - name: 'mod_security'
     state: 'present'

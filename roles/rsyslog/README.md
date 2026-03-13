@@ -5,11 +5,11 @@ This role installs and configures [rsyslog](https://www.rsyslog.com/). Useful fo
 
 ## Tags
 
-| Tag                 | What it does                                     |
-| ---                 | ------------                                     |
-| `rsyslog`           | Installs and configures rsyslog                  |
-| `rsyslog:configure` | Deploys the configuration                        |
-| `rsyslog:state`     | Manages the state of the rsyslog systemd service |
+| Tag                 | What it does                                     | Reload / Restart |
+| ---                 | ------------                                     | ---------------- |
+| `rsyslog`           | Installs and configures rsyslog                  | Restarts rsyslog.service |
+| `rsyslog:configure` | Deploys the configuration                        | Restarts rsyslog.service |
+| `rsyslog:state`     | Manages the state of the systemd service | - |
 
 
 ## Optional Role Variables

@@ -12,11 +12,11 @@ If you use the ["GLPI Agent" Playbook](https://github.com/Linuxfabrik/lfops/blob
 
 ## Tags
 
-| Tag                    | What it does                              |
-| ---                    | ------------                              |
-| `glpi_agent`           | Installs and configure GLPI Agent.        |
-| `glpi_agent:configure` | Deploys the configuration file.           |
-| `glpi_agent:state`     | Manages the state of the systemd service. |
+| Tag                    | What it does                              | Reload / Restart |
+| ---                    | ------------                              | ---------------- |
+| `glpi_agent`           | Installs and configure GLPI Agent.        | Restarts glpi-agent.service |
+| `glpi_agent:configure` | Deploys the configuration file.           | Restarts glpi-agent.service |
+| `glpi_agent:state`     | Manages the state of the systemd service. | - |
 
 
 ## Mandatory Role Variables

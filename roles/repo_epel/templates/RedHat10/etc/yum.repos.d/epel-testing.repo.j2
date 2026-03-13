@@ -1,0 +1,66 @@
+# {{ ansible_managed }}
+# 2026010801
+
+[epel-testing]
+name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch
+# It is much more secure to use the metalink, but if you wish to use a local mirror
+# place its address here.
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
+baseurl={{ repo_epel__mirror_url }}/epel/testing/${releasever_minor:+z}/Everything/x86_64
+#metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% else %}
+#baseurl=https://download.example/pub/epel/testing/$releasever${releasever_minor:+z}/Everything/$basearch/
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel${releasever_minor:+-z}-testing-$releasever&arch=$basearch
+{% endif %}
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever_major
+gpgcheck=1
+repo_gpgcheck=0
+metadata_expire=24h
+countme=1
+enabled=0
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}
+
+[epel-testing-debuginfo]
+name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch - Debug
+# It is much more secure to use the metalink, but if you wish to use a local mirror
+# place its address here.
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
+baseurl={{ repo_epel__mirror_url }}/epel/testing/${releasever_minor:+z}/Everything/x86_64/debug
+#metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-debug-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% else %}
+#baseurl=https://download.example/pub/epel/testing/$releasever${releasever_minor:+z}/Everything/$basearch/debug/
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel${releasever_minor:+-z}-testing-debug-$releasever&arch=$basearch
+{% endif %}
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever_major
+gpgcheck=1
+repo_gpgcheck=0
+metadata_expire=24h
+enabled=0
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}
+
+[epel-testing-source]
+name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch - Source
+# It is much more secure to use the metalink, but if you wish to use a local mirror
+# place its address here.
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
+baseurl={{ repo_epel__mirror_url }}/epel/testing/${releasever_minor:+z}/Everything/source/tree/
+#metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-source-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
+{% else %}
+#baseurl=https://download.example/pub/epel/testing/$releasever${releasever_minor:+z}/Everything/source/tree/
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel${releasever_minor:+-z}-testing-source-$releasever&arch=source
+{% endif %}
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever_major
+gpgcheck=1
+repo_gpgcheck=0
+metadata_expire=24h
+enabled=0
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+username={{ repo_epel__basic_auth_login["username"] }}
+password={{ repo_epel__basic_auth_login["password"] }}
+{% endif %}

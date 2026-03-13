@@ -2,7 +2,6 @@ icinga2_master__icinga_user: 'icinga'
 icinga2_master__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'
 icinga2_master__required_packages:
   - 'icinga2'
-  - 'icinga2-ido-mysql'
   - 'icinga2-selinux'
   - 'nano-icinga2'
   - 'vim-icinga2'

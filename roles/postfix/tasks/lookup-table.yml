@@ -1,0 +1,27 @@
+- block:
+
+  - name: 'deploy lookup table to {{ item["path"] }}'
+    ansible.builtin.copy:
+      content: '{{ item["content"] }}'
+      dest: '{{ item["path"] }}'
+      mode: '0o644'
+      owner: 'root'
+      group: 'root'
+    register: '__postfix__lookup_table_deploy_result'
+
+  - name: 'postmap {{ item["path"] }}' # noqa: no-changed-when - we are only running the command if the file changed
+    ansible.builtin.command: 'postmap {{ item["path"] }}'
+    when: '__postfix__lookup_table_deploy_result is changed'
+    notify: 'postfix: reload postfix'
+
+  # block
+  when:
+    - 'item["state"] | d("present") != "absent"'
+
+
+- name: 'Remove lookup table {{ item["path"] }}'
+  ansible.builtin.file:
+    path: '{{ item["path"] }}'
+    state: 'absent'
+  when:
+    - 'item["state"] | d("present") == "absent"'

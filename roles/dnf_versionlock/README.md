@@ -9,9 +9,9 @@ Hints:
 
 ## Tags
 
-| Tag               | What it does                            |
-| ---               | ------------                            |
-| `dnf_versionlock` | Installs and configures dnf versionlock |
+| Tag               | What it does                            | Reload / Restart |
+| ---               | ------------                            | ---------------- |
+| `dnf_versionlock` | Installs and configures dnf versionlock | - |
 
 
 ## Mandatory Role Variables

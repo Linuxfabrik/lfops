@@ -30,11 +30,11 @@ If you use the [acme.sh Playbook](https://github.com/Linuxfabrik/lfops/blob/main
 
 ## Tags
 
-| Tag                    | What it does                                  |
-| ---                    | ------------                                  |
-| `acme_sh`              | Installs acme.sh and issues certificates      |
-| `acme_sh:certificates` | Issues certificates                           |
-| `acme_sh:state`        | Manages the state of the weekly acme.sh timer |
+| Tag                    | What it does                                  | Reload / Restart |
+| ---                    | ------------                                  | ---------------- |
+| `acme_sh`              | Installs acme.sh and issues certificates      | - |
+| `acme_sh:certificates` | Issues certificates                           | - |
+| `acme_sh:state`        | Manages the state of the weekly acme.sh timer | - |
 
 
 ## Mandatory Role Variables
@@ -63,9 +63,10 @@ acme_sh__certificates:
 | -------- | ----------- | ------------- |
 | `acme_sh__deploy_to_host`  | The host which the issued certificates should be deployed to. | unset |
 | `acme_sh__deploy_to_host_hook`  | The deployment hook which should be used to deploy the certificates to the deploy host. | `ssh` |
-| `acme_sh__deploy_to_host_reload_cmd`  | The reload command which should be executed after the certificates were deployed to the deploy host. | `reload_cmd` subkey of the `acme_sh__certificates` item, or `systemctl reload httpd` |
+| `acme_sh__deploy_to_host_reload_cmd`  | The reload command which should be executed on the deploy host after the certificates were deployed to the deploy host. | `reload_cmd` subkey of the `acme_sh__certificates` item, or `systemctl reload httpd` |
 | `acme_sh__deploy_to_host_user`  | The remote user account which should be used to deploy the certificates to the deploy host. | `root` |
 | `acme_sh__key_length`  | Key length in bits of the certificates to issue. | `4096` |
+| `acme_sh__reload_cmd` | The reload command which should be executed on the local host after the certificates were installed. | `reload_cmd` subkey of the `acme_sh__certificates` item, or `systemctl reload httpd` |
 | `acme_sh__timer_enabled` | Enables or disables the weekly acme.sh timer, analogous to `systemctl enable/disable --now`. | `true` |
 
 Example:
@@ -77,6 +78,7 @@ acme_sh__deploy_to_host_reload_cmd: 'systemctl reload nginx'
 acme_sh__deploy_to_host_user: 'root'
 acme_sh__key_length: 4096
 acme_sh__timer_enabled: true
+acme_sh__reload_cmd: 'systemctl reload nginx'
 ```
 
 

@@ -5,9 +5,9 @@ This role deploys the Redis Repository.
 
 ## Tags
 
-| Tag          | What it does                 |
-| ---          | ------------                 |
-| `repo_redis` | Deploys the Redis Repository |
+| Tag          | What it does                 | Reload / Restart |
+| ---          | ------------                 | ---------------- |
+| `repo_redis` | Deploys the Redis Repository | - |
 
 
 ## Optional Role Variables

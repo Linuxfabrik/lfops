@@ -1,0 +1,51 @@
+# gather data
+- name: 'lsblk'
+  ansible.builtin.command:
+    cmd: 'lsblk'
+  register: '__lvm__lsblk_result'
+  changed_when: false
+
+- name: 'df --human-readable'
+  ansible.builtin.command:
+    cmd: 'df --human-readable'
+  register: '__lvm__df_result'
+  changed_when: false
+
+- name: 'pvs'
+  ansible.builtin.command:
+    cmd: 'pvs'
+  register: '__lvm__pvs_result'
+  changed_when: false
+
+- name: 'vgs'
+  ansible.builtin.command:
+    cmd: 'vgs'
+  register: '__lvm__vgs_result'
+  changed_when: false
+
+- name: 'lvs'
+  ansible.builtin.command:
+    cmd: 'lvs'
+  register: '__lvm__lvs_result'
+  changed_when: false
+
+# output data
+- name: 'lsblk output'
+  ansible.builtin.debug:
+    var: '__lvm__lsblk_result["stdout_lines"]'
+
+- name: 'df output'
+  ansible.builtin.debug:
+    var: '__lvm__df_result["stdout_lines"]'
+
+- name: 'pvs output'
+  ansible.builtin.debug:
+    var: '__lvm__pvs_result["stdout_lines"]'
+
+- name: 'vgs output'
+  ansible.builtin.debug:
+    var: '__lvm__vgs_result["stdout_lines"]'
+
+- name: 'lvs output'
+  ansible.builtin.debug:
+    var: '__lvm__lvs_result["stdout_lines"]'

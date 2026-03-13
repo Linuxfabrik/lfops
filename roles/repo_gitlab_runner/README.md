@@ -5,9 +5,9 @@ This role deploys the GitLab Runner Repository.
 
 ## Tags
 
-| Tag                  | What it does                         |
-| ---                  | ------------                         |
-| `repo_gitlab_runner` | Deploys the GitLab Runner Repository |
+| Tag                  | What it does                         | Reload / Restart |
+| ---                  | ------------                         | ---------------- |
+| `repo_gitlab_runner` | Deploys the GitLab Runner Repository | - |
 
 
 ## Optional Role Variables

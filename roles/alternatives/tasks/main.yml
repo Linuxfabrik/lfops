@@ -1,0 +1,20 @@
+- block:
+
+  - name: 'Debug'
+    ansible.builtin.debug:
+      msg:
+        - '{{ item }}'
+    loop: '{{ alternatives__alternatives }}'
+
+  # alternatives --install <link> <name> <path> <priority>
+  - name: 'Manages alternative programs for common commands'
+    community.general.alternatives:
+      link: '{{ item["link"] }}'
+      name: '{{ item["name"] }}'
+      path: '{{ item["path"] }}'
+      priority: '{{ item["priority"] | d(50) }}'
+      state: '{{ item["state"] | d("selected") }}'
+    loop: '{{ alternatives__alternatives }}'
+
+  tags:
+    - 'alternatives'

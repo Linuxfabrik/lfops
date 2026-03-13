@@ -130,7 +130,7 @@
   - ansible.builtin.debug:
       msg: |-
         Follow these manual steps to finish the migration:
-        1. Double check the values in `/tmp/icingadb-migration.yml`
+        1. Fill in and double check the values in `/tmp/icingadb-migration.yml`
         2. Run the migration: `icingadb-migrate --config /tmp/icingadb-migration.yml --cache /tmp/icingadb-migration.cache`
         3. Clean up: `rm -rf /tmp/icingadb-migration.cache /tmp/icingadb-migration.yml`
         4. If everything works, disable the IcingaWeb2 monitoring module: `icingacli module disable monitoring`

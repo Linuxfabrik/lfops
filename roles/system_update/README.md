@@ -19,10 +19,10 @@ If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blo
 
 ## Tags
 
-| Tag                   | What it does                                            |
-| ---                   | ------------                                            |
-| `system_update`       | Sets up automatic system update via systemd timer       |
-| `system_update:state` | Determines whether notify-and-schedule.timer is enabled |
+| Tag                   | What it does                                            | Reload / Restart |
+| ---                   | ------------                                            | ---------------- |
+| `system_update`       | Sets up automatic system update via systemd timer       | - |
+| `system_update:state` | Determines whether notify-and-schedule.timer is enabled | - |
 
 
 ## Optional Role Variables

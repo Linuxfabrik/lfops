@@ -1,3 +1,14 @@
+podman_containers__auto_update__combined_var: '{{ (
+      podman_containers__auto_update__role_var +
+      podman_containers__auto_update__dependent_var +
+      podman_containers__auto_update__group_var +
+      podman_containers__auto_update__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="user")
+  }}'
+podman_containers__auto_update__dependent_var: []
+podman_containers__auto_update__group_var: []
+podman_containers__auto_update__host_var: []
+podman_containers__auto_update__role_var: []
 podman_containers__containers__combined_var: '{{ (
       podman_containers__containers__role_var +
       podman_containers__containers__dependent_var +

@@ -5,16 +5,16 @@ This role sets the crypto policy for the system. In addition, it implements and 
 
 ## Tags
 
-| Tag             | What it does                  |
-| ---             | ------------                  |
-| `crypto_policy` | Sets the system crypto policy |
+| Tag             | What it does                  | Reload / Restart |
+| ---             | ------------                  | ---------------- |
+| `crypto_policy` | Sets the system crypto policy | - |
 
 
 ## Optional Role Variables
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `crypto_policy__policy` | String. The crypto policy to activate. See `roles/crypto_policy/templates/etc/crypto-policies/policies/modules/` for a list of available crypto policies. Example: `DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-SSH-NO-CBC` | <ul><li>RedHat8:<br>`'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20'`</li><li>RedHat9:<br>`'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20:LINUXFABRIK-SSH-NO-ETM'`</li></ul> |
+| `crypto_policy__policy` | String. The crypto policy to activate. See `roles/crypto_policy/templates/etc/crypto-policies/policies/modules/` for a list of available crypto policies. Example: `DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-SSH-NO-CBC` | <ul><li>RedHat8:<br>`'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20'`</li><li>RedHat9:<br>`'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20:LINUXFABRIK-SSH-NO-ETM'`</li><li>RedHat10:<br>`'DEFAULT:LINUXFABRIK-NO-SHA1:LINUXFABRIK-NO-WEAKMAC:LINUXFABRIK-SSH-NO-CBC:LINUXFABRIK-SSH-NO-CHACHA20:LINUXFABRIK-SSH-NO-ETM'`</li></ul> |
 
 Example:
 ```yaml

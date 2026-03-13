@@ -1,0 +1,3 @@
+__repo_opensearch__gpgkey_url:
+  2.x: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
+  3.x: 'https://artifacts.opensearch.org/publickeys/opensearch-release.pgp'

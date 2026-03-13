@@ -1,0 +1,4 @@
+elastic_agent__insecure: false
+elastic_agent__service_enabled: true
+elastic_agent__service_state: 'started'
+elastic_agent__tags: []

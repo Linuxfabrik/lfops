@@ -6,3 +6,5 @@ tests/output/*
 **/.cache/*
 playbooks/test.yml
 roles/test
+context/
+particle/.vagrant

@@ -1,0 +1,20 @@
+- block:
+
+  # https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-with-rpm#rpm-repo
+  - name: 'Deploy the Elasticsearch repo (mirror: {{ repo_elasticsearch__mirror_url }})'
+    ansible.builtin.template:
+      src: 'etc/yum.repos.d/elasticsearch.repo.j2'
+      dest: '/etc/yum.repos.d/elasticsearch.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/elasticsearch.repo'
+
+  tags:
+    - 'repo_elasticsearch'

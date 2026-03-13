@@ -24,18 +24,18 @@ If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/m
 
 ## Tags
 
-| Tag             | What it does                            |
-| ---             | ------------                            |
-| `opensearch`       | <ul><li>Install opensearch-`{{ opensearch__version__combined_var }}`</li><li>Deploy `/etc/opensearch/opensearch.yml`</li><li>Deploy `/etc/sysconfig/opensearch`</li><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> |
-| `opensearch:state` | <ul><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> |
-| `opensearch:configure` | Deploys the config files and configures the security plugin |
+| Tag             | What it does                            | Reload / Restart |
+| ---             | ------------                            | ---------------- |
+| `opensearch`       | <ul><li>Install opensearch-`{{ opensearch__version__combined_var }}`</li><li>Deploy `/etc/opensearch/opensearch.yml`</li><li>Deploy `/etc/sysconfig/opensearch`</li><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> | Restarts opensearch.service |
+| `opensearch:state` | <ul><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> | - |
+| `opensearch:configure` | Deploys the config files and configures the security plugin | Restarts opensearch.service |
 
 
 ## Mandatory Role Variables
 
 | Variable | Description |
 | -------- | ----------- |
-| `opensearch__opensearch_initial_admin_password` | Mandatory, string. For new installations of OpenSearch 2.12 and later, you must define a custom admin password in order to set up an OpenSearch instance. |
+| `opensearch__opensearch_initial_admin_password` | Mandatory, string. For new installations of OpenSearch 2.12 and later, you must define a custom admin password in order to set up an OpenSearch instance. *Attention*: minimum 8 characters, must contain at least one uppercase letter, one lowercase letter, one digit, and one special character. |
 
 Example:
 ```yaml
@@ -46,7 +46,7 @@ opensearch__opensearch_initial_admin_password: 'linuxfabrik'
 
 ## TLS Certificate Generation
 
-Completely unrelated to the rest of the tasks, just a convenience feature to help the admin generate TLS certificates: Use the following variables to easily generate self-signed certificates. These tasks run against the ansible controller. Internally, the [SecureGuard TLS Tool](https://docs.search-guard.com/latest/offline-tls-tool) is used for this, with the generated config at `/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml`.
+Just a convenience feature to help the admin generate TLS certificates: Use the following variables to easily generate self-signed certificates before installing Opensearch. These tasks run against the ansible controller. Internally, the [SecureGuard TLS Tool](https://docs.search-guard.com/latest/offline-tls-tool) is used for this, with the generated config at `/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml`.
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
@@ -66,7 +66,7 @@ opensearch__generate_certs_nodes:
     ip: '192.0.2.10'
 ```
 
-Run: `ansible-playbook --inventory=myinv linuxfabrik.lfops.setup_graylog_server --tags=opensearch:generate_certs`
+Run: `ansible-playbook --inventory=myinv linuxfabrik.lfops.opensearch --tags=opensearch:generate_certs`
 
 
 ## Optional Role Variables - General
@@ -94,7 +94,7 @@ Only optional if `opensearch__plugins_security_disabled` is `true`.
 | `opensearch__plugins_security_transport_enforce_hostname_verification` | See https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup | `false` |
 | `opensearch__plugins_security_transport_resolve_hostname` | See https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup | `true` |
 | `opensearch__service_enabled` | Enables or disables the opensearch service, analogous to `systemctl enable/disable --now`. | `true` |
-| `opensearch__version__host_var` / <br> `opensearch__version__group_var` | The version of OpenSearch which should be installed. If unset, latest will be installed.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | unset |
+| `opensearch__version__host_var` / <br> `opensearch__version__group_var` | The version of OpenSearch which should be installed. If unset, latest will be installed. Note that this is OS-dependent. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | unset |
 
 Example:
 ```yaml
@@ -137,7 +137,8 @@ opensearch__plugins_security_transport_certificate_key: '{{ lookup("ansible.buil
 opensearch__plugins_security_transport_enforce_hostname_verification: false
 opensearch__plugins_security_transport_resolve_hostname: true
 opensearch__service_enabled: false
-opensearch__version__host_var: '2.15.0'
+opensearch__version__host_var: '-2.15.0' # rhel
+opensearch__version__host_var: '=2.15.0*' # debian
 ```
 
 ## Optional Role Variables - Cluster Configuration
@@ -153,7 +154,7 @@ curl 'https://localhost:9200/_cat/nodes?v' --user opensearch-admin:linuxfabrik -
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
 | `opensearch__cluster_initial_cluster_manager_nodes` | A list of initial master-eligible nodes. The entries have to match the `opensearch__node_name`. You need to set this once when bootstrapping the cluster (aka the first start of the cluster). Make sure to remove this option after the first start, the nodes should not restart with this option active. Most of the time contains the same value as `opensearch__discovery_seed_hosts`. | unset |
-| `opensearch__discovery_seed_hosts` | A list of IPs or hostnames that point to other master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten using `:9301`, for example. | unset |
+| `opensearch__discovery_seed_hosts` | A list of IPs or hostnames that point to other master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten by appending it to the hostname. | unset |
 | `opensearch__plugins_security_nodes_dns` | List of distinguished names of the other cluster members. | `[]` |
 
 Example:
@@ -166,7 +167,7 @@ opensearch__cluster_initial_cluster_manager_nodes:
 opensearch__discovery_seed_hosts:
   - 'node1.example.com'
   - 'node2.example.com'
-  - 'node3.example.com'
+  - 'node3.example.com:9301'
 opensearch__plugins_security_nodes_dns:
   - 'CN=node1.example.com,OU=ops,O=acme,L=Zuerich,ST=Zuerich,C=CH'
   - 'CN=node2.example.com,OU=ops,O=acme,L=Zuerich,ST=Zuerich,C=CH'

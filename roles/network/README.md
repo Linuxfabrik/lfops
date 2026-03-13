@@ -12,9 +12,9 @@ The role heavily relies on the [linux_system_roles.network Role](https://github.
 
 ## Tags
 
-| Tag       | What it does                    |
-| ---       | ------------                    |
-| `network` | Configures the network settings |
+| Tag       | What it does                    | Reload / Restart |
+| ---       | ------------                    | ---------------- |
+| `network` | Configures the network settings | - |
 
 
 ## Role Variables

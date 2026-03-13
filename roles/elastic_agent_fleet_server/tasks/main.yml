@@ -1,0 +1,117 @@
+- block:
+
+    - name: 'Install elastic-agent'
+      ansible.builtin.package:
+        name: 'elastic-agent'
+        state: 'present'
+      environment:
+        ELASTIC_AGENT_FLAVOR: 'servers'
+
+  tags:
+    - 'elastic_agent_fleet_server'
+
+
+- block:
+
+    - name: 'mkdir -p /etc/elastic-agent/certs'
+      ansible.builtin.file:
+        path: '/etc/elastic-agent/certs'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    - name: 'Deploy /etc/elastic-agent/certs/elasticsearch-ca.crt'
+      ansible.builtin.copy:
+        dest: '/etc/elastic-agent/certs/elasticsearch-ca.crt'
+        content: '{{ elastic_agent_fleet_server__elasticsearch_ca }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      when:
+        - 'elastic_agent_fleet_server__elasticsearch_ca is defined'
+        - 'elastic_agent_fleet_server__elasticsearch_ca | length'
+
+    - name: 'Deploy /etc/elastic-agent/certs/fleet-server.crt'
+      ansible.builtin.copy:
+        dest: '/etc/elastic-agent/certs/fleet-server.crt'
+        content: '{{ elastic_agent_fleet_server__ssl_cert }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      when:
+        - 'elastic_agent_fleet_server__ssl_cert is defined'
+        - 'elastic_agent_fleet_server__ssl_cert | length'
+
+    - name: 'Deploy /etc/elastic-agent/certs/fleet-server.key'
+      ansible.builtin.copy:
+        dest: '/etc/elastic-agent/certs/fleet-server.key'
+        content: '{{ elastic_agent_fleet_server__ssl_key }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o600
+      when:
+        - 'elastic_agent_fleet_server__ssl_key is defined'
+        - 'elastic_agent_fleet_server__ssl_key | length'
+
+  tags:
+    - 'elastic_agent_fleet_server'
+    - 'elastic_agent_fleet_server:certs'
+
+
+- block:
+
+    - name: 'elastic-agent inspect'
+      ansible.builtin.command:
+        cmd: 'elastic-agent inspect'
+      register: '__elastic_agent_fleet_server__inspect_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Set enrollment fact'
+      ansible.builtin.set_fact:
+        __elastic_agent_fleet_server__is_enrolled: '{{ (__elastic_agent_fleet_server__inspect_result["stdout"] | ansible.builtin.from_yaml).get("fleet", {}).get("enabled", false) }}'
+      when:
+        - '__elastic_agent_fleet_server__inspect_result["rc"] == 0'
+
+    - name: 'Enroll elastic-agent as Fleet Server'
+      ansible.builtin.command:
+        cmd: >-
+          elastic-agent enroll
+          --fleet-server-es={{ elastic_agent_fleet_server__elasticsearch_host | ansible.builtin.quote }}
+          --fleet-server-service-token={{ elastic_agent_fleet_server__service_token | ansible.builtin.quote }}
+          --fleet-server-policy={{ elastic_agent_fleet_server__policy_id | ansible.builtin.quote }}
+          --url={{ elastic_agent_fleet_server__url | ansible.builtin.quote }}
+          {% if elastic_agent_fleet_server__elasticsearch_ca is defined and elastic_agent_fleet_server__elasticsearch_ca | length %}
+          --certificate-authorities=/etc/elastic-agent/certs/elasticsearch-ca.crt
+          --fleet-server-es-ca=/etc/elastic-agent/certs/elasticsearch-ca.crt
+          {% endif %}
+          {% if elastic_agent_fleet_server__ssl_cert is defined and elastic_agent_fleet_server__ssl_cert | length %}
+          --fleet-server-cert=/etc/elastic-agent/certs/fleet-server.crt
+          {% endif %}
+          {% if elastic_agent_fleet_server__ssl_key is defined and elastic_agent_fleet_server__ssl_key | length %}
+          --fleet-server-cert-key=/etc/elastic-agent/certs/fleet-server.key
+          {% endif %}
+          {% if elastic_agent_fleet_server__insecure %}
+          --insecure
+          {% endif %}
+          --force
+      when:
+        - '__elastic_agent_fleet_server__inspect_result["rc"] != 0 or not (__elastic_agent_fleet_server__is_enrolled | default(false))'
+
+  tags:
+    - 'elastic_agent_fleet_server'
+    - 'elastic_agent_fleet_server:enroll'
+
+
+- block:
+
+    - name: 'systemctl {{ elastic_agent_fleet_server__service_enabled | bool | ternary("enable", "disable") }} elastic-agent.service'
+      ansible.builtin.service:
+        name: 'elastic-agent'
+        enabled: '{{ elastic_agent_fleet_server__service_enabled }}'
+        state: '{{ elastic_agent_fleet_server__service_state }}'
+
+  tags:
+    - 'elastic_agent_fleet_server'
+    - 'elastic_agent_fleet_server:state'

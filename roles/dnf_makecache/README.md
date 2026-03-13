@@ -5,9 +5,9 @@ This role ensures that the DNF-makecache Systemd service and timer are disabled.
 
 ## Tags
 
-| Tag             | What it does                                |
-| ---             | ------------                                |
-| `dnf_makecache` | Manages the dnf-makecache service and timer |
+| Tag             | What it does                                | Reload / Restart |
+| ---             | ------------                                | ---------------- |
+| `dnf_makecache` | Manages the dnf-makecache service and timer | - |
 
 
 ## Optional Role Variables

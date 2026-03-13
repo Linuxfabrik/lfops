@@ -7,11 +7,11 @@ This Ansible role does not provide a way to template the blocky configuration fi
 
 ## Tags
 
-| Tag                | What it does                                 |
-| ---                | ------------                                 |
-| `blocky`           | Downloads blocky from GitHub to the Ansible control node, copies it to the remote host, configures Systemd, applies a default configuration, and overrides it with a custom configuration (if available). |
-| `blocky:configure` | Copies and applies a custom blocky configuration file. |
-| `blocky:state`     | Enable/disable the default blocky service. |
+| Tag                | What it does                                 | Reload / Restart |
+| ---                | ------------                                 | ---------------- |
+| `blocky`           | Downloads blocky from GitHub to the Ansible control node, copies it to the remote host, configures Systemd, applies a default configuration, and overrides it with a custom configuration (if available). | Restarts blocky.service |
+| `blocky:configure` | Copies and applies a custom blocky configuration file. | Restarts blocky.service |
+| `blocky:state`     | Enable/disable the default blocky service. | - |
 
 
 ## Optional Role Variables

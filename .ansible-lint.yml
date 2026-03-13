@@ -1,0 +1,9 @@
+# Offline mode disables installation of requirements.yml and schema refreshing
+offline: true
+
+skip_list:
+  - 'key-order[task]'
+  - 'name'
+  - 'yaml'
+
+var_naming_pattern: '^([a-z][a-z0-9_]*)?__[a-z0-9_]*$'

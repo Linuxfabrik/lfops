@@ -7,9 +7,9 @@ By default, the role just installs the latest available `nodejs` package. One ca
 
 ## Tags
 
-| Tag      | What it does     |
-| ---      | ------------     |
-| `nodejs` | Installs Node.js |
+| Tag      | What it does     | Reload / Restart |
+| ---      | ------------     | ---------------- |
+| `nodejs` | Installs Node.js | - |
 
 
 ## Optional Role Variables

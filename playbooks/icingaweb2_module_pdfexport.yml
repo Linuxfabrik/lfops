@@ -1,0 +1,23 @@
+- name: 'Playbook linuxfabrik.lfops.icingaweb2_module_pdfexport'
+  hosts:
+    - 'lfops_icingaweb2_module_pdfexport'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.icingaweb2_module_pdfexport'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

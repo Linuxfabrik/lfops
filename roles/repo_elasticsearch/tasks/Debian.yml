@@ -1,0 +1,39 @@
+- block:
+
+  - name: 'curl https://artifacts.elastic.co/GPG-KEY-elasticsearch --output /tmp/ansible.elasticsearch.gpg'
+    ansible.builtin.get_url:
+      url: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+      dest: '/tmp/ansible.elasticsearch.gpg'
+      mode: 0o644
+    delegate_to: 'localhost'
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.elasticsearch.gpg to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.elasticsearch.gpg'
+      dest: '/etc/apt/keyrings/elasticsearch.asc' # use asc for ASCII-armored keys
+      mode: 0o644
+
+  # https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-with-debian-package#deb-repo
+  - name: 'deploy the repo file (mirror: {{ repo_elasticsearch__mirror_url | default("") }})'
+    ansible.builtin.template:
+      src: 'etc/apt/sources.list.d/elasticsearch.list.j2'
+      dest: '/etc/apt/sources.list.d/elasticsearch.list'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/elasticsearch.list'
+
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+
+  tags:
+    - 'repo_elasticsearch'

@@ -1,7 +1,21 @@
+icinga_kubernetes__clusters__combined_var: '{{ (
+      icinga_kubernetes__clusters__role_var +
+      icinga_kubernetes__clusters__dependent_var +
+      icinga_kubernetes__clusters__group_var +
+      icinga_kubernetes__clusters__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+icinga_kubernetes__clusters__dependent_var: []
+icinga_kubernetes__clusters__group_var: []
+icinga_kubernetes__clusters__host_var: []
+icinga_kubernetes__clusters__role_var:
+  - name: 'default'
+    kubeconfig_path: '/etc/icinga-kubernetes/kubeconfig'
+    state: 'present'
+
 icinga_kubernetes__database_host: '127.0.0.1'
 icinga_kubernetes__database_login_host: '127.0.0.1'
 icinga_kubernetes__database_name: 'icinga_kubernetes'
-icinga_kubernetes__kubeconfig_path: '/etc/icinga-kubernetes/kubeconfig'
 icinga_kubernetes__service_enabled: true
 
 # -----------------------------------------------------------------------------

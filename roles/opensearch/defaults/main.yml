@@ -67,9 +67,3 @@ opensearch__version__combined_var: '{{
     opensearch__version__dependent_var if (opensearch__version__dependent_var | string | length) else
     opensearch__version__role_var
   }}'
-
-# -----------------------------------------------------------------------------
-
-opensearch__graylog_server__cacerts_imports__dependent_var:
-  - name: 'opensearch-root-ca'
-    file: '/etc/opensearch/root-ca.pem'

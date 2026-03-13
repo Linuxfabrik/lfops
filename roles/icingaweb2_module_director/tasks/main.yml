@@ -1,5 +1,20 @@
 - block:
 
+  - name: 'Make sure that `icingaweb2_module_director__monitoring_plugins_version` is set'
+    ansible.builtin.assert:
+      that:
+        - 'icingaweb2_module_director__monitoring_plugins_version | length'
+      fail_msg: 'icingaweb2_module_director__monitoring_plugins_version is unset. Make sure to either set `icingaweb2_module_director__monitoring_plugins_version` or `lfops__monitoring_plugins_version`.'
+
+  when:
+    - 'not icingaweb2_module_director__skip_basket_import'
+  tags:
+    - 'icingaweb2_module_director:basket'
+    - 'never'
+
+
+- block:
+
   - name: 'Set platform/version specific variables'
     ansible.builtin.import_role:
       name: 'shared'
@@ -151,7 +166,7 @@
       name: 'shared'
       tasks_from: 'clone-monitoring-plugins-repo.yml'
     vars:
-      shared__monitoring_plugins_repo_version: '{{ icingaweb2_module_director__monitoring_plugins_version }}'
+      shared__monitoring_plugins_version: '{{ icingaweb2_module_director__monitoring_plugins_version }}'
 
   - name: 'Generate the joined basket from git'
     ansible.builtin.command: 'python3 ./tools/basket-join' # use python3 instead of directly calling the file so that it works on a noexec partition
@@ -160,22 +175,25 @@
     delegate_to: 'localhost'
     run_once: true
     check_mode: false # run task even if `--check` is specified
+    changed_when: false # no change on the remote host
 
-  - name: 'Copy the basket to the remote host'
+  - name: 'Copy the basket to the remote host' # noqa risky-file-permissions (only a temporary file)
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/icingaweb2-module-director-basket.json'
       dest: '/tmp/icingaweb2-module-director-basket.json'
+    changed_when: false # no relevant change on the remote host
 
-  - name: 'icingacli director basket restore < /tmp/icingaweb2-module-director-basket.json'
+  - name: 'icingacli director basket restore < /tmp/icingaweb2-module-director-basket.json' # noqa no-changed-when
     ansible.builtin.shell: 'icingacli director basket restore < /tmp/icingaweb2-module-director-basket.json'
 
   - name: 'rm /tmp/icingaweb2-module-director-basket.json'
     ansible.builtin.file:
       path: '/tmp/icingaweb2-module-director-basket.json'
       state: 'absent'
+    changed_when: false # no relevant change on the remote host
 
   when:
     - 'not icingaweb2_module_director__skip_basket_import'
   tags:
-    - 'icingaweb2_module_director'
     - 'icingaweb2_module_director:basket'
+    - 'never'

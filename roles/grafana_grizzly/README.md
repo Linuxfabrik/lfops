@@ -15,10 +15,10 @@ If you use the [Grafana Grizzly Playbook](https://github.com/Linuxfabrik/lfops/b
 
 ## Tags
 
-| Tag                     | What it does                                     |
-| ---                     | ------------                                     |
-| `grafana_grizzly`       | Installs grizzly and applies the given resources |
-| `grafana_grizzly:apply` | Applies the given resources                      |
+| Tag                     | What it does                                     | Reload / Restart |
+| ---                     | ------------                                     | ---------------- |
+| `grafana_grizzly`       | Installs grizzly and applies the given resources | - |
+| `grafana_grizzly:apply` | Applies the given resources                      | - |
 
 
 ## Mandatory Role Variables

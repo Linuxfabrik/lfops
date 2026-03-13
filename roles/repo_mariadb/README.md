@@ -5,9 +5,9 @@ This role deploys the [MariaDB Package Repository](https://mariadb.com/kb/en/mar
 
 ## Tags
 
-| Tag            | What it does                           |
-| ---            | ------------                           |
-| `repo_mariadb` | Deploys the MariaDB Package Repository |
+| Tag            | What it does                           | Reload / Restart |
+| ---            | ------------                           | ---------------- |
+| `repo_mariadb` | Deploys the MariaDB Package Repository | - |
 
 
 ## Mandatory Role Variables

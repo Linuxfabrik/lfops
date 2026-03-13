@@ -18,9 +18,9 @@ If you use the [Setup Icinga2 Master Playbook](https://github.com/Linuxfabrik/lf
 
 ## Tags
 
-| Tag                           | What it does                                            |
-| ---                           | ------------                                            |
-| `icingaweb2_module_vspheredb` | Installs and configures the IcingaWeb2 vSphereDB Module |
+| Tag                           | What it does                                            | Reload / Restart |
+| ---                           | ------------                                            | ---------------- |
+| `icingaweb2_module_vspheredb` | Installs and configures the IcingaWeb2 vSphereDB Module | - |
 
 
 ## Mandatory Role Variables

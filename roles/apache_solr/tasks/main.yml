@@ -1,5 +1,10 @@
 - block:
 
+  - name: 'install {{ __apache_solr__java_package[apache_solr__version.split(".")[0]] }}'
+    ansible.builtin.package:
+      name: '{{ __apache_solr__java_package[apache_solr__version.split(".")[0]] }}'
+      state: 'present'
+
   - name: 'Download and verify Apache Solr {{ apache_solr__version }} from Solr archive (the full binary package, for all operating systems)'
     ansible.builtin.get_url:
       url: 'https://archive.apache.org/dist/solr/solr/{{ apache_solr__version }}/solr-{{ apache_solr__version }}.tgz'
@@ -110,7 +115,7 @@
 
   - name: 'chmod -R 0755 {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}/bin'
     ansible.builtin.file:
-      mode: 0o0755
+      mode: 0o755
       path: '{{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}/bin'
       recurse: true
       state: 'directory'

@@ -1,0 +1,41 @@
+- block:
+
+  - name: 'Windows: Stop the Icinga2 service'
+    ansible.windows.win_service:
+      name: 'Icinga 2'
+      state: 'stopped'
+    register: '__monitoring_plugins__icinga2_service_stop_result'
+    # ignore errors if the service does not exist
+    failed_when:
+      - '__monitoring_plugins__icinga2_service_stop_result["failed"] is defined'
+      - '__monitoring_plugins__icinga2_service_stop_result["failed"]'
+      - 'not "is not installed" in __monitoring_plugins__icinga2_service_stop_result["msg"]'
+
+  - name: 'uninstall linuxfabrik-monitoring-plugins.msi'
+    ansible.windows.win_package:
+      product_id: '{7060a355-f73b-447d-aaa8-f4bf2db48032}' # taken from https://github.com/Linuxfabrik/monitoring-plugins/blob/main/build/create-wxs.sh
+      state: 'absent'
+
+  - name: 'Windows: Make sure the Linuxfabrik plugins are removed (old path)'
+    ansible.windows.win_file:
+      path: 'C:\ProgramData\icinga2\usr\lib64\nagios\plugins'
+      state: 'absent'
+
+  - name: 'Windows: Make sure the Linuxfabrik plugins are removed (new path)'
+    ansible.windows.win_file:
+      path: 'C:\Program Files\icinga2\sbin\linuxfabrik\'
+      state: 'absent'
+
+  - name: 'Windows: Start the Icinga2 service'
+    ansible.windows.win_service:
+      name: 'Icinga 2'
+      state: 'started'
+    register: '__monitoring_plugins__icinga2_service_start_result'
+    # ignore errors if the service does not exist
+    failed_when:
+      - '__monitoring_plugins__icinga2_service_start_result["failed"] is defined'
+      - '__monitoring_plugins__icinga2_service_start_result["failed"]'
+      - 'not "is not installed" in __monitoring_plugins__icinga2_service_start_result["msg"]'
+
+  tags:
+    - 'monitoring_plugins:remove'

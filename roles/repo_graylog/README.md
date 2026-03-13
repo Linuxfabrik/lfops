@@ -5,9 +5,9 @@ This role deploys the [Graylog Repository](https://docs.graylog.org/docs/operati
 
 ## Tags
 
-| Tag           | What it does                     |
-| ---           | ------------                     |
-| `repo_graylog` | Deploys the Graylog Repository |
+| Tag           | What it does                     | Reload / Restart |
+| ---           | ------------                     | ---------------- |
+| `repo_graylog` | Deploys the Graylog Repository | - |
 
 
 ## Mandatory Role Variables

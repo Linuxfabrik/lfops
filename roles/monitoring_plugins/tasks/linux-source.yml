@@ -1,0 +1,239 @@
+- block:
+
+  - name: 'Clone the monitoring-plugins repo'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'clone-monitoring-plugins-repo.yml'
+    vars:
+      shared__monitoring_plugins_version: '{{ monitoring_plugins__version }}'
+
+  - name: 'Clone the lib repo'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'clone-lib-repo.yml'
+    vars:
+      shared__lib_version: '{{ monitoring_plugins__version }}'
+
+  - name: 'Flatten check-plugins locally using shell'
+    ansible.builtin.shell:
+      cmd: |
+        set -o pipefail
+        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins
+        find /tmp/ansible.monitoring-plugins-repo/check-plugins -mindepth 2 -maxdepth 2 -type f | while read file; do
+          base=$(basename "$file")
+          parent=$(basename "$(dirname "$file")")
+          if [ "$base" = "$parent" ]; then
+            cp -- "$file" /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/"$base"
+          fi
+        done
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # no change on the remote host
+
+  - name: 'Flatten notification-plugins locally using shell'
+    ansible.builtin.shell:
+      cmd: |
+        set -o pipefail
+        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins
+        find /tmp/ansible.monitoring-plugins-repo/notification-plugins -mindepth 2 -maxdepth 2 -type f | while read file; do
+          base=$(basename "$file")
+          parent=$(basename "$(dirname "$file")")
+          if [ "$base" = "$parent" ]; then
+            cp -- "$file" /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/"$base"
+          fi
+        done
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # no change on the remote host
+
+  - name: 'Flatten asset files from plugin assets directories'
+    ansible.builtin.shell:
+      cmd: |
+        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets
+        find /tmp/ansible.monitoring-plugins-repo/check-plugins/*/assets -type f -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets/ \;
+    delegate_to: 'localhost'
+    run_once: true
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # no change on the remote host
+
+  - name: 'Make sure rsync is installed'
+    ansible.builtin.package:
+      name: 'rsync'
+      state: 'present'
+
+  - name: 'rsync requirements.txt to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.monitoring-plugins-repo/requirements.txt'
+      dest: '/tmp'
+      mode: 'push'
+
+  - name: 'rsync lib requirements.txt to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.lib-repo/requirements.txt'
+      dest: '/tmp/lib-requirements.txt'
+      mode: 'push'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  # needed for plugins that run with "sudo"
+  - block:
+
+      - name: '`pip3 install --requirement=/tmp/requirements.txt --user --require-hashes` for user root'
+        ansible.builtin.pip:
+          requirements: '/tmp/requirements.txt'
+          extra_args: '--user --require-hashes'
+          executable: 'pip3'
+
+    rescue:
+
+      - name: 'Retry pip3 install with --break-system-packages for user root'
+        ansible.builtin.pip:
+          requirements: '/tmp/requirements.txt'
+          extra_args: '--user --require-hashes --break-system-packages'
+          executable: 'pip3'
+        when:
+          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
+
+  - block:
+
+      - name: '`pip3 install --requirement=/tmp/lib-requirements.txt --user --require-hashes` for user root'
+        ansible.builtin.pip:
+          requirements: '/tmp/lib-requirements.txt'
+          extra_args: '--user --require-hashes'
+          executable: 'pip3'
+
+    rescue:
+
+      - name: 'Retry pip3 install lib requirements with --break-system-packages for user root'
+        ansible.builtin.pip:
+          requirements: '/tmp/lib-requirements.txt'
+          extra_args: '--user --require-hashes --break-system-packages'
+          executable: 'pip3'
+        when:
+          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'Check if user {{ monitoring_plugins__icinga_user }} exists'
+    ansible.builtin.getent:
+      database: 'passwd'
+      key: "{{ monitoring_plugins__icinga_user }}"
+    register: '__monitoring_plugins__icinga_user_check'
+    changed_when: false
+    failed_when: false
+
+  - block:
+
+      - name: '`pip3 install --requirement=/tmp/requirements.txt --user --require-hashes` for user {{ monitoring_plugins__icinga_user }}'
+        ansible.builtin.pip:
+          requirements: '/tmp/requirements.txt'
+          extra_args: '--user --require-hashes'
+          executable: 'pip3'
+        become: true
+        become_user: '{{ monitoring_plugins__icinga_user }}'
+
+    rescue:
+
+      - name: 'Retry pip3 install with --break-system-packages for user {{ monitoring_plugins__icinga_user }}'
+        ansible.builtin.pip:
+          requirements: '/tmp/requirements.txt'
+          extra_args: '--user --require-hashes --break-system-packages'
+          executable: 'pip3'
+        become: true
+        become_user: '{{ monitoring_plugins__icinga_user }}'
+        when:
+          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
+
+    when:
+      - '__monitoring_plugins__icinga_user_check is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"] is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"] is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"][monitoring_plugins__icinga_user] is defined'
+
+  - block:
+
+      - name: '`pip3 install --requirement=/tmp/lib-requirements.txt --user --require-hashes` for user {{ monitoring_plugins__icinga_user }}'
+        ansible.builtin.pip:
+          requirements: '/tmp/lib-requirements.txt'
+          extra_args: '--user --require-hashes'
+          executable: 'pip3'
+        become: true
+        become_user: '{{ monitoring_plugins__icinga_user }}'
+
+    rescue:
+
+      - name: 'Retry pip3 install lib requirements with --break-system-packages for user {{ monitoring_plugins__icinga_user }}'
+        ansible.builtin.pip:
+          requirements: '/tmp/lib-requirements.txt'
+          extra_args: '--user --require-hashes --break-system-packages'
+          executable: 'pip3'
+        become: true
+        become_user: '{{ monitoring_plugins__icinga_user }}'
+        when:
+          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
+
+    when:
+      - '__monitoring_plugins__icinga_user_check is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"] is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"] is defined'
+      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"][monitoring_plugins__icinga_user] is defined'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  - name: 'mkdir -p /usr/lib64/nagios/plugins/notifications/'
+    ansible.builtin.file:
+      path: '/usr/lib64/nagios/plugins/notifications/'
+      state: 'directory'
+      mode: 0o755
+
+  - name: 'rsync flattened check-plugins to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/'
+      dest: '/usr/lib64/nagios/plugins/'
+      mode: 'push'
+
+  - name: 'rsync flattened notification-plugins to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/'
+      dest: '/usr/lib64/nagios/plugins/notifications/'
+      mode: 'push'
+
+  - name: 'rsync lib to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.lib-repo/'
+      dest: '/usr/lib64/nagios/plugins/lib/'
+      mode: 'push'
+      rsync_opts:
+        - '--include=*.py'
+        - '--exclude=*'
+
+  - name: 'restorecon -Fvr /usr/lib64/nagios/plugins/'
+    ansible.builtin.command: 'restorecon -Fvr /usr/lib64/nagios/plugins/'
+    register: '__monitoring_plugins__restorecon_result'
+    changed_when:
+      - '__monitoring_plugins__restorecon_result["stdout"] | length'
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+  - name: 'Copy the /etc/sudoers.d/monitoring-plugins file to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}.sudoers'
+      dest: '/etc/sudoers.d/monitoring-plugins'
+      mode: 0o440
+
+  tags:
+    - 'monitoring_plugins'

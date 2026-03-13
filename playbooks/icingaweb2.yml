@@ -21,6 +21,11 @@
         - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] == "9"'
         - 'not icingaweb2__skip_repo_baseos | d(false)'
 
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ mariadb_server__kernel_settings__sysctl__dependent_var | d([]) }}'
+      when:
+        - 'not icingaweb2__skip_kernel_settings | d(false)'
+
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'

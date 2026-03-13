@@ -5,10 +5,10 @@ This role installs and configures [audit](http://people.redhat.com/sgrubb/audit/
 
 ## Tags
 
-| Tag           | What it does                               |
-| ---           | ------------                               |
-| `audit`       | Installs and configures audit              |
-| `audit:state` | Starts, stops or restarts the audit daemon |
+| Tag           | What it does                               | Reload / Restart |
+| ---           | ------------                               | ---------------- |
+| `audit`       | Installs and configures audit              | - |
+| `audit:state` | Starts, stops or restarts the audit daemon | - |
 
 
 ## Optional Role Variables

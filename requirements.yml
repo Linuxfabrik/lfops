@@ -1,0 +1,20 @@
+# note: do not forget to update dependencies in galaxy.yml
+collections:
+  - name: 'ansible.posix'
+  - name: 'ansible.utils'
+  - name: 'ansible.windows'
+  - name: 'community.crypto'
+    version: '<3.0.0' # we need python 3.6 support to run against rhel8
+  - name: 'community.general'
+    version: '<9.0.0' # we need python 3.6 support to run against rhel8
+  - name: 'community.grafana'
+  - name: 'community.libvirt'
+  - name: 'community.mongodb'
+  - name: 'community.mysql'
+  - name: 'community.postgresql'
+  - name: 'community.windows'
+  - name: 'fedora.linux_system_roles'
+  - name: 'freeipa.ansible_freeipa'
+  - name: 'hetzner.hcloud'
+  - name: 'ngine_io.cloudstack'
+  - name: 'openstack.cloud'

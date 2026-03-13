@@ -30,12 +30,12 @@ To start a backup, simply call `duba` (or `duba --config=/etc/duba/duba.json --c
 
 ## Tags
 
-| Tag                   | What it does                                 |
-| ---                   | ------------                                 |
-| `duplicity`           | Installs and configures duplicity            |
-| `duplicity:configure` | Deploys the configuration for duplicity      |
-| `duplicity:script`    | Just deploys the `duba` script               |
-| `duplicity:state`     | Manages the state of the daily systemd timer |
+| Tag                   | What it does                                 | Reload / Restart |
+| ---                   | ------------                                 | ---------------- |
+| `duplicity`           | Installs and configures duplicity            | - |
+| `duplicity:configure` | Deploys the configuration for duplicity      | - |
+| `duplicity:script`    | Just deploys the `duba` script               | - |
+| `duplicity:state`     | Manages the state of the daily systemd timer | - |
 
 
 ## Mandatory Role Variables
@@ -66,16 +66,18 @@ duplicity__swift_login:
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `duplicity__backup_backend` | The backup backend being used. Possible options:<ul><li>`swift`</li><li>`sftp`</li></ul> | `swift` |
 | `duplicity__backup_dest_container` | The Swift container. This can be used to separate backups on the destination. By default, this will be used in `duplicity__backup_dest`. | `'{{ ansible_nodename }}'` |
 | `duplicity__backup_dest` | The backup destination. This will be used in combination with the backup source path to create the target URL for `duplicity`. | `duplicity__backup_dest_container \| regex_replace("/$", "") }}'` |
 | `duplicity__backup_full_if_older_than` | After how long a full backup instead of a incremental one should be done. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`. | `'30D'` |
 | `duplicity__backup_retention_time` | The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`. | `'30D'` |
 | `duplicity__backup_sources__host_var` / <br> `duplicity__backup_sources__group_var` | List of dictionaries with directories to backup. Subkeys: <ul><li>`path`: Mandatory, string. Path to the folder to be backed up.</li><li>`divide`: Optional, boolean. Defaults to `false`. Whether to split a large directory at its first level to perform parallel backups. Imagine a computer with 4 processor cores and the folder `data` containing 100 files and folders. If `divide` is set to `true`, `duba` will start and control 5 duplicate processes at once to speed up the backup process by almost a factor of 5.</li><li>`excludes`: Optional, list. Defaults to `[]`. List of patterns that should not be included in the backup for this `path`. </li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | <ul><li>`/backup`</li><li>`/etc`</li><li>`/home`</li><li>`/opt`</li><li>`/root`</li><li>`/var/spool/cron`.</li></ul> |
 | `duplicity__excludes` | List of *global* exclude shell patterns for `duplicity`. Have a look at `man duplicity` for details. | `['**/*.git*', '**/*.svn*', '**/*.temp', '**/*.tmp', '**/.cache', '**/cache', '**/log']` |
-| `duplicity__loglevel` | Set the loglevel. Possible options: * error<br> * warning<br> * notice<br> * info<br> * debug | `'notice'` |
+| `duplicity__loglevel` | Set the loglevel. Possible options:<ul><li>`error`</li><li>`warning`</li><li>`notice`</li><li>`info`</li><li>`debug`</li></ul> | `'notice'` |
 | `duplicity__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `'{{ logrotate__rotate \| d(14) }}'` |
 | `duplicity__on_calendar_hour` | A shorthand to set the hour of `duplicity__on_calendar`. | `'23'` |
 | `duplicity__on_calendar` | The `OnCalendar` definition for the daily systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* {{ duplicity__on_calendar_hour }}:{{ 59 \| random(seed=inventory_hostname) }}'` |
+| `duplicity__sftp_password` | Password for SSH User that is used by SFTP connection. |
 | `duplicity__swift_authurl` | The Authentication URL for Swift. Usually, this is given by the provider of the Swift Storage. | `'swiss-backup02.infomaniak.com/identity/v3'` |
 | `duplicity__swift_authversion` | The Authentication Version for Swift. Usually, this is given by the provider of the Swift Storage. | `'3'` |
 | `duplicity__swift_tenantname` | The Swift Tenantname. Usually, this is given by the provider of the Swift Storage. | `'sb_project_{{ duplicity__swift_login["username"] }}'` |
@@ -123,6 +125,7 @@ duplicity__timer_enabled: true
 
 If the `gpg --import /tmp/public-master-key` task fails with `gpg: invalid armor header` in `stderr`, make sure your `duplicity__gpg_encrypt_master_key_block` is correct and has an empty line after the `-----BEGIN PGP PUBLIC KEY BLOCK-----`.
 
+If `duplicity` fails with `AttributeError: module 'collections' has no attribute 'Mapping'` in `/opt/python-venv/duplicity/lib64/python3.11/site-packages/oslo_config/cfg.py`, manually install `'oslo.config>=9'`, e.g. `/opt/python-venv/duplicity/bin/pip install 'oslo.config>=9'`.
 
 ## License
 

@@ -1,15 +1,13 @@
 - block:
 
-  - name: "dnf install '@Virtualization Host' genisoimage libguestfs-tools-c libosinfo qemu-img virt-install"
-    ansible.builtin.dnf:
-      name:
-        - '@Virtualization Host'
-        - 'genisoimage'
-        - 'libguestfs-tools-c'
-        - 'libosinfo'
-        - 'libvirt-client'
-        - 'qemu-img'
-        - 'virt-install'
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  - name: 'install {{ __kvm_host__packages | join (" ") }}'
+    ansible.builtin.package:
+      name: '{{ __kvm_host__packages }}'
       state: 'present'
 
   - name: 'systemctl {{ kvm_host__libvirtd_service_enabled | bool | ternary("enable", "disable") }} --now libvirtd.service'
@@ -18,10 +16,10 @@
       enabled: '{{ kvm_host__libvirtd_service_enabled }}'
       state: '{{ kvm_host__libvirtd_service_enabled | bool | ternary("started", "stopped") }}'
 
-  - name: 'deploy /etc/sysconfig/libvirt-guests'
+  - name: 'deploy {{ __kvm_host__libvirt_guests_path }}'
     ansible.builtin.template:
       src: 'etc/sysconfig/libvirt-guests.j2'
-      dest: '/etc/sysconfig/libvirt-guests'
+      dest: '{{ __kvm_host__libvirt_guests_path }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -31,7 +29,7 @@
       name: 'shared'
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
-      shared__remove_rpmnew_rpmsave_config_file: '/etc/sysconfig/libvirt-guests'
+      shared__remove_rpmnew_rpmsave_config_file: '{{ __kvm_host__libvirt_guests_path }}'
 
   - name: 'systemctl {{ kvm_host__libvirt_guests_service_enabled | bool | ternary("enable", "disable") }} --now libvirt-guests.service'
     ansible.builtin.systemd:

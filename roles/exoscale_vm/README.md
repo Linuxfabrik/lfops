@@ -17,11 +17,11 @@ This role creates and manages instances (virtual machines) on [Exoscale](https:/
 
 ## Tags
 
-| Tag                     | What it does                               |
-| ---                     | ------------                               |
-| `exoscale_vm`           | Creates and manages the instance           |
-| `exoscale_vm:firewalls` | Manage the provider firewalls of the host. |
-| `exoscale_vm:networks`  | Manage the provider private networks.      |
+| Tag                     | What it does                               | Reload / Restart |
+| ---                     | ------------                               | ---------------- |
+| `exoscale_vm`           | Creates and manages the instance           | - |
+| `exoscale_vm:firewalls` | Manage the provider firewalls of the host. | - |
+| `exoscale_vm:networks`  | Manage the provider private networks.      | - |
 
 
 ## Mandatory Role Variables

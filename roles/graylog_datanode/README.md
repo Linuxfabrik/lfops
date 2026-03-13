@@ -2,9 +2,6 @@
 
 This role installs and configures a [Graylog](https://www.graylog.org) Data Node.
 
-Currently supported versions:
-* 6.1
-
 Note that this role does NOT let you specify a particular Graylog Data Node version. It simply installs the latest available Graylog Data Node version from the repos configured in the system.
 
 
@@ -30,11 +27,11 @@ If you use the ["Setup Graylog Data Node" Playbook](https://github.com/Linuxfabr
 
 ## Tags
 
-| Tag                           | What it does                                    |
-| ---                           | ------------                                    |
-| `graylog_datanode`            | Installs and configures Graylog Data Node          |
-| `graylog_datanode:configure`  | Deploys the config files |
-| `graylog_datanode:state`      | Manages the state of the Graylog Data Node service |
+| Tag                           | What it does                                    | Reload / Restart |
+| ---                           | ------------                                    | ---------------- |
+| `graylog_datanode`            | Installs and configures Graylog Data Node          | Restarts graylog-datanode.service |
+| `graylog_datanode:configure`  | Deploys the config files | Restarts graylog-datanode.service |
+| `graylog_datanode:state`      | Manages the state of the Graylog Data Node service | - |
 
 
 ## Mandatory Role Variables
@@ -58,6 +55,7 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 | `graylog_datanode__http_port`    | Number. The port where the DataNode REST api is listening. | `8999` |
 | `graylog_datanode__mongodb_uri`  | String. MongoDB connection string. See https://docs.mongodb.com/manual/reference/connection-string/ for details. | `'mongodb://127.0.0.1/graylog'` |
 | `graylog_datanode__opensearch_data_location` | String. Set this OpenSearch folder if you need OpenSearch to be located in a special place. | `/var/lib/graylog-datanode/opensearch/data` |
+| `graylog_datanode__opensearch_heap` | String. Ensure the heap settings are set to half your system memory, up to a max of 31 GB. | 50% of system memory, e.g. 8g |
 
 Example:
 ```yaml
@@ -66,6 +64,7 @@ graylog_datanode__bind_address: '127.0.0.1'
 graylog_datanode__datanode_http_port: 8999
 graylog_datanode__mongodb_uri: 'mongodb://127.0.0.1/graylog'
 graylog_datanode__opensearch_data_location: '/data/opensearch'
+graylog_datanode__opensearch_heap: '8g'
 ```
 
 

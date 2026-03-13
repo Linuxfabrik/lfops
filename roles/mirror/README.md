@@ -15,10 +15,10 @@ If you use the [`mirror` Playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 
 ## Tags
 
-| Tag      | What it does                   |
-| ---      | ------------                   |
-| `mirror` | Installs and configures mirror |
-| `mirror:configure` | Deploys `/etc/mirror.yml` |
+| Tag      | What it does                   | Reload / Restart |
+| ---      | ------------                   | ---------------- |
+| `mirror` | Installs and configures mirror | - |
+| `mirror:configure` | Deploys `/etc/mirror.yml` | - |
 
 
 ## Mandatory Role Variables

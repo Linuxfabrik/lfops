@@ -5,9 +5,9 @@ This role deploys the repository at repo.linuxfabrik.ch for the Linuxfabrik Moni
 
 ## Tags
 
-| Tag                       | What it does                              |
-| ---                       | ------------                              |
-| `repo_monitoring_plugins` | Deploys the Monitoring Plugins repository |
+| Tag                       | What it does                              | Reload / Restart |
+| ---                       | ------------                              | ---------------- |
+| `repo_monitoring_plugins` | Deploys the Monitoring Plugins repository | - |
 
 
 ## Optional Role Variables

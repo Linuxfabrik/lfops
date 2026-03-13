@@ -1,4 +1,0 @@
-monitoring_plugins__versionlock_lock_command: 'dnf versionlock add'
-monitoring_plugins__versionlock_package: 'dnf-command(versionlock)'
-monitoring_plugins__versionlock_unlock_command: 'dnf versionlock delete'
-monitoring_plugins__webserver_user: 'apache'

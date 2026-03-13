@@ -5,10 +5,10 @@ This role installs at, a daemon that allows commands to be run at a specified ti
 
 ## Tags
 
-| Tag        | What it does                          |
-| ---        | ------------                          |
-| `at`       | Installs and configures at/atd        |
-| `at:state` | Controls the state of the atd service |
+| Tag        | What it does                          | Reload / Restart |
+| ---        | ------------                          | ---------------- |
+| `at`       | Installs and configures at/atd        | - |
+| `at:state` | Controls the state of the atd service | - |
 
 
 ## Optional Role Variables

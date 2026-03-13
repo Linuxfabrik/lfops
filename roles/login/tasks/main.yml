@@ -67,11 +67,11 @@
       password: '{{ (item["password"] | d(None)) | ternary(
             (
               item["password"] | d()
-              | password_hash("sha512", (65534 | random(seed=inventory_hostname) | string))
+              | ansible.builtin.password_hash("sha512", (65534 | random(seed=inventory_hostname) | string))
             ), omit)
           }}'
       remove: true #  only affects `state=absent`
-      shell: '{{ item["shell"] | d(omit) }}'
+      shell: '{{ item["shell"] | d("/bin/bash") }}'
       state: '{{ item["state"] | d("present") }}'
       system: '{{ item["system"] | d(false) }}'
     loop: '{{ login__users__combined_var }}'
@@ -104,8 +104,12 @@
       exclusive: '{{ item["remove_other_sshd_authorized_keys"] | d(false) }}'
     when: 'item["state"] | d("present") == "present"'
     loop: '{{ login__users__combined_var }}'
+    ignore_errors: '{{ ansible_check_mode }}' # ignore errors such as `Either user must exist or you must provide full path to key file in check mode`
     loop_control:
       label: '{{ item["name"] }}'
+    tags:
+      - 'login'
+      - 'login:authorized_keys'
 
   - name: 'Allow "{{ login__passwordless_sudo_group }}" group to have password-less sudo'
     community.general.sudoers:

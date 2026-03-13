@@ -1,0 +1,9 @@
+__kvm_host__libvirt_guests_path: '/etc/default/libvirt-guests'
+__kvm_host__packages:
+  - 'bridge-utils'
+  - 'genisoimage'
+  - 'libguestfs-tools'
+  - 'libvirt-clients'
+  - 'libvirt-daemon-system'
+  - 'qemu-kvm'
+  - 'virtinst'

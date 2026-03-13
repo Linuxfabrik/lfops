@@ -5,11 +5,11 @@ This role installs and configures [NFS](http://linux-nfs.org/) as a server.
 
 ## Tags
 
-| Tag                  | What it does                           |
-| ---                  | ------------                           |
-| `nfs_server`         | Installs and configures NFS  as server |
-| `nfs_server:state`   | Manages the state of the NFS server    |
-| `nfs_server:exports` | Configures the NFS exports             |
+| Tag                  | What it does                           | Reload / Restart |
+| ---                  | ------------                           | ---------------- |
+| `nfs_server`         | Installs and configures NFS  as server | Reloads nfs-server.service |
+| `nfs_server:state`   | Manages the state of the NFS server    | - |
+| `nfs_server:exports` | Configures the NFS exports             | Reloads nfs-server.service |
 
 
 ## Mandatory Role Variables

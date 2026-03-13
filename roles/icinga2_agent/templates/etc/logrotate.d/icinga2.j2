@@ -1,0 +1,28 @@
+# {{ ansible_managed }}
+# 2025110601
+# This file serves as a hotfix to prevent rlimit permission warnings in the cron.daily mail messages until the problem is fixed upstream.
+# see https://github.com/Icinga/icinga2/issues/10617
+
+/var/log/icinga2/icinga2.log /var/log/icinga2/debug.log {
+    daily
+    rotate 7
+    su icinga icinga
+    compress
+    delaycompress
+    missingok
+    notifempty
+    postrotate
+        /bin/kill -USR1 "$(cat /run/icinga2/icinga2.pid 2>/dev/null)" >/dev/null 2>&1 || true
+    endscript
+}
+
+/var/log/icinga2/error.log {
+    daily
+    rotate 90
+    su icinga icinga
+    compress
+    delaycompress
+    missingok
+    notifempty
+    # TODO: figure out how to get Icinga to re-open this log file
+}

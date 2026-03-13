@@ -1,0 +1,27 @@
+- name: 'Playbook linuxfabrik.lfops.elastic_agent_fleet_server'
+  hosts:
+    - 'lfops_elastic_agent_fleet_server'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_elasticsearch'
+      when:
+        - 'not elastic_agent_fleet_server__skip_repo_elasticsearch | d(false)'
+
+    - role: 'linuxfabrik.lfops.elastic_agent_fleet_server'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

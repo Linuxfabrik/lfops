@@ -5,9 +5,9 @@ This role simply removes the `unattended-upgrades` package from the system.
 
 ## Tags
 
-| Tag                   | What it does                              |
-| ---                   | ------------                              |
-| `unattended_upgrades` | Deactivates Unattended Upgrades |
+| Tag                   | What it does                              | Reload / Restart |
+| ---                   | ------------                              | ---------------- |
+| `unattended_upgrades` | Deactivates Unattended Upgrades | - |
 
 
 ## License

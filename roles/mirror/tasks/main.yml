@@ -58,7 +58,7 @@
       recursive: true
       state: 'present'
 
-  - name: 'setfacl --recursive --modify user:{{ mirror__webserver_user }}:rwx {{ mirror__base_path }}'
+  - name: 'setfacl --default --recursive --modify user:{{ mirror__webserver_user }}:rwx {{ mirror__base_path }}'
     ansible.posix.acl:
       default: true
       entity: '{{ mirror__webserver_user }}'
@@ -77,7 +77,7 @@
       recursive: true
       state: 'present'
 
-  - name: 'setfacl --recursive --modify group:{{ mirror__webserver_user }}:rx {{ mirror__base_path }}'
+  - name: 'setfacl --default --recursive --modify group:{{ mirror__webserver_user }}:rx {{ mirror__base_path }}'
     ansible.posix.acl:
       default: true
       entity: '{{ mirror__webserver_user }}'
@@ -96,7 +96,7 @@
       recursive: true
       state: 'present'
 
-  - name: 'setfacl --recursive --modify user:mirror:rwx --default {{ mirror__base_path }}'
+  - name: 'setfacl --default --recursive --modify user:mirror:rwx {{ mirror__base_path }}'
     ansible.posix.acl:
       default: true
       entity: 'mirror'

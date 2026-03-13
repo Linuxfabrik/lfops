@@ -5,6 +5,7 @@
     login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
     variable: 'datadir'
   register: 'mariadb_server__datadir_result'
+  check_mode: false # run task even if `--check` is specified
 
 - name: 'Extract "msg" from mariadb_server__datadir_result and remove trailing `/` from {{ mariadb_server__datadir_result.msg }}'
   ansible.builtin.set_fact:
@@ -17,7 +18,7 @@
 
 # if current_datadir <> datadir_in_inventory:
 #     systemctl stop mariadb
-#     cp --archive current_datadir/. datadir_in_inventory/)
+#     cp --archive current_datadir/. datadir_in_inventory/
 #     systemctl start mariadb
 
 - block:
@@ -36,6 +37,7 @@
 
   - name: 'Deploy {{ mariadb_server__config_file_01 }}'
     ansible.builtin.template:
+      backup: true
       src: 'etc/my.cnf.d/z01-linuxfabrik.cnf.j2'
       dest: '{{ mariadb_server__config_file_01 }}'
       owner: 'root'
@@ -46,6 +48,13 @@
     ansible.builtin.service:
       name: 'mariadb.service'
       state: 'started'
+    when:
+      - 'mariadb_server__run_galera_new_cluster is false'
+
+  - name: 'Run galera_new_cluster' # noqa no-changed-when
+    ansible.builtin.command: 'galera_new_cluster'
+    when:
+      - 'mariadb_server__run_galera_new_cluster is true'
 
   when:
     - 'mariadb_server__datadir_result != mariadb_server__cnf_datadir__combined_var'
