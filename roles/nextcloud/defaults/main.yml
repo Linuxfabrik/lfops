@@ -3,11 +3,11 @@ nextcloud__app_configs__group_var: []
 nextcloud__app_configs__host_var: []
 nextcloud__app_configs__role_var:
   - key: 'core shareapi_default_expire_date'
-    value: 'yes'
+    value: true
     type: 'boolean'
     state: 'present'
   - key: 'core shareapi_enforce_expire_date'
-    value: 'no'
+    value: false
     type: 'boolean'
     state: 'present'
   - key: 'core shareapi_expire_after_n_days'
@@ -15,12 +15,12 @@ nextcloud__app_configs__role_var:
     type: 'integer'
     state: 'present'
   - key: 'dav buildCalendarSearchIndex'
-    value: 'yes'
+    value: true
     type: 'boolean'
     state: 'present'
   - key: 'password_policy enforceHaveIBeenPwned'
-    value: 1
-    type: 'integer'
+    value: true
+    type: 'boolean'
     state: 'present'
   - key: 'password_policy minLength'
     value: 12
@@ -30,7 +30,7 @@ nextcloud__app_configs__role_var:
     value: 'ch'
     state: 'present'
   - key: 'support hide-app'
-    value: 'yes'
+    value: true
     type: 'boolean'
     state: 'present'
   - key: 'text workspace_available'

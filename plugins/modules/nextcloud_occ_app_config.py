@@ -71,8 +71,6 @@ options:
       - Pre-fetched JSON output from C(occ config:list --output=json --private).
       - When provided, the module skips calling C(config:app:get) itself,
         avoiding repeated occ invocations in a loop.
-      - Type comparison is skipped when using cached data since
-        C(config:list) does not include type information.
     type: raw
 '''
 
@@ -180,16 +178,28 @@ def main():
         key_exists = name in app_configs
         if key_exists:
             raw = app_configs[name]
-            # config:list returns JSON booleans (true/false),
-            # but config:app:get returns 1/0 for booleans
+            # infer the type from the JSON value's Python type,
+            # since config:list returns values through convertTypedValue()
+            # which converts based on the DB type column.
+            # must check bool before int, as bool is a subclass of int.
             if isinstance(raw, bool):
                 current_value = '1' if raw else '0'
+                current_type = 'boolean'
+            elif isinstance(raw, int):
+                current_value = str(raw)
+                current_type = 'integer'
+            elif isinstance(raw, float):
+                current_value = str(raw)
+                current_type = 'float'
+            elif isinstance(raw, list):
+                current_value = str(raw)
+                current_type = 'array'
             else:
                 current_value = str(raw)
+                current_type = 'string'
         else:
             current_value = ''
-        # config:list does not include type information
-        current_type = ''
+            current_type = ''
     else:
         get_cmd = [
             php_path,
@@ -219,9 +229,8 @@ def main():
     result['current_value'] = current_value
 
     if state == 'present':
-        # check if the current value matches the desired settings
-        # when using cache, type info is not available so we only compare values
-        if current_value == value and (current_type == value_type or current_type == ''):
+        # check if the current value and type match the desired settings
+        if current_value == value and current_type == value_type:
             module.exit_json(**result)
 
         # else, the value will be changed
