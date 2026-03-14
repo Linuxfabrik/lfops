@@ -35,7 +35,7 @@ nextcloud__app_configs__role_var:
     state: 'present'
   - key: 'text workspace_available'
     value: 0
-    type: 'integer'
+    type: 'string' # for some reason this has to be string, not integer or boolean
     state: 'present'
   - key: 'theming imprintUrl'
     value: 'https://www.linuxfabrik.ch/ueber-uns/agb/'
