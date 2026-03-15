@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:keycloak**: Rework `keycloak.conf` template to match Keycloak's default config structure
 * **role:apache_httpd**: bump Core Rule Set to 4.24.1
 * **role:repo_remi**: Install Composer from `remi-modular` repository
 * **role:icingadb**: Enhance `config.yml` template

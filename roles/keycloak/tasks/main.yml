@@ -19,7 +19,6 @@
         keycloak__log_file: {{ keycloak__log_file }}
         keycloak__mode: {{ keycloak__mode }}
         keycloak__proxy_headers: {{ keycloak__proxy_headers }}
-        keycloak__proxy_trusted_addresses: {{ keycloak__proxy_trusted_addresses }}
         keycloak__service_enabled: {{ keycloak__service_enabled }}
         keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: {{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route }}
         keycloak__state: {{ keycloak__state }}

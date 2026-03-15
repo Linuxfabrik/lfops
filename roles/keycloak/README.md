@@ -79,8 +79,8 @@ keycloak__version: '26.1.2'
 | `keycloak__log` | String. Enable one or more log handlers in a comma-separated list. | `file` |
 | `keycloak__log_file` | String. Set the log file path and filename. | `/var/log/keycloak/keycloak.log` |
 | `keycloak__mode` | String. The mode to start Keycloak in. The development mode is targeted for people trying out Keycloak the first time and get it up and running quickly. It also offers convenient defaults for developers, for example to develop a new Keycloak theme.<br>Possible options:<br> * `production`<br> * `development` | `production` |
-| `keycloak__proxy_headers` | String. The proxy headers that should be accepted by the server. | `'xforwarded'` |
-| `keycloak__proxy_trusted_addresses` | String. A comma separated list of trusted proxy addresses. | `'127.0.0.1'` |
+| `keycloak__proxy_headers` | String. The proxy headers that should be accepted by the server. Only applies in production mode without HTTPS certificates (edge proxy mode). | `'xforwarded'` |
+| `keycloak__proxy_trusted_addresses` | String. A comma separated list of trusted proxy addresses. Only applies in production mode without HTTPS certificates (edge proxy mode). | `unset` |
 | `keycloak__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
 | `keycloak__spi_sticky_session_encoder_infinispan_should_attach_route` | Bool. https://www.keycloak.org/server/reverseproxy#_enable_sticky_sessions | `false` |
 | `keycloak__state`| String. Controls the Systemd service. One of<br> * `started`<br> * `stopped`<br> * `reloaded` | `'started'` |
@@ -103,7 +103,7 @@ keycloak__log: 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
 keycloak__mode: 'production'
 keycloak__proxy_headers: 'xforwarded'
-keycloak__proxy_trusted_addresses: '127.0.0.1'
+keycloak__proxy_trusted_addresses: '10.0.0.2'
 keycloak__service_enabled: true
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
 keycloak__state: 'started'
@@ -112,7 +112,7 @@ keycloak__state: 'started'
 
 ## Using a reverse proxy
 
-See the [Keycloak reverse proxy documentation](https://www.keycloak.org/server/reverseproxy) for details. The `proxy-headers` option (default: `xforwarded`) controls which reverse proxy headers Keycloak accepts. When running behind a reverse proxy that terminates TLS (edge mode), leave the HTTPS certificate variables empty, as the role will set `http-enabled=true` automatically. When the reverse proxy does not terminate TLS (reencrypt/passthrough), provide certificate paths via `keycloak__https_certificate_file` and `keycloak__https_certificate_key_file`.
+See the [Keycloak reverse proxy documentation](https://www.keycloak.org/server/reverseproxy) for details. When running behind a reverse proxy that terminates TLS (edge mode), leave the HTTPS certificate variables empty. The role will automatically set `http-enabled=true` and `proxy-headers` (default: `xforwarded`). Optionally set `keycloak__proxy_trusted_addresses` to restrict which proxy addresses are trusted. When the reverse proxy does not terminate TLS (reencrypt/passthrough), provide certificate paths via `keycloak__https_certificate_file` and `keycloak__https_certificate_key_file`.
 
 
 ## License

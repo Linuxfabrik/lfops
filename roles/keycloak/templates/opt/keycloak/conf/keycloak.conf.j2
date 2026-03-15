@@ -1,68 +1,76 @@
 # {{ ansible_managed }}
-# 2025022704
+# 2026031501
 
 # Basic settings for running in production. Change accordingly before deploying the server.
-# https://www.keycloak.org/server/all-config
-
 
 # Database
-# https://www.keycloak.org/server/all-config#category-database
+
+# The database vendor.
 db={{ keycloak__db_vendor }}
+
+# The username of the database user.
+db-username={{ keycloak__db_login.username }}
+
+# The password of the database user.
 db-password={{ keycloak__db_login.password }}
+
+# The full database JDBC URL. If not provided, a default URL is set based on the selected database vendor.
 {% if keycloak__db_url is defined and keycloak__db_url | length %}
 db-url={{ keycloak__db_url }}
+{% else %}
+#db-url=jdbc:mariadb://localhost/keycloak
 {% endif %}
 db-url-database={{ keycloak__db_url_database }}
 db-url-host={{ keycloak__db_url_host }}
-db-username={{ keycloak__db_login.username }}
 
+# Observability
 
-# Health
-# https://www.keycloak.org/server/all-config#category-health
+# If the server should expose healthcheck endpoints.
 health-enabled={{ keycloak__expose_healthcheck_endpoints | string | lower }}
 
-
-# Metrics
-# https://www.keycloak.org/server/all-config#category-metrics
+# If the server should expose metrics endpoints.
 metrics-enabled={{ keycloak__expose_metrics_endpoints | string | lower }}
 
+# HTTP
 
-# HTTP(S)
-# https://www.keycloak.org/server/all-config#category-http
-{% if keycloak__mode == 'production' %}
-{% if keycloak__https_certificate_file | default('') | length == 0 %}
-http-enabled=true
-{% else %}
+# The file path to a server certificate or certificate chain in PEM format.
+{% if keycloak__https_certificate_file | default('') | length %}
 https-certificate-file={{ keycloak__https_certificate_file }}
+{% else %}
+#https-certificate-file=${kc.home.dir}/conf/server.crt.pem
+{% endif %}
+
+# The file path to a private key in PEM format.
+{% if keycloak__https_certificate_key_file | default('') | length %}
 https-certificate-key-file={{ keycloak__https_certificate_key_file }}
+{% else %}
+#https-certificate-key-file=${kc.home.dir}/conf/server.key.pem
+{% endif %}
+{% if keycloak__mode == 'production' and keycloak__https_certificate_file | default('') | length == 0 %}
+http-enabled=true
+
+# Proxy
+proxy-headers={{ keycloak__proxy_headers }}
+{% if keycloak__proxy_trusted_addresses is defined and keycloak__proxy_trusted_addresses | length %}
+proxy-trusted-addresses={{ keycloak__proxy_trusted_addresses }}
+{% endif %}
+{% endif %}
+{% if keycloak__https_certificate_file | default('') | length %}
 {% if keycloak__https_cipher_suites is defined and keycloak__https_cipher_suites | length %}
 https-cipher-suites={{ keycloak__https_cipher_suites }}
 {% endif %}
 https-protocols={{ keycloak__https_protocols }}
 {% endif %}
-{% endif %}
 
-
-# Proxy
-# https://www.keycloak.org/server/all-config#category-proxy
-{% if keycloak__proxy_headers is defined and keycloak__proxy_headers | length %}
-proxy-headers={{ keycloak__proxy_headers }}
-proxy-trusted-addresses={{ keycloak__proxy_trusted_addresses }}
-{% endif %}
-
-
-# Hostname v2
-# https://www.keycloak.org/server/all-config#category-hostname_v2
-hostname={{ keycloak__hostname }}
-hostname-backchannel-dynamic={{ keycloak__hostname_backchannel_dynamic | string | lower }}
-
-
-# Logging
-# https://www.keycloak.org/server/all-config#category-logging
-log={{ keycloak__log }}
-log-file={{ keycloak__log_file }}
-
-
-# https://www.keycloak.org/server/reverseproxy#_enable_sticky_sessions
 # Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy
 spi-sticky-session-encoder-infinispan-should-attach-route={{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route | string | lower }}
+
+# Hostname for the Keycloak server.
+hostname={{ keycloak__hostname }}
+{% if keycloak__hostname_backchannel_dynamic | bool %}
+hostname-backchannel-dynamic={{ keycloak__hostname_backchannel_dynamic | string | lower }}
+{% endif %}
+
+# Logs
+log={{ keycloak__log }}
+log-file={{ keycloak__log_file }}
