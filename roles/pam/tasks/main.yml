@@ -1,0 +1,94 @@
+    # CIS_Rocky_Linux_9_Benchmark_v2.0.0
+- block:
+
+  - name: 'Install pam authselect libpwquality'
+    ansible.builtin.package:
+      name:
+        - 'authselect'
+        - 'libpwquality'
+        - 'pam'
+      state: 'latest'
+
+  tags:
+    - 'pam'
+
+
+    # CIS_Rocky_Linux_9_Benchmark_v2.0.0
+- block:
+
+  - name: 'Ensure active authselect profile includes pam modules - get current profile'
+    ansible.builtin.command:
+      cmd: 'authselect current --raw'
+    register: 'pam__authselect_current'
+    changed_when: false
+    failed_when: false
+
+  - name: 'Ensure active authselect profile includes pam modules - create custom profile'
+    ansible.builtin.command:
+      cmd: 'authselect create-profile {{ pam__authselect_profile }} --base-on sssd'
+      creates: '/etc/authselect/custom/{{ pam__authselect_profile }}/README'
+
+  - name: 'Ensure active authselect profile includes pam modules - select custom profile'
+    ansible.builtin.command:
+      cmd: >-
+        authselect select
+        custom/{{ pam__authselect_profile }}
+        with-faillock
+        with-pwhistory
+        without-nullok
+        --backup=PAM_CONFIG_BACKUP
+        --force
+    when: >-
+      ('custom/' + pam__authselect_profile) not in (pam__authselect_current.stdout | default('')) or
+      'with-faillock' not in (pam__authselect_current.stdout | default('')) or
+      'with-pwhistory' not in (pam__authselect_current.stdout | default('')) or
+      'without-nullok' not in (pam__authselect_current.stdout | default(''))
+
+  when: pam__authselect_profile is defined
+  tags:
+    - 'pam'
+
+
+    # CIS_Rocky_Linux_9_Benchmark_v2.0.0
+- block:
+
+  - name: 'Deploy /etc/security/faillock.conf'
+    ansible.builtin.template:
+      src: 'etc/security/faillock.conf.j2'
+      dest: '/etc/security/faillock.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'pam'
+
+
+    # CIS_Rocky_Linux_9_Benchmark_v2.0.0
+- block:
+
+  - name: 'Deploy /etc/security/pwquality.conf'
+    ansible.builtin.template:
+      src: 'etc/security/pwquality.conf.j2'
+      dest: '/etc/security/pwquality.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'pam'
+
+
+    # CIS_Rocky_Linux_9_Benchmark_v2.0.0
+- block:
+
+  - name: 'Deploy /etc/security/pwhistory.conf'
+    ansible.builtin.template:
+      src: 'etc/security/pwhistory.conf.j2'
+      dest: '/etc/security/pwhistory.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'pam'

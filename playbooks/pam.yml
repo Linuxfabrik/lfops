@@ -1,0 +1,22 @@
+- name: 'Playbook linuxfabrik.lfops.pam'
+  hosts:
+    - 'pam'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+    - role: 'linuxfabrik.lfops.pam'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

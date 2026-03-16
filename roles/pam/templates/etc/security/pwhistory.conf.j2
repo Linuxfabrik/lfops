@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+# 2026041601
+# Configuration for remembering the last passwords used by a user.
+#
+# Enable the debugging logs.
+# Enabled if option is present.
+# debug
+
+# root account's passwords are also remembered.
+# Enabled if option is present.
+enforce_for_root
+
+# Number of passwords to remember.
+# The default is 10.
+remember = {{ pam__pwhistory_remember }}
+
+# Number of times to prompt for the password.
+# The default is 1.
+# retry = 1
+#
+# The directory where the last passwords are kept.
+# The default is /etc/security/opasswd.
+# file = /etc/security/opasswd

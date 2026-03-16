@@ -1,0 +1,16 @@
+pam__faillock_deny: 5
+pam__faillock_unlock_time: 0 # or greater then 900 seconds (0 could result denial of service)
+pam__faillock_root_unlock_time: 60 # or remove line
+
+pam__pwquality_difok: 2 # or more
+pam__pwquality_minlen: 14 # or more
+pam__pwquality_minclass: 4
+
+pam__pwquality_dcredit: -1 # 1 must have digit
+pam__pwquality_ucredit: -1 # 1 must have uppercase letter
+pam__pwquality_lcredit: -1 # 1 must have other char
+pam__pwquality_ocredit: -1 # 1 must have lowercase letter
+pam__pwquality_maxrepeat: 3 # or less but NOT 0
+pam__pwquality_maxsequence: 3 # or less but NOT 0
+
+pam__pwhistory_remember: 24 # number of old passwords to remember

@@ -84,6 +84,7 @@
 - import_playbook: 'open_vm_tools.yml'
 - import_playbook: 'opensearch.yml'
 - import_playbook: 'openvpn_server.yml'
+- import_playbook: 'pam.yml'
 - import_playbook: 'php.yml'
 - import_playbook: 'podman_containers.yml'
 - import_playbook: 'policycoreutils.yml'
