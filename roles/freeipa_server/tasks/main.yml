@@ -34,22 +34,6 @@
       ipaserver_realm: '{{ freeipa_server__realm }}'
       ipaserver_setup_firewalld: false
 
-  # we need to use shell instead of command for the kerberos ticket to work
-  - name: 'kinit'
-    ansible.builtin.shell: "echo '{{ freeipa_server__ipa_admin_password }}' | kinit"
-
-  - name: "ipa config-mod --defaultshell='/bin/bash' --pwdexpnotify=10"
-    ansible.builtin.shell: "ipa config-mod --defaultshell='/bin/bash' --pwdexpnotify=10"
-    register: 'freeipa_server__ipa_config_mod_result'
-    changed_when: '"no modifications" not in freeipa_server__ipa_config_mod_result["stderr"]'
-    failed_when:
-      - 'freeipa_server__ipa_config_mod_result["failed"] is defined'
-      - 'freeipa_server__ipa_config_mod_result["failed"]'
-      - '"no modifications" not in freeipa_server__ipa_config_mod_result["stderr"]'
-
-  - name: 'kdestroy'
-    ansible.builtin.shell: 'kdestroy'
-
   tags:
     - 'freeipa_server'
 
@@ -59,7 +43,7 @@
   - name: 'ensures /etc/systemd/system/pki-tomcatd@.service.d dir exists'
     ansible.builtin.file:
       path: '/etc/systemd/system/pki-tomcatd@.service.d'
-      state: directory
+      state: 'directory'
 
   - name: 'deploy /etc/systemd/system/pki-tomcatd@.service.d/override.conf'
     ansible.builtin.template:
@@ -71,4 +55,402 @@
 
   tags:
     - 'freeipa_server'
+    - 'freeipa_server:configure'
     - 'freeipa_server:systemd_override'
+
+
+# group management
+- block:
+
+  - name: 'Combined Groups:'
+    ansible.builtin.debug:
+      var: 'freeipa_server__groups__combined_var'
+
+  - name: 'Remove FreeIPA groups'
+    # freeipa.ansible_freeipa.ipagroup: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipagroup:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ freeipa_server__groups__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Create or update FreeIPA groups'
+    # freeipa.ansible_freeipa.ipagroup: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipagroup:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      description: '{{ item["description"] | default(omit) }}'
+      gidnumber: '{{ item["gidnumber"] | default(omit) }}'
+      nonposix: '{{ item["nonposix"] | default(omit) }}'
+      external: '{{ item["external"] | default(omit) }}'
+      state: 'present'
+    loop: '{{ (freeipa_server__groups__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__groups__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:configure'
+    - 'freeipa_server:group'
+
+
+# host group management
+- block:
+
+  - name: 'Combined Host Groups:'
+    ansible.builtin.debug:
+      var: 'freeipa_server__hostgroups__combined_var'
+
+  - name: 'Remove FreeIPA host groups'
+    # freeipa.ansible_freeipa.ipahostgroup: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipahostgroup:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ freeipa_server__hostgroups__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Create or update FreeIPA host groups'
+    # freeipa.ansible_freeipa.ipahostgroup: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipahostgroup:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      description: '{{ item["description"] | default(omit) }}'
+      host: '{{ item["hosts"] | default(omit) }}'
+      hostgroup: '{{ item["hostgroups"] | default(omit) }}'
+      state: 'present'
+    loop: '{{ (freeipa_server__hostgroups__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__hostgroups__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:configure'
+    - 'freeipa_server:hostgroup'
+
+
+# user management
+- block:
+
+  - name: 'Combined Users:'
+    ansible.builtin.debug:
+      var: 'freeipa_server__users__combined_var'
+
+  - name: 'Remove FreeIPA users'
+    # freeipa.ansible_freeipa.ipauser: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipauser:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ freeipa_server__users__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Create or update FreeIPA users'
+    # freeipa.ansible_freeipa.ipauser: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipauser:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      first: '{{ item["first"] }}'
+      last: '{{ item["last"] }}'
+      password: '{{ item["password"] | default(omit) }}'
+      email: '{{ item["email"] | default(omit) }}'
+      shell: '{{ item["shell"] | default(omit) }}'
+      sshpubkey: '{{ item["sshpubkey"] | default(omit) }}'
+      update_password: '{{ item["update_password"] | default("on_create") }}'
+      state: 'present'
+    loop: '{{ (freeipa_server__users__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__users__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    # no_log: true
+
+  - name: 'Manage FreeIPA user group memberships'
+    # freeipa.ansible_freeipa.ipagroup: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipagroup:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item[1] }}'
+      user:
+        - '{{ item[0]["name"] }}'
+      action: 'member'
+    loop: '{{ ((freeipa_server__users__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__users__combined_var | selectattr("state", "undefined") | list))
+            | subelements("groups", skip_missing=true) }}'
+    loop_control:
+      label: '{{ item[0]["name"] }} -> {{ item[1] }}'
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:configure'
+    - 'freeipa_server:user'
+
+
+# HBAC rule management
+- block:
+
+  - name: 'Combined HBAC Rules:'
+    ansible.builtin.debug:
+      var: 'freeipa_server__hbacrules__combined_var'
+
+  - name: 'Remove FreeIPA HBAC rules'
+    # freeipa.ansible_freeipa.ipahbacrule: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipahbacrule:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ freeipa_server__hbacrules__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Create or update FreeIPA HBAC rules'
+    # freeipa.ansible_freeipa.ipahbacrule: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipahbacrule:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      description: '{{ item["description"] | default(omit) }}'
+      usercategory: '{{ item["usercategory"] | default(omit) }}'
+      hostcategory: '{{ item["hostcategory"] | default(omit) }}'
+      servicecategory: '{{ item["servicecategory"] | default(omit) }}'
+      state: 'present'
+    loop: '{{ (freeipa_server__hbacrules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__hbacrules__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Manage FreeIPA HBAC rule members'
+    # freeipa.ansible_freeipa.ipahbacrule: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipahbacrule:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      user: '{{ item["users"] | default(omit) }}'
+      group: '{{ item["groups"] | default(omit) }}'
+      host: '{{ item["hosts"] | default(omit) }}'
+      hostgroup: '{{ item["hostgroups"] | default(omit) }}'
+      hbacsvc: '{{ item["hbacsvcs"] | default(omit) }}'
+      hbacsvcgroup: '{{ item["hbacsvcgroups"] | default(omit) }}'
+      action: 'member'
+    loop: '{{ (freeipa_server__hbacrules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__hbacrules__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when: 'item["users"] is defined or item["groups"] is defined or item["hosts"] is defined or item["hostgroups"] is defined or item["hbacsvcs"] is defined or item["hbacsvcgroups"] is defined'
+
+  - name: 'Enable or disable FreeIPA HBAC rules'
+    # freeipa.ansible_freeipa.ipahbacrule: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipahbacrule:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      state: '{{ item["state"] | default("enabled") }}'
+    loop: '{{ (freeipa_server__hbacrules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__hbacrules__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:configure'
+    - 'freeipa_server:hbacrule'
+
+
+# password policy management
+- block:
+
+  - name: 'Combined Password Policies:'
+    ansible.builtin.debug:
+      var: 'freeipa_server__pwpolicies__combined_var'
+
+  - name: 'Remove FreeIPA password policies'
+    # freeipa.ansible_freeipa.ipapwpolicy: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipapwpolicy:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ freeipa_server__pwpolicies__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Create or update FreeIPA password policies'
+    # freeipa.ansible_freeipa.ipapwpolicy: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipapwpolicy:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      maxlife: '{{ item["maxlife"] | default(omit) }}'
+      minlife: '{{ item["minlife"] | default(omit) }}'
+      history: '{{ item["history"] | default(omit) }}'
+      minclasses: '{{ item["minclasses"] | default(omit) }}'
+      minlength: '{{ item["minlength"] | default(omit) }}'
+      maxfail: '{{ item["maxfail"] | default(omit) }}'
+      failinterval: '{{ item["failinterval"] | default(omit) }}'
+      lockouttime: '{{ item["lockouttime"] | default(omit) }}'
+      priority: '{{ item["priority"] | default(omit) }}'
+      state: 'present'
+    loop: '{{ (freeipa_server__pwpolicies__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__pwpolicies__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:configure'
+    - 'freeipa_server:pwpolicy'
+
+
+# sudo command and command group management
+- block:
+
+  - name: 'Combined Sudo Commands:'
+    ansible.builtin.debug:
+      var: 'freeipa_server__sudocmds__combined_var'
+
+  - name: 'Remove FreeIPA sudo commands'
+    # freeipa.ansible_freeipa.ipasudocmd: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipasudocmd:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ freeipa_server__sudocmds__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Create or update FreeIPA sudo commands'
+    # freeipa.ansible_freeipa.ipasudocmd: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipasudocmd:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      description: '{{ item["description"] | default(omit) }}'
+      state: 'present'
+    loop: '{{ (freeipa_server__sudocmds__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__sudocmds__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Combined Sudo Command Groups:'
+    ansible.builtin.debug:
+      var: 'freeipa_server__sudocmdgroups__combined_var'
+
+  - name: 'Remove FreeIPA sudo command groups'
+    # freeipa.ansible_freeipa.ipasudocmdgroup: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipasudocmdgroup:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ freeipa_server__sudocmdgroups__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Create or update FreeIPA sudo command groups'
+    # freeipa.ansible_freeipa.ipasudocmdgroup: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipasudocmdgroup:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      description: '{{ item["description"] | default(omit) }}'
+      sudocmd: '{{ item["sudocmds"] | default(omit) }}'
+      state: 'present'
+    loop: '{{ (freeipa_server__sudocmdgroups__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__sudocmdgroups__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:configure'
+    - 'freeipa_server:sudocmd'
+
+
+# sudo rule management
+- block:
+
+  - name: 'Combined Sudo Rules:'
+    ansible.builtin.debug:
+      var: 'freeipa_server__sudorules__combined_var'
+
+  - name: 'Remove FreeIPA sudo rules'
+    # freeipa.ansible_freeipa.ipasudorule: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipasudorule:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ freeipa_server__sudorules__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Create or update FreeIPA sudo rules'
+    # freeipa.ansible_freeipa.ipasudorule: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipasudorule:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      description: '{{ item["description"] | default(omit) }}'
+      usercategory: '{{ item["usercategory"] | default(omit) }}'
+      hostcategory: '{{ item["hostcategory"] | default(omit) }}'
+      cmdcategory: '{{ item["cmdcategory"] | default(omit) }}'
+      runasusercategory: '{{ item["runasusercategory"] | default(omit) }}'
+      runasgroupcategory: '{{ item["runasgroupcategory"] | default(omit) }}'
+      order: '{{ item["order"] | default(omit) }}'
+      state: 'present'
+    loop: '{{ (freeipa_server__sudorules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__sudorules__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Manage FreeIPA sudo rule members'
+    # freeipa.ansible_freeipa.ipasudorule: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipasudorule:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      user: '{{ item["users"] | default(omit) }}'
+      group: '{{ item["groups"] | default(omit) }}'
+      host: '{{ item["hosts"] | default(omit) }}'
+      hostgroup: '{{ item["hostgroups"] | default(omit) }}'
+      cmd: '{{ item["cmds"] | default(omit) }}'
+      cmdgroup: '{{ item["cmdgroups"] | default(omit) }}'
+      runasuser: '{{ item["runasusers"] | default(omit) }}'
+      runasgroup: '{{ item["runasgroups"] | default(omit) }}'
+      sudooption: '{{ item["options"] | default(omit) }}'
+      action: 'member'
+    loop: '{{ (freeipa_server__sudorules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__sudorules__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when: 'item["users"] is defined or item["groups"] is defined or item["hosts"] is defined or item["hostgroups"] is defined or item["cmds"] is defined or item["cmdgroups"] is defined or item["runasusers"] is defined or item["runasgroups"] is defined or item["options"] is defined'
+
+  - name: 'Enable or disable FreeIPA sudo rules'
+    # freeipa.ansible_freeipa.ipasudorule: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
+    linuxfabrik.lfops.ipasudorule:
+      ipaadmin_password: '{{ freeipa_server__ipa_admin_password }}'
+      ipaadmin_principal: '{{ freeipa_server__ipa_admin_principal }}'
+      name: '{{ item["name"] }}'
+      state: '{{ item["state"] | default("enabled") }}'
+    loop: '{{ (freeipa_server__sudorules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+            + (freeipa_server__sudorules__combined_var | selectattr("state", "undefined") | list) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:configure'
+    - 'freeipa_server:sudorule'
