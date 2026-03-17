@@ -28,6 +28,7 @@ dependencies:
     - 'cs' # required for ngine_io.cloudstack
     - 'hcloud' # required for hetzner.hcloud
     - 'jmespath' # required for community.general.json_query
+    - 'mitogen'
     - 'netaddr' # required for ansible.utils.ipaddr
     - 'openstacksdk' # required for openstack.cloud
     - 'passlib' # required for ansible.builtin.password_hash filter
@@ -44,3 +45,7 @@ dependencies:
 additional_build_files:
   - src: 'linuxfabrik-lfops.tar.gz'
     dest: '.'
+
+additional_build_steps:
+  append_final:
+    - 'RUN mkdir -p /opt/mitogen && ln -s /usr/local/lib/python3.11/site-packages/mitogen /opt/mitogen/mitogen && ln -s /usr/local/lib/python3.11/site-packages/ansible_mitogen /opt/mitogen/ansible_mitogen'
