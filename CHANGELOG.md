@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:nfs_server**: Rework `nfs_server__exports` from a list of strings to a list of dictionaries with new `path`, `clients`, `owner`, `group`, and `mode` subkeys
 * **role:kvm_host**: Change NAT to be explicitly activated for virtual nets
 * **role:apache_httpd**: Change the default to not install/enable mod_qos by default (it is no longer shipped in EPEL 10)
 

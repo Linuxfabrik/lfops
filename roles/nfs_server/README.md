@@ -7,23 +7,31 @@ This role installs and configures [NFS](http://linux-nfs.org/) as a server.
 
 | Tag                  | What it does                           | Reload / Restart |
 | ---                  | ------------                           | ---------------- |
-| `nfs_server`         | Installs and configures NFS  as server | Reloads nfs-server.service |
-| `nfs_server:state`   | Manages the state of the NFS server    | - |
-| `nfs_server:exports` | Configures the NFS exports             | Reloads nfs-server.service |
+| `nfs_server`         | <ul><li>Install nfs-utils on RedHat-Based systems or nfs-kernel-server on Debian-Based systems</li><li>Enable/disable nfs-server.service</li><li>`mkdir -p nfs-export-directory`</li><li>Deploy /etc/exports</li></ul> | Reloads nfs-server.service |
+| `nfs_server:state`   | <ul><li>Enable/disable nfs-server.service</li></ul> | - |
+| `nfs_server:exports` | <ul><li>`mkdir -p nfs-export-directory`</li><li>Deploy /etc/exports</li></ul> | Reloads nfs-server.service |
 
 
 ## Mandatory Role Variables
 
-| Variable              | Description                                                         |
-| --------              | -----------                                                         |
-| `nfs_server__exports` | A list of valid NFS server exports. Have a look at `man 5 exports`. |
+| Variable | Description |
+| -------- | ----------- |
+| `nfs_server__exports` | List of NFS exports to create. Subkeys: <ul><li>`path`: Mandatory, string. Directory to export.</li><li>`clients`: Mandatory, list. List of client specifications. Have a look at `man 5 exports`.</li><li>`owner`: Optional, string. Owner of the export directory. Defaults to `'nobody'`.</li><li>`group`: Optional, string. Group of the export directory. Defaults to `'nogroup'` (`'nobody'` for RHEL, CentOS, Fedora, Rocky).</li><li>`mode`: Optional, string. Mode of the export directory. Defaults to `'0o755'`.</li></ul> |
 
 Example:
 ```yaml
 # mandatory
 nfs_server__exports:
-  - '/data/appserver1 192.0.2.10(rw,sync,all_squash)'
-  - '/data/appserver2 192.0.2.11(ro,sync,all_squash)'
+  - path: '/data/dir1'
+    clients:
+      - '192.0.2.1(rw,sync,all_squash)'
+      - '192.0.2.2(ro,sync,all_squash)'
+    owner: 'root'
+    group: 'root'
+    mode: '0o755'
+  - path: '/data/dir2'
+    clients:
+      - '192.0.2.3(ro,sync,all_squash)'
 ```
 
 

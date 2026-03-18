@@ -1,6 +1,6 @@
 # {{ ansible_managed }}
-# 2022072201
+# 2026031801
 
 {% for item in nfs_server__exports %}
-{{ item }}
+{{ item['path'] }} {{ item['clients'] | join(' ') }}
 {% endfor %}
