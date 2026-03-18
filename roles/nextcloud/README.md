@@ -93,6 +93,7 @@ nextcloud__users:
 | `nextcloud__version` | Which version to install. One of `'latest'`, `'latest-XX'` or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/ for a list of available releases. | `'latest'` |
 | `nextcloud__vhost_virtualhost_ip` | String. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `*` |
 | `nextcloud__vhost_virtualhost_port` | Number. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `80` |
+| `system_update__icinga2_api_user_login` | If present, the nextcloud-update script will set and unset automatically an Icinga2 downtime during the Nextcloud update | unset |
 
 Example:
 ```yaml
