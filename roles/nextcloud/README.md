@@ -77,6 +77,9 @@ nextcloud__users:
 | `nextcloud__database_host` | Host where MariaDB is located. | `'localhost'` |
 | `nextcloud__database_name` | Name of the Nextcloud database in MariaDB. | `'nextcloud'` |
 | `nextcloud__datadir` | Where to store the user files. | `'/data'` |
+| `nextcloud__icinga2_api_url` | The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script. | `'https://{{ icinga2_agent__icinga2_master_host \| d("") }}:{{ icinga2_agent__icinga2_master_port \| d(5665) }}'` |
+| `nextcloud__icinga2_api_user_login` | The Icinga2 API User to set the downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script. | `'{{ system_update__icinga2_api_user_login }}'` |
+| `nextcloud__icinga2_hostname` | The hostname of the Icinga2 host on which the downtime should be set. | `'{{ ansible_facts["nodename"] }}'` |
 | `nextcloud__mariadb_login` | The user account for the database administrator. The Nextcloud setup will create its own database account. | `'{{ mariadb_server__admin_user }}'` |
 | `nextcloud__on_calendar_app_update` | Time to update the Nextcloud apps. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'06,18,23:{{ 59 \| random(seed=inventory_hostname) }}'` |
 | `nextcloud__on_calendar_jobs`| Run interval of OCC background jobs. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'*:0/5'` |
@@ -93,9 +96,6 @@ nextcloud__users:
 | `nextcloud__version` | Which version to install. One of `'latest'`, `'latest-XX'` or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/ for a list of available releases. | `'latest'` |
 | `nextcloud__vhost_virtualhost_ip` | String. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `*` |
 | `nextcloud__vhost_virtualhost_port` | Number. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `80` |
-| `nextcloud__icinga2_api_url` | The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script. | `'https://{{ icinga2_agent__icinga2_master_host \| d("") }}:{{ icinga2_agent__icinga2_master_port \| d(5665) }}'` |
-| `nextcloud__icinga2_api_user_login` | The Icinga2 API User to set the downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script. | `'{{ system_update__icinga2_api_user_login }}'` |
-| `nextcloud__icinga2_hostname` | The hostname of the Icinga2 host on which the downtime should be set. | `'{{ ansible_facts["nodename"] }}'` |
 
 Example:
 ```yaml
