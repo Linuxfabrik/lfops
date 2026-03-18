@@ -6,6 +6,7 @@
     - 'always'
     - 'nfs_server'  # for --skip-tags
 
+
 - block:
 
   - name: 'Install {{ nfs_server__nfs_server_package }}'
@@ -15,6 +16,7 @@
 
   tags:
     - 'nfs_server'
+
 
 - block:
 
@@ -31,12 +33,13 @@
 
 - block:
 
-  - name: 'Ensure directories to export exist'
+  - name: 'mkdir -p nfs-export-directory'
     ansible.builtin.file:
-      path: '{{ item.strip().split()[0] }}'
+      path: '{{ item["path"] }}'
       state: 'directory'
-      owner: '{{ nfs_server__owner }}'
-      group: '{{ nfs_server__group }}'
+      owner: '{{ item["owner"] | default(nfs_server__owner) }}'
+      group: '{{ item["group"] | default(nfs_server__group) }}'
+      mode: '{{ item["mode"] | default("0o755") }}'
     loop: '{{ nfs_server__exports }}'
 
   - name: 'Deploy /etc/exports'
