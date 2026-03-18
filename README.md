@@ -1,10 +1,10 @@
 <h1 align="center">
-  <a href="https://linuxfabrik.ch" target="_blank">Linuxfabrik's LFOps</a>
+  Linuxfabrik's LFOps
 </h1>
 <p align="center">
-  <b>Ansible Collection of Roles, Playbooks and Plugins for managing Linux-based Cloud Infrastructures</b>
-  <br />
-  made by <a href="https://linuxfabrik.ch/">Linuxfabrik</a>, Zurich
+  Ansible Collection of roles, playbooks & plugins for Linux-based cloud infrastructure. Covers OS hardening, MariaDB, Icinga2, Nextcloud, FreeIPA, KVM & more. Bitwarden & Cloud integration.
+  <span>&#8226;</span>
+  <b>made by <a href="https://linuxfabrik.ch/">Linuxfabrik</a></b>
 </p>
 <div align="center">
 
