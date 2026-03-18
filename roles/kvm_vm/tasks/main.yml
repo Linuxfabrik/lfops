@@ -27,7 +27,7 @@
       creates: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-boot.qcow2" }}'
     register: 'kvm_vm__boot_disk_create_result'
     when:
-      - 'kvm_vm__existing_boot_disk is not defined or not kvm_vm__existing_boot_disk | length'
+      - 'kvm_vm__existing_boot_disk is not defined or not kvm_vm__existing_boot_disk | length > 0'
 
   - name: >
       required since we are using a base image:
@@ -114,7 +114,7 @@
       --add {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
       --install {{ kvm_vm__packages | join(',') }}
     when:
-      - 'kvm_vm__packages is defined and kvm_vm__packages | length'
+      - 'kvm_vm__packages is defined and kvm_vm__packages | length > 0'
       - 'kvm_vm__boot_disk_create_result is changed'
 
   - name: >
@@ -297,7 +297,7 @@
     __kvm_vm__boot_disk_path: >-
       {{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/"
           ~ (kvm_vm__existing_boot_disk
-              if (kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length)
+              if (kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length > 0)
               else kvm_vm__name ~ "-boot.qcow2") }}
   when: 'kvm_vm__state != "absent"'
   delegate_to: '{{ kvm_vm__host }}'
@@ -337,7 +337,7 @@
     ansible.builtin.file:
       path: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-boot.qcow2" }}'
       state: 'absent'
-    when: 'not (kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length)'
+    when: 'not (kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length > 0)'
 
   - name: 'additional disks: rm -f ...'
     ansible.builtin.file:
@@ -349,7 +349,7 @@
     ansible.builtin.file:
       path: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__existing_boot_disk }}'
       state: 'absent'
-    when: 'kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length'
+    when: 'kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length > 0'
 
   - name: 'existing additional disks: rm -f ...'
     ansible.builtin.file:

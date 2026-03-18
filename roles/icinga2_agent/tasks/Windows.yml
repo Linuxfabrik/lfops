@@ -58,7 +58,7 @@
     ignore_errors: true
     register: 'icinga2_agent__icinga2_ticket'
     when:
-      - 'icinga2_agent__icinga2_api_user_login is defined and icinga2_agent__icinga2_api_user_login | length'
+      - 'icinga2_agent__icinga2_api_user_login is defined and icinga2_agent__icinga2_api_user_login | length > 0'
 
   - name: 'execute icinga2 node setup as {{ icinga2_agent__cn }} against {{ icinga2_agent__icinga2_master_cn }}'
     ansible.windows.win_shell: >-
@@ -110,7 +110,7 @@
         Accept: 'application/json'
     ignore_errors: true
     when:
-      - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length'
+      - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length > 0'
 
   tags:
     - 'icinga2_agent'

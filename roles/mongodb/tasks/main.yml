@@ -60,7 +60,7 @@
       group: '{{ mongodb__mongodb_user }}'
       mode: 0o400 # contains secrets
     when:
-      - 'mongodb__keyfile_content is defined and mongodb__keyfile_content | length'
+      - 'mongodb__keyfile_content is defined and mongodb__keyfile_content | length > 0'
 
   tags:
     - 'mongodb'
@@ -120,7 +120,7 @@
 
   when:
     - 'not mongodb__repl_set_skip_init'
-    - 'mongodb__conf_replication_repl_set_name__combined_var | length'
+    - 'mongodb__conf_replication_repl_set_name__combined_var | length > 0'
   tags:
     - 'mongodb'
 
@@ -220,7 +220,7 @@
       update_password: 'always' # note: sadly 'always' is not idempotent
     when:
       - 'mongodb__dump_user is defined'
-      - 'mongodb__dump_user | length'
+      - 'mongodb__dump_user | length > 0'
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
 

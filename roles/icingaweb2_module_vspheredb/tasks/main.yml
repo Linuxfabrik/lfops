@@ -70,7 +70,7 @@
   - name: 'restorecon -Fvr /var/run/icinga-vspheredb/'
     ansible.builtin.command: 'restorecon -Fvr /var/run/icinga-vspheredb/'
     register: 'icingaweb2_module_vspheredb__restorecon_result'
-    changed_when: 'icingaweb2_module_vspheredb__restorecon_result["stdout"] | length'
+    changed_when: 'icingaweb2_module_vspheredb__restorecon_result["stdout"] | length > 0'
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 

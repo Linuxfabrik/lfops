@@ -11,4 +11,4 @@
   notify:
     - 'mariadb_server: systemctl restart mariadb'
 
-  when: 'mariadb_server__dare_keys is defined and mariadb_server__dare_keys | length'
+  when: 'mariadb_server__dare_keys is defined and mariadb_server__dare_keys | length > 0'

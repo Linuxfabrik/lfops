@@ -56,7 +56,7 @@
   - name: 'restorecon -Fvr ...'
     ansible.builtin.command: 'restorecon -Fvr {{ item }}'
     register: 'libreoffice__restorecon_libreoffice_result'
-    changed_when: 'libreoffice__restorecon_libreoffice_result["stdout"] | length'
+    changed_when: 'libreoffice__restorecon_libreoffice_result["stdout"] | length > 0'
     loop:
       - '/usr/share/httpd/.cache'
       - '/usr/share/httpd/.config'

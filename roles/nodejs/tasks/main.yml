@@ -5,7 +5,7 @@
       name:
         - 'nodejs'
       state: 'present'
-    when: 'nodejs__dnf_module_stream is not defined or not (nodejs__dnf_module_stream | string | length)'
+    when: 'nodejs__dnf_module_stream is not defined or not (nodejs__dnf_module_stream | string | length > 0)'
 
   - name: 'Install @nodejs:{{ nodejs__dnf_module_stream }} -y'
     ansible.builtin.package:
@@ -14,7 +14,7 @@
       state: 'present'
     when:
       - 'nodejs__dnf_module_stream is defined'
-      - 'nodejs__dnf_module_stream | string | length'
+      - 'nodejs__dnf_module_stream | string | length > 0'
 
   - name: 'ln -s /bin/node /bin/nodejs'
     ansible.builtin.file:

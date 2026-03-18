@@ -82,7 +82,7 @@
   - name: 'restorecon -RFv /opt/librenms'
     ansible.builtin.command: 'restorecon -RFv /opt/librenms'
     register: 'librenms__restorecon_data_result'
-    changed_when: 'librenms__restorecon_data_result["stdout"] | length'
+    changed_when: 'librenms__restorecon_data_result["stdout"] | length > 0'
 
   - name: 'semodule --list-modules | grep --quiet http_fping # check for http_fping'
     ansible.builtin.shell: 'semodule --list-modules | grep --quiet http_fping'

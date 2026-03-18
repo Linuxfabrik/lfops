@@ -51,7 +51,7 @@
       owner: 'root'
       group: 'root'
     when:
-      - 'vsftpd__conf_user_config_dir is defined and vsftpd__conf_user_config_dir | length'
+      - 'vsftpd__conf_user_config_dir is defined and vsftpd__conf_user_config_dir | length > 0'
 
   - name: 'Remove user-specific configs'
     ansible.builtin.file:
@@ -71,7 +71,7 @@
       group: 'root'
       mode: 0o600
     when:
-      - 'vsftpd__conf_user_config_dir is defined and vsftpd__conf_user_config_dir | length'
+      - 'vsftpd__conf_user_config_dir is defined and vsftpd__conf_user_config_dir | length > 0'
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ vsftpd__user_config__combined_var }}'
     loop_control:

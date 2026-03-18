@@ -20,7 +20,7 @@
       postgresql_server__initdb_cmd: '/usr/pgsql-{{ postgresql_server__version }}/bin/postgresql-{{ postgresql_server__version }}-setup initdb'
 
   when:
-    - 'postgresql_server__version | string | length'
+    - 'postgresql_server__version | string | length > 0'
   tags:
     - 'postgresql_server'
     - 'postgresql_server:state'
@@ -43,7 +43,7 @@
       postgresql_server__initdb_cmd: '/usr/bin/postgresql-setup --initdb'
 
   when:
-    - 'not postgresql_server__version | string | length'
+    - 'not postgresql_server__version | string | length > 0'
   tags:
     - 'postgresql_server'
     - 'postgresql_server:state'

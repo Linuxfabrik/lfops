@@ -127,7 +127,7 @@
   - name: 'restorecon -Fvr ...'
     ansible.builtin.command: 'restorecon -Fvr {{ item }}'
     register: 'grav__restorecon_grav_result'
-    changed_when: 'grav__restorecon_grav_result["stdout"] | length'
+    changed_when: 'grav__restorecon_grav_result["stdout"] | length > 0'
     loop:
       - '{{ grav__install_dir }}'
 
@@ -135,25 +135,25 @@
     ansible.builtin.command: |
       find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;
     register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length > 0'
 
   - name: 'find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;'
     ansible.builtin.command: |
       find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;
     register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length > 0'
 
   - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;'
     ansible.builtin.command: |
       find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;
     register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length > 0'
 
   - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;'
     ansible.builtin.command: |
       find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;
     register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length'
+    changed_when: 'grav__chmod_dirs_result["stdout"] | length > 0'
 
   tags:
     - 'grav'

@@ -30,7 +30,7 @@
         mode: 0o644
       when:
         - 'elastic_agent_fleet_server__elasticsearch_ca is defined'
-        - 'elastic_agent_fleet_server__elasticsearch_ca | length'
+        - 'elastic_agent_fleet_server__elasticsearch_ca | length > 0'
 
     - name: 'Deploy /etc/elastic-agent/certs/fleet-server.crt'
       ansible.builtin.copy:
@@ -41,7 +41,7 @@
         mode: 0o644
       when:
         - 'elastic_agent_fleet_server__ssl_cert is defined'
-        - 'elastic_agent_fleet_server__ssl_cert | length'
+        - 'elastic_agent_fleet_server__ssl_cert | length > 0'
 
     - name: 'Deploy /etc/elastic-agent/certs/fleet-server.key'
       ansible.builtin.copy:
@@ -52,7 +52,7 @@
         mode: 0o600
       when:
         - 'elastic_agent_fleet_server__ssl_key is defined'
-        - 'elastic_agent_fleet_server__ssl_key | length'
+        - 'elastic_agent_fleet_server__ssl_key | length > 0'
 
   tags:
     - 'elastic_agent_fleet_server'

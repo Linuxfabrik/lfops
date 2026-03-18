@@ -9,7 +9,7 @@
 
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ __task_file }}'
-  when: '__task_file | length'
+  when: '__task_file | length > 0'
   vars:
     __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
     __first_found_options:
@@ -202,7 +202,7 @@
   - name: 'restorecon -Fvr {{ mariadb_server__cnf_datadir__combined_var }}'
     ansible.builtin.command: 'restorecon -Fvr {{ mariadb_server__cnf_datadir__combined_var }}'
     register: 'mariadb_server__restorecon_result'
-    changed_when: 'mariadb_server__restorecon_result["stdout"] | length'
+    changed_when: 'mariadb_server__restorecon_result["stdout"] | length > 0'
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 
@@ -243,7 +243,7 @@
   - name: 'restorecon -Fvr /var/log/mariadb/mariadb.log'
     ansible.builtin.command: 'restorecon -Fvr /var/log/mariadb/mariadb.log'
     register: 'mariadb_server__restorecon_result'
-    changed_when: 'mariadb_server__restorecon_result["stdout"] | length'
+    changed_when: 'mariadb_server__restorecon_result["stdout"] | length > 0'
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 
@@ -294,7 +294,7 @@
       mode: 0o750
       state: 'directory'
     when:
-      - '(__mariadb_server__cnf_log_bin_parent_dir | trim) | length'
+      - '(__mariadb_server__cnf_log_bin_parent_dir | trim) | length > 0'
 
   - name: 'Make sure the tmpdir exists with the correct permissions'
     ansible.builtin.file:
@@ -304,7 +304,7 @@
       mode: 0o750
       state: 'directory'
     when:
-      - 'mariadb_server__cnf_tmpdir__combined_var | length'
+      - 'mariadb_server__cnf_tmpdir__combined_var | length > 0'
 
   - name: 'Make sure mariadb can read the SSL cert'
     ansible.builtin.file:
@@ -313,7 +313,7 @@
       group: 'root'
       mode: 0o644
     when:
-      - 'mariadb_server__cnf_ssl_key__combined_var | length'
+      - 'mariadb_server__cnf_ssl_key__combined_var | length > 0'
 
   - name: 'Make sure mariadb can read the SSL key'
     ansible.builtin.file:
@@ -322,7 +322,7 @@
       group: 'mysql'
       mode: 0o400
     when:
-      - 'mariadb_server__cnf_ssl_key__combined_var | length'
+      - 'mariadb_server__cnf_ssl_key__combined_var | length > 0'
 
   - name: 'Remove old workaround at /etc/systemd/system/mariadb.service'
     ansible.builtin.file:
@@ -640,7 +640,7 @@
 
   when:
     - 'mariadb_server__dump_user is defined'
-    - 'mariadb_server__dump_user | length'
+    - 'mariadb_server__dump_user | length > 0'
   tags:
     - 'mariadb_server'
     - 'mariadb_server:configure'
@@ -763,7 +763,7 @@
     loop: '{{ mariadb_server__users__combined_var }}'
     loop_control:
       label: '{{ item["username"] }}@{{ item["host"] | default("localhost") }}'
-    when: 'item["default_role"] is defined and item["default_role"] | length'
+    when: 'item["default_role"] is defined and item["default_role"] | length > 0'
     changed_when: true # too hard to detect right now, so always report a change
 
   tags:

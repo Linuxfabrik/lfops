@@ -81,7 +81,7 @@
     when:
       - 'item["state"] | d("present") != "absent"'
 
-  when: 'lvm__vgs__combined_var | length'
+  when: 'lvm__vgs__combined_var | length > 0'
   tags:
     - 'lvm'
     - 'lvm:vg'
@@ -129,7 +129,7 @@
     when:
       - 'item["state"] | d("present") != "absent"'
 
-  when: 'lvm__lvs__combined_var | length'
+  when: 'lvm__lvs__combined_var | length > 0'
   tags:
     - 'lvm'
     - 'lvm:lv'
@@ -146,7 +146,7 @@
     when:
       - 'item["state"] | d("present") != "absent"'
 
-  when: 'lvm__lvs__combined_var | length'
+  when: 'lvm__lvs__combined_var | length > 0'
   tags:
     - 'lvm'
     - 'lvm:filesystem'

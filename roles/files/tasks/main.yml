@@ -23,7 +23,7 @@
     ansible.builtin.copy:
       backup: true
       content: '{{ item["content"] | d(omit) }}'
-      src: '{{ (item["content"] is defined and item["content"] | length) | ternary(
+      src: '{{ (item["content"] is defined and item["content"] | length > 0) | ternary(
           omit,
           inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/" ~ item["path"]
         ) }}'

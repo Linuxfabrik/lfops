@@ -28,8 +28,8 @@
       owner: 'apache'
       group: 'apache'
       mode: 0o644
-    when: '(nextcloud__storage_backend_s3["bucket"] is defined and nextcloud__storage_backend_s3["bucket"] | length)
-          or (nextcloud__storage_backend_swift["bucket"] is defined and nextcloud__storage_backend_swift["bucket"] | length)'
+    when: '(nextcloud__storage_backend_s3["bucket"] is defined and nextcloud__storage_backend_s3["bucket"] | length > 0)
+          or (nextcloud__storage_backend_swift["bucket"] is defined and nextcloud__storage_backend_swift["bucket"] | length > 0)'
 
   - name: 'chown -R apache:apache /var/www/html/nextcloud'
     ansible.builtin.file:
@@ -57,7 +57,7 @@
   - name: 'restorecon -Fvr /data /var/www/html/nextcloud'
     ansible.builtin.command: 'restorecon -Fvr /data /var/www/html/nextcloud'
     register: 'nextcloud__restorecon_nextcloud_result'
-    changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length'
+    changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length > 0'
 
   - name: 'Run the Nextcloud installer'
     # installation hangs without "--admin-user" and "--admin-pass"
@@ -182,7 +182,7 @@
   - name: 'restorecon -Fvr /var/www/html/nextcloud/apps/notify_push/'
     ansible.builtin.command: 'restorecon -Fvr /var/www/html/nextcloud/apps/notify_push/'
     register: 'nextcloud__restorecon_notify_push_result'
-    changed_when: 'nextcloud__restorecon_notify_push_result["stdout"] | length'
+    changed_when: 'nextcloud__restorecon_notify_push_result["stdout"] | length > 0'
 
   - name: 'systemctl restart notify_push.service'
     ansible.builtin.systemd_service:

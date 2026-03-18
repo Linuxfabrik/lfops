@@ -19,7 +19,7 @@
 
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ __task_file }}'
-  when: '__task_file | length'
+  when: '__task_file | length > 0'
   vars:
     __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
     __first_found_options:
@@ -140,8 +140,8 @@
     ignore_errors: true
     register: 'icinga2_master__ticket_result'
     when:
-      - 'icinga2_master__api_ticket_login.username is defined and icinga2_master__api_ticket_login.username | length'
-      - 'icinga2_master__api_ticket_login.password is defined and icinga2_master__api_ticket_login.password | length'
+      - 'icinga2_master__api_ticket_login.username is defined and icinga2_master__api_ticket_login.username | length > 0'
+      - 'icinga2_master__api_ticket_login.password is defined and icinga2_master__api_ticket_login.password | length > 0'
 
   - name: 'execute icinga2 node setup as {{ icinga2_master__cn }} against {{ icinga2_master__primary_host }}:{{ icinga2_master__primary_port }}'
     ansible.builtin.command: >-

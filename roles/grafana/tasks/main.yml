@@ -17,14 +17,14 @@
       path: '{{ grafana__https_config["cert_file"] }}'
       state: 'file'
     when:
-      - 'grafana__https_config is defined and grafana__https_config | length'
+      - 'grafana__https_config is defined and grafana__https_config | length > 0'
 
   - name: 'make sure the private key file exists'
     ansible.builtin.file:
       path: '{{ grafana__https_config["cert_key"] }}'
       state: 'file'
     when:
-      - 'grafana__https_config is defined and grafana__https_config | length'
+      - 'grafana__https_config is defined and grafana__https_config | length > 0'
 
   - name: 'deploy /etc/grafana/grafana.ini'
     ansible.builtin.template:
@@ -49,7 +49,7 @@
       owner: 'root'
       group: 'grafana'
       mode: 0o640
-    when: 'grafana__ldap_config is defined and grafana__ldap_config | length'
+    when: 'grafana__ldap_config is defined and grafana__ldap_config | length > 0'
     notify: 'grafana: restart grafana-server'
 
   tags:
@@ -250,8 +250,8 @@
     when:
       - 'not grafana__skip_token_to_bitwarden'
       - 'not (item["skipped"] is defined and item["skipped"])'
-      - 'grafana__bitwarden_collection_id is defined and grafana__bitwarden_collection_id | length'
-      - 'grafana__bitwarden_organization_id is defined and grafana__bitwarden_organization_id | length'
+      - 'grafana__bitwarden_collection_id is defined and grafana__bitwarden_collection_id | length > 0'
+      - 'grafana__bitwarden_organization_id is defined and grafana__bitwarden_organization_id | length > 0'
 
   tags:
     - 'grafana'

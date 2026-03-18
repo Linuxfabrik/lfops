@@ -54,7 +54,7 @@
 
   - name: 'Remove container units'
     ansible.builtin.file:
-      path: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+      path: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
         "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1] ~ "/",
         "/etc/containers/systemd"
         ) }}/{{ item["name"] }}-container.container'
@@ -69,7 +69,7 @@
   - name: 'Deploy container units'
     ansible.builtin.template:
       src: 'etc/containers/systemd/container.j2'
-      dest: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+      dest: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
         "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
         "/etc/containers/systemd"
         ) }}/{{ item["name"] }}-container.container'
@@ -92,7 +92,7 @@
 
   - name: 'Remove network units'
     ansible.builtin.file:
-      path: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+      path: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
         "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
         "/etc/containers/systemd"
         ) }}/{{ item["name"] }}.network'
@@ -107,7 +107,7 @@
   - name: 'Deploy network units'
     ansible.builtin.template:
       src: 'etc/containers/systemd/network.j2'
-      dest: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+      dest: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
         "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
         "/etc/containers/systemd"
         ) }}/{{ item["name"] }}.network'
@@ -130,7 +130,7 @@
 
   - name: 'Remove volume units'
     ansible.builtin.file:
-      path: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+      path: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
         "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
         "/etc/containers/systemd"
         ) }}/{{ item["name"] }}.volume'
@@ -145,7 +145,7 @@
   - name: 'Deploy volume units'
     ansible.builtin.template:
       src: 'etc/containers/systemd/volume.j2'
-      dest: '{{ (item["user"] is defined and item["user"] | length) | ternary(
+      dest: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
         "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
         "/etc/containers/systemd"
         ) }}/{{ item["name"] }}.volume'
@@ -171,7 +171,7 @@
   - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}-network.service'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}-network.service'
-      scope: '{{ (item["user"] is defined and item["user"] | length) | ternary("user", omit) }}'
+      scope: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary("user", omit) }}'
       state: '{{ item["state"] | d("started") }}'
       daemon_reload: true
     become: true
@@ -185,7 +185,7 @@
   - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}-volume.service'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}-volume.service'
-      scope: '{{ (item["user"] is defined and item["user"] | length) | ternary("user", omit) }}'
+      scope: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary("user", omit) }}'
       state: '{{ item["state"] | d("started") }}'
       daemon_reload: true
     become: true
@@ -199,7 +199,7 @@
   - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}-container.service'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}-container.service'
-      scope: '{{ (item["user"] is defined and item["user"] | length) | ternary("user", omit) }}'
+      scope: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary("user", omit) }}'
       state: '{{ item["state"] | d("started") }}'
       daemon_reload: true
     become: true
@@ -225,7 +225,7 @@
       group: 'root'
       mode: 0o755
     when:
-      - 'podman_containers__auto_update__combined_var | selectattr("user", "equalto", "root") | selectattr("on_calendar", "defined") | length'
+      - 'podman_containers__auto_update__combined_var | selectattr("user", "equalto", "root") | selectattr("on_calendar", "defined") | length > 0'
 
   - name: 'mkdir -p ~/.config/systemd/user/podman-auto-update.timer.d/ # user'
     ansible.builtin.file:
@@ -253,7 +253,7 @@
     vars:
       __podman_containers__auto_update_on_calendar: '{{ (podman_containers__auto_update__combined_var | selectattr("user", "equalto", "root") | first)["on_calendar"] }}'
     when:
-      - 'podman_containers__auto_update__combined_var | selectattr("user", "equalto", "root") | selectattr("on_calendar", "defined") | length'
+      - 'podman_containers__auto_update__combined_var | selectattr("user", "equalto", "root") | selectattr("on_calendar", "defined") | length > 0'
     notify: 'podman_containers: systemctl daemon-reload'
 
   - name: 'Deploy podman-auto-update.timer.d/z00-linuxfabrik.conf # user'

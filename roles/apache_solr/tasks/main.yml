@@ -106,12 +106,12 @@
   - name: 'find {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }} -type d -exec chmod --changes 0755 {} \;'
     ansible.builtin.command: 'find {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }} -type d -exec chmod --changes 0755 {} \;'
     register: 'apache_solr__chmod_dirs_result'
-    changed_when: 'apache_solr__chmod_dirs_result["stdout"] | length'
+    changed_when: 'apache_solr__chmod_dirs_result["stdout"] | length > 0'
 
   - name: 'find {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }} -type f -exec chmod --changes 0644 {} \;'
     ansible.builtin.command: 'find {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }} -type f -exec chmod --changes 0644 {} \;'
     register: 'apache_solr__chmod_files_result'
-    changed_when: 'apache_solr__chmod_files_result["stdout"] | length'
+    changed_when: 'apache_solr__chmod_files_result["stdout"] | length > 0'
 
   - name: 'chmod -R 0755 {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}/bin'
     ansible.builtin.file:
@@ -123,12 +123,12 @@
   - name: 'find {{ apache_solr__var_dir }} -type d -exec chmod --changes 0750 {} \;'
     ansible.builtin.command: 'find {{ apache_solr__var_dir }} -type d -exec chmod --changes 0750 {} \;'
     register: 'apache_solr__chmod_dirs_result'
-    changed_when: 'apache_solr__chmod_dirs_result["stdout"] | length'
+    changed_when: 'apache_solr__chmod_dirs_result["stdout"] | length > 0'
 
   - name: 'find {{ apache_solr__var_dir }} -type f -exec chmod --changes 0640 {} \;'
     ansible.builtin.command: 'find {{ apache_solr__var_dir }} -type f -exec chmod --changes 0640 {} \;'
     register: 'apache_solr__chmod_files_result'
-    changed_when: 'apache_solr__chmod_files_result["stdout"] | length'
+    changed_when: 'apache_solr__chmod_files_result["stdout"] | length > 0'
 
   tags:
     - 'apache_solr'
@@ -181,7 +181,7 @@
     loop: '{{ apache_solr__users__combined_var }}'
     register: 'apache_solr__pwhashes'
     when:
-      - 'apache_solr__users__combined_var is defined and apache_solr__users__combined_var | length'
+      - 'apache_solr__users__combined_var is defined and apache_solr__users__combined_var | length > 0'
 
   - name: 'Deploy {{ apache_solr__var_dir }}/security.json'
     ansible.builtin.template:
@@ -189,7 +189,7 @@
       dest: '{{ apache_solr__var_dir }}/security.json'
     notify: 'apache_solr: restart solr.service'
     when:
-      - 'apache_solr__users__combined_var is defined and apache_solr__users__combined_var | length'
+      - 'apache_solr__users__combined_var is defined and apache_solr__users__combined_var | length > 0'
 
   tags:
     - 'apache_solr'

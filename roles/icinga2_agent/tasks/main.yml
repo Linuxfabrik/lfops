@@ -32,7 +32,7 @@
 
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ __task_file }}'
-  when: '__task_file | length'
+  when: '__task_file | length > 0'
   vars:
     __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
     __first_found_options:
@@ -95,7 +95,7 @@
     ignore_errors: true
     register: 'icinga2_agent__icinga2_ticket'
     when:
-      - 'icinga2_agent__icinga2_api_user_login is defined and icinga2_agent__icinga2_api_user_login | length'
+      - 'icinga2_agent__icinga2_api_user_login is defined and icinga2_agent__icinga2_api_user_login | length > 0'
 
   - name: 'execute icinga2 node setup as {{ icinga2_agent__cn }} against {{ icinga2_agent__icinga2_master_cn }}'
     ansible.builtin.command: >-
@@ -146,7 +146,7 @@
       validate_certs: '{{ icinga2_agent__validate_certs }}'
     ignore_errors: true
     when:
-      - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length'
+      - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length > 0'
 
   # block
   when: 'ansible_facts["os_family"] != "Windows"'

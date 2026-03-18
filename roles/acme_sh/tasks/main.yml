@@ -91,7 +91,7 @@
       --cert-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}.crt' \
       --fullchain-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}-fullchain.crt' \
       --key-file '{{ __acme_sh__key_path }}/{{ item["name"] }}.key' \
-      --reloadcmd '{{ acme_sh__reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
+      --reloadcmd '{{ acme_sh__reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length > 0) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
     loop: '{{ acme_sh__certificates }}'
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy ...'
@@ -106,9 +106,9 @@
       DEPLOY_SSH_KEYFILE: '{{ __acme_sh__key_path }}/{{ item["name"] }}.key'
       DEPLOY_SSH_FULLCHAIN: '{{ __acme_sh__cert_path }}/{{ item["name"] }}-fullchain.crt'
       DEPLOY_SSH_CAFILE: '{{ __acme_sh__cert_path }}/{{ item["name"] }}-chain.crt'
-      DEPLOY_SSH_REMOTE_CMD: '{{ acme_sh__deploy_to_host_reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
+      DEPLOY_SSH_REMOTE_CMD: '{{ acme_sh__deploy_to_host_reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length > 0) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
     loop: '{{ acme_sh__certificates }}'
-    when: 'acme_sh__deploy_to_host is defined and acme_sh__deploy_to_host | length'
+    when: 'acme_sh__deploy_to_host is defined and acme_sh__deploy_to_host | length > 0'
 
   tags:
     - 'acme_sh'

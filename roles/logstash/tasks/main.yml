@@ -71,7 +71,7 @@
 
   # block
   when:
-    - 'logstash__elasticsearch_ca_cert is defined and logstash__elasticsearch_ca_cert | length'
+    - 'logstash__elasticsearch_ca_cert is defined and logstash__elasticsearch_ca_cert | length > 0'
   tags:
     - 'logstash'
     - 'logstash:configure'

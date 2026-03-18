@@ -104,12 +104,12 @@
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
-    when: 'wordpress__theme is defined and wordpress__theme | length'
+    when: 'wordpress__theme is defined and wordpress__theme | length > 0'
 
   - name: 'restorecon -Fvr {{ wordpress__install_dir | quote }}'
     ansible.builtin.command: 'restorecon -Fvr {{ wordpress__install_dir | quote }}'
     register: 'wordpress__restorecon_result'
-    changed_when: 'wordpress__restorecon_result["stdout"] | length'
+    changed_when: 'wordpress__restorecon_result["stdout"] | length > 0'
 
   tags:
     - 'wordpress'
@@ -132,12 +132,12 @@
   - name: 'find {{ wordpress__install_dir | quote }} -type d -exec chmod --changes 755 {} \;'
     ansible.builtin.command: 'find {{ wordpress__install_dir | quote }} -type d -exec chmod --changes 755 {} \;'
     register: 'wordpress__chmod_dirs_result'
-    changed_when: 'wordpress__chmod_dirs_result["stdout"] | length'
+    changed_when: 'wordpress__chmod_dirs_result["stdout"] | length > 0'
 
   - name: 'find {{ wordpress__install_dir | quote }} -type f -exec chmod --changes 644 {} \;'
     ansible.builtin.command: 'find {{ wordpress__install_dir | quote }} -type f -exec chmod --changes 644 {} \;'
     register: 'wordpress__chmod_files_result'
-    changed_when: 'wordpress__chmod_files_result["stdout"] | length'
+    changed_when: 'wordpress__chmod_files_result["stdout"] | length > 0'
 
   - name: "wp plugin install 'disable-json-api' --path={{ wordpress__install_dir | quote }} --activate"
     ansible.builtin.command: "/usr/local/bin/wp plugin install 'disable-json-api' --path={{ wordpress__install_dir | quote }} --activate"
@@ -203,14 +203,14 @@
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
-    when: 'item["wxr_export"] is defined and item["wxr_export"] | length'
+    when: 'item["wxr_export"] is defined and item["wxr_export"] | length > 0'
 
   - name: 'wp import --path={{ wordpress__install_dir | quote }} --authors="create" {{ item["wxr_export"] }}'
     ansible.builtin.command: '/usr/local/bin/wp import --path={{ wordpress__install_dir | quote }} --authors="create" {{ item["wxr_export"] }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
-    when: 'item["wxr_export"] is defined and item["wxr_export"] | length'
+    when: 'item["wxr_export"] is defined and item["wxr_export"] | length > 0'
     register: 'wordpress__import_result'
     failed_when: '"Success" not in wordpress__import_result["stdout"]
       or wordpress__import_result["rc"] != 0'
@@ -218,7 +218,7 @@
   - name: 'Result of importing the wxr file'
     ansible.builtin.debug:
       var: 'wordpress__import_result["stdout"]'
-    when: 'item["wxr_export"] is defined and item["wxr_export"] | length'
+    when: 'item["wxr_export"] is defined and item["wxr_export"] | length > 0'
 
   tags:
     - 'wordpress'
@@ -229,12 +229,12 @@
   - name: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
     ansible.builtin.command: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
     register: 'wordpress__chown_result'
-    changed_when: 'wordpress__chown_result["stdout"] | length'
+    changed_when: 'wordpress__chown_result["stdout"] | length > 0'
 
   - name: 'restorecon -Fvr {{ wordpress__install_dir | quote }}'
     ansible.builtin.command: 'restorecon -Fvr {{ item }}'
     register: 'wordpress__restorecon_wordpress_result'
-    changed_when: 'wordpress__restorecon_wordpress_result["stdout"] | length'
+    changed_when: 'wordpress__restorecon_wordpress_result["stdout"] | length > 0'
     loop:
       - '{{ wordpress__install_dir }}'
 
@@ -276,7 +276,7 @@
   - name: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
     ansible.builtin.command: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
     register: 'wordpress__chown_result'
-    changed_when: 'wordpress__chown_result["stdout"] | length'
+    changed_when: 'wordpress__chown_result["stdout"] | length > 0'
 
   tags:
     - 'never'

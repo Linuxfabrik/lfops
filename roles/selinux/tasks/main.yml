@@ -76,7 +76,7 @@
 
   when:
     - 'selinux__state != "disabled"'
-    - '(selinux__modules__combined_var | selectattr("state", "undefined") | list + selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list) | length'
+    - '(selinux__modules__combined_var | selectattr("state", "undefined") | list + selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list) | length > 0'
   tags:
     - 'selinux'
     - 'selinux:modules'
@@ -98,7 +98,7 @@
 
   when:
     - 'selinux__state != "disabled"'
-    - '(selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "absent") | list) | length'
+    - '(selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "absent") | list) | length > 0'
   tags:
     - 'selinux'
     - 'selinux:modules'
@@ -180,7 +180,7 @@
       - 'selinux__state != "disabled"'
       - 'item["state"] | d("present") == "present"'
     register: '__selinux__restorecons_result'
-    changed_when: '__selinux__restorecons_result["stdout"] | length'
+    changed_when: '__selinux__restorecons_result["stdout"] | length > 0'
 
   tags:
     - 'selinux'

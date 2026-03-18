@@ -7,8 +7,8 @@
       disable_gpg_check: true
 
   when:
-    - 'repo_icinga__mirror_url is not defined or not repo_icinga__mirror_url | length'
-    - 'repo_icinga__basic_auth_login is not defined or not repo_icinga__basic_auth_login | length'
+    - 'repo_icinga__mirror_url is not defined or not repo_icinga__mirror_url | length > 0'
+    - 'repo_icinga__basic_auth_login is not defined or not repo_icinga__basic_auth_login | length > 0'
   tags:
     - 'repo_icinga'
 
@@ -60,6 +60,6 @@
       dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-ICINGA'
 
   when:
-    - '(repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length) or (repo_icinga__basic_auth_login is defined and repo_icinga__basic_auth_login | length)'
+    - '(repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length > 0) or (repo_icinga__basic_auth_login is defined and repo_icinga__basic_auth_login | length > 0)'
   tags:
     - 'repo_icinga'

@@ -40,7 +40,7 @@
 
   # block
   when:
-    - 'kibana__elasticsearch_ca_cert is defined and kibana__elasticsearch_ca_cert | length'
+    - 'kibana__elasticsearch_ca_cert is defined and kibana__elasticsearch_ca_cert | length > 0'
   tags:
     - 'kibana'
     - 'kibana:configure'

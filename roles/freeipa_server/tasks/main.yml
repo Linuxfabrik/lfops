@@ -8,7 +8,7 @@
   - name: 'check that the DNS reverse lookup config is working'
     ansible.builtin.assert:
       # ansible determines the domain by using socket.gethostbyaddr() which is a DNS reverse lookup (see module_utils/facts/system/platform.py)
-      that: 'ansible_facts["domain"] is defined and ansible_facts["domain"] | length'
+      that: 'ansible_facts["domain"] is defined and ansible_facts["domain"] | length > 0'
       fail_msg: 'DNS reverse lookup for "{{ ansible_facts["fqdn"] }}" failed. This is required for FreeIPA to work.'
 
   - name: 'Running freeipa.ansible_freeipa.ipaserver with following vars'
@@ -59,7 +59,7 @@
   - name: 'ensures /etc/systemd/system/pki-tomcatd@.service.d dir exists'
     ansible.builtin.file:
       path: '/etc/systemd/system/pki-tomcatd@.service.d'
-      state: directory
+      state: 'directory'
 
   - name: 'deploy /etc/systemd/system/pki-tomcatd@.service.d/override.conf'
     ansible.builtin.template:

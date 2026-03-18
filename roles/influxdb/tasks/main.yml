@@ -17,14 +17,14 @@
       path: '{{ influxdb__conf_https["certificate_path"] }}'
       state: 'file'
     when:
-      - 'influxdb__conf_https is defined and influxdb__conf_https | length'
+      - 'influxdb__conf_https is defined and influxdb__conf_https | length > 0'
 
   - name: 'make sure the private key file exists'
     ansible.builtin.file:
       path: '{{ influxdb__conf_https["private_key_path"] }}'
       state: 'file'
     when:
-      - 'influxdb__conf_https is defined and influxdb__conf_https | length'
+      - 'influxdb__conf_https is defined and influxdb__conf_https | length > 0'
 
   - name: 'Deploy /etc/influxdb/influxdb.conf'
     ansible.builtin.template:
@@ -102,7 +102,7 @@
         validate_certs: '{{ influxdb__validate_certs }}'
       vars:
         ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
-      when: 'influxdb__admin_login["old_password"] is defined and influxdb__admin_login["old_password"] | length'
+      when: 'influxdb__admin_login["old_password"] is defined and influxdb__admin_login["old_password"] | length > 0'
 
   tags:
     - 'influxdb'

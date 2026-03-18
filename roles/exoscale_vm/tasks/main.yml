@@ -9,7 +9,7 @@
       state: 'present'
     delegate_to: 'localhost'
     when:
-      - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length'
+      - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
       - 'exoscale_vm__state != "absent"'
 
   - name: 'Manage the required security group rules for the VM'
@@ -45,7 +45,7 @@
   #     api_url: 'https://api.exoscale.com/compute'
   #     name: '{{ exoscale_vm__name }}'
   #     service_offering: '{{ exoscale_vm__service_offering }}'
-  #     security_groups: '{{ (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length) | ternary(["default", exoscale_vm__name], ["default"]) }}'
+  #     security_groups: '{{ (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0) | ternary(["default", exoscale_vm__name], ["default"]) }}'
   #     ssh_key: '{{ exoscale_vm__ssh_key }}'
   #     state: '{{ exoscale_vm__state }}'
   #     template: '{{ exoscale_vm__template }}'
@@ -69,7 +69,7 @@
       --use-account '{{ exoscale_vm__account }}'
       --output-format json
       --instance-type '{{ exoscale_vm__service_offering }}'
-      {% for item in  (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length) | ternary(["default", exoscale_vm__name], ["default"]) %}
+      {% for item in  (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0) | ternary(["default", exoscale_vm__name], ["default"]) %}
       --security-group '{{ item }}'
       {% endfor %}
       --ssh-key '{{ exoscale_vm__ssh_key }}'
@@ -152,7 +152,7 @@
       state: 'absent'
     delegate_to: 'localhost'
     when:
-      - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length'
+      - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
       - 'exoscale_vm__state == "absent"'
 
   tags:

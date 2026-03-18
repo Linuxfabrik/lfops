@@ -120,7 +120,7 @@
   - name: 'find {{ moodle__install_dir }} -type f -exec chmod --changes 0440 {} \;'
     ansible.builtin.command: 'find {{ moodle__install_dir }} -type f -exec chmod --changes 0440 {} \;'
     register: 'moodle__chmod_files_result'
-    changed_when: 'moodle__chmod_files_result["stdout"] | length'
+    changed_when: 'moodle__chmod_files_result["stdout"] | length > 0'
 
   # this is needed for monitoring plugins and an icinga user, for example
   - name: 'chmod o+r {{ moodle__install_dir }}/version.php'
@@ -209,7 +209,7 @@
   - name: 'find /opt/moosh -type f -exec chmod --changes 0440 {} \;'
     ansible.builtin.command: 'find /opt/moosh -type f -exec chmod --changes 0440 {} \;'
     register: 'moodle__chmod_files_result'
-    changed_when: 'moodle__chmod_files_result["stdout"] | length'
+    changed_when: 'moodle__chmod_files_result["stdout"] | length > 0'
 
   tags:
     - 'moodle'
@@ -232,7 +232,7 @@
   - name: 'restorecon -Fvr ...'
     ansible.builtin.command: 'restorecon -Fvr {{ item }}'
     register: 'moodle__restorecon_moodle_result'
-    changed_when: 'moodle__restorecon_moodle_result["stdout"] | length'
+    changed_when: 'moodle__restorecon_moodle_result["stdout"] | length > 0'
     loop:
       - '{{ moodle__data_dir }}'
       - '{{ moodle__install_dir }}'

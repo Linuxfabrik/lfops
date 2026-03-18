@@ -1,6 +1,6 @@
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ __task_file }}'
-  when: '__task_file | length'
+  when: '__task_file | length > 0'
   vars:
     __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
     __first_found_options:

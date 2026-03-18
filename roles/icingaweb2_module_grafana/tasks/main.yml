@@ -3,7 +3,7 @@
   - name: 'Make sure that icingaweb2_module_grafana__monitoring_plugins_version is set'
     ansible.builtin.assert:
       that:
-        - 'icingaweb2_module_grafana__monitoring_plugins_version | length'
+        - 'icingaweb2_module_grafana__monitoring_plugins_version | length > 0'
       fail_msg: 'icingaweb2_module_grafana__monitoring_plugins_version is unset. Make sure to either set icingaweb2_module_grafana__monitoring_plugins_version or `lfops__monitoring_plugins_version`.'
 
   tags:

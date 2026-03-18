@@ -92,7 +92,7 @@
 
   # block
   when:
-    - 'elasticsearch__ca_cert is defined and elasticsearch__ca_cert | length'
+    - 'elasticsearch__ca_cert is defined and elasticsearch__ca_cert | length > 0'
   notify: 'elasticsearch: restart elasticsearch'
   tags:
     - 'elasticsearch'
@@ -171,7 +171,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    when: 'elasticsearch__discovery_seed_hosts is defined and elasticsearch__discovery_seed_hosts | length'
+    when: 'elasticsearch__discovery_seed_hosts is defined and elasticsearch__discovery_seed_hosts | length > 0'
 
   tags:
     - 'elasticsearch'

@@ -43,7 +43,7 @@
     ansible.builtin.file:
       path: '{{ ansible_init__ansinv_path }}../roles/'
       state: 'directory'
-    when: 'ansible_init__roles is defined and ansible_init__roles | length'
+    when: 'ansible_init__roles is defined and ansible_init__roles | length > 0'
 
   - name: 'Clone the roles to ../roles/'
     ansible.builtin.git:
@@ -73,7 +73,7 @@
       type: '{{ item["type"] | d("collection") }}'
       force: true # from the doc: *Ansible 2.9 and 2.10*: Must be `true' to upgrade roles and collections.
     loop: '{{ ansible_init__ansible_collections }}'
-    when: 'ansible_init__ansible_collections | length'
+    when: 'ansible_init__ansible_collections | length > 0'
     ignore_errors: true
 
   tags:

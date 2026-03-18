@@ -4,7 +4,7 @@
   ansible.builtin.set_fact:
     apache_httpd__vhosts__combined_var: '{{ apache_httpd__vhosts__combined_var | selectattr("conf_server_name", "in", apache_httpd__limit_vhosts) | list }}'
   when:
-    - 'apache_httpd__limit_vhosts is defined and apache_httpd__limit_vhosts | length'
+    - 'apache_httpd__limit_vhosts is defined and apache_httpd__limit_vhosts | length > 0'
 
 - name: 'Combined vHosts:'
   ansible.builtin.debug:

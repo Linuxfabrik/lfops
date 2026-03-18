@@ -40,6 +40,6 @@
 
   when:
     - 'nfs_client__mounts is defined'
-    - 'nfs_client__mounts | length'
+    - 'nfs_client__mounts | length > 0'
   tags:
     - 'nfs_client'

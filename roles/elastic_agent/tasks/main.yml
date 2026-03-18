@@ -28,7 +28,7 @@
         mode: 0o644
       when:
         - 'elastic_agent__fleet_ca is defined'
-        - 'elastic_agent__fleet_ca | length'
+        - 'elastic_agent__fleet_ca | length > 0'
 
   tags:
     - 'elastic_agent'
