@@ -166,6 +166,9 @@
       when:
         - 'not setup_nextcloud__skip_objectstore_backup | d(false)'
 
+      # nextcloud-update.j2 must access the icinga2_agent variables
+    - role: 'linuxfabrik.lfops.icinga2_agent'
+      when: false
 
   post_tasks:
     - ansible.builtin.import_role:

@@ -168,6 +168,10 @@ nextcloud__datadir: '/data'
 nextcloud__database_host: 'localhost'
 nextcloud__database_name: 'nextcloud'
 
+nextcloud__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
+nextcloud__icinga2_api_user_login: '{{ system_update__icinga2_api_user_login }}'
+nextcloud__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
+
 nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'

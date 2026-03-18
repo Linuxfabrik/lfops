@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026031701
+# 2026031801
 
 set -e
 
@@ -9,7 +9,7 @@ LOG_DIR="/tmp/nextcloud-update-$(date --iso-8601)"
 STATE_FILE="${LOG_DIR}/nextcloud-update.state"
 NC_DATA_DIR=$(sudo -u apache php "${NC_DIR}/occ" config:system:get datadirectory)
 
-{% if system_update__icinga2_api_user_login is defined and system_update__icinga2_api_user_login | length %}
+{% if nextcloud__icinga2_api_user_login is defined and nextcloud__icinga2_api_user_login | length %}
 START_TIME=$(date +%s)
 END_TIME=$(( START_TIME + 1800 ))
 {% endif %}
@@ -17,7 +17,7 @@ END_TIME=$(( START_TIME + 1800 ))
 mkdir -p "$LOG_DIR"
 touch "${STATE_FILE}"
 
-{% if system_update__icinga2_api_user_login is defined and system_update__icinga2_api_user_login | length %}
+{% if nextcloud__icinga2_api_user_login is defined and nextcloud__icinga2_api_user_login | length %}
 echo
 echo
 echo 'set icinga2 downtime'
@@ -27,17 +27,17 @@ curl \
 --connect-timeout 5 \
 --insecure \
 --silent \
---user "{{ system_update__icinga2_api_user_login["username"] }}:{{ system_update__icinga2_api_user_login["password"] }}" \
+--user "{{ nextcloud__icinga2_api_user_login["username"] }}:{{ nextcloud__icinga2_api_user_login["password"] }}" \
 --header 'Accept: application/json' \
---request POST 'https://{{ icinga2_agent__icinga2_master_cn }}:5665/v1/actions/schedule-downtime' \
+--request POST '{{ nextcloud__icinga2_api_url }}/v1/actions/schedule-downtime' \
 --data-binary @- 1> /dev/null << EOF
 {
     "type": "Host",
-    "filter": "match(\"{{ ansible_facts['fqdn'] }}\", host.name)",
+    "filter": "match(\"{{ nextcloud__icinga2_hostname }}\", host.name)",
     "start_time": "${START_TIME}",
     "end_time": "${END_TIME}",
-    "author": "{{ ansible_facts['hostname'] }}",
-    "comment": "Nextcloud Update",
+    "author": "{{ nextcloud__icinga2_hostname }}",
+    "comment": "Running Nextcloud update",
     "all_services": true
 }
 EOF
@@ -142,7 +142,7 @@ sudo -u apache php "${NC_DIR}/occ" user:list | tee "${LOG_DIR}/nextcloud-user-li
 sudo -u apache php "${NC_DIR}/occ" config:list | tee "${LOG_DIR}/nextcloud-config-list-after-update" > /dev/null
 sudo -u apache php "${NC_DIR}/occ" app:list | tee "${LOG_DIR}/nextcloud-app-list-after-update" > /dev/null
 
-{% if system_update__icinga2_api_user_login is defined and system_update__icinga2_api_user_login | length %}
+{% if nextcloud__icinga2_api_user_login is defined and nextcloud__icinga2_api_user_login | length %}
 echo
 echo
 echo 'remove icinga2 downtime'
@@ -152,13 +152,13 @@ curl \
 --connect-timeout 5 \
 --insecure \
 --silent \
---user '{{ system_update__icinga2_api_user_login["username"] }}:{{ system_update__icinga2_api_user_login["password"] }}' \
+--user '{{ nextcloud__icinga2_api_user_login["username"] }}:{{ nextcloud__icinga2_api_user_login["password"] }}' \
 --header 'Accept: application/json' \
---request POST 'https://{{ icinga2_agent__icinga2_master_cn }}:5665/v1/actions/remove-downtime' \
+--request POST '{{ nextcloud__icinga2_api_url  }}/v1/actions/remove-downtime' \
 --data-binary @- 1> /dev/null << EOF
 {
     "type": "Host",
-    "filter": "host.name==\"{{ ansible_facts['fqdn'] }}\"",
+    "filter": "host.name==\"{{ nextcloud__icinga2_hostname }}\"",
     "pretty": true
 }
 EOF
