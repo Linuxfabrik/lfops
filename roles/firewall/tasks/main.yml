@@ -106,12 +106,12 @@
     - 'firewall:firewalld'
 
 
+# this block intentionally has no "when: firewall__firewall == fwbuilder" condition. run_once picks
+# the first host in the play - if that host does not use fwbuilder, a block-level when would cause
+# the clone to be skipped for all hosts. instead, we extract the repo url across all play hosts
+# (using select to skip undefined and empty values) and use the first truthy match.
 - block:
 
-  # run_once picks the first host in the play. if that host does not have firewall__fwbuilder_repo_url
-  # set, the task would be skipped for all hosts. to avoid this, we look across all play hosts and use
-  # the first defined, non-empty value. this ensures the repo is cloned whenever at least one host in
-  # the play has the variable set.
   - name: 'Remove any existing local fwb repo'
     ansible.builtin.file:
       path: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
@@ -123,9 +123,8 @@
     vars:
       __firewall__fwbuilder_repo_url: >-
         {{ ansible_play_hosts_all
-           | map('extract', hostvars)
-           | selectattr('firewall__fwbuilder_repo_url', 'defined')
-           | map(attribute='firewall__fwbuilder_repo_url')
+           | map('extract', hostvars, 'firewall__fwbuilder_repo_url')
+           | select('defined')
            | select
            | first
            | default('') }}
@@ -144,13 +143,19 @@
     vars:
       __firewall__fwbuilder_repo_url: >-
         {{ ansible_play_hosts_all
-           | map('extract', hostvars)
-           | selectattr('firewall__fwbuilder_repo_url', 'defined')
-           | map(attribute='firewall__fwbuilder_repo_url')
+           | map('extract', hostvars, 'firewall__fwbuilder_repo_url')
+           | select('defined')
            | select
            | first
            | default('') }}
     when: '__firewall__fwbuilder_repo_url | length > 0'
+
+  tags:
+    - 'firewall'
+    - 'firewall:deploy_fwb_sh'
+
+
+- block:
 
   - name: 'Deploy /etc/fwb.sh'
     ansible.builtin.copy:
