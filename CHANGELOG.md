@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:firewall**: Fix fwbuilder repo clone being skipped when `run_once` picks a host without `firewall__fwbuilder_repo_url`
 * **role:sshd**: Validate sshd config with `sshd -t` before reloading the service
 * **role:nfs_client**: Fix systemd not being aware of new or removed NFS mount units
 * **role:keycloak**: Fix issues preventing Keycloak from starting

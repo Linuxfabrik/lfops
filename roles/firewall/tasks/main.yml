@@ -108,6 +108,10 @@
 
 - block:
 
+  # run_once picks the first host in the play. if that host does not have firewall__fwbuilder_repo_url
+  # set, the task would be skipped for all hosts. to avoid this, we look across all play hosts and use
+  # the first defined, non-empty value. this ensures the repo is cloned whenever at least one host in
+  # the play has the variable set.
   - name: 'Remove any existing local fwb repo'
     ansible.builtin.file:
       path: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
@@ -115,11 +119,21 @@
     changed_when: false # not a config change on the server
     check_mode: false # run task even if `--check` is specified
     delegate_to: 'localhost'
-    when: 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length'
+    run_once: true
+    vars:
+      __firewall__fwbuilder_repo_url: >-
+        {{ ansible_play_hosts_all
+           | map('extract', hostvars)
+           | selectattr('firewall__fwbuilder_repo_url', 'defined')
+           | map(attribute='firewall__fwbuilder_repo_url')
+           | select
+           | first
+           | default('') }}
+    when: '__firewall__fwbuilder_repo_url | length > 0'
 
   - name: 'Clone the fwb git repo to localhost'
     ansible.builtin.git:
-      repo: '{{ firewall__fwbuilder_repo_url }}'
+      repo: '{{ __firewall__fwbuilder_repo_url }}'
       dest: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
       depth: 1
       single_branch: true
@@ -127,7 +141,16 @@
     delegate_to: 'localhost'
     run_once: true
     check_mode: false # run task even if `--check` is specified
-    when: 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length'
+    vars:
+      __firewall__fwbuilder_repo_url: >-
+        {{ ansible_play_hosts_all
+           | map('extract', hostvars)
+           | selectattr('firewall__fwbuilder_repo_url', 'defined')
+           | map(attribute='firewall__fwbuilder_repo_url')
+           | select
+           | first
+           | default('') }}
+    when: '__firewall__fwbuilder_repo_url | length > 0'
 
   - name: 'Deploy /etc/fwb.sh'
     ansible.builtin.copy:
