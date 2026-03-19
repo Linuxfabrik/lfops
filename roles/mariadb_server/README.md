@@ -441,10 +441,12 @@ mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0 #  inconsistenc
 | `mariadb_server__cnf_wsrep_cluster_addresses` | List of strings. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_cluster_address). DNS names work as well, IPs are preferred for performance. | unset |
 | `mariadb_server__cnf_wsrep_cluster_name` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_cluster_name) | `'lfops_galera_cluster'` |
 | `mariadb_server__cnf_wsrep_gtid_mode__group_var` / `mariadb_server__cnf_wsrep_gtid_mode__host_var` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_gtid_mode) | `'OFF'` |
+| `mariadb_server__cnf_wsrep_log_conflicts__group_var` / `mariadb_server__cnf_wsrep_log_conflicts__host_var` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_log_conflicts) | `'OFF'` |
 | `mariadb_server__cnf_wsrep_node_address` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_node_address) | `'{{ ansible_facts["default_ipv4"]["address"] }}'` |
 | `mariadb_server__cnf_wsrep_node_name` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_node_name) | `'{{ ansible_facts["nodename"] }}'` |
 | `mariadb_server__cnf_wsrep_on` | Boolean. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_on). Also installs the packages required for Galera. | `false` |
 | `mariadb_server__cnf_wsrep_provider_options` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_provider_options) | `'gcache.size=300M; gcache.page_size=300M'` |
+| `mariadb_server__cnf_wsrep_retry_autocommit__group_var` / `mariadb_server__cnf_wsrep_retry_autocommit__host_var` | Integer. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_retry_autocommit) | `1` |
 | `mariadb_server__cnf_wsrep_slave_threads` | Integer. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_slave_threads). Four slave threads can typically saturate one CPU core. | `'{{ 1 if ansible_facts["processor_nproc"] == 1 else (ansible_facts["processor_nproc"] - 1) * 4 }}'` |
 | `mariadb_server__run_galera_new_cluster` | Boolean. [mariadb.com](https://mariadb.com/kb/en/mariadbd-options/#-wsrep-new-cluster). Do not set in the inventory, use via `--extra-vars`. This bootstraps the Galera cluster. Only set this to `true` during the deployment of the first node, or when recovering / restarting a stopped cluster. | `false` |
 
@@ -460,10 +462,12 @@ mariadb_server__cnf_wsrep_cluster_addresses:
   - '192.0.2.30'
 mariadb_server__cnf_wsrep_cluster_name: 'lfops_galera_cluster'
 mariadb_server__cnf_wsrep_gtid_mode__host_var: 'ON'
+mariadb_server__cnf_wsrep_log_conflicts__host_var: 'ON'
 mariadb_server__cnf_wsrep_node_address: '192.0.2.10'
 mariadb_server__cnf_wsrep_node_name: 'db10'
 mariadb_server__cnf_wsrep_on: true
 mariadb_server__cnf_wsrep_provider_options: 'gcache.size=300M; gcache.page_size=300M'
+mariadb_server__cnf_wsrep_retry_autocommit__host_var: 3
 mariadb_server__cnf_wsrep_slave_threads: 4
 mariadb_server__cnf_wsrep_sst_auth: 'sst_user:linuxfabrik'
 mariadb_server__cnf_wsrep_sst_method: 'mariabackup'
