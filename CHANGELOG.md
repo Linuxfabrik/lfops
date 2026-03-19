@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:openvpn_server**: Add `openvpn_server:crl` tag to allow deploying the certificate revocation list independently
 * **role:nextcloud**: Add Icinga2 set / unset downtime functionality to `nextcloud-update.j2`
 * **execution-environment**: Add mitogen
 * **role:nfs_client**: Add optional `owner`, `group` and `mode` subkeys for mount point directories

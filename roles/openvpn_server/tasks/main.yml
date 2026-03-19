@@ -62,19 +62,6 @@
     when:
       - 'not openvpn_server__pkcs12_skip_deploy'
 
-  - name: 'Deploy /etc/openvpn/server/crl.pem'
-    ansible.builtin.copy:
-      src: '{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files{{ openvpn_server__crl_verify }}'
-      dest: '{{ openvpn_server__crl_verify }}'
-      mode: 0o600
-      owner: 'openvpn'
-      group: 'openvpn'
-      seuser: 'system_u'
-      serole: 'object_r'
-      setype: 'openvpn_etc_t'
-    when:
-      - 'not openvpn_server__crl_verify_skip_deploy'
-
   - name: 'semanage port --add --type openvpn_port_t --proto udp {{ openvpn_server__port }}'
     community.general.seport:
       ports: '{{ openvpn_server__port }}'
@@ -90,6 +77,26 @@
 
   tags:
     - 'openvpn_server'
+
+
+- block:
+
+  - name: 'Deploy /etc/openvpn/server/crl.pem'
+    ansible.builtin.copy:
+      src: '{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files{{ openvpn_server__crl_verify }}'
+      dest: '{{ openvpn_server__crl_verify }}'
+      mode: 0o600
+      owner: 'openvpn'
+      group: 'openvpn'
+      seuser: 'system_u'
+      serole: 'object_r'
+      setype: 'openvpn_etc_t'
+    when:
+      - 'not openvpn_server__crl_verify_skip_deploy'
+
+  tags:
+    - 'openvpn_server'
+    - 'openvpn_server:crl'
 
 
 - block:

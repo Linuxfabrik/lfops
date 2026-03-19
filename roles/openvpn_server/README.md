@@ -22,6 +22,7 @@ This role does not configure OpenVPN logging via `log-append /var/log/openvpn.lo
 | Tag                    | What it does                             | Reload / Restart |
 | ---                    | ------------                             | ---------------- |
 | `openvpn_server`       | Installs and configures OpenVPN          | - |
+| `openvpn_server:crl`   | Deploys the certificate revocation list  | - |
 | `openvpn_server:state` | Manages the state of the OpenVPN service | - |
 
 
