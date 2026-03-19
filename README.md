@@ -1,5 +1,5 @@
 <h1 align="center">
-  Linuxfabrik's LFOps
+  Linuxfabrik LFOps
 </h1>
 <p align="center">
   Ansible Collection of roles, playbooks & plugins for Linux-based cloud infrastructure. Covers OS hardening, MariaDB, Icinga2, Nextcloud, FreeIPA, KVM & more. Bitwarden & Cloud integration.
