@@ -440,6 +440,7 @@ mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0 #  inconsistenc
 | `mariadb_server__cnf_sst_tkey` | String. [mariadb.com](https://mariadb.com/kb/en/mariabackup-sst-method/#tls) | unset |
 | `mariadb_server__cnf_wsrep_cluster_addresses` | List of strings. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_cluster_address). DNS names work as well, IPs are preferred for performance. | unset |
 | `mariadb_server__cnf_wsrep_cluster_name` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_cluster_name) | `'lfops_galera_cluster'` |
+| `mariadb_server__cnf_wsrep_gtid_mode__group_var` / `mariadb_server__cnf_wsrep_gtid_mode__host_var` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_gtid_mode) | `'OFF'` |
 | `mariadb_server__cnf_wsrep_node_address` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_node_address) | `'{{ ansible_facts["default_ipv4"]["address"] }}'` |
 | `mariadb_server__cnf_wsrep_node_name` | String. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_node_name) | `'{{ ansible_facts["nodename"] }}'` |
 | `mariadb_server__cnf_wsrep_on` | Boolean. [mariadb.com](https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_on). Also installs the packages required for Galera. | `false` |
@@ -458,6 +459,7 @@ mariadb_server__cnf_wsrep_cluster_addresses:
   - '192.0.2.20'
   - '192.0.2.30'
 mariadb_server__cnf_wsrep_cluster_name: 'lfops_galera_cluster'
+mariadb_server__cnf_wsrep_gtid_mode__host_var: 'ON'
 mariadb_server__cnf_wsrep_node_address: '192.0.2.10'
 mariadb_server__cnf_wsrep_node_name: 'db10'
 mariadb_server__cnf_wsrep_on: true
