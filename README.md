@@ -8,9 +8,12 @@
 </p>
 <div align="center">
 
+![GitHub Stars](https://img.shields.io/github/stars/linuxfabrik/lfops)
 ![License](https://img.shields.io/github/license/linuxfabrik/lfops)
-![GitHub last commit](https://img.shields.io/github/last-commit/linuxfabrik/lfops)
 ![Version](https://img.shields.io/github/v/release/linuxfabrik/lfops?sort=semver)
+![Ansible](https://img.shields.io/badge/ansible--core-≥2.16-EE0000)
+![Platforms](https://img.shields.io/badge/Platforms-RHEL%20%7C%20Debian%20%7C%20Ubuntu-informational)
+![GitHub Issues](https://img.shields.io/github/issues/linuxfabrik/lfops)
 [![Galaxy](https://img.shields.io/badge/Galaxy-linuxfabrik.lfops-blue)](https://galaxy.ansible.com/ui/repo/published/linuxfabrik/lfops/)
 [![GitHubSponsors](https://img.shields.io/github/sponsors/Linuxfabrik?label=GitHub%20Sponsors)](https://github.com/sponsors/Linuxfabrik)
 [![PayPal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7AW3VVX62TR4A&source=url)
