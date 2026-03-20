@@ -1,0 +1,58 @@
+trend_micro__install_log: '/tmp/v1es_install.log'
+trend_micro__path_dsa: '/var/opt/ds_agent/' # deep security agent
+trend_micro__path_identity_file: '/opt/TrendMicro/EndpointBasecamp/etc/.identity'
+trend_micro__install_log: '/tmp/v1es_install.log'
+
+trend_micro__policy_id: 0
+trend_micro__group_id: 0
+trend_micro__relay_group_id: 0
+
+trend_micro__proxy_addr: 'zhsp-tregtw-001.kws.local'
+trend_micro__proxy_port: '8080'
+# trend_micro__proxy_username: ';'
+# trend_micro__proxy_password: ''
+
+# trend_micro__tenant_id: ''
+
+trend_micro__platform_rpm: false # is it RPM?
+trend_micro__platform_linux: false
+trend_micro__platform_archtype: ''
+# trend_micro__customer_id: ''
+
+
+trend_micro__xbc_installer_x86_64_company_id: ''
+trend_micro__xbc_installer_x86_64_platform: 'linux64'
+trend_micro__xbc_installer_x86_64_scenario_ids: ['','']
+
+trend_micro__xbc_installer_aarch64_company_id: ''
+trend_micro__xbc_installer_aarch64_platform: 'linuxaarch64' #NOTE: hardcoding?
+trend_micro__xbc_installer_aarch64_scenario_ids: ['','']
+
+trend_micro__xbc_fqdn: 'api-eu1.xbc.trendmicro.com'
+trend_micro__xbc_env: 'prod-eu1'
+trend_micro__xbc_agent_token_x86_64: ''
+trend_micro__xbc_agent_token_aarch64: ''
+
+
+# isRPM=""
+# linuxPlatform=""
+# archType=""
+# CURLOPTIONS="--silent --tlsv1.2"
+# CUSTOMER_ID=""
+# XBC_FQDN="api-eu1.xbc.trendmicro.com"
+
+
+# How do we get the relevant Information to configure our Ansible Inventory
+
+# Create new Product instance for Standard Endpoint Protection
+
+# How to get the installer IDS for XBC
+# 1. Navigate to Dashboard → Endpoint Security → Endpoint Inventory
+# 2. Click Agent Installer
+# 3. Click Deployment Script
+# 4. Select Endpoint Sensor (Protection type)
+# 5. Select Linux (Operating system)
+# 6. In the Preview script section, you'll see both installer IDs along with your company_id
+
+# Within the console
+# 1. Navigate to Dashboard → Endpoint Security Installer → Endpoint Inventory

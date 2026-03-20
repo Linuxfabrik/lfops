@@ -1,0 +1,27 @@
+- name: 'Playbook linuxfabrik.lfops.trend_micro'
+  hosts:
+    - 'lfops_trend_micro'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    # - role: 'linuxfabrik.lfops.?' # check other roles if anything can be reused
+    #   when:
+    #     - 'not selinux__skip_policycoreutils | d(false)'
+
+    - role: 'linuxfabrik.lfops.trend_micro'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

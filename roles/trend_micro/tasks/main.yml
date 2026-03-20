@@ -1,0 +1,306 @@
+# Check whether /tmp is writable
+# ?? Check whether the script is running as root
+# Check whether curl is installed
+# Check whether curl supports tls v1.2
+# Check whether tar is installed
+# check if base64 method exists
+# PROXY_ADDR_PORT and PROXY_CREDENTIAL define proxy for software download and Agent activation
+# HTTP_PROXY is exported for compatibility purpose, remove it if it is not needed in your environment
+# configure connection methods
+# Platform detection
+## Get Installer Package
+# Get XBC installer
+## Install v1es agents
+# set xbc site and scenario IDs
+# check if XBC is installed as usual
+## SWP installation prerequisites
+## Check SWP is installed and running
+## Activate SWP
+# Wait for 15 seconds to ensure SWP is fully initialized before activation
+
+
+# check whether /tmp is writable
+- block:
+
+  - name: 'Check whether /tmp is writable'
+    ansible.builtin.stat:
+      path: '/tmp'
+    register: tmp_stat
+
+  - name: 'Assert /tmp is writable'
+  ansibl  :
+    that:
+      - tmp_stat.stat.writeable
+    fail_msg: '/tmp is not writable'
+
+
+# check whether needed packages are installed
+- block:
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Install tar if not present'
+    ansible.builtin.package:
+      name: 'tar'
+      state: 'present'
+    when: "'tar' not in ansible_facts.packages"
+
+  - name: 'Install curl if not present'
+# Get Installer Package
+# Get XBC installer
+# Install v1es agents
+# Set xbc site and scenario IDs
+# check if XBC is installed as usual
+# SWP installation prerequisites
+# Check SWP is installed and running
+# Activate SWP
+
+  # Wait for 15 seconds to ensure SWP is fully initialized before activation
+- block:
+
+  - name: 'stat /tmp'
+    ansible.builtin.stat:
+      path: '/tmp'
+    register: 'trend_micro__tmp_stat'
+
+  - name: 'assert /tmp is writable'
+    ansible.builtin.assert:
+      that:
+        - 'trend_micro__tmp_stat.stat.writeable'
+      fail_msg: '/tmp is not writable. Please check the permissions of /tmp.'
+
+  tags:
+    - 'trend_micro'
+
+
+- block:
+
+  - name: 'package_facts'
+    ansible.builtin.package_facts:
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'install curl'
+    ansible.builtin.package:
+      name: 'curl'
+      state: 'present'
+    when: "'curl' not in ansible_facts.packages"
+
+  - name: 'install tar'
+    ansible.builtin.package:
+      name: 'tar'
+      state: 'present'
+    when: "'tar' not in ansible_facts.packages"
+
+  tags:
+    - 'trend_micro:install'
+
+
+- block:
+
+  - name: 'Set proxy and connection config facts (proxy with username and password)'
+    ansible.builtin.set_fact:
+      trend_micro__proxy_env:
+        HTTP_PROXY: 'http://{{ trend_micro__proxy_username }}:{{ trend_micro__proxy_password }}@{{ trend_micro__proxy_addr }}:{{ trend_micro__proxy_port }}/'
+        HTTPS_PROXY: 'http://{{ trend_micro__proxy_username }}:{{ trend_micro__proxy_password }}@{{ trend_micro__proxy_addr }}:{{ trend_micro__proxy_port }}/' # its http in the bash script too, is that right?
+      trend_micro__proxy_config: '{{ (trend_micro__proxy_username + ":" + trend_micro__proxy_password) | b64encode }}@{{ trend_micro__proxy_addr }}:{{ trend_micro__proxy_port }}'
+      trend_micro__connect_config: '{{ {"fps": [{"connections": [{"type": "USER_INPUT"}]}]} | to_json | b64encode }}'
+    when:
+      - 'trend_micro__proxy_addr | length > 0'
+      - 'trend_micro__proxy_username | length > 0'
+      - 'trend_micro__proxy_password | length > 0'
+
+  - name: 'Set proxy and connection config facts (proxy with username only)'
+    ansible.builtin.set_fact:
+      trend_micro__proxy_env:
+        HTTP_PROXY: 'http://{{ trend_micro__proxy_username }}@{{ trend_micro__proxy_addr }}:{{ trend_micro__proxy_port }}/'
+        HTTPS_PROXY: 'http://{{ trend_micro__proxy_username }}@{{ trend_micro__proxy_addr }}:{{ trend_micro__proxy_port }}/'
+      trend_micro__proxy_config: '{{ (trend_micro__proxy_username + ":") | b64encode }}@{{ trend_micro__proxy_addr }}:{{ trend_micro__proxy_port }}'
+      trend_micro__connect_config: '{{ {"fps": [{"connections": [{"type": "USER_INPUT"}]}]} | to_json | b64encode }}'
+    when:
+      - 'trend_micro__proxy_addr | length > 0'
+      - 'trend_micro__proxy_username | length > 0'
+      - 'trend_micro__proxy_password | length == 0'
+
+  - name: 'Set proxy and connection config facts (proxy without credentials)'
+    ansible.builtin.set_fact:
+      trend_micro__proxy_env:
+        HTTP_PROXY: 'http://{{ trend_micro__proxy_addr }}:{{ trend_micro__proxy_port }}/'
+        HTTPS_PROXY: 'http://{{ trend_micro__proxy_addr }}:{{ trend_micro__proxy_port }}/'
+      trend_micro__proxy_config: '{{ trend_micro__proxy_addr }}:{{ trend_micro__proxy_port }}'
+      trend_micro__connect_config: '{{ {"fps": [{"connections": [{"type": "USER_INPUT"}]}]} | to_json | b64encode }}'
+    when:
+      - 'trend_micro__proxy_addr | length > 0'
+      - 'trend_micro__proxy_username | length == 0'
+
+  - name: 'Set connection config facts (direct connection)'
+    ansible.builtin.set_fact:
+      trend_micro__proxy_env: {}
+      trend_micro__proxy_config: ''
+      trend_micro__connect_config: '{{ {"fps": [{"connections": [{"type": "DIRECT_CONNECT"}]}]} | to_json | b64encode }}'
+    when: 'trend_micro__proxy_addr | length == 0'
+
+  tags:
+    - 'trend_micro'
+
+# in original script, this is being done by a platform detection script https://api-eu1.xbc.trendmicro.com/apk/platform-detection-script
+
+- block:
+
+  - name: 'Set x86_64 installer facts'
+    ansible.builtin.set_fact:
+      trend_micro__installer_body:
+        company_id: '{{ trend_micro__xbc_installer_x86_64_company_id }}'
+        platform: 'linux64'
+        scenario_ids: '{{ trend_micro__xbc_installer_x86_64_scenario_ids }}'
+      trend_micro__xbc_agent_token: '{{ trend_micro__xbc_agent_token_x86_64 }}'
+    when: "ansible_architecture == 'x86_64'"
+
+  - name: 'Set aarch64 installer facts'
+    ansible.builtin.set_fact:
+      trend_micro__installer_body:
+        company_id: '{{ trend_micro__xbc_installer_aarch64_company_id }}'
+        platform: 'linuxaarch64'
+        scenario_ids: '{{ trend_micro__xbc_installer_aarch64_scenario_ids }}'
+      trend_micro__xbc_agent_token: '{{ trend_micro__xbc_agent_token_aarch64 }}'
+    when: "ansible_architecture == 'aarch64'"
+
+  - name: 'assert supported architecture'
+    ansible.builtin.assert:
+      that: "ansible_architecture in ['x86_64', 'aarch64']"
+      fail_msg: 'Architecture {{ ansible_architecture }} is not supported.'
+
+  tags:
+    - 'trend_micro'
+
+
+- block:
+
+  - name: 'POST https://{{ trend_micro__xbc_fqdn }}/apk/installer - download installer to /tmp/v1es_installer.tgz'
+    ansible.builtin.uri:
+      url: 'https://{{ trend_micro__xbc_fqdn }}/apk/installer' # does keeping that value dynamic really make sense?
+      method: 'POST'
+      headers:
+        X-Customer-Id: '{{ trend_micro__customer_id }}'
+      body: '{{ trend_micro__installer_body }}'
+      body_format: 'json'
+      dest: '/tmp/v1es_installer.tgz'
+      status_code:
+        - 200
+    environment: '{{ trend_micro__proxy_env }}'
+
+  tags:
+    - 'trend_micro'
+
+
+- block:
+
+  - name: 'file state=directory /tmp/v1es'
+    ansible.builtin.file:
+      path: '/tmp/v1es'
+      state: 'directory'
+      mode: 0o755
+
+  - name: 'unarchive /tmp/v1es_installer.tgz to /tmp/v1es'
+    ansible.builtin.unarchive:
+      src: '/tmp/v1es_installer.tgz'
+      dest: '/tmp/v1es'
+      remote_src: true
+
+  - name: 'copy /tmp/v1es/.property'
+    ansible.builtin.copy:
+      content: '{{ {"xbc_env": trend_micro__xbc_env, "xbc_agent_token": trend_micro__xbc_agent_token, "full_package": true} | to_json }}'
+      dest: '/tmp/v1es/.property'
+      mode: 0o644
+
+  tags:
+    - 'trend_micro'
+
+
+- block:
+
+  - name: '/tmp/v1es/tmxbc install --proxiesWithCred ... --connection ... (proxy)'
+    ansible.builtin.command:
+      argv:
+        - '/tmp/v1es/tmxbc'
+        - 'install'
+        - '--proxiesWithCred'
+        - '{{ trend_micro__proxy_config }}'
+        - '--connection'
+        - '{{ trend_micro__connect_config }}'
+    environment: '{{ trend_micro__proxy_env }}'
+    when: "trend_micro__proxy_config | length > 0"
+
+  - name: '/tmp/v1es/tmxbc install --connection ... (direct)'
+    ansible.builtin.command:
+      argv:
+        - '/tmp/v1es/tmxbc'
+        - 'install'
+        - '--connection'
+        - '{{ trend_micro__connect_config }}'
+    when: "trend_micro__proxy_config | length == 0"
+
+  tags:
+    - 'trend_micro'
+
+
+- block:
+
+  - name: 'wait_for path={{ trend_micro__path_identity_file }} # agent registration'
+    ansible.builtin.wait_for:
+      path: '{{ trend_micro__path_identity_file }}'
+      timeout: 300
+
+  tags:
+    - 'trend_micro'
+
+
+- block:
+
+  - name: 'systemctl is-active ds_agent # wait for SWP to install and start'
+    ansible.builtin.command:
+      cmd: 'systemctl is-active ds_agent'
+    register: 'trend_micro__ds_agent_status'
+    until: 'trend_micro__ds_agent_status.rc == 0'
+    retries: 60
+    delay: 10
+    changed_when: false
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'wait_for path=/var/opt/ds_agent/dsa_core/ds_agent.crt # SWP initialization'
+    ansible.builtin.wait_for:
+      path: '/var/opt/ds_agent/dsa_core/ds_agent.crt'
+      timeout: 300
+
+  tags:
+    - 'trend_micro'
+
+
+- block:
+
+  - name: 'pause seconds=15 # ensure SWP is fully initialized before activation'
+    ansible.builtin.pause:
+      seconds: 15 # like in the script, is it necessary tho?
+
+  - name: '{{ trend_micro__path_dsa }} -a dsm://{{ trend_micro__swp_dsm_fqdn }}:443/ ...'
+    ansible.builtin.command:
+      argv:
+        - '{{ trend_micro__path_dsa }}'
+        - '-a'
+        - 'dsm://{{ trend_micro__swp_dsm_fqdn }}:443/'
+        - 'tenantID:{{ trend_micro__tenant_id }}'
+        - 'token:{{ trend_micro__token }}'
+        - 'policyid:{{ trend_micro__policy_id }}'
+        - 'relaygroupid:{{ trend_micro__relay_group_id }}'
+        - 'groupid:{{ trend_micro__group_id }}'
+    register: 'trend_micro__activation_result'
+
+  - name: 'assert SWP activation succeeded (HTTP 200)'
+    ansible.builtin.assert:
+      that:
+        - "'200' in trend_micro__activation_result.stdout"
+      fail_msg: 'Failed to activate Server & Workload Protection. Output: {{ trend_micro__activation_result.stdout }}'
+
+  tags:
+    - 'trend_micro'

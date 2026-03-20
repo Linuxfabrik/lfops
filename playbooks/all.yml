@@ -139,6 +139,7 @@
 - import_playbook: 'system_update.yml'
 - import_playbook: 'systemd_journald.yml'
 - import_playbook: 'systemd_unit.yml'
+- import_playbook: 'trend_micro.yml'
 - import_playbook: 'telegraf.yml'
 - import_playbook: 'timezone.yml'
 - import_playbook: 'tools.yml'
