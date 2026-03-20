@@ -20,7 +20,7 @@ sshd__allow_users__group_var: []
 sshd__allow_users__host_var: []
 sshd__allow_users__role_var: []
 sshd__client_alive_count_max: '{{ sshd__client_alive_count_max__stig_var | d(3) }}'
-sshd__client_alive_interval: '{{ sshd__client_alive_interval__stig_var | d(15) }}'
+sshd__client_alive_interval: '{{ sshd__client_alive_interval__stig_var | d(0) }}'
 sshd__deny_groups__combined_var: '{{
     sshd__deny_groups__role_var +
     sshd__deny_groups__dependent_var +
@@ -41,7 +41,7 @@ sshd__deny_users__dependent_var: []
 sshd__deny_users__group_var: []
 sshd__deny_users__host_var: []
 sshd__deny_users__role_var: []
-sshd__disable_forwarding: '{{ sshd__disable_forwarding__stig_var | d(true) }}'
+sshd__disable_forwarding: '{{ sshd__disable_forwarding__stig_var | d(false) }}'
 sshd__gssapi_authentication: '{{ sshd__gssapi_authentication__stig_var | d(true) }}'
 sshd__log_level__combined_var: '{{
     sshd__log_level__host_var if (sshd__log_level__host_var | string | length) else
