@@ -108,6 +108,7 @@
 
   - name: 'deploy /etc/github-project-createrepo.yml'
     ansible.builtin.template:
+      backup: true
       src: 'etc/github-project-createrepo.yml.j2'
       dest: '/etc/github-project-createrepo.yml'
       owner: 'root'

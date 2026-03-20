@@ -8,6 +8,7 @@
 
   - name: 'Deploy /etc/icinga-kubernetes/config.yml'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icinga-kubernetes/config.yml.j2'
       dest: '/etc/icinga-kubernetes/config.yml'
       owner: 'icinga-kubernetes'
@@ -17,6 +18,7 @@
 
   - name: 'Deploy /etc/icinga-kubernetes/*.env'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icinga-kubernetes/cluster.env.j2'
       dest: '/etc/icinga-kubernetes/{{ item["name"] }}.env'
       owner: 'root'

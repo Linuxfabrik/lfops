@@ -12,6 +12,7 @@
 
   - name: 'Copy logrotate.conf template to /etc'
     ansible.builtin.template:
+      backup: true
       src: 'etc/logrotate.conf.j2'
       dest: '/etc/logrotate.conf'
       owner: 'root'
@@ -27,6 +28,7 @@
 
   - name: 'Copy system logrotate templates to /etc/logrotate.d'
     ansible.builtin.template:
+      backup: true
       src: 'etc/logrotate.d/syslog.j2'
       dest: '/etc/logrotate.d/{{ logrotate__syslog_filename }}'
       owner: 'root'

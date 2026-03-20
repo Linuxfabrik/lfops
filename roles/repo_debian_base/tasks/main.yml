@@ -2,6 +2,7 @@
 
   - name: 'deploy the repo files (mirror: {{ repo_debian_base__mirror_url | default("") }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/apt/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-sources.list.j2'
       dest: '/etc/apt/sources.list'
       owner: 'root'

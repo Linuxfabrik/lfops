@@ -9,6 +9,7 @@
 
   - name: 'Deploy /etc/audit/auditd.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/audit/auditd.conf.j2'
       dest: '/etc/audit/auditd.conf'
       owner: 'root'

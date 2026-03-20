@@ -74,6 +74,7 @@
 
   - name: 'deploy /etc/kibana/kibana.yml'
     ansible.builtin.template:
+      backup: true
       src: 'etc/kibana/kibana.yml.j2'
       dest: '/etc/kibana/kibana.yml'
       owner: 'root'

@@ -23,6 +23,7 @@
 
   - name: 'Deploy /etc/opensearch/{{ __opensearch__installed_version[:1] }}.x-opensearch.yml'
     ansible.builtin.template:
+      backup: true
       src: 'etc/opensearch/{{ __opensearch__installed_version[:1] }}.x-opensearch.yml.j2'
       dest: '/etc/opensearch/opensearch.yml'
       owner: 'opensearch'
@@ -47,6 +48,7 @@
 
   - name: 'Deploy /etc/sysconfig/opensearch'
     ansible.builtin.template:
+      backup: true
       src: 'etc/sysconfig/opensearch.j2'
       dest: '/etc/sysconfig/opensearch'
       owner: 'opensearch'
@@ -144,6 +146,7 @@
 
     - name: 'Deploy /etc/opensearch/opensearch-security/internal_users.yml'
       ansible.builtin.template:
+        backup: true
         src: 'etc/opensearch/opensearch-security/internal_users.yml.j2'
         dest: '/etc/opensearch/opensearch-security/internal_users.yml'
         owner: 'opensearch'
@@ -212,6 +215,7 @@
 
   - name: 'Deploy /tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml'
     ansible.builtin.template:
+      backup: true
       src: 'tmp/opensearch-certs/config/tlsconfig.yml.j2'
       dest: '/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml'
 

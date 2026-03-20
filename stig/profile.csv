@@ -1,0 +1,346 @@
+id,profile_name,profile_version,control_name,enabled,automated,server_level,workstation_level
+
+cramfs_off,CIS Rocky Linux 9,v2.0.0,1.1.1.1 Ensure cramfs kernel module is not available,1,1,1,1
+freevxfs_off,CIS Rocky Linux 9,v2.0.0,1.1.1.2 Ensure freevxfs kernel module is not available,1,1,1,1
+hfs_off,CIS Rocky Linux 9,v2.0.0,1.1.1.3 Ensure hfs kernel module is not available,1,1,1,1
+hfsplus_off,CIS Rocky Linux 9,v2.0.0,1.1.1.4 Ensure hfsplus kernel module is not available,1,1,1,1
+jffs2_off,CIS Rocky Linux 9,v2.0.0,1.1.1.5 Ensure jffs2 kernel module is not available,1,1,1,1
+squashfs_off,CIS Rocky Linux 9,v2.0.0,1.1.1.6 Ensure squashfs kernel module is not available,1,1,1,1
+udf_off,CIS Rocky Linux 9,v2.0.0,1.1.1.7 Ensure udf kernel module is not available,1,1,1,1
+usb_storage_off,CIS Rocky Linux 9,v2.0.0,1.1.1.8 Ensure usb-storage kernel module is not available,1,1,1,1
+unused_filesystems_modules_off,CIS Rocky Linux 9,v2.0.0,1.1.1.9 Ensure unused filesystems kernel modules are not available,1,0,1,1
+
+tmp_separate_partition,CIS Rocky Linux 9,v2.0.0,1.1.2.1.1 Ensure /tmp is a separate partition,1,1,1,1
+tmp_nodev,CIS Rocky Linux 9,v2.0.0,1.1.2.1.2 Ensure nodev option set on /tmp partition,1,1,1,1
+tmp_nosuid,CIS Rocky Linux 9,v2.0.0,1.1.2.1.3 Ensure nosuid option set on /tmp partition,1,1,1,1
+tmp_noexec,CIS Rocky Linux 9,v2.0.0,1.1.2.1.4 Ensure noexec option set on /tmp partition,1,1,1,1
+
+dev_shm_separate_partition,CIS Rocky Linux 9,v2.0.0,1.1.2.2.1 Ensure /dev/shm is a separate partition,1,1,1,1
+dev_shm_nodev,CIS Rocky Linux 9,v2.0.0,1.1.2.2.2 Ensure nodev option set on /dev/shm partition,1,1,1,1
+dev_shm_nosuid,CIS Rocky Linux 9,v2.0.0,1.1.2.2.3 Ensure nosuid option set on /dev/shm partition,1,1,1,1
+dev_shm_noexec,CIS Rocky Linux 9,v2.0.0,1.1.2.2.4 Ensure noexec option set on /dev/shm partition,1,1,1,1
+
+home_separate_partition,CIS Rocky Linux 9,v2.0.0,1.1.2.3.1 Ensure separate partition exists for /home,1,1,1,1
+home_nodev,CIS Rocky Linux 9,v2.0.0,1.1.2.3.2 Ensure nodev option set on /home partition,1,1,1,1
+home_nosuid,CIS Rocky Linux 9,v2.0.0,1.1.2.3.3 Ensure nosuid option set on /home partition,1,1,1,1
+
+var_separate_partition,CIS Rocky Linux 9,v2.0.0,1.1.2.4.1 Ensure separate partition exists for /var,1,1,1,1
+var_nodev,CIS Rocky Linux 9,v2.0.0,1.1.2.4.2 Ensure nodev option set on /var partition,1,1,1,1
+var_nosuid,CIS Rocky Linux 9,v2.0.0,1.1.2.4.3 Ensure nosuid option set on /var partition,1,1,1,1
+
+var_tmp_separate_partition,CIS Rocky Linux 9,v2.0.0,1.1.2.5.1 Ensure separate partition exists for /var/tmp,1,1,1,1
+var_tmp_nodev,CIS Rocky Linux 9,v2.0.0,1.1.2.5.2 Ensure nodev option set on /var/tmp partition,1,1,1,1
+var_tmp_nosuid,CIS Rocky Linux 9,v2.0.0,1.1.2.5.3 Ensure nosuid option set on /var/tmp partition,1,1,1,1
+var_tmp_noexec,CIS Rocky Linux 9,v2.0.0,1.1.2.5.4 Ensure noexec option set on /var/tmp partition,1,1,1,1
+
+var_log_separate_partition,CIS Rocky Linux 9,v2.0.0,1.1.2.6.1 Ensure separate partition exists for /var/log,1,1,1,1
+var_log_nodev,CIS Rocky Linux 9,v2.0.0,1.1.2.6.2 Ensure nodev option set on /var/log partition,1,1,1,1
+var_log_nosuid,CIS Rocky Linux 9,v2.0.0,1.1.2.6.3 Ensure nosuid option set on /var/log partition,1,1,1,1
+var_log_noexec,CIS Rocky Linux 9,v2.0.0,1.1.2.6.4 Ensure noexec option set on /var/log partition,1,1,1,1
+
+var_log_audit_separate_partition,CIS Rocky Linux 9,v2.0.0,1.1.2.7.1 Ensure separate partition exists for /var/log/audit,1,1,1,1
+var_log_audit_nodev,CIS Rocky Linux 9,v2.0.0,1.1.2.7.2 Ensure nodev option set on /var/log/audit partition,1,1,1,1
+var_log_audit_nosuid,CIS Rocky Linux 9,v2.0.0,1.1.2.7.3 Ensure nosuid option set on /var/log/audit partition,1,1,1,1
+var_log_audit_noexec,CIS Rocky Linux 9,v2.0.0,1.1.2.7.4 Ensure noexec option set on /var/log/audit partition,1,1,1,1
+
+gpg_keys_configured,CIS Rocky Linux 9,v2.0.0,1.2.1.1 Ensure GPG keys are configured,1,0,1,1
+gpgcheck_globally_activated,CIS Rocky Linux 9,v2.0.0,1.2.1.2 Ensure gpgcheck is globally activated,1,1,1,1
+repo_gpgcheck_globally_activated,CIS Rocky Linux 9,v2.0.0,1.2.1.3 Ensure repo_gpgcheck is globally activated,1,0,1,1
+package_manager_repos_configured,CIS Rocky Linux 9,v2.0.0,1.2.1.4 Ensure package manager repositories are configured,1,0,1,1
+
+updates_patches_installed,CIS Rocky Linux 9,v2.0.0,"1.2.2.1 Ensure updates, patches, and additional security software are installed",1,0,1,1
+
+selinux_installed,CIS Rocky Linux 9,v2.0.0,1.3.1.1 Ensure SELinux is installed,1,1,1,1
+selinux_not_disabled_bootloader,CIS Rocky Linux 9,v2.0.0,1.3.1.2 Ensure SELinux is not disabled in bootloader configuration,1,1,1,1
+selinux_policy_configured,CIS Rocky Linux 9,v2.0.0,1.3.1.3 Ensure SELinux policy is configured,1,1,1,1
+selinux_mode_not_disabled,CIS Rocky Linux 9,v2.0.0,1.3.1.4 Ensure the SELinux mode is not disabled,1,1,1,1
+selinux_mode_enforcing,CIS Rocky Linux 9,v2.0.0,1.3.1.5 Ensure the SELinux mode is enforcing,1,1,1,1
+no_unconfined_services,CIS Rocky Linux 9,v2.0.0,1.3.1.6 Ensure no unconfined services exist,1,0,1,1
+mcstrans_not_installed,CIS Rocky Linux 9,v2.0.0,1.3.1.7 Ensure the MCS Translation Service (mcstrans) is not installed,1,1,1,1
+setroubleshoot_not_installed,CIS Rocky Linux 9,v2.0.0,1.3.1.8 Ensure SETroubleshoot is not installed,1,1,1,1
+
+bootloader_password_set,CIS Rocky Linux 9,v2.0.0,1.4.1 Ensure bootloader password is set,1,1,1,1
+bootloader_config_access,CIS Rocky Linux 9,v2.0.0,1.4.2 Ensure access to bootloader config is configured,1,1,1,1
+
+aslr_enabled,CIS Rocky Linux 9,v2.0.0,1.5.1 Ensure address space layout randomization is enabled,1,1,1,1
+ptrace_scope_restricted,CIS Rocky Linux 9,v2.0.0,1.5.2 Ensure ptrace_scope is restricted,1,1,1,1
+core_dump_backtraces_disabled,CIS Rocky Linux 9,v2.0.0,1.5.3 Ensure core dump backtraces are disabled,1,1,1,1
+core_dump_storage_disabled,CIS Rocky Linux 9,v2.0.0,1.5.4 Ensure core dump storage is disabled,1,1,1,1
+
+crypto_policy_not_legacy,CIS Rocky Linux 9,v2.0.0,1.6.1 Ensure system wide crypto policy is not set to legacy,1,1,1,1
+crypto_policy_not_sshd,CIS Rocky Linux 9,v2.0.0,1.6.2 Ensure system wide crypto policy is not set in sshd configuration,1,1,1,1
+crypto_policy_disable_sha1,CIS Rocky Linux 9,v2.0.0,1.6.3 Ensure system wide crypto policy disables sha1 hash and signature support,1,1,1,1
+crypto_policy_disable_mac_128_bits,CIS Rocky Linux 9,v2.0.0,1.6.4 Ensure system wide crypto policy disables macs less than 128 bits,1,1,1,1
+crypto_policy_disable_ssh_cbc,CIS Rocky Linux 9,v2.0.0,1.6.5 Ensure system wide crypto policy disables cbc for ssh,1,1,1,1
+crypto_policy_disable_ssh_chacha20_poly1305,CIS Rocky Linux 9,v2.0.0,1.6.6 Ensure system wide crypto policy disables chacha20-poly1305 for ssh,1,0,1,1
+crypto_policy_disable_ssh_etm,CIS Rocky Linux 9,v2.0.0,1.6.7 Ensure system wide crypto policy disables EtM for ssh,1,0,1,1
+
+motd_configured,CIS Rocky Linux 9,v2.0.0,1.7.1 Ensure message of the day is configured properly,1,1,1,1
+local_login_banner_configured,CIS Rocky Linux 9,v2.0.0,1.7.2 Ensure local login warning banner is configured properly,1,1,1,1
+remote_login_banner_configured,CIS Rocky Linux 9,v2.0.0,1.7.3 Ensure remote login warning banner is configured properly,1,1,1,1
+motd_permissions_configured,CIS Rocky Linux 9,v2.0.0,1.7.4 Ensure access to /etc/motd is configured,1,1,1,1
+issue_permissions_configured,CIS Rocky Linux 9,v2.0.0,1.7.5 Ensure access to /etc/issue is configured,1,1,1,1
+issue_net_permissions_configured,CIS Rocky Linux 9,v2.0.0,1.7.6 Ensure access to /etc/issue.net is configured,1,1,1,1
+
+gdm_removed,CIS Rocky Linux 9,v2.0.0,1.8.1 Ensure GNOME Display Manager is removed,1,1,1,0
+gdm_login_banner_configured,CIS Rocky Linux 9,v2.0.0,1.8.2 Ensure GDM login banner is configured,1,1,1,1
+gdm_disable_user_list_enabled,CIS Rocky Linux 9,v2.0.0,1.8.3 Ensure GDM disable-user-list option is enabled,1,1,1,1
+gdm_screen_locks_when_idle,CIS Rocky Linux 9,v2.0.0,1.8.4 Ensure GDM screen locks when the user is idle,1,1,1,1
+gdm_screen_locks_cannot_be_overridden,CIS Rocky Linux 9,v2.0.0,1.8.5 Ensure GDM screen locks cannot be overridden,1,1,1,1
+gdm_automount_removable_media_disabled,CIS Rocky Linux 9,v2.0.0,1.8.6 Ensure GDM automatic mounting of removable media is disabled,1,1,1,1
+gdm_automount_not_overridden,CIS Rocky Linux 9,v2.0.0,1.8.7 Ensure GDM disabling automatic mounting of removable media is not overridden,1,1,1,1
+gdm_autorun_never_enabled,CIS Rocky Linux 9,v2.0.0,1.8.8 Ensure GDM autorun-never is enabled,1,1,1,1
+gdm_autorun_never_not_overridden,CIS Rocky Linux 9,v2.0.0,1.8.9 Ensure GDM autorun-never is not overridden,1,1,1,1
+xdmcp_not_enabled,CIS Rocky Linux 9,v2.0.0,1.8.10 Ensure XDMCP is not enabled,1,1,1,1
+
+autofs_unused,CIS Rocky Linux 9,v2.0.0,2.1.1 Ensure autofs services are not in use,1,1,1,1
+avahi_daemon_unused,CIS Rocky Linux 9,v2.0.0,2.1.2 Ensure avahi daemon services are not in use,1,1,1,1
+dhcp_server_unused,CIS Rocky Linux 9,v2.0.0,2.1.3 Ensure DHCP server services are not in use,1,1,1,1
+dns_server_unused,CIS Rocky Linux 9,v2.0.0,2.1.4 Ensure DNS server services are not in use,1,1,1,1
+dnsmasq_unused,CIS Rocky Linux 9,v2.0.0,2.1.5 Ensure dnsmasq services are not in use,1,1,1,1
+samba_unused,CIS Rocky Linux 9,v2.0.0,2.1.6 Ensure Samba file server services are not in use,1,1,1,1
+ftp_server_unused,CIS Rocky Linux 9,v2.0.0,2.1.7 Ensure ftp server services are not in use,1,1,1,1
+message_access_server_unused,CIS Rocky Linux 9,v2.0.0,2.1.8 Ensure message access server services are not in use,1,1,1,1
+nfs_server_unused,CIS Rocky Linux 9,v2.0.0,2.1.9 Ensure network file system services are not in use,1,1,1,1
+nis_server_unused,CIS Rocky Linux 9,v2.0.0,2.1.10 Ensure nis server services are not in use,1,1,1,1
+print_server_unused,CIS Rocky Linux 9,v2.0.0,2.1.11 Ensure print server services are not in use,1,1,1,1
+rpcbind_unused,CIS Rocky Linux 9,v2.0.0,2.1.12 Ensure rpcbind services are not in use,1,1,1,1
+rsync_unused,CIS Rocky Linux 9,v2.0.0,2.1.13 Ensure rsync services are not in use,1,1,1,1
+snmp_unused,CIS Rocky Linux 9,v2.0.0,2.1.14 Ensure snmp services are not in use,1,1,1,1
+telnet_unused,CIS Rocky Linux 9,v2.0.0,2.1.15 Ensure telnet server services are not in use,1,1,1,1
+tftp_unused,CIS Rocky Linux 9,v2.0.0,2.1.16 Ensure tftp server services are not in use,1,1,1,1
+web_proxy_unused,CIS Rocky Linux 9,v2.0.0,2.1.17 Ensure web proxy server services are not in use,1,1,1,1
+web_server_unused,CIS Rocky Linux 9,v2.0.0,2.1.18 Ensure web server services are not in use,1,1,1,1
+xinetd_unused,CIS Rocky Linux 9,v2.0.0,2.1.19 Ensure xinetd services are not in use,1,1,1,1
+x_window_unused,CIS Rocky Linux 9,v2.0.0,2.1.20 Ensure X Window server services are not in use,1,1,1,1
+mta_local_only_mode,CIS Rocky Linux 9,v2.0.0,2.1.21 Ensure mail transfer agents are configured for local-only mode,1,1,1,1
+approved_services_listening,CIS Rocky Linux 9,v2.0.0,2.1.22 Ensure only approved services are listening on a network interface,0,0,1,1
+
+ftp_client_not_installed,CIS Rocky Linux 9,v2.0.0,2.2.1 Ensure ftp client is not installed,1,1,1,1
+ldap_client_not_installed,CIS Rocky Linux 9,v2.0.0,2.2.2 Ensure ldap client is not installed,1,1,1,1
+nis_client_not_installed,CIS Rocky Linux 9,v2.0.0,2.2.3 Ensure nis client is not installed,1,1,1,1
+telnet_client_not_installed,CIS Rocky Linux 9,v2.0.0,2.2.4 Ensure telnet client is not installed,1,1,1,1
+tftp_client_not_installed,CIS Rocky Linux 9,v2.0.0,2.2.5 Ensure tftp client is not installed,1,1,1,1
+
+time_synchronization,CIS Rocky Linux 9,v2.0.0,2.3.1 Ensure time synchronization is in use,1,1,1,1
+chrony_configured,CIS Rocky Linux 9,v2.0.0,2.3.2 Ensure chrony is configured,1,1,1,1
+chrony_not_root,CIS Rocky Linux 9,v2.0.0,2.3.3 Ensure chrony is not run as the root user,1,1,1,1
+
+cron_enabled_n_active,CIS Rocky Linux 9,v2.0.0,2.4.1.1 Ensure cron daemon is enabled and active,1,1,1,1
+cron_permissions_configured,CIS Rocky Linux 9,v2.0.0,2.4.1.2 Ensure permissions on /etc/crontab are configured,1,1,1,1
+cron_hourly_configured,CIS Rocky Linux 9,v2.0.0,2.4.1.3 Ensure permissions on /etc/cron.hourly are configured,1,1,1,1
+cron_daily_configured,CIS Rocky Linux 9,v2.0.0,2.4.1.4 Ensure permissions on /etc/cron.daily are configured,1,1,1,1
+cron_weekly_configured,CIS Rocky Linux 9,v2.0.0,2.4.1.5 Ensure permissions on /etc/cron.weekly are configured,1,1,1,1
+cron_monthly_configured,CIS Rocky Linux 9,v2.0.0,2.4.1.6 Ensure permissions on /etc/cron.monthly are configured,1,1,1,1
+crond_permissions_configured,CIS Rocky Linux 9,v2.0.0,2.4.1.7 Ensure permissions on /etc/cron.d are configured,1,1,1,1
+crontab_auth_restricted,CIS Rocky Linux 9,v2.0.0,2.4.1.8 Ensure crontab is restricted to authorized users,1,1,1,1
+
+at_auth_restricted,CIS Rocky Linux 9,v2.0.0,2.4.2.1 Ensure at is restricted to authorized users,1,1,1,1
+
+ipv6_status_identified,CIS Rocky Linux 9,v2.0.0,3.1.1 Ensure IPv6 status is identified,1,0,1,1
+wireless_interfaces_disabled,CIS Rocky Linux 9,v2.0.0,3.1.2 Ensure wireless interfaces are disabled,1,1,1,0
+bluetooth_services_unused,CIS Rocky Linux 9,v2.0.0,3.1.3 Ensure bluetooth services are not in use,1,1,1,1
+
+dccp_kernel_module_unavailable,CIS Rocky Linux 9,v2.0.0,3.2.1 Ensure dccp kernel module is not available,1,1,1,1
+tipc_kernel_module_unavailable,CIS Rocky Linux 9,v2.0.0,3.2.2 Ensure tipc kernel module is not available,1,1,1,1
+rds_kernel_module_unavailable,CIS Rocky Linux 9,v2.0.0,3.2.3 Ensure rds kernel module is not available,1,1,1,1
+sctp_kernel_module_unavailable,CIS Rocky Linux 9,v2.0.0,3.2.4 Ensure sctp kernel module is not available,1,1,1,1
+
+ip_forwarding_disabled,CIS Rocky Linux 9,v2.0.0,3.3.1 Ensure ip forwarding is disabled,1,1,1,1
+packet_redirect_sending_disabled,CIS Rocky Linux 9,v2.0.0,3.3.2 Ensure packet redirect sending is disabled,1,1,1,1
+bogus_icmp_responses_ignored,CIS Rocky Linux 9,v2.0.0,3.3.3 Ensure bogus icmp responses are ignored,1,1,1,1
+icmp_broadcasted_requests_ignored,CIS Rocky Linux 9,v2.0.0,3.3.4 Ensure broadcast icmp requests are ignored,1,1,1,1
+icmp_redirects_not_accepted,CIS Rocky Linux 9,v2.0.0,3.3.5 Ensure icmp redirects are not accepted,1,1,1,1
+icmp_secure_redirects_not_accepted,CIS Rocky Linux 9,v2.0.0,3.3.6 Ensure secure icmp requests are not accepted,1,1,1,1
+reverse_path_filtering_enabled,CIS Rocky Linux 9,v2.0.0,3.3.7 Ensure reverse path filtering is enabled,1,1,1,1
+source_routed_packets_not_accepted,CIS Rocky Linux 9,v2.0.0,3.3.8 Ensure source routed packets are not accepted,1,1,1,1
+suspicious_packets_logged,CIS Rocky Linux 9,v2.0.0,3.3.9 Ensure suspicious packets are logged,1,1,1,1
+tcp_syn_cookies_enabled,CIS Rocky Linux 9,v2.0.0,3.3.10 Ensure tcp syn cookies is enabled,1,1,1,1
+ipv6_router_advertisements_not_accepted,CIS Rocky Linux 9,v2.0.0,3.3.11 Ensure ipv6 router advertisements are not accepted,1,1,1,1
+
+nftables_installed,CIS Rocky Linux 9,v2.0.0,4.1.1 Ensure nftables is installed,1,1,1,1
+single_firewall_config_utility,CIS Rocky Linux 9,v2.0.0,4.1.2 Ensure a single firewall configuration utility is in use,1,1,1,1
+firewalld_drops_services_n_ports,CIS Rocky Linux 9,v2.0.0,4.2.1 Ensure firewalld drops unnecessary services and ports,0,0,1,1
+firewalld_loopback_traffic,CIS Rocky Linux 9,v2.0.0,4.2.2 Ensure firewalld loopback traffic is configured,1,1,1,1
+
+nftables_base_chains_exist,CIS Rocky Linux 9,v2.0.0,4.3.1 Ensure nftables base chains exist,1,1,1,1
+nftables_established_connections_configured,CIS Rocky Linux 9,v2.0.0,4.3.2 Ensure nftables established connections are configured,0,0,1,1
+nftables_deny_firewall_policy,CIS Rocky Linux 9,v2.0.0,4.3.3 Ensure nftables default deny firewall policy,1,1,1,1
+nftables_loopback_traffic,CIS Rocky Linux 9,v2.0.0,4.3.4 Ensure nftables loopback traffic is configured,1,1,1,1
+
+sshd_config_permissions,CIS Rocky Linux 9,v2.0.0,5.1.1 Ensure permissions on /etc/ssh/sshd_config are configured,1,1,1,1
+sshd_private_host_key_permissions,CIS Rocky Linux 9,v2.0.0,5.1.2 Ensure permissions on SSH private host key files are configured,1,1,1,1
+sshd_public_host_key_permissions,CIS Rocky Linux 9,v2.0.0,5.1.3 Ensure permissions on SSH public host key files are configured,1,1,1,0
+sshd_ciphers,CIS Rocky Linux 9,v2.0.0,5.1.4 Ensure sshd Ciphers are configured,1,1,1,1
+sshd_kex_algorithms,CIS Rocky Linux 9,v2.0.0,5.1.5 Ensure sshd KexAlgorithms is configured,1,1,1,1
+sshd_macs,CIS Rocky Linux 9,v2.0.0,5.1.6 Ensure sshd MACs are configured,1,1,1,1
+sshd_access,CIS Rocky Linux 9,v2.0.0,5.1.7 Ensure sshd access is configured,1,1,1,1
+sshd_banner,CIS Rocky Linux 9,v2.0.0,5.1.8 Ensure sshd Banner is configured,1,1,1,1
+sshd_client_alive,CIS Rocky Linux 9,v2.0.0,5.1.9 Ensure sshd ClientAliveInterval and ClientAliveCountMax are configured,1,1,1,1
+sshd_disable_forwarding,CIS Rocky Linux 9,v2.0.0,5.1.10 Ensure sshd DisableForwarding is enabled,1,1,1,1
+sshd_gssapi_authentication,CIS Rocky Linux 9,v2.0.0,5.1.11 Ensure sshd GSSAPIAuthentication is disabled,1,1,1,1
+sshd_host_based_authentication,CIS Rocky Linux 9,v2.0.0,5.1.12 Ensure sshd HostbasedAuthentication is disabled,1,1,1,1
+sshd_ignore_rhosts,CIS Rocky Linux 9,v2.0.0,5.1.13 Ensure sshd IgnoreRhosts is enabled,1,1,1,1
+sshd_login_grace_time,CIS Rocky Linux 9,v2.0.0,5.1.14 Ensure sshd LoginGraceTime is configured,1,1,1,1
+sshd_log_level,CIS Rocky Linux 9,v2.0.0,5.1.15 Ensure sshd LogLevel is configured,1,1,1,1
+sshd_max_auth_tries,CIS Rocky Linux 9,v2.0.0,5.1.16 Ensure sshd MaxAuthTries is configured,1,1,1,1
+sshd_max_startups,CIS Rocky Linux 9,v2.0.0,5.1.17 Ensure sshd MaxStartups is configured,1,1,1,1
+sshd_max_sessions,CIS Rocky Linux 9,v2.0.0,5.1.18 Ensure sshd MaxSessions is configured,1,1,1,1
+sshd_permit_empty_passwords,CIS Rocky Linux 9,v2.0.0,5.1.19 Ensure sshd PermitEmptyPasswords is disabled,1,1,1,1
+sshd_permit_root_login,CIS Rocky Linux 9,v2.0.0,5.1.20 Ensure sshd PermitRootLogin is disabled,1,1,1,1
+sshd_permit_user_environment,CIS Rocky Linux 9,v2.0.0,5.1.21 Ensure sshd PermitUserEnvironment is disabled,1,1,1,1
+sshd_use_pam,CIS Rocky Linux 9,v2.0.0,5.1.22 Ensure sshd UsePAM is enabled,1,1,1,1
+
+sudo_installed,CIS Rocky Linux 9,v2.0.0,5.2.1 Ensure sudo is installed,1,1,1,1
+sudo_use_pty,CIS Rocky Linux 9,v2.0.0,5.2.2 Ensure sudo commands use pty,1,1,1,1
+sudo_logfile_exists,CIS Rocky Linux 9,v2.0.0,5.2.3 Ensure sudo log file exists,1,1,1,1
+sudo_password_required,CIS Rocky Linux 9,v2.0.0,5.2.4 Ensure users must provide password for escalation,1,1,1,1
+sudo_reauth_not_disabled_globally,CIS Rocky Linux 9,v2.0.0,5.2.5 Ensure re-authentication for privilege escalation is not disabled globally,1,1,1,1
+sudo_auth_timeout_configured,CIS Rocky Linux 9,v2.0.0,5.2.6 Ensure sudo authentication timeout is configured correctly,1,1,1,1
+su_access_restricted,CIS Rocky Linux 9,v2.0.0,5.2.7 Ensure access to the su command is restricted,1,1,1,1
+
+latest_pam_installed,CIS Rocky Linux 9,v2.0.0,5.3.1.1 Ensure latest version of pam is installed,1,1,1,1
+latest_authselect_installed,CIS Rocky Linux 9,v2.0.0,5.3.1.2 Ensure latest version of authselect is installed,1,1,1,1
+latest_libpwquality_installed,CIS Rocky Linux 9,v2.0.0,5.3.1.3 Ensure latest version of libpwquality is installed,1,1,1,1
+
+authselect_profile_includes_pam_modules,CIS Rocky Linux 9,v2.0.0,5.3.2.1 Ensure active authselect profile includes pam modules,1,1,1,1
+pam_faillock_enabled,CIS Rocky Linux 9,v2.0.0,5.3.2.2 Ensure pam_faillock module is enabled,1,1,1,1
+pam_pwquality_enabled,CIS Rocky Linux 9,v2.0.0,5.3.2.3 Ensure pam_pwquality module is enabled,1,1,1,1
+pam_pwhistory_enabled,CIS Rocky Linux 9,v2.0.0,5.3.2.4 Ensure pam_pwhistory module is enabled,1,1,1,1
+pam_unix_enabled,CIS Rocky Linux 9,v2.0.0,5.3.2.5 Ensure pam_unix module is enabled,1,1,1,1
+
+password_failed_lockout_configured,CIS Rocky Linux 9,v2.0.0,5.3.3.1.1 Ensure password failed attempts lockout is configured,1,1,1,1
+password_unlock_time_configured,CIS Rocky Linux 9,v2.0.0,5.3.3.1.2 Ensure password unlock time is configured,1,1,1,1
+password_lockout_includes_root,CIS Rocky Linux 9,v2.0.0,5.3.3.1.3 Ensure password failed attempts lockout includes root account,1,1,1,1
+
+password_changed_characters_configured,CIS Rocky Linux 9,v2.0.0,5.3.3.2.1 Ensure password number of changed characters is configured,1,1,1,1
+password_length_configured,CIS Rocky Linux 9,v2.0.0,5.3.3.2.2 Ensure password length is configured,1,1,1,1
+password_complexity_configured,CIS Rocky Linux 9,v2.0.0,5.3.3.2.3 Ensure password complexity is configured,1,0,1,1
+password_same_consecutive_chars_configured,CIS Rocky Linux 9,v2.0.0,5.3.3.2.4 Ensure password same consecutive characters is configured,1,1,1,1
+password_max_sequential_chars_configured,CIS Rocky Linux 9,v2.0.0,5.3.3.2.5 Ensure password maximum sequential characters is configured,1,1,1,1
+password_dictionary_check_enabled,CIS Rocky Linux 9,v2.0.0,5.3.3.2.6 Ensure password dictionary check is enabled,1,1,1,1
+password_quality_enforced_for_root,CIS Rocky Linux 9,v2.0.0,5.3.3.2.7 Ensure password quality is enforced for the root user,1,1,1,1
+
+password_history_remember_configured,CIS Rocky Linux 9,v2.0.0,5.3.3.3.1 Ensure password history remember is configured,1,1,1,1
+password_history_enforced_for_root,CIS Rocky Linux 9,v2.0.0,5.3.3.3.2 Ensure password history is enforced for the root user,1,1,1,1
+pam_pwhistory_includes_use_authtok,CIS Rocky Linux 9,v2.0.0,5.3.3.3.3 Ensure pam_pwhistory includes use_authtok,1,1,1,1
+
+pam_unix_no_nullok,CIS Rocky Linux 9,v2.0.0,5.3.3.4.1 Ensure pam_unix does not include nullok,1,1,1,1
+pam_unix_no_remember,CIS Rocky Linux 9,v2.0.0,5.3.3.4.2 Ensure pam_unix does not include remember,1,1,1,1
+pam_unix_strong_hashing_algorithm,CIS Rocky Linux 9,v2.0.0,5.3.3.4.3 Ensure pam_unix includes a strong password hashing algorithm,1,1,1,1
+pam_unix_includes_use_authtok,CIS Rocky Linux 9,v2.0.0,5.3.3.4.4 Ensure pam_unix includes use_authtok,1,1,1,1
+
+password_expiration_configured,CIS Rocky Linux 9,v2.0.0,5.4.1.1 Ensure password expiration is configured,1,1,1,1
+minimum_password_days_configured,CIS Rocky Linux 9,v2.0.0,5.4.1.2 Ensure minimum password days is configured,1,0,1,1
+password_expiration_warning_days,CIS Rocky Linux 9,v2.0.0,5.4.1.3 Ensure password expiration warning days is configured,1,1,1,1
+strong_password_hashing_algorithm,CIS Rocky Linux 9,v2.0.0,5.4.1.4 Ensure strong password hashing algorithm is configured (Automated),1,1,1,1
+inactive_password_lock_configured,CIS Rocky Linux 9,v2.0.0,5.4.1.5 Ensure inactive password lock is configured (Automated),1,1,1,1
+users_last_password_change_in_past,CIS Rocky Linux 9,v2.0.0,5.4.1.6 Ensure all users last password change date is in the past (Automated),1,1,1,1
+
+root_only_uid_0,CIS Rocky Linux 9,v2.0.0,5.4.2.1 Ensure root is the only UID 0 account (Automated),1,1,1,1
+root_only_gid_0,CIS Rocky Linux 9,v2.0.0,5.4.2.2 Ensure root is the only GID 0 account (Automated),1,1,1,1
+group_root_only_gid_0,CIS Rocky Linux 9,v2.0.0,5.4.2.3 Ensure group root is the only GID 0 group (Automated),1,1,1,1
+root_account_access_controlled,CIS Rocky Linux 9,v2.0.0,5.4.2.4 Ensure root account access is controlled (Automated),1,1,1,1
+root_path_integrity,CIS Rocky Linux 9,v2.0.0,5.4.2.5 Ensure root path integrity (Automated),1,1,1,1
+root_umask_configured,CIS Rocky Linux 9,v2.0.0,5.4.2.6 Ensure root user umask is configured (Automated),1,1,1,1
+system_accounts_no_valid_shell,CIS Rocky Linux 9,v2.0.0,5.4.2.7 Ensure system accounts do not have a valid login shell (Automated),1,1,1,1
+accounts_without_valid_shell_locked,CIS Rocky Linux 9,v2.0.0,5.4.2.8 Ensure accounts without a valid login shell are locked (Automated),1,1,1,1
+
+nologin_not_listed_in_shells,CIS Rocky Linux 9,v2.0.0,5.4.3.1 Ensure nologin is not listed in /etc/shells (Automated),1,1,1,1
+default_user_shell_timeout_configured,CIS Rocky Linux 9,v2.0.0,5.4.3.2 Ensure default user shell timeout is configured (Automated),1,1,1,1
+default_user_umask_configured,CIS Rocky Linux 9,v2.0.0,5.4.3.3 Ensure default user umask is configured (Automated),1,1,1,1
+
+aide_installed,CIS Rocky Linux 9,v2.0.0,6.1.1 Ensure AIDE is installed,1,1,1,1
+aide_integrity_checked,CIS Rocky Linux 9,v2.0.0,6.1.2 Ensure filesystem integrity is regularly checked,1,1,1,1
+audit_tools_protected,CIS Rocky Linux 9,v2.0.0,6.1.3 Ensure cryptographic mechanisms are used to protect the integrity of audit tools,1,1,1,1
+
+journald_enabled,CIS Rocky Linux 9,v2.0.0,6.2.1.1 Ensure journald service is enabled and active,1,1,1,1
+journald_log_access,CIS Rocky Linux 9,v2.0.0,6.2.1.2 Ensure journald log file access is configured,1,0,1,1
+journald_log_rotation,CIS Rocky Linux 9,v2.0.0,6.2.1.3 Ensure journald log file rotation is configured,1,0,1,1
+single_logging,CIS Rocky Linux 9,v2.0.0,6.2.1.4 Ensure only one logging system is in use,1,1,1,1
+
+journal_remote_pkg,CIS Rocky Linux 9,v2.0.0,6.2.2.1.1 Ensure systemd-journal-remote is installed,1,1,1,1
+journal_upload_auth,CIS Rocky Linux 9,v2.0.0,6.2.2.1.2 Ensure systemd-journal-upload authentication is configured,1,0,1,1
+journal_upload_enabled,CIS Rocky Linux 9,v2.0.0,6.2.2.1.3 Ensure systemd-journal-upload is enabled and active,1,1,1,1
+journal_remote_unused,CIS Rocky Linux 9,v2.0.0,6.2.2.1.4 Ensure systemd-journal-remote service is not in use,1,1,1,1
+
+journald_no_syslog,CIS Rocky Linux 9,v2.0.0,6.2.2.2 Ensure journald ForwardToSyslog is disabled,1,1,1,1
+journald_compress,CIS Rocky Linux 9,v2.0.0,6.2.2.3 Ensure journald Compress is configured,1,1,1,1
+journald_storage,CIS Rocky Linux 9,v2.0.0,6.2.2.4 Ensure journald Storage is configured,1,1,1,1
+
+rsyslog_installed,CIS Rocky Linux 9,v2.0.0,6.2.3.1 Ensure rsyslog is installed,1,1,1,1
+rsyslog_enabled,CIS Rocky Linux 9,v2.0.0,6.2.3.2 Ensure rsyslog service is enabled and active,1,1,1,1
+journald_to_rsyslog,CIS Rocky Linux 9,v2.0.0,6.2.3.3 Ensure journald is configured to send logs to rsyslog,1,1,1,1
+rsyslog_mode,CIS Rocky Linux 9,v2.0.0,6.2.3.4 Ensure rsyslog log file creation mode is configured,1,1,1,1
+rsyslog_logging,CIS Rocky Linux 9,v2.0.0,6.2.3.5 Ensure rsyslog logging is configured,1,0,1,1
+rsyslog_remote,CIS Rocky Linux 9,v2.0.0,6.2.3.6 Ensure rsyslog is configured to send logs to a remote log host,1,0,1,1
+rsyslog_no_receive,CIS Rocky Linux 9,v2.0.0,6.2.3.7 Ensure rsyslog is not configured to receive logs from a remote client,1,1,1,1
+rsyslog_logrotate,CIS Rocky Linux 9,v2.0.0,6.2.3.8 Ensure rsyslog logrotate is configured,0,0,1,1
+
+logfiles_access,CIS Rocky Linux 9,v2.0.0,6.2.4.1 Ensure access to all logfiles has been configured,1,1,1,1
+
+auditd_installed,CIS Rocky Linux 9,v2.0.0,6.3.1.1. Ensure auditd packages are installed,1,1,1,1
+auditd_prior_processes,CIS Rocky Linux 9,v2.0.0,6.3.1.2 Ensure auditing for processes that start prior to auditd is enabled,1,1,1,1
+auditd_backlog_limit,CIS Rocky Linux 9,v2.0.0,6.3.1.3 Ensure audit_backlog_limit is sufficient, 1,1,1,1
+auditd_active,CIS Rocky Linux 9,v2.0.0,6.3.1.4 Ensure auditd service is enabled and active,1,1,1,1
+audit_maxsize,CIS Rocky Linux 9,v2.0.0,6.3.2.1 Ensure audit log storage size is configured,1,1,1,1
+audit_keep_logs,CIS Rocky Linux 9,v2.0.0,6.3.2.2 Ensure audit logs are not automatically deleted,1,1,1,1
+audit_full_act,CIS Rocky Linux 9,v2.0.0,6.3.2.3 Ensure system is disabled when audit logs are full,1,1,1,1
+audit_lowspace,CIS Rocky Linux 9,v2.0.0,6.3.2.4 Ensure system warns when audit logs are low on space,1,1,1,1
+
+audit_scope,CIS Rocky Linux 9,v2.0.0,6.3.3.1 Ensure changes to system administration scope (sudoers) is collected,1,1,1,1
+audit_su_exec,CIS Rocky Linux 9,v2.0.0,6.3.3.2 Ensure actions as another user are always logged,1,1,1,1
+audit_sudo_log,CIS Rocky Linux 9,v2.0.0,6.3.3.3 Ensure events that modify the sudo log file are collected,1,1,1,1
+audit_timechg,CIS Rocky Linux 9,v2.0.0,6.3.3.4 Ensure events that modify date and time information are collected,1,1,1,1
+audit_netenv,CIS Rocky Linux 9,v2.0.0,6.3.3.5 Ensure events that modify the system's network environment are collected,1,1,1,1
+audit_privcmd,CIS Rocky Linux 9,v2.0.0,6.3.3.6 Ensure use of privileged commands are collected,1,1,1,1
+audit_filefail,CIS Rocky Linux 9,v2.0.0,6.3.3.7 Ensure unsuccessful file access attempts are collected,1,1,1,1
+audit_identity,CIS Rocky Linux 9,v2.0.0,6.3.3.8 Ensure events that modify user/group information are collected,1,1,1,1
+audit_permchg,CIS Rocky Linux 9,v2.0.0,6.3.3.9 Ensure discretionary access control permission modification events are collected,1,1,1,1
+audit_mount,CIS Rocky Linux 9,v2.0.0,6.3.3.10 Ensure successful file system mounts are collected,1,1,1,1
+audit_session,CIS Rocky Linux 9,v2.0.0,6.3.3.11 Ensure session initiation information is collected,1,1,1,1
+audit_login,CIS Rocky Linux 9,v2.0.0,6.3.3.12 Ensure login and logout events are collected,1,1,1,1
+audit_delete,CIS Rocky Linux 9,v2.0.0,6.3.3.13 Ensure file deletion events by users are collected,1,1,1,1
+audit_mac,CIS Rocky Linux 9,v2.0.0,6.3.3.14 Ensure events that modify the system's Mandatory Access Controls are collected,1,1,1,1
+audit_chcon,CIS Rocky Linux 9,v2.0.0,6.3.3.15 Ensure successful and unsuccessful attempts to use the chcon command are collected,1,1,1,1
+audit_setfacl,CIS Rocky Linux 9,v2.0.0,6.3.3.16 Ensure successful and unsuccessful attempts to use the setfacl command are collected,1,1,1,1
+audit_chacl,CIS Rocky Linux 9,v2.0.0,6.3.3.17 Ensure successful and unsuccessful attempts to use the chacl command are collected,1,1,1,1
+audit_usermod,CIS Rocky Linux 9,v2.0.0,6.3.3.18 Ensure successful and unsuccessful attempts to use the usermod command are collected,1,1,1,1
+audit_kmod,CIS Rocky Linux 9,v2.0.0,6.3.3.19 Ensure kernel module loading unloading and modification is collected,1,1,1,1
+audit_config_immutable,CIS Rocky Linux 9,v2.0.0,6.3.3.20 Ensure the audit configuration is immutable,1,1,1,1
+audit_config_consistent,CIS Rocky Linux 9,v2.0.0,6.3.3.21 Ensure the running and on disk configuration is the same,1,0,1,1
+
+audit_log_dir_mode,CIS Rocky Linux 9,v2.0.0,6.3.4.1 Ensure the audit log file directory mode is configured,1,1,1,1
+audit_log_mode,CIS Rocky Linux 9,v2.0.0,6.3.4.2 Ensure audit log files mode is configured,1,1,1,1
+audit_log_owner,CIS Rocky Linux 9,v2.0.0,6.3.4.3 Ensure audit log files owner is configured,1,1,1,1
+audit_log_group,CIS Rocky Linux 9,v2.0.0,6.3.4.4 Ensure audit log files group owner is configured,1,1,1,1
+audit_conf_mode,CIS Rocky Linux 9,v2.0.0,6.3.4.5 Ensure audit configuration files mode is configured,1,1,1,1
+audit_conf_owner,CIS Rocky Linux 9,v2.0.0,6.3.4.6 Ensure audit configuration files owner is configured,1,1,1,1
+audit_conf_group,CIS Rocky Linux 9,v2.0.0,6.3.4.7 Ensure audit configuration files group owner is configured,1,1,1,1
+audit_tools_mode,CIS Rocky Linux 9,v2.0.0,6.3.4.8 Ensure audit tools mode is configured,1,1,1,1
+audit_tools_owner,CIS Rocky Linux 9,v2.0.0,6.3.4.9 Ensure audit tools owner is configured,1,1,1,1
+audit_tools_group,CIS Rocky Linux 9,v2.0.0,6.3.4.10 Ensure audit tools group owner is configured,1,1,1,1
+
+etc_passwd_permissions,CIS Rocky Linux 9,v2.0.0,7.1.1 Ensure permissions on /etc/passwd are configured,1,1,1,1
+etc_passwd_dash_permissions,CIS Rocky Linux 9,v2.0.0,7.1.2 Ensure permissions on /etc/passwd- are configured,1,1,1,1
+etc_group_permissions,CIS Rocky Linux 9,v2.0.0,7.1.3 Ensure permissions on /etc/group are configured,1,1,1,1
+etc_group_dash_permissions,CIS Rocky Linux 9,v2.0.0,7.1.4 Ensure permissions on /etc/group- are configured,1,1,1,1
+etc_shadow_permissions,CIS Rocky Linux 9,v2.0.0,7.1.5 Ensure permissions on /etc/shadow are configured,1,1,1,1
+etc_shadow_dash_permissions,CIS Rocky Linux 9,v2.0.0,7.1.6 Ensure permissions on /etc/shadow- are configured,1,1,1,1
+etc_gshadow_permissions,CIS Rocky Linux 9,v2.0.0,7.1.7 Ensure permissions on /etc/gshadow are configured,1,1,1,1
+etc_gshadow_dash_permissions,CIS Rocky Linux 9,v2.0.0,7.1.8 Ensure permissions on /etc/gshadow- are configured,1,1,1,1
+etc_shells_permissions,CIS Rocky Linux 9,v2.0.0,7.1.9 Ensure permissions on /etc/shells are configured,1,1,1,1
+etc_security_opasswd_permissions,CIS Rocky Linux 9,v2.0.0,7.1.10 Ensure permissions on /etc/security/opasswd are configured,1,1,1,1
+world_writable_files_and_directories_secured,CIS Rocky Linux 9,v2.0.0,7.1.11 Ensure world writable files and directories are secured,1,1,1,1
+no_unowned_or_ungrouped_files_exist,CIS Rocky Linux 9,v2.0.0,7.1.12 Ensure no files or directories without an owner and a group exist,1,1,1,1
+suid_sgid_files_reviewed,CIS Rocky Linux 9,v2.0.0,7.1.13 Ensure SUID and SGID files are reviewed,1,0,1,1
+
+passwd_use_shadowed_passwords,CIS Rocky Linux 9,v2.0.0,7.2.1 Ensure accounts in /etc/passwd use shadowed passwords,1,1,1,1
+shadow_password_fields_not_empty,CIS Rocky Linux 9,v2.0.0,7.2.2 Ensure /etc/shadow password fields are not empty,1,1,1,1
+passwd_groups_exist_in_group,CIS Rocky Linux 9,v2.0.0,7.2.3 Ensure all groups in /etc/passwd exist in /etc/group,1,1,1,1
+no_duplicate_uids_exist,CIS Rocky Linux 9,v2.0.0,7.2.4 Ensure no duplicate UIDs exist,1,1,1,1
+no_duplicate_gids_exist,CIS Rocky Linux 9,v2.0.0,7.2.5 Ensure no duplicate GIDs exist,1,1,1,1
+no_duplicate_user_names_exist,CIS Rocky Linux 9,v2.0.0,7.2.6 Ensure no duplicate user names exist,1,1,1,1
+no_duplicate_group_names_exist,CIS Rocky Linux 9,v2.0.0,7.2.7 Ensure no duplicate group names exist,1,1,1,1
+local_interactive_user_home_directories_configured,CIS Rocky Linux 9,v2.0.0,7.2.8 Ensure local interactive user home directories are configured,1,1,1,1
+local_interactive_user_dot_files_access_configured,CIS Rocky Linux 9,v2.0.0,7.2.9 Ensure local interactive user dot files access is configured,1,1,1,1

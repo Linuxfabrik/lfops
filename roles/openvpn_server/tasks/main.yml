@@ -30,6 +30,7 @@
 
   - name: 'Deploy client-configs to /etc/openvpn/ccd'
     ansible.builtin.template:
+      backup: true
       src: 'etc/openvpn/ccd/raw.j2'
       dest: '/etc/openvpn/ccd/{{ item["name"] }}'
       group: 'openvpn'
@@ -39,6 +40,7 @@
 
   - name: 'Deploy /etc/openvpn/server/server.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/openvpn/server/server.conf.j2'
       dest: '/etc/openvpn/server/server.conf'
       group: 'openvpn'
@@ -70,6 +72,7 @@
 
   - name: 'Deploy example client config to /tmp/{{ inventory_hostname }}.conf (on ansible control node)'
     ansible.builtin.template:
+      backup: true
       src: 'tmp/client.conf.j2'
       dest: '/tmp/{{ inventory_hostname }}.conf'
     delegate_to: 'localhost'

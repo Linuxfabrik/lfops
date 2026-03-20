@@ -164,6 +164,7 @@
   - name: 'Deploy /etc/tmpfiles.d/mariadb-linuxfabrik.conf for the socket path'
     ansible.builtin.template:
       # we need to use a different name than the packaged /usr/lib/tmpfiles.d/mariadb.conf, else it is overwritten completely
+      backup: true
       src: 'etc/tmpfiles.d/mariadb-linuxfabrik.conf.j2'
       dest: '/etc/tmpfiles.d/mariadb-linuxfabrik.conf'
       owner: 'root'
@@ -340,6 +341,7 @@
 
   - name: 'Deploy /etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf.j2'
       dest: '/etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf'
       owner: 'root'
@@ -350,6 +352,7 @@
 
   - name: 'Deploy /etc/systemd/system/mariadb.service.d/z00-linuxfabrik.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/mariadb.service.d/z00-linuxfabrik.conf.j2'
       dest: '/etc/systemd/system/mariadb.service.d/z00-linuxfabrik.conf'
       owner: 'root'
@@ -368,6 +371,7 @@
 
   - name: 'Deploy {{ mariadb_server__logrotate_path }}'
     ansible.builtin.template:
+      backup: true
       src: 'etc/logrotate.d/mariadb.j2'
       dest: '{{ mariadb_server__logrotate_path }}'
       owner: 'root'
@@ -590,6 +594,7 @@
 
   - name: 'Deploy /usr/local/bin/mariadb-dump'
     ansible.builtin.template:
+      backup: true
       src: 'usr/local/bin/mariadb-dump.j2'
       dest: '/usr/local/bin/mariadb-dump'
       mode: 0o755

@@ -59,6 +59,7 @@
 
   - name: 'Deploy /etc/glpi-agent/conf.d/z00-linuxfabrik.cfg'
     ansible.builtin.template:
+      backup: true
       src: 'etc/glpi-agent/conf.d/z00-linuxfabrik.cfg.j2'
       dest: '/etc/glpi-agent/conf.d/z00-linuxfabrik.cfg'
       owner: 'root'

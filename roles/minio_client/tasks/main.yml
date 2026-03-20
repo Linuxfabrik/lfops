@@ -44,6 +44,7 @@
 
   - name: 'Deploy /etc/mc/config.json'
     ansible.builtin.template:
+      backup: true
       src: 'etc/mc/config.json.j2'
       dest: '/etc/mc/config.json'
       owner: 'root'
