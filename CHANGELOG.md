@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:php**: Add JIT support
 * **role:mariadb_server**: Add `mariadb_server__cnf_wsrep_log_conflicts` and `mariadb_server__cnf_wsrep_retry_autocommit` variables
 * **role:mariadb_server**: Add `mariadb_server__cnf_wsrep_gtid_mode` variable to configure `wsrep_gtid_mode` for Galera
 * **role:openvpn_server**: Add `openvpn_server:crl` tag to allow deploying the certificate revocation list independently

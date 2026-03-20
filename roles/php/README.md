@@ -25,6 +25,7 @@ Rules of thumb:
 
 This role never exposes to the world that PHP is installed on the server, no matter what.
 
+JIT is available from PHP 8.0 onwards.
 
 ## Optional Requirements
 
@@ -87,6 +88,8 @@ Variables for `php.ini` directives and their default values, defined and support
 | `php__ini_opcache_enable_cli__group_var` / `php__ini_opcache_enable_cli__host_var`              | Enables the opcode cache for the CLI version of PHP. [php.net](https://www.php.net/manual/en/opcache.configuration.php)    | `1`                                                     |
 | `php__ini_opcache_huge_code_pages__group_var` / `php__ini_opcache_huge_code_pages__host_var`         | [php.net](https://www.php.net/manual/en/opcache.configuration.php)    | `1`                                                     |
 | `php__ini_opcache_interned_strings_buffer__group_var` / `php__ini_opcache_interned_strings_buffer__host_var` | The amount of memory used to store interned strings, in megabytes. [php.net](https://www.php.net/manual/en/opcache.configuration.php)    | `12`                                                    |
+| `php__ini_opcache_jit__group_var` / `php__ini_opcache_jit__host_var` | Configures the OPcache JIT compilation mode. When set to disable or off, JIT is fully disabled and no code is JIT compiled. Other values select the JIT strategy. [php.net](https://www.php.net/manual/en/opcache.configuration.php)    | `Disable`                                                    |
+| `php__ini_opcache_jit_buffer_size__group_var` / `php__ini_opcache_jit_buffer_size__host_var` | The amount of shared memory to reserve for compiled JIT code. [php.net](https://www.php.net/manual/en/opcache.configuration.php)    | `0`                                                    |
 | `php__ini_opcache_max_accelerated_files__group_var` / `php__ini_opcache_max_accelerated_files__host_var`   | The maximum number of keys (and therefore scripts) in the OPcache hash table. The actual value ;used will be the first number in the set of prime numbers { 223, 463, 983, 1979, 3907, 7963, 16229, 32531, 65407, 130987, 262237, 524521, 1048793 } that is greater than or equal to the configured value. [php.net](https://www.php.net/manual/en/opcache.configuration.php)    | `7963`                                                  |
 | `php__ini_opcache_memory_consumption__group_var` / `php__ini_opcache_memory_consumption__host_var`      | The size of the shared memory storage used by OPcache, in megabytes. The minimum permissible value is "8", which is enforced if a smaller value is set. [php.net](https://www.php.net/manual/en/opcache.configuration.php)    | `128`                                                   |
 | `php__ini_opcache_revalidate_freq__group_var` / `php__ini_opcache_revalidate_freq__host_var`         | How often to check script timestamps for updates, in seconds. 0 will result in OPcache checking for updates on every request. [php.net](https://www.php.net/manual/en/opcache.configuration.php)    | `60`                                                    |
@@ -110,6 +113,8 @@ php__ini_max_execution_time__host_var: 3600
 php__ini_max_file_uploads__host_var: 100
 php__ini_memory_limit__host_var: '1024M'
 php__ini_upload_max_filesize__host_var: '10000M'
+php__ini_opcache_jit__host_var: 'tracing'
+php__ini_opcache_jit_buffer_size__host_var: '100M'
 ```
 
 

@@ -257,6 +257,28 @@ php__ini_opcache_interned_strings_buffer__combined_var: '{{
     php__ini_opcache_interned_strings_buffer__role_var
   }}'
 
+php__ini_opcache_jit__dependent_var: ''
+php__ini_opcache_jit__group_var: ''
+php__ini_opcache_jit__host_var: ''
+php__ini_opcache_jit__role_var: 'Disable'
+php__ini_opcache_jit__combined_var: '{{
+    php__ini_opcache_jit__host_var if (php__ini_opcache_jit__host_var | string | length) else
+    php__ini_opcache_jit__group_var if (php__ini_opcache_jit__group_var | string | length) else
+    php__ini_opcache_jit__dependent_var if (php__ini_opcache_jit__dependent_var | string | length) else
+    php__ini_opcache_jit__role_var
+  }}'
+
+php__ini_opcache_jit_buffer_size__dependent_var: ''
+php__ini_opcache_jit_buffer_size__group_var: ''
+php__ini_opcache_jit_buffer_size__host_var: ''
+php__ini_opcache_jit_buffer_size__role_var: '0'
+php__ini_opcache_jit_buffer_size__combined_var: '{{
+    php__ini_opcache_jit_buffer_size__host_var if (php__ini_opcache_jit_buffer_size__host_var | string | length) else
+    php__ini_opcache_jit_buffer_size__group_var if (php__ini_opcache_jit_buffer_size__group_var | string | length) else
+    php__ini_opcache_jit_buffer_size__dependent_var if (php__ini_opcache_jit_buffer_size__dependent_var | string | length) else
+    php__ini_opcache_jit_buffer_size__role_var
+  }}'
+
 php__ini_opcache_max_accelerated_files__dependent_var: ''
 php__ini_opcache_max_accelerated_files__group_var: ''
 php__ini_opcache_max_accelerated_files__host_var: ''
