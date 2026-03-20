@@ -12,6 +12,19 @@ Note: Always add new entries to the top of the section, even if this results in 
 
 ### Added
 
+Playbook:stig_cis_rocky9_v2_0_0
+* Add playbook for CIS Rocky Linux 9 v2.0.0 STIG compliance
+
+Role:sshd
+* Add `sshd__allow_groups`, `sshd__allow_users`, `sshd__deny_groups`, `sshd__deny_users` variables using the injection system
+* Add `sshd__client_alive_count_max`, `sshd__client_alive_interval`, `sshd__disable_forwarding`, `sshd__login_grace_time`, `sshd__max_auth_tries`, `sshd__max_sessions`, `sshd__max_startups`, `sshd__permit_empty_passwords`, `sshd__permit_user_environment` variables
+* Hardcode `HostbasedAuthentication no`, `IgnoreRhosts yes`, `UsePAM yes` for STIG compliance
+* Add tasks for SSH host key file permissions
+* Add `__stig_var` override support for STIG-driven variable injection
+
+Role:crypto_policy
+* Add `__stig_var` override support for STIG-driven variable injection
+
 Role:fail2ban
 * Make `bantime` configurable for the sshd and portscan jails
 
