@@ -5,7 +5,7 @@ Additionally, it deploys the the graph configuration for the [Linuxfabrik Monito
 
 This role is tested with the following IcingaWeb2 Grafana Module versions:
 
-* 3.0.1
+* 3.1.3
 
 
 ## Mandatory Requirements
@@ -36,7 +36,7 @@ Example:
 ```yaml
 # mandatory
 icingaweb2_module_grafana__monitoring_plugins_version: '1.2.0.11'
-icingaweb2_module_grafana__version: 'v3.1.1'
+icingaweb2_module_grafana__version: 'v3.1.3'
 ```
 
 
@@ -44,6 +44,7 @@ icingaweb2_module_grafana__version: 'v3.1.1'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
+| `icingaweb2_module_grafana__auth_jwt` | Enable JWT-based authentication for Grafana requests | `false` |
 | `icingaweb2_module_grafana__custom_graphs_config` | Multiline string. Custom configuration for the Grafana Graphs, will be deployed to `/etc/icingweb2/modules/grafana/graphs.ini` along with the configuration for the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) | `''` |
 | `icingaweb2_module_grafana__default_dashboard` | Name of the default Grafana dashboard | `'Default'` |
 | `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config` | Skip the deployment of the graph configuration for [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). | `false` |
@@ -53,6 +54,7 @@ icingaweb2_module_grafana__version: 'v3.1.1'
 Example:
 ```yaml
 # optional
+icingaweb2_module_grafana__auth_jwt: false
 icingaweb2_module_grafana__custom_graphs_config: |-
   [icingacli-x509]
   dashboard = "Default"

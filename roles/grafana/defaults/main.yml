@@ -6,6 +6,8 @@ grafana__auth_anonymous_org_role: 'Viewer'
 grafana__bitwarden_collection_id: '{{ lfops__bitwarden_collection_id | default() }}'
 grafana__bitwarden_organization_id: '{{ lfops__bitwarden_organization_id | default() }}'
 grafana__cookie_samesite: 'lax'
+grafana__auth_jwt: false
+grafana__auth_jwt_key_file: '/etc/grafana/icinga.pem'
 grafana__plugins__dependent_var: []
 grafana__plugins__group_var: []
 grafana__plugins__host_var: []
@@ -58,3 +60,4 @@ grafana__serve_from_sub_path: false
 grafana__service_enabled: true
 grafana__skip_token_to_bitwarden: false
 grafana__validate_certs: true
+

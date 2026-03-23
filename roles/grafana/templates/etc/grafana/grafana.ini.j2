@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024031901
+# 2026032301
 
 ##################### Grafana Configuration Example #####################
 #
@@ -1217,3 +1217,32 @@ interval_year = YYYY
 
 # Enable or disable loading other base map layers
 ;enable_custom_baselayers = true
+
+{% if grafana__auth_jwt %}
+[auth.jwt]
+# By default, auth.jwt is disabled.
+enabled = true
+
+# HTTP header to look into to get a JWT token.
+header_name = X-JWT-Assertion
+
+# Specify a claim to use as a username to sign in.
+username_claim = sub
+
+# Specify a claim to use as an email to sign in.
+email_claim = sub
+
+# enable JWT authentication in the URL
+url_login = true
+
+# PEM-encoded key file in PKIX, PKCS #1, PKCS #8 or SEC 1 format.
+key_file = {{ grafana__auth_jwt_key_file }}
+
+# This can be seen as a required "subset" of a JWT Claims Set.
+# expect_claims = {"iss": "https://icinga.yourdomain"}
+
+# role_attribute_path = contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor') && 'Editor' || 'Viewer'
+
+# To skip the assignment of roles and permissions upon login via JWT and handle them via other mechanisms like the user interface, we can skip the organization role synchronization with the following configuration.
+skip_org_role_sync = true
+{% endif %}
