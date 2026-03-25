@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **playbook:stig_cis_rocky9_v2_0_0**: Add playbook for CIS Rocky Linux 9 v2.0.0 STIG compliance
+* **role:sshd**: Add `sshd__allow_groups`, `sshd__allow_users`, `sshd__deny_groups`, `sshd__deny_users` variables using the injection system
+* **role:sshd**: Add `sshd__client_alive_count_max`, `sshd__client_alive_interval`, `sshd__disable_forwarding`, `sshd__login_grace_time`, `sshd__max_auth_tries`, `sshd__max_sessions`, `sshd__max_startups`, `sshd__permit_empty_passwords`, `sshd__permit_user_environment` variables
+* **role:sshd**: Hardcode `HostbasedAuthentication no`, `IgnoreRhosts yes`, `UsePAM yes` for STIG compliance
+* **role:sshd**: Add tasks for SSH host key file permissions
+* **role:sshd**: Add `__stig_var` override support for STIG-driven variable injection
+* **role:crypto_policy**: Add `__stig_var` override support for STIG-driven variable injection
 * **role:mariadb_server**: Add `mariadb_server__cnf_wsrep_log_conflicts` and `mariadb_server__cnf_wsrep_retry_autocommit` variables
 * **role:mariadb_server**: Add `mariadb_server__cnf_wsrep_gtid_mode` variable to configure `wsrep_gtid_mode` for Galera
 * **role:openvpn_server**: Add `openvpn_server:crl` tag to allow deploying the certificate revocation list independently

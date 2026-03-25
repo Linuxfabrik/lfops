@@ -1,0 +1,48 @@
+- name: 'Playbook linuxfabrik.lfops.stig_cis_rocky9_v2_0_0'
+  hosts:
+    - 'lfops_stig_cis_rocky9_v2_0_0'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    # TODO
+    # - ansible.builtin.import_role:
+    #     name: 'shared'
+    #     tasks_from: 'stig.yml'
+    #   tags:
+    #     - 'always'
+
+    # * create sqlite from csv files
+    # * queries the db
+    # * templates the vars/stig.yml to localhost
+    # * include_vars against vars/stig.yml
+
+    # - name: 'Load default values for cis'
+    #   ansible.builtin.include_vars: '../vars/cis-todo.yml'
+    #   # when: 'test__cis'
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.crypto_policy'
+      when:
+        - 'not stig_cis_rocky9_v2_0_0__skip_crypto_policy'
+
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not stig_cis_rocky9_v2_0_0__skip_policycoreutils'
+
+    - role: 'linuxfabrik.lfops.sshd'
+      when:
+        - 'not stig_cis_rocky9_v2_0_0__skip_sshd'
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

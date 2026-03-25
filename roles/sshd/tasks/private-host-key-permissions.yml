@@ -1,0 +1,16 @@
+- name: 'Find SSH private key files in /etc/ssh'
+  ansible.builtin.find:
+    paths: '/etc/ssh'
+    patterns: 'ssh_host_*_key'
+    file_type: 'file'
+  register: '__sshd_private_key_files'
+
+- name: 'Ensure correct permissions on SSH private key files'
+  ansible.builtin.file:
+    path: '{{ item["path"] }}'
+    owner: 'root'
+    group: 'ssh_keys'
+    mode: 0o0640
+  loop: '{{ __sshd_private_key_files["files"] }}'
+  loop_control:
+    label: '{{ item["path"] }}'
