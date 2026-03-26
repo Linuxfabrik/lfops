@@ -1,20 +1,20 @@
 - block:
 
   # https://docs.influxdata.com/influxdb/v1.8/introduction/install/
-  - name: 'curl https://repos.influxdata.com/influxdata-archive_compat.key --output /tmp/ansible.influxdata-archive_compat.key'
+  - name: 'curl https://repos.influxdata.com/influxdata-archive.key --output /tmp/ansible.influxdata-archive.key'
     ansible.builtin.get_url:
-      url: 'https://repos.influxdata.com/influxdata-archive_compat.key'
-      dest: '/tmp/ansible.influxdata-archive_compat.key'
+      url: 'https://repos.influxdata.com/influxdata-archive.key'
+      dest: '/tmp/ansible.influxdata-archive.key'
       mode: 0o644
     delegate_to: 'localhost'
     run_once: true
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.influxdata-archive_compat.key to remote host'
+  - name: 'copy /tmp/ansible.influxdata-archive.key to remote host'
     ansible.builtin.copy:
-      src: '/tmp/ansible.influxdata-archive_compat.key'
-      dest: '/etc/apt/keyrings/influxdata-archive_compat.asc' # use asc for ASCII-armored keys
+      src: '/tmp/ansible.influxdata-archive.key'
+      dest: '/etc/apt/keyrings/influxdata-archive.asc' # use asc for ASCII-armored keys
       owner: 'root'
       group: 'root'
       mode: 0o644
