@@ -8,6 +8,7 @@ playbooks/test.yml
 roles/test
 context/
 particle/.vagrant
+<<<<<<< HEAD
 
 # mkdocs documentation
 /docs/CHANGELOG.md
@@ -20,3 +21,6 @@ particle/.vagrant
 /docs/stigs.md
 /mkdocs.yml
 /site
+=======
+stig/stig.db
+>>>>>>> 0a78d88e (feat: implement Rocky Linux 9 CIS)
