@@ -1,5 +1,102 @@
 freeipa_server__config_default_shell: '/bin/bash'
 freeipa_server__config_password_expiration_notification: 10
 freeipa_server__domain: '{{ ansible_facts["domain"] | lower }}'
+freeipa_server__ipa_admin_principal: 'admin'
 freeipa_server__realm: '{{ ansible_facts["domain"] | upper }}'
 freeipa_server__systemd_timeoutstartsec: 300
+
+freeipa_server__groups__dependent_var: []
+freeipa_server__groups__group_var: []
+freeipa_server__groups__host_var: []
+freeipa_server__groups__role_var: []
+freeipa_server__groups__combined_var: '{{ (
+      freeipa_server__groups__role_var +
+      freeipa_server__groups__dependent_var +
+      freeipa_server__groups__group_var +
+      freeipa_server__groups__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+freeipa_server__hbacrules__dependent_var: []
+freeipa_server__hbacrules__group_var: []
+freeipa_server__hbacrules__host_var: []
+freeipa_server__hbacrules__role_var: []
+freeipa_server__hbacrules__combined_var: '{{ (
+      freeipa_server__hbacrules__role_var +
+      freeipa_server__hbacrules__dependent_var +
+      freeipa_server__hbacrules__group_var +
+      freeipa_server__hbacrules__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+freeipa_server__hostgroups__dependent_var: []
+freeipa_server__hostgroups__group_var: []
+freeipa_server__hostgroups__host_var: []
+freeipa_server__hostgroups__role_var: []
+freeipa_server__hostgroups__combined_var: '{{ (
+      freeipa_server__hostgroups__role_var +
+      freeipa_server__hostgroups__dependent_var +
+      freeipa_server__hostgroups__group_var +
+      freeipa_server__hostgroups__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+freeipa_server__pwpolicies__dependent_var: []
+freeipa_server__pwpolicies__group_var: []
+freeipa_server__pwpolicies__host_var: []
+freeipa_server__pwpolicies__role_var: []
+freeipa_server__pwpolicies__combined_var: '{{ (
+      freeipa_server__pwpolicies__role_var +
+      freeipa_server__pwpolicies__dependent_var +
+      freeipa_server__pwpolicies__group_var +
+      freeipa_server__pwpolicies__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+freeipa_server__sudocmdgroups__dependent_var: []
+freeipa_server__sudocmdgroups__group_var: []
+freeipa_server__sudocmdgroups__host_var: []
+freeipa_server__sudocmdgroups__role_var: []
+freeipa_server__sudocmdgroups__combined_var: '{{ (
+      freeipa_server__sudocmdgroups__role_var +
+      freeipa_server__sudocmdgroups__dependent_var +
+      freeipa_server__sudocmdgroups__group_var +
+      freeipa_server__sudocmdgroups__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+freeipa_server__sudocmds__dependent_var: []
+freeipa_server__sudocmds__group_var: []
+freeipa_server__sudocmds__host_var: []
+freeipa_server__sudocmds__role_var: []
+freeipa_server__sudocmds__combined_var: '{{ (
+      freeipa_server__sudocmds__role_var +
+      freeipa_server__sudocmds__dependent_var +
+      freeipa_server__sudocmds__group_var +
+      freeipa_server__sudocmds__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+freeipa_server__sudorules__dependent_var: []
+freeipa_server__sudorules__group_var: []
+freeipa_server__sudorules__host_var: []
+freeipa_server__sudorules__role_var: []
+freeipa_server__sudorules__combined_var: '{{ (
+      freeipa_server__sudorules__role_var +
+      freeipa_server__sudorules__dependent_var +
+      freeipa_server__sudorules__group_var +
+      freeipa_server__sudorules__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+freeipa_server__users__dependent_var: []
+freeipa_server__users__group_var: []
+freeipa_server__users__host_var: []
+freeipa_server__users__role_var: []
+freeipa_server__users__combined_var: '{{ (
+      freeipa_server__users__role_var +
+      freeipa_server__users__dependent_var +
+      freeipa_server__users__group_var +
+      freeipa_server__users__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
