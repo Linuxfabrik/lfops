@@ -1,10 +1,10 @@
 - block:
 
-  - name: 'Validate that graylog_datanode__password_secret length > 16 characters'
+  - name: 'Validate that graylog_datanode__password_secret length >= 16 characters'
     ansible.builtin.assert:
       that:
-        - 'graylog_datanode__password_secret | length > 16'
-      fail_msg: 'graylog_datanode__password_secret must be longer than 16 characters'
+        - 'graylog_datanode__password_secret | length >= 16'
+      fail_msg: 'graylog_datanode__password_secret must at least 16 characters'
       quiet: true
 
   tags:
