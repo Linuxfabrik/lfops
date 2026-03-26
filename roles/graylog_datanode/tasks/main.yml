@@ -14,6 +14,13 @@
       fail_msg: 'graylog_datanode__password_secret must at least 16 characters'
       quiet: true
 
+  - name: 'Validate that graylog_datanode__node_search_cache_size follows OpenSearch Bytes format'
+    ansible.builtin.assert:
+      that:
+      -  'graylog_datanode__node_search_cache_size | regex_search("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
+      fail_msg: '"{{ graylog_datanode__node_search_cache_size }}" does not follow OpenSearch Bytes format'
+      quiet: true
+
   tags:
     - 'graylog_datanode'
     - 'graylog_datanode:configure'
