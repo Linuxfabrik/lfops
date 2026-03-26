@@ -96,7 +96,6 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 * Type: List of Strings
 * Default: `[]`
 
-
 `graylog_datanode__service_enabled`
 
 * Enables or disables the graylog-datanode service, analogous to `systemctl enable/disable --now`.
