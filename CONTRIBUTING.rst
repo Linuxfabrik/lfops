@@ -10,6 +10,7 @@ Rules of Thumb
 * Keep templates as close to the original file as possible. This makes handling of rpmnew files easier.
 * Prefer `item["subkey"]` to `item.subkey`.
 * Always use the long parameter when using shell commands.
+* Avoid breaking changes as far as possible, but don't let them stand in the way of improvements.
 
 Playbooks:
 
