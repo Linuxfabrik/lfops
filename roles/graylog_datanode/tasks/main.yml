@@ -7,6 +7,13 @@
       fail_msg: 'graylog_datanode__password_secret must at least 16 characters'
       quiet: true
 
+  - name: 'Validate graylog_datanode__node_search_cache_size'
+    ansible.builtin.assert:
+      that:
+        - 'graylog_datanode__password_secret | length >= 16'
+      fail_msg: 'graylog_datanode__password_secret must at least 16 characters'
+      quiet: true
+
   tags:
     - 'graylog_datanode'
     - 'graylog_datanode:configure'
@@ -72,6 +79,15 @@
       owner: 'graylog-datanode'
       group: 'graylog-datanode'
       mode: 0o755
+
+  - name: 'mkdir -p {{ item }}; chown graylog-datanode:graylog-datanode {{ item }}'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      owner: 'graylog-datanode'
+      group: 'graylog-datanode'
+      mode: 0o755
+    loop: '{{ graylog_datanode__path_repo }}'
 
   tags:
     - 'graylog_datanode'
