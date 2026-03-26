@@ -28,6 +28,16 @@
     ansible.builtin.set_fact:
       mongodb__installed_version: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_replace("\.\d+$", "") }}' # strip the patch version
 
+
+  - name: 'Validate that mongodb__conf_net_bind_ip either has length of 1 or does not include "0.0.0.0"'
+    ansible.builtin.assert:
+      that: >
+        (mongodb__conf_net_bind_ip | length > 1) or
+        ("0.0.0.0" not in mongodb__conf_net_bind_ip)
+      fail_msg: 'mongodb__conf_net_bind_ip must either have length of 1 or must not include "0.0.0.0"'
+      quiet: true
+        
+
   - name: 'Deploy /etc/mongod.conf'
     ansible.builtin.template:
       src: 'etc/{{ ansible_facts["os_family"] }}-{{ mongodb__installed_version }}-mongod.conf.j2'
