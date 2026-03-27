@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **plugin:bitwarden_item**: Add file-based item cache to reduce `bw serve` API calls, preventing crashes under load. Cache is stored in `$XDG_RUNTIME_DIR` (RAM-backed tmpfs) with `/tmp` fallback. After create/edit operations, the cache is updated inline to avoid expensive full re-syncs, with a 1-second sleep as rate limit to prevent Bitwarden API errors. Convert `is_unlocked` to a property to fix it never being called.
 * **role:freeipa_server**: Add `--diff` support for all FreeIPA modules and add `freeipa_server:configure` tag
 * **role:mariadb_server**: Add `mariadb_server__cnf_wsrep_log_conflicts` and `mariadb_server__cnf_wsrep_retry_autocommit` variables
 * **role:mariadb_server**: Add `mariadb_server__cnf_wsrep_gtid_mode` variable to configure `wsrep_gtid_mode` for Galera
