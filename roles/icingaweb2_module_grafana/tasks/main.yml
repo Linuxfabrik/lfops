@@ -87,40 +87,15 @@
       group: 'icingaweb2'
       mode: 0o660
 
-  - name: 'generate JWT RSA private key'
-    community.crypto.openssl_privatekey:
-      path: '/etc/icingaweb2/modules/grafana/jwt.key.priv'
-      size: 2048
-      type: 'RSA'
-      owner: 'apache'
-      group: 'icingaweb2'
-      mode: '0640'
-    when: icingaweb2_module_grafana__auth_jwt
-
-  - name: 'generate JWT RSA public key'
-    community.crypto.openssl_publickey:
-      path: '/etc/icingaweb2/modules/grafana/jwt.key.pub'
-      privatekey_path: '/etc/icingaweb2/modules/grafana/jwt.key.priv'
-      owner: 'apache'
-      group: 'icingaweb2'
-      mode: '0644'
-    when: icingaweb2_module_grafana__auth_jwt
-
-  - name: 'copy /etc/icingaweb2/modules/grafana/jwt.key.pub to /etc/grafana/icinga.pem'
+  - name: 'copy {{ icingaweb2_module_grafana__auth_jwt__priv_key_file }} to /etc/icingaweb2/modules/grafana/jwt.key.priv'
     ansible.builtin.copy:
-      src: '/etc/icingaweb2/modules/grafana/jwt.key.pub'
-      dest: '/etc/grafana/icinga.pem'
+      src: '{{ icingaweb2_module_grafana__auth_jwt__priv_key_file }}'
+      dest: '/etc/icingaweb2/modules/grafana/jwt.key.priv'
       remote_src: true
       owner: 'root'
       group: 'root'
-      mode: '0644'
-    when: icingaweb2_module_grafana__auth_jwt
-
-  - name: 'restart grafana'
-    ansible.builtin.systemd:
-      name: 'grafana-server'
-      state: 'restarted'
-    when: icingaweb2_module_grafana__auth_jwt
+      mode: 0o644
+    when: 'icingaweb2_module_grafana__auth_jwt'
 
   tags:
     - 'icingaweb2_module_grafana'
