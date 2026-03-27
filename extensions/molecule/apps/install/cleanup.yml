@@ -1,0 +1,2 @@
+- name: 'Converge'
+  hosts: 'systems_under_test'

@@ -1,0 +1,6 @@
+ansible_connection: 'containers.podman.podman'
+ansible_host: 'ubuntu2404_container'
+
+container_command: 'sleep 1d'
+container_image: 'docker.io/library/ubuntu:24.04'
+container_privileged: false
