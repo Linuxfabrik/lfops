@@ -18,8 +18,8 @@ description:
     - If no password item is found, a new item is created. Useful for automation.
     - If you do not specify a name or Bitwarden ID, it searches using the name/title.
     - If there is an existing Bitwarden item that differs from the given parameters, the item is updated, and the updated item is returned.
-    - If a search returns multiple entries, this lookup plugin throws an error, since it cannot decide which one to use.
-    - On success, this lookup plugin returns the complete Bitwarden item object.
+    - If a search returns multiple entries, this module throws an error, since it cannot decide which one to use.
+    - On success, this module returns the complete Bitwarden item object.
     - If you don't specify a name/title for a password item, a name/title will be created automatically, using C(hostname - purpose) (for example "C(dbserver - MariaDB)") or just C(hostname) (for example "C(dbserver)", depending on what is provided).
 
 notes:
@@ -288,7 +288,7 @@ def run_module():
     module_args = dict(
         attachments=dict(type='list', required=False, default=[]),
         collection_id=dict(type='str', required=False, default=None),
-        folder_id=dict(type='list', required=False, default=None),
+        folder_id=dict(type='str', required=False, default=None),
         hostname=dict(type='str', required=False, default=None),
         id=dict(type='str', required=False, default=None),
         name=dict(type='str', required=False, default=None),
