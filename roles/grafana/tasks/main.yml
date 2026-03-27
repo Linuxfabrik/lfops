@@ -26,6 +26,23 @@
     when:
       - 'grafana__https_config is defined and grafana__https_config | length > 0'
 
+  - name: 'generate JWT RSA private key'
+    community.crypto.openssl_privatekey:
+      path: '{{ grafana__auth_jwt__priv_key_file }}'
+      size: 2048
+      type: 'RSA'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o644
+
+  - name: 'generate JWT RSA public key'
+    community.crypto.openssl_publickey:
+      path: '{{ grafana__auth_jwt__pub_key_file }}'
+      privatekey_path: '{{ grafana__auth_jwt__priv_key_file }}'
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o644
+
   - name: 'deploy /etc/grafana/grafana.ini'
     ansible.builtin.template:
       src: 'etc/grafana/grafana.ini.j2'
