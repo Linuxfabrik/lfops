@@ -8,6 +8,7 @@ from __future__ import absolute_import, division, print_function
 
 # This module requires Python 3.8+ (secrets, f-strings with =, os.replace, json.JSONDecodeError). This should be fine since it will always run on localhost and the Ansible Controller has to be Python 3.9+ anyway
 
+import copy
 import email.encoders
 import email.mime.application
 import email.mime.multipart
@@ -18,7 +19,8 @@ import json
 import mimetypes
 import os
 import secrets
-import urllib.parse
+import tempfile
+import time
 from urllib.error import HTTPError, URLError
 
 from ansible.module_utils.common.collections import Mapping
@@ -27,6 +29,9 @@ from ansible.module_utils.six import string_types
 from ansible.module_utils._text import to_bytes, to_native, to_text
 from ansible.module_utils.urls import (ConnectionError, SSLValidationError,
                                        open_url)
+from ansible.utils.display import Display
+
+display = Display()
 
 
 def prepare_multipart_no_base64(fields):
@@ -131,6 +136,11 @@ def prepare_multipart_no_base64(fields):
     )
 
 
+CACHE_DIR = os.environ.get('XDG_RUNTIME_DIR', '/tmp')
+CACHE_FILE = os.path.join(CACHE_DIR, 'lfops_bitwarden_cache.json')
+CACHE_VERSION = 2026032701
+
+
 class BitwardenException(Exception):
     pass
 
@@ -140,6 +150,8 @@ class Bitwarden(object):
 
     def __init__(self, hostname='127.0.0.1', port=8087):
         self._base_url = 'http://%s:%s' % (hostname, port)
+        self._cache = None
+        self._load_cache()
 
     def _api_call(self, url_path, method='GET', body=None, body_format='json'):
         url = '%s/%s' % (self._base_url, url_path)
@@ -158,7 +170,8 @@ class Bitwarden(object):
 
         # mostly taken from ansible.builtin.url lookup plugin
         try:
-            response = open_url(url, method=method, data=body, headers=headers)
+            # increased the timeout since listing all items via `list/object/items` takes forever (13s for ~2500 items)
+            response = open_url(url, method=method, data=body, headers=headers, timeout=60)
         except HTTPError as e:
             raise BitwardenException("Received HTTP error for %s : %s" % (url, to_native(e)))
         except URLError as e:
@@ -179,6 +192,64 @@ class Bitwarden(object):
         return result
 
 
+    def _load_cache(self):
+        """Load the cache from disk. If missing, unreadable, or invalid, start with an empty cache.
+        Freshness is handled by sync().
+        """
+        try:
+            with open(CACHE_FILE, 'r') as f:
+                data = json.load(f)
+            if data.get('version') == CACHE_VERSION:
+                self._cache = data
+                item_count = len(self._cache['items']) if self._cache['items'] is not None else 0
+                display.vvv('lfbw - cache loaded from %s (%d items)' % (CACHE_FILE, item_count))
+                return
+        except (IOError, OSError, ValueError, json.decoder.JSONDecodeError):
+            pass
+        self._cache = {
+            'version': CACHE_VERSION,
+            'sync_timestamp': 0,
+            'items': None,
+            'templates': {},
+        }
+        display.vvv('lfbw - no valid cache found, starting fresh')
+
+
+    def _save_cache(self):
+        """Write the cache to disk atomically.
+        """
+        try:
+            fd, tmp_path = tempfile.mkstemp(
+                dir=os.path.dirname(CACHE_FILE),
+                prefix='.lfops_bw_cache_',
+            )
+            try:
+                with os.fdopen(fd, 'w') as f:
+                    json.dump(self._cache, f)
+                os.replace(tmp_path, CACHE_FILE)
+                display.vvv('lfbw - cache saved to %s' % (CACHE_FILE))
+            except Exception:
+                os.unlink(tmp_path)
+                raise
+        except (IOError, OSError):
+            display.vvv('lfbw - failed to save cache to %s' % (CACHE_FILE))
+
+
+    def _get_template(self, template_name):
+        """Return a template from cache, fetching from API on first use.
+        Templates are static API schema definitions that never change.
+        """
+        if template_name not in self._cache['templates']:
+            display.vvv('lfbw - fetching template "%s" from API' % (template_name))
+            result = self._api_call('object/template/%s' % (template_name))
+            self._cache['templates'][template_name] = result['data']['template']
+            self._save_cache()
+        else:
+            display.vvv('lfbw - using cached template "%s"' % (template_name))
+        return copy.deepcopy(self._cache['templates'][template_name])
+
+
+    @property
     def is_unlocked(self):
         """Check if the Bitwarden vault is unlocked.
         """
@@ -186,10 +257,20 @@ class Bitwarden(object):
         return result['data']['template']['status'] == 'unlocked'
 
 
-    def sync(self):
-        """Pull the latest vault data from server.
+    def sync(self, force=False, interval=60):
+        """Pull the latest vault data from server and repopulate the items cache.
+        Syncs only if the last sync was more than `interval` seconds ago, unless `force` is True.
         """
-        return self._api_call('sync', method='POST')
+        if not force and time.time() - self._cache.get('sync_timestamp', 0) < interval:
+            display.vvv('lfbw - sync skipped, last sync was recent enough')
+            return
+        display.vvv('lfbw - syncing vault (force=%s)' % (force))
+        self._api_call('sync', method='POST')
+        result = self._api_call('list/object/items')
+        self._cache['items'] = result['data']['data']
+        self._cache['sync_timestamp'] = time.time()
+        display.vvv('lfbw - sync complete, cached %d items' % (len(self._cache['items'])))
+        self._save_cache()
 
 
     def get_items(self, name, username=None, folder_id=None, collection_id=None, organization_id=None):
@@ -236,18 +317,11 @@ class Bitwarden(object):
         if isinstance(organization_id, str) and len(organization_id.strip()) == 0:
             organization_id = None
 
-        params = urllib.parse.urlencode(
-            {
-                'search': name,
-            },
-            quote_via=urllib.parse.quote,
-        )
-        result = self._api_call('list/object/items?%s' % (params))
-
-        # make sure that all the given parameters exactly match the requested one, as `bw` is not that precise (only performs a search)
-        # we are not using the filter parameters of the `bw` utility, as they perform an OR operation, but we want AND
+        display.vvv('lfbw - searching cache for name="%s", username="%s"' % (name, username))
         matching_items = []
-        for item in result['data']['data']:
+        for item in self._cache['items']:
+            if item.get('type') != 1:
+                continue # skip non-login items (cards, secure notes, identities)
             if item['name'] == name \
             and (item['login']['username'] == username) \
             and (item.get('folderId') == folder_id) \
@@ -260,13 +334,20 @@ class Bitwarden(object):
             and (item.get('organizationId') == organization_id):
                 matching_items.append(item)
 
+        display.vvv('lfbw - found %d matching item(s)' % (len(matching_items)))
         return matching_items
 
 
     def get_item_by_id(self, item_id):
         """Get an item by ID from Bitwarden. Returns the item or None. Throws an exception if the id leads to unambiguous results.
         """
-
+        display.vvv('lfbw - looking up item by id=%s' % (item_id))
+        for item in self._cache['items']:
+            if item.get('id') == item_id:
+                display.vvv('lfbw - found item in cache')
+                return item
+        # fallback to API if not found in cache (item could have been created externally)
+        display.vvv('lfbw - item not in cache, falling back to API')
         result = self._api_call('object/item/%s' % (item_id))
         return result['data']
 
@@ -299,9 +380,7 @@ class Bitwarden(object):
         """
         login_uris = []
         if uris:
-            # To create uris, fetch the JSON structure for that.
-            result = self._api_call('object/template/item.login.uri')
-            template = result['data']['template']
+            template = self._get_template('item.login.uri')
             for uri in uris:
                 login_uri = template.copy() # make sure we are not editing the same object repeatedly
                 login_uri['uri'] = uri
@@ -322,9 +401,7 @@ class Bitwarden(object):
           "totp": "JBSWY3DPEHPK3PXP"
         }
         """
-        # To create a login item, fetch the JSON structure for that.
-        result = self._api_call('object/template/item.login')
-        login = result['data']['template']
+        login = self._get_template('item.login')
         login['password'] = password
         login['totp'] = ''
         login['uris'] = login_uris or []
@@ -354,10 +431,7 @@ class Bitwarden(object):
           "reprompt": 0
         }
         """
-        # To create an item later on, fetch the item JSON structure, and fill in the appropriate
-        # values.
-        result = self._api_call('object/template/item')
-        item = result['data']['template']
+        item = self._get_template('item')
         item['collectionIds'] = collection_ids
         item['folderId'] = folder_id
         item['login'] = login
@@ -371,20 +445,32 @@ class Bitwarden(object):
     def create_item(self, item):
         """Creates an item object in Bitwarden.
         """
+        display.vvv('lfbw - creating item "%s"' % (item.get('name', '')))
         result = self._api_call('object/item', method='POST', body=item)
+        self._cache['items'].append(result['data'])
+        self._save_cache()
+        time.sleep(1)
         return result['data']
 
 
     def edit_item(self, item, item_id):
         """Edits an item object in Bitwarden.
         """
+        display.vvv('lfbw - editing item %s' % (item_id))
         result = self._api_call('object/item/%s' % (item_id), method='PUT', body=item)
+        for i, cached_item in enumerate(self._cache['items']):
+            if cached_item.get('id') == item_id:
+                self._cache['items'][i] = result['data']
+                break
+        self._save_cache()
+        time.sleep(1)
         return result['data']
 
 
     def add_attachment(self, item_id, attachment_path):
         """Adds the file at `attachment_path` to the item specified by `item_id`
         """
+        display.vvv('lfbw - adding attachment "%s" to item %s' % (attachment_path, item_id))
 
         body = {
             'file': {
@@ -392,6 +478,12 @@ class Bitwarden(object):
             },
         }
         result = self._api_call('attachment?itemId=%s' % (item_id), method='POST', body=body, body_format='form-multipart')
+        for i, cached_item in enumerate(self._cache['items']):
+            if cached_item.get('id') == item_id:
+                self._cache['items'][i] = result['data']
+                break
+        self._save_cache()
+        time.sleep(1)
         return result
 
     @staticmethod
