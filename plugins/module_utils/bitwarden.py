@@ -173,7 +173,7 @@ class Bitwarden(object):
                 try:
                     content_type, body = prepare_multipart_no_base64(body)
                 except (TypeError, ValueError) as e:
-                    BitwardenException('failed to parse body as form-multipart: %s' % to_native(e))
+                    raise BitwardenException('failed to parse body as form-multipart: %s' % to_native(e))
                 headers['Content-Type'] = content_type
 
         # mostly taken from ansible.builtin.url lookup plugin

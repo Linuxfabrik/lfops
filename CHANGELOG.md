@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:bitwarden_item**: Fix missing `raise` in multipart error handling, `break` instead of `continue` in multi-term lookup, `folder_id` wrongly typed as `list` instead of `str` in module, notes default mismatch between documentation and code, and wrong "lookup plugin" wording in module documentation
 * **role:mirror**: Fix missing `0440` permissions on sudoers file
 * **role:login**: Rename sudoers file from `lfops_login` to `linuxfabrik` to match the kickstart configuration; remove the old file automatically
 * **roles**: Fix Ansible 2.19 deprecation warning for conditional results of type `int` by using `| length > 0` instead of `| length`
