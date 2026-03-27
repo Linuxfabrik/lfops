@@ -92,8 +92,8 @@
       src: '{{ icingaweb2_module_grafana__auth_jwt__priv_key_file }}'
       dest: '/etc/icingaweb2/modules/grafana/jwt.key.priv'
       remote_src: true
-      owner: 'root'
-      group: 'root'
+      owner: 'apache'
+      group: 'icingaweb2'
       mode: 0o644
     when: 'icingaweb2_module_grafana__auth_jwt'
 
