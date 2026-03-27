@@ -1,0 +1,9 @@
+scenario:
+  test_sequence:
+    - 'create'
+    - 'prepare'
+    - 'converge'
+    - 'verify'
+    - 'idempotence'
+    - 'verify'
+    - 'destroy'

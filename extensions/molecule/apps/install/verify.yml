@@ -1,0 +1,11 @@
+- name: 'Verify'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:
+        manager: 'auto'
+
+    - name: 'Assert'
+      ansible.builtin.assert:
+        that: '"zsh" in ansible_facts.packages'

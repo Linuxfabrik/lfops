@@ -1,0 +1,6 @@
+ansible_connection: 'containers.podman.podman'
+ansible_host: 'debian11_container'
+
+container_command: 'sleep 1d'
+container_image: 'docker.io/library/debian:11'
+container_privileged: false

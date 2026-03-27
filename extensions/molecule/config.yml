@@ -1,0 +1,66 @@
+dependency:
+  name: 'galaxy'
+  options:
+    requirements-file: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/requirements.yml'
+
+ansible:
+  cfg:
+    defaults:
+      accelerate_timeout: 5
+      ansible_managed: 'This file is managed by Ansible - do not edit'
+      callbacks_enabled: 'profile_tasks'
+      fact_caching: 'jsonfile'
+      fact_caching_connection: '${MOLECULE_EPHEMERAL_DIRECTORY}/.ansible_cache'
+      fact_caching_timeout: 86400
+      forks: 30
+      gathering: 'smart'
+      host_key_checking: false
+      inventory: 'hosts'
+      nocows: 1
+      retry_files_enabled: true
+      timeout: 60
+      log_path: '${MOLECULE_EPHEMERAL_DIRECTORY}/ansible.log'
+      inventory_ignore_extensions:
+        - '~'
+        - '.orig'
+        - '.bak'
+        - '.ini'
+        - '.cfg'
+        - '.retry'
+        - '.pyc'
+        - '.pyo'
+        - '.csv'
+        - '.md'
+      inventory_ignore_patterns: '(host|group)_files'
+      stdout_callback: 'yaml'
+    ssh_connections:
+      pipelining: true
+      ssh_args: '-o ControlMaster=auto -o ControlPersist=60s'
+  executor:
+    backend: 'ansible-playbook' # or 'ansible-navigator'
+    args:
+      ansible_navigator:
+        - '--inventory=${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/inventory/'
+        - '--inventory=${MOLECULE_SCENARIO_DIRECTORY}/inventory/'
+        - '--limit=${MOLECULE_TARGET}'
+      ansible_playbook:
+        - '--inventory=${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/inventory/'
+        - '--inventory=${MOLECULE_SCENARIO_DIRECTORY}/inventory/'
+        - '--limit=${MOLECULE_TARGET}'
+
+provisioner:
+  playbooks:
+    create: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/create.yml'
+    destroy: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/destroy.yml'
+    prepare: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/prepare.yml'
+
+scenario:
+  test_sequence:
+    - 'create'
+    - 'prepare'
+    - 'converge'
+    - 'verify'
+    - 'idempotence'
+    - 'verify'
+    - 'cleanup'
+    - 'destroy'
