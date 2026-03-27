@@ -6,12 +6,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+# This module requires Python 3.8+ (secrets, f-strings with =, os.replace, json.JSONDecodeError). This should be fine since it will always run on localhost and the Ansible Controller has to be Python 3.9+ anyway
+
 import email.encoders
 import email.mime.application
 import email.mime.multipart
 import email.mime.nonmultipart
 import email.parser
-import email.utils
+import email.policy
 import json
 import mimetypes
 import os
@@ -20,14 +22,7 @@ import urllib.parse
 from urllib.error import HTTPError, URLError
 
 from ansible.module_utils.common.collections import Mapping
-from ansible.module_utils.six import PY2, PY3, string_types
-from ansible.module_utils.six.moves import cStringIO
-
-try:
-    import email.policy
-except ImportError:
-    # Py2
-    import email.generator
+from ansible.module_utils.six import string_types
 
 from ansible.module_utils._text import to_bytes, to_native, to_text
 from ansible.module_utils.urls import (ConnectionError, SSLValidationError,
@@ -120,30 +115,15 @@ def prepare_multipart_no_base64(fields):
 
         m.attach(part)
 
-    if PY3:
-        # Ensure headers are not split over multiple lines
-        # The HTTP policy also uses CRLF by default
-        b_data = m.as_bytes(policy=email.policy.HTTP)
-    else:
-        # Py2
-        # We cannot just call ``as_string`` since it provides no way
-        # to specify ``maxheaderlen``
-        fp = cStringIO()  # cStringIO seems to be required here
-        # Ensure headers are not split over multiple lines
-        g = email.generator.Generator(fp, maxheaderlen=0)
-        g.flatten(m)
-        # ``fix_eols`` switches from ``\n`` to ``\r\n``
-        b_data = email.utils.fix_eols(fp.getvalue())
+    # Ensure headers are not split over multiple lines
+    # The HTTP policy also uses CRLF by default
+    b_data = m.as_bytes(policy=email.policy.HTTP)
     del m
 
     headers, sep, b_content = b_data.partition(b'\r\n\r\n')
     del b_data
 
-    if PY3:
-        parser = email.parser.BytesHeaderParser().parsebytes
-    else:
-        # Py2
-        parser = email.parser.HeaderParser().parsestr
+    parser = email.parser.BytesHeaderParser().parsebytes
 
     return (
         parser(headers)['content-type'],  # Message converts to native strings
