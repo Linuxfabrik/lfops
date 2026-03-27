@@ -88,7 +88,7 @@
       state: 'directory'
       owner: 'graylog-datanode'
       group: 'graylog-datanode'
-      mode: 0o755
+      mode: 0o740
     loop: '{{ graylog_datanode__path_repo }}'
 
   tags:
