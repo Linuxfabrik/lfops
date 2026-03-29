@@ -12,6 +12,7 @@
 
   - name: 'deploy /etc/dnf/plugins/versionlock.list'
     ansible.builtin.template:
+      backup: true
       src: 'etc/dnf/plugins/versionlock.list.j2'
       dest: '{{ dnf_versionlock__list_path }}'
       owner: 'root'

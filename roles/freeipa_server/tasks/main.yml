@@ -47,6 +47,7 @@
 
   - name: 'deploy /etc/systemd/system/pki-tomcatd@.service.d/override.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/pki-tomcatd@.service.d/override.conf.j2'
       dest: '/etc/systemd/system/pki-tomcatd@.service.d/override.conf'
       owner: 'root'

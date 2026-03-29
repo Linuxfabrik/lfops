@@ -20,6 +20,7 @@
 
   - name: 'deploy the repo file (mirror: {{ repo_mariadb__mirror_url | default("") }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/apt/sources.list.d/mariadb.list.j2'
       dest: '/etc/apt/sources.list.d/mariadb.list'
       owner: 'root'
@@ -35,6 +36,7 @@
 
   - name: 'deploy /etc/apt/preferences.d/mariadb-enterprise.pref'
     ansible.builtin.template:
+      backup: true
       src: 'etc/apt/preferences.d/mariadb-enterprise.pref.j2'
       dest: '/etc/apt/preferences.d/mariadb-enterprise.pref'
       owner: 'root'

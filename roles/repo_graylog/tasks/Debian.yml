@@ -20,6 +20,7 @@
 
   - name: 'deploy the repo file (mirror: {{ repo_graylog__mirror_url | default("") }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/apt/sources.list.d/graylog.list.j2'
       dest: '/etc/apt/sources.list.d/graylog.list'
       owner: 'root'

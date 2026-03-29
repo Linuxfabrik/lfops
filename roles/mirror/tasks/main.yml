@@ -113,6 +113,7 @@
 
   - name: 'deploy /etc/mirror.yml'
     ansible.builtin.template:
+      backup: true
       src: 'etc/mirror.yml.j2'
       dest: '/etc/mirror.yml'
       owner: 'root'

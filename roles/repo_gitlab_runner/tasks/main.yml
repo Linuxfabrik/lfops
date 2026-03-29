@@ -2,6 +2,7 @@
 
   - name: 'deploy the GitLab Runner repo (mirror: {{ repo_gitlab_runner__mirror_url }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/yum.repos.d/gitlab_gitlab-ce.repo.j2'
       dest: '/etc/yum.repos.d/gitlab_gitlab-ce.repo'
       owner: 'root'

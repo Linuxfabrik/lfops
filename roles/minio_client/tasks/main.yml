@@ -18,6 +18,7 @@
 
   - name: 'Deploy /etc/bash_completion.d/minio'
     ansible.builtin.template:
+      backup: true
       src: 'etc/bash_completion.d/minio.j2'
       dest: '/etc/bash_completion.d/minio'
       owner: 'root'
@@ -26,6 +27,7 @@
 
   - name: 'Deploy /etc/profile.d/mc.sh'
     ansible.builtin.template:
+      backup: true
       src: 'etc/profile.d/mc.sh.j2'
       dest: '/etc/profile.d/mc.sh'
       owner: 'root'
@@ -44,6 +46,7 @@
 
   - name: 'Deploy /etc/mc/config.json'
     ansible.builtin.template:
+      backup: true
       src: 'etc/mc/config.json.j2'
       dest: '/etc/mc/config.json'
       owner: 'root'

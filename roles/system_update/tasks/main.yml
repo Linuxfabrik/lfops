@@ -22,6 +22,7 @@
 
   - name: 'Deploy /usr/local/bin/notify-and-schedule'
     ansible.builtin.template:
+      backup: true
       src: 'usr/local/bin/notify-and-schedule.j2'
       dest: '/usr/local/bin/notify-and-schedule'
       owner: 'root'
@@ -30,6 +31,7 @@
 
   - name: 'Deploy /usr/local/bin/update-and-reboot'
     ansible.builtin.template:
+      backup: true
       src: 'usr/local/bin/update-and-reboot.j2'
       dest: '/usr/local/bin/update-and-reboot'
       owner: 'root'
@@ -38,6 +40,7 @@
 
   - name: 'Deploy /etc/systemd/system/notify-and-schedule.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/notify-and-schedule.service.j2'
       dest: '/etc/systemd/system/notify-and-schedule.service'
       owner: 'root'
@@ -46,6 +49,7 @@
 
   - name: 'Deploy /etc/systemd/system/notify-and-schedule.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/notify-and-schedule.timer.j2'
       dest: '/etc/systemd/system/notify-and-schedule.timer'
       owner: 'root'

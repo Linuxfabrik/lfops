@@ -134,6 +134,7 @@
 
   - name: 'deploy /etc/elasticsearch/elasticsearch.yml'
     ansible.builtin.template:
+      backup: true
       src: 'etc/elasticsearch/elasticsearch.yml.j2'
       dest: '/etc/elasticsearch/elasticsearch.yml'
       owner: 'root'
@@ -167,6 +168,7 @@
 
   - name: 'deploy {{ __elasticsearch__sysconfig_file_path }}'
     ansible.builtin.template:
+      backup: true
       src: 'etc/sysconfig/elasticsearch.j2'
       dest: '{{ __elasticsearch__sysconfig_file_path }}'
       owner: 'root'
@@ -176,6 +178,7 @@
 
   - name: 'deploy /tmp/certutil.yml'
     ansible.builtin.template:
+      backup: true
       src: 'tmp/certutil.yml.j2'
       dest: '/tmp/certutil.yml'
       owner: 'root'

@@ -32,6 +32,7 @@
 
   - name: 'Deploy /etc/systemd/system/gitlab-dump.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/gitlab-dump.service.j2'
       dest: '/etc/systemd/system/gitlab-dump.service'
       owner: 'root'
@@ -40,6 +41,7 @@
 
   - name: 'Deploy /etc/systemd/system/gitlab-dump.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/gitlab-dump.timer.j2'
       dest: '/etc/systemd/system/gitlab-dump.timer'
       owner: 'root'
@@ -56,6 +58,7 @@
 
   - name: 'Deploy /etc/gitlab/gitlab.rb'
     ansible.builtin.template:
+      backup: true
       src: 'etc/gitlab/gitlab.rb.j2'
       dest: '/etc/gitlab/gitlab.rb'
       owner: 'root'

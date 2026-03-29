@@ -13,6 +13,7 @@
 
   - name: 'Deploy the service units to /etc/systemd/system'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/service.j2'
       dest: '/etc/systemd/system/{{ item["name"] }}.service'
       owner: 'root'
@@ -43,6 +44,7 @@
 
   - name: 'Deploy the timer units to /etc/systemd/system'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/timer.j2'
       dest: '/etc/systemd/system/{{ item["name"] }}.timer'
       owner: 'root'
@@ -73,6 +75,7 @@
 
   - name: 'Deploy the mount units to /etc/systemd/system'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/mount.j2'
       dest: '/etc/systemd/system/{{ item["name"] }}.mount'
       owner: 'root'

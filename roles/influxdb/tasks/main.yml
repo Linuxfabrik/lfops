@@ -28,6 +28,7 @@
 
   - name: 'Deploy /etc/influxdb/influxdb.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/influxdb/influxdb.conf.j2'
       dest: '/etc/influxdb/influxdb.conf'
       owner: 'root'
@@ -112,12 +113,14 @@
 
   - name: 'Deploy /usr/local/bin/influxdb-dump'
     ansible.builtin.template:
+      backup: true
       src: 'usr/local/bin/influxdb-dump.j2'
       dest: '/usr/local/bin/influxdb-dump'
       mode: 0o755
 
   - name: 'Deploy /etc/systemd/system/influxdb-dump.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/influxdb-dump.timer.j2'
       dest: '/etc/systemd/system/influxdb-dump.timer'
       owner: 'root'
@@ -126,6 +129,7 @@
 
   - name: 'Deploy /etc/systemd/system/influxdb-dump.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/influxdb-dump.service.j2'
       dest: '/etc/systemd/system/influxdb-dump.service'
       owner: 'root'

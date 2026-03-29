@@ -10,6 +10,7 @@
 
   - name: 'Deploy /etc/fangfrisch.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/fangfrisch.conf.j2'
       dest: '/etc/fangfrisch.conf'
       owner: 'clamupdate'
@@ -23,6 +24,7 @@
 
   - name: 'Deploy /etc/systemd/system/fangfrisch.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/fangfrisch.service.j2'
       dest: '/etc/systemd/system/fangfrisch.service'
       owner: 'root'
@@ -31,6 +33,7 @@
 
   - name: 'Deploy /etc/systemd/system/fangfrisch.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/fangfrisch.timer.j2'
       dest: '/etc/systemd/system/fangfrisch.timer'
       owner: 'root'

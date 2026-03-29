@@ -2,6 +2,7 @@
 
   - name: 'Deploy /usr/local/sbin/update-maxmind'
     ansible.builtin.template:
+      backup: true
       src: 'usr/local/sbin/update-maxmind.j2'
       dest: '/usr/local/sbin/update-maxmind'
       owner: 'root'

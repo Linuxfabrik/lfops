@@ -15,6 +15,7 @@
 
   - name: 'Deploy /etc/systemd/system/clamav-clamonacc.service.d/fdpass.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/clamav-clamonacc.service.d/fdpass.conf.j2'
       dest: '/etc/systemd/system/clamav-clamonacc.service.d/fdpass.conf'
       owner: 'root'
@@ -25,6 +26,7 @@
 
   - name: 'Deploy /etc/systemd/system/clamav-clamdscan.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/clamav-clamdscan.service.j2'
       dest: '/etc/systemd/system/clamav-clamdscan.service'
       owner: 'root'
@@ -33,6 +35,7 @@
 
   - name: 'Deploy /etc/systemd/system/clamav-clamdscan.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/clamav-clamdscan.timer.j2'
       dest: '/etc/systemd/system/clamav-clamdscan.timer'
       owner: 'root'
@@ -42,6 +45,7 @@
 
   - name: 'Deploy /usr/local/bin/clamav-virusevent.sh'
     ansible.builtin.template:
+      backup: true
       src: 'usr/local/bin/clamav-virusevent.sh.j2'
       dest: '/usr/local/bin/clamav-virusevent.sh'
       owner: 'root'
@@ -50,6 +54,7 @@
 
   - name: 'Deploy /etc/logrotate.d/clamav'
     ansible.builtin.template:
+      backup: true
       src: 'etc/logrotate.d/clamav.j2'
       dest: '/etc/logrotate.d/clamav'
       owner: 'root'
@@ -64,6 +69,7 @@
 
   - name: 'Deploy /etc/clamd.d/scan.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/clamd.d/scan.conf.j2'
       dest: '/etc/clamd.d/scan.conf'
       owner: 'root'
@@ -82,6 +88,7 @@
 
   - name: 'Deploy /etc/freshclam.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/freshclam.conf.j2'
       dest: '/etc/freshclam.conf'
       owner: 'root'
@@ -98,6 +105,7 @@
 
   - name: 'Deploy /var/lib/clamav/lfops_whitelist.ign2'
     ansible.builtin.template:
+      backup: true
       src: 'var/lib/clamav/lfops_whitelist.ign2.j2'
       dest: '/var/lib/clamav/lfops_whitelist.ign2'
       owner: 'root'
@@ -107,6 +115,7 @@
 
   - name: 'Deploy /var/lib/clamav/lfops_whitelist.fp'
     ansible.builtin.template:
+      backup: true
       src: 'var/lib/clamav/lfops_whitelist.fp.j2'
       dest: '/var/lib/clamav/lfops_whitelist.fp'
       owner: 'root'
@@ -116,6 +125,7 @@
 
   - name: 'Deploy /etc/clamd.d/clamdscan.filelist'
     ansible.builtin.template:
+      backup: true
       src: 'etc/clamd.d/clamdscan.filelist.j2'
       dest: '/etc/clamd.d/clamdscan.filelist'
       owner: 'root'

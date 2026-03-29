@@ -20,6 +20,7 @@
 
   - name: 'deploy the repo file (mirror: {{ repo_redis__mirror_url | default("") }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/apt/sources.list.d/redis.list.j2'
       dest: '/etc/apt/sources.list.d/redis.list'
       owner: 'root'

@@ -108,6 +108,7 @@
 
   - name: 'Deploy the PHP configs'
     ansible.builtin.template:
+      backup: true
       src: 'etc/php.d/{{ php__installed_version }}-z00-linuxfabrik.ini.j2'
       dest: '{{ item }}'
       owner: 'root'
@@ -135,6 +136,7 @@
 
   - name: 'Deploy the pools to {{ php__fpm_pools_path }}'
     ansible.builtin.template:
+      backup: true
       src: 'etc/php-fpm.d/{{ ansible_facts["os_family"] }}-pool.conf.j2'
       dest: '{{ php__fpm_pools_path }}/{{ item["name"] }}.conf'
       owner: 'root'

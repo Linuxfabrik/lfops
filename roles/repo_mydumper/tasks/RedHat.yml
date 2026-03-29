@@ -2,6 +2,7 @@
 
   - name: "Deploy the mydumper repo"
     ansible.builtin.template:
+      backup: true
       src: 'etc/yum.repos.d/mydumper.repo.j2'
       dest: '/etc/yum.repos.d/mydumper.repo'
       owner: 'root'

@@ -13,6 +13,7 @@
 
   - name: 'Deploy {{ mastodon__user_home_directory }}/mastodon.env'
     ansible.builtin.template:
+      backup: true
       src: 'opt/mastodon/mastodon.env.j2'
       dest: '{{ mastodon__user_home_directory }}/mastodon.env'
       owner: 'mastodon'

@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **roles**: Add `backup: true` to all `ansible.builtin.template` tasks to ensure config file backups before overwriting
 * **role:nextcloud**: Refactor `nextcloud-update.j2`
 * **role:keycloak**: Rework `keycloak.conf` template to match Keycloak's default config structure
 * **role:apache_httpd**: bump Core Rule Set to 4.24.1

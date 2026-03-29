@@ -23,6 +23,7 @@
 
   - name: 'Deploy /var/www/html/nextcloud/config/objectstore.config.php (storage backend)'
     ansible.builtin.template:
+      backup: true
       src: 'var/www/html/nextcloud/config/objectstore.config.php.j2'
       dest: '/var/www/html/nextcloud/config/objectstore.config.php'
       owner: 'apache'
@@ -235,6 +236,7 @@
 
   - name: 'Deploy /etc/systemd/system/nextcloud-jobs.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/nextcloud-jobs.service.j2'
       dest: '/etc/systemd/system/nextcloud-jobs.service'
       owner: 'root'
@@ -244,6 +246,7 @@
 
   - name: 'Deploy /etc/systemd/system/nextcloud-jobs.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/nextcloud-jobs.timer.j2'
       dest: '/etc/systemd/system/nextcloud-jobs.timer'
       owner: 'root'
@@ -262,6 +265,7 @@
 
   - name: 'Deploy /etc/systemd/system/nextcloud-app-update.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/nextcloud-app-update.service.j2'
       dest: '/etc/systemd/system/nextcloud-app-update.service'
       owner: 'root'
@@ -271,6 +275,7 @@
 
   - name: 'Deploy /etc/systemd/system/nextcloud-app-update.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/nextcloud-app-update.timer.j2'
       dest: '/etc/systemd/system/nextcloud-app-update.timer'
       owner: 'root'
@@ -280,6 +285,7 @@
 
   - name: 'Deploy /etc/systemd/system/nextcloud-scan-files.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/nextcloud-scan-files.service.j2'
       dest: '/etc/systemd/system/nextcloud-scan-files.service'
       owner: 'root'
@@ -289,6 +295,7 @@
 
   - name: 'Deploy /etc/systemd/system/nextcloud-scan-files.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/nextcloud-scan-files.timer.j2'
       dest: '/etc/systemd/system/nextcloud-scan-files.timer'
       owner: 'root'
@@ -298,6 +305,7 @@
 
   - name: 'Deploy /etc/systemd/system/nextcloud-ldap-show-remnants.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/nextcloud-ldap-show-remnants.service.j2'
       dest: '/etc/systemd/system/nextcloud-ldap-show-remnants.service'
       owner: 'root'
@@ -307,6 +315,7 @@
 
   - name: 'Deploy /etc/systemd/system/nextcloud-ldap-show-remnants.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/nextcloud-ldap-show-remnants.timer.j2'
       dest: '/etc/systemd/system/nextcloud-ldap-show-remnants.timer'
       owner: 'root'
@@ -316,6 +325,7 @@
 
   - name: 'Deploy /usr/local/bin/nextcloud-ldap-show-remnants'
     ansible.builtin.template:
+      backup: true
       src: 'usr/local/bin/nextcloud-ldap-show-remnants.j2'
       dest: '/usr/local/bin/nextcloud-ldap-show-remnants'
       owner: 'root'
@@ -363,6 +373,7 @@
 
   - name: 'Deploy /usr/local/bin/nextcloud-update'
     ansible.builtin.template:
+      backup: true
       src: 'usr/local/bin/nextcloud-update.j2'
       dest: '/usr/local/bin/nextcloud-update'
       owner: 'root'

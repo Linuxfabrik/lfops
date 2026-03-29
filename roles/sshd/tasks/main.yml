@@ -7,6 +7,7 @@
 
   - name: 'Deploy /etc/ssh/sshd_config'
     ansible.builtin.template:
+      backup: true
       src: '{{ lookup("ansible.builtin.first_found", __task_file) }}'
       dest: '/etc/ssh/sshd_config'
       owner: 'root'
