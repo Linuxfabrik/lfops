@@ -63,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:login**: Rename sudoers file from `lfops_login` to `linuxfabrik` to match the kickstart configuration; remove the old file automatically
 * **roles**: Fix Ansible 2.19 deprecation warning for conditional results of type `int` by using `| length > 0` instead of `| length`
 * **role:firewall**: Fix fwbuilder repo clone being skipped when `run_once` picks a host without `firewall__fwbuilder_repo_url`
 * **role:sshd**: Validate sshd config with `sshd -t` before reloading the service
