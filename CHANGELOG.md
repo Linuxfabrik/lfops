@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* Update pre-commit hooks to latest versions
 * Unify CONTRIBUTING and convert from reStructuredText to Markdown
 
 ### Breaking Changes
