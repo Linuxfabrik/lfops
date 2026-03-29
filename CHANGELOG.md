@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+* Unify CONTRIBUTING and convert from reStructuredText to Markdown
+
 ### Breaking Changes
 
 * **role:nfs_server**: Rework `nfs_server__exports` from a list of strings to a list of dictionaries with new `path`, `clients`, `owner`, `group`, and `mode` subkeys
