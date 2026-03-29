@@ -4,9 +4,6 @@ on:
   branch_protection_rule: {}
   schedule:
     - cron: '22 14 * * 4'
-  push:
-    branches:
-      - 'main'
 
 permissions: 'read-all'
 
