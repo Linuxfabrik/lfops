@@ -27,7 +27,7 @@ jobs:
     steps:
 
       - name: 'git clone https://github.com/Linuxfabrik/lfops'
-        uses: 'actions/checkout@v4'
+        uses: 'actions/checkout@v6'
 
       - name: 'Log in to GitHub Container Registry'
         uses: 'redhat-actions/podman-login@v1'
