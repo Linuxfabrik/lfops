@@ -1880,8 +1880,8 @@ def main():
             exit_args=exit_args, single_user=users is None)
 
     # Done
-    ansible_module.exit_json(changed=changed, user=exit_args,
-                             **diff_tracker.build_diff())
+    _exit_kwargs = diff_tracker.build_diff()
+    ansible_module.exit_json(changed=changed, user=exit_args, **_exit_kwargs)
 
 
 if __name__ == "__main__":

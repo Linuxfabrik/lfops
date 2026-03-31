@@ -28,7 +28,7 @@ def _compare_key(arg, ipa_arg):
     return arg == ipa_arg
 
 
-class IPADiffTracker:
+class IPADiffTracker(object):
     """Track before/after state for Ansible --diff output."""
 
     def __init__(self):

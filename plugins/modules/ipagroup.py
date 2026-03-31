@@ -1081,8 +1081,8 @@ def main():
 
     # Done
 
-    ansible_module.exit_json(changed=changed, **diff_tracker.build_diff(),
-                             **exit_args)
+    _exit_kwargs = dict(exit_args, **diff_tracker.build_diff())
+    ansible_module.exit_json(changed=changed, **_exit_kwargs)
 
 
 if __name__ == "__main__":
