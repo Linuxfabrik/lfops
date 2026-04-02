@@ -5,21 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> **Maintainer note:** Always add new entries to the top of the Unreleased section (newest first), even if this results in multiple entries for the same role. This way users only need to read the new entries at the top.
+> **Maintainer note:** Always add new entries to the top of the Unreleased section (newest first; correct subsection), even if this results in multiple entries for the same role. This way users only need to read the new entries at the top.
 
 
 ## [Unreleased]
-
-### Changed
-
-* Update pre-commit hooks to latest versions
-* Unify CONTRIBUTING and convert from reStructuredText to Markdown
-
-### Fixed
-
-* **role:apache_httpd**: Fix `apache_httpd__mod_security_coreruleset_version` default value in README (4.4.0 -> 4.24.1), fix prefork variable names in README (`spare_threads` -> `spare_servers`), fix various typos ("best practise", "Tipp")
-* **role:mailx**: Fix grammar in task name ("make" -> "makes"), sort template module parameters alphabetically
-* **role:policycoreutils**: Fix grammar in task name ("are" -> "is")
 
 ### Breaking Changes
 
@@ -74,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* Update pre-commit hooks to latest versions
+* Unify CONTRIBUTING and convert from reStructuredText to Markdown
 * **roles**: Add `backup: true` to all `ansible.builtin.template` tasks to ensure config file backups before overwriting
 * **role:nextcloud**: Refactor `nextcloud-update.j2`
 * **role:keycloak**: Rework `keycloak.conf` template to match Keycloak's default config structure
@@ -84,6 +75,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_httpd**: Fix `apache_httpd__mod_security_coreruleset_version` default value in README (4.4.0 -> 4.24.1), fix prefork variable names in README (`spare_threads` -> `spare_servers`), fix various typos ("best practise", "Tipp")
+* **role:mailx**: Fix grammar in task name ("make" -> "makes"), sort template module parameters alphabetically
+* **role:policycoreutils**: Fix grammar in task name ("are" -> "is")
 * **plugin:bitwarden_item**: Fix missing `raise` in multipart error handling, `break` instead of `continue` in multi-term lookup, `folder_id` wrongly typed as `list` instead of `str` in module, notes default mismatch between documentation and code, and wrong "lookup plugin" wording in module documentation
 * **role:mirror**: Fix missing `0440` permissions on sudoers file
 * **role:login**: Rename sudoers file from `lfops_login` to `linuxfabrik` to match the kickstart configuration; remove the old file automatically
