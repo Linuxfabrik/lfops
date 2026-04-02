@@ -134,6 +134,20 @@ Tip:
 
 
 
+## Skip Variables
+
+This role is used in several playbooks that provide skip variables to disable specific dependencies. See the playbooks documentation for details:
+
+* [apache_httpd.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#apache_httpdyml)
+* [setup_grav.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_gravyml)
+* [setup_icinga2_master.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_icinga2_masteryml)
+* [setup_librenms.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_librenmsyml)
+* [setup_mastodon.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_mastodonyml)
+* [setup_moodle.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_moodleyml)
+* [setup_nextcloud.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_nextcloudyml)
+* [setup_wordpress.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_wordpressyml)
+
+
 ## Mandatory Role Variables - Global Apache Config (core)
 
 `apache_httpd__conf_server_admin`
