@@ -91,6 +91,7 @@
 
   - name: 'Deploy config files to /etc/icingaweb2/'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/{{ item }}.j2'
       dest: "/etc/icingaweb2/{{ item }}"
       owner: '{{ icingaweb2__webserver_owner }}'
@@ -103,6 +104,7 @@
 
   - name: 'Deploy /etc/icingaweb2/navigation/host-actions.ini'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/navigation/host-actions.ini.j2'
       dest: '/etc/icingaweb2/navigation/host-actions.ini'
       owner: '{{ icingaweb2__webserver_owner }}'
@@ -111,6 +113,7 @@
 
   - name: 'Deploy /etc/icingaweb2/navigation/icingadb-host-actions.ini'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/navigation/icingadb-host-actions.ini.j2'
       dest: '/etc/icingaweb2/navigation/icingadb-host-actions.ini'
       owner: '{{ icingaweb2__webserver_owner }}'
@@ -119,6 +122,7 @@
 
   - name: 'Deploy /etc/icingaweb2/navigation/icingadb-service-actions.ini'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/navigation/icingadb-service-actions.ini.j2'
       dest: '/etc/icingaweb2/navigation/icingadb-service-actions.ini'
       owner: '{{ icingaweb2__webserver_owner }}'
@@ -127,6 +131,7 @@
 
   - name: 'Deploy /etc/icingaweb2/navigation/menu.ini'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/navigation/menu.ini.j2'
       dest: '/etc/icingaweb2/navigation/menu.ini'
       owner: '{{ icingaweb2__webserver_owner }}'
@@ -135,6 +140,7 @@
 
   - name: 'Deploy /etc/icingaweb2/navigation/service-actions.ini'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/navigation/service-actions.ini.j2'
       dest: '/etc/icingaweb2/navigation/service-actions.ini'
       owner: '{{ icingaweb2__webserver_owner }}'
@@ -158,6 +164,7 @@
 
   - name: 'Deploy /etc/icingaweb2/resources.ini'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/resources.ini.j2'
       dest: '/etc/icingaweb2/resources.ini'
       owner: '{{ icingaweb2__webserver_owner }}'
@@ -174,6 +181,7 @@
 
   - name: 'Deploy /etc/icingaweb2/roles.ini'
     ansible.builtin.template:
+      backup: true
       src: 'etc/icingaweb2/roles.ini.j2'
       dest: '/etc/icingaweb2/roles.ini'
       owner: '{{ icingaweb2__webserver_owner }}'

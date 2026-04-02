@@ -10,12 +10,13 @@
       name: '{{ mailx__package }}'
       state: 'present'
 
-  - name: 'Deploy bash wrapper script that make sending mail easier to /root/send-mail'
+  - name: 'Deploy bash wrapper script that makes sending mail easier to /root/send-mail'
     ansible.builtin.template:
-      src: 'root/send-mail.j2'
+      backup: true
       dest: '/root/send-mail'
-      owner: 'root'
       mode: 0o755
+      owner: 'root'
+      src: 'root/send-mail.j2'
 
   tags:
     - 'mailx'

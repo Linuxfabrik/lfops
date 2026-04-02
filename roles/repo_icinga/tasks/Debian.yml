@@ -20,6 +20,7 @@
 
   - name: 'deploy the repo file (mirror: {{ repo_icinga__mirror_url | default("") }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/apt/sources.list.d/packages_icinga_com_debian.list.j2'
       dest: '/etc/apt/sources.list.d/packages_icinga_com_{{ ansible_facts["distribution"] | lower }}.list'
       owner: 'root'

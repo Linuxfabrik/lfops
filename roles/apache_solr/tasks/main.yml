@@ -77,12 +77,14 @@
 
   - name: 'Deploy {{ apache_solr__install_dir }}/solr/bin/solr.in.sh'
     ansible.builtin.template:
+      backup: true
       src: 'opt/solr/bin/solr.in.sh.j2'
       dest: '{{ apache_solr__install_dir }}/solr/bin/solr.in.sh'
     notify: 'apache_solr: restart solr.service'
 
   - name: 'Deploy {{ apache_solr__log4j_props }}'
     ansible.builtin.template:
+      backup: true
       src: 'var/solr/log4j.xml.j2'
       dest: '{{ apache_solr__log4j_props }}'
     notify: 'apache_solr: restart solr.service'
@@ -138,6 +140,7 @@
 
   - name: 'Deploy /etc/systemd/system/solr.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/solr.service.j2'
       dest: '/etc/systemd/system/solr.service'
       owner: 'root'
@@ -185,6 +188,7 @@
 
   - name: 'Deploy {{ apache_solr__var_dir }}/security.json'
     ansible.builtin.template:
+      backup: true
       src: 'var/solr/security.json.j2'
       dest: '{{ apache_solr__var_dir }}/security.json'
     notify: 'apache_solr: restart solr.service'

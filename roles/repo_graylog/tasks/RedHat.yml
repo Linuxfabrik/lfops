@@ -18,6 +18,7 @@
   # https://www.elastic.co/guide/en/graylog/reference/current/rpm.html#rpm-repo
   - name: 'Deploy the graylog repo (mirror: {{ repo_graylog__mirror_url }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/yum.repos.d/graylog.repo.j2'
       dest: '/etc/yum.repos.d/graylog.repo'
       owner: 'root'

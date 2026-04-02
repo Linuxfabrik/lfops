@@ -47,6 +47,7 @@
 
 - name: 'Create sites-available vHosts'
   ansible.builtin.template:
+    backup: true
     src: 'etc/httpd/sites-available/{{ item["template"] }}.conf.j2'
     dest: '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}sites-available/{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ (item["virtualhost_port"] | d(443))) }}.conf'
     owner: 'root'

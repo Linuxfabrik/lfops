@@ -17,6 +17,7 @@
 
   - name: 'Deploy /etc/docker/daemon.json'
     ansible.builtin.template:
+      backup: true
       src: 'etc/docker/daemon.json.j2'
       dest: '/etc/docker/daemon.json'
       mode: 0o640

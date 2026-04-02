@@ -2,6 +2,7 @@
 
   - name: 'Deploy the repo files (mirror: {{ repo_rpmfusion__mirror_url }})'
     ansible.builtin.template:
+      backup: true
       src: '{{ item }}.j2'
       dest: '/{{ item }}'
       owner: 'root'

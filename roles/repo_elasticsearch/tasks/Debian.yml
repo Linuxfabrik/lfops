@@ -18,6 +18,7 @@
   # https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-with-debian-package#deb-repo
   - name: 'deploy the repo file (mirror: {{ repo_elasticsearch__mirror_url | default("") }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/apt/sources.list.d/elasticsearch.list.j2'
       dest: '/etc/apt/sources.list.d/elasticsearch.list'
       owner: 'root'

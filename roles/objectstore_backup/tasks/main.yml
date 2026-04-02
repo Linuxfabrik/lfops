@@ -15,6 +15,7 @@
 
   - name: 'Deploy systemd service and timer'
     ansible.builtin.template:
+      backup: true
       src: '{{ item }}.j2'
       dest: '/{{ item }}'
       owner: 'root'
@@ -27,6 +28,7 @@
 
   - name: 'Deploy systemd service wrapper script'
     ansible.builtin.template:
+      backup: true
       src: '{{ item }}.j2'
       dest: '/{{ item }}'
       owner: 'root'

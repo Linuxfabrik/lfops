@@ -17,6 +17,7 @@
   # https://grafana.com/docs/grafana/latest/setup-grafana/installation/redhat-rhel-fedora/
   - name: 'deploy the Grafana repo (mirror: {{ repo_grafana__mirror_url }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/yum.repos.d/grafana.repo.j2'
       dest: '/etc/yum.repos.d/grafana.repo'
       owner: 'root'

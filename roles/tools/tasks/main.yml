@@ -34,6 +34,7 @@
 
   - name: 'Enhance session profiles for all users in /etc/profile.d'
     ansible.builtin.template:
+      backup: true
       src: 'etc/profile.d/{{ item }}.j2'
       dest: '/etc/profile.d/{{ item }}'
       owner: 'root'

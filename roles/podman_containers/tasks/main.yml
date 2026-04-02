@@ -68,6 +68,7 @@
 
   - name: 'Deploy container units'
     ansible.builtin.template:
+      backup: true
       src: 'etc/containers/systemd/container.j2'
       dest: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
         "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
@@ -106,6 +107,7 @@
 
   - name: 'Deploy network units'
     ansible.builtin.template:
+      backup: true
       src: 'etc/containers/systemd/network.j2'
       dest: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
         "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
@@ -144,6 +146,7 @@
 
   - name: 'Deploy volume units'
     ansible.builtin.template:
+      backup: true
       src: 'etc/containers/systemd/volume.j2'
       dest: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
         "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
@@ -245,6 +248,7 @@
 
   - name: 'Deploy podman-auto-update.timer.d/z00-linuxfabrik.conf # system'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/podman-auto-update.timer.d/z00-linuxfabrik.conf.j2'
       dest: '/etc/systemd/system/podman-auto-update.timer.d/z00-linuxfabrik.conf'
       owner: 'root'
@@ -258,6 +262,7 @@
 
   - name: 'Deploy podman-auto-update.timer.d/z00-linuxfabrik.conf # user'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/podman-auto-update.timer.d/z00-linuxfabrik.conf.j2'
       dest: '~{{ item["user"] }}/.config/systemd/user/podman-auto-update.timer.d/z00-linuxfabrik.conf'
       owner: '{{ item["user"] }}'

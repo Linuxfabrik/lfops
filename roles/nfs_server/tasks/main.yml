@@ -44,6 +44,7 @@
 
   - name: 'Deploy /etc/exports'
     ansible.builtin.template:
+      backup: true
       src: 'etc/exports.j2'
       dest: '/etc/exports'
       owner: 'root'

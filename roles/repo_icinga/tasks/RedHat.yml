@@ -17,6 +17,7 @@
 
   - name: 'Deploy the icinga-release repo (mirror: {{ repo_icinga__mirror_url }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/yum.repos.d/ICINGA-release.repo.j2'
       dest: '/etc/yum.repos.d/ICINGA-release.repo'
       owner: 'root'
@@ -32,6 +33,7 @@
 
   - name: 'Deploy the icinga-snapshot repo (mirror: {{ repo_icinga__mirror_url }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/yum.repos.d/ICINGA-snapshot.repo.j2'
       dest: '/etc/yum.repos.d/ICINGA-snapshot.repo'
       owner: 'root'

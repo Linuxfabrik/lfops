@@ -66,16 +66,19 @@
 
     - name: 'deploy {{ kvm_vm__cloud_init_tempdir_result["path"] }}/meta-data'
       ansible.builtin.template:
+        backup: true
         src: 'cloud-init/meta-data.j2'
         dest: '{{ kvm_vm__cloud_init_tempdir_result["path"] }}/meta-data'
 
     - name: 'deploy {{ kvm_vm__cloud_init_tempdir_result["path"] }}/network-config'
       ansible.builtin.template:
+        backup: true
         src: 'cloud-init/network-config.j2'
         dest: '{{ kvm_vm__cloud_init_tempdir_result["path"] }}/network-config'
 
     - name: 'deploy {{ kvm_vm__cloud_init_tempdir_result["path"] }}/user-data'
       ansible.builtin.template:
+        backup: true
         src: 'cloud-init/user-data.j2'
         dest: '{{ kvm_vm__cloud_init_tempdir_result["path"] }}/user-data'
 

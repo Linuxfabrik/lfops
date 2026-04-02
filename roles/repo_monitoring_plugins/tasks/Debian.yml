@@ -28,6 +28,7 @@
 
   - name: 'Deploy /etc/apt/sources.list.d/linuxfabrik-monitoring-plugins.list'
     ansible.builtin.template:
+      backup: true
       src: 'etc/apt/sources.list.d/linuxfabrik-monitoring-plugins.list.j2'
       dest: '/etc/apt/sources.list.d/linuxfabrik-monitoring-plugins.list'
       owner: 'root'

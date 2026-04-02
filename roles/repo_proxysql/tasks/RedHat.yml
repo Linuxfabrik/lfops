@@ -18,6 +18,7 @@
 
   - name: 'deploy /etc/yum.repos.d/proxysql.repo (mirror: {{ repo_proxysql__mirror_url | default("") }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/yum.repos.d/proxysql.repo.j2'
       dest: '/etc/yum.repos.d/proxysql.repo'
       owner: 'root'

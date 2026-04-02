@@ -61,12 +61,14 @@
 
   - name: 'Deploy /etc/duba/duba.json'
     ansible.builtin.template:
+      backup: true
       src: 'etc/duba/duba.json.j2'
       dest: '/etc/duba/duba.json'
       mode: 0o600 # file contains secrets
 
   - name: 'Deploy /etc/systemd/system/duba.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/duba.service.j2'
       dest: '/etc/systemd/system/duba.service'
       owner: 'root'
@@ -75,6 +77,7 @@
 
   - name: 'Deploy /etc/systemd/system/duba.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/duba.timer.j2'
       dest: '/etc/systemd/system/duba.timer'
       owner: 'root'
@@ -84,6 +87,7 @@
 
   - name: 'Deploy /etc/logrotate.d/duplicity'
     ansible.builtin.template:
+      backup: true
       src: 'etc/logrotate.d/duplicity.j2'
       dest: '/etc/logrotate.d/duplicity'
       owner: 'root'
@@ -98,6 +102,7 @@
 
   - name: 'Deploy /usr/local/bin/duba'
     ansible.builtin.template:
+      backup: true
       src: 'usr/local/bin/duba.j2'
       dest: '/usr/local/bin/duba'
       owner: 'root'

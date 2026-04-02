@@ -94,6 +94,7 @@
 
     - name: 'Deploy /tmp/http_fping.tt'
       ansible.builtin.template:
+        backup: true
         src: 'tmp/http_fping.tt.j2'
         dest: '/tmp/http_fping.tt'
 
@@ -128,6 +129,7 @@
 
   #   - name: 'Deploy /tmp/rrdcached_librenms.tt'
   #     ansible.builtin.template:
+  #       backup: true
   #       src: 'tmp/rrdcached_librenms.tt.j2'
   #       dest: '/tmp/rrdcached_librenms.tt'
 
@@ -158,6 +160,7 @@
 
   # - name: 'Deploy /etc/systemd/system/rrdcached.service.d/librenms.conf'
   #   ansible.builtin.template:
+  #     backup: true
   #     src: 'etc/systemd/system/rrdcached.service.d/librenms.conf.j2'
   #     dest: '/etc/systemd/system/rrdcached.service.d/librenms.conf'
   #     owner: 'root'
@@ -223,6 +226,7 @@
 
   - name: 'Deploy /opt/librenms/config.php'
     ansible.builtin.template:
+      backup: true
       src: 'opt/librenms/config.php.j2'
       dest: '/opt/librenms/config.php'
       owner: 'librenms'

@@ -25,6 +25,7 @@
 
 - name: 'Create mods-available configs'
   ansible.builtin.template:
+    backup: true
     src: 'etc/httpd/mods-available/{{ item["template"] | d(item["filename"]) }}.conf.j2'
     dest: '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}mods-available/{{ item["filename"] }}.conf'
     owner: 'root'

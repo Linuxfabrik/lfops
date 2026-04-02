@@ -73,6 +73,7 @@
 
   - name: 'Deploy {{ postgresql_server__data_dir }}/conf.d/z00-linuxfabrik.conf'
     ansible.builtin.template:
+      backup: true
       src: 'var/lib/pgsql/data/conf.d/z00-linuxfabrik.conf.j2'
       dest: '{{ postgresql_server__data_dir }}/conf.d/z00-linuxfabrik.conf'
       owner: 'postgres'
@@ -82,6 +83,7 @@
 
   - name: 'Deploy {{ postgresql_server__data_dir }}/pg_hba.conf'
     ansible.builtin.template:
+      backup: true
       src: 'var/lib/pgsql/data/pg_hba.conf.j2'
       dest: '{{ postgresql_server__data_dir }}/pg_hba.conf'
       owner: 'postgres'
@@ -185,12 +187,14 @@
 
   - name: 'Deploy /usr/local/sbin/postgresql-dump'
     ansible.builtin.template:
+      backup: true
       src: 'usr/local/sbin/postgresql-dump.j2'
       dest: '/usr/local/sbin/postgresql-dump'
       mode: 0o755
 
   - name: 'Deploy /etc/postgresql-dump.conf'
     ansible.builtin.template:
+      backup: true
       src: 'etc/postgresql-dump.conf.j2'
       dest: '/etc/postgresql-dump.conf'
       owner: 'root'
@@ -199,6 +203,7 @@
 
   - name: 'Deploy /etc/systemd/system/postgresql-dump.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/postgresql-dump.service.j2'
       dest: '/etc/systemd/system/postgresql-dump.service'
       owner: 'root'
@@ -207,6 +212,7 @@
 
   - name: 'Deploy /etc/systemd/system/postgresql-dump.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/postgresql-dump.timer.j2'
       dest: '/etc/systemd/system/postgresql-dump.timer'
       owner: 'root'

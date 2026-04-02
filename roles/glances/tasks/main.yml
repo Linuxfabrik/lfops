@@ -8,6 +8,7 @@
 
   - name: 'Deploy /etc/profile.d/glances.sh'
     ansible.builtin.template:
+      backup: true
       src: 'etc/profile.d/glances.sh.j2'
       dest: '/etc/profile.d/glances.sh'
       owner: 'root'

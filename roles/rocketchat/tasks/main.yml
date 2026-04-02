@@ -2,6 +2,7 @@
 
   - name: 'Deploy {{ rocketchat__user_home_directory }}/rocketchat.env'
     ansible.builtin.template:
+      backup: true
       src: 'opt/rocketchat/rocketchat.env.j2'
       dest: '{{ rocketchat__user_home_directory }}/rocketchat.env'
       owner: 'rocketchat'

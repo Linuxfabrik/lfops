@@ -12,6 +12,7 @@
 
   - name: 'deploy the repo file (mirror: {{ repo_mariadb__mirror_url | default("") }})'
     ansible.builtin.template:
+      backup: true
       src: 'etc/yum.repos.d/RedHat-MariaDB.repo.j2'
       dest: '/etc/yum.repos.d/MariaDB.repo'
       owner: 'root'

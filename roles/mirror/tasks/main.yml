@@ -19,6 +19,7 @@
     ansible.builtin.copy:
       src: '/opt/mirror/mirror.sudoers'
       dest: '/etc/sudoers.d/mirror'
+      mode: 0o440
       remote_src: true
 
   - name: 'cp /opt/mirror/systemd/mirror-update.service /etc/systemd/system/mirror-update.service'
@@ -113,6 +114,7 @@
 
   - name: 'deploy /etc/mirror.yml'
     ansible.builtin.template:
+      backup: true
       src: 'etc/mirror.yml.j2'
       dest: '/etc/mirror.yml'
       owner: 'root'

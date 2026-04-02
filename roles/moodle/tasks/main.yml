@@ -136,6 +136,7 @@
 
   - name: 'Deploy /etc/systemd/system/moodle-cron.service'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/moodle-cron.service.j2'
       dest: '/etc/systemd/system/moodle-cron.service'
       owner: 'root'
@@ -145,6 +146,7 @@
 
   - name: 'Deploy /etc/systemd/system/moodle-cron.timer'
     ansible.builtin.template:
+      backup: true
       src: 'etc/systemd/system/moodle-cron.timer.j2'
       dest: '/etc/systemd/system/moodle-cron.timer'
       owner: 'root'

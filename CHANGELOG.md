@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+* Update pre-commit hooks to latest versions
+* Unify CONTRIBUTING and convert from reStructuredText to Markdown
+
+### Fixed
+
+* **role:apache_httpd**: Fix `apache_httpd__mod_security_coreruleset_version` default value in README (4.4.0 -> 4.24.1), fix prefork variable names in README (`spare_threads` -> `spare_servers`), fix various typos ("best practise", "Tipp")
+* **role:mailx**: Fix grammar in task name ("make" -> "makes"), sort template module parameters alphabetically
+* **role:policycoreutils**: Fix grammar in task name ("are" -> "is")
+
 ### Breaking Changes
 
 * **role:nfs_server**: Rework `nfs_server__exports` from a list of strings to a list of dictionaries with new `path`, `clients`, `owner`, `group`, and `mode` subkeys
@@ -20,6 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **role:icingaweb2_module_grafana**: Add JWT support
 * **role:grafana**: Add JWT support
+* Add `playbooks/README.md` documenting all playbooks with their roles in execution order and available skip variables
+* **role:apache_httpd**: Add platform-specific behavior section, wsgi example, and document localhost endpoints in README
+* **role:apache_httpd**: Add skip variables section to README linking to relevant playbooks
+* **role:mailx**: Add skip variables section to README linking to relevant playbooks
+* **role:policycoreutils**: Add skip variables section to README linking to relevant playbooks
+* **role:yum_utils**: Add skip variables section to README linking to relevant playbooks
+* **plugin:bitwarden_item**: Add file-based item cache to reduce `bw serve` API calls, preventing crashes under load. Cache is stored in `$XDG_RUNTIME_DIR` (RAM-backed tmpfs) with `/tmp` fallback. After create/edit operations, the cache is updated inline to avoid expensive full re-syncs, with a 1-second sleep as rate limit to prevent Bitwarden API errors. Convert `is_unlocked` to a property to fix it never being called.
+* **role:freeipa_server**: Add `--diff` support for all FreeIPA modules and add `freeipa_server:configure` tag
 * **role:mariadb_server**: Add `mariadb_server__cnf_wsrep_log_conflicts` and `mariadb_server__cnf_wsrep_retry_autocommit` variables
 * **role:mariadb_server**: Add `mariadb_server__cnf_wsrep_gtid_mode` variable to configure `wsrep_gtid_mode` for Galera
 * **role:openvpn_server**: Add `openvpn_server:crl` tag to allow deploying the certificate revocation list independently
@@ -55,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **roles**: Add `backup: true` to all `ansible.builtin.template` tasks to ensure config file backups before overwriting
 * **role:nextcloud**: Refactor `nextcloud-update.j2`
 * **role:keycloak**: Rework `keycloak.conf` template to match Keycloak's default config structure
 * **role:apache_httpd**: bump Core Rule Set to 4.24.1
@@ -64,6 +84,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:bitwarden_item**: Fix missing `raise` in multipart error handling, `break` instead of `continue` in multi-term lookup, `folder_id` wrongly typed as `list` instead of `str` in module, notes default mismatch between documentation and code, and wrong "lookup plugin" wording in module documentation
+* **role:mirror**: Fix missing `0440` permissions on sudoers file
+* **role:login**: Rename sudoers file from `lfops_login` to `linuxfabrik` to match the kickstart configuration; remove the old file automatically
 * **roles**: Fix Ansible 2.19 deprecation warning for conditional results of type `int` by using `| length > 0` instead of `| length`
 * **role:firewall**: Fix fwbuilder repo clone being skipped when `run_once` picks a host without `firewall__fwbuilder_repo_url`
 * **role:sshd**: Validate sshd config with `sshd -t` before reloading the service
