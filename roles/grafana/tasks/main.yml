@@ -31,17 +31,19 @@
       path: '{{ grafana__auth_jwt__priv_key_file }}'
       size: 2048
       type: 'RSA'
-      owner: 'apache'
-      group: 'icingaweb2'
+      owner: 'root'
+      group: 'grafana'
       mode: 0o644
+    when: 'grafana__auth_jwt | bool'
 
   - name: 'generate JWT RSA public key'
     community.crypto.openssl_publickey:
       path: '{{ grafana__auth_jwt__pub_key_file }}'
       privatekey_path: '{{ grafana__auth_jwt__priv_key_file }}'
-      owner: 'apache'
-      group: 'icingaweb2'
+      owner: 'root'
+      group: 'grafana'
       mode: 0o644
+    when: 'grafana__auth_jwt | bool'
 
   - name: 'deploy /etc/grafana/grafana.ini'
     ansible.builtin.template:
