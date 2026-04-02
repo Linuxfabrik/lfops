@@ -44,7 +44,7 @@ icingaweb2_module_grafana__version: 'v3.1.3'
 
 | Variable | Description | Default Value |
 | -------- | ----------- | ------------- |
-| `icingaweb2_module_grafana__auth_jwt` | Enable JWT-based authentication for Grafana requests | `false` |
+| `icingaweb2_module_grafana__auth_jwt` | Enable JWT-based authentication for Grafana requests | `'{{ grafana__auth_jwt }}'` |
 | `icingaweb2_module_grafana__auth_jwt__priv_key_file` | Path to the private key file used for JWT-based Grafana authentication | `'{{ grafana__auth_jwt__priv_key_file }}'` |
 | `icingaweb2_module_grafana__custom_graphs_config` | Multiline string. Custom configuration for the Grafana Graphs, will be deployed to `/etc/icingweb2/modules/grafana/graphs.ini` along with the configuration for the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) | `''` |
 | `icingaweb2_module_grafana__default_dashboard` | Name of the default Grafana dashboard | `'Default'` |
