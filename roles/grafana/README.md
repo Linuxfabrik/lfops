@@ -47,6 +47,9 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
 | `grafana__auth_anonymous_enabled` | Whether to allow anonymous (passwordless) access or not. Possible options: `true` or `false` | `false` |
 | `grafana__auth_anonymous_org_name` | The organization name that should be used for unauthenticated users. | `'Main Org.'` |
 | `grafana__auth_anonymous_org_role` | The role for unauthenticated users. | `'Viewer'` |
+| `grafana__auth_jwt` | Enable JWT-based authentication for Grafana requests. | `false` |
+| `grafana__auth_jwt__priv_key_file` | Path to the private key file used to verify JWT signatures for Grafana authentication. | `'/etc/grafana/jwt.key.priv'` |
+| `grafana__auth_jwt__pub_key_file` | Path to the public key file used to verify JWT signatures for Grafana authentication. | `'/etc/grafana/jwt.key.pub'` |
 | `grafana__bitwarden_collection_id` | Will be used to store the token of the created service accounts to this Bitwarden Collection. Can be obtained from the URL in Bitwarden WebGUI. | `'{{ lfops__bitwarden_collection_id | default() }}'` |
 | `grafana__bitwarden_organization_id` | Will be used to store the token of the created service accounts to this Bitwarden Organization. Can be obtained from the URL in Bitwarden WebGUI. | `'{{ lfops__bitwarden_organization_id | default() }}'` |
 | `grafana__cookie_samesite` | The [SameSite cookie attribute](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite). Possible options:<br> * disabled<br> * lax<br> * none<br> * strict | `'lax'` |
@@ -71,6 +74,9 @@ grafana__api_url: 'https://grafana01.example.com/grafana'
 grafana__auth_anonymous_enabled: false
 grafana__auth_anonymous_org_name: 'Main Org.'
 grafana__auth_anonymous_org_role: 'Viewer'
+grafana__auth_jwt: false
+grafana__auth_jwt__priv_key_file: '/etc/grafana/jwt.key.priv'
+grafana__auth_jwt__pub_key_file: '/etc/grafana/jwt.key.pub'
 grafana__cookie_samesite: 'lax'
 grafana__https_config:
   cert_file: '/etc/ssl/ssl-certificate.crt'

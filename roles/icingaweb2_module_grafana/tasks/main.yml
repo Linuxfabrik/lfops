@@ -88,6 +88,16 @@
       group: 'icingaweb2'
       mode: 0o660
 
+  - name: 'copy {{ icingaweb2_module_grafana__auth_jwt__priv_key_file }} to /etc/icingaweb2/modules/grafana/jwt.key.priv'
+    ansible.builtin.copy:
+      src: '{{ icingaweb2_module_grafana__auth_jwt__priv_key_file }}'
+      dest: '/etc/icingaweb2/modules/grafana/jwt.key.priv'
+      remote_src: true
+      owner: 'apache'
+      group: 'icingaweb2'
+      mode: 0o644
+    when: 'icingaweb2_module_grafana__auth_jwt'
+
   tags:
     - 'icingaweb2_module_grafana'
     - 'icingaweb2_module_grafana:configure'

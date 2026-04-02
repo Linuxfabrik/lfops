@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:icingaweb2_module_grafana**: Add JWT support
+* **role:grafana**: Add JWT support
 * Add `playbooks/README.md` documenting all playbooks with their roles in execution order and available skip variables
 * **role:apache_httpd**: Add platform-specific behavior section, wsgi example, and document localhost endpoints in README
 * **role:apache_httpd**: Add skip variables section to README linking to relevant playbooks

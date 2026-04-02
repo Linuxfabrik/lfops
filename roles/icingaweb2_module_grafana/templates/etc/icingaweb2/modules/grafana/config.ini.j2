@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2023050802
+; 2026032601
 
 [grafana]
 accessmode = "iframe"
@@ -9,9 +9,18 @@ defaultdashboard = "{{ icingaweb2_module_grafana__default_dashboard }}"
 defaultdashboardpanelid = "1"
 defaultdashboarduid = "default"
 defaultorgid = "1"
-host = "{{ (icingaweb2_module_grafana__url | split('://'))[1] }}"
-protocol = "{{ (icingaweb2_module_grafana__url | split('://'))[0] }}"
+host = "{{ icingaweb2_module_grafana__url | ansible.builtin.urlsplit('hostname') }}{{ icingaweb2_module_grafana__url | ansible.builtin.urlsplit('path') }}"
+protocol = "{{ icingaweb2_module_grafana__url | ansible.builtin.urlsplit('scheme') }}"
 shadows = "0"
 theme = "{{ icingaweb2_module_grafana__theme }}"
 timerange = "2d"
 timerangeAll = "1w/w"
+ssl_verifypeer = "0"
+ssl_verifyhost = "0"
+dashboardlink = "0"
+{% if icingaweb2_module_grafana__auth_jwt %}
+jwtEnable = "1"
+jwtUser = "grafana-admin"
+jwtIssuer = "{{ icingaweb2_module_grafana__url }}"
+jwtExpires = "30"
+{% endif %}
