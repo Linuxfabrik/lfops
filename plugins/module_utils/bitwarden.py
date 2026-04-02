@@ -29,9 +29,16 @@ from ansible.module_utils.six import string_types
 from ansible.module_utils._text import to_bytes, to_native, to_text
 from ansible.module_utils.urls import (ConnectionError, SSLValidationError,
                                        open_url)
-from ansible.utils.display import Display
-
-display = Display()
+try:
+    from ansible.utils.display import Display
+    display = Display()
+except ImportError:
+    # When used from a module (not a lookup plugin), this code runs inside an AnsiballZ
+    # process on the remote host where ansible.utils.display is not available.
+    class _NoopDisplay:
+        def vvv(self, msg, **kwargs):
+            pass
+    display = _NoopDisplay()
 
 
 def prepare_multipart_no_base64(fields):
