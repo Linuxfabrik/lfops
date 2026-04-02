@@ -53,9 +53,12 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 | -------- | ----------- | ------------- |
 | `graylog_datanode__bind_address` | String. The network interface used by the Graylog DataNode to bind all services. | `'127.0.0.1'` |
 | `graylog_datanode__http_port`    | Number. The port where the DataNode REST api is listening. | `8999` |
+| `graylog_datanode__node_search_cache_size` | Cache size for searchable snaphots. This space will be automatically reserved if `graylog_datanode__path_repo` is configured. See [docs.opensearch.org - Supported Units](https://docs.opensearch.org/latest/api-reference/units/) for a list of possible options. | `10gb` |
 | `graylog_datanode__mongodb_uri`  | String. MongoDB connection string. See https://docs.mongodb.com/manual/reference/connection-string/ for details. | `'mongodb://127.0.0.1/graylog'` |
 | `graylog_datanode__opensearch_data_location` | String. Set this OpenSearch folder if you need OpenSearch to be located in a special place. | `/var/lib/graylog-datanode/opensearch/data` |
 | `graylog_datanode__opensearch_heap` | String. Ensure the heap settings are set to half your system memory, up to a max of 31 GB. | 50% of system memory, e.g. 8g |
+| `graylog_datanode__path_repo` | Filesystem paths where searchable snapshots should be stored. | `[]` |
+| `graylog_datanode__service_enabled` | Enables or disables the opensearch service, analogous to ``systemctl enable/disable --now``. | `true` |
 
 Example:
 ```yaml

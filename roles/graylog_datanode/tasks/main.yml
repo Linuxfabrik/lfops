@@ -1,5 +1,25 @@
 - block:
 
+  - name: 'Validate that graylog_datanode__password_secret length >= 16 characters'
+    ansible.builtin.assert:
+      that:
+        - 'graylog_datanode__password_secret | length >= 16'
+      fail_msg: 'graylog_datanode__password_secret must at least 16 characters'
+      quiet: true
+
+  - name: 'Validate that graylog_datanode__node_search_cache_size follows OpenSearch Bytes format'
+    ansible.builtin.assert:
+      that:
+      -  'graylog_datanode__node_search_cache_size | regex_search("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
+      fail_msg: '"{{ graylog_datanode__node_search_cache_size }}" does not follow OpenSearch Bytes format'
+      quiet: true
+
+  tags:
+    - 'graylog_datanode'
+    - 'graylog_datanode:configure'
+
+- block:
+
   - name: 'Install graylog-datanode'
     ansible.builtin.package:
       name:
@@ -61,6 +81,15 @@
       owner: 'graylog-datanode'
       group: 'graylog-datanode'
       mode: 0o755
+
+  - name: 'mkdir -p {{ item }}; chown graylog-datanode:graylog-datanode {{ item }}'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      owner: 'graylog-datanode'
+      group: 'graylog-datanode'
+      mode: 0o740
+    loop: '{{ graylog_datanode__path_repo }}'
 
   tags:
     - 'graylog_datanode'
