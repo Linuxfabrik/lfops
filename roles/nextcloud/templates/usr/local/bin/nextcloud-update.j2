@@ -67,10 +67,10 @@ else
 fi
 
 echo
-echo 'restart php-fpm.service'
+echo 'restart {{ php__fpm_service_name }}.service'
 echo '-----------------------'
 if ! grep -q "restart_php-fpm_before_done" "${STATE_FILE}"; then
-    systemctl restart php-fpm.service
+    systemctl restart {{ php__fpm_service_name }}.service
     echo "restart_php-fpm_before_done" >> "${STATE_FILE}"
     echo 'done.'
 else
@@ -94,7 +94,7 @@ echo
 echo 'updater.phar --no-upgrade --no-interaction'
 echo '------------------------------------------'
 if ! grep -q "updater_done" "${STATE_FILE}"; then
-    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/updater/updater.phar" --uri="https://github.com/nextcloud-releases/server/releases/download/v33.0.2/{{ nextcloud__version }}.zip"--no-upgrade --no-interaction
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/updater/updater.phar" --url="https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.zip" --no-upgrade --no-interaction
     echo "updater_done" >> "${STATE_FILE}"
 else
     echo 'skipping.'
@@ -135,10 +135,10 @@ fi
 {% endif %}
 
 echo
-echo 'restart php-fpm.service'
+echo 'restart {{ php__fpm_service_name }}.service'
 echo '-----------------------'
 if ! grep -q "restart_php-fpm_after_done" "${STATE_FILE}"; then
-    systemctl restart php-fpm.service
+    systemctl restart {{ php__fpm_service_name }}.service
     echo "restart_php-fpm_after_done" >> "${STATE_FILE}"
     echo 'done.'
 else
