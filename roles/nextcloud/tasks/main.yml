@@ -1,12 +1,30 @@
 - block:
 
-  - name: 'Install bzip2 jq openldap-clients samba-client'
+  - name: 'Load OS-specific variables'
+    ansible.builtin.include_vars:
+      file: '{{ ansible_facts["os_family"] }}.yml'
+
+  tags:
+    - 'always'
+
+- block:
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get PHP version'
+    ansible.builtin.set_fact:
+      php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
+
+  tags:
+    - 'always'
+
+- block:
+
+  - name: 'Install packages'
     ansible.builtin.package:
-      name:
-        - 'bzip2'
-        - 'jq'
-        - 'openldap-clients'
-        - 'samba-client'
+      name: '{{ _nextcloud__packages }}'
       state: 'present'
 
   - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
@@ -26,8 +44,8 @@
       backup: true
       src: 'var/www/html/nextcloud/config/objectstore.config.php.j2'
       dest: '/var/www/html/nextcloud/config/objectstore.config.php'
-      owner: 'apache'
-      group: 'apache'
+      owner: '{{ php__webserver_user }}'
+      group: '{{ php__webserver_group }}'
       mode: 0o644
     when: '(nextcloud__storage_backend_s3["bucket"] is defined and nextcloud__storage_backend_s3["bucket"] | length > 0)
           or (nextcloud__storage_backend_swift["bucket"] is defined and nextcloud__storage_backend_swift["bucket"] | length > 0)'
@@ -35,16 +53,16 @@
   - name: 'chown -R apache:apache /var/www/html/nextcloud'
     ansible.builtin.file:
       path: '/var/www/html/nextcloud'
-      owner: 'apache'
-      group: 'apache'
+      owner: '{{ php__webserver_user }}'
+      group: '{{ php__webserver_group }}'
       recurse: true
 
   - name: 'mkdir path/to/data; chown -R apache:apache path/to/data; chmod 0750 -R path/to/data'
     ansible.builtin.file:
       path: '{{ item }}'
       state: 'directory'
-      owner: 'apache'
-      group: 'apache'
+      owner: '{{ php__webserver_user }}'
+      group: '{{ php__webserver_group }}'
       mode: 0o750
     loop:
       - '/data'
@@ -59,6 +77,7 @@
     ansible.builtin.command: 'restorecon -Fvr /data /var/www/html/nextcloud'
     register: 'nextcloud__restorecon_nextcloud_result'
     changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length > 0'
+    when: 'ansible_facts["os_family"] == "RedHat"'
 
   - name: 'Run the Nextcloud installer'
     # installation hangs without "--admin-user" and "--admin-pass"
@@ -76,7 +95,7 @@
       chdir: '/var/www/html/nextcloud/'
       creates: '/var/www/html/nextcloud/config/config.php'
     become: true
-    become_user: 'apache'
+    become_user: '{{ php__webserver_user }}'
 
   - name: 'Convert some database columns to big int'
     ansible.builtin.command: |
@@ -84,7 +103,7 @@
     args:
       chdir: '/var/www/html/nextcloud/'
     become: true
-    become_user: 'apache'
+    become_user: '{{ php__webserver_user }}'
     register: 'nextcloud__convert_filecache_bigint_result'
     changed_when: '"All tables already up to date" not in nextcloud__convert_filecache_bigint_result["stdout"]'
     # changed_when: there is no easy way to check for changes
@@ -98,7 +117,7 @@
   - name: 'Get Nextcloud config list'
     ansible.builtin.command: 'php /var/www/html/nextcloud/occ --no-interaction --output=json config:list --private'
     become: true
-    become_user: 'apache'
+    become_user: '{{ php__webserver_user }}'
     changed_when: false
     check_mode: false
     register: '__nextcloud__config_list_result'
@@ -111,14 +130,14 @@
       state: '{{ item["state"] | d("present") }}'
       installed_config_json: '{{ __nextcloud__config_list_result["stdout"] | from_json }}'
     become: true
-    become_user: 'apache'
+    become_user: '{{ php__webserver_user }}'
     loop: '{{ nextcloud__sysconfig__combined_var }}'
 
   # do this straight after the installation to get NC up and running
   # otherwise subsequent occ commands might fail
-  - name: 'restart php-fpm'
+  - name: 'restart {{ php__fpm_service_name }}'
     ansible.builtin.service:
-      name: 'php-fpm'
+      name: '{{ php__fpm_service_name }}'
       state: 'restarted'
 
   tags:
@@ -131,7 +150,7 @@
   - name: 'Get Nextcloud app list'
     ansible.builtin.command: 'php /var/www/html/nextcloud/occ --no-interaction --output=json app:list'
     become: true
-    become_user: 'apache'
+    become_user: '{{ php__webserver_user }}'
     changed_when: false
     check_mode: false
     register: '__nextcloud__app_list_result'
@@ -143,13 +162,13 @@
       force: '{{ item["force"] | d(false) }}'
       installed_apps_json: '{{ __nextcloud__app_list_result["stdout"] | from_json }}'
     become: true
-    become_user: 'apache'
+    become_user: '{{ php__webserver_user }}'
     loop: '{{ nextcloud__apps__combined_var }}'
 
   - name: 'Get Nextcloud config list'
     ansible.builtin.command: 'php /var/www/html/nextcloud/occ --no-interaction --output=json config:list --private'
     become: true
-    become_user: 'apache'
+    become_user: '{{ php__webserver_user }}'
     changed_when: false
     check_mode: false
     register: '__nextcloud__config_list_result'
@@ -163,12 +182,12 @@
       state: '{{ item["state"] | d("present") }}'
       installed_config_json: '{{ __nextcloud__config_list_result["stdout"] | from_json }}'
     become: true
-    become_user: 'apache'
+    become_user: '{{ php__webserver_user }}'
     loop: '{{ nextcloud__app_configs__combined_var }}'
 
-  - name: 'restart php-fpm'
+  - name: 'restart {{ php__fpm_service_name }}'
     ansible.builtin.service:
-      name: 'php-fpm'
+      name: '{{ php__fpm_service_name }}'
       state: 'restarted'
 
   when:
@@ -184,6 +203,7 @@
     ansible.builtin.command: 'restorecon -Fvr /var/www/html/nextcloud/apps/notify_push/'
     register: 'nextcloud__restorecon_notify_push_result'
     changed_when: 'nextcloud__restorecon_notify_push_result["stdout"] | length > 0'
+    when: 'ansible_facts["os_family"] == "RedHat"'
 
   - name: 'systemctl restart notify_push.service'
     ansible.builtin.systemd_service:
@@ -196,7 +216,7 @@
     args:
       chdir: '/var/www/html/nextcloud/'
     become: true
-    become_user: 'apache'
+    become_user: '{{ php__webserver_user }}'
 
   when:
     - 'not nextcloud__skip_notify_push'
@@ -221,11 +241,11 @@
 
 - block:
 
-  - name: 'chown -R apache:apache /var/www/html/nextcloud'
+  - name: 'chown -R {{ php__webserver_user }}:{{ php__webserver_group }} /var/www/html/nextcloud'
     ansible.builtin.file:
       path: '/var/www/html/nextcloud'
-      owner: 'apache'
-      group: 'apache'
+      owner: '{{ php__webserver_user }}'
+      group: '{{ php__webserver_group }}'
       recurse: true
 
   tags:
@@ -260,7 +280,7 @@
     args:
       chdir: '/var/www/html/nextcloud/'
     become: true
-    become_user: 'apache'
+    become_user: '{{ php__webserver_user }}'
     # changed_when: there is no easy way to check for changes
 
   - name: 'Deploy /etc/systemd/system/nextcloud-app-update.service'

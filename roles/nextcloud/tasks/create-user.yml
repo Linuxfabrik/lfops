@@ -1,7 +1,7 @@
 - name: 'Create Nextcloud user {{ ncuser["username"] }}'
   ansible.builtin.shell: >-
     export OC_PASS={{ ncuser["password"] | quote }};
-    sudo -E -u apache php occ user:add
+    sudo -E -u {{ php__webserver_user}} php occ user:add
     --password-from-env
     --group {{ ncuser["group"] | d('""') | quote }}
     {{ ncuser["username"] | quote }}
@@ -15,7 +15,7 @@
 
 - name: 'Update Nextcloud settings for user {{ ncuser["username"] }}'
   ansible.builtin.command: |
-    sudo -u apache php occ user:setting {{ ncuser["username"] }} {{ item }}
+    sudo -u {{ php__webserver_user}} php occ user:setting {{ ncuser["username"] }} {{ item }}
   args:
     chdir: '/var/www/html/nextcloud/'
   # changed_when: there is no easy way to check for changes

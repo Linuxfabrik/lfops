@@ -1,9 +1,18 @@
 - block:
 
+  - name: 'Load OS-specific variables'
+    ansible.builtin.include_vars:
+      file: '{{ ansible_facts["os_family"] }}.yml'
+
+  tags:
+    - 'always'
+
+- block:
+
   - name: 'install collabora and dependent packages'
     ansible.builtin.package:
       name:
-        - '{{ collabora__use_code | bool | ternary("CODE-brand", "collabora-online-brand") }}'
+        - '{{ collabora__use_code | bool | ternary(code_package_name, "collabora-online-brand") }}'
         - 'collaboraofficebasis-calc'
         - 'collaboraofficebasis-core'
         - 'collaboraofficebasis-draw'
@@ -71,28 +80,20 @@
 
 - block:
 
-  - name: 'install spell checker'
-    ansible.builtin.package:
-      name:
-        - 'hunspell'
-        - 'mythes'
-      state: 'present'
+    - name: 'install spell checker'
+      ansible.builtin.package:
+        name: '{{ collabora__spell_packages }}'
+        state: 'present'
 
-  - name: 'Combined Language Packages:'
-    ansible.builtin.debug:
-      var: 'collabora__language_packages__combined_var'
+    - name: 'install language packages'
+      ansible.builtin.package:
+        name: '{{ collabora__language_packages__combined_var | selectattr("state", "ne", "absent") | map(attribute="name") | list }}'
+        state: 'present'
 
-  - name: 'install language packages'
-    ansible.builtin.package:
-      name: '{{ (collabora__language_packages__combined_var  | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
-          + (collabora__language_packages__combined_var  | selectattr("state", "undefined") | map(attribute="name")) }}'
-      state: 'present'
-
-  - name: 'remove language packages'
-    ansible.builtin.package:
-      name: '{{ collabora__language_packages__combined_var  | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
-      state: 'absent'
-
+    - name: 'remove language packages'
+      ansible.builtin.package:
+        name: '{{ collabora__language_packages__combined_var | selectattr("state", "eq", "absent") | map(attribute="name") | list }}'
+        state: 'absent'
   tags:
     - 'collabora'
     - 'collabora:spell_check'

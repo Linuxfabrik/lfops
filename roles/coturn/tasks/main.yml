@@ -1,17 +1,26 @@
 - block:
 
+  - name: 'Load OS-specific variables'
+    ansible.builtin.include_vars:
+      file: '{{ ansible_facts["os_family"] }}.yml'
+
+  tags:
+    - 'always'
+
+- block:
+
   - name: 'Install coturn'
     ansible.builtin.package:
       name: 'coturn'
       state: 'present'
 
-  - name: 'Deploy /etc/coturn/turnserver.conf'
+  - name: 'Deploy {{ turn_conf_path }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/coturn/turnserver.conf.j2'
-      dest: '/etc/coturn/turnserver.conf'
+      dest: '{{ turn_conf_path }}'
       owner: 'root'
-      group: 'coturn'
+      group: '{{ coturn_group }}'
       mode: 0o640
     notify: 'coturn: restart coturn'
 

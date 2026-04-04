@@ -1,0 +1,23 @@
+- block:
+
+  - name: 'wget https://collaboraoffice.com/downloads/gpg/collaboraonline-release-keyring.gpg'
+    ansible.builtin.get_url:
+      url: 'https://collaboraoffice.com/downloads/gpg/collaboraonline-release-keyring.gpg'
+      dest: '/etc/apt/keyrings/collaboraonline-release-keyring.gpg'
+      mode: '0644'
+
+  - name: 'deploy /etc/apt/sources.list.d/collaboraonline.sources (mirror: {{ repo_collabora_code__mirror_url | default(default) }})'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/apt/sources.list.d/collaboraonline.sources.j2'
+      dest: '/etc/apt/sources.list.d/collaboraonline.sources'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'apt update'
+    ansible.builtin.apt:
+      update_cache: true
+
+  tags:
+    - 'repo_collabora_code'

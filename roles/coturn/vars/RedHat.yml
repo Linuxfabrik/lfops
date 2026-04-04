@@ -1,0 +1,2 @@
+turn_conf_path: '/etc/coturn/turnserver.conf'
+coturn_group: 'coturn'
