@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2024010301
+# 2026040401
+
+set -euo pipefail
+trap 'rc=$?; echo && echo "ERROR in Row ${LINENO} (Exit: ${rc})" >&2' ERR
 
 output=$(/usr/bin/php /var/www/html/nextcloud/occ ldap:show-remnants)
 if [ -z "$output" ]; then
@@ -8,6 +11,8 @@ if [ -z "$output" ]; then
     exit 0
 fi
 
+{% if not setup_basic__skip_mailto_root %}
 # only send output if there is any
 echo "$output" | /usr/bin/mail -s "$(hostname --short) - Users not available on LDAP anymore, but have remnants in Nextcloud" {{ mailto_root__to | join(' ') }}
 exit 0
+{% endif %}
