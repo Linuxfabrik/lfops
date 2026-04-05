@@ -1,5 +1,8 @@
 - block:
 
+  - name: 'Load vars/{{ ansible_facts["os_family"] }}.yml'
+    ansible.builtin.include_vars: 'vars/{{ ansible_facts["os_family"] }}.yml'
+
   - name: 'install {{ __apache_solr__java_package[apache_solr__version.split(".")[0]] }}'
     ansible.builtin.package:
       name: '{{ __apache_solr__java_package[apache_solr__version.split(".")[0]] }}'
@@ -185,6 +188,8 @@
     register: 'apache_solr__pwhashes'
     when:
       - 'apache_solr__users__combined_var is defined and apache_solr__users__combined_var | length > 0'
+    args:
+      executable: '/bin/env bash'
 
   - name: 'Deploy {{ apache_solr__var_dir }}/security.json'
     ansible.builtin.template:
