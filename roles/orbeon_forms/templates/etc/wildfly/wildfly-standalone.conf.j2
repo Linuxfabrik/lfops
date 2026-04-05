@@ -1,0 +1,27 @@
+# {{ ansible_managed }}
+# 2026040501
+
+# Location of java
+JAVA_HOME={{ wildfly__java_home }}
+
+# Configure the suspend timeout.
+# See https://docs.wildfly.org/32/Admin_Guide.html#graceful-shutdown-from-an-os-signal
+#WILDFLY_SUSPEND_TIMEOUT=300
+
+# Location of the server standard out
+WILDFLY_CONSOLE_LOG="{{ wildfly__home }}/standalone/log/systemd-console.log"
+
+# Define the script to use to start wildfly
+WILDFLY_SH="{{ wildfly__home }}/bin/standalone.sh"
+
+# Define server configuration to start
+WILDFLY_SERVER_CONFIG={{ wildfly__server_config }}
+
+# The address to bind to
+WILDFLY_BIND=0.0.0.0
+
+# Additional server args
+#WILDFLY_OPTS="-Dproperty1=value1 -Dproperty2=value2"
+
+# Enables debug traces
+#WILDFLY_SYSTEMD_DEBUG=true

@@ -1,0 +1,8 @@
+wildfly__home: '/opt/wildfly'
+wildfly__user: 'wildfly'
+wildfly__group: 'wildfly'
+wildfly__packages:
+  - { name: 'default-jre', state: 'present' }
+wildfly__etc: '/etc/wildfly'
+wildfly__java_home: '/usr/lib/jvm/java-21-openjdk-amd64'
+wildfly__management_bind: '0.0.0.0'

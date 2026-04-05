@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+# 2026040501
+
+[Unit]
+Description=eXist-DB Native XML Database
+After=network.target
+
+[Service]
+Environment="JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64"
+Environment="JAVA_OPTS=-Xms256m -Xmx512m"
+User=existdb
+Group=existdb
+ExecStart=/opt/existdb/bin/startup.sh
+ExecStop=/opt/existdb/bin/shutdown.sh -u admin -p ${EXISTDB_ADMIN_PASSWORD}
+TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target

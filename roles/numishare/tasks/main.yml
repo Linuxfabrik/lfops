@@ -1,0 +1,21 @@
+- block:
+
+  - name: 'Clone Numishare'
+    ansible.builtin.git:
+      repo: 'https://github.com/ewg118/numishare.git'
+      dest: '/tmp/numishare'
+      version: 'master'
+      force: false
+
+  - name: 'Deploy Numishare into Orbeon'
+    ansible.builtin.copy:
+      src: '/tmp/numishare/'
+      dest: '/opt/wildfly/standalone/deployments/orbeon.war/WEB-INF/resources/apps/numishare/'
+      owner: 'wildfly'
+      group: 'wildfly'
+      mode: '0755'
+      remote_src: true
+
+  tags:
+    - 'numishare'
+

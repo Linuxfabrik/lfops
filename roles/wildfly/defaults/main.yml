@@ -1,0 +1,7 @@
+wildfly__url: 'https://github.com/wildfly/wildfly/releases/download/39.0.1.Final/wildfly-39.0.1.Final.tar.gz'
+wildfly__bind: '0.0.0.0'
+wildfly__etc: '/etc/wildfly'
+wildfly__management_bind: '127.0.0.1'
+wildfly__admin_user: 'wildfly-admin'
+wildfly__admin_password: 'linuxfabrik'
+wildfly__server_config: 'standalone.xml'

@@ -1,0 +1,240 @@
+- block:
+
+  - name: 'Load vars/{{ ansible_facts["os_family"] }}.yml'
+    ansible.builtin.include_vars: 'vars/{{ ansible_facts["os_family"] }}.yml'
+
+  tags:
+    - 'wildfly'
+    - 'wildfly:debug'
+    - 'wildfly:configure'
+    - 'wildfly:user'
+
+- block:
+
+  - name: 'Debug all wildfly vars'
+    ansible.builtin.debug:
+      msg: '{{ vars | dict2items | selectattr("key", "match", "wildfly.*") | list }}'
+
+  tags:
+    - 'wildfly:debug'
+
+- block:
+
+    - name: 'Install packages'
+      ansible.builtin.package:
+        name: '{{ item.name }}'
+        state: '{{ item.state }}'
+      loop: '{{ wildfly__packages }}'
+
+  tags:
+    - 'wildfly'
+
+
+- block:
+
+  - name: 'Add WildFly System Group: {{ wildfly__group }}'
+    ansible.builtin.group:
+      name: '{{ wildfly__group }}'
+      system: true
+      state: 'present'
+
+  - name: 'Add WildFly System User: {{ wildfly__user }}'
+    ansible.builtin.user:
+      name: '{{ wildfly__user }}'
+      group: '{{ wildfly__group }}'
+      home: '{{ wildfly__home }}'
+      shell: '/sbin/nologin'
+      system: true
+      create_home: false
+      state: 'present'
+
+  - name: 'chown {{ wildfly__home }}'
+    ansible.builtin.file:
+      path: '{{ wildfly__home }}'
+      owner: '{{ wildfly__user }}'
+      group: '{{ wildfly__group }}'
+      recurse: true
+      state: 'directory'
+
+  - name: 'create {{ wildfly__etc }}'
+    ansible.builtin.file:
+      path: '{{ wildfly__etc }}'
+      state: 'directory'
+      owner: 'root'
+      group: '{{ wildfly__group }}'
+      mode: '0755'
+
+  # - name: 'create {{ wildfly__home }}'
+  #   ansible.builtin.file:
+  #     path: '{{ wildfly__home }}'
+  #     state: 'directory'
+  #     owner: '{{ wildfly__user }}'
+  #     group: '{{ wildfly__group }}'
+  #     mode: '0755'
+
+  tags:
+    - 'wildfly'
+
+
+- block:
+
+  - name: 'wget {{ wildfly__url }}'
+    ansible.builtin.get_url:
+      url: '{{ wildfly__url }}'
+      dest: '/tmp/wildfly.tar.gz'
+
+  - name: 'decomrpress /tmp/wildfly.tar.gz'
+    ansible.builtin.unarchive:
+      src: '/tmp/wildfly.tar.gz'
+      dest: '{{ wildfly__home }}'
+      remote_src: true
+      extra_opts: '--strip-components=1'
+
+  - name: 'Fix launch.sh shebang'
+    ansible.builtin.replace:
+      path: '{{ wildfly__home }}/bin/systemd/launch.sh'
+      regexp: '^#!/bin/sh$'
+      replace: '#!/usr/bin/env bash'
+    when: 'ansible_facts["os_family"] == "Debian"'
+
+  - name: 'chown {{ wildfly__home }}'
+    ansible.builtin.file:
+      path: '{{ wildfly__home }}'
+      owner: '{{ wildfly__user }}'
+      group: '{{ wildfly__group }}'
+      recurse: true
+      state: 'directory'
+
+  tags:
+    - 'wildfly'
+
+- block:
+
+  - name: 'Deploy WildFly Standalone Systemd Unit File'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/wildfly-standalone.service.j2'
+      dest: '/etc/systemd/system/wildfly-standalone.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'wildfly: systemctl daemon-reload'
+
+  tags:
+    - 'wildfly'
+
+- block:
+
+  - name: 'Deploy WildFly Standalone Config File'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/wildfly/wildfly-standalone.conf.j2'
+      dest: '/etc/wildfly/wildfly-standalone.conf'
+      owner: 'root'
+      group: '{{ wildfly__group }}'
+      mode: 0o644
+
+  tags:
+    - 'wildfly'
+
+- block:
+
+  - name: 'Set transaction node-identifier'
+    community.general.xml:
+      path: '{{ wildfly__home }}/standalone/configuration/standalone.xml'
+      xpath: '//*[local-name()="core-environment"]'
+      attribute: 'node-identifier'
+      value: '{{ ansible_hostname }}'
+    become: true
+    become_user: '{{ wildfly__user }}'
+
+  - name: 'Set public interface bind address'
+    community.general.xml:
+      path: '{{ wildfly__home }}/standalone/configuration/standalone.xml'
+      xpath: '//*[local-name()="interface"][@name="public"]/*[local-name()="inet-address"]'
+      attribute: 'value'
+      value: '${jboss.bind.address:{{ wildfly__bind }}}'
+    become: true
+    become_user: '{{ wildfly__user }}'
+
+  - name: 'Enable audit logging'
+    community.general.xml:
+      path: '{{ wildfly__home }}/standalone/configuration/standalone.xml'
+      xpath: '//*[local-name()="logger"][@log-boot="true"]'
+      attribute: 'enabled'
+      value: 'true'
+    become: true
+    become_user: '{{ wildfly__user }}'
+
+  - name: 'Remove AJP listener'
+    community.general.xml:
+      path: '{{ wildfly__home }}/standalone/configuration/standalone.xml'
+      xpath: '//*[local-name()="ajp-listener"][@name="ajp"]'
+      state: 'absent'
+    become: true
+    become_user: '{{ wildfly__user }}'
+
+  - name: 'Remove AJP socket-binding'
+    community.general.xml:
+      path: '{{ wildfly__home }}/standalone/configuration/standalone.xml'
+      xpath: '//*[local-name()="socket-binding"][@name="ajp"]'
+      state: 'absent'
+    become: true
+    become_user: '{{ wildfly__user }}'
+
+  - name: 'Remove datasource reference from EE default-bindings'
+    ansible.builtin.replace:
+      path: '{{ wildfly__home }}/standalone/configuration/standalone.xml'
+      regexp: '\s*datasource="java:jboss/datasources/ExampleDS"'
+      replace: ''
+    become: true
+    become_user: '{{ wildfly__user }}'
+
+  - name: 'Remove ExampleDS datasource'
+    community.general.xml:
+      path: '{{ wildfly__home }}/standalone/configuration/standalone.xml'
+      xpath: '//*[local-name()="datasource"][@pool-name="ExampleDS"]'
+      state: 'absent'
+    become: true
+    become_user: '{{ wildfly__user }}'
+
+  - name: 'Remove H2 driver'
+    community.general.xml:
+      path: '{{ wildfly__home }}/standalone/configuration/standalone.xml'
+      xpath: '//*[local-name()="driver"][@name="h2"]'
+      state: 'absent'
+    become: true
+    become_user: '{{ wildfly__user }}'
+
+  - name: 'Remove empty drivers element'
+    community.general.xml:
+      path: '{{ wildfly__home }}/standalone/configuration/standalone.xml'
+      xpath: '//*[local-name()="drivers"]'
+      state: 'absent'
+    become: true
+    become_user: '{{ wildfly__user }}'
+
+  - name: 'Set management interface bind address'
+    community.general.xml:
+      path: '{{ wildfly__home }}/standalone/configuration/standalone.xml'
+      xpath: '//*[local-name()="interface"][@name="management"]/*[local-name()="inet-address"]'
+      attribute: 'value'
+      value: '${jboss.bind.address.management:{{ wildfly__management_bind }}}'
+    become: true
+    become_user: '{{ wildfly__user }}'
+
+  tags:
+    - 'wildfly:conf'
+
+
+- block:
+
+  - name: 'Add WildFly management user'
+    ansible.builtin.command:
+      cmd: '/opt/wildfly/bin/add-user.sh -u {{ wildfly__admin_user }} -p {{ wildfly__admin_password }} -s'
+    become: true
+    become_user: '{{ wildfly__user }}'
+    no_log: true
+
+  tags:
+    - 'wildfly:user'

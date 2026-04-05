@@ -1,0 +1,27 @@
+- name: 'Playbook linuxfabrik.lfops.setup_numishare'
+  hosts:
+    - 'lfops_setup_numishare'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.existdb'
+    - role: 'linuxfabrik.lfops.apache_solr'
+    - role: 'linuxfabrik.lfops.wildfly'
+    - role: 'linuxfabrik.lfops.orbeon_forms'
+    - role: 'linuxfabrik.lfops.numishare'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

@@ -1,0 +1,45 @@
+- block:
+
+  - name: 'Install required packages'
+    ansible.builtin.package:
+      name:
+        - 'unzip'
+      state: 'present'
+
+  - name: 'wget {{ orbeon_forms__url }}'
+    ansible.builtin.get_url:
+      url: '{{ orbeon_forms__url }}'
+      dest: '/tmp/orbeon_forms.zip'
+
+  - name: 'decompress /tmp/orbeon_forms.zip'
+    ansible.builtin.unarchive:
+      src: '/tmp/orbeon_forms.zip'
+      dest: '/tmp'
+      remote_src: true
+      include:
+        - '*/orbeon.war'
+
+  - name: 'Create exploded deployment directory'
+    ansible.builtin.file:
+      path: '/opt/wildfly/standalone/deployments/orbeon.war'
+      state: 'directory'
+      owner: 'wildfly'
+      group: 'wildfly'
+      mode: '0755'
+
+  - name: 'Extract orbeon.war as exploded deployment'
+    ansible.builtin.unarchive:
+      src: '/tmp/orbeon-2025.1.202512310433-CE/orbeon.war'
+      dest: '/opt/wildfly/standalone/deployments/orbeon.war'
+      remote_src: true
+
+  - name: 'Create deployment marker'
+    ansible.builtin.file:
+      path: '/opt/wildfly/standalone/deployments/orbeon.war.dodeploy'
+      state: 'touch'
+      owner: 'wildfly'
+      group: 'wildfly'
+
+  tags:
+    - 'orbeon_forms'
+

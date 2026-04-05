@@ -1,0 +1,6 @@
+wildfly__home: '/opt/wildfly'
+wildfly__user: 'wildfly'
+wildfly__group: 'wildfly'
+wildfly__packages:
+  - { name: 'default-jre', state: 'present' }
+wildfly__etc: '/etc/wildfly'

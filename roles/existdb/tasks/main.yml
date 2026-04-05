@@ -1,0 +1,93 @@
+- block:
+
+  - name: 'Install bzip2'
+    ansible.builtin.package:
+      name: 'bzip2'
+      state: 'present'
+
+  - name: 'Add eXist-DB system group'
+    ansible.builtin.group:
+      name: 'existdb'
+      system: true
+      state: 'present'
+
+  - name: 'Add eXist-DB system user'
+    ansible.builtin.user:
+      name: 'existdb'
+      group: 'existdb'
+      home: '/opt/existdb'
+      shell: '/sbin/nologin'
+      system: true
+      create_home: false
+      state: 'present'
+
+  - name: 'Create /opt/existdb'
+    ansible.builtin.file:
+      path: '/opt/existdb'
+      state: 'directory'
+      owner: 'existdb'
+      group: 'existdb'
+      mode: '0755'
+
+  - name: 'Download eXist-DB'
+    ansible.builtin.get_url:
+      url: 'https://github.com/eXist-db/exist/releases/download/eXist-6.4.1/exist-distribution-6.4.1-unix.tar.bz2'
+      dest: '/tmp/existdb.tar.bz2'
+
+  - name: 'Extract eXist-DB'
+    ansible.builtin.unarchive:
+      src: '/tmp/existdb.tar.bz2'
+      dest: '/opt/existdb'
+      remote_src: true
+      extra_opts: '--strip-components=1'
+      creates: '/opt/existdb/bin/startup.sh'
+
+  - name: 'chown /opt/existdb'
+    ansible.builtin.file:
+      path: '/opt/existdb'
+      owner: 'existdb'
+      group: 'existdb'
+      recurse: true
+      state: 'directory'
+
+
+
+  tags:
+    - 'existdb'
+
+- block:
+
+  - name: 'Set eXist-DB HTTP port'
+    community.general.xml:
+      path: '/opt/existdb/etc/jetty/jetty-http.xml'
+      xpath: '//*[contains(@name,"jetty.http.port")]/*[local-name()="Default"]/*[local-name()="SystemProperty"]'
+      attribute: 'default'
+      value: '8181'
+    become: true
+    become_user: 'existdb'
+
+  - name: 'Deploy eXist-DB systemd unit'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/existdb.service.j2'
+      dest: '/etc/systemd/system/existdb.service'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    notify: 'existdb: systemctl daemon-reload'
+
+  tags:
+    - 'existdb:deploy'
+
+
+- block:
+
+  - name: 'Set eXist-DB admin password (from empty)'
+    ansible.builtin.command:
+      cmd: '/opt/existdb/bin/client.sh -ouri=xmldb:exist://localhost:8181/exist/xmlrpc -u admin -P "" -x "sm:passwd(''admin'', ''{{ existdb__admin_password }}'')"'
+    become: true
+    become_user: 'existdb'
+    no_log: true
+    failed_when: false
+
+  tags:
+    - 'existdb:user'

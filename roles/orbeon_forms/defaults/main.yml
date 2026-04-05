@@ -1,0 +1,7 @@
+orbeon_forms__url: 'https://github.com/orbeon/orbeon-forms/releases/download/tag-release-2025.1-ce/orbeon-2025.1.202512310433-CE.zip'
+orbeon_forms__bind: '0.0.0.0'
+orbeon_forms__etc: '/etc/orbeon_forms'
+orbeon_forms__management_bind: '127.0.0.1'
+orbeon_forms__admin_user: 'orbeon_forms-admin'
+orbeon_forms__admin_password: 'linuxfabrik'
+orbeon_forms__server_config: 'standalone.xml'
