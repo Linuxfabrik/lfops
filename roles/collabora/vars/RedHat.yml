@@ -3,13 +3,26 @@ collabora__spell_packages:
   - 'hunspell'
   - 'mythes'
 collabora__language_packages__role_var:
+  # de
   - { name: 'collaboraoffice-dict-de', state: 'present' }
   - { name: 'collaboraofficebasis-de', state: 'present' }
   - { name: 'mythes-de', state: 'present' }
-  - { name: 'hunspell-de-de', state: 'present' }
+  - { name: 'hunspell-de', state: 'present' }
+  # en
   - { name: 'collaboraoffice-dict-en', state: 'present' }
-  - { name: 'collaboraofficebasis-en-gb', state: 'present' }
-  - { name: 'collaboraofficebasis-en-us', state: 'present' }
-  - { name: 'mythes-en-us', state: 'present' }
-  - { name: 'hunspell-en-gb', state: 'present' }
-  - { name: 'hunspell-en-us', state: 'present' }
+  - { name: 'collaboraofficebasis-en-GB', state: 'present' }
+  - { name: 'collaboraofficebasis-en-US', state: 'present' }
+  - { name: 'mythes-en', state: 'present' }
+  - { name: 'hunspell-en', state: 'present' }
+  - { name: 'hunspell-en-GB', state: 'present' }
+  - { name: 'hunspell-en-US', state: 'present' }
+  # fr
+  - { name: 'collaboraoffice-dict-fr', state: 'present' }
+  - { name: 'collaboraofficebasis-fr', state: 'present' }
+  - { name: 'mythes-fr', state: 'present' }
+  - { name: 'hunspell-fr', state: 'present' }
+  # it
+  - { name: 'collaboraoffice-dict-it', state: 'present' }
+  - { name: 'collaboraofficebasis-it', state: 'present' }
+  - { name: 'mythes-it', state: 'present' }
+  - { name: 'hunspell-it', state: 'present' }
