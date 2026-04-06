@@ -10,7 +10,8 @@
         - 'always'
     - ansible.builtin.include_vars:
         file: '{{ playbook_dir }}/../roles/nextcloud/vars/{{ ansible_facts["os_family"] }}.yml'
-      tags: 'always'
+      tags:
+        - 'always'
 
 
   roles:

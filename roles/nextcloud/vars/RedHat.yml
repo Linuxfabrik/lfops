@@ -1,11 +1,4 @@
-php__webserver_group: 'apache'
-php__webserver_user: 'apache'
-_nextcloud__packages:
-  - 'bzip2'
-  - 'jq'
-  - 'openldap-clients'
-  - 'samba-client'
-php__fpm_service_name: 'php-fpm'
+nextcloud__php__fpm_service_name: '{{ php__fpm_service_name }}'
 nextcloud__php__modules__dependent_var:
   - { name: 'php-bcmath', state: 'present' }
   - { name: 'php-gd', state: 'present' }
@@ -24,3 +17,10 @@ nextcloud__php__modules__dependent_var:
   - { name: 'php-redis', state: 'present' }
   - { name: 'php-smbclient', state: 'present' }
   - { name: 'php-zip', state: 'present' }
+nextcloud__php__webserver_group: '{{ php__webserver_user }}'
+nextcloud__php__webserver_user: '{{ php__webserver_user }}'
+nextcloud__system_packages:
+  - 'bzip2'
+  - 'jq'
+  - 'openldap-clients'
+  - 'samba-client'

@@ -7,6 +7,7 @@
   tags:
     - 'always'
 
+
 - block:
 
   - name: 'Get the list of installed packages'
@@ -20,11 +21,12 @@
   tags:
     - 'always'
 
+
 - block:
 
   - name: 'Install packages'
     ansible.builtin.package:
-      name: '{{ _nextcloud__packages }}'
+      name: '{{ nextcloud__system_packages }}'
       state: 'present'
 
   - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
