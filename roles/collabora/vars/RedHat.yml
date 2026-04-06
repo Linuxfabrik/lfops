@@ -1,7 +1,4 @@
-code_package_name: 'CODE-brand'
-collabora__spell_packages:
-  - 'hunspell'
-  - 'mythes'
+collabora__code_package_name: 'CODE-brand'
 collabora__language_packages__role_var:
   # de
   - { name: 'collaboraoffice-dict-de', state: 'present' }
@@ -26,3 +23,6 @@ collabora__language_packages__role_var:
   - { name: 'collaboraofficebasis-it', state: 'present' }
   - { name: 'mythes-it', state: 'present' }
   - { name: 'hunspell-it', state: 'present' }
+collabora__spell_packages:
+  - 'hunspell'
+  - 'mythes'

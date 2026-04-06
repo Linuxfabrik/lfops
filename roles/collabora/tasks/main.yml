@@ -12,7 +12,7 @@
   - name: 'install collabora and dependent packages'
     ansible.builtin.package:
       name:
-        - '{{ collabora__use_code | bool | ternary(code_package_name, "collabora-online-brand") }}'
+        - '{{ collabora__use_code | bool | ternary(collabora__code_package_name, "collabora-online-brand") }}'
         - 'collaboraofficebasis-calc'
         - 'collaboraofficebasis-core'
         - 'collaboraofficebasis-draw'
