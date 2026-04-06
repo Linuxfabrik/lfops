@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026040401
+# 2026040601
 
 set -euo pipefail
 trap 'rc=$?; echo && echo "ERROR in Row ${LINENO} (Exit: ${rc})" >&2' ERR
 
-WEBSERVER_USER="{{ php__webserver_user  }}"
-WEBSERVER_GROUP="{{ php__webserver_group  }}"
+WEBSERVER_USER="{{ nextcloud__php__webserver_user  }}"
+WEBSERVER_GROUP="{{ nextcloud__php__webserver_group  }}"
 
 NC_DIR="/var/www/html/nextcloud"
 DATA_DIR=$(sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" config:system:get datadirectory)
