@@ -72,24 +72,13 @@ jobs:
           ansible-galaxy collection build
           cp --verbose linuxfabrik-lfops-${{ env.TAG1 }}.tar.gz linuxfabrik-lfops.tar.gz
 
-      - name: 'Publish to Galaxy (Prod)'
-        if: "${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}"
+      - name: 'Publish to Galaxy'
         env:
           ANSIBLE_GALAXY_TOKEN: '${{ secrets.GALAXY_API_KEY_PROD }}'
         run: |
           ansible-galaxy collection publish \
             linuxfabrik-lfops-${{ env.TAG1 }}.tar.gz \
             --server https://galaxy.ansible.com \
-            --api-key "$ANSIBLE_GALAXY_TOKEN"
-
-      - name: 'Publish to Galaxy (Dev)'
-        if: "${{ github.event_name == 'workflow_dispatch' }}"
-        env:
-          ANSIBLE_GALAXY_TOKEN: '${{ secrets.GALAXY_API_KEY_DEV }}'
-        run: |
-          ansible-galaxy collection publish \
-            linuxfabrik-lfops-${{ env.TAG1 }}.tar.gz \
-            --server https://galaxy-dev.ansible.com \
             --api-key "$ANSIBLE_GALAXY_TOKEN"
 
       - name: 'Build Execution Environment'
