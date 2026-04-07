@@ -10,7 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-tbd
+### Changed
+
+* **COMPATIBILITY**: Add missing `crypto_policy` RHEL 10 entry
+* **COMPATIBILITY**: Remove Debian 11 and Ubuntu 20.04 columns (EOL)
 
 
 ## [v6.0.1] - 2026-04-07
