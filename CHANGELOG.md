@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+tbd
+
+
+## [v6.0.0] - 2026-04-07
+
 ### Breaking Changes
 
 * **role:nfs_server**: Rework `nfs_server__exports` from a list of strings to a list of dictionaries with new `path`, `clients`, `owner`, `group`, and `mode` subkeys
@@ -692,7 +697,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **module_util:gnupg**: Add new module util
 
 
-[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v5.1.0...HEAD
+[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v6.0.0...HEAD
+[v6.0.0]: https://github.com/Linuxfabrik/lfops/compare/v5.1.0...v6.0.0
 [v5.1.0]: https://github.com/Linuxfabrik/lfops/compare/v5.0.0...v5.1.0
 [v5.0.0]: https://github.com/Linuxfabrik/lfops/compare/v4.0.0...v5.0.0
 [v4.0.0]: https://github.com/Linuxfabrik/lfops/compare/v3.0.0...v4.0.0
