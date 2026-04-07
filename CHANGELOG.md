@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **CONTRIBUTING**: Document semantic parameter ordering for Ansible modules
+* **playbooks**: Add `example.yml` and `setup_example.yml` playbooks as development references
 * **role:example**: Add complete example role with defaults, handlers, tasks, templates, and vars as a reference for consistent role development
 * **role:icingaweb2_module_grafana**: Add JWT support
 * **role:grafana**: Add JWT support

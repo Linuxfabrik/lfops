@@ -1,0 +1,27 @@
+- name: 'Playbook linuxfabrik.lfops.example'
+  hosts:
+    - 'lfops_example'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_example'
+      when:
+        - 'not example__skip_repo_example | d(false)'
+
+    - role: 'linuxfabrik.lfops.example'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

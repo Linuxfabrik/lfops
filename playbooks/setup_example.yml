@@ -1,0 +1,83 @@
+# Setup playbook for an application with complex dependencies (webserver, database, etc.).
+# Playbooks with such dependencies are prefixed by "setup_".
+#
+# skip_role and skip_injections variables:
+# - setup_example__<role>__skip_role: skips the role entirely
+# - setup_example__<role>__skip_injections: skips only the dependent_var injections
+#   (defaults to the value of skip_role if not set)
+
+- name: 'Playbook linuxfabrik.lfops.setup_example'
+  hosts:
+    - 'lfops_setup_example'
+
+  vars:
+
+    setup_example__mariadb_server__skip_injections__internal_var: '{{ setup_example__mariadb_server__skip_injections | d(setup_example__mariadb_server__skip_role__internal_var) }}'
+    setup_example__mariadb_server__skip_role__internal_var: '{{ setup_example__mariadb_server__skip_role | d(false) }}'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    # === Repositories ===
+    - role: 'linuxfabrik.lfops.repo_baseos'
+      repo_baseos__crb_repo_enabled__dependent_var: '{{
+          repo_epel__repo_baseos__crb_repo_enabled__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_example__skip_repo_baseos | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_example__skip_repo_epel | d(false)'
+
+    # === SELinux ===
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_example__skip_policycoreutils | d(false)'
+
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var: '{{
+          example__selinux__booleans__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_example__skip_selinux | d(false)'
+
+    # === Web server ===
+    - role: 'linuxfabrik.lfops.apache_httpd'
+      apache_httpd__mods__dependent_var: '{{ example__apache_httpd__mods__dependent_var | d([]) }}'
+      apache_httpd__vhosts__dependent_var: '{{ example__apache_httpd__vhosts__dependent_var | d([]) }}'
+      when:
+        - 'not setup_example__skip_apache_httpd | d(false)'
+
+    # === Database ===
+    - role: 'linuxfabrik.lfops.mariadb_server'
+      mariadb_server__databases__dependent_var: '{{
+          (not setup_example__mariadb_server__skip_injections__internal_var) | ternary(example__mariadb_server__databases__dependent_var, [])
+        }}'
+      mariadb_server__users__dependent_var: '{{
+          (not setup_example__mariadb_server__skip_injections__internal_var) | ternary(example__mariadb_server__users__dependent_var, [])
+        }}'
+      when:
+        - 'not setup_example__mariadb_server__skip_role__internal_var'
+
+    # === Application ===
+    - role: 'linuxfabrik.lfops.example'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'
