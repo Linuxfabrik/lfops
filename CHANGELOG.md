@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+tbd
+
+
+## [v6.0.1] - 2026-04-07
+
 ### Fixed
 
 * **ci**: Strip badges from README.md before publishing to Galaxy, as external images are not rendered
@@ -699,7 +704,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **module_util:gnupg**: Add new module util
 
 
-[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v6.0.0...HEAD
+[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v6.0.1...HEAD
+[v6.0.1]: https://github.com/Linuxfabrik/lfops/compare/v6.0.0...v6.0.1
 [v6.0.0]: https://github.com/Linuxfabrik/lfops/compare/v5.1.0...v6.0.0
 [v5.1.0]: https://github.com/Linuxfabrik/lfops/compare/v5.0.0...v5.1.0
 [v5.0.0]: https://github.com/Linuxfabrik/lfops/compare/v4.0.0...v5.0.0
