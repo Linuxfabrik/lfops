@@ -78,6 +78,12 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 * Type: String.
 * Default: `'mongodb://127.0.0.1/graylog'`
 
+`graylog_datanode__node_search_cache_size`
+
+* Cache size for searchable snaphots. This space will be automatically reserved if `graylog_datanode__path_repo` is configured. See [docs.opensearch.org - Supported Units](https://docs.opensearch.org/latest/api-reference/units/) for a list of possible options. 
+* Type: String
+* Default: `10gb`
+
 `graylog_datanode__opensearch_data_location`
 
 * Set this OpenSearch folder if you need OpenSearch to be located in a special place.
@@ -95,6 +101,11 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 * Filesystem paths where searchable snapshots should be stored
 * Type: List of Strings
 * Default: `[]`
+
+`graylog_datanode__raw`
+* Multiline string. Raw content which will be appended to the `datanode.conf` config file.
+* Type: String
+* Default: unset
 
 `graylog_datanode__service_enabled`
 
