@@ -67,6 +67,10 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install ansible-builder
 
+      - name: 'Strip badges from README.md (not rendered correctly on Galaxy)'
+        run: |
+          sed --in-place '/<div align="center" id="badges">/,/<\/div>/d' README.md
+
       - name: 'Build Collection'
         run: |
           ansible-galaxy collection build

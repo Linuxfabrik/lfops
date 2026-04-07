@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-tbd
+### Fixed
+
+* **ci**: Strip badges from README.md before publishing to Galaxy, as external images are not rendered
 
 
 ## [v6.0.0] - 2026-04-07

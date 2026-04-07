@@ -6,7 +6,7 @@
   <span>&#8226;</span>
   <b>made by <a href="https://linuxfabrik.ch/">Linuxfabrik</a></b>
 </p>
-<div align="center">
+<div align="center" id="badges"> <!-- Do not change this line. It is used by .github/workflows/lf-build.yml to strip badges before publishing to Galaxy. -->
 
 ![GitHub Stars](https://img.shields.io/github/stars/linuxfabrik/lfops)
 ![License](https://img.shields.io/github/license/linuxfabrik/lfops)
