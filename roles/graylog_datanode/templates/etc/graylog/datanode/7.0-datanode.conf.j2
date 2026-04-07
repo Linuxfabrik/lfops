@@ -168,3 +168,8 @@ opensearch_heap = {{ graylog_datanode__opensearch_heap }}
 
 node_search_cache_size = {{ graylog_datanode__node_search_cache_size }}
 path_repo = {{ graylog_datanode__path_repo | join(',') }}
+
+{% if graylog_datanode__raw is defined and graylog_datanode__raw | length %}
+#### Raw ####
+{{ graylog_datanode__raw }}
+{% endif %}
