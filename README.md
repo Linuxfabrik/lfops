@@ -408,13 +408,6 @@ See `ansible-doc -t lookup linuxfabrik.lfops.bitwarden_item` for all options.
 
 Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfabrik.github.io/lfops/). It is automatically built and deployed on every push to `main`.
 
-* **Ansible Roles**: Each role has its own README file in [`roles/<role_name>/`](roles/).
-* **Ansible Plugins**: Available through `ansible-doc`. For example: `ansible-doc linuxfabrik.lfops.gpg_key`.
-* **Changelog**: [CHANGELOG.md](CHANGELOG.md)
-* **Compatibility**: [COMPATIBILITY.md](COMPATIBILITY.md)
-* **Contributing**: [CONTRIBUTING.rst](CONTRIBUTING.rst)
-* **Issue Tracker**: [GitHub Issues](https://github.com/Linuxfabrik/lfops/issues)
-
 
 ## Compatibility
 
