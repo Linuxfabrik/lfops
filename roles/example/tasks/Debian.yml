@@ -1,0 +1,10 @@
+- block:
+
+  - name: 'Install Debian-specific dependencies'
+    ansible.builtin.package:
+      name:
+        - 'libexample-dev'
+      state: 'present'
+
+  tags:
+    - 'example'

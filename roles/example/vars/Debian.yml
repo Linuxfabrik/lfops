@@ -1,0 +1,5 @@
+example__required_packages:
+  - 'example-server'
+  - 'example-tools'
+
+example__conf_path: '/etc/example/example.conf'

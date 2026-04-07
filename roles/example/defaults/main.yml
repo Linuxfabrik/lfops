@@ -1,0 +1,45 @@
+# --- scalar injection pattern ---
+# priority: host > group > dependent > role
+
+example__service_enabled: true
+example__service_state: 'started'
+
+example__conf_log_level__dependent_var: ''
+example__conf_log_level__group_var: ''
+example__conf_log_level__host_var: ''
+example__conf_log_level__role_var: 'info'
+example__conf_log_level__combined_var: '{{
+    example__conf_log_level__host_var if (example__conf_log_level__host_var | string | length) else
+    example__conf_log_level__group_var if (example__conf_log_level__group_var | string | length) else
+    example__conf_log_level__dependent_var if (example__conf_log_level__dependent_var | string | length) else
+    example__conf_log_level__role_var
+  }}'
+
+example__conf_max_connections__dependent_var: ''
+example__conf_max_connections__group_var: ''
+example__conf_max_connections__host_var: ''
+example__conf_max_connections__role_var: 100
+example__conf_max_connections__combined_var: '{{
+    example__conf_max_connections__host_var if (example__conf_max_connections__host_var | string | length) else
+    example__conf_max_connections__group_var if (example__conf_max_connections__group_var | string | length) else
+    example__conf_max_connections__dependent_var if (example__conf_max_connections__dependent_var | string | length) else
+    example__conf_max_connections__role_var
+  }}'
+
+example__logrotate: '{{ logrotate__rotate | d(14) }}'
+
+
+# --- list of dicts injection pattern ---
+# combined using linuxfabrik.lfops.combine_lod
+
+example__users__dependent_var: []
+example__users__group_var: []
+example__users__host_var: []
+example__users__role_var: []
+example__users__combined_var: '{{ (
+      example__users__role_var +
+      example__users__dependent_var +
+      example__users__group_var +
+      example__users__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'

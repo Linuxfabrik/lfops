@@ -1,73 +1,119 @@
 # Ansible Role linuxfabrik.lfops.example
 
-This role configures something using [example](https://example.com/). Currently, this role Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+This role installs and configures [Example](https://example.com/). Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+This role also serves as a reference for consistent role development across LFOps. All `ansible.builtin.*` modules used in `tasks/main.yml` are documented alphabetically with their most common parameters.
 
 
 ## Mandatory Requirements
 
-* Enable the [example repository](https://example.com/). This can be done using the [linuxfabrik.lfops.repo_example](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_example) role.
-* Install EXAMPLE. This can be done using the [linuxfabrik.lfops.example](https://github.com/Linuxfabrik/lfops/tree/main/roles/example) role.
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-
-**Attention**
-
-> Make sure that this condition is met.
+* Enable the example repository. This can be done using the [linuxfabrik.lfops.repo_example](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_example) role.
 
 If you use the [Example Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/example.yml), this is automatically done for you.
 
 
-## Optional Requirements
-
-* Step 1
-* Step 2
-
-
 ## Tags
 
-| Tag                   | What it does                                 |
-| ---                   | ------------                                 |
-| `example`             | * step 1<br> * step 2                        |
-| `example:configure`   | * step 1<br> * step 2                        |
-| `example:script`      | * step 1<br> * step 2                        |
-| `example:state`       | * step 1<br> * step 2                        |
+`example`
 
+* Installs required packages.
+* Creates the example system user and group.
+* Deploys the configuration files.
+* Ensures the example service is in the desired state.
+* Triggers: example.service restart.
 
-## Post-Installation Steps
+`example:configure`
 
-After setting up a single node or cluster, generate the initial password for the `example` user:
+* Deploys configuration files.
+* Runs database migrations if needed.
+* Triggers: example.service restart.
 
-```bash
-/usr/share/elasticsearch/bin/elasticsearch-reset-password --username example
-```
+`example:state`
+
+* Manages the service state (start, stop, enable, disable).
+* Waits for the service to become available.
+* Triggers: none.
+
+`example:user`
+
+* Manages the example system user and application users.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `example__var1` | List/Dict/String/Number/Bool. Description. |
+`example__version`
+
+* The version of example to install.
+* Type: String.
 
 Example:
 ```yaml
 # mandatory
-example__var1: 'value'
+example__version: '3.2.1'
 ```
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `example__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
-| `example__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
-| `example__service_state`| String. Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<ul><li>`reloaded`</li><li>`restarted`</li><li>`started`</li><li>`stopped`</li></ul> | `'started'` |
-| `example__var2` | List/Dict/String/Number/Bool. Description. | `'default'` |
-| `example__var3` | List of dictionaries. Description. Subkeys:<ul><li>`name`: Mandatory, string. The package name.</li><li>`state`: Mandatory, string. State of the package, one of `present`, `absent`.</li></ul> | `[]` |
+`example__conf_log_level__host_var` / `example__conf_log_level__group_var`
+
+* The log level.
+* Type: String. One of `debug`, `info`, `warn`, `error`.
+* Default: `'info'`
+
+`example__conf_max_connections__host_var` / `example__conf_max_connections__group_var`
+
+* Maximum number of concurrent connections.
+* Type: Number.
+* Default: `100`
+
+`example__logrotate`
+
+* Log files are rotated `count` days before being removed. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space).
+* Type: Number.
+* Default: `{{ logrotate__rotate | d(14) }}`
+
+`example__service_enabled`
+
+* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`example__service_state`
+
+* Changes the state of the service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'`
+
+`example__users__host_var` / `example__users__group_var`
+
+* Application users to manage.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+    * `name`: Mandatory, string. Username.
+    * `comment`: Optional, string. User description.
+    * `group`: Optional, string. Primary group.
+    * `home`: Optional, string. Home directory.
+    * `shell`: Optional, string. Login shell.
+    * `state`: Optional, string. `present` or `absent`. Defaults to `'present'`.
 
 Example:
 ```yaml
 # optional
-example__var2: 'value'
+example__conf_log_level__host_var: 'debug'
+example__conf_max_connections__host_var: 200
+example__logrotate: 7
+example__service_enabled: true
+example__service_state: 'started'
+example__users__host_var:
+  - name: 'app-user'
+    comment: 'Application User'
+    group: 'example'
+    shell: '/bin/bash'
+  - name: 'old-user'
+    state: 'absent'
 ```
 
 

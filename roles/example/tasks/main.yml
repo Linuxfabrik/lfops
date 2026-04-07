@@ -1,0 +1,432 @@
+# This is the example role for linuxfabrik.lfops.
+# It demonstrates the correct and consistent usage of the most common Ansible
+# modules across LFOps, sorted alphabetically.
+#
+# Anti-patterns (do NOT use these, use the alternative instead):
+# - ansible.builtin.apt / ansible.builtin.dnf -> ansible.builtin.package
+# - ansible.builtin.copy -> ansible.builtin.template
+# - ansible.builtin.shell -> ansible.builtin.command
+# - ansible.builtin.systemd -> ansible.builtin.service
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ __task_file }}'
+  when: '__task_file | length > 0'
+  vars:
+    __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
+    __first_found_options:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+      skip: true
+  tags:
+    - 'always'
+
+- block:
+
+  - name: 'Check mandatory variables'
+    ansible.builtin.assert:
+      that:
+        - 'example__conf_log_level__combined_var is defined'
+        - 'example__conf_log_level__combined_var | length'
+      quiet: true
+      fail_msg: 'Please define "example__conf_log_level".'
+
+  tags:
+    - 'example'
+    - 'example:configure'
+
+- block:
+
+  # use ansible.builtin.command instead of ansible.builtin.shell wherever possible.
+  # always provide changed_when or creates/removes for idempotency.
+
+  - name: 'example --init'
+    ansible.builtin.command: 'example --init'
+    args:
+      creates: '/var/lib/example/initialized'
+
+  - name: 'example --check-config'
+    ansible.builtin.command: 'example --check-config'
+    register: 'example__check_config_result'
+    changed_when: false # read-only command, never changes anything
+    check_mode: false # also run in check mode
+
+  # for multi-parameter commands, use the >- folded scalar style
+  - name: 'example --setup'
+    ansible.builtin.command: >-
+      example --setup
+        --log-level '{{ example__conf_log_level__combined_var }}'
+        --max-connections {{ example__conf_max_connections__combined_var }}
+    register: 'example__setup_result'
+    changed_when: '"already configured" not in example__setup_result["stdout"]'
+    failed_when: 'example__setup_result["rc"] != 0 and "already configured" not in example__setup_result["stdout"]'
+
+  tags:
+    - 'example'
+    - 'example:configure'
+
+- block:
+
+  - name: 'Combined Users:'
+    ansible.builtin.debug:
+      var: 'example__users__combined_var'
+
+  tags:
+    - 'example'
+    - 'example:user'
+
+- block:
+
+  - name: 'Fail if unsupported OS'
+    ansible.builtin.fail:
+      msg: 'This role is not supported on {{ ansible_facts["distribution"] }} {{ ansible_facts["distribution_major_version"] }}.'
+    when:
+      - 'ansible_facts["os_family"] not in ["Debian", "RedHat"]'
+
+  tags:
+    - 'example'
+
+- block:
+
+  # create directory
+  - name: 'mkdir -p /etc/example'
+    ansible.builtin.file:
+      path: '/etc/example'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # create symlink
+  - name: 'ln -s /etc/example/example.conf /etc/example/current.conf'
+    ansible.builtin.file:
+      src: '/etc/example/example.conf'
+      path: '/etc/example/current.conf'
+      state: 'link'
+
+  # set permissions
+  - name: 'chmod 0600 /etc/example/secrets.conf'
+    ansible.builtin.file:
+      path: '/etc/example/secrets.conf'
+      owner: 'example'
+      group: 'example'
+      mode: 0o600
+
+  # remove file
+  - name: 'rm -f /etc/example/deprecated.conf'
+    ansible.builtin.file:
+      path: '/etc/example/deprecated.conf'
+      state: 'absent'
+
+  tags:
+    - 'example'
+    - 'example:configure'
+
+- block:
+
+  - name: 'curl --output /tmp/example-{{ example__version }}.tar.gz https://example.com/releases/example-{{ example__version }}.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://example.com/releases/example-{{ example__version }}.tar.gz'
+      dest: '/tmp/example-{{ example__version }}.tar.gz'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'example'
+
+- block:
+
+  - name: 'groupadd example'
+    ansible.builtin.group:
+      name: 'example'
+      state: 'present'
+      system: true
+
+  tags:
+    - 'example'
+    - 'example:user'
+
+- block:
+
+  # use import_role when the included tasks should inherit the surrounding tags.
+  # this is the standard way to load platform-specific variables (see top of this file).
+  # another common use: include shared tasks from the 'shared' role.
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+    loop:
+      - '/etc/example/example.conf'
+
+  tags:
+    - 'example'
+    - 'example:configure'
+
+- block:
+
+  # simple: add a line to a file, creating it if necessary
+  - name: 'Add example to /etc/example/allowed-users'
+    ansible.builtin.lineinfile:
+      path: '/etc/example/allowed-users'
+      line: 'example'
+      state: 'present'
+      create: true
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  # with regexp: idempotent line replacement (most common real-world use)
+  - name: 'Set log_level in /etc/example/example.conf'
+    ansible.builtin.lineinfile:
+      path: '/etc/example/example.conf'
+      regexp: '^log_level(\s+|\s*=\s*).*$'
+      line: 'log_level = {{ example__conf_log_level__combined_var }}'
+      state: 'present'
+
+  tags:
+    - 'example'
+    - 'example:configure'
+
+- block:
+
+  # use flush_handlers when subsequent tasks depend on the handler having run.
+  - name: 'Flush handlers so that the service can be used by other roles later'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'example'
+    - 'example:configure'
+
+- block:
+
+  # always use ansible.builtin.package instead of ansible.builtin.apt or ansible.builtin.dnf.
+  # always use state: 'present', not 'latest'.
+
+  - name: 'Install required packages'
+    ansible.builtin.package:
+      name: '{{ example__required_packages }}'
+      state: 'present'
+
+  # for user-defined package lists with state support, use the selectattr pattern
+  - name: 'Ensure absent packages are removed'
+    ansible.builtin.package:
+      name: '{{ example__users__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
+      state: 'absent'
+
+  - name: 'Ensure present packages are installed'
+    ansible.builtin.package:
+      name: '{{ (example__users__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+          + (example__users__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
+      state: 'present'
+
+  tags:
+    - 'example'
+
+- block:
+
+  - name: 'Gather package facts'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false
+
+  tags:
+    - 'example'
+
+- block:
+
+  # always use ansible.builtin.service instead of ansible.builtin.systemd.
+
+  - name: 'systemctl {{ example__service_enabled | bool | ternary("enable", "disable") }} --now example.service'
+    ansible.builtin.service:
+      name: 'example.service'
+      enabled: '{{ example__service_enabled }}'
+      state: '{{ example__service_state }}'
+
+  tags:
+    - 'example'
+    - 'example:state'
+
+- block:
+
+  - name: 'Set installed version fact'
+    ansible.builtin.set_fact:
+      example__installed_version: '{{ ansible_facts["packages"]["example-server"][0]["version"] }}'
+    when:
+      - '"example-server" in ansible_facts["packages"]'
+
+  tags:
+    - 'example'
+
+- block:
+
+  # use stat to check before performing an action
+  - name: 'stat /etc/example/example.conf'
+    ansible.builtin.stat:
+      path: '/etc/example/example.conf'
+    register: 'example__conf_stat_result'
+
+  - name: 'example --migrate'
+    ansible.builtin.command: 'example --migrate'
+    when:
+      - 'example__conf_stat_result["stat"]["exists"]'
+    # changed_when: there is no easy way to check for changes
+
+  tags:
+    - 'example'
+    - 'example:configure'
+
+- block:
+
+  # always use ansible.builtin.template instead of ansible.builtin.copy.
+  # always set: backup, src (relative, mirroring dest path), dest, owner, group, mode.
+
+  - name: 'Deploy /etc/example/example.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/example/example.conf.j2'
+      dest: '/etc/example/example.conf'
+      owner: 'example'
+      group: 'example'
+      mode: 0o644
+    notify: 'example: validate config; restart example'
+
+  # os-specific template selection using first_found
+  - name: 'Deploy /etc/example/platform.conf'
+    ansible.builtin.template:
+      backup: true
+      src: '{{ lookup("ansible.builtin.first_found", __template_file) }}'
+      dest: '/etc/example/platform.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    vars:
+      __template_file:
+        files:
+          - 'etc/example/{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}-platform.conf.j2'
+          - 'etc/example/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-platform.conf.j2'
+        paths:
+          - '{{ role_path }}/templates'
+
+  tags:
+    - 'example'
+    - 'example:configure'
+
+- block:
+
+  - name: 'tar xzf /tmp/example-{{ example__version }}.tar.gz -C /opt/example'
+    ansible.builtin.unarchive:
+      src: '/tmp/example-{{ example__version }}.tar.gz'
+      dest: '/opt/example'
+      remote_src: true
+      owner: 'example'
+      group: 'example'
+      creates: '/opt/example/bin/example'
+
+  tags:
+    - 'example'
+
+- block:
+
+  # GET request with response validation
+  - name: 'curl http://localhost:8080/api/health'
+    ansible.builtin.uri:
+      url: 'http://localhost:8080/api/health'
+      method: 'GET'
+      return_content: true
+      status_code: 200
+    register: 'example__api_health_result'
+    changed_when: false
+    check_mode: false
+
+  - name: 'Fail if API health check failed'
+    ansible.builtin.fail:
+      msg: 'API is not healthy: {{ example__api_health_result["content"] }}'
+    when:
+      - '"healthy" not in example__api_health_result["content"]'
+
+  # POST request with JSON body, authentication, and headers
+  - name: 'Create service account via REST API'
+    ansible.builtin.uri:
+      url: '{{ example__api_url }}/api/serviceaccounts'
+      user: '{{ example__admin_login["username"] }}'
+      password: '{{ example__admin_login["password"] }}'
+      force_basic_auth: true
+      validate_certs: true
+      method: 'POST'
+      body: >
+        {
+          "name": "{{ item["name"] }}",
+          "role": "{{ item["role"] | d("viewer") }}"
+        }
+      body_format: 'json'
+      headers:
+        Accept: 'application/json'
+      status_code: 201
+    register: 'example__create_account_result'
+    loop: '{{ example__users__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'example'
+    - 'example:configure'
+
+- block:
+
+  - name: 'useradd example'
+    ansible.builtin.user:
+      name: 'example'
+      comment: 'Example Service'
+      group: 'example'
+      home: '/var/lib/example'
+      shell: '/sbin/nologin'
+      system: true
+      state: 'present'
+
+  # loop with state-based filtering and loop_control label
+  - name: 'Manage users'
+    ansible.builtin.user:
+      name: '{{ item["name"] }}'
+      comment: '{{ item["comment"] | d(omit) }}'
+      group: '{{ item["group"] | d(omit) }}'
+      home: '{{ item["home"] | d(omit) }}'
+      shell: '{{ item["shell"] | d(omit) }}'
+      state: '{{ item["state"] | d("present") }}'
+    loop: '{{ example__users__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'example'
+    - 'example:user'
+
+- block:
+
+  - name: 'Wait for port 8080 to become available'
+    ansible.builtin.wait_for:
+      port: 8080
+      host: '127.0.0.1'
+      delay: 5
+      timeout: 30
+      state: 'started'
+
+  tags:
+    - 'example'
+    - 'example:state'

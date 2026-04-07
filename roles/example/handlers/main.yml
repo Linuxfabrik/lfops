@@ -1,0 +1,16 @@
+# handler names are prefixed with the role name to avoid collisions with other roles.
+# use chained handlers (notify) when a validation step should precede the actual action.
+
+- name: 'example: validate config; restart example'
+  ansible.builtin.command: 'example --validate-config'
+  notify: 'example: restart example'
+
+- name: 'example: restart example'
+  ansible.builtin.service:
+    name: 'example'
+    state: 'restarted'
+
+- name: 'example: reload example'
+  ansible.builtin.service:
+    name: 'example'
+    state: 'reloaded'

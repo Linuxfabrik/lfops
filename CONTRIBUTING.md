@@ -327,6 +327,30 @@ See also:
 
 * Always use `state: 'present'` for the `ansible.builtin.package` module - we are installing, not updating.
 * Always use the FQCN of the module.
+* Order module parameters semantically, not alphabetically. The general order is: first identify the target, then describe the action, then set ownership and permissions. For example:
+
+    ```yaml
+    # ansible.builtin.file
+    - name: 'mkdir -p /etc/example'
+      ansible.builtin.file:
+        path: '/etc/example'        # 1. what (the target)
+        state: 'directory'          # 2. what to do
+        owner: 'root'              # 3. who owns it
+        group: 'root'
+        mode: 0o755                # 4. permissions
+
+    # ansible.builtin.template
+    - name: 'Deploy /etc/example/example.conf'
+      ansible.builtin.template:
+        backup: true               # 1. safety first
+        src: 'etc/example/example.conf.j2'  # 2. source
+        dest: '/etc/example/example.conf'   # 3. target
+        owner: 'root'              # 4. who owns it
+        group: 'root'
+        mode: 0o644                # 5. permissions
+    ```
+
+    This is an exception to the general "sort alphabetically" rule, as alphabetical ordering would obscure what the task operates on.
 * `ansible.builtin.uri` module: if consuming a RESTful API, check if it is returning the required content:
 
     ```yaml

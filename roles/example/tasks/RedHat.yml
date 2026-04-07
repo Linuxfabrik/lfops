@@ -1,0 +1,9 @@
+- block:
+
+  - name: 'Import the example RPM GPG key'
+    ansible.builtin.rpm_key:
+      key: 'https://example.com/rpm-gpg-key'
+      state: 'present'
+
+  tags:
+    - 'example'
