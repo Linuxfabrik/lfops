@@ -30,6 +30,7 @@ tbd
 
 ### Added
 
+* Add MkDocs-based documentation site, deployed automatically to GitHub Pages via `tools/build-docs` and a GitHub Actions workflow
 * **CONTRIBUTING**: Document semantic parameter ordering for Ansible modules
 * **playbooks**: Add `example.yml` and `setup_example.yml` playbooks as development references
 * **role:example**: Add complete example role with defaults, handlers, tasks, templates, and vars as a reference for consistent role development

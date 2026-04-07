@@ -8,3 +8,15 @@ playbooks/test.yml
 roles/test
 context/
 particle/.vagrant
+
+# mkdocs documentation
+/docs/CHANGELOG.md
+/docs/CODE_OF_CONDUCT.md
+/docs/compatibility.md
+/docs/contributing.md
+/docs/playbooks.md
+/docs/roles/
+/docs/security.md
+/docs/stigs.md
+/mkdocs.yml
+/site
