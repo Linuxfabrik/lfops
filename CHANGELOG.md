@@ -10,10 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-* **ci**: Publish pre-releases directly to prod Ansible Galaxy instead of galaxy-dev, since it is unreliable and pulp-ansible excludes pre-release versions from "latest"
-
 ### Breaking Changes
 
 * **role:nfs_server**: Rework `nfs_server__exports` from a list of strings to a list of dictionaries with new `path`, `clients`, `owner`, `group`, and `mode` subkeys
@@ -70,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **ci**: Publish pre-releases directly to prod Ansible Galaxy instead of galaxy-dev, since it is unreliable and pulp-ansible excludes pre-release versions from "latest"
 * Update pre-commit hooks to latest versions
 * Unify CONTRIBUTING and convert from reStructuredText to Markdown
 * **roles**: Add `backup: true` to all `ansible.builtin.template` tasks to ensure config file backups before overwriting
