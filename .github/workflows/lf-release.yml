@@ -16,10 +16,10 @@ jobs:
 
     steps:
 
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+      - name: 'Harden the runner (Audit all outbound calls)'
+        uses: 'step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594' # v2.16.0
         with:
-          egress-policy: audit
+          egress-policy: 'audit'
 
       - name: 'Create GitHub Release for ${{ github.ref_name }}'
         uses: 'softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe' # v2.6.1

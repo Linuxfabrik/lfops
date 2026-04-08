@@ -14,10 +14,10 @@ jobs:
       contents: 'write'
       pull-requests: 'write'
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+      - name: 'Harden the runner (Audit all outbound calls)'
+        uses: 'step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594' # v2.16.0
         with:
-          egress-policy: audit
+          egress-policy: 'audit'
 
       - name: 'Checkout repository'
         uses: 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd' # v6.0.2
@@ -28,7 +28,7 @@ jobs:
           python-version: '3.12'
 
       - name: 'Install pre-commit'
-        run: 'pip install --require-hashes --requirement /dev/stdin <<< "pre-commit==4.5.1 --hash=sha256:3b3afd891e97337708c1674210f8eba659b52a38ea5f822ff142d10786221f77"'
+        run: 'pip install --require-hashes --requirement pre-commit-requirements.txt'
 
       - name: 'Run pre-commit autoupdate'
         run: 'pre-commit autoupdate'

@@ -27,10 +27,10 @@ jobs:
 
     steps:
 
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+      - name: 'Harden the runner (Audit all outbound calls)'
+        uses: 'step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594' # v2.16.0
         with:
-          egress-policy: audit
+          egress-policy: 'audit'
 
       - name: 'git clone https://github.com/Linuxfabrik/lfops'
         uses: 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd' # v6.0.2
@@ -71,7 +71,7 @@ jobs:
       - name: 'Install Ansible Builder'
         run: |
           python3 -m pip install --upgrade pip
-          pip install --require-hashes --requirement /dev/stdin <<< "ansible-builder==3.1.1 --hash=sha256:a8246022edb92ca27ea95e87c7af30bcb2752f108dcc75fbf96e77196dff1072"
+          pip install --require-hashes --requirement build-requirements.txt
 
       - name: 'Strip badges from README.md (not rendered correctly on Galaxy)'
         run: |

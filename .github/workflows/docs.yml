@@ -18,10 +18,10 @@ jobs:
   build:
     runs-on: 'ubuntu-latest'
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+      - name: 'Harden the runner (Audit all outbound calls)'
+        uses: 'step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594' # v2.16.0
         with:
-          egress-policy: audit
+          egress-policy: 'audit'
 
       - name: 'Checkout repository'
         uses: 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd' # v6.0.2
@@ -32,9 +32,7 @@ jobs:
           python-version: '3.12'
 
       - name: 'Install dependencies'
-        run: |
-          pip install --require-hashes --requirement /dev/stdin <<< "mkdocs==1.6.1 --hash=sha256:db91759624d1647f3f34aa0c3f327dd2601beae39a366d6e064c03468d35c20e"
-          pip install --require-hashes --requirement /dev/stdin <<< "mkdocs-material==9.7.6 --hash=sha256:71b84353921b8ea1ba84fe11c50912cc512da8fe0881038fcc9a0761c0e635ba"
+        run: 'pip install --require-hashes --requirement docs-requirements.txt'
 
       - name: 'Generate docs structure'
         run: 'python3 tools/build-docs'
@@ -54,10 +52,10 @@ jobs:
       name: 'github-pages'
       url: '${{ steps.deployment.outputs.page_url }}'
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+      - name: 'Harden the runner (Audit all outbound calls)'
+        uses: 'step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594' # v2.16.0
         with:
-          egress-policy: audit
+          egress-policy: 'audit'
 
       - name: 'Deploy to GitHub Pages'
         id: 'deployment'
