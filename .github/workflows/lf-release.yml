@@ -6,12 +6,13 @@ on:
       - 'v*'
 
 # modify the default permissions granted to the GITHUB_TOKEN
-permissions:
-  contents: 'write' # to push to the repo and create the release
+permissions: 'read-all'
 
 jobs:
   release:
     runs-on: 'ubuntu-latest'
+    permissions:
+      contents: 'write' # to push to the repo and create the release
 
     steps:
 
