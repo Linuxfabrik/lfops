@@ -17,19 +17,26 @@ If you use the [Setup Icinga2 Master Playbook](https://github.com/Linuxfabrik/lf
 
 ## Tags
 
-| Tag                      | What it does                                       | Reload / Restart |
-| ---                      | ------------                                       | ---------------- |
-| `icingaweb2_module_x509` | Installs and configures the IcingaWeb2 x509 Module | - |
+`icingaweb2_module_x509`
+
+* Installs and configures the IcingaWeb2 x509 Module.
+* Triggers: icingaweb2_module_x509: systemctl daemon-reload.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `icingaweb2_module_x509__database_login` | The user account for accessing the x509 SQL database. Currently, only MySQL is supported. |
-| `icingaweb2_module_x509__version` | The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-x509/releases |
+`icingaweb2_module_x509__database_login`
+
+* The user account for accessing the x509 SQL database. Currently, only MySQL is supported.
+* Type: Dictionary.
+
+`icingaweb2_module_x509__version`
+
+* The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-x509/releases.
+* Type: String.
 
 Example:
+
 ```yaml
 # mandatory
 icingaweb2_module_x509__database_login:
@@ -41,14 +48,32 @@ icingaweb2_module_x509__version: 'v1.3.2'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icingaweb2_module_x509__database_host` | The host of the SQL database server. | `'localhost'` |
-| `icingaweb2_module_x509__database_name` | The name of the x509 SQL database. | `'icinga_x509'` |
-| `icingaweb2_module_x509__service_enabled` | Enables or disables the x509 service, analogous to `systemctl enable/disable --now`. | `true` on the primary Icinga2 Master |
-| `icingaweb2_module_x509__url` | The URL from which to download the IcingaWeb2 x509 Module. | `https://github.com/Icinga/icingaweb2-module-x509/archive/{{ icingaweb2_module_x509__version }}.tar.gz` |
+`icingaweb2_module_x509__database_host`
+
+* The host of the SQL database server.
+* Type: String.
+* Default: `'localhost'`
+
+`icingaweb2_module_x509__database_name`
+
+* The name of the x509 SQL database.
+* Type: String.
+* Default: `'icinga_x509'`
+
+`icingaweb2_module_x509__service_enabled`
+
+* Enables or disables the x509 service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`icingaweb2_module_x509__url`
+
+* The URL from which to download the IcingaWeb2 x509 Module.
+* Type: String.
+* Default: `'https://github.com/Icinga/icingaweb2-module-x509/archive/{{ icingaweb2_module_x509__version }}.tar.gz'`
 
 Example:
+
 ```yaml
 # optional
 icingaweb2_module_x509__database_host: 'localhost'

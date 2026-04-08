@@ -2,7 +2,7 @@
 
 This role installs and enables the [IcingaWeb2 Incubator Module](https://github.com/Icinga/icingaweb2-module-incubator).
 
-This role is tested with the following IcingaWeb2 Grafana Module versions:
+This role is tested with the following IcingaWeb2 Incubator Module versions:
 
 * 0.17.0
 * 0.20.0
@@ -15,18 +15,21 @@ This role is tested with the following IcingaWeb2 Grafana Module versions:
 
 ## Tags
 
-| Tag                           | What it does                                         | Reload / Restart |
-| ---                           | ------------                                         | ---------------- |
-| `icingaweb2_module_incubator` | Installs and enables the IcingaWeb2 Incubator Module | - |
+`icingaweb2_module_incubator`
+
+* Installs and enables the IcingaWeb2 Incubator Module.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                               | Description                                                                                                      |
-| --------                               | -----------                                                                                                      |
-| `icingaweb2_module_incubator__version` | The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-incubator/releases. |
+`icingaweb2_module_incubator__version`
+
+* The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-incubator/releases.
+* Type: String.
 
 Example:
+
 ```yaml
 # mandatory
 icingaweb2_module_incubator__version: 'v0.16.1'

@@ -5,18 +5,36 @@ This role installs [haveged](https://github.com/jirka-h/haveged).
 
 ## Tags
 
-| Tag       | What it does     | Reload / Restart |
-| ---       | ------------     | ---------------- |
-| `haveged` | Installs haveged | - |
-| `haveged:state` | Manages the state of the systemd service | - |
+`haveged`
+
+* Installs haveged.
+* Triggers: none.
+
+`haveged:state`
+
+* Manages the state of the systemd service.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `haveged__service_enabled`| Enables or disables the service, analogous to `systemctl enable/disable`. | `true` |
-| `haveged__service_state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options: <ul><li>`started`</li><li>`stopped`</li><li>`restarted`</li><li>`reloaded`</li></ul> | `'started'` |
+`haveged__service_enabled`
+
+* Enables or disables the service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`haveged__service_state`
+
+* Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:
+
+    * `started`
+    * `stopped`
+    * `restarted`
+    * `reloaded`
+
+* Type: String.
+* Default: `'started'`
 
 Example:
 ```yaml

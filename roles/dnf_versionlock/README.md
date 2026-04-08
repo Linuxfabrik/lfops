@@ -9,16 +9,18 @@ Hints:
 
 ## Tags
 
-| Tag               | What it does                            | Reload / Restart |
-| ---               | ------------                            | ---------------- |
-| `dnf_versionlock` | Installs and configures dnf versionlock | - |
+`dnf_versionlock`
+
+* Installs and configures dnf versionlock.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `dnf_versionlock__versionlocks` | List of versionlock (<package-name-spec>) entries. Have a look at `man yum-versionlock` for RHEL7 or [dnf versionlock](https://dnf-plugins-core.readthedocs.io/en/latest/versionlock.html) for RHEL8. |
+`dnf_versionlock__versionlocks`
+
+* List of versionlock (<package-name-spec>) entries. Have a look at `man yum-versionlock` for RHEL7 or [dnf versionlock](https://dnf-plugins-core.readthedocs.io/en/latest/versionlock.html) for RHEL8.
+* Type: List of strings.
 
 Example:
 ```yaml

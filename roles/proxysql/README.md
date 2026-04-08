@@ -5,19 +5,33 @@ This role installs and configures [ProxySQL](https://proxysql.com/). Note that r
 
 ## Tags
 
-| Tag                  | What it does                             | Reload / Restart |
-| ---                  | ------------                             | ---------------- |
-| `proxysql`           | Installs and configures ProxySQL         | Restarts proxysql-initial.service |
-| `proxysql:configure` | Manages the config file                  | Restarts proxysql-initial.service |
-| `proxysql:state`     | Manages the state of the systemd service | - |
+`proxysql`
+
+* Installs and configures ProxySQL.
+* Triggers: proxysql-initial.service restart.
+
+`proxysql:configure`
+
+* Manages the config file.
+* Triggers: proxysql-initial.service restart.
+
+`proxysql:state`
+
+* Manages the state of the systemd service.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `proxysql__admin_users` | The ProxySQL account for administrating ProxySQL. |
-| `proxysql__monitor_users` | The MariaDB account for monitoring the backend SQL nodes. The user has to exist in MariaDB and have `USAGE, REPLICATION CLIENT,REPLICA MONITOR` privileges. |
+`proxysql__admin_users`
+
+* The ProxySQL account for administrating ProxySQL.
+* Type: List of dictionaries.
+
+`proxysql__monitor_users`
+
+* The MariaDB account for monitoring the backend SQL nodes. The user has to exist in MariaDB and have `USAGE, REPLICATION CLIENT,REPLICA MONITOR` privileges.
+* Type: Dictionary.
 
 Example:
 ```yaml
@@ -33,16 +47,217 @@ proxysql__monitor_user:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `proxysql__cluster_user` | Account used internally for communication in ProxySQL clusters. | unset |
-| `proxysql__mysql_galera_hostgroups__host_var` / <br> `proxysql__mysql_galera_hostgroups__group_var` | List of dictionaries defining the hostgroups for the use with Galera. Subkeys: <ul><li>`*_hostgroup`: Mandatory, int. ID of the respective hostgroup.</li><li>`max_writers`: Optional, int. Maximum number of nodes that should be allowed in the `writer_hostgroup`, nodes in excess of this value will be put into the `backup_writer_hostgroup`. Defaults to `1`.</li><li>`writer_is_also_reader`: Optional, int. Determines if a node should be added to the `reader_hostgroup` as well as the `writer_hostgroup`. Value of `2` signals that only the nodes in `backup_writer_hostgroup` are also in `reader_hostgroup`, excluding the node(s) in the `writer_hostgroup`. Defaults to `0`.</li><li>`max_transactions_behind`: Optional, int. Maximum number of writesets behind the cluster that ProxySQL should allow before shunning the node to prevent stale reads. Defaults to `0`.</li><li>`state`: Optional, string. State, either `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `proxysql__mysql_query_rules__host_var` / <br> `proxysql__mysql_query_rules__group_var` | List of dictionaries determining the routing of queries to the backends. Subkeys: <ul><li>`rule_id`: Mandatory, int. Unique ID of the rule. Rules are processed in `rule_id` order.</li><li>`match_pattern`: Mandatory, string. Regular expression that matches the query text.</li><li>`destination_hostgroup`: Mandatory, int. ID of the hostgroup to which the query gets routed.</li><li>`active`: Optional, boolean. State of the rule.</li><li>`apply`: Optional, boolean. When set to `true` no further queries will be evaluated after this rule is matched and processed.</li><li>`state`: Optional, string. State, either `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `proxysql__mysql_replication_hostgroups__host_var` / <br> `proxysql__mysql_replication_hostgroups__group_var` | List of dictionaries defining the hostgroups for the use with MariaDB/MySQL replication. Subkeys: <ul><li>`*_hostgroup`: Mandatory, int. ID of the respective hostgroup.</li><li>`state`: Optional, string. State, either `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `proxysql__mysql_servers__host_var` / <br> `proxysql__mysql_servers__group_var` | List of dictionaries defining the backend MariaDB/MySQL servers. Subkeys: <ul><li>`address`: Mandatory, string. Address.</li><li>`port`: Optional, int. Port. Defaults to `3306`.</li><li>`use_ssl`: Optional, boolean. Determines if SSL is used for the connection to the backend. Defaults to `false`.</li><li>`weight`: Optional, int. Determines the priority of the backend. Defaults to `1`.</li><li>`max_replication_lag`: Optional, int. If greater than 0, ProxySQL will regularly monitor replication lag and if it goes beyond the configured threshold it will temporary shun the host until replication catches up. Defaults to `0`.</li><li>`state`: Optional, string. State, either `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `proxysql__mysql_users__host_var` / <br> `proxysql__mysql_users__group_var` | List of dictionaries defining the MariaDB/MySQL users. They have to already exist in the DB. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Optional, int. Port. Defaults to `3306`.</li><li>`use_ssl`: Optional, boolean. Determines if SSL is used for the connection to the backend. Defaults to `false`.</li><li>`default_hostgroup`: Optional, int. If there is no matching rule for the queries sent by this user, the traffic it generates is sent to the specified hostgroup. Defaults to `0`.</li><li>`state`: Optional, string. State, either `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `proxysql__proxysql_servers__host_var` / <br> `proxysql__proxysql_servers__group_var` | List of dictionaries defining the ProxySQL inside a cluster. Subkeys: <ul><li>`hostnaem`: Mandatory, string. Hostname / Address.</li><li>`port`: Optional, int. Port. Defaults to `6032`.</li><li>`state`: Optional, string. State, either `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `proxysql__service_enabled` | Enables or disables the ProxySQL service, analogous to `systemctl enable/disable --now`. | `true` |
+`proxysql__cluster_user`
+
+* Account used internally for communication in ProxySQL clusters.
+* Type: Dictionary.
+* Default: unset
+
+`proxysql__mysql_galera_hostgroups__host_var` / `proxysql__mysql_galera_hostgroups__group_var`
+
+* List of dictionaries defining the hostgroups for the use with Galera.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `*_hostgroup`:
+
+        * Mandatory. ID of the respective hostgroup.
+        * Type: Number.
+
+    * `max_writers`:
+
+        * Optional. Maximum number of nodes that should be allowed in the `writer_hostgroup`, nodes in excess of this value will be put into the `backup_writer_hostgroup`.
+        * Type: Number.
+        * Default: `1`
+
+    * `writer_is_also_reader`:
+
+        * Optional. Determines if a node should be added to the `reader_hostgroup` as well as the `writer_hostgroup`. Value of `2` signals that only the nodes in `backup_writer_hostgroup` are also in `reader_hostgroup`, excluding the node(s) in the `writer_hostgroup`.
+        * Type: Number.
+        * Default: `0`
+
+    * `max_transactions_behind`:
+
+        * Optional. Maximum number of writesets behind the cluster that ProxySQL should allow before shunning the node to prevent stale reads.
+        * Type: Number.
+        * Default: `0`
+
+    * `state`:
+
+        * Optional. State, either `present` or `absent`.
+        * Type: String.
+        * Default: `present`
+
+`proxysql__mysql_query_rules__host_var` / `proxysql__mysql_query_rules__group_var`
+
+* List of dictionaries determining the routing of queries to the backends.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `rule_id`:
+
+        * Mandatory. Unique ID of the rule. Rules are processed in `rule_id` order.
+        * Type: Number.
+
+    * `match_pattern`:
+
+        * Mandatory. Regular expression that matches the query text.
+        * Type: String.
+
+    * `destination_hostgroup`:
+
+        * Mandatory. ID of the hostgroup to which the query gets routed.
+        * Type: Number.
+
+    * `active`:
+
+        * Optional. State of the rule.
+        * Type: Bool.
+
+    * `apply`:
+
+        * Optional. When set to `true` no further queries will be evaluated after this rule is matched and processed.
+        * Type: Bool.
+
+    * `state`:
+
+        * Optional. State, either `present` or `absent`.
+        * Type: String.
+        * Default: `present`
+
+`proxysql__mysql_replication_hostgroups__host_var` / `proxysql__mysql_replication_hostgroups__group_var`
+
+* List of dictionaries defining the hostgroups for the use with MariaDB/MySQL replication.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `*_hostgroup`:
+
+        * Mandatory. ID of the respective hostgroup.
+        * Type: Number.
+
+    * `state`:
+
+        * Optional. State, either `present` or `absent`.
+        * Type: String.
+        * Default: `present`
+
+`proxysql__mysql_servers__host_var` / `proxysql__mysql_servers__group_var`
+
+* List of dictionaries defining the backend MariaDB/MySQL servers.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `address`:
+
+        * Mandatory. Address.
+        * Type: String.
+
+    * `port`:
+
+        * Optional. Port.
+        * Type: Number.
+        * Default: `3306`
+
+    * `use_ssl`:
+
+        * Optional. Determines if SSL is used for the connection to the backend.
+        * Type: Bool.
+        * Default: `false`
+
+    * `weight`:
+
+        * Optional. Determines the priority of the backend.
+        * Type: Number.
+        * Default: `1`
+
+    * `max_replication_lag`:
+
+        * Optional. If greater than 0, ProxySQL will regularly monitor replication lag and if it goes beyond the configured threshold it will temporary shun the host until replication catches up.
+        * Type: Number.
+        * Default: `0`
+
+    * `state`:
+
+        * Optional. State, either `present` or `absent`.
+        * Type: String.
+        * Default: `present`
+
+`proxysql__mysql_users__host_var` / `proxysql__mysql_users__group_var`
+
+* List of dictionaries defining the MariaDB/MySQL users. They have to already exist in the DB.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Optional. Port.
+        * Type: Number.
+        * Default: `3306`
+
+    * `use_ssl`:
+
+        * Optional. Determines if SSL is used for the connection to the backend.
+        * Type: Bool.
+        * Default: `false`
+
+    * `default_hostgroup`:
+
+        * Optional. If there is no matching rule for the queries sent by this user, the traffic it generates is sent to the specified hostgroup.
+        * Type: Number.
+        * Default: `0`
+
+    * `state`:
+
+        * Optional. State, either `present` or `absent`.
+        * Type: String.
+        * Default: `present`
+
+`proxysql__proxysql_servers__host_var` / `proxysql__proxysql_servers__group_var`
+
+* List of dictionaries defining the ProxySQL inside a cluster.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `hostnaem`:
+
+        * Mandatory. Hostname / Address.
+        * Type: String.
+
+    * `port`:
+
+        * Optional. Port.
+        * Type: Number.
+        * Default: `6032`
+
+    * `state`:
+
+        * Optional. State, either `present` or `absent`.
+        * Type: String.
+        * Default: `present`
+
+`proxysql__service_enabled`
+
+* Enables or disables the ProxySQL service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
 
 Example:
 ```yaml

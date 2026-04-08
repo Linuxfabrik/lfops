@@ -127,13 +127,30 @@ If you use the [Apache Tomcat Playbook](https://github.com/Linuxfabrik/lfops/blo
 
 ## Tags
 
-| Tag                       | What it does                                   | Reload / Restart |
-| ---                       | ------------                                   | ---------------- |
-| `apache_tomcat`           | Install tomcat and optional default web apps, configure Tomcat (`server.xml` and others), configure logrotating, configure access to optional web apps, create users and roles, and enable or disable the default Tomcat service. | Restarts tomcat.service |
-| `apache_tomcat:configure` | Configure Tomcat (`server.xml` and others), configure logrotating. | Restarts tomcat.service |
-| `apache_tomcat:webapps`   | Configure access to optional web apps. | Restarts tomcat.service |
-| `apache_tomcat:users`     | Create users and roles. | Restarts tomcat.service |
-| `apache_tomcat:state`     | Enable/disable the default Tomcat service. | - |
+`apache_tomcat`
+
+* Install tomcat and optional default web apps, configure Tomcat (`server.xml` and others), configure logrotating, configure access to optional web apps, create users and roles, and enable or disable the default Tomcat service.
+* Triggers: tomcat.service restart.
+
+`apache_tomcat:configure`
+
+* Configure Tomcat (`server.xml` and others), configure logrotating.
+* Triggers: tomcat.service restart.
+
+`apache_tomcat:webapps`
+
+* Configure access to optional web apps.
+* Triggers: tomcat.service restart.
+
+`apache_tomcat:users`
+
+* Create users and roles.
+* Triggers: tomcat.service restart.
+
+`apache_tomcat:state`
+
+* Enable/disable the default Tomcat service.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
@@ -149,11 +166,41 @@ Note that for Tomcat 7 onwards, the roles required to use the manager applicatio
 
 The GUI is protected against CSRF, but the text and JMX interfaces are not. To maintain CSRF protection, users with the `manager-gui` role should not be given the `manager-script` or `manager-jmx` roles.
 
-| Variable | Description |
-| -------- | ----------- |
-| `apache_tomcat__webapps_docs_context_xml_allow` | String. A regex that describes which IP addresses are allowed to access the documentation webapp. |
-| `apache_tomcat__webapps_manager_context_xml_allow` | String. A regex that describes which IP addresses are allowed to access the [manager and host-manager](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html) webapps. |
-| `apache_tomcat__users__host_var` / <br> `apache_tomcat__users__group_var`  | List of dictionaries. Users allowed to access the Manager Web GUI. Subkeys: <ul><li>`password`: Mandatory, string.</li><li>`roles`: Mandatory, list. Any of `admin`, `admin-gui`, `admin-script`, `manager`, `manager-gui`, `manager-script`, `manager-jmx`, `manager-status` </li><li>`state`: Optional, string. Either `present` or `absent`.</li><li>`username`: Mandatory, string.</li></ul> |
+`apache_tomcat__webapps_docs_context_xml_allow`
+
+* A regex that describes which IP addresses are allowed to access the documentation webapp.
+* Type: String.
+
+`apache_tomcat__webapps_manager_context_xml_allow`
+
+* A regex that describes which IP addresses are allowed to access the [manager and host-manager](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html) webapps.
+* Type: String.
+
+`apache_tomcat__users__host_var` / `apache_tomcat__users__group_var`
+
+* Users allowed to access the Manager Web GUI.
+* Type: List of dictionaries.
+* Subkeys:
+
+    * `password`:
+
+        * Mandatory.
+        * Type: String.
+
+    * `roles`:
+
+        * Mandatory. Any of `admin`, `admin-gui`, `admin-script`, `manager`, `manager-gui`, `manager-script`, `manager-jmx`, `manager-status`.
+        * Type: List.
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`.
+        * Type: String.
+
+    * `username`:
+
+        * Mandatory.
+        * Type: String.
 
 Example:
 ```yaml
@@ -172,29 +219,136 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `apache_tomcat__webapps_manager_web_xml_max_file_size` | Number. [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). File size limit for WAR file uploads in bytes. Defaults to 50MB. | `52428800`
-| `apache_tomcat__webapps_manager_web_xml_max_request_size` | Number. [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). Request limit in bytes. Defaults to 50MB. | `52428800`
-| `apache_tomcat__context_xml_cache_max_size` | Number. The maximum size of the static resource cache in kilobytes. If not specified, the default value is `10240` (10 megabytes). This value may be changed while the web application is running (e.g. via JMX). If the cache is using more memory than the new limit the cache will attempt to reduce in size over time to meet the new limit. If necessary, cacheObjectMaxSize will be reduced to ensure that it is no larger than `cacheMaxSize/20`. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/resources.html) | `102400` |
-| `apache_tomcat__env_xms` | Number. `CATALINA_OPTS=-Xms`. Specifies the initial heap size. | `'1024M'` |
-| `apache_tomcat__env_xmx` | Number. `CATALINA_OPTS=-Xmx`. Specifies the maximum heap size. | `'1024M'` |
-| `apache_tomcat__env_xx` | For specifiying various [JVM Options](http://www.oracle.com/technetwork/articles/java/vmoptions-jsp-140102.html) after `-XX:`:<br>* Boolean options are turned on with `-XX:+` and turned off with `-XX:-`.<br> * Numeric options are set with `-XX:=`. Numbers can include `'m'` or `'M'` for megabytes, `'k'` or `'K'` for kilobytes, and `'g'` or `'G'` for gigabytes (for example, `32k` is the same as `32768`).<br> * String options are set with `-XX:=`, are usually used to specify a file, a path, or a list of commands. | `'+UseParallelGC'` |
-| `apache_tomcat__logrotate` | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `{{ logrotate__rotate \| d(14) }}` |
-| `apache_tomcat__roles__host_var` / <br> `apache_tomcat__roles__group_var` | List of dictionaries. Tomcat roles to deploy. Subkeys: <ul><li>`name`: Mandatory, string. Name of the role.</li><li>`state`: Optional, string. Either `present` or `absent`.</li></ul><br> Built-in Tomcat manager roles are: <ul><li>`manager-gui`: Allows access to the HTML GUI and the status pages.</li><li>`manager-script`: Allows access to the HTTP API and the status pages.</li><li>`manager-jmx`: Allows access to the JMX proxy and the status pages.</li><li>`manager-status`: Allows access to the status pages only.</li></ul> | `['admin-gui', 'manager-gui']` |
-| `apache_tomcat__server_xml_ajp_port` | Number. The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of 0 (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/ajp.html) | unset (not listening on AJP) |
-| `apache_tomcat__server_xml_connector_compression` | String. The Connector may use HTTP/1.1 GZIP compression in an attempt to save server bandwidth. The acceptable values for the parameter is "off" (disable compression), "on" (allow compression, which causes text data to be compressed), "force" (forces compression in all cases), or a numerical integer value (which is equivalent to "on", but specifies the minimum amount of data before the output is compressed). If the content-length is not known and compression is set to "on" or more aggressive, the output will also be compressed. If not specified, this attribute is set to "off".<br>Note: There is a tradeoff between using compression (saving your bandwidth) and using the sendfile feature (saving your CPU cycles). If the connector supports the sendfile feature, e.g. the NIO connector, using sendfile will take precedence over compression. The symptoms will be that static files greater that 48 Kb will be sent uncompressed. You can turn off sendfile by setting useSendfile attribute of the connector, as documented below, or change the sendfile usage threshold in the configuration of the DefaultServlet in the default conf/web.xml or in the web.xml of your web application. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `'on'` |
-| `apache_tomcat__server_xml_connector_connection_timeout` | The number of milliseconds this Connector will wait, after accepting a connection, for the request URI line to be presented. Use a value of `-1` to indicate no (i.e. infinite) timeout. The default value is `60000` (i.e. 60 seconds) but note that the standard `server.xml` that ships with Tomcat sets this to `20000` (i.e. 20 seconds). Unless `disableUploadTimeout` is set to `false`, this timeout will also be used when reading the request body (if any). This parameter is there specifically to fight one type of Denial-Of-Service attack, whereby some malicious client(s) create a TCP connection to the server (which has the effect of reserving some resources on the server for handling this connection), and then just sit there without sending any HTTP request on that connection. By making this delay shorter, you shorten the time during which the server resources are allocated, to serve a request that will never come. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `20000` |
-| `apache_tomcat__server_xml_connector_max_threads` | Number. The maximum number of request processing threads to be created by this Connector, which therefore determines the maximum number of simultaneous requests that can be handled. If not specified, this attribute is set to `200`. If an executor is associated with this connector, this attribute is ignored as the connector will execute tasks using the executor rather than an internal thread pool. Note that if an executor is configured any value set for this attribute will be recorded correctly but it will be reported (e.g. via JMX) as `-1` to make clear that it is not used. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `200` |
-| `apache_tomcat__server_xml_connector_min_spare_threads` | Number. The minimum number of threads always kept running. This includes both active and idle threads. If an executor is associated with this connector, this attribute is ignored as the connector will execute tasks using the executor rather than an internal thread pool. Note that if an executor is configured any value set for this attribute will be recorded correctly but it will be reported (e.g. via JMX) as `-1` to make clear that it is not used. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `10` |
-| `apache_tomcat__server_xml_connector_port` | The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of `0` (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) | `8080` |
-| `apache_tomcat__server_xml_shutdown_port` | | `8005` |
-| `apache_tomcat__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
-| `apache_tomcat__service_state` | String. Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `reloaded`<br> * `restarted`<br> * `started`<br> * `stopped` | `'started'` |
-| `apache_tomcat__skip_admin_webapps` | Bool. If set to `true`, installation of the Manager Web GUIs will be skipped. | `false` |
-| `apache_tomcat__skip_root_webapp` | Bool. If set to `true`, installation of the ROOT webapp (the tomcat startpage) will be skipped. | `false` |
-| `apache_tomcat__webapps_manager_web_xml_max_file_size` | Number. [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). File size limit for WAR file uploads in bytes. Defaults to 50MB. | `52428800`
-| `apache_tomcat__webapps_manager_web_xml_max_request_size` | Number. [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). Request limit in bytes. Defaults to 50MB. | `52428800`
+`apache_tomcat__context_xml_cache_max_size`
+
+* The maximum size of the static resource cache in kilobytes. If not specified, the default value is `10240` (10 megabytes). This value may be changed while the web application is running (e.g. via JMX). If the cache is using more memory than the new limit the cache will attempt to reduce in size over time to meet the new limit. If necessary, cacheObjectMaxSize will be reduced to ensure that it is no larger than `cacheMaxSize/20`. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/resources.html)
+* Type: Number.
+* Default: `10240`
+
+`apache_tomcat__env_xms`
+
+* `CATALINA_OPTS=-Xms`. Specifies the initial heap size.
+* Type: String.
+* Default: `'1024M'`
+
+`apache_tomcat__env_xmx`
+
+* `CATALINA_OPTS=-Xmx`. Specifies the maximum heap size.
+* Type: String.
+* Default: `'1024M'`
+
+`apache_tomcat__env_xx`
+
+* For specifiying various [JVM Options](http://www.oracle.com/technetwork/articles/java/vmoptions-jsp-140102.html) after `-XX:`: Boolean options are turned on with `-XX:+` and turned off with `-XX:-`. Numeric options are set with `-XX:=`. Numbers can include `'m'` or `'M'` for megabytes, `'k'` or `'K'` for kilobytes, and `'g'` or `'G'` for gigabytes (for example, `32k` is the same as `32768`). String options are set with `-XX:=`, are usually used to specify a file, a path, or a list of commands.
+* Type: String.
+* Default: `'+UseParallelGC'`
+
+`apache_tomcat__logrotate`
+
+* Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space).
+* Type: Number.
+* Default: `{{ logrotate__rotate | d(14) }}`
+
+`apache_tomcat__roles__host_var` / `apache_tomcat__roles__group_var`
+
+* Tomcat roles to deploy. Built-in Tomcat manager roles are: `manager-gui` (allows access to the HTML GUI and the status pages), `manager-script` (allows access to the HTTP API and the status pages), `manager-jmx` (allows access to the JMX proxy and the status pages), `manager-status` (allows access to the status pages only).
+* Type: List of dictionaries.
+* Default: `[{'name': 'admin-gui'}, {'name': 'manager-gui'}]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the role.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`.
+        * Type: String.
+
+`apache_tomcat__server_xml_ajp_port`
+
+* The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of 0 (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/ajp.html)
+* Type: Number.
+* Default: unset (not listening on AJP)
+
+`apache_tomcat__server_xml_connector_compressable_mime_types`
+
+* The compressable MIME types for the HTTP connector.
+* Type: String.
+* Default: `'text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml'`
+
+`apache_tomcat__server_xml_connector_compression`
+
+* The Connector may use HTTP/1.1 GZIP compression in an attempt to save server bandwidth. The acceptable values for the parameter is "off" (disable compression), "on" (allow compression, which causes text data to be compressed), "force" (forces compression in all cases), or a numerical integer value (which is equivalent to "on", but specifies the minimum amount of data before the output is compressed). If the content-length is not known and compression is set to "on" or more aggressive, the output will also be compressed. If not specified, this attribute is set to "off". Note: There is a tradeoff between using compression (saving your bandwidth) and using the sendfile feature (saving your CPU cycles). If the connector supports the sendfile feature, e.g. the NIO connector, using sendfile will take precedence over compression. The symptoms will be that static files greater that 48 Kb will be sent uncompressed. You can turn off sendfile by setting useSendfile attribute of the connector, as documented below, or change the sendfile usage threshold in the configuration of the DefaultServlet in the default conf/web.xml or in the web.xml of your web application. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html)
+* Type: String.
+* Default: `'on'`
+
+`apache_tomcat__server_xml_connector_connection_timeout`
+
+* The number of milliseconds this Connector will wait, after accepting a connection, for the request URI line to be presented. Use a value of `-1` to indicate no (i.e. infinite) timeout. The default value is `60000` (i.e. 60 seconds) but note that the standard `server.xml` that ships with Tomcat sets this to `20000` (i.e. 20 seconds). Unless `disableUploadTimeout` is set to `false`, this timeout will also be used when reading the request body (if any). This parameter is there specifically to fight one type of Denial-Of-Service attack, whereby some malicious client(s) create a TCP connection to the server (which has the effect of reserving some resources on the server for handling this connection), and then just sit there without sending any HTTP request on that connection. By making this delay shorter, you shorten the time during which the server resources are allocated, to serve a request that will never come. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html)
+* Type: Number.
+* Default: `20000`
+
+`apache_tomcat__server_xml_connector_max_threads`
+
+* The maximum number of request processing threads to be created by this Connector, which therefore determines the maximum number of simultaneous requests that can be handled. If not specified, this attribute is set to `200`. If an executor is associated with this connector, this attribute is ignored as the connector will execute tasks using the executor rather than an internal thread pool. Note that if an executor is configured any value set for this attribute will be recorded correctly but it will be reported (e.g. via JMX) as `-1` to make clear that it is not used. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html)
+* Type: Number.
+* Default: `200`
+
+`apache_tomcat__server_xml_connector_min_spare_threads`
+
+* The minimum number of threads always kept running. This includes both active and idle threads. If an executor is associated with this connector, this attribute is ignored as the connector will execute tasks using the executor rather than an internal thread pool. Note that if an executor is configured any value set for this attribute will be recorded correctly but it will be reported (e.g. via JMX) as `-1` to make clear that it is not used. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html)
+* Type: Number.
+* Default: `10`
+
+`apache_tomcat__server_xml_connector_port`
+
+* The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of `0` (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html)
+* Type: Number.
+* Default: `8080`
+
+`apache_tomcat__server_xml_shutdown_port`
+
+* The TCP port number on which this server waits for a shutdown command.
+* Type: Number.
+* Default: `8005`
+
+`apache_tomcat__service_enabled`
+
+* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`apache_tomcat__service_state`
+
+* Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options: `reloaded`, `restarted`, `started`, `stopped`.
+* Type: String.
+* Default: `'started'`
+
+`apache_tomcat__skip_admin_webapps`
+
+* If set to `true`, installation of the Manager Web GUIs will be skipped.
+* Type: Bool.
+* Default: `false`
+
+`apache_tomcat__skip_root_webapp`
+
+* If set to `true`, installation of the ROOT webapp (the tomcat startpage) will be skipped.
+* Type: Bool.
+* Default: `false`
+
+`apache_tomcat__webapps_manager_web_xml_max_file_size`
+
+* [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). File size limit for WAR file uploads in bytes. Defaults to 50MB.
+* Type: Number.
+* Default: `52428800`
+
+`apache_tomcat__webapps_manager_web_xml_max_request_size`
+
+* [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). Request limit in bytes. Defaults to 50MB.
+* Type: Number.
+* Default: `52428800`
 
 Example:
 ```yaml

@@ -5,15 +5,18 @@ This role deploys the [Sury repository](https://deb.sury.org/).
 
 ## Tags
 
-| Tag         | What it does                | Reload / Restart |
-| ---         | ------------                | ---------------- |
-| `repo_sury` | Deploys the Sury Repository | - |
+`repo_sury`
+
+* Deploys the Sury Repository.
+* Triggers: none.
+
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `repo_sury__enabled_repos` | A list of package repos which should be enabled. If the list is empty, none of the Sury package repos will be activated.<br>For a full list of possible repos, please check [Sury Packages](https://packages.sury.org) |
+`repo_sury__enabled_repos`
+
+* A list of package repos which should be enabled. If the list is empty, none of the Sury package repos will be activated. For a full list of possible repos, please check [Sury Packages](https://packages.sury.org).
+* Type: List.
 
 Example:
 ```yaml
@@ -24,11 +27,14 @@ repo_sury__enabled_repos:
   - 'php'
 ```
 
+
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `repo_sury__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used. | `'{{ lfops__repo_mirror_url | default("") }}'` |
+`repo_sury__mirror_url`
+
+* Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used.
+* Type: String.
+* Default: `'{{ lfops__repo_mirror_url | default("") }}'`
 
 Example:
 ```yaml

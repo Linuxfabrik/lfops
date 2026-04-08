@@ -10,18 +10,140 @@ This role manages file system entities such as files, directories and symlinks.
 
 ## Tags
 
-| Tag     | What it does                             | Reload / Restart |
-| ---     | ------------                             | ---------------- |
-| `files` | Manages files, directories and symlinks. | - |
+`files`
+
+* Manages files, directories and symlinks.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `files__directories__host_var` / <br> `files__directories__group_var` | List of dictionaries containing the directories to manage. Subkeys:<ul><li>`path`: Mandatory, string. Path to the directory.</li><li>`state`: Optional, string. State of the directory, one of `present`, `absent`. Defaults to `present`. Note: both operations are recursive.</li><li>`mode`: Optional, string. Mode (permissions) of the directory. Defaults to `0o755`.</li><li>`owner`: Optional, string. Owner of the directory. Defaults to `root`.</li><li>`group`: Optional, string. Group of the directory. Defaults to `root`.</li></ul> | `[]` |
-| `files__files__host_var` / <br> `files__files__group_var` | List of dictionaries containing the files to manage. Subkeys:<ul><li>`path`: Mandatory, string. Path to the file.</li><li>`content`: Optional, string. Content of the file. If unset, the role copies the file from `inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/" ~ item["path"]`.</li><li>`state`: Optional, string. State of the file, one of `present`, `absent`. Defaults to `present`.</li><li>`mode`: Optional, string. Mode (permissions) of the file. Defaults to `0o644`.</li><li>`owner`: Optional, string. Owner of the file. Defaults to `root`.</li><li>`group`: Optional, string. Group of the file. Defaults to `root`.</li><li>`template`: Optional, boolean. Whether to process file as Jinja template. Note: only works if `content` is unset. Defaults to `false`.</li></ul> | `[]` |
-| `files__symlinks__host_var` / <br> `files__symlinks__group_var` | List of dictionaries the symlinks to manage. Subkeys:<ul><li>`src`: Mandatory, string. Path to source of the symlink.</li><li>`dest`: Mandatory, string. Path to dest of the symlink.</li><li>`state`: Optional, string. State of the symlink, one of `present`, `absent`. Defaults to `present`.</li><li>`mode`: Optional, string. Mode (permissions) of the directory. Defaults to `0o644`.</li><li>`owner`: Optional, string. Owner of the directory. Defaults to `root`.</li><li>`group`: Optional, string. Group of the directory. Defaults to `root`.</li></ul> | `[]` |
+`files__directories__host_var` / `files__directories__group_var`
+
+* List of dictionaries containing the directories to manage.
+* Type: List of dictionaries.
+* Default: `[]`
+
+* Subkeys:
+
+    * `path`:
+
+        * Mandatory. Path to the directory.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. State of the directory, one of `present`, `absent`. Note: both operations are recursive.
+        * Type: String.
+        * Default: `'present'`
+
+    * `mode`:
+
+        * Optional. Mode (permissions) of the directory.
+        * Type: String.
+        * Default: `0o755`
+
+    * `owner`:
+
+        * Optional. Owner of the directory.
+        * Type: String.
+        * Default: `'root'`
+
+    * `group`:
+
+        * Optional. Group of the directory.
+        * Type: String.
+        * Default: `'root'`
+
+`files__files__host_var` / `files__files__group_var`
+
+* List of dictionaries containing the files to manage.
+* Type: List of dictionaries.
+* Default: `[]`
+
+* Subkeys:
+
+    * `path`:
+
+        * Mandatory. Path to the file.
+        * Type: String.
+
+    * `content`:
+
+        * Optional. Content of the file. If unset, the role copies the file from `inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/" ~ item["path"]`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. State of the file, one of `present`, `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `mode`:
+
+        * Optional. Mode (permissions) of the file.
+        * Type: String.
+        * Default: `0o644`
+
+    * `owner`:
+
+        * Optional. Owner of the file.
+        * Type: String.
+        * Default: `'root'`
+
+    * `group`:
+
+        * Optional. Group of the file.
+        * Type: String.
+        * Default: `'root'`
+
+    * `template`:
+
+        * Optional. Whether to process file as Jinja template. Note: only works if `content` is unset.
+        * Type: Bool.
+        * Default: `false`
+
+`files__symlinks__host_var` / `files__symlinks__group_var`
+
+* List of dictionaries the symlinks to manage.
+* Type: List of dictionaries.
+* Default: `[]`
+
+* Subkeys:
+
+    * `src`:
+
+        * Mandatory. Path to source of the symlink.
+        * Type: String.
+
+    * `dest`:
+
+        * Mandatory. Path to dest of the symlink.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. State of the symlink, one of `present`, `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `mode`:
+
+        * Optional. Mode (permissions) of the directory.
+        * Type: String.
+        * Default: `0o644`
+
+    * `owner`:
+
+        * Optional. Owner of the directory.
+        * Type: String.
+        * Default: `'root'`
+
+    * `group`:
+
+        * Optional. Group of the directory.
+        * Type: String.
+        * Default: `'root'`
 
 Example:
 ```yaml

@@ -10,16 +10,19 @@
 
 ## Tags
 
-| Tag            | What it does                          | Reload / Restart |
-| ---            | ------------                          | ---------------- |
-| `icingadb_web` | Installs and configures IcingaDB Web. | - |
+`icingadb_web`
+
+* Installs and configures IcingaDB Web.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                       | Description                                |
-| --------                       | -----------                                |
-| `icingadb_web__api_user_login` | The account for accessing the Icinga2 API. |
+`icingadb_web__api_user_login`
+
+* The account for accessing the Icinga2 API.
+* Type: Dictionary.
+* Default: none
 
 Example:
 ```yaml
@@ -32,23 +35,95 @@ icingadb_web__api_user_login:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icingadb_web__api_host` | The host on which the Icinga2 API is reachable. | `'localhost'` |
-| `icingadb_web__api_port` | The port on which the Icinga2 API is reachable. | `5665` |
-| `icingadb_web__database_host` | The host on which the IcingaDB SQL database is reachable. | `'{{ icingadb__database_host }}'` |
-| `icingadb_web__database_login` | The user account for accessing the IcingaDB SQL database. Currently, only MySQL is supported. | `'{{ icingadb__database_login }}'` |
-| `icingadb_web__database_name` | The name of the IcingaDB SQL database. | `'{{ icingadb__database_name }}'` |
-| `icingadb_web__plugin_output_character_limit` | Number. Sets the maximum number of characters to display in plugin output. | `20000` |
-| `icingadb_web__redis_ca` | Path to the CA certificate used to check the Redis TLS certificate. | `{{ icingadb__redis_ca \| d() }}` |
-| `icingadb_web__redis_host` | The host on which Redis instance is reachable. | `'{{ icingadb__redis_host }}'` |
-| `icingadb_web__redis_insecure` | Allow insecure connections to Redis via TLS. | `'{{ icingadb__redis_insecure }}'` |
-| `icingadb_web__redis_password` | The password for the Redis instance, if authentication is enabled. | `'{{ icingadb__redis_password \| d() }}'` |
-| `icingadb_web__redis_port` | The port on which Redis instance is reachable. | `'{{ icingadb__redis_port }}'` |
-| `icingadb_web__redis_tls` | Enable TLS when connecting to Redis. | `'{{ icingadb__redis_tls }}'` |
-| `icingadb_web__redis2_host` | The host on which the secondary Redis instance is reachable. | unset |
-| `icingadb_web__redis2_password` | The password for the the secondary Redis instance, if authentication is enabled. | `'{{ icingadb_web__redis_password }}'` |
-| `icingadb_web__redis2_port` | The port on which the secondary Redis instance is reachable. | `'{{ icingadb_web__redis_port }}'` |
+`icingadb_web__api_host`
+
+* The host on which the Icinga2 API is reachable.
+* Type: String.
+* Default: `'localhost'`
+
+`icingadb_web__api_port`
+
+* The port on which the Icinga2 API is reachable.
+* Type: Number.
+* Default: `5665`
+
+`icingadb_web__database_host`
+
+* The host on which the IcingaDB SQL database is reachable.
+* Type: String.
+* Default: `'{{ icingadb__database_host }}'`
+
+`icingadb_web__database_login`
+
+* The user account for accessing the IcingaDB SQL database. Currently, only MySQL is supported.
+* Type: Dictionary.
+* Default: `'{{ icingadb__database_login }}'`
+
+`icingadb_web__database_name`
+
+* The name of the IcingaDB SQL database.
+* Type: String.
+* Default: `'{{ icingadb__database_name }}'`
+
+`icingadb_web__plugin_output_character_limit`
+
+* Sets the maximum number of characters to display in plugin output.
+* Type: Number.
+* Default: `20000`
+
+`icingadb_web__redis_ca`
+
+* Path to the CA certificate used to check the Redis TLS certificate.
+* Type: String.
+* Default: `'{{ icingadb__redis_ca | d() }}'`
+
+`icingadb_web__redis_host`
+
+* The host on which Redis instance is reachable.
+* Type: String.
+* Default: `'{{ icingadb__redis_host }}'`
+
+`icingadb_web__redis_insecure`
+
+* Allow insecure connections to Redis via TLS.
+* Type: Bool.
+* Default: `'{{ icingadb__redis_insecure }}'`
+
+`icingadb_web__redis_password`
+
+* The password for the Redis instance, if authentication is enabled.
+* Type: String.
+* Default: `'{{ icingadb__redis_password | d() }}'`
+
+`icingadb_web__redis_port`
+
+* The port on which Redis instance is reachable.
+* Type: Number.
+* Default: `'{{ icingadb__redis_port }}'`
+
+`icingadb_web__redis_tls`
+
+* Enable TLS when connecting to Redis.
+* Type: Bool.
+* Default: `'{{ icingadb__redis_tls }}'`
+
+`icingadb_web__redis2_host`
+
+* The host on which the secondary Redis instance is reachable.
+* Type: String.
+* Default: unset
+
+`icingadb_web__redis2_password`
+
+* The password for the secondary Redis instance, if authentication is enabled.
+* Type: String.
+* Default: `'{{ icingadb_web__redis_password }}'`
+
+`icingadb_web__redis2_port`
+
+* The port on which the secondary Redis instance is reachable.
+* Type: Number.
+* Default: `'{{ icingadb_web__redis_port }}'`
 
 Example:
 ```yaml

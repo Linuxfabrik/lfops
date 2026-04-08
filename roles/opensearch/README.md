@@ -268,30 +268,29 @@ Only optional if `opensearch__plugins_security_disabled` is `true`.
 * Internal users that can access OpenSearch via HTTP Basic Auth.
 * Type: List of dictionaries.
 * Default: `[]`
+* Subkeys:
 
-Subkeys:
+    * `username`:
 
-> `username`
->
-> * Mandatory. Username.
-> * Type: String.
->
-> `password`
->
-> * Mandatory. Password.
-> * Type: String.
->
-> `backend_roles`
->
-> * Backend roles.
-> * Type: List of strings.
-> * Default: `[]`
->
-> `state`
->
-> * State of the user. Either `present` or `absent`.
-> * Type: String.
-> * Default: `'present'`
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `backend_roles`:
+
+        * Optional. Backend roles.
+        * Type: List of strings.
+        * Default: `[]`
+
+    * `state`:
+
+        * Optional. State of the user. Either `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
 
 `opensearch__network_host`
 
@@ -376,7 +375,7 @@ Subkeys:
 
 * See [hostname verification](https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup).
 * Type: Bool.
-* Default: `false`
+* Default: `true`
 
 `opensearch__plugins_security_transport_resolve_hostname`
 
@@ -504,18 +503,17 @@ These variables are only needed when using the built-in certificate generator (s
 * List of dictionaries for the node certificates.
 * Type: List of dictionaries.
 * Default: `[]`
+* Subkeys:
 
-Subkeys:
+    * `cn`:
 
-> `cn`
->
-> * Mandatory. Common name of the node certificate.
-> * Type: String.
->
-> `ip`
->
-> * Mandatory. IP address of the node.
-> * Type: String.
+        * Mandatory. Common name of the node certificate.
+        * Type: String.
+
+    * `ip`:
+
+        * Mandatory. IP address of the node.
+        * Type: String.
 
 Example:
 ```yaml

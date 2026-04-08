@@ -16,23 +16,76 @@ If you use the [WordPress Playbook](https://github.com/Linuxfabrik/lfops/blob/ma
 
 ## Tags
 
-| Tag                | What it does                                                                                                            | Reload / Restart |
-| ---                | ------------                                                                                                            | ---------------- |
-| `wordpress`        | Installs and configures wordpress                                                                                       | - |
-| `wordpress:export` | Exports the site content (posts, pages, comments, custom fields, categories and tags) as a wxr file.                    | - |
-| `wordpress:file_policy` | * `chown -R --changes apache:apache {{ wordpress__install_dir  }}`<br> * `restorecon -Fvr {{ wordpress__install_dir }}` | - |
-| `wordpress:update` | Updates the WordPress core to `wordpress__version`. Also applies all DB migrations, and updates all plugins and themes. | - |
+`wordpress`
+
+* Installs and configures wordpress.
+* Triggers: none.
+
+`wordpress:export`
+
+* Exports the site content (posts, pages, comments, custom fields, categories and tags) as a wxr file.
+* Triggers: none.
+
+`wordpress:file_policy`
+
+* `chown -R --changes apache:apache {{ wordpress__install_dir }}`.
+* `restorecon -Fvr {{ wordpress__install_dir }}`.
+* Triggers: none.
+
+`wordpress:update`
+
+* Updates the WordPress core to `wordpress__version`. Also applies all DB migrations, and updates all plugins and themes.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `wordpress__admin_email` | The Email of the WordPress admin user. |
-| `wordpress__admin_user` | The WordPress admin user account. Subkeys:<br> * `username`: Mandatory, string. Username<br> * `password`: Mandatory, string. Password |
-| `wordpress__database_user` | The database user account with permissions on the `wordpress__database_name` database. Subkeys:<br> * `username`: Mandatory, string. Username<br> * `password`: Mandatory, string. Password |
-| `wordpress__site_title` | The WordPress site title. |
-| `wordpress__url` | The WordPress URL, without `http://` or `https://`.  |
+`wordpress__admin_email`
+
+* The Email of the WordPress admin user.
+* Type: String.
+
+`wordpress__admin_user`
+
+* The WordPress admin user account.
+* Type: Dictionary.
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+`wordpress__database_user`
+
+* The database user account with permissions on the `wordpress__database_name` database.
+* Type: Dictionary.
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+`wordpress__site_title`
+
+* The WordPress site title.
+* Type: String.
+
+`wordpress__url`
+
+* The WordPress URL, without `http://` or `https://`.
+* Type: String.
 
 Example:
 ```yaml
@@ -51,16 +104,65 @@ wordpress__url: 'wordpress.example.com'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `wordpress__database_host` | The host on which the database is accessible. | `'localhost'` |
-| `wordpress__database_name` | The name of the database. | `'wordpress'` |
-| `wordpress__disallow_file_edit` | Prevent editing of plugin / theme files from the admin WebGUI. Strongly recommended to set this to `true` for security reasons. | `true` |
-| `wordpress__install_dir` | The installation directory for WordPress. | `'/var/www/html/{{ wordpress__url }}'` |
-| `wordpress__plugins` | List of WordPress plugin slugs. To get a list of already installed plugins, use the WordPress CLI `sudo -u apache /usr/local/bin/wp plugin list --status=active`. Subkeys: <br> * name: Mandatory, string. Plugin slug, path to a local zip file, or URL to a remote zip file. <br> * state: Optional, string. Either `'present'` or `'absent`' | `[]` |
-| `wordpress__theme` | The WordPress theme to install. Accepts a theme slug, the path to a local zip file, or a URL to a remote zip file. | unset |
-| `wordpress__version` | The WordPress version to install. Possible options: <br> * Version number <br> * `'latest'` <br> * `'nightly'` | `'latest'` |
-| `wordpress__wxr_export` | Path to a WXR export file which will be imported after installing WordPress. The file includes posts, pages, comments, custom fields, categories and tags, and can be created using the [wp-cli export function](https://developer.wordpress.org/cli/commands/export/) or the `wordpress:export` tag. | unset |
+`wordpress__database_host`
+
+* The host on which the database is accessible.
+* Type: String.
+* Default: `'localhost'`
+
+`wordpress__database_name`
+
+* The name of the database.
+* Type: String.
+* Default: `'wordpress'`
+
+`wordpress__disallow_file_edit`
+
+* Prevent editing of plugin / theme files from the admin WebGUI. Strongly recommended to set this to `true` for security reasons.
+* Type: Bool.
+* Default: `true`
+
+`wordpress__install_dir`
+
+* The installation directory for WordPress.
+* Type: String.
+* Default: `'/var/www/html/{{ wordpress__url }}'`
+
+`wordpress__plugins`
+
+* List of WordPress plugin slugs. To get a list of already installed plugins, use the WordPress CLI `sudo -u apache /usr/local/bin/wp plugin list --status=active`.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Plugin slug, path to a local zip file, or URL to a remote zip file.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. Either `'present'` or `'absent'`.
+        * Type: String.
+        * Default: `'present'`
+
+`wordpress__theme`
+
+* The WordPress theme to install. Accepts a theme slug, the path to a local zip file, or a URL to a remote zip file.
+* Type: String.
+* Default: unset
+
+`wordpress__version`
+
+* The WordPress version to install. Possible options: version number, `'latest'`, `'nightly'`.
+* Type: String.
+* Default: `'latest'`
+
+`wordpress__wxr_export`
+
+* Path to a WXR export file which will be imported after installing WordPress. The file includes posts, pages, comments, custom fields, categories and tags, and can be created using the [wp-cli export function](https://developer.wordpress.org/cli/commands/export/) or the `wordpress:export` tag.
+* Type: String.
+* Default: unset
 
 Example:
 ```yaml

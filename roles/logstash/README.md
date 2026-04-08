@@ -14,30 +14,195 @@ If you use the [logstash playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 
 ## Tags
 
-| Tag                  | What it does                              | Reload / Restart          |
-| ---                  | ------------                              | ----------------          |
-| `logstash`           | Installs and configures Logstash          | Restarts logstash.service |
-| `logstash:configure` | Deploys configuration files and TLS certs | Reloads logstash.service  |
-| `logstash:grok_patterns` | Deploys custom grok pattern files      | Reloads logstash.service  |
-| `logstash:pipelines`     | Deploys pipeline configuration files  | Reloads logstash.service  |
-| `logstash:state`         | Manages the state of the Logstash service | -                     |
+`logstash`
+
+* Installs and configures Logstash.
+* Triggers: logstash.service restart.
+
+`logstash:configure`
+
+* Deploys configuration files and TLS certs.
+* Triggers: logstash.service reload.
+
+`logstash:grok_patterns`
+
+* Deploys custom grok pattern files.
+* Triggers: logstash.service reload.
+
+`logstash:pipelines`
+
+* Deploys pipeline configuration files.
+* Triggers: logstash.service reload.
+
+`logstash:state`
+
+* Manages the state of the Logstash service.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `logstash__elasticsearch_ca_cert` | ASCII-armored PEM CA certificate for TLS connections to Elasticsearch. Should match the CA used by Elasticsearch. | unset |
-| `logstash__grok_patterns__host_var` / <br> `logstash__grok_patterns__group_var` | List of custom grok pattern file definitions. Subkeys: <ul><li>`name`: Mandatory, string. Filename in `/etc/logstash/patterns/`.</li><li>`content`: Mandatory, multiline string. Pattern definitions (format: `PATTERN_NAME regex`).</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `logstash__java_opts` | Additional Java options passed to Logstash via `LS_JAVA_OPTS`. By default, sets the temp directory to `{{ logstash__path_data }}/tmp` because `/tmp` on CIS-hardened systems is mounted with noexec. | `'-Djava.io.tmpdir={{ logstash__path_data }}/tmp'` |
-| `logstash__log_level` | The log level. Valid values are: `fatal`, `error`, `warn`, `info`, `debug`, `trace`. | `'info'` |
-| `logstash__node_name` | A descriptive name for the node. | `'{{ ansible_facts["nodename"] }}'` |
-| `logstash__path_data` | Path to the directory where Logstash stores its data. | `'/var/lib/logstash'` |
-| `logstash__path_logs` | Path to the directory where Logstash stores its logs. | `'/var/log/logstash'` |
-| `logstash__pipelines__host_var` / <br> `logstash__pipelines__group_var` | List of pipeline definitions. Subkeys: <ul><li>`pipeline_id`: Mandatory, string. Unique identifier for the pipeline. Used as filename (`<pipeline_id>.conf`).</li><li>`content`: Mandatory, multiline string. The pipeline configuration content (input/filter/output sections).</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li><li>`pipeline_workers`: Optional, integer. Number of worker threads for this pipeline.</li><li>`pipeline_batch_size`: Optional, integer. Maximum number of events per batch.</li><li>`pipeline_batch_delay`: Optional, integer. Maximum delay in milliseconds before dispatching an undersized batch.</li><li>`pipeline_ordered`: Optional, string. Event ordering mode: `auto`, `true`, or `false`.</li><li>`queue_type`: Optional, string. Queue type: `memory` or `persisted`.</li><li>`queue_max_bytes`: Optional, string. Maximum queue capacity (e.g., `'1024mb'`).</li><li>`queue_page_capacity`: Optional, string. Page data file size for persisted queues.</li><li>`queue_max_events`: Optional, integer. Maximum number of unread events in the queue.</li><li>`queue_checkpoint_acks`: Optional, integer. Maximum number of acked events before forcing a checkpoint.</li><li>`queue_checkpoint_writes`: Optional, integer. Maximum number of written events before forcing a checkpoint.</li><li>`dead_letter_queue_enable`: Optional, boolean. Enable dead letter queue for this pipeline.</li><li>`dead_letter_queue_max_bytes`: Optional, string. Maximum size of the dead letter queue.</li></ul> | `[]` |
-| `logstash__raw` | Multiline string. Raw content which will be appended to the `logstash.yml` config file. | `''` |
-| `logstash__service_enabled` | Enables or disables the logstash service, analogous to `systemctl enable/disable --now`. | `true` |
-| `logstash__service_state` | Controls the state of the logstash service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+`logstash__elasticsearch_ca_cert`
+
+* ASCII-armored PEM CA certificate for TLS connections to Elasticsearch. Should match the CA used by Elasticsearch.
+* Type: String.
+* Default: unset
+
+`logstash__grok_patterns__host_var` / `logstash__grok_patterns__group_var`
+
+* List of custom grok pattern file definitions.
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Filename in `/etc/logstash/patterns/`.
+        * Type: String.
+
+    * `content`:
+
+        * Mandatory. Pattern definitions (format: `PATTERN_NAME regex`).
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+* Type: List of dictionaries.
+* Default: `[]`
+
+`logstash__java_opts`
+
+* Additional Java options passed to Logstash via `LS_JAVA_OPTS`. By default, sets the temp directory to `{{ logstash__path_data }}/tmp` because `/tmp` on CIS-hardened systems is mounted with noexec.
+* Type: String.
+* Default: `'-Djava.io.tmpdir={{ logstash__path_data }}/tmp'`
+
+`logstash__log_level`
+
+* The log level. Valid values are: `fatal`, `error`, `warn`, `info`, `debug`, `trace`.
+* Type: String.
+* Default: `'info'`
+
+`logstash__node_name`
+
+* A descriptive name for the node.
+* Type: String.
+* Default: `'{{ ansible_facts["nodename"] }}'`
+
+`logstash__path_data`
+
+* Path to the directory where Logstash stores its data.
+* Type: String.
+* Default: `'/var/lib/logstash'`
+
+`logstash__path_logs`
+
+* Path to the directory where Logstash stores its logs.
+* Type: String.
+* Default: `'/var/log/logstash'`
+
+`logstash__pipelines__host_var` / `logstash__pipelines__group_var`
+
+* List of pipeline definitions.
+* Subkeys:
+
+    * `pipeline_id`:
+
+        * Mandatory. Unique identifier for the pipeline. Used as filename (`<pipeline_id>.conf`).
+        * Type: String.
+
+    * `content`:
+
+        * Mandatory. The pipeline configuration content (input/filter/output sections).
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `pipeline_workers`:
+
+        * Optional. Number of worker threads for this pipeline.
+        * Type: Number.
+
+    * `pipeline_batch_size`:
+
+        * Optional. Maximum number of events per batch.
+        * Type: Number.
+
+    * `pipeline_batch_delay`:
+
+        * Optional. Maximum delay in milliseconds before dispatching an undersized batch.
+        * Type: Number.
+
+    * `pipeline_ordered`:
+
+        * Optional. Event ordering mode: `auto`, `true`, or `false`.
+        * Type: String.
+
+    * `queue_type`:
+
+        * Optional. Queue type: `memory` or `persisted`.
+        * Type: String.
+
+    * `queue_max_bytes`:
+
+        * Optional. Maximum queue capacity (e.g., `'1024mb'`).
+        * Type: String.
+
+    * `queue_page_capacity`:
+
+        * Optional. Page data file size for persisted queues.
+        * Type: String.
+
+    * `queue_max_events`:
+
+        * Optional. Maximum number of unread events in the queue.
+        * Type: Number.
+
+    * `queue_checkpoint_acks`:
+
+        * Optional. Maximum number of acked events before forcing a checkpoint.
+        * Type: Number.
+
+    * `queue_checkpoint_writes`:
+
+        * Optional. Maximum number of written events before forcing a checkpoint.
+        * Type: Number.
+
+    * `dead_letter_queue_enable`:
+
+        * Optional. Enable dead letter queue for this pipeline.
+        * Type: Bool.
+
+    * `dead_letter_queue_max_bytes`:
+
+        * Optional. Maximum size of the dead letter queue.
+        * Type: String.
+
+* Type: List of dictionaries.
+* Default: `[]`
+
+`logstash__raw`
+
+* Raw content which will be appended to the `logstash.yml` config file.
+* Type: String.
+* Default: `''`
+
+`logstash__service_enabled`
+
+* Enables or disables the logstash service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`logstash__service_state`
+
+* Controls the state of the logstash service, analogous to `systemctl start/stop/restart/reload`. Possible options: `started`, `stopped`, `restarted`, `reloaded`.
+* Type: String.
+* Default: `'started'`
 
 Example:
 ```yaml

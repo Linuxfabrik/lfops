@@ -25,17 +25,24 @@ Notes on high availability / Icinga2 Master clusters:
 
 ## Tags
 
-| Tag        | What it does                                 | Reload / Restart |
-| ---        | ------------                                 | ---------------- |
-| `icingadb` | Installs and configures IcingaDB. | Restarts icinga2.service, icingadb.service |
-| `icingadb:migration` | Only executed on demand. Prepares the migration of the history from the IDO feature to Icinga DB. | - |
+`icingadb`
+
+* Installs and configures IcingaDB.
+* Triggers: icinga2.service restart, icingadb.service restart.
+
+`icingadb:migration`
+
+* Only executed on demand. Prepares the migration of the history from the IDO feature to Icinga DB.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `icingadb__database_login` | The user account for accessing the IcingaDB SQL database. Currently, only MySQL is supported. |
+`icingadb__database_login`
+
+* The user account for accessing the IcingaDB SQL database. Currently, only MySQL is supported.
+* Type: Dictionary.
+* Default: none
 
 Example:
 ```yaml
@@ -48,20 +55,77 @@ icingadb__database_login:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icingadb__database_host` | The host on which the IcingaDB SQL database is reachable. | `127.0.0.1` |
-| `icingadb__database_login_host` | The Host-part of the SQL database user. | `127.0.0.1` |
-| `icingadb__database_name` | The name of the IcingaDB SQL database. | `'icingadb'` |
-| `icingadb__logging_level` | The loglevel of IcingaDB. One of` 'fatal'`, `'error'`, `'warn'`, `'info'` or `'debug'`. | `'info'` |
-| `icingadb__redis_ca` | Path to the CA certificate used to check the Redis TLS certificate. | unset |
-| `icingadb__redis_host` | The host on which Redis instance is reachable. | `'127.0.0.1'` |
-| `icingadb__redis_insecure` | Allow insecure connections to Redis via TLS. | `false` |
-| `icingadb__redis_password` | The password for the Redis instance, if authentication is enabled. | unset |
-| `icingadb__redis_port` | The port on which Redis instance is reachable. | `6379` |
-| `icingadb__redis_tls` | Enable TLS when connecting to Redis. | `false` |
-| `icingadb__retention_history_days` | Number of days to retain full historical data. By default, historical data is retained forever. | unset |
-| `icingadb__service_enabled` | Enables or disables the IcingaDB service, analogous to `systemctl enable/disable --now`. | `true` |
+`icingadb__database_host`
+
+* The host on which the IcingaDB SQL database is reachable.
+* Type: String.
+* Default: `'127.0.0.1'`
+
+`icingadb__database_login_host`
+
+* The Host-part of the SQL database user.
+* Type: String.
+* Default: `'127.0.0.1'`
+
+`icingadb__database_name`
+
+* The name of the IcingaDB SQL database.
+* Type: String.
+* Default: `'icingadb'`
+
+`icingadb__logging_level`
+
+* The loglevel of IcingaDB. One of `'fatal'`, `'error'`, `'warn'`, `'info'` or `'debug'`.
+* Type: String.
+* Default: `'info'`
+
+`icingadb__redis_ca`
+
+* Path to the CA certificate used to check the Redis TLS certificate.
+* Type: String.
+* Default: unset
+
+`icingadb__redis_host`
+
+* The host on which Redis instance is reachable.
+* Type: String.
+* Default: `'127.0.0.1'`
+
+`icingadb__redis_insecure`
+
+* Allow insecure connections to Redis via TLS.
+* Type: Bool.
+* Default: `false`
+
+`icingadb__redis_password`
+
+* The password for the Redis instance, if authentication is enabled.
+* Type: String.
+* Default: unset
+
+`icingadb__redis_port`
+
+* The port on which Redis instance is reachable.
+* Type: Number.
+* Default: `6379`
+
+`icingadb__redis_tls`
+
+* Enable TLS when connecting to Redis.
+* Type: Bool.
+* Default: `false`
+
+`icingadb__retention_history_days`
+
+* Number of days to retain full historical data. By default, historical data is retained forever.
+* Type: Number.
+* Default: unset
+
+`icingadb__service_enabled`
+
+* Enables or disables the IcingaDB service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
 
 Example:
 ```yaml

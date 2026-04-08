@@ -51,9 +51,10 @@ The resulting set of files can then be further analyzed, for example by hand or 
 
 ## Tags
 
-| Tag       | What it does                 | Reload / Restart |
-| ---       | ------------                 | ---------------- |
-| `collect_rpmnew_rpmsave` | Collect all rpmnew/rpmsave files | - |
+`collect_rpmnew_rpmsave`
+
+* Collect all rpmnew/rpmsave files.
+* Triggers: none.
 
 
 ## License

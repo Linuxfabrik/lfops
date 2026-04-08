@@ -10,17 +10,45 @@ This role installs and configures [FreeIPA](https://www.freeipa.org/) as a clien
 
 ## Tags
 
-| Tag              | What it does                                | Reload / Restart |
-| ---              | ------------                                | ---------------- |
-| `freeipa_client` | Installs and configures FreeIPA as a client | - |
+`freeipa_client`
+
+* Installs and configures FreeIPA as a client.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `freeipa_client__create_home_dir` | Defines if PAM will be configured to create a users home directory if it does not exist. | `true` |
-| `freeipa_client__ipa_admin_user` | The IPA admin user / Kerberos admin principal. | `{'username': 'admin', 'password': freeipa_server__ipa_admin_password}` |
+`freeipa_client__create_home_dir`
+
+* Defines if PAM will be configured to create a users home directory if it does not exist.
+* Type: Bool.
+* Default: `true`
+
+`freeipa_client__ipa_admin_user`
+
+* The IPA admin user / Kerberos admin principal.
+* Type: Dictionary.
+* Default:
+
+```yaml
+freeipa_client__ipa_admin_user:
+  username: 'admin'
+  password: '{{ freeipa_server__ipa_admin_password }}'
+```
+
+* Subkeys:
+
+    * `username`:
+
+        * Optional. The admin username.
+        * Type: String.
+        * Default: `'admin'`
+
+    * `password`:
+
+        * Optional. The admin password.
+        * Type: String.
+        * Default: `'{{ freeipa_server__ipa_admin_password }}'`
 
 Example:
 ```yaml

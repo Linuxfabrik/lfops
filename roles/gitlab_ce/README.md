@@ -15,17 +15,31 @@ If you use the [gitlab_ce Playbook](https://github.com/Linuxfabrik/lfops/blob/ma
 
 ## Tags
 
-| Tag                   | What it does                           | Reload / Restart |
-| ---                   | ------------                           | ---------------- |
-| `gitlab_ce`           | * `install tar gitlab-ce`<br> * `mkdir -p /backup/gitlab`<br> * Deploy `/etc/systemd/system/gitlab-dump.service`<br> * Deploy `/etc/systemd/system/gitlab-dump.timer`<br> * `systemctl enable gitlab-dump.timer --now`<br> * Deploy `/etc/gitlab/gitlab.rb`<br> * `gitlab-ctl reconfigure`<br> * `gitlab-ctl restart` | `gitlab-ctl restart` |
-| `gitlab_ce:configure` | Same as above, but without install. | `gitlab-ctl restart` |
+`gitlab_ce`
+
+* `install tar gitlab-ce`
+* `mkdir -p /backup/gitlab`
+* Deploy `/etc/systemd/system/gitlab-dump.service`
+* Deploy `/etc/systemd/system/gitlab-dump.timer`
+* `systemctl enable gitlab-dump.timer --now`
+* Deploy `/etc/gitlab/gitlab.rb`
+* `gitlab-ctl reconfigure`
+* `gitlab-ctl restart`
+* Triggers: `gitlab-ctl restart`.
+
+`gitlab_ce:configure`
+
+* Same as above, but without install.
+* Triggers: `gitlab-ctl restart`.
 
 
 ## Mandatory Role Variables
 
-| Variable              | Description                                                         |
-| --------              | -----------                                                         |
-| `gitlab_ce__rb_external_url` | The URL of your GitLab instance. Currently, only `http://` is supported by this role. If running behind a reverse proxy or on a trusted network, this is good enough. |
+`gitlab_ce__rb_external_url`
+
+* The URL of your GitLab instance. Currently, only `http://` is supported by this role. If running behind a reverse proxy or on a trusted network, this is good enough.
+* Type: String.
+* Default: none
 
 Example:
 ```yaml
@@ -36,49 +50,251 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `gitlab_ce__on_calendar` | The `OnCalendar` definition for the GitLab Backup. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 23:{{ 59 \| random(seed=inventory_hostname) }}'` |
-| `gitlab_ce__rb_git_data_dirs_default_path` | For setting up different data storing directory. If missing, the directory will be created by GitLab. If you want to use a single non-default directory to store git data use a path that doesn't contain symlinks. [Docs](https://docs.gitlab.com/omnibus/settings/configuration.html#store-git-data-in-an-alternative-directory) | unset |
-| `gitlab_ce__rb_gitlab_rails_backup_keep_time` | The duration in seconds to keep backups before they are allowed to be deleted | `86400` (24h) |
-| `gitlab_ce__rb_gitlab_rails_backup_path` | Backup Settings. [Docs](https://docs.gitlab.com/omnibus/settings/backups.html) | `'/backup/gitlab'` |
-| `gitlab_ce__rb_gitlab_rails_extra_matomo_site_id` | Extra customization for Matomo | unset |
-| `gitlab_ce__rb_gitlab_rails_extra_matomo_url` | Extra customization for Matomo | unset |
-| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_builds` | Whether builds are enabled by default for projects. | `true` |
-| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_container_registry` | Whether the container registry is enabled by default for projects. | `true` |
-| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_issues` | Whether issues are enabled by default for projects. | `true` |
-| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_merge_requests` | Whether merge requests are enabled by default for projects. | `true` |
-| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_snippets` | Whether snippets are enabled by default for projects. | `true` |
-| `gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_wiki` | Whether the wiki feature is enabled by default for projects. | `true` |
-| `gitlab_ce__rb_gitlab_rails_gitlab_email_display_name` | | `'GitLab@{{ inventory_hostname }}'` |
-| `gitlab_ce__rb_gitlab_rails_gitlab_email_from` | If your SMTP server does not like the default 'From: gitlab@gitlab.example.com', you can change the 'From' with this setting. | `'{{ mailto_root__from \| d("") }}'` |
-| `gitlab_ce__rb_gitlab_rails_gitlab_email_reply_to` | The 'Reply To' address for emails if it differs from the 'From' address. | unset |
-| `gitlab_ce__rb_gitlab_rails_ldap_enabled` | Whether the LDAP integration is enabled. [Docs](https://docs.gitlab.com/administration/uploads/#using-local-storage) | `false` |
-| `gitlab_ce__rb_gitlab_rails_ldap_servers` | LDAP configuration for one or more servers. [Docs](https://docs.gitlab.com/administration/auth/ldap/?tab=Self-compiled+%28source%29#configure-ldap) | unset |
-| `gitlab_ce__rb_gitlab_rails_omniauth_allow_single_sign_on` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
-| `gitlab_ce__rb_gitlab_rails_omniauth_auto_link_ldap_user` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
-| `gitlab_ce__rb_gitlab_rails_omniauth_block_auto_created_users` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
-| `gitlab_ce__rb_gitlab_rails_omniauth_enabled` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
-| `gitlab_ce__rb_gitlab_rails_omniauth_external_providers` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
-| `gitlab_ce__rb_gitlab_rails_omniauth_providers` | OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html) | unset |
-| `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_bantime` | Ban an IP for x seconds after too many auth attempts | `3600` (1h) |
-| `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled` |  | `true` |
-| `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_findtime` | Reset the auth attempt counter per IP after x seconds | `60` |
-| `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_ip_whitelist` |  | `['127.0.0.1']` |
-| `gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_maxretry` | Limit the number of Git HTTP authentication attempts per IP | `10` |
-| `gitlab_ce__rb_gitlab_rails_time_zone` | [Docs](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/gitlab.yml.md) | `'Europe/Zurich'` |
-| `gitlab_ce__rb_gitlab_rails_uploads_directory` | For setting up a different storage directory for uploads. If missing, the directory will be created by GitLab. [Docs](https://docs.gitlab.com/administration/uploads/#using-local-storage) | `'/var/opt/gitlab/gitlab-rails/uploads'` |
-| `gitlab_ce__rb_letsencrypt_enable` | If GitLab should manage Let's Encrypt certificates itself | `false` |
-| `gitlab_ce__rb_nginx_listen_https` | Set this to `false` only if your reverse proxy internally communicates over HTTP. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl) | `false` |
-| `gitlab_ce__rb_nginx_listen_port` | Override only if you use a reverse proxy. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#setting-the-nginx-listen-port) | `80` |
-| `gitlab_ce__rb_nginx_ssl_certificate_key`` | Path to the SSL certificate key. | unset |
-| `gitlab_ce__rb_nginx_ssl_certificate`` | Path to the SSL certificate. | unset |
-| `gitlab_ce__rb_registry_external_url` | The URL of the GitLab Container registry. | unset |
-| `gitlab_ce__rb_registry_nginx_enable` | Set this to `true` to enable the GitLab Container Registry. | unset |
-| `gitlab_ce__rb_registry_nginx_listen_https` | Set this to `false` only if your reverse proxy internally communicates over HTTP. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl) | `false` |
-| `gitlab_ce__rb_registry_nginx_listen_port` | The port on which the Container Registry is listening. | `5050` |
-| `gitlab_ce__rb_registry_nginx_proxy_set_headers` | Nginx headers for the Container Registry. | `{'X-Forwarded-Proto': 'https', 'X-Forwarded-Ssl': 'on'}` |
-| `gitlab_ce__version` | The GitLab version to install. This is useful when restoring from a backup. When unset, the latest available version is used. | unset |
+`gitlab_ce__on_calendar`
+
+* The `OnCalendar` definition for the GitLab Backup. Have a look at `man systemd.time(7)` for the format.
+* Type: String.
+* Default: `'*-*-* 23:{{ 59 | random(seed=inventory_hostname) }}'`
+
+`gitlab_ce__rb_git_data_dirs_default_path`
+
+* For setting up different data storing directory. If missing, the directory will be created by GitLab. If you want to use a single non-default directory to store git data use a path that doesn't contain symlinks. [Docs](https://docs.gitlab.com/omnibus/settings/configuration.html#store-git-data-in-an-alternative-directory)
+* Type: String.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_backup_keep_time`
+
+* The duration in seconds to keep backups before they are allowed to be deleted.
+* Type: Number.
+* Default: `86400`
+
+`gitlab_ce__rb_gitlab_rails_backup_path`
+
+* Backup Settings. [Docs](https://docs.gitlab.com/omnibus/settings/backups.html)
+* Type: String.
+* Default: `'/backup/gitlab'`
+
+`gitlab_ce__rb_gitlab_rails_extra_matomo_site_id`
+
+* Extra customization for Matomo.
+* Type: String.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_extra_matomo_url`
+
+* Extra customization for Matomo.
+* Type: String.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_builds`
+
+* Whether builds are enabled by default for projects.
+* Type: Bool.
+* Default: `true`
+
+`gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_container_registry`
+
+* Whether the container registry is enabled by default for projects.
+* Type: Bool.
+* Default: `true`
+
+`gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_issues`
+
+* Whether issues are enabled by default for projects.
+* Type: Bool.
+* Default: `true`
+
+`gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_merge_requests`
+
+* Whether merge requests are enabled by default for projects.
+* Type: Bool.
+* Default: `true`
+
+`gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_snippets`
+
+* Whether snippets are enabled by default for projects.
+* Type: Bool.
+* Default: `true`
+
+`gitlab_ce__rb_gitlab_rails_gitlab_default_projects_features_wiki`
+
+* Whether the wiki feature is enabled by default for projects.
+* Type: Bool.
+* Default: `true`
+
+`gitlab_ce__rb_gitlab_rails_gitlab_email_display_name`
+
+* The display name used in GitLab emails.
+* Type: String.
+* Default: `'GitLab@{{ inventory_hostname }}'`
+
+`gitlab_ce__rb_gitlab_rails_gitlab_email_from`
+
+* If your SMTP server does not like the default 'From: gitlab@gitlab.example.com', you can change the 'From' with this setting.
+* Type: String.
+* Default: `'{{ mailto_root__from | d("") }}'`
+
+`gitlab_ce__rb_gitlab_rails_gitlab_email_reply_to`
+
+* The 'Reply To' address for emails if it differs from the 'From' address.
+* Type: String.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_ldap_enabled`
+
+* Whether the LDAP integration is enabled. [Docs](https://docs.gitlab.com/administration/uploads/#using-local-storage)
+* Type: Bool.
+* Default: `false`
+
+`gitlab_ce__rb_gitlab_rails_ldap_servers`
+
+* LDAP configuration for one or more servers. [Docs](https://docs.gitlab.com/administration/auth/ldap/?tab=Self-compiled+%28source%29#configure-ldap)
+* Type: Dictionary.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_omniauth_allow_single_sign_on`
+
+* OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html)
+* Type: List.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_omniauth_auto_link_ldap_user`
+
+* OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html)
+* Type: Bool.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_omniauth_block_auto_created_users`
+
+* OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html)
+* Type: Bool.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_omniauth_enabled`
+
+* OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html)
+* Type: Bool.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_omniauth_external_providers`
+
+* OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html)
+* Type: List.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_omniauth_providers`
+
+* OmniAuth Settings. [Docs](https://docs.gitlab.com/ee/integration/omniauth.html)
+* Type: List of dictionaries.
+* Default: unset
+
+`gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_bantime`
+
+* Ban an IP for x seconds after too many auth attempts.
+* Type: Number.
+* Default: `3600`
+
+`gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_enabled`
+
+* Whether rack attack for Git basic auth is enabled.
+* Type: Bool.
+* Default: `true`
+
+`gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_findtime`
+
+* Reset the auth attempt counter per IP after x seconds.
+* Type: Number.
+* Default: `60`
+
+`gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_ip_whitelist`
+
+* List of IP addresses to whitelist from rack attack.
+* Type: List.
+* Default: `['127.0.0.1']`
+
+`gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_maxretry`
+
+* Limit the number of Git HTTP authentication attempts per IP.
+* Type: Number.
+* Default: `10`
+
+`gitlab_ce__rb_gitlab_rails_time_zone`
+
+* The time zone for GitLab. [Docs](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/gitlab.yml.md)
+* Type: String.
+* Default: `'Europe/Zurich'`
+
+`gitlab_ce__rb_gitlab_rails_uploads_directory`
+
+* For setting up a different storage directory for uploads. If missing, the directory will be created by GitLab. [Docs](https://docs.gitlab.com/administration/uploads/#using-local-storage)
+* Type: String.
+* Default: `'/var/opt/gitlab/gitlab-rails/uploads'`
+
+`gitlab_ce__rb_letsencrypt_enable`
+
+* If GitLab should manage Let's Encrypt certificates itself.
+* Type: Bool.
+* Default: `false`
+
+`gitlab_ce__rb_nginx_listen_https`
+
+* Set this to `false` only if your reverse proxy internally communicates over HTTP. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl)
+* Type: Bool.
+* Default: `false`
+
+`gitlab_ce__rb_nginx_listen_port`
+
+* Override only if you use a reverse proxy. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#setting-the-nginx-listen-port)
+* Type: Number.
+* Default: `80`
+
+`gitlab_ce__rb_nginx_ssl_certificate`
+
+* Path to the SSL certificate.
+* Type: String.
+* Default: unset
+
+`gitlab_ce__rb_nginx_ssl_certificate_key`
+
+* Path to the SSL certificate key.
+* Type: String.
+* Default: unset
+
+`gitlab_ce__rb_registry_external_url`
+
+* The URL of the GitLab Container registry.
+* Type: String.
+* Default: unset
+
+`gitlab_ce__rb_registry_nginx_enable`
+
+* Set this to `true` to enable the GitLab Container Registry.
+* Type: Bool.
+* Default: unset
+
+`gitlab_ce__rb_registry_nginx_listen_https`
+
+* Set this to `false` only if your reverse proxy internally communicates over HTTP. [Docs](https://docs.gitlab.com/omnibus/settings/nginx.html#supporting-proxied-ssl)
+* Type: Bool.
+* Default: `false`
+
+`gitlab_ce__rb_registry_nginx_listen_port`
+
+* The port on which the Container Registry is listening.
+* Type: Number.
+* Default: `5050`
+
+`gitlab_ce__rb_registry_nginx_proxy_set_headers`
+
+* Nginx headers for the Container Registry.
+* Type: Dictionary.
+* Default: `{'X-Forwarded-Proto': 'https', 'X-Forwarded-Ssl': 'on'}`
+
+`gitlab_ce__version`
+
+* The GitLab version to install. This is useful when restoring from a backup. When unset, the latest available version is used.
+* Type: String.
+* Default: unset
 
 Example (GitLab running on port 80 behind a reverse proxy, offering Google Authentication, with Matomo integration, plus running a registry):
 ```yaml

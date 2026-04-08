@@ -30,18 +30,26 @@ mongodb__repl_set_members:
 
 ## Tags
 
-| Tag          | What it does                       | Reload / Restart |
-| ---          | ------------                       | ---------------- |
-| `rocketchat` | Installs and configure Rocket.Chat | Restarts rocketchat-container.service |
+`rocketchat`
+
+* Installs and configure Rocket.Chat.
+* Triggers: `systemctl --user restart rocketchat-container.service`.
 
 
 ## Mandatory Role Variables
-| Variable                  | Description                                                |
-| --------                  | -----------                                                |
-| `rocketchat__mongodb_login` | The user account for accessing the MongoDB database. Mandatory when authentication in MongoDB is enabled. |
-| `rocketchat__root_url`    | The URL on which the Rocket.Chat server will be available. |
+
+`rocketchat__mongodb_login`
+
+* The user account for accessing the MongoDB database. Mandatory when authentication in MongoDB is enabled.
+* Type: Dictionary.
+
+`rocketchat__root_url`
+
+* The URL on which the Rocket.Chat server will be available.
+* Type: String.
 
 Example:
+
 ```yaml
 # mandatory
 rocketchat__mongodb_login:
@@ -53,18 +61,56 @@ rocketchat__root_url: 'https://rocketchat.example.com'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `rocketchat__container_enabled`| Enables or disables the service, analogous to `systemctl enable/disable`. | `true` |
-| `rocketchat__container_state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
-| `rocketchat__mongodb_host`| The host on which MongoDB is reachable. | `'host.containers.internal'` |
-| `rocketchat__mongodb_port`| The port on which MongoDB is reachable. | `27017` |
-| `rocketchat__mongodb_repl_set_name`| The name of the MongoDB replica set for Rocket.Chat. | `'rs01'` |
-| `rocketchat__port`| The port on which Rocket.Chat server will be available. | `3000` |
-| `rocketchat__user_home_directory`| The home directory of the user running Rocket.Chat. | `/opt/rocketchat` |
-| `rocketchat__version`| Which Rocket.Chat version to install. Have a at the available [releases](https://github.com/RocketChat/Rocket.Chat/releases). | `'latest'` |
+`rocketchat__container_enabled`
+
+* Enables or disables the service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`rocketchat__container_state`
+
+* Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options: `started`, `stopped`, `restarted`, `reloaded`.
+* Type: String.
+* Default: `'started'`
+
+`rocketchat__mongodb_host`
+
+* The host on which MongoDB is reachable.
+* Type: String.
+* Default: `'host.containers.internal'`
+
+`rocketchat__mongodb_port`
+
+* The port on which MongoDB is reachable.
+* Type: Number.
+* Default: `27017`
+
+`rocketchat__mongodb_repl_set_name`
+
+* The name of the MongoDB replica set for Rocket.Chat.
+* Type: String.
+* Default: `'rs01'`
+
+`rocketchat__port`
+
+* The port on which Rocket.Chat server will be available.
+* Type: Number.
+* Default: `3000`
+
+`rocketchat__user_home_directory`
+
+* The home directory of the user running Rocket.Chat.
+* Type: String.
+* Default: `'/opt/rocketchat'`
+
+`rocketchat__version`
+
+* Which Rocket.Chat version to install. Have a at the available [releases](https://github.com/RocketChat/Rocket.Chat/releases).
+* Type: String.
+* Default: `'latest'`
 
 Example:
+
 ```yaml
 # optional
 rocketchat__container_enabled: true

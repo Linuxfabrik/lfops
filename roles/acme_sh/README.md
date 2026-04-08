@@ -10,6 +10,7 @@ SSLCertificateKeyFile   /etc/pki/tls/private/www.example.com.key
 SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-chain.crt
 ```
 
+
 ## Mandatory Requirements
 
 * Install `openssl`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
@@ -30,19 +31,53 @@ If you use the [acme.sh Playbook](https://github.com/Linuxfabrik/lfops/blob/main
 
 ## Tags
 
-| Tag                    | What it does                                  | Reload / Restart |
-| ---                    | ------------                                  | ---------------- |
-| `acme_sh`              | Installs acme.sh and issues certificates      | - |
-| `acme_sh:certificates` | Issues certificates                           | - |
-| `acme_sh:state`        | Manages the state of the weekly acme.sh timer | - |
+`acme_sh`
+
+* Installs acme.sh and issues certificates.
+* Triggers: none.
+
+`acme_sh:certificates`
+
+* Issues certificates.
+* Triggers: none.
+
+`acme_sh:state`
+
+* Manages the state of the weekly acme.sh timer.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                 | Description                                                                           |
-| --------                 | -----------                                                                           |
-| `acme_sh__account_email` | Email address for the Let's encrypt account. This address will receive expiry emails. |
-| `acme_sh__certificates`  | List of certificates that should be issued. Subkeys: <ul><li>`name`: Mandatory, string. Domain of the certificate.</li><li>`alternative_names`: Optional, list. Subject Alternative Names (SAN) for the certificate. Defaults to unset.</li><li>`reload_cmd`: Optional, string. Command to execute after issue/renew to reload the server. Defaults to `systemctl reload httpd`.</li></ul> |
+`acme_sh__account_email`
+
+* Email address for the Let's encrypt account. This address will receive expiry emails.
+* Type: String.
+* Default: none
+
+`acme_sh__certificates`
+
+* List of certificates that should be issued.
+* Type: List of dictionaries.
+* Default: none
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Domain of the certificate.
+        * Type: String.
+
+    * `alternative_names`:
+
+        * Optional. Subject Alternative Names (SAN) for the certificate.
+        * Type: List.
+        * Default: unset
+
+    * `reload_cmd`:
+
+        * Optional. Command to execute after issue/renew to reload the server.
+        * Type: String.
+        * Default: `'systemctl reload httpd'`
 
 Example:
 ```yaml
@@ -59,15 +94,47 @@ acme_sh__certificates:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `acme_sh__deploy_to_host`  | The host which the issued certificates should be deployed to. | unset |
-| `acme_sh__deploy_to_host_hook`  | The deployment hook which should be used to deploy the certificates to the deploy host. | `ssh` |
-| `acme_sh__deploy_to_host_reload_cmd`  | The reload command which should be executed on the deploy host after the certificates were deployed to the deploy host. | `reload_cmd` subkey of the `acme_sh__certificates` item, or `systemctl reload httpd` |
-| `acme_sh__deploy_to_host_user`  | The remote user account which should be used to deploy the certificates to the deploy host. | `root` |
-| `acme_sh__key_length`  | Key length in bits of the certificates to issue. | `4096` |
-| `acme_sh__reload_cmd` | The reload command which should be executed on the local host after the certificates were installed. | `reload_cmd` subkey of the `acme_sh__certificates` item, or `systemctl reload httpd` |
-| `acme_sh__timer_enabled` | Enables or disables the weekly acme.sh timer, analogous to `systemctl enable/disable --now`. | `true` |
+`acme_sh__deploy_to_host`
+
+* The host which the issued certificates should be deployed to.
+* Type: String.
+* Default: unset
+
+`acme_sh__deploy_to_host_hook`
+
+* The deployment hook which should be used to deploy the certificates to the deploy host.
+* Type: String.
+* Default: `'ssh'`
+
+`acme_sh__deploy_to_host_reload_cmd`
+
+* The reload command which should be executed on the deploy host after the certificates were deployed to the deploy host.
+* Type: String.
+* Default: `reload_cmd` subkey of the `acme_sh__certificates` item, or `'systemctl reload httpd'`
+
+`acme_sh__deploy_to_host_user`
+
+* The remote user account which should be used to deploy the certificates to the deploy host.
+* Type: String.
+* Default: `'root'`
+
+`acme_sh__key_length`
+
+* Key length in bits of the certificates to issue.
+* Type: Number.
+* Default: `4096`
+
+`acme_sh__reload_cmd`
+
+* The reload command which should be executed on the local host after the certificates were installed.
+* Type: String.
+* Default: `reload_cmd` subkey of the `acme_sh__certificates` item, or `'systemctl reload httpd'`
+
+`acme_sh__timer_enabled`
+
+* Enables or disables the weekly acme.sh timer, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
 
 Example:
 ```yaml

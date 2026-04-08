@@ -12,17 +12,25 @@ If you use the ["Repo RPM Fusion" Playbook](https://github.com/Linuxfabrik/lfops
 
 ## Tags
 
-| Tag                  | What it does                         | Reload / Restart |
-| ---                  | ------------                         | ---------------- |
-| `repo_rpmfusion`     | Deploys the RPM Fusion Repository    | - |
+`repo_rpmfusion`
+
+* Deploys the RPM Fusion Repository.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `repo_rpmfusion__basic_auth_login` | Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles. | `{{ lfops__repo_basic_auth_login \| default("") }}` |
-| `repo_rpmfusion__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used. | `'{{ lfops__repo_mirror_url | default("") }}'` |
+`repo_rpmfusion__basic_auth_login`
+
+* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Type: String.
+* Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
+
+`repo_rpmfusion__mirror_url`
+
+* Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used.
+* Type: String.
+* Default: `'{{ lfops__repo_mirror_url | default("") }}'`
 
 Example:
 ```yaml

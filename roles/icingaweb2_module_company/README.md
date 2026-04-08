@@ -14,9 +14,10 @@ This role is tested with the following IcingaWeb2 Company Module versions:
 
 ## Tags
 
-| Tag                         | What it does                                          | Reload / Restart |
-| ---                         | ------------                                          | ---------------- |
-| `icingaweb2_module_company` | Installs and configures the IcingaWeb2 Company Module | - |
+`icingaweb2_module_company`
+
+* Installs and configures the IcingaWeb2 Company Module.
+* Triggers: none.
 
 
 ## License

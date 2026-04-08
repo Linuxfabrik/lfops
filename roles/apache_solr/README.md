@@ -15,21 +15,36 @@ This Ansible role
 
 If you use the [Apache Solr Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apache_solr.yml), this is automatically done for you.
 
+
 ## Tags
 
-| Tag                      | What it does                                    | Reload / Restart |
-| ---                      | ------------                                    | ---------------- |
-| `apache_solr`            | Installs and configures the whole Apache Solr server and deploys `bin/solr.in.sh`, `log4j.xml.j2` and `security.json` | Restarts solr.service |
-| `apache_solr:state`      | Manages the state of `solr.service` | -  |
-| `apache_solr:user`       | Generates hashed passwords and deploys `security.json` | Restarts solr.service |
+`apache_solr`
+
+* Installs and configures the whole Apache Solr server and deploys `bin/solr.in.sh`, `log4j.xml.j2` and `security.json`.
+* Triggers: solr.service restart.
+
+`apache_solr:state`
+
+* Manages the state of `solr.service`.
+* Triggers: none.
+
+`apache_solr:user`
+
+* Generates hashed passwords and deploys `security.json`.
+* Triggers: solr.service restart.
 
 
 ## Mandatory Role Variables
 
-| Variable                             | Description                                                                                                        |
-| --------                             | -----------                                                                                                        |
-| `apache_solr__checksum` | String. The SHA512 checksum according to your version. See `solr-X.X.X.tgz.sha512` file at https://archive.apache.org/dist/solr/solr/ for Solr 9+, https://archive.apache.org/dist/lucene/solr/ for Solr 8-. |
-| `apache_solr__version` | The version to install. See https://archive.apache.org/dist/solr/solr/ for Solr 9+, https://archive.apache.org/dist/lucene/solr/ for Solr 8-. |
+`apache_solr__checksum`
+
+* The SHA512 checksum according to your version. See `solr-X.X.X.tgz.sha512` file at https://archive.apache.org/dist/solr/solr/ for Solr 9+, https://archive.apache.org/dist/lucene/solr/ for Solr 8-.
+* Type: String.
+
+`apache_solr__version`
+
+* The version to install. See https://archive.apache.org/dist/solr/solr/ for Solr 9+, https://archive.apache.org/dist/lucene/solr/ for Solr 8-.
+* Type: String.
 
 Example:
 ```yaml
@@ -43,24 +58,140 @@ apache_solr__version: '9.4.0'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `apache_solr__data_dir` | String. [SOLR_DATA_HOME](https://solr.apache.org/guide/solr/latest/configuration-guide/index-location-format.html) | `'/var/solr/data'` |
-| `apache_solr__group` | String. Group running the systemd service. | `'solr'` |
-| `apache_solr__http_bind_address` | String. [SOLR_JETTY_HOST](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#security-considerations) | `'0.0.0.0'` |
-| `apache_solr__http_bind_port` | Number. [SOLR_PORT](https://solr.apache.org/guide/solr/latest/deployment-guide/upgrading-a-solr-cluster.html#planning-your-upgrade) | `8983` |
-| `apache_solr__install_dir` | String. Where to install Apache Solr to. | `'/opt'` |
-| `apache_solr__log4j_props` | String. [LOG4J_PROPS](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#log-settings) | `'/var/solr/log4j2.xml'` |
-| `apache_solr__log_level` | String. [SOLR_LOG_LEVEL](https://solr.apache.org/guide/solr/latest/deployment-guide/configuring-logging.html) | `'INFO'` |
-| `apache_solr__logs_dir` | String. [SOLR_LOGS_DIR](https://solr.apache.org/guide/solr/latest/deployment-guide/configuring-logging.html#permanent-logging-settings) | `'/var/log/solr'` |
-| `apache_solr__pid_dir` | String. [SOLR_PID_DIR](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#environment-overrides-include-file) | `'/var/solr'` |
-| `apache_solr__roles__group_var`/<br/>`apache_solr__roles__host_var` | List of dictionaries. Roles bridge the gap between users and permissions. The roles can be used with any of the authentication plugins or with a custom authentication plugin if you have created one. You will only need to ensure that logged-in users are mapped to the roles defined by the plugin. The role-to-user mappings must be defined explicitly for every possible authenticated user.<br/>Subkeys: <ul><li>`name`: Mandatory, string. Name for the role.</li><li>`permissions`: Mandatory, list of strings. Apache Solr permissions assigned to this role. Have a look at the example for all possible values.</li><li>`state`: Optional, string. Either `present` or `absent`.</li></ul> | `[]` |
-| `apache_solr__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
-| `apache_solr__service` | String. Name of the systemd service. | `'solr'` |
-| `apache_solr__stop_wait` | Number. Waiting up to $SOLR_STOP_WAIT seconds to see Solr running on port $SOLR_PORT". | `15` |
-| `apache_solr__user` | String. Username running the systemd service. | `'solr'` |
-| `apache_solr__users__group_var`/<br/>`apache_solr__users__host_var` | List of dictionaries. This Ansible role supports Basic authentication for users with the use of the `BasicAuthPlugin`, which only provides user authentication. To control user permissions, you may need to configure `apache_solr__roles__group_var` / `apache_solr__roles__host_var`.<br/>Note: The 'all' permission should always be the last permission in your config so that more specific permissions are applied first.<br/>Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password.</li><li>`role`: Mandatory, string. Name of the role the user belongs to.</li><li>`state`: Optional, string. Either `present` or `absent`.</li></ul> | `[]` |
-| `apache_solr__var_dir` | String. The absolute path to the Solr home directory for each Solr node. | `'/var/solr'` |
+`apache_solr__data_dir`
+
+* [SOLR_DATA_HOME](https://solr.apache.org/guide/solr/latest/configuration-guide/index-location-format.html).
+* Type: String.
+* Default: `'/var/solr/data'`
+
+`apache_solr__group`
+
+* Group running the systemd service.
+* Type: String.
+* Default: `'solr'`
+
+`apache_solr__http_bind_address`
+
+* [SOLR_JETTY_HOST](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#security-considerations).
+* Type: String.
+* Default: `'0.0.0.0'`
+
+`apache_solr__http_bind_port`
+
+* [SOLR_PORT](https://solr.apache.org/guide/solr/latest/deployment-guide/upgrading-a-solr-cluster.html#planning-your-upgrade).
+* Type: Number.
+* Default: `8983`
+
+`apache_solr__install_dir`
+
+* Where to install Apache Solr to.
+* Type: String.
+* Default: `'/opt'`
+
+`apache_solr__log4j_props`
+
+* [LOG4J_PROPS](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#log-settings).
+* Type: String.
+* Default: `'/var/solr/log4j2.xml'`
+
+`apache_solr__log_level`
+
+* [SOLR_LOG_LEVEL](https://solr.apache.org/guide/solr/latest/deployment-guide/configuring-logging.html).
+* Type: String.
+* Default: `'INFO'`
+
+`apache_solr__logs_dir`
+
+* [SOLR_LOGS_DIR](https://solr.apache.org/guide/solr/latest/deployment-guide/configuring-logging.html#permanent-logging-settings).
+* Type: String.
+* Default: `'/var/log/solr'`
+
+`apache_solr__pid_dir`
+
+* [SOLR_PID_DIR](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#environment-overrides-include-file).
+* Type: String.
+* Default: `'/var/solr'`
+
+`apache_solr__roles__group_var` / `apache_solr__roles__host_var`
+
+* Roles bridge the gap between users and permissions. The roles can be used with any of the authentication plugins or with a custom authentication plugin if you have created one. You will only need to ensure that logged-in users are mapped to the roles defined by the plugin. The role-to-user mappings must be defined explicitly for every possible authenticated user.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name for the role.
+        * Type: String.
+
+    * `permissions`:
+
+        * Mandatory. Apache Solr permissions assigned to this role. Have a look at the example for all possible values.
+        * Type: List of strings.
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`.
+        * Type: String.
+
+`apache_solr__service`
+
+* Name of the systemd service.
+* Type: String.
+* Default: `'solr'`
+
+`apache_solr__service_enabled`
+
+* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`apache_solr__stop_wait`
+
+* Waiting up to $SOLR_STOP_WAIT seconds to see Solr running on port $SOLR_PORT.
+* Type: Number.
+* Default: `15`
+
+`apache_solr__user`
+
+* Username running the systemd service.
+* Type: String.
+* Default: `'solr'`
+
+`apache_solr__users__group_var` / `apache_solr__users__host_var`
+
+* This Ansible role supports Basic authentication for users with the use of the `BasicAuthPlugin`, which only provides user authentication. To control user permissions, you may need to configure `apache_solr__roles__group_var` / `apache_solr__roles__host_var`. Note: The 'all' permission should always be the last permission in your config so that more specific permissions are applied first.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `role`:
+
+        * Mandatory. Name of the role the user belongs to.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`.
+        * Type: String.
+
+`apache_solr__var_dir`
+
+* The absolute path to the Solr home directory for each Solr node.
+* Type: String.
+* Default: `'/var/solr'`
 
 Example:
 ```yaml

@@ -5,18 +5,61 @@ This role installs and configures [NFS](http://linux-nfs.org/) as a server.
 
 ## Tags
 
-| Tag                  | What it does                           | Reload / Restart |
-| ---                  | ------------                           | ---------------- |
-| `nfs_server`         | <ul><li>Install nfs-utils on RedHat-Based systems or nfs-kernel-server on Debian-Based systems</li><li>Enable/disable nfs-server.service</li><li>`mkdir -p nfs-export-directory`</li><li>Deploy /etc/exports</li></ul> | Reloads nfs-server.service |
-| `nfs_server:state`   | <ul><li>Enable/disable nfs-server.service</li></ul> | - |
-| `nfs_server:exports` | <ul><li>`mkdir -p nfs-export-directory`</li><li>Deploy /etc/exports</li></ul> | Reloads nfs-server.service |
+`nfs_server`
+
+* Install nfs-utils on RedHat-Based systems or nfs-kernel-server on Debian-Based systems.
+* Enable/disable nfs-server.service.
+* `mkdir -p nfs-export-directory`.
+* Deploy /etc/exports.
+* Triggers: nfs-server.service reload.
+
+`nfs_server:state`
+
+* Enable/disable nfs-server.service.
+* Triggers: none.
+
+`nfs_server:exports`
+
+* `mkdir -p nfs-export-directory`.
+* Deploy /etc/exports.
+* Triggers: nfs-server.service reload.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `nfs_server__exports` | List of NFS exports to create. Subkeys: <ul><li>`path`: Mandatory, string. Directory to export.</li><li>`clients`: Mandatory, list. List of client specifications. Have a look at `man 5 exports`.</li><li>`owner`: Optional, string. Owner of the export directory. Defaults to `'nobody'`.</li><li>`group`: Optional, string. Group of the export directory. Defaults to `'nogroup'` (`'nobody'` for RHEL, CentOS, Fedora, Rocky).</li><li>`mode`: Optional, string. Mode of the export directory. Defaults to `'0o755'`.</li></ul> |
+`nfs_server__exports`
+
+* List of NFS exports to create.
+* Type: List of dictionaries.
+* Subkeys:
+
+    * `path`:
+
+        * Mandatory. Directory to export.
+        * Type: String.
+
+    * `clients`:
+
+        * Mandatory. List of client specifications. Have a look at `man 5 exports`.
+        * Type: List.
+
+    * `owner`:
+
+        * Optional. Owner of the export directory.
+        * Type: String.
+        * Default: `'nobody'`
+
+    * `group`:
+
+        * Optional. Group of the export directory.
+        * Type: String.
+        * Default: `'nogroup'` (`'nobody'` for RHEL, CentOS, Fedora, Rocky)
+
+    * `mode`:
+
+        * Optional. Mode of the export directory.
+        * Type: String.
+        * Default: `'0o755'`
 
 Example:
 ```yaml
@@ -37,9 +80,11 @@ nfs_server__exports:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `nfs_server__service_enabled` | Enables or disables the nfs-server service, analogous to `systemctl enable/disable --now`. | `true` |
+`nfs_server__service_enabled`
+
+* Enables or disables the nfs-server service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
 
 Example:
 ```yaml

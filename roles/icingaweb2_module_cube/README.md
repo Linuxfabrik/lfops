@@ -14,18 +14,21 @@ This role is tested with the following IcingaWeb2 Cube Module versions:
 
 ## Tags
 
-| Tag                      | What it does                                       | Reload / Restart |
-| ---                      | ------------                                       | ---------------- |
-| `icingaweb2_module_cube` | Installs and configures the IcingaWeb2 Cube Module | - |
+`icingaweb2_module_cube`
+
+* Installs and configures the IcingaWeb2 Cube Module.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                          | Description                                                                                                 |
-| --------                          | -----------                                                                                                 |
-| `icingaweb2_module_cube__version` | The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-cube/releases. |
+`icingaweb2_module_cube__version`
+
+* The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-cube/releases.
+* Type: String.
 
 Example:
+
 ```yaml
 # mandatory
 icingaweb2_module_cube__version: 'v1.3.3'
@@ -34,11 +37,14 @@ icingaweb2_module_cube__version: 'v1.3.3'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icingaweb2_module_cube__url` | The URL from where to download the IcingaWeb2 Cube Module. | `https://github.com/Icinga/icingaweb2-module-cube/archive/{{ icingaweb2_module_cube__version }}.tar.gz` |
+`icingaweb2_module_cube__url`
+
+* The URL from where to download the IcingaWeb2 Cube Module.
+* Type: String.
+* Default: `'https://github.com/Icinga/icingaweb2-module-cube/archive/{{ icingaweb2_module_cube__version }}.tar.gz'`
 
 Example:
+
 ```yaml
 # optional
 icingaweb2_module_cube__url: 'https://github.com/Linuxfabrik/icingaweb2-module-cube/archive/{{ icingaweb2_module_cube__version }}.tar.gz'

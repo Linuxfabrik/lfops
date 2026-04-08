@@ -12,29 +12,87 @@ Note that the role does not make use of `/etc/ssh/sshd_config.d/` since not all 
 
 ## Tags
 
-| Tag         | What it does                                  | Reload / Restart |
-| ---         | ------------                                  | ---------------- |
-| `sshd`       | Configures sshd                               | Reloads sshd.service |
-| `sshd:state` | Manages the state of the sshd systemd service | - |
+`sshd`
+
+* Configures sshd.
+* Triggers: `sshd: sshd -t; reload sshd`.
+
+`sshd:state`
+
+* Manages the state of the sshd systemd service.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `sshd__address_family` | Specifies which address family should be used. Possible options: `any`, `inet` (use IPv4 only) or `inet6` (use IPv6 only). | `'any'` |
-| `sshd__gssapi_authentication` | Specifies whether user authentication based on GSSAPI is allowed | `true` |
-| `sshd__log_level` | Sets the log level | `'INFO'` |
-| `sshd__password_authentication` | Specifies whether password authentication is allowed. | `false` |
-| `sshd__permit_root_login` | Specifies whether root can log in using ssh. Possible options:<br> * `yes`<br> * `prohibit-password`<br> * `forced-commands-only`<br> * `no` | `'yes'` |
-| `sshd__port` | Which port the sshd server should use. | `22` |
-| `sshd__raw` | Raw (user-defined) SSH-Config. Will be placed at the end of the `/etc/ssh/sshd_config` file. Useful for `Match` directives. | unset |
-| `sshd__service_enabled` | Enables or disables the sshd service, analogous to `systemctl enable/disable`. | `true` |
-| `sshd__service_state` | Changes the state of the sshd service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
-| `sshd__sftp_subsystem` | Which command should be used for the sftp subsystem. | RHEL: `'/usr/libexec/openssh/sftp-server'`, Debian: `/usr/lib/openssh/sftp-server` |
-| `sshd__use_dns` | Specifies whether sshd should look up the remote hostname, and to check that the resolved host name for the remote IP address maps back to the very same IP address. | `false` |
+`sshd__address_family`
+
+* Specifies which address family should be used. Possible options: `any`, `inet` (use IPv4 only) or `inet6` (use IPv6 only).
+* Type: String.
+* Default: `'any'`
+
+`sshd__gssapi_authentication`
+
+* Specifies whether user authentication based on GSSAPI is allowed.
+* Type: Bool.
+* Default: `true`
+
+`sshd__log_level`
+
+* Sets the log level.
+* Type: String.
+* Default: `'INFO'`
+
+`sshd__password_authentication`
+
+* Specifies whether password authentication is allowed.
+* Type: Bool.
+* Default: `false`
+
+`sshd__permit_root_login`
+
+* Specifies whether root can log in using ssh. Possible options: `yes`, `prohibit-password`, `forced-commands-only`, `no`.
+* Type: String.
+* Default: `'yes'`
+
+`sshd__port`
+
+* Which port the sshd server should use.
+* Type: Number.
+* Default: `22`
+
+`sshd__raw`
+
+* Raw (user-defined) SSH-Config. Will be placed at the end of the `/etc/ssh/sshd_config` file. Useful for `Match` directives.
+* Type: String.
+* Default: unset
+
+`sshd__service_enabled`
+
+* Enables or disables the sshd service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`sshd__service_state`
+
+* Changes the state of the sshd service, analogous to `systemctl start/stop/restart/reload`. Possible options: `started`, `stopped`, `restarted`, `reloaded`.
+* Type: String.
+* Default: `'started'`
+
+`sshd__sftp_subsystem`
+
+* Which command should be used for the sftp subsystem.
+* Type: String.
+* Default: RHEL: `'/usr/libexec/openssh/sftp-server'`, Debian: `'/usr/lib/openssh/sftp-server'`
+
+`sshd__use_dns`
+
+* Specifies whether sshd should look up the remote hostname, and to check that the resolved host name for the remote IP address maps back to the very same IP address.
+* Type: Bool.
+* Default: `false`
 
 Example:
+
 ```yaml
 # optional
 sshd__address_family: 'inet'
@@ -52,6 +110,7 @@ sshd__service_enabled: true
 sshd__service_state: 'started'
 sshd__use_dns: false
 ```
+
 
 ## License
 

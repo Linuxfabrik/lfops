@@ -8,10 +8,15 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 
 ## Tags
 
-| Tag            | What it does                            | Reload / Restart |
-| ---            | ------------                            | ---------------- |
-| `chrony`       | Installs and configures chrony          | Restarts chronyd.service |
-| `chrony:state` | Manages the state of the chrony service | - |
+`chrony`
+
+* Installs and configures chrony.
+* Triggers: chronyd.service restart.
+
+`chrony:state`
+
+* Manages the state of the chrony service.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
@@ -21,14 +26,41 @@ This role does not have any mandatory variables. However, either `chrony__ntp_po
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `chrony__allow` | A list of subnets which are allowed to access the server as a NTP server. Setting this effectively turns this server into a NTP server. | `[]` |
-| `chrony__bindaddress` | On which address chrony should listen. Can be used to restrict access to a certain address. | unset |
-| `chrony__binddevice` | To which network interface chrony should bind. Can be used to restrict access to certain interfaces. Note that this does not work with enforcing SELinux. Try using `chrony__bindaddress`. | unset |
-| `chrony__ntp_pools` | A list of NTP server pools. Same as `chrony__ntp_servers`, except that it is used to specify a pool of NTP servers rather than a single NTP server. | `[]` |
-| `chrony__ntp_servers` | A list of NTP servers which should be used as a time source. The `ibust` option is always used, meaning chronyd will start with a burst of 4-8 requests in order to make the first update of the clock sooner. | `[]` |
-| `chrony__service_enabled` | Enables or disables the chrony service, analogous to `systemctl enable/disable --now`. | `true` |
+`chrony__allow`
+
+* A list of subnets which are allowed to access the server as a NTP server. Setting this effectively turns this server into a NTP server.
+* Type: List.
+* Default: `[]`
+
+`chrony__bindaddress`
+
+* On which address chrony should listen. Can be used to restrict access to a certain address.
+* Type: String.
+* Default: unset
+
+`chrony__binddevice`
+
+* To which network interface chrony should bind. Can be used to restrict access to certain interfaces. Note that this does not work with enforcing SELinux. Try using `chrony__bindaddress`.
+* Type: String.
+* Default: unset
+
+`chrony__ntp_pools`
+
+* A list of NTP server pools. Same as `chrony__ntp_servers`, except that it is used to specify a pool of NTP servers rather than a single NTP server.
+* Type: List.
+* Default: `[]`
+
+`chrony__ntp_servers`
+
+* A list of NTP servers which should be used as a time source. The `ibust` option is always used, meaning chronyd will start with a burst of 4-8 requests in order to make the first update of the clock sooner.
+* Type: List.
+* Default: `[]`
+
+`chrony__service_enabled`
+
+* Enables or disables the chrony service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
 
 Example:
 ```yaml

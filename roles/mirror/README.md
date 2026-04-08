@@ -15,19 +15,30 @@ If you use the [`mirror` Playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 
 ## Tags
 
-| Tag      | What it does                   | Reload / Restart |
-| ---      | ------------                   | ---------------- |
-| `mirror` | Installs and configures mirror | - |
-| `mirror:configure` | Deploys `/etc/mirror.yml` | - |
+`mirror`
+
+* Installs and configures mirror.
+* Triggers: `mirror: systemctl daemon-reload`.
+
+`mirror:configure`
+
+* Deploys `/etc/mirror.yml`.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `mirror__reposync_repos` | A list of dictionaries containing RPM-based repositories which should be mirrored. Subkeys: Have a look at the project's [README](https://github.com/Linuxfabrik/mirror/blob/main/README.md#synopsis---the-configuration-file) |
+`mirror__reposync_repos`
+
+* A list of dictionaries containing RPM-based repositories which should be mirrored.
+* Subkeys:
+
+    * Have a look at the project's [README](https://github.com/Linuxfabrik/mirror/blob/main/README.md#synopsis---the-configuration-file).
+
+* Type: List of dictionaries.
 
 Example:
+
 ```yaml
 # mandatory
 mirror__reposync_repos:
@@ -44,13 +55,26 @@ mirror__reposync_repos:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `mirror__base_path` | Directory under which all the repos will be placed. This directory should be served by a webserver. | `'/var/www/html/reposync-repos'` |
-| `mirror__timer_enabled` | Enables or disables the mirror timer, analogous to `systemctl enable/disable --now`. | `true` |
-| `mirror__webserver_user` | The user under which the webserver runs. Will be used to set the correct FACL entries so that both users can access the files. | `'apache'` |
+`mirror__base_path`
+
+* Directory under which all the repos will be placed. This directory should be served by a webserver.
+* Type: String.
+* Default: `'/var/www/html/reposync-repos'`
+
+`mirror__timer_enabled`
+
+* Enables or disables the mirror timer, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`mirror__webserver_user`
+
+* The user under which the webserver runs. Will be used to set the correct FACL entries so that both users can access the files.
+* Type: String.
+* Default: `'apache'`
 
 Example:
+
 ```yaml
 # optional
 mirror__base_path: '/var/www/html/reposync-repos'

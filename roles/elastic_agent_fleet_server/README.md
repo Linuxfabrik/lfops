@@ -17,12 +17,25 @@ This role installs and configures [Elastic Agent](https://www.elastic.co/elastic
 
 ## Tags
 
-| Tag | Description |
-| --- | ----------- |
-| `elastic_agent_fleet_server` | Installs and configures elastic-agent as Fleet Server |
-| `elastic_agent_fleet_server:certs` | Deploys TLS certificates |
-| `elastic_agent_fleet_server:enroll` | Enrolls the agent as Fleet Server |
-| `elastic_agent_fleet_server:state` | Manages the state of the elastic-agent service |
+`elastic_agent_fleet_server`
+
+* Installs and configures elastic-agent as Fleet Server.
+* Triggers: none.
+
+`elastic_agent_fleet_server:certs`
+
+* Deploys TLS certificates.
+* Triggers: none.
+
+`elastic_agent_fleet_server:enroll`
+
+* Enrolls the agent as Fleet Server.
+* Triggers: none.
+
+`elastic_agent_fleet_server:state`
+
+* Manages the state of the elastic-agent service.
+* Triggers: none.
 
 
 ## Pre-Installation Steps
@@ -81,10 +94,17 @@ Copy the generated certificates to the Ansible inventory. The certificates are u
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `elastic_agent_fleet_server__elasticsearch_host` | Elasticsearch URL. Will only be used for the initial connection, so the node's role is irrelevant. Afterwards, the output defined in the policy will be used. |
-| `elastic_agent_fleet_server__service_token` | The service token for authenticating the Fleet Server to Elasticsearch. Generate using the Elasticsearch API. |
+`elastic_agent_fleet_server__elasticsearch_host`
+
+* Elasticsearch URL. Will only be used for the initial connection, so the node's role is irrelevant. Afterwards, the output defined in the policy will be used.
+* Type: String.
+* Default: none
+
+`elastic_agent_fleet_server__service_token`
+
+* The service token for authenticating the Fleet Server to Elasticsearch. Generate using the Elasticsearch API.
+* Type: String.
+* Default: none
 
 Example:
 ```yaml
@@ -96,16 +116,53 @@ elastic_agent_fleet_server__service_token: 'AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rv
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `elastic_agent_fleet_server__elasticsearch_ca` | ASCII-armored PEM CA certificate for verifying Elasticsearch TLS (Fleet Server -> Elasticsearch). | unset |
-| `elastic_agent_fleet_server__insecure` | Skip TLS verification. Only use for testing with self-signed certificates. | `false` |
-| `elastic_agent_fleet_server__policy_id` | The Fleet Server policy ID. Must exist in Kibana Fleet. | `'fleet-server-policy'` |
-| `elastic_agent_fleet_server__service_enabled` | Enables or disables the elastic-agent service, analogous to `systemctl enable/disable`. | `true` |
-| `elastic_agent_fleet_server__service_state` | The state of the elastic-agent service. Possible options: `started`, `stopped`, `restarted`. | `'started'` |
-| `elastic_agent_fleet_server__ssl_cert` | ASCII-armored PEM TLS certificate for the Fleet Server (Fleet Agent -> Fleet Server). | unset |
-| `elastic_agent_fleet_server__ssl_key` | ASCII-armored PEM TLS private key for the Fleet Server (Fleet Agent -> Fleet Server). | unset |
-| `elastic_agent_fleet_server__url` | The URL of the Fleet Server. Used by agents to connect. | `'https://{{ ansible_facts["nodename"] }}:8220'` |
+`elastic_agent_fleet_server__elasticsearch_ca`
+
+* ASCII-armored PEM CA certificate for verifying Elasticsearch TLS (Fleet Server -> Elasticsearch).
+* Type: String.
+* Default: unset
+
+`elastic_agent_fleet_server__insecure`
+
+* Skip TLS verification. Only use for testing with self-signed certificates.
+* Type: Bool.
+* Default: `false`
+
+`elastic_agent_fleet_server__policy_id`
+
+* The Fleet Server policy ID. Must exist in Kibana Fleet.
+* Type: String.
+* Default: `'fleet-server-policy'`
+
+`elastic_agent_fleet_server__service_enabled`
+
+* Enables or disables the elastic-agent service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`elastic_agent_fleet_server__service_state`
+
+* The state of the elastic-agent service. Possible options: `started`, `stopped`, `restarted`.
+* Type: String.
+* Default: `'started'`
+
+`elastic_agent_fleet_server__ssl_cert`
+
+* ASCII-armored PEM TLS certificate for the Fleet Server (Fleet Agent -> Fleet Server).
+* Type: String.
+* Default: unset
+
+`elastic_agent_fleet_server__ssl_key`
+
+* ASCII-armored PEM TLS private key for the Fleet Server (Fleet Agent -> Fleet Server).
+* Type: String.
+* Default: unset
+
+`elastic_agent_fleet_server__url`
+
+* The URL of the Fleet Server. Used by agents to connect.
+* Type: String.
+* Default: `'https://{{ ansible_facts["nodename"] }}:8220'`
 
 Example:
 ```yaml

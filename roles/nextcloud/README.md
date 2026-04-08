@@ -32,23 +32,76 @@ If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops
 
 ## Tags
 
-| Tag                       | What it does | Reload / Restart |
-| ---                       | ------------ | ---------------- |
-| `nextcloud`               | Installs and configures the whole Nextcloud server | - |
-| `nextcloud:apps`          | Enables, disables apps and sets their settings | - |
-| `nextcloud:configure`     | Deploys the `nextcloud__sysconfig__*_var` and configures notify_push | - |
-| `nextcloud:cron`          | Sets the Nextcloud background job setting to cron, deploys and manages the state of: <ul><li>`nextcloud-app-update.{service,timer}`</li><li>`nextcloud-jobs.{service,timer}`</li><li>`nextcloud-ldap-show-remnants.{service,timer}`</li><li>`nextcloud-ldap-show-remnants` script</li><li>`nextcloud-scan-files.{service,timer}`</li></ul> | - |
-| `nextcloud:notify_push`   | Configures notify_push | - |
-| `nextcloud:scripts`       | Deploys `/usr/local/bin/nextcloud-update` | - |
-| `nextcloud:state`         | Manages the state of: <ul><li>`nextcloud-jobs.timer`</li><li>`nextcloud-app-update.timer`</li><li>`nextcloud-scan-files.timer`</li><li>`nextcloud-ldap-show-remnants.timer`</li></ul> | - |
+`nextcloud`
+
+* Installs and configures the whole Nextcloud server.
+* Triggers: none.
+
+`nextcloud:apps`
+
+* Enables, disables apps and sets their settings.
+* Triggers: none.
+
+`nextcloud:configure`
+
+* Deploys the `nextcloud__sysconfig__*_var` and configures notify_push.
+* Triggers: none.
+
+`nextcloud:cron`
+
+* Sets the Nextcloud background job setting to cron, deploys and manages the state of `nextcloud-app-update.{service,timer}`, `nextcloud-jobs.{service,timer}`, `nextcloud-ldap-show-remnants.{service,timer}`, `nextcloud-ldap-show-remnants` script, `nextcloud-scan-files.{service,timer}`.
+* Triggers: none.
+
+`nextcloud:notify_push`
+
+* Configures notify_push.
+* Triggers: none.
+
+`nextcloud:scripts`
+
+* Deploys `/usr/local/bin/nextcloud-update`.
+* Triggers: none.
+
+`nextcloud:state`
+
+* Manages the state of `nextcloud-jobs.timer`, `nextcloud-app-update.timer`, `nextcloud-scan-files.timer`, `nextcloud-ldap-show-remnants.timer`.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `nextcloud__fqdn` | The FQDN of the Nextcloud instance. |
-| `nextcloud__users` | List of dictionaries containing the user accounts to create. Attention: The first user has to be the primary administrator account. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password.</li><li>`group`: Optional, string. Group of the user. Defaults to none.</li><li>`settings`: Optional, list of strings. Nextcloud settings for the user. Have a look at the example below. Defaults to `[]`.</li></ul> |
+`nextcloud__fqdn`
+
+* The FQDN of the Nextcloud instance.
+* Type: String.
+
+`nextcloud__users`
+
+* List of dictionaries containing the user accounts to create. Attention: The first user has to be the primary administrator account.
+* Type: List of dictionaries.
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `group`:
+
+        * Optional. Group of the user.
+        * Type: String.
+        * Default: unset
+
+    * `settings`:
+
+        * Optional. Nextcloud settings for the user. Have a look at the example below.
+        * Type: List of strings.
+        * Default: `[]`
 
 Example:
 ```yaml
@@ -71,32 +124,206 @@ nextcloud__users:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `nextcloud__app_configs__host_var` / <br> `nextcloud__app_configs__group_var` | List of dictionaries containing key-value pairs for configuring apps in Nextcloud. Subkeys: <ul><li>`key`: Mandatory, string. The name of the config option to set.</li><li>`value`: Mandatory, string. The configuration value.</li><li>`force`: Optional, boolean. Set to `true` to install the app regardless of the Nextcloud version requirement.</li><li>`state`: Optional, string. Either `absent`, `disabled`, `enabled` or `present`. Note that `enabled` also installs the app. Defaults to `enabled`.</li></ul> | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__apps__host_var` / <br> `nextcloud__apps__group_var` | List of dictionaries containing Nextcloud apps to install. Subkeys: <ul><li>`name`: Mandatory, string. The app name.</li><li>`state`: Optional, string. State of the app, either `present` or `absent`. Defaults to `present`.</li></ul> | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__database_host` | Host where MariaDB is located. | `'localhost'` |
-| `nextcloud__database_name` | Name of the Nextcloud database in MariaDB. | `'nextcloud'` |
-| `nextcloud__datadir` | Where to store the user files. | `'/data'` |
-| `nextcloud__icinga2_api_url` | The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script. | `'https://{{ icinga2_agent__icinga2_master_host \| d("") }}:{{ icinga2_agent__icinga2_master_port \| d(5665) }}'` |
-| `nextcloud__icinga2_api_user_login` | The Icinga2 API User to set the downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script. | `'{{ system_update__icinga2_api_user_login }}'` |
-| `nextcloud__icinga2_hostname` | The hostname of the Icinga2 host on which the downtime should be set. | `'{{ ansible_facts["nodename"] }}'` |
-| `nextcloud__mariadb_login` | The user account for the database administrator. The Nextcloud setup will create its own database account. | `'{{ mariadb_server__admin_user }}'` |
-| `nextcloud__on_calendar_app_update` | Time to update the Nextcloud apps. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'06,18,23:{{ 59 \| random(seed=inventory_hostname) }}'` |
-| `nextcloud__on_calendar_jobs`| Run interval of OCC background jobs. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'*:0/5'` |
-| `nextcloud__on_calendar_scan_files`| Run interval of rescanning filesystem. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'*:50:15'` |
-| `nextcloud__skip_apps` | Boolean. Completely skips the management of Nextcloud apps. Set this to prevent changes via the WebGUI from being overwritten. | `false` |
-| `nextcloud__skip_notify_push` | Boolean. Skips the configuration of notify_push. Use this if the DNS setup is not done yet when running the role. | `false` |
-| `nextcloud__storage_backend_s3` | S3 Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. Have a look at the example below on how to configure. | unset |
-| `nextcloud__storage_backend_swift` | Swift Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. Have a look at the example below on how to configure. | unset |
-| `nextcloud__sysconfig__host_var` / <br> `nextcloud__sysconfig__group_var` | List of dictionaries containing key-value pairs for Nextcloud system config settings. Also use this setting to configure [Nextcloud behind a reverse proxy](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/reverse_proxy_configuration.html), have a look at the example below on how to configure. Subkeys: <ul><li>`key`: Mandatory, string. The name of the config option to set.</li><li>`value`: Mandatory, string. The configuration value.</li><li>`type`: Optional, string. The type of the configuration value. Defaults to `'string`'.</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul> | Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml) |
-| `nextcloud__timer_app_update_enabled` | Enables/disables Systemd-Timer for updating apps. | `false` |
-| `nextcloud__timer_jobs_enabled` | Enables/disables Systemd-Timer for running OCC background jobs. | `true` |
-| `nextcloud__timer_ldap_show_remnants_enabled` | Enables/disables Systemd-Timer for mailing once a month which users are not available on LDAP anymore, but have remnants in Nextcloud. Will only be applied if the app `users_ldap` is present. | `true` |
-| `nextcloud__timer_scan_files_enabled` | Enables/disables Systemd-Timer for re-scanning the Nextcloud files. | `true` |
-| `nextcloud__version` | Which version to install. One of `'latest'`, `'latest-XX'` or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/ for a list of available releases. | `'latest'` |
-| `nextcloud__vhost_virtualhost_ip` | String. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `*` |
-| `nextcloud__vhost_virtualhost_port` | Number. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. | `80` |
+`nextcloud__app_configs__host_var` / `nextcloud__app_configs__group_var`
+
+* List of dictionaries containing key-value pairs for configuring apps in Nextcloud.
+* Type: List of dictionaries.
+* Default: Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml)
+* Subkeys:
+
+    * `key`:
+
+        * Mandatory. The name of the config option to set.
+        * Type: String.
+
+    * `value`:
+
+        * Mandatory. The configuration value.
+        * Type: String.
+
+    * `force`:
+
+        * Optional. Set to `true` to install the app regardless of the Nextcloud version requirement.
+        * Type: Bool.
+
+    * `state`:
+
+        * Optional. Either `absent`, `disabled`, `enabled` or `present`. Note that `enabled` also installs the app.
+        * Type: String.
+        * Default: `'enabled'`
+
+`nextcloud__apps__host_var` / `nextcloud__apps__group_var`
+
+* List of dictionaries containing Nextcloud apps to install.
+* Type: List of dictionaries.
+* Default: Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml)
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The app name.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. State of the app, either `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+`nextcloud__database_host`
+
+* Host where MariaDB is located.
+* Type: String.
+* Default: `'localhost'`
+
+`nextcloud__database_name`
+
+* Name of the Nextcloud database in MariaDB.
+* Type: String.
+* Default: `'nextcloud'`
+
+`nextcloud__datadir`
+
+* Where to store the user files.
+* Type: String.
+* Default: `'/data'`
+
+`nextcloud__icinga2_api_url`
+
+* The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script.
+* Type: String.
+* Default: `'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'`
+
+`nextcloud__icinga2_api_user_login`
+
+* The Icinga2 API User to set the downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script.
+* Type: Dictionary.
+* Default: `'{{ system_update__icinga2_api_user_login }}'`
+
+`nextcloud__icinga2_hostname`
+
+* The hostname of the Icinga2 host on which the downtime should be set.
+* Type: String.
+* Default: `'{{ ansible_facts["nodename"] }}'`
+
+`nextcloud__mariadb_login`
+
+* The user account for the database administrator. The Nextcloud setup will create its own database account.
+* Type: Dictionary.
+* Default: `'{{ mariadb_server__admin_user }}'`
+
+`nextcloud__on_calendar_app_update`
+
+* Time to update the Nextcloud apps. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* Type: String.
+* Default: `'06,18,23:{{ 59 | random(seed=inventory_hostname) }}'`
+
+`nextcloud__on_calendar_jobs`
+
+* Run interval of OCC background jobs. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* Type: String.
+* Default: `'*:0/5'`
+
+`nextcloud__on_calendar_scan_files`
+
+* Run interval of rescanning filesystem. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* Type: String.
+* Default: `'*:50:15'`
+
+`nextcloud__skip_apps`
+
+* Completely skips the management of Nextcloud apps. Set this to prevent changes via the WebGUI from being overwritten.
+* Type: Bool.
+* Default: `false`
+
+`nextcloud__skip_notify_push`
+
+* Skips the configuration of notify_push. Use this if the DNS setup is not done yet when running the role.
+* Type: Bool.
+* Default: `false`
+
+`nextcloud__storage_backend_s3`
+
+* S3 Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. Have a look at the example below on how to configure.
+* Type: Dictionary.
+* Default: unset
+
+`nextcloud__storage_backend_swift`
+
+* Swift Storage Backend. If ommitted, local storage is used. If both S3 and Swift are provided, S3 is configured. Have a look at the example below on how to configure.
+* Type: Dictionary.
+* Default: unset
+
+`nextcloud__sysconfig__host_var` / `nextcloud__sysconfig__group_var`
+
+* List of dictionaries containing key-value pairs for Nextcloud system config settings. Also use this setting to configure [Nextcloud behind a reverse proxy](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/reverse_proxy_configuration.html), have a look at the example below on how to configure.
+* Type: List of dictionaries.
+* Default: Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml)
+* Subkeys:
+
+    * `key`:
+
+        * Mandatory. The name of the config option to set.
+        * Type: String.
+
+    * `value`:
+
+        * Mandatory. The configuration value.
+        * Type: String.
+
+    * `type`:
+
+        * Optional. The type of the configuration value.
+        * Type: String.
+        * Default: `'string'`
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+`nextcloud__timer_app_update_enabled`
+
+* Enables/disables Systemd-Timer for updating apps.
+* Type: Bool.
+* Default: `false`
+
+`nextcloud__timer_jobs_enabled`
+
+* Enables/disables Systemd-Timer for running OCC background jobs.
+* Type: Bool.
+* Default: `true`
+
+`nextcloud__timer_ldap_show_remnants_enabled`
+
+* Enables/disables Systemd-Timer for mailing once a month which users are not available on LDAP anymore, but have remnants in Nextcloud. Will only be applied if the app `users_ldap` is present.
+* Type: Bool.
+* Default: `true`
+
+`nextcloud__timer_scan_files_enabled`
+
+* Enables/disables Systemd-Timer for re-scanning the Nextcloud files.
+* Type: Bool.
+* Default: `true`
+
+`nextcloud__version`
+
+* Which version to install. One of `'latest'`, `'latest-XX'` or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/ for a list of available releases.
+* Type: String.
+* Default: `'latest'`
+
+`nextcloud__vhost_virtualhost_ip`
+
+* Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive.
+* Type: String.
+* Default: `*`
+
+`nextcloud__vhost_virtualhost_port`
+
+* Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive.
+* Type: Number.
+* Default: `80`
 
 Example:
 ```yaml

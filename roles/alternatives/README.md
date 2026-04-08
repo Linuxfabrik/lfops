@@ -11,16 +11,46 @@ Hints:
 
 ## Tags
 
-| Tag       | What it does                         | Reload / Restart |
-| ---       | ------------                         | ---------------- |
-| `alternatives` | Manages alternative programs for common commands. | - |
+`alternatives`
+
+* Manages alternative programs for common commands.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `alternatives__alternatives` | List of alternatives to remove or to deploy. Subkeys:<ul><li>`link`: String. The path to the symbolic link that should point to the real executable. This option is always required on RHEL-based distributions. On Debian-based distributions this option is required when the alternative `name` is unknown to the system.</li><li>`name`: Mandatory, string. The generic name of the link.</li><li>`path`: Optional, string. The path to the real executable that the link should point to.</li><li>`priority`: Optional, number. The priority of the alternative. If no priority is given for creation `50` is used as a fallback.</li><li>`state`: Optional, string. One of:<ul><li>`selected`: Default. Install the alternative (if not already installed), and set it as the currently selected alternative for the group.</li><li>`present`: Install the alternative (if not already installed), but do not set it as the currently selected alternative for the group.</li><li>`auto`: Install the alternative (if not already installed), and set the group to auto mode.</li><li>`absent`: Remove the alternative.</li></ul></ul> | `[]` |
+`alternatives__alternatives`
+
+* List of alternatives to remove or to deploy.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `link`:
+
+        * The path to the symbolic link that should point to the real executable. This option is always required on RHEL-based distributions. On Debian-based distributions this option is required when the alternative `name` is unknown to the system.
+        * Type: String.
+
+    * `name`:
+
+        * Mandatory. The generic name of the link.
+        * Type: String.
+
+    * `path`:
+
+        * Optional. The path to the real executable that the link should point to.
+        * Type: String.
+
+    * `priority`:
+
+        * Optional. The priority of the alternative. If no priority is given for creation `50` is used as a fallback.
+        * Type: Number.
+
+    * `state`:
+
+        * Optional. One of: `selected` (default; install the alternative and set it as the currently selected alternative for the group), `present` (install the alternative but do not set it as the currently selected alternative for the group), `auto` (install the alternative and set the group to auto mode), `absent` (remove the alternative).
+        * Type: String.
+        * Default: `'selected'`
 
 Example:
 ```yaml

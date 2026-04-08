@@ -7,16 +7,18 @@ This role deploys the [Elasticsearch Repository](https://www.elastic.co/guide/en
 
 ## Tags
 
-| Tag                  | What it does                         | Reload / Restart |
-| ---                  | ------------                         | ---------------- |
-| `repo_elasticsearch` | Deploys the Elasticsearch Repository | - |
+`repo_elasticsearch`
+
+* Deploys the Elasticsearch Repository.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `repo_elasticsearch__version` | The Elasticsearch repo version to install. One of `7.x`, `8.x` or `9.x`. [Have a look at the Elasticsearch repository for the list of available releases](https://www.elastic.co/downloads/past-releases#elasticsearch). |
+`repo_elasticsearch__version`
+
+* The Elasticsearch repo version to install. One of `7.x`, `8.x` or `9.x`. [Have a look at the Elasticsearch repository for the list of available releases](https://www.elastic.co/downloads/past-releases#elasticsearch).
+* Type: String.
 
 Example:
 ```yaml
@@ -24,12 +26,20 @@ Example:
 repo_elasticsearch__version: '8.x'
 ```
 
+
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `repo_elasticsearch__basic_auth_login` | Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles. | `{{ lfops__repo_basic_auth_login \| default("") }}` |
-| `repo_elasticsearch__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used. | `'{{ lfops__repo_mirror_url | default("") }}'` |
+`repo_elasticsearch__basic_auth_login`
+
+* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Type: String.
+* Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
+
+`repo_elasticsearch__mirror_url`
+
+* Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used.
+* Type: String.
+* Default: `'{{ lfops__repo_mirror_url | default("") }}'`
 
 Example:
 ```yaml

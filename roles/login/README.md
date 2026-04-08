@@ -14,20 +14,105 @@ IMPORTANT:
 
 ## Tags
 
-| Tag     | What it does                                        | Reload / Restart |
-| ---     | ------------                                        | ---------------- |
-| `login` | Manages users, their groups and SSH authorized_keys | - |
-| `login:authorized_keys` | Manages SSH authorized_keys | - |
+`login`
+
+* Manages users, their groups and SSH authorized_keys.
+* Triggers: none.
+
+`login:authorized_keys`
+
+* Manages SSH authorized_keys.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `login__passwordless_sudo_group` | The group which should be added to the sudoers for password-less `sudo` access. | `''` |
-| `login__users__host_var` /<br> `login__users__group_var` | A list of the users to be created or deleted. Subkeys: <ul><li>`additional_groups`: Optional, list. Defaults to `[]`. Additional groups the user account should be in.</li> <li>`create_home`: Optional, boolean. Unless set to `false`, a home directory will be made for the user when the account is created or if the home directory does not exist. Defaults to `true`. <li>`home`: Optional, string. Defaults to the OS default. The home directory for the user.</li> <li>`linger`: Optional, boolean. Enable lingering of the account, analogous to `loginctl enable/disable-linger`. Defaults to `false`.</li> <li>`name`: Mandatory, string. The name of the user account.</li> <li>`password`: Optional, string. The password of the user.</li> <li>`primary_group`: Optional, string. The name of the primary group. If omitted, the primary group name will be the same as the username. If this primary group exists via a central authentication method e.g. FreeIPA, the primary group will default to `users`.</li> <li>`remove_other_sshd_authorized_keys`: Optional, boolean. Defaults to `false`. Whether to remove all other non-specified keys from the authorized_keys file.</li> <li>`shell`: Optional, string. Defaults to `/bin/bash`. Shell for the user account.</li> <li>`sshd_authorized_keys`: Optional, list. Defaults to `[]`. List of sshd authorized_keys for the user account.</li> <li>`state`: Optional, string. Defaults to `present`. The state of the user account. Possible options: `present`, `absent`.</li> <li>`system`: Optional, string. Defaults to `false`. If this is a system account or not. Usually system accounts are used for running applications.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+`login__passwordless_sudo_group`
+
+* The group which should be added to the sudoers for password-less `sudo` access.
+* Type: String.
+* Default: `''`
+
+`login__users__host_var` / `login__users__group_var`
+
+* A list of the users to be created or deleted.
+* Subkeys:
+
+    * `additional_groups`:
+
+        * Optional. Additional groups the user account should be in.
+        * Type: List.
+        * Default: `[]`
+
+    * `create_home`:
+
+        * Optional. Unless set to `false`, a home directory will be made for the user when the account is created or if the home directory does not exist.
+        * Type: Bool.
+        * Default: `true`
+
+    * `home`:
+
+        * Optional. The home directory for the user.
+        * Type: String.
+        * Default: the OS default
+
+    * `linger`:
+
+        * Optional. Enable lingering of the account, analogous to `loginctl enable/disable-linger`.
+        * Type: Bool.
+        * Default: `false`
+
+    * `name`:
+
+        * Mandatory. The name of the user account.
+        * Type: String.
+
+    * `password`:
+
+        * Optional. The password of the user.
+        * Type: String.
+
+    * `primary_group`:
+
+        * Optional. The name of the primary group. If omitted, the primary group name will be the same as the username. If this primary group exists via a central authentication method e.g. FreeIPA, the primary group will default to `users`.
+        * Type: String.
+
+    * `remove_other_sshd_authorized_keys`:
+
+        * Optional. Whether to remove all other non-specified keys from the authorized_keys file.
+        * Type: Bool.
+        * Default: `false`
+
+    * `shell`:
+
+        * Optional. Shell for the user account.
+        * Type: String.
+        * Default: `'/bin/bash'`
+
+    * `sshd_authorized_keys`:
+
+        * Optional. List of sshd authorized_keys for the user account.
+        * Type: List.
+        * Default: `[]`
+
+    * `state`:
+
+        * Optional. The state of the user account. Possible options: `present`, `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `system`:
+
+        * Optional. If this is a system account or not. Usually system accounts are used for running applications.
+        * Type: Bool.
+        * Default: `false`
+
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
 
 Example:
+
 ```yaml
 # optional
 login__passwordless_sudo_group: 'linuxfabrik'

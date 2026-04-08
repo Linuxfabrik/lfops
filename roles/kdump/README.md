@@ -5,17 +5,31 @@ This role stops and disables the `kdump` service. Since most of the time, kdump 
 
 ## Tags
 
-| Tag     | What it does                           | Reload / Restart |
-| ---     | ------------                           | ---------------- |
-| `kdump` | Stops and disables the `kdump` service | - |
+`kdump`
+
+* Stops and disables the `kdump` service.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable                 | Description                                                                                                                                                                  | Default Value |
-| --------                 | -----------                                                                                                                                                                  | ------------- |
-| `kdump__service_enabled` | Enables or disables the kdump service, analogous to `systemctl enable/disable`.                                                                                              | `false`       |
-| `kdump__service_state`   | Changes the state of the kdump service, analogous to `systemctl start/stop/restart/reload`. Possible options: * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'stopped'`   |
+`kdump__service_enabled`
+
+* Enables or disables the kdump service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `false`
+
+`kdump__service_state`
+
+* Changes the state of the kdump service, analogous to `systemctl start/stop/restart/reload`. Possible options:
+
+    * `started`
+    * `stopped`
+    * `restarted`
+    * `reloaded`
+
+* Type: String.
+* Default: `'stopped'`
 
 Example:
 ```yaml

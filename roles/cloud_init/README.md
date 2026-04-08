@@ -8,9 +8,10 @@ Note that removing `cloud-init` could break some functions of the cloud provider
 
 ## Tags
 
-| Tag          | What it does                   | Reload / Restart |
-| ---          | ------------                   | ---------------- |
-| `cloud_init` | Removes the cloud-init package | - |
+`cloud_init`
+
+* Removes the cloud-init package.
+* Triggers: none.
 
 
 ## License

@@ -18,21 +18,43 @@ This role installs and configures [IcingaWeb2](https://icinga.com/docs/icinga-we
 
 ## Tags
 
-| Tag                | What it does                                      | Reload / Restart |
-| ---                | ------------                                      | ---------------- |
-| `icingaweb2`       | Installs and configures IcingaWeb2                | - |
-| `icingaweb2:configure` | Configures Authentication, Resources, Navigation and IcingaWeb2 settings. | - |
-| `icingaweb2:resources` | Deploys `/etc/icingaweb2/resources.ini`       | - |
-| `icingaweb2:user`  | Creates user accounts and deploys the role config | - |
+`icingaweb2`
+
+* Installs and configures IcingaWeb2.
+* Triggers: none.
+
+`icingaweb2:configure`
+
+* Configures Authentication, Resources, Navigation and IcingaWeb2 settings.
+* Triggers: none.
+
+`icingaweb2:resources`
+
+* Deploys `/etc/icingaweb2/resources.ini`.
+* Triggers: none.
+
+`icingaweb2:user`
+
+* Creates user accounts and deploys the role config.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                     | Description                                                                          |
-| --------                     | -----------                                                                          |
-| `icingaweb2__api_user_login` | The account for accessing the Icinga2 API.                                           |
-| `icingaweb2__database_login` | The user account for accessing the SQL database. Currently, only MySQL is supported. |
-| `icingaweb2__url_host`       | The host part of the URL for IcingaWeb2. Will be used for the Apache HTTPd vHost.    |
+`icingaweb2__api_user_login`
+
+* The account for accessing the Icinga2 API.
+* Type: Dictionary.
+
+`icingaweb2__database_login`
+
+* The user account for accessing the SQL database. Currently, only MySQL is supported.
+* Type: Dictionary.
+
+`icingaweb2__url_host`
+
+* The host part of the URL for IcingaWeb2. Will be used for the Apache HTTPd vHost.
+* Type: String.
 
 Example:
 ```yaml
@@ -49,23 +71,221 @@ icingaweb2__url_host: 'monitoring.example.com'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icingaweb2__authentications__host_var` /<br> `icingaweb2__authentications__group_var` | A list of dictionaries defining the authentication backends (e.g. database) for IcingaWeb2. Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/05-Authentication/. Subkeys:<br> * `name`: Mandatory, string. The name of the authentication backend.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | IcingaWeb2 Database |
-| `icingaweb2__database_host` | The host on which the SQL database is reachable. | `'localhost'` |
-| `icingaweb2__database_login_host` | The Host-part of the SQL database user. | `'localhost'` |
-| `icingaweb2__database_name` | The name of the SQL database. | `'icingaweb2'` |
-| `icingaweb2__default_theme` | The application-wide default theme for the web interface. | `'Icinga'` |
-| `icingaweb2__groups__host_var` /<br> `icingaweb2__groups__group_var` | A list of dictionaries defining the available user groups for IcingaWeb2. Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/05-Authentication/#groups. Subkeys:<br> * `name`: Mandatory, string. The name of the user group.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `icingaweb2__navigation_host_actions_entries__host_var` /<br> `icingaweb2__navigation_host_actions_entries__group_var` | A list of dictionaries defining additional actions entries in the deprecated IcingaWeb2 Monitoring host view. Use `icingaweb2__navigation_icingadb_host_actions_entries__*_var` with IcingaDB. Subkeys:<br> * `name`: Mandatory, string. The name of the action.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `icingaweb2__navigation_icingadb_host_actions_entries__host_var` /<br> `icingaweb2__navigation_icingadb_host_actions_entries__group_var` | A list of dictionaries defining additional actions entries in the IcingaWeb2 IcingaDB host view. Subkeys:<br> * `name`: Mandatory, string. The name of the action.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `icingaweb2__navigation_icingadb_service_actions_entries__host_var` /<br> `icingaweb2__navigation_icingadb_service_actions_entries__group_var` | A list of dictionaries defining additional actions entries in the IcingaWeb2 IcingaDB service view. Subkeys:<br> * `name`: Mandatory, string. The name of the action.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `service_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `icingaweb2__navigation_menu_entries__host_var` /<br> `icingaweb2__navigation_menu_entries__group_var` | A list of dictionaries defining additional menu entries in the IcingaWeb2 navigation bar. Subkeys:<br> * `name`: Mandatory, string. The name of the navigation entry.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | IcingaWeb2 Database |
-| `icingaweb2__navigation_service_actions_entries__host_var` /<br> `icingaweb2__navigation_service_actions_entries__group_var` | A list of dictionaries defining additional actions entries in the IcingaWeb2 service view. Use `icingaweb2__navigation_icingadb_service_actions_entries__*_var` with IcingaDB. Subkeys:<br> * `name`: Mandatory, string. The name of the action.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `service_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `icingaweb2__resources__host_var` /<br> `icingaweb2__resources__group_var` | A list of dictionaries defining the resources for IcingaWeb2 (entities that provide data to IcingaWeb2). Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/04-Resources/#resources. Subkeys:<br> * `name`: Mandatory, string. The name of the resource.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `icingaweb2__roles__host_var` /<br> `icingaweb2__roles__group_var` | A list of dictionaries defining the user roles for IcingaWeb2. Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/06-Security/#security-roles. Subkeys:<br> * `name`: Mandatory, string. The name of the user role.<br> * free-form: Optional, string. Will be used as the key-value pair in the resulting ini file.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `icingaweb2__url_port` | The port of the URL for IcingaWeb2. Will be used for the Apache HTTPd vHost. | `80` |
-| `icingaweb2__users__host_var` /<br> `icingaweb2__users__group_var` | A list of dictionaries containing the IcingaWeb2 users. Subkeys: <ul><li>`username`: Mandatory, string. The username of the IcingaWeb2 user.</li><li>`password`: Mandatory, string. The password of the IcingaWeb2 user. Note that it is only set once, so the user can change it themselves.</li><li>`state`: Optional, string. State of the user. Either `present` (insert only, no update), `updated` (changes the password, but not idempotent) or `absent`. Defaults to `present`.</li></ul> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+`icingaweb2__authentications__host_var` / `icingaweb2__authentications__group_var`
+
+* A list of dictionaries defining the authentication backends (e.g. database) for IcingaWeb2. Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/05-Authentication/.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: IcingaWeb2 Database
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the authentication backend.
+        * Type: String.
+
+    * free-form:
+
+        * Optional. Will be used as the key-value pair in the resulting ini file.
+        * Type: String.
+
+`icingaweb2__database_host`
+
+* The host on which the SQL database is reachable.
+* Type: String.
+* Default: `'localhost'`
+
+`icingaweb2__database_login_host`
+
+* The Host-part of the SQL database user.
+* Type: String.
+* Default: `'localhost'`
+
+`icingaweb2__database_name`
+
+* The name of the SQL database.
+* Type: String.
+* Default: `'icingaweb2'`
+
+`icingaweb2__default_theme`
+
+* The application-wide default theme for the web interface.
+* Type: String.
+* Default: `'linuxfabrik/linuxfabrik'`
+
+`icingaweb2__groups__host_var` / `icingaweb2__groups__group_var`
+
+* A list of dictionaries defining the available user groups for IcingaWeb2. Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/05-Authentication/#groups.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the user group.
+        * Type: String.
+
+    * free-form:
+
+        * Optional. Will be used as the key-value pair in the resulting ini file.
+        * Type: String.
+
+`icingaweb2__navigation_host_actions_entries__host_var` / `icingaweb2__navigation_host_actions_entries__group_var`
+
+* A list of dictionaries defining additional actions entries in the deprecated IcingaWeb2 Monitoring host view. Use `icingaweb2__navigation_icingadb_host_actions_entries__*_var` with IcingaDB.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the action.
+        * Type: String.
+
+    * free-form:
+
+        * Optional. Will be used as the key-value pair in the resulting ini file.
+        * Type: String.
+
+`icingaweb2__navigation_icingadb_host_actions_entries__host_var` / `icingaweb2__navigation_icingadb_host_actions_entries__group_var`
+
+* A list of dictionaries defining additional actions entries in the IcingaWeb2 IcingaDB host view.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the action.
+        * Type: String.
+
+    * free-form:
+
+        * Optional. Will be used as the key-value pair in the resulting ini file.
+        * Type: String.
+
+`icingaweb2__navigation_icingadb_service_actions_entries__host_var` / `icingaweb2__navigation_icingadb_service_actions_entries__group_var`
+
+* A list of dictionaries defining additional actions entries in the IcingaWeb2 IcingaDB service view.
+* For the usage in `service_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the action.
+        * Type: String.
+
+    * free-form:
+
+        * Optional. Will be used as the key-value pair in the resulting ini file.
+        * Type: String.
+
+`icingaweb2__navigation_menu_entries__host_var` / `icingaweb2__navigation_menu_entries__group_var`
+
+* A list of dictionaries defining additional menu entries in the IcingaWeb2 navigation bar.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: IcingaWeb2 Database
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the navigation entry.
+        * Type: String.
+
+    * free-form:
+
+        * Optional. Will be used as the key-value pair in the resulting ini file.
+        * Type: String.
+
+`icingaweb2__navigation_service_actions_entries__host_var` / `icingaweb2__navigation_service_actions_entries__group_var`
+
+* A list of dictionaries defining additional actions entries in the IcingaWeb2 service view. Use `icingaweb2__navigation_icingadb_service_actions_entries__*_var` with IcingaDB.
+* For the usage in `service_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the action.
+        * Type: String.
+
+    * free-form:
+
+        * Optional. Will be used as the key-value pair in the resulting ini file.
+        * Type: String.
+
+`icingaweb2__resources__host_var` / `icingaweb2__resources__group_var`
+
+* A list of dictionaries defining the resources for IcingaWeb2 (entities that provide data to IcingaWeb2). Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/04-Resources/#resources.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the resource.
+        * Type: String.
+
+    * free-form:
+
+        * Optional. Will be used as the key-value pair in the resulting ini file.
+        * Type: String.
+
+`icingaweb2__roles__host_var` / `icingaweb2__roles__group_var`
+
+* A list of dictionaries defining the user roles for IcingaWeb2. Have a look at https://icinga.com/docs/icinga-web-2/latest/doc/06-Security/#security-roles.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the user role.
+        * Type: String.
+
+    * free-form:
+
+        * Optional. Will be used as the key-value pair in the resulting ini file.
+        * Type: String.
+
+`icingaweb2__url_port`
+
+* The port of the URL for IcingaWeb2. Will be used for the Apache HTTPd vHost.
+* Type: Number.
+* Default: `80`
+
+`icingaweb2__users__host_var` / `icingaweb2__users__group_var`
+
+* A list of dictionaries containing the IcingaWeb2 users.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. The username of the IcingaWeb2 user.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. The password of the IcingaWeb2 user. Note that it is only set once, so the user can change it themselves.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. State of the user. Either `present` (insert only, no update), `updated` (changes the password, but not idempotent) or `absent`.
+        * Type: String.
+        * Default: `'present'`
 
 Example:
 ```yaml

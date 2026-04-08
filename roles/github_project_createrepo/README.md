@@ -14,17 +14,24 @@ If you use the [`github_project_createrepo` Playbook](https://github.com/Linuxfa
 
 ## Tags
 
-| Tag           | What it does                                 | Reload / Restart |
-| ---           | ------------                                 | ---------------- |
-| `github_project_createrepo` | Installs and configures github_project_createrepo | - |
-| `github_project_createrepo:configure` | Deploys `/etc/github_project_createrepo.yml` | - |
+`github_project_createrepo`
+
+* Installs and configures github_project_createrepo.
+* Triggers: none.
+
+`github_project_createrepo:configure`
+
+* Deploys `/etc/github_project_createrepo.yml`.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `github_project_createrepo__github_repos` | A list of dictionaries containing GitHub Repository from which the RPM-assets will be downloaded. Subkeys: Have a look at the project's [README](https://github.com/Linuxfabrik/github-project-createrepo/blob/main/README.md#configuration) |
+`github_project_createrepo__github_repos`
+
+* A list of dictionaries containing GitHub Repository from which the RPM-assets will be downloaded. Subkeys: Have a look at the project's [README](https://github.com/Linuxfabrik/github-project-createrepo/blob/main/README.md#configuration).
+* Type: List of dictionaries.
+* Default: none
 
 Example:
 ```yaml
@@ -44,11 +51,23 @@ github_project_createrepo__github_repos:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `github_project_createrepo__base_path` | Directory under which all the repos will be placed. This directory should be served by a webserver. | `'/var/www/html/github-repos'` |
-| `github_project_createrepo__timer_enabled` | Enables or disables the github-project-createrepo timer, analogous to `systemctl enable/disable --now`. | `true` |
-| `github_project_createrepo__webserver_user` | The user under which the webserver runs. Will be used to set the correct FACL entries so that both users can access the files. | `'apache'` |
+`github_project_createrepo__base_path`
+
+* Directory under which all the repos will be placed. This directory should be served by a webserver.
+* Type: String.
+* Default: `'/var/www/html/github-repos'`
+
+`github_project_createrepo__timer_enabled`
+
+* Enables or disables the github-project-createrepo timer, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`github_project_createrepo__webserver_user`
+
+* The user under which the webserver runs. Will be used to set the correct FACL entries so that both users can access the files.
+* Type: String.
+* Default: `'apache'`
 
 Example:
 ```yaml

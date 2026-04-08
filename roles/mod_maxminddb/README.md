@@ -16,19 +16,36 @@ Apache has to be installed and at least one `LoadModule` directive already has t
 
 ## Tags
 
-| Tag                   | What it does                                 | Reload / Restart |
-| ---                   | ------------                                 | ---------------- |
-| `mod_maxminddb`        | <ul><li>install gcc httpd-devel redhat-rpm-config</li><li>curl https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz --output /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz</li><li>copy /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz to the server</li><li>mkdir -p /tmp/mod_maxminddb-{{ mod_maxminddb__version }}</li><li>tar xfz --strip-components 1 -C /tmp/mod_maxminddb-{{ mod_maxminddb__version }} /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz</li><li>rm -f /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz</li><li>./configure</li><li>Create Apache `LoadModule` directive in {{ mod_maxminddb__apache_conf_modules_d }} </li><li>make install</li></ul> | - |
+`mod_maxminddb`
+
+* Install gcc httpd-devel redhat-rpm-config.
+* curl https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz --output /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz.
+* Copy /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz to the server.
+* mkdir -p /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.
+* tar xfz --strip-components 1 -C /tmp/mod_maxminddb-{{ mod_maxminddb__version }} /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz.
+* rm -f /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz.
+* ./configure.
+* Create Apache `LoadModule` directive in {{ mod_maxminddb__apache_conf_modules_d }}.
+* make install.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `mod_maxminddb__apache_conf_modules_d` | Path and filename to place the new `LoadModule` directive for Apache. | `/etc/httpd/conf.modules.d/20-mod_maxminddb.conf` |
-| `mod_maxminddb__version` | String. The version to install. | `1.2.0` |
+`mod_maxminddb__apache_conf_modules_d`
 
-mod_maxminddb:
+* Path and filename to place the new `LoadModule` directive for Apache.
+* Type: String.
+* Default: `'/etc/httpd/conf.modules.d/20-mod_maxminddb.conf'`
+
+`mod_maxminddb__version`
+
+* The version to install.
+* Type: String.
+* Default: `'1.2.0'`
+
+Example:
+
 ```yaml
 # optional
 mod_maxminddb__apache_conf_modules_d: '/etc/httpd/conf-available/mod_maxminddb.conf'

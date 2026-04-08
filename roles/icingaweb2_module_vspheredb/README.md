@@ -18,19 +18,26 @@ If you use the [Setup Icinga2 Master Playbook](https://github.com/Linuxfabrik/lf
 
 ## Tags
 
-| Tag                           | What it does                                            | Reload / Restart |
-| ---                           | ------------                                            | ---------------- |
-| `icingaweb2_module_vspheredb` | Installs and configures the IcingaWeb2 vSphereDB Module | - |
+`icingaweb2_module_vspheredb`
+
+* Installs and configures the IcingaWeb2 vSphereDB Module.
+* Triggers: icingaweb2_module_vspheredb: systemctl daemon-reload.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `icingaweb2_module_vspheredb__database_login` | The user account for accessing the vSphereDB SQL database. Currently, only MySQL is supported. |
-| `icingaweb2_module_vspheredb__version` | The Module version to install. Can be found [here](https://github.com/Icinga/icingaweb2-module-vspheredb/releases). |
+`icingaweb2_module_vspheredb__database_login`
+
+* The user account for accessing the vSphereDB SQL database. Currently, only MySQL is supported.
+* Type: Dictionary.
+
+`icingaweb2_module_vspheredb__version`
+
+* The Module version to install. Can be found [here](https://github.com/Icinga/icingaweb2-module-vspheredb/releases).
+* Type: String.
 
 Example:
+
 ```yaml
 # mandatory
 icingaweb2_module_vspheredb__database_login:
@@ -42,13 +49,26 @@ icingaweb2_module_vspheredb__version: '1.6.0'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icingaweb2_module_vspheredb__database_host` | The host of the SQL database server. | `'localhost'` |
-| `icingaweb2_module_vspheredb__database_name` | The name of the vspheredb SQL database. | `'icinga_vspheredb'` |
-| `icingaweb2_module_vspheredb__service_enabled` | Enables or disables the vSphereDB service, analogous to `systemctl enable/disable --now`. | `true` on the primary Icinga2 Master |
+`icingaweb2_module_vspheredb__database_host`
+
+* The host of the SQL database server.
+* Type: String.
+* Default: `'localhost'`
+
+`icingaweb2_module_vspheredb__database_name`
+
+* The name of the vspheredb SQL database.
+* Type: String.
+* Default: `'icinga_vspheredb'`
+
+`icingaweb2_module_vspheredb__service_enabled`
+
+* Enables or disables the vSphereDB service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `'{{ icinga2_master__node_role | d("primary") == "primary" }}'`
 
 Example:
+
 ```yaml
 # optional
 icingaweb2_module_vspheredb__database_host: 'localhost'

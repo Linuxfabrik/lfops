@@ -22,26 +22,68 @@ Ideally, the FreeIPA should be installed on a separate server. If that is not po
 
 ## Tags
 
-| Tag              | What it does                    | Reload / Restart |
-| ---              | ------------                    | ---------------- |
-| `freeipa_server` | Installs and configures FreeIPA as a server | - |
-| `freeipa_server:configure` | Manages all FreeIPA resources (everything except installation) | - |
-| `freeipa_server:group` | Manages FreeIPA groups | - |
-| `freeipa_server:hbacrule` | Manages FreeIPA HBAC rules | - |
-| `freeipa_server:hostgroup` | Manages FreeIPA host groups | - |
-| `freeipa_server:pwpolicy` | Manages FreeIPA password policies | - |
-| `freeipa_server:sudocmd` | Manages FreeIPA sudo commands and sudo command groups | - |
-| `freeipa_server:sudorule` | Manages FreeIPA sudo rules | - |
-| `freeipa_server:systemd_override` | Deploys `/etc/systemd/system/pki-tomcatd@.service.d/override.conf` | - |
-| `freeipa_server:user` | Manages FreeIPA users and their group memberships | - |
+`freeipa_server`
+
+* Installs and configures FreeIPA as a server.
+* Triggers: none.
+
+`freeipa_server:configure`
+
+* Manages all FreeIPA resources (everything except installation).
+* Triggers: none.
+
+`freeipa_server:group`
+
+* Manages FreeIPA groups.
+* Triggers: none.
+
+`freeipa_server:hbacrule`
+
+* Manages FreeIPA HBAC rules.
+* Triggers: none.
+
+`freeipa_server:hostgroup`
+
+* Manages FreeIPA host groups.
+* Triggers: none.
+
+`freeipa_server:pwpolicy`
+
+* Manages FreeIPA password policies.
+* Triggers: none.
+
+`freeipa_server:sudocmd`
+
+* Manages FreeIPA sudo commands and sudo command groups.
+* Triggers: none.
+
+`freeipa_server:sudorule`
+
+* Manages FreeIPA sudo rules.
+* Triggers: none.
+
+`freeipa_server:systemd_override`
+
+* Deploys `/etc/systemd/system/pki-tomcatd@.service.d/override.conf`.
+* Triggers: none.
+
+`freeipa_server:user`
+
+* Manages FreeIPA users and their group memberships.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                     | Description                                                                          |
-| --------                     | -----------                                                                          |
-| `freeipa_server__directory_manager_password` | The password for the Directory Manager. This is the superuser that needs to be used to perform rare low level tasks. |
-| `freeipa_server__ipa_admin_password` | The password for the FreeIPA admin. This user is a regular system account used for IPA server administration. Set this in the `group_vars` so that the `linuxfabrik.lfops.freeipa_client` role can use it. |
+`freeipa_server__directory_manager_password`
+
+* The password for the Directory Manager. This is the superuser that needs to be used to perform rare low level tasks.
+* Type: String.
+
+`freeipa_server__ipa_admin_password`
+
+* The password for the FreeIPA admin. This user is a regular system account used for IPA server administration. Set this in the `group_vars` so that the `linuxfabrik.lfops.freeipa_client` role can use it.
+* Type: String.
 
 Example:
 ```yaml
@@ -53,21 +95,450 @@ freeipa_server__ipa_admin_password: 'linuxfabrik'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `freeipa_server__config_default_shell` | The default shell for the users in FreeIPA. | `'/bin/bash'` |
-| `freeipa_server__config_password_expiration_notification` | When the password expiration notification for FreeIPA users should be sent, in days. | `10` |
-| `freeipa_server__domain` | The primary DNS domain. Typically this should be the domain part of FQDN of the server. | `'{{ ansible_facts["domain"] \| lower }}'` |
-| `freeipa_server__groups__host_var` / `freeipa_server__groups__group_var` | List of dictionaries of FreeIPA groups to manage. Subkeys: <ul><li>`name`: Mandatory, string. Name of the group.</li><li>`description`: Optional, string. Group description.</li><li>`gidnumber`: Optional, integer. GID number.</li><li>`nonposix`: Optional, boolean. Create as a non-POSIX group.</li><li>`external`: Optional, boolean. Allow external non-IPA members.</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `freeipa_server__hbacrules__host_var` / `freeipa_server__hbacrules__group_var` | List of dictionaries of FreeIPA HBAC rules to manage. Subkeys: <ul><li>`name`: Mandatory, string. Name of the HBAC rule.</li><li>`description`: Optional, string. Rule description.</li><li>`usercategory`: Optional, string. User category (`all`).</li><li>`hostcategory`: Optional, string. Host category (`all`).</li><li>`servicecategory`: Optional, string. Service category (`all`).</li><li>`users`: Optional, list. List of user names.</li><li>`groups`: Optional, list. List of group names.</li><li>`hosts`: Optional, list. List of host names.</li><li>`hostgroups`: Optional, list. List of host group names.</li><li>`hbacsvcs`: Optional, list. List of HBAC service names.</li><li>`hbacsvcgroups`: Optional, list. List of HBAC service group names.</li><li>`state`: Optional, string. `enabled`, `disabled` or `absent`. Defaults to `enabled`.</li></ul> | `[]` |
-| `freeipa_server__hostgroups__host_var` / `freeipa_server__hostgroups__group_var` | List of dictionaries of FreeIPA host groups to manage. Subkeys: <ul><li>`name`: Mandatory, string. Name of the host group.</li><li>`description`: Optional, string. Host group description.</li><li>`hosts`: Optional, list. List of host names to add as members.</li><li>`hostgroups`: Optional, list. List of host group names to add as members.</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `freeipa_server__ipa_admin_principal` | The Kerberos principal used for IPA admin authentication. | `'admin'` |
-| `freeipa_server__pwpolicies__host_var` / `freeipa_server__pwpolicies__group_var` | List of dictionaries of FreeIPA password policies to manage. Subkeys: <ul><li>`name`: Mandatory, string. Name of the group the policy applies to.</li><li>`maxlife`: Optional, integer. Maximum password lifetime in days.</li><li>`minlife`: Optional, integer. Minimum password lifetime in hours.</li><li>`history`: Optional, integer. Password history size.</li><li>`minclasses`: Optional, integer. Minimum number of character classes.</li><li>`minlength`: Optional, integer. Minimum password length.</li><li>`maxfail`: Optional, integer. Maximum number of consecutive failures before lockout.</li><li>`failinterval`: Optional, integer. Period (in seconds) after which failure count is reset.</li><li>`lockouttime`: Optional, integer. Period (in seconds) for which account is locked.</li><li>`priority`: Optional, integer. Policy priority (lower value = higher priority).</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `freeipa_server__realm` | The kerberos protocol requires a Realm name to be defined. This is typically the domain name converted to uppercase. | `'{{ ansible_facts["domain"] \| upper }}'` |
-| `freeipa_server__sudocmdgroups__host_var` / `freeipa_server__sudocmdgroups__group_var` | List of dictionaries of FreeIPA sudo command groups to manage. Subkeys: <ul><li>`name`: Mandatory, string. Name of the sudo command group.</li><li>`description`: Optional, string. Command group description.</li><li>`sudocmds`: Optional, list. List of sudo command names to add as members.</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `freeipa_server__sudocmds__host_var` / `freeipa_server__sudocmds__group_var` | List of dictionaries of FreeIPA sudo commands to manage. Subkeys: <ul><li>`name`: Mandatory, string. Command (e.g. `/usr/bin/less`).</li><li>`description`: Optional, string. Command description.</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `freeipa_server__sudorules__host_var` / `freeipa_server__sudorules__group_var` | List of dictionaries of FreeIPA sudo rules to manage. Subkeys: <ul><li>`name`: Mandatory, string. Name of the sudo rule.</li><li>`description`: Optional, string. Rule description.</li><li>`usercategory`: Optional, string. User category (`all`).</li><li>`hostcategory`: Optional, string. Host category (`all`).</li><li>`cmdcategory`: Optional, string. Command category (`all`).</li><li>`runasusercategory`: Optional, string. RunAs user category (`all`).</li><li>`runasgroupcategory`: Optional, string. RunAs group category (`all`).</li><li>`users`: Optional, list. List of user names.</li><li>`groups`: Optional, list. List of group names.</li><li>`hosts`: Optional, list. List of host names.</li><li>`hostgroups`: Optional, list. List of host group names.</li><li>`cmds`: Optional, list. List of sudo command names.</li><li>`cmdgroups`: Optional, list. List of sudo command group names.</li><li>`runasusers`: Optional, list. List of RunAs user names.</li><li>`runasgroups`: Optional, list. List of RunAs group names.</li><li>`options`: Optional, list. List of sudo options (e.g. `!authenticate`).</li><li>`order`: Optional, integer. Sudo rule order.</li><li>`state`: Optional, string. `enabled`, `disabled` or `absent`. Defaults to `enabled`.</li></ul> | `[]` |
-| `freeipa_server__users__host_var` / `freeipa_server__users__group_var` | List of dictionaries of FreeIPA users to manage. Subkeys: <ul><li>`name`: Mandatory, string. Login name.</li><li>`first`: Mandatory (for creation), string. First name.</li><li>`last`: Mandatory (for creation), string. Last name.</li><li>`password`: Optional, string. User password.</li><li>`email`: Optional, list. List of email addresses.</li><li>`shell`: Optional, string. Login shell.</li><li>`sshpubkey`: Optional, list. List of SSH public keys.</li><li>`groups`: Optional, list. List of group names the user should be a member of.</li><li>`update_password`: Optional, string. `on_create` or `always`. Defaults to `on_create`.</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
+`freeipa_server__config_default_shell`
+
+* The default shell for the users in FreeIPA.
+* Type: String.
+* Default: `'/bin/bash'`
+
+`freeipa_server__config_password_expiration_notification`
+
+* When the password expiration notification for FreeIPA users should be sent, in days.
+* Type: Number.
+* Default: `10`
+
+`freeipa_server__domain`
+
+* The primary DNS domain. Typically this should be the domain part of FQDN of the server.
+* Type: String.
+* Default: `'{{ ansible_facts["domain"] | lower }}'`
+
+`freeipa_server__groups__host_var` / `freeipa_server__groups__group_var`
+
+* FreeIPA groups to manage.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the group.
+        * Type: String.
+
+    * `description`:
+
+        * Optional. Group description.
+        * Type: String.
+
+    * `gidnumber`:
+
+        * Optional. GID number.
+        * Type: Number.
+
+    * `nonposix`:
+
+        * Optional. Create as a non-POSIX group.
+        * Type: Bool.
+
+    * `external`:
+
+        * Optional. Allow external non-IPA members.
+        * Type: Bool.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
+`freeipa_server__hbacrules__host_var` / `freeipa_server__hbacrules__group_var`
+
+* FreeIPA HBAC rules to manage.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the HBAC rule.
+        * Type: String.
+
+    * `description`:
+
+        * Optional. Rule description.
+        * Type: String.
+
+    * `usercategory`:
+
+        * Optional. User category (`all`).
+        * Type: String.
+
+    * `hostcategory`:
+
+        * Optional. Host category (`all`).
+        * Type: String.
+
+    * `servicecategory`:
+
+        * Optional. Service category (`all`).
+        * Type: String.
+
+    * `users`:
+
+        * Optional. List of user names.
+        * Type: List.
+
+    * `groups`:
+
+        * Optional. List of group names.
+        * Type: List.
+
+    * `hosts`:
+
+        * Optional. List of host names.
+        * Type: List.
+
+    * `hostgroups`:
+
+        * Optional. List of host group names.
+        * Type: List.
+
+    * `hbacsvcs`:
+
+        * Optional. List of HBAC service names.
+        * Type: List.
+
+    * `hbacsvcgroups`:
+
+        * Optional. List of HBAC service group names.
+        * Type: List.
+
+    * `state`:
+
+        * Optional. `enabled`, `disabled` or `absent`. Defaults to `enabled`.
+        * Type: String.
+
+`freeipa_server__hostgroups__host_var` / `freeipa_server__hostgroups__group_var`
+
+* FreeIPA host groups to manage.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the host group.
+        * Type: String.
+
+    * `description`:
+
+        * Optional. Host group description.
+        * Type: String.
+
+    * `hosts`:
+
+        * Optional. List of host names to add as members.
+        * Type: List.
+
+    * `hostgroups`:
+
+        * Optional. List of host group names to add as members.
+        * Type: List.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
+`freeipa_server__ipa_admin_principal`
+
+* The Kerberos principal used for IPA admin authentication.
+* Type: String.
+* Default: `'admin'`
+
+`freeipa_server__pwpolicies__host_var` / `freeipa_server__pwpolicies__group_var`
+
+* FreeIPA password policies to manage.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the group the policy applies to.
+        * Type: String.
+
+    * `maxlife`:
+
+        * Optional. Maximum password lifetime in days.
+        * Type: Number.
+
+    * `minlife`:
+
+        * Optional. Minimum password lifetime in hours.
+        * Type: Number.
+
+    * `history`:
+
+        * Optional. Password history size.
+        * Type: Number.
+
+    * `minclasses`:
+
+        * Optional. Minimum number of character classes.
+        * Type: Number.
+
+    * `minlength`:
+
+        * Optional. Minimum password length.
+        * Type: Number.
+
+    * `maxfail`:
+
+        * Optional. Maximum number of consecutive failures before lockout.
+        * Type: Number.
+
+    * `failinterval`:
+
+        * Optional. Period (in seconds) after which failure count is reset.
+        * Type: Number.
+
+    * `lockouttime`:
+
+        * Optional. Period (in seconds) for which account is locked.
+        * Type: Number.
+
+    * `priority`:
+
+        * Optional. Policy priority (lower value = higher priority).
+        * Type: Number.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
+`freeipa_server__realm`
+
+* The kerberos protocol requires a Realm name to be defined. This is typically the domain name converted to uppercase.
+* Type: String.
+* Default: `'{{ ansible_facts["domain"] | upper }}'`
+
+`freeipa_server__sudocmdgroups__host_var` / `freeipa_server__sudocmdgroups__group_var`
+
+* FreeIPA sudo command groups to manage.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the sudo command group.
+        * Type: String.
+
+    * `description`:
+
+        * Optional. Command group description.
+        * Type: String.
+
+    * `sudocmds`:
+
+        * Optional. List of sudo command names to add as members.
+        * Type: List.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
+`freeipa_server__sudocmds__host_var` / `freeipa_server__sudocmds__group_var`
+
+* FreeIPA sudo commands to manage.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Command (e.g. `/usr/bin/less`).
+        * Type: String.
+
+    * `description`:
+
+        * Optional. Command description.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
+`freeipa_server__sudorules__host_var` / `freeipa_server__sudorules__group_var`
+
+* FreeIPA sudo rules to manage.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the sudo rule.
+        * Type: String.
+
+    * `description`:
+
+        * Optional. Rule description.
+        * Type: String.
+
+    * `usercategory`:
+
+        * Optional. User category (`all`).
+        * Type: String.
+
+    * `hostcategory`:
+
+        * Optional. Host category (`all`).
+        * Type: String.
+
+    * `cmdcategory`:
+
+        * Optional. Command category (`all`).
+        * Type: String.
+
+    * `runasusercategory`:
+
+        * Optional. RunAs user category (`all`).
+        * Type: String.
+
+    * `runasgroupcategory`:
+
+        * Optional. RunAs group category (`all`).
+        * Type: String.
+
+    * `users`:
+
+        * Optional. List of user names.
+        * Type: List.
+
+    * `groups`:
+
+        * Optional. List of group names.
+        * Type: List.
+
+    * `hosts`:
+
+        * Optional. List of host names.
+        * Type: List.
+
+    * `hostgroups`:
+
+        * Optional. List of host group names.
+        * Type: List.
+
+    * `cmds`:
+
+        * Optional. List of sudo command names.
+        * Type: List.
+
+    * `cmdgroups`:
+
+        * Optional. List of sudo command group names.
+        * Type: List.
+
+    * `runasusers`:
+
+        * Optional. List of RunAs user names.
+        * Type: List.
+
+    * `runasgroups`:
+
+        * Optional. List of RunAs group names.
+        * Type: List.
+
+    * `options`:
+
+        * Optional. List of sudo options (e.g. `!authenticate`).
+        * Type: List.
+
+    * `order`:
+
+        * Optional. Sudo rule order.
+        * Type: Number.
+
+    * `state`:
+
+        * Optional. `enabled`, `disabled` or `absent`. Defaults to `enabled`.
+        * Type: String.
+
+`freeipa_server__systemd_timeoutstartsec`
+
+* The `TimeoutStartSec` value for the `pki-tomcatd@.service` systemd override.
+* Type: Number.
+* Default: `300`
+
+`freeipa_server__users__host_var` / `freeipa_server__users__group_var`
+
+* FreeIPA users to manage.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Login name.
+        * Type: String.
+
+    * `first`:
+
+        * Mandatory (for creation). First name.
+        * Type: String.
+
+    * `last`:
+
+        * Mandatory (for creation). Last name.
+        * Type: String.
+
+    * `password`:
+
+        * Optional. User password.
+        * Type: String.
+
+    * `email`:
+
+        * Optional. List of email addresses.
+        * Type: List.
+
+    * `shell`:
+
+        * Optional. Login shell.
+        * Type: String.
+
+    * `sshpubkey`:
+
+        * Optional. List of SSH public keys.
+        * Type: List.
+
+    * `groups`:
+
+        * Optional. List of group names the user should be a member of.
+        * Type: List.
+
+    * `update_password`:
+
+        * Optional. `on_create` or `always`. Defaults to `on_create`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. Defaults to `present`.
+        * Type: String.
 
 Example:
 ```yaml

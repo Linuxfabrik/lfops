@@ -19,32 +19,114 @@ If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blo
 
 ## Tags
 
-| Tag                   | What it does                                            | Reload / Restart |
-| ---                   | ------------                                            | ---------------- |
-| `system_update`       | Sets up automatic system update via systemd timer       | - |
-| `system_update:state` | Determines whether notify-and-schedule.timer is enabled | - |
+`system_update`
+
+* Sets up automatic system update via systemd timer.
+* Triggers: none.
+
+`system_update:state`
+
+* Determines whether notify-and-schedule.timer is enabled.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `system_update__cache_only` | Whether to install updates from cache only. This implies to have the cache built beforehand. | `false` |
-| `system_update__icinga2_api_url` | The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `reboot` alias. | `'https://{{ icinga2_agent__icinga2_master_host \| d("") }}:{{ icinga2_agent__icinga2_master_port \| d(5665) }}'` |
-| `system_update__icinga2_api_user_login` | The Icinga2 API User to set the downtime for the corresponding host and all its services. | unset |
-| `system_update__icinga2_hostname` | The hostname of the Icinga2 host on which the downtime should be set. |  `'{{ ansible_facts["nodename"] }}'` |
-| `system_update__mail_from` | The email sender account. This will be used as the "from"-address for all notifications. | `'{{ mailto_root__from }}'` |
-| `system_update__mail_recipients_new_configfiles` | A list of email recipients to notify if there is a new version of a config file (`rpmnew` / `rpmsave` / `dpkg-dist` / `ucf-dist`). | `'{{ mailto_root__to }}'` |
-| `system_update__mail_recipients_updates` | A list of email recipients to notify about the expected updates and the report of the installed updates. | `'{{ mailto_root__to }}'` |
-| `system_update__mail_subject_hostname` | String which will be used as the hostname in the mail subject. You can use `$()` to call bash code. | '$(hostname --short)' |
-| `system_update__mail_subject_prefix` | This will set a prefix that will be showed in front of the hostname. Can be used to separate servers by environment or customer. | `''` |
-| `system_update__notify_and_schedule_on_calendar` | When the notification for the expected updates should be sent. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format. | `'mon 10:00'` |
-| `system_update__post_update_code` | This codeblock will be executed after the updates have been installed and before a potential reboot. | unset |
-| `system_update__pre_update_code` | This codeblock will be executed before the update process is started. Can be used to check pre-conditions for updating, for example for checking cluster nodes. | unset |
-| `system_update__rocketchat_msg_suffix` | A suffix to the Rocket.Chat notifications. This can be used to mention other users. | `''` |
-| `system_update__rocketchat_url` | The URL to a potential Rocket.Chat server to send notifications about the updates to. | unset |
-| `system_update__update_enabled` | Enables or disables the system-update timer, analogous to `systemctl enable/disable --now`.  | `true` |
-| `system_update__update_time` | The time when to actually execute the updates (and automatically reboot if necessary), relative to `system_update__notify_and_schedule_on_calendar`. | `04:00 + 1 days'` |
+`system_update__cache_only`
+
+* Whether to install updates from cache only. This implies to have the cache built beforehand.
+* Type: Bool.
+* Default: `false`
+
+`system_update__icinga2_api_url`
+
+* The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `reboot` alias.
+* Type: String.
+* Default: `'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'`
+
+`system_update__icinga2_api_user_login`
+
+* The Icinga2 API User to set the downtime for the corresponding host and all its services.
+* Type: Dictionary.
+* Default: unset
+
+`system_update__icinga2_hostname`
+
+* The hostname of the Icinga2 host on which the downtime should be set.
+* Type: String.
+* Default: `'{{ ansible_facts["nodename"] }}'`
+
+`system_update__mail_from`
+
+* The email sender account. This will be used as the "from"-address for all notifications.
+* Type: String.
+* Default: `'{{ mailto_root__from }}'`
+
+`system_update__mail_recipients_new_configfiles`
+
+* A list of email recipients to notify if there is a new version of a config file (`rpmnew` / `rpmsave` / `dpkg-dist` / `ucf-dist`).
+* Type: String.
+* Default: `'{{ mailto_root__to }}'`
+
+`system_update__mail_recipients_updates`
+
+* A list of email recipients to notify about the expected updates and the report of the installed updates.
+* Type: String.
+* Default: `'{{ mailto_root__to }}'`
+
+`system_update__mail_subject_hostname`
+
+* String which will be used as the hostname in the mail subject. You can use `$()` to call bash code.
+* Type: String.
+* Default: `'$(hostname --short)'`
+
+`system_update__mail_subject_prefix`
+
+* This will set a prefix that will be showed in front of the hostname. Can be used to separate servers by environment or customer.
+* Type: String.
+* Default: `''`
+
+`system_update__notify_and_schedule_on_calendar`
+
+* When the notification for the expected updates should be sent. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* Type: String.
+* Default: `'mon 10:00'`
+
+`system_update__post_update_code`
+
+* This codeblock will be executed after the updates have been installed and before a potential reboot.
+* Type: String.
+* Default: unset
+
+`system_update__pre_update_code`
+
+* This codeblock will be executed before the update process is started. Can be used to check pre-conditions for updating, for example for checking cluster nodes.
+* Type: String.
+* Default: unset
+
+`system_update__rocketchat_msg_suffix`
+
+* A suffix to the Rocket.Chat notifications. This can be used to mention other users.
+* Type: String.
+* Default: `''`
+
+`system_update__rocketchat_url`
+
+* The URL to a potential Rocket.Chat server to send notifications about the updates to.
+* Type: String.
+* Default: unset
+
+`system_update__update_enabled`
+
+* Enables or disables the system-update timer, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`system_update__update_time`
+
+* The time when to actually execute the updates (and automatically reboot if necessary), relative to `system_update__notify_and_schedule_on_calendar`.
+* Type: String.
+* Default: `'04:00 + 1 days'`
 
 Example:
 ```yaml

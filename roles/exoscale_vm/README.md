@@ -17,23 +17,53 @@ This role creates and manages instances (virtual machines) on [Exoscale](https:/
 
 ## Tags
 
-| Tag                     | What it does                               | Reload / Restart |
-| ---                     | ------------                               | ---------------- |
-| `exoscale_vm`           | Creates and manages the instance           | - |
-| `exoscale_vm:firewalls` | Manage the provider firewalls of the host. | - |
-| `exoscale_vm:networks`  | Manage the provider private networks.      | - |
+`exoscale_vm`
+
+* Creates and manages the instance.
+* Triggers: none.
+
+`exoscale_vm:firewalls`
+
+* Manage the provider firewalls of the host.
+* Triggers: none.
+
+`exoscale_vm:networks`
+
+* Manage the provider private networks.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `exoscale_vm__account` | The name of the Exoscale account name as configured during `exo config`. Can be found in `~/.config/exoscale/exoscale.toml` afterwards. |
-| `exoscale_vm__api_key` | Set the Exoscale API key. API keys can be managed [here](https://portal.exoscale.com/iam/api-keys). We recommend creating a unrestricted key, because else some operations fail. |
-| `exoscale_vm__api_secret` | Set the Exoscale secret corresponding to the API key. |
-| `exoscale_vm__service_offering` | The Exoscale service offering. This defines the amount of CPU cores, RAM and disk space. The possible options can be obtained using `exo compute instance-type list --verbose`. Note that these changes will only be applied to stopped instances. |
-| `exoscale_vm__template` | The Exoscale template for the instance. The possible options can be obtained using `exo compute instance-template list`. Note that you have to use the ID instead of the name when referencing custom templates. |
-| `exoscale_vm__zone` | The Exoscale zone the instance should be in.  The possible options can be obtained using `exo zone list`. |
+`exoscale_vm__account`
+
+* The name of the Exoscale account name as configured during `exo config`. Can be found in `~/.config/exoscale/exoscale.toml` afterwards.
+* Type: String.
+
+`exoscale_vm__api_key`
+
+* Set the Exoscale API key. API keys can be managed [here](https://portal.exoscale.com/iam/api-keys). We recommend creating a unrestricted key, because else some operations fail.
+* Type: String.
+
+`exoscale_vm__api_secret`
+
+* Set the Exoscale secret corresponding to the API key.
+* Type: String.
+
+`exoscale_vm__service_offering`
+
+* The Exoscale service offering. This defines the amount of CPU cores, RAM and disk space. The possible options can be obtained using `exo compute instance-type list --verbose`. Note that these changes will only be applied to stopped instances.
+* Type: String.
+
+`exoscale_vm__template`
+
+* The Exoscale template for the instance. The possible options can be obtained using `exo compute instance-template list`. Note that you have to use the ID instead of the name when referencing custom templates.
+* Type: String.
+
+`exoscale_vm__zone`
+
+* The Exoscale zone the instance should be in. The possible options can be obtained using `exo zone list`.
+* Type: String.
 
 Example:
 ```yaml
@@ -49,16 +79,103 @@ exoscale_vm__zone: 'ch-dk-2'
 
 ## Optional Role Variables
 
-| Variable                 | Description | Default Value |
-| --------                 | ----------- | ------------- |
-| `exoscale_vm__disk_size` | The disk size in GBs. Must be greater than 10. Note that adjusting the disk size is not currently supported. | `10` |
-| `exoscale_vm__name` | The name of the instance. By default, the Ansible inventory name prefixed with `e` is used, as it has to start with a letter. | `'e{{ inventory_hostname }}'` |
-| `exoscale_vm__private_instance` | Boolean to choose if the instance should be "private" without a public IP, or not. | `false` |
-| `exoscale_vm__private_networks` | A list of dictionaries defining which networks should be attached to this instance. It also allows the creation of new internal networks, or setting a fixed IP for the instance. Subkeys: <ul><li>`name`: Mandatory, string. The name of an existing network, or the network which should be created.</li><li>`cidr`: Optional, string. If this is given, a new network with this cidr is created.</li><li>`fixed_ip`: Optional, string. The fixed IP of this instance. This can be used for attach to an existing network, or when creating a new one.</li></ul> | `[]` |
-| `exoscale_vm__security_group_rules` | A list of dictionaries containing rules for the security group (basically Exoscale firewall rules). Subkeys: <ul><li>`cidr`: Optional, string. CIDR to be used for security group rule.</li><li>`protocol`: Mandatory, string. To which IP protocol the rule is applied. Possible options: `tcp`, `udp`, `icmp`.</li><li>`start_port`: Mandatory, int. The starting port.</li><li>`end_port`: Mandatory, int. The ending port.</li><li>`state`: Optional, string. State of the rule. Either `absent` or `present`. Defaults to `present`.</li><li>`type`: Mandatory, string. For which direction the rule should apply. Possible options: `ingress`, `egress`.</li></ul> | unset |
-| `exoscale_vm__ssh_key` | The name of the SSH-key depoited in Exoscale [here](https://portal.exoscale.com/compute/keypairs). Defaults to using the local username of the Ansible control node. | `'{{ lookup("env", "USER") }}'` |
-| `exoscale_vm__state` | The state of the instance. Possible options: <ul><li>deployed</li><li>started</li><li>stopped</li><li>restarted</li><li>restored</li><li>destroyed</li><li>expunged</li><li>present</li><li>absent</li></ul> | `'started'` |
-| `exoscale_vm__template_visibility` | Visibility of the Exoscale template for the instance. Usually `'private'` for custom templates. | `'public'` |
+`exoscale_vm__disk_size`
+
+* The disk size in GBs. Must be greater than 10. Note that adjusting the disk size is not currently supported.
+* Type: Number.
+* Default: `10`
+
+`exoscale_vm__name`
+
+* The name of the instance. By default, the Ansible inventory name prefixed with `e` is used, as it has to start with a letter.
+* Type: String.
+* Default: `'e{{ inventory_hostname }}'`
+
+`exoscale_vm__private_instance`
+
+* Choose if the instance should be "private" without a public IP, or not.
+* Type: Bool.
+* Default: `true`
+
+`exoscale_vm__private_networks`
+
+* A list of dictionaries defining which networks should be attached to this instance. It also allows the creation of new internal networks, or setting a fixed IP for the instance.
+* Type: List of dictionaries.
+* Default: `[]`
+
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of an existing network, or the network which should be created.
+        * Type: String.
+
+    * `cidr`:
+
+        * Optional. If this is given, a new network with this cidr is created.
+        * Type: String.
+
+    * `fixed_ip`:
+
+        * Optional. The fixed IP of this instance. This can be used for attach to an existing network, or when creating a new one.
+        * Type: String.
+
+`exoscale_vm__security_group_rules`
+
+* A list of dictionaries containing rules for the security group (basically Exoscale firewall rules).
+* Type: List of dictionaries.
+* Default: unset
+
+* Subkeys:
+
+    * `cidr`:
+
+        * Optional. CIDR to be used for security group rule.
+        * Type: String.
+
+    * `protocol`:
+
+        * Mandatory. To which IP protocol the rule is applied. Possible options: `tcp`, `udp`, `icmp`.
+        * Type: String.
+
+    * `start_port`:
+
+        * Mandatory. The starting port.
+        * Type: Number.
+
+    * `end_port`:
+
+        * Mandatory. The ending port.
+        * Type: Number.
+
+    * `state`:
+
+        * Optional. State of the rule. Either `absent` or `present`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `type`:
+
+        * Mandatory. For which direction the rule should apply. Possible options: `ingress`, `egress`.
+        * Type: String.
+
+`exoscale_vm__ssh_key`
+
+* The name of the SSH-key deposited in Exoscale [here](https://portal.exoscale.com/compute/keypairs). Defaults to using the local username of the Ansible control node.
+* Type: String.
+* Default: `'{{ lookup("env", "USER") }}'`
+
+`exoscale_vm__state`
+
+* The state of the instance. Possible options: `deployed`, `started`, `stopped`, `restarted`, `restored`, `destroyed`, `expunged`, `present`, `absent`.
+* Type: String.
+* Default: `'started'`
+
+`exoscale_vm__template_visibility`
+
+* Visibility of the Exoscale template for the instance. Usually `'private'` for custom templates.
+* Type: String.
+* Default: `'public'`
 
 Example:
 ```yaml

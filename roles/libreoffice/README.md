@@ -5,16 +5,19 @@ This role installs LibreOffice on a server, so it is intended for headless opera
 
 ## Tags
 
-| Tag           | What it does     | Reload / Restart |
-| ---           | ------------     | ---------------- |
-| `libreoffice` | Installs LibreOffice | - |
+`libreoffice`
+
+* Installs LibreOffice.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `libreoffice__client_apache`| Boolean. If set to `true`, LibreOffice is configured to run under the user "apache". | `false` |
+`libreoffice__client_apache`
+
+* If set to `true`, LibreOffice is configured to run under the user "apache".
+* Type: Bool.
+* Default: `false`
 
 Example:
 ```yaml

@@ -10,17 +10,23 @@ Supported Versions:
 
 ## Tags
 
-| Tag                   | What it does                          | Reload / Restart |
-| ---                   | ------------                          | ---------------- |
-| `repo_collabora` | Deploys the Collabora Enterprise Repository | - |
+`repo_collabora`
+
+* Deploys the Collabora Enterprise Repository.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `repo_collabora__customer_token` | The Customer Token to the Collabora Enterprise subscription. |
-| `repo_collabora__version` | The version of Collabora Enterprise to be installed. |
+`repo_collabora__customer_token`
+
+* The Customer Token to the Collabora Enterprise subscription.
+* Type: String.
+
+`repo_collabora__version`
+
+* The version of Collabora Enterprise to be installed.
+* Type: String.
 
 Example:
 ```yaml
@@ -32,11 +38,17 @@ repo_collabora__version: '24.04'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `repo_collabora__basic_auth_login` | Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles. | `{{ lfops__repo_basic_auth_login \| default("") }}` |
-| `repo_collabora__mirror_url` | Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used. | `'{{ lfops__repo_mirror_url \| default("") }}'` |
+`repo_collabora__basic_auth_login`
 
+* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Type: String.
+* Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
+
+`repo_collabora__mirror_url`
+
+* Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used.
+* Type: String.
+* Default: `'{{ lfops__repo_mirror_url | default("") }}'`
 
 Example:
 ```yaml

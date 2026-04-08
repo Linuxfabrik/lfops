@@ -5,10 +5,10 @@ This role installs the [Open VM Tools](https://github.com/vmware/open-vm-tools/)
 
 ## Tags
 
-| Tag       | What it does                    | Reload / Restart |
-| ---       | ------------                    | ---------------- |
-| `open_vm_tools` | Install open-vm-tools     | - |
+`open_vm_tools`
 
+* Installs open-vm-tools and enables vmtoolsd.service.
+* Triggers: none.
 
 
 ## License

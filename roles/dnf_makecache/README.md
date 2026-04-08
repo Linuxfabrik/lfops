@@ -5,17 +5,25 @@ This role ensures that the DNF-makecache Systemd service and timer are disabled.
 
 ## Tags
 
-| Tag             | What it does                                | Reload / Restart |
-| ---             | ------------                                | ---------------- |
-| `dnf_makecache` | Manages the dnf-makecache service and timer | - |
+`dnf_makecache`
+
+* Manages the dnf-makecache service and timer.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `dnf_makecache__service_enabled` | Enables or disables the DNF-makecache service, analogous to `systemctl enable/disable --now`. | `false` |
-| `dnf_makecache__timer_enabled` | Enables or disables the DNF-makecache timer, analogous to `systemctl enable/disable --now`. | `false` |
+`dnf_makecache__service_enabled`
+
+* Enables or disables the DNF-makecache service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `false`
+
+`dnf_makecache__timer_enabled`
+
+* Enables or disables the DNF-makecache timer, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `false`
 
 Example:
 ```yaml

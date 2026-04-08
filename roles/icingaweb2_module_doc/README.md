@@ -10,9 +10,10 @@ This role enables the [IcingaWeb2 Doc Module](https://icinga.com/docs/icinga-web
 
 ## Tags
 
-| Tag                     | What it does                      | Reload / Restart |
-| ---                     | ------------                      | ---------------- |
-| `icingaweb2_module_doc` | Enables the IcingaWeb2 Doc Module | - |
+`icingaweb2_module_doc`
+
+* Enables the IcingaWeb2 Doc Module.
+* Triggers: none.
 
 
 ## License

@@ -7,16 +7,19 @@ By default, the role just installs the latest available `nodejs` package. One ca
 
 ## Tags
 
-| Tag      | What it does     | Reload / Restart |
-| ---      | ------------     | ---------------- |
-| `nodejs` | Installs Node.js | - |
+`nodejs`
+
+* Installs Node.js.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `nodejs__dnf_module_stream` | The DNF module stream from which Node.js should be installed. Possible options: `dnf module list nodejs`. | unset |
+`nodejs__dnf_module_stream`
+
+* The DNF module stream from which Node.js should be installed. Possible options: `dnf module list nodejs`.
+* Type: Number.
+* Default: unset
 
 Example:
 ```yaml

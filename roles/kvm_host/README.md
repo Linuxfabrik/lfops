@@ -10,22 +10,115 @@ This role installs the required packages and configures the host as a KVM host.
 
 ## Tags
 
-| Tag        | What it does                                                       | Reload / Restart |
-| ---        | ------------                                                       | ---------------- |
-| `kvm_host` | Install the required packages and configure the host as a KVM host | - |
+`kvm_host`
+
+* Install the required packages and configure the host as a KVM host.
+* Triggers: none.
+
+`kvm_host:networks`
+
+* Manage libvirt networks.
+* Triggers: none.
+
+`kvm_host:pools`
+
+* Manage libvirt storage pools.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `kvm_host__libvirt_guests_on_shutdown` | What should happen with the guests (VMs) when the host shuts down. Possible options:<br> * `shutdown`<br> * `suspend` | `'shutdown'` |
-| `kvm_host__libvirt_guests_parallel_shutdown` | Number of guests will be shutdown concurrently. | `5` |
-| `kvm_host__libvirt_guests_service_enabled` | Enables or disables the libvirt-guests service, analogous to `systemctl enable/disable --now`. | `true` |
-| `kvm_host__libvirt_guests_shutdown_timeout` | Number of seconds we're willing to wait for a guest to shut down. | `300` |
-| `kvm_host__libvirtd_service_enabled` | Enables or disables the libvirtd service, analogous to `systemctl enable/disable --now`. | `true` |
-| `kvm_host__networks` | A list of libvirt network definitions. Subkeys:<br> * `name`: Mandatory, string. The name of the network.<br> * `bridge`: Optional, string. If set, will be used as the network bridge.<br> * `ip_address`: Optional, string. If set, will be used the IP address for the interface.<br> * `subnet`: Optional, string. Subnet mask for the network. Defaults to `255.255.255.0` if the `ip_address` is set.<br> * `dhcp_start`: Optional, string. Start of the DHCP range. Requires `dhcp_end` to be set as well.<br> * `dhcp_end`: Optional, string. End of the DHCP range. Requires `dhcp_start` to be set as well.<br> * `forward_mode`: Optional, string. When set to `'nat'` will configure the network to use NAT for the port range 1024-65535. | `[]` |
-| `kvm_host__pools` | A list of libvirt storage pool definitions. Currently only supports directory pools. Subkeys:<br> * `name`: Mandatory, string. The name of the pool. Use `default` to overwrite the default pool.<br> * `path`: Mandatory, string. Path to the directory that should be used as the storage pool. | `[]` |
+`kvm_host__libvirt_guests_on_shutdown`
+
+* What should happen with the guests (VMs) when the host shuts down. Possible options: `shutdown`, `suspend`.
+* Type: String.
+* Default: `'shutdown'`
+
+`kvm_host__libvirt_guests_parallel_shutdown`
+
+* Number of guests will be shutdown concurrently.
+* Type: Number.
+* Default: `5`
+
+`kvm_host__libvirt_guests_service_enabled`
+
+* Enables or disables the libvirt-guests service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`kvm_host__libvirt_guests_shutdown_timeout`
+
+* Number of seconds we're willing to wait for a guest to shut down.
+* Type: Number.
+* Default: `300`
+
+`kvm_host__libvirtd_service_enabled`
+
+* Enables or disables the libvirtd service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`kvm_host__networks`
+
+* A list of libvirt network definitions.
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the network.
+        * Type: String.
+
+    * `bridge`:
+
+        * Optional. If set, will be used as the network bridge.
+        * Type: String.
+
+    * `ip_address`:
+
+        * Optional. If set, will be used the IP address for the interface.
+        * Type: String.
+
+    * `subnet`:
+
+        * Optional. Subnet mask for the network.
+        * Type: String.
+        * Default: `'255.255.255.0'` (if the `ip_address` is set)
+
+    * `dhcp_start`:
+
+        * Optional. Start of the DHCP range. Requires `dhcp_end` to be set as well.
+        * Type: String.
+
+    * `dhcp_end`:
+
+        * Optional. End of the DHCP range. Requires `dhcp_start` to be set as well.
+        * Type: String.
+
+    * `forward_mode`:
+
+        * Optional. When set to `'nat'` will configure the network to use NAT for the port range 1024-65535.
+        * Type: String.
+
+* Type: List of dictionaries.
+* Default: `[]`
+
+`kvm_host__pools`
+
+* A list of libvirt storage pool definitions. Currently only supports directory pools.
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the pool. Use `default` to overwrite the default pool.
+        * Type: String.
+
+    * `path`:
+
+        * Mandatory. Path to the directory that should be used as the storage pool.
+        * Type: String.
+
+* Type: List of dictionaries.
+* Default: `[]`
 
 Example:
 ```yaml

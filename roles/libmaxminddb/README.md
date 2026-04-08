@@ -11,18 +11,33 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
 
 ## Tags
 
-| Tag                   | What it does                                 | Reload / Restart |
-| ---                   | ------------                                 | ---------------- |
-| `libmaxminddb`        | <ul><li>install gcc httpd-devel</li><li>curl https://github.com/maxmind/libmaxminddb/releases/download/{{ libmaxminddb__version }}/libmaxminddb-{{ libmaxminddb__version }}.tar.gz --output /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz</li><li>copy /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz to the server</li><li>mkdir -p /tmp/libmaxminddb-{{ libmaxminddb__version }}</li><li>tar xfz --strip-components 1 -C /tmp/libmaxminddb-{{ libmaxminddb__version }} /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz</li><li>rm -f /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz</li><li>./configure</li><li>make</li><li>make check</li><li>make install</li><li>Configure Dynamic Linker Run Time Bindings</li><li>ldconfig</li></ul> | - |
+`libmaxminddb`
+
+* Install gcc httpd-devel.
+* curl https://github.com/maxmind/libmaxminddb/releases/download/{{ libmaxminddb__version }}/libmaxminddb-{{ libmaxminddb__version }}.tar.gz --output /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz.
+* Copy /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz to the server.
+* mkdir -p /tmp/libmaxminddb-{{ libmaxminddb__version }}.
+* tar xfz --strip-components 1 -C /tmp/libmaxminddb-{{ libmaxminddb__version }} /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz.
+* rm -f /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz.
+* ./configure.
+* make.
+* make check.
+* make install.
+* Configure Dynamic Linker Run Time Bindings.
+* ldconfig.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `libmaxminddb__version` | String. The version to install. | `1.7.1` |
+`libmaxminddb__version`
 
-libmaxminddb:
+* The version to install.
+* Type: String.
+* Default: `'1.7.1'`
+
+Example:
+
 ```yaml
 # optional
 libmaxminddb__version: '1.7.1'

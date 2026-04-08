@@ -11,17 +11,23 @@ This role enables relaying all mail that is sent to the root user (or other serv
 
 ## Tags
 
-| Tag           | What it does           | Reload / Restart |
-| ---           | ------------           | ---------------- |
-| `mailto_root` | Configures mailto_root | - |
+`mailto_root`
+
+* Configures mailto_root.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable            | Description                                                    |
-| --------            | -----------                                                    |
-| `mailto_root__from` | The sender address from which the relayed mail should be sent. |
-| `mailto_root__to`   | List recipient addresses to which the mails should be relayed. |
+`mailto_root__from`
+
+* The sender address from which the relayed mail should be sent.
+* Type: String.
+
+`mailto_root__to`
+
+* List of recipient addresses to which the mails should be relayed.
+* Type: List of strings.
 
 Example:
 ```yaml

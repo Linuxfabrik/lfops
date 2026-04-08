@@ -17,24 +17,242 @@ login__users__host_var:
 
 ## Tags
 
-| Tag                   | What it does                                 | Reload / Restart |
-| ---                   | ------------                                 | ---------------- |
-| `podman_containers`             | Installs Podman, deploys Quadlets and manages their state | - |
-| `podman_containers:auto_update`   | Manages podman-auto-update.timer for system and users | - |
-| `podman_containers:containers`   | Deploys and removes container Quadlets | - |
-| `podman_containers:networks`   | Deploys and removes network Quadlets | - |
-| `podman_containers:state`   | Manages the state of the containers, networks and volumes | - |
-| `podman_containers:volumes`   | Deploys and removes volume Quadlets | - |
+`podman_containers`
+
+* Installs Podman, deploys Quadlets and manages their state.
+* Triggers: none.
+
+`podman_containers:auto_update`
+
+* Manages podman-auto-update.timer for system and users.
+* Triggers: none.
+
+`podman_containers:containers`
+
+* Deploys and removes container Quadlets.
+* Triggers: none.
+
+`podman_containers:networks`
+
+* Deploys and removes network Quadlets.
+* Triggers: none.
+
+`podman_containers:state`
+
+* Manages the state of the containers, networks and volumes.
+* Triggers: none.
+
+`podman_containers:volumes`
+
+* Deploys and removes volume Quadlets.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `podman_containers__auto_update__host_var` / <br> `podman_containers__auto_update__group_var` | List of dictionaries controlling `podman-auto-update.timer`. Subkeys: <ul><li>`on_calendar`: String, optional. Custom schedule for the timer in systemd calendar format (e.g., `daily`, `weekly`, `*-*-* 04:00:00`). When specified, creates an override file to customize the schedule. Defaults to unset (uses systemd default `daily`).</li><li>`state`: String, optional. State of the timer. Possible options: `present` (enable and start), `absent` (disable and stop). Defaults to `present`.</li><li>`user`: String, mandatory. Username for which to manage the timer. Use `root` for the system-wide timer.</li></ul> | `[]` |
-| `podman_containers__containers__host_var` / <br> `podman_containers__containers__group_var` | List of dictionaries describing the Podman containers. Subkeys: <ul><li>`enabled`: Boolean, optional. Set `true` to start the container at boot. Defaults to `true`.</li><li>`name`: String, mandatory. Name of the quadlet file. Will be suffixed with `-container.service`.</li><li>`raw_container`: String, optional. Raw block in the `[Container]` section. Defaults to unset.</li><li>`raw_install`: String, optional. Raw block in the `[Install]` section. Defaults to unset.</li><li>`raw_service`: String, optional. Raw block in the `[Service]` section. Defaults to unset.</li><li>`raw_unit`: String, optional. Raw block in the `[Unit]` section. Defaults to unset.</li><li>`state`: String, optional. State of the container. Possible options: `present`, `absent`, `started` (implies `present`), `stopped` (implies `present`). Defaults to `started`.</li><li>`user`: String, optional. Set this to run the container as rootless. Defaults to unset Defaults to unset (rootful).</li><li>`wanted_by`: String, optional. Unit for the `WantedBy` directive. Only effective if `enabled: true` is set. Defaults to `default.target`.</li></ul> | `[]` |
-| `podman_networks__networks__host_var` / <br> `podman_networks__networks__group_var` | List of dictionaries describing the Podman networks. Subkeys: <ul><li>`enabled`: Boolean, optional. Set `true` to start the network at boot. Defaults to `true`.</li><li>`name`: String, mandatory. Name of the quadlet file. Will be suffixed with `-network.service`.</li><li>`raw_network`: String, optional. Raw block in the `[Network]` section. Defaults to unset.</li><li>`raw_install`: String, optional. Raw block in the `[Install]` section. Defaults to unset.</li><li>`raw_service`: String, optional. Raw block in the `[Service]` section. Defaults to unset.</li><li>`raw_unit`: String, optional. Raw block in the `[Unit]` section. Defaults to unset.</li><li>`state`: String, optional. State of the network. Possible options: `present`, `absent`, `started` (implies `present`), `stopped` (implies `present`). Defaults to `started`.</li><li>`user`: String, optional. Set this to run the corresponding container as rootless. Defaults to unset (rootful).</li><li>`wanted_by`: String, optional. Unit for the `WantedBy` directive. Only effective if `enabled: true` is set. Defaults to `default.target`.</li></ul> | `[]` |
-| `podman_volumes__volumes__host_var` / <br> `podman_volumes__volumes__group_var` | List of dictionaries describing the Podman volumes. Subkeys: <ul><li>`enabled`: Boolean, optional. Set `true` to start the volume at boot. Defaults to `true`.</li><li>`name`: String, mandatory. Name of the quadlet file. Will be suffixed with `-volume.service`.</li><li>`raw_volume`: String, optional. Raw block in the `[Volume]` section. Defaults to unset.</li><li>`raw_install`: String, optional. Raw block in the `[Install]` section. Defaults to unset.</li><li>`raw_service`: String, optional. Raw block in the `[Service]` section. Defaults to unset.</li><li>`raw_unit`: String, optional. Raw block in the `[Unit]` section. Defaults to unset.</li><li>`state`: String, optional. State of the volume. Possible options: `present`, `absent`, `started` (implies `present`), `stopped` (implies `present`). Defaults to `started`.</li><li>`user`: String, optional. Set this to run the corresponding container as rootless. Defaults to unset (rootful).</li><li>`wanted_by`: String, optional. Unit for the `WantedBy` directive. Only effective if `enabled: true` is set. Defaults to `default.target`.</li></ul> | `[]` |
+`podman_containers__auto_update__host_var` / `podman_containers__auto_update__group_var`
+
+* List of dictionaries controlling `podman-auto-update.timer`.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `on_calendar`:
+
+        * Optional. Custom schedule for the timer in systemd calendar format (e.g., `daily`, `weekly`, `*-*-* 04:00:00`). When specified, creates an override file to customize the schedule. Uses systemd default `daily` when unset.
+        * Type: String.
+        * Default: unset
+
+    * `state`:
+
+        * Optional. State of the timer. Possible options: `present` (enable and start), `absent` (disable and stop).
+        * Type: String.
+        * Default: `'present'`
+
+    * `user`:
+
+        * Mandatory. Username for which to manage the timer. Use `root` for the system-wide timer.
+        * Type: String.
+
+`podman_containers__containers__host_var` / `podman_containers__containers__group_var`
+
+* List of dictionaries describing the Podman containers.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `enabled`:
+
+        * Optional. Set `true` to start the container at boot.
+        * Type: Bool.
+        * Default: `true`
+
+    * `name`:
+
+        * Mandatory. Name of the quadlet file. Will be suffixed with `-container.service`.
+        * Type: String.
+
+    * `raw_container`:
+
+        * Optional. Raw block in the `[Container]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_install`:
+
+        * Optional. Raw block in the `[Install]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_service`:
+
+        * Optional. Raw block in the `[Service]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_unit`:
+
+        * Optional. Raw block in the `[Unit]` section.
+        * Type: String.
+        * Default: unset
+
+    * `state`:
+
+        * Optional. State of the container. Possible options: `present`, `absent`, `started` (implies `present`), `stopped` (implies `present`).
+        * Type: String.
+        * Default: `'started'`
+
+    * `user`:
+
+        * Optional. Set this to run the container as rootless.
+        * Type: String.
+        * Default: unset (rootful)
+
+    * `wanted_by`:
+
+        * Optional. Unit for the `WantedBy` directive. Only effective if `enabled: true` is set.
+        * Type: String.
+        * Default: `'default.target'`
+
+`podman_networks__networks__host_var` / `podman_networks__networks__group_var`
+
+* List of dictionaries describing the Podman networks.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `enabled`:
+
+        * Optional. Set `true` to start the network at boot.
+        * Type: Bool.
+        * Default: `true`
+
+    * `name`:
+
+        * Mandatory. Name of the quadlet file. Will be suffixed with `-network.service`.
+        * Type: String.
+
+    * `raw_network`:
+
+        * Optional. Raw block in the `[Network]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_install`:
+
+        * Optional. Raw block in the `[Install]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_service`:
+
+        * Optional. Raw block in the `[Service]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_unit`:
+
+        * Optional. Raw block in the `[Unit]` section.
+        * Type: String.
+        * Default: unset
+
+    * `state`:
+
+        * Optional. State of the network. Possible options: `present`, `absent`, `started` (implies `present`), `stopped` (implies `present`).
+        * Type: String.
+        * Default: `'started'`
+
+    * `user`:
+
+        * Optional. Set this to run the corresponding container as rootless.
+        * Type: String.
+        * Default: unset (rootful)
+
+    * `wanted_by`:
+
+        * Optional. Unit for the `WantedBy` directive. Only effective if `enabled: true` is set.
+        * Type: String.
+        * Default: `'default.target'`
+
+`podman_volumes__volumes__host_var` / `podman_volumes__volumes__group_var`
+
+* List of dictionaries describing the Podman volumes.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `enabled`:
+
+        * Optional. Set `true` to start the volume at boot.
+        * Type: Bool.
+        * Default: `true`
+
+    * `name`:
+
+        * Mandatory. Name of the quadlet file. Will be suffixed with `-volume.service`.
+        * Type: String.
+
+    * `raw_volume`:
+
+        * Optional. Raw block in the `[Volume]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_install`:
+
+        * Optional. Raw block in the `[Install]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_service`:
+
+        * Optional. Raw block in the `[Service]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_unit`:
+
+        * Optional. Raw block in the `[Unit]` section.
+        * Type: String.
+        * Default: unset
+
+    * `state`:
+
+        * Optional. State of the volume. Possible options: `present`, `absent`, `started` (implies `present`), `stopped` (implies `present`).
+        * Type: String.
+        * Default: `'started'`
+
+    * `user`:
+
+        * Optional. Set this to run the corresponding container as rootless.
+        * Type: String.
+        * Default: unset (rootful)
+
+    * `wanted_by`:
+
+        * Optional. Unit for the `WantedBy` directive. Only effective if `enabled: true` is set.
+        * Type: String.
+        * Default: `'default.target'`
 
 Example:
 ```yaml

@@ -14,20 +14,31 @@ This role installs and configures [LibreNMS](https://www.librenms.org/).
 
 If you use the ["Setup LibreNMS" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_librenms.yml), this is automatically done for you.
 
+
 ## Tags
 
-| Tag                  | What it does                     | Reload / Restart |
-| ---                  | ------------                     | ---------------- |
-| `librenms`           | Installs and configures LibreNMS | - |
-| `librenms:configure` | Configures LibreNMS              | - |
+`librenms`
+
+* Installs and configures LibreNMS.
+* Triggers: none.
+
+`librenms:configure`
+
+* Configures LibreNMS.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                   | Description                                                         |
-| --------                   | -----------                                                         |
-| `librenms__database_login` | The user account for accessing the MySQL database.                  |
-| `librenms__fqdn`           | The fully qualified domain name under which LibreNMS is accessible. |
+`librenms__database_login`
+
+* The user account for accessing the MySQL database.
+* Type: Dictionary.
+
+`librenms__fqdn`
+
+* The fully qualified domain name under which LibreNMS is accessible.
+* Type: String.
 
 Example:
 ```yaml
@@ -41,13 +52,35 @@ librenms__fqdn: 'librenms.example.com'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `librenms__config_auth_mechanism` | Which authentication mechanism LibreNMS should use. Have a look at https://docs.librenms.org/Extensions/Authentication/. Note that only one mechanism can be active at the same time. Possible options: * `active_directory`<br> * `http-auth`<br> * `ldap`<br> * `ldap-authorization`<br> * `mysql`<br> * `sso` | `'mysql'` |
-| `librenms__config_rrd_purge` | Number in days of how long to keep old rrd files. `0` disables this feature. | `0` |
-| `librenms__config_update_channel` | Which update channel LibreNMS should use during automatic updates. Possible options:<br> * `master`<br> * `release` | `'release'` |
-| `librenms__database_host` | The host on which the MySQL database is reachable. | `'localhost'` |
-| `librenms__database_name` | The name of the SQL database. | `'librenms'` |
+`librenms__config_auth_mechanism`
+
+* Which authentication mechanism LibreNMS should use. Have a look at https://docs.librenms.org/Extensions/Authentication/. Note that only one mechanism can be active at the same time. Possible options: `active_directory`, `http-auth`, `ldap`, `ldap-authorization`, `mysql`, `sso`.
+* Type: String.
+* Default: `'mysql'`
+
+`librenms__config_rrd_purge`
+
+* Number in days of how long to keep old rrd files. `0` disables this feature.
+* Type: Number.
+* Default: `0`
+
+`librenms__config_update_channel`
+
+* Which update channel LibreNMS should use during automatic updates. Possible options: `master`, `release`.
+* Type: String.
+* Default: `'release'`
+
+`librenms__database_host`
+
+* The host on which the MySQL database is reachable.
+* Type: String.
+* Default: `'localhost'`
+
+`librenms__database_name`
+
+* The name of the SQL database.
+* Type: String.
+* Default: `'librenms'`
 
 Example:
 ```yaml

@@ -14,18 +14,21 @@ This role is tested with the following IcingaWeb2 GenericTTS Module versions:
 
 ## Tags
 
-| Tag                            | What it does                                             | Reload / Restart |
-| ---                            | ------------                                             | ---------------- |
-| `icingaweb2_module_generictts` | Installs and configures the IcingaWeb2 GenericTTS Module | - |
+`icingaweb2_module_generictts`
+
+* Installs and configures the IcingaWeb2 GenericTTS Module.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                                | Description                                                                                                       |
-| --------                                | -----------                                                                                                       |
-| `icingaweb2_module_generictts__version` | The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-generictts/releases. |
+`icingaweb2_module_generictts__version`
+
+* The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-generictts/releases.
+* Type: String.
 
 Example:
+
 ```yaml
 # mandatory
 icingaweb2_module_generictts__version: 'v2.1.0'
@@ -34,11 +37,14 @@ icingaweb2_module_generictts__version: 'v2.1.0'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icingaweb2_module_generictts__url` | The URL from where to download the IcingaWeb2 GenericTTS Module. | `https://github.com/Icinga/icingaweb2-module-generictts/archive/{{ icingaweb2_module_generictts__version }}.tar.gz` |
+`icingaweb2_module_generictts__url`
+
+* The URL from where to download the IcingaWeb2 GenericTTS Module.
+* Type: String.
+* Default: `'https://github.com/Icinga/icingaweb2-module-generictts/archive/{{ icingaweb2_module_generictts__version }}.tar.gz'`
 
 Example:
+
 ```yaml
 # optional
 icingaweb2_module_generictts__url: 'https://github.com/Linuxfabrik/icingaweb2-module-generictts/archive/{{ icingaweb2_module_generictts__version }}.tar.gz'

@@ -17,22 +17,45 @@ This role is compatible with the following Redis versions:
 
 ## Tags
 
-| Tag           | What it does                           | Reload / Restart |
-| ---           | ------------                           | ---------------- |
-| `redis`       | Installs and configures Redis          | Restarts redis.service |
-| `redis:state` | Manages the state of the Redis service | - |
+`redis`
+
+* Installs and configures Redis.
+* Triggers: redis.service restart.
+
+`redis:state`
+
+* Manages the state of the Redis service.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `redis__service_enabled` | Enables or disables the redis service, analogous to `systemctl enable/disable --now`. | `true` |
-| `redis__service_limit_nofile` | Systemd: Resource limit directive for the number of file descriptors. | `10240` |
-| `redis__service_timeout_start_sec` | Systemd: Configures the time to wait for start-up. If Redis does not signal start-up completion within the configured time, the service will be considered failed and will be shut down again. | `'90s'` |
-| `redis__service_timeout_stop_sec` | Systemd: First, it configures the time to wait for the ExecStop= command. Second, it configures the time to wait for the Redis itself to stop. If Redis doesn't terminate in the specified time, it will be forcibly terminated by SIGKILL. | `'90s'` |
+`redis__service_enabled`
+
+* Enables or disables the redis service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`redis__service_limit_nofile`
+
+* Systemd: Resource limit directive for the number of file descriptors.
+* Type: Number.
+* Default: `10240`
+
+`redis__service_timeout_start_sec`
+
+* Systemd: Configures the time to wait for start-up. If Redis does not signal start-up completion within the configured time, the service will be considered failed and will be shut down again.
+* Type: String.
+* Default: `'90s'`
+
+`redis__service_timeout_stop_sec`
+
+* Systemd: First, it configures the time to wait for the ExecStop= command. Second, it configures the time to wait for the Redis itself to stop. If Redis doesn't terminate in the specified time, it will be forcibly terminated by SIGKILL.
+* Type: String.
+* Default: `'90s'`
 
 Example:
+
 ```yaml
 # optional
 redis__service_enabled: true
@@ -46,27 +69,119 @@ redis__service_timeout_stop_sec: 5
 
 Variables for `redis.conf` directives and their default values, defined and supported by this role.
 
-| Role Variable                           | Documentation                                                    | Default Value  |
-| -------------                           | -------------                                                    | -------------  |
-| `redis__conf_appendonly`                | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`         |
-| `redis__conf_auto_aof_rewrite_min_size` | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'64mb'`       |
-| `redis__conf_bind`                      | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'127.0.0.1'`  |
-| `redis__conf_daemonize`                 | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`         |
-| `redis__conf_databases`                 | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `16`           |
-| `redis__conf_loglevel`                  | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'notice'`     |
-| `redis__conf_maxmemory`                 | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'50M'`        |
-| `redis__conf_maxmemory_policy`          | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'noeviction'` |
-| `redis__conf_port`                      | If port `0` is specified Redis will not listen on a TCP socket. [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `6379`|
-| `redis__conf_protected_mode`            | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'yes'`        |
-| `redis__conf_replica_serve_stale_data`  | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'yes'`        |
-| `redis__conf_requirepass`               | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `unset`        |
-| `redis__conf_save`                      | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | v6: `['3600 1', '300 100', '60 10000']`<br>v7: `['3600 1', '300 100', '60 10000']` |
-| `redis__conf_supervised`                | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | `'no'`         |
-| `redis__conf_tls_auth_clients`          | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset          |
-| `redis__conf_tls_ca_cert_file`          | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset          |
-| `redis__conf_tls_cert_file`             | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset          |
-| `redis__conf_tls_key_file`              | [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset          |
-| `redis__conf_tls_port` | TLS Port. Set `redis__conf_port: 0` to only listen with TLS. [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf) | unset |
+`redis__conf_appendonly`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: `'no'`
+
+`redis__conf_auto_aof_rewrite_min_size`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: `'64mb'`
+
+`redis__conf_bind`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: `'127.0.0.1'`
+
+`redis__conf_daemonize`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: `'no'`
+
+`redis__conf_databases`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: Number.
+* Default: `16`
+
+`redis__conf_loglevel`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: `'notice'`
+
+`redis__conf_maxmemory`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: `'50M'`
+
+`redis__conf_maxmemory_policy`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: `'noeviction'`
+
+`redis__conf_port`
+
+* If port `0` is specified Redis will not listen on a TCP socket. [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: Number.
+* Default: `6379`
+
+`redis__conf_protected_mode`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: `'yes'`
+
+`redis__conf_replica_serve_stale_data`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: `'yes'`
+
+`redis__conf_requirepass`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: unset
+
+`redis__conf_save`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: List.
+* Default: `['3600 1', '300 100', '60 10000']`
+
+`redis__conf_supervised`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: `'auto'`
+
+`redis__conf_tls_auth_clients`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: unset
+
+`redis__conf_tls_ca_cert_file`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: unset
+
+`redis__conf_tls_cert_file`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: unset
+
+`redis__conf_tls_key_file`
+
+* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: String.
+* Default: unset
+
+`redis__conf_tls_port`
+
+* TLS Port. Set `redis__conf_port: 0` to only listen with TLS. [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* Type: Number.
+* Default: unset
 
 Example:
 

@@ -12,18 +12,30 @@ If you use the [Fangfrisch Playbook](https://github.com/Linuxfabrik/lfops/blob/m
 
 ## Tags
 
-| Tag                | What it does                              | Reload / Restart |
-| ---                | ------------                              | ---------------- |
-| `fangfrisch`       | Installs and configures Fangfrisch        | - |
-| `fangfrisch:state` | Manages the state of the Fangfrisch timer | - |
+`fangfrisch`
+
+* Installs and configures Fangfrisch.
+* Triggers: none.
+
+`fangfrisch:state`
+
+* Manages the state of the Fangfrisch timer.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `fangfrisch__securiteinfo_customer_id` | Set this to enable downloading signatures from [SecuriteInfo](https://www.securiteinfo.com/). Requires an [SecuriteInfo account](https://www.securiteinfo.com/clients/customers/account). | unset |
-| `fangfrisch__timer_enabled` | Enables or disables the hourly fangfrisch timer to automatically update the signatures, analogous to `systemctl enable/disable`. | `true` |
+`fangfrisch__securiteinfo_customer_id`
+
+* Set this to enable downloading signatures from [SecuriteInfo](https://www.securiteinfo.com/). Requires a [SecuriteInfo account](https://www.securiteinfo.com/clients/customers/account).
+* Type: String.
+* Default: unset
+
+`fangfrisch__timer_enabled`
+
+* Enables or disables the hourly fangfrisch timer to automatically update the signatures, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
 
 Example:
 ```yaml

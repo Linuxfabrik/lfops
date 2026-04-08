@@ -14,16 +14,19 @@ This role is tested with the following Icinga for Kubernetes Web versions:
 
 ## Tags
 
-| Tag                     | What it does                                                 | Reload / Restart |
-| ---                     | ------------                                                 | ---------------- |
-| `icinga_kubernetes_web` | Installs and configures the Icinga for Kubernetes Web Module | - |
+`icinga_kubernetes_web`
+
+* Installs and configures the Icinga for Kubernetes Web Module.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                         | Description                                                                                               |
-| --------                         | -----------                                                                                               |
-| `icinga_kubernetes_web__version` | The module version to install. Possible options: https://github.com/Icinga/icinga-kubernetes-web/releases |
+`icinga_kubernetes_web__version`
+
+* The module version to install. Possible options: https://github.com/Icinga/icinga-kubernetes-web/releases.
+* Type: String.
+* Default: none
 
 Example:
 ```yaml
@@ -34,9 +37,11 @@ icinga_kubernetes_web__version: 'v0.2.0'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icinga_kubernetes_web__url` | The URL from where to download the IcingaWeb2 Business Process Module. | `https://github.com/Icinga/icinga-kubernetes-web/archive/{{ icinga_kubernetes_web__version }}.tar.gz` |
+`icinga_kubernetes_web__url`
+
+* The URL from where to download the IcingaWeb2 Business Process Module.
+* Type: String.
+* Default: `'https://github.com/Icinga/icinga-kubernetes-web/archive/{{ icinga_kubernetes_web__version }}.tar.gz'`
 
 Example:
 ```yaml

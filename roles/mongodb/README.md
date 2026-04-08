@@ -19,20 +19,74 @@ This role is only compatible with the following MongoDB versions:
 
 ## Tags
 
-| Tag             | What it does                              | Reload / Restart |
-| ---             | ------------                              | ---------------- |
-| `mongodb`       | Installs and configures MongoDB           | Restarts mongod.service |
-| `mongodb:dump`  | Configures the database dumping (backups) | - |
-| `mongodb:state` | Manages the state of the mongod service   | - |
-| `mongodb:user`  | Manages the MongoDB users                 | - |
+`mongodb`
+
+* Installs and configures MongoDB.
+* Triggers: restart mongod.service.
+
+`mongodb:dump`
+
+* Configures the database dumping (backups).
+* Triggers: none.
+
+`mongodb:state`
+
+* Manages the state of the mongod service.
+* Triggers: none.
+
+`mongodb:user`
+
+* Manages the MongoDB users.
+* Triggers: none.
+
 
 ## Recommended Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `mongodb__admin_user` | The main user account for the database administrator. This is required when authorization is enabled by `mongodb__conf_security_authorization`. To create additional ones, use the `mongodb__users__*_var` variables. Subkeys:<ul><li>`username`: Username</li><li>`password`: Password</li></ul> | unset |
-| `mongodb__conf_security_authorization` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-security.authorization) | `false` |
-| `mongodb__dump_user` | The MongoDB user for dumping the database when Role-Based Access Control is enabled (`mongodb__conf_security_authorization`). Subkeys: <br> * `auth_database`: Optional, string. Database to authenticate against. Defaults to `'admin'`. <br> * `username`: Mandatory, string. <br> * `password`: Mandatory, string. | unset |
+`mongodb__admin_user`
+
+* The main user account for the database administrator. This is required when authorization is enabled by `mongodb__conf_security_authorization`. To create additional ones, use the `mongodb__users__*_var` variables.
+* Type: Dictionary.
+* Default: unset
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+`mongodb__conf_security_authorization`
+
+* [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-security.authorization)
+* Type: Bool.
+* Default: `false`
+
+`mongodb__dump_user`
+
+* The MongoDB user for dumping the database when Role-Based Access Control is enabled (`mongodb__conf_security_authorization`).
+* Type: Dictionary.
+* Default: unset
+* Subkeys:
+
+    * `auth_database`:
+
+        * Optional. Database to authenticate against.
+        * Type: String.
+        * Default: `'admin'`
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
 
 ```yaml
 # recommended
@@ -48,27 +102,146 @@ mongodb__dump_user:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `mongodb__conf_net_bind_ip` | List of the IPs on which MongoDB should be available. Make sure that the first address in the list is reachable by the server itself, and to set the first address to `'localhost'` if you need to use the [localhost exception](https://www.mongodb.com/docs/manual/core/localhost-exception/) to create the first DBA. Have a look at [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-net.bindIp). | `'localhost'` |
-| `mongodb__conf_net_port` | The port on which MongoDB should be available. | `27017` |
-| `mongodb__conf_replication_oplog_size_mb` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.oplogSizeMB) | unset |
-| `mongodb__conf_replication_repl_set_name__host_var` /<br> `mongodb__conf_replication_repl_set_name__group_var` | Set this to enable replication. Have a look at <https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.replSetName>. Will be initiated automatically (have a look at `mongodb__repl_set_skip_init`). <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | unset |
-| `mongodb__conf_storage_directory_per_db` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.directoryPerDB) | `true` |
-| `mongodb__conf_storage_engine_raw` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.engine) | unset |
-| `mongodb__conf_storage_journal_commit_interval_ms` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.journal.commitIntervalMs) | `100` |
-| `mongodb__conf_storage_journal_enabled` | Enable or disable the durability journal to ensure data files remain valid and recoverable. | `true` |
-| `mongodb__dump_method_file_based_backup_dir` | Where to store the file-based backup. | `'/backup/var-lib-mongo'` |
-| `mongodb__dump_method_file_based` | Use this to create file based backups by locking the instance and copying `/var/lib/mongo`. This is recommended when using `mongodb__dump_method_mongodump` is too slow. | `false` |
-| `mongodb__dump_method_mongodump_backup_dir` | Where to store the `mongodump`-based backup. | `'/backup/mongodb-dump'` |
-| `mongodb__dump_method_mongodump` | Use `mongodump` to create database dumps. This is recommended since it allows the most flexible restores. | `true` |
-| `mongodb__dump_on_calendar` | The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format. | `'*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'` |
-| `mongodb__dump_only_if_hidden` | Use this to only run the backup if the instance is hidden. This is useful in a MongoDB cluster setup. | `false` |
-| `mongodb__dump_use_oplog` | Use this to capture incoming write operations during the dump operation to ensure that the backups reflect a consistent data state. Note that this only works on cluster setups or with replica sets. | `false` |
-| `mongodb__repl_set_skip_init` | Set this to skip the initiation of the replica set. Note: Set this on all secondaries when setting up a replica set across members. | `false` |
-| `mongodb__service_enabled`| Enables or disables the service, analogous to `systemctl enable/disable`. | `true` |
-| `mongodb__service_state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
-| `mongodb__users__group_var` /<br> `mongodb__users__host_var` | List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mongodb__admin_user`). Subkeys:<ul><li>`username`: Mandatory, string. Username.<li>`password`: Mandatory, string. Password.<li>`database`: Mandatory, string. Database in which the user should be.<li>`roles`: Optional, string or list. Either name of one of the [built-in roles](https://www.mongodb.com/docs/manual/reference/built-in-roles), or list of dictionaries with `db` and `role`.</li><li>`state`: Optional, string. State of the user. Possible options: `present`, `absent`. Defaults to `present`.</ul><br> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+`mongodb__conf_net_bind_ip`
+
+* List of the IPs on which MongoDB should be available. Make sure that the first address in the list is reachable by the server itself, and to set the first address to `'localhost'` if you need to use the [localhost exception](https://www.mongodb.com/docs/manual/core/localhost-exception/) to create the first DBA. Have a look at [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-net.bindIp).
+* Type: List.
+* Default: `['localhost']`
+
+`mongodb__conf_net_port`
+
+* The port on which MongoDB should be available.
+* Type: Number.
+* Default: `27017`
+
+`mongodb__conf_replication_oplog_size_mb`
+
+* [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.oplogSizeMB)
+* Type: Number.
+* Default: unset
+
+`mongodb__conf_replication_repl_set_name__host_var` / `mongodb__conf_replication_repl_set_name__group_var`
+
+* Set this to enable replication. Have a look at [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-replication.replSetName). Will be initiated automatically (have a look at `mongodb__repl_set_skip_init`). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: String.
+* Default: unset
+
+`mongodb__conf_storage_directory_per_db`
+
+* [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.directoryPerDB)
+* Type: Bool.
+* Default: `true`
+
+`mongodb__conf_storage_engine_raw`
+
+* [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.engine)
+* Type: String.
+* Default: unset
+
+`mongodb__conf_storage_journal_commit_interval_ms`
+
+* [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.journal.commitIntervalMs)
+* Type: Number.
+* Default: `100`
+
+`mongodb__conf_storage_journal_enabled`
+
+* Enable or disable the durability journal to ensure data files remain valid and recoverable.
+* Type: Bool.
+* Default: `true`
+
+`mongodb__dump_method_file_based_backup_dir`
+
+* Where to store the file-based backup.
+* Type: String.
+* Default: `'/backup/var-lib-mongo'`
+
+`mongodb__dump_method_file_based`
+
+* Use this to create file based backups by locking the instance and copying `/var/lib/mongo`. This is recommended when using `mongodb__dump_method_mongodump` is too slow.
+* Type: Bool.
+* Default: `false`
+
+`mongodb__dump_method_mongodump_backup_dir`
+
+* Where to store the `mongodump`-based backup.
+* Type: String.
+* Default: `'/backup/mongodb-dump'`
+
+`mongodb__dump_method_mongodump`
+
+* Use `mongodump` to create database dumps. This is recommended since it allows the most flexible restores.
+* Type: Bool.
+* Default: `true`
+
+`mongodb__dump_on_calendar`
+
+* The `OnCalendar` definition for the systemd timer. Have a look at `man systemd.time(7)` for the format.
+* Type: String.
+* Default: `'*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'`
+
+`mongodb__dump_only_if_hidden`
+
+* Use this to only run the backup if the instance is hidden. This is useful in a MongoDB cluster setup.
+* Type: Bool.
+* Default: `false`
+
+`mongodb__dump_use_oplog`
+
+* Use this to capture incoming write operations during the dump operation to ensure that the backups reflect a consistent data state. Note that this only works on cluster setups or with replica sets.
+* Type: Bool.
+* Default: `false`
+
+`mongodb__repl_set_skip_init`
+
+* Set this to skip the initiation of the replica set. Note: Set this on all secondaries when setting up a replica set across members.
+* Type: Bool.
+* Default: `false`
+
+`mongodb__service_enabled`
+
+* Enables or disables the service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`mongodb__service_state`
+
+* Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options: `started`, `stopped`, `restarted`, `reloaded`.
+* Type: String.
+* Default: `'started'`
+
+`mongodb__users__group_var` / `mongodb__users__host_var`
+
+* List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mongodb__admin_user`). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `database`:
+
+        * Mandatory. Database in which the user should be.
+        * Type: String.
+
+    * `roles`:
+
+        * Optional. Either name of one of the [built-in roles](https://www.mongodb.com/docs/manual/reference/built-in-roles), or list of dictionaries with `db` and `role`.
+        * Type: String or List.
+
+    * `state`:
+
+        * Optional. State of the user. Possible options: `present`, `absent`.
+        * Type: String.
+        * Default: `'present'`
 
 Example:
 ```yaml
@@ -120,10 +293,25 @@ To setup a replica set from scratch:
 * Rollout against the primary to initiate the replica set with the given members.
 * Check the state of the cluster by using `mongosh --username mongodb-admin --password --eval 'rs.status()'` on any member. The output should contain all configured members.
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `mongodb__keyfile_content` | The content of the MongoDB keyfile which is used for [internal authentication](https://www.mongodb.com/docs/manual/core/security-internal-authentication/) between the members. Setting this automatically adjusts the MongoDB config to use the keyfile. The content can be generated using `openssl rand -base64 756`. | unset |
-| `mongodb__repl_set_members` | List of dictionaries of all the members (including the primary) which should be part of the replica set. Subkeys: <ul><li>`host`: Mandatory, string. Hostname and optionally, the port number, of the set member.</li><li>Any other [Replica Set Configuration Field](https://www.mongodb.com/docs/manual/reference/replica-configuration/#replica-set-configuration-fields).</li></ul> | unset |
+`mongodb__keyfile_content`
+
+* The content of the MongoDB keyfile which is used for [internal authentication](https://www.mongodb.com/docs/manual/core/security-internal-authentication/) between the members. Setting this automatically adjusts the MongoDB config to use the keyfile. The content can be generated using `openssl rand -base64 756`.
+* Type: String.
+* Default: unset
+
+`mongodb__repl_set_members`
+
+* List of dictionaries of all the members (including the primary) which should be part of the replica set.
+* Type: List of dictionaries.
+* Default: `['localhost:27017']`
+* Subkeys:
+
+    * `host`:
+
+        * Mandatory. Hostname and optionally, the port number, of the set member.
+        * Type: String.
+
+    * Any other [Replica Set Configuration Field](https://www.mongodb.com/docs/manual/reference/replica-configuration/#replica-set-configuration-fields).
 
 Example:
 ```yaml

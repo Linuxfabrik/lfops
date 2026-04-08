@@ -12,22 +12,54 @@ If you use the ["docker" Playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 
 ## Tags
 
-| Tag            | What it does                            | Reload / Restart |
-| ---            | ------------                            | ---------------- |
-| `docker`       | Installs and configures docker          | Restarts docker.service |
-| `docker:state` | Manages the state of the docker service | - |
+`docker`
+
+* Installs and configures docker.
+* Triggers: docker.service restart.
+
+`docker:state`
+
+* Manages the state of the docker service.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `docker__daemon_json_dns`| A list of DNS server for all Docker containers. | The server's nameserver |
-| `docker__daemon_json_insecure_registries`| A list of insecure registries (without TLS) which should be accepted by the docker daemon. | unset |
-| `docker__daemon_json_log_driver`| The default logging driver for all containers. Possible options: <https://docs.docker.com/config/containers/logging/configure/>. | `'syslog'` |
-| `docker__daemon_json_log_opts`| A dictionary of logging options. Possible options: <https://docs.docker.com/config/containers/logging/configure/>. | unset |
-| `docker__service_enabled`| Enables or disables the docker service, analogous to `systemctl enable/disable`. | `true` |
-| `docker__service_state`| Changes the state of the docker service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+`docker__daemon_json_dns`
+
+* A list of DNS server for all Docker containers.
+* Type: List.
+* Default: the server's nameserver (`['{{ ansible_facts["dns"]["nameservers"][0] }}']`)
+
+`docker__daemon_json_insecure_registries`
+
+* A list of insecure registries (without TLS) which should be accepted by the docker daemon.
+* Type: List.
+* Default: unset
+
+`docker__daemon_json_log_driver`
+
+* The default logging driver for all containers. Possible options: <https://docs.docker.com/config/containers/logging/configure/>.
+* Type: String.
+* Default: `'syslog'`
+
+`docker__daemon_json_log_opts`
+
+* A dictionary of logging options. Possible options: <https://docs.docker.com/config/containers/logging/configure/>.
+* Type: Dictionary.
+* Default: unset
+
+`docker__service_enabled`
+
+* Enables or disables the docker service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`docker__service_state`
+
+* Changes the state of the docker service, analogous to `systemctl start/stop/restart/reload`. Possible options: `started`, `stopped`, `restarted`, `reloaded`.
+* Type: String.
+* Default: `'started'`
 
 Example:
 ```yaml

@@ -11,21 +11,58 @@ This role installs and configures [InfluxDB](https://www.influxdata.com/products
 
 ## Tags
 
-| Tag                  | What it does                                        | Reload / Restart          |
-| ---                  | ------------                                        | ----------------          |
-| `influxdb`           | Installs and configures InfluxDB                    | Restarts influxdb.service |
-| `influxdb:configure` | Deploys the /etc/influxdb/influxdb.conf config file | Restarts influxdb.service |
-| `influxdb:database`  | Creates or deletes InfluxDB databases               | -                         |
-| `influxdb:dump`      | Configures dumps (backups) of the InfluxDB server   | -                         |
-| `influxdb:state`     | Manages the state of the InfluxDB service           | -                         |
-| `influxdb:user`      | Creates, updates or deletes InfluxDB users          | -                         |
+`influxdb`
+
+* Installs and configures InfluxDB.
+* Triggers: influxdb.service restart.
+
+`influxdb:configure`
+
+* Deploys the /etc/influxdb/influxdb.conf config file.
+* Triggers: influxdb.service restart.
+
+`influxdb:database`
+
+* Creates or deletes InfluxDB databases.
+* Triggers: none.
+
+`influxdb:dump`
+
+* Configures dumps (backups) of the InfluxDB server.
+* Triggers: none.
+
+`influxdb:state`
+
+* Manages the state of the InfluxDB service.
+* Triggers: none.
+
+`influxdb:user`
+
+* Creates, updates or deletes InfluxDB users.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `influxdb__admin_login` | The user account for the database administrator. Subkeys: <ul><li>`username`: String, mandatory. Username.</li><li>`password`: String, mandatory. Password</li><li>`old_password`: String, optional. The old password. Set this when changing the password.</li></ul> |
+`influxdb__admin_login`
+
+* The user account for the database administrator.
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `old_password`:
+
+        * Optional. The old password. Set this when changing the password.
+        * Type: String.
 
 Example:
 ```yaml
@@ -39,18 +76,124 @@ influxdb__admin_login:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `influxdb__conf_continuous_queries_log_enabled` | Controls whether queries are logged when executed by the continuous query service. Make sure to also set `influxdb__conf_logging_level: 'debug'` if this is enabled. | `false` |
-| `influxdb__conf_continuous_queries_run_interval` | Interval for how often continuous queries will be checked if they need to run. | `'1s'` |
-| `influxdb__conf_https` | Determines whether HTTPS is enabled or not. Also have a look at `influxdb__validate_certs`. Subkeys: <ul><li>`certificate_path`: Mandatory, string. The path of the certificate file used for SSL encryption.</li><li>`privatekey_path`: Mandatory, string. The path of the certificate key file used for SSL encryption.</li></ul> | unset |
-| `influxdb__conf_log_queries_after` | The time threshold when a query will be logged as a slow query. Setting the value to 0 disables the slow query logging. | `'0s'` |
-| `influxdb__conf_logging_level` | Determines which level of logs will be emitted. Possible options: `'error'`, `'warn'`, `'info'`, `'debug'`. | `'warn'` |
-| `influxdb__dump_timer_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
-| `influxdb__databases__host_var` /<br> `influxdb__databases__group_var` | List of InfluxDB databases that should be created or deleted.<br> Subkeys:<br> * `name`: Mandatory, string. Name of the database.<br> * `state`: Optional, string. Defaults to `present`. The state of the database. Possible options: `present`, `absent`.<br> * `retention`: Mandatory, string. Determines how long InfluxDB should keep the data. If specified, it should be `INF` or at least one hour.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `influxdb__users__host_var` /<br> `influxdb__users__group_var` | List of InfluxDB users that should be created, updated or deleted.<br> Subkeys:<br> * `name`: Mandatory, string. The name of the account.<br> * `password`: Mandatory, string. The password of the account.<br> * `state`: Optional, string. Defaults to `present`. The state of the account. Possible options: `present`, `absent`.<br> * `admin`: Optional, boolean. Defaults to `false`. Whether the user should be in the admin role or not.<br> * `grants`: Optional, list. Defaults to omit. Takes a list of dicts containing the `database` and `privilege` keys.<br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `influxdb__service_enabled` | Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`. | `true` |
-| `influxdb__validate_certs` | If set to `false`, the role will not validate SSL certificates when connecting to InfluxDB. This is useful when using self-signed certificates. | `true` |
+`influxdb__conf_continuous_queries_log_enabled`
+
+* Controls whether queries are logged when executed by the continuous query service. Make sure to also set `influxdb__conf_logging_level: 'debug'` if this is enabled.
+* Type: Bool.
+* Default: `false`
+
+`influxdb__conf_continuous_queries_run_interval`
+
+* Interval for how often continuous queries will be checked if they need to run.
+* Type: String.
+* Default: `'1s'`
+
+`influxdb__conf_https`
+
+* Determines whether HTTPS is enabled or not. Also have a look at `influxdb__validate_certs`.
+* Subkeys:
+
+    * `certificate_path`:
+
+        * Mandatory. The path of the certificate file used for SSL encryption.
+        * Type: String.
+
+    * `privatekey_path`:
+
+        * Mandatory. The path of the certificate key file used for SSL encryption.
+        * Type: String.
+
+* Default: unset
+
+`influxdb__conf_log_queries_after`
+
+* The time threshold when a query will be logged as a slow query. Setting the value to 0 disables the slow query logging.
+* Type: String.
+* Default: `'0s'`
+
+`influxdb__conf_logging_level`
+
+* Determines which level of logs will be emitted. Possible options: `'error'`, `'warn'`, `'info'`, `'debug'`.
+* Type: String.
+* Default: `'warn'`
+
+`influxdb__databases__host_var` / `influxdb__databases__group_var`
+
+* List of InfluxDB databases that should be created or deleted. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the database.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. The state of the database. Possible options: `present`, `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `retention`:
+
+        * Mandatory. Determines how long InfluxDB should keep the data. If specified, it should be `INF` or at least one hour.
+        * Type: String.
+
+* Type: List of dictionaries.
+* Default: `[]`
+
+`influxdb__dump_timer_enabled`
+
+* Enables or disables the influxdb-dump timer, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`influxdb__service_enabled`
+
+* Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`influxdb__users__host_var` / `influxdb__users__group_var`
+
+* List of InfluxDB users that should be created, updated or deleted. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the account.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. The password of the account.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. The state of the account. Possible options: `present`, `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `admin`:
+
+        * Optional. Whether the user should be in the admin role or not.
+        * Type: Bool.
+        * Default: `false`
+
+    * `grants`:
+
+        * Optional. Takes a list of dicts containing the `database` and `privilege` keys.
+        * Type: List of dictionaries.
+        * Default: omit
+
+* Type: List of dictionaries.
+* Default: `[]`
+
+`influxdb__validate_certs`
+
+* If set to `false`, the role will not validate SSL certificates when connecting to InfluxDB. This is useful when using self-signed certificates.
+* Type: Bool.
+* Default: `true`
 
 Example:
 ```yaml

@@ -5,20 +5,42 @@ This role installs and configures [keepalived](https://www.keepalived.org/).
 
 ## Tags
 
-| Tag                 | What it does                                      | Reload / Restart |
-| ---                 | ------------                                      | ---------------- |
-| `keepalived`          | Installs and configures keepalived                  | Restarts keepalived.service |
-| `keepalived:state`    | Manages the state of the keepalived service         | - |
+`keepalived`
+
+* Installs and configures keepalived.
+* Triggers: keepalived.service restart.
+
+`keepalived:state`
+
+* Manages the state of the keepalived service.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `keepalived__notification_email_addresses` | The email addresses for notifications. |
-| `keepalived__password` | The password for the communication between the MASTER and BACKUP instances. Only the first eight (8) characters are used. |
-| `keepalived__state` | Determines whether to be the MASTER or BACKUP. |
-| `keepalived__virtual_ipaddress` | The IP address to be shared between the MASTER and BACKUP. |
+`keepalived__notification_email_addresses`
+
+* The email addresses for notifications.
+* Type: List.
+* Default: none
+
+`keepalived__password`
+
+* The password for the communication between the MASTER and BACKUP instances. Only the first eight (8) characters are used.
+* Type: String.
+* Default: none
+
+`keepalived__state`
+
+* Determines whether to be the MASTER or BACKUP.
+* Type: String.
+* Default: none
+
+`keepalived__virtual_ipaddress`
+
+* The IP address to be shared between the MASTER and BACKUP.
+* Type: String.
+* Default: none
 
 Example:
 ```yaml
@@ -33,21 +55,51 @@ keepalived__virtual_ipaddress: '192.0.2.1'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `keepalived__instance_id` | The vrrp instance id keepalived should use. | `1` |
-| `keepalived__interface` | The network interface keepalived should use. | `{{ ansible_facts["default_ipv4"]["interface"] }}` |
-| `keepalived__notification_email_from` | The email address keepalived should use the sender address for email notifications. | `root@{{ ansible_facts["nodename"] }}` |
-| `keepalived__smtp_server` | The SMTP server keepalived should use in order to send email notifications. | `localhost` |
-| `keepalived__virtual_router_id` | The virtual router id. | `{{ keepalived__instance_id }}` |
+`keepalived__instance_id`
 
+* The vrrp instance id keepalived should use.
+* Type: Number.
+* Default: `1`
+
+`keepalived__interface`
+
+* The network interface keepalived should use.
+* Type: String.
+* Default: `'{{ ansible_facts["default_ipv4"]["interface"] }}'`
+
+`keepalived__notification_email_from`
+
+* The email address keepalived should use as the sender address for email notifications.
+* Type: String.
+* Default: `'root@{{ ansible_facts["nodename"] }}'`
+
+`keepalived__service_enabled`
+
+* Enables or disables the keepalived service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`keepalived__smtp_server`
+
+* The SMTP server keepalived should use in order to send email notifications.
+* Type: String.
+* Default: `'localhost'`
+
+`keepalived__virtual_router_id`
+
+* The virtual router id.
+* Type: Number.
+* Default: `'{{ keepalived__instance_id }}'`
 
 Example:
 ```yaml
 # optional
+keepalived__instance_id: 1
 keepalived__interface: 'eth'
 keepalived__notification_email_from: 'root@server.loc'
+keepalived__service_enabled: true
 keepalived__smtp_server: 'smtp.example.com'
+keepalived__virtual_router_id: 1
 ```
 
 

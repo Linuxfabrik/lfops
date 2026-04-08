@@ -14,18 +14,21 @@ This role is tested with the following IcingaWeb2 Business Process Module versio
 
 ## Tags
 
-| Tag                                 | What it does                                                   | Reload / Restart |
-| ---                                 | ------------                                                   | ---------------- |
-| `icingaweb2_module_businessprocess` | Installs and configures the IcingaWeb2 Business Process Module | - |
+`icingaweb2_module_businessprocess`
+
+* Installs and configures the IcingaWeb2 Business Process Module.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                             | Description                                                                                                        |
-| --------                             | -----------                                                                                                        |
-| `icingaweb2_module_businessprocess__version` | The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-businessprocess/releases. |
+`icingaweb2_module_businessprocess__version`
+
+* The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-businessprocess/releases.
+* Type: String.
 
 Example:
+
 ```yaml
 # mandatory
 icingaweb2_module_businessprocess__version: 'v2.5.1'
@@ -34,11 +37,14 @@ icingaweb2_module_businessprocess__version: 'v2.5.1'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icingaweb2_module_businessprocess__url` | The URL from where to download the IcingaWeb2 Business Process Module. | `https://github.com/Icinga/icingaweb2-module-businessprocess/archive/{{ icingaweb2_module_businessprocess__version }}.tar.gz` |
+`icingaweb2_module_businessprocess__url`
+
+* The URL from where to download the IcingaWeb2 Business Process Module.
+* Type: String.
+* Default: `'https://github.com/Icinga/icingaweb2-module-businessprocess/archive/{{ icingaweb2_module_businessprocess__version }}.tar.gz'`
 
 Example:
+
 ```yaml
 # optional
 icingaweb2_module_businessprocess__url: 'https://github.com/Linuxfabrik/icingaweb2-module-businessprocess/archive/{{ icingaweb2_module_businessprocess__version }}.tar.gz'

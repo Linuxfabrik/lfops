@@ -19,34 +19,249 @@ If you use the [postgresql_server Playbook](https://github.com/Linuxfabrik/lfops
 
 ## Tags
 
-| Tag                           | What it does                                       | Reload / Restart |
-| ---                           | ------------                                       | ---------------- |
-| `postgresql_server`           | Installs and configures PostgreSQL                 | Restarts posgresql.service |
-| `postgresql_server:state`     | Manages the state of the PostgreSQL service        | - |
-| `postgresql_server:users`     | Creates, updates and deletes PostgreSQL users      | - |
-| `postgresql_server:databases` | Creates, updates and deletes PostgreSQL databases  | - |
-| `postgresql_server:privs`     | Creates, updates and deletes PostgreSQL privileges | - |
-| `postgresql_server:dump`      | Configures database dumping (backups) | - |
+`postgresql_server`
+
+* Installs and configures PostgreSQL.
+* Triggers: posgresql.service restart.
+
+`postgresql_server:state`
+
+* Manages the state of the PostgreSQL service.
+* Triggers: none.
+
+`postgresql_server:users`
+
+* Creates, updates and deletes PostgreSQL users.
+* Triggers: none.
+
+`postgresql_server:databases`
+
+* Creates, updates and deletes PostgreSQL databases.
+* Triggers: none.
+
+`postgresql_server:privs`
+
+* Creates, updates and deletes PostgreSQL privileges.
+* Triggers: none.
+
+`postgresql_server:dump`
+
+* Configures database dumping (backups).
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `postgresql_server__conf_listen_addresses` | List of IP address(es) to listen on. Use `*` for all. | `['localhost']` |
-| `postgresql_server__conf_max_connections` | Determines the maximum number of concurrent connections to the database server. | `100` |
-| `postgresql_server__conf_password_encryption` | Determines the algorithm to use to encrypt passwords when creating new users / roles. Possible options:<ul><li>`'scram-sha-256'`</li><li>`'md5'`</li></ul>| `'scram-sha-256'` |
-| `postgresql_server__conf_port` | The TCP port the server listens on. | `5432` |
-| `postgresql_server__databases__host_var` / `postgresql_server__databases__group_var` | List of dictionaries of databases to create. Subkeys:<ul><li>`name`: Mandatory, string. Name of the database. </li><li>`lc_collate`: Optional, string. DB Collation order. Defaults to `'en_US.UTF-8'`.</li><li>`lc_ctype`: Optional, string. DB Character classification. Defaults to `'en_US.UTF-8'`.</li><li>`encoding`: Optional, string. DB encoding. Defaults to `'UTF-8'`.</li><li>`encoding`: Optional, string. DB template. Defaults to `'template0'`.</li><li>`owner`: Optional, string. DB owner. Defaults to `'postgres'`.</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `'present'`.</li></ul> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `postgresql_server__dump_directory` | The directory where `postgresql-dump` stores its database dumps | `/backup/postgresql-dump` |
-| `postgresql_server__dump_on_calendar` | Sets the `OnCalendar=` directive for `postgresql-dump.timer` | `*-*-* 21:{{ 59 \| random(start=0, seed=inventory_hostname) }}:00` |
-| `postgresql_server__enabled` | Enables or disables the service, analogous to `systemctl enable/disable`. Possible options: `true`, `false`. | `true` |
-| `postgresql_server__login_password` | The password for the `postgres` user to establish the PostgreSQL session. | unset |
-| `postgresql_server__pg_hba_entries` | List of [host based authentication](https://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html) entries. Subkeys:<ul><li>`type`: Mandatory, string. Record type.</li><li>`database`: Mandatory, string. Specifies which database name(s) this record matches.</li><li>`user`: Mandatory, string. Specifies which database user name(s) this record matches.</li><li>`address`: Optional, string. Specifies the client machine address(es) that this record matches. Defaults to `''`.</li><li>`auth_method`: Optional, string. Specifies the authentication method to use when a connection matches this record. Defaults to `'scram-sha-256'`.</li><li>`auth_options`: Optional, string. Options for the `auth_method`. Defaults to `''`.</li></ul> | Allow `scram-sha-256` for all `local` and `host` |
-| `postgresql_server__privs__host_var` / `postgresql_server__privs__group_var` | List of dictionaries containing PostgreSQL privileges to apply. Subkeys:<ul><li>`privs`: Optional, list of strings. List of privileges to grant/revoke. Defaults to unset.</li><li>`type`: Optional, string. Type of database object to set privileges on. Defaults to `'database'`.</li><li>`objs`: Mandatory, list of strings. List of database objects (of type `type`) to set privileges on.</li><li>`grant_option`: Mandatory, boolean. Whether the role may grant/revoke the specified privileges/group memberships to others. Defaults to unset.</li></ul> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `postgresql_server__state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<ul><li>`started`</li><li>`stopped`</li><li>`restarted`</li><li>`reloaded`</li></ul> | `'started'` |
-| `postgresql_server__users__host_var` / `postgresql_server__users__group_var` | List of dictionaries of users to create . Subkeys:<ul><li>`username`: Mandatory, string. Username. </li><li>`password`: Optional, string. Password. Defaults to unset. </li><li>`role_attr_flags`: Optional, list of strings. List of [PostgreSQL user attributes](https://www.postgresql.org/docs/current/role-attributes.html). Defaults to unset. </li><li>`state`: Optional, string. `present` or `absent`. Defaults to `'present'`.</li></ul>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `postgresql_server__version` | Specifies the PostgreSQL verison to install (use only the major version number like `'14'`. The latest minor version is used). Set this when using the official PostgreSQL Repo. | `''` |
+`postgresql_server__conf_listen_addresses`
+
+* List of IP address(es) to listen on. Use `*` for all.
+* Type: List.
+* Default: `['localhost']`
+
+`postgresql_server__conf_max_connections`
+
+* Determines the maximum number of concurrent connections to the database server.
+* Type: Number.
+* Default: `100`
+
+`postgresql_server__conf_password_encryption`
+
+* Determines the algorithm to use to encrypt passwords when creating new users / roles. Possible options: `'scram-sha-256'`, `'md5'`.
+* Type: String.
+* Default: `'scram-sha-256'`
+
+`postgresql_server__conf_port`
+
+* The TCP port the server listens on.
+* Type: Number.
+* Default: `5432`
+
+`postgresql_server__databases__host_var` / `postgresql_server__databases__group_var`
+
+* List of dictionaries of databases to create.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the database.
+        * Type: String.
+
+    * `lc_collate`:
+
+        * Optional. DB Collation order.
+        * Type: String.
+        * Default: `'en_US.UTF-8'`
+
+    * `lc_ctype`:
+
+        * Optional. DB Character classification.
+        * Type: String.
+        * Default: `'en_US.UTF-8'`
+
+    * `encoding`:
+
+        * Optional. DB encoding.
+        * Type: String.
+        * Default: `'UTF-8'`
+
+    * `template`:
+
+        * Optional. DB template.
+        * Type: String.
+        * Default: `'template0'`
+
+    * `owner`:
+
+        * Optional. DB owner.
+        * Type: String.
+        * Default: `'postgres'`
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+`postgresql_server__dump_directory`
+
+* The directory where `postgresql-dump` stores its database dumps.
+* Type: String.
+* Default: `'/backup/postgresql-dump'`
+
+`postgresql_server__dump_on_calendar`
+
+* Sets the `OnCalendar=` directive for `postgresql-dump.timer`.
+* Type: String.
+* Default: `'*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'`
+
+`postgresql_server__enabled`
+
+* Enables or disables the service, analogous to `systemctl enable/disable`. Possible options: `true`, `false`.
+* Type: Bool.
+* Default: `true`
+
+`postgresql_server__login_password`
+
+* The password for the `postgres` user to establish the PostgreSQL session.
+* Type: String.
+* Default: unset
+
+`postgresql_server__pg_hba_entries`
+
+* List of [host based authentication](https://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html) entries.
+* Type: List of dictionaries.
+* Default: Allow `scram-sha-256` for all `local` and `host`
+* Subkeys:
+
+    * `type`:
+
+        * Mandatory. Record type.
+        * Type: String.
+
+    * `database`:
+
+        * Mandatory. Specifies which database name(s) this record matches.
+        * Type: String.
+
+    * `user`:
+
+        * Mandatory. Specifies which database user name(s) this record matches.
+        * Type: String.
+
+    * `address`:
+
+        * Optional. Specifies the client machine address(es) that this record matches.
+        * Type: String.
+        * Default: `''`
+
+    * `auth_method`:
+
+        * Optional. Specifies the authentication method to use when a connection matches this record.
+        * Type: String.
+        * Default: `'scram-sha-256'`
+
+    * `auth_options`:
+
+        * Optional. Options for the `auth_method`.
+        * Type: String.
+        * Default: `''`
+
+`postgresql_server__privs__host_var` / `postgresql_server__privs__group_var`
+
+* List of dictionaries containing PostgreSQL privileges to apply.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `privs`:
+
+        * Optional. List of privileges to grant/revoke.
+        * Type: List of strings.
+        * Default: unset
+
+    * `type`:
+
+        * Optional. Type of database object to set privileges on.
+        * Type: String.
+        * Default: `'database'`
+
+    * `objs`:
+
+        * Mandatory. List of database objects (of type `type`) to set privileges on.
+        * Type: List of strings.
+
+    * `grant_option`:
+
+        * Mandatory. Whether the role may grant/revoke the specified privileges/group memberships to others.
+        * Type: Bool.
+        * Default: unset
+
+`postgresql_server__state`
+
+* Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options: `started`, `stopped`, `restarted`, `reloaded`.
+* Type: String.
+* Default: `'started'`
+
+`postgresql_server__users__host_var` / `postgresql_server__users__group_var`
+
+* List of dictionaries of users to create.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Optional. Password.
+        * Type: String.
+        * Default: unset
+
+    * `role_attr_flags`:
+
+        * Optional. List of [PostgreSQL user attributes](https://www.postgresql.org/docs/current/role-attributes.html).
+        * Type: List of strings.
+        * Default: unset
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+`postgresql_server__version`
+
+* Specifies the PostgreSQL verison to install (use only the major version number like `'14'`. The latest minor version is used). Set this when using the official PostgreSQL Repo.
+* Type: String.
+* Default: `''`
 
 
 Example:

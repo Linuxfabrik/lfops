@@ -5,16 +5,59 @@ This role installs NFS and CIFS client utilities when necessary and configures m
 
 ## Tags
 
-| Tag                  | What it does                           | Reload / Restart |
-| ---                  | ------------                           | ---------------- |
-| `mount`              | Installs nfs-utils/cifs on RedHat-Based systems or nfs-common/cifs-utils on Debian-Based systems, creates the corresponding directories for the mount points, alters `/etc/fstab` und mounts the volumes | - |
+`mount`
+
+* Installs nfs-utils/cifs on RedHat-Based systems or nfs-common/cifs-utils on Debian-Based systems, creates the corresponding directories for the mount points, alters `/etc/fstab` und mounts the volumes.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `mount__mounts__host_var` / <br> `mount__mounts__group_var` | List of directories containing the mounts to create. Subkeys: <ul><li>`path`: Mandatory, string. Path to the mount point.</li><li>`src`: Mandatory, string. Device (or NFS volume, or something else) to be mounted on `path`.</li><li>`fstype`: Mandatory, string. Filesystem type.</li><li>`group`: Optional, string. Group of the mount point directory. Defaults to `'root'`.</li><li>`opts`: Optional, string. Mount options, `man fstab`. Defaults to none.</li><li>`owner`: Optional, string. Owner of the mount point directory. Defaults to `'root'`.</li><li>`state`: Optional, string. Possible options: `absent`, `absent_from_fstab`, `ephemeral`, `mounted`, `present`, `remounted` or `unmounted`. Defaults to `mounted`. For details, have a look at the [ansible.posix.mount module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html).</li></ul> | `[]` |
+`mount__mounts__host_var` / `mount__mounts__group_var`
+
+* List of directories containing the mounts to create.
+* Subkeys:
+
+    * `path`:
+
+        * Mandatory. Path to the mount point.
+        * Type: String.
+
+    * `src`:
+
+        * Mandatory. Device (or NFS volume, or something else) to be mounted on `path`.
+        * Type: String.
+
+    * `fstype`:
+
+        * Mandatory. Filesystem type.
+        * Type: String.
+
+    * `group`:
+
+        * Optional. Group of the mount point directory.
+        * Type: String.
+        * Default: `'root'`
+
+    * `opts`:
+
+        * Optional. Mount options, `man fstab`.
+        * Type: String.
+
+    * `owner`:
+
+        * Optional. Owner of the mount point directory.
+        * Type: String.
+        * Default: `'root'`
+
+    * `state`:
+
+        * Optional. Possible options: `absent`, `absent_from_fstab`, `ephemeral`, `mounted`, `present`, `remounted` or `unmounted`. For details, have a look at the [ansible.posix.mount module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html).
+        * Type: String.
+        * Default: `'mounted'`
+
+* Type: List of dictionaries.
+* Default: `[]`
 
 Example:
 ```yaml

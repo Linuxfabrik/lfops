@@ -14,16 +14,19 @@ This role is tested with the following Icinga for Kubernetes versions:
 
 ## Tags
 
-| Tag        | What it does                                 | Reload / Restart |
-| ---        | ------------                                 | ---------------- |
-| `icinga_kubernetes` | Installs and configures Icinga for Kubernetes. | Restarts icinga-kubernetes.service |
+`icinga_kubernetes`
+
+* Installs and configures Icinga for Kubernetes.
+* Triggers: icinga-kubernetes.service restart.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `icinga_kubernetes__database_login` | The user account for accessing the Icinga for Kubernetes SQL database. Currently, only MySQL is supported. |
+`icinga_kubernetes__database_login`
+
+* The user account for accessing the Icinga for Kubernetes SQL database. Currently, only MySQL is supported.
+* Type: Dictionary.
+* Default: none
 
 Example:
 ```yaml
@@ -36,13 +39,60 @@ icinga_kubernetes__database_login:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icinga_kubernetes__clusters__host_var` /<br> `icinga_kubernetes__clusters__group_var` | A list of kubernetes cluster configs. Subkeys: <ul><li>`name`: Mandatory, string. The name of the cluster.</li> <li>`kubeconfig_path`: Mandatory, string. Path to the cluster's kubeconfig. For permissions, have a look at https://icinga.com/docs/icinga-for-kubernetes/latest/doc/02-Installation/#kubernetes-access-control-requirements.</li> <li>`state`: Optional, string. State of the cluster config. Defaults to `present`. Possible options: `present`, `absent`.</li></ul> | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/icinga_kubernetes/defaults/main.yml) |
-| `icinga_kubernetes__database_host` | The host on which the Icinga for Kubernetes SQL database is reachable. | `127.0.0.1` |
-| `icinga_kubernetes__database_login_host` | The Host-part of the SQL database user. | `127.0.0.1` |
-| `icinga_kubernetes__database_name` | The name of the Icinga for Kubernetes SQL database. | `'icinga_kubernetes'` |
-| `icinga_kubernetes__service_enabled` | Enables or disables the Icinga for Kubernetes service, analogous to `systemctl enable/disable --now`. | `true` |
+`icinga_kubernetes__clusters__host_var` / `icinga_kubernetes__clusters__group_var`
+
+* A list of kubernetes cluster configs. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The name of the cluster.
+        * Type: String.
+
+    * `kubeconfig_path`:
+
+        * Mandatory. Path to the cluster's kubeconfig. For permissions, have a look at https://icinga.com/docs/icinga-for-kubernetes/latest/doc/02-Installation/#kubernetes-access-control-requirements.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. State of the cluster config. Possible options: `present`, `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+* Type: List of dictionaries.
+* Default:
+
+```yaml
+icinga_kubernetes__clusters__role_var:
+  - name: 'default'
+    kubeconfig_path: '/etc/icinga-kubernetes/kubeconfig'
+    state: 'present'
+```
+
+`icinga_kubernetes__database_host`
+
+* The host on which the Icinga for Kubernetes SQL database is reachable.
+* Type: String.
+* Default: `'127.0.0.1'`
+
+`icinga_kubernetes__database_login_host`
+
+* The Host-part of the SQL database user.
+* Type: String.
+* Default: `'127.0.0.1'`
+
+`icinga_kubernetes__database_name`
+
+* The name of the Icinga for Kubernetes SQL database.
+* Type: String.
+* Default: `'icinga_kubernetes'`
+
+`icinga_kubernetes__service_enabled`
+
+* Enables or disables the Icinga for Kubernetes service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
 
 Example:
 ```yaml

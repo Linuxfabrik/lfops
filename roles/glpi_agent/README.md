@@ -12,18 +12,29 @@ If you use the ["GLPI Agent" Playbook](https://github.com/Linuxfabrik/lfops/blob
 
 ## Tags
 
-| Tag                    | What it does                              | Reload / Restart |
-| ---                    | ------------                              | ---------------- |
-| `glpi_agent`           | Installs and configure GLPI Agent.        | Restarts glpi-agent.service |
-| `glpi_agent:configure` | Deploys the configuration file.           | Restarts glpi-agent.service |
-| `glpi_agent:state`     | Manages the state of the systemd service. | - |
+`glpi_agent`
+
+* Installs and configure GLPI Agent.
+* Triggers: glpi-agent.service restart.
+
+`glpi_agent:configure`
+
+* Deploys the configuration file.
+* Triggers: glpi-agent.service restart.
+
+`glpi_agent:state`
+
+* Manages the state of the systemd service.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `glpi_agent__conf_server` | String. Specifies the server to use both as a controller for the agent, and as a recipient for task execution output. |
+`glpi_agent__conf_server`
+
+* Specifies the server to use both as a controller for the agent, and as a recipient for task execution output.
+* Type: String.
+* Default: none
 
 Example:
 ```yaml
@@ -34,13 +45,35 @@ glpi_agent__conf_server: 'https://glpi.example.com'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `glpi_agent__conf_local` | String. Write the results of the tasks execution locally. | `'/tmp'` |
-| `glpi_agent__conf_no_ssl_check` | Bool. Ignore self-signed certificates of the server. | `false` |
-| `glpi_agent__conf_ssl_fingerprint` | Specifies the fingerprint of the ssl server certificate to trust. The fingerprint to use can be retrieved in agent log by temporarily enabling `glpi_agent__conf_no_ssl_check` option. | unset |
-| `glpi_agent__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`.  | `true` |
-| `glpi_agent__version` | String. The version of blocky to install. Possible options: `'latest'`, or any from https://github.com/glpi-project/glpi-agent/releases. | `'latest'` |
+`glpi_agent__conf_local`
+
+* Write the results of the tasks execution locally.
+* Type: String.
+* Default: `'/tmp'`
+
+`glpi_agent__conf_no_ssl_check`
+
+* Ignore self-signed certificates of the server.
+* Type: Bool.
+* Default: `false`
+
+`glpi_agent__conf_ssl_fingerprint`
+
+* Specifies the fingerprint of the ssl server certificate to trust. The fingerprint to use can be retrieved in agent log by temporarily enabling `glpi_agent__conf_no_ssl_check` option.
+* Type: String.
+* Default: unset
+
+`glpi_agent__service_enabled`
+
+* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`glpi_agent__version`
+
+* The version of blocky to install. Possible options: `'latest'`, or any from https://github.com/glpi-project/glpi-agent/releases.
+* Type: String.
+* Default: `'latest'`
 
 Example:
 ```yaml

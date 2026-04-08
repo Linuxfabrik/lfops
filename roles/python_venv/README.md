@@ -11,19 +11,69 @@ This role creates and manages various [Python 3 virtual environments (venv)](htt
 
 ## Tags
 
-| Tag           | What it does                                 | Reload / Restart |
-| ---           | ------------                                 | ---------------- |
-| `python_venv` | Creates and manages the virtual environments | - |
+`python_venv`
+
+* Creates and manages the virtual environments.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `python_venv__pip_cert` | Path to PEM-encoded CA certificate bundle. Set this to use the system CA store instead of pip's built-in certficates. See 'SSL Certificate Verification' in pip documentation for more information. | unset |
-| `python_venv__venvs__host_var` / <br> `python_venv__venvs__group_var` | Dictionary containing definitions for the virtual environments. Subkeys: <ul><li>`exposed_binaries`: Optional, list. List of binaries which should be linked to `/usr/local/bin` for easier access on the command line. The binaries are expected to exist below `/opt/python-venv/name/bin/`.</li><li>`name`: Mandatory, string. The name of the virtual environment. Will be used for the folder name below `/opt/python-venv`.</li><li>`package_requirements`: Optional, list. These packages will be installed before installing the pip `packages` using the default package manager (e.g. `dnf`).</li><li>`packages`: Mandatory, list. These packages will be installed in the virtual environment using `pip`.</li><li>`system_site_packages`:  Optional, boolean. Defaults to `true`. Allows the virtual environment to access the system site-packages dir.</li><li>`python_executable`: Optional, string. The Python executable to use for the virtual environment. Defaults to `'python3'`.</li><li>`state`: Optional, string. State of venv. Either `absent` or `present`. Defaults to `'present'`.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
+`python_venv__pip_cert`
+
+* Path to PEM-encoded CA certificate bundle. Set this to use the system CA store instead of pip's built-in certficates. See 'SSL Certificate Verification' in pip documentation for more information.
+* Type: String.
+* Default: unset
+
+`python_venv__venvs__host_var` / `python_venv__venvs__group_var`
+
+* Dictionary containing definitions for the virtual environments.
+* Subkeys:
+
+    * `exposed_binaries`:
+
+        * Optional. List of binaries which should be linked to `/usr/local/bin` for easier access on the command line. The binaries are expected to exist below `/opt/python-venv/name/bin/`.
+        * Type: List.
+
+    * `name`:
+
+        * Mandatory. The name of the virtual environment. Will be used for the folder name below `/opt/python-venv`.
+        * Type: String.
+
+    * `package_requirements`:
+
+        * Optional. These packages will be installed before installing the pip `packages` using the default package manager (e.g. `dnf`).
+        * Type: List.
+
+    * `packages`:
+
+        * Mandatory. These packages will be installed in the virtual environment using `pip`.
+        * Type: List.
+
+    * `system_site_packages`:
+
+        * Optional. Allows the virtual environment to access the system site-packages dir.
+        * Type: Bool.
+        * Default: `true`
+
+    * `python_executable`:
+
+        * Optional. The Python executable to use for the virtual environment.
+        * Type: String.
+        * Default: `'python3'`
+
+    * `state`:
+
+        * Optional. State of venv. Either `absent` or `present`.
+        * Type: String.
+        * Default: `'present'`
+
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
 
 Example:
+
 ```yaml
 # optional
 python_venv__pip_cert: '/etc/pki/tls/certs/ca-bundle.crt' # system CA bundle on RHEL 8

@@ -29,18 +29,33 @@ Notes:
 
 ## Tags
 
-| Tag                                 | What it does                                                                                | Reload / Restart |
-| ---                                 | ------------                                                                                | ---------------- |
-| `monitoring_plugins`                | Deploys the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins | - |
-| `monitoring_plugins:custom`         | Only deploys the custom plugins                                                             | - |
-| `monitoring_plugins:remove`         | Removes the Linuxfabrik Monitoring Plugins                                                  | - |
+`monitoring_plugins`
+
+* Deploys the monitoring plugins, including the Linuxfabrik Plugin Library and custom plugins.
+* Triggers: none.
+
+`monitoring_plugins:custom`
+
+* Only deploys the custom plugins.
+* Triggers: none.
+
+`monitoring_plugins:remove`
+
+* Removes the Linuxfabrik Monitoring Plugins.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `monitoring_plugins__version` | String. Which version of the monitoring plugins should be deployed? Possible options: <ul><li>A specific release, for example `2.2.1`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`dev`: The development version (main branch). Use with care. Only works with `monitoring_plugins__install_method: 'source'`.</li></ul> Defaults to `lfops__monitoring_plugins_version` for convenience. |
+`monitoring_plugins__version`
+
+* Which version of the monitoring plugins should be deployed? Possible options:
+
+    * A specific release, for example `2.2.1`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).
+    * `dev`: The development version (main branch). Use with care. Only works with `monitoring_plugins__install_method: 'source'`.
+
+* Defaults to `lfops__monitoring_plugins_version` for convenience.
+* Type: String.
 
 Example:
 ```yaml
@@ -51,15 +66,52 @@ monitoring_plugins__version: '2.2.1'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `monitoring_plugins__icinga2_api_password` | String. The password of the `monitoring_plugins__icinga2_api_user`. This is required to schedule a downtime for Windows hosts. | unset |
-| `monitoring_plugins__icinga2_api_url` | String. The address of the Icinga2 master API. This is required to schedule a downtime for Windows hosts. | unset |
-| `monitoring_plugins__icinga2_api_user` | String. The Icinga2 API user. This is required to schedule a downtime for Windows hosts. Therefore, it needs to have the following permissions: `permissions = [ "actions/schedule-downtime", "actions/remove-downtime" ]` | unset |
-| `monitoring_plugins__icinga2_cn` | String. The common name / host name. Will be used to schedule a downtime for Windows hosts. | `'{{ ansible_facts["nodename"] }}'` |
-| `monitoring_plugins__icinga_user` | String. The user running the Monitoring Plugins. The role installs the pip packages from the requirements.yml for this user. Only relevant if `monitoring_plugins__install_method: 'source'`.  | `'icinga'` on RHEL, `'nagios'` on Debian |
-| `monitoring_plugins__install_method` | String. Which variant of the monitoring plugins should be deployed? Possible options:<ul><li>`package`: Deploy the install package with the compiled checks. This does not require Python on the system.</li><li>`source`: Deploy the plugins as source code. This requires Python to be installed. Currently for Linux only.</li><li>`archive`: Deploy the compiled binaries from a zip file downloaded from [download.linuxfabrik.ch](https://download.linuxfabrik.ch). Currently for Windows only.</li></ul> | `'package'` |
-| `monitoring_plugins__skip_package_versionlock` | By default, the version of the `linuxfabrik-monitoring-plugins` are locked after installation. Setting this to `true` skips this step (and never unlocks the version pinning again). | `false` |
+`monitoring_plugins__icinga2_api_password`
+
+* The password of the `monitoring_plugins__icinga2_api_user`. This is required to schedule a downtime for Windows hosts.
+* Type: String.
+* Default: unset
+
+`monitoring_plugins__icinga2_api_url`
+
+* The address of the Icinga2 master API. This is required to schedule a downtime for Windows hosts.
+* Type: String.
+* Default: unset
+
+`monitoring_plugins__icinga2_api_user`
+
+* The Icinga2 API user. This is required to schedule a downtime for Windows hosts. Therefore, it needs to have the following permissions: `permissions = [ "actions/schedule-downtime", "actions/remove-downtime" ]`
+* Type: String.
+* Default: unset
+
+`monitoring_plugins__icinga2_cn`
+
+* The common name / host name. Will be used to schedule a downtime for Windows hosts.
+* Type: String.
+* Default: `'{{ ansible_facts["nodename"] }}'`
+
+`monitoring_plugins__icinga_user`
+
+* The user running the Monitoring Plugins. The role installs the pip packages from the requirements.yml for this user. Only relevant if `monitoring_plugins__install_method: 'source'`.
+* Type: String.
+* Default: `'icinga'` on RHEL, `'nagios'` on Debian
+
+`monitoring_plugins__install_method`
+
+* Which variant of the monitoring plugins should be deployed? Possible options:
+
+    * `package`: Deploy the install package with the compiled checks. This does not require Python on the system.
+    * `source`: Deploy the plugins as source code. This requires Python to be installed. Currently for Linux only.
+    * `archive`: Deploy the compiled binaries from a zip file downloaded from [download.linuxfabrik.ch](https://download.linuxfabrik.ch). Currently for Windows only.
+
+* Type: String.
+* Default: `'package'`
+
+`monitoring_plugins__skip_package_versionlock`
+
+* By default, the version of the `linuxfabrik-monitoring-plugins` are locked after installation. Setting this to `true` skips this step (and never unlocks the version pinning again).
+* Type: Bool.
+* Default: `false`
 
 Example:
 ```yaml

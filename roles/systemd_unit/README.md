@@ -5,22 +5,200 @@ This role installs and manages systemd unit files. A unit file is a plain text i
 
 ## Tags
 
-| Tag           | What it does                                 | Reload / Restart |
-| ---           | ------------                                 | ---------------- |
-| `systemd_unit` | <ul><li>Remove service units from `/etc/systemd/system`</li><li>Deploy the service units to `/etc/systemd/system`</li><li>Remove timer units from `/etc/systemd/system`</li><li>Deploy the timer units to `/etc/systemd/system`</li></ul> | - |
-| `systemd_unit:mounts` | Manages systemd mount units. | - |
-| `systemd_unit:services` | <ul><li>Remove service units from `/etc/systemd/system`</li><li>Deploy the service units to `/etc/systemd/system`</li></ul> | - |
-| `systemd_unit:state` | Manages the state of the unit file | - |
-| `systemd_unit:timers` | <ul><li>Remove timer units from `/etc/systemd/system`</li><li>Deploy the timer units to `/etc/systemd/system`</li></ul> | - |
+`systemd_unit`
+
+* Remove service units from `/etc/systemd/system`.
+* Deploy the service units to `/etc/systemd/system`.
+* Remove timer units from `/etc/systemd/system`.
+* Deploy the timer units to `/etc/systemd/system`.
+* Triggers: systemctl daemon-reload.
+
+`systemd_unit:mounts`
+
+* Manages systemd mount units.
+* Triggers: systemctl daemon-reload.
+
+`systemd_unit:services`
+
+* Remove service units from `/etc/systemd/system`.
+* Deploy the service units to `/etc/systemd/system`.
+* Triggers: systemctl daemon-reload.
+
+`systemd_unit:state`
+
+* Manages the state of the unit file.
+* Triggers: none.
+
+`systemd_unit:timers`
+
+* Remove timer units from `/etc/systemd/system`.
+* Deploy the timer units to `/etc/systemd/system`.
+* Triggers: systemctl daemon-reload.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `systemd_unit__mounts__host_var` /<br> `systemd_unit__mounts__group_var` | List of Systemd Mount Units. Subkeys:<ul><li>`name`: Mandatory, string. Name of the systemd mount. Will be used as the filename. Note mount units must be named after the mount point directories they control. Use `systemd-escape --path /mnt/my-folder`.</li><li>`description`: Optional, string. The description for the unit. If ommitted, the name will be used, suffixed by `Mount`.</li><li>`wanted_by`: Optional, string. Value for `WantedBy`. Defaults to `'default.target'`.</li><li>`raw_unit`: Optional, string. Raw block in the `[Unit]` section. Defaults to unset.</li><li>`raw_mount`: Optional, string. Raw block in the `[Mount]` section. Defaults to unset.</li><li>`raw_install`: Optional, string. Raw block in the `[Install]` section. Defaults to unset.</li><li>`state`: Optional, string. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`. Defaults to `started`.</li><li>`enabled`: Optional, boolean. If the unit should start at boot or not. Defaults to `true`.</li></ul> | `[]` |
-| `systemd_unit__services__host_var` /<br> `systemd_unit__services__group_var` | List of Systemd Service Units. Subkeys:<ul><li>`name`: Mandatory, string. Name of the systemd service. Will be used as the filename.</li><li>`description`: Optional, string. The description for the unit. If ommitted, the name will be used, suffixed by `Service`.</li><li>`wanted_by`: Optional, string. Value for `WantedBy`. Defaults to `'default.target'`.</li><li>`raw_unit`: Optional, string. Raw block in the `[Unit]` section. Defaults to unset.</li><li>`raw_service`: Optional, string. Raw block in the `[Service]` section. Defaults to unset.</li><li>`raw_install`: Optional, string. Raw block in the `[Install]` section. Defaults to unset.</li><li>`state`: Optional, string. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`. Defaults to `started`.</li><li>`enabled`: Optional, boolean. If the unit should start at boot or not. Defaults to `true`.</li></ul> | `[]` |
-| `systemd_unit__timers__host_var` /<br> `systemd_unit__timers__group_var` | List of Systemd Timer Units. Subkeys:<ul> <li>`name`: Mandatory, string. Name of the systemd timer. Will be used as the filename.</li> <li>`description`: Optional, string. The description for the unit. If ommitted, the name will be used, suffixed by `Timer`.</li> <li>`wanted_by`: Optional, string. Value for `WantedBy`. Defaults to `'default.target'`.</li> <li>`raw_unit`: Optional, string. Raw block in the `[Unit]` section. Defaults to unset.</li> <li>`raw_timer`: Optional, string. Raw block in the `[Service]` section. Defaults to unset.</li> <li>`raw_install`: Optional, string. Raw block in the `[Install]` section. Defaults to unset.</li> <li>`state`: Optional, string. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`. Defaults to `started`.</li> <li>`enabled`: Optional, boolean. If the unit should start at boot or not. Defaults to `true`.</li></ul> | `[]` |
+`systemd_unit__mounts__host_var` / `systemd_unit__mounts__group_var`
+
+* List of Systemd Mount Units.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the systemd mount. Will be used as the filename. Note mount units must be named after the mount point directories they control. Use `systemd-escape --path /mnt/my-folder`.
+        * Type: String.
+
+    * `description`:
+
+        * Optional. The description for the unit. If ommitted, the name will be used, suffixed by `Mount`.
+        * Type: String.
+        * Default: unset
+
+    * `wanted_by`:
+
+        * Optional. Value for `WantedBy`.
+        * Type: String.
+        * Default: `'default.target'`
+
+    * `raw_unit`:
+
+        * Optional. Raw block in the `[Unit]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_mount`:
+
+        * Optional. Raw block in the `[Mount]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_install`:
+
+        * Optional. Raw block in the `[Install]` section.
+        * Type: String.
+        * Default: unset
+
+    * `state`:
+
+        * Optional. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`.
+        * Type: String.
+        * Default: `'started'`
+
+    * `enabled`:
+
+        * Optional. If the unit should start at boot or not.
+        * Type: Bool.
+        * Default: `true`
+
+`systemd_unit__services__host_var` / `systemd_unit__services__group_var`
+
+* List of Systemd Service Units.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the systemd service. Will be used as the filename.
+        * Type: String.
+
+    * `description`:
+
+        * Optional. The description for the unit. If ommitted, the name will be used, suffixed by `Service`.
+        * Type: String.
+        * Default: unset
+
+    * `wanted_by`:
+
+        * Optional. Value for `WantedBy`.
+        * Type: String.
+        * Default: `'default.target'`
+
+    * `raw_unit`:
+
+        * Optional. Raw block in the `[Unit]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_service`:
+
+        * Optional. Raw block in the `[Service]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_install`:
+
+        * Optional. Raw block in the `[Install]` section.
+        * Type: String.
+        * Default: unset
+
+    * `state`:
+
+        * Optional. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`.
+        * Type: String.
+        * Default: `'started'`
+
+    * `enabled`:
+
+        * Optional. If the unit should start at boot or not.
+        * Type: Bool.
+        * Default: `true`
+
+`systemd_unit__timers__host_var` / `systemd_unit__timers__group_var`
+
+* List of Systemd Timer Units.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the systemd timer. Will be used as the filename.
+        * Type: String.
+
+    * `description`:
+
+        * Optional. The description for the unit. If ommitted, the name will be used, suffixed by `Timer`.
+        * Type: String.
+        * Default: unset
+
+    * `wanted_by`:
+
+        * Optional. Value for `WantedBy`.
+        * Type: String.
+        * Default: `'default.target'`
+
+    * `raw_unit`:
+
+        * Optional. Raw block in the `[Unit]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_timer`:
+
+        * Optional. Raw block in the `[Service]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_install`:
+
+        * Optional. Raw block in the `[Install]` section.
+        * Type: String.
+        * Default: unset
+
+    * `state`:
+
+        * Optional. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`.
+        * Type: String.
+        * Default: `'started'`
+
+    * `enabled`:
+
+        * Optional. If the unit should start at boot or not.
+        * Type: Bool.
+        * Default: `true`
 
 Example:
 ```yaml

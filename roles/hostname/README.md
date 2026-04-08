@@ -5,18 +5,31 @@ This role simply sets the hostname of the server.
 
 ## Tags
 
-| Tag        | What it does                    | Reload / Restart |
-| ---        | ------------                    | ---------------- |
-| `hostname` | Sets the hostname of the server | - |
+`hostname`
+
+* Sets the hostname of the server.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `hostname__domain_part` | The domain (name) part of the hostname. Allows easily setting the same domain name for multiple servers. | `''` |
-| `hostname__full_hostname` | The full hostname to set. This could be a fully qualified domain name (FQDN). Setting this overwrites `hostname__host_part` and `hostname__domain_part`. | `'{{ (hostname__host_part ~ "." ~ hostname__domain_part) \| trim(".") }}'` |
-| `hostname__host_part` | The host part of the hostname. | `'{{ inventory_hostname }}'` |
+`hostname__domain_part`
+
+* The domain (name) part of the hostname. Allows easily setting the same domain name for multiple servers.
+* Type: String.
+* Default: `''`
+
+`hostname__full_hostname`
+
+* The full hostname to set. This could be a fully qualified domain name (FQDN). Setting this overwrites `hostname__host_part` and `hostname__domain_part`.
+* Type: String.
+* Default: `'{{ (hostname__host_part ~ "." ~ hostname__domain_part) | trim(".") }}'`
+
+`hostname__host_part`
+
+* The host part of the hostname.
+* Type: String.
+* Default: `'{{ inventory_hostname }}'`
 
 Example:
 ```yaml

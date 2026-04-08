@@ -15,11 +15,20 @@ If you use the [kibana playbook](https://github.com/Linuxfabrik/lfops/blob/main/
 
 ## Tags
 
-| Tag                  | What it does                               | Reload / Restart            |
-| ---                  | ------------                               | ----------------            |
-| `kibana`             | Installs and configures Kibana             | Restarts kibana.service     |
-| `kibana:configure`   | Deploys configuration files                | Restarts kibana.service     |
-| `kibana:state`       | Manages the state of the Kibana service    | -                           |
+`kibana`
+
+* Installs and configures Kibana.
+* Triggers: kibana.service restart.
+
+`kibana:configure`
+
+* Deploys configuration files.
+* Triggers: kibana.service restart.
+
+`kibana:state`
+
+* Manages the state of the Kibana service.
+* Triggers: none.
 
 
 ## Pre-Installation Steps
@@ -39,12 +48,29 @@ curl --cacert "$elastic_cacert" \
 
 ## Mandatory Role Variables
 
-| Variable                                          | Description                                                                         |
-| --------                                          | -----------                                                                         |
-| `kibana__elasticsearch_service_account_token`     | Service account token for Kibana to authenticate to Elasticsearch. See Post-Installation Steps for how to create this token. |
-| `kibana__xpack_encrypted_saved_objects_encryption_key` | Encryption key for encrypted saved objects (alerts, actions, connectors). Must be at least 32 characters. Generate with `openssl rand -base64 32`. Note: Use the same key across all Kibana instances when load-balancing. |
-| `kibana__xpack_reporting_encryption_key`          | Encryption key for reporting features. Must be at least 32 characters. Generate with `openssl rand -base64 32`. Note: Use the same key across all Kibana instances when load-balancing. |
-| `kibana__xpack_security_encryption_key`           | Encryption key for security features (session data, tokens). Must be at least 32 characters. Generate with `openssl rand -base64 32`. Note: Use the same key across all Kibana instances when load-balancing. |
+`kibana__elasticsearch_service_account_token`
+
+* Service account token for Kibana to authenticate to Elasticsearch. See Post-Installation Steps for how to create this token.
+* Type: String.
+* Default: none
+
+`kibana__xpack_encrypted_saved_objects_encryption_key`
+
+* Encryption key for encrypted saved objects (alerts, actions, connectors). Must be at least 32 characters. Generate with `openssl rand -base64 32`. Note: Use the same key across all Kibana instances when load-balancing.
+* Type: String.
+* Default: none
+
+`kibana__xpack_reporting_encryption_key`
+
+* Encryption key for reporting features. Must be at least 32 characters. Generate with `openssl rand -base64 32`. Note: Use the same key across all Kibana instances when load-balancing.
+* Type: String.
+* Default: none
+
+`kibana__xpack_security_encryption_key`
+
+* Encryption key for security features (session data, tokens). Must be at least 32 characters. Generate with `openssl rand -base64 32`. Note: Use the same key across all Kibana instances when load-balancing.
+* Type: String.
+* Default: none
 
 Example:
 ```yaml
@@ -58,23 +84,101 @@ kibana__xpack_security_encryption_key: '...'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `kibana__csp_strict` | Boolean. Enables strict Content Security Policy (CSP) mode for additional protection against XSS attacks. Set to `false` if you have compatibility issues with certain browsers or plugins. | `true` |
-| `kibana__elasticsearch_ca_cert` | ASCII-armored PEM CA certificate for TLS connections to Elasticsearch. Should match the CA used by Elasticsearch. | unset |
-| `kibana__elasticsearch_hosts` | List of URLs of the Elasticsearch instances to use for all queries. Supports multiple hosts for high availability. | `['https://localhost:9200']` |
-| `kibana__elasticsearch_ssl_verification_mode` | Controls the verification of certificates presented by Elasticsearch. One of: `full` (performs hostname verification), `certificate` (skips hostname verification) or `none` (skips verification entirely). | `'full'` |
-| `kibana__server_host` | Specifies the address to which the Kibana server will bind. IP addresses and host names are both valid values. To allow connections from remote users, set this parameter to a non-loopback address. | `0.0.0.0` |
-| `kibana__server_name` | A human-readable name for this Kibana instance. | `'{{ ansible_facts["nodename"] }}'` |
-| `kibana__server_port` | The port on which the Kibana server will listen. | `5601` |
-| `kibana__server_public_base_url` | The publicly available URL that end users will use to access Kibana. This is used for generating links in emails and other places. | unset |
-| `kibana__server_security_response_headers_disable_embedding` | Prevents embedding Kibana in iframes to mitigate clickjacking attacks. Set to `false` if you need to embed Kibana in other applications. | `true` |
-| `kibana__server_ssl_certificate` | Path to the PEM-format SSL certificate file for HTTPS connections from browsers to Kibana. Required when `kibana__server_ssl_enabled: true` is set. The role will set ownership to `kibana:root` and mode to `0644`. | unset |
-| `kibana__server_ssl_enabled` | Boolean. Enables SSL/TLS for incoming connections from browsers to the Kibana server. When enabled, `kibana__server_ssl_certificate` and `kibana__server_ssl_key` must be provided. | `false` |
-| `kibana__server_ssl_key` | Path to the PEM-format SSL private key file for HTTPS connections from browsers to Kibana. Required when `kibana__server_ssl_enabled: true` is set. The role will set ownership to `kibana:kibana` and mode to `0400` for security. | unset |
-| `kibana__raw` | Multiline string. Raw content which will be appended to the `kibana.yml` config file. | unset |
-| `kibana__service_enabled` | Enables or disables the kibana service, analogous to `systemctl enable/disable --now`. | `true` |
-| `kibana__service_state` | Controls the state of the kibana service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+`kibana__csp_strict`
+
+* Enables strict Content Security Policy (CSP) mode for additional protection against XSS attacks. Set to `false` if you have compatibility issues with certain browsers or plugins.
+* Type: Bool.
+* Default: `true`
+
+`kibana__elasticsearch_ca_cert`
+
+* ASCII-armored PEM CA certificate for TLS connections to Elasticsearch. Should match the CA used by Elasticsearch.
+* Type: String.
+* Default: unset
+
+`kibana__elasticsearch_hosts`
+
+* List of URLs of the Elasticsearch instances to use for all queries. Supports multiple hosts for high availability.
+* Type: List.
+* Default: `['https://localhost:9200']`
+
+`kibana__elasticsearch_ssl_verification_mode`
+
+* Controls the verification of certificates presented by Elasticsearch. One of: `full` (performs hostname verification), `certificate` (skips hostname verification) or `none` (skips verification entirely).
+* Type: String.
+* Default: `'full'`
+
+`kibana__server_host`
+
+* Specifies the address to which the Kibana server will bind. IP addresses and host names are both valid values. To allow connections from remote users, set this parameter to a non-loopback address.
+* Type: String.
+* Default: `'0.0.0.0'`
+
+`kibana__server_name`
+
+* A human-readable name for this Kibana instance.
+* Type: String.
+* Default: `'{{ ansible_facts["nodename"] }}'`
+
+`kibana__server_port`
+
+* The port on which the Kibana server will listen.
+* Type: Number.
+* Default: `5601`
+
+`kibana__server_public_base_url`
+
+* The publicly available URL that end users will use to access Kibana. This is used for generating links in emails and other places.
+* Type: String.
+* Default: unset
+
+`kibana__server_security_response_headers_disable_embedding`
+
+* Prevents embedding Kibana in iframes to mitigate clickjacking attacks. Set to `false` if you need to embed Kibana in other applications.
+* Type: Bool.
+* Default: `true`
+
+`kibana__server_ssl_certificate`
+
+* Path to the PEM-format SSL certificate file for HTTPS connections from browsers to Kibana. Required when `kibana__server_ssl_enabled: true` is set. The role will set ownership to `kibana:root` and mode to `0644`.
+* Type: String.
+* Default: unset
+
+`kibana__server_ssl_enabled`
+
+* Enables SSL/TLS for incoming connections from browsers to the Kibana server. When enabled, `kibana__server_ssl_certificate` and `kibana__server_ssl_key` must be provided.
+* Type: Bool.
+* Default: `false`
+
+`kibana__server_ssl_key`
+
+* Path to the PEM-format SSL private key file for HTTPS connections from browsers to Kibana. Required when `kibana__server_ssl_enabled: true` is set. The role will set ownership to `kibana:kibana` and mode to `0400` for security.
+* Type: String.
+* Default: unset
+
+`kibana__raw`
+
+* Raw content which will be appended to the `kibana.yml` config file.
+* Type: String.
+* Default: unset
+
+`kibana__service_enabled`
+
+* Enables or disables the kibana service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`kibana__service_state`
+
+* Controls the state of the kibana service, analogous to `systemctl start/stop/restart/reload`. Possible options:
+
+    * `started`
+    * `stopped`
+    * `restarted`
+    * `reloaded`
+
+* Type: String.
+* Default: `'started'`
 
 Example:
 ```yaml

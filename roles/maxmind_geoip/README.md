@@ -16,16 +16,18 @@ You need a (free) Maxmind license key.
 
 ## Tags
 
-| Tag                   | What it does                                 | Reload / Restart |
-| ---                   | ------------                                 | ---------------- |
-| `maxmind_geoip`       | Deploy `/usr/local/sbin/update-maxmind`      | - |
+`maxmind_geoip`
+
+* Deploys `/usr/local/sbin/update-maxmind`.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `maxmind_geoip__lic` | String. The license key from Maxmind. |
+`maxmind_geoip__lic`
+
+* The license key from Maxmind.
+* Type: String.
 
 Example:
 ```yaml

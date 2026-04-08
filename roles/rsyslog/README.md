@@ -5,20 +5,64 @@ This role installs and configures [rsyslog](https://www.rsyslog.com/). Useful fo
 
 ## Tags
 
-| Tag                 | What it does                                     | Reload / Restart |
-| ---                 | ------------                                     | ---------------- |
-| `rsyslog`           | Installs and configures rsyslog                  | Restarts rsyslog.service |
-| `rsyslog:configure` | Deploys the configuration                        | Restarts rsyslog.service |
-| `rsyslog:state`     | Manages the state of the systemd service | - |
+`rsyslog`
+
+* Installs and configures rsyslog.
+* Triggers: rsyslog.service restart.
+
+`rsyslog:configure`
+
+* Deploys the configuration.
+* Triggers: rsyslog.service restart.
+
+`rsyslog:state`
+
+* Manages the state of the systemd service.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `rsyslog__conf__group_var` /<br> `rsyslog__conf__host_`var` | A list of rsyslog configs that should be deployed to `/etc/rsyslog.d/`. Subkeys:<ul><li>`template`: Mandatory, string. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/rsyslog/templates/etc/rsyslog.d/).</li> <li>`filename`: Mandatory, string. Destination filename in `/etc/rsyslog.d/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.</li> <li>`state`: Optional, string. State of the config. Possible options: `absent`, `present`. Defaults to `present`.</li> <li>`raw`: Optional, string: Raw content for the config.</li></ul> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `rsyslog__service_enabled` | Enables or disables the rsyslog service, analogous to `systemctl enable/disable`. | `true` |
-| `rsyslog__service_state` | Changes the state of the rsyslog service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
+`rsyslog__conf__group_var` / `rsyslog__conf__host_var`
+
+* A list of rsyslog configs that should be deployed to `/etc/rsyslog.d/`. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `template`:
+
+        * Mandatory. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/rsyslog/templates/etc/rsyslog.d/).
+        * Type: String.
+
+    * `filename`:
+
+        * Mandatory. Destination filename in `/etc/rsyslog.d/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. State of the config. Possible options: `absent`, `present`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `raw`:
+
+        * Optional. Raw content for the config.
+        * Type: String.
+        * Default: unset
+
+`rsyslog__service_enabled`
+
+* Enables or disables the rsyslog service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`rsyslog__service_state`
+
+* Changes the state of the rsyslog service, analogous to `systemctl start/stop/restart/reload`. Possible options: `started`, `stopped`, `restarted`, `reloaded`.
+* Type: String.
+* Default: `'started'`
 
 Example:
 ```yaml

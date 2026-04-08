@@ -10,9 +10,10 @@ This role installs [glances](https://nicolargo.github.io/glances/). It also alia
 
 ## Tags
 
-| Tag       | What it does                              | Reload / Restart |
-| ---       | ------------                              | ---------------- |
-| `glances` | Installs glances and configures the alias | - |
+`glances`
+
+* Installs glances and configures the alias.
+* Triggers: none.
 
 
 ## License

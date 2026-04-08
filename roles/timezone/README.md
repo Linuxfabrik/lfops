@@ -5,16 +5,19 @@ This role sets the desired timezone.
 
 ## Tags
 
-| Tag        | What it does      | Reload / Restart |
-| ---        | ------------      | ---------------- |
-| `timezone` | Sets the timezone | - |
+`timezone`
+
+* Sets the timezone.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable             | Description                                                                                                                      | Default Value     |
-| --------             | -----------                                                                                                                      | -------------     |
-| `timezone__timezone` | Set timezone. Have a look at the [Wikipedia List](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for the options. | `'Europe/Zurich'` |
+`timezone__timezone`
+
+* Set timezone. Have a look at the [Wikipedia List](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for the options.
+* Type: String.
+* Default: `'Europe/Zurich'`
 
 Example:
 ```yaml

@@ -5,17 +5,24 @@ This role installs at, a daemon that allows commands to be run at a specified ti
 
 ## Tags
 
-| Tag        | What it does                          | Reload / Restart |
-| ---        | ------------                          | ---------------- |
-| `at`       | Installs and configures at/atd        | - |
-| `at:state` | Controls the state of the atd service | - |
+`at`
+
+* Installs and configures at/atd.
+* Triggers: none.
+
+`at:state`
+
+* Controls the state of the atd service.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `at__service_enabled` | Enables or disables the atd service, analogous to `systemctl enable/disable --now`. | `true` |
+`at__service_enabled`
+
+* Enables or disables the atd service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
 
 Example:
 ```yaml

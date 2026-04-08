@@ -5,22 +5,162 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
 ## Tags
 
-| Tag              | What it does                                                            | Reload / Restart |
-| ---              | ------------                                                            | ---------------- |
-| `lvm`            | Runs all LVM tasks                                                      | -                |
-| `lvm:filesystem` | Creates filesystems on logical volumes                                  | -                |
-| `lvm:info`       | Displays current LVM state (lsblk, df, pvs, vgs, lvs)                   | -                |
-| `lvm:lv`         | Creates/extends/removes logical volumes                                 | -                |
-| `lvm:mount`      | Creates mount directories, mounts volumes, restorecon                   | -                |
-| `lvm:vg`         | Growpart (if enabled), creates/resizes PVs, creates/extends/removes VGs | -                |
+`lvm`
+
+* Runs all LVM tasks.
+* Triggers: none.
+
+`lvm:filesystem`
+
+* Creates filesystems on logical volumes.
+* Triggers: none.
+
+`lvm:info`
+
+* Displays current LVM state (lsblk, df, pvs, vgs, lvs).
+* Triggers: none.
+
+`lvm:lv`
+
+* Creates/extends/removes logical volumes.
+* Triggers: none.
+
+`lvm:mount`
+
+* Creates mount directories, mounts volumes, restorecon.
+* Triggers: none.
+
+`lvm:vg`
+
+* Growpart (if enabled), creates/resizes PVs, creates/extends/removes VGs.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `lvm__lvs__host_var` / <br> `lvm__lvs__group_var` | List of logical volumes to manage. Subkeys: <ul><li>`name`: Mandatory, string. The logical volume name.</li><li>`vg`: Mandatory, string. The volume group name.</li><li>`size`: Mandatory (for state=present), string. Absolute size of the LV (relative sizes with `+` or `-` prefix are not allowed). Supports formats like `10G`, `512M`, `100%FREE`, `50%VG`, `50%PVS`, `50%ORIGIN`.</li><li>`fstype`: Optional, string. Filesystem type. Defaults to `xfs`.</li><li>`resizefs`: Optional, boolean. Resize the underlying filesystem when extending the LV. Defaults to `true`.</li><li>`shrink`: Optional, boolean. Allow shrinking the LV. Defaults to `false`.</li><li>`force`: Optional, boolean. Force removal of LV. Only used when `state: absent`. Defaults to `false`.</li><li>`mount_path`: Optional, string. Mount point path. If specified, the directory will be created, the LV will be mounted, and `restorecon` will be run automatically on the mount path.</li><li>`mount_opts`: Optional, string. Mount options. Defaults to `defaults`.</li><li>`mount_owner`: Optional, string. Owner of the mount directory. Defaults to `root`.</li><li>`mount_group`: Optional, string. Group of the mount directory. Defaults to `root`.</li><li>`mount_mode`: Optional, octal. Mode of the mount directory. Defaults to `0o0755`.</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
-| `lvm__vgs__host_var` / <br> `lvm__vgs__group_var` | List of volume groups to manage. PVs listed in `pvs` are automatically created and resized. Subkeys: <ul><li>`name`: Mandatory, string. The volume group name.</li><li>`pvs`: Mandatory (for state=present), list. List of physical volume device paths to include in the VG. PVs are automatically created (`pvcreate`) and resized (`pvresize`) before the VG is created/extended.</li><li>`growpart`: Optional, boolean. If `true`, automatically runs `growpart` on partition-based PVs (e.g., `/dev/vda3`) before resizing. The partition device and number are auto-detected from the PV path. Defaults to `false`.</li><li>`pesize`: Optional, string. Physical extent size (e.g., `4`, `128K`). Defaults to `4`.</li><li>`force`: Optional, boolean. Force removal of VG even if LVs exist. Only used when `state: absent`. Defaults to `false`.</li><li>`state`: Optional, string. `present` or `absent`. Defaults to `present`.</li></ul> | `[]` |
+`lvm__lvs__host_var` / `lvm__lvs__group_var`
+
+* List of logical volumes to manage.
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The logical volume name.
+        * Type: String.
+
+    * `vg`:
+
+        * Mandatory. The volume group name.
+        * Type: String.
+
+    * `size`:
+
+        * Mandatory (for state=present). Absolute size of the LV (relative sizes with `+` or `-` prefix are not allowed). Supports formats like `10G`, `512M`, `100%FREE`, `50%VG`, `50%PVS`, `50%ORIGIN`.
+        * Type: String.
+
+    * `fstype`:
+
+        * Optional. Filesystem type.
+        * Type: String.
+        * Default: `'xfs'`
+
+    * `resizefs`:
+
+        * Optional. Resize the underlying filesystem when extending the LV.
+        * Type: Bool.
+        * Default: `true`
+
+    * `shrink`:
+
+        * Optional. Allow shrinking the LV.
+        * Type: Bool.
+        * Default: `false`
+
+    * `force`:
+
+        * Optional. Force removal of LV. Only used when `state: absent`.
+        * Type: Bool.
+        * Default: `false`
+
+    * `mount_path`:
+
+        * Optional. Mount point path. If specified, the directory will be created, the LV will be mounted, and `restorecon` will be run automatically on the mount path.
+        * Type: String.
+
+    * `mount_opts`:
+
+        * Optional. Mount options.
+        * Type: String.
+        * Default: `'defaults'`
+
+    * `mount_owner`:
+
+        * Optional. Owner of the mount directory.
+        * Type: String.
+        * Default: `'root'`
+
+    * `mount_group`:
+
+        * Optional. Group of the mount directory.
+        * Type: String.
+        * Default: `'root'`
+
+    * `mount_mode`:
+
+        * Optional. Mode of the mount directory.
+        * Type: String.
+        * Default: `0o0755`
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+* Type: List of dictionaries.
+* Default: `[]`
+
+`lvm__vgs__host_var` / `lvm__vgs__group_var`
+
+* List of volume groups to manage. PVs listed in `pvs` are automatically created and resized.
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. The volume group name.
+        * Type: String.
+
+    * `pvs`:
+
+        * Mandatory (for state=present). List of physical volume device paths to include in the VG. PVs are automatically created (`pvcreate`) and resized (`pvresize`) before the VG is created/extended.
+        * Type: List.
+
+    * `growpart`:
+
+        * Optional. If `true`, automatically runs `growpart` on partition-based PVs (e.g., `/dev/vda3`) before resizing. The partition device and number are auto-detected from the PV path.
+        * Type: Bool.
+        * Default: `false`
+
+    * `pesize`:
+
+        * Optional. Physical extent size (e.g., `4`, `128K`).
+        * Type: String.
+        * Default: `4`
+
+    * `force`:
+
+        * Optional. Force removal of VG even if LVs exist. Only used when `state: absent`.
+        * Type: Bool.
+        * Default: `false`
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+* Type: List of dictionaries.
+* Default: `[]`
 
 Example:
 ```yaml

@@ -5,18 +5,31 @@ This role ensures that login warning banners are configured properly (according 
 
 ## Tags
 
-| Tag   | What it does | Reload / Restart |
-| ---   | ------------ | ---------------- |
-| `motd` | Installs login warning banners. | - |
+`motd`
+
+* Installs login warning banners.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `motd__logo_pty` | Logo for PTY consoles like SSH and other pseudo-terminals (multi-line) | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/motd/defaults/main.yml) |
-| `motd__logo_tty` | Logo for TTY console (multi-line). Backslashes have to be escaped properly. | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/motd/defaults/main.yml) |
-| `motd__legal_notice` | Legal notice (multi-line). CIS states that *Warning messages inform users who are attempting to login to the system of their legal status regarding the system and must include the name of the organization that owns the system and any monitoring policies that are in place.* | [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/motd/defaults/main.yml) |
+`motd__logo_pty`
+
+* Logo for PTY consoles like SSH and other pseudo-terminals (multi-line).
+* Type: String.
+* Default: [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/motd/defaults/main.yml)
+
+`motd__logo_tty`
+
+* Logo for TTY console (multi-line). Backslashes have to be escaped properly.
+* Type: String.
+* Default: [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/motd/defaults/main.yml)
+
+`motd__legal_notice`
+
+* Legal notice (multi-line). CIS states that *Warning messages inform users who are attempting to login to the system of their legal status regarding the system and must include the name of the organization that owns the system and any monitoring policies that are in place.*
+* Type: String.
+* Default: [Have a look](https://github.com/Linuxfabrik/lfops/blob/main/roles/motd/defaults/main.yml)
 
 Example:
 ```yaml

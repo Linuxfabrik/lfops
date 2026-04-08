@@ -7,18 +7,27 @@ Additionally, this role allows you to deploy custom logrotate configs which are 
 
 ## Tags
 
-| Tag         | What it does                         | Reload / Restart |
-| ---         | ------------                         | ---------------- |
-| `logrotate` | <ul><li>Set platform/version specific variables</li><li>Install logrotate</li><li>Copy logrotate.conf template to /etc</li><li>Copy system logrotate templates to /etc/logrotate.d</li><li>Check if custom logrotate configs for {{ inventory_hostname }} exist</li><li>Copy the custom logrotate configs to /etc/logrotate.d</li></ul> | - |
+`logrotate`
+
+* Set platform/version specific variables.
+* Install logrotate.
+* Copy logrotate.conf template to /etc.
+* Copy system logrotate templates to /etc/logrotate.d.
+* Check if custom logrotate configs for {{ inventory_hostname }} exist.
+* Copy the custom logrotate configs to /etc/logrotate.d.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable                 | Description                                         | Default Value |
-| --------                 | -----------                                         | ------------- |
-| `logrotate__rotate`      | Number. Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space). | `14`          |
+`logrotate__rotate`
+
+* Log files are rotated `count` days before being removed or mailed to the address specified in a `logrotate` mail directive. If count is `0`, old versions are removed rather than rotated. If count is `-1`, old logs are not removed at all (use with caution, may waste performance and disk space).
+* Type: Number.
+* Default: `14`
 
 Example:
+
 ```yaml
 # optional
 logrotate__rotate: 7

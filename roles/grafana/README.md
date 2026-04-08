@@ -10,23 +10,48 @@ This role installs and configures [Grafana](https://grafana.com/).
 
 ## Tags
 
-| Tag                        | What it does                                  | Reload / Restart |
-| ---                        | ------------                                  | ---------------- |
-| `grafana`                  | Installs and configures Grafana               | Restarts grafana-server.service |
-| `grafana:configure`        | Deploys the Grafana config files              | Restarts grafana-server.service |
-| `grafana:plugins`          | Manages Grafana Plugins                       | Restarts grafana-server.service |
-| `grafana:provisioning`     | Deploys the Grafana provisioning config files | Restarts grafana-server.service |
-| `grafana:service_accounts` | Creates Service Accounts and their tokens     | - |
-| `grafana:state` | Manages the state of the systemd service | - |
+`grafana`
+
+* Installs and configures Grafana.
+* Triggers: grafana-server.service restart.
+
+`grafana:configure`
+
+* Deploys the Grafana config files.
+* Triggers: grafana-server.service restart.
+
+`grafana:plugins`
+
+* Manages Grafana Plugins.
+* Triggers: grafana-server.service restart.
+
+`grafana:provisioning`
+
+* Deploys the Grafana provisioning config files.
+* Triggers: grafana-server.service restart.
+
+`grafana:service_accounts`
+
+* Creates Service Accounts and their tokens.
+* Triggers: none.
+
+`grafana:state`
+
+* Manages the state of the systemd service.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable               | Description                                 |
-| --------               | -----------                                 |
-| `grafana__admin_login` | The Grafana admin account.                  |
-| `grafana__root_url`    | The root url on which Grafana is reachable. |
+`grafana__admin_login`
 
+* The Grafana admin account.
+* Type: Dictionary.
+
+`grafana__root_url`
+
+* The root url on which Grafana is reachable.
+* Type: String.
 
 Example:
 ```yaml
@@ -40,31 +65,329 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `grafana__allow_embedding` | Whether to allow browsers to render Grafana in a `<frame>`, `<iframe>`, `<embed>` or `<object>`. | `true` |
-| `grafana__api_url` | The url on which the Grafana API is reachable. This might differ from the `grafana__root_url` when running a Grafana cluster behind a loadbalancer. | `'{{ grafana__root_url }}'` |
-| `grafana__auth_anonymous_enabled` | Whether to allow anonymous (passwordless) access or not. Possible options: `true` or `false` | `false` |
-| `grafana__auth_anonymous_org_name` | The organization name that should be used for unauthenticated users. | `'Main Org.'` |
-| `grafana__auth_anonymous_org_role` | The role for unauthenticated users. | `'Viewer'` |
-| `grafana__auth_jwt` | Enable JWT-based authentication for Grafana requests. | `false` |
-| `grafana__auth_jwt__priv_key_file` | Path to the private key file used to verify JWT signatures for Grafana authentication. | `'/etc/grafana/jwt.key.priv'` |
-| `grafana__auth_jwt__pub_key_file` | Path to the public key file used to verify JWT signatures for Grafana authentication. | `'/etc/grafana/jwt.key.pub'` |
-| `grafana__bitwarden_collection_id` | Will be used to store the token of the created service accounts to this Bitwarden Collection. Can be obtained from the URL in Bitwarden WebGUI. | `'{{ lfops__bitwarden_collection_id | default() }}'` |
-| `grafana__bitwarden_organization_id` | Will be used to store the token of the created service accounts to this Bitwarden Organization. Can be obtained from the URL in Bitwarden WebGUI. | `'{{ lfops__bitwarden_organization_id | default() }}'` |
-| `grafana__cookie_samesite` | The [SameSite cookie attribute](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite). Possible options:<br> * disabled<br> * lax<br> * none<br> * strict | `'lax'` |
-| `grafana__https_config` | Determines whether HTTPS is enabled or not. Subkeys: <ul><li>`cert_file`: Mandatory, string. The path of the certificate file used for SSL encryption.</li><li>`cert_key`: Mandatory, string. The path of the certificate key file used for SSL encryption.</li></ul> | unset |
-| `grafana__ldap_config` | The configuration to use a LDAP user base for logging into Grafana. More information can be found [here](https://grafana.com/docs/grafana/latest/auth/ldap/). Subkeys: <ul><li>`host`: Optional, string. Defaults to `127.0.0.1`. The host on which the LDAP server is accessible. Specify multiple hosts space separated.</li><li>`port`: Optional, integer. Defaults to `389`. The port on which the LDAP server is accessible.</li><li>`use_ssl`: Optional, boolean. Defaults to `false`. If an encrypted TLS connection should be used.</li><li>`ssl_skip_verify`: Optional, boolean. Defaults to `false`. If the ssl cert validation should be skipped.</li><li>`bind_dn`: Mandatory, string. The distinguished name of the account which should be used to login to the LDAP server.</li><li>`bind_password`: Mandatory, string. The password of the account which should be used to login to the LDAP server.</li><li>`search_base_dns`: Mandatory, list. List of base dns to search through for users.</li><li>`search_filter`: Mandatory, string. A LDAP user filter expression.</li><li>`group_search_base_dns`: Optional, list. Defaults to unset. List of base dns to search through for groups.</li><li>`group_search_filter_user_attribute`: Optional, list. Defaults to unset. The `%s` in the search filter will be replaced by this.</li><li>`group_search_filter`: Optional, string. Defaults to unset. A LDAP filter, to retrieve the groups of which the user is a member (only set if memberOf attribute is not available).</li><li>`admin_group_dn`: Optional, string. Defaults to unset. The distinguished name of the LDAP group that should be Grafana admins.</li><li>`editor_group_dn`: Optional, string. Defaults to unset. The distinguished name of the LDAP group that should be Grafana editors.</li><li>`viewer_group_dn`: Optional, string. Defaults to unset. The distinguished name of the LDAP group that should be Grafana viewers.</li><li>`email`: Optional, string. Defaults to `email`. Email attribute in the LDAP directory.</li><li>`username`: Optional, string. Defaults to `cn`. Username attribute in the LDAP directory. | unset |</li></ul>
-| `grafana__plugins__group_var`/<br> `grafana__plugins__host_var` | List of dictionaries containing Grafana plugins. Subkeys: <ul><li>`name`: Mandatory, string. Name of the plugin. Can be found using `grafana-cli plugins list-remote`.</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `grafana__provisioning_dashboards__group_var`/<br> `grafana__provisioning_dashboards__host_var` | List of dictionaries containing the dashboards to deploy via provisioning. Subkeys: <ul><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li><li>Have a look at https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards for the subkeys. </li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `grafana__provisioning_datasources__group_var` /<br> `grafana__provisioning_datasources__host_var` | List of dictionaries containing the datasources to deploy via provisioning. Subkeys: <ul><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li><li>Have a look at https://grafana.com/docs/grafana/latest/administration/provisioning/#data-sources for the subkeys.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `grafana__provisioning_service_accounts__group_var` /<br> `grafana__provisioning_service_accounts__host_var` | List of dictionaries containing [service accounts](https://grafana.com/docs/grafana/latest/administration/service-accounts/) to create. It automatically creates a token for the service account, with the same role as the service account itself. Beware that the token is only displayed once during the Ansible run, or optionally saved to Bitwarden. Subkeys: <ul><li>name: Mandatory, string. Name of the service account.</li><li>role: Optional, string. Role of the service account. Possible options: `'Admin'`, `'Editor'` or `'Viewer'`. Defaults to `'Viewer'`</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `grafana__serve_from_sub_path` | Bool. Whether Grafana itself should run on a subpath or not. Only effective if there is a subpath in `grafana__root_url` | `false` |
-| `grafana__service_enabled` | Bool. Enables or disables the service, analogous to `systemctl enable/disable --now`. | `true` |
-| `grafana__skip_token_to_bitwarden` | Skip the storing of the service account tokens to Bitwarden. | `false` |
-| `grafana__smtp_config` | Email server settings. More information can be found here: https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#smtp. Subkeys:<br> * `host`: Optional, string. Defaults to `localhost:25`. The host and port on which the SMTP server is accessible.<br> * `user`: Optional, string. Defaults to unset. The user, in case of SMTP auth.<br> * `password`: Optional, string. Defaults to unset. The password, in case of SMTP auth.<br> * `cert_file`: Optional, string. Defaults to unset. File path to a cert file.<br> * `key_file`: Optional, string. Defaults to unset. File path to a key file.<br> * `skip_verify`: Optional, string. Defaults to `false`.If the ssl cert validation should be skipped.<br> * `from_name`: Optional, string. Defaults to `Grafana`. Name to be used when sending out emails.<br> * `from_address`: Optional, string. Defaults to `admin@grafana.localhost`. Address used when sending out emails. | unset |
-| `grafana__users_case_insensitive_login` | Have a look at https://grafana.com/blog/2022/12/12/guide-to-using-the-new-grafana-cli-user-identity-conflict-tool-in-grafana-9.3 | unset |
-| `grafana__validate_certs` | If set to `false`, the role will not validate SSL certificates when connecting to Grafana via `grafana__root_url`. This is useful when using self-signed certificates. | `true` |
+`grafana__allow_embedding`
+
+* Whether to allow browsers to render Grafana in a `<frame>`, `<iframe>`, `<embed>` or `<object>`.
+* Type: Bool.
+* Default: `true`
+
+`grafana__api_url`
+
+* The url on which the Grafana API is reachable. This might differ from the `grafana__root_url` when running a Grafana cluster behind a loadbalancer.
+* Type: String.
+* Default: `'{{ grafana__root_url }}'`
+
+`grafana__auth_anonymous_enabled`
+
+* Whether to allow anonymous (passwordless) access or not. Possible options: `true` or `false`.
+* Type: Bool.
+* Default: `false`
+
+`grafana__auth_anonymous_org_name`
+
+* The organization name that should be used for unauthenticated users.
+* Type: String.
+* Default: `'Main Org.'`
+
+`grafana__auth_anonymous_org_role`
+
+* The role for unauthenticated users.
+* Type: String.
+* Default: `'Viewer'`
+
+`grafana__auth_jwt`
+
+* Enable JWT-based authentication for Grafana requests.
+* Type: Bool.
+* Default: `false`
+
+`grafana__auth_jwt__priv_key_file`
+
+* Path to the private key file used to verify JWT signatures for Grafana authentication.
+* Type: String.
+* Default: `'/etc/grafana/jwt.key.priv'`
+
+`grafana__auth_jwt__pub_key_file`
+
+* Path to the public key file used to verify JWT signatures for Grafana authentication.
+* Type: String.
+* Default: `'/etc/grafana/jwt.key.pub'`
+
+`grafana__bitwarden_collection_id`
+
+* Will be used to store the token of the created service accounts to this Bitwarden Collection. Can be obtained from the URL in Bitwarden WebGUI.
+* Type: String.
+* Default: `'{{ lfops__bitwarden_collection_id | default() }}'`
+
+`grafana__bitwarden_organization_id`
+
+* Will be used to store the token of the created service accounts to this Bitwarden Organization. Can be obtained from the URL in Bitwarden WebGUI.
+* Type: String.
+* Default: `'{{ lfops__bitwarden_organization_id | default() }}'`
+
+`grafana__cookie_samesite`
+
+* The [SameSite cookie attribute](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite). Possible options: `disabled`, `lax`, `none`, `strict`.
+* Type: String.
+* Default: `'lax'`
+
+`grafana__https_config`
+
+* Determines whether HTTPS is enabled or not.
+* Type: Dictionary.
+* Default: unset
+* Subkeys:
+
+    * `cert_file`:
+
+        * Mandatory. The path of the certificate file used for SSL encryption.
+        * Type: String.
+
+    * `cert_key`:
+
+        * Mandatory. The path of the certificate key file used for SSL encryption.
+        * Type: String.
+
+`grafana__ldap_config`
+
+* The configuration to use a LDAP user base for logging into Grafana. More information can be found [here](https://grafana.com/docs/grafana/latest/auth/ldap/).
+* Type: Dictionary.
+* Default: unset
+* Subkeys:
+
+    * `host`:
+
+        * Optional. The host on which the LDAP server is accessible. Specify multiple hosts space separated.
+        * Type: String.
+        * Default: `'127.0.0.1'`
+
+    * `port`:
+
+        * Optional. The port on which the LDAP server is accessible.
+        * Type: Number.
+        * Default: `389`
+
+    * `use_ssl`:
+
+        * Optional. If an encrypted TLS connection should be used.
+        * Type: Bool.
+        * Default: `false`
+
+    * `ssl_skip_verify`:
+
+        * Optional. If the ssl cert validation should be skipped.
+        * Type: Bool.
+        * Default: `false`
+
+    * `bind_dn`:
+
+        * Mandatory. The distinguished name of the account which should be used to login to the LDAP server.
+        * Type: String.
+
+    * `bind_password`:
+
+        * Mandatory. The password of the account which should be used to login to the LDAP server.
+        * Type: String.
+
+    * `search_base_dns`:
+
+        * Mandatory. List of base dns to search through for users.
+        * Type: List.
+
+    * `search_filter`:
+
+        * Mandatory. A LDAP user filter expression.
+        * Type: String.
+
+    * `group_search_base_dns`:
+
+        * Optional. List of base dns to search through for groups.
+        * Type: List.
+
+    * `group_search_filter_user_attribute`:
+
+        * Optional. The `%s` in the search filter will be replaced by this.
+        * Type: List.
+
+    * `group_search_filter`:
+
+        * Optional. A LDAP filter, to retrieve the groups of which the user is a member (only set if memberOf attribute is not available).
+        * Type: String.
+
+    * `admin_group_dn`:
+
+        * Optional. The distinguished name of the LDAP group that should be Grafana admins.
+        * Type: String.
+
+    * `editor_group_dn`:
+
+        * Optional. The distinguished name of the LDAP group that should be Grafana editors.
+        * Type: String.
+
+    * `viewer_group_dn`:
+
+        * Optional. The distinguished name of the LDAP group that should be Grafana viewers.
+        * Type: String.
+
+    * `email`:
+
+        * Optional. Email attribute in the LDAP directory.
+        * Type: String.
+        * Default: `'email'`
+
+    * `username`:
+
+        * Optional. Username attribute in the LDAP directory.
+        * Type: String.
+        * Default: `'cn'`
+
+`grafana__plugins__group_var` / `grafana__plugins__host_var`
+
+* Grafana plugins.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the plugin. Can be found using `grafana-cli plugins list-remote`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
+`grafana__provisioning_dashboards__group_var` / `grafana__provisioning_dashboards__host_var`
+
+* The dashboards to deploy via provisioning. Have a look at https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards for the subkeys.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
+`grafana__provisioning_datasources__group_var` / `grafana__provisioning_datasources__host_var`
+
+* The datasources to deploy via provisioning. Have a look at https://grafana.com/docs/grafana/latest/administration/provisioning/#data-sources for the subkeys.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
+`grafana__provisioning_service_accounts__group_var` / `grafana__provisioning_service_accounts__host_var`
+
+* [Service accounts](https://grafana.com/docs/grafana/latest/administration/service-accounts/) to create. It automatically creates a token for the service account, with the same role as the service account itself. Beware that the token is only displayed once during the Ansible run, or optionally saved to Bitwarden.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the service account.
+        * Type: String.
+
+    * `role`:
+
+        * Optional. Role of the service account. Possible options: `'Admin'`, `'Editor'` or `'Viewer'`. Defaults to `'Viewer'`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
+`grafana__serve_from_sub_path`
+
+* Whether Grafana itself should run on a subpath or not. Only effective if there is a subpath in `grafana__root_url`.
+* Type: Bool.
+* Default: `false`
+
+`grafana__service_enabled`
+
+* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
+`grafana__skip_token_to_bitwarden`
+
+* Skip the storing of the service account tokens to Bitwarden.
+* Type: Bool.
+* Default: `false`
+
+`grafana__smtp_config`
+
+* Email server settings. More information can be found here: https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#smtp.
+* Type: Dictionary.
+* Default: unset
+* Subkeys:
+
+    * `host`:
+
+        * Optional. The host and port on which the SMTP server is accessible.
+        * Type: String.
+        * Default: `'localhost:25'`
+
+    * `user`:
+
+        * Optional. The user, in case of SMTP auth.
+        * Type: String.
+
+    * `password`:
+
+        * Optional. The password, in case of SMTP auth.
+        * Type: String.
+
+    * `cert_file`:
+
+        * Optional. File path to a cert file.
+        * Type: String.
+
+    * `key_file`:
+
+        * Optional. File path to a key file.
+        * Type: String.
+
+    * `skip_verify`:
+
+        * Optional. If the ssl cert validation should be skipped.
+        * Type: Bool.
+        * Default: `false`
+
+    * `from_name`:
+
+        * Optional. Name to be used when sending out emails.
+        * Type: String.
+        * Default: `'Grafana'`
+
+    * `from_address`:
+
+        * Optional. Address used when sending out emails.
+        * Type: String.
+        * Default: `'admin@grafana.localhost'`
+
+`grafana__users_case_insensitive_login`
+
+* Have a look at https://grafana.com/blog/2022/12/12/guide-to-using-the-new-grafana-cli-user-identity-conflict-tool-in-grafana-9.3
+* Type: Bool.
+* Default: unset
+
+`grafana__validate_certs`
+
+* If set to `false`, the role will not validate SSL certificates when connecting to Grafana via `grafana__root_url`. This is useful when using self-signed certificates.
+* Type: Bool.
+* Default: `true`
 
 Example:
 ```yaml

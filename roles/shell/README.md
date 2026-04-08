@@ -7,9 +7,10 @@ Note that this role is not idempotent by default, consider setting `creates`, `r
 
 ## Tags
 
-| Tag     | What it does             | Reload / Restart |
-| ---     | ------------             | ---------------- |
-| `shell` | Executes shell commands. | - |
+`shell`
+
+* Executes shell commands.
+* Triggers: none.
 
 Tipp:
 
@@ -17,12 +18,86 @@ Tipp:
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `shell__commands__host_var` / <br> `shell__commands__group_var` | List of dictionaries containing the commands to execute. Subkeys:<ul><li>`name`: Mandatory, string. A user-defined name for the commands. Must be unique. The commands are sorted by name and executed in that order.</li><li>`commands`: Mandatory, string. Shell commands to execute.</li><li>`state`: Optional, string. Whether to execute the commands or not. One of `present` or `absent`. Defaults to `present`.</li><li>`chdir`: Optional, string. Change into this directory before running the command. Defaults to null.</li><li>`creates`: Optional, string. A filename, when it already exists, the commands *not* be run. If `run_once: true` is set, this will be set to `/etc/ansible/facts.d/shell_{{ item["name"] }}.state`. Defaults to null.</li><li>`removes`: Optional, string. A filename, when it does not exist, the commands will *not* be run. Defaults to null.</li><li>`run_once`: Optional, bool. Only run the commands once. This creates a state file (`/etc/ansible/facts.d/shell_{{ item["name"] }}.state`) and sets `creates` correspondingly. Defaults to `false`.</li><li>`stdin`: Optional, string. Set the stdin of the command directly to the specified value. Defaults to null.</li><li>`stdin_add_newline`: Optional, bool. Whether to append a newline to stdin data. Defaults to `true`.</li><li>`user`: Optional, string. User to run the commands as. Defaults to null (most likely `root`).</li><li>`ignore_errors`: Optional, bool. Whether to ignore errors during command execution. Defaults to `false`</li></ul> | `[]` |
-| `shell__limit_cmds` | List. Checks if the `name` of the command is in the list and only runs those. Can be used on the CLI to speed up the deployment, e.g. `--extra-vars='shell__limit_cmds=["010-setup-step1"]'`. | unset |
+`shell__commands__host_var` / `shell__commands__group_var`
+
+* List of dictionaries containing the commands to execute.
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. A user-defined name for the commands. Must be unique. The commands are sorted by name and executed in that order.
+        * Type: String.
+
+    * `commands`:
+
+        * Mandatory. Shell commands to execute.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. Whether to execute the commands or not. One of `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `chdir`:
+
+        * Optional. Change into this directory before running the command.
+        * Type: String.
+        * Default: unset
+
+    * `creates`:
+
+        * Optional. A filename, when it already exists, the commands *not* be run. If `run_once: true` is set, this will be set to `/etc/ansible/facts.d/shell_{{ item["name"] }}.state`.
+        * Type: String.
+        * Default: unset
+
+    * `removes`:
+
+        * Optional. A filename, when it does not exist, the commands will *not* be run.
+        * Type: String.
+        * Default: unset
+
+    * `run_once`:
+
+        * Optional. Only run the commands once. This creates a state file (`/etc/ansible/facts.d/shell_{{ item["name"] }}.state`) and sets `creates` correspondingly.
+        * Type: Bool.
+        * Default: `false`
+
+    * `stdin`:
+
+        * Optional. Set the stdin of the command directly to the specified value.
+        * Type: String.
+        * Default: unset
+
+    * `stdin_add_newline`:
+
+        * Optional. Whether to append a newline to stdin data.
+        * Type: Bool.
+        * Default: `true`
+
+    * `user`:
+
+        * Optional. User to run the commands as.
+        * Type: String.
+        * Default: unset (most likely `root`)
+
+    * `ignore_errors`:
+
+        * Optional. Whether to ignore errors during command execution.
+        * Type: Bool.
+        * Default: `false`
+
+* Type: List of dictionaries.
+* Default: `[]`
+
+`shell__limit_cmds`
+
+* Checks if the `name` of the command is in the list and only runs those. Can be used on the CLI to speed up the deployment, e.g. `--extra-vars='shell__limit_cmds=["010-setup-step1"]'`.
+* Type: List.
+* Default: unset
 
 Example:
+
 ```yaml
 # optional
 shell__commands__host_var:

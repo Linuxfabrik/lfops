@@ -17,12 +17,25 @@ This role installs and configures [Elastic Agent](https://www.elastic.co/elastic
 
 ## Tags
 
-| Tag | Description |
-| --- | ----------- |
-| `elastic_agent` | Installs and configures elastic-agent |
-| `elastic_agent:certs` | Deploys CA certificate |
-| `elastic_agent:enroll` | Enrolls the agent to Fleet Server |
-| `elastic_agent:state` | Manages the state of the elastic-agent service |
+`elastic_agent`
+
+* Installs and configures elastic-agent.
+* Triggers: none.
+
+`elastic_agent:certs`
+
+* Deploys CA certificate.
+* Triggers: none.
+
+`elastic_agent:enroll`
+
+* Enrolls the agent to Fleet Server.
+* Triggers: none.
+
+`elastic_agent:state`
+
+* Manages the state of the elastic-agent service.
+* Triggers: none.
 
 
 ## Pre-Installation Steps
@@ -39,10 +52,17 @@ Get an enrollment token from Kibana:
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `elastic_agent__enrollment_token` | The enrollment token for registering the agent with Fleet Server. Obtain from Kibana Fleet UI or API. |
-| `elastic_agent__fleet_url` | URL of the Fleet Server. Will only be used for the initial connection, afterwards the fleet server defined in the policy will be used. |
+`elastic_agent__enrollment_token`
+
+* The enrollment token for registering the agent with Fleet Server. Obtain from Kibana Fleet UI or API.
+* Type: String.
+* Default: none
+
+`elastic_agent__fleet_url`
+
+* URL of the Fleet Server. Will only be used for the initial connection, afterwards the fleet server defined in the policy will be used.
+* Type: String.
+* Default: none
 
 Example:
 ```yaml
@@ -54,13 +74,35 @@ elastic_agent__fleet_url: 'https://fleet1.example.com:8220'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `elastic_agent__fleet_ca` | ASCII-armored PEM CA certificate for verifying the Fleet Server TLS certificate. | unset |
-| `elastic_agent__insecure` | Skip TLS verification. Only use for testing with self-signed certificates. | `false` |
-| `elastic_agent__service_enabled` | Enables or disables the elastic-agent service, analogous to `systemctl enable/disable`. | `true` |
-| `elastic_agent__service_state` | The state of the elastic-agent service. Possible options: `started`, `stopped`, `restarted`. | `'started'` |
-| `elastic_agent__tags` | List of tags to apply to the agent during enrollment. Useful for identifying agents in Fleet. | `[]` |
+`elastic_agent__fleet_ca`
+
+* ASCII-armored PEM CA certificate for verifying the Fleet Server TLS certificate.
+* Type: String.
+* Default: unset
+
+`elastic_agent__insecure`
+
+* Skip TLS verification. Only use for testing with self-signed certificates.
+* Type: Bool.
+* Default: `false`
+
+`elastic_agent__service_enabled`
+
+* Enables or disables the elastic-agent service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`elastic_agent__service_state`
+
+* The state of the elastic-agent service. Possible options: `started`, `stopped`, `restarted`.
+* Type: String.
+* Default: `'started'`
+
+`elastic_agent__tags`
+
+* List of tags to apply to the agent during enrollment. Useful for identifying agents in Fleet.
+* Type: List.
+* Default: `[]`
 
 Example:
 ```yaml

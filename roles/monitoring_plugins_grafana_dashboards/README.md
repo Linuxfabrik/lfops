@@ -13,18 +13,33 @@ If you use the ["Monitoring Plugins Grafana Dashboards" Playbook](https://github
 
 ## Tags
 
-| Tag           | What it does                                 | Reload / Restart |
-| ---           | ------------                                 | ---------------- |
-| `monitoring_plugins_grafana_dashboards` | Deploys the Monitoring Plugins Grafana Dashboards. | - |
+`monitoring_plugins_grafana_dashboards`
+
+* Deploys the Monitoring Plugins Grafana Dashboards.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `monitoring_plugins_grafana_dashboard__grafana_service_account_login` | The login for a Grafana service account with a "Admin" token. |
-| `monitoring_plugins_grafana_dashboard__influxdb_login` | The login for the InfluxDB database. Only needs to have read permissions. |
-| `monitoring_plugins_grafana_dashboards__repo_version` | String. Which version of the monitoring plugins should be deployed? Possible options: <ul><li>A specific release, for example `1.2.0.11`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).</li><li>`dev`: The development version (main branch). Use with care. Only works with `monitoring_plugins__install_method: 'source'`.</li></ul> Defaults to `lfops__monitoring_plugins_version` for convenience. |
+`monitoring_plugins_grafana_dashboard__grafana_service_account_login`
+
+* The login for a Grafana service account with a "Admin" token.
+* Type: Dictionary.
+
+`monitoring_plugins_grafana_dashboard__influxdb_login`
+
+* The login for the InfluxDB database. Only needs to have read permissions.
+* Type: Dictionary.
+
+`monitoring_plugins_grafana_dashboards__repo_version`
+
+* Which version of the monitoring plugins should be deployed? Possible options:
+
+    * A specific release, for example `1.2.0.11`. See the [Releases](https://github.com/Linuxfabrik/monitoring-plugins/releases).
+    * `dev`: The development version (main branch). Use with care. Only works with `monitoring_plugins__install_method: 'source'`.
+
+* Defaults to `lfops__monitoring_plugins_version` for convenience.
+* Type: String.
 
 Example:
 ```yaml
@@ -41,13 +56,35 @@ monitoring_plugins_grafana_dashboards__repo_version: '1.2.0.11'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `monitoring_plugins_grafana_dashboard__director_database_host` | The host of the Director SQL database. | `'127.0.0.1'` |
-| `monitoring_plugins_grafana_dashboard__director_database_name` | The name of the Director SQL database. | `'{{ icingaweb2_module_director__database_name }}'` |
-| `monitoring_plugins_grafana_dashboard__influxdb_database_name` | The name of the InfluxDB database. | `'{{ icinga2_master__influxdb_database_name }}'` |
-| `monitoring_plugins_grafana_dashboard__influxdb_host` | The host of the InfluxDB database. | `'{{ icinga2_master__influxdb_host }}'` |
-| `monitoring_plugins_grafana_dashboards__grafana_url` | The URL under which Grafana is reachable | `'{{ grafana__api_url }}'` |
+`monitoring_plugins_grafana_dashboard__director_database_host`
+
+* The host of the Director SQL database.
+* Type: String.
+* Default: `'127.0.0.1'`
+
+`monitoring_plugins_grafana_dashboard__director_database_name`
+
+* The name of the Director SQL database.
+* Type: String.
+* Default: `'{{ icingaweb2_module_director__database_name }}'`
+
+`monitoring_plugins_grafana_dashboard__influxdb_database_name`
+
+* The name of the InfluxDB database.
+* Type: String.
+* Default: `'{{ icinga2_master__influxdb_database_name }}'`
+
+`monitoring_plugins_grafana_dashboard__influxdb_host`
+
+* The host of the InfluxDB database.
+* Type: String.
+* Default: `'{{ icinga2_master__influxdb_host }}'`
+
+`monitoring_plugins_grafana_dashboards__grafana_url`
+
+* The URL under which Grafana is reachable.
+* Type: String.
+* Default: `'{{ grafana__api_url }}'`
 
 Example:
 ```yaml

@@ -39,27 +39,94 @@ elasticsearch__network_host: 'fqdn.example.com' # Allow access from container. M
 
 ## Tags
 
-| Tag        | What it does                     | Reload / Restart |
-| ---        | ------------                     | ---------------- |
-| `mastodon` | Installs and configures Mastodon | - |
-| `mastodon:configure` | Deploys Mastodon configuration files | - |
-| `mastodon:containers` | Deploys Mastodon containers | - |
-| `mastodon:deploy_search` | Deploys the Elasticsearch indices | - |
-| `mastodon:users` | Creates Mastodon users | - |
+`mastodon`
+
+* Installs and configures Mastodon.
+* Triggers: none.
+
+`mastodon:configure`
+
+* Deploys Mastodon configuration files.
+* Triggers: none.
+
+`mastodon:containers`
+
+* Deploys Mastodon containers.
+* Triggers: none.
+
+`mastodon:deploy_search`
+
+* Deploys the Elasticsearch indices.
+* Triggers: none.
+
+`mastodon:users`
+
+* Creates Mastodon users.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
-| Variable                  | Description                  |
-| --------                  | -----------                  |
-| `mastodon__active_record_encryption_deterministic_key` | Generate with `bundle exec rails db:encryption:init`. Changing this will result in data loss and other issues. |
-| `mastodon__active_record_encryption_key_derivation_salt` | Generate with `bundle exec rails db:encryption:init`. Changing this will result in data loss and other issues. |
-| `mastodon__active_record_encryption_primary_key` | Generate with `bundle exec rails db:encryption:init`. Changing this will result in data loss and other issues. |
-| `mastodon__domain` | This is the unique identifier of your server in the network. This cannot be safely changed later. It has to be the public domain name the server is running under. |
-| `mastodon__otp_secret` | Generate with `bundle exec rails secret`. Changing this will break two-factor authentication. |
-| `mastodon__postgresql_login` | The user account for accessing the PostgreSQL database. |
-| `mastodon__secret_key_base` | Generate with `bundle exec rails secret`. Changing this will break all active browser sessions. |
-| `mastodon__vapid_private_key` | Generate with `bundle exec rails mastodon:webpush:generate_vapid_key`. Changing this will break push notifications. |
-| `mastodon__vapid_public_key` | Generate with `bundle exec rails mastodon:webpush:generate_vapid_key`. Changing this will break push notifications. |
+
+`mastodon__active_record_encryption_deterministic_key`
+
+* Generate with `bundle exec rails db:encryption:init`. Changing this will result in data loss and other issues.
+* Type: String.
+
+`mastodon__active_record_encryption_key_derivation_salt`
+
+* Generate with `bundle exec rails db:encryption:init`. Changing this will result in data loss and other issues.
+* Type: String.
+
+`mastodon__active_record_encryption_primary_key`
+
+* Generate with `bundle exec rails db:encryption:init`. Changing this will result in data loss and other issues.
+* Type: String.
+
+`mastodon__domain`
+
+* This is the unique identifier of your server in the network. This cannot be safely changed later. It has to be the public domain name the server is running under.
+* Type: String.
+
+`mastodon__otp_secret`
+
+* Generate with `bundle exec rails secret`. Changing this will break two-factor authentication.
+* Type: String.
+
+`mastodon__postgresql_login`
+
+* The user account for accessing the PostgreSQL database.
+* Type: Dictionary.
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `state`:
+
+        * Mandatory. State of the user.
+        * Type: String.
+
+`mastodon__secret_key_base`
+
+* Generate with `bundle exec rails secret`. Changing this will break all active browser sessions.
+* Type: String.
+
+`mastodon__vapid_private_key`
+
+* Generate with `bundle exec rails mastodon:webpush:generate_vapid_key`. Changing this will break push notifications.
+* Type: String.
+
+`mastodon__vapid_public_key`
+
+* Generate with `bundle exec rails mastodon:webpush:generate_vapid_key`. Changing this will break push notifications.
+* Type: String.
 
 Note: Secrets can be easily generated without installing Mastodon and Ruby locally by running the bundle commands in a temporary container, e.g. `podman run --rm mastodon/mastodon:latest bundle exec rails secret`.
 
@@ -83,46 +150,262 @@ mastodon__vapid_public_key: 'insecure_DO_NOT_USE_IN_PRODUCTION_BIKa90fBBxJ_iXZDY
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `mastodon__container_enabled`| Enables or disables the service, analogous to `systemctl enable/disable`. | `true` |
-| `mastodon__container_state` | Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options:<br> * `started`<br> * `stopped`<br> * `restarted`<br> * `reloaded` | `'started'` |
-| `mastodon__elasticsearch_enabled` | Whether Elasticsearch support is enabled. | `true` |
-| `mastodon__elasticsearch_host` | The host on which Elasticsearch is reachable. | `'host.containers.internal'` |
-| `mastodon__elasticsearch_port` | The port on which Elasticsearch is reachable. | `9200` |
-| `mastodon__ip_retention_period` | How long Mastodon should retain records of IPs (in seconds). Make sure to modify the scheduling of `ip_cleanup_scheduler` in `config/sidekiq.yml` to be less than daily if you lower this below two days (172800). | `31556952` |
-| `mastodon__ldap_base` | The base distinguised name for the LDAP search. | `''` |
-| `mastodon__ldap_bind_dn` | The bind distinguished name to authenticate against the LDAP server. | `''` |
-| `mastodon__ldap_enabled` | Whether to enable the LDAP integration. | `false` |
-| `mastodon__ldap_host` | The host on which LDAP is reachable. | `''` |
-| `mastodon__ldap_mail` | The LDAP attribute which Mastodon should use as the account e-mail address. | `'mail'` |
-| `mastodon__ldap_method` | The method to connect to the LDAP server. Possible options:<br> * `'start_tls'`<br> * `'simple_tls'` | `'start_tls'` |
-| `mastodon__ldap_password` | The password for the LDAP bind distinguished name. | `''` |
-| `mastodon__ldap_port` | The port on which LDAP is reachable. | `389` |
-| `mastodon__ldap_search_filter` | LDAP search filter for mapping users. Mastodon `%<uid>s` with `mastodon__ldap_uid`, `%<mail>s` with `mastodon__ldap_mail` and `%s<email>s` with the e-mail address to look up. | `'(\|(%<uid>s=%<email>s)(%<mail>s=%<email>s))'` |
-| `mastodon__ldap_tls_no_verify` | Whether Mastodon should not verify SSL connections to the LDAP server (e.g. when using self-signed certificates). | `false` |
-| `mastodon__ldap_uid` | The LDAP attribute which Mastodon should use as the account username. | `'uid'` |
-| `mastodon__ldap_uid_conversion_enabled` | Mastodon does not allow certain characters in usernames. Enable automatic conversion of usernames that do not conform. | `true` |
-| `mastodon__postgresql_db_name` | The name of the PostgreSQL database. | `'mastodon_production'` |
-| `mastodon__postgresql_host` | The host on which PostgreSQL is reachable. | `'host.containers.internal'` |
-| `mastodon__postgresql_port` | The port on which PostgreSQL is reachable. | `5432` |
-| `mastodon__redis_host` | The host on which Redis is reachable. | `'host.containers.internal'` |
-| `mastodon__redis_password` | The password for the Redis instance, if authentication is enabled. | `''` |
-| `mastodon__redis_port` | The port on which Redis is reachable. | `6379` |
-| `mastodon__session_retention_period` | How long Mastodon should retain records of sessions (in seconds). | `31556952` |
-| `mastodon__smtp_auth_method` | How Mastodon should authenticate against the SMTP server. Possible options:<br> * `'none'` no authentication<br> * `'plain'` authentication with plaintext password<br> * `'login'` authentication with base64 encoded password<br> * `'cram_md5'` | `'none'` |
-| `mastodon__smtp_from_address` | The from address Mastodon should use when sending email notifications. | `''` |
-| `mastodon__smtp_login` | The login for the SMTP server Mastodon should use in order to send email notifications. | `''` |
-| `mastodon__smtp_openssl_verify_mode` | How Mastodon should verify/enforce SSL connections to the SMTP server. Possible options:<br> * `'none'`<br> * `'peer'`<br> * `client_once`<br> * `'fail_if_no_peer_cert'` | `'none'` |
-| `mastodon__smtp_password` | The password for the SMTP server Mastodon should use in order to send email notifications. | `''` |
-| `mastodon__smtp_port` | The port Mastodon should use in order to send email notifications. | `25` |
-| `mastodon__smtp_server` | The SMTP server Mastodon should use in order to send email notifications. | `'host.containers.internal'` |
-| `mastodon__streaming_port` | The port on which the Mastodon streaming service will be available. | `4000` |
-| `mastodon__user_home_directory`| The home directory of the user running Mastodon. | `/opt/mastodon` |
-| `mastodon__users__host_var` <br/> / <br/> `mastodon__users__group_var` | A list of dictionaries containing Mastodon users. Subkeys: <ul><li>`username`: Mandatory, string. The username of the Mastodon user.</li><li>`email`: Mandatory, string. The email of the Mastodon user.</li><li>`approve`: Optional, bool. Approve the user. Otherwise the user may need to be approved manually in the webgui before being able to log in. Defaults to `false`.</li><li>`confirm`: Optional, bool. Confirm the users email address. No email confirmation message will be sent to the user. Defaults to `false`.</li><li>`role`: Optional, string. Role of the user. Defaults to `unset`.</li></ul> For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `mastodon__version`| Which Mastodon version to install. Have a look at the available [releases](https://github.com/mastodon/mastodon/releases). | `'latest'` |
-| `mastodon__web_domain` | To install Mastodon on `mastodon.example.com` in such a way it can serve `@alice@example.com`, set `mastodon__local_domain` to `example.com` and `mastodon__web_domain` to `mastodon.example.com`. This also requires additional configuration on the server hosting `example.com` to redirect requests from `https://example.com/.well-known/webfinger` to `https://mastodon.example.com/.well-known/webfinger`. | `unset` |
-| `mastodon__web_port` | The port on which the Mastodon web service will be available. | `3000` |
+`mastodon__container_enabled`
+
+* Enables or disables the service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`mastodon__container_state`
+
+* Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options: `started`, `stopped`, `restarted`, `reloaded`.
+* Type: String.
+* Default: `'started'`
+
+`mastodon__elasticsearch_enabled`
+
+* Whether Elasticsearch support is enabled.
+* Type: Bool.
+* Default: `true`
+
+`mastodon__elasticsearch_host`
+
+* The host on which Elasticsearch is reachable.
+* Type: String.
+* Default: `'host.containers.internal'`
+
+`mastodon__elasticsearch_port`
+
+* The port on which Elasticsearch is reachable.
+* Type: Number.
+* Default: `9200`
+
+`mastodon__ip_retention_period`
+
+* How long Mastodon should retain records of IPs (in seconds). Make sure to modify the scheduling of `ip_cleanup_scheduler` in `config/sidekiq.yml` to be less than daily if you lower this below two days (172800).
+* Type: Number.
+* Default: `31556952`
+
+`mastodon__ldap_base`
+
+* The base distinguised name for the LDAP search.
+* Type: String.
+* Default: `''`
+
+`mastodon__ldap_bind_dn`
+
+* The bind distinguished name to authenticate against the LDAP server.
+* Type: String.
+* Default: `''`
+
+`mastodon__ldap_enabled`
+
+* Whether to enable the LDAP integration.
+* Type: Bool.
+* Default: `false`
+
+`mastodon__ldap_host`
+
+* The host on which LDAP is reachable.
+* Type: String.
+* Default: `''`
+
+`mastodon__ldap_mail`
+
+* The LDAP attribute which Mastodon should use as the account e-mail address.
+* Type: String.
+* Default: `'mail'`
+
+`mastodon__ldap_method`
+
+* The method to connect to the LDAP server. Possible options: `'start_tls'`, `'simple_tls'`.
+* Type: String.
+* Default: `'start_tls'`
+
+`mastodon__ldap_password`
+
+* The password for the LDAP bind distinguished name.
+* Type: String.
+* Default: `''`
+
+`mastodon__ldap_port`
+
+* The port on which LDAP is reachable.
+* Type: Number.
+* Default: `389`
+
+`mastodon__ldap_search_filter`
+
+* LDAP search filter for mapping users. Mastodon `%<uid>s` with `mastodon__ldap_uid`, `%<mail>s` with `mastodon__ldap_mail` and `%s<email>s` with the e-mail address to look up.
+* Type: String.
+* Default: `'(|(%<uid>s=%<email>s)(%<mail>s=%<email>s))'`
+
+`mastodon__ldap_tls_no_verify`
+
+* Whether Mastodon should not verify SSL connections to the LDAP server (e.g. when using self-signed certificates).
+* Type: Bool.
+* Default: `true`
+
+`mastodon__ldap_uid`
+
+* The LDAP attribute which Mastodon should use as the account username.
+* Type: String.
+* Default: `'uid'`
+
+`mastodon__ldap_uid_conversion_enabled`
+
+* Mastodon does not allow certain characters in usernames. Enable automatic conversion of usernames that do not conform.
+* Type: Bool.
+* Default: `true`
+
+`mastodon__postgresql_db_name`
+
+* The name of the PostgreSQL database.
+* Type: String.
+* Default: `'mastodon_production'`
+
+`mastodon__postgresql_host`
+
+* The host on which PostgreSQL is reachable.
+* Type: String.
+* Default: `'host.containers.internal'`
+
+`mastodon__postgresql_port`
+
+* The port on which PostgreSQL is reachable.
+* Type: Number.
+* Default: `5432`
+
+`mastodon__redis_host`
+
+* The host on which Redis is reachable.
+* Type: String.
+* Default: `'host.containers.internal'`
+
+`mastodon__redis_password`
+
+* The password for the Redis instance, if authentication is enabled.
+* Type: String.
+* Default: `''`
+
+`mastodon__redis_port`
+
+* The port on which Redis is reachable.
+* Type: Number.
+* Default: `6379`
+
+`mastodon__session_retention_period`
+
+* How long Mastodon should retain records of sessions (in seconds).
+* Type: Number.
+* Default: `31556952`
+
+`mastodon__smtp_auth_method`
+
+* How Mastodon should authenticate against the SMTP server. Possible options: `'none'` no authentication, `'plain'` authentication with plaintext password, `'login'` authentication with base64 encoded password, `'cram_md5'`.
+* Type: String.
+* Default: `'none'`
+
+`mastodon__smtp_from_address`
+
+* The from address Mastodon should use when sending email notifications.
+* Type: String.
+* Default: `''`
+
+`mastodon__smtp_login`
+
+* The login for the SMTP server Mastodon should use in order to send email notifications.
+* Type: String.
+* Default: `''`
+
+`mastodon__smtp_openssl_verify_mode`
+
+* How Mastodon should verify/enforce SSL connections to the SMTP server. Possible options: `'none'`, `'peer'`, `'client_once'`, `'fail_if_no_peer_cert'`.
+* Type: String.
+* Default: `'none'`
+
+`mastodon__smtp_password`
+
+* The password for the SMTP server Mastodon should use in order to send email notifications.
+* Type: String.
+* Default: `''`
+
+`mastodon__smtp_port`
+
+* The port Mastodon should use in order to send email notifications.
+* Type: Number.
+* Default: `25`
+
+`mastodon__smtp_server`
+
+* The SMTP server Mastodon should use in order to send email notifications.
+* Type: String.
+* Default: `'host.containers.internal'`
+
+`mastodon__streaming_port`
+
+* The port on which the Mastodon streaming service will be available.
+* Type: Number.
+* Default: `4000`
+
+`mastodon__user_home_directory`
+
+* The home directory of the user running Mastodon.
+* Type: String.
+* Default: `'/opt/mastodon'`
+
+`mastodon__users__host_var` / `mastodon__users__group_var`
+
+* A list of dictionaries containing Mastodon users. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. The username of the Mastodon user.
+        * Type: String.
+
+    * `email`:
+
+        * Mandatory. The email of the Mastodon user.
+        * Type: String.
+
+    * `approve`:
+
+        * Optional. Approve the user. Otherwise the user may need to be approved manually in the webgui before being able to log in.
+        * Type: Bool.
+        * Default: `false`
+
+    * `confirm`:
+
+        * Optional. Confirm the users email address. No email confirmation message will be sent to the user.
+        * Type: Bool.
+        * Default: `false`
+
+    * `role`:
+
+        * Optional. Role of the user.
+        * Type: String.
+        * Default: unset
+
+`mastodon__version`
+
+* Which Mastodon version to install. Have a look at the available [releases](https://github.com/mastodon/mastodon/releases).
+* Type: String.
+* Default: `'latest'`
+
+`mastodon__web_domain`
+
+* To install Mastodon on `mastodon.example.com` in such a way it can serve `@alice@example.com`, set `mastodon__local_domain` to `example.com` and `mastodon__web_domain` to `mastodon.example.com`. This also requires additional configuration on the server hosting `example.com` to redirect requests from `https://example.com/.well-known/webfinger` to `https://mastodon.example.com/.well-known/webfinger`.
+* Type: String.
+* Default: unset
+
+`mastodon__web_port`
+
+* The port on which the Mastodon web service will be available.
+* Type: Number.
+* Default: `3000`
 
 Example:
 ```yaml

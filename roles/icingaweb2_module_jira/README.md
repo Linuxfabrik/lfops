@@ -15,21 +15,36 @@ This role is tested with the following IcingaWeb2 Jira Module versions:
 
 ## Tags
 
-| Tag                      | What it does                                       | Reload / Restart |
-| ---                      | ------------                                       | ---------------- |
-| `icingaweb2_module_jira` | Installs and configures the IcingaWeb2 Jira Module | - |
+`icingaweb2_module_jira`
+
+* Installs and configures the IcingaWeb2 Jira Module.
+* Triggers: none.
 
 
 ## Mandatory Role Variables
 
-| Variable                               | Description                                                                                                 |
-| --------                               | -----------                                                                                                 |
-| `icingaweb2_module_jira__api_host`     | String. Hostname or IP address of the Jira API.                                                                     |
-| `icingaweb2_module_jira__api_password` | String. Password of the Jira API.                                                                                   |
-| `icingaweb2_module_jira__api_username` | String. Username of the Jira API.                                                                                   |
-| `icingaweb2_module_jira__version`      | String. The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-jira/releases. |
+`icingaweb2_module_jira__api_host`
+
+* Hostname or IP address of the Jira API.
+* Type: String.
+
+`icingaweb2_module_jira__api_password`
+
+* Password of the Jira API.
+* Type: String.
+
+`icingaweb2_module_jira__api_username`
+
+* Username of the Jira API.
+* Type: String.
+
+`icingaweb2_module_jira__version`
+
+* The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-jira/releases.
+* Type: String.
 
 Example:
+
 ```yaml
 # mandatory
 icingaweb2_module_jira__api_host: 'jira.example.com'
@@ -41,21 +56,74 @@ icingaweb2_module_jira__version: 'v1.3.4'
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `icingaweb2_module_jira__api_path` | String. Path of the Jira API, relative to `icingaweb2_module_jira__api_host`. | `''` |
-| `icingaweb2_module_jira__api_port` | Integer. Port of the Jira API. | `''` |
-| `icingaweb2_module_jira__api_scheme` | String. Scheme of the Jira API. One of `'http'` or `'https'`. | `''` |
-| `icingaweb2_module_jira__deployment_legacy` | Boolean. If legacy compatibility should be enabled or not. | `true` |
-| `icingaweb2_module_jira__deployment_type` | String. The deployment type of Jira. One of `'cloud'` or `'server'`. | `'cloud'` |
-| `icingaweb2_module_jira__icingaweb2_url` | String. The IcingaWeb2 URL for links pointing back to IcingaWeb2 in the Jira issues. | `''` |
-| `icingaweb2_module_jira__key_fields_icinga_key` | String. Custom field in Jira to figure out whether an issue for the given object already exists. | `'icingaKey'` |
-| `icingaweb2_module_jira__key_fields_icinga_status` | String. Custom field in Jira that represents the status of icinga object. | `'icingaStatus'` |
-| `icingaweb2_module_jira__ui_issuetype` | Default issue type to be used for creating Jira tickets. Please note that the project settings must represent project keys, not display names. | `''` |
-| `icingaweb2_module_jira__ui_project` | Default project to be used for creating Jira tickets. Please note that the project settings must represent project keys, not display names. | `''` |
-| `icingaweb2_module_jira__url` | The URL from where to download the IcingaWeb2 Jira Module. | `https://github.com/Icinga/icingaweb2-module-jira/archive/{{ icingaweb2_module_jira__version }}.tar.gz` |
+`icingaweb2_module_jira__api_path`
+
+* Path of the Jira API, relative to `icingaweb2_module_jira__api_host`.
+* Type: String.
+* Default: `''`
+
+`icingaweb2_module_jira__api_port`
+
+* Port of the Jira API.
+* Type: String.
+* Default: `''`
+
+`icingaweb2_module_jira__api_scheme`
+
+* Scheme of the Jira API. One of `'http'` or `'https'`.
+* Type: String.
+* Default: `''`
+
+`icingaweb2_module_jira__deployment_legacy`
+
+* If legacy compatibility should be enabled or not.
+* Type: Bool.
+* Default: `true`
+
+`icingaweb2_module_jira__deployment_type`
+
+* The deployment type of Jira. One of `'cloud'` or `'server'`.
+* Type: String.
+* Default: `'cloud'`
+
+`icingaweb2_module_jira__icingaweb2_url`
+
+* The IcingaWeb2 URL for links pointing back to IcingaWeb2 in the Jira issues.
+* Type: String.
+* Default: `''`
+
+`icingaweb2_module_jira__key_fields_icinga_key`
+
+* Custom field in Jira to figure out whether an issue for the given object already exists.
+* Type: String.
+* Default: `'icingaKey'`
+
+`icingaweb2_module_jira__key_fields_icinga_status`
+
+* Custom field in Jira that represents the status of icinga object.
+* Type: String.
+* Default: `'icingaStatus'`
+
+`icingaweb2_module_jira__ui_issuetype`
+
+* Default issue type to be used for creating Jira tickets. Please note that the project settings must represent project keys, not display names.
+* Type: String.
+* Default: `''`
+
+`icingaweb2_module_jira__ui_project`
+
+* Default project to be used for creating Jira tickets. Please note that the project settings must represent project keys, not display names.
+* Type: String.
+* Default: `''`
+
+`icingaweb2_module_jira__url`
+
+* The URL from where to download the IcingaWeb2 Jira Module.
+* Type: String.
+* Default: `'https://github.com/Icinga/icingaweb2-module-jira/archive/{{ icingaweb2_module_jira__version }}.tar.gz'`
 
 Example:
+
 ```yaml
 # optional
 icingaweb2_module_jira__api_path: ''

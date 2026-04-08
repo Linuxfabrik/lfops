@@ -5,17 +5,37 @@ This role installs Python 2 or Python 3 on the system, optionally with additiona
 
 ## Tags
 
-| Tag      | What it does                                                                 | Reload / Restart |
-| ---      | ------------                                                                 | ---------------- |
-| `python` | This role installs Python on the system, optionally with additional modules. | - |
+`python`
+
+* This role installs Python on the system, optionally with additional modules.
+* Triggers: none.
 
 
 ## Optional Role Variables
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `python__modules__host_var` / `python__modules__group_var` | List of dictionaries containing additional Python modules that should be installed via the OS package manager on Linux, or via pip on Windows. Subkeys: <ul><li>* `name`: String, mandatory. Name of the packages.</li><li>`state`: Optional, string. Either `present` or `absent`. Defaults to `present`.</li></ul><br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `[]` |
-| `python__version` | The Python version to install. Possible options for Linux:<br> * 2<br> * 3<br> Windows requires the full version (check the possible options [here](https://www.python.org/ftp/python/)). | `3` |
+`python__modules__host_var` / `python__modules__group_var`
+
+* List of dictionaries containing additional Python modules that should be installed via the OS package manager on Linux, or via pip on Windows. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the packages.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+`python__version`
+
+* The Python version to install. Possible options for Linux: `2`, `3`. Windows requires the full version (check the possible options [here](https://www.python.org/ftp/python/)).
+* Type: Number.
+* Default: `3`
 
 Example:
 ```yaml
