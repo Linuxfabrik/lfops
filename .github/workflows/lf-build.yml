@@ -26,11 +26,16 @@ jobs:
 
     steps:
 
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+        with:
+          egress-policy: audit
+
       - name: 'git clone https://github.com/Linuxfabrik/lfops'
-        uses: 'actions/checkout@v6'
+        uses: 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd' # v6.0.2
 
       - name: 'Log in to GitHub Container Registry'
-        uses: 'redhat-actions/podman-login@v1'
+        uses: 'redhat-actions/podman-login@4934294ad0449894bcd1e9f191899d7292469603' # v1.7
         with:
           registry: 'ghcr.io'
           username: '${{ github.actor }}'
@@ -99,7 +104,7 @@ jobs:
 
       - name: 'Push to GitHub Container Registry'
         id: 'push-to-ghcr'
-        uses: 'redhat-actions/push-to-registry@v2'
+        uses: 'redhat-actions/push-to-registry@5ed88d269cf581ea9ef6dd6806d01562096bee9c' # v2.8
         with:
           registry: 'ghcr.io'
           image: '${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee'
