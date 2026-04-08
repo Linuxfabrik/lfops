@@ -8,19 +8,27 @@
 
 - block:
 
+  - name: 'Combined Mounts'
+    ansible.builtin.debug:
+      var: 'mount__mounts__combined_var'
+
   - name: 'Install {{ mount__nfs_client_package }}'
     ansible.builtin.package:
       name: '{{ mount__nfs_client_package }}'
       state: 'present'
     when:
-      - 'mount__mounts__combined_var | selectattr("state", "ne", "absent") | selectattr("fstype", "equalto", "nfs") | list | length | bool'
+      - '((mount__mounts__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+          + (mount__mounts__combined_var | selectattr("state", "undefined") | list))
+          | selectattr("fstype", "equalto", "nfs") | list | length > 0'
 
   - name: 'Install {{ mount__cifs_client_package }}'
     ansible.builtin.package:
       name: '{{ mount__cifs_client_package }}'
       state: 'present'
     when:
-      - 'mount__mounts__combined_var | selectattr("state", "ne", "absent") | selectattr("fstype", "equalto", "cifs") | list | length | bool'
+      - '((mount__mounts__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+          + (mount__mounts__combined_var | selectattr("state", "undefined") | list))
+          | selectattr("fstype", "equalto", "cifs") | list | length > 0'
 
   - name: 'mkdir -p mount-point'
     ansible.builtin.file:

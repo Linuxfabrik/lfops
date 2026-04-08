@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+* **role:mount**: Fix `when` condition for NFS/CIFS client package installation failing with multiple mounts and when `state` key is undefined
+
 ### Changed
 
 * **role:opensearch**: Rewrite README with step-by-step cluster setup guide, single-node section, post-installation steps, and improved variable documentation
