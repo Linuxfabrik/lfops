@@ -28,7 +28,7 @@ jobs:
           python-version: '3.12'
 
       - name: 'Install pre-commit'
-        run: 'pip install --require-hashes --requirement pre-commit-requirements.txt'
+        run: 'pip install pre-commit==4.5.1'
 
       - name: 'Run pre-commit autoupdate'
         run: 'pre-commit autoupdate'

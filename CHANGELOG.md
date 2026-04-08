@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-* **ci**: Fix `--require-hashes` pip installs by providing complete requirements files with all transitive dependencies pinned
+* **ci**: Fix pip installs by replacing `--require-hashes` with pinned versions to allow Dependabot updates
 * **role:mount**: Fix `when` condition for NFS/CIFS client package installation failing with multiple mounts and when `state` key is undefined
 
 ### Changed

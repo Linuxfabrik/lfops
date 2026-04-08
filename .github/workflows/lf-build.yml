@@ -71,7 +71,7 @@ jobs:
       - name: 'Install Ansible Builder'
         run: |
           python3 -m pip install --upgrade pip
-          pip install --require-hashes --requirement build-requirements.txt
+          pip install ansible-builder==3.1.1
 
       - name: 'Strip badges from README.md (not rendered correctly on Galaxy)'
         run: |
