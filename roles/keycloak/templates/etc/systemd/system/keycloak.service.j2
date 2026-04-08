@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025100101
+# 2026040801
 
 [Unit]
 Description=Keycloak Service
@@ -10,9 +10,17 @@ User=keycloak
 Group=keycloak
 EnvironmentFile=/etc/sysconfig/keycloak
 {% if keycloak__mode == 'production' %}
+{% if keycloak__version is version('26.6.0', '<') %}
 ExecStart=/opt/keycloak/bin/kc.sh start -Dquarkus.transaction-manager.default-transaction-timeout=3600
 {% else %}
+ExecStart=/opt/keycloak/bin/kc.sh start
+{% endif %}
+{% else %}
+{% if keycloak__version is version('26.6.0', '<') %}
 ExecStart=/opt/keycloak/bin/kc.sh start-dev -Dquarkus.transaction-manager.default-transaction-timeout=3600
+{% else %}
+ExecStart=/opt/keycloak/bin/kc.sh start-dev
+{% endif %}
 {% endif %}
 LimitNOFILE=131072
 WorkingDirectory=/opt/keycloak
