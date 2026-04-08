@@ -233,6 +233,7 @@ WARN org.hibernate.engine.jdbc.internal.JdbcServicesImpl:169 - HHH000342: Could 
 The last packet sent successfully to the server was 0 milliseconds ago. The driver has not received any packets from the server.
 Caused by: org.hibernate.HibernateException: Connection cannot be null when 'hibernate.dialect' not set
 ```
+
 * `chown -R root:tomcat /var/lib/tomcat/webapps/`?
 * Database Credentials correct?
 * Connection string correct? Example: `jdbc:mysql://localhost/linuxfabrik?createDatabaseIfNotExist=true&useEncoding=true&characterEncoding=UTF-8`

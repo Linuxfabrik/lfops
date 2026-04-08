@@ -10,6 +10,7 @@ When running the `icingadb:migration` tag, the role tries to prepare the configu
 Also have a look at https://icinga.com/docs/icinga-db-web/latest/doc/10-Migration/ for other migration steps.
 
 Notes on high availability / Icinga2 Master clusters:
+
 * Redis: "Each of the master nodes must have the Icinga DB feature enabled and have their own dedicated Redis server set up for it."
 * SQL database: "Icinga DB instances must write to the same database, which of course can be replicated or a cluster."
 * Environment ID: Make sure that `/var/lib/icinga2/icingadb.env` is the same on all master nodes.

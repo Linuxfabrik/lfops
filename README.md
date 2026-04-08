@@ -31,19 +31,26 @@ LFOps is a comprehensive Ansible Collection providing 145+ playbooks and 160+ ro
 
 * [Requirements](#requirements)
 * [Installation](#installation)
+
     * [Using ansible-galaxy](#using-ansible-galaxy)
     * [Development Setup](#development-setup)
+
 * [Mitogen](#mitogen)
+
     * [Mitogen with ansible-playbook](#mitogen-with-ansible-playbook)
     * [Mitogen with ansible-navigator](#mitogen-with-ansible-navigator)
     * [Mitogen Compatibility](#mitogen-compatibility)
+
 * [Using ansible-navigator](#using-ansible-navigator)
 * [Usage](#usage)
+
     * [Running a Playbook](#running-a-playbook)
     * [Typical Workflow Example](#typical-workflow-example)
     * [The "all" Playbook](#the-all-playbook)
     * [Skipping Roles in a Playbook](#skipping-roles-in-a-playbook)
+
 * [Configuration](#configuration)
+
     * [Recommended ansible.cfg](#recommended-ansiblecfg)
     * [LFOps-wide Variables](#lfops-wide-variables)
     * [Bitwarden Integration](#bitwarden-integration)

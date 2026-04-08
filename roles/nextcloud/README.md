@@ -1,6 +1,7 @@
 # Ansible Role linuxfabrik.lfops.nextcloud
 
 This role installs Nextcloud including the tools needed by the most popular business plugins and [notify_push](https://github.com/nextcloud/notify_push). By default, the latest available version is installed. You can choose wether to use
+
 * local block storage (default)
 * S3 object storage backend (by providing `nextcloud__storage_backend_s3`)
 * Swift object storage backend (by providing `nextcloud__storage_backend_swift`)

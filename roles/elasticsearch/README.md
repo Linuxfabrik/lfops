@@ -72,6 +72,7 @@ Note that a fully unattended cluster setup is not possible with Elasticsearch. T
 The following steps are marked as **manual** or **automated** accordingly.
 
 All cluster nodes must:
+
 * Have the same `elasticsearch__cluster_name__*_var` configured
 * Be able to communicate with each other (configure `elasticsearch__network_host` to be accessible from other nodes, e.g., `0.0.0.0` or a specific IP)
 * Have `elasticsearch__discovery_seed_hosts` set to the list of all cluster nodes from the start

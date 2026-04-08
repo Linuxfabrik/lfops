@@ -489,6 +489,7 @@ Types of vHosts:
 
 * **app**: A hardened vHost running an application like Nextcloud, Wordpress etc. with the most common options. Can be extended by using the `raw` variable.
 * **localhost**: A hardened, pre-defined VirtualHost just listening on https://localhost, and only accessible from localhost. Due to its naming, it is the first defined vHost. Can be extended by using the `raw` variable. The following URLs are pre-configured and only accessible from localhost:
+
     * `/fpm-ping` - PHP-FPM health check
     * `/fpm-status` - PHP-FPM status page
     * `/monitoring.php` - Linuxfabrik monitoring endpoint
@@ -533,8 +534,11 @@ This role creates a vHost named `localhost` by default. See [defaults/main.yml](
 
 * Restrict allowed [HTTP methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods). Only the explicitly listed ones are allowed; all others return [405 Method Not Allowed](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes). This does not disable TRACE. Always enable GET and OPTIONS at least. For an OPTIONS request, Apache always returns `Allow: GET,POST,OPTIONS,HEAD`, no matter what. We are NOT using [LimitExcept](https://httpd.apache.org/docs/2.4/mod/core.html#limitexcept), because this directive is not allowed in a VirtualHost context. Use `skip_allowed_http_methods` to allow all HTTP methods.
 * Available HTTP methods:
+
     * CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT
+
 * Available WebDAV methods:
+
     * COPY, LOCK, MKCOL, MOVE, PROPFIND, PROPPATCH, UNLOCK
 * Type: List.
 * Default: app/localhost/proxy `['GET', 'OPTIONS']`

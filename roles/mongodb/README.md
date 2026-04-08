@@ -110,6 +110,7 @@ mongodb__repl_set_skip_init: false
 Important: When setting up a replica set across members, make sure that there is no data being written on any member until all members have joined the replica set. Else you need to [manually prepare the data files](https://www.mongodb.com/docs/manual/tutorial/expand-replica-set/#data-files) on the to-be-added secondary before joining.
 
 To setup a replica set from scratch:
+
 * Choose a name via the `mongodb__conf_replication_repl_set_name__*_var` (needs to be the same for all members).
 * Make sure that the cluster members can reach each other by setting `mongodb__conf_net_bind_ip` accordingly.
 * For production use, also make sure that `mongodb__conf_security_authorization` is enabled and `mongodb__keyfile_content` is set for all members.

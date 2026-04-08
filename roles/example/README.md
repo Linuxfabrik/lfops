@@ -92,6 +92,7 @@ example__version: '3.2.1'
 * Type: List of dictionaries.
 * Default: `[]`
 * Subkeys:
+
     * `name`: Mandatory, string. Username.
     * `comment`: Optional, string. User description.
     * `group`: Optional, string. Primary group.

@@ -5,10 +5,12 @@ This role installs and configures OpenSearch, either as a single-node instance o
 Note that this role does NOT let you specify a particular OpenSearch version. It simply installs the latest available OpenSearch version from the repos configured in the system. If you want or need to install a specific version, use the `opensearch__version__host_var` / `opensearch__version__group_var` variables.
 
 Supported versions:
+
 * 1.x
 * 2.x
 
 Hints for configuring TLS:
+
 * The admin certificate must not be the same as a node certificate. Using the same certificate results in: `Seems you use a node certificate. This is not permitted, you have to use a client certificate and register it as admin_dn in opensearch.yml`
 * Node certificates must either have `extendedKeyUsage = serverAuth, clientAuth` (`TLS Web Server Authentication`, `TLS Web Client Authentication`, respectively) set, or no `Extended Key Usage` at all. Otherwise `securityadmin.sh` fails with: `ERR: An unexpected SSLHandshakeException occured: Received fatal alert: certificate_unknown`
 
@@ -86,6 +88,7 @@ curl 'https://localhost:9200' --user admin:your-password --insecure
 This role supports creating a multi-node OpenSearch cluster using manual certificate distribution. TLS certificates are generated beforehand and distributed to all nodes via Ansible. The security plugin is configured with the certificate distinguished names of all cluster members.
 
 All cluster nodes must:
+
 * Have the same `opensearch__cluster_name__*_var` configured
 * Be able to communicate with each other (configure `opensearch__network_host` accordingly, e.g., `0.0.0.0` or a specific IP)
 * Have `opensearch__discovery_seed_hosts` set to the list of all cluster nodes from the start

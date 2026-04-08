@@ -73,6 +73,7 @@ EOF
 ```
 
 Copy the generated certificates to the Ansible inventory. The certificates are used for:
+
 * `elastic_agent_fleet_server__elasticsearch_ca` - The CA certificate (same as Elasticsearch CA)
 * `elastic_agent_fleet_server__ssl_cert` - The Fleet Server certificate
 * `elastic_agent_fleet_server__ssl_key` - The Fleet Server private key
