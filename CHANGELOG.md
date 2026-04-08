@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:keycloak**: Fix MariaDB database encoding defaulting to deprecated `utf8` (`utf8mb3`) instead of `utf8mb4`, causing warnings in Keycloak 26.6.0+
 * **ci**: Fix pip installs by replacing `--require-hashes` with pinned versions to allow Dependabot updates
 * **role:mount**: Fix `when` condition for NFS/CIFS client package installation failing with multiple mounts and when `state` key is undefined
 

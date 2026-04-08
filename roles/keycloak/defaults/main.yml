@@ -25,8 +25,8 @@ keycloak__state: 'started'
 
 keycloak__mariadb_server__databases__dependent_var:
   - name: '{{ keycloak__db_url_database }}'
-    collation: 'utf8_general_ci'
-    encoding: 'utf8'
+    collation: 'utf8mb4_unicode_ci'
+    encoding: 'utf8mb4'
     state: 'present'
 
 keycloak__mariadb_server__users__dependent_var:
