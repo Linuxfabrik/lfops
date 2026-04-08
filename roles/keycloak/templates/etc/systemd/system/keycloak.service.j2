@@ -10,13 +10,13 @@ User=keycloak
 Group=keycloak
 EnvironmentFile=/etc/sysconfig/keycloak
 {% if keycloak__mode == 'production' %}
-{% if keycloak__version is version('26.6.0', '<') %}
+{% if keycloak__version is ansible.builtin.version('26.6.0', '<') %}
 ExecStart=/opt/keycloak/bin/kc.sh start -Dquarkus.transaction-manager.default-transaction-timeout=3600
 {% else %}
 ExecStart=/opt/keycloak/bin/kc.sh start
 {% endif %}
 {% else %}
-{% if keycloak__version is version('26.6.0', '<') %}
+{% if keycloak__version is ansible.builtin.version('26.6.0', '<') %}
 ExecStart=/opt/keycloak/bin/kc.sh start-dev -Dquarkus.transaction-manager.default-transaction-timeout=3600
 {% else %}
 ExecStart=/opt/keycloak/bin/kc.sh start-dev

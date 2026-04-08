@@ -75,7 +75,7 @@ hostname-backchannel-dynamic={{ keycloak__hostname_backchannel_dynamic | string 
 log={{ keycloak__log }}
 log-file={{ keycloak__log_file }}
 
-{% if keycloak__version is version('26.6.0', '>=') %}
+{% if keycloak__version is ansible.builtin.version('26.6.0', '>=') %}
 # Transaction
 transaction-default-timeout=60m
 transaction-setup-timeout=60m
