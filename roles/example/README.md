@@ -12,6 +12,11 @@ This role also serves as a reference for consistent role development across LFOp
 If you use the [Example Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/example.yml), this is automatically done for you.
 
 
+## Optional Requirements
+
+* Install the optional dependency. This can be done using the [linuxfabrik.lfops.optional_dependency](https://github.com/Linuxfabrik/lfops/tree/main/roles/optional_dependency) role.
+
+
 ## Tags
 
 `example`
@@ -93,12 +98,36 @@ example__version: '3.2.1'
 * Default: `[]`
 * Subkeys:
 
-    * `name`: Mandatory, string. Username.
-    * `comment`: Optional, string. User description.
-    * `group`: Optional, string. Primary group.
-    * `home`: Optional, string. Home directory.
-    * `shell`: Optional, string. Login shell.
-    * `state`: Optional, string. `present` or `absent`. Defaults to `'present'`.
+    * `name`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `comment`:
+
+        * Optional. User description.
+        * Type: String.
+
+    * `group`:
+
+        * Optional. Primary group.
+        * Type: String.
+
+    * `home`:
+
+        * Optional. Home directory.
+        * Type: String.
+
+    * `shell`:
+
+        * Optional. Login shell.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
 
 Example:
 ```yaml

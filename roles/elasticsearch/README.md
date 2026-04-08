@@ -221,7 +221,7 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 
 * Automatic index creation allows any index to be created automatically.
 * For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
-* Type: Boolean.
+* Type: Bool.
 * Default: `true`
 
 `elasticsearch__ca_cert`
@@ -342,7 +342,7 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 `elasticsearch__service_enabled`
 
 * Enables or disables the Elasticsearch service, analogous to `systemctl enable/disable --now`.
-* Type: Boolean.
+* Type: Bool.
 * Default: `true`
 
 `elasticsearch__service_state`

@@ -32,7 +32,7 @@ This role is only compatible with the following MongoDB versions:
 | -------- | ----------- | ------------- |
 | `mongodb__admin_user` | The main user account for the database administrator. This is required when authorization is enabled by `mongodb__conf_security_authorization`. To create additional ones, use the `mongodb__users__*_var` variables. Subkeys:<ul><li>`username`: Username</li><li>`password`: Password</li></ul> | unset |
 | `mongodb__conf_security_authorization` | [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-security.authorization) | `false` |
-| `mongodb__dump_user` | The MongoDB user for dumping the database when Role-Based Access Control is enabled (`mongodb__conf_security_authorization`). Subkeys: <br> * `auth_database`: Optional, string. Database to authenticate against. Defaults to `'admin'`. <br> * `username`: Required, string. <br> * `password`: Required, string. | unset |
+| `mongodb__dump_user` | The MongoDB user for dumping the database when Role-Based Access Control is enabled (`mongodb__conf_security_authorization`). Subkeys: <br> * `auth_database`: Optional, string. Database to authenticate against. Defaults to `'admin'`. <br> * `username`: Mandatory, string. <br> * `password`: Mandatory, string. | unset |
 
 ```yaml
 # recommended

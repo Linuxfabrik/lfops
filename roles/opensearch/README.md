@@ -253,7 +253,7 @@ Only optional if `opensearch__plugins_security_disabled` is `true`.
 
 * Automatic index creation allows any index to be created automatically.
 * For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
-* Type: Boolean.
+* Type: Bool.
 * Default: `true`
 
 `opensearch__cluster_name__host_var` / `opensearch__cluster_name__group_var`
@@ -273,12 +273,12 @@ Subkeys:
 
 > `username`
 >
-> * Required. Username.
+> * Mandatory. Username.
 > * Type: String.
 >
 > `password`
 >
-> * Required. Password.
+> * Mandatory. Password.
 > * Type: String.
 >
 > `backend_roles`
@@ -327,7 +327,7 @@ Subkeys:
 `opensearch__plugins_security_allow_unsafe_democertificates`
 
 * When set to true, OpenSearch starts up with demo certificates. These certificates are issued only for demo purposes. See [security settings](https://opensearch.org/docs/latest/install-and-configure/configuring-opensearch/security-settings/#advanced-settings).
-* Type: Boolean.
+* Type: Bool.
 * Default: `false`
 
 `opensearch__plugins_security_authcz_admin_dns`
@@ -339,7 +339,7 @@ Subkeys:
 `opensearch__plugins_security_disabled`
 
 * Enables or disables the OpenSearch [security plugin](https://opensearch.org/docs/1.3/security-plugin/index/), which offers encryption, authentication, access control as well as audit logging and compliance.
-* Type: Boolean.
+* Type: Bool.
 * Default: `false`
 
 `opensearch__plugins_security_http_certificate`
@@ -375,19 +375,19 @@ Subkeys:
 `opensearch__plugins_security_transport_enforce_hostname_verification`
 
 * See [hostname verification](https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup).
-* Type: Boolean.
+* Type: Bool.
 * Default: `false`
 
 `opensearch__plugins_security_transport_resolve_hostname`
 
 * See [hostname verification](https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup).
-* Type: Boolean.
+* Type: Bool.
 * Default: `true`
 
 `opensearch__service_enabled`
 
 * Enables or disables the OpenSearch service, analogous to `systemctl enable/disable --now`.
-* Type: Boolean.
+* Type: Bool.
 * Default: `true`
 
 `opensearch__version__host_var` / `opensearch__version__group_var`
@@ -509,12 +509,12 @@ Subkeys:
 
 > `cn`
 >
-> * Required. Common name of the node certificate.
+> * Mandatory. Common name of the node certificate.
 > * Type: String.
 >
 > `ip`
 >
-> * Required. IP address of the node.
+> * Mandatory. IP address of the node.
 > * Type: String.
 
 Example:

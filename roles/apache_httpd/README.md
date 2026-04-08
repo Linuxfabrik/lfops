@@ -298,28 +298,28 @@ apache_httpd__conf_trace_enable: 'Off'
 * Type: List of dictionaries.
 * Default: See [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml)
 
-Subkeys:
+* Subkeys:
 
-> `enabled`
->
-> * Creates a symlink to conf-available/filename.conf in conf-enabled (true), otherwise the link is removed (false).
-> * Type: Boolean.
-> * Default: `true`
->
-> `filename`
->
-> * Required. Destination filename in conf-available/, normally equal to the name of the source template used. Suffixed with `.conf`.
-> * Type: String.
->
-> `state`
->
-> * conf-available/filename.conf is created (`present`), otherwise file is removed (`absent`).
-> * Type: String.
->
-> `template`
->
-> * Required. Name of the Jinja template source file to use.
-> * Type: String.
+    * `enabled`:
+
+        * Optional. Creates a symlink to conf-available/filename.conf in conf-enabled (true), otherwise the link is removed (false).
+        * Type: Bool.
+        * Default: `true`
+
+    * `filename`:
+
+        * Mandatory. Destination filename in conf-available/, normally equal to the name of the source template used. Suffixed with `.conf`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. conf-available/filename.conf is created (`present`), otherwise file is removed (`absent`).
+        * Type: String.
+
+    * `template`:
+
+        * Mandatory. Name of the Jinja template source file to use.
+        * Type: String.
 
 `apache_httpd__htpasswd__group_var` / `apache_httpd__htpasswd__host_var`
 
@@ -327,29 +327,29 @@ Subkeys:
 * Type: List of dictionaries.
 * Default: `[]`
 
-Subkeys:
+* Subkeys:
 
-> `password`
->
-> * Required. Password.
-> * Type: String.
->
-> `path`
->
-> * Path to the htpasswd file.
-> * Type: String.
-> * Default: `'/etc/httpd/.htpasswd'`
->
-> `state`
->
-> * Either `present` or `absent`.
-> * Type: String.
-> * Default: `'present'`
->
-> `username`
->
-> * Required. Username.
-> * Type: String.
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `path`:
+
+        * Optional. Path to the htpasswd file.
+        * Type: String.
+        * Default: `'/etc/httpd/.htpasswd'`
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
 
 `apache_httpd__limit_vhosts`
 
@@ -363,28 +363,28 @@ Subkeys:
 * Type: List of dictionaries.
 * Default: See [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml)
 
-Subkeys:
+* Subkeys:
 
-> `enabled`
->
-> * Creates a symlink to mods-available/filename.mods in mods-enabled (true), otherwise the link is removed (false).
-> * Type: Boolean.
-> * Default: `true`
->
-> `filename`
->
-> * Required. Destination filename in mods-available/, normally equal to the name of the source template used. Suffixed with `.conf`.
-> * Type: String.
->
-> `state`
->
-> * mods-available/filename.conf is created (`present`), otherwise file is removed (`absent`).
-> * Type: String.
->
-> `template`
->
-> * Name of the Ansible Jinja template source file to use. If omitted, `filename` is used.
-> * Type: String.
+    * `enabled`:
+
+        * Optional. Creates a symlink to mods-available/filename.mods in mods-enabled (true), otherwise the link is removed (false).
+        * Type: Bool.
+        * Default: `true`
+
+    * `filename`:
+
+        * Mandatory. Destination filename in mods-available/, normally equal to the name of the source template used. Suffixed with `.conf`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. mods-available/filename.conf is created (`present`), otherwise file is removed (`absent`).
+        * Type: String.
+
+    * `template`:
+
+        * Optional. Name of the Ansible Jinja template source file to use. If omitted, `filename` is used.
+        * Type: String.
 
 `apache_httpd__packages__group_var` / `apache_httpd__packages__host_var`
 
@@ -392,34 +392,34 @@ Subkeys:
 * Type: List of dictionaries.
 * Default: See [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml)
 
-Subkeys:
+* Subkeys:
 
-> `name`
->
-> * Required. The package name.
-> * Type: String.
->
-> `state`
->
-> * State of the package, one of `present`, `absent`.
-> * Type: String.
+    * `name`:
+
+        * Mandatory. The package name.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. State of the package, one of `present`, `absent`.
+        * Type: String.
 
 `apache_httpd__skip_document_root_chown`
 
 * Set to true to skip the `chown -R apache:apache` of the document root.
-* Type: Boolean.
+* Type: Bool.
 * Default: `false`
 
 `apache_httpd__skip_php_fpm`
 
 * Skip PHP-FPM configuration globally and in each vHost within Apache. When set to `false` (default), the role automatically injects PHP-FPM `ProxyPass` directives into app, localhost, and wordpress vHosts.
-* Type: Boolean.
+* Type: Bool.
 * Default: `false`
 
 `apache_httpd__systemd_enabled`
 
 * Whether the Apache webserver service should start on boot (true) or not (false).
-* Type: Boolean.
+* Type: Bool.
 * Default: `true`
 
 `apache_httpd__systemd_state`
@@ -463,13 +463,16 @@ apache_httpd__systemd_state: 'started'
 
 ## Mandatory Role Variables - vHosts
 
-`apache_httpd__vhosts__group_var` / `apache_httpd__vhosts__host_var`:
+`apache_httpd__vhosts__group_var` / `apache_httpd__vhosts__host_var`
 
-`conf_server_name`
+* vHost definitions for Apache. See the "Optional Role Variables - vHosts" section below for all available subkeys.
+* Type: List of dictionaries.
+* Subkeys:
 
-* Set this variable for each vHost definition. Although this is just best practice, we would never use a vHost without a ServerName.
-* Type: String.
+    * `conf_server_name`:
 
+        * Mandatory. Set this variable for each vHost definition. Although this is just best practice, we would never use a vHost without a ServerName.
+        * Type: String.
 
 Example:
 ```yaml
@@ -513,13 +516,13 @@ This role creates a vHost named `localhost` by default. See [defaults/main.yml](
 `allow_accessing_dotfiles`
 
 * app-vHosts block access to files that begin with a period. With this setting you can disable this behavior.
-* Type: Boolean.
+* Type: Bool.
 * Default: `false`
 
 `allow_requests_without_hostname`
 
 * app-vHosts forbid accessing them without a hostname / just by IP. With this setting you can disable this behavior.
-* Type: Boolean.
+* Type: Bool.
 * Default: `false`
 
 `allowed_file_extensions`
@@ -662,7 +665,7 @@ This role creates a vHost named `localhost` by default. See [defaults/main.yml](
 `enabled`
 
 * Enable this vHost.
-* Type: Boolean.
+* Type: Bool.
 * Default: `true`
 
 `filename`
@@ -686,13 +689,13 @@ This role creates a vHost named `localhost` by default. See [defaults/main.yml](
 `skip_allowed_file_extensions`
 
 * Skips checking file extensions in app- and localhost-vHosts, allowing essentially all file extensions.
-* Type: Boolean.
+* Type: Bool.
 * Default: `false`
 
 `skip_allowed_http_methods`
 
 * Skips checking the HTTP methods in app-, localhost-, proxy-, wordpress-vHosts, allowing essentially all HTTP methods.
-* Type: Boolean.
+* Type: Bool.
 * Default: `false`
 
 `state`
@@ -773,7 +776,7 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 `apache_httpd__skip_mod_security_coreruleset`
 
 * Skip the installation of the OWASP ModSecurity Core Rule Set (CRS).
-* Type: Boolean.
+* Type: Bool.
 * Default: `true`
 
 Example:
