@@ -1,18 +1,16 @@
 # Ansible Role linuxfabrik.lfops.opensearch
 
-This role installs and configures a OpenSearch server. Optionally, it allows the creation of a cluster setup.
+This role installs and configures OpenSearch, either as a single-node instance or as a multi-node cluster.
 
-TODO:
-* This role needs to be adapted to the latest https://opensearch.org/docs/latest/install-and-configure/install-opensearch/rpm/ and https://opensearch.org/docs/latest/install-and-configure/install-opensearch/debian/ documents.
-* Currently this role does not follow the configuration hints on https://opensearch.org/docs/latest/install-and-configure/install-opensearch/index/.
+Note that this role does NOT let you specify a particular OpenSearch version. It simply installs the latest available OpenSearch version from the repos configured in the system. If you want or need to install a specific version, use the `opensearch__version__host_var` / `opensearch__version__group_var` variables.
 
-Hints for configuring TLS:
-* The admin certificate cannot be the same as the node certificate. This will lead to the following error: `Seems you use a node certificate. This is not permitted, you have to use a client certificate and register it as admin_dn in opensearch.yml`
-* The node certificates either need to have `extendedKeyUsage = serverAuth, clientAuth` (`TLS Web Server Authentication`, `TLS Web Client Authentication`, respectively) set, or no `Extended Key Usage` at all. Else running `securityadmin.sh` results in `ERR: An unexpected SSLHandshakeException occured: Received fatal alert: certificate_unknown`.
-
-Currently supported versions:
+Supported versions:
 * 1.x
 * 2.x
+
+Hints for configuring TLS:
+* The admin certificate must not be the same as a node certificate. Using the same certificate results in: `Seems you use a node certificate. This is not permitted, you have to use a client certificate and register it as admin_dn in opensearch.yml`
+* Node certificates must either have `extendedKeyUsage = serverAuth, clientAuth` (`TLS Web Server Authentication`, `TLS Web Client Authentication`, respectively) set, or no `Extended Key Usage` at all. Otherwise `securityadmin.sh` fails with: `ERR: An unexpected SSLHandshakeException occured: Received fatal alert: certificate_unknown`
 
 
 ## Mandatory Requirements
@@ -22,20 +20,50 @@ Currently supported versions:
 If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/opensearch.yml), this is automatically done for you.
 
 
+## Single-Node Setup
+
+For a single-node setup, no special configuration is needed beyond the mandatory variables. When `opensearch__discovery_seed_hosts` is not set, OpenSearch 2.x automatically runs in single-node mode (`discovery.type: single-node`). After installation, verify that OpenSearch is running (see Post-Installation Steps below).
+
+
 ## Tags
 
-| Tag             | What it does                            | Reload / Restart |
-| ---             | ------------                            | ---------------- |
-| `opensearch`       | <ul><li>Install opensearch-`{{ opensearch__version__combined_var }}`</li><li>Deploy `/etc/opensearch/opensearch.yml`</li><li>Deploy `/etc/sysconfig/opensearch`</li><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> | Restarts opensearch.service |
-| `opensearch:state` | <ul><li>`systemctl {{ opensearch__service_enabled \| bool \| ternary("enable", "disable") }} --now opensearch.service`</li></ul> | - |
-| `opensearch:configure` | Deploys the config files and configures the security plugin | Restarts opensearch.service |
+`opensearch`
+
+* Installs OpenSearch.
+* Deploys all configuration files.
+* Deploys TLS certificates and runs `securityadmin.sh` (if security plugin is enabled).
+* Manages the state of the OpenSearch service.
+* Triggers: opensearch.service restart.
+
+`opensearch:configure`
+
+* Deploys `/etc/opensearch/opensearch.yml`.
+* Deploys `/etc/sysconfig/opensearch`.
+* Deploys internal users configuration (if security plugin is enabled).
+* Triggers: opensearch.service restart.
+
+`opensearch:generate_certs`
+
+* Generates self-signed TLS certificates on the Ansible controller using the SearchGuard TLS Tool.
+* Triggers: none.
+
+`opensearch:state`
+
+* Manages the state of the OpenSearch service (`systemctl enable/disable --now`).
+* Triggers: none.
+
+`opensearch:user`
+
+* Manages internal users (generates hashed passwords, deploys `internal_users.yml`).
+* Triggers: opensearch.service restart, `securityadmin.sh`.
 
 
 ## Mandatory Role Variables
 
-| Variable | Description |
-| -------- | ----------- |
-| `opensearch__opensearch_initial_admin_password` | Mandatory, string. For new installations of OpenSearch 2.12 and later, you must define a custom admin password in order to set up an OpenSearch instance. *Attention*: minimum 8 characters, must contain at least one uppercase letter, one lowercase letter, one digit, and one special character. |
+`opensearch__opensearch_initial_admin_password`
+
+* For new installations of OpenSearch 2.12 and later, a custom admin password is required. Minimum 8 characters, must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.
+* Type: String.
 
 Example:
 ```yaml
@@ -44,57 +72,327 @@ opensearch__opensearch_initial_admin_password: 'linuxfabrik'
 ```
 
 
-## TLS Certificate Generation
+## Post-Installation Steps
 
-Just a convenience feature to help the admin generate TLS certificates: Use the following variables to easily generate self-signed certificates before installing Opensearch. These tasks run against the ansible controller. Internally, the [SecureGuard TLS Tool](https://docs.search-guard.com/latest/offline-tls-tool) is used for this, with the generated config at `/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml`.
+After setting up a single node or cluster, verify that OpenSearch is running:
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `opensearch__generate_certs_admin_cn` | The common name of the admin certificate. | `'OpenSearch Admin'` |
-| `opensearch__generate_certs_base_dn` | The base distinguished name for all the self-signed certificates. | `'OU=Secure Services,O=ACME,ST=Zurich,C=CH'` |
-| `opensearch__generate_certs_ca_cn` | The common name of the CA certificate. | `'OpenSearch Self-signed RootCA'` |
-| `opensearch__generate_certs_nodes` | List of dictionaries for the node certificates. Subkeys: <ul><li>`cn`: Mandatory, string. Common name of the node certificate.</li><li>`ip`: Mandatory, string. IP address of the node.</li></ul> | `[]` |
+```bash
+curl 'https://localhost:9200' --user admin:your-password --insecure
+```
 
-Example:
+
+## Setting Up an OpenSearch Cluster
+
+This role supports creating a multi-node OpenSearch cluster using manual certificate distribution. TLS certificates are generated beforehand and distributed to all nodes via Ansible. The security plugin is configured with the certificate distinguished names of all cluster members.
+
+All cluster nodes must:
+* Have the same `opensearch__cluster_name__*_var` configured
+* Be able to communicate with each other (configure `opensearch__network_host` accordingly, e.g., `0.0.0.0` or a specific IP)
+* Have `opensearch__discovery_seed_hosts` set to the list of all cluster nodes from the start
+* Have matching TLS certificates (same CA, correct node DNs)
+
+
+### Generate TLS Certificates
+
+You have two options:
+
+**Option A: Use the built-in certificate generator (recommended for testing)**
+
+This role includes a convenience feature to generate self-signed certificates using the [SearchGuard TLS Tool](https://docs.search-guard.com/latest/offline-tls-tool). The certificates are generated on the Ansible controller.
+
+Configure the certificate generation variables:
 ```yaml
-# tls certificate generation
 opensearch__generate_certs_admin_cn: 'OpenSearch Admin'
 opensearch__generate_certs_base_dn: 'OU=Secure Services,O=ACME,ST=Zurich,C=CH'
 opensearch__generate_certs_ca_cn: 'OpenSearch Self-signed RootCA'
 opensearch__generate_certs_nodes:
   - cn: 'node1.example.com'
     ip: '192.0.2.10'
+  - cn: 'node2.example.com'
+    ip: '192.0.2.11'
+  - cn: 'node3.example.com'
+    ip: '192.0.2.12'
 ```
 
-Run: `ansible-playbook --inventory=myinv linuxfabrik.lfops.opensearch --tags=opensearch:generate_certs`
+Run the certificate generation:
+```bash
+ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch --tags opensearch:generate_certs
+```
+
+The generated certificates and the SearchGuard TLS Tool config are placed in `/tmp/opensearch-certs/`. Copy them to your Ansible inventory for deployment.
+
+**Option B: Provide your own certificates**
+
+Place your certificates in the inventory and reference them via the `opensearch__plugins_security_*` variables (see Optional Role Variables below).
+
+
+### Bootstrap the First Node
+
+Set the cluster variables in your inventory:
+
+```yaml
+# group_vars for the OpenSearch cluster group
+opensearch__cluster_name__group_var: 'my-cluster'
+opensearch__discovery_seed_hosts:
+  - 'node1.example.com'
+  - 'node2.example.com'
+  - 'node3.example.com'
+opensearch__network_host: '0.0.0.0'
+opensearch__plugins_security_authcz_admin_dns:
+  - 'CN=OpenSearch Admin,OU=Secure Services,O=ACME,ST=Zurich,C=CH'
+opensearch__plugins_security_nodes_dns:
+  - 'CN=node1.example.com,OU=Secure Services,O=ACME,ST=Zurich,C=CH'
+  - 'CN=node2.example.com,OU=Secure Services,O=ACME,ST=Zurich,C=CH'
+  - 'CN=node3.example.com,OU=Secure Services,O=ACME,ST=Zurich,C=CH'
+# TLS certificates (example using file lookups)
+opensearch__plugins_security_root_ca: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/root-ca.pem")
+  }}'
+opensearch__plugins_security_admin_certificate: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/admin.pem")
+  }}'
+opensearch__plugins_security_admin_certificate_key: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/admin.key")
+  }}'
+opensearch__plugins_security_http_certificate: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_http.pem")
+  }}'
+opensearch__plugins_security_http_certificate_key: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_http.key")
+  }}'
+opensearch__plugins_security_transport_certificate: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_transport.pem")
+  }}'
+opensearch__plugins_security_transport_certificate_key: '{{ lookup("ansible.builtin.file",
+    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_transport.key")
+  }}'
+```
+
+Deploy the first node with `opensearch__cluster_initial_cluster_manager_nodes`:
+
+```bash
+ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch \
+  --limit node1.example.com \
+  --extra-vars='{"opensearch__cluster_initial_cluster_manager_nodes": ["node1.example.com"]}'
+```
+
+**Important:** Only include the first node in `opensearch__cluster_initial_cluster_manager_nodes`. Including nodes that do not exist yet causes the first node to wait indefinitely and the cluster will not form.
+
+
+### Verify Cluster State
+
+```bash
+curl 'https://node1.example.com:9200/_cluster/health?pretty' --user admin:your-password --insecure
+curl 'https://node1.example.com:9200/_cat/nodes?v' --user admin:your-password --insecure
+```
+
+
+### Deploy Additional Nodes
+
+Deploy remaining nodes without `opensearch__cluster_initial_cluster_manager_nodes`:
+
+```bash
+ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch \
+  --limit node2.example.com,node3.example.com
+```
+
+The nodes will automatically join the existing cluster using `opensearch__discovery_seed_hosts`.
+
+
+### Clear Initial Cluster Manager Nodes Configuration
+
+After all nodes have joined, remove the `cluster.initial_cluster_manager_nodes` setting from the first node:
+
+```bash
+ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch \
+  --limit node1.example.com \
+  --tags opensearch:configure
+```
+
+This prevents issues when the first node is restarted later.
+
+
+### Verify Complete Cluster
+
+Verify all nodes have joined the cluster:
+```bash
+curl 'https://node1.example.com:9200/_cluster/health?pretty' --user admin:your-password --insecure
+curl 'https://node1.example.com:9200/_cat/nodes?v' --user admin:your-password --insecure
+```
+The status should be `green` with all nodes listed.
+
+
+## Adding a New Node to an Existing Cluster
+
+1. Generate certificates for the new node using the same CA as the existing cluster.
+2. Add the certificate files to your Ansible inventory.
+3. Add the new node's DN to `opensearch__plugins_security_nodes_dns` in group_vars.
+4. Add the new node to `opensearch__discovery_seed_hosts` in group_vars.
+5. Create host_vars for the new node with a unique `opensearch__node_name`.
+6. Deploy the new node:
+
+```bash
+ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch --limit new-node.example.com
+```
+
+7. Roll out the updated `opensearch__discovery_seed_hosts` and `opensearch__plugins_security_nodes_dns` to all cluster nodes:
+
+```bash
+ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch --tags opensearch:configure
+```
 
 
 ## Optional Role Variables - General
 
 Only optional if `opensearch__plugins_security_disabled` is `true`.
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `opensearch__action_auto_create_index__host_var` / <br> `opensearch__action_auto_create_index__group_var` | Automatic index creation allows any index to be created automatically.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `true` |
-| `opensearch__cluster_name__host_var` / <br> `opensearch__cluster_name__group_var` | A descriptive name for your cluster.  <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | `'my-application'` |
-| `opensearch__internal_users__host_var` / <br> `opensearch__internal_users__group_var` | List of dictionaries. Internal users that can access OpenSearch via HTTP Basic Auth. Subkeys: <ul><li>`username`: Mandatory, string. Username.</li><li>`password`: Mandatory, string. Password.</li><li>`backend_roles`: Optional, list. Defaults to `[]`.</li><li>`state`: Optional, string. State of the user. Either `present` or `absent`.</li></ul> |
-| `opensearch__network_host` | Set the bind address to a specific IP. | `'127.0.0.1'` |
-| `opensearch__node_name` | A descriptive name for the node | `'{{ ansible_facts["nodename"] }}'` |
-| `opensearch__path_data__host_var` / <br> `opensearch__path_data__group_var` | Path to directory where to store the data. Directory will be created. | `'/var/lib/opensearch'` |
-| `opensearch__plugins_security_admin_certificate` | The ASCII-armored public PEM admin certificate. | unset |
-| `opensearch__plugins_security_admin_certificate_key` | The ASCII-armored private PEM admin key. | unset |
-| `opensearch__plugins_security_allow_unsafe_democertificates` | When set to true, OpenSearch starts up with demo certificates. These certificates are issued only for demo purposes. See https://opensearch.org/docs/latest/install-and-configure/configuring-opensearch/security-settings/#advanced-settings | `false` |
-| `opensearch__plugins_security_authcz_admin_dns` | List of distinguished names of certificates that should have admin permissions. | `[]` |
-| `opensearch__plugins_security_disabled` | Enables or disables the opensearch [security plugin](https://opensearch.org/docs/1.3/security-plugin/index/), which offers encryption, authentication, access control as well as audit logging and compliance. | `false` |
-| `opensearch__plugins_security_http_certificate` | The ASCII-armored public PEM http certificate. | unset |
-| `opensearch__plugins_security_http_certificate_key` | The ASCII-armored private PEM http key. | unset |
-| `opensearch__plugins_security_root_ca` | The ASCII-armored public PEM root CA certificate. | unset |
-| `opensearch__plugins_security_transport_certificate` | The ASCII-armored public PEM transport certificate. | unset |
-| `opensearch__plugins_security_transport_certificate_key` | The ASCII-armored private PEM transport key. | unset |
-| `opensearch__plugins_security_transport_enforce_hostname_verification` | See https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup | `false` |
-| `opensearch__plugins_security_transport_resolve_hostname` | See https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup | `true` |
-| `opensearch__service_enabled` | Enables or disables the opensearch service, analogous to `systemctl enable/disable --now`. | `true` |
-| `opensearch__version__host_var` / <br> `opensearch__version__group_var` | The version of OpenSearch which should be installed. If unset, latest will be installed. Note that this is OS-dependent. <br>For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). | unset |
+`opensearch__action_auto_create_index__host_var` / `opensearch__action_auto_create_index__group_var`
+
+* Automatic index creation allows any index to be created automatically.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: Boolean.
+* Default: `true`
+
+`opensearch__cluster_name__host_var` / `opensearch__cluster_name__group_var`
+
+* A descriptive name for your cluster.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: String.
+* Default: `'my-application'`
+
+`opensearch__internal_users__host_var` / `opensearch__internal_users__group_var`
+
+* Internal users that can access OpenSearch via HTTP Basic Auth.
+* Type: List of dictionaries.
+* Default: `[]`
+
+Subkeys:
+
+> `username`
+>
+> * Required. Username.
+> * Type: String.
+>
+> `password`
+>
+> * Required. Password.
+> * Type: String.
+>
+> `backend_roles`
+>
+> * Backend roles.
+> * Type: List of strings.
+> * Default: `[]`
+>
+> `state`
+>
+> * State of the user. Either `present` or `absent`.
+> * Type: String.
+> * Default: `'present'`
+
+`opensearch__network_host`
+
+* Set the bind address to a specific IP.
+* Type: String.
+* Default: `'127.0.0.1'`
+
+`opensearch__node_name`
+
+* A descriptive name for the node.
+* Type: String.
+* Default: `'{{ ansible_facts["nodename"] }}'`
+
+`opensearch__path_data__host_var` / `opensearch__path_data__group_var`
+
+* Path to directory where to store the data. Directory will be created.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: String.
+* Default: `'/var/lib/opensearch'`
+
+`opensearch__plugins_security_admin_certificate`
+
+* The ASCII-armored public PEM admin certificate.
+* Type: String.
+* Default: unset
+
+`opensearch__plugins_security_admin_certificate_key`
+
+* The ASCII-armored private PEM admin key.
+* Type: String.
+* Default: unset
+
+`opensearch__plugins_security_allow_unsafe_democertificates`
+
+* When set to true, OpenSearch starts up with demo certificates. These certificates are issued only for demo purposes. See [security settings](https://opensearch.org/docs/latest/install-and-configure/configuring-opensearch/security-settings/#advanced-settings).
+* Type: Boolean.
+* Default: `false`
+
+`opensearch__plugins_security_authcz_admin_dns`
+
+* List of distinguished names of certificates that should have admin permissions.
+* Type: List of strings.
+* Default: `[]`
+
+`opensearch__plugins_security_disabled`
+
+* Enables or disables the OpenSearch [security plugin](https://opensearch.org/docs/1.3/security-plugin/index/), which offers encryption, authentication, access control as well as audit logging and compliance.
+* Type: Boolean.
+* Default: `false`
+
+`opensearch__plugins_security_http_certificate`
+
+* The ASCII-armored public PEM HTTP certificate.
+* Type: String.
+* Default: unset
+
+`opensearch__plugins_security_http_certificate_key`
+
+* The ASCII-armored private PEM HTTP key.
+* Type: String.
+* Default: unset
+
+`opensearch__plugins_security_root_ca`
+
+* The ASCII-armored public PEM root CA certificate.
+* Type: String.
+* Default: unset
+
+`opensearch__plugins_security_transport_certificate`
+
+* The ASCII-armored public PEM transport certificate.
+* Type: String.
+* Default: unset
+
+`opensearch__plugins_security_transport_certificate_key`
+
+* The ASCII-armored private PEM transport key.
+* Type: String.
+* Default: unset
+
+`opensearch__plugins_security_transport_enforce_hostname_verification`
+
+* See [hostname verification](https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup).
+* Type: Boolean.
+* Default: `false`
+
+`opensearch__plugins_security_transport_resolve_hostname`
+
+* See [hostname verification](https://opensearch.org/docs/latest/security/configuration/tls/#advanced-hostname-verification-and-dns-lookup).
+* Type: Boolean.
+* Default: `true`
+
+`opensearch__service_enabled`
+
+* Enables or disables the OpenSearch service, analogous to `systemctl enable/disable --now`.
+* Type: Boolean.
+* Default: `true`
+
+`opensearch__version__host_var` / `opensearch__version__group_var`
+
+* The version of OpenSearch to install. If unset, the latest version will be installed. Note that the version format is OS-dependent: use `-2.15.0` on RHEL and `=2.15.0*` on Debian.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: String.
+* Default: unset
 
 Example:
 ```yaml
@@ -117,7 +415,7 @@ opensearch__plugins_security_admin_certificate_key: '{{ lookup("ansible.builtin.
   }}'
 opensearch__plugins_security_allow_unsafe_democertificates: false
 opensearch__plugins_security_authcz_admin_dns:
-  - 'CN=A,OU=UNIT,O=ORG,L=TORONTO,ST=ONTARIO,C=CA'
+  - 'CN=OpenSearch Admin,OU=Secure Services,O=ACME,ST=Zurich,C=CH'
 opensearch__plugins_security_disabled: false
 opensearch__plugins_security_http_certificate: '{{ lookup("ansible.builtin.file",
     "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_http.pem")
@@ -141,37 +439,94 @@ opensearch__version__host_var: '-2.15.0' # rhel
 opensearch__version__host_var: '=2.15.0*' # debian
 ```
 
+
 ## Optional Role Variables - Cluster Configuration
 
-Use the following variables if you want to setup a OpenSearch cluster. Make sure that the cluster members can reach each other by setting `opensearch__network_host` accordingly.
+`opensearch__cluster_initial_cluster_manager_nodes`
 
-You can check the status of the cluster with the following commands:
-```bash
-curl 'https://localhost:9200/_cluster/health?pretty' --user opensearch-admin:linuxfabrik --insecure
-curl 'https://localhost:9200/_cat/nodes?v' --user opensearch-admin:linuxfabrik --insecure
-```
+* A list of initial master-eligible nodes. The entries have to match the `opensearch__node_name`. Only use this during initial cluster bootstrap via `--extra-vars`. Never set this permanently in inventory. After the first successful cluster start, all subsequent runs should omit this variable.
+* Type: List of strings.
+* Default: unset
 
-| Variable | Description | Default Value |
-| -------- | ----------- | ------------- |
-| `opensearch__cluster_initial_cluster_manager_nodes` | A list of initial master-eligible nodes. The entries have to match the `opensearch__node_name`. You need to set this once when bootstrapping the cluster (aka the first start of the cluster). Make sure to remove this option after the first start, the nodes should not restart with this option active. Most of the time contains the same value as `opensearch__discovery_seed_hosts`. | unset |
-| `opensearch__discovery_seed_hosts` | A list of IPs or hostnames that point to other master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten by appending it to the hostname. | unset |
-| `opensearch__plugins_security_nodes_dns` | List of distinguished names of the other cluster members. | `[]` |
+`opensearch__discovery_seed_hosts`
+
+* A list of IPs or hostnames that point to all master-eligible nodes of the cluster. The port defaults to 9300 but can be overwritten by appending it to the hostname.
+* Type: List of strings.
+* Default: unset
+
+`opensearch__plugins_security_nodes_dns`
+
+* List of distinguished names of all cluster member certificates.
+* Type: List of strings.
+* Default: `[]`
 
 Example:
 ```yaml
 # cluster configuration
-opensearch__cluster_initial_cluster_manager_nodes:
-  - 'node1.example.com'
-  - 'node2.example.com'
-  - 'node3.example.com'
 opensearch__discovery_seed_hosts:
   - 'node1.example.com'
   - 'node2.example.com'
   - 'node3.example.com:9301'
 opensearch__plugins_security_nodes_dns:
-  - 'CN=node1.example.com,OU=ops,O=acme,L=Zuerich,ST=Zuerich,C=CH'
-  - 'CN=node2.example.com,OU=ops,O=acme,L=Zuerich,ST=Zuerich,C=CH'
-  - 'CN=node3.example.com,OU=ops,O=acme,L=Zuerich,ST=Zuerich,C=CH'
+  - 'CN=node1.example.com,OU=Secure Services,O=ACME,ST=Zurich,C=CH'
+  - 'CN=node2.example.com,OU=Secure Services,O=ACME,ST=Zurich,C=CH'
+  - 'CN=node3.example.com,OU=Secure Services,O=ACME,ST=Zurich,C=CH'
+```
+
+
+## TLS Certificate Generation Variables
+
+These variables are only needed when using the built-in certificate generator (see "Setting Up an OpenSearch Cluster" above). The tasks run against the Ansible controller. Internally, the [SearchGuard TLS Tool](https://docs.search-guard.com/latest/offline-tls-tool) is used, with the generated config at `/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml`.
+
+`opensearch__generate_certs_admin_cn`
+
+* The common name of the admin certificate.
+* Type: String.
+* Default: `'OpenSearch Admin'`
+
+`opensearch__generate_certs_base_dn`
+
+* The base distinguished name for all the self-signed certificates.
+* Type: String.
+* Default: `'OU=Secure Services,O=ACME,ST=Zurich,C=CH'`
+
+`opensearch__generate_certs_ca_cn`
+
+* The common name of the CA certificate.
+* Type: String.
+* Default: `'OpenSearch Self-signed RootCA'`
+
+`opensearch__generate_certs_nodes`
+
+* List of dictionaries for the node certificates.
+* Type: List of dictionaries.
+* Default: `[]`
+
+Subkeys:
+
+> `cn`
+>
+> * Required. Common name of the node certificate.
+> * Type: String.
+>
+> `ip`
+>
+> * Required. IP address of the node.
+> * Type: String.
+
+Example:
+```yaml
+# tls certificate generation
+opensearch__generate_certs_admin_cn: 'OpenSearch Admin'
+opensearch__generate_certs_base_dn: 'OU=Secure Services,O=ACME,ST=Zurich,C=CH'
+opensearch__generate_certs_ca_cn: 'OpenSearch Self-signed RootCA'
+opensearch__generate_certs_nodes:
+  - cn: 'node1.example.com'
+    ip: '192.0.2.10'
+  - cn: 'node2.example.com'
+    ip: '192.0.2.11'
+  - cn: 'node3.example.com'
+    ip: '192.0.2.12'
 ```
 
 
