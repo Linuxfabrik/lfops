@@ -5,7 +5,6 @@ graylog_server__is_leader: true
 graylog_server__message_journal_dir: '/var/lib/graylog-server/journal'
 graylog_server__mongodb_uri: 'mongodb://127.0.0.1/graylog'
 graylog_server__opts: '-Xms1g -Xmx1g -server -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow'
-graylog_server__plugins: []
 graylog_server__service_enabled: true
 graylog_server__stale_leader_timeout_ms: 2000
 graylog_server__timezone: 'Europe/Zurich'
