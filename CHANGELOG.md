@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **execution-environment**: Add missing `sshpass` system package, required for SSH password-based connections (e.g. `--ask-pass`)
 * **role:keycloak**: Fix transaction timeout silently dropping from 3600s to 300s on Keycloak 26.6.0+ due to new `transaction-default-timeout` CLI option overriding the Quarkus property
 * **role:keycloak**: Fix MariaDB database encoding defaulting to deprecated `utf8` (`utf8mb3`) instead of `utf8mb4`, causing warnings in Keycloak 26.6.0+
 * **ci**: Fix pip installs by replacing `--require-hashes` with pinned versions to allow Dependabot updates

@@ -41,6 +41,7 @@ dependencies:
   system:
     - 'git-core' # required for ansible.builtin.git module
     - 'rsync' # required for ansible.posix.synchronize module
+    - 'sshpass' # required for ssh connections with passwords, eg via `--ask-pass`
 
 additional_build_files:
   - src: 'linuxfabrik-lfops.tar.gz'
