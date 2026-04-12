@@ -14,7 +14,7 @@
 - block:
 
   - name: 'Remove'
-    ansible.builtin.include_tasks: '_remove.yml'
+    ansible.builtin.include_tasks: 'remove.yml'
 
   tags:
     - 'never'
@@ -24,7 +24,7 @@
 - block:
 
   - name: 'Install & Manage'
-    ansible.builtin.include_tasks: '_install.yml'
+    ansible.builtin.include_tasks: 'install.yml'
 
   tags:
     - 'monitoring_plugins'
