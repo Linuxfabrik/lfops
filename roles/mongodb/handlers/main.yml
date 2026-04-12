@@ -12,4 +12,4 @@
   listen: 'mongodb: systemctl restart mongod.service'
   when:
     - 'mongodb__service_state_result is not changed'
-    - 'mongodb__repl_set_name is defined'
+    - 'mongodb__repl_set_name is defined and mongodb__repl_set_name | length > 0'

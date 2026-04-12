@@ -20,7 +20,7 @@
     register: 'repo_remi__dnf_module_enable_php_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_php_result.stdout'
 
-  when: 'repo_remi__enabled_php_version is defined'
+  when: 'repo_remi__enabled_php_version is defined and repo_remi__enabled_php_version | length > 0'
   tags:
     - 'repo_remi'
 
@@ -37,7 +37,7 @@
     register: 'repo_remi__dnf_module_enable_composer_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_composer_result.stdout'
 
-  when: 'repo_remi__enabled_php_version is defined'
+  when: 'repo_remi__enabled_php_version is defined and repo_remi__enabled_php_version | length > 0'
   tags:
     - 'repo_remi'
 
@@ -54,6 +54,6 @@
     register: 'repo_remi__dnf_module_enable_redis_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_redis_result.stdout'
 
-  when: 'repo_remi__enabled_redis_version is defined'
+  when: 'repo_remi__enabled_redis_version is defined and repo_remi__enabled_redis_version | length > 0'
   tags:
     - 'repo_remi'

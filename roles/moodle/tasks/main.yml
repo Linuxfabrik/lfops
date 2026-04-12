@@ -28,7 +28,9 @@
 
   - name: 'check that moodle__github_version is set'
     ansible.builtin.assert:
-      that: 'moodle__github_version is defined'
+      that:
+        - 'moodle__github_version is defined'
+        - 'moodle__github_version | length > 0'
       fail_msg: 'Could not find the latest Moodle version'
 
   - name: 'moodle__github_version'

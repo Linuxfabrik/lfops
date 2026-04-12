@@ -62,7 +62,7 @@
       label: '{{ item.key }}'
     when:
       - 'found_files.files'
-      - 'package_file_mappings is defined'
+      - 'package_file_mappings is defined and package_file_mappings | length > 0'
 
   - name: 'Download original files to control node'
     ansible.builtin.fetch:
@@ -74,7 +74,7 @@
       label: '{{ item.key }}'
     when:
       - 'found_files.files'
-      - 'package_file_mappings is defined'
+      - 'package_file_mappings is defined and package_file_mappings | length > 0'
 
   tags:
     - 'collect_rpmnew_rpmsave'
