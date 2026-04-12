@@ -77,83 +77,23 @@ Code, comments, commit messages, and documentation must be written in English.
 
 ## Ansible Development Guidelines
 
-
-### Rules of Thumb
-
-* Do not set defaults for mandatory variables.
-* All user-facing information should be in the README. Only use comments in other places for technical information.
-* Keep templates as close to the original file as possible. This makes handling of rpmnew files easier.
-* Prefer `item["subkey"]` to `item.subkey`.
-* Avoid breaking changes as far as possible, but don't let them stand in the way of improvements.
-
-Playbooks:
-
-* Each playbook must contain all dependencies to run flawlessly against a newly installed machine.
-* Playbooks installing an application together with software packages that are complex to configure (`apache_httpd`, `mariadb_server` and/or `php`) as a dependency are prefixed by `setup_`. Example: `setup_nextcloud` because Nextcloud also needs Apache httpd, MariaDB Server etc.
-* The name of the playbook should be `- name: 'Playbook linuxfabrik.lfops.example'`.
-* After creating a new playbook, add it in the `playbooks/all.yml`.
-* Every run of the playbooks should be logged to `/var/log/linuxfabrik-lfops.log`. Include the following code in the playbook for this:
-
-    ```yaml
-    pre_tasks:
-      - ansible.builtin.import_role:
-          name: 'shared'
-          tasks_from: 'log-start.yml'
-        tags:
-          - 'always'
-
-    roles:
-      - role: '...'
-
-    post_tasks:
-      - ansible.builtin.import_role:
-          name: 'shared'
-          tasks_from: 'log-end.yml'
-        tags:
-          - 'always'
-    ```
-
-Roles:
-
-* To understand/use a role, reading the readme and the defaults/main.yml must be enough.
-* Idempotency: Roles should not perform changes when applied a second time to the same system with the same parameters, and it should not report that changes have been done if they have not been done. More importantly, it should not damage an existing installation when applied a second time (even without tags). Example:
-
-    ```yaml
-    - name: Create new DBA '{{ mariadb_root.user }}' after a fresh installation
-      ansible.builtin.command: mysql --unbuffered --execute '{{ item }}'
-      with_items:
-        - create user if not exists "{{ mariadb_root.user }}"@"%" identified by "{{ mariadb_root.password }}";
-        - grant all privileges on *.* to "{{ mariadb_root.user }}"@"%" with grant option;
-        - flush privileges;
-      register: mariadb_new_dba_result
-      changed_when: mariadb_new_dba_result.stderr is not match('ERROR \d+ \(28000\).*')
-      failed_when: mariadb_new_dba_result.rc != 0 and mariadb_new_dba_result.stderr is not match('ERROR \d+ \(28000\).*')
-    ```
-
-* If a role was run without tags, it should deliver a completely installed application (assuming it installs an application).
-* Do not over-engineer the role during the development - it should fulfill its use case, but can grow and be improved on later.
-* The role should support the installation and configuration of multiple major versions of the software. For example, PHP 7.1, 7.2, 7.3 etc. should all be supported by a single role. Upgrades are either done manually or using Ansible, depending on the software and the implementation effort.
-* Do not use role dependencies via `meta/main.yml`. Dependencies make it harder to maintain a role, especially if it has many complex dependencies.
-* Whenever the role requires a list as an input, use a list of dictionaries, preferably with `state: present/absent`. See "Injections" below.
-* Avoid constructs that could suppress error messages like `IfModule` in Apache HTTPd. This makes debugging and troubleshooting a lot easier.
-
-Common:
-
-* Document all changes in the [CHANGELOG.md](https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md) file.
-* Do not support and remove software versions that are EOL.
-* When implementing a role for a new application, consider security, monitoring and backups.
+To see these concepts in practice, have a look at the [example role](https://github.com/Linuxfabrik/lfops/tree/main/roles/example).
 
 
 ### Style Guide
 
+YAML:
+
 * Do not use `---` at the top of YAML files. It is only required if one specifies YAML directives above it.
 * For YAML files, use the `.yml` extension. This is consistent with `ansible-galaxy init`.
 * In YAML files, use 2 spaces for indentation. Elsewhere prefer 4 spaces.
-* Do not use special characters other than underscores in variable names.
-* Try to name tasks after their respective shell commands. Exceptions are STIG tasks (they are too small, and too many to achieve a consistent naming).
-* Split long Jinja2 expressions into multiple lines.
-* Use the `| bool` filter when using bare variables (expressions consisting of just one variable reference without any operator).
 * Use `true` / `false` instead of `yes` / `no`, as they are actually part of YAML.
+* Always quote strings and prefer single quotes over double quotes. The only time you should use double quotes is when they are nested within single quotes (e.g. Jinja map reference), or when the string requires escaping characters (e.g. using `\n` to represent a newline). Even though strings are the default type for YAML, syntax highlighting looks better when types are set explicitly. It also helps troubleshooting malformed strings.
+* If you must write a long string, use the "folded scalar" (`>` converts newlines to spaces, `|` keeps newlines) style and omit all special quoting.
+* Do not quote booleans (e.g. `true`/`false`).
+* Do not quote numbers (e.g. `42`).
+* Do not quote octal numbers (e.g. `0o755`).
+* Insert whitespaces around Jinja filters like so: `{{ my_var | d("my_default") }}`.
 * Indent list items:
 
     Do:
@@ -173,402 +113,331 @@ Common:
     list3: [ 'tag1', 'tag2' ]
     ```
 
+Ansible:
 
-### Quotes
-
-* We always quote strings and prefer single quotes over double quotes. The only time you should use double quotes is when they are nested within single quotes (e.g. Jinja map reference), or when your string requires escaping characters (e.g. using `\n` to represent a newline).
-* If you must write a long string, we use the "folded scalar" (`>` converts newlines to spaces, `|` keeps newlines) style and omit all special quoting.
-* Do not quote booleans (e.g. `true`/`false`).
-* Do not quote numbers (e.g. `42`).
-* Do not quote octal numbers (e.g. `0755`), use the `0o` prefix instead (e.g. `0o0755`).
-* Do not quote things referencing the local Ansible environment (e.g. boolean logic in `when:` statements or names of variables we are assigning values to).
-
-```yaml
-# bad
-- name: start robot named S1m0ne
-  service:
-    name: s1m0ne
-    state: started
-    enabled: true
-  become: yes
-
-# good
-- name: 'start robot named S1m0ne'
-  ansible.builtin.service:
-    name: 's1m0ne'
-    state: 'started'
-    enabled: true
-  become: true
-
-# double quotes w/ nested single quotes
-- name: 'start all robots'
-  ansible.builtin.service:
-    name: '{{ item["robot_name"] }}'
-    state: 'started'
-    enabled: true
-  with_items: '{{ robots }}'
-  become: true
-
-# double quotes to escape characters
-- name: 'print some text on two lines'
-  ansible.builtin.debug:
-    msg: "This text is on\ntwo lines"
-
-# folded scalar style
-- name: 'robot infos'
-  ansible.builtin.debug:
-    msg: >
-      Robot {{ item['robot_name'] }} is {{ item['status'] }} and in {{ item['az'] }}
-      availability zone with a {{ item['curiosity_quotient'] }} curiosity quotient.
-  with_items: robots
-
-# folded scalar when the string has nested quotes already
-- name: 'print some text'
-  ansible.builtin.debug:
-    msg: >
-      "I haven't the slightest idea," said the Hatter.
-
-# don't quote booleans/numbers
-- name: 'download google homepage'
-  ansible.builtin.get_url:
-    dest: '/tmp'
-    timeout: 60
-    url: 'https://google.com'
-    validate_certs: true
-
-# variables example 1
-- name: 'set a variable'
-  ansible.builtin.set_fact:
-    my_var: 'test'
-
-# variables example 2
-- name: 'print my_var'
-  ansible.builtin.debug:
-    var: my_var
-  when: ansible_facts['os_family'] == 'Darwin'
-
-# variables example 3
-- name: 'set another variable'
-  ansible.builtin.set_fact:
-    my_second_var: '{{ my_var }}'
-```
-
-Why? Even though strings are the default type for YAML, syntax highlighting looks better when explicitly set types. This also helps troubleshoot malformed strings when they should be properly escaped to have the desired effect.
-
-
-### Whitespace-Control in Jinja-Templates
-
-So called "Block Scalar Styles":
-
-* `>`: Folded. Single line breaks within the string are replaced by a space. All trailing line breaks except one are removed.
-* `|`: Literal. Preserves every line break in the string. All trailing line breaks except one are removed.
-* `>-`, `|-`: Strip the final line break and any trailing empty lines.
-* `>+`, `|+`: Keep the final line break and any trailing empty lines.
-
-Any indention remains only for the first line of a multiline variable content.
-
-Insert whitespaces around Jinja filters like so: `{{ my_var | d("my_default") }}`.
-
-See also:
-
-* <https://yaml.org/spec/1.2.2/>
-* <https://jinja.palletsprojects.com/en/latest/templates/#whitespace-control>
-
-
-### Deploying files to the remote server
-
-* Always use the `ansible.builtin.template` module instead of the `ansible.builtin.copy` module, even if there are currently no variables in the file. This makes it easier to extend later on, and allows the usage of an automatically generated header.
-
-* Always create a backup file including the timestamp information (e.g. `keycloak.conf.23875.2025-02-14@15:19:16~`) so you can get the original file back if you somehow clobbered it incorrectly, by using `backup: true`.
-
-* Always add the following to the top of templates, using the appropriate comment syntax:
-
-    ```
-    # {{ ansible_managed }}
-    # 2021081601
-    ```
-
-* Do not use `{{ template_run_date }}`. Such a timestamp is the date of the last change to the template itself, but changes on every Ansible run.
-
-* Use the target path for the file in the `template` folder, for example: `templates/etc/httpd/sites-available/default.conf.j2`. This makes it clear what the file is for, and avoids name collisions.
-
-* Always use the `.j2` file extension for files in the `template` folder.
-
-* If deploying self-written scripts, copy them to `/usr/local/bin` (due to SELinux).
-
-* Add the following task after deploying a file that might get rpmnew or rpmsave files (or their Debian equivalents):
-
-    ```yaml
-    - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
-      ansible.builtin.include_role:
-        name: 'shared'
-        tasks_from: 'remove-rpmnew-rpmsave.yml'
-      vars:
-        shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
-      loop: '{{ repo_epel__repo_files }}'
-    ```
-
-
-### Handlers
-
-* Use handlers in favor to `some_result is changed` if no `meta: flush_handlers` is required or if it would prevent duplicate code.
-* Since handlers are global, prefix them with the role name to make sure the correct one is used.
-
-
-### Modules
-
-* Always use meta modules wherever possible:
-    * `ansible.builtin.package` instead of `ansible.builtin.yum`, `ansible.builtin.dnf` or `ansible.builtin.apt`
-    * `ansible.builtin.service` instead of `ansible.builtin.systemd`
-
-* Use some modules in preference to others:
-    * `ansible.builtin.command` or `ansible.windows.win_command` over `ansible.builtin.shell` over `ansible.builtin.raw`
-    * `ansible.builtin.template` over `ansible.builtin.copy` if deploying files to the remote host (see above)
-
-* Always use `state: 'present'` for the `ansible.builtin.package` module - we are installing, not updating.
-* Always use the FQCN of the module.
+* Keep 2 empty lines before each `- block:`.
+* Prefer `item["subkey"]` to `item.subkey`, since that notation always works.
+* Do not use special characters other than underscores in variable names.
+* Try to name tasks after their respective shell commands. This makes it easy for sysadmins to understand what is going on.
+* Do not use colons at the end of task names. `- name: 'Combined Users:'` renders as `Combined Users:]` in the output.
+* Split long Jinja2 expressions into multiple lines.
+* Always use `| length > 0` instead of bare `| length` in conditionals. Ansible 2.19+ requires conditional results to be bool, not int.
+* Use the `| bool` filter when using bare variables (expressions consisting of just one variable reference without any operator). This guards against YAML quoting mistakes where a boolean ends up as a string: in a `when:` clause, the string `'false'` is truthy (non-empty string) and would incorrectly evaluate to true without `| bool`. Applying it consistently — including in module parameters where Ansible's type coercion would handle it — avoids having to think about where it matters.
 * Order module parameters semantically, not alphabetically. The general order is: first identify the target, then describe the action, then set ownership and permissions. For example:
 
     ```yaml
-    # ansible.builtin.file
     - name: 'mkdir -p /etc/example'
       ansible.builtin.file:
-        path: '/etc/example'        # 1. what (the target)
-        state: 'directory'          # 2. what to do
-        owner: 'root'              # 3. who owns it
+        path: '/etc/example'
+        state: 'directory'
+        owner: 'root'
         group: 'root'
-        mode: 0o755                # 4. permissions
+        mode: 0o755
 
-    # ansible.builtin.template
     - name: 'Deploy /etc/example/example.conf'
       ansible.builtin.template:
-        backup: true               # 1. safety first
-        src: 'etc/example/example.conf.j2'  # 2. source
-        dest: '/etc/example/example.conf'   # 3. target
-        owner: 'root'              # 4. who owns it
+        backup: true
+        src: 'etc/example/example.conf.j2'
+        dest: '/etc/example/example.conf'
+        owner: 'root'
         group: 'root'
-        mode: 0o644                # 5. permissions
+        mode: 0o644
     ```
 
     This is an exception to the general "sort alphabetically" rule, as alphabetical ordering would obscure what the task operates on.
-* `ansible.builtin.uri` module: if consuming a RESTful API, check if it is returning the required content:
+
+Commit scopes:
+
+* Use the role or playbook path as commit scope:
+
+    ```
+    fix(roles/graylog_server): prevent warn on receiveBufferSize (fix #341)
+    ```
+
+* For the first commit, use the message `Add roles/<role-name>` or `Add playbooks/<playbook-name>`.
+
+
+### Deliverables
+
+When creating a new role, make sure to deliver:
+
+* The role itself.
+* `roles/<role-name>/README.md`, following `roles/example/README.md` as a template.
+* `roles/<role-name>/meta/argument_specs.yml` declaring all user-facing variables.
+* Update `playbooks/README.md`.
+* Update `playbooks/all.yml`.
+* Update `COMPATIBILITY.md`.
+* Update `CHANGELOG.md`.
+
+
+### Playbooks
+
+* Each playbook must contain all dependencies to run flawlessly against a newly installed machine.
+* Playbooks installing an application together with software packages that are complex to configure (`apache_httpd`, `mariadb_server` and/or `php`) as a dependency are prefixed by `setup_`. Example: `setup_nextcloud` because Nextcloud also needs Apache httpd, MariaDB Server etc.
+* The name of the playbook should be `- name: 'Playbook linuxfabrik.lfops.example'`.
+* After creating a new playbook, document it in `playbooks/README.md` and add it in the `playbooks/all.yml`.
+* Every run of the playbooks should be logged to `/var/log/linuxfabrik-lfops.log`. Include the following code in the playbook for this:
 
     ```yaml
-    tasks:
-      - ansible.builtin.uri:
-          url: 'http://api.example.com'
-          return_content: yes
-        register: apiresponse
-      - fail:
-          msg: 'version was not provided'
-        when: "version" not in apiresponse.content
+    pre_tasks:
+      - ansible.builtin.import_role:
+          name: 'shared'
+          tasks_from: 'log-start.yml'
+        tags:
+          - 'always'
+
+    roles:
+
+      - role: 'example'
+
+    post_tasks:
+      - ansible.builtin.import_role:
+          name: 'shared'
+          tasks_from: 'log-end.yml'
+        tags:
+          - 'always'
     ```
 
 
-### Tags
+### Roles
 
-* Naming scheme: `role_name` and `role_name:section`, for example `apache_httpd`, `apache_httpd:vhosts`.
+* To understand/use a role, reading the README must be enough.
+* Idempotency: Roles should not perform changes when applied a second time to the same system with the same parameters, and they should not report that changes have been done if they have not been done. More importantly, it should not damage an existing installation when applied a second time (even without tags). Example:
+    ```yaml
+    - name: 'Create new DBA "{{ mariadb_root["user"] }}" after a fresh installation'
+      ansible.builtin.command: 'mysql --unbuffered --execute "{{ item }}"'
+      loop:
+        - 'create user if not exists "{{ mariadb_root["user"] }}"@"%" identified by "{{ mariadb_root.password }}";'
+        - 'grant all privileges on *.* to "{{ mariadb_root["user"] }}"@"%" with grant option;'
+        - 'flush privileges;'
+      register: 'mariadb_new_dba_result'
+      changed_when: 'mariadb_new_dba_result["stderr"] is not match("ERROR \d+ \(28000\).*")'
+      failed_when: 'mariadb_new_dba_result["rc"] != 0 and mariadb_new_dba_result["stderr"] is not match("ERROR \d+ \(28000\).*")'
+    ```
+* If a role was run without tags, it should deliver a completely installed application (assuming it installs an application).
+* Do not over-engineer the role during the development — it should fulfill its use case, but can grow and be improved on later.
+* There should be one role per software application. If there are multiple versions of the software, e.g. PHP 7.1, 7.2, 7.3, etc., they all should be supported by a single role.
+* Do not use role dependencies via `meta/main.yml`. Dependencies are handled in playbooks.
+* Whenever the role requires a list as an input, use a list of dictionaries with `state: present/absent`. See "Combined Variables" below.
+* Fail loudly. Avoid constructs that could suppress error messages, like `IfModule` in Apache HTTPd. This makes debugging and troubleshooting a lot easier.
+* Do not support software versions that are EOL.
+* When implementing a role for a new application, consider security, monitoring and backups.
+* For mailing, use the `sendmail` utility, as it provides a consistent interface across distros.
+* All user-facing information should be included in the README. Comments are intended for developers only.
+* Avoid breaking changes as far as possible, but don't let them stand in the way of improvements.
+* Document all changes in the [CHANGELOG.md](https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md) file.
+
+
+#### Tasks
+
+* Always use the FQCN of the module.
+* Always use meta modules wherever possible:
+    * `ansible.builtin.package` instead of `ansible.builtin.yum`, `ansible.builtin.dnf` or `ansible.builtin.apt`
+    * `ansible.builtin.service` instead of `ansible.builtin.systemd`
+* Use the following modules in preference to their alternatives:
+    * `ansible.builtin.command` or `ansible.windows.win_command` over `ansible.builtin.shell` over `ansible.builtin.raw`
+    * `ansible.builtin.template` over `ansible.builtin.copy`, `ansible.builtin.lineinfile` or `ansible.builtin.blockinfile`. Templating the whole file leads to more consistent, deterministic, and expected results.
+* Do not use `state: 'latest'` for the `ansible.builtin.package` module as this is not idempotent. Always use `state: 'present'`.
+* Always use `delegate_to: 'localhost'` instead of `local_action`.
+* Always provide `changed_when`, `creates`, or `removes` for `ansible.builtin.command` and `ansible.builtin.shell` tasks to ensure idempotency. Use `changed_when: false` for read-only commands.
+* When deploying files with `ansible.builtin.template`, always set `backup`, `src`, `dest`, `owner`, `group`, and `mode`.
+* Prefer `ansible.builtin.assert` over `ansible.builtin.fail` with `when` for validation checks. There is basically no technical difference; this guideline is only for consistency.
+* Optionally add `ansible.builtin.debug` tasks for `__combined_var` variables so the user can see what the role will do.
+* Split the service `enabled` and `state` into separate tasks. This is relevant for handlers that would restart the service, see "Handlers" below.
+* Always check if SELinux is enabled before managing ports, file contexts, or booleans:
+
+    ```yaml
+    - name: 'semanage port --add --type example_port_t --proto tcp 8080'
+      community.general.seport:
+        ports: 8080
+        proto: 'tcp'
+        setype: 'example_port_t'
+        state: 'present'
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+    ```
+
+
+#### Handlers
+
+* Use handlers in favor to `some_result is changed` if no `meta: flush_handlers` is required or if it would prevent duplicate code.
+* Since handlers are global, prefix them with the role name to make sure the correct one is used.
+* Use chained handlers (notify) when a validation step should precede the actual action, e.g. a config validation handler that notifies a restart handler.
+* Handlers that restart or reload a service should skip execution when the service was just started (redundant) or when the user wants it stopped. For this, the result of the service state task has to be registered and checked. Example:
+
+    ```yaml
+    - name: 'example: restart example'
+      ansible.builtin.service:
+        name: 'example'
+        state: 'restarted'
+      when:
+        - '__example__service_state_result is not changed'
+        - 'example__service_state != "stopped"'
+    ```
+
+
+#### Tags
+
+* Naming scheme: `role_name` and `role_name:section`. For example `apache_httpd` and `apache_httpd:vhosts`.
 * The role should only do what one expects from the tag name. For example, the `mariadb:user` tag only manages MariaDB users.
 * The README of a role should provide a list of the available tags and what they do.
 * The tags should be set in the role itself. Do not set them in the playbook.
-* Blocks/tasks that install base packages do not need a tag like `apache:pkgs`, `apache:setup` or `apache:install`. Why? There is no reason to just run the setup task by tag, you always need to do at least some configuration afterwards.
+* Blocks/tasks that install base packages do not require tags such as `apache:pkgs`, `apache:setup` or `apache:install`. There is no real world scenario where it makes sense to only run the installation via Ansible, some configuration is always required.
 * For each task, consider to which areas it belongs. A task will usually have multiple tags.
 
 
-### Being OS-specific
+#### Variables
 
-#### OS-specific Tasks
-
-To indicate on which operating system platforms the role can be used, (empty) files must be placed in `tasks/` which have the file name of the supported "os family". In these files you probably want to perform platform specific tasks once, for the most specific match.
-
-Assume you have the following OS-specific task files, in order of most specific to least specific:
-
-* `tasks/CentOS7.4.yml`
-* `tasks/CentOS7.yml`
-* `tasks/RedHat.yml`
-* `tasks/main.yml`
-
-Now, if you run Ansible against a *CentOS 7.9* host, for example, only these tasks are processed in the following order:
-
-1. `tasks/CentOS7.yml`
-2. `tasks/main.yml`
-
-Include the OS-specific tasks in the `tasks/main.yml` like this, and set the tags appropriately (should contain all tags of the possibly included task files):
-
-```yaml
-- name: 'Perform platform/version specific tasks'
-  ansible.builtin.include_tasks: '{{ __task_file }}'
-  when: '__task_file | length > 0'
-  vars:
-    __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
-    __first_found_options:
-      files:
-        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
-        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
-        - '{{ ansible_facts["distribution"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}.yml'
-      paths:
-        - '{{ role_path }}/tasks'
-      skip: true
-  tags:
-    - 'always'
-```
-
-Make sure to set the tags directly on the `include_tasks` task, and not on a surrounding block. Setting it on a block causes the tag to be inherited to all tasks in that block, therefore also to included tasks. See the following example for details:
-
-```yaml
-# RedHat.yml
-- block:
-
-  - name: 'task 1'
-    ansible.builtin.debug:
-      msg: 'task 1 {{ test__var1 }}'
-
-  tags:
-    - 'test'
-    - 'test:one'
-
-
-- block:
-
-  - name: 'task 2'
-    ansible.builtin.debug:
-      msg: 'task 2 {{ test__var2 }}'
-
-  tags:
-    - 'test'
-
-
-# main.yml
-# THIS WORKS:
-- name: 'Perform platform/version specific tasks'
-  ansible.builtin.include_tasks: 'RedHat.yml'
-  tags:
-    - 'test'
-    - 'test:one'
-
-# without tags, whole playbook:
-# task 1 one
-# task 2 two
-
-# --tags test
-# task 1 one
-# task 2 two
-
-# --tags test:one
-# task 1 one
-
-# --tags other
-# no debug output, and include_tasks is not running
-
-
-# THIS DOES NOT WORK:
-- block:
-
-  - name: 'Perform platform/version specific tasks'
-    ansible.builtin.include_tasks: 'RedHat.yml'
-
-  tags:
-    - 'test'
-    - 'test:one'
-
-# without tags, whole playbook:
-# task 1 one
-# task 2 two
-
-# --tags test
-# task 1 one
-# task 2 two
-
-# --tags test:one
-# task 1 one
-# task 2 two # we don't want this task to run
-
-# --tags other
-# no debug output, and include_tasks is not running
-```
-
-
-#### OS-specific Variables
-
-You normally use `vars/main.yml` (automatically included) to set variables used by your role. If some variables need to be parameterized according to distribution and version (name of packages, configuration file paths, names of services), use OS-specific vars-files.
-
-Variables with the same name are overridden by the files in `vars/` in order from least specific to most specific:
-
-* `os_family` covers a group of closely related platforms (e.g. `RedHat` covers `RHEL`, `CentOS`, `Fedora`)
-* `distribution` (e.g. `CentOS`) is more specific than os_family
-* `distribution_major_version` (e.g. `CentOS7`) is more specific than distribution
-* `distribution_version` (e.g. `CentOS7.9`) is the most specific
-
-As always be aware of the fact that dicts and lists are completely replaced, not merged.
-
-Include the `platform-variables.yml` in the `tasks/main.yml` like this, and set the tags appropriately (should contain all tags tasks that could require the variables):
-
-```yaml
-- name: 'Set platform/version specific variables'
-  ansible.builtin.import_role:
-    name: 'shared'
-    tasks_from: 'platform-variables.yml'
-  tags:
-    - 'role'
-    - 'role:tag1' # for example, tag for a task which requires a platform specific variable
-```
-
-For this task, it does not matter if the tags are set directly on the task itself or on a surrounding block.
-
-
-#### OS-specific Filenames
-
-For example:
-
-* AIX.yml
-* Amazon.yml
-* Archlinux.yml
-* CentOS.yml
-* CentOS6.yml
-* CentOS7.yml
-* CentOS7.3.yml
-* Container Linux by CoreOS.yml
-* Debian.yml
-* Debian11.yml
-* Fedora.yml
-* Fedora33.yml
-* FreeBSD.yml
-* Gentoo.yml
-* OpenBSD.yml
-* openSUSE Leap15.yml
-* RedHat.yml
-* RedHat8.yml
-* RedHat8.2.yml
-* Suse.yml
-* Ubuntu.yml
-* Ubuntu20.yml
-
-
-### Variables
-
-* `./vars`: Variables that are not to be edited by users
-* `./defaults`: Default variables for the role, might be overridden by the user using group_vars or host_vars
+* `./vars`: Variables that are not to be edited by users.
+* `./defaults`: Default variables for the role, might be overridden by the user in the inventory.
+* Document all user-facing variables in the README. Have a look at `roles/example/README.md` for the format.
+* Do not set defaults for mandatory variables.
 * Naming scheme: `<role name>__<optional: config file>_<setting name>`, for example `apache_httpd__server_admin`.
-* Every argument accepted from outside of the role should be given a default value in `defaults/main.yml`. This allows a single place for users to look to see what inputs are expected. Avoid giving default values in vars/main.yml as such values are very high in the precedence order and are difficult for users and consumers of a role to override.
 * No need to invent new names, use the key-names from the config file (if possible), for example `redis__conf_maxmemory`.
+* Prefix role-internal variables with `__`, for example `__example__sysconfig_path`. This makes it easy to determine which variables are user-facing and therefore should be in the README.
 * Avoid embedding large lists or "magic values" directly into the playbook. Such static lists should be placed into the `vars/main.yml` file and named appropriately.
-* If you need random but predictable/idempotent values, use the `inventory_hostname` as seed. Example for setting the minutes of an hour: `{{ 59 | random(seed=inventory_hostname) }}`
-* Any secrets (passwords, tokens etc.) should not be provided with default values in the role. The tasks should be implemented in such a way that any secrets required, but not provided, should result in task execution failure. It is important for a secure-by-default implementation to ensure that an environment is not vulnerable due to the production use of default secrets. Deployers must be forced to properly provide their own secret variable values. Example:
-
-    ```yaml
-    assert:
-      that:
-        - 'stig__grub2_password is defined'
-        - 'stig__grub2_password | length'
-      quiet: true
-      fail_msg: 'Please define bootloader passwords for your hosts ("stig__grub2_password").'
-    ```
+* If you need random but predictable/idempotent values, use the `inventory_hostname` as seed. Example for setting the minutes of an hour: `{{ 59 | random(seed=inventory_hostname) }}`.
+* When guarding optional role variables (strings or lists) that may be undefined, use `is defined and my_var | length > 0`. This catches both undefined variables and empty values (e.g. `my_var: ''`). Bare `is defined` is fine for dict subkeys where presence alone is the signal (e.g. `item["cidr"] is defined`) or for result attributes (e.g. `result["failed"] is defined`).
+* Any secrets (passwords, tokens etc.) should not be provided with default values in the role. It is important for a secure-by-default implementation to ensure that an environment is not vulnerable due to the production use of default secrets. Users must be forced to properly provide their own secret variable values.
+* Always use the `ansible_facts` dictionary (e.g. `ansible_facts["os_family"]` instead of `ansible_os_family`). The old pre-2.5 "facts injected as separate variables" naming system will be deprecated in a future release of Ansible.
 
 
-#### `skip_role`-Variables in Playbooks
+##### Variable Validation with `argument_specs`
+
+Every role should include a `meta/argument_specs.yml` that declares all user-facing variables with their types. Ansible validates these automatically at role entry (before any tasks run), catching type mismatches and missing required variables without manual assert code.
+
+Include all variables documented in the README: mandatory variables, simple optional variables, and the `__host_var`/`__group_var` variants of injection variables. Do not include internal variables (`__dependent_var`, `__role_var`, `__combined_var`).
+
+Guidelines for `argument_specs`:
+
+* Use `required: true` for mandatory variables (replaces manual `assert` + `is defined` checks).
+* Use `type` and `choices` where applicable. For injection variables where the default is `''` (empty string) but the actual value is a different type (e.g. int), use `type: 'raw'` to avoid rejecting the empty default.
+* Omit `default` when the default in `defaults/main.yml` is a Jinja2 expression (e.g. `'{{ __example__conf_worker_threads }}'`), as `argument_specs` cannot evaluate it.
+* Set `default` when it is a static value (e.g. `true`, `'started'`, `[]`).
+* Sort entries alphabetically.
+
+Use `ansible.builtin.assert` in the tasks for validations that `argument_specs` cannot express: value ranges, regex patterns, or cross-variable dependencies. Tag the assert block with `always` so it runs even when other roles reference the validated variables.
+
+Have a look at the `example` role's `meta/argument_specs.yml` for a complete reference.
+
+
+##### Combined Variables
+
+The goal of combined variables is that variables can be set in multiple places, and then merged in order to be used in the role. For example, the user can overwrite a specific configuration role default (`__role_var`) from their inventory (`__host_var` / `__group_var`).
+
+Furthermore, other roles can also inject their sensible defaults via the `__dependent_var`, with a higher precedence than the role defaults, but lower than the user's inventory.
+
+To enable this behavior, you must define the `__combined_var` as follows:
+```yaml
+# for list of dictionaries
+my_role__my_var__dependent_var: []
+my_role__my_var__group_var: []
+my_role__my_var__host_var: []
+my_role__my_var__role_var: []
+my_role__my_var__combined_var: '{{ (
+      my_role__my_var__role_var +
+      my_role__my_var__dependent_var +
+      my_role__my_var__group_var +
+      my_role__my_var__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+# for simple values like strings, numbers or booleans
+my_role__my_var__dependent_var: ''
+my_role__my_var__group_var: ''
+my_role__my_var__host_var: ''
+my_role__my_var__role_var: ''
+my_role__my_var__combined_var: '{{
+    my_role__my_var__host_var if (my_role__my_var__host_var | string | length) else
+    my_role__my_var__group_var if (my_role__my_var__group_var | string | length) else
+    my_role__my_var__dependent_var if (my_role__my_var__dependent_var | string | length) else
+    my_role__my_var__role_var
+  }}'
+```
+
+The `__combined_var` will then be used in the tasks or templates of the role.
+
+The role must always implement some sort of `state` key, otherwise the user cannot unset a value defined in the defaults. Suppose the user wants to disable the default localhost vHost of the Apache HTTPd role:
+```yaml
+# defaults/main.yml
+apache_httpd__vhosts__role_var:
+  - conf_server_name: 'localhost'
+    virtualhost_port: 80
+    template: 'localhost'
+```
+
+Without the `state` key, the user has no way of achieving this, as they cannot remove previously defined elements from the list via the inventory. With the `state` key, the role knows it has to remove the vHost:
+```yaml
+# inventory
+apache_httpd__vhosts__role_var:
+  - conf_server_name: 'localhost'
+    virtualhost_port: 80
+    state: 'absent'
+```
+
+The handling of the state in the role should look something like this, assuming the default value for `state` is `present`:
+```yaml
+- name: 'Remove sites-available vHosts'
+  ansible.builtin.file:
+    path: '...'
+    state: 'absent'
+  loop: '{{ apache_httpd__vhosts__combined_var }}'
+  loop_control:
+    label: '{{ item["name"] }}'
+  when:
+    - 'item["state"] | d("present") == "absent"'
+
+- name: 'Create sites-available vHosts'
+  ansible.builtin.template:
+    src: '...'
+    dest: '...'
+  loop: '{{ apache_httpd__vhosts__combined_var }}'
+  loop_control:
+    label: '{{ item["name"] }}'
+  when:
+    - 'item["state"] | d("present") != "absent"'
+```
+
+Other times it is useful to generate a list of present and absent elements, for example when using `ansible.builtin.package`, as providing the packages as a list is much faster than looping through them.
+```yaml
+- name: 'Ensure PHP modules are absent'
+  ansible.builtin.package:
+    name: '{{ php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
+    state: 'absent'
+
+- name: 'Ensure PHP modules are present'
+  ansible.builtin.package:
+    name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+        + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
+    state: 'present'
+```
+
+Or in a Jinja2 template:
+```
+{% for item in apache_tomcat__roles__combined_var if item['state'] | d('present') != 'absent' %}
+<role rolename="{{ item['name'] }}"/>
+{% endfor %}
+```
+
+The vHost example above can be used to demonstrate another feature of `linuxfabrik.lfops.combine_lod`. Normally, the list items are combined based on a `unique_key` that should match, for example, the `name` key. However, this does not work with `conf_server_name` because you can have a vHost with the same `conf_server_name` for multiple ports. This means that the `unique_key` must be a *combination* of `conf_server_name` and `virtualhost_port`:
+```yaml
+apache_httpd__vhosts__combined_var: '{{ (
+      apache_httpd__vhosts__role_var +
+      apache_httpd__vhosts__dependent_var +
+      apache_httpd__vhosts__group_var +
+      apache_httpd__vhosts__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["conf_server_name", "virtualhost_port"])
+  }}'
+```
+
+Note:
+
+* Have a look at `ansible-doc --type filter linuxfabrik.lfops.combine_lod`.
+* Always use lists of dictionaries or simple values. Never use dictionaries directly, even though they allow overwriting of earlier elements, since one cannot template the keyname using Jinja2. This would prevent passing on of variables, especially in `__dependent_var` (for details have a look at <https://docs.linuxfabrik.ch/software/ansible.html#besonderheiten-von-ansible>).
+* Simple value `__combined_var` are always returned as strings. Convert them to integers when needed.
+
+
+##### `skip_role` Variables in Playbooks
 
 The `playbook_name__role_name__skip_role` and `playbook_name__role_name__skip_role_injections` variables should provide the user an option to skip the role and the role's injections respectively. Have a look at the [README.md](./README.md#skipping-roles-in-a-playbook).
 
@@ -609,158 +478,110 @@ Make sure to use the following format when passing multiple injections to avoid 
 ```
 
 
-#### Injections
+#### Templates
 
-The goal of injections is that variables can be set in multiple places, and then merged in order to be used in the role. For example, the user can overwrite a specific configuration role default (`__role_var`) from their inventory (`__host_var` / `__group_var`).
+* Always use the `ansible.builtin.template` module instead of the `ansible.builtin.copy` module, even if there are currently no variables in the file. This makes it easier to extend later on, and allows the usage of an automatically generated header.
+* Always create a backup file including the timestamp information (e.g. `keycloak.conf.23875.2025-02-14@15:19:16~`) so you can get the original file back if you somehow clobbered it incorrectly, by using `backup: true`.
+* Always add the following to the top of templates, using the appropriate comment syntax:
+    ```
+    # {{ ansible_managed }}
+    # 2021081601
+    ```
+* Do not use `{{ template_run_date }}` inside the template. It is the date that the template was rendered, which is done during every Ansible run. This means that the task will always be changed, even if nothing else changed in the template, therefore breaking idempotency.
+* Use the target path for the file in the `template` folder, for example: `templates/etc/httpd/sites-available/default.conf.j2`. This makes it clear what the file is for, and avoids name collisions.
+* Always use the `.j2` file extension for files in the `template` folder.
+* If deploying self-written scripts, copy them to `/usr/local/sbin` (due to SELinux).
+* Keep templates as close to the original file as possible. This makes handling of rpmnew/rpmsave files easier.
+* Add the following task after deploying a file that might get rpmnew or rpmsave files (or their Debian equivalents):
+    ```yaml
+    - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+      ansible.builtin.include_role:
+        name: 'shared'
+        tasks_from: 'remove-rpmnew-rpmsave.yml'
+      vars:
+        shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+      loop: '{{ repo_epel__repo_files }}'
+    ```
 
-Furthermore, other roles can also inject their sensible defaults via the `__dependent_var`, with a higher precedence than the role defaults, but lower than the user's inventory.
 
-To enable this behavior, you must define the `__combined_var` as follows:
+#### OS-specific Variables
+
+If some variables need to be parameterized according to distribution and version (name of packages, configuration file paths, names of services), use OS-specific vars-files inside the `vars/` of your role.
+
+Variables with the same name are overridden by the files in `vars/` in order from least specific to most specific:
+
+* `os_family` covers a group of closely related platforms (e.g. `RedHat` covers `RHEL`, `CentOS`, `Fedora`)
+* `distribution` (e.g. `CentOS`) is more specific than os_family
+* `distribution_major_version` (e.g. `CentOS7`) is more specific than distribution
+* `distribution_version` (e.g. `CentOS7.9`) is the most specific
+
+To load the variables include the `platform-variables.yml` in the `tasks/main.yml` like this:
+```yaml
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+```
+
+Use the `always` tag so the variables are available even when running with a specific tag — other roles in the playbook may reference these variables.
+
+Note that since `vars/` are higher up in the [Ansible variable precedence](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence) than inventory variables we cannot directly define our defaults there. Instead, we either need to use the `my_role__my_var__role_var` (as these already support overwriting of `role_vars`; see "Combined Variables") or to define an internal variable (prefixed with `__`) in the `vars/` file:
 
 ```yaml
-# for list of dictionaries
-my_role__my_var__dependent_var: []
-my_role__my_var__group_var: []
-my_role__my_var__host_var: []
-my_role__my_var__role_var: []
-my_role__my_var__combined_var: '{{ (
-      my_role__my_var__role_var +
-      my_role__my_var__dependent_var +
-      my_role__my_var__group_var +
-      my_role__my_var__host_var
-    ) | linuxfabrik.lfops.combine_lod
-  }}'
-
-# for simple values like strings, numbers or booleans
-my_role__my_var__dependent_var: ''
-my_role__my_var__group_var: ''
-my_role__my_var__host_var: ''
-my_role__my_var__role_var: ''
-my_role__my_var__combined_var: '{{
-    my_role__my_var__host_var if (my_role__my_var__host_var | string | length) else
-    my_role__my_var__group_var if (my_role__my_var__group_var | string | length) else
-    my_role__my_var__dependent_var if (my_role__my_var__dependent_var | string | length) else
-    my_role__my_var__role_var
-  }}'
+__my_role__my_simple_value: 'os-dependant default'
 ```
 
-The `__combined_var` will then be used in the tasks or templates of the role.
-
-The role must always implement some sort of `state` key, otherwise the user cannot "unselect" a value defined in the defaults. Suppose the user wants to disable the default localhost vHost of the Apache HTTPd role:
+Then, in `defaults/main.yml`, we reference that internal variable as our public default:
 
 ```yaml
-# defaults/main.yml
-apache_httpd__vhosts__role_var:
-
-  - conf_server_name: 'localhost'
-    virtualhost_port: 80
-    template: 'localhost'
+my_role__my_simple_value: '{{ __my_role__my_simple_value }}'
 ```
 
-Without the `state` key, the user has no way of achieving this, as they cannot remove previously defined elements from the list via the inventory. With the `state` key, the role knows it has to remove the vHost:
+This allows the user to overwrite `my_role__my_simple_value` in their inventory.
+
+
+#### OS-specific Tasks
+
+In order to run only certain tasks based on the operating system platform, files need to be placed in `tasks/` with the filename of the supported "os family".
+
+Assume you have the following OS-specific task files, in order of most specific to least specific:
+
+* `tasks/CentOS7.4.yml`
+* `tasks/CentOS7.yml`
+* `tasks/RedHat.yml`
+* `tasks/main.yml`
+
+Now, if you run Ansible against a *CentOS 7.9* host, for example, only these tasks are processed in the following order:
+
+1. `tasks/CentOS7.yml`
+2. `tasks/main.yml`
+
+Include the OS-specific tasks in the `tasks/main.yml` like this:
 
 ```yaml
-# inventory
-apache_httpd__vhosts__role_var:
-
-  - conf_server_name: 'localhost'
-    virtualhost_port: 80
-    state: 'absent'
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ __task_file }}'
+  when: '__task_file | length > 0'
+  vars:
+    __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
+    __first_found_options:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+      skip: true
+  tags:
+    - 'always'
 ```
 
-The handling of the state in the role can look something like this, assuming the default value for `state` is `present`:
-
-```yaml
-- name: 'Remove sites-available vHosts'
-  ansible.builtin.file:
-    path: '...'
-    state: 'absent'
-  when:
-    - 'item["state"] | d("present") == "absent"'
-  loop: '{{ apache_httpd__vhosts__combined_var }}'
-
-- name: 'Create sites-available vHosts'
-  ansible.builtin.template:
-    src: '...'
-    dest: '...'
-  when:
-    - 'item["state"] | d("present") != "absent"'
-  loop: '{{ apache_httpd__vhosts__combined_var }}'
-```
-
-Other times it is useful to generate a list of present and absent elements, for example when using `ansible.builtin.package`, as providing the packages as a list is much faster than looping through them.
-
-```yaml
-- name: 'Ensure PHP modules are absent'
-  ansible.builtin.package:
-    name: '{{ php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
-    state: 'absent'
-
-- name: 'Ensure PHP modules are present'
-  ansible.builtin.package:
-    name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
-        + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
-    state: 'present'
-```
-
-Or in a Jinja2 template:
-
-```
-{% for item in apache_tomcat__roles__combined_var if item['state'] | d('present') != 'absent' %}
-<role rolename="{{ item['name'] }}"/>
-{% endfor %}
-```
-
-The vHost example above can be used to demonstrate another feature of `linuxfabrik.lfops.combine_lod`. Normally, the list items are combined based on a `unique_key` that should match, for example, the `name` key. However, this does not work with `conf_server_name` because you can have a vHost with the same `conf_server_name` for multiple ports. This means that the `unique_key` must be a *combination* of `conf_server_name` and `virtualhost_port`:
-
-```yaml
-apache_httpd__vhosts__combined_var: '{{ (
-      apache_httpd__vhosts__role_var +
-      apache_httpd__vhosts__dependent_var +
-      apache_httpd__vhosts__group_var +
-      apache_httpd__vhosts__host_var
-    ) | linuxfabrik.lfops.combine_lod(unique_key=["conf_server_name", "virtualhost_port"])
-  }}'
-```
-
-Note:
-
-* Have a look at `ansible-doc --type filter linuxfabrik.lfops.combine_lod`.
-* Always use lists of dictionaries or simple values. Never use dictionaries, even though they allow overwriting of earlier elements, since one cannot template the keyname using Jinja2. This would prevent passing on of variables, especially in `__dependent_var` (for details have a look at <https://docs.linuxfabrik.ch/software/ansible.html#besonderheiten-von-ansible>).
-* Simple value `__combined_var` are always returned as strings. Convert them to integers when using maths.
-
-
-#### Ansible Facts / Magic Vars
-
-* Always use `ansible_facts`. Currently, Ansible recognizes both the new fact naming system (using `ansible_facts`) and the old pre-2.5 "facts injected as separate variables" naming system. The old naming system will be deprecated in a future release of Ansible.
-
-
-#### Documenting Variables
-
-* Document variables in the `README`. Have a look at `python_venv/README.md` on how this could look like.
-
-
-#### Handling default values
-
-1. A Jinja template contains vendor defaults using `{{ variable | d('vendor-default-value') }}`.
-2. Is overridden by `defaults/main.yml` using Linuxfabrik's best practice value `variable: linuxfabrik-default-value`.
-3. May be overridden by the customer by using a `group_vars` or `host_vars` definition.
-
-
-### Commit Scopes
-
-Use the role or playbook path as commit scope:
-
-```
-fix(roles/graylog_server): prevent warn on receiveBufferSize (fix #341)
-```
-
-For the first commit, use the message `Add roles/<role-name>` or `Add playbooks/<playbook-name>`.
-
-
-### Releases
-
-Releases are available on Ansible Galaxy.
+Make sure to set the tags directly on the `include_tasks` task, and not on a surrounding block. Setting it on a block causes the tag to be inherited to all tasks in that block, therefore also to included tasks.
 
 
 ### Handling of GPG Keys under Debian (APT Keyring)
@@ -781,6 +602,8 @@ Have a look at the [repo_icinga/tasks/Debian.yml](https://github.com/Linuxfabrik
 ### Roles with Special Features
 
 Roles with special technical implementations and capabilities:
+
+* [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr): Installs the correct version of a dependent package (i.e. java) based on the solr version.
 
 * [github_project_createrepo](https://github.com/Linuxfabrik/lfops/tree/main/roles/github_project_createrepo): Sets FACL entries to allow both the webserver user and the github-project-createrepo user to access files.
 
