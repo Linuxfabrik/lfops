@@ -25,3 +25,20 @@ repos:
       - id: 'end-of-file-fixer'
       - id: 'mixed-line-ending'
       - id: 'trailing-whitespace'
+
+  - repo: 'https://github.com/PyCQA/bandit'
+    rev: '1.9.4'
+    hooks:
+      - id: 'bandit'
+        args:
+          - '--severity-level=low'
+          - '--confidence-level=low'
+          - '--skip=B110,B112,B311'  # graceful-degradation patterns, non-crypto randomness
+        types_or: ['python']
+
+  - repo: 'https://github.com/jendrikseipp/vulture'
+    rev: 'v2.16'
+    hooks:
+      - id: 'vulture'
+        args: ['--min-confidence=80']
+        types_or: ['python']

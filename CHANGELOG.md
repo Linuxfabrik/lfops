@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* **ci**: Add bandit (security) and vulture (dead code) to pre-commit hooks
+
 ### Fixed
 
 * **execution-environment**: Add missing `sshpass` system package, required for SSH password-based connections (e.g. `--ask-pass`)
