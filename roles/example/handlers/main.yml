@@ -3,14 +3,24 @@
 
 - name: 'example: validate config; restart example'
   ansible.builtin.command: 'example --validate-config'
+  changed_when: false # no config change
   notify: 'example: restart example'
 
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __example__service_state_result is registered on a dedicated state-only task (not the enabled task),
+# so that enabled-only changes don't prevent the restart.
 - name: 'example: restart example'
   ansible.builtin.service:
     name: 'example'
     state: 'restarted'
+  when:
+    - '__example__service_state_result is not changed'
+    - 'example__service_state != "stopped"'
 
 - name: 'example: reload example'
   ansible.builtin.service:
     name: 'example'
     state: 'reloaded'
+  when:
+    - '__example__service_state_result is not changed'
+    - 'example__service_state != "stopped"'

@@ -1,12 +1,14 @@
 # This is the example role for linuxfabrik.lfops.
 # It demonstrates the correct and consistent usage of the most common Ansible
-# modules across LFOps, sorted alphabetically.
+# modules across LFOps.
 #
 # Anti-patterns (do NOT use these, use the alternative instead):
 # - ansible.builtin.apt / ansible.builtin.dnf -> ansible.builtin.package
 # - ansible.builtin.copy -> ansible.builtin.template
 # - ansible.builtin.shell -> ansible.builtin.command
 # - ansible.builtin.systemd -> ansible.builtin.service
+
+
 - block:
 
   - name: 'Set platform/version specific variables'
@@ -17,6 +19,8 @@
   tags:
     - 'always'
 
+
+# include_tasks is required here because import_tasks cannot handle dynamic variables.
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ __task_file }}'
   when: '__task_file | length > 0'
@@ -36,33 +40,76 @@
   tags:
     - 'always'
 
+
 - block:
 
-  - name: 'Check mandatory variables'
+  # simple mandatory variable checks (required, type, choices) belong in meta/argument_specs.yml.
+  # use assert only for validations that argument_specs cannot express:
+  # value ranges, regex patterns, cross-variable dependencies.
+  - name: 'Check variable constraints'
     ansible.builtin.assert:
       that:
-        - 'example__conf_log_level__combined_var is defined'
-        - 'example__conf_log_level__combined_var | length'
+        - 'example__conf_max_connections__combined_var | int >= 1'
+        - 'example__conf_max_connections__combined_var | int <= 10000'
       quiet: true
-      fail_msg: 'Please define "example__conf_log_level".'
+      fail_msg: 'example__conf_max_connections must be between 1 and 10000, got "{{ example__conf_max_connections__combined_var }}".'
 
   tags:
-    - 'example'
-    - 'example:configure'
+    # use 'always' so the validation runs even when other roles reference these variables.
+    - 'always'
+
 
 - block:
+
+  - name: 'groupadd example'
+    ansible.builtin.group:
+      name: 'example'
+      state: 'present'
+      system: true
+
+  - name: 'useradd example'
+    ansible.builtin.user:
+      name: 'example'
+      comment: 'Example Service'
+      group: 'example'
+      home: '/var/lib/example'
+      shell: '/sbin/nologin'
+      system: true
+      state: 'present'
+
+  # always use ansible.builtin.package instead of ansible.builtin.apt or ansible.builtin.dnf.
+  # always use state: 'present', not 'latest'.
+  - name: 'Install required packages'
+    ansible.builtin.package:
+      name: '{{ __example__required_packages }}'
+      state: 'present'
+
+  - name: 'curl --output /tmp/example-{{ example__version }}.tar.gz https://example.com/releases/example-{{ example__version }}.tar.gz'
+    ansible.builtin.get_url:
+      url: 'https://example.com/releases/example-{{ example__version }}.tar.gz'
+      dest: '/tmp/example-{{ example__version }}.tar.gz'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'tar xzf /tmp/example-{{ example__version }}.tar.gz -C /opt/example'
+    ansible.builtin.unarchive:
+      src: '/tmp/example-{{ example__version }}.tar.gz'
+      dest: '/opt/example'
+      remote_src: true
+      owner: 'example'
+      group: 'example'
+      creates: '/opt/example/bin/example'
 
   # use ansible.builtin.command instead of ansible.builtin.shell wherever possible.
   # always provide changed_when or creates/removes for idempotency.
-
-  - name: 'example --init'
-    ansible.builtin.command: 'example --init'
+  - name: 'example {{ __example__init_flag }}'
+    ansible.builtin.command: 'example {{ __example__init_flag }}'
     args:
       creates: '/var/lib/example/initialized'
 
   - name: 'example --check-config'
     ansible.builtin.command: 'example --check-config'
-    register: 'example__check_config_result'
     changed_when: false # read-only command, never changes anything
     check_mode: false # also run in check mode
 
@@ -72,34 +119,35 @@
       example --setup
         --log-level '{{ example__conf_log_level__combined_var }}'
         --max-connections {{ example__conf_max_connections__combined_var }}
-    register: 'example__setup_result'
-    changed_when: '"already configured" not in example__setup_result["stdout"]'
-    failed_when: 'example__setup_result["rc"] != 0 and "already configured" not in example__setup_result["stdout"]'
+    register: '__example__setup_result' # prefix role internal variables with `__`
+    changed_when: '"already configured" not in __example__setup_result["stdout"]'
+    failed_when: '__example__setup_result["rc"] != 0 and "already configured" not in __example__setup_result["stdout"]'
+
+  - name: 'example --generate-cache' # noqa: no-changed-when - no easy way to detect changes
+    ansible.builtin.command: 'example --generate-cache'
 
   tags:
+    - 'example'
+
+
+- block:
+
+  - name: 'Gather package facts'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false
+
+  - name: 'Set installed version fact'
+    ansible.builtin.set_fact:
+      __example__installed_server_version: '{{ ansible_facts["packages"]["example-server"][0]["version"] }}'
+
+  - name: 'Load default values for {{ __example__installed_server_version }}'
+    ansible.builtin.include_vars: 'vars/{{ __example__installed_server_version }}.yml'
+
+  tags:
+    # make sure to list all the tags that required the version-dependent variables
     - 'example'
     - 'example:configure'
 
-- block:
-
-  - name: 'Combined Users:'
-    ansible.builtin.debug:
-      var: 'example__users__combined_var'
-
-  tags:
-    - 'example'
-    - 'example:user'
-
-- block:
-
-  - name: 'Fail if unsupported OS'
-    ansible.builtin.fail:
-      msg: 'This role is not supported on {{ ansible_facts["distribution"] }} {{ ansible_facts["distribution_major_version"] }}.'
-    when:
-      - 'ansible_facts["os_family"] not in ["Debian", "RedHat"]'
-
-  tags:
-    - 'example'
 
 - block:
 
@@ -108,8 +156,8 @@
     ansible.builtin.file:
       path: '/etc/example'
       state: 'directory'
-      owner: 'root'
-      group: 'root'
+      owner: 'example'
+      group: 'example'
       mode: 0o755
 
   # create symlink
@@ -133,40 +181,86 @@
       path: '/etc/example/deprecated.conf'
       state: 'absent'
 
+  # this is the standard way to load platform-specific variables (see top of this file).
+  # another common use: include shared tasks from the 'shared' role.
+  - name: 'Clone the lib repo'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'clone-lib-repo.yml'
+    vars:
+      shared__lib_version: '{{ example__lib_version }}'
+    when:
+      - 'example__lib_version is defined and example__lib_version | length > 0'
+
+  # use a sub-block with a block-level when to avoid repeating the same condition on every task.
+  - block:
+
+    - name: 'semanage port --add --type example_port_t --proto tcp 8080'
+      community.general.seport:
+        ports: 8080
+        proto: 'tcp'
+        setype: 'example_port_t'
+        state: 'present'
+
+    - name: 'setsebool -P httpd_can_network_connect on'
+      ansible.posix.seboolean:
+        name: 'httpd_can_network_connect'
+        persistent: true
+        state: true
+
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+
   tags:
     - 'example'
     - 'example:configure'
 
+
 - block:
 
-  - name: 'curl --output /tmp/example-{{ example__version }}.tar.gz https://example.com/releases/example-{{ example__version }}.tar.gz'
-    ansible.builtin.get_url:
-      url: 'https://example.com/releases/example-{{ example__version }}.tar.gz'
-      dest: '/tmp/example-{{ example__version }}.tar.gz'
+  # always use ansible.builtin.template instead of ansible.builtin.copy, ansible.builtin.lineinfile or ansible.builtin.blockinfile.
+  # always set: backup, src (relative, mirroring dest path), dest, owner, group, mode.
+  - name: 'Deploy /etc/example/example.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/example/example.conf.j2'
+      dest: '/etc/example/example.conf'
+      owner: 'example'
+      group: 'example'
+      mode: 0o400 # contains secrets
+    notify: 'example: validate config; restart example'
+
+  # os-specific template selection using first_found
+  - name: 'Deploy /etc/example/platform.conf'
+    ansible.builtin.template:
+      backup: true
+      src: '{{ lookup("ansible.builtin.first_found", __example__platform_template_file) }}'
+      dest: '/etc/example/platform.conf'
+      owner: 'example'
+      group: 'example'
+      mode: 0o644
+    vars:
+      __example__platform_template_file:
+        files:
+          - 'etc/example/{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}-platform.conf.j2'
+          - 'etc/example/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-platform.conf.j2'
+        paths:
+          - '{{ role_path }}/templates'
+    notify: 'example: validate config; restart example'
+
+  # platform-specific dest path using a variable from vars/<os_family>.yml
+  - name: 'Deploy {{ __example__sysconfig_path }}'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/example/sysconfig.j2'
+      dest: '{{ __example__sysconfig_path }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'example: restart example'
 
-  tags:
-    - 'example'
-
-- block:
-
-  - name: 'groupadd example'
-    ansible.builtin.group:
-      name: 'example'
-      state: 'present'
-      system: true
-
-  tags:
-    - 'example'
-    - 'example:user'
-
-- block:
-
-  # use import_role when the included tasks should inherit the surrounding tags.
-  # this is the standard way to load platform-specific variables (see top of this file).
-  # another common use: include shared tasks from the 'shared' role.
+  # remove rpmnew/rpmsave (and Debian equivalents) after deploying config files
+  # that might be overwritten by package updates.
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
       name: 'shared'
@@ -175,247 +269,56 @@
       shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
     loop:
       - '/etc/example/example.conf'
+      - '/etc/example/platform.conf'
+      - '{{ __example__sysconfig_path }}'
 
   tags:
     - 'example'
     - 'example:configure'
 
-- block:
-
-  # simple: add a line to a file, creating it if necessary
-  - name: 'Add example to /etc/example/allowed-users'
-    ansible.builtin.lineinfile:
-      path: '/etc/example/allowed-users'
-      line: 'example'
-      state: 'present'
-      create: true
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-
-  # with regexp: idempotent line replacement (most common real-world use)
-  - name: 'Set log_level in /etc/example/example.conf'
-    ansible.builtin.lineinfile:
-      path: '/etc/example/example.conf'
-      regexp: '^log_level(\s+|\s*=\s*).*$'
-      line: 'log_level = {{ example__conf_log_level__combined_var }}'
-      state: 'present'
-
-  tags:
-    - 'example'
-    - 'example:configure'
 
 - block:
 
-  # use flush_handlers when subsequent tasks depend on the handler having run.
-  - name: 'Flush handlers so that the service can be used by other roles later'
-    ansible.builtin.meta: 'flush_handlers'
-
-  tags:
-    - 'example'
-    - 'example:configure'
-
-- block:
-
-  # always use ansible.builtin.package instead of ansible.builtin.apt or ansible.builtin.dnf.
-  # always use state: 'present', not 'latest'.
-
-  - name: 'Install required packages'
+  # for lists with state support, use the selectattr pattern with map(attribute="name")
+  # to extract just the names for modules that accept a list (like ansible.builtin.package).
+  - name: 'Ensure absent plugins are removed'
     ansible.builtin.package:
-      name: '{{ example__required_packages }}'
-      state: 'present'
-
-  # for user-defined package lists with state support, use the selectattr pattern
-  - name: 'Ensure absent packages are removed'
-    ansible.builtin.package:
-      name: '{{ example__users__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
+      name: '{{ example__plugins__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
       state: 'absent'
 
-  - name: 'Ensure present packages are installed'
+  - name: 'Ensure present plugins are installed'
     ansible.builtin.package:
-      name: '{{ (example__users__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
-          + (example__users__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
+      name: '{{ (example__plugins__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+          + (example__plugins__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
 
   tags:
     - 'example'
+    - 'example:plugin'
 
-- block:
-
-  - name: 'Gather package facts'
-    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
-    check_mode: false
-
-  tags:
-    - 'example'
 
 - block:
 
   # always use ansible.builtin.service instead of ansible.builtin.systemd.
-
-  - name: 'systemctl {{ example__service_enabled | bool | ternary("enable", "disable") }} --now example.service'
+  # split enabled and state into separate tasks so that the register on the state task
+  # only reflects actual state changes (started/stopped), not enabled/disabled changes.
+  # this allows the handler to correctly skip a restart when the service was just started,
+  # without false-positives from enabled-only changes.
+  - name: 'systemctl {{ example__service_enabled | bool | ternary("enable", "disable") }} example.service'
     ansible.builtin.service:
       name: 'example.service'
-      enabled: '{{ example__service_enabled }}'
+      enabled: '{{ example__service_enabled | bool }}'
+
+  - name: 'systemctl {{ example__service_state }} example.service'
+    ansible.builtin.service:
+      name: 'example.service'
       state: '{{ example__service_state }}'
+    register: '__example__service_state_result'
 
   tags:
     - 'example'
     - 'example:state'
 
-- block:
-
-  - name: 'Set installed version fact'
-    ansible.builtin.set_fact:
-      example__installed_version: '{{ ansible_facts["packages"]["example-server"][0]["version"] }}'
-    when:
-      - '"example-server" in ansible_facts["packages"]'
-
-  tags:
-    - 'example'
-
-- block:
-
-  # use stat to check before performing an action
-  - name: 'stat /etc/example/example.conf'
-    ansible.builtin.stat:
-      path: '/etc/example/example.conf'
-    register: 'example__conf_stat_result'
-
-  - name: 'example --migrate'
-    ansible.builtin.command: 'example --migrate'
-    when:
-      - 'example__conf_stat_result["stat"]["exists"]'
-    # changed_when: there is no easy way to check for changes
-
-  tags:
-    - 'example'
-    - 'example:configure'
-
-- block:
-
-  # always use ansible.builtin.template instead of ansible.builtin.copy.
-  # always set: backup, src (relative, mirroring dest path), dest, owner, group, mode.
-
-  - name: 'Deploy /etc/example/example.conf'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/example/example.conf.j2'
-      dest: '/etc/example/example.conf'
-      owner: 'example'
-      group: 'example'
-      mode: 0o644
-    notify: 'example: validate config; restart example'
-
-  # os-specific template selection using first_found
-  - name: 'Deploy /etc/example/platform.conf'
-    ansible.builtin.template:
-      backup: true
-      src: '{{ lookup("ansible.builtin.first_found", __template_file) }}'
-      dest: '/etc/example/platform.conf'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-    vars:
-      __template_file:
-        files:
-          - 'etc/example/{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}-platform.conf.j2'
-          - 'etc/example/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-platform.conf.j2'
-        paths:
-          - '{{ role_path }}/templates'
-
-  tags:
-    - 'example'
-    - 'example:configure'
-
-- block:
-
-  - name: 'tar xzf /tmp/example-{{ example__version }}.tar.gz -C /opt/example'
-    ansible.builtin.unarchive:
-      src: '/tmp/example-{{ example__version }}.tar.gz'
-      dest: '/opt/example'
-      remote_src: true
-      owner: 'example'
-      group: 'example'
-      creates: '/opt/example/bin/example'
-
-  tags:
-    - 'example'
-
-- block:
-
-  # GET request with response validation
-  - name: 'curl http://localhost:8080/api/health'
-    ansible.builtin.uri:
-      url: 'http://localhost:8080/api/health'
-      method: 'GET'
-      return_content: true
-      status_code: 200
-    register: 'example__api_health_result'
-    changed_when: false
-    check_mode: false
-
-  - name: 'Fail if API health check failed'
-    ansible.builtin.fail:
-      msg: 'API is not healthy: {{ example__api_health_result["content"] }}'
-    when:
-      - '"healthy" not in example__api_health_result["content"]'
-
-  # POST request with JSON body, authentication, and headers
-  - name: 'Create service account via REST API'
-    ansible.builtin.uri:
-      url: '{{ example__api_url }}/api/serviceaccounts'
-      user: '{{ example__admin_login["username"] }}'
-      password: '{{ example__admin_login["password"] }}'
-      force_basic_auth: true
-      validate_certs: true
-      method: 'POST'
-      body: >
-        {
-          "name": "{{ item["name"] }}",
-          "role": "{{ item["role"] | d("viewer") }}"
-        }
-      body_format: 'json'
-      headers:
-        Accept: 'application/json'
-      status_code: 201
-    register: 'example__create_account_result'
-    loop: '{{ example__users__combined_var }}'
-    loop_control:
-      label: '{{ item["name"] }}'
-
-  tags:
-    - 'example'
-    - 'example:configure'
-
-- block:
-
-  - name: 'useradd example'
-    ansible.builtin.user:
-      name: 'example'
-      comment: 'Example Service'
-      group: 'example'
-      home: '/var/lib/example'
-      shell: '/sbin/nologin'
-      system: true
-      state: 'present'
-
-  # loop with state-based filtering and loop_control label
-  - name: 'Manage users'
-    ansible.builtin.user:
-      name: '{{ item["name"] }}'
-      comment: '{{ item["comment"] | d(omit) }}'
-      group: '{{ item["group"] | d(omit) }}'
-      home: '{{ item["home"] | d(omit) }}'
-      shell: '{{ item["shell"] | d(omit) }}'
-      state: '{{ item["state"] | d("present") }}'
-    loop: '{{ example__users__combined_var }}'
-    loop_control:
-      label: '{{ item["name"] }}'
-
-  tags:
-    - 'example'
-    - 'example:user'
 
 - block:
 
@@ -427,6 +330,88 @@
       timeout: 30
       state: 'started'
 
+  # GET request with response validation
+  - name: 'curl http://localhost:8080/api/health'
+    ansible.builtin.uri:
+      url: 'http://localhost:8080/api/health'
+      method: 'GET'
+      return_content: true
+      status_code: 200
+    register: '__example__api_health_result'
+    changed_when: false
+    check_mode: false
+
+  # fail + when and assert are functionally equivalent for single conditions.
+  # prefer assert for consistency with the rest of the role.
+  - name: 'Fail if API health check failed'
+    ansible.builtin.assert:
+      that:
+        - '"healthy" in __example__api_health_result["content"]'
+      fail_msg: 'API is not healthy: {{ __example__api_health_result["content"] }}'
+
   tags:
     - 'example'
+
+
+- block:
+
+  # optionally, add debug messages for combined vars.
+  # this makes it easier for the user to see what the role will do.
+  - name: 'Combined Users'
+    ansible.builtin.debug:
+      var: 'example__users__combined_var'
+
+  # DELETE request with JSON body
+  - name: 'Remove users via REST API'
+    ansible.builtin.uri:
+      url: 'http://127.0.0.1:8080/api/user/{{ item["name"] }}'
+      method: 'DELETE'
+      headers:
+        Accept: 'application/json'
+      status_code:
+        - 200
+        - 404
+    loop: '{{ example__users__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+
+  - name: 'Create users via REST API'
+    ansible.builtin.uri:
+      url: 'http://127.0.0.1:8080/api/user'
+      method: 'POST'
+      body: >
+        {
+          "name": "{{ item["name"] }}",
+          "password": "{{ item["password"] }}",
+          "comment": "{{ item["comment"] | d("") }}"
+        }
+      body_format: 'json'
+      headers:
+        Accept: 'application/json'
+      status_code: 201
+    loop: '{{ example__users__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  tags:
+    - 'example'
+    - 'example:user'
+
+
+- block:
+
+  # use flush_handlers when subsequent tasks depend on the handler having run.
+  - name: 'Flush handlers so that the service can be used by other roles later'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    # make sure to list all tags which might need the flush_handlers to run.
+    - 'example'
+    - 'example:configure'
+    - 'example:plugin'
     - 'example:state'
+    - 'example:user'

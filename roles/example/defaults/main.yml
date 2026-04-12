@@ -1,9 +1,5 @@
 # --- scalar injection pattern ---
 # priority: host > group > dependent > role
-
-example__service_enabled: true
-example__service_state: 'started'
-
 example__conf_log_level__dependent_var: ''
 example__conf_log_level__group_var: ''
 example__conf_log_level__host_var: ''
@@ -26,11 +22,37 @@ example__conf_max_connections__combined_var: '{{
     example__conf_max_connections__role_var
   }}'
 
+# version-specific default from vars/<version>.yml, overridable by the user via inventory
+example__conf_worker_threads: '{{ __example__conf_worker_threads }}'
+
+# referencing another role's variable keeps values consistent when the user sets it in
+# their inventory. always provide a d() fallback, since role defaults are only loaded
+# for roles that are part of the play.
 example__logrotate: '{{ logrotate__rotate | d(14) }}'
+
+# use inventory_hostname as seed for random but idempotent values.
+# this ensures each host gets a different minute, but the same minute on every run.
+example__maintenance_cron_minute: '{{ 59 | random(seed=inventory_hostname) }}'
+
+# not all variables need the injection pattern. simple settings like service state
+# are typically only set by the user, never injected by other roles.
+example__service_enabled: true
+example__service_state: 'started'
 
 
 # --- list of dicts injection pattern ---
 # combined using linuxfabrik.lfops.combine_lod
+example__plugins__dependent_var: []
+example__plugins__group_var: []
+example__plugins__host_var: []
+example__plugins__role_var: []
+example__plugins__combined_var: '{{ (
+      example__plugins__role_var +
+      example__plugins__dependent_var +
+      example__plugins__group_var +
+      example__plugins__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 
 example__users__dependent_var: []
 example__users__group_var: []
@@ -42,4 +64,24 @@ example__users__combined_var: '{{ (
       example__users__group_var +
       example__users__host_var
     ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+# --- list of dicts injection pattern with composite unique key ---
+# when items are identified by a combination of keys (e.g. same name on different ports),
+# pass a list of key names to unique_key.
+example__listeners__dependent_var: []
+example__listeners__group_var: []
+example__listeners__host_var: []
+example__listeners__role_var:
+  - name: 'default'
+    port: 8080
+  - name: 'default'
+    port: 8443
+    ssl: true
+example__listeners__combined_var: '{{ (
+      example__listeners__role_var +
+      example__listeners__dependent_var +
+      example__listeners__group_var +
+      example__listeners__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["name", "port"])
   }}'

@@ -1,0 +1,8 @@
+# only use `__` prefixed (role-internal) vars or `__role_var` suffixed vars in here.
+# vars/ has higher precedence than the inventory, so user-facing vars placed here
+# cannot be overwritten by group_vars or host_vars.
+
+__example__conf_worker_threads: 4
+
+# internal only, not exposed in defaults — the user must not override this
+__example__init_flag: '--init'

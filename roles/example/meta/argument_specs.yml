@@ -1,0 +1,114 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      example__conf_log_level__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The log level. Group-level override.'
+
+      example__conf_log_level__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The log level. Host-level override.'
+
+      example__conf_max_connections__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of concurrent connections. Group-level override.'
+
+      example__conf_max_connections__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of concurrent connections. Host-level override.'
+
+      example__conf_worker_threads:
+        type: 'int'
+        required: false
+        description: 'Number of worker threads for request processing.'
+
+      example__lib_version:
+        type: 'str'
+        required: false
+        description: 'The version of the Linuxfabrik Python Libraries to install.'
+
+      example__listeners__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Network listeners. Group-level override.'
+
+      example__listeners__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Network listeners. Host-level override.'
+
+      example__logrotate:
+        type: 'int'
+        required: false
+        description: 'Number of days to keep rotated log files.'
+
+      example__maintenance_cron_minute:
+        type: 'int'
+        required: false
+        description: 'Minute of the hour at which the maintenance cron job runs.'
+
+      example__plugins__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Optional plugins to install as OS packages. Group-level override.'
+
+      example__plugins__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Optional plugins to install as OS packages. Host-level override.'
+
+      example__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the service.'
+
+      example__service_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Desired state of the example service.'
+
+      example__users__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Application users to manage. Group-level override.'
+
+      example__users__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Application users to manage. Host-level override.'
+
+      example__version:
+        type: 'str'
+        required: true
+        description: 'The version of example to install.'

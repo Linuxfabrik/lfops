@@ -1,6 +1,23 @@
 # {{ ansible_managed }}
-# 2026040601
+# 2026041201
 
 [server]
 log_level = {{ example__conf_log_level__combined_var }}
 max_connections = {{ example__conf_max_connections__combined_var }}
+worker_threads = {{ example__conf_worker_threads }}
+{% if __example__installed_server_version is ansible.builtin.version('2.0.0', '>=') %}
+data_format = v2
+{% endif %}
+
+[plugins]
+{% for item in example__plugins__combined_var if item['state'] | d('present') != 'absent' %}
+load = {{ item['name'] }}
+{% endfor %}
+
+[listeners]
+{% for item in example__listeners__combined_var if item['state'] | d('present') != 'absent' %}
+listen = {{ item['name'] }}:{{ item['port'] }}{% if item['ssl'] | d(false) | bool %} ssl{% endif %}
+{% endfor %}
+
+[maintenance]
+cron_minute = {{ example__maintenance_cron_minute }}
