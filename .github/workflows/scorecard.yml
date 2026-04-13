@@ -3,7 +3,7 @@ name: 'Scorecard supply-chain security'
 on:
   branch_protection_rule: {}
   schedule:
-    - cron: '22 14 * * 4'
+    - cron: '0 5 * * 5'
   workflow_dispatch: {}
 
 permissions: 'read-all'
