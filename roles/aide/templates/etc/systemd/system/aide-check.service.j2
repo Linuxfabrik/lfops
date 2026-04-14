@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026030401
+
+
+[Unit]
+Description=Aide check
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/aide --check
+
+[Install]
+WantedBy=multi-user.target

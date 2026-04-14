@@ -1,0 +1,39 @@
+aide__check_time_on_calendar: '*-*-* 05:00:00'
+aide__exclude_rules__dependent_var: []
+aide__exclude_rules__group_var: []
+aide__exclude_rules__host_var: []
+aide__exclude_rules__role_var: []
+aide__exclude_rules__combined_var: '{{ (
+      aide__exclude_rules__role_var +
+      aide__exclude_rules__dependent_var +
+      aide__exclude_rules__group_var +
+      aide__exclude_rules__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
+aide__exclude_recursive__dependent_var: []
+aide__exclude_recursive__group_var: []
+aide__exclude_recursive__host_var: []
+aide__exclude_recursive__role_var: []
+aide__exclude_recursive__combined_var: '{{ (
+      aide__exclude_recursive__role_var +
+      aide__exclude_recursive__dependent_var +
+      aide__exclude_recursive__group_var +
+      aide__exclude_recursive__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
+aide__include_rules__dependent_var: []
+aide__include_rules__group_var: []
+aide__include_rules__host_var: []
+aide__include_rules__role_var:
+  - path: '/opt/python-venv'
+    attributes: 'CONTENT'
+    state: 'present'
+aide__include_rules__combined_var: '{{ (
+      aide__include_rules__role_var +
+      aide__include_rules__dependent_var +
+      aide__include_rules__group_var +
+      aide__include_rules__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
+aide__timer_state: 'started'
+aide__timer_enabled: true
