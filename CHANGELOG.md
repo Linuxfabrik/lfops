@@ -19,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **execution-environment**: Add missing `sshpass` system package, required for SSH password-based connections (e.g. `--ask-pass`)
 * **role:keycloak**: Fix transaction timeout silently dropping from 3600s to 300s on Keycloak 26.6.0+ due to new `transaction-default-timeout` CLI option overriding the Quarkus property
 * **role:keycloak**: Fix MariaDB database encoding defaulting to deprecated `utf8` (`utf8mb3`) instead of `utf8mb4`, causing warnings in Keycloak 26.6.0+
-* **ci**: Fix pip installs by replacing `--require-hashes` with pinned versions to allow Dependabot updates
 * **role:mount**: Fix `when` condition for NFS/CIFS client package installation failing with multiple mounts and when `state` key is undefined
 
 ### Changed
@@ -29,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:elasticsearch**: Improve README with single-node section and clearer explanation of the manual certificate approach for cluster setup
 * **COMPATIBILITY**: Add missing `crypto_policy` RHEL 10 entry
 * **COMPATIBILITY**: Remove Debian 11 and Ubuntu 20.04 columns (EOL)
+
+### Security
+
+* **ci**: Harden the CI supply chain: the `pre-commit` install in the pre-commit-autoupdate workflow is now hash-pinned via `.github/pre-commit/requirements.txt` (generated with `pip-compile --generate-hashes --strip-extras`), and `dependabot/fetch-metadata` is pinned to a commit SHA so all GitHub Actions used in `.github/workflows/` are now pinned by hash. The policy is documented in CONTRIBUTING.md under "CI Supply Chain"
 
 
 ## [v6.0.1] - 2026-04-07
