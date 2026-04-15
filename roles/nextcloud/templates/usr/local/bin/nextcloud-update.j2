@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026031801
+# 2026041501
 
 set -e
 
@@ -136,6 +136,8 @@ else
 fi
 
 chown -R apache:apache "${NC_DIR}"
+chmod 0755 "${NC_DIR}/occ"
+
 restorecon -r "${NC_DIR}"
 
 sudo -u apache php "${NC_DIR}/occ" user:list | tee "${LOG_DIR}/nextcloud-user-list-after-update" > /dev/null
