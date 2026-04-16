@@ -45,7 +45,7 @@
     ansible.builtin.command: 'dnf -y module disable mariadb'
     register: 'repo_mariadb__command_result'
     changed_when: "'Nothing to do' not in repo_mariadb__command_result.stdout"
-    when: 'ansible_facts["distribution_major_version"] | int > 7'
+    when: 'ansible_facts["distribution_major_version"] | int < 10'
 
   tags:
     - 'repo_mariadb'

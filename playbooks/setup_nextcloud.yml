@@ -77,7 +77,7 @@
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'ansible_facts["distribution_major_version"] in ["7", "8", "9", "10"]'
         - 'not setup_nextcloud__skip_repo_remi | d(false)'
 
     - role: 'linuxfabrik.lfops.php'
@@ -96,7 +96,7 @@
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'ansible_facts["distribution_major_version"] in ["7", "8", "9"]'   # currently doesn't work for fedora
+        - 'ansible_facts["distribution_major_version"] in ["7", "8", "9", "10"]'   # currently doesn't work for fedora
         - 'not setup_nextcloud__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
