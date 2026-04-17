@@ -1,0 +1,10 @@
+- name: 'Prepare VMs for Ansible'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+    - name: 'Wait for SSH to be available'
+      ansible.builtin.wait_for_connection:
+        timeout: 120
+
+    - name: 'Gather facts'
+      ansible.builtin.setup:
