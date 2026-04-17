@@ -1,0 +1,4 @@
+- name: 'Converge'
+  hosts: 'systems_under_test'
+  roles:
+    - role: 'linuxfabrik.lfops.kernel_settings'
