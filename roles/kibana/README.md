@@ -108,6 +108,38 @@ kibana__xpack_security_encryption_key: '...'
 * Type: String.
 * Default: `'full'`
 
+`kibana__logging`
+
+* Kibana logging configuration. Maps 1:1 to Kibana's [logging schema](https://www.elastic.co/guide/en/kibana/current/logging-settings.html), so any combination of appenders, loggers, and root settings is supported. Setting this variable in the inventory replaces the default entirely; there is no recursive merge. The default writes JSON-formatted logs to `/var/log/kibana/kibana.log`, rotates them daily, and keeps 14 rotations.
+* Type: Dictionary.
+* Default:
+
+    ```yaml
+    appenders:
+      file:
+        type: 'rolling-file'
+        fileName: '/var/log/kibana/kibana.log'
+        layout:
+          type: 'json'
+        policy:
+          type: 'time-interval'
+          interval: '24h'
+          modulate: true
+        strategy:
+          type: 'numeric'
+          max: 14
+    root:
+      appenders:
+        - 'default'
+        - 'file'
+    ```
+
+`kibana__raw`
+
+* Raw content which will be appended to the `kibana.yml` config file.
+* Type: String.
+* Default: unset
+
 `kibana__server_host`
 
 * Specifies the address to which the Kibana server will bind. IP addresses and host names are both valid values. To allow connections from remote users, set this parameter to a non-loopback address.
@@ -156,12 +188,6 @@ kibana__xpack_security_encryption_key: '...'
 * Type: String.
 * Default: unset
 
-`kibana__raw`
-
-* Raw content which will be appended to the `kibana.yml` config file.
-* Type: String.
-* Default: unset
-
 `kibana__service_enabled`
 
 * Enables or disables the kibana service, analogous to `systemctl enable/disable --now`.
@@ -190,6 +216,22 @@ kibana__elasticsearch_hosts:
   - 'https://elasticsearch02.example.com:9200'
   - 'https://elasticsearch03.example.com:9200'
 kibana__elasticsearch_ssl_verification_mode: 'full'
+kibana__logging:
+  appenders:
+    console_appender:
+      type: 'console'
+      layout:
+        type: 'pattern'
+        highlight: true
+  root:
+    level: 'info'
+    appenders:
+      - 'console_appender'
+  loggers:
+    - name: 'plugins.reporting'
+      level: 'debug'
+kibana__raw: |-
+  xpack.fleet.agents.enabled: true
 kibana__server_host: '0.0.0.0'
 kibana__server_name: 'kibana-prod-01'
 kibana__server_port: 5601
@@ -198,9 +240,6 @@ kibana__server_security_response_headers_disable_embedding: true
 kibana__server_ssl_certificate: '/etc/pki/tls/certs/kibana-server.crt'
 kibana__server_ssl_enabled: true
 kibana__server_ssl_key: '/etc/pki/tls/private/kibana-server.key'
-kibana__raw: |-
-  logging.root.level: debug
-  xpack.fleet.agents.enabled: true
 kibana__service_enabled: true
 kibana__service_state: 'started'
 ```

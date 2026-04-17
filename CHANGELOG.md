@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:kibana**: Add `kibana__logging` variable to make the `logging:` block in `kibana.yml` fully user-configurable (appenders, loggers, root, rotation). The default preserves the previous hardcoded behavior: JSON logs at `/var/log/kibana/kibana.log`, rotated daily, 14 rotations kept
 * **ci**: Add bandit (security) and vulture (dead code) to pre-commit hooks
 
 ### Fixed
