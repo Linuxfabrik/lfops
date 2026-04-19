@@ -3,6 +3,31 @@
 This role installs and configures [keepalived](https://www.keepalived.org/).
 
 
+## Scope
+
+The role intentionally covers a minimal VRRP setup:
+
+* Deploys exactly one `vrrp_instance` (`VI_{{ keepalived__instance_id }}`) with a single
+  `virtual_ipaddress`.
+* PASS authentication (`auth_type PASS`) between MASTER and BACKUP. Note that keepalived
+  only evaluates the first eight characters of the password.
+* Priorities: `255` for MASTER, `200` for BACKUP.
+* `smtp_alert` for notifications; no `notify_*` hooks.
+* No tracking (no `track_process`, `track_file`, `track_interface` or `track_script`).
+
+It does **not**:
+
+* Set the `net.ipv4.ip_nonlocal_bind = 1` sysctl that services binding to the VIP typically
+  need. Use [linuxfabrik.lfops.kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings)
+  or set it manually.
+* Open the firewall for VRRP (IP protocol 112). Use [linuxfabrik.lfops.firewall](https://github.com/Linuxfabrik/lfops/tree/main/roles/firewall)
+  or similar.
+
+For advanced setups (multiple VIPs, tracking-based priority adjustments, `notify_*` hooks),
+override the template in your own role or extend `/etc/keepalived/keepalived.conf`
+manually.
+
+
 ## Tags
 
 `keepalived`
