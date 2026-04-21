@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026042001
+# 2026042101
 
 set -euo pipefail
 
@@ -108,6 +108,17 @@ else
 fi
 
 echo
+echo 'chmod'
+echo '-----'
+if ! grep -q "chmod_done" "${STATE_FILE}"; then
+    chmod 0755 "${NC_DIR}/occ"
+    echo "chmod_done" >> "${STATE_FILE}"
+    echo 'done.'
+else
+    echo 'skipping.'
+fi
+
+echo
 echo 'occ upgrade --no-interaction'
 echo '----------------------------'
 if ! grep -q "upgrade_done" "${STATE_FILE}"; then
@@ -169,17 +180,6 @@ echo '-----'
 if ! grep -q "chown_done" "${STATE_FILE}"; then
     chown -R "${WEBSERVER_USER}:${WEBSERVER_GROUP}" "${NC_DIR}"
     echo "chown_done" >> "${STATE_FILE}"
-    echo 'done.'
-else
-    echo 'skipping.'
-fi
-
-echo
-echo 'chmod'
-echo '-----'
-if ! grep -q "chmod_done" "${STATE_FILE}"; then
-    chmod 0755 "${NC_DIR}/occ"
-    echo "chmod_done" >> "${STATE_FILE}"
     echo 'done.'
 else
     echo 'skipping.'
