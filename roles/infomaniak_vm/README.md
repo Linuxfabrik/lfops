@@ -182,7 +182,14 @@ infomaniak_vm__api_username: 'PCU-123456'
 
 `infomaniak_vm__state`
 
-* The state of the instance. Note that setting this to absent also removes all other created compontents, except the networks, which are never deleted since other VMs could still be using them. Possible options: `present`, `absent`.
+* The state of the instance. Possible options: `present`, `absent`.
+* When set to `absent`, the role deletes:
+    * the VM instance itself
+    * its boot volume
+    * the managed ports for every entry in `infomaniak_vm__networks`, unless the entry has `keep_port_on_absent: true`
+    * the VM's security group
+* The following are **never** deleted by this role:
+    * the networks and subnets, since other VMs could still be using them
 * Type: String.
 * Default: `'present'`
 
