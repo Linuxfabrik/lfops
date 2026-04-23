@@ -6,7 +6,7 @@ This role creates and manages various [Python 3 virtual environments (venv)](htt
 ## Mandatory Requirements
 
 * Install Python 3
-* On Rocky 9, the CRB Repo ("Code Ready Builder") needs to be enabled to be able to deploy `python3-virtualenv` - otherwise you'll get `nothing provides python3-wheel-wheel needed by python3-virtualenv-20.21.1-1.el9.noarch from epel`.
+* On Rocky 9+, the EPEL and the CRB Repo ("Code Ready Builder") need to be enabled to be able to install `python3-virtualenv` - otherwise you'll get `No match for argument: python3-virtualenv` or `nothing provides python3-wheel-wheel needed by python3-virtualenv-20.21.1-1.el9.noarch from epel`.
 
 
 ## Tags
