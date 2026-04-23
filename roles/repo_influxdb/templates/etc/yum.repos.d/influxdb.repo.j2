@@ -1,10 +1,12 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2026042301
 
 [influxdb]
 name = InfluxDB Repository - RHEL $releasever
 {% if repo_influxdb__mirror_url is defined and repo_influxdb__mirror_url | length %}
 baseurl={{ repo_influxdb__mirror_url }}/influxdb/rhel/$releasever/x86_64/stable
+# recommended package for influxdb. will be installed on updates and result in having an additional repo (influxdata) on the server. that repo provides the influxdb package too which will overwrite the repo_influxdb__mirror_url
+exclude = influxdata-archive-keyring
 {% else %}
 baseurl = https://repos.influxdata.com/rhel/$releasever/$basearch/stable
 {% endif %}
