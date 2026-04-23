@@ -82,6 +82,9 @@ infomaniak_vm__api_username: 'PCU-123456'
 `infomaniak_vm__networks`
 
 * A list of dictionaries defining which networks should be attached to this instance. It also allows the creation of new internal networks, or setting a fixed IP for the instance.
+* For each network, the role creates a dedicated port. Port security is handled automatically based on the network name:
+    * On the public `ext-net1` network, `port_security_enabled` is left unset and the cloud default applies (Infomaniak enables port security on `ext-net1` by default, so security groups are enforced on public ports). Infomaniak's Neutron policy forbids clients from setting this attribute on external ports anyway — attempting to do so returns `(rule:create_port and rule:create_port:port_security_enabled) is disallowed by policy`.
+    * On every other network, `port_security_enabled` is set to `false`. This is a sensible default for internal networks. Security groups are therefore not enforced on internal ports — design internal traffic filtering accordingly.
 * Subkeys:
 
     * `name`:
@@ -98,6 +101,18 @@ infomaniak_vm__api_username: 'PCU-123456'
 
         * Optional. The fixed IP of this instance. This can be used for attach to an existing network, or when creating a new one.
         * Type: String.
+
+    * `port_name`:
+
+        * Optional. Name of the network port. Useful for adopting an existing port in place. Note that only explicitly created ports can survive VM deletion / detachment. Auto-created ports will be instantly deleted on detachment (even if the name was edited later on).
+        * Type: String.
+        * Default: `'{{ infomaniak_vm__name }}--{{ item["name"] }}--port'`
+
+    * `keep_port_on_absent`:
+
+        * Optional. If `true`, the port for this network is kept when the VM is removed by this role (`infomaniak_vm__state: 'absent'`). Useful for preserving a public IP across VM recreations / migrations — when a VM of the same name is created again (or the port is renamed in OpenStack), the existing port is re-used. The network itself is never deleted regardless of this setting, as it could be used by other VMs.
+        * Type: Bool.
+        * Default: `false`
 
 * Type: List of dictionaries.
 * Default: `[]`

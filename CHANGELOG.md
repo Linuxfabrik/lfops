@@ -10,8 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking Changes
+
+* **role:infomaniak_vm**: Always create a managed port for every entry in `infomaniak_vm__networks`, even when no `fixed_ip` is set. Previously only networks with a `fixed_ip` got a managed port; networks without one relied on OpenStack's auto-created port. To avoid creating unused (but billed) managed ports on VMs provisioned under the old behavior, make sure to manually rename the existing port in OpenStack to match the `port_name`. Note that this port will not survive VM deletion / detachment, since it was automatically created and therefore is owned by OpenStack, not the user.
+
 ### Added
 
+* **role:infomaniak_vm**: Add `keep_port_on_absent` subkey on `infomaniak_vm__networks` entries to preserve the port (and its fixed IP) when the VM is set to `infomaniak_vm__state: 'absent'`, so the same IP can be re-used
+* **role:infomaniak_vm**: Add `port_name` subkey on `infomaniak_vm__networks` entries to override the name of the managed port. Defaults to the previous `{{ infomaniak_vm__name }}--{{ item["name"] }}--port` pattern, so existing setups are unaffected
 * **role:kibana**: Add `kibana__logging` variable to make the `logging:` block in `kibana.yml` fully user-configurable (appenders, loggers, root, rotation). The default preserves the previous hardcoded behavior: JSON logs at `/var/log/kibana/kibana.log`, rotated daily, 14 rotations kept
 * **ci**: Add bandit (security) and vulture (dead code) to pre-commit hooks
 
