@@ -9,7 +9,10 @@ logstash__grok_patterns__dependent_var: []
 logstash__grok_patterns__group_var: []
 logstash__grok_patterns__host_var: []
 logstash__grok_patterns__role_var: []
-logstash__java_opts: '-Djava.io.tmpdir={{ logstash__path_data }}/tmp'
+logstash__java_opts: >
+  -Djava.io.tmpdir={{ logstash__path_data }}/tmp
+  -Xms{{ (ansible_facts["memtotal_mb"] * 0.6) | int }}m
+  -Xmx{{ (ansible_facts["memtotal_mb"] * 0.6) | int }}m
 logstash__log_level: 'info'
 logstash__node_name: '{{ ansible_facts["nodename"] }}'
 logstash__path_data: '/var/lib/logstash'
