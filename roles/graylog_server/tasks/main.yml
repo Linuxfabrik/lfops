@@ -8,8 +8,7 @@
       quiet: true
 
   tags:
-    - 'graylog_server'
-    - 'graylog_server:configure'
+    - 'always'
 
 - block:
 

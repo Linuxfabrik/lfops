@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025082001
+# 2026042401
 # 6.1
 # see https://go2docs.graylog.org/6-1/setting_up_graylog/data_node_configuration_file.htm
 #####################################
@@ -166,8 +166,10 @@ opensearch_heap = {{ graylog_datanode__opensearch_heap }}
 
 #### Data Tiering Properties
 
+{% if graylog_datanode__path_repos | length %}
 node_search_cache_size = {{ graylog_datanode__node_search_cache_size }}
-path_repo = {{ graylog_datanode__path_repo | join(',') }}
+path_repo = {{ graylog_datanode__path_repos | join(',') }}
+{% endif %}
 
 {% if graylog_datanode__raw is defined and graylog_datanode__raw | length %}
 #### Raw ####
