@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:graylog_datanode**: Add optional variable `graylog_datanode__raw`.
+* **role:graylog_datanode**: Add optional variables `graylog_datanode__path_repos`, `graylog_datanode__node_search_cache_size` to configure searchable snapshot locations and size of disk-based searchable snapshot cache.
 * **role:infomaniak_vm**: Add `keep_port_on_absent` subkey on `infomaniak_vm__networks` entries to preserve the port (and its fixed IP) when the VM is set to `infomaniak_vm__state: 'absent'`, so the same IP can be re-used
 * **role:infomaniak_vm**: Add `port_name` subkey on `infomaniak_vm__networks` entries to override the name of the managed port. Defaults to the previous `{{ infomaniak_vm__name }}--{{ item["name"] }}--port` pattern, so existing setups are unaffected
 * **role:kibana**: Add `kibana__logging` variable to make the `logging:` block in `kibana.yml` fully user-configurable (appenders, loggers, root, rotation). The default preserves the previous hardcoded behavior: JSON logs at `/var/log/kibana/kibana.log`, rotated daily, 14 rotations kept
@@ -23,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:graylog_datanode**: Validate that `graylog_datanode__password_secret | length >= 16`
+* **role:graylog_server**: Validate that `graylog_server__password_secret | length >= 16`
 * **role:nextcloud**: Ensure that the Nextcloud OCC is executable.
 * **execution-environment**: Add missing `sshpass` system package, required for SSH password-based connections (e.g. `--ask-pass`)
 * **role:keycloak**: Fix transaction timeout silently dropping from 3600s to 300s on Keycloak 26.6.0+ due to new `transaction-default-timeout` CLI option overriding the Quarkus property
@@ -31,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:graylog_server**: Update `server.conf` templates to include `telemetry_enabled = false`.
 * **role:keepalived**: Document role scope in the README. The role intentionally covers only a minimal VRRP setup (single `vrrp_instance`, single `virtual_ipaddress`, PASS auth, `smtp_alert`). It does not set the `net.ipv4.ip_nonlocal_bind` sysctl and does not open the firewall for VRRP; pointers to the `kernel_settings` and `firewall` roles are included
 * **all roles**: Rewrite all role READMEs to use the new standard format: replace markdown tables with bullet lists for tags and variables, convert HTML/blockquote subkeys to expanded indented format, standardize terminology (`Bool` not `Boolean`, `Mandatory` not `Required`)
 * **role:opensearch**: Rewrite README with step-by-step cluster setup guide, single-node section, post-installation steps, and improved variable documentation

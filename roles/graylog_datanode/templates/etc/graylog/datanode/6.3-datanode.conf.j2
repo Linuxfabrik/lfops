@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025082001
+# 2026042401
 # 6.3
 # see https://go2docs.graylog.org/6-3/setting_up_graylog/data_node_configuration_file.htm
 #####################################
@@ -163,3 +163,13 @@ opensearch_logs_location = /var/log/graylog-datanode/opensearch
 # indexer_jwt_auth_token_expiration_duration = 180s
 
 opensearch_heap = {{ graylog_datanode__opensearch_heap }}
+
+{% if graylog_datanode__path_repos | length %}
+#### Data Tiering Properties
+node_search_cache_size = {{ graylog_datanode__node_search_cache_size }}
+path_repo = {{ graylog_datanode__path_repos | join(',') }}
+{% endif %}
+{% if graylog_datanode__raw is defined and graylog_datanode__raw | length %}
+#### Raw
+{{ graylog_datanode__raw }}
+{% endif %}

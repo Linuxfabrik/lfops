@@ -78,6 +78,12 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 * Type: String.
 * Default: `'mongodb://127.0.0.1/graylog'`
 
+`graylog_datanode__node_search_cache_size`
+
+* Size of disk-based cache for searchable snaphots. This space will be automatically reserved if `graylog_datanode__path_repos` is configured. See [docs.opensearch.org - Supported Units](https://docs.opensearch.org/latest/api-reference/units/) for a list of possible options. This setting is only applied when `graylog_datanode__path_repos` contains at least one path.
+* Type: String.
+* Default: `10gb`
+
 `graylog_datanode__opensearch_data_location`
 
 * Set this OpenSearch folder if you need OpenSearch to be located in a special place.
@@ -89,6 +95,18 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 * Ensure the heap settings are set to half your system memory, up to a max of 31 GB.
 * Type: String.
 * Default: 50% of system memory, e.g. `'8g'`
+
+`graylog_datanode__path_repos`
+
+* Filesystem paths where searchable snapshots should be stored.
+* Type: List of Strings.
+* Default: `[]`
+
+`graylog_datanode__raw`
+
+* Multiline string. Raw content which will be appended to the `datanode.conf` config file. Note that the config file uses the Java properties format and not YAML.
+* Type: String.
+* Default: unset
 
 `graylog_datanode__service_enabled`
 
@@ -102,8 +120,13 @@ Example:
 graylog_datanode__bind_address: '127.0.0.1'
 graylog_datanode__datanode_http_port: 8999
 graylog_datanode__mongodb_uri: 'mongodb://127.0.0.1/graylog'
+graylog_datanode__node_search_cache_size: '5gb'
 graylog_datanode__opensearch_data_location: '/data/opensearch'
 graylog_datanode__opensearch_heap: '8g'
+graylog_datanode__path_repos:
+  - '/mnt/backups/graylog-datanode/backup'
+graylog_datanode__raw: |-
+  insecure_startup = false
 graylog_datanode__service_enabled: true
 ```
 
