@@ -2,7 +2,7 @@
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
-    - name: 'Install Python using raw module'
+    - name: 'Install Python using raw module (in case it is missing from the container image)'
       ansible.builtin.raw: |
         sh -c '''
         if command -v dnf > /dev/null 2>&1; then
