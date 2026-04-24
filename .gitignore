@@ -8,6 +8,7 @@ playbooks/test.yml
 roles/test
 context/
 particle/.vagrant
+extensions/molecule/**/*.retry
 
 # mkdocs documentation
 /docs/CHANGELOG.md

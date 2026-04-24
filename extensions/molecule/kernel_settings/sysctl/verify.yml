@@ -1,0 +1,12 @@
+- name: 'Verify'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+    - name: 'Read sysctl vm.overcommit_memory from procfs'
+      ansible.builtin.slurp:
+        src: '/proc/sys/vm/overcommit_memory'
+      register: 'sysctl_vm_overcommit_memory_result'
+
+    - name: 'Assert'
+      ansible.builtin.assert:
+        that: 'sysctl_vm_overcommit_memory_result.content | b64decode | int == 1'

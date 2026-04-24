@@ -1,0 +1,17 @@
+ansible_connection: 'ssh'
+ansible_user: 'root'
+
+vm_image_url: 'https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img'
+
+kvm_vm__autostart: false
+kvm_vm__base_image: 'noble-server-cloudimg-amd64.img'
+kvm_vm__boot_disk_size: '20G'
+kvm_vm__host: 'localhost'
+kvm_vm__memory: 4096
+kvm_vm__network_connections:
+  - name: 'enp1s0'
+    network_name: 'default'
+    dhcp4: true
+kvm_vm__osinfo: 'ubuntu24.04'
+kvm_vm__packages: []
+kvm_vm__vcpus: 2

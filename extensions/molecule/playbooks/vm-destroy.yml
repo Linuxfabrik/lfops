@@ -1,4 +1,5 @@
 - name: 'Destroy VM instances using kvm_vm role'
+  become: true
   hosts: 'systems_under_test'
   gather_facts: false
   roles:

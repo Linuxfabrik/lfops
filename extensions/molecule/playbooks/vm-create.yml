@@ -1,14 +1,8 @@
 - name: 'Prepare for VM creation'
-  hosts: 'localhost'
+  hosts: 'systems_under_test'
   gather_facts: false
   vars:
     molecule_ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
-    molecule_vm_hosts: >-
-      {{ groups['systems_under_test'] | default([])
-         | select('in', hostvars | dict2items
-           | selectattr('value.vm_image_url', 'defined')
-           | map(attribute='key') | list)
-         | list }}
   tasks:
 
     - name: 'Generate ephemeral SSH keypair'
@@ -16,39 +10,51 @@
         path: '{{ molecule_ephemeral_dir }}/molecule_key'
         type: 'ed25519'
         comment: 'molecule'
+      delegate_to: 'localhost'
+      run_once: true
 
     - name: 'Read SSH public key'
       ansible.builtin.slurp:
         src: '{{ molecule_ephemeral_dir }}/molecule_key.pub'
+      delegate_to: 'localhost'
       register: 'molecule_pubkey_result'
+      run_once: true
 
     - name: 'Set SSH public key fact'
       ansible.builtin.set_fact:
         molecule_ssh_pubkey: '{{ molecule_pubkey_result["content"] | b64decode | trim }}'
+      delegate_to: 'localhost'
+      delegate_facts: true
+      run_once: true
 
     - name: 'Get info on storage pools'
       community.libvirt.virt_pool:
         command: 'info'
+      delegate_to: 'localhost'
       register: 'molecule_pool_info'
+      run_once: true
 
     - name: 'Download cloud images into storage pool'
       ansible.builtin.get_url:
-        url: '{{ hostvars[item]["vm_image_url"] }}'
-        dest: '{{ molecule_pool_info["pools"]["default"]["path"] }}/{{ hostvars[item]["kvm_vm__base_image"] }}'
+        url: '{{ vm_image_url }}'
+        dest: '{{ molecule_pool_info["pools"]["default"]["path"] }}/{{ kvm_vm__base_image }}'
         mode: '0644'
-      loop: '{{ molecule_vm_hosts }}'
-      loop_control:
-        label: '{{ hostvars[item]["kvm_vm__base_image"] }}'
+      become: true
+      delegate_to: 'localhost'
+      when: 'vm_image_url is defined'
 
     - name: 'Ensure ephemeral inventory directory exists'
       ansible.builtin.file:
         path: '{{ molecule_ephemeral_dir }}/inventory'
         state: 'directory'
         mode: '0755'
+      delegate_to: 'localhost'
+      run_once: true
 
 
 - name: 'Create VM instances using kvm_vm role'
-  hosts: 'molecule'
+  become: true
+  hosts: 'systems_under_test'
   gather_facts: false
   roles:
     - role: 'linuxfabrik.lfops.kvm_vm'
@@ -59,51 +65,44 @@
 
 
 - name: 'Discover VM IPs and write dynamic inventory'
-  hosts: 'localhost'
+  hosts: 'systems_under_test'
   gather_facts: false
   vars:
     molecule_ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
-    molecule_vm_hosts: >-
-      {{ groups['systems_under_test'] | default([])
-         | select('in', hostvars | dict2items
-           | selectattr('value.vm_image_url', 'defined')
-           | map(attribute='key') | list)
-         | list }}
   tasks:
 
     - name: 'Wait for VMs to obtain IP addresses'
       ansible.builtin.command:
-        cmd: 'virsh domifaddr {{ item }} --source arp'
+        cmd: 'virsh domifaddr {{ inventory_hostname }} --source arp'
       register: 'domifaddr_result'
       until: 'domifaddr_result.stdout_lines | select("match", ".*ipv4.*") | list | length > 0'
       retries: 30
       delay: 5
       changed_when: false
-      loop: '{{ molecule_vm_hosts }}'
+      delegate_to: 'localhost'
 
     - name: 'Parse VM IP addresses'
       ansible.builtin.set_fact:
-        molecule_vm_ips: >-
-          {{ molecule_vm_ips | default({}) | combine({
-              item.item: item.stdout_lines
-                | select('match', '.*ipv4.*')
-                | first
-                | regex_replace('.*\s+(\d+\.\d+\.\d+\.\d+)\/.*', '\1')
-          }) }}
-      loop: '{{ domifaddr_result.results }}'
-      loop_control:
-        label: '{{ item.item }}'
+        molecule_vm_ip: >-
+          {{
+            domifaddr_result.stdout_lines
+            | select('match', '.*ipv4.*')
+            | first
+            | regex_replace('.*\s+(\d+\.\d+\.\d+\.\d+)\/.*', '\1')
+          }}
 
     - name: 'Write dynamic VM inventory'
       ansible.builtin.copy:
         content: |
           molecule:
             hosts:
-          {% for host in molecule_vm_hosts %}
+          {% for host in ansible_play_hosts %}
               {{ host }}:
-                ansible_host: '{{ molecule_vm_ips[host] }}'
+                ansible_host: '{{ hostvars[host]["molecule_vm_ip"] }}'
                 ansible_ssh_private_key_file: '{{ molecule_ephemeral_dir }}/molecule_key'
                 ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
           {% endfor %}
         dest: '{{ molecule_ephemeral_dir }}/inventory/molecule_vm.yml'
         mode: '0644'
+      delegate_to: 'localhost'
+      run_once: true
