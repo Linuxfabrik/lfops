@@ -17,6 +17,7 @@
   tags:
     - 'always'
 
+
 - block:
 
   - name: 'Install graylog-datanode'
