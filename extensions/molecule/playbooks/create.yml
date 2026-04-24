@@ -1,34 +1,28 @@
 - name: 'Create container instances'
-  hosts: 'localhost'
+  hosts: 'systems_under_test'
   gather_facts: false
   tasks:
     - name: 'Create containers from inventory'
       containers.podman.podman_container:
-        hostname: '{{ item }}'
-        name: '{{ item }}'
-        image: '{{ hostvars[item]["container_image"] }}'
-        command: '{{ hostvars[item]["container_command"] | default("sleep 1d") }}'
-        privileged: '{{ hostvars[item]["container_privileged"] | default(false) }}'
-        volumes: '{{ hostvars[item]["container_volumes"] | default(omit) }}'
-        capabilities: '{{ hostvars[item]["container_capabilities"] | default(omit) }}'
-        systemd: '{{ hostvars[item]["container_systemd"] | default(false) }}'
-        log_driver: '{{ hostvars[item]["container_log_driver"] | default("json-file") }}'
+        hostname: '{{ inventory_hostname }}'
+        name: '{{ inventory_hostname }}'
+        image: '{{ container_image }}'
+        command: '{{ container_command | default("sleep 1d") }}'
+        privileged: '{{ container_privileged | default(false) }}'
+        volumes: '{{ container_volumes | default(omit) }}'
+        capabilities: '{{ container_capabilities | default(omit) }}'
+        systemd: '{{ container_systemd | default(false) }}'
+        log_driver: '{{ container_log_driver | default("json-file") }}'
         state: 'started'
-      register: result
-      loop: '{{ groups["systems_under_test"] }}'
+      register: 'create_result'
+      delegate_to: 'localhost'
 
+    # Not using ansible.builtin.wait_for_connection here as it depends on a working Python
+    # installation inside the container; however, some container images are shipped with the
+    # bare minimum and thus do not contain a Python interpreter.
     - name: 'Verify containers are running'
       ansible.builtin.include_tasks:
         file: 'tasks/create-fail.yml'
       when: >
-        item.container.State.ExitCode != 0 or
-        not item.container.State.Running
-      loop: '{{ result.results }}'
-      loop_control:
-        label: '{{ item.container.Name }}'
-
-    #- name: 'Wait for containers to be ready'
-    #  ansible.builtin.wait_for_connection:
-    #    timeout: 30
-    #  delegate_to: '{{ item }}'
-    #  loop: '{{ groups["systems_under_test"] }}'
+        create_result.container.State.ExitCode != 0 or
+        not create_result.container.State.Running

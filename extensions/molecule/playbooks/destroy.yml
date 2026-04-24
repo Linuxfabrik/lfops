@@ -1,21 +1,16 @@
 - name: 'Destroy container instances'
-  hosts: 'localhost'
+  hosts: 'systems_under_test'
   gather_facts: false
   tasks:
-    - name: 'Get info for all containers'
-      containers.podman.podman_container_info:
-        name: '{{ item }}'
-      loop: '{{ groups["systems_under_test"] }}'
-      register: 'podman_infos'
+    #- name: 'Get info for all containers'
+    #  containers.podman.podman_container_info:
+    #    name: '{{ inventory_hostname }}'
+    #  delegate_to: 'localhost'
+    #  register: 'container_info'
 
     - name: 'Kill container if running'
       containers.podman.podman_container:
-        name: '{{ item.item }}'
+        name: '{{ inventory_hostname }}'
         state: 'absent' #'stopped'
         timeout: 2
-      loop: '{{ podman_infos.results }}'
-      loop_control:
-        label: '{{ item.item }}'
-      when:
-        - 'item.containers | length > 0'
-        - 'item.containers[0].State.Status == "running"'
+      delegate_to: 'localhost'
