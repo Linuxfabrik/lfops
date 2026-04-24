@@ -218,6 +218,8 @@ infomaniak_vm__state: 'present'
 
 `BadRequestException: 400: Client Error for url: https://api....infomaniak.cloud/compute/v2.1/..., Invalid key_name provided.`: [Provide the correct "Key Pair Name" of your SSH Key](https://api.pub1.infomaniak.cloud/horizon/project/key_pairs). It should match your local Linux username.
 
+`Only volume-backed servers are allowed for flavors with zero disk.`: The selected `infomaniak_vm__flavor` does not include a local disk (for example, a flavor whose name contains `disk0`). Such flavors require a separate bootable volume, but `infomaniak_vm__separate_boot_volume_size` is unset. Either pick a flavor that includes a disk, or set `infomaniak_vm__separate_boot_volume_size` to the desired root-volume size in GB.
+
 
 ## License
 
