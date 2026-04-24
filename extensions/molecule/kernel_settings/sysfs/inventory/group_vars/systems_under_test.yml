@@ -1,5 +1,0 @@
-kernel_settings__sysfs__group_var:
-  - name: '/sys/kernel/debug/x86/pti_enabled'
-    value: 0
-  - name: '/sys/kernel/debug/x86/retp_enabled'
-    value: 0

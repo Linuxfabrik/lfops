@@ -1,0 +1,3 @@
+kernel_settings__sysctl__group_var:
+  - name: 'vm.overcommit_memory'
+    value: 1
