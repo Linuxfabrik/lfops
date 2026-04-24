@@ -10,25 +10,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking Changes
+
+* **role:infomaniak_vm**: Always create a managed port for every entry in `infomaniak_vm__networks`, even when no `fixed_ip` is set. Previously only networks with a `fixed_ip` got a managed port; networks without one relied on OpenStack's auto-created port. To avoid creating unused (but billed) managed ports on VMs provisioned under the old behavior, make sure to manually rename the existing port in OpenStack to match the `port_name`. Note that this port will not survive VM deletion / detachment, since it was automatically created and therefore is owned by OpenStack, not the user.
+
 ### Added
 
+* **role:infomaniak_vm**: Add `keep_port_on_absent` subkey on `infomaniak_vm__networks` entries to preserve the port (and its fixed IP) when the VM is set to `infomaniak_vm__state: 'absent'`, so the same IP can be re-used
+* **role:infomaniak_vm**: Add `port_name` subkey on `infomaniak_vm__networks` entries to override the name of the managed port. Defaults to the previous `{{ infomaniak_vm__name }}--{{ item["name"] }}--port` pattern, so existing setups are unaffected
+* **role:kibana**: Add `kibana__logging` variable to make the `logging:` block in `kibana.yml` fully user-configurable (appenders, loggers, root, rotation). The default preserves the previous hardcoded behavior: JSON logs at `/var/log/kibana/kibana.log`, rotated daily, 14 rotations kept
 * **ci**: Add bandit (security) and vulture (dead code) to pre-commit hooks
 
 ### Fixed
 
+* **role:nextcloud**: Ensure that the Nextcloud OCC is executable.
 * **execution-environment**: Add missing `sshpass` system package, required for SSH password-based connections (e.g. `--ask-pass`)
 * **role:keycloak**: Fix transaction timeout silently dropping from 3600s to 300s on Keycloak 26.6.0+ due to new `transaction-default-timeout` CLI option overriding the Quarkus property
 * **role:keycloak**: Fix MariaDB database encoding defaulting to deprecated `utf8` (`utf8mb3`) instead of `utf8mb4`, causing warnings in Keycloak 26.6.0+
-* **ci**: Fix pip installs by replacing `--require-hashes` with pinned versions to allow Dependabot updates
 * **role:mount**: Fix `when` condition for NFS/CIFS client package installation failing with multiple mounts and when `state` key is undefined
 
 ### Changed
 
+* **role:keepalived**: Document role scope in the README. The role intentionally covers only a minimal VRRP setup (single `vrrp_instance`, single `virtual_ipaddress`, PASS auth, `smtp_alert`). It does not set the `net.ipv4.ip_nonlocal_bind` sysctl and does not open the firewall for VRRP; pointers to the `kernel_settings` and `firewall` roles are included
 * **all roles**: Rewrite all role READMEs to use the new standard format: replace markdown tables with bullet lists for tags and variables, convert HTML/blockquote subkeys to expanded indented format, standardize terminology (`Bool` not `Boolean`, `Mandatory` not `Required`)
 * **role:opensearch**: Rewrite README with step-by-step cluster setup guide, single-node section, post-installation steps, and improved variable documentation
 * **role:elasticsearch**: Improve README with single-node section and clearer explanation of the manual certificate approach for cluster setup
 * **COMPATIBILITY**: Add missing `crypto_policy` RHEL 10 entry
 * **COMPATIBILITY**: Remove Debian 11 and Ubuntu 20.04 columns (EOL)
+
+### Security
+
+* **ci**: Harden the CI supply chain: the `pre-commit` install in the pre-commit-autoupdate workflow is now hash-pinned via `.github/pre-commit/requirements.txt` (generated with `pip-compile --generate-hashes --strip-extras`), and `dependabot/fetch-metadata` is pinned to a commit SHA so all GitHub Actions used in `.github/workflows/` are now pinned by hash. The policy is documented in CONTRIBUTING.md under "CI Supply Chain"
 
 
 ## [v6.0.1] - 2026-04-07

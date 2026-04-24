@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025121901
+# 2026041701
 
 # For more configuration options see the configuration guide for Kibana in
 # https://www.elastic.co/guide/index.html
@@ -117,25 +117,7 @@ elasticsearch.ssl.verificationMode: '{{ kibana__elasticsearch_ssl_verification_m
 
 # Enables you to specify a file where Kibana stores log output.
 logging:
-  appenders:
-    file:
-      type: rolling-file
-      fileName: /var/log/kibana/kibana.log
-      layout:
-        type: json
-      # rotate daily, keep logs for 14 days
-      policy:
-        type: time-interval
-        interval: 24h
-        modulate: true
-      strategy:
-        type: numeric
-        max: 14
-  root:
-    appenders:
-      - default
-      - file
-
+{{ kibana__logging | ansible.builtin.to_nice_yaml(indent=2) | indent(2, true) }}
 # Logs queries sent to Elasticsearch.
 #logging.loggers:
 #  - name: elasticsearch.query

@@ -52,7 +52,7 @@ This role does not have any mandatory variables. However, either `chrony__ntp_po
 
 `chrony__ntp_servers`
 
-* A list of NTP servers which should be used as a time source. The `ibust` option is always used, meaning chronyd will start with a burst of 4-8 requests in order to make the first update of the clock sooner.
+* A list of NTP servers which should be used as a time source. The `iburst` option is always used, meaning chronyd will start with a burst of 4-8 requests in order to make the first update of the clock sooner.
 * Type: List.
 * Default: `[]`
 

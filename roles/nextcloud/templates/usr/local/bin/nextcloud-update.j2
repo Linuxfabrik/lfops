@@ -1,194 +1,289 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026031801
+# 2026042101
 
-set -e
+set -euo pipefail
+
+error_handler() {
+    local rc=$?
+    echo >&2
+    echo "ERROR in Row ${1} (Exit: ${rc}" >&2
+}
+trap 'error_handler "${LINENO}"' ERR
+
+WEBSERVER_USER="apache"
+WEBSERVER_GROUP="apache"
+PHP_SERVICE_NAME="php-fpm"
 
 NC_DIR="/var/www/html/nextcloud"
-LOG_DIR="/tmp/nextcloud-update-$(date --iso-8601)"
-STATE_FILE="${LOG_DIR}/nextcloud-update.state"
-NC_DATA_DIR=$(sudo -u apache php "${NC_DIR}/occ" config:system:get datadirectory)
+DATA_DIR=$(sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" config:system:get datadirectory)
+TMP_DIR="/tmp/nextcloud-update-$(date --iso-8601)"
+
+STATE_FILE="${TMP_DIR}/nextcloud-update.state"
 
 {% if nextcloud__icinga2_api_user_login is defined and nextcloud__icinga2_api_user_login | length %}
 START_TIME=$(date +%s)
 END_TIME=$(( START_TIME + 1800 ))
 {% endif %}
 
-mkdir -p "$LOG_DIR"
+mkdir -p "${TMP_DIR}"
 touch "${STATE_FILE}"
 
 {% if nextcloud__icinga2_api_user_login is defined and nextcloud__icinga2_api_user_login | length %}
 echo
-echo
 echo 'set icinga2 downtime'
 echo '--------------------'
 if ! grep -q "set_icinga2_downtime_done" "${STATE_FILE}"; then
-curl \
---connect-timeout 5 \
---insecure \
---silent \
---user "{{ nextcloud__icinga2_api_user_login["username"] }}:{{ nextcloud__icinga2_api_user_login["password"] }}" \
---header 'Accept: application/json' \
---request POST '{{ nextcloud__icinga2_api_url }}/v1/actions/schedule-downtime' \
---data-binary @- 1> /dev/null << EOF
-{
-    "type": "Host",
-    "filter": "match(\"{{ nextcloud__icinga2_hostname }}\", host.name)",
-    "start_time": "${START_TIME}",
-    "end_time": "${END_TIME}",
-    "author": "{{ nextcloud__icinga2_hostname }}",
-    "comment": "Running Nextcloud update",
-    "all_services": true
-}
+    curl \
+    --connect-timeout 5 \
+    --insecure \
+    --silent \
+    --user "{{ nextcloud__icinga2_api_user_login["username"] }}:{{ nextcloud__icinga2_api_user_login["password"] }}" \
+    --header 'Accept: application/json' \
+    --request POST '{{ nextcloud__icinga2_api_url }}/v1/actions/schedule-downtime' \
+    --data-binary @- 1> /dev/null << EOF
+    {
+        "type": "Host",
+        "filter": "match(\"{{ nextcloud__icinga2_hostname }}\", host.name)",
+        "start_time": "${START_TIME}",
+        "end_time": "${END_TIME}",
+        "author": "{{ nextcloud__icinga2_hostname }}",
+        "comment": "Running Nextcloud update",
+        "all_services": true
+    }
 EOF
-echo 'done.'
-echo "set_icinga2_downtime_done" >> "${STATE_FILE}"
-sleep 5
+    echo "set_icinga2_downtime_done" >> "${STATE_FILE}"
+    echo 'done.'
+    sleep 5
+else
+    echo 'skipping.'
 fi
 {% endif %}
 
 echo
-echo
 echo 'export before-update list'
 echo '-------------------------'
 if ! grep -q "before_update_list_done" "${STATE_FILE}"; then
-    sudo -u apache php "${NC_DIR}/occ" user:list | tee "${LOG_DIR}/nextcloud-user-list-before-update" > /dev/null
-    sudo -u apache php "${NC_DIR}/occ" config:list | tee "${LOG_DIR}/nextcloud-config-list-before-update" > /dev/null
-    sudo -u apache php "${NC_DIR}/occ" app:list | tee "${LOG_DIR}/nextcloud-app-list-before-update" > /dev/null
-    echo 'done.'
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" user:list | tee "${TMP_DIR}/nextcloud-user-list-before-update" > /dev/null
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" config:list | tee "${TMP_DIR}/nextcloud-config-list-before-update" > /dev/null
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" app:list | tee "${TMP_DIR}/nextcloud-app-list-before-update" > /dev/null
     echo "before_update_list_done" >> "${STATE_FILE}"
+    echo 'done.'
 else
-    echo 'before_update_list_done found in state file. skipping'
+    echo 'skipping.'
 fi
 
-systemctl restart php-fpm.service
-setsebool httpd_unified on
-
 echo
+echo "restart ${PHP_SERVICE_NAME}.service"
+echo '-----------------------'
+if ! grep -q "restart_php-fpm_before_done" "${STATE_FILE}"; then
+    systemctl restart "${PHP_SERVICE_NAME}.service"
+    echo "restart_php-fpm_before_done" >> "${STATE_FILE}"
+    echo 'done.'
+else
+    echo 'skipping.'
+fi
+
+{% if ansible_os_family == "RedHat" %}
+echo
+echo 'setsebool httpd_unified on'
+echo '--------------------------'
+if ! grep -q "setsebool_before_done" "${STATE_FILE}"; then
+    setsebool httpd_unified on
+    echo "setsebool_before_done" >> "${STATE_FILE}"
+    echo 'done.'
+else
+    echo 'skipping.'
+fi
+{% endif %}
+
 echo
 echo 'updater.phar --no-upgrade --no-interaction'
 echo '------------------------------------------'
 if ! grep -q "updater_done" "${STATE_FILE}"; then
-    sudo -u apache php "${NC_DIR}/occ" maintenance:mode --on
-    sudo -u apache php "${NC_DIR}/updater/updater.phar" --no-upgrade --no-interaction
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/updater/updater.phar" --no-upgrade --no-interaction
     echo "updater_done" >> "${STATE_FILE}"
 else
-    echo 'updater_done found in state file. skipping'
+    echo 'skipping.'
 fi
 
 echo
+echo 'chmod'
+echo '-----'
+if ! grep -q "chmod_done" "${STATE_FILE}"; then
+    chmod 0755 "${NC_DIR}/occ"
+    echo "chmod_done" >> "${STATE_FILE}"
+    echo 'done.'
+else
+    echo 'skipping.'
+fi
+
 echo
 echo 'occ upgrade --no-interaction'
 echo '----------------------------'
 if ! grep -q "upgrade_done" "${STATE_FILE}"; then
-    sudo -u apache php "${NC_DIR}/occ" maintenance:mode --off
-    sudo -u apache php "${NC_DIR}/occ" upgrade --no-interaction
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" maintenance:mode --off
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" upgrade --no-interaction
     echo "upgrade_done" >> "${STATE_FILE}"
 else
-    echo 'upgrade_done found in state file. skipping'
+    echo 'skipping.'
 fi
 
-echo
 echo
 echo 'occ app:update --all --no-interaction'
 echo '-------------------------------------'
 if ! grep -q "app_done" "${STATE_FILE}"; then
-    sudo -u apache php "${NC_DIR}/occ" maintenance:mode --off
-    sudo -u apache php "${NC_DIR}/occ" app:update --all --no-interaction
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" app:update --all --no-interaction
     echo "app_done" >> "${STATE_FILE}"
 else
-    echo 'app_done found in state file. skipping'
+    echo 'skipping.'
 fi
 
-setsebool httpd_unified off
-systemctl restart php-fpm.service
-systemctl restart notify_push.service
+{% if ansible_os_family == "RedHat" %}
+echo
+echo 'setsebool httpd_unified off'
+echo '---------------------------'
+if ! grep -q "setsebool_after_done" "${STATE_FILE}"; then
+    setsebool httpd_unified off
+    echo "setsebool_after_done" >> "${STATE_FILE}"
+    echo 'done.'
+else
+    echo 'skipping.'
+fi
+{% endif %}
 
 echo
+echo "restart ${PHP_SERVICE_NAME}.service"
+echo '-----------------------'
+if ! grep -q "restart_php-fpm_after_done" "${STATE_FILE}"; then
+    systemctl restart "${PHP_SERVICE_NAME}.service"
+    echo "restart_php-fpm_after_done" >> "${STATE_FILE}"
+    echo 'done.'
+else
+    echo 'skipping.'
+fi
+
+echo
+echo 'restart notify_push.service'
+echo '---------------------------'
+if ! grep -q "restart_notify_after_done" "${STATE_FILE}"; then
+    systemctl restart notify_push.service
+    echo "restart_notify_after_done" >> "${STATE_FILE}"
+    echo 'done.'
+else
+    echo 'skipping.'
+fi
+
+echo
+echo 'chown'
+echo '-----'
+if ! grep -q "chown_done" "${STATE_FILE}"; then
+    chown -R "${WEBSERVER_USER}:${WEBSERVER_GROUP}" "${NC_DIR}"
+    echo "chown_done" >> "${STATE_FILE}"
+    echo 'done.'
+else
+    echo 'skipping.'
+fi
+
+{% if ansible_os_family == "RedHat" %}
+echo
+echo "restorecon"
+echo '----------'
+if ! grep -q "restorecon_done" "${STATE_FILE}"; then
+    restorecon -r "${NC_DIR}"
+    echo "restorecon_done" >> "${STATE_FILE}"
+    echo 'done.'
+else
+    echo 'skipping.'
+fi
+{% endif %}
+
 echo
 echo 'db:add-missing-indices'
 echo '----------------------'
-if ! grep -q "db_add_missing_indices" "${STATE_FILE}"; then
-    sudo -u apache php "${NC_DIR}/occ" db:add-missing-indices
-    echo "db_add_missing_indices" >> "${STATE_FILE}"
+if ! grep -q "db_add_missing_indices_done" "${STATE_FILE}"; then
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" db:add-missing-indices
+    echo "db_add_missing_indices_done" >> "${STATE_FILE}"
+    echo 'done.'
 else
-    echo 'db_add_missing_indices found in state file. skipping'
+    echo 'skipping.'
 fi
 
 echo
 echo 'db:add-missing-columns'
 echo '----------------------'
-if ! grep -q "db_add_missing_columns" "${STATE_FILE}"; then
-    sudo -u apache php "${NC_DIR}/occ" db:add-missing-columns
-    echo "db_add_missing_columns" >> "${STATE_FILE}"
+if ! grep -q "db_add_missing_columns_done" "${STATE_FILE}"; then
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" db:add-missing-columns
+    echo "db_add_missing_columns_done" >> "${STATE_FILE}"
 else
-    echo 'db_add_missing_columns found in state file. skipping'
+    echo 'skipping.'
 fi
 
 echo
 echo 'db:convert-filecache-bigint --no-interaction'
 echo '--------------------------------------------'
-if ! grep -q "db_convert_filecache_bigint" "${STATE_FILE}"; then
-    sudo -u apache php "${NC_DIR}/occ" db:convert-filecache-bigint --no-interaction
-    echo "db_convert_filecache_bigint" >> "${STATE_FILE}"
+if ! grep -q "db_convert_filecache_bigint_done" "${STATE_FILE}"; then
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" db:convert-filecache-bigint --no-interaction
+    echo "db_convert_filecache_bigint_done" >> "${STATE_FILE}"
 else
-    echo 'db_convert_filecache_bigint found in state file. skipping'
+    echo 'skipping.'
 fi
 
-chown -R apache:apache "${NC_DIR}"
-restorecon -r "${NC_DIR}"
-
-sudo -u apache php "${NC_DIR}/occ" user:list | tee "${LOG_DIR}/nextcloud-user-list-after-update" > /dev/null
-sudo -u apache php "${NC_DIR}/occ" config:list | tee "${LOG_DIR}/nextcloud-config-list-after-update" > /dev/null
-sudo -u apache php "${NC_DIR}/occ" app:list | tee "${LOG_DIR}/nextcloud-app-list-after-update" > /dev/null
+echo
+echo 'export after-update list'
+echo '------------------------'
+sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" user:list | tee "${TMP_DIR}/nextcloud-user-list-after-update" > /dev/null
+sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" config:list | tee "${TMP_DIR}/nextcloud-config-list-after-update" > /dev/null
+sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" app:list | tee "${TMP_DIR}/nextcloud-app-list-after-update" > /dev/null
+echo 'done.'
 
 {% if nextcloud__icinga2_api_user_login is defined and nextcloud__icinga2_api_user_login | length %}
-echo
 echo
 echo 'remove icinga2 downtime'
 echo '-----------------------'
 if ! grep -q "remove_icinga2_downtime_done" "${STATE_FILE}"; then
-curl \
---connect-timeout 5 \
---insecure \
---silent \
---user '{{ nextcloud__icinga2_api_user_login["username"] }}:{{ nextcloud__icinga2_api_user_login["password"] }}' \
---header 'Accept: application/json' \
---request POST '{{ nextcloud__icinga2_api_url  }}/v1/actions/remove-downtime' \
---data-binary @- 1> /dev/null << EOF
-{
-    "type": "Host",
-    "filter": "host.name==\"{{ nextcloud__icinga2_hostname }}\"",
-    "pretty": true
-}
+    curl \
+    --connect-timeout 5 \
+    --insecure \
+    --silent \
+    --user '{{ nextcloud__icinga2_api_user_login["username"] }}:{{ nextcloud__icinga2_api_user_login["password"] }}' \
+    --header 'Accept: application/json' \
+    --request POST '{{ nextcloud__icinga2_api_url  }}/v1/actions/remove-downtime' \
+    --data-binary @- 1> /dev/null << EOF
+    {
+        "type": "Host",
+        "filter": "host.name==\"{{ nextcloud__icinga2_hostname }}\"",
+        "pretty": true
+    }
 EOF
-echo 'done.'
-echo "remove_icinga2_downtime_done" >> "${STATE_FILE}"
-sleep 5
+    echo "remove_icinga2_downtime_done" >> "${STATE_FILE}"
+    echo 'done.'
+    sleep 5
+else
+    echo 'skipping.'
 fi
 {% endif %}
 
-set +e
-
-echo
 echo
 echo 'User List before and after'
 echo '--------------------------'
-diff --side-by-side "${LOG_DIR}/nextcloud-user-list-before-update" "${LOG_DIR}/nextcloud-user-list-after-update"
+diff --side-by-side "${TMP_DIR}/nextcloud-user-list-before-update" "${TMP_DIR}/nextcloud-user-list-after-update" || true
 echo
 echo 'Config List before and after'
 echo '----------------------------'
-diff --side-by-side "${LOG_DIR}/nextcloud-config-list-before-update" "${LOG_DIR}/nextcloud-config-list-after-update" --ignore-matching-lines='"installed_version":'
+diff --side-by-side "${TMP_DIR}/nextcloud-config-list-before-update" "${TMP_DIR}/nextcloud-config-list-after-update" --ignore-matching-lines='"installed_version":' || true
 echo
 echo 'App List before and after'
 echo '-------------------------'
-diff --side-by-side <(cut -d':' -f1 "${LOG_DIR}/nextcloud-app-list-before-update") <(cut -d':' -f1 "${LOG_DIR}/nextcloud-app-list-after-update")
+diff --side-by-side <(cut -d':' -f1 "${TMP_DIR}/nextcloud-app-list-before-update") <(cut -d':' -f1 "${TMP_DIR}/nextcloud-app-list-after-update") || true
 
-set -e
-
-echo
 echo
 echo 'Old backup directories can be removed with'
 echo '------------------------------------------'
-find "${NC_DATA_DIR}/updater-"*/backups/ -maxdepth 1 -mindepth 1 -type d -printf 'rm --recursive --force %p\n'
-rm --force "${STATE_FILE}"
+find "${DATA_DIR}/updater-"*/backups/ -maxdepth 1 -mindepth 1 -type d -printf 'rm --recursive --force %p\n'
+
+echo
+echo 'rm TMP_DIR'
+echo '----------'
+rm --recursive --force "${TMP_DIR}"
+echo 'done.'

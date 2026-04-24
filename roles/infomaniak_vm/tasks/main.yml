@@ -48,29 +48,22 @@
         project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: '{{ infomaniak_vm__region_name }}'
-      name: '{{ infomaniak_vm__name }}--{{ item["name"] }}--port'
+      name: '{{ item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
       network: '{{ item["name"] }}'
-      fixed_ips:
-        - ip_address: '{{ item["fixed_ip"] }}'
-      port_security_enabled: false # we disable port security, as this makes debugging connections in internal networks hard. it also prevents NAT if not configured properly
+      fixed_ips: '{{ [{"ip_address": item["fixed_ip"]}] if item["fixed_ip"] is defined else omit }}'
+      # Infomaniak's Neutron policy forbids setting `port_security_enabled` on the public `ext-net1` network, so omit it there and let the cloud default apply. On every other network, disable port security — this is a sensible default for internal networks
+      port_security_enabled: '{{ omit if item["name"] == "ext-net1" else false }}'
       state: 'present'
     delegate_to: 'localhost'
     loop: '{{ infomaniak_vm__networks }}'
-    when:
-      - 'infomaniak_vm__state != "absent"'
-      - 'item["fixed_ip"] is defined'
+    loop_control:
+      label: 'name={{ item["name"] }}, port_name={{ item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
+    when: 'infomaniak_vm__state != "absent"'
 
-  - name: 'Create the list of nics for the VM (1/2)'
+  - name: 'Create the list of nics for the VM'
     ansible.builtin.set_fact:
-      infomaniak_vm__nics: '{{ infomaniak_vm__nics | default([]) + [{ "net-name": item["name"] }] }}'
+      infomaniak_vm__nics: '{{ infomaniak_vm__nics | default([]) + [{ "port-name": item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }] }}'
     loop: '{{ infomaniak_vm__networks }}'
-    when: 'item["fixed_ip"] is not defined'
-
-  - name: 'Create the list of nics for the VM (2/2)'
-    ansible.builtin.set_fact:
-      infomaniak_vm__nics: '{{ infomaniak_vm__nics | default([]) + [{ "port-name": infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port" }] }}'
-    loop: '{{ infomaniak_vm__networks }}'
-    when: 'item["fixed_ip"] is defined'
 
   tags:
     - 'infomaniak_vm'
@@ -204,13 +197,13 @@
         project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: '{{ infomaniak_vm__region_name }}'
-      name: '{{ infomaniak_vm__name }}--{{ item["name"] }}--port'
+      name: '{{ item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
       state: 'absent'
     delegate_to: 'localhost'
     loop: '{{ infomaniak_vm__networks }}'
     when:
       - 'infomaniak_vm__state == "absent"'
-      - 'item["fixed_ip"] is defined'
+      - 'not (item["keep_port_on_absent"] | d(false) | bool)'
 
   - name: 'Cleanup security group when deleting VM'
     openstack.cloud.security_group:
