@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:infomaniak_vm**: Apply the VM's security group on the `ext-net1` port instead of (only) on the server. When a VM boots against a pre-created port, Neutron enforces the port's security groups, not those passed to the server, so without this the configured rules were silently ignored on the public interface
 * **role:logstash**: Default value of `logstash__java_opts` now caps JVM heap size at 8g.
 * **role:logstash**: Default value of `logstash__java_opts` now sets JVM heap size to be 60% of total memory.
 * **role:graylog_datanode**: Validate that `graylog_datanode__password_secret | length >= 16`

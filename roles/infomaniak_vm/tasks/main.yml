@@ -1,5 +1,53 @@
 - block:
 
+  - name: 'Manage the security group for the VM'
+    openstack.cloud.security_group:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
+        user_domain_name: 'default'
+      region_name: '{{ infomaniak_vm__region_name }}'
+      name: '{{ infomaniak_vm__name }}'
+      state: 'present'
+    delegate_to: 'localhost'
+    when:
+      - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0'
+      - 'infomaniak_vm__state != "absent"'
+
+  - name: 'Manage the required security group rules for the VM'
+    openstack.cloud.security_group_rule:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
+        user_domain_name: 'default'
+      region_name: '{{ infomaniak_vm__region_name }}'
+      security_group: '{{ infomaniak_vm__name }}'
+      direction: '{{ item["direction"] | default("ingress") }}'
+      protocol: '{{ item["protocol"] | default(omit) }}'
+      port_range_min: '{{ item["port_range_min"] | default(omit) }}'
+      port_range_max: '{{ item["port_range_max"] | default(omit) }}'
+      remote_ip_prefix: '{{ item["remote_ip_prefix"] | default(omit) }}'
+      ethertype: '{{ item["ethertype"] | default("IPv4") }}'
+      state: '{{ item["state"] | d("present") }}'
+    loop: '{{ infomaniak_vm__security_group_rules }}'
+    delegate_to: 'localhost'
+    when:
+      - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0'
+      - 'infomaniak_vm__state != "absent"'
+
+  tags:
+    - 'infomaniak_vm'
+    - 'infomaniak_vm:firewalls'
+
+
+- block:
+
   - name: 'Manage the networks for the VM'
     openstack.cloud.network:
       auth:
@@ -53,6 +101,8 @@
       fixed_ips: '{{ [{"ip_address": item["fixed_ip"]}] if item["fixed_ip"] is defined else omit }}'
       # Infomaniak's Neutron policy forbids setting `port_security_enabled` on the public `ext-net1` network, so omit it there and let the cloud default apply. On every other network, disable port security — this is a sensible default for internal networks
       port_security_enabled: '{{ omit if item["name"] == "ext-net1" else false }}'
+      # When a VM boots against a pre-created port, Neutron enforces the port's security groups, not the ones passed to `openstack.cloud.server`. Assign them here so `ext-net1` traffic is filtered. On internal networks port security is disabled, so security groups don't apply — omit to keep Neutron quiet.
+      security_groups: '{{ ((infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0) | ternary(["default", infomaniak_vm__name], ["default"])) if item["name"] == "ext-net1" else omit }}'
       state: 'present'
     delegate_to: 'localhost'
     loop: '{{ infomaniak_vm__networks }}'
@@ -68,54 +118,6 @@
   tags:
     - 'infomaniak_vm'
     - 'infomaniak_vm:networks'
-
-
-- block:
-
-  - name: 'Manage the security group for the VM'
-    openstack.cloud.security_group:
-      auth:
-        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
-        username: '{{ infomaniak_vm__api_username }}'
-        password: '{{ infomaniak_vm__api_password }}'
-        project_id: '{{ infomaniak_vm__api_project_id }}'
-        project_name: '{{ infomaniak_vm__api_username }}'
-        user_domain_name: 'default'
-      region_name: '{{ infomaniak_vm__region_name }}'
-      name: '{{ infomaniak_vm__name }}'
-      state: 'present'
-    delegate_to: 'localhost'
-    when:
-      - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0'
-      - 'infomaniak_vm__state != "absent"'
-
-  - name: 'Manage the required security group rules for the VM'
-    openstack.cloud.security_group_rule:
-      auth:
-        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
-        username: '{{ infomaniak_vm__api_username }}'
-        password: '{{ infomaniak_vm__api_password }}'
-        project_id: '{{ infomaniak_vm__api_project_id }}'
-        project_name: '{{ infomaniak_vm__api_username }}'
-        user_domain_name: 'default'
-      region_name: '{{ infomaniak_vm__region_name }}'
-      security_group: '{{ infomaniak_vm__name }}'
-      direction: '{{ item["direction"] | default("ingress") }}'
-      protocol: '{{ item["protocol"] | default(omit) }}'
-      port_range_min: '{{ item["port_range_min"] | default(omit) }}'
-      port_range_max: '{{ item["port_range_max"] | default(omit) }}'
-      remote_ip_prefix: '{{ item["remote_ip_prefix"] | default(omit) }}'
-      ethertype: '{{ item["ethertype"] | default("IPv4") }}'
-      state: '{{ item["state"] | d("present") }}'
-    loop: '{{ infomaniak_vm__security_group_rules }}'
-    delegate_to: 'localhost'
-    when:
-      - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0'
-      - 'infomaniak_vm__state != "absent"'
-
-  tags:
-    - 'infomaniak_vm'
-    - 'infomaniak_vm:firewalls'
 
 
 - block:
