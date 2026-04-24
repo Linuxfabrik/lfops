@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:openvpn_server**: Fix `invalid selinux context: [Errno 22] Invalid argument` on RHEL 10 when deploying `server.p12` / `crl.pem`. The SELinux type `openvpn_etc_t` no longer exists in the RHEL 10 core policy (only `openvpn_port_t` and the packet types remain). The role now uses `etc_t` on RHEL 10 via a new OS-specific internal variable `__openvpn_server__selinux_etc_type`; other platforms keep `openvpn_etc_t`
 * **role:repo_epel**: Fix malformed RHEL 10 `epel.repo`: a missing newline in the `[epel-source]` section rendered `enabled=0username=<login>` when `repo_epel__basic_auth_login` was set, causing dnf to reject the file with `Invalid configuration value: enabled=0username=...`
 * **role:infomaniak_vm**: Apply the VM's security group on the `ext-net1` port instead of (only) on the server. When a VM boots against a pre-created port, Neutron enforces the port's security groups, not those passed to the server, so without this the configured rules were silently ignored on the public interface
 * **role:logstash**: Default value of `logstash__java_opts` now caps JVM heap size at 8g.

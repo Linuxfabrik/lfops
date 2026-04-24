@@ -1,3 +1,11 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - block:
 
   - name: 'Install openvpn'
@@ -60,7 +68,7 @@
       group: 'root'
       seuser: 'system_u'
       serole: 'object_r'
-      setype: 'openvpn_etc_t'
+      setype: '{{ __openvpn_server__selinux_etc_type }}'
     when:
       - 'not openvpn_server__pkcs12_skip_deploy'
 
@@ -93,7 +101,7 @@
       group: 'openvpn'
       seuser: 'system_u'
       serole: 'object_r'
-      setype: 'openvpn_etc_t'
+      setype: '{{ __openvpn_server__selinux_etc_type }}'
     when:
       - 'not openvpn_server__crl_verify_skip_deploy'
 

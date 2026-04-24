@@ -122,7 +122,7 @@ nodejs                               |    |    | x | x |    |       |       |
 objectstore_backup                   |    |    | x |   |    |       |       |
 opensearch                           |    |    | x |   |    |       |       |
 open_vm_tools                        |    |    | x | x |    |       |       |
-openvpn_server                       |    |    | x | x |    |       |       |
+openvpn_server                       |    |    | x | x | x  |       |       |
 php                                  | x  | x  | x | x |    |       |       |
 podman_containers                    |    |    |   | x |    |       |       |
 policycoreutils                      |    |    | x | x | x  |       |       | Fedora 35
