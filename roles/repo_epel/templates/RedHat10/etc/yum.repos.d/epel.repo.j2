@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026010801
+# 2026042401
 
 [epel]
 name=Extra Packages for Enterprise Linux $releasever - $basearch
@@ -59,7 +59,8 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever_major
 gpgcheck=1
 repo_gpgcheck=0
 metadata_expire=24h
-enabled=0{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+enabled=0
+{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
 username={{ repo_epel__basic_auth_login["username"] }}
 password={{ repo_epel__basic_auth_login["password"] }}
 {% endif %}

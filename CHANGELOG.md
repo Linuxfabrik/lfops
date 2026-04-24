@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_epel**: Fix malformed RHEL 10 `epel.repo`: a missing newline in the `[epel-source]` section rendered `enabled=0username=<login>` when `repo_epel__basic_auth_login` was set, causing dnf to reject the file with `Invalid configuration value: enabled=0username=...`
 * **role:infomaniak_vm**: Apply the VM's security group on the `ext-net1` port instead of (only) on the server. When a VM boots against a pre-created port, Neutron enforces the port's security groups, not those passed to the server, so without this the configured rules were silently ignored on the public interface
 * **role:logstash**: Default value of `logstash__java_opts` now caps JVM heap size at 8g.
 * **role:logstash**: Default value of `logstash__java_opts` now sets JVM heap size to be 60% of total memory.
