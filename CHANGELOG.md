@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:logstash**: Default value of `logstash__java_opts` now caps JVM heap size at 8g.
 * **role:logstash**: Default value of `logstash__java_opts` now sets JVM heap size to be 60% of total memory.
 * **role:graylog_datanode**: Validate that `graylog_datanode__password_secret | length >= 16`
 * **role:graylog_server**: Validate that `graylog_server__password_secret | length >= 16`
