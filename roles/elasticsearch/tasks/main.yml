@@ -140,6 +140,43 @@
         - 'elasticsearch__cluster_routing_allocation_disk_watermark_high <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
       fail_msg: 'elasticsearch__cluster_routing_allocation_disk_watermark_low must not exceed elasticsearch__cluster_routing_allocation_disk_watermark_high'
 
+  - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom is a valid byte size'
+    ansible.builtin.assert:
+      that:
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom is ansible.builtin.regex("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
+      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom: {{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom }}` is not a valid byte size'
+    when: >
+      elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom is defined and
+      (elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom | length) > 0
+
+  - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom is a valid byte size'
+    ansible.builtin.assert:
+      that:
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom is ansible.builtin.regex("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
+      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom: {{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom }}` is not a valid byte size'
+    when: >
+      elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom is defined and
+      (elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom | length) > 0
+
+  - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom is a valid byte size'
+    ansible.builtin.assert:
+      that:
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom is ansible.builtin.regex("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
+      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom: {{ elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom }}` is not a valid byte size'
+    when: >
+      elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom is defined and
+      (elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom | length) > 0
+
+
+  - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom is a valid byte size'
+    ansible.builtin.assert:
+      that:
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom | ansible.builtin.regex_search("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
+      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom: {{ elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom }}` is not a valid byte size'
+    when: >
+      elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom is defined and
+      (elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom | length) > 0
+
   tags:
     - 'always'
 
