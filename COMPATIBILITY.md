@@ -98,7 +98,7 @@ logstash                             |    |    |   | x |    |       |   x   |
 lvm                                  |    |    |   |   |    |       |       |
 mailto_root                          |    |    | x | x |    |       |       |
 mailx                                | x  | x  | x | x | x  |       |       | Fedora
-mariadb_server                       | x  | x  | x | x |    |       |       | Galera on Debian is untested
+mariadb_server                       | x  | x  | x | x | x  |       |       | Galera on Debian is untested
 mastodon                             |    |    |   | x |    |       |       |
 maxmind_geoip                        |    |    | x |   |    |       |       |
 minio_client                         |    |    | x |   |    |       |       |
@@ -146,7 +146,7 @@ repo_grafana                         | x  | x  | x | x |    |       |       |
 repo_graylog                         | x  | x  | x |   |    |       |       |
 repo_icinga                          | x  | x  | x | x |    |   x   |       |
 repo_influxdb                        | x  | x  | x | x |    |       |       |
-repo_mariadb                         | x  | x  | x | x |    |       |   x   |
+repo_mariadb                         | x  | x  | x | x | x  |       |   x   |
 repo_mongodb                         | x  | x  | x | x |    |       |       |
 repo_monitoring_plugins              |    |    | x | x |    |   x   |       |
 repo_mydumper                        |    |    | x | x |    |       |       |
