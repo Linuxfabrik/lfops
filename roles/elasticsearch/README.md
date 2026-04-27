@@ -269,13 +269,13 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 
 `elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom`
 
-* Max headroom size for flood stage watermark on dedicated `data_frozen` nodes.
+* Max headroom size for flood stage watermark on dedicated `data_frozen` nodes. It expects a string consisting of an unsigned integer and a [byte size unit](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/api-conventions#byte-units).
 * Type: String.
 * Default: unset
 
 `elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom`
 
-* Max headroom size for flood stage watermark.
+* Max headroom size for flood stage watermark. It expects a string consisting of an unsigned integer and a [byte size unit](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/api-conventions#byte-units).
 * Type: String.
 * Default: unset
 
@@ -287,7 +287,7 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 
 `elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom`
 
-* Max headroom size for high watermark.
+* Max headroom size for high watermark. It expects a string consisting of an unsigned integer and a [byte size unit](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/api-conventions#byte-units).
 * Type: String.
 * Default: unset
 
@@ -299,7 +299,7 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 
 `elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom`
 
-* Max headroom size for low watermark.
+* Max headroom size for low watermark. It expects a string consisting of an unsigned integer and a [byte size unit](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/api-conventions#byte-units).
 * Type: String
 * Default: unset
 
