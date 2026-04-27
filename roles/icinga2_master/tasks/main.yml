@@ -8,6 +8,13 @@
 
 - block:
 
+  - name: 'install OS-specific prerequisite packages # ensures correct %post ordering before the main package list is installed'
+    ansible.builtin.package:
+      name: '{{ __icinga2_master__pre_install_packages | d([]) }}'
+      state: 'present'
+    when:
+      - '__icinga2_master__pre_install_packages | d([]) | length > 0'
+
   - name: 'install icinga2 and dependent packages'
     ansible.builtin.package:
       name: '{{ icinga2_master__required_packages }}'

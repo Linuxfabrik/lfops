@@ -1,0 +1,3 @@
+# `nagios-selinux` provides the `nagios_*_plugin_t` types referenced by `icinga2-selinux`'s policy module — they were moved out of the EL10 base policy into the separate package. Installed as a pre-install package so its `%post` runs before `icinga2-selinux`'s.
+__icinga2_master__pre_install_packages:
+  - 'nagios-selinux'
