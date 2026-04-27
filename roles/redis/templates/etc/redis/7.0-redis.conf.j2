@@ -361,7 +361,7 @@ supervised {{ redis__conf_supervised }}
 #
 # Note that on modern Linux systems "/run/redis.pid" is more conforming
 # and should be used instead.
-pidfile /var/run/redis/{{ redis__conf_port }}.pid
+pidfile {{ __redis__runtime_dir }}/{{ redis__conf_port }}.pid
 
 # Specify the server verbosity level.
 # This can be one of:
@@ -525,7 +525,7 @@ rdb-del-sync-files no
 # The Append Only File will also be created inside this directory.
 #
 # Note that you must specify a directory here, not a file name.
-dir /var/lib/redis
+dir {{ __redis__data_dir }}
 
 ################################# REPLICATION #################################
 

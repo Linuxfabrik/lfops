@@ -9,9 +9,9 @@
 
 - block:
 
-  - name: 'Install redis'
+  - name: 'Install {{ __redis__package }}'
     ansible.builtin.package:
-      name: 'redis'
+      name: '{{ __redis__package }}'
       state: 'present'
 
   - name: 'Get the list of installed packages'
@@ -20,13 +20,13 @@
 
   - name: 'Get Redis version'
     ansible.builtin.set_fact:
-      redis__installed_version: '{{ ansible_facts.packages["redis"][0]["version"] | regex_search("\d+\.\d+") }}'
+      redis__installed_version: '{{ ansible_facts.packages[__redis__package][0]["version"] | regex_search("\d+\.\d+") }}'
 
-  - name: 'Deploy /etc/redis/redis.conf (v{{ redis__installed_version }})'
+  - name: 'Deploy {{ __redis__config_dir }}/{{ __redis__config_file }} (v{{ redis__installed_version }})'
     ansible.builtin.template:
       backup: true
       src: 'etc/redis/{{ redis__installed_version }}-redis.conf.j2'
-      dest: '/etc/redis/redis.conf'
+      dest: '{{ __redis__config_dir }}/{{ __redis__config_file }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -37,7 +37,7 @@
       name: 'shared'
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
-      shared__remove_rpmnew_rpmsave_config_file: '/etc/redis/redis.conf'
+      shared__remove_rpmnew_rpmsave_config_file: '{{ __redis__config_dir }}/{{ __redis__config_file }}'
 
   - name: 'mkdir -p /etc/systemd/system/{{ redis__service_name }}.d/'
     ansible.builtin.file:
