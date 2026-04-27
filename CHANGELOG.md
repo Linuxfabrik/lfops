@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **playbooks/freeipa_client, playbooks/freeipa_server**: Set `strategy: 'linear'` explicitly so the playbooks work even when the user's `ansible.cfg` defaults to a strategy that reuses the target Python interpreter (e.g. `mitogen_linear`). The ansible-freeipa modules rely on `ipalib`'s global API singleton and otherwise fail with `API.bootstrap() already called` on the second module call.
 * **role:infomaniak_vm**: Stop passing `security_groups` to `openstack.cloud.server`. Since the security group is already applied on the `ext-net1` port, setting it on the server made Neutron attempt the same on internal-network ports where `port_security_enabled` is `false`, failing with `Network requires port_security_enabled and subnet associated in order to apply security groups.`
 * **role:openvpn_server**: Fix `invalid selinux context: [Errno 22] Invalid argument` on RHEL 10 when deploying `server.p12` / `crl.pem`. The SELinux type `openvpn_etc_t` no longer exists in the RHEL 10 core policy (only `openvpn_port_t` and the packet types remain). The role now uses `etc_t` on RHEL 10 via a new OS-specific internal variable `__openvpn_server__selinux_etc_type`; other platforms keep `openvpn_etc_t`
 * **role:repo_epel**: Fix malformed RHEL 10 `epel.repo`: a missing newline in the `[epel-source]` section rendered `enabled=0username=<login>` when `repo_epel__basic_auth_login` was set, causing dnf to reject the file with `Invalid configuration value: enabled=0username=...`
