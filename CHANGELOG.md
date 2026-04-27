@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:firewall**: Install `nftables` together with `iptables` for `firewall__firewall == "fwbuilder"` on all distros (previously only installed via per-distro task files on Fedora and RHEL 8/9). The redundant `tasks/Fedora.yml`, `tasks/RedHat8.yml` and `tasks/RedHat9.yml` were removed.
 * **role:graylog_server**: Update `server.conf` templates to include `telemetry_enabled = false`.
 * **role:keepalived**: Document role scope in the README. The role intentionally covers only a minimal VRRP setup (single `vrrp_instance`, single `virtual_ipaddress`, PASS auth, `smtp_alert`). It does not set the `net.ipv4.ip_nonlocal_bind` sysctl and does not open the firewall for VRRP; pointers to the `kernel_settings` and `firewall` roles are included
 * **all roles**: Rewrite all role READMEs to use the new standard format: replace markdown tables with bullet lists for tags and variables, convert HTML/blockquote subkeys to expanded indented format, standardize terminology (`Bool` not `Boolean`, `Mandatory` not `Required`)
