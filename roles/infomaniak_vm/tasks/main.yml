@@ -158,7 +158,6 @@
       nics: '{{ infomaniak_vm__nics }}'
       boot_volume: '{{ infomaniak_vm__name }}--boot'
       terminate_volume: true # delete volume when deleting VM
-      security_groups: '{{ (infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0) | ternary(["default", infomaniak_vm__name], ["default"]) }}'
       state: '{{ infomaniak_vm__state }}'
       auto_ip: false # not all VMs need to have a public ip
     delegate_to: 'localhost'
@@ -181,7 +180,6 @@
       flavor: '{{ infomaniak_vm__flavor }}'
       nics: '{{ infomaniak_vm__nics }}'
       terminate_volume: true # delete volume when deleting VM
-      security_groups: '{{ (infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0) | ternary(["default", infomaniak_vm__name], ["default"]) }}'
       state: '{{ infomaniak_vm__state }}'
       auto_ip: false # not all VMs need to have a public ip
     delegate_to: 'localhost'
