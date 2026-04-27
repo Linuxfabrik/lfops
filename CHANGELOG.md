@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:infomaniak_vm**: Stop passing `security_groups` to `openstack.cloud.server`. Since the security group is already applied on the `ext-net1` port, setting it on the server made Neutron attempt the same on internal-network ports where `port_security_enabled` is `false`, failing with `Network requires port_security_enabled and subnet associated in order to apply security groups.`
 * **role:openvpn_server**: Fix `invalid selinux context: [Errno 22] Invalid argument` on RHEL 10 when deploying `server.p12` / `crl.pem`. The SELinux type `openvpn_etc_t` no longer exists in the RHEL 10 core policy (only `openvpn_port_t` and the packet types remain). The role now uses `etc_t` on RHEL 10 via a new OS-specific internal variable `__openvpn_server__selinux_etc_type`; other platforms keep `openvpn_etc_t`
 * **role:repo_epel**: Fix malformed RHEL 10 `epel.repo`: a missing newline in the `[epel-source]` section rendered `enabled=0username=<login>` when `repo_epel__basic_auth_login` was set, causing dnf to reject the file with `Invalid configuration value: enabled=0username=...`
 * **role:infomaniak_vm**: Apply the VM's security group on the `ext-net1` port instead of (only) on the server. When a VM boots against a pre-created port, Neutron enforces the port's security groups, not those passed to the server, so without this the configured rules were silently ignored on the public interface
@@ -40,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:firewall**: Install `nftables` together with `iptables` for `firewall__firewall == "fwbuilder"` on all distros (previously only installed via per-distro task files on Fedora and RHEL 8/9). The redundant `tasks/Fedora.yml`, `tasks/RedHat8.yml` and `tasks/RedHat9.yml` were removed.
 * **role:graylog_server**: Update `server.conf` templates to include `telemetry_enabled = false`.
 * **role:keepalived**: Document role scope in the README. The role intentionally covers only a minimal VRRP setup (single `vrrp_instance`, single `virtual_ipaddress`, PASS auth, `smtp_alert`). It does not set the `net.ipv4.ip_nonlocal_bind` sysctl and does not open the firewall for VRRP; pointers to the `kernel_settings` and `firewall` roles are included
 * **all roles**: Rewrite all role READMEs to use the new standard format: replace markdown tables with bullet lists for tags and variables, convert HTML/blockquote subkeys to expanded indented format, standardize terminology (`Bool` not `Boolean`, `Mandatory` not `Required`)

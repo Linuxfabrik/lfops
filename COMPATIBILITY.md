@@ -38,7 +38,7 @@ exoscale_vm                          |    |    |   |   |    |       |       | Fe
 fail2ban                             |    |    | x | x |    |       |       |
 fangfrisch                           |    |    |   | x |    |       |       |
 files                                |    |    | x | x | x  |       |       |
-firewall                             |    |    | x | x |    |       |       |
+firewall                             | x  | x  | x | x | x  |   x   |   x   |
 freeipa_client                       |    |    | x | x | x  |       |       |
 freeipa_server                       |    |    | x | x | x  |       |       |
 github_project_createrepo            |    |    | x |   |    |       |       |

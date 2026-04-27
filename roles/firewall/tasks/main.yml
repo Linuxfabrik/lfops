@@ -185,9 +185,11 @@
 
 - block:
 
-  - name: 'Make sure iptables is installed (required for fwb)'
+  - name: 'Make sure iptables and nftables are installed (required for fwb)'
     ansible.builtin.package:
-      name: 'iptables'
+      name:
+        - 'iptables'
+        - 'nftables'
       state: 'present'
 
   # You can't enable and start fwb.service at the same time - `/etc/fwb.sh start`

@@ -103,34 +103,48 @@
 
   - name: 'ensure  0 <= elasticsearch__cluster_routing_allocation_disk_watermark_low <= 1'
     ansible.builtin.assert:
-      that: >
-        elasticsearch__cluster_routing_allocation_disk_watermark_low is number and
-        elasticsearch__cluster_routing_allocation_disk_watermark_low >= 0 and
-        elasticsearch__cluster_routing_allocation_disk_watermark_low <= 1
-      fail_msg: 'elasticsearch__cluster_routing_allocation_disk_watermark_low must be a number between 0 and 1'
+      that:
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low is number'
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low >= 0'
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low <= 1'
+      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_low: {{ elasticsearch__cluster_routing_allocation_disk_watermark_low }}` must be a number between 0 and 1'
 
   - name: 'ensure  0 <= elasticsearch__cluster_routing_allocation_disk_watermark_high <= 1'
     ansible.builtin.assert:
-      that: >
-        elasticsearch__cluster_routing_allocation_disk_watermark_high is number and
-        elasticsearch__cluster_routing_allocation_disk_watermark_high >= 0 and
-        elasticsearch__cluster_routing_allocation_disk_watermark_high <= 1
-      fail_msg: 'elasticsearch__cluster_routing_allocation_disk_watermark_high must be a number between 0 and 1'
+      that:
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high is number'
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high >= 0'
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high <= 1'
+      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_high: {{ elasticsearch__cluster_routing_allocation_disk_watermark_high }}` must be a number between 0 and 1'
 
   - name: 'ensure  0 <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage <= 1'
     ansible.builtin.assert:
-      that: >
-        elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage is number and
-        elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage >= 0 and
-        elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage <= 1
-      fail_msg: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage must be a number between 0 and 1'
+      that:
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage is number'
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage >= 0'
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage <= 1'
+      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage: {{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage }}` must be a number between 0 and 1'
+
+  - name: 'ensure  0 <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage <= 1'
+    ansible.builtin.assert:
+      that:
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage is number'
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage >= 0'
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage <= 1'
+      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage: {{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage }}` must be a number between 0 and 1'
 
   - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_low <= elasticsearch__cluster_routing_allocation_disk_watermark_high <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
     ansible.builtin.assert:
-      that: >
-        elasticsearch__cluster_routing_allocation_disk_watermark_low <= elasticsearch__cluster_routing_allocation_disk_watermark_high and
-        elasticsearch__cluster_routing_allocation_disk_watermark_high <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage
+      that:
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low <= elasticsearch__cluster_routing_allocation_disk_watermark_high'
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
       fail_msg: 'elasticsearch__cluster_routing_allocation_disk_watermark_low must not exceed elasticsearch__cluster_routing_allocation_disk_watermark_high'
+
+  tags:
+    - 'always'
+
+
+- block:
 
   - name: 'deploy /etc/elasticsearch/elasticsearch.yml'
     ansible.builtin.template:
