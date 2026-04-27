@@ -300,7 +300,7 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 `elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom`
 
 * Max headroom size for low watermark. It expects a string consisting of an unsigned integer and a [byte size unit](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/api-conventions#byte-units).
-* Type: String
+* Type: String.
 * Default: unset
 
 `elasticsearch__discovery_seed_hosts`
