@@ -261,17 +261,47 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 * Type: Float (`0 <= n <= 1`).
 * Default: `0.95`
 
+`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen`
+
+* Flood stage percentage for [disk-based shard allocation](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/cluster-level-shard-allocation-routing-settings#disk-based-shard-allocation) on dedicated `data_frozen` nodes.
+* Type: Float (`0 <= n <= 1`).
+* Default: `0.95`
+
+`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom`
+
+* Max headroom size for flood stage watermark on dedicated `data_frozen` nodes.
+* Type: String.
+* Default: unset
+
+`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom`
+
+* Max headroom size for flood stage watermark.
+* Type: String.
+* Default: unset
+
 `elasticsearch__cluster_routing_allocation_disk_watermark_high`
 
 * High watermark percentage for [disk-based shard allocation](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/cluster-level-shard-allocation-routing-settings#disk-based-shard-allocation). Elasticsearch will not allocate shards to nodes whose disk usage exceeds this percentage.
 * Type: Float (`0 <= n <= 1`).
 * Default: `0.9`
 
+`elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom`
+
+* Max headroom size for high watermark.
+* Type: String.
+* Default: unset
+
 `elasticsearch__cluster_routing_allocation_disk_watermark_low`
 
 * Low watermark percentage for [disk-based shard allocation](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/cluster-level-shard-allocation-routing-settings#disk-based-shard-allocation). Elasticsearch will not allocate shards to nodes whose disk usage exceeds this percentage.
 * Type: Float (`0 <= n <= 1`).
 * Default: `0.85`
+
+`elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom`
+
+* Max headroom size for low watermark.
+* Type: String
+* Default: unset
 
 `elasticsearch__discovery_seed_hosts`
 
