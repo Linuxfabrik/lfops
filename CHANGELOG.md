@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:system_update**: Change default of `system_update__update_time` from `'04:00 + 1 days'` to `'04:{{ 59 | random(seed=inventory_hostname) }} + 1 days'`, so updates are spread deterministically across 04:00–04:59 (minute derived from `inventory_hostname`) instead of all hosts firing at 04:00 sharp
 * **role:firewall**: Install `nftables` together with `iptables` for `firewall__firewall == "fwbuilder"` on all distros (previously only installed via per-distro task files on Fedora and RHEL 8/9). The redundant `tasks/Fedora.yml`, `tasks/RedHat8.yml` and `tasks/RedHat9.yml` were removed.
 * **role:graylog_server**: Update `server.conf` templates to include `telemetry_enabled = false`.
 * **role:keepalived**: Document role scope in the README. The role intentionally covers only a minimal VRRP setup (single `vrrp_instance`, single `virtual_ipaddress`, PASS auth, `smtp_alert`). It does not set the `net.ipv4.ip_nonlocal_bind` sysctl and does not open the firewall for VRRP; pointers to the `kernel_settings` and `firewall` roles are included

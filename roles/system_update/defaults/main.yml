@@ -9,4 +9,4 @@ system_update__mail_subject_prefix: ''
 system_update__notify_and_schedule_on_calendar: 'mon 10:00'
 system_update__rocketchat_msg_suffix: ''
 system_update__update_enabled: true
-system_update__update_time: '04:00 + 1 days'
+system_update__update_time: '04:{{ 59 | random(seed=inventory_hostname) }} + 1 days'
