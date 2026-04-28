@@ -1,3 +1,11 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - block:
 
   - name: 'install {{ __apache_solr__java_package[apache_solr__version.split(".")[0]] }}'
@@ -5,15 +13,30 @@
       name: '{{ __apache_solr__java_package[apache_solr__version.split(".")[0]] }}'
       state: 'present'
 
-  - name: 'Download and verify Apache Solr {{ apache_solr__version }} from Solr archive (the full binary package, for all operating systems)'
-    ansible.builtin.get_url:
-      url: 'https://archive.apache.org/dist/solr/solr/{{ apache_solr__version }}/solr-{{ apache_solr__version }}.tgz'
-      dest: '/tmp/solr-{{ apache_solr__version }}.tgz'
-      checksum: '{{ apache_solr__checksum }}'
-    delegate_to: 'localhost'
-    become: false
-    check_mode: false # run task even if `--check` is specified
-    changed_when: false # just gathering info, no actual change
+  # Try Apache CDN first (fast, but only hosts currently-supported versions);
+  # fall back to archive.apache.org (slow, archival; serves every version ever
+  # released).
+  - name: 'Download and verify Apache Solr {{ apache_solr__version }} (the full binary package, for all operating systems)'
+    block:
+      - name: 'Download and verify Apache Solr {{ apache_solr__version }} from Apache CDN'
+        ansible.builtin.get_url:
+          url: 'https://dlcdn.apache.org/solr/solr/{{ apache_solr__version }}/solr-{{ apache_solr__version }}.tgz'
+          dest: '/tmp/solr-{{ apache_solr__version }}.tgz'
+          checksum: '{{ apache_solr__checksum }}'
+        delegate_to: 'localhost'
+        become: false  # writes to /tmp/ on the controller; ansible-navigator EE has no sudo
+        check_mode: false # run task even if `--check` is specified
+        changed_when: false # just gathering info, no actual change
+    rescue:
+      - name: 'Download and verify Apache Solr {{ apache_solr__version }} from Solr archive (fallback)'
+        ansible.builtin.get_url:
+          url: 'https://archive.apache.org/dist/solr/solr/{{ apache_solr__version }}/solr-{{ apache_solr__version }}.tgz'
+          dest: '/tmp/solr-{{ apache_solr__version }}.tgz'
+          checksum: '{{ apache_solr__checksum }}'
+        delegate_to: 'localhost'
+        become: false  # writes to /tmp/ on the controller; ansible-navigator EE has no sudo
+        check_mode: false # run task even if `--check` is specified
+        changed_when: false # just gathering info, no actual change
     when:
       - 'apache_solr__version is version("9.0.0", ">=")'
 
@@ -23,7 +46,7 @@
       dest: '/tmp/solr-{{ apache_solr__version }}.tgz'
       checksum: '{{ apache_solr__checksum }}'
     delegate_to: 'localhost'
-    become: false
+    become: false  # writes to /tmp/ on the controller; ansible-navigator EE has no sudo
     check_mode: false # run task even if `--check` is specified
     changed_when: false # just gathering info, no actual change
     when:
@@ -202,3 +225,78 @@
   tags:
     - 'apache_solr'
     - 'apache_solr:users'
+
+
+# Backup (mariadb-dump-style): oneshot service + timer wipe and refresh
+# /backup/apache-solr-dump/ on each run via Solr's replication?command=backup
+# endpoint; an external backup tool snapshots that directory. Disabled when
+# `apache_solr__dump_cores` is empty (no cores to back up).
+- block:
+
+  # Parent dir owned by root, world-traversable. Without this the implicit
+  # `mkdir -p` from the leaf task below would inherit the leaf's owner/mode on
+  # the parent too, making /backup/ unreadable for any other dump pipeline
+  # (e.g. mariadb-dump, existdb-dump) sharing the same root.
+  - name: 'mkdir -p {{ apache_solr__dump_directory | dirname }} (multi-tenant parent)'
+    ansible.builtin.file:
+      path: '{{ apache_solr__dump_directory | dirname }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'mkdir -p {{ apache_solr__dump_directory }}'
+    ansible.builtin.file:
+      path: '{{ apache_solr__dump_directory }}'
+      state: 'directory'
+      owner: '{{ apache_solr__user }}'
+      group: '{{ apache_solr__group }}'
+      mode: 0o750
+
+  - name: 'Deploy /usr/local/bin/apache-solr-dump'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/bin/apache-solr-dump.j2'
+      dest: '/usr/local/bin/apache-solr-dump'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/apache-solr-dump.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/apache-solr-dump.conf.j2'
+      dest: '/etc/apache-solr-dump.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy /etc/systemd/system/apache-solr-dump.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/apache-solr-dump.service.j2'
+      dest: '/etc/systemd/system/apache-solr-dump.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy /etc/systemd/system/apache-solr-dump.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/apache-solr-dump.timer.j2'
+      dest: '/etc/systemd/system/apache-solr-dump.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__apache_solr__dump_timer_result'
+
+  - name: 'systemctl {{ (apache_solr__dump_cores | length > 0) | ternary("enable --now", "disable --now") }} apache-solr-dump.timer'
+    ansible.builtin.systemd:
+      name: 'apache-solr-dump.timer'
+      enabled: '{{ apache_solr__dump_cores | length > 0 }}'
+      state: '{{ (apache_solr__dump_cores | length > 0) | ternary("started", "stopped") }}'
+      daemon_reload: '{{ __apache_solr__dump_timer_result is changed }}'
+
+  tags:
+    - 'apache_solr'
+    - 'apache_solr:backup'

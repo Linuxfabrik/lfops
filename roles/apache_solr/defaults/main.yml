@@ -1,5 +1,7 @@
+apache_solr__allow_paths: []  # extra paths Solr is allowed to read/write (-Dsolr.allowPaths). Backup directory is auto-included when apache_solr__dump_cores is non-empty.
 apache_solr__data_dir: '/var/solr/data'
 apache_solr__group: 'solr'
+apache_solr__heap: '512m'  # SOLR_HEAP — keeps Solr's documented default
 apache_solr__http_bind_address: '0.0.0.0'
 apache_solr__http_bind_port: 8983
 apache_solr__install_dir: '/opt'
@@ -7,11 +9,20 @@ apache_solr__log4j_props: '/var/solr/log4j2.xml'
 apache_solr__log_level: 'INFO'
 apache_solr__logs_dir: '/var/log/solr'
 apache_solr__pid_dir: '/var/solr'
+apache_solr__security_manager_enabled: true
 apache_solr__service: 'solr'
 apache_solr__service_enabled: true
 apache_solr__stop_wait: 15
 apache_solr__user: 'solr'
 apache_solr__var_dir: '/var/solr'
+
+# Backup (mariadb-dump-style: oneshot service + timer; rm -rf + fresh dump every
+# run, retention is the external backup tool's job). Empty `apache_solr__dump_cores`
+# disables the timer.
+apache_solr__dump_cores: []
+apache_solr__dump_directory: '/backup/apache-solr-dump'
+apache_solr__dump_on_calendar: '*-*-* 22:{{ 59 | random(seed=inventory_hostname) }}:00'
+apache_solr__dump_url: 'http://127.0.0.1:{{ apache_solr__http_bind_port }}/solr'
 
 apache_solr__roles__role_var: []
 apache_solr__roles__dependent_var: []

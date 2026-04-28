@@ -262,6 +262,64 @@ apache_solr__users__host_var:
 ```
 
 
+## Backup and Restore
+
+The role can deploy a `mariadb-dump`-style backup pipeline for one or more Solr cores. It uses Solr's `replication?command=backup` endpoint, polls `command=details` until the backup status reports `success`, and writes the snapshot under `apache_solr__dump_directory`. On every run the directory is wiped and refreshed; retention is the responsibility of the surrounding backup tool (Borg, Restic, ...) which snapshots that directory.
+
+### Optional Backup Variables
+
+`apache_solr__dump_cores`
+
+* List of cores to back up. Empty disables the timer and stops the existing one.
+* Type: List of strings.
+* Default: `[]`
+
+`apache_solr__dump_directory`
+
+* Where the latest snapshot lands. Owned by `{{ apache_solr__user }}:{{ apache_solr__group }}` so Solr can write into it.
+* Type: String.
+* Default: `'/backup/apache-solr-dump'`
+
+`apache_solr__dump_on_calendar`
+
+* `OnCalendar=` value for `apache-solr-dump.timer`. Default seeds the minute by `inventory_hostname` so a fleet does not all hit Solr at the same second.
+* Type: String.
+* Default: `'*-*-* 22:{{ 59 | random(seed=inventory_hostname) }}:00'`
+
+`apache_solr__dump_url`
+
+* Base URL of the Solr instance the dumper hits. Defaults to localhost on the configured port. Override if Solr listens on a UNIX socket or the loopback alias differs.
+* Type: String.
+* Default: `'http://127.0.0.1:{{ apache_solr__http_bind_port }}/solr'`
+
+### Restoring a Core
+
+1. Stop Solr writes to the target core (route traffic away or stop the service).
+2. Identify the snapshot directory written by the dumper:
+
+    ```bash
+    ls /backup/apache-solr-dump/snapshot.<core_name>/
+    ```
+
+3. Hit the replication restore endpoint:
+
+    ```bash
+    curl 'http://127.0.0.1:8983/solr/<core_name>/replication?command=restore&location=/backup/apache-solr-dump&name=<core_name>'
+    ```
+
+4. Poll until done:
+
+    ```bash
+    curl 'http://127.0.0.1:8983/solr/<core_name>/replication?command=restorestatus&wt=json'
+    ```
+
+    `status` flips to `success` (or `failed`) when the restore completes.
+
+5. Re-enable traffic.
+
+For Numishare specifically: the `numishare` core is also reproducible from eXist-db (the Numishare publish pipeline rebuilds the index). The Solr snapshot exists to skip the (potentially long) rebuild during disaster recovery, not as the only authoritative source.
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)

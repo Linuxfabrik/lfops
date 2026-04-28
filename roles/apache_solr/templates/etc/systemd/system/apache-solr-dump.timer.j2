@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2026042801
+
+[Unit]
+Description=apache-solr-dump Timer
+
+[Timer]
+OnCalendar={{ apache_solr__dump_on_calendar }}
+Unit=apache-solr-dump.service
+
+[Install]
+WantedBy=timers.target

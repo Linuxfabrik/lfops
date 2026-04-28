@@ -19,14 +19,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_solr**: Add `apache_solr__allow_paths` to expose `-Dsolr.allowPaths` from the inventory (default `[]`). Required when Solr 9 must read or write outside `solr.solr.home` — e.g. backup destinations that the new dump pipeline auto-injects, or cores whose data lives elsewhere. The empty default keeps the property unset, matching upstream behavior
+* **role:apache_solr**: Add `apache_solr__heap` (default `'512m'`) so users can size the Solr JVM heap from the inventory. Previously the only knob was the upstream-shipped `#SOLR_HEAP="512m"` comment in `solr.in.sh`, leaving Solr permanently on the 512m default with no role-level override
+* **role:apache_solr**: Add `apache_solr__security_manager_enabled` (default `true`, matching Solr 9's documented default) so deployments with a `solr.solr.home` outside Solr's permitted paths can disable the Java SecurityManager from the inventory. Required for Numishare, whose Solr core lives under `/opt/numishare/solr-home/` and otherwise hits `access denied ("java.io.FilePermission" ...)` errors
+* **role:apache_solr**: Add a `mariadb-dump`-style backup pipeline: `apache-solr-dump.service` (oneshot) + `.timer` snapshot every core listed in `apache_solr__dump_cores` via Solr's `replication?command=backup` endpoint, polling `command=details` until status is `success`. Snapshots land in `apache_solr__dump_directory` (default `/backup/apache-solr-dump`). Wipe-and-refresh per run; retention is the surrounding backup tool's job. Empty `apache_solr__dump_cores` disables the timer (no-op default). The pipeline also adds `apache_solr__dump_directory` to `-Dsolr.allowPaths` automatically (Solr 9 rejects backup `location=` outside `solr.solr.home` with HTTP 400). The parent of `apache_solr__dump_directory` is created as `0o755 root:root` so other dump pipelines (existdb-dump, mariadb-dump) sharing `/backup/` can still traverse into their own subdirs. README documents the restore via `replication?command=restore` plus `restorestatus` polling
 * **role:glances**: Add RHEL 10 / Rocky 10 / Alma 10 support by installing glances into a Python venv via the `python_venv` role, since the package is not available in EPEL 10. RHEL 10 is now marked proven (`x`) in COMPATIBILITY.
 * **role:graylog_datanode**: Add `graylog_datanode__http_publish_uri` to set the REST API URI the DataNode advertises, needed when the bind address is not directly reachable (multiple interfaces, a NAT gateway, or a `0.0.0.0` bind address).
 
 ### Changed
 
+* **role:apache_solr**: Download Solr 9.x tarballs from `dlcdn.apache.org` first and only fall back to `archive.apache.org` on failure. The Apache CDN serves currently-supported versions at full speed, while the archive server is intentionally throttled (advertises `Vary: Slow,Glacial`) and previously made `get_url` appear to hang for ~30 minutes per run. The fallback keeps older 9.x versions reachable once they've rotated out of the CDN. Solr 8.x stays on `archive.apache.org` (Lucene path; EOL, CDN no longer mirrors it).
 * **role:icingadb, role:icingaweb2, role:icingaweb2_module_reporting, role:icingaweb2_module_x509, role:mariadb_server**: Move the MariaDB tasks from the deprecated `community.mysql` collection to its replacement `ansible.mysql`. Behaviour is unchanged, but the deprecation warnings printed on every run are gone and the roles keep working once `community.mysql` is removed upstream.
 * **role:apache_httpd**: Update the Matomo log-analytics import script (`import_logs.py`) to the latest upstream version. The auth token can now be provided via a `--auth-config` file instead of the command line (passing `--token-auth`, `--login` or `--password` as options is deprecated, since they are visible in the process list and now log a deprecation warning). Also adds support for the Traefik access-log format and fixes a possible endless loop when reading a config file.
 
+
+### Fixed
+
+* **role:apache_solr**: Fix `No package java-17-openjdk-headless available.` on RHEL 10. Red Hat dropped `java-17-openjdk` from EL10 AppStream (only `java-21-openjdk` and `java-25-openjdk` ship now). The role now picks `java-21-openjdk-headless` for Solr 9.x on EL10 via a new OS-specific `vars/RedHat10.yml`; EL8/9 keep `java-17-openjdk-headless` unchanged. Solr 9.x officially supports Java 11, 17, and 21.
 
 ## [v7.0.0] - 2026-06-11
 

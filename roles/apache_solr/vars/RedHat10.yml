@@ -1,0 +1,4 @@
+# RHEL 10 dropped java-17-openjdk-headless from AppStream. Solr 9.x officially
+# supports Java 11, 17, and 21, so use java-21-openjdk-headless on EL10.
+__apache_solr__java_package:
+  '9': 'java-21-openjdk-headless'
