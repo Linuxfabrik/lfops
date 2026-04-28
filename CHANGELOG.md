@@ -77,6 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **all roles**: Rewrite all role READMEs to use the new standard format: replace markdown tables with bullet lists for tags and variables, convert HTML/blockquote subkeys to expanded indented format, standardize terminology (`Bool` not `Boolean`, `Mandatory` not `Required`)
 * **role:opensearch**: Rewrite README with step-by-step cluster setup guide, single-node section, post-installation steps, and improved variable documentation
 * **role:elasticsearch**: Improve README with single-node section and clearer explanation of the manual certificate approach for cluster setup
+* **COMPATIBILITY**: Add Ubuntu 26.04 column
+* **COMPATIBILITY**: Mark OSes a role is theoretically usable on (but untested) with `(x)`. Inferred from per-role static analysis (OS-specific task/vars files, modules used, hardcoded paths and services)
 * **COMPATIBILITY**: Add missing `crypto_policy` RHEL 10 entry
 * **COMPATIBILITY**: Remove Debian 11 and Ubuntu 20.04 columns (EOL)
 
