@@ -1,0 +1,18 @@
+argument_specs:
+  main:
+    options:
+
+      mailto_root__from:
+        type: 'str'
+        required: true
+        description: >-
+          Sender address used for the relayed mail (`postfix`
+          sender_canonicals rewrite).
+
+      mailto_root__to:
+        type: 'list'
+        elements: 'str'
+        required: true
+        description: >-
+          Recipient addresses to which mail addressed to `root` is
+          relayed.

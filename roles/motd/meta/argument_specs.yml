@@ -1,0 +1,26 @@
+argument_specs:
+  main:
+    options:
+
+      motd__legal_notice:
+        type: 'str'
+        required: false
+        description: >-
+          Multi-line legal / authorized-use banner shown to users
+          before login. See `defaults/main.yml` for the shipped
+          default.
+
+      motd__logo_pty:
+        type: 'str'
+        required: false
+        description: >-
+          Multi-line logo for pseudo-terminals (SSH, screen, ...). See
+          `defaults/main.yml` for the shipped default.
+
+      motd__logo_tty:
+        type: 'str'
+        required: false
+        description: >-
+          Multi-line logo for the local TTY console. Backslashes have
+          to be escaped. See `defaults/main.yml` for the shipped
+          default.

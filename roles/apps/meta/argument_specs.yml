@@ -1,0 +1,47 @@
+argument_specs:
+  main:
+    options:
+
+      apps__apps__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'List of apps to remove or to deploy. Group-level override.'
+        options:
+
+          name:
+            type: 'str'
+            required: true
+            description: 'Name of the application package.'
+
+          state:
+            type: 'str'
+            required: false
+            default: 'present'
+            description: >-
+              `present` (default) or `absent`. Other states like
+              `latest` work only if the underlying package backend
+              supports them.
+
+      apps__apps__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'List of apps to remove or to deploy. Host-level override.'
+        options:
+
+          name:
+            type: 'str'
+            required: true
+            description: 'Name of the application package.'
+
+          state:
+            type: 'str'
+            required: false
+            default: 'present'
+            description: >-
+              `present` (default) or `absent`. Other states like
+              `latest` work only if the underlying package backend
+              supports them.
