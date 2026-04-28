@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:network**: README still claimed the role disables zeroconf, but the corresponding `NOZEROCONF=yes` task was removed in 2024 (NetworkManager no longer adds the zeroconf route by default). Bring the README in line with what the role actually does and call out the Hetzner-specific `hc-utils` cleanup explicitly.
 * **role:haveged**: Setting `haveged__service_state: 'stopped'` produced the invalid systemctl command `stopp` because of a `[:-2]` slice in the task name. The role now uses `ansible.builtin.service` directly with the configured state, so all four valid values (`reloaded` / `restarted` / `started` / `stopped`) work as expected.
 * **role:unattended_upgrades**: Correct README description; the role deactivates Unattended Upgrades by setting both `APT::Periodic` flags to `0` in `/etc/apt/apt.conf.d/20auto-upgrades` (Debian/Ubuntu), it does not remove the `unattended-upgrades` package.
 * **playbooks/freeipa_client, playbooks/freeipa_server**: Set `strategy: 'linear'` explicitly so the playbooks work even when the user's `ansible.cfg` defaults to a strategy that reuses the target Python interpreter (e.g. `mitogen_linear`). The ansible-freeipa modules rely on `ipalib`'s global API singleton and otherwise fail with `API.bootstrap() already called` on the second module call.
@@ -75,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:libmaxminddb, role:mod_maxminddb**: Add `meta/argument_specs.yml`. No behaviour change.
 * **role:apps, role:grafana_grizzly, role:mailto_root, role:motd**: Add `meta/argument_specs.yml`. No behaviour change.
 * **role:alternatives, role:elastic_agent, role:elastic_agent_fleet_server, role:icinga_kubernetes_web, role:icingaweb2_module_reporting, role:kernel_settings, role:lvm, role:mastodon, role:proxysql**: Add `meta/argument_specs.yml`. No behaviour change.
+* **role:network**: Scope the `hc-utils` removal task to Red Hat-family hosts (`when: ansible_facts["os_family"] == "RedHat"`). Hetzner ships `hc-utils` as RPMs only, so on Debian / Ubuntu the call was a no-op caught by `ignore_errors: true`. No behaviour change on either family.
 * **role:icingaweb2_module_businessprocess**: README now documents the install behaviour (controller-side download, every-run-overwrite, idempotent module enable). Add `meta/argument_specs.yml`.
 * **role:icingaweb2_module_cube**: README now documents the install behaviour. Add `meta/argument_specs.yml`.
 * **role:icingaweb2_module_fileshipper**: README now documents the install behaviour and the `php-xml`/`php-yaml`/`php-zip` runtime dependency. Add `meta/argument_specs.yml`.

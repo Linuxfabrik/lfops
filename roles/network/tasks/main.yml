@@ -9,6 +9,10 @@
       name:
         - 'hc-utils'
       state: 'absent'
+    # Hetzner ships hc-utils as RPMs only; on Debian / Ubuntu the package
+    # does not exist, so skip the call entirely.
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
     ignore_errors: true # allow this task to fail, for example due to unconfigured repos
 
   - ansible.builtin.debug:

@@ -1,28 +1,30 @@
 # Ansible Role linuxfabrik.lfops.network
 
-This role configures the network settings on the server. It also disables the [zeroconf](http://www.zeroconf.org/).
+This role is a thin wrapper around the [`fedora.linux_system_roles.network` role](https://github.com/linux-system-roles/network), the upstream Linux System Role for declaring network connections (ethernet, bonds, bridges, VLANs, IP / DNS / route configuration, ...) on top of NetworkManager. It additionally cleans up Hetzner-specific cruft that conflicts with NetworkManager.
 
-The role heavily relies on the [linux_system_roles.network Role](https://github.com/linux-system-roles/network).
+Concretely, this role:
+
+* Calls `fedora.linux_system_roles.network` with whatever `network_connections` you pass in (host or group vars).
+* On Red Hat-family hosts only: removes the `hc-utils` package (Hetzner Cloud utilities). They install legacy ifcfg scripts that fight with NetworkManager. The task tolerates the package not being installed (`ignore_errors: true`).
+* Prints a reminder that NetworkManager may need to be restarted by hand (`systemctl restart NetworkManager`) for the new configuration to take full effect — the upstream role applies connections via NetworkManager APIs, but a few changes (e.g. plugin reloads) require a service restart.
 
 
 ## Mandatory Requirements
 
-* Install the [Linux System Roles](https://linux-system-roles.github.io/) on the Ansible control node. For example by calling `ansible-galaxy collection install fedora.linux_system_roles`.
+* Install the [Linux System Roles](https://linux-system-roles.github.io/) on the Ansible control node, e.g. via `ansible-galaxy collection install fedora.linux_system_roles`.
 
 
 ## Tags
 
 `network`
 
-* Configures the network settings.
+* Configures the network and removes `hc-utils` (Hetzner) on Red Hat hosts.
 * Triggers: none.
 
 
 ## Role Variables
 
-Have a look at the available role variables from the [linux_system_roles.network Role](https://github.com/linux-system-roles/network/blob/main/README.md).
-
-On RHEL 7 `ipv6_disabled` is not supported.
+This role does not define its own variables. All configuration is passed straight through to `fedora.linux_system_roles.network`. See the [upstream README](https://github.com/linux-system-roles/network/blob/main/README.md) for the full list (`network_connections`, `network_provider`, `network_state`, ...).
 
 Example:
 
