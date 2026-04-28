@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.libmaxminddb
 
-This role downloads, compiles and installs [libmaxminddb](https://github.com/maxmind/libmaxminddb/).
+This role downloads, compiles and installs [libmaxminddb](https://github.com/maxmind/libmaxminddb/), the C library that reads MaxMind's binary GeoIP database files (`.mmdb`). It is the runtime dependency for any application that wants to look up an IP address against the GeoLite2 / GeoIP2 databases (web servers via `mod_maxminddb`, custom code via the C API, Python bindings via `python-maxminddb`, ...).
 
 For Maxmind, depending on your needs, you normally run three playbooks in this particular order:
 

@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.haveged
 
-This role installs [haveged](https://github.com/jirka-h/haveged).
+This role installs [haveged](https://github.com/jirka-h/haveged), a userspace entropy daemon. It feeds the kernel's random pool from CPU timing jitter (the HAVEGE algorithm), which is mostly useful on headless VMs and older systems where `/dev/random` would otherwise block during early boot or under heavy crypto load. Modern Linux kernels (5.x+) usually have enough entropy from `getrandom()` plus virtio-rng, so `haveged` is more of a safety net than a hard requirement.
 
 
 ## Tags

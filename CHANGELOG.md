@@ -63,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * **role:freeipa_client**: Add `meta/argument_specs.yml`. No behaviour change.
+* **role:haveged, role:libmaxminddb, role:qemu_guest_agent**: README now also explains *what* the underlying tool actually does and when you'd want it (entropy daemon, MaxMind GeoIP reader library, hypervisor-to-guest communication channel) instead of just linking out.
 * **COMPATIBILITY**: `at`, `haveged`, `mod_maxminddb` and `qemu_guest_agent` are now expected to work on Debian 12 / 13 and Ubuntu 22.04 / 24.04 / 26.04 (marked `(x)`: code-reviewed, untested in production).
 * **role:hostname, role:kdump, role:timezone**: Add `meta/argument_specs.yml` so Ansible validates the role variables (types, choices) at role entry. No behaviour change.
 * **role:libmaxminddb, role:mod_maxminddb**: Add `meta/argument_specs.yml`. No behaviour change.
