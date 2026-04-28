@@ -63,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * **COMPATIBILITY**: `at`, `haveged`, `mod_maxminddb` and `qemu_guest_agent` are now expected to work on Debian 12 / 13 and Ubuntu 22.04 / 24.04 / 26.04 (marked `(x)`: code-reviewed, untested in production).
+* **role:hostname, role:kdump, role:timezone**: Add `meta/argument_specs.yml` so Ansible validates the role variables (types, choices) at role entry. No behaviour change.
 * **role:apps**: Document that the role uses `ansible.builtin.package` internally, so `state: 'latest'` works on backends that support it.
 * **role:cloud_init**: README now lists all cleanup actions (`cloud-init` package removal, `/etc/NetworkManager/conf.d/99-cloud-init.conf`, `/etc/cloud/cloud.cfg.rpmsave`).
 * **role:dnf_versionlock**: README explains the RHEL 7 vs RHEL 8+ backend differences (`yum-plugin-versionlock` vs `dnf-command(versionlock)` and the corresponding lock-list paths).

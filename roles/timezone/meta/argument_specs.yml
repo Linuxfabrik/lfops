@@ -1,0 +1,12 @@
+argument_specs:
+  main:
+    options:
+
+      timezone__timezone:
+        type: 'str'
+        required: false
+        default: 'Europe/Zurich'
+        description: >-
+          The system timezone, e.g. `Europe/Zurich`, `UTC` or
+          `America/New_York`. Anything `community.general.timezone`
+          accepts is allowed.

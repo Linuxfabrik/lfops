@@ -1,0 +1,25 @@
+argument_specs:
+  main:
+    options:
+
+      hostname__domain_part:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          DNS domain that gets appended to `hostname__host_part` to
+          form the FQDN. Leave empty for an unqualified hostname.
+
+      hostname__full_hostname:
+        type: 'str'
+        required: false
+        description: >-
+          The full hostname to set. Defaults to
+          `hostname__host_part.hostname__domain_part` (trailing dots
+          trimmed); override directly to bypass the host/domain split.
+
+      hostname__host_part:
+        type: 'str'
+        required: false
+        description: >-
+          Hostname-only part. Defaults to `inventory_hostname`.

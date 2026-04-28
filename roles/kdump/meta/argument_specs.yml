@@ -1,0 +1,20 @@
+argument_specs:
+  main:
+    options:
+
+      kdump__service_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Whether kdump.service is enabled at boot.'
+
+      kdump__service_state:
+        type: 'str'
+        required: false
+        default: 'stopped'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'State of kdump.service.'
