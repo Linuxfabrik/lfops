@@ -1,0 +1,39 @@
+argument_specs:
+  main:
+    options:
+
+      dnf_makecache__service_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Whether dnf-makecache.service is enabled at boot.'
+
+      dnf_makecache__service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          State of dnf-makecache.service. Defaults to started or stopped
+          depending on dnf_makecache__service_enabled.
+
+      dnf_makecache__timer_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Whether dnf-makecache.timer is enabled at boot.'
+
+      dnf_makecache__timer_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          State of dnf-makecache.timer. Defaults to started or stopped
+          depending on dnf_makecache__timer_enabled.
