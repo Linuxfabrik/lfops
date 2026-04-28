@@ -1,0 +1,7 @@
+__mod_maxminddb__apache_conf_modules_d: '/etc/apache2/mods-available/maxminddb.load'
+__mod_maxminddb__build_packages:
+  - 'apache2-dev'
+  - 'gcc'
+  - 'make'
+  - 'tar'
+__mod_maxminddb__module_path: '/usr/lib/apache2/modules/mod_maxminddb.so'

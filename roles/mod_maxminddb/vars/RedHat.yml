@@ -1,0 +1,8 @@
+__mod_maxminddb__apache_conf_modules_d: '/etc/httpd/conf.modules.d/20-mod_maxminddb.conf'
+__mod_maxminddb__build_packages:
+  - 'gcc'
+  - 'httpd-devel'
+  - 'make'
+  - 'redhat-rpm-config'
+  - 'tar'
+__mod_maxminddb__module_path: '/usr/lib64/httpd/modules/mod_maxminddb.so'

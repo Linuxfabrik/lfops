@@ -1,13 +1,13 @@
 - block:
 
-  - name: 'install gcc httpd-devel make redhat-rpm-config tar'
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  - name: 'install build dependencies ({{ __mod_maxminddb__build_packages | join(" ") }})'
     ansible.builtin.package:
-      name:
-        - 'gcc'
-        - 'httpd-devel'
-        - 'make'
-        - 'redhat-rpm-config'
-        - 'tar'
+      name: '{{ __mod_maxminddb__build_packages }}'
       state: 'present'
 
   - name: 'curl https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz --output /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
@@ -36,16 +36,23 @@
     args:
       chdir: '{{ ansible_env["HOME"] }}/mod_maxminddb-{{ mod_maxminddb__version }}'
 
-  - name: 'Create Apache `LoadModule` directive in {{ mod_maxminddb__apache_conf_modules_d }} '
+  - name: 'Create Apache `LoadModule` directive in {{ mod_maxminddb__apache_conf_modules_d }}'
     ansible.builtin.copy:
       dest: '{{ mod_maxminddb__apache_conf_modules_d }}'
-      content: 'LoadModule maxminddb_module /usr/lib64/httpd/modules/mod_maxminddb.so'
+      content: 'LoadModule maxminddb_module {{ __mod_maxminddb__module_path }}'
 
   - name: 'make install'
     ansible.builtin.make:
       chdir: '{{ ansible_env["HOME"] }}/mod_maxminddb-{{ mod_maxminddb__version }}'
       target: 'install'
     ignore_errors: true
+
+  - name: 'a2enmod maxminddb'
+    community.general.apache2_module:
+      name: 'maxminddb'
+      state: 'present'
+    when:
+      - 'ansible_facts["os_family"] == "Debian"'
 
   tags:
     - 'mod_maxminddb'
