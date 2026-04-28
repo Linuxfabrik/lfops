@@ -101,37 +101,24 @@
 
 - block:
 
-  - name: 'ensure  0 <= elasticsearch__cluster_routing_allocation_disk_watermark_low <= 1'
+  - name: 'ensure 0 <= watermark ratios <= 1'
     ansible.builtin.assert:
       that:
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low is number'
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low >= 0'
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low <= 1'
-      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_low: {{ elasticsearch__cluster_routing_allocation_disk_watermark_low }}` must be a number between 0 and 1'
-
-  - name: 'ensure  0 <= elasticsearch__cluster_routing_allocation_disk_watermark_high <= 1'
-    ansible.builtin.assert:
-      that:
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high is number'
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high >= 0'
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high <= 1'
-      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_high: {{ elasticsearch__cluster_routing_allocation_disk_watermark_high }}` must be a number between 0 and 1'
-
-  - name: 'ensure  0 <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage <= 1'
-    ansible.builtin.assert:
-      that:
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage is number'
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage >= 0'
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage <= 1'
-      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage: {{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage }}` must be a number between 0 and 1'
-
-  - name: 'ensure  0 <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage <= 1'
-    ansible.builtin.assert:
-      that:
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage is number'
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage >= 0'
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage <= 1'
-      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage: {{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage }}` must be a number between 0 and 1'
+        - 'item["value"] is number'
+        - 'item["value"] >= 0'
+        - 'item["value"] <= 1'
+      fail_msg: '`{{ item["name"] }}: {{ item["value"] }}` must be a number between 0 and 1'
+    loop:
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_high'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_high }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_low'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_low }}'
+    loop_control:
+      label: '{{ item["name"] }}'
 
   - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_low <= elasticsearch__cluster_routing_allocation_disk_watermark_high <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
     ansible.builtin.assert:
@@ -140,42 +127,23 @@
         - 'elasticsearch__cluster_routing_allocation_disk_watermark_high <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
       fail_msg: 'elasticsearch__cluster_routing_allocation_disk_watermark_low must not exceed elasticsearch__cluster_routing_allocation_disk_watermark_high'
 
-  - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom is a valid byte size'
+  - name: 'ensure watermark max_headroom values are valid byte sizes'
     ansible.builtin.assert:
       that:
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom is ansible.builtin.regex("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
-      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom: {{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom }}` is not a valid byte size'
-    when: >
-      elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom is defined and
-      (elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom | length) > 0
-
-  - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom is a valid byte size'
-    ansible.builtin.assert:
-      that:
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom is ansible.builtin.regex("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
-      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom: {{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom }}` is not a valid byte size'
-    when: >
-      elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom is defined and
-      (elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom | length) > 0
-
-  - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom is a valid byte size'
-    ansible.builtin.assert:
-      that:
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom is ansible.builtin.regex("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
-      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom: {{ elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom }}` is not a valid byte size'
-    when: >
-      elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom is defined and
-      (elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom | length) > 0
-
-
-  - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom is a valid byte size'
-    ansible.builtin.assert:
-      that:
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom | ansible.builtin.regex_search("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
-      fail_msg: '`elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom: {{ elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom }}` is not a valid byte size'
-    when: >
-      elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom is defined and
-      (elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom | length) > 0
+        - '(item["value"] | lower) is ansible.builtin.regex("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
+      fail_msg: '`{{ item["name"] }}: {{ item["value"] }} is not a valid byte size'
+    loop:
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom | d("") }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom | d("") }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom | d("") }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom | d("") }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when: 'item["value"] | length > 0'
 
   tags:
     - 'always'
