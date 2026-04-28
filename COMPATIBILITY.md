@@ -34,6 +34,7 @@ duplicity                            |    |    | x | x | x  |       |       | Fe
 elastic_agent                        |    |    |   | x |    |       |   x   |
 elastic_agent_fleet_server           |    |    |   | x |    |       |   x   |
 elasticsearch                        |    |    | x | x |    |       |   x   |
+existdb                              |    |    |   |   | x  |       |       |
 exoscale_vm                          |    |    |   |   |    |       |       | Fedora 35+
 fail2ban                             |    |    | x | x |    |       |       |
 fangfrisch                           |    |    |   | x |    |       |       |
