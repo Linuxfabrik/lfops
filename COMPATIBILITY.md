@@ -14,20 +14,20 @@ apache_httpd                         | x  | x  | x | x | x  |  (x)  |   x   |  (
 apache_solr                          |    |    | x | x |(x) |       |       |       |
 apache_tomcat                        |    |    | x | x |(x) |       |       |       |
 apps                                 |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  |
-at                                   |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  | Fedora 35
+at                                   |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  | Fedora 35
 audit                                |    |    | x | x |(x) |       |       |       |
 bind                                 |    |    | x | x | x  |       |       |       |
 blocky                               |    |    | x | x |(x) |       |       |       |
 borg_local                           |    |    | x |(x)|(x) |       |       |       |
 chrony                               |    |    | x | x | x  |       |       |       |
 clamav                               |    |    | x | x |(x) |       |       |       |
-cloud_init                           |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
-cockpit                              |    |    | x | x |(x) |       |       |       | Fedora 35
+cloud_init                           |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  |
+cockpit                              |    |    | x | x | x  |       |       |       | Fedora 35
 collabora                            |    |    | x | x |(x) |       |       |       |
 collect_rpmnew_rpmsave               |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  | Fedora 40
 coturn                               |    |    | x | x |(x) |       |       |       |
 crypto_policy                        |    |    | x | x | x  |       |       |       |
-dnf_makecache                        |    |    | x | x |(x) |       |       |       |
+dnf_makecache                        |    |    | x | x | x  |       |       |       |
 dnf_versionlock                      |    |    | x | x |    |       |       |       | Fedora 40
 docker                               |    |    | x |(x)|(x) |       |       |       |
 duplicity                            |    |    | x | x | x  |       |       |       | Fedora 35
@@ -52,8 +52,8 @@ graylog_datanode                     | x  | x  | x | x |(x) |  (x)  |  (x)  |  (
 graylog_server                       | x  | x  | x |(x)|(x) |  (x)  |  (x)  |  (x)  |
 haveged                              |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
 hetzner_vm                           |    |    |   |   |    |       |       |       | Fedora 35+
-hostname                             |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
-icinga2_agent                        |(x) | x  | x | x |(x) |  (x)  |  (x)  |  (x)  | Fedora 35
+hostname                             |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  |
+icinga2_agent                        |(x) | x  | x | x | x  |  (x)  |  (x)  |  (x)  | Fedora 35
 icinga2_master                       | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
 icinga_kubernetes                    |    |    |(x)| x |(x) |       |       |       |
 icinga_kubernetes_web                |(x) |(x) |(x)| x |(x) |  (x)  |  (x)  |  (x)  |
@@ -81,7 +81,7 @@ icingaweb2_module_x509               | x  | x  | x | x |(x) |  (x)  |  (x)  |  (
 icingaweb2_theme_linuxfabrik         |(x) |(x) | x | x |(x) |  (x)  |   x   |  (x)  |
 influxdb                             | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
 infomaniak_vm                        |    |    |   |   |    |       |       |       | Fedora 35+
-kdump                                |    |    | x | x |(x) |       |       |       |
+kdump                                |    |    | x | x | x  |       |       |       |
 keepalived                           |    |    | x |(x)|(x) |       |       |       |
 kernel_settings                      | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
 keycloak                             |    |    | x |(x)|(x) |       |       |       |
@@ -91,11 +91,11 @@ kvm_vm                               |(x) |(x) | x |(x)|(x) |  (x)  |   x   |  (
 libmaxminddb                         |(x) |(x) | x |(x)|(x) |  (x)  |  (x)  |  (x)  |
 librenms                             |    |    | x |(x)|(x) |       |       |       |
 libreoffice                          |    |    | x |(x)|(x) |       |       |       |
-login                                |(x) |(x) | x | x |    |  (x)  |  (x)  |  (x)  | Fedora 35+
+login                                |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  | Fedora 35+
 logrotate                            |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  | Fedora
 logstash                             |(x) |(x) |(x)| x |(x) |  (x)  |   x   |  (x)  |
-lvm                                  |    |    |(x)|(x)|(x) |       |       |       |
-mailto_root                          |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
+lvm                                  |    |    |(x)|(x)| x  |       |       |       |
+mailto_root                          |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  |
 mailx                                | x  | x  | x | x | x  |  (x)  |  (x)  |  (x)  | Fedora
 mariadb_server                       | x  | x  | x | x | x  |  (x)  |  (x)  |  (x)  | Galera on Debian is untested
 mastodon                             |(x) |(x) |(x)| x |(x) |  (x)  |  (x)  |  (x)  |
@@ -104,12 +104,12 @@ minio_client                         |(x) |(x) | x |(x)|(x) |  (x)  |  (x)  |  (
 mirror                               |    |    | x | x |(x) |       |       |       |
 mod_maxminddb                        |(x) |(x) | x |(x)|(x) |  (x)  |  (x)  |  (x)  |
 mongodb                              | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
-monitoring_plugins                   |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  | Debian 9, Fedora, Suse, Windows
+monitoring_plugins                   |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  | Debian 9, Fedora, Suse, Windows
 monitoring_plugins_grafana_dashboards|(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
 moodle                               | -  | -  | x | x |(x) |       |       |       |
-motd                                 |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
+motd                                 |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  |
 mount                                |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
-network                              | -  | -  | x | x |(x) |       |       |       |
+network                              | -  | -  | x | x | x  |       |       |       |
 nextcloud                            |    |    | x | x |(x) |       |       |       |
 nfs_client                           |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
 nfs_server                           |(x) |(x) | x |(x)|(x) |  (x)  |  (x)  |  (x)  |
@@ -128,8 +128,8 @@ postgresql_server                    |    |    | x |(x)|(x) |       |       |   
 Role                                 | 12 | 13 | 8 | 9 | 10 | 22.04 | 24.04 | 26.04 |
 -------------------------------------+----+----+---+---+----+-------+-------+-------+-----------
 proxysql                             |    |    | x |(x)|(x) |       |       |       |
-python                               | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  | Windows
-python_venv                          | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  | Fedora 35
+python                               | x  | x  | x | x | x  |  (x)  |  (x)  |  (x)  | Windows
+python_venv                          | x  | x  | x | x | x  |  (x)  |  (x)  |  (x)  | Fedora 35
 qemu_guest_agent                     |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  |
 redis                                | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
 repo_baseos                          |    |    | x | x | x  |       |       |       |
@@ -143,11 +143,11 @@ repo_gitlab_ce                       |    |    | x |(x)|(x) |       |       |   
 repo_gitlab_runner                   |    |    | x |(x)|(x) |       |       |       |
 repo_grafana                         | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
 repo_graylog                         | x  | x  | x |(x)|(x) |  (x)  |  (x)  |  (x)  |
-repo_icinga                          | x  | x  | x | x |(x) |   x   |  (x)  |  (x)  |
+repo_icinga                          | x  | x  | x | x | x  |   x   |  (x)  |  (x)  |
 repo_influxdb                        | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
 repo_mariadb                         | x  | x  | x | x | x  |  (x)  |   x   |  (x)  |
 repo_mongodb                         | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
-repo_monitoring_plugins              |(x) |(x) | x | x |(x) |   x   |  (x)  |  (x)  |
+repo_monitoring_plugins              |(x) |(x) | x | x | x  |   x   |  (x)  |  (x)  |
 repo_mydumper                        |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
 repo_opensearch                      | x  | x  | x |(x)|(x) |   x   |   x   |  (x)  |
 repo_postgresql                      |    |    |(x)| x |(x) |       |       |       |
@@ -157,18 +157,18 @@ repo_remi                            |    |    | x | x |    |       |       |   
 repo_rpmfusion                       |    |    | x |(x)|(x) |       |       |       |
 repo_sury                            | x  | x  | - | - |    |  (x)  |  (x)  |  (x)  |
 rocketchat                           |    |    | x |(x)|(x) |       |       |       | Fedora 35
-rsyslog                              |    |    | x | x |(x) |       |       |       |
-selinux                              |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
+rsyslog                              |    |    | x | x | x  |       |       |       |
+selinux                              |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  |
 shell                                |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  |
 snmp                                 |    |    | x | x |(x) |       |       |       |
 squid                                |    |    |(x)| x |(x) |       |       |       |
 sshd                                 | x  | x  | x | x | x  |  (x)  |  (x)  |  (x)  | Fedora 40
-system_update                        | x  | x  | x | x |    |  (x)  |  (x)  |  (x)  |
-systemd_journald                     |    |    | x | x |(x) |       |       |       |
+system_update                        | x  | x  | x | x | x  |  (x)  |  (x)  |  (x)  |
+systemd_journald                     |    |    | x | x | x  |       |       |       |
 systemd_unit                         |    |    | x | x | x  |       |       |       |
 telegraf                             |    |    | x |(x)|(x) |       |       |       |
-timezone                             |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  | Fedora 35
-tools                                |    |    | x | x |(x) |       |       |       | Fedora
+timezone                             |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  | Fedora 35
+tools                                |    |    | x | x | x  |       |       |       | Fedora
 unattended_upgrades                  |(x) |(x) |   |   |    |  (x)  |  (x)  |  (x)  |
 vsftpd                               |    |    | x |(x)|(x) |       |       |       |
 wordpress                            |    |    | x |(x)|(x) |       |       |       |
