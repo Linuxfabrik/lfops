@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
+
+# {{ ansible_managed }}
+# 2026042801
+
+# Snapshot every core listed in /etc/apache-solr-dump.conf via Solr's
+# replication?command=backup endpoint. Mirrors the mariadb-dump pattern: rm -rf
+# $BACKUP_DIR + mkdir + fresh dump on every run; external backup tool handles
+# retention.
+#
+# Solr's backup is async, so we trigger and then poll
+# replication?command=details until status == "success" (or "exception"). Cap
+# the wait at 10 minutes per core; raise it for very large indexes.
+
+set -e
+
+old_umask=$(umask)
+umask 027
+
+source /etc/apache-solr-dump.conf
+
+if [ -z "$CORES" ]; then
+    echo "apache-solr-dump: CORES is empty, nothing to back up." >&2
+    exit 0
+fi
+
+rm -rf "$BACKUP_DIR"
+mkdir -p "$BACKUP_DIR"
+chown "$SOLR_USER:$SOLR_GROUP" "$BACKUP_DIR"
+
+deadline_per_core=600  # seconds
+
+for core in $CORES; do
+    echo "apache-solr-dump: backing up core '$core' to $BACKUP_DIR"
+
+    # Trigger async backup. Solr writes to "$BACKUP_DIR/snapshot.$core/".
+    # On HTTP error print the response body so the failure mode is visible in
+    # the journal (typical: 400 with "Path X must be relative to SOLR_HOME ..."
+    # when solr.allowPaths does not include $BACKUP_DIR).
+    if ! trigger_response=$(curl --fail-with-body --silent --show-error \
+            "$SOLR_URL/$core/replication?command=backup&location=$BACKUP_DIR&name=$core"); then
+        echo "apache-solr-dump: replication?command=backup failed for core '$core':" >&2
+        echo "$trigger_response" >&2
+        exit 1
+    fi
+
+    # Poll until done.
+    deadline=$(($(date +%s) + deadline_per_core))
+    while [ "$(date +%s)" -lt "$deadline" ]; do
+        details=$(curl --fail --silent --show-error \
+            "$SOLR_URL/$core/replication?command=details&wt=json")
+
+        if echo "$details" | grep -q '"status":"success"'; then
+            break
+        fi
+        if echo "$details" | grep -q '"status":"exception"'; then
+            echo "apache-solr-dump: backup of core '$core' failed:" >&2
+            echo "$details" >&2
+            exit 1
+        fi
+        sleep 5
+    done
+
+    # Final check: if we exited the loop on the deadline, fail loudly.
+    if ! echo "$details" | grep -q '"status":"success"'; then
+        echo "apache-solr-dump: backup of core '$core' did not finish within $deadline_per_core seconds." >&2
+        exit 1
+    fi
+done
+
+umask "$old_umask"
