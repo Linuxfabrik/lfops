@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:logstash**: Add variable `logstash__monitoring_enabled`.
+* **role:logstash**: Add optional variable `logstash__monitoring_cluster_uuid`.
 * **role:graylog_datanode**: Add optional variable `graylog_datanode__raw`.
 * **role:graylog_datanode**: Add optional variables `graylog_datanode__path_repos`, `graylog_datanode__node_search_cache_size` to configure searchable snapshot locations and size of disk-based searchable snapshot cache.
 * **role:infomaniak_vm**: Add `keep_port_on_absent` subkey on `infomaniak_vm__networks` entries to preserve the port (and its fixed IP) when the VM is set to `infomaniak_vm__state: 'absent'`, so the same IP can be re-used

@@ -376,9 +376,9 @@ path.logs: '{{ logstash__path_logs }}'
 
 # Stack Monitoring
 # https://www.elastic.co/docs/reference/logstash/monitoring-with-elastic-agent
-monitoring.enabled: {{ logstash__monitoring_enabled | string | lower }}
+monitoring.enabled: {{ logstash__monitoring_enabled | bool | string | lower }}
 {% if logstash__monitoring_cluster_uuid is defined and logstash__monitoring_cluster_uuid | length > 0 %}
-monitoring.cluster_uuid: {{ logstash__monitoring_cluster_uuid }}
+monitoring.cluster_uuid: '{{ logstash__monitoring_cluster_uuid }}'
 {% endif %}
 
 {% if logstash__raw | length %}
