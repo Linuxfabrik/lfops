@@ -123,6 +123,7 @@ nfs_server                           |    |    | x |   |    |       |       |
 nodejs                               |    |    | x | x |    |       |       |
 objectstore_backup                   |    |    | x |   |    |       |       |
 opensearch                           |    |    | x |   |    |       |       |
+orbeon_forms                         |    |    |   |   | x  |       |       |
 open_vm_tools                        |    |    | x | x |    |       |       |
 openvpn_server                       |    |    | x | x | x  |       |       |
 php                                  | x  | x  | x | x |    |       |       |
