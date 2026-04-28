@@ -13,6 +13,22 @@
       depth: 1
       update: false  # Numishare is checked out once; updates handled out-of-band
 
+  # Numishare ships two files with the install path hardcoded to
+  # `/usr/local/projects/numishare` (the upstream developer's own layout):
+  #   * xforms/admin.xhtml — pre-fills the "Installation Directory" field on
+  #     the Add-New-Collection form, persisted into eXist-db per collection
+  #   * script/reindex-collection.php — `$eXist_config_path` for CLI reindex
+  # Rewrite both to numishare__install_dir so the form default is correct
+  # out of the box and the reindex CLI works without manual edits.
+  - name: 'Rewrite hardcoded /usr/local/projects/numishare paths to {{ numishare__install_dir }}'
+    ansible.builtin.replace:
+      path: '{{ numishare__install_dir }}/{{ item }}'
+      regexp: '/usr/local/projects/numishare'
+      replace: '{{ numishare__install_dir }}'
+    loop:
+      - 'script/reindex-collection.php'
+      - 'xforms/admin.xhtml'
+
   - name: 'Deploy {{ numishare__install_dir }}/exist-config.xml'
     ansible.builtin.template:
       backup: true

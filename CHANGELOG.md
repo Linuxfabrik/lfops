@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:numishare**: Rewrite the two upstream-hardcoded `/usr/local/projects/numishare` paths in the cloned source tree to `numishare__install_dir`. Affects `xforms/admin.xhtml` (pre-fills the "Installation Directory" field on the Add-New-Collection form, persisted into eXist-db per collection) and `script/reindex-collection.php` (`$eXist_config_path` for the CLI reindex). Without this rewrite the form default points at a non-existent path on every fresh install (lfops uses `/opt/numishare`) and the reindex script can't find `exist-config.xml` until manually patched.
 * **role:apache_solr**: Fix `No package java-17-openjdk-headless available.` on RHEL 10. Red Hat dropped `java-17-openjdk` from EL10 AppStream (only `java-21-openjdk` and `java-25-openjdk` ship now). The role now picks `java-21-openjdk-headless` for Solr 9.x on EL10 via a new OS-specific `vars/RedHat10.yml`; EL8/9 keep `java-17-openjdk-headless` unchanged. Solr 9.x officially supports Java 11, 17, and 21.
 
 ## [v7.0.0] - 2026-06-11
