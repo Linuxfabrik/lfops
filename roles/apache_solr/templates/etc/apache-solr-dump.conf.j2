@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2026042801
+
+BACKUP_DIR={{ apache_solr__dump_directory | quote }}
+CORES={{ (apache_solr__dump_cores | join(' ')) | quote }}
+SOLR_GROUP={{ apache_solr__group | quote }}
+SOLR_URL={{ apache_solr__dump_url | quote }}
+SOLR_USER={{ apache_solr__user | quote }}

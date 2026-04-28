@@ -1,0 +1,21 @@
+existdb__admin_password: 'linuxfabrik'
+existdb__data_dir: '/var/lib/existdb/data'
+existdb__group: 'existdb'
+existdb__http_port: 8888
+existdb__https_port: 8444
+existdb__install_dir: '/opt/existdb'
+existdb__java_opts: '-XX:+UseG1GC -XX:+UseStringDeduplication -XX:MaxRAMPercentage=75.0'
+existdb__log_dir: '/var/log/existdb'
+existdb__service_enabled: true
+existdb__user: 'existdb'
+existdb__version: '6.4.1'
+
+# Backup (mariadb-dump-style: oneshot service + timer; rm -rf + fresh dump every
+# run, retention is the external backup tool's job). Set `existdb__dump_enabled`
+# to false to skip the timer.
+existdb__dump_collection: '/db'
+existdb__dump_directory: '/backup/existdb-dump'
+existdb__dump_enabled: true
+existdb__dump_on_calendar: '*-*-* 22:{{ 59 | random(seed=inventory_hostname) }}:00'
+existdb__dump_password: '{{ existdb__admin_password }}'
+existdb__dump_user: 'admin'

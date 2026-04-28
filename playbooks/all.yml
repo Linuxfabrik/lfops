@@ -130,6 +130,7 @@
 - import_playbook: 'setup_mastodon.yml'
 - import_playbook: 'setup_moodle.yml'
 - import_playbook: 'setup_nextcloud.yml'
+- import_playbook: 'setup_numishare.yml'
 - import_playbook: 'setup_rocketchat.yml'
 - import_playbook: 'setup_wordpress.yml'
 - import_playbook: 'shell.yml'

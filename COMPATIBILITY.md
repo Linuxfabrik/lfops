@@ -11,8 +11,8 @@ acme_sh                              | x  | x  | x | x | x  |       |   x   |
 alternatives                         | x  | x  | x | x |    |   x   |   x   |
 ansible_init                         |    |    |   |   |    |       |       | Fedora 35+
 apache_httpd                         | x  | x  | x | x | x  |       |   x   |
-apache_solr                          |    |    | x | x |    |       |       |
-apache_tomcat                        |    |    | x | x |    |       |       |
+apache_solr                          |    |    | x | x | x  |       |       |
+apache_tomcat                        |    |    | x | x | x  |       |       |
 apps                                 |    |    | x | x | x  |       |       |
 at                                   |    |    | x | x |    |       |       | Fedora 35
 audit                                |    |    | x | x |    |       |       |
@@ -34,6 +34,7 @@ duplicity                            |    |    | x | x | x  |       |       | Fe
 elastic_agent                        |    |    |   | x |    |       |   x   |
 elastic_agent_fleet_server           |    |    |   | x |    |       |   x   |
 elasticsearch                        |    |    | x | x |    |       |   x   |
+existdb                              |    |    |   |   | x  |       |       |
 exoscale_vm                          |    |    |   |   |    |       |       | Fedora 35+
 fail2ban                             |    |    | x | x |    |       |       |
 fangfrisch                           |    |    |   | x |    |       |       |
@@ -117,10 +118,12 @@ mount                                |    |    | x | x |    |       |       |
 network                              | -  | -  | x | x |    |       |       |
 nextcloud                            |    |    | x | x |    |       |       |
 nfs_client                           |    |    | x | x |    |       |       |
+numishare                            |    |    |   |   | x  |       |       |
 nfs_server                           |    |    | x |   |    |       |       |
 nodejs                               |    |    | x | x |    |       |       |
 objectstore_backup                   |    |    | x |   |    |       |       |
 opensearch                           |    |    | x |   |    |       |       |
+orbeon_forms                         |    |    |   |   | x  |       |       |
 open_vm_tools                        |    |    | x | x |    |       |       |
 openvpn_server                       |    |    | x | x | x  |       |       |
 php                                  | x  | x  | x | x |    |       |       |

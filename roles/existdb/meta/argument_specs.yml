@@ -1,0 +1,106 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      existdb__admin_password:
+        type: 'str'
+        required: false
+        default: 'linuxfabrik'
+        description: 'Password for the eXist-db admin user. Set on first install only; subsequent runs do not touch it.'
+
+      existdb__data_dir:
+        type: 'str'
+        required: false
+        default: '/var/lib/existdb/data'
+        description: 'Where eXist-db stores its index and journal files.'
+
+      existdb__dump_collection:
+        type: 'str'
+        required: false
+        default: '/db'
+        description: 'Collection to back up.'
+
+      existdb__dump_directory:
+        type: 'str'
+        required: false
+        default: '/backup/existdb-dump'
+        description: 'Where the latest backup snapshot lands.'
+
+      existdb__dump_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether the existdb-dump.timer is enabled.'
+
+      existdb__dump_on_calendar:
+        type: 'str'
+        required: false
+        description: 'OnCalendar= value for existdb-dump.timer.'
+
+      existdb__dump_password:
+        type: 'str'
+        required: false
+        description: 'Password the dumper uses to authenticate against eXist-db. Defaults to existdb__admin_password.'
+
+      existdb__dump_user:
+        type: 'str'
+        required: false
+        default: 'admin'
+        description: 'User the dumper authenticates as.'
+
+      existdb__group:
+        type: 'str'
+        required: false
+        default: 'existdb'
+        description: 'System group that owns the install dir and runs the service.'
+
+      existdb__http_port:
+        type: 'int'
+        required: false
+        default: 8888
+        description: 'Jetty HTTP port. Shifted off the application-server-default 8080 so eXist-db can coexist with Tomcat or Wildfly on the same host.'
+
+      existdb__https_port:
+        type: 'int'
+        required: false
+        default: 8444
+        description: 'Jetty HTTPS port. Shifted off 8443 for the same reason as HTTP.'
+
+      existdb__install_dir:
+        type: 'str'
+        required: false
+        default: '/opt/existdb'
+        description: 'Where the upstream tarball is extracted to.'
+
+      existdb__java_opts:
+        type: 'str'
+        required: false
+        default: '-XX:+UseG1GC -XX:+UseStringDeduplication -XX:MaxRAMPercentage=75.0'
+        description: 'JVM options passed to the eXist-db service via systemd Environment=JAVA_OPTS.'
+
+      existdb__log_dir:
+        type: 'str'
+        required: false
+        default: '/var/log/existdb'
+        description: 'Where eXist-db log4j2 writes log files.'
+
+      existdb__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether the existdb.service is enabled, analogous to systemctl enable/disable --now.'
+
+      existdb__user:
+        type: 'str'
+        required: false
+        default: 'existdb'
+        description: 'System user that owns the install dir and runs the service.'
+
+      existdb__version:
+        type: 'str'
+        required: false
+        default: '6.4.1'
+        description: 'Upstream release version. The role downloads exist-distribution-<version>-unix.tar.bz2.'

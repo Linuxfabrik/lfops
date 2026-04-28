@@ -1,0 +1,10 @@
+<!-- ANSIBLE MANAGED: Numishare login-config -->
+    <login-config>
+        <auth-method>{{ orbeon_forms__auth_method | upper }}</auth-method>
+{% if orbeon_forms__auth_method | upper == 'FORM' %}
+        <form-login-config>
+            <form-login-page>{{ orbeon_forms__form_login_page }}</form-login-page>
+            <form-error-page>{{ orbeon_forms__form_error_page }}</form-error-page>
+        </form-login-config>
+{% endif %}
+    </login-config>

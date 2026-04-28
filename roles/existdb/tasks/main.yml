@@ -1,0 +1,246 @@
+- block:
+
+  - name: 'Install bzip2 (needed to extract the eXist-db tarball)'
+    ansible.builtin.package:
+      name:
+        - 'bzip2'
+      state: 'present'
+
+  - name: 'groupadd --system {{ existdb__group }}'
+    ansible.builtin.group:
+      name: '{{ existdb__group }}'
+      system: true
+      state: 'present'
+
+  - name: 'useradd --system {{ existdb__user }}'
+    ansible.builtin.user:
+      name: '{{ existdb__user }}'
+      group: '{{ existdb__group }}'
+      home: '{{ existdb__install_dir }}'
+      create_home: false  # {{ existdb__install_dir }} wird vom Tarball-Move angelegt; sonst kollidiert mv
+      shell: '/usr/sbin/nologin'
+      comment: 'eXist-db Service Account'
+      system: true
+      state: 'present'
+
+  - name: 'mkdir -p {{ existdb__data_dir }} {{ existdb__log_dir }}'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      owner: '{{ existdb__user }}'
+      group: '{{ existdb__group }}'
+      mode: 0o750
+    loop:
+      - '{{ existdb__data_dir }}'
+      - '{{ existdb__log_dir }}'
+
+  - name: 'curl https://github.com/eXist-db/exist/releases/download/eXist-{{ existdb__version }}/exist-distribution-{{ existdb__version }}-unix.tar.bz2 -> /tmp/'
+    ansible.builtin.get_url:
+      url: 'https://github.com/eXist-db/exist/releases/download/eXist-{{ existdb__version }}/exist-distribution-{{ existdb__version }}-unix.tar.bz2'
+      dest: '/tmp/ansible.exist-distribution-{{ existdb__version }}-unix.tar.bz2'
+      mode: 0o644
+
+  - name: 'tar -xjf /tmp/ansible.exist-distribution-{{ existdb__version }}-unix.tar.bz2 -C /opt/'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible.exist-distribution-{{ existdb__version }}-unix.tar.bz2'
+      dest: '/opt/'
+      remote_src: true
+      creates: '{{ existdb__install_dir }}'  # Endzustand pruefen, nicht den Zwischenpfad - sonst doppelt extrahiert
+
+  - name: 'mv /opt/exist-distribution-{{ existdb__version }} {{ existdb__install_dir }}'
+    ansible.builtin.command: 'mv /opt/exist-distribution-{{ existdb__version }} {{ existdb__install_dir }}'
+    args:
+      creates: '{{ existdb__install_dir }}'
+      removes: '/opt/exist-distribution-{{ existdb__version }}'
+
+  - name: 'chown -R {{ existdb__user }}:{{ existdb__group }} {{ existdb__install_dir }}'
+    ansible.builtin.file:
+      path: '{{ existdb__install_dir }}'
+      owner: '{{ existdb__user }}'
+      group: '{{ existdb__group }}'
+      recurse: true
+
+  # Configure paths and ports. eXist-db ships defaults that collide with Wildfly/Tomcat
+  # (8080/8443 vs 8888/8444). The role rewrites them in place via lineinfile-with-regex
+  # so re-runs are idempotent.
+
+  - name: 'configure data dir in {{ existdb__install_dir }}/etc/conf.xml'
+    ansible.builtin.replace:
+      path: '{{ existdb__install_dir }}/etc/conf.xml'
+      regexp: 'files="\.\./data"'
+      replace: 'files="{{ existdb__data_dir }}"'
+
+  - name: 'configure journal dir in {{ existdb__install_dir }}/etc/conf.xml'
+    ansible.builtin.replace:
+      path: '{{ existdb__install_dir }}/etc/conf.xml'
+      regexp: 'journal-dir="\.\./data"'
+      replace: 'journal-dir="{{ existdb__data_dir }}"'
+
+  - name: 'set HTTP port to {{ existdb__http_port }} in jetty-http.xml'
+    ansible.builtin.replace:
+      path: '{{ existdb__install_dir }}/etc/jetty/jetty-http.xml'
+      regexp: 'default="8080"'
+      replace: 'default="{{ existdb__http_port }}"'
+
+  - name: 'set HTTPS port to {{ existdb__https_port }} in jetty-ssl.xml'
+    ansible.builtin.replace:
+      path: '{{ existdb__install_dir }}/etc/jetty/jetty-ssl.xml'
+      regexp: 'default="8443"'
+      replace: 'default="{{ existdb__https_port }}"'
+
+  - name: 'redirect logs to {{ existdb__log_dir }} in log4j2.xml'
+    ansible.builtin.replace:
+      path: '{{ existdb__install_dir }}/etc/log4j2.xml'
+      regexp: '<Property name="logs">.*</Property>'
+      replace: '<Property name="logs">{{ existdb__log_dir }}</Property>'
+
+  # Point the bundled CLI tools (client.sh / backup.sh / restore.sh) at the
+  # configured HTTP port. They read the connection URI from
+  # $EXIST_HOME/etc/client.properties (default: localhost:8080). We also
+  # replace `localhost` with `127.0.0.1` because eXist-db's Jetty binds IPv4
+  # only — when `localhost` resolves to `::1` first (Rocky 10 default
+  # gai.conf), apache-xmlrpc returns the cryptic `HTTP server returned
+  # unexpected status: null` for every CLI call.
+  - name: 'set client.properties URI to 127.0.0.1:{{ existdb__http_port }}'
+    ansible.builtin.replace:
+      path: '{{ existdb__install_dir }}/etc/client.properties'
+      regexp: '^uri=xmldb:exist://(localhost|127\.0\.0\.1):\d+/exist/xmlrpc'
+      replace: 'uri=xmldb:exist://127.0.0.1:{{ existdb__http_port }}/exist/xmlrpc'
+
+  # Set the admin password on first install only. The marker prevents re-runs from
+  # overwriting a manually changed password.
+
+  - name: 'Check whether eXist-db admin password has already been set'
+    ansible.builtin.stat:
+      path: '{{ existdb__install_dir }}/.linuxfabrik-admin-password-set'
+    register: '__existdb__admin_pw_marker'
+
+  - name: 'Set eXist-db admin password'
+    ansible.builtin.command: >-
+      {{ existdb__install_dir }}/bin/client.sh
+      -l -u admin -P ""
+      -x "sm:passwd('admin', '{{ existdb__admin_password }}')"
+    become_user: '{{ existdb__user }}'
+    when:
+      - 'not __existdb__admin_pw_marker["stat"]["exists"]'
+
+  - name: 'Mark eXist-db admin password as set'
+    ansible.builtin.file:
+      path: '{{ existdb__install_dir }}/.linuxfabrik-admin-password-set'
+      state: 'touch'
+      owner: '{{ existdb__user }}'
+      group: '{{ existdb__group }}'
+      mode: 0o600
+    when:
+      - 'not __existdb__admin_pw_marker["stat"]["exists"]'
+
+  - name: 'Deploy /etc/systemd/system/existdb.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/existdb.service.j2'
+      dest: '/etc/systemd/system/existdb.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__existdb__unit_result'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__existdb__unit_result is changed'
+
+  - name: 'systemctl {{ existdb__service_enabled | bool | ternary("enable", "disable") }} existdb.service'
+    ansible.builtin.service:
+      name: 'existdb.service'
+      enabled: '{{ existdb__service_enabled | bool }}'
+
+  - name: 'systemctl {{ existdb__service_enabled | bool | ternary("start", "stop") }} existdb.service'
+    ansible.builtin.service:
+      name: 'existdb.service'
+      state: '{{ existdb__service_enabled | bool | ternary("started", "stopped") }}'
+    register: '__existdb__service_state_result'
+
+  tags:
+    - 'existdb'
+
+
+# Backup (mariadb-dump-style): oneshot service + timer wipe and refresh
+# /backup/existdb-dump/ on each run; an external backup tool snapshots that
+# directory to provide retention.
+- block:
+
+  # Parent dir owned by root, world-traversable. Without this the implicit
+  # `mkdir -p` from the leaf task below would inherit the leaf's owner/mode on
+  # the parent too, making /backup/ unreadable for any other dump pipeline
+  # (e.g. mariadb-dump, apache-solr-dump) sharing the same root.
+  - name: 'mkdir -p {{ existdb__dump_directory | dirname }} (multi-tenant parent)'
+    ansible.builtin.file:
+      path: '{{ existdb__dump_directory | dirname }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'mkdir -p {{ existdb__dump_directory }}'
+    ansible.builtin.file:
+      path: '{{ existdb__dump_directory }}'
+      state: 'directory'
+      owner: '{{ existdb__user }}'
+      group: '{{ existdb__group }}'
+      mode: 0o750
+
+  - name: 'Deploy /usr/local/bin/existdb-dump'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/bin/existdb-dump.j2'
+      dest: '/usr/local/bin/existdb-dump'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/existdb-dump.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/existdb-dump.conf.j2'
+      dest: '/etc/existdb-dump.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600  # contains the eXist-db admin password
+
+  - name: 'Deploy /etc/systemd/system/existdb-dump.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/existdb-dump.service.j2'
+      dest: '/etc/systemd/system/existdb-dump.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy /etc/systemd/system/existdb-dump.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/existdb-dump.timer.j2'
+      dest: '/etc/systemd/system/existdb-dump.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__existdb__dump_timer_result'
+
+  - name: 'systemctl daemon-reload (existdb-dump.timer changed)' # noqa no-handler
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__existdb__dump_timer_result is changed'
+
+  - name: 'systemctl {{ existdb__dump_enabled | bool | ternary("enable", "disable") }} existdb-dump.timer'
+    ansible.builtin.service:
+      name: 'existdb-dump.timer'
+      enabled: '{{ existdb__dump_enabled | bool }}'
+
+  - name: 'systemctl {{ existdb__dump_enabled | bool | ternary("start", "stop") }} existdb-dump.timer'
+    ansible.builtin.service:
+      name: 'existdb-dump.timer'
+      state: '{{ existdb__dump_enabled | bool | ternary("started", "stopped") }}'
+
+  tags:
+    - 'existdb'
+    - 'existdb:backup'

@@ -1,0 +1,25 @@
+<!-- Numishare specific configuration -->
+
+<security-constraint>
+    <web-resource-collection>
+        <web-resource-name>Numishare</web-resource-name>
+        <url-pattern>/numishare/admin/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+{% for role in orbeon_forms__roles %}
+        <role-name>{{ role }}</role-name>
+{% endfor %}
+    </auth-constraint>
+</security-constraint>
+
+{% for role in orbeon_forms__roles %}
+<security-role>
+    <role-name>{{ role }}</role-name>
+</security-role>
+{% endfor %}
+
+<!-- deliver theme assets via default servlet -->
+<servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/themes/*</url-pattern>
+</servlet-mapping>

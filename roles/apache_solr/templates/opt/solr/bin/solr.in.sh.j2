@@ -276,6 +276,10 @@
 # Sometimes it may be necessary to place a core or a backup on a different location or a different disk
 # This parameter lets you specify file system path(s) to explicitly allow. The special value of '*' will allow any path
 #SOLR_OPTS="$SOLR_OPTS -Dsolr.allowPaths=/mnt/bigdisk,/other/path"
+{% set __apache_solr__allow_paths_effective = (apache_solr__allow_paths + ([apache_solr__dump_directory] if apache_solr__dump_cores | length > 0 else [])) | unique %}
+{% if __apache_solr__allow_paths_effective | length > 0 %}
+SOLR_OPTS="$SOLR_OPTS -Dsolr.allowPaths={{ __apache_solr__allow_paths_effective | join(',') }}"
+{% endif %}
 
 # Solr can attempt to take a heap dump on out of memory errors. To enable this, uncomment the line setting
 # SOLR_HEAP_DUMP below. Heap dumps will be saved to SOLR_LOG_DIR/dumps by default. Alternatively, you can specify any
@@ -330,7 +334,8 @@
 #SOLR_RECOMMENDED_MAX_PROCESSES=
 #SOLR_RECOMMENDED_OPEN_FILES=
 #SOLR_REQUESTLOG_ENABLED=true
-#SOLR_SECURITY_MANAGER_ENABLED=true
+SOLR_HEAP="{{ apache_solr__heap }}"
+SOLR_SECURITY_MANAGER_ENABLED={{ apache_solr__security_manager_enabled | string | lower }}
 #SOLR_SOLRXML_REQUIRED=false
 #SOLR_SSL_CHECK_PEER_NAME=true
 #SOLR_SSL_CLIENT_HOSTNAME_VERIFICATION=false

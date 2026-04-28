@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# 2026042801
+
+[Unit]
+Description=apache-solr-dump Service
+After=solr.service
+Requires=solr.service
+
+[Service]
+ExecStart=/usr/local/bin/apache-solr-dump
+Type=oneshot
+User=root
+
+[Install]
+WantedBy=basic.target

@@ -1,0 +1,98 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      numishare__app_group:
+        type: 'str'
+        required: false
+        default: 'tomcat'
+        description: 'Group that owns Numishare config files; must match the application server user.'
+
+      numishare__app_user:
+        type: 'str'
+        required: false
+        default: 'tomcat'
+        description: 'User that owns Numishare config files; must match the application server user.'
+
+      numishare__exist_password:
+        type: 'str'
+        required: false
+        default: 'linuxfabrik'
+        description: 'Password Numishare uses to authenticate against eXist-db.'
+
+      numishare__exist_url:
+        type: 'str'
+        required: false
+        default: 'http://127.0.0.1:8888/exist/rest/db/'
+        description: 'eXist-db REST endpoint Numishare connects to. 127.0.0.1 is preferred over localhost because eXist-db Jetty binds IPv4 only.'
+
+      numishare__exist_username:
+        type: 'str'
+        required: false
+        default: 'admin'
+        description: 'User Numishare authenticates as against eXist-db.'
+
+      numishare__git_url:
+        type: 'str'
+        required: false
+        default: 'https://github.com/ewg118/numishare.git'
+        description: 'Upstream Numishare repository to clone.'
+
+      numishare__install_dir:
+        type: 'str'
+        required: false
+        default: '/opt/numishare'
+        description: 'Where Numishare is checked out to.'
+
+      numishare__solr_core_name:
+        type: 'str'
+        required: false
+        default: 'numishare'
+        description: 'Name of the Solr core Numishare uses.'
+
+      numishare__solr_core_version:
+        type: 'str'
+        required: false
+        default: '1.7'
+        description: 'Numishare Solr schema version. Selects the solr-home/<version>/ subtree.'
+
+      numishare__solr_data_dir:
+        type: 'str'
+        required: false
+        default: '/var/solr/data'
+        description: 'Solr solr.solr.home directory. The role wires <solr_data_dir>/<solr_core_name> as a symlink.'
+
+      numishare__solr_group:
+        type: 'str'
+        required: false
+        default: 'solr'
+        description: 'Group that owns the Solr-related Numishare files.'
+
+      numishare__solr_user:
+        type: 'str'
+        required: false
+        default: 'solr'
+        description: 'User that owns the Solr-related Numishare files.'
+
+      numishare__themes__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Custom themes to deploy. Group-level override.'
+
+      numishare__themes__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Custom themes to deploy. Host-level override.'
+
+      numishare__themes_dir:
+        type: 'str'
+        required: false
+        default: '/opt/themes'
+        description: 'Root directory for custom themes. The role auto-creates <themes_dir>/default as a symlink to Numishare bundled UI assets.'

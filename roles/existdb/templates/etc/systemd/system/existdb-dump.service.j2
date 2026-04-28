@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# 2026042801
+
+[Unit]
+Description=existdb-dump Service
+After=existdb.service
+Requires=existdb.service
+
+[Service]
+ExecStart=/usr/local/bin/existdb-dump
+Type=oneshot
+User=root
+
+[Install]
+WantedBy=basic.target

@@ -1,0 +1,18 @@
+orbeon_forms__auth_method: 'BASIC'  # 'BASIC' or 'FORM'
+orbeon_forms__form_error_page: '/numishare/login-failed'
+orbeon_forms__form_login_page: '/numishare/login'
+orbeon_forms__home: '/var/lib/tomcat/webapps/orbeon'
+orbeon_forms__log_dir: '/var/log/tomcat'
+orbeon_forms__numishare_dir: '/opt/numishare'
+orbeon_forms__themes_dir: '/opt/themes'
+orbeon_forms__tomcat_conf_dir: '/usr/share/tomcat/conf'
+orbeon_forms__tomcat_group: 'tomcat'
+orbeon_forms__tomcat_user: 'tomcat'
+orbeon_forms__version: '2023.1.202312312000'
+orbeon_forms__zip_url: 'https://github.com/orbeon/orbeon-forms/releases/download/tag-release-2023.1-ce/orbeon-2023.1.202312312000-CE.zip'
+# Container roles allowed to access /numishare/admin/*. Map 1:1 to
+# apache_tomcat__roles__host_var. The default ships only the universal
+# `numishare-admin` role; per-collection roles are added via the inventory.
+orbeon_forms__roles:
+  - 'numishare-admin'
+orbeon_forms__session_timeout: 720

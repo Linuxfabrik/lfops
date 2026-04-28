@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2026042801
+
+BACKUP_DIR={{ existdb__dump_directory | quote }}
+COLLECTION={{ existdb__dump_collection | quote }}
+EXISTDB_GROUP={{ existdb__group | quote }}
+EXISTDB_INSTALL_DIR={{ existdb__install_dir | quote }}
+EXISTDB_USER={{ existdb__user | quote }}
+PASSWORD={{ existdb__dump_password | quote }}
+URI={{ ('xmldb:exist://127.0.0.1:' ~ existdb__http_port ~ '/exist/xmlrpc') | quote }}
+USERNAME={{ existdb__dump_user | quote }}
