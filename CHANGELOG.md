@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **role:icingaweb2_module_businessprocess**: Rename internal variable `icingaweb2_module_businessprocess__icingaweb2_owner` (set in `vars/{Debian,RedHat}.yml`) to `__icingaweb2_module_businessprocess__icingaweb2_owner`. Inventory overrides need to be renamed; the value (`www-data` on Debian, `apache` on Red Hat) stays the same.
 * **role:icingaweb2_module_cube**: Rename internal variable `icingaweb2_module_cube__icingaweb2_owner` to `__icingaweb2_module_cube__icingaweb2_owner`. See `roles/icingaweb2_module_businessprocess` above.
+* **role:icingaweb2_module_fileshipper**: Rename internal variable `icingaweb2_module_fileshipper__icingaweb2_owner` to `__icingaweb2_module_fileshipper__icingaweb2_owner`. See `roles/icingaweb2_module_businessprocess` above.
 * **role:dnf_versionlock**: Rename internal OS-specific variables `dnf_versionlock__list_path` and `dnf_versionlock__packages` to `__dnf_versionlock__list_path` and `__dnf_versionlock__packages`. They are set in `vars/RedHat{7,8,9}.yml` and `vars/Fedora{40,41}.yml` and were never meant to be overridden from inventory; the `__` prefix makes that visible (LFOps convention). If you set either of these in your inventory, switch to the new names.
 * **role:icingaweb2_module_company**: Rename internal variable `icingaweb2_module_company__icingaweb2_owner` (set in `vars/{Debian,RedHat}.yml`) to `__icingaweb2_module_company__icingaweb2_owner`. Inventory overrides need to be renamed; the value (`www-data` on Debian, `apache` on Red Hat) stays the same.
 * **role:icingaweb2_module_incubator**: Rename internal variable `icingaweb2_module_incubator__icingaweb2_owner` to `__icingaweb2_module_incubator__icingaweb2_owner`. See `roles/icingaweb2_module_company` above.
@@ -73,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:apps, role:grafana_grizzly, role:mailto_root, role:motd**: Add `meta/argument_specs.yml`. No behaviour change.
 * **role:icingaweb2_module_businessprocess**: README now documents the install behaviour (controller-side download, every-run-overwrite, idempotent module enable). Add `meta/argument_specs.yml`.
 * **role:icingaweb2_module_cube**: README now documents the install behaviour. Add `meta/argument_specs.yml`.
+* **role:icingaweb2_module_fileshipper**: README now documents the install behaviour and the `php-xml`/`php-yaml`/`php-zip` runtime dependency. Add `meta/argument_specs.yml`.
 * **role:apps**: Document that the role uses `ansible.builtin.package` internally, so `state: 'latest'` works on backends that support it.
 * **role:cloud_init**: README now lists all cleanup actions (`cloud-init` package removal, `/etc/NetworkManager/conf.d/99-cloud-init.conf`, `/etc/cloud/cloud.cfg.rpmsave`).
 * **role:dnf_versionlock**: README explains the RHEL 7 vs RHEL 8+ backend differences (`yum-plugin-versionlock` vs `dnf-command(versionlock)` and the corresponding lock-list paths).
