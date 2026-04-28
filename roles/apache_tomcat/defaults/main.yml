@@ -14,8 +14,13 @@ apache_tomcat__roles__combined_var: '{{ (
 
 apache_tomcat__context_xml_cache_max_size: 10240
 
+apache_tomcat__env_xms: '1024M'
+apache_tomcat__env_xmx: '1024M'
+apache_tomcat__env_xx: '+UseParallelGC'
+
 apache_tomcat__server_xml_connector_compressable_mime_types: 'text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml'
 apache_tomcat__server_xml_connector_compression: 'on'
+apache_tomcat__server_xml_connector_connection_timeout: 20000
 apache_tomcat__server_xml_connector_max_threads: 200
 apache_tomcat__server_xml_connector_min_spare_threads: 10
 apache_tomcat__server_xml_connector_port: 8080
