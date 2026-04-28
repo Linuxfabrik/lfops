@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:elasticsearch**: Add optional variables `elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom`, `elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom`, `elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom`, `elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom`.
+* **role:elasticsearch**: Add optional variable `elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen`.
 * **role:graylog_datanode**: Add optional variable `graylog_datanode__raw`.
 * **role:graylog_datanode**: Add optional variables `graylog_datanode__path_repos`, `graylog_datanode__node_search_cache_size` to configure searchable snapshot locations and size of disk-based searchable snapshot cache.
 * **role:infomaniak_vm**: Add `keep_port_on_absent` subkey on `infomaniak_vm__networks` entries to preserve the port (and its fixed IP) when the VM is set to `infomaniak_vm__state: 'absent'`, so the same IP can be re-used
