@@ -118,6 +118,7 @@ mount                                |    |    | x | x |    |       |       |
 network                              | -  | -  | x | x |    |       |       |
 nextcloud                            |    |    | x | x |    |       |       |
 nfs_client                           |    |    | x | x |    |       |       |
+numishare                            |    |    |   |   | x  |       |       |
 nfs_server                           |    |    | x |   |    |       |       |
 nodejs                               |    |    | x | x |    |       |       |
 objectstore_backup                   |    |    | x |   |    |       |       |

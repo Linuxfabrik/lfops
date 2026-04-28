@@ -1,0 +1,141 @@
+- block:
+
+  - name: 'Install git-core'
+    ansible.builtin.package:
+      name:
+        - 'git-core'
+      state: 'present'
+
+  - name: 'git clone --depth 1 {{ numishare__git_url }} {{ numishare__install_dir }}'
+    ansible.builtin.git:
+      repo: '{{ numishare__git_url }}'
+      dest: '{{ numishare__install_dir }}'
+      depth: 1
+      update: false  # Numishare is checked out once; updates handled out-of-band
+
+  - name: 'Deploy {{ numishare__install_dir }}/exist-config.xml'
+    ansible.builtin.template:
+      backup: true
+      src: 'opt/numishare/exist-config.xml.j2'
+      dest: '{{ numishare__install_dir }}/exist-config.xml'
+      owner: '{{ numishare__app_user }}'
+      group: '{{ numishare__app_group }}'
+      mode: 0o640  # contains the eXist-db admin password in plaintext
+
+  - name: 'Deploy {{ numishare__install_dir }}/solr-home/{{ numishare__solr_core_version }}/core.properties'
+    ansible.builtin.template:
+      backup: true
+      src: 'var/solr/data/numishare/core.properties.j2'
+      dest: '{{ numishare__install_dir }}/solr-home/{{ numishare__solr_core_version }}/core.properties'
+      owner: '{{ numishare__solr_user }}'
+      group: '{{ numishare__solr_group }}'
+      mode: 0o644
+    notify: 'apache_solr: restart solr.service'
+
+  - name: 'Symlink {{ numishare__solr_data_dir }}/{{ numishare__solr_core_name }} -> {{ numishare__install_dir }}/solr-home/{{ numishare__solr_core_version }}/'
+    ansible.builtin.file:
+      src: '{{ numishare__install_dir }}/solr-home/{{ numishare__solr_core_version }}/'
+      dest: '{{ numishare__solr_data_dir }}/{{ numishare__solr_core_name }}'
+      owner: '{{ numishare__solr_user }}'
+      group: '{{ numishare__solr_group }}'
+      state: 'link'
+      force: true
+    notify: 'apache_solr: restart solr.service'
+
+  - name: 'chown -R {{ numishare__solr_user }}:{{ numishare__solr_group }} {{ numishare__install_dir }}/solr-home/{{ numishare__solr_core_version }}/'
+    ansible.builtin.file:
+      path: '{{ numishare__install_dir }}/solr-home/{{ numishare__solr_core_version }}/'
+      owner: '{{ numishare__solr_user }}'
+      group: '{{ numishare__solr_group }}'
+      recurse: true
+
+  - name: 'mkdir -p {{ numishare__themes_dir }}'
+    ansible.builtin.file:
+      path: '{{ numishare__themes_dir }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # Numishare's built-in "default" theme ships inside the repo under ui/, not
+  # under /opt/themes/. Expose it as `default` so that /orbeon/themes/default/...
+  # resolves through the same delivery path as custom themes.
+  - name: 'Symlink {{ numishare__themes_dir }}/default -> {{ numishare__install_dir }}/ui'
+    ansible.builtin.file:
+      src: '{{ numishare__install_dir }}/ui'
+      dest: '{{ numishare__themes_dir }}/default'
+      state: 'link'
+      force: true
+
+  # ----------------------------------------------------------------------------
+  # Custom themes — deployed from git_url or tarball_url. Each theme lands in
+  # {{ numishare__themes_dir }}/<name>/ and is automatically picked up by
+  # Numishare's directory-scanner (Discovery) and the Orbeon `/themes/*` mapping.
+  # ----------------------------------------------------------------------------
+
+  - name: 'Combined Themes:'
+    ansible.builtin.debug:
+      var: 'numishare__themes__combined_var'
+
+  - name: 'Remove absent themes from {{ numishare__themes_dir }}/'
+    ansible.builtin.file:
+      path: '{{ numishare__themes_dir }}/{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ numishare__themes__combined_var
+        | selectattr("state", "defined")
+        | selectattr("state", "eq", "absent")
+        | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'git clone present themes (git_url)'
+    ansible.builtin.git:
+      repo: '{{ item["git_url"] }}'
+      dest: '{{ numishare__themes_dir }}/{{ item["name"] }}'
+      version: '{{ item["git_version"] | d(omit) }}'
+      update: '{{ item["git_update"] | d(false) }}'
+    loop: '{{ (numishare__themes__combined_var | selectattr("state", "undefined") | selectattr("git_url", "defined") | list)
+          + (numishare__themes__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | selectattr("git_url", "defined") | list)
+        }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'mkdir -p {{ numishare__themes_dir }}/<name> for tarball-based themes'
+    ansible.builtin.file:
+      path: '{{ numishare__themes_dir }}/{{ item["name"] }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    loop: '{{ (numishare__themes__combined_var | selectattr("state", "undefined") | selectattr("tarball_url", "defined") | list)
+          + (numishare__themes__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | selectattr("tarball_url", "defined") | list)
+        }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Download tarball-based themes to /tmp/'
+    ansible.builtin.get_url:
+      url: '{{ item["tarball_url"] }}'
+      dest: '/tmp/ansible-numishare-theme-{{ item["name"] }}.archive'
+      mode: 0o644
+    loop: '{{ (numishare__themes__combined_var | selectattr("state", "undefined") | selectattr("tarball_url", "defined") | list)
+          + (numishare__themes__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | selectattr("tarball_url", "defined") | list)
+        }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Extract tarball-based themes into {{ numishare__themes_dir }}/<name>/'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible-numishare-theme-{{ item["name"] }}.archive'
+      dest: '{{ numishare__themes_dir }}/{{ item["name"] }}/'
+      remote_src: true
+      extra_opts:
+        - '--strip-components={{ item["tarball_strip_components"] | d(1) }}'
+    loop: '{{ (numishare__themes__combined_var | selectattr("state", "undefined") | selectattr("tarball_url", "defined") | list)
+          + (numishare__themes__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | selectattr("tarball_url", "defined") | list)
+        }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'numishare'
