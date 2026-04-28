@@ -12,7 +12,7 @@ alternatives                         | x  | x  | x | x |    |   x   |   x   |
 ansible_init                         |    |    |   |   |    |       |       | Fedora 35+
 apache_httpd                         | x  | x  | x | x | x  |       |   x   |
 apache_solr                          |    |    | x | x | x  |       |       |
-apache_tomcat                        |    |    | x | x |    |       |       |
+apache_tomcat                        |    |    | x | x | x  |       |       |
 apps                                 |    |    | x | x | x  |       |       |
 at                                   |    |    | x | x |    |       |       | Fedora 35
 audit                                |    |    | x | x |    |       |       |
