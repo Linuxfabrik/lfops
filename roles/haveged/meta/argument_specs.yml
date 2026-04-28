@@ -1,0 +1,20 @@
+argument_specs:
+  main:
+    options:
+
+      haveged__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether haveged.service is enabled at boot.'
+
+      haveged__service_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'State of haveged.service.'
