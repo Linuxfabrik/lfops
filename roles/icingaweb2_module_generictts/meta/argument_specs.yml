@@ -1,0 +1,18 @@
+argument_specs:
+  main:
+    options:
+
+      icingaweb2_module_generictts__url:
+        type: 'str'
+        required: false
+        description: >-
+          The URL from which the module tarball is downloaded.
+          Defaults to
+          `https://github.com/Icinga/icingaweb2-module-generictts/archive/{{ icingaweb2_module_generictts__version }}.tar.gz`.
+
+      icingaweb2_module_generictts__version:
+        type: 'str'
+        required: true
+        description: >-
+          The module version to install. Possible options:
+          https://github.com/Icinga/icingaweb2-module-generictts/releases.

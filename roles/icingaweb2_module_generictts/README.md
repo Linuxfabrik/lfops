@@ -1,22 +1,30 @@
 # Ansible Role linuxfabrik.lfops.icingaweb2_module_generictts
 
-This role installs and configures the [IcingaWeb2 GenericTTS Module](https://github.com/Icinga/icingaweb2-module-generictts).
+This role installs and enables the [IcingaWeb2 GenericTTS Module](https://github.com/Icinga/icingaweb2-module-generictts), which renders ticket-system references found in Icinga `notes` / `notes_url` fields as clickable links into a configurable issue tracker (Jira, Redmine, Bugzilla, ...).
 
 This role is tested with the following IcingaWeb2 GenericTTS Module versions:
 
 * 2.1.0
 
 
+## How the Role Behaves
+
+* The Tarball for `icingaweb2_module_generictts__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
+* On every role run the directory `/usr/share/icingaweb2/modules/generictts` is overwritten with the contents of the configured version. To upgrade or downgrade the module, change `icingaweb2_module_generictts__version` and re-run the role.
+* `icingacli module enable generictts` is only invoked when `/etc/icingaweb2/enabledModules/generictts` does not yet exist (idempotent).
+
+
 ## Mandatory Requirements
 
 * A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
+* Internet access from the Ansible controller (downloads from `https://github.com/Icinga/icingaweb2-module-generictts/archive/`).
 
 
 ## Tags
 
 `icingaweb2_module_generictts`
 
-* Installs and configures the IcingaWeb2 GenericTTS Module.
+* Installs and enables the IcingaWeb2 GenericTTS Module.
 * Triggers: none.
 
 
@@ -39,7 +47,7 @@ icingaweb2_module_generictts__version: 'v2.1.0'
 
 `icingaweb2_module_generictts__url`
 
-* The URL from where to download the IcingaWeb2 GenericTTS Module.
+* The URL from which the module tarball is downloaded. Override only if you mirror the upstream GitHub release elsewhere.
 * Type: String.
 * Default: `'https://github.com/Icinga/icingaweb2-module-generictts/archive/{{ icingaweb2_module_generictts__version }}.tar.gz'`
 
