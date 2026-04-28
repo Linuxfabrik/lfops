@@ -6,12 +6,13 @@
 
   vars:
 
-    setup_numishare__apache_solr__skip_role__internal_var: '{{ setup_numishare__apache_solr__skip_role | d(false) }}'
-    setup_numishare__apache_tomcat__skip_role__internal_var: '{{ setup_numishare__apache_tomcat__skip_role | d(false) }}'
-    setup_numishare__apps__skip_role__internal_var: '{{ setup_numishare__apps__skip_role | d(false) }}'
-    setup_numishare__existdb__skip_role__internal_var: '{{ setup_numishare__existdb__skip_role | d(false) }}'
-    setup_numishare__numishare__skip_role__internal_var: '{{ setup_numishare__numishare__skip_role | d(false) }}'
-    setup_numishare__orbeon_forms__skip_role__internal_var: '{{ setup_numishare__orbeon_forms__skip_role | d(false) }}'
+    setup_numishare__apache_solr__skip_injections__internal_var: '{{ setup_numishare__apache_solr__skip_injections | d(setup_numishare__apache_solr__skip_role__internal_var) }}'
+    setup_numishare__apache_solr__skip_role__internal_var:       '{{ setup_numishare__apache_solr__skip_role       | d(false) }}'
+    setup_numishare__apache_tomcat__skip_role__internal_var:     '{{ setup_numishare__apache_tomcat__skip_role     | d(false) }}'
+    setup_numishare__apps__skip_role__internal_var:              '{{ setup_numishare__apps__skip_role              | d(false) }}'
+    setup_numishare__existdb__skip_role__internal_var:           '{{ setup_numishare__existdb__skip_role           | d(false) }}'
+    setup_numishare__numishare__skip_role__internal_var:         '{{ setup_numishare__numishare__skip_role         | d(false) }}'
+    setup_numishare__orbeon_forms__skip_role__internal_var:      '{{ setup_numishare__orbeon_forms__skip_role      | d(false) }}'
 
   pre_tasks:
 
@@ -24,10 +25,12 @@
   roles:
 
     # OS-level helpers (java, git, unzip, ...). Reduce to whatever is missing
-    # by overriding `apps__apps__host_var` in the inventory.
+    # by overriding `apps__apps__host_var` in the inventory. apache_solr's OS
+    # dependencies (bc, lsof, pwgen, tar) are injected here unless the user
+    # opts out via setup_numishare__apache_solr__skip_injections.
     - role: 'linuxfabrik.lfops.apps'
       apps__apps__dependent_var: '{{
-          apache_solr__apps__apps__dependent_var
+          (not setup_numishare__apache_solr__skip_injections__internal_var) | ternary(apache_solr__apps__apps__dependent_var, [])
         }}'
       when:
         - 'not setup_numishare__apps__skip_role__internal_var'

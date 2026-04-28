@@ -149,11 +149,16 @@
       daemon_reload: true
     when: '__existdb__unit_result is changed'
 
-  - name: 'systemctl {{ existdb__service_enabled | bool | ternary("enable", "disable") }} --now existdb.service'
-    ansible.builtin.systemd:
+  - name: 'systemctl {{ existdb__service_enabled | bool | ternary("enable", "disable") }} existdb.service'
+    ansible.builtin.service:
       name: 'existdb.service'
-      enabled: '{{ existdb__service_enabled }}'
+      enabled: '{{ existdb__service_enabled | bool }}'
+
+  - name: 'systemctl {{ existdb__service_enabled | bool | ternary("start", "stop") }} existdb.service'
+    ansible.builtin.service:
+      name: 'existdb.service'
       state: '{{ existdb__service_enabled | bool | ternary("started", "stopped") }}'
+    register: '__existdb__service_state_result'
 
   tags:
     - 'existdb'
@@ -221,12 +226,20 @@
       mode: 0o644
     register: '__existdb__dump_timer_result'
 
-  - name: 'systemctl {{ existdb__dump_enabled | bool | ternary("enable --now", "disable --now") }} existdb-dump.timer'
+  - name: 'systemctl daemon-reload (existdb-dump.timer changed)' # noqa no-handler
     ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__existdb__dump_timer_result is changed'
+
+  - name: 'systemctl {{ existdb__dump_enabled | bool | ternary("enable", "disable") }} existdb-dump.timer'
+    ansible.builtin.service:
       name: 'existdb-dump.timer'
-      enabled: '{{ existdb__dump_enabled }}'
+      enabled: '{{ existdb__dump_enabled | bool }}'
+
+  - name: 'systemctl {{ existdb__dump_enabled | bool | ternary("start", "stop") }} existdb-dump.timer'
+    ansible.builtin.service:
+      name: 'existdb-dump.timer'
       state: '{{ existdb__dump_enabled | bool | ternary("started", "stopped") }}'
-      daemon_reload: '{{ __existdb__dump_timer_result is changed }}'
 
   tags:
     - 'existdb'
