@@ -1,0 +1,14 @@
+<!-- {{ ansible_managed }} -->
+<!-- Numishare specific configuration -->
+<property
+    as="xs:anyURI"
+    name="oxf.epilogue.theme"
+    value="oxf:/config/theme-plain.xsl"/>
+<property
+    as="xs:string"
+    name="oxf.fr.authentication.method"
+    value="container"/>
+<property
+    as="xs:string"
+    name="oxf.fr.authentication.container.roles"
+    value="{{ orbeon_forms__roles | join(' ') }}"/>

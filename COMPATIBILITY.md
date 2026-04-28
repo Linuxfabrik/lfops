@@ -114,6 +114,7 @@ Which Ansible role is proven to run on which OS?
 | open_vm_tools                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | opensearch                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | openvpn_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
+| orbeon_forms                          |        |        |        |        |    x    |           |           |           |                                              |
 | php                                   |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | podman_containers                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | policycoreutils                       |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
