@@ -271,13 +271,13 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 
 * Max headroom size for flood stage watermark on dedicated `data_frozen` nodes. It expects a string consisting of an unsigned integer and a [byte size unit](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/api-conventions#byte-units).
 * Type: String.
-* Default: unset
+* Default: `''`
 
 `elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom`
 
 * Max headroom size for flood stage watermark. It expects a string consisting of an unsigned integer and a [byte size unit](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/api-conventions#byte-units).
 * Type: String.
-* Default: unset
+* Default: `''`
 
 `elasticsearch__cluster_routing_allocation_disk_watermark_high`
 
@@ -289,7 +289,7 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 
 * Max headroom size for high watermark. It expects a string consisting of an unsigned integer and a [byte size unit](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/api-conventions#byte-units).
 * Type: String.
-* Default: unset
+* Default: `''`
 
 `elasticsearch__cluster_routing_allocation_disk_watermark_low`
 
@@ -301,7 +301,7 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 
 * Max headroom size for low watermark. It expects a string consisting of an unsigned integer and a [byte size unit](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/api-conventions#byte-units).
 * Type: String.
-* Default: unset
+* Default: `''`
 
 `elasticsearch__discovery_seed_hosts`
 
@@ -408,6 +408,14 @@ elasticsearch__cluster_routing_allocation_awareness_force:
     - 'dc1'
     - 'dc2'
     - 'dc3'
+elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage: 0.97
+elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen: 0.97
+elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom: '20gb'
+elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom: '50gb'
+elasticsearch__cluster_routing_allocation_disk_watermark_high: 0.95
+elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom: '100gb'
+elasticsearch__cluster_routing_allocation_disk_watermark_low: 0.9
+elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom: '150gb'
 elasticsearch__discovery_seed_hosts:
   - 'node1.example.com'
   - 'node2.example.com'

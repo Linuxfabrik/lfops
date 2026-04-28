@@ -8,6 +8,60 @@
     - 'elasticsearch:configure'
     - 'elasticsearch:state'
 
+
+- block:
+
+  - name: 'ensure 0 <= watermark ratios <= 1'
+    ansible.builtin.assert:
+      that:
+        - 'item["value"] is number'
+        - 'item["value"] >= 0'
+        - 'item["value"] <= 1'
+      fail_msg: '`{{ item["name"] }}: {{ item["value"] }}` must be a number between 0 and 1'
+      quiet: true
+    loop:
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_high'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_high }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_low'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_low }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_low <= elasticsearch__cluster_routing_allocation_disk_watermark_high <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
+    ansible.builtin.assert:
+      that:
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low <= elasticsearch__cluster_routing_allocation_disk_watermark_high'
+        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
+      fail_msg: 'elasticsearch__cluster_routing_allocation_disk_watermark_low must not exceed elasticsearch__cluster_routing_allocation_disk_watermark_high'
+      quiet: true
+
+  - name: 'ensure watermark max_headroom values are valid byte sizes'
+    ansible.builtin.assert:
+      that:
+        - '(item["value"] | lower) is ansible.builtin.regex("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
+      fail_msg: '`{{ item["name"] }}: {{ item["value"] }} is not a valid byte size'
+      quiet: true
+    loop:
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom }}'
+      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom'
+        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when: 'item["value"] | length > 0'
+
+  tags:
+    - 'always'
+
+
 - block:
 
   - name: 'Install elasticsearch unzip'
@@ -97,56 +151,6 @@
   tags:
     - 'elasticsearch'
     - 'elasticsearch:certs'
-
-
-- block:
-
-  - name: 'ensure 0 <= watermark ratios <= 1'
-    ansible.builtin.assert:
-      that:
-        - 'item["value"] is number'
-        - 'item["value"] >= 0'
-        - 'item["value"] <= 1'
-      fail_msg: '`{{ item["name"] }}: {{ item["value"] }}` must be a number between 0 and 1'
-    loop:
-      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
-        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage }}'
-      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen'
-        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen }}'
-      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_high'
-        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_high }}'
-      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_low'
-        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_low }}'
-    loop_control:
-      label: '{{ item["name"] }}'
-
-  - name: 'ensure elasticsearch__cluster_routing_allocation_disk_watermark_low <= elasticsearch__cluster_routing_allocation_disk_watermark_high <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
-    ansible.builtin.assert:
-      that:
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_low <= elasticsearch__cluster_routing_allocation_disk_watermark_high'
-        - 'elasticsearch__cluster_routing_allocation_disk_watermark_high <= elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage'
-      fail_msg: 'elasticsearch__cluster_routing_allocation_disk_watermark_low must not exceed elasticsearch__cluster_routing_allocation_disk_watermark_high'
-
-  - name: 'ensure watermark max_headroom values are valid byte sizes'
-    ansible.builtin.assert:
-      that:
-        - '(item["value"] | lower) is ansible.builtin.regex("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
-      fail_msg: '`{{ item["name"] }}: {{ item["value"] }} is not a valid byte size'
-    loop:
-      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom'
-        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom | d("") }}'
-      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom'
-        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom | d("") }}'
-      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom'
-        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom | d("") }}'
-      - name: 'elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom'
-        value: '{{ elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom | d("") }}'
-    loop_control:
-      label: '{{ item["name"] }}'
-    when: 'item["value"] | length > 0'
-
-  tags:
-    - 'always'
 
 
 - block:
