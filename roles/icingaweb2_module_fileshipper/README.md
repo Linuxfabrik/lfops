@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.icingaweb2_module_fileshipper
 
-This role installs and enables the [IcingaWeb2 Fileshipper Module](https://github.com/Icinga/icingaweb2-module-fileshipper). The Fileshipper extends the Icinga Director with the ability to import host / service definitions from CSV / YAML / JSON / XML files on disk and from plain config-file templates.
+This role installs and enables the [IcingaWeb2 Fileshipper Module](https://github.com/Icinga/icingaweb2-module-fileshipper). The Fileshipper extends the Icinga Director with two things: an `Import Source` that reads CSV / JSON / YAML / XML files from disk, and the ability to ship hand-crafted Icinga 2 config files through the Director.
 
 This role is tested with the following IcingaWeb2 Fileshipper Module versions:
 

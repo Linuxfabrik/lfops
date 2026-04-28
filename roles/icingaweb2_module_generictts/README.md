@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.icingaweb2_module_generictts
 
-This role installs and enables the [IcingaWeb2 GenericTTS Module](https://github.com/Icinga/icingaweb2-module-generictts), which renders ticket-system references found in Icinga `notes` / `notes_url` fields as clickable links into a configurable issue tracker (Jira, Redmine, Bugzilla, ...).
+This role installs and enables the [IcingaWeb2 GenericTTS Module](https://github.com/Icinga/icingaweb2-module-generictts). The module rewrites ticket patterns (configurable regular expressions) found in Icinga acknowledgements, downtimes and comments into clickable links pointing at the configured trouble-ticket system.
 
 This role is tested with the following IcingaWeb2 GenericTTS Module versions:
 
