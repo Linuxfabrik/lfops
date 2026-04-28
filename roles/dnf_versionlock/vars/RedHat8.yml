@@ -1,3 +1,3 @@
-dnf_versionlock__list_path: '/etc/dnf/plugins/versionlock.list'
-dnf_versionlock__packages:
+__dnf_versionlock__list_path: '/etc/dnf/plugins/versionlock.list'
+__dnf_versionlock__packages:
   - 'dnf-command(versionlock)'

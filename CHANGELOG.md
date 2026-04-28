@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:dnf_versionlock**: Rename internal OS-specific variables `dnf_versionlock__list_path` and `dnf_versionlock__packages` to `__dnf_versionlock__list_path` and `__dnf_versionlock__packages`. They are set in `vars/RedHat{7,8,9}.yml` and `vars/Fedora{40,41}.yml` and were never meant to be overridden from inventory; the `__` prefix makes that visible (LFOps convention). If you set either of these in your inventory, switch to the new names.
+* **role:icingaweb2_module_company**: Rename internal variable `icingaweb2_module_company__icingaweb2_owner` (set in `vars/{Debian,RedHat}.yml`) to `__icingaweb2_module_company__icingaweb2_owner`. Inventory overrides need to be renamed; the value (`www-data` on Debian, `apache` on Red Hat) stays the same.
+* **role:icingaweb2_module_incubator**: Rename internal variable `icingaweb2_module_incubator__icingaweb2_owner` to `__icingaweb2_module_incubator__icingaweb2_owner`. See `roles/icingaweb2_module_company` above.
+* **role:icingaweb2_module_pdfexport**: Rename internal variable `icingaweb2_module_pdfexport__icingaweb2_owner` to `__icingaweb2_module_pdfexport__icingaweb2_owner`. See `roles/icingaweb2_module_company` above.
+* **role:icingaweb2_theme_linuxfabrik**: Rename internal variable `icingaweb2_theme_linuxfabrik__icingaweb2_owner` to `__icingaweb2_theme_linuxfabrik__icingaweb2_owner`. See `roles/icingaweb2_module_company` above.
 * **role:infomaniak_vm**: Always create a managed port for every entry in `infomaniak_vm__networks`, even when no `fixed_ip` is set. Previously only networks with a `fixed_ip` got a managed port; networks without one relied on OpenStack's auto-created port. To avoid creating unused (but billed) managed ports on VMs provisioned under the old behavior, make sure to manually rename the existing port in OpenStack to match the `port_name`. Note that this port will not survive VM deletion / detachment, since it was automatically created and therefore is owned by OpenStack, not the user.
 
 ### Added
