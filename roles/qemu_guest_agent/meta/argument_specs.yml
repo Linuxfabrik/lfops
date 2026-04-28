@@ -1,0 +1,21 @@
+argument_specs:
+  main:
+    options:
+
+      qemu_guest_agent__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether qemu-guest-agent.service is enabled at boot.'
+
+      qemu_guest_agent__service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          State of qemu-guest-agent.service. Defaults to started or
+          stopped depending on qemu_guest_agent__service_enabled.

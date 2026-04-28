@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:at**: Add optional variable `at__service_state` (`reloaded` / `restarted` / `started` / `stopped`) to control the running state of `atd.service` independently from boot autostart. Default behaviour is unchanged: `at__service_enabled: true` keeps the service started, `false` stops it.
+* **role:qemu_guest_agent**: Add optional variable `qemu_guest_agent__service_state` (`reloaded` / `restarted` / `started` / `stopped`) to control the running state of `qemu-guest-agent.service` independently from boot autostart. Default behaviour is unchanged: `qemu_guest_agent__service_enabled: true` keeps the service started, `false` stops it.
 * **role:libmaxminddb**: Now runs on Debian and Ubuntu in addition to Red Hat-family systems.
 * **role:mod_maxminddb**: Now runs on Debian and Ubuntu in addition to Red Hat-family systems. The Apache module is enabled automatically on Debian/Ubuntu (no manual `a2enmod` needed).
 * **role:logstash**: Add optional variables `logstash__monitoring_cluster_uuid`, `logstash__monitoring_enabled`.

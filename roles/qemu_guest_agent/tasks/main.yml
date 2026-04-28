@@ -12,11 +12,15 @@
 
 - block:
 
-  - name: 'systemctl {{ qemu_guest_agent__service_enabled | bool | ternary("enable", "disable") }} --now qemu-guest-agent.service'
-    ansible.builtin.systemd:
+  - name: 'systemctl {{ qemu_guest_agent__service_enabled | bool | ternary("enable", "disable") }} qemu-guest-agent.service'
+    ansible.builtin.service:
       name: 'qemu-guest-agent.service'
-      enabled: '{{ qemu_guest_agent__service_enabled }}'
-      state: '{{ qemu_guest_agent__service_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ qemu_guest_agent__service_enabled | bool }}'
+
+  - name: 'systemctl {{ qemu_guest_agent__service_state }} qemu-guest-agent.service'
+    ansible.builtin.service:
+      name: 'qemu-guest-agent.service'
+      state: '{{ qemu_guest_agent__service_state }}'
 
   tags:
     - 'qemu_guest_agent'

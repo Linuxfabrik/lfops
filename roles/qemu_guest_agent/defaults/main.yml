@@ -1,1 +1,2 @@
 qemu_guest_agent__service_enabled: true
+qemu_guest_agent__service_state: '{{ "started" if (qemu_guest_agent__service_enabled | bool) else "stopped" }}'
