@@ -2,10 +2,20 @@
 
 This role installs and enables [Linuxfabrik's IcingaWeb2 Theme](https://github.com/Linuxfabrik/icingaweb2-theme-linuxfabrik).
 
+The role does not have a dedicated playbook. It is normally pulled in via the [`setup_icinga2_master`](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_icinga2_master.yml) playbook and can be skipped there with `setup_icinga2_master__icingaweb2_theme_linuxfabrik__skip_role: true`.
+
+
+## How the Role Behaves
+
+* The Tarball for `icingaweb2_theme_linuxfabrik__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
+* On every role run the directory `/usr/share/icingaweb2/modules/linuxfabrik` is overwritten with the contents of the configured version. To upgrade or downgrade the theme, change `icingaweb2_theme_linuxfabrik__version` and re-run the role.
+* `icingacli module enable linuxfabrik` is only invoked when `/etc/icingaweb2/enabledModules/linuxfabrik` does not yet exist (idempotent). The theme has to be selected per user in IcingaWeb2 (or set as the default theme via the `theme` setting in `/etc/icingaweb2/config.ini`).
+
 
 ## Mandatory Requirements
 
 * A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
+* Internet access from the Ansible controller (downloads from `https://github.com/Linuxfabrik/icingaweb2-theme-linuxfabrik/archive/`).
 
 
 ## Tags
@@ -20,7 +30,7 @@ This role installs and enables [Linuxfabrik's IcingaWeb2 Theme](https://github.c
 
 `icingaweb2_theme_linuxfabrik__version`
 
-* The module version to install. Possible options: https://github.com/Linuxfabrik/icingaweb2-theme-linuxfabrik/releases.
+* The theme version to install. Possible options: https://github.com/Linuxfabrik/icingaweb2-theme-linuxfabrik/releases.
 * Type: String.
 
 Example:

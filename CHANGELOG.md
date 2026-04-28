@@ -56,6 +56,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apps**: Document that the role uses `ansible.builtin.package` internally, so `state: 'latest'` works on backends that support it.
+* **role:cloud_init**: README now lists all cleanup actions (`cloud-init` package removal, `/etc/NetworkManager/conf.d/99-cloud-init.conf`, `/etc/cloud/cloud.cfg.rpmsave`).
+* **role:dnf_versionlock**: README explains the RHEL 7 vs RHEL 8+ backend differences (`yum-plugin-versionlock` vs `dnf-command(versionlock)` and the corresponding lock-list paths).
+* **role:glances**: Document the optional `glances__skip_repo_baseos` variable (skip the implicit `repo_baseos` invocation on Rocky 9) and the implicit `repo_epel` / `repo_baseos` dependencies. Add a "Platform Support" section noting that the role currently fails on RHEL 10 / Rocky 10 / Alma 10 because `glances` is not packaged in EPEL 10.
+* **role:icingaweb2_module_company**: Document the install-once idempotency (module is installed on first run only; subsequent runs do not overwrite local customizations) and the controller-side download mechanism.
+* **role:icingaweb2_module_incubator**: Document the controller-side download mechanism and that the directory is overwritten on every run, so changing `icingaweb2_module_incubator__version` is the supported upgrade path.
+* **role:icingaweb2_module_pdfexport**: Document the controller-side download mechanism and the upgrade-on-rerun behaviour. Add a pointer that runtime dependencies (e.g. a headless browser) have to be installed separately.
+* **role:icingaweb2_theme_linuxfabrik**: README clarifies that the role is pulled in via `setup_icinga2_master` (there is no dedicated playbook) and documents the upgrade-on-rerun behaviour.
+* **role:libreoffice**: Document the full effect of `libreoffice__client_apache: true` (directory layout, one-shot dummy conversion, two custom SELinux policy modules, plus SELinux booleans/fcontexts via the companion playbook). Note that this option is Red Hat-only.
+* **role:maxmind_geoip**: Document the optional `maxmind_geoip__skip_systemd_unit` variable and how to override the `OnCalendar=weekly` schedule via `maxmind_geoip__systemd_unit__timers__dependent_var`. Mention that the timer is what triggers the first download (so initial population requires a manual `systemctl start update-maxmind.service` if you don't want to wait for the next weekly fire).
+* **role:nodejs**: Document the `/bin/nodejs -> /bin/node` compatibility symlink, clarify that `nodejs__dnf_module_stream` is Red Hat-family only and accepts the stream as Number or String.
+* **role:open_vm_tools**: Document that the role targets VMware-virtualized guests and that, unlike `qemu_guest_agent` / `haveged`, no `__service_enabled` variable is exposed.
+* **role:repo_debian_base**: Document the supported Debian versions (10, 11, 12), the Debian-only scope, and the post-deploy `rpmnew` / `dpkg-dist` / `ucf-dist` cleanup.
+* **role:shared**: Document all `tasks_from:` helpers (`log-start`, `log-end`, `platform-variables`, `clone-lib-repo`, `clone-monitoring-plugins-repo`, `remove-rpmnew-rpmsave`) with their required parameters and side effects.
 * **role:system_update**: Change default of `system_update__update_time` from `'04:00 + 1 days'` to `'04:{{ 59 | random(seed=inventory_hostname) }} + 1 days'`, so updates are spread deterministically across 04:00–04:59 (minute derived from `inventory_hostname`) instead of all hosts firing at 04:00 sharp
 * **role:firewall**: Install `nftables` together with `iptables` for `firewall__firewall == "fwbuilder"` on all distros (previously only installed via per-distro task files on Fedora and RHEL 8/9). The redundant `tasks/Fedora.yml`, `tasks/RedHat8.yml` and `tasks/RedHat9.yml` were removed.
 * **role:graylog_server**: Update `server.conf` templates to include `telemetry_enabled = false`.
