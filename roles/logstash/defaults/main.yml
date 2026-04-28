@@ -14,6 +14,7 @@ logstash__java_opts: >
   -Xms{{ [((ansible_facts["memtotal_mb"] * 0.6) | int), 8192] | min }}m
   -Xmx{{ [((ansible_facts["memtotal_mb"] * 0.6) | int), 8192] | min }}m
 logstash__log_level: 'info'
+logstash__monitoring_enabled: true
 logstash__node_name: '{{ ansible_facts["nodename"] }}'
 logstash__path_data: '/var/lib/logstash'
 logstash__path_logs: '/var/log/logstash'

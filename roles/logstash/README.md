@@ -84,6 +84,18 @@ If you use the [logstash playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 * Type: String.
 * Default: `'info'`
 
+`logstash__monitoring_cluster_uuid`
+
+* Elasticsearch Cluster UUID. Binds the metrics of Logstash to this specific cluster.
+* Type: String.
+* Default: unset
+
+`logstash__monitoring_enabled`
+
+* Enables or disables default collection of Logstash monitoring data.
+* Type: Bool.
+* Default: `true`
+
 `logstash__node_name`
 
 * A descriptive name for the node.
