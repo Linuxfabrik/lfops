@@ -9,7 +9,7 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/cube'
       state: 'directory'
-      owner: '{{ icingaweb2_module_cube__icingaweb2_owner }}'
+      owner: '{{ __icingaweb2_module_cube__icingaweb2_owner }}'
       group: 'icingaweb2'
       mode: 0o755
 
