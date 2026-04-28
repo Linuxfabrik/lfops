@@ -1,0 +1,32 @@
+argument_specs:
+  main:
+    options:
+
+      freeipa_client__create_home_dir:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          If `true`, configure PAM to create a user's home directory on
+          first login if it does not exist.
+
+      freeipa_client__ipa_admin_user:
+        type: 'dict'
+        required: false
+        description: >-
+          The IPA admin user / Kerberos admin principal used to enroll
+          the client. The password defaults to the Jinja expression
+          `{{ freeipa_server__ipa_admin_password }}`, which is provided
+          by the `freeipa_server` role's inventory.
+        options:
+
+          password:
+            type: 'str'
+            required: false
+            description: 'The admin password.'
+
+          username:
+            type: 'str'
+            required: false
+            default: 'admin'
+            description: 'The admin username.'
