@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.repo_docker
 
-This role deploys the Docker CE Repository.
+This role deploys the package repository for [Docker CE](https://www.docker.com/) (the open-source container engine).
 
 
 ## Tags

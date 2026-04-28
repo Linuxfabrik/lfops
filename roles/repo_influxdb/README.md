@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.repo_influxdb
 
-This role deploys the InfluxDB repository.
+This role deploys the package repository for [InfluxDB](https://www.influxdata.com/products/influxdb/) (a time-series database commonly used for metrics).
 
 
 ## Tags

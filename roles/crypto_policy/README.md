@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.crypto_policy
 
-This role sets the crypto policy for the system. In addition, it implements and deploys crypto policies defined by Linuxfabrik, e.g. to support CIS hardening.
+On Red Hat-family systems, `update-crypto-policies` is a system-wide switch that picks the allowed TLS / SSH / IPsec / Kerberos algorithm sets for *all* crypto-aware services in one place (e.g. `DEFAULT`, `LEGACY`, `FUTURE`, `FIPS`). This role sets that policy and additionally ships custom sub-policies defined by Linuxfabrik, e.g. to support CIS hardening.
 
 
 ## Tags

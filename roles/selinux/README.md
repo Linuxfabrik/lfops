@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.selinux
 
-This role
+[SELinux](https://github.com/SELinuxProject) (Security-Enhanced Linux) is a kernel security module that implements Mandatory Access Control: every process and every file gets a security label, and a system-wide policy decides which transitions and accesses are allowed. This role exposes the user-facing knobs of an SELinux installation. It
 
 * sets the state of SELinux using `setenforce`
 * toggles SELinux booleans using `setsebool`

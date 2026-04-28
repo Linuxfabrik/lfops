@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.repo_collabora
 
-This role deploys the official Collabora Enterprise Repository.
+This role deploys the official package repository for [Collabora Enterprise](https://www.collaboraonline.com/) (a self-hostable web-based office suite based on LibreOffice).
 
 Supported Versions:
 

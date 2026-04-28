@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.repo_grafana
 
-This role deploys the Grafana OSS Repository.
+This role deploys the package repository for [Grafana OSS](https://grafana.com/oss/grafana/) (an open-source dashboard and metrics-visualization platform).
 
 
 ## Tags

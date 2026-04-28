@@ -1,8 +1,8 @@
 # Ansible Role linuxfabrik.lfops.sshd
 
-This role ensures that sshd is configured.
+This role deploys `/etc/ssh/sshd_config` for [OpenSSH](https://www.openssh.com/) (the standard SSH server on Linux). It exposes the most commonly tuned options as variables (port, address family, password / GSSAPI / root login, log level, sftp subsystem) plus a `sshd__raw` escape hatch for `Match` blocks etc.
 
-Note that the role does not make use of `/etc/ssh/sshd_config.d/` since not all options can be overwritten (eg. `Subsystem 'sftp' already defined`).
+Note that the role does not make use of `/etc/ssh/sshd_config.d/` since not all options can be overwritten there (e.g. `Subsystem 'sftp' already defined`); the full `sshd_config` is templated instead.
 
 
 ## Mandatory Requirements

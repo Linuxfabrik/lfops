@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.repo_gitlab_runner
 
-This role deploys the GitLab Runner Repository.
+This role deploys the package repository for [GitLab Runner](https://docs.gitlab.com/runner/) (the agent that runs CI/CD jobs scheduled by a GitLab server).
 
 
 ## Tags

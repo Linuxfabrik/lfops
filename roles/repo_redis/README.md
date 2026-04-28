@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.repo_redis
 
-This role deploys the Redis Repository.
+This role deploys the package repository for [Redis](https://redis.io/) (an in-memory key/value store, typically used as a cache, session store or message broker).
 
 
 ## Tags

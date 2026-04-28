@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.hostname
 
-This role simply sets the hostname of the server.
+This role sets the system hostname (the name returned by `hostname` / `hostnamectl status` and stored in `/etc/hostname`) via the `ansible.builtin.hostname` module. The new name is applied immediately and persists across reboots.
 
 
 ## Tags

@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.repo_mongodb
 
-This role deploys the MongoDB repository.
+This role deploys the package repository for [MongoDB](https://www.mongodb.com/) (a NoSQL document database).
 
 
 ## Tags

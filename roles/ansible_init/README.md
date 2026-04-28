@@ -1,8 +1,8 @@
 # Ansible Role linuxfabrik.lfops.ansible_init
 
-`ansible-init` helps installing a working Ansible environment including roles from LFOps and a list Ansible inventories from various Git repositories.
+`ansible-init` (CLI binary `ansinv`) is a Linuxfabrik tool that bootstraps and refreshes a working Ansible environment on a workstation: it pulls LFOps and any number of inventory repositories from Git, optionally clones additional roles next to LFOps, and installs the Ansible collections recommended by LFOps.
 
-This role:
+This role keeps `ansinv` itself, LFOps, the configured inventories / extra roles and the recommended collections up-to-date. Specifically, it:
 
 * Updates ansible_init (`ansinv`) itself
 * Updates LFOps

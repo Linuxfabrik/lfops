@@ -1,6 +1,8 @@
 # Ansible Role linuxfabrik.lfops.collect_rpmnew_rpmsave
 
-Fetches rpmnew and rpmsave files from a remote host to the `/tmp/lfops` directory of the Ansible control node. Typically, you invoke the role like this:
+When an RPM-based system updates a package, RPM keeps the old config file and writes its new version with a `.rpmnew` suffix (when the user had modified the original) or saves the user's version as `.rpmsave` (when the new package replaces a previously customized file). Either way, somebody has to diff and reconcile the two files manually.
+
+This role fetches every such pending file from the remote hosts back to the `/tmp/lfops` directory of the Ansible control node so the admin can review them centrally. Typically, you invoke the role like this:
 
 ```bash
 for INV in {inventoy01,inventory02,inventory03}

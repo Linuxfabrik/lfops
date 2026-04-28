@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.cockpit
 
-This role can either install or remove all cockpit packages from the system (for security reasons).
+[Cockpit](https://cockpit-project.org/) is a web-based admin UI for Linux servers (services, logs, networking, terminal, container management). This role can either install all `cockpit*` packages or remove them again from a host (for hardening / attack-surface-reduction reasons).
 
 
 ## Tags

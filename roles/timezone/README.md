@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.timezone
 
-This role sets the desired timezone.
+This role sets the system timezone (the `/etc/localtime` symlink, which `date`, system logs, cron jobs and journald all use) via the `community.general.timezone` module.
 
 
 ## Tags
