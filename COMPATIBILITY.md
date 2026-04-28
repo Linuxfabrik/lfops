@@ -14,7 +14,7 @@ apache_httpd                         | x  | x  | x | x | x  |  (x)  |   x   |  (
 apache_solr                          |    |    | x | x |(x) |       |       |       |
 apache_tomcat                        |    |    | x | x |(x) |       |       |       |
 apps                                 |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  |
-at                                   |    |    | x | x |(x) |       |       |       | Fedora 35
+at                                   |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  | Fedora 35
 audit                                |    |    | x | x |(x) |       |       |       |
 bind                                 |    |    | x | x | x  |       |       |       |
 blocky                               |    |    | x | x |(x) |       |       |       |
@@ -50,7 +50,7 @@ grafana_grizzly                      |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (
 grav                                 |    |    | x |(x)|(x) |       |       |       |
 graylog_datanode                     | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
 graylog_server                       | x  | x  | x |(x)|(x) |  (x)  |  (x)  |  (x)  |
-haveged                              |    |    | x | x |(x) |       |       |       |
+haveged                              |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
 hetzner_vm                           |    |    |   |   |    |       |       |       | Fedora 35+
 hostname                             |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
 icinga2_agent                        |(x) | x  | x | x |(x) |  (x)  |  (x)  |  (x)  | Fedora 35
@@ -102,7 +102,7 @@ mastodon                             |(x) |(x) |(x)| x |(x) |  (x)  |  (x)  |  (
 maxmind_geoip                        |(x) |(x) | x |(x)|(x) |  (x)  |  (x)  |  (x)  |
 minio_client                         |(x) |(x) | x |(x)|(x) |  (x)  |  (x)  |  (x)  |
 mirror                               |    |    | x | x |(x) |       |       |       |
-mod_maxminddb                        |    |    | x |(x)|(x) |       |       |       |
+mod_maxminddb                        |(x) |(x) | x |(x)|(x) |  (x)  |  (x)  |  (x)  |
 mongodb                              | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
 monitoring_plugins                   |(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  | Debian 9, Fedora, Suse, Windows
 monitoring_plugins_grafana_dashboards|(x) |(x) | x | x |(x) |  (x)  |  (x)  |  (x)  |
@@ -130,7 +130,7 @@ Role                                 | 12 | 13 | 8 | 9 | 10 | 22.04 | 24.04 | 26
 proxysql                             |    |    | x |(x)|(x) |       |       |       |
 python                               | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  | Windows
 python_venv                          | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  | Fedora 35
-qemu_guest_agent                     |    |    | x | x | x  |       |       |       |
+qemu_guest_agent                     |(x) |(x) | x | x | x  |  (x)  |  (x)  |  (x)  |
 redis                                | x  | x  | x | x |(x) |  (x)  |  (x)  |  (x)  |
 repo_baseos                          |    |    | x | x | x  |       |       |       |
 repo_collabora                       |    |    | x |(x)|(x) |       |       |       |
