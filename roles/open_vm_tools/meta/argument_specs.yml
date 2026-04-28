@@ -1,0 +1,21 @@
+argument_specs:
+  main:
+    options:
+
+      open_vm_tools__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether vmtoolsd.service is enabled at boot.'
+
+      open_vm_tools__service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          State of vmtoolsd.service. Defaults to started or stopped
+          depending on open_vm_tools__service_enabled.

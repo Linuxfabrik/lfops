@@ -1,0 +1,2 @@
+open_vm_tools__service_enabled: true
+open_vm_tools__service_state: '{{ "started" if (open_vm_tools__service_enabled | bool) else "stopped" }}'

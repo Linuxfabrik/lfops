@@ -6,11 +6,22 @@
         - 'open-vm-tools'
       state: 'present'
 
-  - name: 'systemctl enable --now vmtoolsd.service'
-    ansible.builtin.systemd:
+  tags:
+    - 'open_vm_tools'
+
+
+- block:
+
+  - name: 'systemctl {{ open_vm_tools__service_enabled | bool | ternary("enable", "disable") }} vmtoolsd.service'
+    ansible.builtin.service:
       name: 'vmtoolsd.service'
-      enabled: true
-      state: 'started'
+      enabled: '{{ open_vm_tools__service_enabled | bool }}'
+
+  - name: 'systemctl {{ open_vm_tools__service_state }} vmtoolsd.service'
+    ansible.builtin.service:
+      name: 'vmtoolsd.service'
+      state: '{{ open_vm_tools__service_state }}'
 
   tags:
     - 'open_vm_tools'
+    - 'open_vm_tools:state'
