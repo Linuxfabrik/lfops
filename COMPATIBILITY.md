@@ -33,6 +33,7 @@ Which Ansible role is proven to run on which OS?
 | elastic_agent                         |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | elastic_agent_fleet_server            |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | elasticsearch                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
+| existdb                               |        |        |        |        |    x    |           |           |           |                                              |
 | exoscale_vm                           |        |        |        |        |         |           |           |           | Fedora 35+                                   |
 | fail2ban                              |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | fangfrisch                            |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |

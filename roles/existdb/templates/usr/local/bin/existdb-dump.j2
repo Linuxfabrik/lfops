@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
+
+# {{ ansible_managed }}
+# 2026042801
+
+# Online backup of an eXist-db instance via bin/backup.sh. Mirrors the
+# mariadb-dump pattern: rm -rf $BACKUP_DIR + mkdir + fresh dump. Retention is
+# the external backup tool's job.
+
+set -e
+
+old_umask=$(umask)
+umask 027
+
+source /etc/existdb-dump.conf
+
+rm -rf "$BACKUP_DIR"
+mkdir -p "$BACKUP_DIR"
+chown "$EXISTDB_USER:$EXISTDB_GROUP" "$BACKUP_DIR"
+
+# bin/backup.sh connects via XML-RPC to the running eXist-db instance and
+# writes the backup tree under "$BACKUP_DIR/db/" (eXist-db 6.x writes the
+# backup tree directly, no `full<timestamp>` prefix).
+#
+# We pass the connection URI as `-ouri=...` (no space — that is the syntax
+# AppassemblerBooter expects). bin/backup.sh ignores
+# $EXIST_HOME/etc/client.properties at runtime and otherwise falls back to
+# its compiled-in default `xmldb:exist://localhost:8080/exist/xmlrpc`, which
+# is wrong on two counts here: port 8080 (we shifted to existdb__http_port)
+# and `localhost` resolves to ::1 first on dual-stack hosts but eXist-db's
+# Jetty binds IPv4 only — apache-xmlrpc then returns the cryptic "HTTP
+# server returned unexpected status: null".
+#
+# We use `runuser` rather than `sudo`: `sudo` requires PAM session setup
+# that systemd's no-TTY oneshot context handles awkwardly, swallowing the
+# Java process's stderr and leaving the service exiting `status=1` with no
+# diagnostic in the journal.
+runuser -u "$EXISTDB_USER" -- \
+    "$EXISTDB_INSTALL_DIR/bin/backup.sh" \
+    -u "$USERNAME" \
+    -p "$PASSWORD" \
+    -b "$COLLECTION" \
+    -d "$BACKUP_DIR" \
+    "-ouri=$URI"
+backup_retc=$?
+
+umask "$old_umask"
+
+exit "$backup_retc"
