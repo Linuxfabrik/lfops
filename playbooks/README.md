@@ -1231,6 +1231,18 @@ Calls the following roles (in order):
 * [icinga2_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_agent)
 
 
+## setup_numishare.yml
+
+Calls the following roles (in order):
+
+* [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps): `setup_numishare__skip_apps`
+* [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr): `setup_numishare__skip_apache_solr`, `setup_numishare__apache_solr__skip_injections`
+* [apache_tomcat](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_tomcat): `setup_numishare__skip_apache_tomcat`
+* [numishare](https://github.com/Linuxfabrik/lfops/tree/main/roles/numishare): `setup_numishare__skip_numishare`
+* [existdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/existdb): `setup_numishare__skip_existdb`
+* [orbeon_forms](https://github.com/Linuxfabrik/lfops/tree/main/roles/orbeon_forms): `setup_numishare__skip_orbeon_forms`
+
+
 ## setup_rocketchat.yml
 
 Calls the following roles (in order):
