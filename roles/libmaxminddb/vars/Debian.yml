@@ -1,0 +1,5 @@
+__libmaxminddb__build_packages:
+  - 'apache2-dev'
+  - 'gcc'
+  - 'make'
+  - 'tar'

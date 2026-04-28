@@ -1,12 +1,13 @@
 - block:
 
-  - name: 'install gcc httpd-devel make tar'
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  - name: 'install build dependencies ({{ __libmaxminddb__build_packages | join(" ") }})'
     ansible.builtin.package:
-      name:
-        - 'gcc'
-        - 'httpd-devel'
-        - 'make'
-        - 'tar'
+      name: '{{ __libmaxminddb__build_packages }}'
       state: 'present'
 
   - name: 'curl https://github.com/maxmind/libmaxminddb/releases/download/{{ libmaxminddb__version }}/libmaxminddb-{{ libmaxminddb__version }}.tar.gz --output /tmp/libmaxminddb-{{ libmaxminddb__version }}.tar.gz'
