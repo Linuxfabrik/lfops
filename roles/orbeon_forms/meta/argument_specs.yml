@@ -1,0 +1,95 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      orbeon_forms__auth_method:
+        type: 'str'
+        required: false
+        default: 'BASIC'
+        choices:
+          - 'BASIC'
+          - 'FORM'
+        description: 'HTTP authentication method written into the Orbeon web.xml.'
+
+      orbeon_forms__form_error_page:
+        type: 'str'
+        required: false
+        default: '/numishare/login-failed'
+        description: 'Login-failure page when auth_method == FORM.'
+
+      orbeon_forms__form_login_page:
+        type: 'str'
+        required: false
+        default: '/numishare/login'
+        description: 'Login page when auth_method == FORM.'
+
+      orbeon_forms__home:
+        type: 'str'
+        required: false
+        default: '/var/lib/tomcat/webapps/orbeon'
+        description: 'Exploded-WAR deployment directory. Tomcat must scan this path for webapps.'
+
+      orbeon_forms__log_dir:
+        type: 'str'
+        required: false
+        default: '/var/log/tomcat'
+        description: 'Absolute path that replaces Orbeon shipped ../logs/ references in log4j2.xml. Must be writable by the Tomcat user.'
+
+      orbeon_forms__numishare_dir:
+        type: 'str'
+        required: false
+        default: '/opt/numishare'
+        description: 'Where Numishare is checked out. Must match numishare__install_dir.'
+
+      orbeon_forms__roles:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'numishare-admin'
+        description: 'Container roles allowed to access /numishare/admin/*. Each entry must have a matching apache_tomcat__roles__* and apache_tomcat__users__* entry so login actually works.'
+
+      orbeon_forms__session_timeout:
+        type: 'int'
+        required: false
+        default: 720
+        description: 'Replaces Orbeon shipped <session-config> value (in minutes). Numishare admin forms benefit from a higher timeout because configuration runs are long.'
+
+      orbeon_forms__themes_dir:
+        type: 'str'
+        required: false
+        default: '/opt/themes'
+        description: 'Theme root directory exposed as the apps/themes discovery path and the <orbeon_home>/themes delivery path.'
+
+      orbeon_forms__tomcat_conf_dir:
+        type: 'str'
+        required: false
+        default: '/usr/share/tomcat/conf'
+        description: 'Tomcat configuration root. The role writes <orbeon_forms__tomcat_conf_dir>/Catalina/localhost/orbeon.xml.'
+
+      orbeon_forms__tomcat_group:
+        type: 'str'
+        required: false
+        default: 'tomcat'
+        description: 'Group that owns Orbeon deployment files; must match the Tomcat group.'
+
+      orbeon_forms__tomcat_user:
+        type: 'str'
+        required: false
+        default: 'tomcat'
+        description: 'User that owns Orbeon deployment files; must match the Tomcat user.'
+
+      orbeon_forms__version:
+        type: 'str'
+        required: false
+        default: '2023.1.202312312000'
+        description: 'Orbeon CE version. Used to construct the download URL and identify the local copy under /tmp.'
+
+      orbeon_forms__zip_url:
+        type: 'str'
+        required: false
+        default: 'https://github.com/orbeon/orbeon-forms/releases/download/tag-release-2023.1-ce/orbeon-2023.1.202312312000-CE.zip'
+        description: 'Direct download URL of the Orbeon CE zip.'
