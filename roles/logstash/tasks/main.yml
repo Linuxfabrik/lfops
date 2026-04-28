@@ -1,5 +1,17 @@
 - block:
 
+  - name: 'Ensure cluster uuid is valid'
+    ansible.builtin.assert:
+      that:
+        - 'logstash__monitoring_cluster_uuid is ansible.builtin.regex("^[A-Za-z0-9_-]{22}$")'
+      fail_msg: '`logstash__monitoring_cluster_uuid: {{ logstash__monitoring_cluster_uuid }}` is not a valid cluster uuid'
+    when: 'logstash__monitoring_cluster_uuid is defined and logstash__monitoring_cluster_uuid | length > 0'
+
+  tags:
+    - 'always'
+
+- block:
+
   - name: 'Install logstash'
     ansible.builtin.package:
       name:

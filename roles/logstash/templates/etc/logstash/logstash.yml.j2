@@ -374,6 +374,13 @@ path.logs: '{{ logstash__path_logs }}'
 #xpack.geoip.downloader.enabled: true
 #xpack.geoip.downloader.endpoint: "https://geoip.elastic.co/v1/database"
 
+# Stack Monitoring
+# https://www.elastic.co/docs/reference/logstash/monitoring-with-elastic-agent
+monitoring.enabled: {{ logstash__monitoring_enabled | string | lower }}
+{% if logstash__monitoring_cluster_uuid is defined and logstash__monitoring_cluster_uuid | length > 0 %}
+monitoring.cluster_uuid: {{ logstash__monitoring_cluster_uuid }}
+{% endif %}
+
 {% if logstash__raw | length %}
 # raw
 {{ logstash__raw }}
