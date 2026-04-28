@@ -110,6 +110,7 @@ Which Ansible role is proven to run on which OS?
 | nfs_client                            |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nfs_server                            |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nodejs                                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| numishare                             |        |        |        |        |    x    |           |           |           |                                              |
 | open_vm_tools                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | opensearch                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | openvpn_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |

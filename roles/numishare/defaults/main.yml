@@ -1,0 +1,25 @@
+numishare__app_group: 'tomcat'
+numishare__app_user: 'tomcat'
+numishare__exist_password: 'linuxfabrik'
+numishare__exist_url: 'http://127.0.0.1:8888/exist/rest/db/'
+numishare__exist_username: 'admin'
+numishare__git_url: 'https://github.com/ewg118/numishare.git'
+numishare__install_dir: '/opt/numishare'
+numishare__solr_core_version: '1.7'
+numishare__solr_core_name: 'numishare'
+numishare__solr_data_dir: '/var/solr/data'
+numishare__solr_group: 'solr'
+numishare__solr_user: 'solr'
+numishare__themes_dir: '/opt/themes'
+
+numishare__themes__role_var: []
+numishare__themes__dependent_var: []
+numishare__themes__group_var: []
+numishare__themes__host_var: []
+numishare__themes__combined_var: '{{ (
+      numishare__themes__role_var +
+      numishare__themes__dependent_var +
+      numishare__themes__group_var +
+      numishare__themes__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="name")
+  }}'
