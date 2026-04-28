@@ -1,0 +1,12 @@
+argument_specs:
+  main:
+    options:
+
+      libmaxminddb__version:
+        type: 'str'
+        required: false
+        default: '1.7.1'
+        description: >-
+          The libmaxminddb version to download, compile and install.
+          Possible options:
+          https://github.com/maxmind/libmaxminddb/releases.
