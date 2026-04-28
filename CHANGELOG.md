@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:logstash**: Add optional variables `logstash__monitoring_cluster_uuid`, `logstash__monitoring_enabled`.
 * **role:elasticsearch**: Add optional variables `elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen_max_headroom`, `elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_max_headroom`, `elasticsearch__cluster_routing_allocation_disk_watermark_high_max_headroom`, `elasticsearch__cluster_routing_allocation_disk_watermark_low_max_headroom`.
 * **role:elasticsearch**: Add optional variable `elasticsearch__cluster_routing_allocation_disk_watermark_flood_stage_frozen`.
 * **role:graylog_datanode**: Add optional variable `graylog_datanode__raw`.

@@ -84,6 +84,18 @@ If you use the [logstash playbook](https://github.com/Linuxfabrik/lfops/blob/mai
 * Type: String.
 * Default: `'info'`
 
+`logstash__monitoring_cluster_uuid`
+
+* Elasticsearch Cluster UUID. Binds the metrics of Logstash to this specific cluster.
+* Type: String.
+* Default: unset
+
+`logstash__monitoring_enabled`
+
+* Enables or disables default collection of Logstash monitoring data.
+* Type: Bool.
+* Default: `true`
+
 `logstash__node_name`
 
 * A descriptive name for the node.
@@ -218,6 +230,8 @@ logstash__grok_patterns__host_var:
     state: 'absent'
 logstash__java_opts: '-Djava.io.tmpdir={{ logstash__path_data }}/tmp'
 logstash__log_level: 'info'
+logstash__monitoring_cluster_uuid: 'zk-HjQtYQGyL3NFSSu7InA'
+logstash__monitoring_enabled: false
 logstash__node_name: '{{ ansible_facts["nodename"] }}'
 logstash__path_data: '/var/lib/logstash'
 logstash__path_logs: '/var/log/logstash'
