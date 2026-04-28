@@ -1,0 +1,75 @@
+- name: 'Playbook linuxfabrik.lfops.setup_numishare'
+  hosts: 'all'
+  become: true
+  any_errors_fatal: true
+  serial: 1
+
+  vars:
+
+    setup_numishare__apache_solr__skip_role__internal_var: '{{ setup_numishare__apache_solr__skip_role | d(false) }}'
+    setup_numishare__apache_tomcat__skip_role__internal_var: '{{ setup_numishare__apache_tomcat__skip_role | d(false) }}'
+    setup_numishare__apps__skip_role__internal_var: '{{ setup_numishare__apps__skip_role | d(false) }}'
+    setup_numishare__existdb__skip_role__internal_var: '{{ setup_numishare__existdb__skip_role | d(false) }}'
+    setup_numishare__numishare__skip_role__internal_var: '{{ setup_numishare__numishare__skip_role | d(false) }}'
+    setup_numishare__orbeon_forms__skip_role__internal_var: '{{ setup_numishare__orbeon_forms__skip_role | d(false) }}'
+
+  pre_tasks:
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+  roles:
+
+    # OS-level helpers (java, git, unzip, ...). Reduce to whatever is missing
+    # by overriding `apps__apps__host_var` in the inventory.
+    - role: 'linuxfabrik.lfops.apps'
+      apps__apps__dependent_var: '{{
+          apache_solr__apps__apps__dependent_var
+        }}'
+      when:
+        - 'not setup_numishare__apps__skip_role__internal_var'
+
+    # Search backend. Numishare's solr-home lives at /opt/numishare/solr-home
+    # (outside Solr's default permitted paths), so the Java SecurityManager
+    # blocks reads with `access denied ("java.io.FilePermission" ...)`. Disable it.
+    # The `numishare` core is fed from eXist-db and could be rebuilt from there,
+    # but we still snapshot it via apache-solr-dump for a fast restore path.
+    - role: 'linuxfabrik.lfops.apache_solr'
+      apache_solr__security_manager_enabled: false
+      apache_solr__dump_cores:
+        - '{{ numishare__solr_core_name | d("numishare") }}'
+      when:
+        - 'not setup_numishare__apache_solr__skip_role__internal_var'
+
+    # Application server (required by Orbeon Forms). Runs before numishare so
+    # the `tomcat` user/group exist when numishare chowns its files.
+    - role: 'linuxfabrik.lfops.apache_tomcat'
+      when:
+        - 'not setup_numishare__apache_tomcat__skip_role__internal_var'
+
+    # Numishare checkout, exist-config, Solr core wiring, themes dir.
+    # Runs before existdb/orbeon so its files exist when those reference them.
+    - role: 'linuxfabrik.lfops.numishare'
+      when:
+        - 'not setup_numishare__numishare__skip_role__internal_var'
+
+    # XML database backing Numishare.
+    - role: 'linuxfabrik.lfops.existdb'
+      when:
+        - 'not setup_numishare__existdb__skip_role__internal_var'
+
+    # Orbeon WAR deployment + Numishare-specific properties / web.xml / themes wiring.
+    - role: 'linuxfabrik.lfops.orbeon_forms'
+      when:
+        - 'not setup_numishare__orbeon_forms__skip_role__internal_var'
+
+  post_tasks:
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'
