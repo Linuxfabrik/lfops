@@ -12,7 +12,7 @@ This role installs at, a daemon that allows commands to be run at a specified ti
 
 `at:state`
 
-* Controls the state of the atd service.
+* Manages the state of `atd.service` (enable/disable at boot, plus start/stop/restart/reload).
 * Triggers: none.
 
 
@@ -20,14 +20,21 @@ This role installs at, a daemon that allows commands to be run at a specified ti
 
 `at__service_enabled`
 
-* Enables or disables the atd service, analogous to `systemctl enable/disable --now`.
+* Whether `atd.service` is enabled at boot, analogous to `systemctl enable / disable`.
 * Type: Bool.
 * Default: `true`
+
+`at__service_state`
+
+* State of `atd.service`, analogous to `systemctl start / stop / restart / reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `at__service_enabled` is `true`, otherwise `'stopped'`.
 
 Example:
 ```yaml
 # optional
 at__service_enabled: true
+at__service_state: 'started'
 ```
 
 

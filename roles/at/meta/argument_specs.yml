@@ -1,0 +1,21 @@
+argument_specs:
+  main:
+    options:
+
+      at__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether atd.service is enabled at boot.'
+
+      at__service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          State of atd.service. Defaults to started or stopped depending
+          on at__service_enabled.
