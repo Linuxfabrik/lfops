@@ -74,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:hostname, role:kdump, role:timezone**: Add `meta/argument_specs.yml` so Ansible validates the role variables (types, choices) at role entry. No behaviour change.
 * **role:libmaxminddb, role:mod_maxminddb**: Add `meta/argument_specs.yml`. No behaviour change.
 * **role:apps, role:grafana_grizzly, role:mailto_root, role:motd**: Add `meta/argument_specs.yml`. No behaviour change.
+* **role:alternatives, role:elastic_agent, role:elastic_agent_fleet_server, role:icinga_kubernetes_web, role:icingaweb2_module_reporting, role:kernel_settings, role:lvm, role:mastodon, role:proxysql**: Add `meta/argument_specs.yml`. No behaviour change.
 * **role:icingaweb2_module_businessprocess**: README now documents the install behaviour (controller-side download, every-run-overwrite, idempotent module enable). Add `meta/argument_specs.yml`.
 * **role:icingaweb2_module_cube**: README now documents the install behaviour. Add `meta/argument_specs.yml`.
 * **role:icingaweb2_module_fileshipper**: README now documents the install behaviour and the `php-xml`/`php-yaml`/`php-zip` runtime dependency. Add `meta/argument_specs.yml`.

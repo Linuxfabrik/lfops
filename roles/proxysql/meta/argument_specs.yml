@@ -1,0 +1,128 @@
+argument_specs:
+  main:
+    options:
+
+      proxysql__admin_users:
+        type: 'list'
+        elements: 'dict'
+        required: true
+        description: >-
+          ProxySQL admin accounts (used to log in to the ProxySQL
+          admin SQL interface on port 6032).
+
+      proxysql__cluster_user:
+        type: 'dict'
+        required: false
+        description: >-
+          Account used internally for communication between ProxySQL
+          cluster nodes.
+
+      proxysql__monitor_user:
+        type: 'dict'
+        required: true
+        description: >-
+          MariaDB account used by ProxySQL to monitor the backend SQL
+          nodes. Needs `USAGE`, `REPLICATION CLIENT`, `REPLICA MONITOR`
+          privileges on the backend.
+
+      proxysql__mysql_galera_hostgroups__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Hostgroup definitions for Galera clusters. Group-level
+          override.
+
+      proxysql__mysql_galera_hostgroups__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Hostgroup definitions for Galera clusters. Host-level
+          override.
+
+      proxysql__mysql_query_rules__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Query routing rules. Group-level override.'
+
+      proxysql__mysql_query_rules__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Query routing rules. Host-level override.'
+
+      proxysql__mysql_replication_hostgroups__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Hostgroup definitions for traditional MySQL replication.
+          Group-level override.
+
+      proxysql__mysql_replication_hostgroups__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Hostgroup definitions for traditional MySQL replication.
+          Host-level override.
+
+      proxysql__mysql_servers__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Backend MySQL/MariaDB servers. Group-level override.'
+
+      proxysql__mysql_servers__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Backend MySQL/MariaDB servers. Host-level override.'
+
+      proxysql__mysql_users__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Application users that ProxySQL accepts and forwards to the
+          backend. Group-level override.
+
+      proxysql__mysql_users__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Application users. Host-level override.'
+
+      proxysql__proxysql_servers__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Other ProxySQL nodes participating in the cluster.
+          Group-level override.
+
+      proxysql__proxysql_servers__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'ProxySQL cluster peers. Host-level override.'
+
+      proxysql__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether proxysql.service is enabled at boot.'

@@ -1,0 +1,38 @@
+argument_specs:
+  main:
+    options:
+
+      icinga_kubernetes_web__database_host:
+        type: 'str'
+        required: false
+        description: >-
+          Hostname of the SQL database. Defaults to
+          `{{ icinga_kubernetes__database_host }}`.
+
+      icinga_kubernetes_web__database_login:
+        type: 'dict'
+        required: false
+        description: >-
+          Login credentials for the SQL database. Defaults to
+          `{{ icinga_kubernetes__database_login }}`.
+
+      icinga_kubernetes_web__database_name:
+        type: 'str'
+        required: false
+        description: >-
+          Name of the SQL database. Defaults to
+          `{{ icinga_kubernetes__database_name }}`.
+
+      icinga_kubernetes_web__url:
+        type: 'str'
+        required: false
+        description: >-
+          URL from which the module tarball is downloaded. Defaults to
+          `https://github.com/Icinga/icinga-kubernetes-web/archive/{{ icinga_kubernetes_web__version }}.tar.gz`.
+
+      icinga_kubernetes_web__version:
+        type: 'str'
+        required: true
+        description: >-
+          The module version to install. Possible options:
+          https://github.com/Icinga/icinga-kubernetes-web/releases.
