@@ -2,6 +2,11 @@
   hosts:
     - 'lfops_freeipa_client'
 
+  # The ansible-freeipa modules rely on ipalib's global API singleton and fail
+  # with `API.bootstrap() already called` under strategies that reuse the
+  # target Python interpreter (e.g. mitogen_linear).
+  strategy: 'linear'
+
   pre_tasks:
     - ansible.builtin.import_role:
         name: 'shared'

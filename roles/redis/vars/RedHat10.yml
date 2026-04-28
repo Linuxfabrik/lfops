@@ -1,0 +1,10 @@
+# Redis is no longer shipped on EL10. The role uses Valkey (BSD-licensed Redis fork in AppStream) as a drop-in; user-facing variables (`redis__conf_*`) and the config-file directives stay redis-compatible.
+__redis__config_dir: '/etc/valkey'
+__redis__config_file: 'valkey.conf'
+__redis__data_dir: '/var/lib/valkey'
+__redis__module_dir: '/etc/valkey/modules'
+__redis__package: 'valkey'
+__redis__runtime_dir: '/var/run/valkey'
+
+redis__conf_logfile: '/var/log/valkey/valkey.log'
+redis__service_name: 'valkey.service'

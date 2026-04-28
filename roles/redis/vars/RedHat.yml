@@ -1,2 +1,9 @@
+__redis__config_dir: '/etc/redis'
+__redis__config_file: 'redis.conf'
+__redis__data_dir: '/var/lib/redis'
+__redis__module_dir: '/etc/redis/modules'
+__redis__package: 'redis'
+__redis__runtime_dir: '/var/run/redis'
+
 redis__conf_logfile: '/var/log/redis/redis.log'
 redis__service_name: 'redis.service'

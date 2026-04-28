@@ -6,6 +6,7 @@ This role installs and configures [FreeIPA](https://www.freeipa.org/) as a clien
 ## Mandatory Requirements
 
 * Install the [ansible-freeipa Ansible Collection](https://github.com/freeipa/ansible-freeipa) on the Ansible control node. This can be done by calling `ansible-galaxy collection install freeipa.ansible_freeipa`.
+* The role must be run with Ansible's `linear` strategy (the default). It is incompatible with strategies that reuse the target Python interpreter, such as Mitogen's `mitogen_linear`, because the underlying ansible-freeipa modules use `ipalib`'s global API singleton and fail with `API.bootstrap() already called` on the second module call. The bundled `playbooks/freeipa_client.yml` sets `strategy: 'linear'` explicitly.
 
 
 ## Tags

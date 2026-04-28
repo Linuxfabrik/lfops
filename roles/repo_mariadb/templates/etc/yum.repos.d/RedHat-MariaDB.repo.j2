@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025080401
+# 2026042701
 
 [mariadb-main]
 name = MariaDB Server
@@ -11,7 +11,7 @@ baseurl = https://rpm.mariadb.org/{{ repo_mariadb__version }}/rhel/$releasever/$
 gpgkey = file:///etc/pki/rpm-gpg/MariaDB-Server-GPG-KEY
 gpgcheck = 1
 enabled = 1
-{% if ansible_facts["distribution_major_version"] | int > 7 %}
+{% if ansible_facts["distribution_major_version"] | int in [8, 9] %}
 module_hotfixes = 1
 {% endif %}
 {% if repo_mariadb__basic_auth_login is defined and repo_mariadb__basic_auth_login | length %}

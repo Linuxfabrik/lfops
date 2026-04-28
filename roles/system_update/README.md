@@ -124,9 +124,9 @@ If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blo
 
 `system_update__update_time`
 
-* The time when to actually execute the updates (and automatically reboot if necessary), relative to `system_update__notify_and_schedule_on_calendar`.
+* The time when to actually execute the updates (and automatically reboot if necessary), relative to `system_update__notify_and_schedule_on_calendar`. Passed verbatim to `at`. The default schedules the update for the next day between 04:00 and 04:59, with the exact minute derived deterministically from `inventory_hostname` so multiple hosts spread across the hour instead of all updating at 04:00.
 * Type: String.
-* Default: `'04:00 + 1 days'`
+* Default: `'04:{{ 59 | random(seed=inventory_hostname) }} + 1 days'`
 
 Example:
 ```yaml
@@ -165,7 +165,7 @@ system_update__pre_update_code: |-
 system_update__rocketchat_msg_suffix: '@administrator'
 system_update__rocketchat_url: 'https://chat.example.com/hooks/abcd1234'
 system_update__update_enabled: true
-system_update__update_time: '04:00 + 1 days'
+system_update__update_time: '04:{{ 59 | random(seed=inventory_hostname) }} + 1 days'
 ```
 
 

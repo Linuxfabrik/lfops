@@ -200,6 +200,29 @@
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
+  # The unit drop-in's `ExecStartPre=-/bin/chcon -t mysqld_exec_t /usr/sbin/mariadbd` workaround for MDEV-30520 cannot relabel the binary on EL10+, where the packaged mariadb.service applies `ProtectSystem` that mounts /usr read-only inside the service sandbox. Set the label persistently here instead. Use `/usr/bin/mariadbd` because SELinux has an equivalency rule `/usr/sbin /usr/bin` (UsrMerge) and `semanage fcontext` rejects the equivalent path.
+  - name: 'semanage fcontext --add --type mysqld_exec_t /usr/bin/mariadbd'
+    community.general.sefcontext:
+      setype: 'mysqld_exec_t'
+      target: '/usr/bin/mariadbd'
+      state: 'present'
+    register: '__mariadb_server__mariadbd_fcontext_result'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+      - 'mariadb_server__cnf_wsrep_on is false'
+    notify: 'mariadb_server: systemctl restart mariadb'
+
+  - name: 'restorecon -Fv /usr/sbin/mariadbd'
+    ansible.builtin.command: 'restorecon -Fv /usr/sbin/mariadbd'
+    register: '__mariadb_server__mariadbd_restorecon_result'
+    changed_when: '__mariadb_server__mariadbd_restorecon_result["stdout"] | length > 0'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+      - 'mariadb_server__cnf_wsrep_on is false'
+    notify: 'mariadb_server: systemctl restart mariadb'
+
   - name: 'restorecon -Fvr {{ mariadb_server__cnf_datadir__combined_var }}'
     ansible.builtin.command: 'restorecon -Fvr {{ mariadb_server__cnf_datadir__combined_var }}'
     register: 'mariadb_server__restorecon_result'
