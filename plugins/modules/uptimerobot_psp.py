@@ -1,13 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2026, Linuxfabrik, Zurich, Switzerland, https://www.linuxfabrik.ch
+# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 # The Unlicense (see LICENSE or https://unlicense.org/)
 
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-
 
 DOCUMENTATION = r'''
 ---
@@ -77,16 +76,38 @@ options:
 
 
 EXAMPLES = r'''
-- name: 'Create a status page'
+# 1) Create-or-update a public status page. Monitors are referenced by their
+#    friendly_name; the module resolves them to numeric IDs at runtime.
+- name: 'Public status page for example.com'
   linuxfabrik.lfops.uptimerobot_psp:
-    friendly_name: 'Status - linuxfabrik.io'
-    custom_url: 'status.linuxfabrik.io'
+    friendly_name: 'Status - example.com'
+    custom_url: 'status.example.com'
     monitors:
-      - friendly_name: '001 cloud.linuxfabrik.io/index.php/login'
-      - friendly_name: '001 office.linuxfabrik.io/hosting/discovery'
+      - friendly_name: '001 www.example.com/index.php/login'
+      - friendly_name: '001 office.example.com/hosting/discovery'
     sort: 'a-z'
     status: 'active'
     state: 'present'
+
+# 2) Password-protected page (no `monitors` => the API publishes ALL monitors
+#    of the account).
+- linuxfabrik.lfops.uptimerobot_psp:
+    friendly_name: 'Internal status'
+    password: '{{ vault_psp_password }}'
+    sort: 'down-up-paused'
+    status: 'active'
+    state: 'present'
+
+# 3) Pause a status page without changing its content.
+- linuxfabrik.lfops.uptimerobot_psp:
+    friendly_name: 'Status - example.com'
+    status: 'paused'
+    state: 'present'
+
+# 4) Delete a stale status page.
+- linuxfabrik.lfops.uptimerobot_psp:
+    friendly_name: 'old-status-page'
+    state: 'absent'
 '''
 
 
@@ -165,21 +186,30 @@ def main():
                 'reason': 'PSP not present',
                 'friendly_name': friendly_name,
             })
+        delete_before = {
+            'friendly_name': current.get('friendly_name'),
+            'id': current.get('id'),
+            'custom_domain': current.get('custom_domain'),
+        }
         if module.check_mode:
-            module.exit_json(changed=True, psp=current, debug={
-                'operation': 'delete (check_mode)',
-                'friendly_name': friendly_name,
-                'psp_id': current['id'],
-            })
+            module.exit_json(changed=True, psp=current,
+                diff={'before': delete_before, 'after': {}},
+                debug={
+                    'operation': 'delete (check_mode)',
+                    'friendly_name': friendly_name,
+                    'psp_id': current['id'],
+                })
         module.log('uptimerobot_psp: deleting id={0}'.format(current['id']))
         success, result = ur.delete_psp(module, api_key, current['id'])
         if not success:
             module.fail_json(msg='Could not delete PSP {0!r}: {1}'.format(friendly_name, result))
-        module.exit_json(changed=True, psp=current, debug={
-            'operation': 'delete',
-            'friendly_name': friendly_name,
-            'psp_id': current['id'],
-        })
+        module.exit_json(changed=True, psp=current,
+            diff={'before': delete_before, 'after': {}},
+            debug={
+                'operation': 'delete',
+                'friendly_name': friendly_name,
+                'psp_id': current['id'],
+            })
 
     # Desired payload.
     custom_domain = module.params.get('custom_domain') or module.params.get('custom_url')
@@ -199,43 +229,47 @@ def main():
         body = dict(desired)
         body['friendly_name'] = friendly_name
         body.pop('status', None)  # not allowed on create
+        create_diff = {'before': {}, 'after': dict(body)}
         if module.check_mode:
-            module.exit_json(changed=True, psp=body, debug={
-                'operation': 'create (check_mode)',
-                'friendly_name': friendly_name,
-                'sent_keys': sorted(body.keys()),
-            })
+            module.exit_json(changed=True, psp=body,
+                diff=create_diff,
+                debug={
+                    'operation': 'create (check_mode)',
+                    'friendly_name': friendly_name,
+                    'sent_keys': sorted(body.keys()),
+                })
         module.log('uptimerobot_psp: creating friendly_name={0!r} sent_keys={1}'.format(
             friendly_name, sorted(body.keys()),
         ))
         success, result = ur.new_psp(module, api_key, body)
         if not success:
             module.fail_json(msg='Could not create PSP {0!r}: {1}'.format(friendly_name, result))
-        module.exit_json(changed=True, psp=result, debug={
-            'operation': 'create',
-            'friendly_name': friendly_name,
-            'sent_keys': sorted(body.keys()),
-        })
+        module.exit_json(changed=True, psp=result,
+            diff=create_diff,
+            debug={
+                'operation': 'create',
+                'friendly_name': friendly_name,
+                'sent_keys': sorted(body.keys()),
+            })
 
-    # Update. Compare normalised forms; the API returns monitors as a list of
-    # IDs, password is masked / not returned, etc.
+    # Update. `get_psps` already translated sort/status to labels. The API
+    # returns monitors as a list of IDs and password is never returned, so
+    # those need their own normalisation.
     current_compare = {
         'monitors': ur.monitors_wire(sorted(int(m) for m in (current.get('monitors') or []))),
         'custom_domain': current.get('custom_domain'),
-        'sort': next((k for k, v in ur.PSP_SORT.items() if v == current.get('sort')), current.get('sort'))
-            if isinstance(current.get('sort'), int) else current.get('sort'),
+        'sort': current.get('sort'),
         'hide_url_links': current.get('hide_url_links'),
-        'status': next((k for k, v in ur.PSP_STATUS.items() if v == current.get('status')), current.get('status'))
-            if isinstance(current.get('status'), int) else current.get('status'),
+        'status': current.get('status'),
     }
     desired_compare = dict(desired)
     if 'monitors' in desired_compare:
         ids = sorted(int(x) for x in desired_compare['monitors'].split(',') if x)
         desired_compare['monitors'] = ur.monitors_wire(ids)
 
-    diff = ur.diff_for_update(current_compare, desired_compare,
-                              ['monitors', 'custom_domain', 'sort', 'hide_url_links', 'status'])
-    if not diff and 'password' not in desired:
+    diff_fields = ['monitors', 'custom_domain', 'sort', 'hide_url_links', 'status']
+    field_diff = ur.diff_for_update(current_compare, desired_compare, diff_fields)
+    if not field_diff and 'password' not in desired:
         module.log('uptimerobot_psp: id={0} no diff -> changed=false'.format(current['id']))
         module.exit_json(changed=False, psp=current, debug={
             'operation': 'noop',
@@ -245,31 +279,44 @@ def main():
         })
 
     module.log('uptimerobot_psp: id={0} diff_fields={1}{2}'.format(
-        current['id'], sorted(diff.keys()),
+        current['id'], sorted(field_diff.keys()),
         ' (+password)' if 'password' in desired else '',
     ))
 
+    update_diff = {
+        'before': {k: current_compare.get(k) for k in field_diff},
+        'after': dict(field_diff),
+    }
+    if 'password' in desired:
+        # Bandit B105 triggers on any string assigned to a `password` key;
+        # this is just the diff display token, never used as an auth secret.
+        update_diff['after']['password'] = '<masked>'  # nosec B105
+
     if module.check_mode:
         preview = dict(current)
-        preview.update(diff)
-        module.exit_json(changed=True, psp=preview, debug={
-            'operation': 'update (check_mode)',
-            'friendly_name': friendly_name,
-            'psp_id': current['id'],
-            'diff_fields': sorted(diff.keys()),
-        })
+        preview.update(field_diff)
+        module.exit_json(changed=True, psp=preview,
+            diff=update_diff,
+            debug={
+                'operation': 'update (check_mode)',
+                'friendly_name': friendly_name,
+                'psp_id': current['id'],
+                'diff_fields': sorted(field_diff.keys()),
+            })
 
     body = dict(desired)
     body['id'] = current['id']
     success, result = ur.edit_psp(module, api_key, body)
     if not success:
         module.fail_json(msg='Could not edit PSP {0!r}: {1}'.format(friendly_name, result))
-    module.exit_json(changed=True, psp=result, debug={
-        'operation': 'update',
-        'friendly_name': friendly_name,
-        'psp_id': current['id'],
-        'diff_fields': sorted(diff.keys()),
-    })
+    module.exit_json(changed=True, psp=result,
+        diff=update_diff,
+        debug={
+            'operation': 'update',
+            'friendly_name': friendly_name,
+            'psp_id': current['id'],
+            'diff_fields': sorted(field_diff.keys()),
+        })
 
 
 if __name__ == '__main__':

@@ -1,13 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2026, Linuxfabrik, Zurich, Switzerland, https://www.linuxfabrik.ch
+# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 # The Unlicense (see LICENSE or https://unlicense.org/)
 
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-
 
 DOCUMENTATION = r'''
 ---
@@ -226,34 +225,81 @@ options:
 
 
 EXAMPLES = r'''
+# 1) Create-or-update a simple HTTPS monitor. Idempotent: re-running with the
+#    same values reports `changed=false`.
 - name: 'Manage a simple HTTPS monitor'
   linuxfabrik.lfops.uptimerobot_monitor:
     api_key: '{{ uptimerobot__api_key }}'
-    friendly_name: '001 cloud.linuxfabrik.io/index.php/login'
-    url: 'https://cloud.linuxfabrik.io/index.php/login'
+    friendly_name: '001 www.example.com/index.php/login'
+    url: 'https://www.example.com/index.php/login'
     type: 'http'
     interval: 120
     http_method: 'get'
     alert_contacts:
-      - friendly_name: 'root@linuxfabrik.ch'
+      - friendly_name: 'monitoring@example.com'
         threshold: 1
         recurrence: 0
     mwindows:
       - friendly_name: 'weekly mon 03:30-05:30'
     state: 'present'
 
-- name: 'Pause a monitor'
+# 2) Keyword monitor: alert if the page does NOT contain "OK" (case-insensitive).
+- name: 'Keyword-monitor a healthcheck endpoint'
   linuxfabrik.lfops.uptimerobot_monitor:
-    friendly_name: '001 cloud.linuxfabrik.io/index.php/login'
+    friendly_name: '001 healthcheck.example.com'
+    url: 'https://healthcheck.example.com/status'
+    type: 'keyw'
+    keyword_type: 'notex'
+    keyword_case_type: 'ci'
+    keyword_value: 'OK'
+    interval: 60
+    alert_contacts:
+      - friendly_name: 'monitoring@example.com'
+        threshold: 1
+        recurrence: 0
+    state: 'present'
+
+# 3) Pause / resume a monitor. The API key is taken from the environment.
+- name: 'Pause a monitor before a deployment'
+  linuxfabrik.lfops.uptimerobot_monitor:
+    friendly_name: '001 www.example.com/index.php/login'
     status: 'paused'
     state: 'present'
   environment:
     UPTIMEROBOT_API_KEY: '{{ uptimerobot__api_key }}'
 
+- name: 'Resume the monitor after the deployment'
+  linuxfabrik.lfops.uptimerobot_monitor:
+    friendly_name: '001 www.example.com/index.php/login'
+    status: 'up'
+    state: 'present'
+
+# 4) Bulk-pause every monitor of a given prefix (utr equivalent:
+#    `utr set monitors --status=paused --prefix=001`):
+- name: 'Inventory monitors to pause'
+  linuxfabrik.lfops.uptimerobot_monitor_info:
+    search: '001 '
+  register: 'ur_to_pause'
+
+- name: 'Pause them all'
+  linuxfabrik.lfops.uptimerobot_monitor:
+    friendly_name: '{{ item.friendly_name }}'
+    status: 'paused'
+    state: 'present'
+  loop: '{{ ur_to_pause.monitors }}'
+  loop_control:
+    label: '{{ item.friendly_name }}'
+
+# 5) Delete a stale monitor.
 - name: 'Delete a monitor'
   linuxfabrik.lfops.uptimerobot_monitor:
     friendly_name: 'old-monitor'
     state: 'absent'
+
+# Debugging hints:
+#   * Tail per-call syslog: `journalctl --identifier ansible-uptimerobot_monitor --follow`
+#   * Inspect the structured operation summary: `register: r` + `debug var=r.debug`.
+#   * Use `--check --diff` to preview create/update/delete without API writes.
 '''
 
 
@@ -264,8 +310,8 @@ monitor:
     returned: always
     sample:
         id: 794294
-        friendly_name: '001 cloud.linuxfabrik.io/index.php/login'
-        url: 'https://cloud.linuxfabrik.io/index.php/login'
+        friendly_name: '001 www.example.com/index.php/login'
+        url: 'https://www.example.com/index.php/login'
         type: 1
         interval: 120
         status: 2
@@ -470,23 +516,32 @@ def main():
                 'reason': 'monitor not present',
                 'friendly_name': friendly_name,
             })
+        delete_before = {
+            'friendly_name': current.get('friendly_name'),
+            'id': current.get('id'),
+            'url': current.get('url'),
+        }
         if module.check_mode:
-            module.exit_json(changed=True, monitor=current, debug={
-                'operation': 'delete (check_mode)',
-                'friendly_name': friendly_name,
-                'monitor_id': current['id'],
-            })
+            module.exit_json(changed=True, monitor=current,
+                diff={'before': delete_before, 'after': {}},
+                debug={
+                    'operation': 'delete (check_mode)',
+                    'friendly_name': friendly_name,
+                    'monitor_id': current['id'],
+                })
         module.log('uptimerobot_monitor: deleting id={0} friendly_name={1!r}'.format(
             current['id'], friendly_name,
         ))
         success, result = ur.delete_monitor(module, api_key, current['id'])
         if not success:
             module.fail_json(msg='Could not delete monitor {0!r}: {1}'.format(friendly_name, result))
-        module.exit_json(changed=True, monitor=current, debug={
-            'operation': 'delete',
-            'friendly_name': friendly_name,
-            'monitor_id': current['id'],
-        })
+        module.exit_json(changed=True, monitor=current,
+            diff={'before': delete_before, 'after': {}},
+            debug={
+                'operation': 'delete',
+                'friendly_name': friendly_name,
+                'monitor_id': current['id'],
+            })
 
     # --- present, create ----------------------------------------------------
     if current is None:
@@ -500,26 +555,33 @@ def main():
         body['type'] = module.params['type']
         # `status` is not allowed on create.
         body.pop('status', None)
+        create_diff = {'before': {}, 'after': dict(body)}
         if module.check_mode:
-            module.exit_json(changed=True, monitor=body, debug={
-                'operation': 'create (check_mode)',
-                'friendly_name': friendly_name,
-                'sent_keys': sorted(body.keys()),
-            })
+            module.exit_json(changed=True, monitor=body,
+                diff=create_diff,
+                debug={
+                    'operation': 'create (check_mode)',
+                    'friendly_name': friendly_name,
+                    'sent_keys': sorted(body.keys()),
+                })
         module.log('uptimerobot_monitor: creating friendly_name={0!r} sent_keys={1}'.format(
             friendly_name, sorted(body.keys()),
         ))
         success, result = ur.new_monitor(module, api_key, body)
         if not success:
             module.fail_json(msg='Could not create monitor {0!r}: {1}'.format(friendly_name, result))
-        module.exit_json(changed=True, monitor=result, debug={
-            'operation': 'create',
-            'friendly_name': friendly_name,
-            'sent_keys': sorted(body.keys()),
-        })
+        module.exit_json(changed=True, monitor=result,
+            diff=create_diff,
+            debug={
+                'operation': 'create',
+                'friendly_name': friendly_name,
+                'sent_keys': sorted(body.keys()),
+            })
 
     # --- present, update ----------------------------------------------------
-    # Build the comparable representation of the current state.
+    # Build the comparable representation of the current state. `get_monitors`
+    # already translated enum-coded fields back to user-facing labels, so we
+    # can compare current/desired field-by-field without further conversion.
     current_compare = {
         'url': current.get('url'),
         'sub_type': current.get('sub_type'),
@@ -540,7 +602,7 @@ def main():
         'custom_http_statuses': current.get('custom_http_statuses'),
         'ignore_ssl_errors': current.get('ignore_ssl_errors'),
         'disable_domain_expire_notifications': current.get('disable_domain_expire_notifications'),
-        'status': ur.MONITOR_STATUS_READ.get(current.get('status'), current.get('status')),
+        'status': current.get('status'),
         'alert_contacts': _normalize_current_alert_contacts(current.get('alert_contacts')),
         'mwindows': _normalize_current_mwindows(current.get('mwindows')),
     }
@@ -551,12 +613,16 @@ def main():
     if 'mwindows' in desired_compare:
         desired_compare['mwindows'] = _normalize_desired_mwindows(desired_compare['mwindows'])
 
-    # http_password can't be diffed (API hides it). If the user provided one,
-    # always send it through to the edit, but don't let it count as a change.
-    diff_fields = [f for f in _MONITOR_DIFFABLE_FIELDS if f != 'http_password']
-    diff = ur.diff_for_update(current_compare, desired_compare, diff_fields)
+    # `http_password` and `http_auth_type` can't be diffed reliably because
+    # the API hides them in `getMonitors` responses (utr's table shows them
+    # masked as `*****`, our get returns them as null). Always send them
+    # through on edit when the user supplied them, but don't let them count
+    # as a change.
+    write_only = {'http_password', 'http_auth_type'}
+    diff_fields = [f for f in _MONITOR_DIFFABLE_FIELDS if f not in write_only]
+    field_diff = ur.diff_for_update(current_compare, desired_compare, diff_fields)
 
-    if not diff:
+    if not field_diff:
         module.log('uptimerobot_monitor: id={0} no diff -> changed=false'.format(current['id']))
         module.exit_json(changed=False, monitor=current, debug={
             'operation': 'noop',
@@ -566,30 +632,39 @@ def main():
         })
 
     module.log('uptimerobot_monitor: id={0} diff_fields={1}'.format(
-        current['id'], sorted(diff.keys()),
+        current['id'], sorted(field_diff.keys()),
     ))
+
+    update_diff = {
+        'before': {k: current_compare.get(k) for k in field_diff},
+        'after': dict(field_diff),
+    }
 
     if module.check_mode:
         preview = dict(current)
-        preview.update(diff)
-        module.exit_json(changed=True, monitor=preview, debug={
-            'operation': 'update (check_mode)',
-            'friendly_name': friendly_name,
-            'monitor_id': current['id'],
-            'diff_fields': sorted(diff.keys()),
-        })
+        preview.update(field_diff)
+        module.exit_json(changed=True, monitor=preview,
+            diff=update_diff,
+            debug={
+                'operation': 'update (check_mode)',
+                'friendly_name': friendly_name,
+                'monitor_id': current['id'],
+                'diff_fields': sorted(field_diff.keys()),
+            })
 
     body = dict(desired)
     body['id'] = current['id']
     success, result = ur.edit_monitor(module, api_key, body)
     if not success:
         module.fail_json(msg='Could not edit monitor {0!r}: {1}'.format(friendly_name, result))
-    module.exit_json(changed=True, monitor=result, debug={
-        'operation': 'update',
-        'friendly_name': friendly_name,
-        'monitor_id': current['id'],
-        'diff_fields': sorted(diff.keys()),
-    })
+    module.exit_json(changed=True, monitor=result,
+        diff=update_diff,
+        debug={
+            'operation': 'update',
+            'friendly_name': friendly_name,
+            'monitor_id': current['id'],
+            'diff_fields': sorted(field_diff.keys()),
+        })
 
 
 if __name__ == '__main__':

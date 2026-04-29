@@ -1,13 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2026, Linuxfabrik, Zurich, Switzerland, https://www.linuxfabrik.ch
+# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 # The Unlicense (see LICENSE or https://unlicense.org/)
 
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-
 
 DOCUMENTATION = r'''
 ---
@@ -71,13 +70,42 @@ options:
 
 
 EXAMPLES = r'''
-- name: 'Create a recurring weekly maintenance window'
+# 1) Create-or-update a weekly window. friendly_name is auto-synthesised as
+#    "weekly mon 03:30-05:30" so re-runs are idempotent without naming it.
+- name: 'Weekly Monday-night maintenance window'
   linuxfabrik.lfops.uptimerobot_mwindow:
     type: 'weekly'
     value: 'mon'
     start_time: '03:30'
     end_time: '05:30'
     state: 'present'
+
+# 2) Daily window (no `value` for type=daily).
+- linuxfabrik.lfops.uptimerobot_mwindow:
+    type: 'daily'
+    start_time: '02:00'
+    end_time: '02:30'
+    state: 'present'
+
+# 3) Override the auto-name and pass a literal duration in minutes.
+- linuxfabrik.lfops.uptimerobot_mwindow:
+    friendly_name: 'cert-renewal'
+    type: 'weekly'
+    value: 'sun'
+    start_time: '04:00'
+    duration: 120
+    state: 'present'
+
+# 4) Pause an existing window without changing schedule.
+- linuxfabrik.lfops.uptimerobot_mwindow:
+    friendly_name: 'weekly mon 03:30-05:30'
+    status: 'paused'
+    state: 'present'
+
+# 5) Delete a stale window by friendly_name.
+- linuxfabrik.lfops.uptimerobot_mwindow:
+    friendly_name: 'old-window'
+    state: 'absent'
 '''
 
 
@@ -164,21 +192,30 @@ def main():
                 'reason': 'mwindow not present',
                 'friendly_name': friendly_name,
             })
+        delete_before = {
+            'friendly_name': current.get('friendly_name'),
+            'id': current.get('id'),
+            'type': current.get('type'),
+        }
         if module.check_mode:
-            module.exit_json(changed=True, mwindow=current, debug={
-                'operation': 'delete (check_mode)',
-                'friendly_name': friendly_name,
-                'mwindow_id': current['id'],
-            })
+            module.exit_json(changed=True, mwindow=current,
+                diff={'before': delete_before, 'after': {}},
+                debug={
+                    'operation': 'delete (check_mode)',
+                    'friendly_name': friendly_name,
+                    'mwindow_id': current['id'],
+                })
         module.log('uptimerobot_mwindow: deleting id={0}'.format(current['id']))
         success, result = ur.delete_mwindow(module, api_key, current['id'])
         if not success:
             module.fail_json(msg='Could not delete maintenance window {0!r}: {1}'.format(friendly_name, result))
-        module.exit_json(changed=True, mwindow=current, debug={
-            'operation': 'delete',
-            'friendly_name': friendly_name,
-            'mwindow_id': current['id'],
-        })
+        module.exit_json(changed=True, mwindow=current,
+            diff={'before': delete_before, 'after': {}},
+            debug={
+                'operation': 'delete',
+                'friendly_name': friendly_name,
+                'mwindow_id': current['id'],
+            })
 
     # Build desired payload.
     duration = module.params.get('duration')
@@ -207,38 +244,40 @@ def main():
         # `status` not honoured on create.
         body = dict(desired)
         body.pop('status', None)
+        create_diff = {'before': {}, 'after': dict(body)}
         if module.check_mode:
-            module.exit_json(changed=True, mwindow=body, debug={
-                'operation': 'create (check_mode)',
-                'friendly_name': friendly_name,
-                'sent_keys': sorted(body.keys()),
-            })
+            module.exit_json(changed=True, mwindow=body,
+                diff=create_diff,
+                debug={
+                    'operation': 'create (check_mode)',
+                    'friendly_name': friendly_name,
+                    'sent_keys': sorted(body.keys()),
+                })
         module.log('uptimerobot_mwindow: creating friendly_name={0!r} sent_keys={1}'.format(
             friendly_name, sorted(body.keys()),
         ))
         success, result = ur.new_mwindow(module, api_key, body)
         if not success:
             module.fail_json(msg='Could not create maintenance window {0!r}: {1}'.format(friendly_name, result))
-        module.exit_json(changed=True, mwindow=result, debug={
-            'operation': 'create',
-            'friendly_name': friendly_name,
-            'sent_keys': sorted(body.keys()),
-        })
+        module.exit_json(changed=True, mwindow=result,
+            diff=create_diff,
+            debug={
+                'operation': 'create',
+                'friendly_name': friendly_name,
+                'sent_keys': sorted(body.keys()),
+            })
 
-    # Update.
-    current_compare = {
-        'type': ur.MWINDOW_TYPE.get(current.get('type'), current.get('type')) if isinstance(current.get('type'), str) else next(
-            (k for k, v in ur.MWINDOW_TYPE.items() if v == current.get('type')), current.get('type')
-        ),
-        'value': current.get('value'),
-        'start_time': current.get('start_time'),
-        'duration': current.get('duration'),
-        'status': next(
-            (k for k, v in ur.MWINDOW_STATUS.items() if v == current.get('status')), current.get('status'),
-        ) if isinstance(current.get('status'), int) else current.get('status'),
-    }
-    diff = ur.diff_for_update(current_compare, desired, ['type', 'value', 'start_time', 'duration', 'status'])
-    if not diff:
+    # Update. `get_mwindows` already translated type/value/status to labels.
+    # `friendly_name` already encodes type/value/start_time/end_time (it is
+    # auto-synthesised from those four), so changing any of them produces a
+    # *new* mwindow rather than an edit. The only fields realistically
+    # editable in-place are `duration` and `status`. Limiting the diff to
+    # those two also dodges the API's inconsistent `start_time` storage
+    # (older windows are saved as local `HH:MM`, newer ones as UTC `HH:MM:SS`).
+    diff_fields = ['duration', 'status']
+    current_compare = {field: current.get(field) for field in diff_fields}
+    field_diff = ur.diff_for_update(current_compare, desired, diff_fields)
+    if not field_diff:
         module.log('uptimerobot_mwindow: id={0} no diff -> changed=false'.format(current['id']))
         module.exit_json(changed=False, mwindow=current, debug={
             'operation': 'noop',
@@ -248,30 +287,39 @@ def main():
         })
 
     module.log('uptimerobot_mwindow: id={0} diff_fields={1}'.format(
-        current['id'], sorted(diff.keys()),
+        current['id'], sorted(field_diff.keys()),
     ))
+
+    update_diff = {
+        'before': {k: current_compare.get(k) for k in field_diff},
+        'after': dict(field_diff),
+    }
 
     if module.check_mode:
         preview = dict(current)
-        preview.update(diff)
-        module.exit_json(changed=True, mwindow=preview, debug={
-            'operation': 'update (check_mode)',
-            'friendly_name': friendly_name,
-            'mwindow_id': current['id'],
-            'diff_fields': sorted(diff.keys()),
-        })
+        preview.update(field_diff)
+        module.exit_json(changed=True, mwindow=preview,
+            diff=update_diff,
+            debug={
+                'operation': 'update (check_mode)',
+                'friendly_name': friendly_name,
+                'mwindow_id': current['id'],
+                'diff_fields': sorted(field_diff.keys()),
+            })
 
     body = dict(desired)
     body['id'] = current['id']
     success, result = ur.edit_mwindow(module, api_key, body)
     if not success:
         module.fail_json(msg='Could not edit maintenance window {0!r}: {1}'.format(friendly_name, result))
-    module.exit_json(changed=True, mwindow=result, debug={
-        'operation': 'update',
-        'friendly_name': friendly_name,
-        'mwindow_id': current['id'],
-        'diff_fields': sorted(diff.keys()),
-    })
+    module.exit_json(changed=True, mwindow=result,
+        diff=update_diff,
+        debug={
+            'operation': 'update',
+            'friendly_name': friendly_name,
+            'mwindow_id': current['id'],
+            'diff_fields': sorted(field_diff.keys()),
+        })
 
 
 if __name__ == '__main__':
