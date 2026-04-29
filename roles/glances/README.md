@@ -11,7 +11,7 @@ This role installs [glances](https://nicolargo.github.io/glances/) and drops a s
 
 ## Platform Support
 
-`glances` is currently **not packaged in EPEL 10**, so this role fails with `No package glances available.` on RHEL 10 and clones (Rocky / Alma 10). Install glances manually (e.g. via `pip install glances` in a venv, or from a third-party repo) on those hosts and skip this role.
+`glances` is not packaged in EPEL 10. On RHEL 10 and clones (Rocky / Alma 10) the role installs glances into a dedicated Python venv at `/opt/python-venv/glances` via pip; on all other supported platforms glances is installed from the distribution package.
 
 
 ## Tags

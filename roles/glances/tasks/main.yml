@@ -5,6 +5,21 @@
       name:
         - 'glances'
       state: 'present'
+    when:
+      - 'not (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10)'
+
+  - name: 'Install glances into a Python venv (RHEL 10+)'
+    ansible.builtin.include_role:
+      name: 'linuxfabrik.lfops.python_venv'
+    vars:
+      python_venv__venvs__role_var:
+        - name: 'glances'
+          packages:
+            - 'glances'
+          exposed_binaries:
+            - 'glances'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10'
 
   - name: 'Deploy /etc/profile.d/glances.sh'
     ansible.builtin.template:
