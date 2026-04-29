@@ -12,7 +12,7 @@ DOCUMENTATION = r'''
 ---
 module: uptimerobot_mwindow
 short_description: Manage UptimeRobot maintenance windows
-version_added: '6.1.0'
+version_added: '6.0.2'
 description:
     - Create, update or delete a maintenance window on UptimeRobot.
     - Identification is by C(friendly_name). The window is auto-named
@@ -26,8 +26,9 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key. Default C(~/.uptimerobot).
+        description: Path to a file containing the API key.
         type: str
+        default: '~/.uptimerobot'
     friendly_name:
         description:
             - Display name of the window. If omitted, it is synthesised from
@@ -148,7 +149,7 @@ def _synthesise_name(params):
 def main():
     argument_spec = dict(
         api_key=dict(type='str', no_log=True),
-        api_key_file=dict(type='str'),
+        api_key_file=dict(type='str', default='~/.uptimerobot'),
         friendly_name=dict(type='str'),
         state=dict(type='str', choices=['absent', 'present'], default='present'),
         type=dict(type='str', choices=['daily', 'monthly', 'once', 'weekly']),

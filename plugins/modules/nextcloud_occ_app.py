@@ -24,7 +24,7 @@ requirements:
 author:
   - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 
-version_added: "2.0.1"
+version_added: "6.0.0"
 
 options:
   name:

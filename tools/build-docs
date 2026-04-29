@@ -403,31 +403,35 @@ def generate_mkdocs_yml(roles, plugin_pages):
     lines.append("  CODE_OF_CONDUCT.md")
     lines.append("")
 
-    # Build nav. The "Linuxfabrik LFOps" section groups the project meta pages
-    # (Home, Compatibility, Playbooks, Security, Contributing). The technical
-    # content (Roles, Modules) lives below as its own collapsible section.
+    # Build nav. Project meta pages (Home, Compatibility, ...) live at the top
+    # level; the technical content (Roles, Plugins) is grouped into collapsible
+    # sections below. Plugins is split into Modules / Lookup / Filter so each
+    # plugin kind gets its own subsection.
     lines.append("nav:")
-    lines.append("  - 'Linuxfabrik LFOps':")
-    lines.append("      - 'Home': 'index.md'")
-    lines.append("      - 'Compatibility': 'compatibility.md'")
-    lines.append("      - 'Playbooks': 'playbooks.md'")
-    lines.append("      - 'Security': 'security.md'")
-    lines.append("      - 'Contributing': 'contributing.md'")
+    lines.append("  - 'Home': 'index.md'")
+    lines.append("  - 'Compatibility': 'compatibility.md'")
+    lines.append("  - 'Playbooks': 'playbooks.md'")
+    lines.append("  - 'Security': 'security.md'")
+    lines.append("  - 'Contributing': 'contributing.md'")
     lines.append("  - 'Roles':")
     for role in roles:
         lines.append(f"      - '{role}': 'roles/{role}.md'")
 
     if plugin_pages:
-        # Decide labels: a name shared between e.g. modules/ and lookup/ needs the
-        # plugin kind suffix for disambiguation; pure-module entries stay clean.
-        name_counts = {}
-        for kind, name, _path in plugin_pages:
-            name_counts[name] = name_counts.get(name, 0) + 1
-
-        lines.append("  - 'Modules':")
+        # Group by plugin kind so the nav has Plugins > Modules / Lookup / Filter.
+        by_kind = {'module': [], 'lookup': [], 'filter': []}
         for kind, name, path in plugin_pages:
-            label = name if (kind == 'module' and name_counts[name] == 1) else f'{name} ({kind})'
-            lines.append(f"      - '{label}': '{path}'")
+            by_kind.setdefault(kind, []).append((name, path))
+        kind_label = {'module': 'Modules', 'lookup': 'Lookup', 'filter': 'Filter'}
+
+        lines.append("  - 'Plugins':")
+        for kind in ('module', 'lookup', 'filter'):
+            entries = sorted(by_kind.get(kind, []), key=lambda t: t[0])
+            if not entries:
+                continue
+            lines.append(f"      - '{kind_label[kind]}':")
+            for name, path in entries:
+                lines.append(f"          - '{name}': '{path}'")
 
     lines.append("")
 

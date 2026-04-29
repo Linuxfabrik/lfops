@@ -13,7 +13,7 @@ from ansible.errors import AnsibleFilterError
 
 DOCUMENTATION = r'''
   name: combine_lod
-  version_added: "2.0.1"
+  version_added: "3.0.0"
   short_description: combine a list of dictionaries
   description:
     - Create list a dictionaries (hashes/associative arrays) as a result of merging existing lists of dictionaries.

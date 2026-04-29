@@ -12,7 +12,7 @@ DOCUMENTATION = r'''
 ---
 module: uptimerobot_alert_contact
 short_description: Manage UptimeRobot alert contacts
-version_added: '6.1.0'
+version_added: '6.0.2'
 description:
     - Delete an alert contact on UptimeRobot. UptimeRobot's API v2 does not
       expose creation or editing of alert contacts (those are only doable
@@ -28,8 +28,9 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key. Default C(~/.uptimerobot).
+        description: Path to a file containing the API key.
         type: str
+        default: '~/.uptimerobot'
     friendly_name:
         description: Friendly name of the alert contact to delete.
         type: str
@@ -92,7 +93,7 @@ from ansible_collections.linuxfabrik.lfops.plugins.module_utils import uptimerob
 def main():
     argument_spec = dict(
         api_key=dict(type='str', no_log=True),
-        api_key_file=dict(type='str'),
+        api_key_file=dict(type='str', default='~/.uptimerobot'),
         friendly_name=dict(type='str'),
         id=dict(type='int'),
         state=dict(type='str', choices=['absent', 'present'], default='absent'),

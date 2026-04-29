@@ -12,7 +12,7 @@ DOCUMENTATION = r'''
 ---
 module: uptimerobot_account_info
 short_description: Read UptimeRobot account details
-version_added: '6.1.0'
+version_added: '6.0.2'
 description:
     - Returns account-level facts (email, monitor limit, monitor counters, ...) from UptimeRobot.
     - Read-only. Reports C(changed=false).
@@ -24,8 +24,9 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key. Default C(~/.uptimerobot).
+        description: Path to a file containing the API key.
         type: str
+        default: '~/.uptimerobot'
 '''
 
 
@@ -79,7 +80,7 @@ from ansible_collections.linuxfabrik.lfops.plugins.module_utils import uptimerob
 def main():
     argument_spec = dict(
         api_key=dict(type='str', no_log=True),
-        api_key_file=dict(type='str'),
+        api_key_file=dict(type='str', default='~/.uptimerobot'),
     )
 
     module = AnsibleModule(

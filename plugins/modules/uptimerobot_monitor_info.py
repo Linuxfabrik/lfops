@@ -12,7 +12,7 @@ DOCUMENTATION = r'''
 ---
 module: uptimerobot_monitor_info
 short_description: List UptimeRobot monitors
-version_added: '6.1.0'
+version_added: '6.0.2'
 description:
     - Returns the full list of monitors on the UptimeRobot account, with
       enum-style fields translated to human-readable labels (C(http_method),
@@ -26,8 +26,9 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key. Default C(~/.uptimerobot).
+        description: Path to a file containing the API key.
         type: str
+        default: '~/.uptimerobot'
     friendly_name:
         description:
             - If set, only the monitor with this exact friendly name is
@@ -113,7 +114,7 @@ from ansible_collections.linuxfabrik.lfops.plugins.module_utils import uptimerob
 def main():
     argument_spec = dict(
         api_key=dict(type='str', no_log=True),
-        api_key_file=dict(type='str'),
+        api_key_file=dict(type='str', default='~/.uptimerobot'),
         friendly_name=dict(type='str'),
         search=dict(type='str'),
     )

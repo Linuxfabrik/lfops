@@ -12,7 +12,7 @@ DOCUMENTATION = r'''
 ---
 module: uptimerobot_monitor
 short_description: Manage UptimeRobot monitors
-version_added: '6.1.0'
+version_added: '6.0.2'
 description:
     - Create, update or delete a monitor on UptimeRobot.
     - Targets the UptimeRobot API v2 (POST + form-urlencoded). Migration to v3
@@ -36,10 +36,10 @@ options:
         no_log: true
     api_key_file:
         description:
-            - Path to a file containing the UptimeRobot API key. Default
-              C(~/.uptimerobot).
+            - Path to a file containing the UptimeRobot API key.
         type: str
         required: false
+        default: '~/.uptimerobot'
     friendly_name:
         description:
             - Display name of the monitor. Used as the idempotency key.
@@ -438,7 +438,7 @@ def _normalize_desired_mwindows(wire):
 def main():
     argument_spec = dict(
         api_key=dict(type='str', required=False, no_log=True),
-        api_key_file=dict(type='str', required=False),
+        api_key_file=dict(type='str', required=False, default='~/.uptimerobot'),
         friendly_name=dict(type='str', required=True),
         state=dict(type='str', choices=['absent', 'present'], default='present'),
 
