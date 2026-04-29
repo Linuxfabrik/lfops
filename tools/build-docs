@@ -20,6 +20,7 @@ Run this tool from the repository root directory.
 
 import ast
 import os
+import re
 import sys
 
 import yaml
@@ -130,76 +131,199 @@ def extract_plugin_docs(filepath):
     }
 
 
+_ANSIBLE_DOC_MARKUP = re.compile(r'([CIBLMOPRUV])\(([^)]+)\)')
+
+
+def _convert_ansible_markup(text):
+    """Convert Ansible's `C(foo)` / `I(foo)` / `B(foo)` / `M(module)` / `U(url)` / `L(text,url)`
+    inline markup to Markdown. Stays close to Ansible's own rendering: code-span for
+    C / O / V, italic for I, bold for B, plain text for L's display part.
+    """
+    if not text:
+        return text
+    def _sub(match):
+        kind, body = match.group(1), match.group(2)
+        if kind in ('C', 'O', 'V'):
+            return f'`{body}`'
+        if kind == 'I':
+            return f'*{body}*'
+        if kind == 'B':
+            return f'**{body}**'
+        if kind == 'M':
+            return f'`{body}`'
+        if kind == 'U':
+            return f'<{body}>'
+        if kind == 'L':
+            # L(label, url)
+            if ',' in body:
+                label, url = (s.strip() for s in body.split(',', 1))
+                return f'[{label}]({url})'
+            return body
+        if kind in ('P', 'R'):
+            return f'`{body}`'
+        return match.group(0)
+    return _ANSIBLE_DOC_MARKUP.sub(_sub, text)
+
+
 def _flatten_description(value):
-    """Description fields can be a string or a list of strings; return a single string."""
+    """Description fields can be a string or a list of strings; return a single string
+    with Ansible inline markup converted to Markdown.
+    """
     if value is None:
         return ''
     if isinstance(value, list):
-        return ' '.join(str(line).strip() for line in value if line is not None)
-    return str(value).strip()
+        joined = ' '.join(str(line).strip() for line in value if line is not None)
+    else:
+        joined = str(value).strip()
+    return _convert_ansible_markup(joined)
 
 
-def _render_options_table(options, level=0):
-    """Render an options block as a Markdown table. Suboptions are folded into the
-    description column as a nested bullet list to keep the table flat.
+_TYPE_LABELS = {
+    'str': 'String',
+    'int': 'Number',
+    'float': 'Number',
+    'bool': 'Bool',
+    'list': 'List',
+    'dict': 'Dictionary',
+    'path': 'Path',
+    'raw': 'Raw',
+    'json': 'JSON',
+    'jsonarg': 'JSON',
+}
+
+
+def _pretty_type(otype):
+    """Map Ansible's wire-level type names to the labels the role-style READMEs use
+    (`str` -> `String`, `int` -> `Number`, etc.).
     """
-    if not options:
-        return []
-    lines = []
-    indent = '    ' * level
-    if level == 0:
-        lines.append('| Parameter | Type | Required | Default | Choices | Description |')
-        lines.append('|---|---|---|---|---|---|')
-    for opt_name in sorted(options):
-        opt = options[opt_name] or {}
-        otype = opt.get('type', '')
-        if isinstance(otype, list):
-            otype = ' / '.join(str(t) for t in otype)
-        required = 'yes' if opt.get('required') else ''
-        default = opt.get('default')
-        if default is None:
-            default_str = ''
-        elif isinstance(default, bool):
-            default_str = str(default).lower()
-        else:
-            default_str = f'`{default}`'
-        choices = opt.get('choices') or []
+    if isinstance(otype, list):
+        return ' / '.join(_pretty_type(t) for t in otype)
+    if not otype:
+        return ''
+    key = str(otype).lower()
+    return _TYPE_LABELS.get(key, str(otype).capitalize())
+
+
+def _format_default(value):
+    """Render an option's default value the same way the role-style READMEs do."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return f'`{str(value).lower()}`'
+    if isinstance(value, str) and value == '':
+        return "`''`"
+    return f'`{value}`'
+
+
+def _format_type(opt):
+    """Render `Type: <type>[. One of <a>, <b>, <c>.]` for an option dict, using the
+    role-style type labels (`String`, `Number`, `Bool`, `List`, `Dictionary`, ...).
+    """
+    type_str = _pretty_type(opt.get('type', ''))
+    choices = opt.get('choices') or []
+    if choices:
         choices_str = ', '.join(f'`{c}`' for c in choices)
-        description = _flatten_description(opt.get('description'))
-        suboptions = opt.get('suboptions') or {}
-        if suboptions:
-            sub_bullets = []
-            for sub_name in sorted(suboptions):
-                sub = suboptions[sub_name] or {}
-                sub_desc = _flatten_description(sub.get('description'))
-                sub_type = sub.get('type', '')
-                sub_req = ' (required)' if sub.get('required') else ''
-                sub_bullets.append(
-                    f'<br>&nbsp;&nbsp;&bull; **{sub_name}** ({sub_type}){sub_req}: {sub_desc}'
-                )
-            description = description + ''.join(sub_bullets)
-        lines.append(
-            f'{indent}| **{opt_name}** | {otype} | {required} | '
-            f'{default_str} | {choices_str} | {description} |'
-        )
+        return f'Type: {type_str}. One of {choices_str}.'
+    return f'Type: {type_str}.'
+
+
+def _render_option_block(name, opt, depth=0):
+    """Render one option in the LFOps role-style definition format.
+
+    At depth=0 (top-level option), the variable name is a bare heading-like
+    line and the bullets sit at column 0:
+
+        `name`
+
+        * Description.
+        * Type: ...
+        * Default: ...
+
+    At depth>=1 (suboption), the name becomes a bullet item indented under
+    its parent's "Subkeys:" line and its own bullets indent one more level.
+    The pattern matches `roles/example/README.md`.
+    """
+    opt = opt or {}
+    if depth == 0:
+        heading = f'`{name}`'
+        heading_indent = ''
+    else:
+        heading = f'* `{name}`:'
+        heading_indent = '    ' * (2 * depth - 1)
+    bullet_indent = '    ' * (2 * depth)
+
+    lines = [f'{heading_indent}{heading}', '']
+
+    description = _flatten_description(opt.get('description')) or '(no description)'
+    lines.append(f'{bullet_indent}* {description}')
+    lines.append(f'{bullet_indent}* {_format_type(opt)}')
+
+    default = _format_default(opt.get('default'))
+    if default is not None:
+        lines.append(f'{bullet_indent}* Default: {default}')
+
+    suboptions = opt.get('suboptions') or {}
+    if suboptions:
+        lines.append(f'{bullet_indent}* Subkeys:')
+        lines.append('')
+        for sub_name in sorted(suboptions):
+            lines.extend(_render_option_block(sub_name, suboptions[sub_name], depth + 1))
+    lines.append('')
     return lines
 
 
-def _render_return_table(returns):
-    """Render the RETURN block as a Markdown table."""
+def _render_options_section(options):
+    """Render an options block as role-style "Mandatory" / "Optional" sections.
+    Returns a list of Markdown lines (with H2 headings already emitted).
+    """
+    if not options:
+        return []
+    mandatory = [n for n in sorted(options) if (options[n] or {}).get('required')]
+    optional = [n for n in sorted(options) if not (options[n] or {}).get('required')]
+
+    lines = []
+    if mandatory:
+        lines.append('## Mandatory Parameters')
+        lines.append('')
+        for name in mandatory:
+            lines.extend(_render_option_block(name, options[name]))
+    if optional:
+        lines.append('## Optional Parameters')
+        lines.append('')
+        for name in optional:
+            lines.extend(_render_option_block(name, options[name]))
+    return lines
+
+
+def _render_return_section(returns):
+    """Render the RETURN block as a role-style definition list."""
     if not returns:
         return []
-    lines = []
-    lines.append('| Key | Type | Returned | Description |')
-    lines.append('|---|---|---|---|')
+    lines = ['## Return Values', '']
     for ret_name in sorted(returns):
         ret = returns[ret_name] or {}
+        lines.append(f'`{ret_name}`')
+        lines.append('')
+        description = _flatten_description(ret.get('description')) or '(no description)'
+        lines.append(f'* {description}')
         rtype = ret.get('type', '')
-        returned = ret.get('returned', '')
-        description = _flatten_description(ret.get('description'))
-        lines.append(
-            f'| **{ret_name}** | {rtype} | {returned} | {description} |'
-        )
+        if rtype:
+            lines.append(f'* Type: {_pretty_type(rtype)}.')
+        returned = ret.get('returned')
+        if returned:
+            lines.append(f'* Returned: {returned}.')
+        sample = ret.get('sample')
+        if sample is not None:
+            if isinstance(sample, (dict, list)):
+                lines.append('* Sample:')
+                lines.append('')
+                lines.append('    ```yaml')
+                for sline in yaml.safe_dump(sample, default_flow_style=False).rstrip().split('\n'):
+                    lines.append(f'    {sline}')
+                lines.append('    ```')
+            else:
+                lines.append(f'* Sample: `{sample}`')
+        lines.append('')
     return lines
 
 
@@ -221,7 +345,7 @@ def render_plugin_md(kind, name, parsed):
     lines = [f'# `{title}`', '']
 
     if short:
-        lines.append(f'> {short}')
+        lines.append(f'> {_convert_ansible_markup(short)}')
         lines.append('')
 
     if deprecated:
@@ -243,7 +367,7 @@ def render_plugin_md(kind, name, parsed):
         if isinstance(description, str):
             description = [description]
         for paragraph in description:
-            lines.append(f'* {str(paragraph).strip()}')
+            lines.append(f'* {_convert_ansible_markup(str(paragraph).strip())}')
         lines.append('')
 
     if version_added:
@@ -254,14 +378,11 @@ def render_plugin_md(kind, name, parsed):
         lines.append('## Requirements')
         lines.append('')
         for req in (requirements if isinstance(requirements, list) else [requirements]):
-            lines.append(f'* {req}')
+            lines.append(f'* {_convert_ansible_markup(str(req).strip())}')
         lines.append('')
 
     if options:
-        lines.append('## Parameters')
-        lines.append('')
-        lines.extend(_render_options_table(options))
-        lines.append('')
+        lines.extend(_render_options_section(options))
 
     if parsed.get('examples'):
         lines.append('## Examples')
@@ -272,23 +393,20 @@ def render_plugin_md(kind, name, parsed):
         lines.append('')
 
     if parsed.get('return'):
-        lines.append('## Return Values')
-        lines.append('')
-        lines.extend(_render_return_table(parsed['return']))
-        lines.append('')
+        lines.extend(_render_return_section(parsed['return']))
 
     if notes:
         lines.append('## Notes')
         lines.append('')
         for note in (notes if isinstance(notes, list) else [notes]):
-            lines.append(f'* {str(note).strip()}')
+            lines.append(f'* {_convert_ansible_markup(str(note).strip())}')
         lines.append('')
 
     if authors:
         lines.append('## Authors')
         lines.append('')
         for author in (authors if isinstance(authors, list) else [authors]):
-            lines.append(f'* {author}')
+            lines.append(f'* {_convert_ansible_markup(str(author).strip())}')
         lines.append('')
 
     return '\n'.join(lines).rstrip() + '\n'
