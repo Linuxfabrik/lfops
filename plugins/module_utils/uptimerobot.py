@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import hashlib
 import json
 import os
 import time
@@ -36,6 +37,32 @@ PAGE_SIZE = 50
 
 # When the API returns 429 (rate limit), wait this many seconds and retry once.
 DEFAULT_RATE_LIMIT_RETRY_SECONDS = 10
+
+# --- Read-side response cache ------------------------------------------------
+# A single Ansible play that loops uptimerobot_monitor over N items would
+# otherwise call getMonitors / getAlertContacts / getMWindows N times each.
+# We cache those responses on disk for a short window so the per-item work
+# becomes a (cache hit, diff, return) round-trip instead of three full API
+# calls. Mutating endpoints (newX / editX / deleteX) invalidate the matching
+# cached read; everything else falls back to a real API call after the TTL.
+CACHE_TTL_SECONDS = 60
+CACHE_DIR = os.path.join(os.path.expanduser('~/.cache'), 'ansible-uptimerobot')
+
+_CACHEABLE_GETS = frozenset({
+    'getAlertContacts', 'getMWindows', 'getMonitors', 'getPSPs',
+})
+_WRITE_INVALIDATES = {
+    'deleteAlertContact': 'getAlertContacts',
+    'deleteMWindow': 'getMWindows',
+    'deleteMonitor': 'getMonitors',
+    'deletePSP': 'getPSPs',
+    'editMWindow': 'getMWindows',
+    'editMonitor': 'getMonitors',
+    'editPSP': 'getPSPs',
+    'newMWindow': 'getMWindows',
+    'newMonitor': 'getMonitors',
+    'newPSP': 'getPSPs',
+}
 
 # --- Human-readable -> UptimeRobot wire values -------------------------------
 # These come 1:1 from linuxfabrik-lib's lib/uptimerobot.py replace_maps.
@@ -180,14 +207,104 @@ def _safe_keys(params):
     )
 
 
+def _cache_key(endpoint, api_key, params):
+    """Stable hash of endpoint + api_key + params; truncated for filename use."""
+    blob = '{e}|{k}|{p}'.format(
+        e=endpoint, k=api_key,
+        p=json.dumps(params or {}, sort_keys=True, default=str),
+    )
+    return hashlib.sha256(blob.encode('utf-8')).hexdigest()[:16]
+
+
+def _cache_path(endpoint, api_key, params):
+    try:
+        os.makedirs(CACHE_DIR, exist_ok=True)
+    except OSError:
+        return None
+    return os.path.join(CACHE_DIR, '{e}-{h}.json'.format(
+        e=endpoint, h=_cache_key(endpoint, api_key, params),
+    ))
+
+
+def _cache_read(endpoint, api_key, params):
+    path = _cache_path(endpoint, api_key, params)
+    if not path:
+        return None
+    try:
+        st = os.stat(path)
+    except OSError:
+        return None
+    if time.time() - st.st_mtime > CACHE_TTL_SECONDS:
+        return None
+    try:
+        with open(path) as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return None
+
+
+def _cache_write(endpoint, api_key, params, data):
+    path = _cache_path(endpoint, api_key, params)
+    if not path:
+        return
+    try:
+        with open(path, 'w') as fh:
+            json.dump(data, fh)
+        # Tighten permissions: cache contains the full UR resource list which
+        # is otherwise behind an API key.
+        os.chmod(path, 0o600)
+    except OSError:
+        pass
+
+
+def _cache_invalidate(endpoint):
+    """Drop every cached response file for `endpoint` (across all api keys /
+    param combinations). Cheap glob-style cleanup; the matching read endpoint
+    will repopulate on the next call.
+    """
+    try:
+        for fname in os.listdir(CACHE_DIR):
+            if fname.startswith(endpoint + '-') and fname.endswith('.json'):
+                try:
+                    os.remove(os.path.join(CACHE_DIR, fname))
+                except OSError:
+                    pass
+    except OSError:
+        pass
+
+
 def _request(module, api_key, endpoint, params, result_key):
     """POST against the v2 API and return (success, result).
 
     On success, `result` is a list of items (or a scalar dict for single-resource
     endpoints, e.g. account). On failure, `result` is an error message string.
 
-    Handles offset-pagination automatically. Retries once on HTTP 429.
+    Handles offset-pagination automatically. Retries once on HTTP 429. Cacheable
+    read endpoints are served from a short-lived on-disk cache; mutating
+    endpoints invalidate the matching read cache after a successful call.
     """
+    if endpoint in _CACHEABLE_GETS:
+        cached = _cache_read(endpoint, api_key, params)
+        if cached is not None:
+            module.log('uptimerobot: cache HIT {endpoint} ({n} items, ttl={ttl}s)'.format(
+                endpoint=endpoint,
+                n=len(cached) if isinstance(cached, list) else 1,
+                ttl=CACHE_TTL_SECONDS,
+            ))
+            return True, cached
+
+    success, result = _request_uncached(module, api_key, endpoint, params, result_key)
+
+    if success:
+        if endpoint in _CACHEABLE_GETS:
+            _cache_write(endpoint, api_key, params, result)
+        elif endpoint in _WRITE_INVALIDATES:
+            _cache_invalidate(_WRITE_INVALIDATES[endpoint])
+
+    return success, result
+
+
+def _request_uncached(module, api_key, endpoint, params, result_key):
     url = API_BASE + endpoint
     body = dict(params)
     body['api_key'] = api_key
@@ -346,16 +463,61 @@ _MONITOR_TRANSLATIONS = {
 
 
 def get_monitors(module, api_key, search=None):
-    """Return the full list of monitors. Optional case-insensitive substring
-    `search` against the friendly name (handled by the API).
+    """Return the full list of monitors with enum-style fields translated to
+    their human-readable labels (matching the user-facing parameter names).
+    Optional case-insensitive substring `search` against the friendly name
+    (handled by the API).
     """
     params = {}
     if search:
         params['search'] = search
-    # Ask the API to include alert_contacts and mwindows so we can diff.
+    # Ask the API to include the optional fields we want to diff against.
+    # Without `http_request_details=True` the API returns http_method, post_*,
+    # custom headers, etc. as null. The literal `True` here is intentional —
+    # the API rejects the int `1` on this particular flag.
     params['alert_contacts'] = 1
     params['mwindows'] = 1
-    return _request(module, api_key, 'getMonitors', params, 'monitors')
+    params['http_request_details'] = True
+    success, monitors = _request(module, api_key, 'getMonitors', params, 'monitors')
+    if not success:
+        return success, monitors
+    for item in monitors:
+        _translate_monitor_response(item)
+    return True, monitors
+
+
+# API-response field translations (integer IDs -> labels). Mirrors the
+# read-direction `replace_map` in linuxfabrik-lib's get_monitors(). Only
+# fields that the API actually returns as integers are listed.
+_MONITOR_RESPONSE_MAPS = (
+    ('keyword_type', KEYWORD_TYPE),
+    ('keyword_case_type', KEYWORD_CASE_TYPE),
+    ('http_method', HTTP_METHOD),
+    ('auth_type', HTTP_AUTH_TYPE),
+)
+
+
+def _translate_monitor_response(item):
+    """Translate a single monitor dict in-place: API integer IDs -> labels,
+    matching the user-facing parameter names.
+    """
+    for field, write_map in _MONITOR_RESPONSE_MAPS:
+        if field in item and item[field] is not None:
+            read_map = {v: k for k, v in write_map.items()}
+            item[field] = read_map.get(item[field], item[field])
+    # The API returns the HTTP-auth field as `auth_type`, but the modules use
+    # `http_auth_type` (matching the v2 write parameter). Mirror the value so
+    # the diff can read it under either name.
+    if 'auth_type' in item and 'http_auth_type' not in item:
+        item['http_auth_type'] = item['auth_type']
+    if 'type' in item and item['type'] is not None:
+        read_type = {v: k for k, v in MONITOR_TYPE.items()}
+        item['type'] = read_type.get(item['type'], item['type'])
+    if 'status' in item and item['status'] is not None:
+        item['status'] = MONITOR_STATUS_READ.get(item['status'], item['status'])
+    for contact in item.get('alert_contacts') or []:
+        if 'type' in contact and contact['type'] is not None:
+            contact['type'] = ALERT_CONTACT_TYPE_READ.get(contact['type'], contact['type'])
 
 
 def new_monitor(module, api_key, params):
@@ -387,7 +549,40 @@ _MWINDOW_TRANSLATIONS = {
 
 
 def get_mwindows(module, api_key):
-    return _request(module, api_key, 'getMWindows', {}, 'mwindows')
+    success, mwindows = _request(module, api_key, 'getMWindows', {}, 'mwindows')
+    if not success:
+        return success, mwindows
+    for item in mwindows:
+        _translate_mwindow_response(item)
+    return True, mwindows
+
+
+def _translate_mwindow_response(item):
+    """API integer IDs -> labels for maintenance windows."""
+    if 'status' in item and item['status'] is not None:
+        read_status = {v: k for k, v in MWINDOW_STATUS.items()}
+        item['status'] = read_status.get(item['status'], item['status'])
+    if 'type' in item and item['type'] is not None:
+        read_type = {v: k for k, v in MWINDOW_TYPE.items()}
+        item['type'] = read_type.get(item['type'], item['type'])
+    if 'value' in item and item['value'] is not None:
+        # `value` is a dash-separated list of day-IDs for weekly windows
+        # (e.g. "1-3-5"), or a list of day-of-month integers for monthly.
+        # Translate weekday IDs back to labels; leave monthly numbers alone.
+        read_day = {v: k for k, v in MWINDOW_DAY.items()}
+        if isinstance(item['value'], str) and '-' in item['value']:
+            parts = []
+            for token in item['value'].split('-'):
+                try:
+                    parts.append(read_day.get(int(token), token))
+                except (TypeError, ValueError):
+                    parts.append(token)
+            item['value'] = '-'.join(parts)
+        else:
+            try:
+                item['value'] = read_day.get(int(item['value']), item['value'])
+            except (TypeError, ValueError):
+                pass
 
 
 def new_mwindow(module, api_key, params):
@@ -418,7 +613,26 @@ _PSP_TRANSLATIONS = {
 
 
 def get_psps(module, api_key):
-    return _request(module, api_key, 'getPSPs', {}, 'psps')
+    success, psps = _request(module, api_key, 'getPSPs', {}, 'psps')
+    if not success:
+        return success, psps
+    for item in psps:
+        _translate_psp_response(item)
+    return True, psps
+
+
+def _translate_psp_response(item):
+    """API integer IDs -> labels for PSPs."""
+    if 'sort' in item and item['sort'] is not None:
+        read_sort = {v: k for k, v in PSP_SORT.items()}
+        item['sort'] = read_sort.get(item['sort'], item['sort'])
+    if 'status' in item and item['status'] is not None:
+        read_status = {v: k for k, v in PSP_STATUS.items()}
+        item['status'] = read_status.get(item['status'], item['status'])
+    # The API returns the custom-domain field as `custom_url` but write requests
+    # use `custom_domain`. Mirror so the diff reads it under the write-side name.
+    if 'custom_url' in item and 'custom_domain' not in item:
+        item['custom_domain'] = item['custom_url']
 
 
 def new_psp(module, api_key, params):
@@ -449,8 +663,30 @@ def delete_psp(module, api_key, psp_id):
 # --- Per-resource API: alert contacts ---------------------------------------
 
 
+# Status read map for alert contacts (write side has no equivalent because
+# v2 does not allow create/edit; this is read-only for inspection).
+ALERT_CONTACT_STATUS_READ = {
+    0: 'not activated',
+    1: 'paused',
+    2: 'active',
+}
+
+
 def get_alert_contacts(module, api_key):
-    return _request(module, api_key, 'getAlertContacts', {}, 'alert_contacts')
+    success, contacts = _request(module, api_key, 'getAlertContacts', {}, 'alert_contacts')
+    if not success:
+        return success, contacts
+    for item in contacts:
+        _translate_alert_contact_response(item)
+    return True, contacts
+
+
+def _translate_alert_contact_response(item):
+    """API integer IDs -> labels for alert contacts."""
+    if 'status' in item and item['status'] is not None:
+        item['status'] = ALERT_CONTACT_STATUS_READ.get(item['status'], item['status'])
+    if 'type' in item and item['type'] is not None:
+        item['type'] = ALERT_CONTACT_TYPE_READ.get(item['type'], item['type'])
 
 
 def delete_alert_contact(module, api_key, contact_id):
