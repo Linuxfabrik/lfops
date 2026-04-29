@@ -12,7 +12,7 @@ The role does not deploy any software on the target hosts. It runs on the Ansibl
 
 ## Concepts
 
-The role works with five concepts that map 1:1 to UptimeRobot's data model and to one Ansible module each:
+The role works with five concepts that map 1:1 to UptimeRobot's data model and to one Ansible CRUD module each (plus a parallel set of read-only `*_info` modules — see the migration section below):
 
 * **Monitor** (`linuxfabrik.lfops.uptimerobot_monitor`) — a single check (URL, host, heartbeat). Carries its own interval, timeout, HTTP method, optional auth, optional keyword search, and references to alert contacts and maintenance windows.
 * **Maintenance window** (`linuxfabrik.lfops.uptimerobot_mwindow`) — a recurring or one-off time slot in which monitors that reference it stop alerting. `daily`, `weekly`, `monthly`, or `once`.
@@ -329,11 +329,11 @@ uptimerobot__mwindows:
 
 uptimerobot__monitors:
   - prefix: '001'
-    url: 'https://cloud.linuxfabrik.io/index.php/login'
+    url: 'https://www.example.com/index.php/login'
     interval: 120
     http_method: 'get'
     alert_contacts:
-      - friendly_name: 'root@linuxfabrik.ch'
+      - friendly_name: 'monitoring@example.com'
         threshold: 1
         recurrence: 0
     mwindows:
@@ -341,14 +341,14 @@ uptimerobot__monitors:
     state: 'present'
 
   - prefix: '001'
-    url: 'https://old-host.linuxfabrik.ch'
+    url: 'https://legacy.example.com'
     state: 'absent'
 
 uptimerobot__psps:
-  - friendly_name: 'Status - linuxfabrik.io'
-    custom_url: 'status.linuxfabrik.io'
+  - friendly_name: 'Status - example.com'
+    custom_url: 'status.example.com'
     monitors:
-      - friendly_name: '001 cloud.linuxfabrik.io/index.php/login'
+      - friendly_name: '001 www.example.com/index.php/login'
     sort: 'a-z'
     status: 'active'
     state: 'present'
@@ -361,14 +361,16 @@ uptimerobot__alert_contacts:
 
 ## Running the Role
 
+The shipped playbook already targets `hosts: lfops_uptimerobot` internally, so put `localhost` (or wherever you keep your API key) into that group and run:
+
 ```bash
-ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.uptimerobot --limit lfops_uptimerobot
+ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.uptimerobot
 
 # Only push maintenance windows:
-ansible-playbook ... linuxfabrik.lfops.uptimerobot --tags uptimerobot:mwindow
+ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.uptimerobot --tags uptimerobot:mwindow
 
-# Dry-run with diff output:
-ansible-playbook ... linuxfabrik.lfops.uptimerobot --check --diff
+# Dry-run with per-resource diff output:
+ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.uptimerobot --check --diff
 ```
 
 For ad-hoc / read-only queries against UptimeRobot, the modules can be invoked directly without the role:
@@ -388,13 +390,82 @@ For ad-hoc / read-only queries against UptimeRobot, the modules can be invoked d
 ```
 
 
+## Performance / Caching
+
+To keep the per-item API cost down when the role loops a CRUD module over a long list, `module_utils.uptimerobot` writes the four heavy `getX` responses (`getMonitors`, `getAlertContacts`, `getMWindows`, `getPSPs`) to a short-lived on-disk cache under `~/.cache/ansible-uptimerobot/` with a 60-second TTL. Cache files are mode `0600` because they hold the full resource list returned by the API.
+
+* **Read calls** check the cache first; a hit replaces the (paginated) HTTP request entirely. Logged as `cache HIT <endpoint> (...)` in syslog.
+* **Mutating calls** (`newX` / `editX` / `deleteX`) succeed against the API and then invalidate the matching `getX` cache so the next read sees the post-write state.
+* Cache files are per-engineer (the path is in your `$HOME`), so different engineers running against the same UptimeRobot account don't share state.
+* If you need to force a fresh read, delete the directory:
+
+    ```
+    rm -rf ~/.cache/ansible-uptimerobot/
+    ```
+
+Typical impact: a `--check` run over 56 monitors goes from ~56× 4 page `getMonitors` + 56× `getAlertContacts` + 56× `getMWindows` to one of each (the rest hit cache). Idempotent re-runs of the same playbook within a minute are nearly free.
+
+
 ## Debugging / Verbose Output
 
-The five modules emit verbose output through three channels — useful when iterating against a live API:
+The CRUD modules emit verbose output through three channels — useful when iterating against a live API:
 
-* **`module.log()`** lines go to syslog under the tag `ansible-uptimerobot_<resource>`. They cover: API-key resolution source, lookup result (existing monitor / window / PSP found or not), every HTTP POST (endpoint plus sanitised key list — API key and passwords are masked), pagination page count, response status, diff field list. Tail with `journalctl -t ansible-uptimerobot_monitor -f`.
+* **`module.log()`** lines go to syslog under the tag `ansible-linuxfabrik.lfops.uptimerobot_<resource>` (the full collection FQDN; that's the identifier Ansible uses when calling modules through a collection). They cover: API-key resolution source, lookup result (existing monitor / window / PSP found or not), every HTTP POST (endpoint plus sanitised key list — API key and passwords are masked), pagination page count, response status, diff field list.
 * **`module.warn()`** is used on rate-limit retries (HTTP 429) so the playbook output shows how often the modules had to back off.
-* The **`debug`** key in every module's return value carries a structured summary (`operation`, `friendly_name`, resource id, `diff_fields` or `sent_keys`). `register:` it and `ansible.builtin.debug var=ur_result.debug` to inspect what the module decided to do, especially when investigating false-positive `changed: true`.
+* The **`debug`** key in every module's return value carries a structured summary (`operation`, `friendly_name`, resource id, `diff_fields` or `sent_keys`).
+
+### Tailing the syslog channel
+
+The syslog tag is `ansible-linuxfabrik.lfops.uptimerobot_<resource>` (one tag per resource type). On a controller running systemd / journald:
+
+```
+# Live tail while a playbook runs:
+journalctl --identifier ansible-linuxfabrik.lfops.uptimerobot_monitor --follow
+
+# Everything from the last run, all UR resources at once:
+journalctl --since '5 minutes ago' \
+    --identifier ansible-linuxfabrik.lfops.uptimerobot_account_info \
+    --identifier ansible-linuxfabrik.lfops.uptimerobot_alert_contact \
+    --identifier ansible-linuxfabrik.lfops.uptimerobot_alert_contact_info \
+    --identifier ansible-linuxfabrik.lfops.uptimerobot_monitor \
+    --identifier ansible-linuxfabrik.lfops.uptimerobot_monitor_info \
+    --identifier ansible-linuxfabrik.lfops.uptimerobot_mwindow \
+    --identifier ansible-linuxfabrik.lfops.uptimerobot_mwindow_info \
+    --identifier ansible-linuxfabrik.lfops.uptimerobot_psp \
+    --identifier ansible-linuxfabrik.lfops.uptimerobot_psp_info
+```
+
+On a sysv / non-journald host, the same lines land in `/var/log/messages` (Red Hat-family) or `/var/log/syslog` (Debian-family). Filter with `grep ansible-uptimerobot_`.
+
+The tag prefix is fixed in `module_utils/uptimerobot.py`; it does not change with `--verbose` and does not need any extra configuration on the controller.
+
+### Reading the debug dict from the playbook side
+
+Every CRUD and info module returns a `debug:` key alongside the resource payload. Capture it with `register:` and inspect it directly — much more compact than `-vvv`-level Ansible chatter:
+
+```yaml
+- linuxfabrik.lfops.uptimerobot_monitor:
+    friendly_name: '001 www.example.com'
+    url: 'https://www.example.com'
+    type: 'http'
+    interval: 30
+    state: 'present'
+  register: 'ur_result'
+
+- ansible.builtin.debug:
+    var: 'ur_result.debug'
+```
+
+Typical values you will see:
+
+* `operation`: `'noop'`, `'create'`, `'create (check_mode)'`, `'update'`, `'update (check_mode)'`, `'delete'`, `'delete (check_mode)'`, `'list'`, `'read'`.
+* `reason`: only set for `noop`, e.g. `'no diff'` or `'monitor not present'`.
+* `friendly_name`, `monitor_id` / `mwindow_id` / `psp_id`: identifiers of the resource the module touched.
+* `diff_fields`: list of field names that actually differ between current and desired state — what an `update` will send to the API, or what a `--check` `update (check_mode)` would send.
+* `sent_keys`: list of field names included in a `create`'s body.
+* `count`: number of items returned (info modules only).
+
+Combined with `--check --diff`, the `debug` dict makes it cheap to investigate false-positive `changed: true` (typically a missing read-side translation or a desired-vs-current normalisation gap).
 
 
 ## Migrating from the `utr` CLI
@@ -408,7 +479,30 @@ Linuxfabrik used to drive the same configuration through the standalone `utr` CL
 | `psps.yml` (top-level `psps:` list) | `uptimerobot__psps` |
 | `alertcontacts.yml` (top-level `alert_contacts:` list) | `uptimerobot__alert_contacts` |
 
-The list items use the same field names — drop them into your inventory's `group_vars/lfops_uptimerobot.yml` (or wherever) and run the playbook. The auto-generated `friendly_name` follows the same `'<prefix> <url-without-protocol>'` (monitors) and `'<type> [<value>] <start_time>-<end_time>'` (mwindows) conventions.
+The list items use the same field names — drop them into your inventory's `group_vars/lfops_uptimerobot.yml` (or wherever) and run the playbook. The auto-generated `friendly_name` follows the same `'<prefix> <url-without-protocol>'` (monitors) and `'<type> [<value>] <start_time>-<end_time>'` (mwindows) conventions, including the same prefix-collapse rule for URLs whose host already starts with the prefix (e.g. `prefix: '038'` plus URL `https://038-p-mon61…/icingaweb2/` becomes friendly_name `038-p-mon61…/icingaweb2/`).
+
+Read-side parity with `utr get …` is provided by four read-only modules — useful for ad-hoc inspection, dynamic inventories, or driving downstream tasks:
+
+| `utr` command | Ansible module |
+|---|---|
+| `utr get account` | `linuxfabrik.lfops.uptimerobot_account_info` |
+| `utr get monitors` | `linuxfabrik.lfops.uptimerobot_monitor_info` |
+| `utr get mwindows` | `linuxfabrik.lfops.uptimerobot_mwindow_info` |
+| `utr get alert_contacts` | `linuxfabrik.lfops.uptimerobot_alert_contact_info` |
+| `utr get psps` | `linuxfabrik.lfops.uptimerobot_psp_info` |
+
+All info modules accept `friendly_name:` to filter to a single resource and (where supported by the API) `search:` for a server-side substring filter. Enum-style fields are returned as labels (e.g. `http_method: 'get'`, `status: 'up'`), matching the user-facing parameter values you write in your inventory.
+
+```yaml
+- linuxfabrik.lfops.uptimerobot_monitor_info:
+    friendly_name: '001 www.example.com'
+  register: ur_monitor
+
+- ansible.builtin.debug:
+    var: ur_monitor.monitors[0].interval
+```
+
+For the equivalent of `utr set monitors --status=paused`, loop the regular `uptimerobot_monitor` module with `state: 'present'` and `status: 'paused'` over the result of `uptimerobot_monitor_info`.
 
 
 ## License
