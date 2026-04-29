@@ -528,7 +528,20 @@ All info modules accept `friendly_name:` to filter to a single resource and (whe
     var: ur_monitor.monitors[0].interval
 ```
 
-For the equivalent of `utr set monitors --status=paused`, loop the regular `uptimerobot_monitor` module with `state: 'present'` and `status: 'paused'` over the result of `uptimerobot_monitor_info`.
+For the equivalent of `utr set monitors --status=paused`, loop the regular `uptimerobot_monitor` module with `state: 'present'` and `status: 'paused'` over the result of `uptimerobot_monitor_info`. Same pattern works for the `utr set psps --status=paused` / `--status=active` workflow:
+
+```yaml
+- linuxfabrik.lfops.uptimerobot_psp_info:
+  register: 'ur_psps'
+
+- linuxfabrik.lfops.uptimerobot_psp:
+    friendly_name: '{{ item.friendly_name }}'
+    status: 'paused'   # or 'active' to resume
+    state: 'present'
+  loop: '{{ ur_psps.psps }}'
+  loop_control:
+    label: '{{ item.friendly_name }}'
+```
 
 
 ## License
