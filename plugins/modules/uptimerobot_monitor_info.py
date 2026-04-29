@@ -17,7 +17,6 @@ description:
     - Returns the full list of monitors on the UptimeRobot account, with
       enum-style fields translated to human-readable labels (C(http_method),
       C(keyword_type), C(status), C(type), nested C(alert_contacts[].type)).
-    - Equivalent of C(utr get monitors).
     - Read-only. Reports C(changed=false).
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
@@ -43,7 +42,7 @@ options:
 
 
 EXAMPLES = r'''
-# 1) Quick ad-hoc list, equivalent to `utr get monitors`. The API key is read
+# 1) Quick ad-hoc list of every monitor on the account. The API key is read
 #    from ~/.uptimerobot when not passed.
 - name: 'Capture all monitors'
   linuxfabrik.lfops.uptimerobot_monitor_info:

@@ -17,7 +17,6 @@ description:
     - Returns the full list of maintenance windows on the UptimeRobot account,
       with enum-style fields translated to human-readable labels (C(type),
       C(value), C(status)).
-    - Equivalent of C(utr get mwindows).
     - Read-only. Reports C(changed=false).
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
@@ -38,7 +37,7 @@ options:
 
 
 EXAMPLES = r'''
-# 1) Equivalent to `utr get mwindows`.
+# 1) List every maintenance window on the account.
 - name: 'Capture all maintenance windows'
   linuxfabrik.lfops.uptimerobot_mwindow_info:
   register: 'ur_mwindows'

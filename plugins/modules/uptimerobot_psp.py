@@ -54,8 +54,8 @@ options:
         type: str
     custom_url:
         description:
-            - Alias for C(custom_domain), accepted for compatibility with the
-              C(utr) YAML format.
+            - Alias for C(custom_domain). Accepted as a backward-compatible
+              spelling.
         type: str
     password:
         description: Optional password to protect the status page.

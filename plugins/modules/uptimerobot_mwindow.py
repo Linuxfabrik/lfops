@@ -17,8 +17,7 @@ description:
     - Create, update or delete a maintenance window on UptimeRobot.
     - Identification is by C(friendly_name). The window is auto-named
       C("<type> [<value>] <start_time>-<end_time>") when no C(friendly_name)
-      is given (e.g. C("weekly mon 03:30-05:30")), matching the convention
-      used by the C(utr) CLI.
+      is given (e.g. C("weekly mon 03:30-05:30")).
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:

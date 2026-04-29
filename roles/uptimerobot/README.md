@@ -98,7 +98,7 @@ UptimeRobot's API has a few sharp edges that are useful to know up front. The mo
 
     * `prefix`:
 
-        * Optional. Customer / project / inventory prefix that gets prepended to the synthesised `friendly_name`.
+        * Optional. Customer / project / inventory prefix that gets prepended to the synthesised `friendly_name`. To keep names readable, the prefix is collapsed when the URL host already starts with it (e.g. `prefix: '001'` plus URL `https://001-app.example.com/login` becomes friendly_name `001-app.example.com/login` instead of `001 001-app.example.com/login`).
         * Type: String.
 
     * `url`:
@@ -494,41 +494,30 @@ Typical values you will see:
 Combined with `--check --diff`, the `debug` dict makes it cheap to investigate false-positive `changed: true` (typically a missing read-side translation or a desired-vs-current normalisation gap).
 
 
-## Migrating from the `utr` CLI
+## Read-Only Inspection
 
-Linuxfabrik used to drive the same configuration through the standalone `utr` CLI (`uptimerobot-cli`). Migration to this role is mechanical:
+Each resource type has a parallel `*_info` module for read-only queries -- useful for ad-hoc inspection, dynamic inventories, or driving downstream tasks:
 
-| `utr` file | Inventory variable |
+| Resource | Read-only module |
 |---|---|
-| `utr.yml` (top-level `monitors:` list) | `uptimerobot__monitors` |
-| `mwindows.yml` (top-level `mwindows:` list) | `uptimerobot__mwindows` |
-| `psps.yml` (top-level `psps:` list) | `uptimerobot__psps` |
-| `alertcontacts.yml` (top-level `alert_contacts:` list) | `uptimerobot__alert_contacts` |
+| Account | `linuxfabrik.lfops.uptimerobot_account_info` |
+| Monitors | `linuxfabrik.lfops.uptimerobot_monitor_info` |
+| Maintenance windows | `linuxfabrik.lfops.uptimerobot_mwindow_info` |
+| Alert contacts | `linuxfabrik.lfops.uptimerobot_alert_contact_info` |
+| Public status pages | `linuxfabrik.lfops.uptimerobot_psp_info` |
 
-The list items use the same field names — drop them into your inventory's `group_vars/lfops_uptimerobot.yml` (or wherever) and run the playbook. The auto-generated `friendly_name` follows the same `'<prefix> <url-without-protocol>'` (monitors) and `'<type> [<value>] <start_time>-<end_time>'` (mwindows) conventions, including the same prefix-collapse rule for URLs whose host already starts with the prefix (e.g. `prefix: '038'` plus URL `https://038-p-mon61…/icingaweb2/` becomes friendly_name `038-p-mon61…/icingaweb2/`).
-
-Read-side parity with `utr get …` is provided by four read-only modules — useful for ad-hoc inspection, dynamic inventories, or driving downstream tasks:
-
-| `utr` command | Ansible module |
-|---|---|
-| `utr get account` | `linuxfabrik.lfops.uptimerobot_account_info` |
-| `utr get monitors` | `linuxfabrik.lfops.uptimerobot_monitor_info` |
-| `utr get mwindows` | `linuxfabrik.lfops.uptimerobot_mwindow_info` |
-| `utr get alert_contacts` | `linuxfabrik.lfops.uptimerobot_alert_contact_info` |
-| `utr get psps` | `linuxfabrik.lfops.uptimerobot_psp_info` |
-
-All info modules accept `friendly_name:` to filter to a single resource and (where supported by the API) `search:` for a server-side substring filter. Enum-style fields are returned as labels (e.g. `http_method: 'get'`, `status: 'up'`), matching the user-facing parameter values you write in your inventory.
+All info modules accept `friendly_name:` to filter to a single resource and (where supported by the API) `search:` for a server-side substring filter. Enum-style fields come back as labels (e.g. `http_method: 'get'`, `status: 'up'`), matching the user-facing parameter values you write in your inventory.
 
 ```yaml
 - linuxfabrik.lfops.uptimerobot_monitor_info:
     friendly_name: '001 www.example.com'
-  register: ur_monitor
+  register: 'ur_monitor'
 
 - ansible.builtin.debug:
-    var: ur_monitor.monitors[0].interval
+    var: 'ur_monitor.monitors[0].interval'
 ```
 
-For the equivalent of `utr set monitors --status=paused`, loop the regular `uptimerobot_monitor` module with `state: 'present'` and `status: 'paused'` over the result of `uptimerobot_monitor_info`. Same pattern works for the `utr set psps --status=paused` / `--status=active` workflow:
+To bulk-pause / -resume monitors or status pages, loop the matching CRUD module with `state: 'present'` over the result of the `*_info` module:
 
 ```yaml
 - linuxfabrik.lfops.uptimerobot_psp_info:

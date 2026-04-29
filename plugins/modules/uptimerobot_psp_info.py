@@ -17,7 +17,6 @@ description:
     - Returns the full list of public status pages on the UptimeRobot account,
       with enum-style fields translated to human-readable labels (C(sort),
       C(status)).
-    - Equivalent of C(utr get psps).
     - Read-only. Reports C(changed=false).
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
@@ -38,7 +37,7 @@ options:
 
 
 EXAMPLES = r'''
-# 1) Equivalent to `utr get psps`.
+# 1) List every public status page on the account.
 - name: 'Capture all public status pages'
   linuxfabrik.lfops.uptimerobot_psp_info:
   register: 'ur_psps'

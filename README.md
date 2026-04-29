@@ -418,7 +418,7 @@ LFOps also ships a small set of custom modules for resource types that are not c
 * **`lvm_pv`** — manage LVM physical volumes.
 * **`nextcloud_occ_app`**, **`nextcloud_occ_app_config`**, **`nextcloud_occ_system_config`** — drive Nextcloud `occ` from a playbook.
 * **`sqlite_query`** — run SQLite queries.
-* **`uptimerobot_*`** — manage UptimeRobot monitors, maintenance windows, public status pages and alert contacts; covers everything the standalone `utr` CLI does, with full idempotency, `--check`, `--diff` and a parallel set of `*_info` modules for read-only inspection. See the [`uptimerobot` role README](roles/uptimerobot/) for the full reference.
+* **`uptimerobot_*`** — manage UptimeRobot monitors, maintenance windows, public status pages and alert contacts via the [UptimeRobot API v2](https://uptimerobot.com/api/legacy/), with full idempotency, `--check`, `--diff` and a parallel set of `*_info` modules for read-only inspection. See the [`uptimerobot` role README](roles/uptimerobot/) for the full reference.
 
 Each custom module ships its own `DOCUMENTATION`, `EXAMPLES` and `RETURN` blocks; browse them with `ansible-doc linuxfabrik.lfops.<module>`.
 

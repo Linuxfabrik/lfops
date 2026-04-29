@@ -30,8 +30,8 @@ options:
 
 
 EXAMPLES = r'''
-# 1) Read account quota and current usage (equivalent to `utr get account`).
-#    The API key comes from ~/.uptimerobot when no parameter is given.
+# 1) Read account quota and current usage. The API key comes from
+#    ~/.uptimerobot when no parameter is given.
 - name: 'Capture UptimeRobot account info'
   linuxfabrik.lfops.uptimerobot_account_info:
   register: 'ur_account'

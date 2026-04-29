@@ -37,7 +37,7 @@ options:
     api_key_file:
         description:
             - Path to a file containing the UptimeRobot API key. Default
-              C(~/.uptimerobot) (compatible with the C(utr) CLI).
+              C(~/.uptimerobot).
         type: str
         required: false
     friendly_name:
@@ -274,8 +274,8 @@ EXAMPLES = r'''
     status: 'up'
     state: 'present'
 
-# 4) Bulk-pause every monitor of a given prefix (utr equivalent:
-#    `utr set monitors --status=paused --prefix=001`):
+# 4) Bulk-pause every monitor of a given prefix (e.g. before a deployment
+#    that would otherwise trigger spurious down-alerts):
 - name: 'Inventory monitors to pause'
   linuxfabrik.lfops.uptimerobot_monitor_info:
     search: '001 '
@@ -614,8 +614,8 @@ def main():
         desired_compare['mwindows'] = _normalize_desired_mwindows(desired_compare['mwindows'])
 
     # `http_password` and `http_auth_type` can't be diffed reliably because
-    # the API hides them in `getMonitors` responses (utr's table shows them
-    # masked as `*****`, our get returns them as null). Always send them
+    # the API hides them in `getMonitors` responses (the `auth_type` field
+    # comes back as null even when credentials are set). Always send them
     # through on edit when the user supplied them, but don't let them count
     # as a change.
     write_only = {'http_password', 'http_auth_type'}

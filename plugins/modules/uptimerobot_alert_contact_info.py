@@ -17,7 +17,6 @@ description:
     - Returns the full list of alert contacts on the UptimeRobot account,
       with enum-style fields translated to human-readable labels (C(status),
       C(type)).
-    - Equivalent of C(utr get alert_contacts).
     - Read-only. Reports C(changed=false).
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
@@ -38,7 +37,7 @@ options:
 
 
 EXAMPLES = r'''
-# 1) Equivalent to `utr get alert_contacts`.
+# 1) List every alert contact on the account.
 - name: 'Capture all alert contacts'
   linuxfabrik.lfops.uptimerobot_alert_contact_info:
   register: 'ur_alert_contacts'
