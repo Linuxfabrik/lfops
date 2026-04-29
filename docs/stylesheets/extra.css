@@ -1,10 +1,10 @@
 /* Linuxfabrik LFOps documentation site - extra styles.
  *
- * The site theme (mkdocs-material) renders tables at `width: 100%`, which
- * spreads short cells (e.g. the `x` / `(x)` markers in the Compatibility
- * matrix) across the entire viewport. Force tables to shrink to their
- * content and tighten the default cell padding / font-size / line-height
- * so the same data fits on one screen.
+ * mkdocs-material's default table styling sets `min-width: 5rem` on `<th>`
+ * cells, which keeps the OS columns of the 160-row Compatibility matrix
+ * (and every plugin parameter table) much wider than their content. Drop
+ * that minimum, shrink padding, font-size and line-height, so the same
+ * data renders compactly without horizontal scroll.
  */
 
 .md-typeset table:not([class]) {
@@ -16,6 +16,7 @@
 .md-typeset table:not([class]) th,
 .md-typeset table:not([class]) td {
     padding: 0.25em 0.55em;
+    min-width: 0;
 }
 
 /* Vertically align cell content; centred OS columns look misaligned with
