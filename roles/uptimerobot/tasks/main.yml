@@ -2,6 +2,18 @@
 # deleted) before the monitors that reference them. PSPs come last because
 # they reference monitors.
 
+- name: 'Print UptimeRobot resource counts before applying'
+  ansible.builtin.debug:
+    msg: >-
+      Will reconcile against UptimeRobot:
+      {{ uptimerobot__mwindows | length }} maintenance window(s),
+      {{ uptimerobot__monitors | length }} monitor(s),
+      {{ uptimerobot__psps | length }} public status page(s),
+      {{ uptimerobot__alert_contacts | length }} alert contact cleanup entr(y|ies).
+  tags:
+    - 'always'
+
+
 - block:
 
   - name: 'Apply UptimeRobot maintenance windows'
@@ -39,7 +51,8 @@
       api_key_file: '{{ uptimerobot__api_key_file | default(omit, true) }}'
       friendly_name: >-
         {{ item.friendly_name
-           | default(item.prefix ~ " " ~ (item.url | regex_replace("^https?://", "") | regex_replace("/$", ""))) }}
+           | default(((item.prefix ~ " " ~ (item.url | regex_replace("^https?://", "")))
+                | replace(item.prefix ~ " " ~ item.prefix, item.prefix))) }}
       url: '{{ item.url | default(omit) }}'
       type: '{{ item.type | default("http") }}'
       sub_type: '{{ item.sub_type | default(omit) }}'
@@ -68,7 +81,8 @@
     loop_control:
       label: >-
         {{ item.friendly_name
-           | default(item.prefix ~ " " ~ (item.url | regex_replace("^https?://", "") | regex_replace("/$", ""))) }}
+           | default(((item.prefix ~ " " ~ (item.url | regex_replace("^https?://", "")))
+                | replace(item.prefix ~ " " ~ item.prefix, item.prefix))) }}
 
   tags:
     - 'uptimerobot'
