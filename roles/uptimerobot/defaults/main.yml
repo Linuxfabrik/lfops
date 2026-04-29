@@ -1,0 +1,7 @@
+uptimerobot__api_key: ''
+uptimerobot__api_key_file: ''
+
+uptimerobot__alert_contacts: []
+uptimerobot__monitors: []
+uptimerobot__mwindows: []
+uptimerobot__psps: []

@@ -1,0 +1,117 @@
+# Order matters: maintenance windows and alert contacts must exist (or be
+# deleted) before the monitors that reference them. PSPs come last because
+# they reference monitors.
+
+- block:
+
+  - name: 'Apply UptimeRobot maintenance windows'
+    linuxfabrik.lfops.uptimerobot_mwindow:
+      api_key: '{{ uptimerobot__api_key | default(omit, true) }}'
+      api_key_file: '{{ uptimerobot__api_key_file | default(omit, true) }}'
+      type: '{{ item.type | default(omit) }}'
+      value: '{{ item.value | default(omit) }}'
+      start_time: '{{ item.start_time | default(omit) }}'
+      end_time: '{{ item.end_time | default(omit) }}'
+      duration: '{{ item.duration | default(omit) }}'
+      status: '{{ item.status | default(omit) }}'
+      friendly_name: '{{ item.friendly_name | default(omit) }}'
+      state: '{{ item.state | default("present") }}'
+    loop: '{{ uptimerobot__mwindows }}'
+    loop_control:
+      label: >-
+        {{ item.friendly_name
+           | default(item.type
+             ~ (" " ~ item.value if item.value is defined else "")
+             ~ " " ~ item.start_time
+             ~ "-" ~ item.end_time
+           ) }}
+
+  tags:
+    - 'uptimerobot'
+    - 'uptimerobot:mwindow'
+
+
+- block:
+
+  - name: 'Apply UptimeRobot monitors'
+    linuxfabrik.lfops.uptimerobot_monitor:
+      api_key: '{{ uptimerobot__api_key | default(omit, true) }}'
+      api_key_file: '{{ uptimerobot__api_key_file | default(omit, true) }}'
+      friendly_name: >-
+        {{ item.friendly_name
+           | default(item.prefix ~ " " ~ (item.url | regex_replace("^https?://", "") | regex_replace("/$", ""))) }}
+      url: '{{ item.url | default(omit) }}'
+      type: '{{ item.type | default("http") }}'
+      sub_type: '{{ item.sub_type | default(omit) }}'
+      port: '{{ item.port | default(omit) }}'
+      keyword_type: '{{ item.keyword_type | default(omit) }}'
+      keyword_case_type: '{{ item.keyword_case_type | default(omit) }}'
+      keyword_value: '{{ item.keyword_value | default(omit) }}'
+      interval: '{{ item.interval | default(omit) }}'
+      timeout: '{{ item.timeout | default(omit) }}'
+      status: '{{ item.status | default(omit) }}'
+      http_username: '{{ item.http_username | default(omit) }}'
+      http_password: '{{ item.http_password | default(omit) }}'
+      http_auth_type: '{{ item.http_auth_type | default(omit) }}'
+      http_method: '{{ item.http_method | default(omit) }}'
+      post_type: '{{ item.post_type | default(omit) }}'
+      post_value: '{{ item.post_value | default(omit) }}'
+      post_content_type: '{{ item.post_content_type | default(omit) }}'
+      custom_http_headers: '{{ item.custom_http_headers | default(omit) }}'
+      custom_http_statuses: '{{ item.custom_http_statuses | default(omit) }}'
+      ignore_ssl_errors: '{{ item.ignore_ssl_errors | default(omit) }}'
+      disable_domain_expire_notifications: '{{ item.disable_domain_expire_notifications | default(omit) }}'
+      alert_contacts: '{{ item.alert_contacts | default(omit) }}'
+      mwindows: '{{ item.mwindows | default(omit) }}'
+      state: '{{ item.state | default("present") }}'
+    loop: '{{ uptimerobot__monitors }}'
+    loop_control:
+      label: >-
+        {{ item.friendly_name
+           | default(item.prefix ~ " " ~ (item.url | regex_replace("^https?://", "") | regex_replace("/$", ""))) }}
+
+  tags:
+    - 'uptimerobot'
+    - 'uptimerobot:monitor'
+
+
+- block:
+
+  - name: 'Apply UptimeRobot public status pages'
+    linuxfabrik.lfops.uptimerobot_psp:
+      api_key: '{{ uptimerobot__api_key | default(omit, true) }}'
+      api_key_file: '{{ uptimerobot__api_key_file | default(omit, true) }}'
+      friendly_name: '{{ item.friendly_name }}'
+      monitors: '{{ item.monitors | default(omit) }}'
+      custom_domain: '{{ item.custom_domain | default(omit) }}'
+      custom_url: '{{ item.custom_url | default(omit) }}'
+      password: '{{ item.password | default(omit) }}'
+      sort: '{{ item.sort | default(omit) }}'
+      hide_url_links: '{{ item.hide_url_links | default(omit) }}'
+      status: '{{ item.status | default(omit) }}'
+      state: '{{ item.state | default("present") }}'
+    loop: '{{ uptimerobot__psps }}'
+    loop_control:
+      label: '{{ item.friendly_name }}'
+
+  tags:
+    - 'uptimerobot'
+    - 'uptimerobot:psp'
+
+
+- block:
+
+  - name: 'Clean up stale UptimeRobot alert contacts'
+    linuxfabrik.lfops.uptimerobot_alert_contact:
+      api_key: '{{ uptimerobot__api_key | default(omit, true) }}'
+      api_key_file: '{{ uptimerobot__api_key_file | default(omit, true) }}'
+      id: '{{ item.id | default(omit) }}'
+      friendly_name: '{{ item.friendly_name | default(omit) }}'
+      state: '{{ item.state | default("absent") }}'
+    loop: '{{ uptimerobot__alert_contacts }}'
+    loop_control:
+      label: '{{ item.friendly_name | default(item.id) }}'
+
+  tags:
+    - 'uptimerobot'
+    - 'uptimerobot:alert_contact'

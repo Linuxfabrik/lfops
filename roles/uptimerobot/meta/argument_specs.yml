@@ -1,0 +1,61 @@
+argument_specs:
+  main:
+    options:
+
+      uptimerobot__alert_contacts:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          List of alert contacts to clean up. UptimeRobot API v2 only allows
+          deleting alert contacts (creating / editing must be done via the
+          web UI), so each entry should carry `state: 'absent'` plus either
+          `id` or `friendly_name`.
+
+      uptimerobot__api_key:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          UptimeRobot API key. If empty, the modules fall back to
+          `uptimerobot__api_key_file` and finally to the
+          `UPTIMEROBOT_API_KEY` environment variable.
+
+      uptimerobot__api_key_file:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Path to a file containing the API key (default `~/.uptimerobot`,
+          compatible with the `utr` CLI).
+
+      uptimerobot__monitors:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          List of monitors to manage. The role synthesises each monitor's
+          `friendly_name` as `'<prefix> <url-without-protocol>'`. Anything
+          accepted by the `linuxfabrik.lfops.uptimerobot_monitor` module
+          (`type`, `interval`, `http_method`, `alert_contacts`, `mwindows`,
+          `state`, ...) can be set per item.
+
+      uptimerobot__mwindows:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          List of maintenance windows to manage. The role synthesises each
+          window's `friendly_name` as `'<type> [<value>] <start_time>-<end_time>'`
+          (e.g. `weekly mon 03:30-05:30`).
+
+      uptimerobot__psps:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          List of public status pages to manage. Identified by `friendly_name`.
