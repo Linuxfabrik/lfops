@@ -71,8 +71,8 @@ options:
         required: false
     sub_type:
         description:
-            - For C(type=port): which protocol/port preset to use. C(custom)
-              means "use the explicit C(port) value".
+            - For C(type=port), which protocol/port preset to use. C(custom)
+              means 'use the explicit C(port) value'.
         type: str
         choices: ['custom', 'ftp', 'http', 'https', 'imap', 'pop3', 'smtp']
         required: false
@@ -83,7 +83,7 @@ options:
         required: false
     keyword_type:
         description:
-            - For C(type=keyw): C(exist) alerts when the keyword is found,
+            - For C(type=keyw), C(exist) alerts when the keyword is found,
               C(notex) alerts when it is missing.
         type: str
         choices: ['exist', 'notex']
