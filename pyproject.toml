@@ -1,0 +1,16 @@
+# Configuration for tools that the LFOps repo runs under pre-commit.
+# This file does *not* describe the Ansible collection itself — that lives
+# in galaxy.yml. It exists only to point the linters at the right paths.
+
+[tool.vulture]
+# vulture's pre-commit hook runs with pass_filenames=false and reads its
+# target paths from here. Without this block it bails with
+# "Please pass at least one file or directory" the moment somebody touches
+# a Python file (i.e. our custom plugins).
+#
+# The whitelist file lists pre-existing findings (tracked in
+# https://github.com/Linuxfabrik/lfops/issues/221) so unrelated commits
+# don't fail the hook. Drop entries from .vulture_whitelist.py as the
+# real issues are fixed.
+paths = ["plugins", ".vulture_whitelist.py"]
+min_confidence = 80
