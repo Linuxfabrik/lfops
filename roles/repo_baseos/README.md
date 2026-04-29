@@ -3,6 +3,9 @@
 This role deploys the BaseOS repositories, which can be used to set a custom mirror server.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_baseos`

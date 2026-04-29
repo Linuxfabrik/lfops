@@ -3,6 +3,9 @@
 This role configures a backup service/timer for an objectstore to objectstore backup using the 'MinIO' client `mc`.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install the `MinIO` binary. This can be done using the [linuxfabrik.lfops.minio_client](https://github.com/Linuxfabrik/lfops/tree/main/roles/minio_client) role.

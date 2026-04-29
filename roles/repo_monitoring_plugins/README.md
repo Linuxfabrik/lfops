@@ -3,6 +3,9 @@
 This role deploys the repository at repo.linuxfabrik.ch for the Linuxfabrik Monitoring Plugins.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_monitoring_plugins`

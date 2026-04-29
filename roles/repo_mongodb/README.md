@@ -3,6 +3,9 @@
 This role deploys the package repository for [MongoDB](https://www.mongodb.com/) (a NoSQL document database).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_mongodb`

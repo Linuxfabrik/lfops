@@ -5,6 +5,9 @@ This role installs and configures a [Graylog](https://www.graylog.org) Data Node
 Note that this role does NOT let you specify a particular Graylog Data Node version. It simply installs the latest available Graylog Data Node version from the repos configured in the system.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Known Limitations
 
 * To secure your data node(s), you can either upload an existing Certificate Authority (CA) or provision a certificate directly from the Graylog interface. This role does not currently support certificate handling - it assumes that you are using the automatic data node setup.

@@ -15,6 +15,9 @@ This role is compatible with the following Redis versions:
 * 8.2
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `redis`

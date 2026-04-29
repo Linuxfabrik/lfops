@@ -12,6 +12,9 @@ This role is only compatible with the following MongoDB versions:
 * 7.0
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Enable the official [MongoDB repository](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-red-hat/#install-mongodb-community-edition). This can be done using the [linuxfabrik.lfops.repo_mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mongodb) role.

@@ -3,6 +3,9 @@
 This role installs and configures [Elastic Agent](https://www.elastic.co/elastic-agent) in Fleet-managed mode. The agent connects to a Fleet Server for centralized management and configuration.
 
 
+*Available since LFOps `6.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Enable the Elasticsearch Package Repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.

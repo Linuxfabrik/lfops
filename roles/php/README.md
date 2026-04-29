@@ -26,6 +26,9 @@ Rules of thumb:
 This role never exposes to the world that PHP is installed on the server, no matter what.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Optional Requirements
 
 * Enable the [Remi's RPM repository](https://rpms.remirepo.net/) to get newer versions of PHP. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) role.

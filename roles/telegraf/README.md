@@ -3,6 +3,9 @@
 This role installs and configures [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Enable the official [InfluxDB repository](https://docs.influxdata.com/influxdb/v1.8/introduction/install/?t=Red+Hat+%26amp%3B+CentOS). This can be done using the [linuxfabrik.lfops.repo_influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_influxdb) role.

@@ -3,6 +3,9 @@
 This role deploys the package repository for [Grafana OSS](https://grafana.com/oss/grafana/) (an open-source dashboard and metrics-visualization platform).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_grafana`

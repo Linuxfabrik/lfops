@@ -3,6 +3,9 @@
 This role configures a firewall on the system. For the currently supported firewalls, see the options for the `firewall__firewall` variable below.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * When using `firewall__firewall == fwbuilder`, you either need to manually deploy a Firewall Builder file to `/etc/fwb.sh` or use the ``firewall__fwbuilder_repo_url`` variable to clone the Firewall Builder files automatically.

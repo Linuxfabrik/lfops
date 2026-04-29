@@ -3,6 +3,9 @@
 This role deploys the [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_mariadb`

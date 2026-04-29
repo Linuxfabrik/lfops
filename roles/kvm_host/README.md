@@ -3,6 +3,9 @@
 This role installs the required packages and configures the host as a KVM host.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install Python 3, and the python3-libvirt and python3-lxml modules.

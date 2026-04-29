@@ -16,6 +16,9 @@ This role creates and manages servers (virtual machines) and volumes at the [Het
 This role does not configure the VM's network interfaces.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install the Python library `hcloud` on the Ansible control node (use `pip install --user --upgrade hcloud`).

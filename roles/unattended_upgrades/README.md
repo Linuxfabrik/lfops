@@ -5,6 +5,9 @@
 This role only supports Debian and Ubuntu. Running it against a Red Hat-family host fails because the target file does not exist there.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `unattended_upgrades`

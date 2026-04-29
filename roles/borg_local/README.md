@@ -21,6 +21,9 @@ umount /mnt/borg
 ```
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `borg_local`

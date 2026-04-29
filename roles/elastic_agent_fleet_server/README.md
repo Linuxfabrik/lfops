@@ -3,6 +3,9 @@
 This role installs and configures [Elastic Agent](https://www.elastic.co/elastic-agent) as a Fleet Server. The Fleet Server acts as the control plane for managing Elastic Agents and connecting them to Elasticsearch and Kibana.
 
 
+*Available since LFOps `6.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Enable the Elasticsearch Package Repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.

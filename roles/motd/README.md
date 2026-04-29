@@ -3,6 +3,9 @@
 This role ensures that login warning banners are configured properly (according to CIS).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `motd`

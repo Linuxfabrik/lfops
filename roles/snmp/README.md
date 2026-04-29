@@ -3,6 +3,9 @@
 [SNMP](http://www.net-snmp.org/) (Simple Network Management Protocol) is the de-facto standard for querying device metrics (CPU, RAM, interface counters, ...) from monitoring systems like LibreNMS, Icinga or Prometheus (via `snmp_exporter`). This role installs the `net-snmp` daemon (`snmpd`) and deploys an `snmpd.conf` with the configured read-only community plus contact / location info.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `snmp`

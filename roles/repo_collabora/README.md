@@ -8,6 +8,9 @@ Supported Versions:
 * 24.04
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_collabora`

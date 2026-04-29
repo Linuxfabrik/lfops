@@ -7,6 +7,9 @@ This role is tested with the following IcingaWeb2 GenericTTS Module versions:
 * 2.1.0
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## How the Role Behaves
 
 * The Tarball for `icingaweb2_module_generictts__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.

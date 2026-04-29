@@ -38,6 +38,7 @@ DOCUMENTATION = """
 ---
 module: ipapwpolicy
 short_description: Manage FreeIPA pwpolicies
+version_added: "6.0.0"
 description: Manage FreeIPA pwpolicies
 extends_documentation_fragment:
   - ipamodule_base_docs

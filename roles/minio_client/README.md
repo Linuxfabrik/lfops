@@ -3,6 +3,9 @@
 This role installs the MinIO client binary, including bash completion and sets config location to `/etc/mc/`.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `minio_client`

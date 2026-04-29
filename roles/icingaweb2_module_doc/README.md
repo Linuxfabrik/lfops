@@ -3,6 +3,9 @@
 This role enables the [IcingaWeb2 Doc Module](https://icinga.com/docs/icinga-web-2/latest/modules/doc/doc/01-About/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.

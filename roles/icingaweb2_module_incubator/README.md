@@ -8,6 +8,9 @@ This role is tested with the following IcingaWeb2 Incubator Module versions:
 * 0.20.0
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## How the Role Behaves
 
 * The Tarball for `icingaweb2_module_incubator__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.

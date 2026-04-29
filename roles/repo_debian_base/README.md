@@ -7,6 +7,9 @@ Supported Debian versions: 10, 11, 12. The version is auto-detected via `ansible
 After deploying the sources list, the role removes any `.rpmnew` / `.dpkg-dist` / `.ucf-dist` siblings if `lfops__remove_rpmnew_rpmsave: true` is set globally. By default these files are kept.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_debian_base`

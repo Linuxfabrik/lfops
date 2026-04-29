@@ -8,6 +8,9 @@ This role is tested with the following IcingaWeb2 vSphereDB Module versions:
 * 1.7.1
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.

@@ -24,6 +24,9 @@ By default, Ansible runs each task on all hosts affected by a play before starti
 Hardenings that can be covered by this role: See [STIGs](https://github.com/Linuxfabrik/lfops/blob/main/STIGs.md)
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * For some machines you might need to set `ansible_python_interpreter: '/usr/bin/python3'` to prevent the error message `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`.

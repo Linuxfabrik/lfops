@@ -10,6 +10,9 @@
 * compiles and installs custom SELinux policy modules from source (.te, .fc, .if files). Note: Module installation is not idempotent - modules with `state: present` will always be compiled and installed on each run
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install the SELinux python bindings. This can be done using the [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) role.

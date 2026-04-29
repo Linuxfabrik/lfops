@@ -12,6 +12,9 @@ Setting the version manually:
 * `ansible-playbook --inventory=myansinv linuxfabrik.lfops.setup_moodle --tags=moodle --extra-vars="moodle__github_version=v4.1.12"`
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Attention: Moodle has very specific version requirements regarding PHP and Redis. See https://moodledev.io/general/development/policies/php.

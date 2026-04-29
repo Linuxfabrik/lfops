@@ -3,6 +3,9 @@
 This role installs and configures [Rocket.Chat](https://www.rocket.chat/), an Open-Source Chat system, as a Podman container.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.

@@ -3,6 +3,9 @@
 This role deploys the official [PostgreSQL Repo](https://www.postgresql.org/download/linux/redhat/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_postgresql`

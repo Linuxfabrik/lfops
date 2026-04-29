@@ -3,6 +3,9 @@
 This role deploys the Monitoring Plugins Grafana Dashboards for a Grafana Server using [grizzly](https://grafana.github.io/grizzly/).
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install and configure Grafana with the required provisioning config. This can be done using the [linuxfabrik.lfops.grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/grafana) role.

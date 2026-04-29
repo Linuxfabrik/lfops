@@ -12,6 +12,9 @@ This role keeps `ansinv` itself, LFOps, the configured inventories / extra roles
 * Installs recommended Ansible collections (from LFOps `requirements.txt`)
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `ansible_init`

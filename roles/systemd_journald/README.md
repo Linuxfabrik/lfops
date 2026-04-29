@@ -16,6 +16,9 @@ Example with numbers on a 100G disk:
 Whenever journald needs to free space, it computes `min(90G, 20G)`, and then deletes archived journal files until usage <= that value. Here, journald will grow the journal up to about 20G, then start deleting archived files to stay under that cap.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `systemd_journald`

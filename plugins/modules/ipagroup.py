@@ -37,6 +37,7 @@ DOCUMENTATION = """
 ---
 module: ipagroup
 short_description: Manage FreeIPA groups
+version_added: "6.0.0"
 description: Manage FreeIPA groups
 extends_documentation_fragment:
   - ipamodule_base_docs

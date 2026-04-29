@@ -3,6 +3,9 @@
 This role deploys the [Extra Packages for Enterprise Linux (EPEL) Repository](https://docs.fedoraproject.org/en-US/epel/).
 
 
+*Available since LFOps `1.0.0`.*
+
+
 ## Tags
 
 `repo_epel`

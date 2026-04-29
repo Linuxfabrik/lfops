@@ -3,6 +3,9 @@
 This role deploys the package repository for [GitLab Runner](https://docs.gitlab.com/runner/) (the agent that runs CI/CD jobs scheduled by a GitLab server).
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `repo_gitlab_runner`

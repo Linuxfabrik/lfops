@@ -3,6 +3,9 @@
 This role deploys the package repository for [Docker CE](https://www.docker.com/) (the open-source container engine).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_docker`

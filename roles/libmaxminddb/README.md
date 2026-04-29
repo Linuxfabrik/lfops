@@ -9,6 +9,9 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
 3. maxmind_geoip
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## How the Role Behaves
 
 * Build dependencies are OS-specific:

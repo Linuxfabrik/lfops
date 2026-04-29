@@ -7,6 +7,9 @@ This role is tested with the following Icinga for Kubernetes versions:
 * 0.3.0
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Mandatory Requirements
 
 * A configured Icinga2 Master Setup. This can be done using the [linuxfabrik.lfops.setup_icinga2_master](https://github.com/linuxfabrik/lfops/tree/main/playbooks/setup_icinga2_master.yml) playbook.

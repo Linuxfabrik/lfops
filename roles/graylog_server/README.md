@@ -7,6 +7,9 @@ Additionally this role creates default "System Inputs" and a Linuxfabrik default
 Note that this role does NOT let you specify a particular Graylog Server version. It simply installs the latest available Graylog Server version from the repos configured in the system. If you want or need to install a specific Graylog Server version, use the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) beforehand.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Known Limitations
 
 * This role only supports Graylog Data Nodes (not OpenSearch or Elasticsearch).

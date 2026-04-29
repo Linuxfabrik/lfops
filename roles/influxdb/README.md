@@ -3,6 +3,9 @@
 This role installs and configures [InfluxDB](https://www.influxdata.com/products/influxdb-overview/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install `influxdb` and `requests` into a Python 3 virtual environment in `/opt/python-venv/influxdb`. This can be done using the [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv) role.

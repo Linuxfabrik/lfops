@@ -15,6 +15,9 @@ Hints for configuring TLS:
 * Node certificates must either have `extendedKeyUsage = serverAuth, clientAuth` (`TLS Web Server Authentication`, `TLS Web Client Authentication`, respectively) set, or no `Extended Key Usage` at all. Otherwise `securityadmin.sh` fails with: `ERR: An unexpected SSLHandshakeException occured: Received fatal alert: certificate_unknown`
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Enable the official OpenSearch repository. This can be done using the [linuxfabrik.lfops.repo_opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_opensearch) role.

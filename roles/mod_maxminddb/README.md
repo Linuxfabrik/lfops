@@ -12,6 +12,9 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
 3. maxmind_geoip
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 Apache has to be installed and at least one `LoadModule` directive already has to exist, otherwise the compile step might fail. If you get `apxs:Error: Activation failed for custom /etc/httpd/conf/httpd.conf file..` or `apxs:Error: At least one 'LoadModule' directive already has to exist..`, check whether `mod_maxminddb.so` has been built (this is the reason why errors of `make install` are ignored — the module is compiled anyway).

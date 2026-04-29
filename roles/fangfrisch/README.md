@@ -3,6 +3,9 @@
 This role installs and configures [Fangfrisch](https://rseichter.github.io/fangfrisch/), a tool that "allows downloading virus definition files that are not official ClamAV canon".
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Mandatory Requirements
 
 * A Python virtual environment `/opt/python-venv/clamav-fangfrisch/` with `fangfrisch` installed. This can be done using the [linuxfabrik.lfops.python_venv](https://github.com/linuxfabrik/lfops/tree/main/roles/python_venv) role.

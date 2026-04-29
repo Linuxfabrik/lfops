@@ -9,6 +9,9 @@ Hints:
 * When priorities are equal, the system will pick the first one that was registered (but you should avoid duplicate priorities to prevent ambiguity).
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `alternatives`

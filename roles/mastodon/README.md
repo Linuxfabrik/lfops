@@ -3,6 +3,9 @@
 This role installs and configures [Mastodon](https://joinmastodon.org/), a federated microblogging platform, as Podman containers.
 
 
+*Available since LFOps `4.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Enable the PostgreSQL repository. This can be done using the [linuxfabrik.lfops.repo_postgresql](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_postgresql) role.

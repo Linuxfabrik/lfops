@@ -3,6 +3,9 @@
 This role installs [Keycloak](https://www.keycloak.org/guides#getting-started).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 Minimum supported Keycloak version:

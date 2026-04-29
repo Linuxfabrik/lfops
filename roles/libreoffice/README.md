@@ -5,6 +5,9 @@ This role installs LibreOffice on a server, intended for headless operation and 
 By default it only installs `libreoffice-core` plus the writer / calc / impress / draw / math packages. With `libreoffice__client_apache: true` it additionally prepares the host for using LibreOffice from an Apache HTTPd context (Red Hat only).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## What `libreoffice__client_apache: true` Does
 
 Setting this to `true` triggers a Red Hat-specific block. On Debian / Ubuntu the block is not skipped automatically; the SELinux compile steps will fail there, so do not enable this on Debian-family hosts.

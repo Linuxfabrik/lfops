@@ -3,6 +3,9 @@
 This role deploys the package repository for [GitLab CE](https://about.gitlab.com/) (a self-hosted Git platform with built-in CI/CD).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_gitlab_ce`

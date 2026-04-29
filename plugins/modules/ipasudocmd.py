@@ -39,6 +39,7 @@ DOCUMENTATION = """
 ---
 module: ipasudocmd
 short_description: Manage FreeIPA sudo command
+version_added: "6.0.0"
 description: Manage FreeIPA sudo command
 extends_documentation_fragment:
   - ipamodule_base_docs

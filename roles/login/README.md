@@ -7,6 +7,9 @@ IMPORTANT:
 
 * The default behavior of this role is that it distributes SSH keys that it knows from the host/group variables and deletes any other keys that already exist on the target system in `.ssh/authorized_keys`. This might break things. Set `remove_other_sshd_authorized_keys` accordingly.
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install the `passlib` Python module on the Ansible Controller (`dnf install python3-passlib` on Fedora). If you use the [LFOps Execution Environment](https://github.com/Linuxfabrik/lfops/pkgs/container/lfops_ee), this is already done for you.

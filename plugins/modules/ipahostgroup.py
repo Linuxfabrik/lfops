@@ -38,6 +38,7 @@ DOCUMENTATION = """
 ---
 module: ipahostgroup
 short_description: Manage FreeIPA hostgroups
+version_added: "6.0.0"
 description: Manage FreeIPA hostgroups
 extends_documentation_fragment:
   - ipamodule_base_docs

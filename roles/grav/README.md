@@ -5,6 +5,9 @@ This role installs Grav (a simple file-based flat-file CMS platform) using PHP c
 It is possible to configure whether the Grav Admin Panel should be installed (it is installed by default). By default, you can access the admin by pointing your browser to http://grav.example.com/admin. You can simply log in with the username and password set in the role variables.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install a web server (for example Apache httpd), and configure a virtual host for Grav. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.

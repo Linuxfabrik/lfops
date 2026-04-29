@@ -5,6 +5,9 @@ This role installs and enables [Linuxfabrik's IcingaWeb2 Theme](https://github.c
 The role does not have a dedicated playbook. It is normally pulled in via the [`setup_icinga2_master`](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_icinga2_master.yml) playbook and can be skipped there with `setup_icinga2_master__icingaweb2_theme_linuxfabrik__skip_role: true`.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## How the Role Behaves
 
 * The Tarball for `icingaweb2_theme_linuxfabrik__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.

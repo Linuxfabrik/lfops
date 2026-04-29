@@ -13,6 +13,9 @@ wget http://www.eicar.org/download/eicarcom2.zip
 ```
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Optional Requirements
 
 * Enable the `antivirus_can_scan_system` and `antivirus_use_jit` SELinux Booleans. This can be done using the [linuxfabrik.lfops.selinux](https://github.com/linuxfabrik/lfops/tree/main/roles/selinux) role.

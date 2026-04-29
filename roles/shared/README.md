@@ -3,6 +3,9 @@
 This role bundles helper tasks reused across other LFOps roles and playbooks. It is not designed to be run as a whole; instead, callers import individual tasks via `import_role` / `include_role` with `tasks_from:`.
 
 
+*Available since LFOps `2.0.1`.*
+
+
 ## Available Tasks
 
 `log-start.yml` and `log-end.yml`

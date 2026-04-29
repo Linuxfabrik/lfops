@@ -3,6 +3,9 @@
 This role deploys the [Remi's RPM repository](https://rpms.remirepo.net/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * For RHEL7, install `yum-utils`. This can be done using the [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils) role.

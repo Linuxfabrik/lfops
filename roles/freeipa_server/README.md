@@ -5,6 +5,9 @@ This role installs and configures [FreeIPA](https://www.freeipa.org/) as a serve
 Ideally, the FreeIPA should be installed on a separate server. If that is not possible, you could group it with DNS and NTP on an infrastructure server. As a last resort you can install it on the central firewall / gateway server.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * At least 2 GB RAM are required.

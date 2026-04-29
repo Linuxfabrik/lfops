@@ -3,6 +3,9 @@
 This role creates and manages instances (virtual machines) on [Exoscale](https://www.exoscale.com/). It also allows creating other compontents for the instance, such as networks and firewall rules.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Known Limitations
 
 * Resizing / scaling of instances is currently not supported

@@ -3,6 +3,9 @@
 This role deploys the [ProxySQL Package Repository](https://proxysql.com/documentation/installing-proxysql/).
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `repo_proxysql`

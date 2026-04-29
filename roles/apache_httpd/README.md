@@ -3,6 +3,9 @@
 This role installs and configures a CIS-compliant [Apache httpd](https://httpd.apache.org/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## What this Role does
 
 This role configures Apache using a Debian-style layout with `conf-available/conf-enabled`, `mods-available/mods-enabled`, and `sites-available/sites-enabled` directories. On Red Hat-based systems, this means a significant restructuring of the default Apache configuration. The goal is to make adding and removing mods, virtual hosts, and extra configuration directives as flexible as possible, regardless of the underlying platform.

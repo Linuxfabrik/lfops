@@ -19,6 +19,9 @@ Notes:
 * If activating AJP, this role currently sets `secretRequired` to `false`.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Multiple Tomcat Instances
 
 How to deploy multiple Tomcat instances on a single server using this and other roles? Imagine you want to run an 'author' and a 'public' instance. Place your config files in `host_files` (for example `host_files/{{ inventory_hostname }}/var/lib/tomcats/{author,public}/conf/{context,server}.xml` and deploy like this:

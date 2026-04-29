@@ -4,6 +4,9 @@ This role deploys a repository for the mydumper package.
 Note that Linuxfabrik currently uses its [own repository server](https://repo.linuxfabrik.ch/) for RedHat-based Distros.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_mydumper`

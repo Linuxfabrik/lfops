@@ -8,6 +8,9 @@ This role is tested with the following IcingaWeb2 Director Module versions:
 * 1.10.2.2023042001
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.

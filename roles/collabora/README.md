@@ -3,6 +3,9 @@
 This role installs and configures either [Collabora Online Development Edition](https://www.collaboraoffice.com/code/) or [Collabora Online Enterprise Edition](https://www.collaboraoffice.com/collabora-online-3/). Note: To use Collabora Enterprise, you need an active [Collabora Subscription](https://www.collaboraoffice.com/subscriptions-2/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Enable either the official [Collabora CODE Repository](https://docs.fedoraproject.org/en-US/collabora_code/) or your Collabora Enterprise Repository. This can be done using the [linuxfabrik.lfops.repo_collabora_code](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora_code) role.

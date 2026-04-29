@@ -3,6 +3,9 @@
 This role deploys the [Opensearch Package Repository](https://opensearch.org/docs/latest/opensearch/install/rpm/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_opensearch`

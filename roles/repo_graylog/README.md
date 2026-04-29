@@ -3,6 +3,9 @@
 This role deploys the [Graylog Repository](https://docs.graylog.org/docs/operating-system-packages). Although the Graylog project doesn't recommend to do that, LFOps prefers to install the repository configuration manually, because it's the only way to handle custom mirror servers.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_graylog`

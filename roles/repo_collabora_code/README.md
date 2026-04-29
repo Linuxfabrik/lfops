@@ -3,6 +3,9 @@
 This role deploys the official [Collabora CODE Repository](https://docs.fedoraproject.org/en-US/collabora_code/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_collabora_code`

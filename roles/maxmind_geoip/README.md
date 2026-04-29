@@ -9,6 +9,9 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
 3. maxmind_geoip (this role)
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## How the Role Behaves
 
 * The role itself only deploys the update script. The companion `linuxfabrik.lfops.systemd_unit` role (called by the playbook) creates the `update-maxmind.service` (oneshot) and `update-maxmind.timer` (`OnCalendar=weekly`). The service is *not* enabled directly; the timer is what fires it.

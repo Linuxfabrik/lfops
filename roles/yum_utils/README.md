@@ -3,6 +3,9 @@
 This role installs the `yum-utils` or `dnf-utils` package.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `yum_utils`

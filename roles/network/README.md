@@ -9,6 +9,9 @@ Concretely, this role:
 * Prints a reminder that NetworkManager may need to be restarted by hand (`systemctl restart NetworkManager`) for the new configuration to take full effect — the upstream role applies connections via NetworkManager APIs, but a few changes (e.g. plugin reloads) require a service restart.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install the [Linux System Roles](https://linux-system-roles.github.io/) on the Ansible control node, e.g. via `ansible-galaxy collection install fedora.linux_system_roles`.

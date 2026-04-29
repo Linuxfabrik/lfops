@@ -7,6 +7,9 @@ This role configures the server to do (weekly) system updates by deploying two s
 * and, if necessary, automatically reboots the host after the updates.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install at. This can be done using the [linuxfabrik.lfops.at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at) role.

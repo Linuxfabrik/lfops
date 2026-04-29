@@ -5,6 +5,9 @@ This role installs and configures Elasticsearch, either as a single-node instanc
 Note that this role does NOT let you specify a particular Elasticsearch server version. It simply installs the latest available Elasticsearch server version from the repos configured in the system. If you want or need to install a specific version, have a look at the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
 
 
+*Available since LFOps `5.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Enable the official Elasticsearch repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.

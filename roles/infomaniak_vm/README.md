@@ -3,6 +3,9 @@
 This role creates and manages instances (virtual machines) on [Infomaniak](https://www.infomaniak.com/). It also allows creating other compontents for the instance, such as networks and firewall rules.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install the [openstack command line tool](https://docs.openstack.org/newton/user-guide/common/cli-install-openstack-command-line-clients.html).

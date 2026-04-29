@@ -5,6 +5,9 @@ This role installs the [Open VM Tools](https://github.com/vmware/open-vm-tools/)
 This role only makes sense on VMware-virtualized guests. On other virtualization platforms (KVM, Hyper-V, ...) the package may install but the daemon will not have anything useful to talk to.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `open_vm_tools`

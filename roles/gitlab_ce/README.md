@@ -6,6 +6,9 @@ This role installs and configures [GitLab CE](https://about.gitlab.com/), includ
 * One of the first steps after that would be to deactivate the registration form: In the left sidebar, select Admin > Settings > General, and expand "Sign-up restrictions". Clear the "Sign-up enabled" checkbox, then select "Save changes" (you can't disable signups without using the UI).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Enable the official GitLab CE Repository. This can be done using the [linuxfabrik.lfops.repo_gitlab_ce](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_gitlab_ce) role.

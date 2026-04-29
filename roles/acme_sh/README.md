@@ -11,6 +11,9 @@ SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-chain.crt
 ```
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install `openssl`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.

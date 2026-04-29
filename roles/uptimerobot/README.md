@@ -3,6 +3,9 @@
 This role applies a declarative UptimeRobot configuration (monitors, maintenance windows, public status pages, and alert-contact cleanup) against an [UptimeRobot](https://uptimerobot.com/) account.
 
 
+*Available since LFOps `6.0.2`.*
+
+
 ## What is UptimeRobot
 
 UptimeRobot is a hosted uptime-monitoring service. You configure *monitors* (HTTP / keyword / port / ping / heartbeat checks), wire them up to *alert contacts* (email, SMS, webhook, Slack, ...), schedule *maintenance windows* during which alerts are suppressed, and optionally publish a *public status page* (PSP) that aggregates a set of monitors. Everything lives in UptimeRobot's cloud — there is no agent on your hosts.

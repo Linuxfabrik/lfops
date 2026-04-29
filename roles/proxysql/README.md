@@ -3,6 +3,9 @@
 This role installs and configures [ProxySQL](https://proxysql.com/). Note that running this role always reloads the config from `/etc/proxysql.cnf` into ProxySQL's internal database.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `proxysql`

@@ -7,6 +7,9 @@ This role is tested with the following IcingaWeb2 Reporting Module versions:
 * 1.0.2
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Mandatory Requirements
 
 * A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.

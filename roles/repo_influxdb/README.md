@@ -3,6 +3,9 @@
 This role deploys the package repository for [InfluxDB](https://www.influxdata.com/products/influxdb/) (a time-series database commonly used for metrics).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_influxdb`

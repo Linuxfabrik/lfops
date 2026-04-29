@@ -3,6 +3,9 @@
 This role installs the SELinux policy core python utilities.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `policycoreutils`

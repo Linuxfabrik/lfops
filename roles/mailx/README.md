@@ -3,6 +3,9 @@
 This role installs [mailx](http://heirloom.sourceforge.net/mailx.html) and deploys a bash wrapper script that makes sending mail easier to `/root/send-mail`.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `mailx`

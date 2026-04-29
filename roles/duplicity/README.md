@@ -5,6 +5,9 @@ This role configures *daily file-based* backups using [duplicity](https://duplic
 Note that this role does not support running with `--check`, as it first creates a GPG-Key which is required for the rest of the role.
 
 
+*Available since LFOps `1.0.0`.*
+
+
 ## duba (Duplicity Backup)
 
 The role comes with the special Python wrapper script `duba` for duplicity, implemented by Linuxfabrik. The script currently does a massive parallel backup to a Swift storage backend with duplicity, where the number of duplicity processes is ``min(processor count, 6) + 1``. The script's configuration file is located at `/etc/duba/duba.json`.

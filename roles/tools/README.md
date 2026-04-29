@@ -30,6 +30,9 @@ Bash:
 * Colorizes the Bash prompt and sets it to something like `[17:30:19 user@server Rocky8 ~]$ `
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.

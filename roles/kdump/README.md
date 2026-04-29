@@ -3,6 +3,9 @@
 [kdump](https://docs.kernel.org/admin-guide/kdump/kdump.html) is the Linux kernel crash-dump mechanism: when the running kernel panics, a pre-loaded "capture kernel" boots and writes a `vmcore` file to disk for post-mortem analysis. The capture kernel needs RAM permanently reserved at boot via the `crashkernel=` cmdline option, which is wasted on most production servers. This role stops and disables the `kdump.service` so the daemon no longer runs; the `crashkernel=` reservation itself is *not* touched (use the `kernel_settings` role for that).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `kdump`

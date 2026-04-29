@@ -5,6 +5,9 @@ This role deploys `/etc/ssh/sshd_config` for [OpenSSH](https://www.openssh.com/)
 Note that the role does not make use of `/etc/ssh/sshd_config.d/` since not all options can be overwritten there (e.g. `Subsystem 'sftp' already defined`); the full `sshd_config` is templated instead.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install Python 3, and the python3-policycoreutils module (required for the SELinux Ansible tasks). This can be done using the [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) role.

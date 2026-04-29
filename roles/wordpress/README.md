@@ -5,6 +5,9 @@ This role installs and configures the [WordPress CMS](https://wordpress.com/).
 Attention: It is intended that when you call `http://{wordpress__url}}` you will get a white page because no theme is installed. `http://{wordpress__url}}/wp-admin` works as expected.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install a web server (for example Apache httpd), and configure a virtual host for Nextcloud. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.

@@ -14,6 +14,7 @@ DOCUMENTATION = r'''
 ---
 module: sqlite
 short_description: Run SQLite queries
+version_added: "2.0.0"
 description:
    - Runs arbitrary SQLite queries.
 options:

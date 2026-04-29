@@ -3,6 +3,9 @@
 This role deploys the [RPM Fusion](https://rpmfusion.org/RPM%20Fusion) free and nonfree Repositories.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Enable the EPEL Repository. This can be done using the [linuxfabrik.lfops.epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/epel) role.

@@ -3,6 +3,9 @@
 This role installs and configures a [PostgreSQL](https://www.postgresql.org/) server.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install the `python3-psycopg2` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.

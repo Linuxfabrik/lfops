@@ -3,6 +3,9 @@
 This role sets the system hostname (the name returned by `hostname` / `hostnamectl status` and stored in `/etc/hostname`) via the `ansible.builtin.hostname` module. The new name is applied immediately and persists across reboots.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `hostname`

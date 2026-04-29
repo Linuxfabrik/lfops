@@ -2,6 +2,9 @@
 
 This role installs and configures [bind](https://www.isc.org/bind/) as a DNS server, either as a primary or secondary.
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `bind`

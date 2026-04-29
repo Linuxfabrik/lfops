@@ -3,6 +3,9 @@
 This role installs and configures [rsyslog](https://www.rsyslog.com/). Useful for configuring log forwarding, for example to a Graylog server.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `rsyslog`

@@ -7,6 +7,9 @@ This role is tested with the following IcingaWeb2 Company Module versions:
 * 1.0.0
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## How the Role Behaves
 
 * The version is hard-coded to `v1.0.0` in `tasks/main.yml`. No version variable is exposed.

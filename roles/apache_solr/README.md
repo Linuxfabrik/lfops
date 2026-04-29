@@ -9,6 +9,9 @@ This Ansible role
 * but currently does not create any cores or collections.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Mandatory Requirements
 
 * Install Java 11+. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role. Java OpenJDK latest is recommended.
