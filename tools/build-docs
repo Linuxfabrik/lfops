@@ -505,6 +505,11 @@ def generate_mkdocs_yml(roles, plugin_pages):
     lines.append("  - admonition")
     lines.append("  - attr_list")
     lines.append("  - def_list")
+    # md_in_html lets python-markdown process Markdown syntax inside HTML
+    # blocks, which the README's `<div align=\"center\" id=\"badges\">…</div>`
+    # block needs so the inline `![…](…)` shields.io image links render as
+    # actual badges instead of raw text.
+    lines.append("  - md_in_html")
     lines.append("  - tables")
     lines.append("  - toc:")
     lines.append("      permalink: true")

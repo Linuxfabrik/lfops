@@ -75,7 +75,7 @@ jobs:
 
       - name: 'Strip badges from README.md (not rendered correctly on Galaxy)'
         run: |
-          sed --in-place '/<div align="center" id="badges">/,/<\/div>/d' README.md
+          sed --in-place '/<div align="center" id="badges"[^>]*>/,/<\/div>/d' README.md
 
       - name: 'Build Collection'
         run: |
