@@ -39,7 +39,6 @@ TOP_LEVEL_DOCS = [
     ('COMPATIBILITY.md', 'compatibility.md', 'Compatibility'),
     ('CONTRIBUTING.md', 'contributing.md', 'Contributing'),
     ('SECURITY.md', 'security.md', 'Security'),
-    ('STIGs.md', 'stigs.md', 'STIGs'),
 ]
 
 # Playbooks README
@@ -405,15 +404,13 @@ def generate_mkdocs_yml(roles, plugin_pages):
     lines.append("")
 
     # Build nav. The "Linuxfabrik LFOps" section groups the project meta pages
-    # (Home, Compatibility, Playbooks, STIGs, Security, Contributing). The
-    # technical content (Roles, Modules) lives below as its own collapsible
-    # section.
+    # (Home, Compatibility, Playbooks, Security, Contributing). The technical
+    # content (Roles, Modules) lives below as its own collapsible section.
     lines.append("nav:")
     lines.append("  - 'Linuxfabrik LFOps':")
     lines.append("      - 'Home': 'index.md'")
     lines.append("      - 'Compatibility': 'compatibility.md'")
     lines.append("      - 'Playbooks': 'playbooks.md'")
-    lines.append("      - 'STIGs': 'stigs.md'")
     lines.append("      - 'Security': 'security.md'")
     lines.append("      - 'Contributing': 'contributing.md'")
     lines.append("  - 'Roles':")
