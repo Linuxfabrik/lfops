@@ -45,14 +45,14 @@ options:
         choices: ['daily', 'monthly', 'once', 'weekly']
     value:
         description:
-            - For C(weekly): day of week (C(mon)..C(sun)).
-            - For C(monthly): day of the month (C(1)..C(31)).
-            - For C(once): unused.
+            - For C(weekly), day of week (C(mon)..C(sun)).
+            - For C(monthly), day of the month (C(1)..C(31)).
+            - For C(once), unused.
         type: str
     start_time:
         description:
-            - For C(once): RFC3339 timestamp.
-            - For C(daily) / C(weekly) / C(monthly): C(HH:MM).
+            - For C(once), RFC3339 timestamp.
+            - For C(daily) / C(weekly) / C(monthly), C(HH:MM).
         type: str
     end_time:
         description:
