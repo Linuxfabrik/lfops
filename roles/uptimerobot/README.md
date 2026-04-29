@@ -373,12 +373,38 @@ ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.uptimerobot --t
 ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.uptimerobot --check --diff
 ```
 
-For ad-hoc / read-only queries against UptimeRobot, the modules can be invoked directly without the role:
+For ad-hoc / read-only queries against UptimeRobot, the modules can be invoked directly without the role -- either from the shell (one-shot) or from a playbook task. Both forms read the API key from `~/.uptimerobot` by default; pass `api_key_file=...` or `api_key=...` to override.
+
+**Shell one-liners** (no inventory, no playbook -- the module runs against the implicit `localhost`):
+
+```bash
+# Account stats: monitor quota, SMS credits, plan / expiry
+ansible localhost -m linuxfabrik.lfops.uptimerobot_account_info
+
+# All monitors / one monitor / search prefix
+ansible localhost -m linuxfabrik.lfops.uptimerobot_monitor_info
+ansible localhost -m linuxfabrik.lfops.uptimerobot_monitor_info \
+    -a 'friendly_name="001 www.example.com/index.php/login"'
+ansible localhost -m linuxfabrik.lfops.uptimerobot_monitor_info -a 'search="001 "'
+
+# Maintenance windows / alert contacts / public status pages
+ansible localhost -m linuxfabrik.lfops.uptimerobot_mwindow_info
+ansible localhost -m linuxfabrik.lfops.uptimerobot_alert_contact_info
+ansible localhost -m linuxfabrik.lfops.uptimerobot_psp_info
+
+# Pause one monitor (a CRUD call -- changed=true on first run, idempotent after)
+ansible localhost -m linuxfabrik.lfops.uptimerobot_monitor \
+    -a 'friendly_name="001 maintenance-mode.example.com" status=paused state=present'
+```
+
+The `[WARNING] No inventory was parsed, only implicit localhost is available` line you see in that mode is harmless -- the modules don't need a real inventory.
+
+**Playbook task** (when the result needs to drive a downstream task, run on every host of a group, or chain through `register:` / `assert:`):
 
 ```yaml
 - name: 'Check UptimeRobot account quota'
   linuxfabrik.lfops.uptimerobot_account_info:
-  register: ur_account
+  register: 'ur_account'
   delegate_to: 'localhost'
 
 - name: 'Pause one monitor'
