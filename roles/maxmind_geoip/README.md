@@ -60,11 +60,15 @@ maxmind_geoip__skip_systemd_unit: true
 ```
 
 
-## Advanced: Changing the Schedule
+`maxmind_geoip__systemd_unit__timers__dependent_var`
 
-The default `OnCalendar=weekly` schedule is set via `maxmind_geoip__systemd_unit__timers__dependent_var` in `defaults/main.yml`. To change it, override the whole list in your inventory:
+* Schedule of the `update-maxmind` timer (passed through to the `linuxfabrik.lfops.systemd_unit` role). Override the whole list in your inventory to change `OnCalendar=` or any other timer directive.
+* Type: List.
+* Default: `OnCalendar=weekly` (see `defaults/main.yml`).
 
+Example:
 ```yaml
+# optional
 maxmind_geoip__systemd_unit__timers__dependent_var:
   - name: 'update-maxmind'
     raw_timer: |-

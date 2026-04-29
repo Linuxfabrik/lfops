@@ -7,11 +7,7 @@ This role installs [glances](https://nicolargo.github.io/glances/) and drops a s
 
 * On RHEL-compatible systems, the EPEL repository (provides the `glances` package). The companion playbook (`playbooks/glances.yml`) takes care of this automatically by also running [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) on RHEL 7/8/9 hosts.
 * On Rocky Linux 9, the CRB repository (moved from EPEL into the base repo on Rocky 9). The playbook also runs [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) for that distribution / version unless skipped (see below).
-
-
-## Platform Support
-
-`glances` is currently **not packaged in EPEL 10**, so this role fails with `No package glances available.` on RHEL 10 and clones (Rocky / Alma 10). Install glances manually (e.g. via `pip install glances` in a venv, or from a third-party repo) on those hosts and skip this role.
+* `glances` is currently **not packaged in EPEL 10**, so this role fails with `No package glances available.` on RHEL 10 and clones (Rocky / Alma 10). Install glances manually (e.g. via `pip install glances` in a venv, or from a third-party repo) on those hosts and skip this role.
 
 
 ## Tags
