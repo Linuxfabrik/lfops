@@ -1,13 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2026, Linuxfabrik, Zurich, Switzerland, https://www.linuxfabrik.ch
+# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 # The Unlicense (see LICENSE or https://unlicense.org/)
 
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-
 
 DOCUMENTATION = r'''
 ---
@@ -31,9 +30,30 @@ options:
 
 
 EXAMPLES = r'''
+# 1) Read account quota and current usage (equivalent to `utr get account`).
+#    The API key comes from ~/.uptimerobot when no parameter is given.
 - name: 'Capture UptimeRobot account info'
   linuxfabrik.lfops.uptimerobot_account_info:
-  register: ur_account
+  register: 'ur_account'
+
+- ansible.builtin.debug:
+    msg: >-
+      {{ ur_account.account.up_monitors }}/{{ ur_account.account.monitor_limit }}
+      monitors used; subscription expires
+      {{ ur_account.account.subscription_expiry_date }}
+
+# 2) Same call but with an explicit key file (any reachable path is fine).
+- linuxfabrik.lfops.uptimerobot_account_info:
+    api_key_file: '/etc/ansible/secrets/uptimerobot.key'
+  register: 'ur_account'
+
+# 3) Fail the play early if the account is over 90% of its monitor quota.
+- linuxfabrik.lfops.uptimerobot_account_info:
+  register: 'ur_account'
+
+- ansible.builtin.assert:
+    that: 'ur_account.account.up_monitors / ur_account.account.monitor_limit < 0.9'
+    fail_msg: 'UptimeRobot quota is nearly exhausted; bump the plan or delete stale monitors.'
 '''
 
 

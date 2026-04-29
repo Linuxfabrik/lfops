@@ -1,13 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2026, Linuxfabrik, Zurich, Switzerland, https://www.linuxfabrik.ch
+# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 # The Unlicense (see LICENSE or https://unlicense.org/)
 
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-
 
 DOCUMENTATION = r'''
 ---
@@ -48,15 +47,33 @@ options:
 
 
 EXAMPLES = r'''
-- name: 'Delete a stale alert contact by id'
-  linuxfabrik.lfops.uptimerobot_alert_contact:
-    id: 7068316
-    state: 'absent'
+# UptimeRobot's v2 API does not allow CREATING or EDITING alert contacts via
+# the API — they must be added in the web UI (which sends an opt-in mail).
+# This module is therefore delete-only, useful for sweeping contacts that no
+# longer correspond to an active recipient.
 
-- name: 'Delete a stale alert contact by friendly_name'
+# 1) Delete by friendly_name (recommended — survives ID re-numbering).
+- name: 'Sweep a stale alert contact by friendly_name'
   linuxfabrik.lfops.uptimerobot_alert_contact:
     friendly_name: 'old-pager@example.com'
     state: 'absent'
+
+# 2) Delete by ID (when you already have it from uptimerobot_alert_contact_info).
+- linuxfabrik.lfops.uptimerobot_alert_contact:
+    id: 7068316
+    state: 'absent'
+
+# 3) Drive a sweep from inventory: list everything via the info module, filter
+#    for the ones you want gone, then delete them.
+- linuxfabrik.lfops.uptimerobot_alert_contact_info:
+  register: 'ur_contacts'
+
+- linuxfabrik.lfops.uptimerobot_alert_contact:
+    friendly_name: '{{ item.friendly_name }}'
+    state: 'absent'
+  loop: '{{ ur_contacts.alert_contacts | selectattr("status", "equalto", "not activated") | list }}'
+  loop_control:
+    label: '{{ item.friendly_name }}'
 '''
 
 
