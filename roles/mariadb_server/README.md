@@ -492,6 +492,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `''`
 
+`mariadb_server__cnf_binlog_cache_size__group_var` / `mariadb_server__cnf_binlog_cache_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#binlog_cache_size)
+* Type: Number.
+* Default: `32768`
+
 `mariadb_server__cnf_binlog_expire_logs_seconds__group_var` / `mariadb_server__cnf_binlog_expire_logs_seconds__host_var`
 
 * Only available in MariaDB 10.6+. [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#binlog_expire_logs_seconds)
@@ -534,6 +540,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'InnoDB'`
 
+`mariadb_server__cnf_eq_range_index_dive_limit__group_var` / `mariadb_server__cnf_eq_range_index_dive_limit__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables#eq_range_index_dive_limit)
+* Type: Number.
+* Default: `200`
+
 `mariadb_server__cnf_extra_max_connections__group_var` / `mariadb_server__cnf_extra_max_connections__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/thread-pool-system-status-variables/#extra_max_connections)
@@ -557,6 +569,18 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#general_log_file)
 * Type: String.
 * Default: `'/var/log/mariadb/mariadb-general.log'`
+
+`mariadb_server__cnf_innodb_adaptive_hash_index__group_var` / `mariadb_server__cnf_innodb_adaptive_hash_index__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables#innodb_adaptive_hash_index)
+* Type: String.
+* Default: `'OFF'`
+
+`mariadb_server__cnf_innodb_adaptive_hash_index_parts__group_var` / `mariadb_server__cnf_innodb_adaptive_hash_index_parts__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables#innodb_adaptive_hash_index_parts)
+* Type: Number.
+* Default: `8`
 
 `mariadb_server__cnf_innodb_autoinc_lock_mode__group_var` / `mariadb_server__cnf_innodb_autoinc_lock_mode__host_var`
 
@@ -612,6 +636,48 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'32M'`
 
+`mariadb_server__cnf_innodb_max_dirty_pages_pct__group_var` / `mariadb_server__cnf_innodb_max_dirty_pages_pct__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_max_dirty_pages_pct)
+* Type: Number.
+* Default: `90`
+
+`mariadb_server__cnf_innodb_max_purge_lag__group_var` / `mariadb_server__cnf_innodb_max_purge_lag__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_max_purge_lag)
+* Type: Number.
+* Default: `0`
+
+`mariadb_server__cnf_innodb_monitor_disable__group_var` / `mariadb_server__cnf_innodb_monitor_disable__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_monitor_disable)
+* Type: String.
+* Default: `''`
+
+`mariadb_server__cnf_innodb_open_files__group_var` / `mariadb_server__cnf_innodb_open_files__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_open_files)
+* Type: Number.
+* Default: `0`
+
+`mariadb_server__cnf_innodb_print_all_deadlocks__group_var` / `mariadb_server__cnf_innodb_print_all_deadlocks__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_print_all_deadlocks)
+* Type: String.
+* Default: `'OFF'`
+
+`mariadb_server__cnf_innodb_purge_batch_size__group_var` / `mariadb_server__cnf_innodb_purge_batch_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_purge_batch_size)
+* Type: Number.
+* Default: `127`
+
+`mariadb_server__cnf_innodb_read_io_threads__group_var` / `mariadb_server__cnf_innodb_read_io_threads__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_read_io_threads)
+* Type: Number.
+* Default: `4`
+
 `mariadb_server__cnf_innodb_strict_mode__group_var` / `mariadb_server__cnf_innodb_strict_mode__host_var`
 
 * [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_strict_mode)
@@ -630,11 +696,29 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'256K'`
 
+`mariadb_server__cnf_local_infile__group_var` `mariadb_server__cnf_local_infile__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#local_infile)
+* Type: String.
+* Default: `'ON'`
+
+`mariadb_server__cnf_lock_wait_timeout__group_var` / `mariadb_server__cnf_lock_wait_timeout__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#lock_wait_timeout)
+* Type: Number.
+* Default: `86400`
+
 `mariadb_server__cnf_log_bin__group_var` / `mariadb_server__cnf_log_bin__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#log_bin). Attention: the variable is *not* a boolean! Instead it either requires a string to enable it, or has to be unset. For convenience this role unsets the variable if it is set to `'OFF'`.
 * Type: String.
 * Default: `''`
+
+`mariadb_server__cnf_log_bin_trust_function_creators__group_var` `mariadb_server__cnf_log_bin_trust_function_creators__host_var`
+
+* [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#log_bin_trust_function_creators)
+* Type: String.
+* Default: `'OFF'`
 
 `mariadb_server__cnf_log_error__group_var` / `mariadb_server__cnf_log_error__host_var`
 
@@ -647,6 +731,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#log_slave_updates)
 * Type: String.
 * Default: `'OFF'`
+
+`mariadb_server__cnf_long_query_time__group_var` / `mariadb_server__cnf_long_query_time__host_var`
+
+* [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#long_query_time)
+* Type: Number.
+* Default: `10`
 
 `mariadb_server__cnf_lower_case_table_names__group_var` / `mariadb_server__cnf_lower_case_table_names__host_var`
 
@@ -672,6 +762,18 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'16M'`
 
+`mariadb_server__cnf_net_read_timeout__group_var` / `mariadb_server__cnf_net_read_timeout__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables#net_read_timeout)
+* Type: Number.
+* Default: `30`
+
+`mariadb_server__cnf_net_write_timeout__group_var` / `mariadb_server__cnf_net_write_timeout__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables#net_write_timeout)
+* Type: Number.
+* Default: `60`
+
 `mariadb_server__cnf_performance_schema__group_var` / `mariadb_server__cnf_performance_schema__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/performance-schema-system-variables/#performance_schema)
@@ -695,6 +797,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#query_cache_type)
 * Type: String.
 * Default: `'OFF'`
+
+`mariadb_server__cnf_server_id__group_var` `mariadb_server__cnf_server_id__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables#server_id)
+* Type: Number.
+* Default: `1`
 
 `mariadb_server__cnf_server_raw`
 
@@ -971,7 +1079,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 `mariadb_server__cnf_plugin_load_add__group_var` / `mariadb_server__cnf_plugin_load_add__host_var`
 
-* [mariadb.com](https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/plugin-load-add/)
+* [mariadb.com](https://mariadb.com/docs/server/reference/plugins/plugin-overview#installing-a-plugin-with-plugin-load-add)
 * Type: String.
 * Default: `'file_key_management'`
 
