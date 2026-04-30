@@ -613,11 +613,25 @@ Have a look at the [repo_icinga/tasks/Debian.yml](https://github.com/Linuxfabrik
 
 Roles with special technical implementations and capabilities:
 
+* [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): Some Jinja templates use non-default block delimiters (`[%`, `%]`) so that Apache's own `%`-prefixed format directives in `LogFormat` etc. do not collide with Jinja's defaults.
+
 * [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr): Installs the correct version of a dependent package (i.e. java) based on the solr version.
 
 * [github_project_createrepo](https://github.com/Linuxfabrik/lfops/tree/main/roles/github_project_createrepo): Sets FACL entries to allow both the webserver user and the github-project-createrepo user to access files.
 
+* [grav](https://github.com/Linuxfabrik/lfops/tree/main/roles/grav): chmod: Sets file (`664`), `bin/` (`775`), directory (`775`) and setgid permissions separately using `find -exec chmod`.
+
+* [icinga2_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_agent): Implements install & maintenance as well as uninstall/remove on Linux and Windows.
+
+* [libmaxminddb](https://github.com/Linuxfabrik/lfops/tree/main/roles/libmaxminddb): Builds from source via `./configure`, `make`, `make check` and `make install` against a GitHub release tarball, instead of relying on a distro package.
+
+* [libreoffice](https://github.com/Linuxfabrik/lfops/tree/main/roles/libreoffice): Generates custom SELinux policy modules (`*.te`) on the fly, packages them with `checkmodule` / `semodule_package`, and loads them via `semodule --install`.
+
 * [librenms](https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms): Compiles and loads an SELinux module.
+
+* [mirror](https://github.com/Linuxfabrik/lfops/tree/main/roles/mirror): Sets FACL entries (including `default:` ACLs for inheritance) so that both the webserver user and the mirror service user can read and write the served files.
+
+* [mod_maxminddb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mod_maxminddb): Builds the Apache module from source via `./configure` + `make install` and registers it with the running Apache via `a2enmod` on Debian/Ubuntu.
 
 * [mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb): The role implements a `skip` state that completely ignores the entry.
 
@@ -631,9 +645,28 @@ Roles with special technical implementations and capabilities:
 
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): Gathers the installed version and deploys the corresponding config file. Configures Systemd with Unit File overrides.
 
+* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): Compiles inventory-defined SELinux policy modules from `.te` source in a temp directory and applies them in a strict order (modules → booleans / file contexts / ports → restorecon → setenforce) so that types and booleans introduced by a new module are usable in the same run.
+
 * [telegraf](https://github.com/Linuxfabrik/lfops/tree/main/roles/telegraf): Jinja templates use non-default strings marking the beginning/end of a print statement.
 
 * [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress): chmod: Sets file and folder permissions separately using `find`.
+
+
+### Vendored Plugins
+
+Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored from upstream projects, either because we needed local patches or because the upstream version requires a newer ansible-core than LFOps supports. They are kept in lockstep with their upstream and should be re-synced (or removed) when the listed condition is met.
+
+* `plugins/modules/ipagroup.py`, `ipahbacrule.py`, `ipahostgroup.py`, `ipapwpolicy.py`, `ipasudocmd.py`, `ipasudocmdgroup.py`, `ipasudorule.py`, `ipauser.py`
+
+    * Upstream: <https://github.com/freeipa/ansible-freeipa>
+    * Reason: temporary copy with local `--diff` support from PR [#1415](https://github.com/freeipa/ansible-freeipa/pull/1415).
+    * Drop when: PR #1415 is merged and an ansible-freeipa release containing it is available; switch to `freeipa.ansible_freeipa.<module>`.
+
+* `plugins/modules/lvm_pv.py`
+
+    * Upstream: <https://github.com/ansible-collections/community.general> (PR [#10070](https://github.com/ansible-collections/community.general/pull/10070), released in community.general 11.0.0).
+    * Reason: community.general 11.0.0 requires ansible-core >= 2.18, which LFOps does not yet mandate (RHEL 8 / Python 3.6 still supported).
+    * Drop when: LFOps raises its minimum ansible-core to >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm` accordingly.
 
 
 ### Credits
