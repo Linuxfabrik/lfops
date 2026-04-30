@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+* **tool:particle**: Remove the `tools/particle` Vagrant-based role test runner, its sample inventories under `tests/`, and the bundled `linuxfabrik/lib` git submodule (whose only consumer was `particle`). The runner and the submodule were tightly wired together, and Dependabot did not have a `gitsubmodule` config for this repo, so the bundled lib was silently drifting behind upstream. Since role testing is moving to Molecule anyway, dropping the whole stack is cleaner than keeping the wiring around. Older revisions remain accessible through git history.
+
 ### Breaking Changes
 
 * **role:infomaniak_vm**: Always create a managed port for every entry in `infomaniak_vm__networks`, even when no `fixed_ip` is set. Previously only networks with a `fixed_ip` got a managed port; networks without one relied on OpenStack's auto-created port. To avoid creating unused (but billed) managed ports on VMs provisioned under the old behavior, make sure to manually rename the existing port in OpenStack to match the `port_name`. Note that this port will not survive VM deletion / detachment, since it was automatically created and therefore is owned by OpenStack, not the user.
