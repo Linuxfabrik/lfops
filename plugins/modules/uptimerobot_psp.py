@@ -11,11 +11,14 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 ---
 module: uptimerobot_psp
-short_description: Manage UptimeRobot Public Status Pages
+short_description: Create, update or delete an UptimeRobot Public Status Page
 version_added: '6.0.2'
 description:
-    - Create, update or delete a public status page on UptimeRobot.
-    - Identification is by C(friendly_name).
+    - Manages a single UptimeRobot Public Status Page (PSP) end-to-end (create, update, pause/resume, delete) against the v2 API.
+    - Identification is by I(friendly_name); the value must be unique on the account. Re-running a task with the same I(friendly_name) updates the existing PSP in place and only reports C(changed=true) when one of the diffable fields actually differs.
+    - I(monitors) is replaced on every run. The list is diffed by sorted monitor IDs, so re-ordering items in the inventory does not produce a spurious change. Omitting I(monitors) (or passing an empty list) leaves the C(monitors) field off the create / edit payload, in which case UptimeRobot applies its own default behaviour for that page.
+    - I(password) cannot be diffed because UptimeRobot never returns it. When supplied, the module always sends it on edit and reports C(changed=true). To keep an existing password as is, simply omit I(password) from the task.
+    - I(status) is only honoured on edit; UptimeRobot rejects this field on create.
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:
@@ -24,42 +27,40 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key.
+        description: Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
         default: '~/.uptimerobot'
     friendly_name:
-        description: Display name of the status page (idempotency key).
+        description: Display name of the status page. Used as the idempotency key, so it must be unique on the account.
         type: str
         required: true
     state:
-        description: C(present) creates or updates, C(absent) deletes.
+        description: C(present) creates the PSP when missing, or updates it in place when present. C(absent) deletes it; when the PSP does not exist, the module exits with C(changed=false).
         type: str
         choices: ['absent', 'present']
         default: 'present'
     monitors:
         description:
-            - Monitors to display on the status page. Each item references an
-              existing monitor via its C(friendly_name) (preferred) or C(id).
-              An empty list publishes all monitors of the account.
+            - Monitors to display on the status page. Each item references an existing monitor.
+            - Resolution: when an item has I(id), it is used directly. Otherwise I(friendly_name) is resolved against C(getMonitors); an unknown name fails the play.
         type: list
         elements: dict
         suboptions:
             friendly_name:
-                description: Friendly name of an existing monitor.
+                description: Friendly name of an existing monitor. Required if I(id) is not given.
                 type: str
             id:
-                description: Monitor ID (alternative to C(friendly_name)).
+                description: Numeric monitor ID. Takes precedence over I(friendly_name) when both are set.
                 type: int
     custom_domain:
-        description: Custom domain to host the status page under (e.g. C(status.example.com)).
+        description: Custom domain to host the status page under (e.g. C(status.example.com)). Mutually exclusive with I(custom_url).
         type: str
     custom_url:
         description:
-            - Alias for C(custom_domain). Accepted as a backward-compatible
-              spelling.
+            - Backward-compatible alias for I(custom_domain) - this is also the field name UptimeRobot uses on the read side. Mutually exclusive with I(custom_domain).
         type: str
     password:
-        description: Optional password to protect the status page.
+        description: Password to protect the status page. UptimeRobot never returns the stored value, so re-running the task with I(password) set always reports C(changed=true). Omit to keep the previous password.
         type: str
         no_log: true
     sort:
@@ -67,10 +68,10 @@ options:
         type: str
         choices: ['a-z', 'down-up-paused', 'up-down-paused', 'z-a']
     hide_url_links:
-        description: If C(true), the page does not show the underlying URLs.
+        description: When C(true), the rendered page does not show the underlying monitor URLs.
         type: bool
     status:
-        description: C(active) or C(paused). Only honoured on edit.
+        description: C(active) un-pauses the page, C(paused) pauses it. Only honoured on edit; UptimeRobot rejects this field on create.
         type: str
         choices: ['active', 'paused']
 '''
@@ -114,9 +115,21 @@ EXAMPLES = r'''
 
 RETURN = r'''
 psp:
-    description: The PSP object as returned by UptimeRobot. Empty dict if just deleted.
+    description:
+        - On create or update, the PSP as returned by UptimeRobot's C(newPSP) / C(editPSP). On delete, the last known state of the PSP.
+        - Empty dict when there was nothing to delete.
+        - In check mode, a synthetic preview reflecting what the run would have written.
     type: dict
     returned: always
+debug:
+    description: Diagnostic information about the operation (one of C(create), C(update), C(delete), C(noop), each optionally suffixed with C( (check_mode))). Stable enough to assert against, not stable enough to be load-bearing.
+    type: dict
+    returned: always
+    sample:
+        operation: 'update'
+        friendly_name: 'Status - example.com'
+        psp_id: 4321
+        diff_fields: ['monitors']
 '''
 
 

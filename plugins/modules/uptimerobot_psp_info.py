@@ -14,10 +14,9 @@ module: uptimerobot_psp_info
 short_description: List UptimeRobot Public Status Pages
 version_added: '6.0.2'
 description:
-    - Returns the full list of public status pages on the UptimeRobot account,
-      with enum-style fields translated to human-readable labels (C(sort),
-      C(status)).
-    - Read-only. Reports C(changed=false).
+    - Calls C(getPSPs) on the UptimeRobot v2 API and returns every public status page on the account.
+    - Enum-coded fields are translated to human-readable labels - C(sort) becomes C(a-z)/C(z-a)/C(up-down-paused)/C(down-up-paused), C(status) becomes C(paused)/C(active). The API field C(custom_url) is also exposed under the write-side name C(custom_domain) so it can be diffed against I(custom_domain) on the write module.
+    - Read-only; the module always reports C(changed=false) and is safe to run in check mode.
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:
@@ -26,13 +25,12 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key.
+        description: Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
         default: '~/.uptimerobot'
     friendly_name:
         description:
-            - If set, only the PSP with this exact friendly name is returned
-              (or none, if no match).
+            - Filter the returned list to the PSP whose C(friendly_name) is an exact match for this value. The result is still a list (length 0 or 1) for shape stability.
         type: str
 '''
 
@@ -71,10 +69,17 @@ EXAMPLES = r'''
 
 RETURN = r'''
 psps:
-    description: List of PSP dicts (empty list if none matched).
+    description: List of PSP dicts. Empty list when nothing matched.
     type: list
     returned: always
     elements: dict
+debug:
+    description: Diagnostic information about the API call. Stable enough to assert against, not stable enough to be load-bearing.
+    type: dict
+    returned: always
+    sample:
+        operation: 'list'
+        count: 2
 '''
 
 

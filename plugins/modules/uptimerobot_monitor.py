@@ -11,16 +11,13 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 ---
 module: uptimerobot_monitor
-short_description: Manage UptimeRobot monitors
+short_description: Create, update or delete an UptimeRobot monitor
 version_added: '6.0.2'
 description:
-    - Create, update or delete a monitor on UptimeRobot.
-    - Targets the UptimeRobot API v2 (POST + form-urlencoded). Migration to v3
-      is local to C(plugins/module_utils/uptimerobot.py); module-level options
-      do not need to change.
-    - Identification is by C(friendly_name). Re-running a task with the same
-      C(friendly_name) updates the existing monitor in-place and only reports
-      C(changed=true) when something actually differs.
+    - Manages a single UptimeRobot monitor end-to-end (create, update, pause/resume, delete) against the v2 API.
+    - Identification is by I(friendly_name); the value must be unique on the account. Re-running a task with the same I(friendly_name) updates the existing monitor in place and only reports C(changed=true) when one of the diffable fields actually differs.
+    - Enum-coded fields (C(type), C(sub_type), C(keyword_type), C(keyword_case_type), C(http_auth_type), C(http_method), C(post_type), C(post_content_type), C(disable_domain_expire_notifications), C(status)) are accepted in their human-readable form; the module translates to the API's integer codes on write and back on read, so the diff happens on labels.
+    - I(http_password) and I(http_auth_type) are not visible in the C(getMonitors) response; when set, they are forwarded on every edit but never count as a change. I(type) is only honoured on create - UptimeRobot does not allow changing the monitor type after the fact. I(status) is only honoured on edit, since UptimeRobot rejects it on create.
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 requirements:
@@ -28,81 +25,71 @@ requirements:
 options:
     api_key:
         description:
-            - UptimeRobot API key. If not given, the module reads
-              C(api_key_file) (default C(~/.uptimerobot)) and finally
-              C(UPTIMEROBOT_API_KEY) from the environment.
+            - UptimeRobot API key. When unset, the module reads I(api_key_file) (default C(~/.uptimerobot)) and finally falls back to the C(UPTIMEROBOT_API_KEY) environment variable.
         type: str
         required: false
         no_log: true
     api_key_file:
         description:
-            - Path to a file containing the UptimeRobot API key.
+            - Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
         required: false
         default: '~/.uptimerobot'
     friendly_name:
         description:
-            - Display name of the monitor. Used as the idempotency key.
+            - Display name of the monitor. Used as the idempotency key, so it must be unique on the account.
         type: str
         required: true
     state:
         description:
-            - C(present) creates the monitor if missing or updates it in-place
-              if present.
-            - C(absent) deletes the monitor identified by C(friendly_name)
-              if it exists.
+            - C(present) creates the monitor when missing, or updates it in place when present.
+            - C(absent) deletes the monitor identified by I(friendly_name). When the monitor does not exist, the module exits with C(changed=false).
         type: str
         choices: ['absent', 'present']
         default: 'present'
     url:
         description:
-            - URL / host / IP / heartbeat-token to monitor. Required for
-              C(state=present) when the monitor does not yet exist.
+            - URL, host, IP or heartbeat token to monitor. Required when creating a new monitor; ignored on update if unchanged.
         type: str
         required: false
     type:
         description:
-            - Monitor type. C(http) for HTTP(S) checks, C(keyw) for keyword
-              checks, C(ping) for ICMP, C(port) for TCP-port checks, C(beat)
-              for heartbeat. Only honoured on create; UptimeRobot does not
-              allow changing the type after the fact.
+            - Monitor type. C(http) for HTTP(S) checks, C(keyw) for keyword checks, C(ping) for ICMP, C(port) for TCP-port checks, C(beat) for heartbeat.
+            - Required when creating a new monitor. Only honoured on create; UptimeRobot rejects type changes on existing monitors.
         type: str
         choices: ['beat', 'http', 'keyw', 'ping', 'port']
         required: false
     sub_type:
         description:
-            - For C(type=port), which protocol/port preset to use. C(custom)
-              means 'use the explicit C(port) value'.
+            - For I(type=C(port)), which protocol/port preset to use. C(custom) means "use the explicit I(port) value".
         type: str
         choices: ['custom', 'ftp', 'http', 'https', 'imap', 'pop3', 'smtp']
         required: false
     port:
         description:
-            - Custom port for C(type=port) + C(sub_type=custom).
+            - Custom port number. Only consulted by UptimeRobot when I(type=C(port)) and I(sub_type=C(custom)).
         type: int
         required: false
     keyword_type:
         description:
-            - For C(type=keyw), C(exist) alerts when the keyword is found,
-              C(notex) alerts when it is missing.
+            - For I(type=C(keyw)), C(exist) alerts when the keyword is found in the response body, C(notex) alerts when it is missing.
         type: str
         choices: ['exist', 'notex']
         required: false
     keyword_case_type:
         description:
-            - C(cs) case-sensitive, C(ci) case-insensitive.
+            - For I(type=C(keyw)), C(cs) makes the search case-sensitive, C(ci) case-insensitive.
         type: str
         choices: ['ci', 'cs']
         required: false
     keyword_value:
         description:
-            - Keyword to look for in the response body.
+            - Keyword to look for in the response body. Required for I(type=C(keyw)).
         type: str
         required: false
     interval:
         description:
-            - Check interval in seconds (UptimeRobot enforces a per-plan
-              minimum, e.g. 30s on the Pro plan).
+            - Check interval in seconds. UptimeRobot enforces a per-plan minimum (e.g. 30s on the Pro plan, 300s on the free plan).
         type: int
         required: false
     timeout:
@@ -112,44 +99,42 @@ options:
         required: false
     status:
         description:
-            - C(up) un-pauses the monitor, C(paused) pauses it. Only honoured
-              on edit (UptimeRobot rejects this on create).
+            - C(up) un-pauses the monitor, C(paused) pauses it. Only honoured on edit; UptimeRobot rejects this field on create. To create a monitor in a paused state, create it first and then re-run the task with I(status=C(paused)).
         type: str
         choices: ['paused', 'up']
         required: false
     http_username:
         description:
-            - Basic-auth / digest-auth username for HTTP(S) monitors.
+            - Username for HTTP basic / digest authentication. Only meaningful for I(type=C(http)) and I(type=C(keyw)).
         type: str
         required: false
     http_password:
         description:
-            - Basic-auth / digest-auth password.
+            - Password for HTTP basic / digest authentication. UptimeRobot does not return this field in C(getMonitors), so the module always forwards the value on edit but never counts it as a change.
         type: str
         required: false
         no_log: true
     http_auth_type:
         description:
-            - Auth scheme used together with C(http_username) /
-              C(http_password).
+            - Authentication scheme used together with I(http_username) and I(http_password). Like I(http_password), this is forwarded on every edit but never counted as a change because the API does not return it.
         type: str
         choices: ['basic', 'digest']
         required: false
     http_method:
         description:
-            - HTTP method for HTTP(S) monitors.
+            - HTTP method to use for I(type=C(http)) and I(type=C(keyw)) monitors.
         type: str
         choices: ['delete', 'get', 'head', 'options', 'patch', 'post', 'put']
         required: false
     post_type:
         description:
-            - Format of the C(post_value) payload.
+            - Format of the I(post_value) payload.
         type: str
         choices: ['key-value', 'raw data']
         required: false
     post_value:
         description:
-            - Payload sent with C(POST) / C(PUT) / C(PATCH) requests.
+            - Payload to send with C(POST) / C(PUT) / C(PATCH) requests.
         type: str
         required: false
     post_content_type:
@@ -160,66 +145,60 @@ options:
         required: false
     custom_http_headers:
         description:
-            - Extra HTTP headers to send. Pass either a JSON string or a dict;
-              both are accepted.
+            - Extra HTTP headers to send with each check. Accepts either a JSON-encoded string or a plain dict; the module forwards either form to UptimeRobot unchanged.
         type: raw
         required: false
     custom_http_statuses:
         description:
-            - Per-status-code override. UptimeRobot wire format applies.
+            - Override of which HTTP status codes count as up/down, in UptimeRobot's wire format (e.g. C(200:0_201:0_500:1)). Only forwarded as-is.
         type: str
         required: false
     ignore_ssl_errors:
         description:
-            - If C(true), accept invalid / self-signed TLS certificates.
+            - When C(true), accept invalid or self-signed TLS certificates and only fail on connection-level errors.
         type: bool
         required: false
     disable_domain_expire_notifications:
         description:
-            - C(disable) silences UptimeRobot's domain-expiry warnings,
-              C(enable) keeps them on.
+            - C(disable) silences UptimeRobot's domain-expiry warnings for this monitor, C(enable) keeps them on.
         type: str
         choices: ['disable', 'enable']
         required: false
     alert_contacts:
         description:
-            - List of alert contacts to attach. Each item must reference an
-              existing alert contact via its C(friendly_name) (preferred) or
-              C(id), plus the per-monitor C(threshold) (alert delay in
-              seconds, 0 = immediately) and C(recurrence) (re-alert interval
-              in minutes, 0 = no recurrence).
+            - Alert contacts to attach to the monitor. Each item references an existing alert contact, plus the per-monitor I(threshold) and I(recurrence). The list is replaced on every run; pass an empty list to clear all attached contacts.
+            - Resolution: when an item has I(id), it is used directly. Otherwise I(friendly_name) is resolved against C(getAlertContacts); an unknown name fails the play.
         type: list
         elements: dict
         required: false
         suboptions:
             friendly_name:
-                description: Friendly name of an existing alert contact.
+                description: Friendly name of an existing alert contact. Required if I(id) is not given.
                 type: str
             id:
-                description: ID of an existing alert contact (alternative to C(friendly_name)).
+                description: Numeric ID of an existing alert contact. Takes precedence over I(friendly_name) when both are set.
                 type: int
             threshold:
-                description: Alert delay in seconds.
+                description: Alert delay in seconds. C(0) means alert immediately.
                 type: int
                 default: 0
             recurrence:
-                description: Re-alert interval in minutes.
+                description: Re-alert interval in minutes. C(0) disables re-alerting.
                 type: int
                 default: 0
     mwindows:
         description:
-            - List of maintenance windows to attach to the monitor. Each item
-              references an existing maintenance window via its
-              C(friendly_name) (preferred) or C(id).
+            - Maintenance windows to attach to the monitor. Each item references an existing maintenance window. The list is replaced on every run; pass an empty list to detach all windows.
+            - Resolution: when an item has I(id), it is used directly. Otherwise I(friendly_name) is resolved against C(getMWindows); an unknown name fails the play.
         type: list
         elements: dict
         required: false
         suboptions:
             friendly_name:
-                description: Friendly name of an existing maintenance window.
+                description: Friendly name of an existing maintenance window. Required if I(id) is not given.
                 type: str
             id:
-                description: ID of an existing maintenance window.
+                description: Numeric ID of an existing maintenance window. Takes precedence over I(friendly_name) when both are set.
                 type: int
 '''
 
@@ -305,16 +284,28 @@ EXAMPLES = r'''
 
 RETURN = r'''
 monitor:
-    description: The monitor object as returned by UptimeRobot. Empty dict if the monitor was just deleted.
+    description:
+        - On create or update, the monitor object as returned by UptimeRobot's C(newMonitor) / C(editMonitor). On delete, the last known state of the monitor as returned by C(getMonitors).
+        - Empty dict when there was nothing to delete (state=absent and monitor not present).
+        - In check mode, a synthetic preview reflecting what the run would have written.
     type: dict
     returned: always
     sample:
         id: 794294
         friendly_name: '001 www.example.com/index.php/login'
         url: 'https://www.example.com/index.php/login'
-        type: 1
+        type: 'http'
         interval: 120
-        status: 2
+        status: 'up'
+debug:
+    description: Diagnostic information about the operation (one of C(create), C(update), C(delete), C(noop), each optionally suffixed with C( (check_mode))). Stable enough to assert against, not stable enough to be load-bearing.
+    type: dict
+    returned: always
+    sample:
+        operation: 'update'
+        friendly_name: '001 www.example.com/index.php/login'
+        monitor_id: 794294
+        diff_fields: ['interval']
 '''
 
 

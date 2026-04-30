@@ -14,10 +14,9 @@ module: uptimerobot_alert_contact_info
 short_description: List UptimeRobot alert contacts
 version_added: '6.0.2'
 description:
-    - Returns the full list of alert contacts on the UptimeRobot account,
-      with enum-style fields translated to human-readable labels (C(status),
-      C(type)).
-    - Read-only. Reports C(changed=false).
+    - Calls C(getAlertContacts) on the UptimeRobot v2 API and returns every alert contact on the account.
+    - Enum-coded fields are translated to human-readable labels - C(status) becomes C(not activated)/C(paused)/C(active), C(type) becomes C(sms)/C(email)/C(slack)/etc.
+    - Read-only; the module always reports C(changed=false) and is safe to run in check mode.
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:
@@ -26,13 +25,12 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key.
+        description: Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
         default: '~/.uptimerobot'
     friendly_name:
         description:
-            - If set, only the alert contact with this exact friendly name is
-              returned (or none, if no match).
+            - Filter the returned list to the contact whose C(friendly_name) is an exact match for this value. The result is still a list (length 0 or 1) for shape stability.
         type: str
 '''
 
@@ -72,10 +70,17 @@ EXAMPLES = r'''
 
 RETURN = r'''
 alert_contacts:
-    description: List of alert contact dicts (empty list if none matched).
+    description: List of alert contact dicts. Empty list when nothing matched.
     type: list
     returned: always
     elements: dict
+debug:
+    description: Diagnostic information about the API call. Stable enough to assert against, not stable enough to be load-bearing.
+    type: dict
+    returned: always
+    sample:
+        operation: 'list'
+        count: 3
 '''
 
 

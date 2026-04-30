@@ -14,10 +14,9 @@ module: uptimerobot_monitor_info
 short_description: List UptimeRobot monitors
 version_added: '6.0.2'
 description:
-    - Returns the full list of monitors on the UptimeRobot account, with
-      enum-style fields translated to human-readable labels (C(http_method),
-      C(keyword_type), C(status), C(type), nested C(alert_contacts[].type)).
-    - Read-only. Reports C(changed=false).
+    - Calls C(getMonitors) on the UptimeRobot v2 API and returns every monitor on the account, paginated transparently.
+    - Enum-coded fields are translated to human-readable labels - C(type) becomes C(http)/C(keyw)/C(ping)/C(port)/C(beat), C(status) becomes C(paused)/C(wait)/C(up)/C(seems_down)/C(down), C(http_method)/C(keyword_type)/C(keyword_case_type)/C(http_auth_type) are unmangled, and the C(type) of each entry in nested C(alert_contacts[]) is mapped to its label (C(sms), C(email), C(slack), ...).
+    - Read-only; the module always reports C(changed=false) and is safe to run in check mode.
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:
@@ -26,18 +25,16 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key.
+        description: Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
         default: '~/.uptimerobot'
     friendly_name:
         description:
-            - If set, only the monitor with this exact friendly name is
-              returned (or none, if no match). Otherwise all monitors are
-              returned.
+            - Filter the returned list to the monitor whose C(friendly_name) is an exact match for this value. The result is still a list (length 0 or 1) for shape stability. Applied client-side after I(search) has narrowed the API response.
         type: str
     search:
         description:
-            - Optional case-insensitive substring filter forwarded to the API.
+            - Server-side, case-insensitive substring filter forwarded to UptimeRobot's C(search) parameter. Useful to keep the response small when the account has thousands of monitors. Combine with I(friendly_name) to narrow further.
         type: str
 '''
 
@@ -100,10 +97,17 @@ EXAMPLES = r'''
 
 RETURN = r'''
 monitors:
-    description: List of monitor dicts (empty list if none matched).
+    description: List of monitor dicts. Empty list when nothing matched.
     type: list
     returned: always
     elements: dict
+debug:
+    description: Diagnostic information about the API call. Stable enough to assert against, not stable enough to be load-bearing.
+    type: dict
+    returned: always
+    sample:
+        operation: 'list'
+        count: 17
 '''
 
 

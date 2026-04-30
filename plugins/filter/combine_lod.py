@@ -14,11 +14,14 @@ from ansible.errors import AnsibleFilterError
 DOCUMENTATION = r'''
   name: combine_lod
   version_added: "3.0.0"
-  short_description: combine a list of dictionaries
+  short_description: Merge lists of dictionaries by a unique key
   description:
-    - Create list a dictionaries (hashes/associative arrays) as a result of merging existing lists of dictionaries.
-    - This is very useful if you want to set sensible defaults in a role, while still allowing the user to selectively overwrite specific parts of the defaults in their inventory.
-  positional: _input, _dicts, unique_key
+    - Merges one or more lists of dictionaries into a single list. Dictionaries that share the same value under I(unique_key) are folded into one entry; later entries overwrite earlier ones (non-recursive, like Python C(dict.update)).
+    - The folding also collapses duplicates inside a single input list, so passing one list with duplicates is a valid way to deduplicate it.
+    - Useful for layering inventory: a role can ship sensible defaults, and the user can selectively override individual keys per item from their inventory without having to redeclare the whole list.
+    - Sub-dictionaries and sub-lists are replaced wholesale, not merged recursively. To merge nested structures, build the nested values up using this filter at each level.
+    - Every input dictionary must contain the unique key (or all keys, if a list is passed). A missing or falsy key value (C(None), C(0), empty string) raises an error.
+  positional: _input, _dicts
   options:
     _input:
       description: First list of dictionaries to combine.
@@ -26,17 +29,15 @@ DOCUMENTATION = r'''
       elements: dictionary
       required: true
     _dicts:
-      description: The other lists of dictionaries to combine.
+      description: Zero or more additional lists of dictionaries to combine. Items are folded in the order the lists are passed; the last occurrence of a unique key wins.
       type: list
       elements: dictionary
-      required: true
+      required: false
     unique_key:
       description:
-        The dictionary key to be used as an indicator to merge the related dictionaries together.
-        The key has to be unique.
-        It is possible to pass a list of keys in case a single key would not be unique.
-      type: str or list
-      elements: str
+        - Dictionary key (or list of keys, for composite keys) used to decide which entries belong together.
+        - Pass a list when no single key is unique on its own (e.g. C(["server_name", "server_port"]) for vHosts where the same hostname can appear on multiple ports).
+      type: raw
       default: name
 '''
 

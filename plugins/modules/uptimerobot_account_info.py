@@ -14,17 +14,18 @@ module: uptimerobot_account_info
 short_description: Read UptimeRobot account details
 version_added: '6.0.2'
 description:
-    - Returns account-level facts (email, monitor limit, monitor counters, ...) from UptimeRobot.
-    - Read-only. Reports C(changed=false).
+    - Calls C(getAccountDetails) on the UptimeRobot v2 API and returns the resulting account record (email, monitor limit, current up/down/paused counters, subscription expiry date, ...).
+    - Read-only; the module always reports C(changed=false) and is safe to run in check mode.
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:
     api_key:
-        description: UptimeRobot API key. See C(uptimerobot_monitor) for the resolution order.
+        description:
+            - UptimeRobot API key. When unset, the module reads I(api_key_file) (default C(~/.uptimerobot)) and finally falls back to the C(UPTIMEROBOT_API_KEY) environment variable.
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key.
+        description: Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
         default: '~/.uptimerobot'
 '''
@@ -60,7 +61,7 @@ EXAMPLES = r'''
 
 RETURN = r'''
 account:
-    description: Account details as returned by UptimeRobot.
+    description: Account details as returned by C(getAccountDetails).
     type: dict
     returned: always
     sample:
@@ -70,6 +71,13 @@ account:
         up_monitors: 10
         down_monitors: 0
         paused_monitors: 0
+debug:
+    description: Diagnostic information about the API call. Stable enough to assert against, not stable enough to be load-bearing.
+    type: dict
+    returned: always
+    sample:
+        operation: 'read'
+        fields: ['down_monitors', 'email', 'monitor_interval', 'monitor_limit', 'paused_monitors', 'up_monitors']
 '''
 
 

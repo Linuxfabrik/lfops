@@ -11,15 +11,16 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 module: nextcloud_occ_system_config
 
-short_description: Manage Nextcloud System configuration using occ commands.
+short_description: Manage a Nextcloud system configuration value via occ
 
 description:
-  - This module sets Nextcloud configuration values using C(occ).
-  - It retrieves the current value via C(config:system:get) and
-    only changes it if the value differs from the desired one.
+  - Drives C(occ config:system:set) and C(config:system:delete) to bring a single system config key into the desired state.
+  - The current value is read from C(occ config:system:get) (or from a pre-fetched C(occ config:list --output=json --private) listing passed via I(installed_config_json)). C(occ config:system:set) is only called when the stored value does not already match I(value).
+  - When I(name) contains spaces, each whitespace-separated token is passed as a separate argument to C(occ), matching how Nextcloud addresses nested keys (e.g. C(name="trusted_domains 0"), C(name="forbidden_filename_characters 0")).
+  - Booleans are normalized for C(occ): I(value) values C(true)/C(1)/C(on)/C(yes) (case-insensitive) become the literal string C(true); everything else becomes C(false). This matches what Nextcloud's CastHelper accepts on C(config:system:set). Note that this differs from C(nextcloud_occ_app_config), which stores booleans as C(1)/C(0).
 
 requirements:
-  - Nextcloud installation with C(occ) available.
+  - A working Nextcloud installation with the C(occ) command available.
 
 author:
   - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
@@ -29,42 +30,38 @@ version_added: "6.0.0"
 options:
   name:
     description:
-      - Name of the configuration key to manage.
+      - Configuration key. Multiple whitespace-separated tokens are forwarded as separate arguments to C(occ), which is how Nextcloud addresses nested keys.
     type: str
     required: true
   value:
     description:
-      - The desired value for the configuration key.
-      - Required when C(state=present).
+      - Target value for the configuration key. Required when I(state=C(present)).
     type: str
   type:
     description:
-      - The data type of the configuration value.
+      - Data type C(occ config:system:set) records for the value. Note that C(occ) names the floating point type C(double), not C(float).
     type: str
     choices: ['string', 'integer', 'double', 'boolean']
     default: 'string'
   state:
     description:
-      - The state of the config key. If C(present) the key will be set to the value,
-        if C(absent) the config key will be deleted.
+      - C(present) creates or updates the key, C(absent) deletes it.
     type: str
     choices: ['absent', 'present']
     default: 'present'
   occ_path:
     description:
-      - The full path to the C(occ) command.
+      - Absolute path to the Nextcloud C(occ) command.
     type: str
     default: '/var/www/html/nextcloud/occ'
   php_path:
     description:
-      - The full path to the PHP binary to use.
+      - PHP binary to invoke C(occ) with. A bare C(php) relies on C($PATH); pass an absolute path to pin a specific PHP version.
     type: str
     default: 'php'
   installed_config_json:
     description:
-      - Pre-fetched JSON output from C(occ config:list --output=json --private).
-      - When provided, the module skips calling C(config:system:get) itself,
-        avoiding repeated occ invocations in a loop.
+      - Pre-fetched output of C(occ config:list --output=json --private), as either a JSON string or an already-parsed dict. When set, the module skips the C(config:system:get) call and walks I(name) through the dict tree (descending into both dicts and lists by index), which avoids running C(occ) once per key when looping over many keys.
     type: raw
 '''
 
@@ -83,24 +80,24 @@ EXAMPLES = r'''
 
 RETURN = r'''
 changed:
-  description: Indicates if the configuration was changed.
+  description: Whether the value had to be changed.
   returned: always
   type: bool
 current_value:
-  description: The current configuration value.
+  description: Stored value (as a string) before any changes were applied. Empty string when the key did not exist. Booleans are returned lowercase (C(true)/C(false)) to match what C(occ config:system:set) accepts.
   returned: always
   type: str
 rc:
-  description: The return code from the C(occ config:system:set) command.
-  returned: when changed
+  description: Exit code of the C(occ config:system:set) or C(config:system:delete) command.
+  returned: when changed and not in check mode
   type: int
 stderr:
-  description: The standard error from the C(occ config:system:set) command.
-  returned: when changed
+  description: Standard error of the C(occ config:system:set) or C(config:system:delete) command.
+  returned: when changed and not in check mode
   type: str
 stdout:
-  description: The standard output from the C(occ config:system:set) command.
-  returned: when changed
+  description: Standard output of the C(occ config:system:set) or C(config:system:delete) command.
+  returned: when changed and not in check mode
   type: str
 '''
 

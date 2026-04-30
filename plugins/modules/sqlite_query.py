@@ -1,79 +1,109 @@
-#!/usr/bin/env python
-# -*- coding: utf-8; py-indent-offset: 4 -*-
-#
-# Author:  Linuxfabrik GmbH, Zurich, Switzerland
-# Contact: info (at) linuxfabrik (dot) ch
-#          https://www.linuxfabrik.ch/
-# License: The Unlicense, see LICENSE file.
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
+# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
+# The Unlicense (see LICENSE or https://unlicense.org/)
+
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 DOCUMENTATION = r'''
 ---
-module: sqlite
-short_description: Run SQLite queries
+module: sqlite_query
+short_description: Run a read-only SQLite query
 version_added: "2.0.0"
 description:
-   - Runs arbitrary SQLite queries.
-options:
-  as_dict:
-    description:
-    - Return a key-value dictionary (default), or a list of values.
-    type: bool
-    default: true
-  db:
-    description:
-    - Filename of the SQLite db file to connect to and run queries against.
-    type: str
-    required: true
-  fetch_one:
-    description:
-    - Just return the first item found.
-    type: bool
-    default: false
-  named_args:
-    description:
-    - Dictionary of key-value arguments to pass to the query.
-    type: dict
-  path:
-    description:
-    - Path to the SQLite db file.
-    type: str
-    required: true
-  query:
-    description:
-    - SQL query to run.
-    type: str
-    required: true
-  query_type:
-    description:
-    - SQL query type to run. Currently only 'select', but might be more in future versions.
-    type: str
-    choices: select
-    default: select
+    - Connects to a SQLite database file and runs a single C(SELECT) query against it.
+    - The query is parameterized via I(named_args) using SQLite's named placeholders (e.g. C(:my_arg)), so user-provided values do not have to be string-concatenated into the SQL.
+    - The connection is opened with a 1-second busy timeout, returns rows as dictionaries by default, and registers a Python-backed C(REGEXP) function so that C(WHERE col REGEXP '...') works (SQLite has no built-in regex implementation).
+    - The module is read-only by design - C(query_type) currently only accepts C(select), no transaction is committed, and the connection is closed (without commit) at the end. As a result, the module always reports C(changed=false).
 author:
-- Linuxfabrik GmbH, Zurich, Switzerland
+    - Linuxfabrik GmbH, Zurich, Switzerland
+options:
+    as_dict:
+        description:
+            - When C(true) (the default), each result row is returned as a dictionary keyed by column name. When C(false), rows are returned as positional tuples.
+        type: bool
+        default: true
+    db:
+        description:
+            - Filename of the SQLite database file. Combined with I(path) using C(os.path.join) to form the full path.
+        type: str
+        required: true
+    fetch_one:
+        description:
+            - When C(true), return only the first row of the result set instead of all rows. If there are no rows, an empty list is returned.
+        type: bool
+        default: false
+    named_args:
+        description:
+            - Dictionary of values bound to SQLite named placeholders (C(:name)) inside I(query). Use this instead of formatting values into the SQL string to avoid injection.
+        type: dict
+    path:
+        description:
+            - Directory the database file lives in. Combined with I(db) to form the full path.
+        type: str
+        required: true
+    query:
+        description:
+            - The SQL C(SELECT) statement to run. Use named placeholders (C(:name)) for any user-provided values and pass them through I(named_args).
+        type: str
+        required: true
+    query_type:
+        description:
+            - Type of SQL query to run. Currently only C(select) is implemented; the option exists to leave room for future write-capable variants.
+        type: str
+        choices: ['select']
+        default: 'select'
 '''
 
 EXAMPLES = r'''
-- name: Simple select query
-  sqlite_query:
-    db: acme.db
-    path: "{{ role_path }}/library"
-    query: SELECT sqlite_version();
+- name: 'Simple select query'
+  linuxfabrik.lfops.sqlite_query:
+    db: 'acme.db'
+    path: '{{ role_path }}/library'
+    query: 'SELECT sqlite_version();'
 
-- name: Extended select query
-  sqlite_query:
-    db: stig.db
-    path: "{{ role_path }}/library"
-    query_type: select
-    query: SELECT control_id FROM profile WHERE profile_name = :profile_name and enabled = :enabled
+- name: 'Parameterized select query'
+  linuxfabrik.lfops.sqlite_query:
+    db: 'stig.db'
+    path: '{{ role_path }}/library'
+    query: 'SELECT control_id FROM profile WHERE profile_name = :profile_name AND enabled = :enabled'
     named_args:
-      profile_name: CIS CentOS 7
+      profile_name: 'CIS CentOS 7'
       enabled: 1
-  delegate_to: localhost
+  delegate_to: 'localhost'
+'''
+
+RETURN = r'''
+changed:
+    description: Always C(false). The module never modifies the database.
+    returned: always
+    type: bool
+    sample: false
+query:
+    description: The SQL query that was executed, echoed back unchanged.
+    returned: always
+    type: str
+    sample: 'SELECT control_id FROM profile WHERE enabled = :enabled'
+query_type:
+    description: The query type that was executed.
+    returned: always
+    type: str
+    sample: 'select'
+query_result:
+    description:
+        - Rows returned by the query.
+        - With I(as_dict=true) (default), a list of dicts keyed by column name; with I(as_dict=false), a list of positional tuples.
+        - With I(fetch_one=true), only the first row is returned (as a single dict / tuple), or an empty list if the query produced no rows.
+    returned: always
+    type: list
+rowcount:
+    description: Number of rows in I(query_result). With I(fetch_one=true) this is C(0) when no rows were returned and C(1) (or the field count of the row) otherwise, since C(len()) is taken over the returned object.
+    returned: always
+    type: int
+    sample: 42
 '''
 
 

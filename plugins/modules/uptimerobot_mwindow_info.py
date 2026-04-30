@@ -14,10 +14,9 @@ module: uptimerobot_mwindow_info
 short_description: List UptimeRobot maintenance windows
 version_added: '6.0.2'
 description:
-    - Returns the full list of maintenance windows on the UptimeRobot account,
-      with enum-style fields translated to human-readable labels (C(type),
-      C(value), C(status)).
-    - Read-only. Reports C(changed=false).
+    - Calls C(getMWindows) on the UptimeRobot v2 API and returns every maintenance window on the account.
+    - Enum-coded fields are translated to human-readable labels - C(type) becomes C(once)/C(daily)/C(weekly)/C(monthly), C(status) becomes C(paused)/C(active), and for weekly windows C(value) is decoded from the dash-joined day-IDs (e.g. C(1-3-5)) back into labels (C(mon-wed-fri)). Monthly day-of-month numbers are passed through unchanged.
+    - Read-only; the module always reports C(changed=false) and is safe to run in check mode.
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:
@@ -26,13 +25,12 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key.
+        description: Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
         default: '~/.uptimerobot'
     friendly_name:
         description:
-            - If set, only the maintenance window with this exact friendly
-              name is returned (or none, if no match).
+            - Filter the returned list to the maintenance window whose C(friendly_name) is an exact match for this value. The result is still a list (length 0 or 1) for shape stability.
         type: str
 '''
 
@@ -73,10 +71,17 @@ EXAMPLES = r'''
 
 RETURN = r'''
 mwindows:
-    description: List of maintenance window dicts (empty list if none matched).
+    description: List of maintenance window dicts. Empty list when nothing matched.
     type: list
     returned: always
     elements: dict
+debug:
+    description: Diagnostic information about the API call. Stable enough to assert against, not stable enough to be load-bearing.
+    type: dict
+    returned: always
+    sample:
+        operation: 'list'
+        count: 4
 '''
 
 

@@ -11,27 +11,29 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 module: bitwarden_item
 
-short_description: Create, update and fetch Bitwarden items
+short_description: Create, update or fetch a Bitwarden login item
 
 description:
-    - This Ansible module returns a password item from Bitwarden by searching for an item name or an item ID.
-    - If no password item is found, a new item is created. Useful for automation.
-    - If you do not specify a name or Bitwarden ID, it searches using the name/title.
-    - If there is an existing Bitwarden item that differs from the given parameters, the item is updated, and the updated item is returned.
-    - If a search returns multiple entries, this module throws an error, since it cannot decide which one to use.
-    - On success, this module returns the complete Bitwarden item object.
-    - If you don't specify a name/title for a password item, a name/title will be created automatically, using C(hostname - purpose) (for example "C(dbserver - MariaDB)") or just C(hostname) (for example "C(dbserver)", depending on what is provided).
+    - Looks up a Bitwarden login item by name (and optional username, folder, collection and organization), or directly by Bitwarden item ID, and creates or updates it as needed to match the given parameters.
+    - When the item does not yet exist, it is created with the supplied values. When it exists but differs from the supplied values, it is updated in place. When it already matches, no API call is made and the module reports C(changed=false).
+    - When I(id) is set, only the lookup-by-ID path is used and all other search filters are ignored. The module fails if the ID does not exist - IDs are never auto-created.
+    - When the lookup is by name and matches more than one item, the module fails because it cannot decide which item to operate on.
+    - When I(name) is omitted, a title is generated automatically as C(hostname - purpose) (e.g. C(appsrv01 - MariaDB)) or just C(hostname) when no purpose is given.
+    - On success, the module returns the full Bitwarden item object. C(username) and C(password) are additionally lifted to the top level so they can be addressed without going through the C(login) sub-dictionary.
+    - Items are read from a local on-disk cache backed by C(bw serve). A cached C(bw sync) is performed at most every 60 seconds, so consecutive calls in the same play do not hammer the API.
 
 notes:
-    - Tested with C(bw) version 2023.5.0
-    - This lookup plugin just handles password items, nothing else.
-    - It does not handle TOTP at all.
-    - It cannot edit URIs in existing password items.
-    - You can get the organization, collection and folder IDs from the URL in the Bitwarden Web-GUI.
+    - Only login items (Bitwarden type 1) are managed. Cards, secure notes and identities are out of scope.
+    - TOTP secrets are not managed; the C(totp) field is set to an empty string on creation.
+    - I(uris) replaces the URI list on every run. Omitting it on an existing item causes the URI list to be cleared.
+    - I(password) defaults to C(None), which translates to "do not set a password". Use the C(bitwarden_item) lookup plugin to generate one.
+    - Attachments are matched by basename only; this module assumes that an attachment with the same basename has the same content. Pre-existing attachments are kept; only missing ones are uploaded.
+    - Organization, collection and folder IDs can be copied from the URL in the Bitwarden web vault.
+    - The cache file lives in C($XDG_RUNTIME_DIR) (falling back to C(/tmp)) and is shared across this module and the C(bitwarden_item) lookup within the same controller session.
 
 requirements:
-    - Requires the Bitwarden CLI tool C(bw) version v2022.9.0+. Have a look at U(https://bitwarden.com/help/article/cli/) for installation instructions.
-    - You must already be logged in to Bitwarden using the CLI tool and have the client API running. You can login to the vault using `bw login` and `bw unlock`, then start the client RESTful API webserver by running `bw serve --hostname 127.0.0.1`.
+    - Bitwarden CLI C(bw) version v2022.9.0 or newer. See U(https://bitwarden.com/help/article/cli/) for installation instructions.
+    - You must be logged in and unlocked (C(bw login) followed by C(bw unlock)), and have the local API running, e.g. C(bw serve --hostname 127.0.0.1 --port 8087). The module connects to C(127.0.0.1:8087) by default.
 
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
@@ -40,54 +42,55 @@ version_added: "1.0.0"
 
 options:
     attachments:
-        description: List of attachments on the bitwarden item. The name of the attachments will be the basename of the files. Note that Bitwarden allows duplicate file names but this module does not, and instead uses the file name as the unique key. This means it assumes that if there is an already uploaded attachment with the same name, it has the same content as the local file.
+        description:
+            - List of local file paths to upload as attachments. The basename of each path is used as the attachment name in Bitwarden.
+            - Bitwarden allows duplicate attachment names, but this module does not, and fails if two paths share the same basename.
+            - Existing attachments with the same basename are assumed to have the same content and are not re-uploaded.
         required: False
         type: list
     collection_id:
-        description: Bitwarden collection IDs in which the password item is stored.
+        description: Bitwarden collection ID the item belongs to. Used both as a search filter and, if the item has to be created, as the target collection.
         required: False
         type: str
     folder_id:
-        description: Bitwarden folder ID in which the password item is stored.
-        default: None
+        description: Bitwarden folder ID the item belongs to. Used both as a search filter and, if the item has to be created, as the target folder.
         required: False
         type: str
     hostname:
-        description: Hostname to which the password belongs. Used for automatic name/title generation if I(name) is not specified.
+        description: Hostname the password belongs to. Used to generate the item name when I(name) is not given.
         required: False
         type: str
     id:
-        description: If specified, searches for the specified item ID instead of the name. This also means all other filters will be ignored.
+        description: Operate on an existing item by its Bitwarden item ID. When set, all other search filters are ignored. The module fails if the ID does not exist (no auto-creation).
         required: False
         type: str
     name:
-        description: Name/Title of the password item. If set, automatic name/title generation is switched off.
+        description: Explicit name/title of the item. When set, disables automatic name generation from I(hostname) and I(purpose).
         required: False
         type: str
     notes:
-        description: Any notes on the password item. This is limited to 10000 characters by Bitwarden.
+        description: Notes to set on the item. Bitwarden limits notes to 10000 characters. Updates on existing items overwrite previous notes.
         default: 'Generated by Ansible.'
         required: False
         type: str
     organization_id:
-        description: Bitwarden Organization ID to which the password item belongs.
+        description: Bitwarden organization ID the item belongs to. Used both as a search filter and, if the item has to be created, as the target organization.
         required: False
         type: str
     password:
-        description: The password of the Bitwarden item.
-        default: None
+        description: Password to set on the login item. C(None) (the default) leaves the password field unset; existing passwords on already-existing items are overwritten by every non-C(None) value.
         required: False
         type: str
     purpose:
-        description: The purpose of the password. What is it for? Used for automatic name/title generation if I(name) is not specified. For example, C(MariaDB) or C(Rocky).
+        description: What the password is for (e.g. C(MariaDB), C(Rocky)). Combined with I(hostname) to build the item name when I(name) is not given.
         required: False
         type: str
     uris:
-        description: List of URIs on the password item.
+        description: List of URIs to set on the login item. The URI list is replaced on every run; omit only when you want the item to have no URIs.
         required: False
         type: list
     username:
-        description: Username of the password item.
+        description: Username to set on the login item. Used both as a search filter and, if the item has to be created or updated, as the C(login.username) value.
         required: False
         type: str
 '''
@@ -239,7 +242,7 @@ revisionDate:
     returned: always
     sample: '2019-01-28T15:31:34.300Z'
 type:
-    description: Unclear from upstream documentation.
+    description: Bitwarden item type. Always C(1) (login) for items handled by this module. Other Bitwarden types (C(2) secure note, C(3) card, C(4) identity) are filtered out and never returned.
     type: int
     returned: always
     sample: 1
