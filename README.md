@@ -27,8 +27,14 @@
 LFOps is a comprehensive Ansible Collection providing 145+ playbooks and 160+ roles to bootstrap and manage Linux-based IT infrastructures. It covers the full server lifecycle -- from initial provisioning and hardening to application deployment, monitoring, and automated backups. LFOps supports RHEL 8/9/10, Debian, and Ubuntu.
 
 
+## Documentation
+
+Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfabrik.github.io/lfops/). It is automatically built and deployed on every push to `main`.
+
+
 ## Table of Contents
 
+* [Documentation](#documentation)
 * [Requirements](#requirements)
 * [Installation](#installation)
 
@@ -54,7 +60,6 @@ LFOps is a comprehensive Ansible Collection providing 145+ playbooks and 160+ ro
     * [Recommended ansible.cfg](#recommended-ansiblecfg)
     * [LFOps-wide Variables](#lfops-wide-variables)
     * [Bitwarden Integration](#bitwarden-integration)
-* [Documentation](#documentation)
 * [Compatibility](#compatibility)
 * [Tips, Tricks & Troubleshooting](#tips-tricks--troubleshooting)
 * [Contributing](#contributing)
@@ -421,11 +426,6 @@ LFOps also ships a small set of custom modules for resource types that are not c
 * **`uptimerobot_*`** — manage UptimeRobot monitors, maintenance windows, public status pages and alert contacts via the [UptimeRobot API v2](https://uptimerobot.com/api/legacy/), with full idempotency, `--check`, `--diff` and a parallel set of `*_info` modules for read-only inspection. See the [`uptimerobot` role README](roles/uptimerobot/) for the full reference.
 
 Each custom module ships its own `DOCUMENTATION`, `EXAMPLES` and `RETURN` blocks; browse them with `ansible-doc linuxfabrik.lfops.<module>`.
-
-
-## Documentation
-
-Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfabrik.github.io/lfops/). It is automatically built and deployed on every push to `main`.
 
 
 ## Compatibility
