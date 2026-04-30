@@ -611,45 +611,52 @@ Have a look at the [repo_icinga/tasks/Debian.yml](https://github.com/Linuxfabrik
 
 ### Roles with Special Features
 
-Roles with special technical implementations and capabilities:
+The following roles use techniques that are unusual within LFOps. Roles not in this list follow the standard install-config-service pattern documented in `roles/example`. Each subsection points to the role we consider the cleanest reference implementation of that pattern; if you need to add the same pattern to a new role, start by reading the listed role.
 
-* [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): Some Jinja templates use non-default block delimiters (`[%`, `%]`) so that Apache's own `%`-prefixed format directives in `LogFormat` etc. do not collide with Jinja's defaults.
 
-* [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr): Installs the correct version of a dependent package (i.e. java) based on the solr version.
+#### Build from source (autotools)
 
-* [github_project_createrepo](https://github.com/Linuxfabrik/lfops/tree/main/roles/github_project_createrepo): Sets FACL entries to allow both the webserver user and the github-project-createrepo user to access files.
+* [libmaxminddb](https://github.com/Linuxfabrik/lfops/tree/main/roles/libmaxminddb): Downloads a GitHub release tarball, then runs `./configure`, `make`, `make check`, `make install` instead of relying on a distro package.
 
-* [grav](https://github.com/Linuxfabrik/lfops/tree/main/roles/grav): chmod: Sets file (`664`), `bin/` (`775`), directory (`775`) and setgid permissions separately using `find -exec chmod`.
 
-* [icinga2_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_agent): Implements install & maintenance as well as uninstall/remove on Linux and Windows.
+#### Custom SELinux policy modules
 
-* [libmaxminddb](https://github.com/Linuxfabrik/lfops/tree/main/roles/libmaxminddb): Builds from source via `./configure`, `make`, `make check` and `make install` against a GitHub release tarball, instead of relying on a distro package.
+* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): Generic driver for inventory-defined `.te` source. Compiles via `checkmodule` + `semodule_package` + `semodule --install` in a temp directory, and applies modules → booleans / file contexts / ports → restorecon → setenforce in that order so types and booleans introduced by a new module are usable in the same run.
 
-* [libreoffice](https://github.com/Linuxfabrik/lfops/tree/main/roles/libreoffice): Generates custom SELinux policy modules (`*.te`) on the fly, packages them with `checkmodule` / `semodule_package`, and loads them via `semodule --install`.
 
-* [librenms](https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms): Compiles and loads an SELinux module.
+#### FACL with multi-user / inherited access
 
-* [mirror](https://github.com/Linuxfabrik/lfops/tree/main/roles/mirror): Sets FACL entries (including `default:` ACLs for inheritance) so that both the webserver user and the mirror service user can read and write the served files.
+* [mirror](https://github.com/Linuxfabrik/lfops/tree/main/roles/mirror): Grants both the webserver user and the mirror service user RW access to the served files, plus `default:` ACLs so newly created files inherit the same permissions without a recursive `setfacl` run.
 
-* [mod_maxminddb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mod_maxminddb): Builds the Apache module from source via `./configure` + `make install` and registers it with the running Apache via `a2enmod` on Debian/Ubuntu.
 
-* [mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb): The role implements a `skip` state that completely ignores the entry.
+#### Multi-OS coverage (Linux + Windows)
 
-* [monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins): Implements install & maintenance as well as uninstall/remove on Linux and Windows.
+* [monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins): Splits its task tree into separate `linux-*.yml` and `windows-*.yml` files for install, package-vs-source flavour, archive download and uninstall paths.
 
-* [moodle](https://github.com/Linuxfabrik/lfops/tree/main/roles/moodle): Searches for the latest and most recent specific LTS version of itself on GitHub.
 
-* [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud): The role performs some tasks only on the very first run and never again after that. To do this, it creates a state file for itself so that it knows that it must skip certain tasks on subsequent runs. The role's README has a concise but informative "Tags" section.
+#### Non-default Jinja2 delimiters
 
-* [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): Build list for ansible.builtin.packages based on state `present` and `absent`. Some Jinja templates use non-default strings marking the beginning/end of a block.
+* [telegraf](https://github.com/Linuxfabrik/lfops/tree/main/roles/telegraf): Flips the variable delimiters via the `#jinja2:variable_start_string:'[%', variable_end_string:'%]'` header in `telegraf.conf.j2`, so TOML payloads containing `{{ ... }}` (Telegraf's own templating) survive Ansible's templating pass.
 
-* [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): Gathers the installed version and deploys the corresponding config file. Configures Systemd with Unit File overrides.
 
-* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): Compiles inventory-defined SELinux policy modules from `.te` source in a temp directory and applies them in a strict order (modules → booleans / file contexts / ports → restorecon → setenforce) so that types and booleans introduced by a new module are usable in the same run.
+#### Permission management via `find -exec chmod`
 
-* [telegraf](https://github.com/Linuxfabrik/lfops/tree/main/roles/telegraf): Jinja templates use non-default strings marking the beginning/end of a print statement.
+* [grav](https://github.com/Linuxfabrik/lfops/tree/main/roles/grav): Four separate `chmod` passes (files `664`, `bin/` `775`, directories `775`, plus a setgid pass on directories), each registered with `changed_when` based on the `--changes` output for idempotency.
 
-* [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress): chmod: Sets file and folder permissions separately using `find`.
+
+#### Other
+
+* [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr): Picks the matching OpenJDK package for the configured Solr major version (Solr 9 → OpenJDK 17, Solr 8 → OpenJDK 8) via a per-major-version lookup in `vars/main.yml`.
+
+* [mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb): Entries in `mongodb__databases` / `mongodb__users` accept `state: skip` to leave the entry untouched in this run (neither created nor removed) - useful when the database / user is managed elsewhere but should still appear in the inventory.
+
+* [moodle](https://github.com/Linuxfabrik/lfops/tree/main/roles/moodle): Runtime version discovery via `api.github.com/repos/moodle/moodle/tags`, filtered on `^v<configured-version>` and using the first match as the patch tag to download.
+
+* [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud): Writes a state file once initial installation succeeded and uses it to skip the install-only tasks on every subsequent run. The README has a concise but informative "Tags" section.
+
+* [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): Builds the `ansible.builtin.package` lists by splitting `php__modules__combined_var` on `state: present` vs `state: absent`, so install and removal happen in two batched package calls instead of one task per module.
+
+* [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): Reads the installed Redis version via `package_facts` and deploys the matching `<version>-redis.conf.j2`. systemd is configured via unit-file overrides instead of editing the upstream unit.
 
 
 ### Vendored Plugins
