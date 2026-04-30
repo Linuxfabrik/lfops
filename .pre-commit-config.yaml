@@ -22,6 +22,10 @@ repos:
         args: ['--unsafe']
       - id: 'debug-statements'
       - id: 'detect-private-key'
+        # gpg_key returns ASCII-armored exports; the RETURN sample contains
+        # the literal PGP private key block header for documentation, which
+        # the hook regex-matches as if it were a real key.
+        exclude: '^plugins/modules/gpg_key\.py$'
       - id: 'end-of-file-fixer'
       - id: 'mixed-line-ending'
       - id: 'trailing-whitespace'
