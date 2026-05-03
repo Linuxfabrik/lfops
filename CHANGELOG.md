@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **role:infomaniak_vm**: Always create a managed port for every entry in `infomaniak_vm__networks`, even when no `fixed_ip` is set. Previously only networks with a `fixed_ip` got a managed port; networks without one relied on OpenStack's auto-created port. To avoid creating unused (but billed) managed ports on VMs provisioned under the old behavior, make sure to manually rename the existing port in OpenStack to match the `port_name`. Note that this port will not survive VM deletion / detachment, since it was automatically created and therefore is owned by OpenStack, not the user.
 
+### Changed
+
+* **role:apache_httpd**: Update the two reverse-proxy snippets in `EXAMPLES.md` to use `ProxyPass` instead of `RewriteRule ^/(.*) ... [proxy,last]`. The RewriteRule variant `%`-decodes the URI pattern and forwards characters such as `?` unencoded to the backend, which breaks WebDAV apps (file-not-found on rename in Nextcloud). The examples now also carry a comment explaining the choice and link to the corresponding [blog post](https://www.linuxfabrik.ch/blog/nextcloud-rewriterules-vs-proxypass).
+
 ### Added
 
 * **playbooks/setup_basic**: Add `setup_basic__skip_policycoreutils` to skip the `policycoreutils` role, matching the pattern used by the other roles in the playbook.
