@@ -26,6 +26,7 @@
       url: 'https://github.com/Icinga/icingaweb2-module-reporting/archive/{{ icingaweb2_module_reporting__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 

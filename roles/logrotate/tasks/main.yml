@@ -39,6 +39,7 @@
     ansible.builtin.stat:
       path: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/logrotate.d'
     delegate_to: 'localhost'
+    become: false
     changed_when: false
     register: 'logrotate__custom_configs'
 

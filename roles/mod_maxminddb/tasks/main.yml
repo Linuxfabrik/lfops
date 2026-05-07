@@ -15,6 +15,7 @@
       url: 'https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
       dest: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 

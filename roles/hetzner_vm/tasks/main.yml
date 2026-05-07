@@ -8,6 +8,7 @@
       state: 'present' # we only use state present, as other vms could use the network too
     loop: '{{ hetzner_vm__networks }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'hetzner_vm__state != "absent"'
       - 'item["cidr"] is defined'
@@ -22,6 +23,7 @@
       state: 'present' # we only use state present, as other vms could use the network too
     loop: '{{ hetzner_vm__networks }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'hetzner_vm__state != "absent"'
       - 'item["cidr"] is defined'
@@ -35,6 +37,7 @@
       state: 'present' # we only use state present, as other vms could use the network too
     loop: '{{ hetzner_vm__networks | subelements("routes", skip_missing=True) }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'hetzner_vm__state != "absent"'
 
@@ -45,6 +48,7 @@
       rules: '{{ hetzner_vm__firewall_rules }}'
       state: 'present'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length > 0'
       - 'hetzner_vm__state != "absent"' # cannot remove the firewall here, as it is still in use
@@ -66,6 +70,7 @@
       firewalls: '{{ (hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length > 0) | ternary([hetzner_vm__name], []) }}'
       state: '{{ hetzner_vm__state }}'
     delegate_to: 'localhost'
+    become: false
 
   - name: 'Manage the firewall of the VM'
     hetzner.hcloud.hcloud_firewall:
@@ -73,6 +78,7 @@
       name: '{{ hetzner_vm__name }}' # name of the firewall. we use the name of the vm for this
       state: 'absent'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length > 0'
       - 'hetzner_vm__state == "absent"' # cannot remove the firewall here, as it is still in use
@@ -87,6 +93,7 @@
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ hetzner_vm__networks }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'hetzner_vm__state != "absent"'
       - 'item["fixed_ip"] is defined'
@@ -102,6 +109,7 @@
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ hetzner_vm__volumes }}'
     delegate_to: 'localhost'
+    become: false
 
   tags:
     - 'hetzner_vm'

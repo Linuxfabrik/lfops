@@ -16,6 +16,7 @@
       version: '{{ __shared__lib_version }}'
       depth: 1
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
@@ -26,6 +27,7 @@
         path: '/tmp/ansible.lib-repo'
         state: 'absent'
       delegate_to: 'localhost'
+      become: false
       changed_when: false # no change on the remote host
 
     - name: 'Clone the lib git repo to localhost (version: {{ __shared__lib_version }})'
@@ -35,5 +37,6 @@
         version: '{{ __shared__lib_version }}'
         depth: 1
       delegate_to: 'localhost'
+      become: false
       run_once: true
       check_mode: false # run task even if `--check` is specified

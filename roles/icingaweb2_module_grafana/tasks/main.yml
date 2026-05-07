@@ -47,6 +47,7 @@
       url: 'https://github.com/NETWAYS/icingaweb2-module-grafana/archive/{{ icingaweb2_module_grafana__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
@@ -130,6 +131,7 @@
 
         cp -- /tmp/ansible.monitoring-plugins-repo/assets/icingaweb2-module-grafana/*.ini /tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana/
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
@@ -139,6 +141,7 @@
       content: '{{ icingaweb2_module_grafana__custom_graphs_config }}'
       dest: '/tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana/z00-custom.ini'
     delegate_to: 'localhost'
+    become: false
     check_mode: false # run task even if `--check` is specified
 
   - name: 'Assemble /tmp/ansible.icingaweb2-module-grafana-combined.ini' # noqa risky-file-permissions (temp file)
@@ -147,6 +150,7 @@
       dest: '/tmp/ansible.icingaweb2-module-grafana-combined.ini'
       delimiter: '\n\n'
     delegate_to: 'localhost'
+    become: false
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 

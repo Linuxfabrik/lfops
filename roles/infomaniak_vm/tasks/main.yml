@@ -13,6 +13,7 @@
       name: '{{ infomaniak_vm__name }}'
       state: 'present'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0'
       - 'infomaniak_vm__state != "absent"'
@@ -37,6 +38,7 @@
       state: '{{ item["state"] | d("present") }}'
     loop: '{{ infomaniak_vm__security_group_rules }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0'
       - 'infomaniak_vm__state != "absent"'
@@ -61,6 +63,7 @@
       name: '{{ item["name"] }}'
       state: 'present' # we only use state present, as other vms could use the network too
     delegate_to: 'localhost'
+    become: false
     loop: '{{ infomaniak_vm__networks }}'
     when: 'infomaniak_vm__state != "absent"'
 
@@ -81,6 +84,7 @@
       enable_dhcp: false
       state: 'present' # we only use state present, as other vms could use the network too
     delegate_to: 'localhost'
+    become: false
     loop: '{{ infomaniak_vm__networks }}'
     when:
       - 'infomaniak_vm__state != "absent"'
@@ -105,6 +109,7 @@
       security_groups: '{{ ((infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0) | ternary(["default", infomaniak_vm__name], ["default"])) if item["name"] == "ext-net1" else omit }}'
       state: 'present'
     delegate_to: 'localhost'
+    become: false
     loop: '{{ infomaniak_vm__networks }}'
     loop_control:
       label: 'name={{ item["name"] }}, port_name={{ item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
@@ -139,6 +144,7 @@
       state: 'present'
       volume_type: 'CEPH_1_{{ infomaniak_vm__separate_boot_volume_type }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'infomaniak_vm__separate_boot_volume_size is defined and infomaniak_vm__separate_boot_volume_size | string | length > 0'
 
@@ -161,6 +167,7 @@
       state: '{{ infomaniak_vm__state }}'
       auto_ip: false # not all VMs need to have a public ip
     delegate_to: 'localhost'
+    become: false
     when:
       - 'infomaniak_vm__separate_boot_volume_size is defined and infomaniak_vm__separate_boot_volume_size | string | length > 0'
 
@@ -183,6 +190,7 @@
       state: '{{ infomaniak_vm__state }}'
       auto_ip: false # not all VMs need to have a public ip
     delegate_to: 'localhost'
+    become: false
     when:
       - 'infomaniak_vm__separate_boot_volume_size is not defined or not infomaniak_vm__separate_boot_volume_size | string | length > 0'
 
@@ -200,6 +208,7 @@
       name: '{{ item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
       state: 'absent'
     delegate_to: 'localhost'
+    become: false
     loop: '{{ infomaniak_vm__networks }}'
     when:
       - 'infomaniak_vm__state == "absent"'
@@ -218,6 +227,7 @@
       name: '{{ infomaniak_vm__name }}'
       state: 'absent'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0'
       - 'infomaniak_vm__state == "absent"'

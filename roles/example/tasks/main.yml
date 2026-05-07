@@ -84,13 +84,26 @@
       name: '{{ __example__required_packages }}'
       state: 'present'
 
-  - name: 'curl --output /tmp/example-{{ example__version }}.tar.gz https://example.com/releases/example-{{ example__version }}.tar.gz'
+  # download on the controller (`delegate_to: 'localhost'`) and copy to the target afterwards,
+  # so that targets without internet access can still be provisioned.
+  # always set `become: false` on tasks delegated to localhost. otherwise `become: true`
+  # from the playbook level propagates and triggers sudo on the controller, which is
+  # unneeded for a download into /tmp and usually fails because no sudo password is set.
+  - name: 'curl --output /tmp/ansible.example-{{ example__version }}.tar.gz https://example.com/releases/example-{{ example__version }}.tar.gz' # noqa risky-file-permissions (temporary file)
     ansible.builtin.get_url:
       url: 'https://example.com/releases/example-{{ example__version }}.tar.gz'
-      dest: '/tmp/example-{{ example__version }}.tar.gz'
-      owner: 'root'
-      group: 'root'
+      dest: '/tmp/ansible.example-{{ example__version }}.tar.gz'
       mode: 0o644
+    delegate_to: 'localhost'
+    become: false
+    run_once: true
+    changed_when: false # not an actual config change on the target
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Copy /tmp/ansible.example-{{ example__version }}.tar.gz to the target' # noqa risky-file-permissions (temporary file)
+    ansible.builtin.copy:
+      src: '/tmp/ansible.example-{{ example__version }}.tar.gz'
+      dest: '/tmp/example-{{ example__version }}.tar.gz'
 
   - name: 'tar xzf /tmp/example-{{ example__version }}.tar.gz -C /opt/example'
     ansible.builtin.unarchive:

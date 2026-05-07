@@ -6,6 +6,7 @@
   check_mode: false # run task even if `--check` is specified
   register: 'acme_sh__curl_result'
   delegate_to: 'localhost'
+  become: false
 
 - name: 'check if acme-challenge was reachable'
   ansible.builtin.assert:

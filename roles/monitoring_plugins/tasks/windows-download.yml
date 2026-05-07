@@ -20,6 +20,7 @@
       url: '{{ __monitoring_plugins__download_url }}'
       dest: '/tmp/ansible.{{ __monitoring_plugins__download_url | basename }}'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 

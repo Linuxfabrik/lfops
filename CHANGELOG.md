@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:example**: Demonstrate the `delegate_to: 'localhost'` + `become: false` pattern (download on the controller, copy to the target) so role authors can copy it consistently.
 * **role:apache_httpd**: bump Core Rule Set to 4.26.0
 * **role:apache_httpd**: Update the two reverse-proxy snippets in `EXAMPLES.md` to use `ProxyPass` instead of `RewriteRule ^/(.*) ... [proxy,last]`. The RewriteRule variant `%`-decodes the URI pattern and forwards characters such as `?` unencoded to the backend, which breaks WebDAV apps (file-not-found on rename in Nextcloud). The examples now also carry a comment explaining the choice and link to the corresponding [blog post](https://www.linuxfabrik.ch/blog/nextcloud-rewriterules-vs-proxypass).
 
@@ -50,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **roles**: Set `become: false` on tasks delegated to localhost across the collection. Previously these tasks inherited `become: true` from the playbook level and tried to call `sudo` on the Ansible controller, which fails on controllers without a passwordless sudo setup with `sudo: a password is required`. Affected are all `repo_*` roles, the `*_vm` cloud roles (`exoscale_vm`, `hetzner_vm`, `infomaniak_vm`), all `icingaweb2_module_*` roles that download artefacts, `monitoring_plugins`, `shared`, plus several others. Existing playbooks that were working without playbook-level `become: true` are unaffected ([#242](https://github.com/Linuxfabrik/lfops/issues/242)).
+* **role:repo_monitoring_plugins**: Add the missing `run_once: true` on the local repo-key download task on Red Hat platforms, matching the Debian variant. The key is now downloaded once per run instead of once per host.
 * **role:network**: README still claimed the role disables zeroconf, but the corresponding `NOZEROCONF=yes` task was removed in 2024 (NetworkManager no longer adds the zeroconf route by default). Bring the README in line with what the role actually does and call out the Hetzner-specific `hc-utils` cleanup explicitly.
 * **role:haveged**: Setting `haveged__service_state: 'stopped'` produced the invalid systemctl command `stopp` because of a `[:-2]` slice in the task name. The role now uses `ansible.builtin.service` directly with the configured state, so all four valid values (`reloaded` / `restarted` / `started` / `stopped`) work as expected.
 * **role:unattended_upgrades**: Correct README description; the role deactivates Unattended Upgrades by setting both `APT::Periodic` flags to `0` in `/etc/apt/apt.conf.d/20auto-upgrades` (Debian/Ubuntu), it does not remove the `unattended-upgrades` package.

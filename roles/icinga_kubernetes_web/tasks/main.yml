@@ -26,6 +26,7 @@
       url: '{{ icinga_kubernetes_web__url }}'
       dest: '/tmp/ansible.icingaweb2-kubernetes-web-{{ icinga_kubernetes_web__version }}.tar.gz'
     delegate_to: 'localhost'
+    become: false
     run_once: true
     check_mode: false # run task even if `--check` is specified
 

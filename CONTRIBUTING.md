@@ -259,6 +259,21 @@ When creating a new role, make sure to deliver:
     * `ansible.builtin.template` over `ansible.builtin.copy`, `ansible.builtin.lineinfile` or `ansible.builtin.blockinfile`. Templating the whole file leads to more consistent, deterministic, and expected results.
 * Do not use `state: 'latest'` for the `ansible.builtin.package` module as this is not idempotent. Always use `state: 'present'`.
 * Always use `delegate_to: 'localhost'` instead of `local_action`.
+* Always set `become: false` on every task delegated to localhost. When a play sets `become: true` at the play level (the typical case), it propagates to delegated tasks too and tries to escalate via sudo on the Ansible controller. On a controller without passwordless sudo this fails with `sudo: a password is required`, even though the delegated task only writes to `/tmp` or hits a remote API and does not need root locally. Example:
+
+    ```yaml
+    - name: 'curl --output /tmp/ansible.example.tar.gz https://example.com/releases/example.tar.gz'
+      ansible.builtin.get_url:
+        url: 'https://example.com/releases/example.tar.gz'
+        dest: '/tmp/ansible.example.tar.gz'
+        mode: 0o644
+      delegate_to: 'localhost'
+      become: false
+      run_once: true
+      changed_when: false # not an actual config change on the target
+      check_mode: false # run task even if `--check` is specified
+    ```
+
 * Always provide `changed_when`, `creates`, or `removes` for `ansible.builtin.command` and `ansible.builtin.shell` tasks to ensure idempotency. Use `changed_when: false` for read-only commands.
 * When deploying files with `ansible.builtin.template`, always set `backup`, `src`, `dest`, `owner`, `group`, and `mode`.
 * Prefer `ansible.builtin.assert` over `ansible.builtin.fail` with `when` for validation checks. There is basically no technical difference; this guideline is only for consistency.

@@ -272,6 +272,7 @@
     loop_control:
       label: '{{ item["json"]["name"] | d(item) }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'not grafana__skip_token_to_bitwarden'
       - 'not (item["skipped"] is defined and item["skipped"])'

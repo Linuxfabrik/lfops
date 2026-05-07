@@ -239,6 +239,7 @@
     changed_when: true
 
   delegate_to: 'localhost'
+  become: false
   tags:
     - 'never'
     - 'opensearch:generate_certs'
