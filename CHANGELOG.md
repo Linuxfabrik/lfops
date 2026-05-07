@@ -94,7 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **COMPATIBILITY**: `at`, `haveged`, `mod_maxminddb` and `qemu_guest_agent` are now expected to work on Debian 12 / 13 and Ubuntu 22.04 / 24.04 / 26.04 (marked `(x)`: code-reviewed, untested in production).
 * **role:hostname, role:kdump, role:timezone**: Add `meta/argument_specs.yml` so Ansible validates the role variables (types, choices) at role entry. No behaviour change.
 * **role:libmaxminddb, role:mod_maxminddb**: Add `meta/argument_specs.yml`. No behaviour change.
-* **role:apps, role:grafana_grizzly, role:mailto_root, role:motd**: Add `meta/argument_specs.yml`. No behaviour change.
 * **role:alternatives, role:elastic_agent, role:elastic_agent_fleet_server, role:icinga_kubernetes_web, role:icingaweb2_module_reporting, role:kernel_settings, role:lvm, role:mastodon, role:proxysql**: Add `meta/argument_specs.yml`. No behaviour change.
 * **role:network**: Scope the `hc-utils` removal task to Red Hat-family hosts (`when: ansible_facts["os_family"] == "RedHat"`). Hetzner ships `hc-utils` as RPMs only, so on Debian / Ubuntu the call was a no-op caught by `ignore_errors: true`. No behaviour change on either family.
 * **role:icingaweb2_module_businessprocess**: README now documents the install behaviour (controller-side download, every-run-overwrite, idempotent module enable). Add `meta/argument_specs.yml`.
