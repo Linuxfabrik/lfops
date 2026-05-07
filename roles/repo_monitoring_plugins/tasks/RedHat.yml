@@ -21,11 +21,16 @@
       state: 'present'
       key: '/tmp/ansible.linuxfabrik.key'
 
-  - name: 'Deploy /etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo'
+  - name: 'Remove legacy /etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo (superseded by linuxfabrik-monitoring-plugins.repo)'
+    ansible.builtin.file:
+      path: '/etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo'
+      state: 'absent'
+
+  - name: 'Deploy /etc/yum.repos.d/linuxfabrik-monitoring-plugins.repo'
     ansible.builtin.template:
       backup: true
-      src: 'etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo.j2'
-      dest: '/etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo'
+      src: 'etc/yum.repos.d/linuxfabrik-monitoring-plugins.repo.j2'
+      dest: '/etc/yum.repos.d/linuxfabrik-monitoring-plugins.repo'
       owner: 'root'
       group: 'root'
       mode: 0o644
