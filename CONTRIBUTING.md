@@ -341,12 +341,15 @@ When creating a new role, make sure to deliver:
 
 Every role should include a `meta/argument_specs.yml` that declares all user-facing variables with their types. Ansible validates these automatically at role entry (before any tasks run), catching type mismatches and missing required variables without manual assert code.
 
-Include all variables documented in the README: mandatory variables, simple optional variables, and the `__host_var`/`__group_var` variants of injection variables. Do not include internal variables (`__dependent_var`, `__role_var`, `__combined_var`).
+Include all variables documented in the README: mandatory variables, simple optional variables, and the `__host_var`/`__group_var`/`__dependent_var` variants of injection variables. Do not include the purely internal `__role_var` and `__combined_var` slots.
+
+`__dependent_var` must be declared even though it is conceptually internal, because `setup_*` playbooks pass it into the role via `vars:` and Ansible validates role-vars against `argument_specs`. Omitting it causes "Supported parameters include: ..." errors at role entry.
 
 Guidelines for `argument_specs`:
 
 * Use `required: true` for mandatory variables (replaces manual `assert` + `is defined` checks).
 * Use `type` and `choices` where applicable. For injection variables where the default is `''` (empty string) but the actual value is a different type (e.g. int), use `type: 'raw'` to avoid rejecting the empty default.
+* For dict variables fed by external lookups (e.g. `linuxfabrik.lfops.bitwarden_item`), declare `type: 'dict'` without `options:`. The lookup returns the full Bitwarden item with extra keys (`id`, `notes`, `fields`, ...), and a strict sub-option spec would reject them. Document the expected keys in the role's README instead.
 * Omit `default` when the default in `defaults/main.yml` is a Jinja2 expression (e.g. `'{{ __example__conf_worker_threads }}'`), as `argument_specs` cannot evaluate it.
 * Set `default` when it is a static value (e.g. `true`, `'started'`, `[]`).
 * Sort entries alphabetically.
