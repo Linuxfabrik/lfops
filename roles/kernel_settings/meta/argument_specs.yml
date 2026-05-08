@@ -1,0 +1,121 @@
+argument_specs:
+  main:
+    options:
+
+      kernel_settings__sysctl__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Sysctl entries to apply (`name`/`value`). Dependent-role
+          injection.
+
+      kernel_settings__sysctl__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Sysctl entries to apply (`name`/`value`). Group-level
+          override.
+
+      kernel_settings__sysctl__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Sysctl entries to apply (`name`/`value`). Host-level
+          override.
+
+      kernel_settings__sysfs__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'sysfs entries to apply. Dependent-role injection.'
+
+      kernel_settings__sysfs__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'sysfs entries to apply. Group-level override.'
+
+      kernel_settings__sysfs__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'sysfs entries to apply. Host-level override.'
+
+      kernel_settings__systemd_cpu_affinity__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Comma-separated CPU list for systemd `CPUAffinity=`.
+          Dependent-role injection.
+
+      kernel_settings__systemd_cpu_affinity__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Comma-separated CPU list for systemd `CPUAffinity=`.
+          Group-level override.
+
+      kernel_settings__systemd_cpu_affinity__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Comma-separated CPU list for systemd `CPUAffinity=`.
+          Host-level override.
+
+      kernel_settings__transparent_hugepages__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Value for `transparent_hugepage/enabled`
+          (`always`/`madvise`/`never`). Dependent-role injection.
+
+      kernel_settings__transparent_hugepages__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Value for `transparent_hugepage/enabled`
+          (`always`/`madvise`/`never`). Group-level override.
+
+      kernel_settings__transparent_hugepages__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Value for `transparent_hugepage/enabled`. Host-level override.
+
+      kernel_settings__transparent_hugepages_defrag__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Value for `transparent_hugepage/defrag` (`always`, `defer`,
+          `defer+madvise`, `madvise`, `never`). Dependent-role injection.
+
+      kernel_settings__transparent_hugepages_defrag__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Value for `transparent_hugepage/defrag` (`always`, `defer`,
+          `defer+madvise`, `madvise`, `never`). Group-level override.
+
+      kernel_settings__transparent_hugepages_defrag__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Value for `transparent_hugepage/defrag`. Host-level override.
