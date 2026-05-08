@@ -1,0 +1,48 @@
+argument_specs:
+  main:
+    options:
+
+      elastic_agent_fleet_server__insecure:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          If `true`, skip TLS verification when enrolling against the
+          Elasticsearch / Kibana endpoint.
+
+      elastic_agent_fleet_server__policy_id:
+        type: 'str'
+        required: false
+        default: 'fleet-server-policy'
+        description: 'The Fleet Server policy ID to attach the agent to.'
+
+      elastic_agent_fleet_server__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether elastic-agent.service is enabled at boot.'
+
+      elastic_agent_fleet_server__service_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'State of elastic-agent.service.'
+
+      elastic_agent_fleet_server__service_token:
+        type: 'str'
+        required: true
+        description: >-
+          Service token created via the Elasticsearch API or Kibana
+          Fleet UI. Used to enroll this host as a Fleet Server.
+
+      elastic_agent_fleet_server__url:
+        type: 'str'
+        required: false
+        description: >-
+          Externally reachable URL of this Fleet Server. Defaults to
+          `https://{{ ansible_facts["nodename"] }}:8220`.
