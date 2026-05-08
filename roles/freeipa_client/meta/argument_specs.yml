@@ -15,18 +15,9 @@ argument_specs:
         required: false
         description: >-
           The IPA admin user / Kerberos admin principal used to enroll
-          the client. The password defaults to the Jinja expression
-          `{{ freeipa_server__ipa_admin_password }}`, which is provided
-          by the `freeipa_server` role's inventory.
-        options:
-
-          password:
-            type: 'str'
-            required: false
-            description: 'The admin password.'
-
-          username:
-            type: 'str'
-            required: false
-            default: 'admin'
-            description: 'The admin username.'
+          the client. Must contain the keys `username` (defaults to
+          `admin`) and `password`. The password defaults to the Jinja
+          expression `{{ freeipa_server__ipa_admin_password }}`, which
+          is provided by the `freeipa_server` role's inventory.
+          Typically fed by `linuxfabrik.lfops.bitwarden_item`, which
+          returns the full Bitwarden item; extra keys are ignored.

@@ -1,0 +1,40 @@
+argument_specs:
+  main:
+    options:
+
+      icingaweb2_module_reporting__database_host:
+        type: 'str'
+        required: false
+        default: 'localhost'
+        description: 'Host of the SQL database server.'
+
+      icingaweb2_module_reporting__database_login:
+        type: 'dict'
+        required: true
+        description: >-
+          User account used by the Reporting module to access its SQL
+          database (currently MySQL). Must contain the keys `username`
+          and `password`. Typically fed by
+          `linuxfabrik.lfops.bitwarden_item`, which returns the full
+          Bitwarden item; extra keys are ignored.
+
+      icingaweb2_module_reporting__database_name:
+        type: 'str'
+        required: false
+        default: 'icinga_reporting'
+        description: 'Name of the SQL database.'
+
+      icingaweb2_module_reporting__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Whether the icinga-reporting timer / cron is enabled at
+          boot.
+
+      icingaweb2_module_reporting__version:
+        type: 'str'
+        required: true
+        description: >-
+          The module version to install. Possible options:
+          https://github.com/Icinga/icingaweb2-module-reporting/releases.

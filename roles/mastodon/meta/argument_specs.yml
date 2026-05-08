@@ -1,0 +1,269 @@
+argument_specs:
+  main:
+    options:
+
+      mastodon__active_record_encryption_deterministic_key:
+        type: 'str'
+        required: true
+        description: >-
+          ActiveRecord encryption deterministic key. Generate with
+          `bundle exec rails db:encryption:init`. Changing this causes
+          data loss.
+
+      mastodon__active_record_encryption_key_derivation_salt:
+        type: 'str'
+        required: true
+        description: >-
+          ActiveRecord encryption key-derivation salt. Generate with
+          `bundle exec rails db:encryption:init`. Changing this causes
+          data loss.
+
+      mastodon__active_record_encryption_primary_key:
+        type: 'str'
+        required: true
+        description: >-
+          ActiveRecord encryption primary key. Generate with
+          `bundle exec rails db:encryption:init`. Changing this causes
+          data loss.
+
+      mastodon__container_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Whether the Mastodon container systemd units are enabled at
+          boot.
+
+      mastodon__container_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'State of the Mastodon container systemd units.'
+
+      mastodon__domain:
+        type: 'str'
+        required: true
+        description: >-
+          Public FQDN this Mastodon instance is reachable under.
+          Cannot be changed safely after first boot.
+
+      mastodon__elasticsearch_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether full-text search via Elasticsearch is enabled.'
+
+      mastodon__elasticsearch_host:
+        type: 'str'
+        required: false
+        default: 'host.containers.internal'
+
+      mastodon__elasticsearch_port:
+        type: 'int'
+        required: false
+        default: 9200
+
+      mastodon__ip_retention_period:
+        type: 'int'
+        required: false
+        default: 31556952
+        description: 'IP-address retention period in seconds (default: 1 year).'
+
+      mastodon__ldap_base:
+        type: 'str'
+        required: false
+        default: ''
+
+      mastodon__ldap_bind_dn:
+        type: 'str'
+        required: false
+        default: ''
+
+      mastodon__ldap_enabled:
+        type: 'bool'
+        required: false
+        default: false
+
+      mastodon__ldap_host:
+        type: 'str'
+        required: false
+        default: ''
+
+      mastodon__ldap_mail:
+        type: 'str'
+        required: false
+        default: 'mail'
+
+      mastodon__ldap_method:
+        type: 'str'
+        required: false
+        default: 'start_tls'
+
+      mastodon__ldap_password:
+        type: 'str'
+        required: false
+        default: ''
+
+      mastodon__ldap_port:
+        type: 'int'
+        required: false
+        default: 389
+
+      mastodon__ldap_search_filter:
+        type: 'str'
+        required: false
+        default: '(|(%<uid>s=%<email>s)(%<mail>s=%<email>s))'
+
+      mastodon__ldap_tls_no_verify:
+        type: 'bool'
+        required: false
+        default: true
+
+      mastodon__ldap_uid:
+        type: 'str'
+        required: false
+        default: 'uid'
+
+      mastodon__ldap_uid_conversion_enabled:
+        type: 'bool'
+        required: false
+        default: true
+
+      mastodon__otp_secret:
+        type: 'str'
+        required: true
+        description: >-
+          OTP secret. Generate with `bundle exec rails secret`.
+          Changing this breaks two-factor authentication.
+
+      mastodon__postgresql_db_name:
+        type: 'str'
+        required: false
+        default: 'mastodon_production'
+
+      mastodon__postgresql_host:
+        type: 'str'
+        required: false
+        default: 'host.containers.internal'
+
+      mastodon__postgresql_login:
+        type: 'dict'
+        required: true
+        description: >-
+          Login credentials for the PostgreSQL database. Must contain
+          the keys `username`, `password` and `state` (`present` /
+          `absent`). Typically fed by
+          `linuxfabrik.lfops.bitwarden_item`, which returns the full
+          Bitwarden item; extra keys are ignored.
+
+      mastodon__postgresql_port:
+        type: 'int'
+        required: false
+        default: 5432
+
+      mastodon__redis_host:
+        type: 'str'
+        required: false
+        default: 'host.containers.internal'
+
+      mastodon__redis_password:
+        type: 'str'
+        required: false
+        default: ''
+
+      mastodon__redis_port:
+        type: 'int'
+        required: false
+        default: 6379
+
+      mastodon__secret_key_base:
+        type: 'str'
+        required: true
+        description: >-
+          Mastodon secret key base. Generate with
+          `bundle exec rails secret`. Changing this invalidates all
+          active browser sessions.
+
+      mastodon__session_retention_period:
+        type: 'int'
+        required: false
+        default: 31556952
+
+      mastodon__smtp_auth_method:
+        type: 'str'
+        required: false
+        default: 'none'
+
+      mastodon__smtp_from_address:
+        type: 'str'
+        required: false
+        default: ''
+
+      mastodon__smtp_login:
+        type: 'str'
+        required: false
+        default: ''
+
+      mastodon__smtp_openssl_verify_mode:
+        type: 'str'
+        required: false
+        default: 'none'
+
+      mastodon__smtp_password:
+        type: 'str'
+        required: false
+        default: ''
+
+      mastodon__smtp_port:
+        type: 'int'
+        required: false
+        default: 25
+
+      mastodon__smtp_server:
+        type: 'str'
+        required: false
+        default: 'host.containers.internal'
+
+      mastodon__streaming_port:
+        type: 'int'
+        required: false
+        default: 4000
+
+      mastodon__user_home_directory:
+        type: 'str'
+        required: false
+        default: '/opt/mastodon'
+
+      mastodon__users__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          List of Mastodon application users to create. Group-level
+          override.
+
+      mastodon__users__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'List of Mastodon application users. Host-level override.'
+
+      mastodon__version:
+        type: 'str'
+        required: false
+        default: 'latest'
+        description: >-
+          Mastodon container image tag to deploy (e.g. `'4.3.0'` or
+          `'latest'`).
+
+      mastodon__web_port:
+        type: 'int'
+        required: false
+        default: 3000
