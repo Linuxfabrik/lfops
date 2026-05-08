@@ -11,7 +11,7 @@
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.linuxfabrik.key to the remote server'
+  - name: 'Copy /tmp/ansible.linuxfabrik.key to the remote host'
     ansible.builtin.copy:
       src: '/tmp/ansible.linuxfabrik.key'
       dest: '/tmp/ansible.linuxfabrik.key'
@@ -23,7 +23,7 @@
       state: 'present'
       key: '/tmp/ansible.linuxfabrik.key'
 
-  - name: 'Remove legacy /etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo (superseded by linuxfabrik-monitoring-plugins.repo)'
+  - name: 'rm -f /etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo  # superseded by linuxfabrik-monitoring-plugins.repo'
     ansible.builtin.file:
       path: '/etc/yum.repos.d/linuxfabrik-monitoring-plugins-release.repo'
       state: 'absent'
