@@ -37,17 +37,31 @@
     notify:
       - 'fail2ban: restart fail2ban'
 
-  - name: 'Deploy filters'
+  - name: 'Combined Filters:'
+    ansible.builtin.debug:
+      var: 'fail2ban__filters__combined_var'
+
+  - name: 'Remove Filters'
+    ansible.builtin.file:
+      path: '/etc/fail2ban/filter.d/{{ item["filename"] }}.conf'
+      state: 'absent'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    loop: '{{ fail2ban__filters__combined_var }}'
+    notify:
+      - 'fail2ban: restart fail2ban'
+
+  - name: 'Create Filters'
     ansible.builtin.template:
       backup: true
-      src: 'etc/fail2ban/filter.d/{{ item }}.conf.j2'
-      dest: '/etc/fail2ban/filter.d/{{ item }}.conf'
+      src: 'etc/fail2ban/filter.d/{{ item["template"] }}.conf.j2'
+      dest: '/etc/fail2ban/filter.d/{{ item["filename"] }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
-    loop:
-      - 'apache-dos'
-      - 'portscan'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ fail2ban__filters__combined_var }}'
     notify:
       - 'fail2ban: restart fail2ban'
 

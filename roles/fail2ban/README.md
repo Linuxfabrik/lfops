@@ -35,6 +35,33 @@ If you use the ["Fail2Ban" Playbook](https://github.com/Linuxfabrik/lfops/blob/m
 
 ## Optional Role Variables
 
+`fail2ban__filters__group_var` / `fail2ban__filters__host_var`
+
+* The fail2ban filter definition. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `apache-dos`, `portscan`
+* Subkeys:
+
+    * `template`:
+
+        * Mandatory. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban/templates/etc/fail2ban/filter.d), or `raw`.
+        * Type: String.
+
+    * `filename`:
+
+        * Mandatory. Destination filename in `filter.d/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.
+        * Type: String.
+
+    * `state`:
+
+        * Mandatory. State of the filter. Possible options: `absent`, `present`.
+        * Type: String.
+
+    * `raw`:
+
+        * Optional. Raw content for the filter.
+        * Type: String.
+
 `fail2ban__jail_default_action`
 
 * The default action. This will be used in all jails which do not overwrite it.
@@ -119,6 +146,14 @@ If you use the ["Fail2Ban" Playbook](https://github.com/Linuxfabrik/lfops/blob/m
 Example:
 ```yaml
 # optional
+fail2ban__filters__host_var:
+  - filename: 'numishare-admin'
+    state: 'present'
+    template: 'raw'
+    raw: |-
+      [Definition]
+      failregex = ^<HOST> .*"POST /admin/j_security_check HTTP/[\d.]+" (401|403)
+      ignoreregex =
 fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
   rocketchat[name=%(__name__)s, rocketchat-hook="%(rocketchat-hook)s"]

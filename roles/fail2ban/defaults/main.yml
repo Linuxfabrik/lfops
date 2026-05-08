@@ -1,3 +1,20 @@
+fail2ban__filters__combined_var: '{{ (
+      fail2ban__filters__role_var +
+      fail2ban__filters__dependent_var +
+      fail2ban__filters__group_var +
+      fail2ban__filters__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
+  }}'
+fail2ban__filters__dependent_var: []
+fail2ban__filters__group_var: []
+fail2ban__filters__host_var: []
+fail2ban__filters__role_var:
+  - filename: 'apache-dos'
+    state: 'present'
+    template: 'apache-dos'
+  - filename: 'portscan'
+    state: 'present'
+    template: 'portscan'
 fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
 fail2ban__jail_default_banaction: 'iptables-multiport'
