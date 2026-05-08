@@ -42,11 +42,11 @@ ansible:
       ansible_navigator:
         - '--inventory=${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/inventory/'
         - '--inventory=${MOLECULE_SCENARIO_DIRECTORY}/inventory/'
-        - '--limit=${MOLECULE_TARGET}'
+        - '--limit=${LFOPS_TEST_TARGETS}'
       ansible_playbook:
         - '--inventory=${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/inventory/'
         - '--inventory=${MOLECULE_SCENARIO_DIRECTORY}/inventory/'
-        - '--limit=${MOLECULE_TARGET}'
+        - '--limit=${LFOPS_TEST_TARGETS}'
 
 provisioner:
   playbooks:
@@ -62,5 +62,4 @@ scenario:
     - 'verify'
     - 'idempotence'
     - 'verify'
-    - 'cleanup'
     - 'destroy'

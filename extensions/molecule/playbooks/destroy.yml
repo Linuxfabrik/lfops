@@ -2,15 +2,10 @@
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
-    #- name: 'Get info for all containers'
-    #  containers.podman.podman_container_info:
-    #    name: '{{ inventory_hostname }}'
-    #  delegate_to: 'localhost'
-    #  register: 'container_info'
 
     - name: 'Kill container if running'
       containers.podman.podman_container:
         name: '{{ inventory_hostname }}'
-        state: 'absent' #'stopped'
+        state: 'absent'
         timeout: 2
       delegate_to: 'localhost'

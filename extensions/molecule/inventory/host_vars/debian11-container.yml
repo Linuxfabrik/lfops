@@ -1,6 +1,6 @@
 ansible_connection: 'containers.podman.podman'
-ansible_host: 'ubuntu2204_container'
+ansible_host: 'debian11-container'
 
 container_command: 'sleep 1d'
-container_image: 'docker.io/library/ubuntu:22.04'
+container_image: 'docker.io/library/debian:11'
 container_privileged: false
