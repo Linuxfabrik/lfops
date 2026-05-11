@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026051101
+# 2026051102
 
 set -euo pipefail
 
@@ -101,7 +101,6 @@ echo
 echo 'updater.phar --no-upgrade --no-interaction'
 echo '------------------------------------------'
 if ! grep -q "updater_done" "${STATE_FILE}"; then
-    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" maintenance:mode --on
     sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/updater/updater.phar" --no-upgrade --no-interaction
     echo "updater_done" >> "${STATE_FILE}"
 else
@@ -123,6 +122,7 @@ echo
 echo 'occ upgrade --no-interaction'
 echo '----------------------------'
 if ! grep -q "upgrade_done" "${STATE_FILE}"; then
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" maintenance:mode --off
     sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" upgrade --no-interaction
     echo "upgrade_done" >> "${STATE_FILE}"
 else
