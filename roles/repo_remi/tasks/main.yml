@@ -3,7 +3,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'repo_remi'
+    - 'always'
 
 
 - block:
