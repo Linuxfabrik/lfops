@@ -1,8 +1,0 @@
-__repo_remi__repo_files:
-  - 'Fedora/etc/yum.repos.d/remi-debuginfo.repo'
-  - 'Fedora/etc/yum.repos.d/remi-modular-test.repo'
-  - 'Fedora/etc/yum.repos.d/remi-modular.repo'
-  - 'Fedora/etc/yum.repos.d/remi-php81-test.repo'
-  - 'Fedora/etc/yum.repos.d/remi-php81.repo'
-  - 'Fedora/etc/yum.repos.d/remi-test.repo'
-  - 'Fedora/etc/yum.repos.d/remi.repo'
