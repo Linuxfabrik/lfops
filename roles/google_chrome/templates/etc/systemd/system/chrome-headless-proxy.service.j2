@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026051201
+
+[Unit]
+Description=Proxy to on-demand Headless Google Chrome
+Requires=chrome-headless.service
+After=chrome-headless.service
+
+[Service]
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time={{ google_chrome__idle_timeout }} {{ google_chrome__listen_address }}:{{ google_chrome__backend_port }}
+PrivateTmp=true
+Restart=on-failure
+RestartSec=5

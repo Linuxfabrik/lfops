@@ -1,0 +1,31 @@
+- name: 'Playbook linuxfabrik.lfops.google_chrome'
+  hosts:
+    - 'lfops_google_chrome'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'not google_chrome__skip_repo_epel | d(false) | bool'
+
+    - role: 'linuxfabrik.lfops.repo_google_chrome'
+      when:
+        - 'not google_chrome__skip_repo_google_chrome | d(false) | bool'
+
+    - role: 'linuxfabrik.lfops.google_chrome'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

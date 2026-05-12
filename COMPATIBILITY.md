@@ -42,6 +42,7 @@ Which Ansible role is proven to run on which OS?
 | gitlab_ce                             |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | glances                               |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | glpi_agent                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| google_chrome                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | grafana                               |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | grafana_grizzly                       |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | grav                                  |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
