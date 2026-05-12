@@ -1,0 +1,59 @@
+- block:
+
+  - name: 'Deploy /etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el10'
+    ansible.builtin.copy:
+      src: 'RedHat10/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el10'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el10'
+  tags:
+    - 'repo_remi'
+
+
+- block:
+
+  - name: 'dnf -y module reset php'
+    ansible.builtin.command: 'dnf -y module reset php'
+    register: 'repo_remi__dnf_module_reset_php_result'
+    changed_when: '"Nothing to do" not in repo_remi__dnf_module_reset_php_result.stdout'
+
+  - name: "dnf -y module enable php:remi-{{ repo_remi__enabled_php_version }}"
+    ansible.builtin.command: "dnf -y module enable php:remi-{{ repo_remi__enabled_php_version }}"
+    register: 'repo_remi__dnf_module_enable_php_result'
+    changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_php_result.stdout'
+
+  when: 'repo_remi__enabled_php_version is defined and repo_remi__enabled_php_version | length > 0'
+  tags:
+    - 'repo_remi'
+
+
+- block:
+
+  - name: 'dnf -y module reset composer'
+    ansible.builtin.command: 'dnf -y module reset composer'
+    register: 'repo_remi__dnf_module_reset_composer_result'
+    changed_when: '"Nothing to do" not in repo_remi__dnf_module_reset_composer_result.stdout'
+
+  - name: "dnf -y module enable composer"
+    ansible.builtin.command: "dnf -y module enable composer"
+    register: 'repo_remi__dnf_module_enable_composer_result'
+    changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_composer_result.stdout'
+
+  when: 'repo_remi__enabled_php_version is defined and repo_remi__enabled_php_version | length > 0'
+  tags:
+    - 'repo_remi'
+
+
+- block:
+
+  - name: 'dnf -y module reset redis'
+    ansible.builtin.command: 'dnf -y module reset redis'
+    register: 'repo_remi__dnf_module_enable_redis_result'
+    changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_redis_result.stdout'
+
+  - name: 'dnf -y module enable redis:remi-{{ repo_remi__enabled_redis_version }}'
+    ansible.builtin.command: 'dnf -y module enable redis:remi-{{ repo_remi__enabled_redis_version }}'
+    register: 'repo_remi__dnf_module_enable_redis_result'
+    changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_redis_result.stdout'
+
+  when: 'repo_remi__enabled_redis_version is defined and repo_remi__enabled_redis_version | length > 0'
+  tags:
+    - 'repo_remi'
