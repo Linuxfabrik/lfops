@@ -454,6 +454,9 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `icingaweb2_module_pdfexport__skip_repo_epel`
+* [repo_google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_google_chrome): `icingaweb2_module_pdfexport__skip_repo_google_chrome`
+* [google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/google_chrome): `icingaweb2_module_pdfexport__skip_google_chrome`
 * [icingaweb2_module_pdfexport](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_pdfexport)
 
 
@@ -1113,6 +1116,8 @@ Calls the following roles (in order):
 * [icingaweb2_theme_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_theme_linuxfabrik): `setup_icinga2_master__icingaweb2_theme_linuxfabrik__skip_role`
 * [icingaweb2_module_incubator](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_incubator): `setup_icinga2_master__icingaweb2_module_incubator__skip_role`
 * [icingaweb2_module_jira](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_jira): `setup_icinga2_master__icingaweb2_module_jira__skip_role` (default: `true`)
+* [repo_google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_google_chrome): `setup_icinga2_master__repo_google_chrome__skip_role` (default: tracks `icingaweb2_module_pdfexport__skip_role`)
+* [google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/google_chrome): `setup_icinga2_master__google_chrome__skip_role` (default: tracks `icingaweb2_module_pdfexport__skip_role`)
 * [icingaweb2_module_pdfexport](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_pdfexport): `setup_icinga2_master__icingaweb2_module_pdfexport__skip_role` (default: `true`)
 * [icingaweb2_module_vspheredb](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_vspheredb): `setup_icinga2_master__icingaweb2_module_vspheredb__skip_role` (default: `true`)
 * [icingaweb2_module_director](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_director): `setup_icinga2_master__icingaweb2_module_director__skip_role`
