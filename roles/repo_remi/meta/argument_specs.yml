@@ -1,0 +1,39 @@
+argument_specs:
+  main:
+    options:
+
+      repo_remi__basic_auth_login:
+        # 'raw' rather than 'dict', because the default in defaults/main.yml
+        # resolves to '' (empty string) when lfops__repo_basic_auth_login is
+        # not set; a strict 'dict' spec would reject the empty default.
+        type: 'raw'
+        required: false
+        description: >-
+          HTTP basic auth credentials for the Remi repository. Expected as
+          a dict with `username` and `password` keys. Typically fed by
+          `linuxfabrik.lfops.bitwarden_item`, which returns the full
+          Bitwarden item with additional keys.
+
+      repo_remi__enabled_php_version:
+        type: 'str'
+        required: false
+        description: >-
+          Major and minor version of PHP for which the repository should
+          be enabled (e.g. `8.1`). If unset, no PHP module stream is
+          enabled.
+
+      repo_remi__enabled_redis_version:
+        type: 'str'
+        required: false
+        description: >-
+          Major and minor version of Redis for which the repository should
+          be enabled (e.g. `7.2`). If unset, no Redis module stream is
+          enabled.
+
+      repo_remi__mirror_url:
+        type: 'str'
+        required: false
+        description: >-
+          URL of a custom mirror server providing the repository. Defaults
+          to `lfops__repo_mirror_url`; if that is also unset, the default
+          upstream mirrors are used.
