@@ -9,6 +9,7 @@
 <div align="center" id="badges" markdown="1"> <!-- Do not change this line. It is used by .github/workflows/lf-build.yml to strip badges before publishing to Galaxy. -->
 
 ![GitHub Stars](https://img.shields.io/github/stars/linuxfabrik/lfops)
+[![Star History Chart](https://api.star-history.com/svg?repos=Linuxfabrik/lfops&type=Date)](https://star-history.com/#Linuxfabrik/lfops&Date)
 ![License](https://img.shields.io/github/license/linuxfabrik/lfops)
 ![Version](https://img.shields.io/github/v/release/linuxfabrik/lfops?sort=semver)
 ![Ansible](https://img.shields.io/badge/ansible--core-≥2.16-EE0000)
@@ -25,6 +26,8 @@
 # LFOps
 
 LFOps is a comprehensive Ansible Collection providing 145+ playbooks and 160+ roles to bootstrap and manage Linux-based IT infrastructures. It covers the full server lifecycle -- from initial provisioning and hardening to application deployment, monitoring, and automated backups. LFOps supports RHEL 8/9/10, Debian, and Ubuntu.
+
+> If these Ansible roles and playbooks help you running your Linux infrastructure, please give it a star.
 
 
 ## Documentation
