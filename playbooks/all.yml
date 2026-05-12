@@ -103,6 +103,7 @@
 - import_playbook: 'repo_epel.yml'
 - import_playbook: 'repo_gitlab_ce.yml'
 - import_playbook: 'repo_gitlab_runner.yml'
+- import_playbook: 'repo_google_chrome.yml'
 - import_playbook: 'repo_grafana.yml'
 - import_playbook: 'repo_graylog.yml'
 - import_playbook: 'repo_icinga.yml'

@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:repo_google_chrome**: New role. Deploys the Google Chrome package repository for RHEL-based distributions, with the same `lfops__repo_mirror_url` / `lfops__repo_basic_auth_login` knobs as the other `repo_*` roles.
 * **role:monitoring_plugins, role:repo_monitoring_plugins**: Add SLES 15 and SLES 16 support. The roles now install the Linuxfabrik Monitoring Plugins from the SUSE channel of `repo.linuxfabrik.ch` and apply the SUSE-specific package version lock ([#245](https://github.com/Linuxfabrik/lfops/issues/245)).
 * **role:alternatives, role:elastic_agent, role:elastic_agent_fleet_server, role:icinga_kubernetes_web, role:lvm, role:mailto_root, role:motd, role:proxysql**: (Re-)introduce `meta/argument_specs.yml` so role-entry validation catches type mismatches and missing required variables. The originally proposed specs were correct for these roles (no strict-options login dicts, no `__dependent_var` injections from `setup_*` playbooks), so they are restored unchanged.
 * **role:apps, role:example, role:kernel_settings**: (Re-)introduce `meta/argument_specs.yml`, with the `__dependent_var` slot declared so `setup_*` playbooks that inject these via `vars:` (e.g. `setup_icinga2_master`, `setup_moodle`, `setup_nextcloud`) pass validation.
