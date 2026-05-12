@@ -7,6 +7,7 @@
 
     setup_icinga2_master__apache_httpd__skip_injections__internal_var: '{{ setup_icinga2_master__apache_httpd__skip_injections | d(setup_icinga2_master__apache_httpd__skip_role__internal_var) }}'
     setup_icinga2_master__apache_httpd__skip_role__internal_var: '{{ setup_icinga2_master__apache_httpd__skip_role | d(false) }}'
+    setup_icinga2_master__google_chrome__skip_role__internal_var: '{{ setup_icinga2_master__google_chrome__skip_role | d(setup_icinga2_master__icingaweb2_module_pdfexport__skip_role__internal_var) }}'
     setup_icinga2_master__grafana__skip_role__internal_var: '{{ setup_icinga2_master__grafana__skip_role | d(false) }}'
     setup_icinga2_master__grafana_grizzly__skip_injections__internal_var: '{{ setup_icinga2_master__grafana_grizzly__skip_injections | d(setup_icinga2_master__grafana_grizzly__skip_role__internal_var) }}'
     setup_icinga2_master__grafana_grizzly__skip_role__internal_var: '{{ setup_icinga2_master__grafana_grizzly__skip_role | d(false) }}'
@@ -58,6 +59,7 @@
     setup_icinga2_master__redis__skip_injections__internal_var: '{{ setup_icinga2_master__redis__skip_injections | d(setup_icinga2_master__redis__skip_role__internal_var) }}'
     setup_icinga2_master__redis__skip_role__internal_var: '{{ setup_icinga2_master__redis__skip_role | d(false) }}'
     setup_icinga2_master__repo_epel__skip_role__internal_var: '{{ setup_icinga2_master__repo_epel__skip_role | d(false) }}'
+    setup_icinga2_master__repo_google_chrome__skip_role__internal_var: '{{ setup_icinga2_master__repo_google_chrome__skip_role | d(setup_icinga2_master__icingaweb2_module_pdfexport__skip_role__internal_var) }}'
     setup_icinga2_master__repo_grafana__skip_role__internal_var: '{{ setup_icinga2_master__repo_grafana__skip_role | d(false) }}'
     setup_icinga2_master__repo_icinga__skip_role__internal_var: '{{ setup_icinga2_master__repo_icinga__skip_role | d(false) }}'
     setup_icinga2_master__repo_influxdb__skip_role__internal_var: '{{ setup_icinga2_master__repo_influxdb__skip_role | d(false) }}'
@@ -311,6 +313,14 @@
     - role: 'linuxfabrik.lfops.icingaweb2_module_jira'
       when:
         - 'not setup_icinga2_master__icingaweb2_module_jira__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.repo_google_chrome'
+      when:
+        - 'not setup_icinga2_master__repo_google_chrome__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.google_chrome'
+      when:
+        - 'not setup_icinga2_master__google_chrome__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_pdfexport'
       when:

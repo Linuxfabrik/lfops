@@ -12,6 +12,18 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'not icingaweb2_module_pdfexport__skip_repo_epel | d(false) | bool'
+
+    - role: 'linuxfabrik.lfops.repo_google_chrome'
+      when:
+        - 'not icingaweb2_module_pdfexport__skip_repo_google_chrome | d(false) | bool'
+
+    - role: 'linuxfabrik.lfops.google_chrome'
+      when:
+        - 'not icingaweb2_module_pdfexport__skip_google_chrome | d(false) | bool'
+
     - role: 'linuxfabrik.lfops.icingaweb2_module_pdfexport'
 
 
