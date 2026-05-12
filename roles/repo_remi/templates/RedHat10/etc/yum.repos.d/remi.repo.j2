@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025051201
+# 2026051201
 
 # Repository: https://rpms.remirepo.net/
 # Blog:       https://blog.remirepo.net/
@@ -16,7 +16,7 @@ mirrorlist=http://cdn.remirepo.net/enterprise/10/remi/$basearch/mirror
 {% endif %}
 enabled=1
 gpgcheck=1
-# can be enabled if not being a proxy because of possible cache issue
+# can be enabled if not behind a proxy because of possible cache issue
 repo_gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el10
 {% if repo_remi__basic_auth_login is defined and repo_remi__basic_auth_login | length %}

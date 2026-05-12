@@ -1,13 +1,15 @@
 - block:
 
-  - name: 'Deploy /etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el9'
+  - name: 'Deploy /etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el{{ ansible_facts["distribution_major_version"] }}'
     ansible.builtin.copy:
-      src: 'RedHat9/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el9'
-      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el9'
+      src: '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el{{ ansible_facts["distribution_major_version"] }}'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el{{ ansible_facts["distribution_major_version"] }}'
+
   tags:
     - 'repo_remi'
 
 
+# note: the remi repo still uses modularity with RHEL10 even though `modularity is deprecated, and functionality will be removed in a future release of DNF5.` have a look at https://github.com/remicollet/remirepo/issues/265#issuecomment-2298206332
 - block:
 
   - name: 'dnf -y module reset php'
@@ -20,6 +22,7 @@
     register: 'repo_remi__dnf_module_enable_php_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_php_result.stdout'
 
+  # block
   when: 'repo_remi__enabled_php_version is defined and repo_remi__enabled_php_version | length > 0'
   tags:
     - 'repo_remi'
@@ -37,6 +40,7 @@
     register: 'repo_remi__dnf_module_enable_composer_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_composer_result.stdout'
 
+  # block
   when: 'repo_remi__enabled_php_version is defined and repo_remi__enabled_php_version | length > 0'
   tags:
     - 'repo_remi'
@@ -54,6 +58,7 @@
     register: 'repo_remi__dnf_module_enable_redis_result'
     changed_when: '"Nothing to do" not in repo_remi__dnf_module_enable_redis_result.stdout'
 
+  # block
   when: 'repo_remi__enabled_redis_version is defined and repo_remi__enabled_redis_version | length > 0'
   tags:
     - 'repo_remi'
