@@ -1,0 +1,20 @@
+- name: 'google_chrome: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+# Restart chrome before the socket: in a migration from the old, non-socket-activated
+# layout the running Chrome still binds the listen port. The socket can only bind
+# after Chrome has been re-execed on the backend port.
+- name: 'google_chrome: restart chrome-headless'
+  ansible.builtin.service:
+    name: 'chrome-headless.service'
+    state: 'restarted'
+  when:
+    - 'google_chrome__service_state != "stopped"'
+
+- name: 'google_chrome: restart chrome-headless-proxy.socket'
+  ansible.builtin.service:
+    name: 'chrome-headless-proxy.socket'
+    state: 'restarted'
+  when:
+    - 'google_chrome__service_state != "stopped"'

@@ -1,0 +1,171 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ __task_file }}'
+  when: '__task_file | length > 0'
+  vars:
+    __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
+    __first_found_options:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+      skip: true
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'groupadd --system chrome'
+    ansible.builtin.group:
+      name: 'chrome'
+      state: 'present'
+      system: true
+
+  - name: 'useradd --system chrome'
+    ansible.builtin.user:
+      name: 'chrome'
+      comment: 'Headless Google Chrome'
+      group: 'chrome'
+      home: '{{ google_chrome__user_data_dir }}'
+      shell: '/sbin/nologin'
+      system: true
+      state: 'present'
+
+  - name: 'install --directory --owner chrome --group chrome --mode 0750 {{ google_chrome__user_data_dir }}'
+    ansible.builtin.file:
+      path: '{{ google_chrome__user_data_dir }}'
+      state: 'directory'
+      owner: 'chrome'
+      group: 'chrome'
+      mode: 0o750
+
+  - name: 'Install required packages'
+    ansible.builtin.package:
+      name: '{{ __google_chrome__packages }}'
+      state: 'present'
+
+  tags:
+    - 'google_chrome'
+
+
+- block:
+
+  - name: 'setsebool -P systemd_socket_proxyd_connect_any on'
+    ansible.posix.seboolean:
+      name: 'systemd_socket_proxyd_connect_any'
+      persistent: true
+      state: true
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+  - name: 'Deploy /etc/systemd/system/chrome-headless-proxy.socket'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/chrome-headless-proxy.socket.j2'
+      dest: '/etc/systemd/system/chrome-headless-proxy.socket'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify:
+      - 'google_chrome: systemctl daemon-reload'
+      - 'google_chrome: restart chrome-headless-proxy.socket'
+
+  - name: 'Deploy /etc/systemd/system/chrome-headless-proxy.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/chrome-headless-proxy.service.j2'
+      dest: '/etc/systemd/system/chrome-headless-proxy.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify:
+      - 'google_chrome: systemctl daemon-reload'
+      - 'google_chrome: restart chrome-headless-proxy.socket'
+
+  - name: 'Deploy /etc/systemd/system/chrome-headless.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/chrome-headless.service.j2'
+      dest: '/etc/systemd/system/chrome-headless.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify:
+      - 'google_chrome: systemctl daemon-reload'
+      - 'google_chrome: restart chrome-headless'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+    loop:
+      - '/etc/systemd/system/chrome-headless-proxy.socket'
+      - '/etc/systemd/system/chrome-headless-proxy.service'
+      - '/etc/systemd/system/chrome-headless.service'
+
+  tags:
+    - 'google_chrome'
+    - 'google_chrome:configure'
+
+
+- block:
+
+  # Force the handlers (daemon-reload, restart chrome on the new backend port,
+  # restart the socket) to run before the state block tries to enable the socket.
+  # Without this the socket would fail to load when migrating from the old
+  # non-socket-activated layout, because Chrome would still be holding the listen
+  # port at enable-time.
+  - name: 'Flush handlers'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'google_chrome'
+    - 'google_chrome:configure'
+    - 'google_chrome:state'
+
+
+- block:
+
+  - name: 'systemctl {{ google_chrome__service_enabled | bool | ternary("enable", "disable") }} chrome-headless-proxy.socket'
+    ansible.builtin.service:
+      name: 'chrome-headless-proxy.socket'
+      enabled: '{{ google_chrome__service_enabled | bool }}'
+
+  - name: 'systemctl {{ google_chrome__service_state }} chrome-headless-proxy.socket'
+    ansible.builtin.service:
+      name: 'chrome-headless-proxy.socket'
+      state: '{{ google_chrome__service_state }}'
+    register: '__google_chrome__service_state_result'
+
+  tags:
+    - 'google_chrome'
+    - 'google_chrome:state'
+
+
+- block:
+
+  - name: 'Flush handlers so that the service is ready for dependent roles'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'google_chrome'
+    - 'google_chrome:configure'
+    - 'google_chrome:state'

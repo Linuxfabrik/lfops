@@ -338,6 +338,15 @@ Calls the following roles (in order):
 * [glpi_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/glpi_agent)
 
 
+## google_chrome.yml
+
+Calls the following roles (in order):
+
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `google_chrome__skip_repo_epel`
+* [repo_google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_google_chrome): `google_chrome__skip_repo_google_chrome`
+* [google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/google_chrome)
+
+
 ## grafana.yml
 
 Calls the following roles (in order):
