@@ -840,6 +840,13 @@ Calls the following roles (in order):
 * [repo_gitlab_runner](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_gitlab_runner)
 
 
+## repo_google_chrome.yml
+
+Calls the following roles (in order):
+
+* [repo_google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_google_chrome)
+
+
 ## repo_grafana.yml
 
 Calls the following roles (in order):
