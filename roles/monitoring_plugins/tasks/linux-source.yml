@@ -66,15 +66,24 @@
       name: 'rsync'
       state: 'present'
 
-  - name: 'rsync requirements.txt to remote host'
+  # Both repos ship per-Python-LTS lockfiles under
+  # `lockfiles/pyXX/requirements.txt` (py39 ... py314). Pick the one
+  # that matches the target's Python interpreter (the same one
+  # Ansible used to run modules; pip3 will install into the same
+  # major.minor unless an alternative interpreter is explicitly used).
+  - name: 'Set per-host Python lockfile tag fact'
+    ansible.builtin.set_fact:
+      __monitoring_plugins__py_tag: 'py{{ ansible_python["version"]["major"] }}{{ ansible_python["version"]["minor"] }}'
+
+  - name: 'rsync lockfiles/{{ __monitoring_plugins__py_tag }}/requirements.txt to remote host'
     ansible.posix.synchronize:
-      src: '/tmp/ansible.monitoring-plugins-repo/requirements.txt'
-      dest: '/tmp'
+      src: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__py_tag }}/requirements.txt'
+      dest: '/tmp/requirements.txt'
       mode: 'push'
 
-  - name: 'rsync lib requirements.txt to remote host'
+  - name: 'rsync lib lockfiles/{{ __monitoring_plugins__py_tag }}/requirements.txt to remote host'
     ansible.posix.synchronize:
-      src: '/tmp/ansible.lib-repo/requirements.txt'
+      src: '/tmp/ansible.lib-repo/lockfiles/{{ __monitoring_plugins__py_tag }}/requirements.txt'
       dest: '/tmp/lib-requirements.txt'
       mode: 'push'
 
