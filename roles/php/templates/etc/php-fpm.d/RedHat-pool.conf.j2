@@ -108,7 +108,7 @@ listen.allowed_clients = 127.0.0.1
 ;             pm.process_idle_timeout   - The number of seconds after which
 ;                                         an idle process will be killed.
 ; Note: This value is mandatory.
-pm = {{ php__fpm_pool_conf_pm__combined_var | d('dynamic') }}
+pm = {{ item['pm'] | d('dynamic') }}
 
 ; The number of child processes to be created when pm is set to 'static' and the
 ; maximum number of child processes when pm is set to 'dynamic' or 'ondemand'.
