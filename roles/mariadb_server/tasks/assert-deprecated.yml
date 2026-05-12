@@ -1,0 +1,43 @@
+# Abort the run if the user has overridden a MariaDB system variable in their
+# inventory that is deprecated for the version actually installed on the host.
+# `mariadb_server__installed_version` is set by `tasks/main.yml` after the
+# package install, so on an upgrade run this reflects the *new* version, not
+# the previous one.
+
+- name: 'Assert `innodb_buffer_pool_chunk_size` is not set in inventory on MariaDB 10.11+'
+  ansible.builtin.assert:
+    that:
+      - >-
+        not (
+          (mariadb_server__cnf_innodb_buffer_pool_chunk_size__host_var      | string | length > 0) or
+          (mariadb_server__cnf_innodb_buffer_pool_chunk_size__group_var     | string | length > 0) or
+          (mariadb_server__cnf_innodb_buffer_pool_chunk_size__dependent_var | string | length > 0)
+        )
+    fail_msg: >-
+      `mariadb_server__cnf_innodb_buffer_pool_chunk_size` is set in your inventory but
+      MariaDB {{ mariadb_server__installed_version }} ignores it (deprecated and ignored
+      from MariaDB 10.11.12, 11.4.6 and 11.8.2; the chunk size is derived automatically
+      from `innodb_buffer_pool_size`). Remove the `__host_var`, `__group_var` and
+      `__dependent_var` overrides for this variable from your inventory before re-running
+      the role.
+  when:
+    - 'mariadb_server__installed_version is version("10.11", ">=")'
+
+
+- name: 'Assert `innodb_file_per_table` is not set in inventory on MariaDB 11.0+'
+  ansible.builtin.assert:
+    that:
+      - >-
+        not (
+          (mariadb_server__cnf_innodb_file_per_table__host_var      | string | length > 0) or
+          (mariadb_server__cnf_innodb_file_per_table__group_var     | string | length > 0) or
+          (mariadb_server__cnf_innodb_file_per_table__dependent_var | string | length > 0)
+        )
+    fail_msg: >-
+      `mariadb_server__cnf_innodb_file_per_table` is set in your inventory but
+      MariaDB {{ mariadb_server__installed_version }} has deprecated it (deprecated from
+      MariaDB 11.0; setting it to `OFF` no longer has any benefit). Remove the
+      `__host_var`, `__group_var` and `__dependent_var` overrides for this variable from
+      your inventory before re-running the role.
+  when:
+    - 'mariadb_server__installed_version is version("11.0", ">=")'

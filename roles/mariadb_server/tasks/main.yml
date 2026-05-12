@@ -105,6 +105,8 @@
   - name: 'Load default values for {{ mariadb_server__installed_version }}'
     ansible.builtin.include_vars: 'vars/{{ mariadb_server__installed_version }}.yml'
 
+  - ansible.builtin.include_tasks: 'assert-deprecated.yml'
+
   tags:
     - 'mariadb_server'
     - 'mariadb_server:clone_datadir'
@@ -112,6 +114,7 @@
     - 'mariadb_server:dare'
     - 'mariadb_server:database'
     - 'mariadb_server:dump'
+    - 'mariadb_server:galera_new_cluster'
     - 'mariadb_server:secure_installation'
     - 'mariadb_server:state'
     - 'mariadb_server:sys_schema'

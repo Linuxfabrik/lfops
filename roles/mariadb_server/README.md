@@ -590,7 +590,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 `mariadb_server__cnf_innodb_buffer_pool_chunk_size__group_var` / `mariadb_server__cnf_innodb_buffer_pool_chunk_size__host_var`
 
-* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_chunk_size)
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_chunk_size) (Deprecated and ignored: MariaDB 10.11.12, MariaDB 11.4.6, MariaDB 11.8.2; no longer written to the generated config on these versions, value is derived automatically from `innodb_buffer_pool_size`)
 * Type: String or Number.
 * Default: 10.08-: `'128M'`, 10.8+: `0` (autosize)
 
@@ -608,7 +608,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 `mariadb_server__cnf_innodb_file_per_table__group_var` / `mariadb_server__cnf_innodb_file_per_table__host_var`
 
-* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table) (Deprecated: MariaDB 11.0.1)
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table) (Deprecated: MariaDB 11.0; no longer written to the generated config on MariaDB 11.x)
 * Type: String.
 * Default: `'ON'`
 

@@ -248,6 +248,10 @@ mariadb_server__cnf_innodb_autoinc_lock_mode__combined_var: '{{
     mariadb_server__cnf_innodb_autoinc_lock_mode__role_var
   }}'
 
+# Deprecated and ignored from MariaDB 10.11.12, 11.4.6 and 11.8.2 (the chunk size is
+# derived automatically from `innodb_buffer_pool_size`). Setting any of the slots below
+# from inventory on MariaDB 10.11+ aborts the role via `tasks/assert-deprecated.yml`.
+# Kept here so existing inventories with explicit empty overrides do not break.
 mariadb_server__cnf_innodb_buffer_pool_chunk_size__dependent_var: ''
 mariadb_server__cnf_innodb_buffer_pool_chunk_size__group_var: ''
 mariadb_server__cnf_innodb_buffer_pool_chunk_size__host_var: ''
