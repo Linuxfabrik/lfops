@@ -53,6 +53,9 @@ mirror__reposync_repos:
     relative_target_path: 'rocky/8/extras/x86_64/os/'
   - repoid: 'powertools'
     relative_target_path: 'rocky/8/PowerTools/x86_64/os/'
+  - repoid: 'mirror-rhel8-icinga-stable-release'
+    relative_target_path: 'icinga/epel/8/release/'
+    newest_only: false
 ```
 
 
