@@ -81,18 +81,18 @@
 
   roles:
 
+      # On Rocky 9+ the EPEL and CRB Repo need to be enabled to install python3-virtualenv
     - role: 'linuxfabrik.lfops.repo_baseos'
       repo_baseos__crb_repo_enabled__dependent_var: '{{
           repo_epel__repo_baseos__crb_repo_enabled__dependent_var
         }}'
-      # Since the CRB repository is included in Rocky9 default repo file now, this will be done on Rocky9 Systems only. Formerly it came from epel repository.
       when:
-        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] == "9"'
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] | int >= 9'
         - 'not setup_icinga2_master__skip_repo_baseos | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9", "10"]'
         - 'not setup_icinga2_master__repo_epel__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'

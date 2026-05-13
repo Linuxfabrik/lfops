@@ -15,6 +15,7 @@ This role is only compatible with the following MongoDB versions:
 ## Mandatory Requirements
 
 * Enable the official [MongoDB repository](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-red-hat/#install-mongodb-community-edition). This can be done using the [linuxfabrik.lfops.repo_mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mongodb) role.
+* On Rocky 9+, the EPEL and the CRB Repo ("Code Ready Builder") need to be enabled to be able to install `python3-virtualenv`. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) and [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) roles.
 
 
 ## Tags

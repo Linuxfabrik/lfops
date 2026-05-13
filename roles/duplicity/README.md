@@ -14,7 +14,7 @@ To start a backup, simply call `duba` (or `duba --config=/etc/duba/duba.json --c
 
 ## Mandatory Requirements
 
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
+* On RHEL-compatible systems, enable the EPEL repository. On Rocky 9+, also enable the CRB Repo ("Code Ready Builder") to be able to install `python3-virtualenv`. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) and [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) roles.
 * Install `duplicity`, `python-swiftclient` and `python-keystoneclient` into a Python 3 virtual environment in `/opt/python-venv/duplicity`. This can be done using the [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv) role.
 
 **Attention**
