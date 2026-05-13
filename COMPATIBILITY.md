@@ -94,7 +94,6 @@ Which Ansible role is proven to run on which OS?
 | mariadb_server                        |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Galera on Debian is untested                 |
 | mastodon                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | maxmind_geoip                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| minio_client                          |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | mirror                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | mod_maxminddb                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | mongodb                               |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
@@ -108,7 +107,6 @@ Which Ansible role is proven to run on which OS?
 | nfs_client                            |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nfs_server                            |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nodejs                                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| objectstore_backup                    |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | open_vm_tools                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | opensearch                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | openvpn_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
@@ -144,7 +142,7 @@ Which Ansible role is proven to run on which OS?
 | repo_postgresql                       |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | repo_proxysql                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_redis                            |   x    |   x    |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
-| repo_remi                             |        |        |   x    |   x    |         |           |           |           | Fedora 35                                    |
+| repo_remi                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_rpmfusion                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_sury                             |   x    |   x    |   -    |   -    |         |    (x)    |    (x)    |    (x)    |                                              |
 | rocketchat                            |        |        |   x    |  (x)   |   (x)   |           |           |           | Fedora 35                                    |

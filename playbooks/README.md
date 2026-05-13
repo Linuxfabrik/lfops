@@ -597,13 +597,6 @@ Calls the following roles (in order):
 * [systemd_unit](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_unit): `maxmind_geoip__skip_systemd_unit`
 
 
-## minio_client.yml
-
-Calls the following roles (in order):
-
-* [minio_client](https://github.com/Linuxfabrik/lfops/tree/main/roles/minio_client)
-
-
 ## mirror.yml
 
 Calls the following roles (in order):
@@ -689,14 +682,6 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [nodejs](https://github.com/Linuxfabrik/lfops/tree/main/roles/nodejs)
-
-
-## objectstore_backup.yml
-
-Calls the following roles (in order):
-
-* [minio_client](https://github.com/Linuxfabrik/lfops/tree/main/roles/minio_client): `objectstore_backup__skip_minio_client`
-* [objectstore_backup](https://github.com/Linuxfabrik/lfops/tree/main/roles/objectstore_backup)
 
 
 ## open_vm_tools.yml
@@ -1247,8 +1232,6 @@ Calls the following roles (in order):
 * [repo_collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora): `setup_nextcloud__skip_repo_collabora` (default: `true`), `setup_nextcloud__skip_repo_collabora_code`
 * [collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora): `setup_nextcloud__skip_collabora`
 * [coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn): `setup_nextcloud__skip_coturn`
-* [minio_client](https://github.com/Linuxfabrik/lfops/tree/main/roles/minio_client): `setup_nextcloud__skip_minio_client`
-* [objectstore_backup](https://github.com/Linuxfabrik/lfops/tree/main/roles/objectstore_backup): `setup_nextcloud__skip_objectstore_backup`
 * [icinga2_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_agent)
 
 
