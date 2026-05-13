@@ -2,6 +2,12 @@ argument_specs:
   main:
     options:
 
+      google_chrome__backend_port:
+        type: 'int'
+        required: false
+        default: 9223
+        description: 'Internal port Chrome itself listens on. The proxy forwards traffic from listen_port to this port.'
+
       google_chrome__extra_args__dependent_var:
         type: 'list'
         elements: 'dict'
@@ -22,12 +28,6 @@ argument_specs:
         required: false
         default: []
         description: 'Extra Google Chrome CLI flags. Host-level override.'
-
-      google_chrome__backend_port:
-        type: 'int'
-        required: false
-        default: 9223
-        description: 'Internal port Chrome itself listens on. The proxy forwards traffic from listen_port to this port.'
 
       google_chrome__idle_timeout:
         type: 'int'

@@ -1,3 +1,7 @@
+# Chrome's own listening port. The proxy connects to it on demand; clients never
+# talk to it directly.
+google_chrome__backend_port: 9223
+
 # --- list of dicts injection pattern ---
 # Extra Chrome CLI flags appended to the chrome-headless systemd unit.
 google_chrome__extra_args__dependent_var: []
@@ -11,10 +15,6 @@ google_chrome__extra_args__combined_var: '{{ (
       google_chrome__extra_args__host_var
     ) | linuxfabrik.lfops.combine_lod
   }}'
-
-# Chrome's own listening port. The proxy connects to it on demand; clients never
-# talk to it directly.
-google_chrome__backend_port: 9223
 
 # Idle timeout for systemd-socket-proxyd in seconds. After this much time without
 # active connections, the proxy exits — and Chrome stops with it via BindsTo.
