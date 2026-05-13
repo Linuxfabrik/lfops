@@ -14,7 +14,6 @@ This role is only compatible with the following MongoDB versions:
 
 *Available since LFOps `2.0.0`.*
 
-
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.

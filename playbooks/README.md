@@ -463,6 +463,8 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [repo_influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_influxdb)
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `influxdb__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `influxdb__skip_repo_epel`
 * [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv): `influxdb__skip_python_venv`
 * [influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/influxdb)
 

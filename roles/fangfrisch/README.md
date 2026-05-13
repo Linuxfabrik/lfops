@@ -5,6 +5,8 @@ This role installs and configures [Fangfrisch](https://rseichter.github.io/fangf
 
 *Available since LFOps `3.0.0`.*
 
+* A Python virtual environment `/opt/python-venv/clamav-fangfrisch/` with `fangfrisch` installed. This can be done using the [linuxfabrik.lfops.python_venv](https://github.com/linuxfabrik/lfops/tree/main/roles/python_venv) role.
+* On Rocky 9+, the EPEL and the CRB Repo ("Code Ready Builder") need to be enabled to be able to install `python3-virtualenv`. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/linuxfabrik/lfops/tree/main/roles/repo_epel) and [linuxfabrik.lfops.repo_baseos](https://github.com/linuxfabrik/lfops/tree/main/roles/repo_baseos) roles.
 
 ## Dependent Roles
 
