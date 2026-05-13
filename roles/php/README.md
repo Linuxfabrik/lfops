@@ -354,7 +354,7 @@ Variables for PHP-FPM Pool Config directives and their default values, defined a
 * List of dictionaries containing PHP-FPM pools.
 * For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
-* Default: `[]`
+* Default: One pool named `www`.
 * Subkeys:
 
     * `name`:
