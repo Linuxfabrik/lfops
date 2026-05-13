@@ -138,11 +138,8 @@
 
 - block:
 
-  # Force the handlers (daemon-reload, restart chrome on the new backend port,
-  # restart the socket) to run before the state block tries to enable the socket.
-  # Without this the socket would fail to load when migrating from the old
-  # non-socket-activated layout, because Chrome would still be holding the listen
-  # port at enable-time.
+  # Run daemon-reload before the state block, so systemctl enable/start operates
+  # on the freshly deployed unit definitions.
   - name: 'Flush handlers'
     ansible.builtin.meta: 'flush_handlers'
 
