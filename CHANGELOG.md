@@ -16,10 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+* **role:repo_remi**: Drop support for RHEL 7 and Fedora 35. Both are EOL (RHEL 7: June 2024, Fedora 35: December 2022). The per-platform `tasks/RedHat7.yml`, `vars/{RedHat7,Fedora}.yml` and `templates/{RedHat7,Fedora}/` trees are removed.
 * **tool:particle**: Remove the `tools/particle` Vagrant-based role test runner, its sample inventories under `tests/`, and the bundled `linuxfabrik/lib` git submodule (whose only consumer was `particle`). The runner and the submodule were tightly wired together, and Dependabot did not have a `gitsubmodule` config for this repo, so the bundled lib was silently drifting behind upstream. Since role testing is moving to Molecule anyway, dropping the whole stack is cleaner than keeping the wiring around. Older revisions remain accessible through git history.
 
 ### Breaking Changes
 
+* **role:minio_client, role:objectstore_backup**: Both roles and their playbooks (`playbooks/minio_client.yml`, `playbooks/objectstore_backup.yml`) have been removed, along with the corresponding role blocks in `playbooks/setup_nextcloud.yml` and the `setup_nextcloud__skip_minio_client` / `setup_nextcloud__skip_objectstore_backup` variables. MinIO Server has been archived as no-longer-maintained since February 2026, and we are moving away from using object storage for critical data. Users relying on these roles must replace the MinIO-based object-store backup with their own solution (e.g. `rclone`); the `mc` binary, its config under `/etc/mc/`, the `objectstore-backup` systemd timer/service, and `/usr/local/bin/mc-mirror.sh` are no longer managed by lfops and will remain on existing hosts until removed manually ([#241](https://github.com/Linuxfabrik/lfops/issues/241)).
 * **role:infomaniak_vm**: Always create a managed port for every entry in `infomaniak_vm__networks`, even when no `fixed_ip` is set. Previously only networks with a `fixed_ip` got a managed port; networks without one relied on OpenStack's auto-created port. To avoid creating unused (but billed) managed ports on VMs provisioned under the old behavior, make sure to manually rename the existing port in OpenStack to match the `port_name`. Note that this port will not survive VM deletion / detachment, since it was automatically created and therefore is owned by OpenStack, not the user.
 
 ### Changed
@@ -32,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:repo_remi**: Add RHEL 10 / Rocky 10 support (new GPG key, repo templates, and module-stream tasks for EL 10).
+* **role:repo_remi**: Add `meta/argument_specs.yml` declaring the four user-facing variables (`repo_remi__basic_auth_login`, `repo_remi__enabled_php_version`, `repo_remi__enabled_redis_version`, `repo_remi__mirror_url`) so role-entry validation catches type mismatches and unknown variables. `repo_remi__basic_auth_login` is declared as `type: 'raw'` because its default in `defaults/main.yml` resolves to an empty string when no Bitwarden lookup is configured.
 * **role:monitoring_plugins, role:repo_monitoring_plugins**: Add SLES 15 and SLES 16 support. The roles now install the Linuxfabrik Monitoring Plugins from the SUSE channel of `repo.linuxfabrik.ch` and apply the SUSE-specific package version lock ([#245](https://github.com/Linuxfabrik/lfops/issues/245)).
 * **role:alternatives, role:elastic_agent, role:elastic_agent_fleet_server, role:icinga_kubernetes_web, role:lvm, role:mailto_root, role:motd, role:proxysql**: (Re-)introduce `meta/argument_specs.yml` so role-entry validation catches type mismatches and missing required variables. The originally proposed specs were correct for these roles (no strict-options login dicts, no `__dependent_var` injections from `setup_*` playbooks), so they are restored unchanged.
 * **role:apps, role:example, role:kernel_settings**: (Re-)introduce `meta/argument_specs.yml`, with the `__dependent_var` slot declared so `setup_*` playbooks that inject these via `vars:` (e.g. `setup_icinga2_master`, `setup_moodle`, `setup_nextcloud`) pass validation.
