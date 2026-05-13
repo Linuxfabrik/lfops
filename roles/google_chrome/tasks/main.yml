@@ -64,6 +64,8 @@
     - 'google_chrome'
 
 
+# Chrome itself does not implement the systemd socket-activation protocol (sd_listen_fds() / LISTEN_FDS); it always binds its own --remote-debugging-port. Direct socket activation is therefore not possible, so we deploy a systemd-socket-proxyd in front of Chrome: the .socket unit binds listen_port, the proxy accepts on that activated fd and forwards to backend_port (the port Chrome opens itself). --exit-idle-time on the proxy plus BindsTo= on chrome-headless.service ties Chrome's lifecycle to the proxy, so Chrome stops together with the proxy after the idle timeout.
+# The SELinux boolean is required because the proxy connects to Chrome's non-standard backend port, which has no matching SELinux port type.
 - block:
 
   - name: 'setsebool -P systemd_socket_proxyd_connect_any on'

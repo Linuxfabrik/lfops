@@ -12,7 +12,7 @@ The setup is used as a headless browser backend for tools such as the [Icinga We
 
 * Three systemd units are deployed:
     * `chrome-headless-proxy.socket` listens on `listen_address:listen_port` (default `127.0.0.1:9222`).
-    * `chrome-headless-proxy.service` runs `systemd-socket-proxyd` and forwards traffic to Chrome on `backend_port` (default `9223`). On `idle_timeout` seconds without traffic it exits.
+    * `chrome-headless-proxy.service` runs `systemd-socket-proxyd`, which bridges the activated socket to Chrome (Chrome itself does not implement the systemd socket-activation protocol), forwarding traffic to `backend_port` (default `9223`). On `idle_timeout` seconds without traffic it exits.
     * `chrome-headless.service` runs the actual Chrome process under the `chrome` system user. It is bound to the proxy via `BindsTo=`, so when the proxy exits on idle, Chrome stops too. It is **not** enabled on boot and must not be started directly — the proxy triggers it via `Requires=`.
 * On SELinux-enforcing hosts, the `systemd_socket_proxyd_connect_any` boolean is enabled so the proxy may connect to Chrome's non-standard backend port.
 * The service-lifecycle variables (`google_chrome__service_enabled`, `__service_state`) manage the `chrome-headless-proxy.socket` unit, not the Chrome service directly.
