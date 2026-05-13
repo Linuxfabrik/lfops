@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:sshd**: Add Debian 13 support.
 * **role:mirror**: Document the new per-repository `newest_only` subkey on `mirror__reposync_repos` entries. Defaults to `true` (only the newest version of each package is mirrored). Set to `false` for repositories that publish multiple versions in parallel, such as Icinga, where older versions must remain available.
 * **role:repo_remi**: Add RHEL 10 / Rocky 10 support (new GPG key, repo templates, and module-stream tasks for EL 10).
 * **role:repo_remi**: Add `meta/argument_specs.yml` declaring the four user-facing variables (`repo_remi__basic_auth_login`, `repo_remi__enabled_php_version`, `repo_remi__enabled_redis_version`, `repo_remi__mirror_url`) so role-entry validation catches type mismatches and unknown variables. `repo_remi__basic_auth_login` is declared as `type: 'raw'` because its default in `defaults/main.yml` resolves to an empty string when no Bitwarden lookup is configured.
