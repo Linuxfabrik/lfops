@@ -1,6 +1,6 @@
-- name: 'Playbook linuxfabrik.lfops.icingaweb2_module_pdfexport'
+- name: 'Playbook linuxfabrik.lfops.google_chrome'
   hosts:
-    - 'lfops_icingaweb2_module_pdfexport'
+    - 'lfops_google_chrome'
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -14,17 +14,13 @@
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'not icingaweb2_module_pdfexport__skip_repo_epel | d(false) | bool'
+        - 'not google_chrome__skip_repo_epel | d(false) | bool'
 
     - role: 'linuxfabrik.lfops.repo_google_chrome'
       when:
-        - 'not icingaweb2_module_pdfexport__skip_repo_google_chrome | d(false) | bool'
+        - 'not google_chrome__skip_repo_google_chrome | d(false) | bool'
 
     - role: 'linuxfabrik.lfops.google_chrome'
-      when:
-        - 'not icingaweb2_module_pdfexport__skip_google_chrome | d(false) | bool'
-
-    - role: 'linuxfabrik.lfops.icingaweb2_module_pdfexport'
 
 
   post_tasks:

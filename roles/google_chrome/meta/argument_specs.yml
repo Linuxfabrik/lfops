@@ -1,0 +1,71 @@
+argument_specs:
+  main:
+    options:
+
+      google_chrome__backend_port:
+        type: 'int'
+        required: false
+        default: 9223
+        description: 'Internal port Chrome itself listens on. The proxy forwards traffic from listen_port to this port.'
+
+      google_chrome__extra_args__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Extra Google Chrome CLI flags. Dependent-role injection.'
+
+      google_chrome__extra_args__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Extra Google Chrome CLI flags. Group-level override.'
+
+      google_chrome__extra_args__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Extra Google Chrome CLI flags. Host-level override.'
+
+      google_chrome__idle_timeout:
+        type: 'int'
+        required: false
+        default: 300
+        description: 'Seconds the systemd-socket-proxyd waits without traffic before exiting (and stopping Chrome via BindsTo).'
+
+      google_chrome__listen_address:
+        type: 'str'
+        required: false
+        default: '127.0.0.1'
+        description: 'Listen address for the Chrome remote debugging interface.'
+
+      google_chrome__listen_port:
+        type: 'int'
+        required: false
+        default: 9222
+        description: 'Listen port for the Chrome remote debugging interface.'
+
+      google_chrome__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the chrome-headless-proxy.socket unit at boot. The Chrome service itself is triggered on demand by the proxy and is not managed directly.'
+
+      google_chrome__service_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Desired state of the chrome-headless-proxy.socket unit. The Chrome service itself is triggered on demand by the proxy and is not managed directly.'
+
+      google_chrome__user_data_dir:
+        type: 'str'
+        required: false
+        default: '/var/lib/chrome-headless'
+        description: 'Home directory of the chrome system user and Chrome user data directory.'

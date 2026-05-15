@@ -1,0 +1,33 @@
+# Chrome's own listening port. The proxy connects to it on demand; clients never
+# talk to it directly.
+google_chrome__backend_port: 9223
+
+# --- list of dicts injection pattern ---
+# Extra Chrome CLI flags appended to the chrome-headless systemd unit.
+google_chrome__extra_args__dependent_var: []
+google_chrome__extra_args__group_var: []
+google_chrome__extra_args__host_var: []
+google_chrome__extra_args__role_var: []
+google_chrome__extra_args__combined_var: '{{ (
+      google_chrome__extra_args__role_var +
+      google_chrome__extra_args__dependent_var +
+      google_chrome__extra_args__group_var +
+      google_chrome__extra_args__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+# Idle timeout for systemd-socket-proxyd in seconds. After this much time without
+# active connections, the proxy exits — and Chrome stops with it via BindsTo.
+google_chrome__idle_timeout: 300
+
+# External listening endpoint exposed by the chrome-headless-proxy.socket unit.
+# This is what clients (Apache, the pdfexport module, ...) connect to.
+google_chrome__listen_address: '127.0.0.1'
+google_chrome__listen_port: 9222
+
+# Lifecycle of the chrome-headless-proxy.socket unit. The Chrome service itself
+# is triggered on demand by the proxy and is not managed directly.
+google_chrome__service_enabled: true
+google_chrome__service_state: 'started'
+
+google_chrome__user_data_dir: '/var/lib/chrome-headless'
