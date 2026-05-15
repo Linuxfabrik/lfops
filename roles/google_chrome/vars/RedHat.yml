@@ -3,4 +3,3 @@ __google_chrome__packages:
   - 'gnu-free-sans-fonts'
   - 'google-chrome-stable'
   - 'mesa-libOSMesa'
-  - 'mesa-libOSMesa-devel'

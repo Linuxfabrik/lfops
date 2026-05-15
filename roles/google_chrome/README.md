@@ -35,12 +35,12 @@ If you use the [Google Chrome Playbook](https://github.com/Linuxfabrik/lfops/blo
 * Sets the `systemd_socket_proxyd_bind_any` and `systemd_socket_proxyd_connect_any` SELinux booleans.
 * Deploys all three systemd units (`chrome-headless-proxy.socket`, `chrome-headless-proxy.service`, `chrome-headless.service`).
 * Ensures the `chrome-headless-proxy.socket` is in the desired state.
-* Triggers: daemon-reload, socket restart, Chrome service restart.
+* Triggers: daemon-reload on any unit-file change; socket restart only on `chrome-headless-proxy.socket` changes. Changes to the proxy or Chrome service unit file take effect on the next socket-activation cycle.
 
 `google_chrome:configure`
 
 * Deploys the three systemd units (`chrome-headless-proxy.socket`, `chrome-headless-proxy.service`, `chrome-headless.service`).
-* Triggers: daemon-reload, socket restart, Chrome service restart.
+* Triggers: daemon-reload on any unit-file change; socket restart only on `chrome-headless-proxy.socket` changes. Changes to the proxy or Chrome service unit file take effect on the next socket-activation cycle.
 
 `google_chrome:state`
 
