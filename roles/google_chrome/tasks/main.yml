@@ -73,16 +73,21 @@
       name: 'systemd_socket_proxyd_bind_any'
       persistent: true
       state: true
-    when:
-      - 'ansible_facts["selinux"]["status"] != "disabled"'
 
   - name: 'setsebool -P systemd_socket_proxyd_connect_any on'
     ansible.posix.seboolean:
       name: 'systemd_socket_proxyd_connect_any'
       persistent: true
       state: true
-    when:
-      - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+  when:
+    - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+  tags:
+    - 'google_chrome'
+
+
+- block:
 
   - name: 'Deploy /etc/systemd/system/chrome-headless-proxy.socket'
     ansible.builtin.template:
@@ -92,8 +97,8 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__google_chrome__deploy_socket_result'
     notify:
-      - 'google_chrome: systemctl daemon-reload'
       - 'google_chrome: restart chrome-headless-proxy.socket'
 
   - name: 'Deploy /etc/systemd/system/chrome-headless-proxy.service'
@@ -104,9 +109,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify:
-      - 'google_chrome: systemctl daemon-reload'
-      - 'google_chrome: restart chrome-headless-proxy.socket'
+    register: '__google_chrome__deploy_proxy_result'
 
   - name: 'Deploy /etc/systemd/system/chrome-headless.service'
     ansible.builtin.template:
@@ -116,9 +119,18 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify:
-      - 'google_chrome: systemctl daemon-reload'
-      - 'google_chrome: restart chrome-headless'
+    register: '__google_chrome__deploy_chrome_result'
+
+  # Run daemon-reload as a regular task (not as a handler), so it runs before the
+  # state block below and so the restart-socket handler can rely on the registered
+  # __google_chrome__service_state_result to skip redundant restarts.
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__google_chrome__deploy_socket_result is changed or
+         __google_chrome__deploy_proxy_result is changed or
+         __google_chrome__deploy_chrome_result is changed'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
@@ -134,19 +146,6 @@
   tags:
     - 'google_chrome'
     - 'google_chrome:configure'
-
-
-- block:
-
-  # Run daemon-reload before the state block, so systemctl enable/start operates
-  # on the freshly deployed unit definitions.
-  - name: 'Flush handlers'
-    ansible.builtin.meta: 'flush_handlers'
-
-  tags:
-    - 'google_chrome'
-    - 'google_chrome:configure'
-    - 'google_chrome:state'
 
 
 - block:
