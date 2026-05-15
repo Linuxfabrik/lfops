@@ -84,42 +84,6 @@ This role never exposes to the world that PHP is installed on the server, no mat
 * Type: Bool.
 * Default: `true`
 
-`php__fpm_pools__host_var` / `php__fpm_pools__group_var`
-
-* List of dictionaries containing PHP-FPM pools.
-* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
-* Type: List of dictionaries.
-* Default: `[]`
-* Subkeys:
-
-    * `name`:
-
-        * Mandatory. The name of the pool. Will also be used as the filename and for logfiles.
-        * Type: String.
-
-    * `state`:
-
-        * Optional. State of the pool. Possible options: `absent`, `present`.
-        * Type: String.
-        * Default: `'present'`
-
-    * `user`:
-
-        * Optional. The Unix user running the pool processes.
-        * Type: String.
-        * Default: `'apache'`
-
-    * `group`:
-
-        * Optional. The Unix group running the pool processes.
-        * Type: String.
-        * Default: `'apache'`
-
-    * `raw`:
-
-        * Optional. Raw content which will be added to the end of the pool config.
-        * Type: String.
-
 `php__modules__host_var` / `php__modules__group_var`
 
 * List of dictionaries containing additional PHP modules that should be installed via the standard package manager.
@@ -341,7 +305,7 @@ php__ini_upload_max_filesize__host_var: '10000M'
 
 ### PHP-FPM Pool Config Directives
 
-Variables for `php.ini` directives and their default values, defined and supported by this role.
+Variables for PHP-FPM Pool Config directives and their default values, defined and supported by this role.
 
 `php__fpm_pool_conf_pm__group_var` / `php__fpm_pool_conf_pm__host_var`
 
@@ -385,32 +349,180 @@ Variables for `php.ini` directives and their default values, defined and support
 * Type: Number.
 * Default: `0`
 
-`php__fpm_pools__group_var` / `php__fpm_pools__host_var`
+`php__fpm_pools__host_var` / `php__fpm_pools__group_var`
 
-* List defining pool configuration.
+* List of dictionaries containing PHP-FPM pools.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
-* Default: `name: 'www'` `user: 'apache'` `group: 'apache'`
+* Default: One pool named `www`.
 * Subkeys:
 
     * `name`:
 
-        * Mandatory. Pool name.
+        * Mandatory. The name of the pool. Will also be used as the filename and for logfiles.
         * Type: String.
+
+    * `state`:
+
+        * Optional. State of the pool. Possible options: `absent`, `present`.
+        * Type: String.
+        * Default: `'present'`
 
     * `user`:
 
         * Optional. The Unix user running the pool processes.
         * Type: String.
+        * Default: `'apache'`
 
     * `group`:
 
         * Optional. The Unix group running the pool processes.
         * Type: String.
+        * Default: `'apache'`
+
+    * `pm`:
+
+        * Optional. Choose how the process manager will control the number of child processes.
+        * Type: String.
+        * Default: `'dynamic'`
+
+    * `pm_max_children`:
+
+        * Optional. The number of child processes to be created when pm is set to `'static'` and the maximum number of child processes when pm is set to `'dynamic'` or `'ondemand'`.
+        * Type: Number.
+        * Default: `50`
+
+    * `pm_start_servers`:
+
+        * Optional. The number of child processes created on startup. Must be greater than `pm_min_spare_servers` but less than `pm_max_spare_servers`. Used only when `pm` is set to `'dynamic`'.
+        * Type: Number.
+        * Default: `5`
+
+    * `pm_min_spare_servers`:
+
+        * Optional. The desired minimum number of idle server processes. Used only when `pm` is set to `'dynamic'`.
+        * Type: Number.
+        * Default: `5`
+
+    * `pm_max_spare_servers`:
+
+        * Optional. The desired maximum number of idle server processes. Used only when `pm` is set to `'dynamic'`.
+        * Type: Number.
+        * Default: `35`
+
+    * `pm_process_idle_timeout`:
+
+        * Optional. The number of seconds after which an idle process will be killed. Used only when `pm` is set to `'ondemand'`. Defaults to `'10s'` if unset. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
+        * Type: String.
+        * Default: `'10s'`
+
+    * `pm_max_requests`:
+
+        * Optional. The number of requests each child process should execute before respawning. This can be useful to work around memory leaks in 3rd party libraries. For endless request processing specify `0`.
+        * Type: Number.
+        * Default: `0`
+
+    * `pm_status_path`:
+
+        * Optional. Path to view FPM status page.
+        * Type: String.
+        * Default: `'/{{ item["name"] }}-fpm-status'`
+
+    * `ping_path`:
+
+        * Optional. The ping path to check if FPM is alive and responding.
+        * Type: String.
+        * Default: `'/{{ item["name"] }}-fpm-ping'`
+
+    * `request_slowlog_timeout`:
+
+        * Optional. The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
+        * Type: Number.
+        * Default: `0`
+
+    * `request_slowlog_trace_depth`:
+
+        * Optional. Depth of slow log stack trace.
+        * Type: Number.
+        * Default: `20`
+
+    * `request_terminate_timeout`:
+
+        * The timeout for serving a single request after which the worker process will be killed. This option should be used when the `max_execution_time` ini option does not stop script execution for some reason. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
+        * Type: Number.
+        * Default: `0`
+
+    * `php_admin_value_session_save_path`:
+
+        * Optional.
+        * Type: String.
+        * Default: `'/var/lib/php/session-{{ item["name"] }}'`
+
+    * `php_admin_value_opcache_file_cache`:
+
+        * Optional.
+        * Type: String.
+        * Default: `'/var/lib/php/opcache-{{ item["name"] }}'`
+
+    * `php_admin_value_max_execution_time`:
+
+        * Optional.
+        * Type: Number.
+        * Default: `{{ php__ini_max_execution_time__combined_var }}`
+
+    * `php_admin_value_max_input_vars`:
+
+        * Optional.
+        * Type: Number.
+        * Default: `{{ php__ini_max_input_vars__combined_var }}`
+
+    * `php_admin_value_memory_limit`:
+
+        * Optional.
+        * Type: String.
+        * Default: `'{{ php__ini_memory_limit__combined_var }}'`
+
+    * `php_admin_value_opcache_interned_strings_buffer`:
+
+        * Optional.
+        * Type: Number.
+        * Default: `{{ php__ini_opcache_interned_strings_buffer__combined_var }}`
+
+    * `php_admin_value_opcache_max_accelerated_files`:
+
+        * Optional.
+        * Type: Number.
+        * Default: `{{ php__ini_opcache_max_accelerated_files__combined_var }}`
+
+    * `php_admin_value_opcache_memory_consumption`:
+
+        * Optional.
+        * Type: Number.
+        * Default: `{{ php__ini_opcache_memory_consumption__combined_var }}`
+
+    * `php_admin_value_open_basedir`:
+
+        * Optional.
+        * Type: String.
+        * Default: unset
+
+    * `php_admin_value_post_max_size`:
+
+        * Optional.
+        * Type: String.
+        * Default: `'{{ php__ini_post_max_size__combined_var }}'`
+
+    * `php_admin_value_upload_max_filesize`:
+
+        * Optional.
+        * Type: String.
+        * Default: `'{{ php__ini_upload_max_filesize__combined_var }}'`
 
     * `raw`:
 
         * Optional. Raw content which will be added to the end of the pool config.
         * Type: String.
+        * Default: unset
 
 Example:
 ```yaml

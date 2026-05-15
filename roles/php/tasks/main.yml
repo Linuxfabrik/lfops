@@ -53,6 +53,7 @@
 
   tags:
     - 'php'
+    - 'php:fpm'
     - 'php:ini'
     - 'php:modules'
     - 'php:update'
