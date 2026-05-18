@@ -27,5 +27,5 @@ redis__kernel_settings__sysctl__dependent_var:
   # WARNING: The TCP backlog setting of 511 cannot be enforced because
   # /proc/sys/net/core/somaxconn is set to the lower value of 128.
   - name: 'net.core.somaxconn'
-    value: 1024
+    value: 4096
 redis__kernel_settings__transparent_hugepages__dependent_var: 'madvise'
