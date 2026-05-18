@@ -1,7 +1,17 @@
 # {{ ansible_managed }}
-# 2025022701
+# 2026051801
 
+{% if __keycloak__render_bootstrap_creds | d(false) | bool %}
 # WARN: Environment variable 'KEYCLOAK_ADMIN' is deprecated, use 'KC_BOOTSTRAP_ADMIN_USERNAME' instead
 # WARN: Environment variable 'KEYCLOAK_ADMIN_PASSWORD' is deprecated, use 'KC_BOOTSTRAP_ADMIN_PASSWORD' instead
 KC_BOOTSTRAP_ADMIN_USERNAME={{ keycloak__admin_login.username }}
 KC_BOOTSTRAP_ADMIN_PASSWORD={{ keycloak__admin_login.password }}
+{% else %}
+# Bootstrap admin credentials have been removed by the role after they served
+# their purpose on the first Keycloak start. Re-bootstrap (e.g. after a DB
+# loss) by removing the state marker /opt/keycloak/.bootstrap_admin_done and
+# re-running the role with `keycloak__admin_login` defined.
+#
+# This file is intentionally kept on disk (empty of credentials) because
+# keycloak.service references it as a mandatory `EnvironmentFile=`.
+{% endif %}

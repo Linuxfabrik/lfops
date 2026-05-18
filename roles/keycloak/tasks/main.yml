@@ -1,9 +1,14 @@
 - block:
 
-  - name: 'Debug Variables:'
+  - name: 'stat /opt/keycloak/.bootstrap_admin_done'
+    ansible.builtin.stat:
+      path: '/opt/keycloak/.bootstrap_admin_done'
+    register: '__keycloak__bootstrap_marker'
+
+  - name: 'Debug Variables'
     ansible.builtin.debug:
       msg: |
-        keycloak__admin_login.username: {{ keycloak__admin_login.username }}
+        keycloak__admin_login.username: {{ (keycloak__admin_login | d({}))["username"] | d("(bootstrap already done)") }}
         keycloak__db_login.username: {{ keycloak__db_login.username }}
         keycloak__db_url_database: {{ keycloak__db_url_database }}
         keycloak__db_url_host: {{ keycloak__db_url_host }}
@@ -95,6 +100,8 @@
       owner: 'root'
       group: 'root'
       mode: 0o640
+    vars:
+      __keycloak__render_bootstrap_creds: '{{ not __keycloak__bootstrap_marker["stat"]["exists"] }}'
     notify: 'keycloak: systemctl restart keycloak'
 
   - name: 'Create keycloak.service'
@@ -148,3 +155,44 @@
     - 'keycloak'
     - 'keycloak:configure'
     - 'keycloak:state'
+
+
+- block:
+
+  - name: 'Flush handlers so Keycloak restarts with the bootstrap credentials loaded'
+    ansible.builtin.meta: 'flush_handlers'
+
+  - name: 'Wait for Keycloak listener on port {{ __keycloak__listen_port }} (bootstrap admin gets provisioned during startup)'
+    ansible.builtin.wait_for:
+      port: '{{ __keycloak__listen_port }}'
+      host: '127.0.0.1'
+      timeout: 180
+    vars:
+      __keycloak__listen_port: '{{ (keycloak__https_certificate_file | d("") | length > 0) | ternary(8443, 8080) }}'
+
+  - name: 'Deploy /etc/sysconfig/keycloak (without bootstrap credentials)'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/sysconfig/keycloak-sysconfig.j2'
+      dest: '/etc/sysconfig/keycloak'
+      owner: 'root'
+      group: 'root'
+      mode: 0o640
+    vars:
+      __keycloak__render_bootstrap_creds: false
+
+  - name: 'touch /opt/keycloak/.bootstrap_admin_done'
+    ansible.builtin.file:
+      path: '/opt/keycloak/.bootstrap_admin_done'
+      state: 'touch'
+      owner: 'keycloak'
+      group: 'keycloak'
+      mode: 0o644
+
+  when:
+    - 'not __keycloak__bootstrap_marker["stat"]["exists"]'
+    - 'keycloak__state == "started"'
+
+  tags:
+    - 'keycloak'
+    - 'keycloak:configure'
