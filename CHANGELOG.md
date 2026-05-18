@@ -99,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:motd**: Updated default value of `motd__legal_notice`.
 * **role:dnf_versionlock**: Rename internal OS-specific variables `dnf_versionlock__list_path` and `dnf_versionlock__packages` to `__dnf_versionlock__list_path` and `__dnf_versionlock__packages`. They are set in `vars/RedHat{7,8,9}.yml` and `vars/Fedora{40,41}.yml` and were never meant to be overridden from inventory; the `__` prefix makes that visible (LFOps convention). If you set either of these in your inventory, switch to the new names.
 * **role:icingaweb2_module_businessprocess**: Rename internal variable `icingaweb2_module_businessprocess__icingaweb2_owner` (set in `vars/{Debian,RedHat}.yml`) to `__icingaweb2_module_businessprocess__icingaweb2_owner`. Inventory overrides need to be renamed; the value (`www-data` on Debian, `apache` on Red Hat) stays the same.
 * **role:icingaweb2_module_company**: Rename internal variable `icingaweb2_module_company__icingaweb2_owner` (set in `vars/{Debian,RedHat}.yml`) to `__icingaweb2_module_company__icingaweb2_owner`. Inventory overrides need to be renamed; the value (`www-data` on Debian, `apache` on Red Hat) stays the same.
