@@ -118,10 +118,14 @@
 
 - block:
 
-  - name: 'Change the working directory to /opt/keycloak and bin/kc.sh build --db {{ keycloak__db_vendor }}'
+  # kc.sh build always rebuilds and gives no reliable idempotency signal in its stdout, hence changed_when: true.
+  - name: 'cd /opt/keycloak && bin/kc.sh build --db {{ keycloak__db_vendor }}'
     ansible.builtin.command: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
     args:
       chdir: '/opt/keycloak'
+    become: true
+    become_user: 'keycloak'
+    changed_when: true
     when: 'keycloak__mode == "production"'
 
   tags:
