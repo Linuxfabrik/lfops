@@ -51,11 +51,12 @@ network_connections:
     state: 'up'
 
   # remove the default connections
+  # check with `nmcli connection show`
+  - name: 'cloud-init eth0'
+    persistent_state: 'absent'
   - name: 'System eth0'
     persistent_state: 'absent'
   - name: 'System eth1'
-    persistent_state: 'absent'
-  - name: 'System eth2'
     persistent_state: 'absent'
 ```
 
