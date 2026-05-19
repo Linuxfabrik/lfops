@@ -55,10 +55,10 @@ All Keycloak config settings are described here: https://www.keycloak.org/server
 `keycloak__admin_login`
 
 * The *temporary* Keycloak bootstrap admin login credentials. Keycloak only honors `KC_BOOTSTRAP_ADMIN_USERNAME` / `KC_BOOTSTRAP_ADMIN_PASSWORD` on the very first start, when no admin user exists in the `master` realm yet. Subsequent restarts ignore these variables.
-* Mandatory only on the first role run (and during disaster recovery, see below). The role writes the credentials to `/etc/sysconfig/keycloak`, restarts Keycloak so it consumes them and provisions the bootstrap admin in the `master` realm, then immediately re-renders the sysconfig file with the credentials removed and marks the bootstrap as done via `/opt/keycloak/.bootstrap_admin_done`. The cleartext password no longer lingers on disk after the role finishes.
+* Mandatory only on the first role run. The role writes the credentials to `/etc/sysconfig/keycloak`, restarts Keycloak so it consumes them and provisions the bootstrap admin in the `master` realm, then immediately re-renders the sysconfig file with the credentials removed and marks the bootstrap as done via `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state`. The cleartext password no longer lingers on disk after the role finishes.
 * On subsequent runs the role detects the marker file and renders the sysconfig file without credentials right away. `keycloak__admin_login` can be removed from the inventory at that point.
 * Use a username that visibly marks the account as throwaway (suffix `-temp`), so it is obvious in the Keycloak UI which account must be deleted once a permanent admin has been created.
-* Disaster recovery (e.g. lost database, need to re-bootstrap an admin): remove `/opt/keycloak/.bootstrap_admin_done`, re-add `keycloak__admin_login` to the inventory, and re-run the role.
+* For disaster recovery (e.g. lost database, need to re-bootstrap an admin): remove `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state`, re-add `keycloak__admin_login` to the inventory, and re-run the role.
 * Type: Dictionary.
 * Subkeys:
 
@@ -96,17 +96,18 @@ All Keycloak config settings are described here: https://www.keycloak.org/server
 `keycloak__version`
 
 * The version of Keycloak that should be installed.
+* Possible options: <https://github.com/keycloak/keycloak/releases>.
 * Type: String.
 
 Example:
 ```yaml
 # mandatory
 keycloak__admin_login:
-  password: 'password'
   username: 'keycloak-admin-temp'
+  password: 'linuxfabrik'
 keycloak__db_login:
-  password: 'password'
   username: 'keycloak'
+  password: 'linuxfabrik'
 keycloak__hostname: 'keycloak.local'
 keycloak__version: '26.1.2'
 ```
