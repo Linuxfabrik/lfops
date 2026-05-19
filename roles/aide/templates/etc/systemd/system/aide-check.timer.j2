@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026030401
+
+
+[Unit]
+Description=Aide check timer
+
+[Timer]
+OnCalendar={{ aide__check_time_on_calendar }}
+Unit=aide-check.service
+
+[Install]
+WantedBy=multi-user.target
