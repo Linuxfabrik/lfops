@@ -8,14 +8,17 @@ This role creates and manages instances (virtual machines) on [Exoscale](https:/
 
 ## Known Limitations
 
-* Resizing / scaling of instances is currently not supported
+* `exoscale_vm__service_offering` can only be changed within the same instance-type family (the Exoscale v2 API rejects cross-family scaling, e.g. `standard.tiny` to `memory.large`). To move across families, set `exoscale_vm__state: 'absent'`, re-run, then recreate.
+* `exoscale_vm__disk_size` can only be grown, never shrunk (an Exoscale v2 API limit). Lowering the value will fail at `PUT /v2/instance/{id}:resize-disk`.
+* Security-group rule idempotency relies on the v2 API returning the current `rules` array on `GET /v2/security-group/{id}`. If a future API version stops returning rules in that response, re-runs may attempt to create duplicate rules.
+* `--check` only shows top-level changes accurately. Read-only GETs run normally (so `--check` reflects the live API state), but mutating calls are skipped without contacting the API, so downstream tasks that depend on a just-created resource (security-group rules after the SG is created, network attachments after the instance is created, the `:start` after a `:stop` for scale, etc.) silently skip in `--check`. Re-running `--check` after a successful real run gives a faithful diff because everything that needs to exist already does.
+* `--diff` is supported on every mutating task: the diff shows the method, path, and JSON body that would be (or was) sent to the Exoscale API. `before` is empty for `POST`/`PUT` and contains the request summary for `DELETE`, so deletions render as removed lines.
 
 
 ## Mandatory Requirements
 
-* Install the [exo command line tool](https://github.com/exoscale/cli/releases) and configure your Exoscale account using `exo config` on the Ansible control node.
-* Install the `python3-cs` library on the Ansible control node.
 * Import your public SSH-key into Exoscale ([here](https://portal.exoscale.com/compute/keypairs)). Ideally, set the key name to your local username, then you can use the default value for `exoscale_vm__ssh_key`.
+* No client binary or Python library is required on the Ansible control node. The role talks to the Exoscale [v2 HTTP API](https://openapi-v2.exoscale.com/) directly via the bundled `linuxfabrik.lfops.exoscale_api` module, which signs each request with `EXO2-HMAC-SHA256` using `exoscale_vm__api_key` / `exoscale_vm__api_secret`.
 
 
 ## Tags
@@ -38,11 +41,6 @@ This role creates and manages instances (virtual machines) on [Exoscale](https:/
 
 ## Mandatory Role Variables
 
-`exoscale_vm__account`
-
-* The name of the Exoscale account name as configured during `exo config`. Can be found in `~/.config/exoscale/exoscale.toml` afterwards.
-* Type: String.
-
 `exoscale_vm__api_key`
 
 * Set the Exoscale API key. API keys can be managed [here](https://portal.exoscale.com/iam/api-keys). We recommend creating a unrestricted key, because else some operations fail.
@@ -55,27 +53,26 @@ This role creates and manages instances (virtual machines) on [Exoscale](https:/
 
 `exoscale_vm__service_offering`
 
-* The Exoscale service offering. This defines the amount of CPU cores, RAM and disk space. The possible options can be obtained using `exo compute instance-type list --verbose`. Note that these changes will only be applied to stopped instances.
+* The Exoscale service offering, in the form `<family>.<size>` (for example `standard.tiny`, `memory.extra-large`). This defines the amount of CPU cores and RAM. The available combinations can be obtained from the [v2 API](https://openapi-v2.exoscale.com/operation/operation-list-instance-types). Changing this value on an existing VM triggers `PUT /v2/instance/{id}:scale`; the role stops the VM first if needed, then leaves the post-state to `exoscale_vm__state` (which by default starts it again). Only within-family changes are accepted by the API (see Known Limitations).
 * Type: String.
 
 `exoscale_vm__template`
 
-* The Exoscale template for the instance. The possible options can be obtained using `exo compute instance-template list`. Note that you have to use the ID instead of the name when referencing custom templates.
+* The Exoscale template for the instance, either as a template name (looked up against `exoscale_vm__template_visibility`) or as a UUID (used directly without a lookup). The available templates can be obtained from the [v2 API](https://openapi-v2.exoscale.com/operation/operation-list-templates). Use the UUID when referencing custom (private) templates whose name is not unique.
 * Type: String.
 
 `exoscale_vm__zone`
 
-* The Exoscale zone the instance should be in. The possible options can be obtained using `exo zone list`.
+* The Exoscale zone the instance should be in. Determines both the placement of the VM and the API endpoint (`https://api-{zone}.exoscale.com/v2`). Possible values include `at-vie-1`, `at-vie-2`, `bg-sof-1`, `ch-dk-2`, `ch-gva-2`, `de-fra-1`, `de-muc-1`, `hr-zag-1`.
 * Type: String.
 
 Example:
 ```yaml
 # mandatory
-exoscale_vm__account: 'example'
 exoscale_vm__api_key: 'EXOtn4Rg5ooosUALc1uNTqVTyTd'
 exoscale_vm__api_secret: '4Is7jmDfzCONfJtEfxqX1VePSK9p7iZLafJy9ItC'
 exoscale_vm__service_offering: 'standard.tiny'
-exoscale_vm__template: 'Rocky Linux 8 (Green Obsidian) 64-bit'
+exoscale_vm__template: 'Linux Rocky 9 (Blue Onyx) 64-bit'
 exoscale_vm__zone: 'ch-dk-2'
 ```
 
@@ -84,7 +81,7 @@ exoscale_vm__zone: 'ch-dk-2'
 
 `exoscale_vm__disk_size`
 
-* The disk size in GBs. Must be greater than 10. Note that adjusting the disk size is not currently supported.
+* The instance root disk size in GiB. Must be at least 10 and at most 51200 (Exoscale v2 limit). Increasing this value on an existing VM triggers `PUT /v2/instance/{id}:resize-disk`; the role stops the VM first if needed. The disk can only grow (see Known Limitations).
 * Type: Number.
 * Default: `10`
 
@@ -102,7 +99,11 @@ exoscale_vm__zone: 'ch-dk-2'
 
 `exoscale_vm__private_networks`
 
-* A list of dictionaries defining which networks should be attached to this instance. It also allows the creation of new internal networks, or setting a fixed IP for the instance.
+* A list of dictionaries defining which private networks the instance should be attached to. The role reconciles the current attachment state against this list on every run:
+    * Networks listed here but not currently attached are attached (`PUT /v2/private-network/{id}:attach`).
+    * Networks currently attached but no longer in this list are detached (`PUT /v2/private-network/{id}:detach`).
+    * For networks listed here with a `fixed_ip` whose current lease for this VM does not match, the lease is updated (`PUT /v2/private-network/{id}:update-ip`).
+    * Networks listed with a `cidr` that do not yet exist are created (`POST /v2/private-network`). Existing networks are never destroyed by this role (a private network may be shared with other VMs).
 * Type: List of dictionaries.
 * Default: `[]`
 
@@ -115,12 +116,12 @@ exoscale_vm__zone: 'ch-dk-2'
 
     * `cidr`:
 
-        * Optional. If this is given, a new network with this cidr is created.
+        * Optional. If this is given, a new network with this cidr is created if missing. Ignored when the network already exists.
         * Type: String.
 
     * `fixed_ip`:
 
-        * Optional. The fixed IP of this instance. This can be used for attach to an existing network, or when creating a new one.
+        * Optional. The IPv4 address this VM should hold on the network. If the current lease for this VM on the network differs (or the VM was holding a DHCP-assigned address), the role calls `:update-ip` to switch to this address.
         * Type: String.
 
 `exoscale_vm__security_group_rules`
@@ -170,13 +171,17 @@ exoscale_vm__zone: 'ch-dk-2'
 
 `exoscale_vm__state`
 
-* The state of the instance. Possible options: `deployed`, `started`, `stopped`, `restarted`, `restored`, `destroyed`, `expunged`, `present`, `absent`.
+* The desired state of the instance. Possible values:
+    * `'started'` (default) or `'present'`: create the VM and ensure it is running. Calls `PUT /v2/instance/{id}:start` only if the current state is `stopped`.
+    * `'stopped'`: create the VM with `auto-start: false` so it is not running on first boot. On subsequent runs, calls `PUT /v2/instance/{id}:stop` only if the current state is `running`.
+    * `'restarted'`: same as `started`, but if the VM is already `running`, calls `PUT /v2/instance/{id}:reboot`. A fresh create with `'restarted'` behaves like `'started'` (no spurious reboot of a just-started VM). Leaving `'restarted'` in your inventory permanently means every Ansible run reboots the VM, which is usually not what you want.
+    * `'absent'`: delete the VM, and the per-VM security group when `exoscale_vm__security_group_rules` is set.
 * Type: String.
 * Default: `'started'`
 
 `exoscale_vm__template_visibility`
 
-* Visibility of the Exoscale template for the instance. Usually `'private'` for custom templates.
+* Visibility under which `exoscale_vm__template` is looked up when given as a name. Use `'private'` for custom templates uploaded to your own account. Ignored when `exoscale_vm__template` is already a UUID.
 * Type: String.
 * Default: `'public'`
 
@@ -199,6 +204,14 @@ exoscale_vm__ssh_key: '{{ lookup("env", "USER") }}'
 exoscale_vm__state: 'started'
 exoscale_vm__template_visibility: 'private'
 ```
+
+
+## Deprecated Role Variables
+
+`exoscale_vm__account`
+
+* No longer used. Previously identified which `exo` CLI / `~/.config/exoscale/exoscale.toml` profile to authenticate with. The role now signs every request itself with `exoscale_vm__api_key` / `exoscale_vm__api_secret`, so this variable is silently ignored. Kept in `meta/argument_specs.yml` so existing inventories that still set it do not fail role-entry validation.
+* Type: String.
 
 
 ## License
