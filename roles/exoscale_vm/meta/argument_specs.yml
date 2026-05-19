@@ -1,0 +1,176 @@
+argument_specs:
+  main:
+    options:
+
+      exoscale_vm__account:
+        type: 'str'
+        required: false
+        description: >-
+          Deprecated, no longer used. Previously identified the `exo` CLI /
+          `~/.config/exoscale/exoscale.toml` profile to authenticate with.
+          Kept here so existing inventories that still set it do not fail
+          role-entry validation.
+
+      exoscale_vm__api_key:
+        type: 'str'
+        required: true
+        description: 'Exoscale API key. API keys can be managed at https://portal.exoscale.com/iam/api-keys. Use an unrestricted key, otherwise some operations fail.'
+
+      exoscale_vm__api_secret:
+        type: 'str'
+        required: true
+        description: 'Exoscale API secret corresponding to exoscale_vm__api_key.'
+
+      exoscale_vm__disk_size:
+        type: 'int'
+        required: false
+        default: 10
+        description: 'Instance root disk size in GiB. Must be greater than or equal to 10. Adjusting the disk size is not currently supported (only honored on create).'
+
+      exoscale_vm__name:
+        type: 'str'
+        required: false
+        description: >-
+          Name of the instance at Exoscale. Defaults to the inventory
+          hostname prefixed with `e` so it always starts with a letter.
+
+      exoscale_vm__private_instance:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Whether the instance should be created without a public IPv4
+          (`public-ip-assignment: none`). When false, the instance gets a
+          public IPv4 (`public-ip-assignment: inet4`).
+
+      exoscale_vm__private_networks:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Private networks to attach to the instance. Each entry attaches
+          to (and optionally creates) one network. Setting `cidr` creates
+          the network if missing; setting `fixed_ip` pins the instance's
+          IP on that network.
+        options:
+
+          cidr:
+            type: 'str'
+            required: false
+            description: 'CIDR for the private network. If set, the network is created (if missing) with this range. Omit to attach to an existing network without creating it.'
+
+          fixed_ip:
+            type: 'str'
+            required: false
+            description: 'Fixed IPv4 address the instance should get on this private network. Omit for DHCP.'
+
+          name:
+            type: 'str'
+            required: true
+            description: 'Name of the private network to create or attach to.'
+
+      exoscale_vm__security_group_rules:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        description: >-
+          Rules for the per-VM security group. When set and non-empty, the
+          role creates a security group named `exoscale_vm__name`, attaches
+          it to the instance in addition to `default`, and reconciles its
+          rules against this list. Leave unset / empty to skip per-VM
+          security-group management entirely (the instance is then only
+          attached to the `default` security group).
+        options:
+
+          cidr:
+            type: 'str'
+            required: false
+            default: '0.0.0.0/0'
+            description: 'Network in CIDR form that this rule applies to.'
+
+          end_port:
+            type: 'int'
+            required: true
+            description: 'End port of the rule range (inclusive).'
+
+          protocol:
+            type: 'str'
+            required: true
+            description: 'IP protocol the rule applies to. Accepted values match the v2 API: `tcp`, `udp`, `icmp`, `esp`, `gre`, `ah`, `ipip`, `icmpv6`.'
+
+          start_port:
+            type: 'int'
+            required: true
+            description: 'Start port of the rule range (inclusive).'
+
+          state:
+            type: 'str'
+            required: false
+            default: 'present'
+            choices:
+              - 'absent'
+              - 'present'
+            description: 'Whether to add (`present`) or remove (`absent`) this rule.'
+
+          type:
+            type: 'str'
+            required: false
+            default: 'ingress'
+            choices:
+              - 'egress'
+              - 'ingress'
+            description: 'Direction the rule applies to.'
+
+      exoscale_vm__service_offering:
+        type: 'str'
+        required: true
+        description: 'Exoscale instance type in the form `<family>.<size>` (for example `standard.tiny`, `memory.extra-large`). Resolved at create time via `GET /v2/instance-type` to the instance type UUID.'
+
+      exoscale_vm__ssh_key:
+        type: 'str'
+        required: false
+        description: >-
+          Name of the SSH key registered with Exoscale
+          (https://portal.exoscale.com/compute/keypairs) to inject into the
+          instance. Defaults to the `USER` environment variable on the
+          Ansible control node.
+
+      exoscale_vm__state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'absent'
+          - 'present'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          Desired state of the instance. `absent` deletes the VM (and the
+          per-VM security group when `exoscale_vm__security_group_rules`
+          is set). `started` (default) and `present` (alias) create the
+          VM and start it if currently stopped. `stopped` creates the VM
+          with `auto-start: false` and stops it if currently running.
+          `restarted` ensures the VM is running and reboots it if it was
+          already running (no reboot if it had to be started, so a fresh
+          create with `restarted` behaves like `started`).
+
+      exoscale_vm__template:
+        type: 'str'
+        required: true
+        description: 'Either a template name (resolved via `GET /v2/template?visibility=...`) or a template UUID (used directly without a lookup). For custom templates, prefer the UUID.'
+
+      exoscale_vm__template_visibility:
+        type: 'str'
+        required: false
+        default: 'public'
+        choices:
+          - 'private'
+          - 'public'
+        description: 'Visibility used when resolving `exoscale_vm__template` by name. Ignored when the template is already a UUID.'
+
+      exoscale_vm__zone:
+        type: 'str'
+        required: true
+        description: 'Exoscale zone the instance lives in. Also determines the API endpoint host (`https://api-{zone}.exoscale.com/v2`).'

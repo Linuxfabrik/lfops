@@ -1,167 +1,560 @@
 - block:
 
-  - name: 'Manage the security group for the VM'
-    ngine_io.cloudstack.cs_securitygroup:
+
+  - block:
+
+    - name: 'GET /v2/security-group'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/security-group'
+      register: '__exoscale_vm__sg_list'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
+
+    - name: 'POST /v2/security-group'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'POST'
+        path: '/security-group'
+        body:
+          name: '{{ exoscale_vm__name }}'
+      when:
+        - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
+        - 'exoscale_vm__state != "absent"'
+        - 'exoscale_vm__name not in __exoscale_vm__sg_list["json"]["security-groups"] | map(attribute="name")'
+
+    - name: 'GET /v2/security-group (refresh after create)'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/security-group'
+      register: '__exoscale_vm__sg_list'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
+        - 'exoscale_vm__state != "absent"'
+
+    - name: 'GET /v2/security-group/{id}'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/security-group/{{ __exoscale_vm__sg_id }}'
+      register: '__exoscale_vm__sg_detail'
+      vars:
+        __exoscale_vm__sg_id: '{{
+            (__exoscale_vm__sg_list["json"]["security-groups"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({}))["id"] | d("")
+          }}'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
+        - 'exoscale_vm__state != "absent"'
+        - '__exoscale_vm__sg_id | length > 0'
+
+    - name: 'POST /v2/security-group/{id}/rules'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'POST'
+        path: '/security-group/{{ __exoscale_vm__sg_id }}/rules'
+        body: >-
+          {{ {
+            "flow-direction": item["type"] | d("ingress"),
+            "protocol": item["protocol"],
+            "network": item["cidr"] | d("0.0.0.0/0"),
+            "start-port": item["start_port"] | int,
+            "end-port": item["end_port"] | int,
+          } }}
+      loop: '{{ exoscale_vm__security_group_rules | d([]) }}'
+      vars:
+        __exoscale_vm__sg_id: '{{
+            (__exoscale_vm__sg_list["json"]["security-groups"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({}))["id"] | d("")
+          }}'
+        __exoscale_vm__matching_rules: '{{
+            (__exoscale_vm__sg_detail["json"]["rules"] | d([]))
+              | selectattr("flow-direction", "eq", item["type"] | d("ingress"))
+              | selectattr("protocol", "eq", item["protocol"])
+              | selectattr("start-port", "eq", item["start_port"] | int)
+              | selectattr("end-port", "eq", item["end_port"] | int)
+              | selectattr("network", "eq", item["cidr"] | d("0.0.0.0/0"))
+              | list
+          }}'
+      when:
+        - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
+        - 'exoscale_vm__state != "absent"'
+        - 'item["state"] | d("present") != "absent"'
+        - '__exoscale_vm__sg_detail is defined and __exoscale_vm__sg_detail is not skipped'
+        - '__exoscale_vm__matching_rules | length == 0'
+
+    - name: 'DELETE /v2/security-group/{id}/rules/{rule-id}'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'DELETE'
+        path: '/security-group/{{ __exoscale_vm__sg_id }}/rules/{{ __exoscale_vm__matching_rules[0]["id"] }}'
+      loop: '{{ exoscale_vm__security_group_rules | d([]) }}'
+      vars:
+        __exoscale_vm__sg_id: '{{
+            (__exoscale_vm__sg_list["json"]["security-groups"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({}))["id"] | d("")
+          }}'
+        __exoscale_vm__matching_rules: '{{
+            (__exoscale_vm__sg_detail["json"]["rules"] | d([]))
+              | selectattr("flow-direction", "eq", item["type"] | d("ingress"))
+              | selectattr("protocol", "eq", item["protocol"])
+              | selectattr("start-port", "eq", item["start_port"] | int)
+              | selectattr("end-port", "eq", item["end_port"] | int)
+              | selectattr("network", "eq", item["cidr"] | d("0.0.0.0/0"))
+              | list
+          }}'
+      when:
+        - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
+        - 'exoscale_vm__state != "absent"'
+        - 'item["state"] | d("present") == "absent"'
+        - '__exoscale_vm__sg_detail is defined and __exoscale_vm__sg_detail is not skipped'
+        - '__exoscale_vm__matching_rules | length > 0'
+
+    tags:
+      - 'exoscale_vm'
+      - 'exoscale_vm:firewalls'
+
+
+  - block:
+
+    - name: 'GET /v2/instance'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/instance'
+      register: '__exoscale_vm__instance_list'
+      changed_when: false
+      check_mode: false
+
+    - name: 'GET /v2/security-group (for instance create)'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/security-group'
+      register: '__exoscale_vm__sg_list_for_instance'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - 'exoscale_vm__name not in __exoscale_vm__instance_list["json"]["instances"] | map(attribute="name")'
+
+    - name: 'GET /v2/instance-type'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/instance-type'
+      register: '__exoscale_vm__instance_type_list'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__state != "absent"'
+
+    - name: 'GET /v2/template (for instance create)'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/template'
+        query_params:
+          visibility: '{{ exoscale_vm__template_visibility }}'
+      register: '__exoscale_vm__template_list'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - 'exoscale_vm__name not in __exoscale_vm__instance_list["json"]["instances"] | map(attribute="name")'
+        - 'exoscale_vm__template is not match("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")'
+
+    - name: 'POST /v2/instance'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'POST'
+        path: '/instance'
+        body: >-
+          {{ {
+            "name": exoscale_vm__name,
+            "disk-size": exoscale_vm__disk_size | int,
+            "instance-type": {"id": __exoscale_vm__instance_type_id},
+            "template": {"id": __exoscale_vm__template_id},
+            "ssh-keys": [{"name": exoscale_vm__ssh_key}],
+            "security-groups": __exoscale_vm__instance_security_groups,
+            "public-ip-assignment": (exoscale_vm__private_instance | bool) | ternary("none", "inet4"),
+            "auto-start": exoscale_vm__state != "stopped",
+          } }}
+      vars:
+        __exoscale_vm__instance_type_family: '{{ exoscale_vm__service_offering.split(".")[0] }}'
+        __exoscale_vm__instance_type_size: '{{ exoscale_vm__service_offering.split(".")[1] }}'
+        __exoscale_vm__instance_type_id: '{{
+            (__exoscale_vm__instance_type_list["json"]["instance-types"]
+              | selectattr("family", "eq", __exoscale_vm__instance_type_family)
+              | selectattr("size", "eq", __exoscale_vm__instance_type_size)
+              | list | first | default({"id": ""}))["id"]
+          }}'
+        __exoscale_vm__template_id: '{{
+            exoscale_vm__template
+            if (exoscale_vm__template is match("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))
+            else (__exoscale_vm__template_list["json"]["templates"]
+              | selectattr("name", "eq", exoscale_vm__template)
+              | list | first | default({"id": ""}))["id"]
+          }}'
+        __exoscale_vm__default_sg_id: '{{
+            (__exoscale_vm__sg_list_for_instance["json"]["security-groups"]
+              | selectattr("name", "eq", "default")
+              | list | first | default({"id": ""}))["id"]
+          }}'
+        __exoscale_vm__own_sg_id: '{{
+            (__exoscale_vm__sg_list_for_instance["json"]["security-groups"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({"id": ""}))["id"]
+          }}'
+        __exoscale_vm__instance_security_groups: '{{
+            [{"id": __exoscale_vm__default_sg_id}]
+            + ([{"id": __exoscale_vm__own_sg_id}]
+                if (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0)
+                else [])
+          }}'
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - 'exoscale_vm__name not in __exoscale_vm__instance_list["json"]["instances"] | map(attribute="name")'
+
+    - name: 'DELETE /v2/instance/{id}'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'DELETE'
+        path: '/instance/{{ __exoscale_vm__instance_id }}'
+      vars:
+        __exoscale_vm__instance_id: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({}))["id"] | d("")
+          }}'
+      when:
+        - 'exoscale_vm__state == "absent"'
+        - '__exoscale_vm__instance_id | length > 0'
+
+    - name: 'GET /v2/instance (refresh for power-state management)'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/instance'
+      register: '__exoscale_vm__instance_list'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__state != "absent"'
+
+    - name: 'PUT /v2/instance/{id}:stop (before scale or resize-disk)'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'PUT'
+        path: '/instance/{{ __exoscale_vm__instance_match["id"] }}:stop'
+      vars:
+        __exoscale_vm__instance_match: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({"id": "", "state": "", "instance-type": {"family": "", "size": ""}, "disk-size": 0}))
+          }}'
+        __exoscale_vm__current_offering: '{{
+            __exoscale_vm__instance_match["instance-type"]["family"] | d("")
+            ~ "." ~
+            __exoscale_vm__instance_match["instance-type"]["size"] | d("")
+          }}'
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - '__exoscale_vm__instance_match["id"] | length > 0'
+        - '__exoscale_vm__instance_match["state"] == "running"'
+        - >
+          __exoscale_vm__current_offering != exoscale_vm__service_offering
+          or (__exoscale_vm__instance_match["disk-size"] | int) != (exoscale_vm__disk_size | int)
+
+    - name: 'PUT /v2/instance/{id}:scale'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'PUT'
+        path: '/instance/{{ __exoscale_vm__instance_match["id"] }}:scale'
+        body:
+          instance-type:
+            id: '{{ __exoscale_vm__instance_type_id }}'
+      vars:
+        __exoscale_vm__instance_match: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({"id": "", "state": "", "instance-type": {"family": "", "size": ""}, "disk-size": 0}))
+          }}'
+        __exoscale_vm__current_offering: '{{
+            __exoscale_vm__instance_match["instance-type"]["family"] | d("")
+            ~ "." ~
+            __exoscale_vm__instance_match["instance-type"]["size"] | d("")
+          }}'
+        __exoscale_vm__instance_type_family: '{{ exoscale_vm__service_offering.split(".")[0] }}'
+        __exoscale_vm__instance_type_size: '{{ exoscale_vm__service_offering.split(".")[1] }}'
+        __exoscale_vm__instance_type_id: '{{
+            (__exoscale_vm__instance_type_list["json"]["instance-types"]
+              | selectattr("family", "eq", __exoscale_vm__instance_type_family)
+              | selectattr("size", "eq", __exoscale_vm__instance_type_size)
+              | list | first | default({"id": ""}))["id"]
+          }}'
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - '__exoscale_vm__instance_match["id"] | length > 0'
+        - '__exoscale_vm__current_offering != exoscale_vm__service_offering'
+
+    - name: 'PUT /v2/instance/{id}:resize-disk'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'PUT'
+        path: '/instance/{{ __exoscale_vm__instance_match["id"] }}:resize-disk'
+        body:
+          disk-size: '{{ exoscale_vm__disk_size | int }}'
+      vars:
+        __exoscale_vm__instance_match: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({"id": "", "state": "", "instance-type": {"family": "", "size": ""}, "disk-size": 0}))
+          }}'
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - '__exoscale_vm__instance_match["id"] | length > 0'
+        - '(__exoscale_vm__instance_match["disk-size"] | int) != (exoscale_vm__disk_size | int)'
+
+    - name: 'GET /v2/instance (refresh after scale / resize-disk)'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/instance'
+      register: '__exoscale_vm__instance_list'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__state != "absent"'
+
+    - name: 'PUT /v2/instance/{id}:start'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'PUT'
+        path: '/instance/{{ __exoscale_vm__instance_match["id"] }}:start'
+        body: {}
+      vars:
+        __exoscale_vm__instance_match: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({"id": "", "state": ""}))
+          }}'
+      when:
+        - 'exoscale_vm__state in ["present", "restarted", "started"]'
+        - '__exoscale_vm__instance_match["id"] | length > 0'
+        - '__exoscale_vm__instance_match["state"] == "stopped"'
+
+    - name: 'PUT /v2/instance/{id}:stop'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'PUT'
+        path: '/instance/{{ __exoscale_vm__instance_match["id"] }}:stop'
+      vars:
+        __exoscale_vm__instance_match: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({"id": "", "state": ""}))
+          }}'
+      when:
+        - 'exoscale_vm__state == "stopped"'
+        - '__exoscale_vm__instance_match["id"] | length > 0'
+        - '__exoscale_vm__instance_match["state"] == "running"'
+
+    - name: 'PUT /v2/instance/{id}:reboot'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'PUT'
+        path: '/instance/{{ __exoscale_vm__instance_match["id"] }}:reboot'
+      vars:
+        __exoscale_vm__instance_match: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({"id": "", "state": ""}))
+          }}'
+      when:
+        - 'exoscale_vm__state == "restarted"'
+        - '__exoscale_vm__instance_match["id"] | length > 0'
+        - '__exoscale_vm__instance_match["state"] == "running"'
+
+    tags:
+      - 'exoscale_vm'
+
+
+  - block:
+
+    - name: 'GET /v2/private-network'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/private-network'
+      register: '__exoscale_vm__private_network_list'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__state != "absent"'
+
+    - name: 'POST /v2/private-network'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'POST'
+        path: '/private-network'
+        body:
+          name: '{{ item["name"] }}'
+          start-ip: '{{ item["cidr"] | ansible.utils.ipaddr("2") | ansible.utils.ipaddr("address") }}'
+          end-ip: '{{ item["cidr"] | ansible.utils.ipaddr("-3") | ansible.utils.ipaddr("address") }}'
+          netmask: '{{ item["cidr"] | ansible.utils.ipaddr("netmask") }}'
+      loop: '{{ exoscale_vm__private_networks | d([]) }}'
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - 'item["cidr"] is defined'
+        - 'item["name"] not in __exoscale_vm__private_network_list["json"]["private-networks"] | map(attribute="name")'
+
+    - name: 'GET /v2/private-network (refresh after create)'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/private-network'
+      register: '__exoscale_vm__private_network_list'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__state != "absent"'
+
+    - name: 'GET /v2/instance/{id}'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'GET'
+        path: '/instance/{{ __exoscale_vm__instance_id }}'
+      register: '__exoscale_vm__instance_detail'
+      vars:
+        __exoscale_vm__instance_id: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({}))["id"] | d("")
+          }}'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - '__exoscale_vm__instance_id | length > 0'
+
+    - name: 'PUT /v2/private-network/{id}:attach'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'PUT'
+        path: '/private-network/{{ __exoscale_vm__pn_id }}:attach'
+        body: '{{
+            {"instance": {"id": __exoscale_vm__instance_id}, "ip": item["fixed_ip"]}
+            if "fixed_ip" in item
+            else {"instance": {"id": __exoscale_vm__instance_id}}
+          }}'
+      loop: '{{ exoscale_vm__private_networks | d([]) }}'
+      vars:
+        __exoscale_vm__instance_id: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({}))["id"] | d("")
+          }}'
+        __exoscale_vm__pn_id: '{{
+            (__exoscale_vm__private_network_list["json"]["private-networks"]
+              | selectattr("name", "eq", item["name"])
+              | list | first | default({}))["id"] | d("")
+          }}'
+        __exoscale_vm__attached_pn_ids: '{{
+            (__exoscale_vm__instance_detail["json"]["private-networks"] | d([]))
+              | map(attribute="id") | list
+          }}'
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - '__exoscale_vm__instance_detail is defined and __exoscale_vm__instance_detail is not skipped'
+        - '__exoscale_vm__pn_id | length > 0'
+        - '__exoscale_vm__pn_id not in __exoscale_vm__attached_pn_ids'
+
+    - name: 'PUT /v2/private-network/{id}:update-ip'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'PUT'
+        path: '/private-network/{{ __exoscale_vm__pn_id }}:update-ip'
+        body:
+          ip: '{{ item["fixed_ip"] }}'
+          instance:
+            id: '{{ __exoscale_vm__instance_id }}'
+      loop: '{{ exoscale_vm__private_networks | d([]) }}'
+      vars:
+        __exoscale_vm__instance_id: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({}))["id"] | d("")
+          }}'
+        __exoscale_vm__pn_match: '{{
+            (__exoscale_vm__private_network_list["json"]["private-networks"]
+              | selectattr("name", "eq", item["name"])
+              | list | first | default({}))
+          }}'
+        __exoscale_vm__pn_id: '{{ __exoscale_vm__pn_match["id"] | d("") }}'
+        __exoscale_vm__current_lease_ip: '{{
+            (__exoscale_vm__pn_match["leases"] | d([])
+              | selectattr("instance-id", "eq", __exoscale_vm__instance_id)
+              | list | first | default({}))["ip"] | d("")
+          }}'
+        __exoscale_vm__attached_pn_ids: '{{
+            (__exoscale_vm__instance_detail["json"]["private-networks"] | d([]))
+              | map(attribute="id") | list
+          }}'
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - '__exoscale_vm__instance_detail is defined and __exoscale_vm__instance_detail is not skipped'
+        - '"fixed_ip" in item'
+        - '__exoscale_vm__pn_id | length > 0'
+        - '__exoscale_vm__pn_id in __exoscale_vm__attached_pn_ids'
+        - '__exoscale_vm__current_lease_ip != item["fixed_ip"]'
+
+    - name: 'PUT /v2/private-network/{id}:detach'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'PUT'
+        path: '/private-network/{{ item["id"] }}:detach'
+        body:
+          instance:
+            id: '{{ __exoscale_vm__instance_id }}'
+      loop: '{{
+          (__exoscale_vm__instance_detail["json"]["private-networks"] | d([]))
+          if (__exoscale_vm__instance_detail is defined and __exoscale_vm__instance_detail is not skipped)
+          else []
+        }}'
+      vars:
+        __exoscale_vm__instance_id: '{{
+            (__exoscale_vm__instance_list["json"]["instances"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({}))["id"] | d("")
+          }}'
+        __exoscale_vm__pn_name: '{{
+            (__exoscale_vm__private_network_list["json"]["private-networks"]
+              | selectattr("id", "eq", item["id"])
+              | list | first | default({}))["name"] | d("")
+          }}'
+        __exoscale_vm__inventory_pn_names: '{{
+            exoscale_vm__private_networks | d([]) | map(attribute="name") | list
+          }}'
+      when:
+        - 'exoscale_vm__state != "absent"'
+        - '__exoscale_vm__pn_name | length > 0'
+        - '__exoscale_vm__pn_name not in __exoscale_vm__inventory_pn_names'
+
+    tags:
+      - 'exoscale_vm'
+      - 'exoscale_vm:networks'
+
+
+  - block:
+
+    - name: 'DELETE /v2/security-group/{id}'
+      linuxfabrik.lfops.exoscale_api:
+        method: 'DELETE'
+        path: '/security-group/{{ __exoscale_vm__sg_id }}'
+      vars:
+        __exoscale_vm__sg_id: '{{
+            (__exoscale_vm__sg_list["json"]["security-groups"]
+              | selectattr("name", "eq", exoscale_vm__name)
+              | list | first | default({}))["id"] | d("")
+          }}'
+      when:
+        - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
+        - 'exoscale_vm__state == "absent"'
+        - '__exoscale_vm__sg_id | length > 0'
+
+    tags:
+      - 'exoscale_vm'
+
+
+  delegate_to: 'localhost'
+  become: false
+  module_defaults:
+    linuxfabrik.lfops.exoscale_api:
       api_key: '{{ exoscale_vm__api_key }}'
       api_secret: '{{ exoscale_vm__api_secret }}'
-      api_url: 'https://api.exoscale.com/compute'
-      name: '{{ exoscale_vm__name }}'
-      state: 'present'
-    delegate_to: 'localhost'
-    become: false
-    when:
-      - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
-      - 'exoscale_vm__state != "absent"'
-
-  - name: 'Manage the required security group rules for the VM'
-    ngine_io.cloudstack.cs_securitygroup_rule:
-      api_key: '{{ exoscale_vm__api_key }}'
-      api_secret: '{{ exoscale_vm__api_secret }}'
-      api_url: 'https://api.exoscale.com/compute'
-      cidr: '{{ item["cidr"] | default(omit) }}'
-      protocol: '{{ item["protocol"] | default(omit) }}'
-      security_group: '{{ exoscale_vm__name }}'
-      start_port: '{{ item["start_port"] | default(omit) }}'
-      end_port: '{{ item["end_port"] | default(omit) }}'
-      state: '{{ item["state"] | d("present") }}'
-      type: '{{ item["type"] | default("ingress") }}'
-    loop: '{{ exoscale_vm__security_group_rules }}'
-    delegate_to: 'localhost'
-    become: false
-    when:
-      - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
-      - 'exoscale_vm__state != "absent"'
-
-  tags:
-    - 'exoscale_vm'
-    - 'exoscale_vm:firewalls'
-
-
-- block:
-
-  # using the exo cli instead, as creating private instances is not supported by the v1 API which the cloudstack modules use
-  # - name: 'Manage the VM at Exoscale'
-  #   ngine_io.cloudstack.cs_instance:
-  #     api_key: '{{ exoscale_vm__api_key }}'
-  #     api_secret: '{{ exoscale_vm__api_secret }}'
-  #     api_url: 'https://api.exoscale.com/compute'
-  #     name: '{{ exoscale_vm__name }}'
-  #     service_offering: '{{ exoscale_vm__service_offering }}'
-  #     security_groups: '{{ (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0) | ternary(["default", exoscale_vm__name], ["default"]) }}'
-  #     ssh_key: '{{ exoscale_vm__ssh_key }}'
-  #     state: '{{ exoscale_vm__state }}'
-  #     template: '{{ exoscale_vm__template }}'
-  #     zone: '{{ exoscale_vm__zone }}'
-  #     root_disk_size: '{{ exoscale_vm__disk_size }}'
-  #     force: true
-  #   delegate_to: 'localhost'
-
-  - name: 'List the VMs at Exoscale'
-    ansible.builtin.command: >
-      exo compute instance list
-      --use-account '{{ exoscale_vm__account }}'
-      --output-format json
-    register: 'exoscale_vm__instance_list_result'
-    delegate_to: 'localhost'
-    become: false
-    changed_when: false # just gathering information, no actual change happening here
-
-  - name: 'Create the VM at Exoscale'
-    ansible.builtin.command: >
-      exo compute instance create
-      --use-account '{{ exoscale_vm__account }}'
-      --output-format json
-      --instance-type '{{ exoscale_vm__service_offering }}'
-      {% for item in  (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0) | ternary(["default", exoscale_vm__name], ["default"]) %}
-      --security-group '{{ item }}'
-      {% endfor %}
-      --ssh-key '{{ exoscale_vm__ssh_key }}'
-      --template '{{ exoscale_vm__template }}'
-      --template-visibility '{{ exoscale_vm__template_visibility }}'
-      --zone '{{ exoscale_vm__zone }}'
-      --disk-size '{{ exoscale_vm__disk_size }}'
-      {% if exoscale_vm__private_instance %}
-      --private-instance
-      {% endif %}
-      '{{ exoscale_vm__name }}'
-    delegate_to: 'localhost'
-    become: false
-    when:
-      - 'exoscale_vm__state != "absent"'
-      - 'exoscale_vm__name not in  exoscale_vm__instance_list_result["stdout"] | from_json | map(attribute="name")'
-
-  - name: 'Delete the VM at Exoscale'
-    ansible.builtin.command: >
-      exo compute instance delete
-      --use-account '{{ exoscale_vm__account }}'
-      --output-format json
-      --zone '{{ exoscale_vm__zone }}'
-      --force
-      '{{ exoscale_vm__name }}'
-    delegate_to: 'localhost'
-    become: false
-    when:
-      - 'exoscale_vm__state == "absent"'
-      - 'exoscale_vm__name in exoscale_vm__instance_list_result["stdout"] | from_json | map(attribute="name")'
-
-  tags:
-    - 'exoscale_vm'
-
-
-- block:
-
-  - name: 'Create the networks required by the VM'
-    ngine_io.cloudstack.cs_network:
-      api_key: '{{ exoscale_vm__api_key }}'
-      api_secret: '{{ exoscale_vm__api_secret }}'
-      api_url: 'https://api.exoscale.com/compute'
-      name: '{{ item["name"] }}'
       zone: '{{ exoscale_vm__zone }}'
-      start_ip: '{{ item["cidr"] | ansible.utils.ipaddr("2") | ansible.utils.ipaddr("address") }}'
-      end_ip: '{{ item["cidr"] | ansible.utils.ipaddr("-3") | ansible.utils.ipaddr("address") }}'
-      netmask: '{{ item["cidr"] | ansible.utils.ipaddr("netmask") }}'
-      state: 'present' # never delete, as it could be used by other VMs as well
-      network_offering: 'Private Network'
-    loop: '{{ exoscale_vm__private_networks }}'
-    when:
-      - 'exoscale_vm__state != "absent"'
-      - 'item["cidr"] is defined'
-    delegate_to: 'localhost'
-    become: false
-
-  - name: "Manage the VM's networks"
-    ngine_io.cloudstack.cs_instance_nic:
-      api_key: '{{ exoscale_vm__api_key }}'
-      api_secret: '{{ exoscale_vm__api_secret }}'
-      api_url: 'https://api.exoscale.com/compute'
-      name: '{{ exoscale_vm__name }}'
-      network: '{{ item["name"] }}'
-      ip_address: '{{ item["fixed_ip"] }}'
-      zone: '{{ exoscale_vm__zone }}'
-    loop: '{{ exoscale_vm__private_networks }}'
-    when: 'exoscale_vm__state != "absent"'
-    delegate_to: 'localhost'
-    become: false
-
-  tags:
-    - 'exoscale_vm'
-    - 'exoscale_vm:networks'
-
-- block:
-
-  # Cleanup
-  - name: 'Clean up the security group for the VM'
-    ngine_io.cloudstack.cs_securitygroup:
-      api_key: '{{ exoscale_vm__api_key }}'
-      api_secret: '{{ exoscale_vm__api_secret }}'
-      api_url: 'https://api.exoscale.com/compute'
-      name: '{{ exoscale_vm__name }}'
-      state: 'absent'
-    delegate_to: 'localhost'
-    become: false
-    when:
-      - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
-      - 'exoscale_vm__state == "absent"'
-
-  tags:
-    - 'exoscale_vm'
