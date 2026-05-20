@@ -8,9 +8,9 @@
 # block is skipped and __google_chrome__service_state_result is never registered.
 # `is not changed` covers the normal flow: skip the restart if the state task just
 # (re-)started the socket.
-- name: 'google_chrome: restart chrome-headless-proxy.socket'
+- name: 'google_chrome: restart google-chrome-headless-proxy.socket'
   ansible.builtin.service:
-    name: 'chrome-headless-proxy.socket'
+    name: 'google-chrome-headless-proxy.socket'
     state: 'restarted'
   when:
     - '__google_chrome__service_state_result is not defined or __google_chrome__service_state_result is not changed'

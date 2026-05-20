@@ -342,6 +342,7 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `google_chrome__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `google_chrome__skip_repo_epel`
 * [repo_google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_google_chrome): `google_chrome__skip_repo_google_chrome`
 * [google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/google_chrome)
@@ -454,6 +455,7 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `icingaweb2_module_pdfexport__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `icingaweb2_module_pdfexport__skip_repo_epel`
 * [repo_google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_google_chrome): `icingaweb2_module_pdfexport__skip_repo_google_chrome`
 * [google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/google_chrome): `icingaweb2_module_pdfexport__skip_google_chrome`
