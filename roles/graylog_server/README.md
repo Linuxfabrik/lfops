@@ -306,6 +306,7 @@ graylog_server__root_user:
 
         * Mandatory. The type of the input.
         * Type: String.
+        * To list the input types available on your Graylog node, append `/api-browser#?route=get-/system/inputs/types` to your Graylog web interface URL (for example `https://graylog.example.com/api-browser#?route=get-/system/inputs/types`) and click `Execute`. The `/system/inputs/types/all` route additionally returns each type's available `configuration` fields.
 
 `graylog_server__timezone`
 
