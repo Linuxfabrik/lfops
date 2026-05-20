@@ -178,11 +178,6 @@ graylog_server__root_user:
 * Default: See [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/graylog_server/defaults/main.yml)
 * Subkeys:
 
-    * `can_be_default`:
-
-        * Mandatory. Whether this index set can be default.
-        * Type: Bool.
-
     * `creation_date`:
 
         * Mandatory. Date in ISO 8601 format.
@@ -341,7 +336,6 @@ graylog_server__opts: '-Xms2g -Xmx2g -server -XX:+UseG1GC -XX:-OmitStackTraceInF
 graylog_server__service_enabled: false
 graylog_server__stale_leader_timeout_ms: 10000
 graylog_server__system_default_index_set:
-  can_be_default: true
   creation_date: '{{ ansible_date_time.iso8601 }}'
   description: 'One index per day; 365 indices max'
   field_type_refresh_interval: 5000
