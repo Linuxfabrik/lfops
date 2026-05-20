@@ -9,26 +9,6 @@
     - 'always'
 
 
-- name: 'Perform platform/version specific tasks'
-  ansible.builtin.include_tasks: '{{ __task_file }}'
-  when: '__task_file | length > 0'
-  vars:
-    __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
-    __first_found_options:
-      files:
-        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
-        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
-        - '{{ ansible_facts["distribution"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
-        - '{{ ansible_facts["os_family"] }}.yml'
-      paths:
-        - '{{ role_path }}/tasks'
-      skip: true
-  tags:
-    - 'always'
-
-
 - block:
 
   - name: 'groupadd --system chrome'
@@ -64,7 +44,7 @@
     - 'google_chrome'
 
 
-# Chrome itself does not implement the systemd socket-activation protocol (sd_listen_fds() / LISTEN_FDS); it always binds its own --remote-debugging-port. Direct socket activation is therefore not possible, so we deploy a systemd-socket-proxyd in front of Chrome: the .socket unit binds listen_port, the proxy accepts on that activated fd and forwards to backend_port (the port Chrome opens itself). --exit-idle-time on the proxy plus BindsTo= on chrome-headless.service ties Chrome's lifecycle to the proxy, so Chrome stops together with the proxy after the idle timeout.
+# Chrome itself does not implement the systemd socket-activation protocol (sd_listen_fds() / LISTEN_FDS); it always binds its own --remote-debugging-port. Direct socket activation is therefore not possible, so we deploy a systemd-socket-proxyd in front of Chrome: the .socket unit binds listen_port, the proxy accepts on that activated fd and forwards to backend_port (the port Chrome opens itself). --exit-idle-time on the proxy plus BindsTo= on google-chrome-headless.service ties Chrome's lifecycle to the proxy, so Chrome stops together with the proxy after the idle timeout.
 # Two SELinux booleans are required: bind_any so the .socket can bind the listen port even when it has an unexpected port type (e.g. on Rocky 9, port 9222 maps to hplip_port_t and would otherwise reject the bind); connect_any so the proxy can connect to Chrome's non-standard backend port, which has no matching SELinux port type.
 - block:
 
@@ -80,46 +60,57 @@
       persistent: true
       state: true
 
+  # block
   when:
     - 'ansible_facts["selinux"]["status"] != "disabled"'
-
   tags:
     - 'google_chrome'
 
 
 - block:
 
-  - name: 'Deploy /etc/systemd/system/chrome-headless-proxy.socket'
+  - name: 'Deploy /etc/systemd/system/google-chrome-headless-proxy.socket'
     ansible.builtin.template:
       backup: true
-      src: 'etc/systemd/system/chrome-headless-proxy.socket.j2'
-      dest: '/etc/systemd/system/chrome-headless-proxy.socket'
+      src: 'etc/systemd/system/google-chrome-headless-proxy.socket.j2'
+      dest: '/etc/systemd/system/google-chrome-headless-proxy.socket'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: '__google_chrome__deploy_socket_result'
     notify:
-      - 'google_chrome: restart chrome-headless-proxy.socket'
+      - 'google_chrome: restart google-chrome-headless-proxy.socket'
 
-  - name: 'Deploy /etc/systemd/system/chrome-headless-proxy.service'
+  - name: 'Deploy /etc/systemd/system/google-chrome-headless-proxy.service'
     ansible.builtin.template:
       backup: true
-      src: 'etc/systemd/system/chrome-headless-proxy.service.j2'
-      dest: '/etc/systemd/system/chrome-headless-proxy.service'
+      src: 'etc/systemd/system/google-chrome-headless-proxy.service.j2'
+      dest: '/etc/systemd/system/google-chrome-headless-proxy.service'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: '__google_chrome__deploy_proxy_result'
 
-  - name: 'Deploy /etc/systemd/system/chrome-headless.service'
+  - name: 'Deploy /etc/systemd/system/google-chrome-headless.service'
     ansible.builtin.template:
       backup: true
-      src: 'etc/systemd/system/chrome-headless.service.j2'
-      dest: '/etc/systemd/system/chrome-headless.service'
+      src: 'etc/systemd/system/google-chrome-headless.service.j2'
+      dest: '/etc/systemd/system/google-chrome-headless.service'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: '__google_chrome__deploy_chrome_result'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+    loop:
+      - '/etc/systemd/system/google-chrome-headless-proxy.socket'
+      - '/etc/systemd/system/google-chrome-headless-proxy.service'
+      - '/etc/systemd/system/google-chrome-headless.service'
 
   # Run daemon-reload as a regular task (not as a handler), so it runs before the
   # state block below and so the restart-socket handler can rely on the registered
@@ -132,17 +123,6 @@
          __google_chrome__deploy_proxy_result is changed or
          __google_chrome__deploy_chrome_result is changed'
 
-  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
-    ansible.builtin.include_role:
-      name: 'shared'
-      tasks_from: 'remove-rpmnew-rpmsave.yml'
-    vars:
-      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
-    loop:
-      - '/etc/systemd/system/chrome-headless-proxy.socket'
-      - '/etc/systemd/system/chrome-headless-proxy.service'
-      - '/etc/systemd/system/chrome-headless.service'
-
   tags:
     - 'google_chrome'
     - 'google_chrome:configure'
@@ -150,14 +130,14 @@
 
 - block:
 
-  - name: 'systemctl {{ google_chrome__service_enabled | bool | ternary("enable", "disable") }} chrome-headless-proxy.socket'
+  - name: 'systemctl {{ google_chrome__service_enabled | bool | ternary("enable", "disable") }} google-chrome-headless-proxy.socket'
     ansible.builtin.service:
-      name: 'chrome-headless-proxy.socket'
+      name: 'google-chrome-headless-proxy.socket'
       enabled: '{{ google_chrome__service_enabled | bool }}'
 
-  - name: 'systemctl {{ google_chrome__service_state }} chrome-headless-proxy.socket'
+  - name: 'systemctl {{ google_chrome__service_state }} google-chrome-headless-proxy.socket'
     ansible.builtin.service:
-      name: 'chrome-headless-proxy.socket'
+      name: 'google-chrome-headless-proxy.socket'
       state: '{{ google_chrome__service_state }}'
     register: '__google_chrome__service_state_result'
 

@@ -1,8 +1,3 @@
-# If `icingaweb2_module_pdfexport__chrome_binary` is set, the module spawns chrome
-# locally on every PDF export. Otherwise it talks to a running headless Chrome via
-# the Chrome DevTools Protocol on `chrome_host` / `chrome_port` (default mode).
-# Defaults pull from the linuxfabrik.lfops.google_chrome role so a single change
-# there propagates here.
 icingaweb2_module_pdfexport__chrome_binary: ''
 icingaweb2_module_pdfexport__chrome_host: '{{ google_chrome__listen_address | d("127.0.0.1") }}'
 icingaweb2_module_pdfexport__chrome_port: '{{ google_chrome__listen_port | d(9222) }}'

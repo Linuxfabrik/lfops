@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.google_chrome
 
-This role installs [Google Chrome](https://www.google.com/chrome/) together with the runtime libraries and fonts required for headless rendering, and sets up a socket-activated `chrome-headless` systemd service. Clients connect to a configurable TCP socket; Chrome is started on the first request via `systemd-socket-proxyd` and stopped again after a configurable idle timeout, so no RAM is wasted while the backend is unused.
+This role installs [Google Chrome](https://www.google.com/chrome/) together with the runtime libraries and fonts required for headless rendering, and sets up a socket-activated `google-chrome-headless` systemd service. Clients connect to a configurable TCP socket; Chrome is started on the first request via `systemd-socket-proxyd` and stopped again after a configurable idle timeout, so no RAM is wasted while the backend is unused.
 
 The setup is used as a headless browser backend for tools such as the [Icinga Web 2 PDF Export Module](https://github.com/Icinga/icingaweb2-module-pdfexport).
 
@@ -11,15 +11,16 @@ The setup is used as a headless browser backend for tools such as the [Icinga We
 ## How the Role Behaves
 
 * Three systemd units are deployed:
-    * `chrome-headless-proxy.socket` listens on `listen_address:listen_port` (default `127.0.0.1:9222`).
-    * `chrome-headless-proxy.service` runs `systemd-socket-proxyd`, which bridges the activated socket to Chrome (Chrome itself does not implement the systemd socket-activation protocol), forwarding traffic to `backend_port` (default `9223`). On `idle_timeout` seconds without traffic it exits.
-    * `chrome-headless.service` runs the actual Chrome process under the `chrome` system user. It is bound to the proxy via `BindsTo=`, so when the proxy exits on idle, Chrome stops too. It is **not** enabled on boot and must not be started directly — the proxy triggers it via `Requires=`.
-* On SELinux-enforcing hosts, two booleans are enabled: `systemd_socket_proxyd_bind_any` so the `chrome-headless-proxy.socket` unit may bind the listen port even when it carries an unexpected SELinux port type (on Rocky/RHEL 9 the default `9222` is registered as `hplip_port_t`), and `systemd_socket_proxyd_connect_any` so the proxy may connect to Chrome's non-standard backend port.
-* The service-lifecycle variables (`google_chrome__service_enabled`, `__service_state`) manage the `chrome-headless-proxy.socket` unit, not the Chrome service directly.
+    * `google-chrome-headless-proxy.socket` listens on `listen_address:listen_port` (default `127.0.0.1:9222`).
+    * `google-chrome-headless-proxy.service` runs `systemd-socket-proxyd`, which bridges the activated socket to Chrome (Chrome itself does not implement the systemd socket-activation protocol), forwarding traffic to `backend_port` (default `9223`). On `idle_timeout` seconds without traffic it exits.
+    * `google-chrome-headless.service` runs the actual Chrome process under the `chrome` system user. It is bound to the proxy via `BindsTo=`, so when the proxy exits on idle, Chrome stops too. It is **not** enabled on boot and must not be started directly. The proxy triggers it via `Requires=`.
+* On SELinux-enforcing hosts, two booleans are enabled: `systemd_socket_proxyd_bind_any` so the `google-chrome-headless-proxy.socket` unit may bind the listen port even when it carries an unexpected SELinux port type (on Rocky/RHEL 9 the default `9222` is registered as `hplip_port_t`), and `systemd_socket_proxyd_connect_any` so the proxy may connect to Chrome's non-standard backend port.
+* The service-lifecycle variables (`google_chrome__service_enabled`, `__service_state`) manage the `google-chrome-headless-proxy.socket` unit, not the Chrome service directly.
 
 
 ## Mandatory Requirements
 
+* Enable the CRB repository (PowerTools on EL8), which provides `mesa-libOSMesa`. On EL9 this can be done using the [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role; on EL8 it ships with the EPEL repository file.
 * Enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
 * Enable the Google Chrome repository. This can be done using the [linuxfabrik.lfops.repo_google_chrome](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_google_chrome) role.
 
@@ -33,18 +34,18 @@ If you use the [Google Chrome Playbook](https://github.com/Linuxfabrik/lfops/blo
 * Creates the `chrome` system user and group.
 * Installs Google Chrome along with the required runtime libraries and fonts.
 * Sets the `systemd_socket_proxyd_bind_any` and `systemd_socket_proxyd_connect_any` SELinux booleans.
-* Deploys all three systemd units (`chrome-headless-proxy.socket`, `chrome-headless-proxy.service`, `chrome-headless.service`).
-* Ensures the `chrome-headless-proxy.socket` is in the desired state.
-* Triggers: daemon-reload on any unit-file change; socket restart only on `chrome-headless-proxy.socket` changes. Changes to the proxy or Chrome service unit file take effect on the next socket-activation cycle.
+* Deploys all three systemd units (`google-chrome-headless-proxy.socket`, `google-chrome-headless-proxy.service`, `google-chrome-headless.service`).
+* Ensures the `google-chrome-headless-proxy.socket` is in the desired state.
+* Triggers: daemon-reload on any unit-file change; socket restart only on `google-chrome-headless-proxy.socket` changes. Changes to the proxy or Chrome service unit file take effect on the next socket-activation cycle.
 
 `google_chrome:configure`
 
-* Deploys the three systemd units (`chrome-headless-proxy.socket`, `chrome-headless-proxy.service`, `chrome-headless.service`).
-* Triggers: daemon-reload on any unit-file change; socket restart only on `chrome-headless-proxy.socket` changes. Changes to the proxy or Chrome service unit file take effect on the next socket-activation cycle.
+* Deploys the three systemd units (`google-chrome-headless-proxy.socket`, `google-chrome-headless-proxy.service`, `google-chrome-headless.service`).
+* Triggers: daemon-reload on any unit-file change; socket restart only on `google-chrome-headless-proxy.socket` changes. Changes to the proxy or Chrome service unit file take effect on the next socket-activation cycle.
 
 `google_chrome:state`
 
-* Manages the `chrome-headless-proxy.socket` state (start, stop, enable, disable).
+* Manages the `google-chrome-headless-proxy.socket` state (start, stop, enable, disable).
 * Triggers: none.
 
 
@@ -58,7 +59,7 @@ If you use the [Google Chrome Playbook](https://github.com/Linuxfabrik/lfops/blo
 
 `google_chrome__extra_args__host_var` / `google_chrome__extra_args__group_var`
 
-* Additional Chrome CLI flags appended to the `ExecStart` line of `chrome-headless.service`, in the order listed. Useful for tuning behavior without overwriting the whole unit.
+* Additional Chrome CLI flags appended to the `ExecStart` line of `google-chrome-headless.service`, in the order listed. Useful for tuning behavior without overwriting the whole unit.
 * Type: List of dictionaries.
 * Default: `[]`
 * Subkeys:
@@ -76,7 +77,7 @@ If you use the [Google Chrome Playbook](https://github.com/Linuxfabrik/lfops/blo
 
 `google_chrome__idle_timeout`
 
-* Seconds the `systemd-socket-proxyd` waits without active connections before exiting. When it exits, the bound `chrome-headless.service` stops automatically. The next inbound connection re-activates the whole chain, paying ~1–2 seconds of cold-start latency.
+* Seconds the `systemd-socket-proxyd` waits without active connections before exiting. When it exits, the bound `google-chrome-headless.service` stops automatically. The next inbound connection re-activates the whole chain, paying ~1-2 seconds of cold-start latency.
 * Type: Number.
 * Default: `300`
 
@@ -94,13 +95,13 @@ If you use the [Google Chrome Playbook](https://github.com/Linuxfabrik/lfops/blo
 
 `google_chrome__service_enabled`
 
-* Enables or disables the `chrome-headless-proxy.socket` at boot, analogous to `systemctl enable/disable --now`.
+* Enables or disables the `google-chrome-headless-proxy.socket` at boot, analogous to `systemctl enable/disable --now`.
 * Type: Bool.
 * Default: `true`
 
 `google_chrome__service_state`
 
-* Changes the state of the `chrome-headless-proxy.socket`, analogous to `systemctl start/stop/restart/reload`.
+* Changes the state of the `google-chrome-headless-proxy.socket`, analogous to `systemctl start/stop/restart/reload`.
 * Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
 * Default: `'started'`
 
@@ -108,7 +109,7 @@ If you use the [Google Chrome Playbook](https://github.com/Linuxfabrik/lfops/blo
 
 * Home directory of the `chrome` system user and Chrome user data directory. Used both as the user's `home`, as the `--user-data-dir` value for Chrome, and as the writable path exposed via systemd `ReadWritePaths=`.
 * Type: String.
-* Default: `'/var/lib/chrome-headless'`
+* Default: `'/var/lib/google-chrome-headless'`
 
 Example:
 ```yaml
@@ -122,7 +123,7 @@ google_chrome__listen_address: '127.0.0.1'
 google_chrome__listen_port: 9222
 google_chrome__service_enabled: true
 google_chrome__service_state: 'started'
-google_chrome__user_data_dir: '/var/lib/chrome-headless'
+google_chrome__user_data_dir: '/var/lib/google-chrome-headless'
 ```
 
 

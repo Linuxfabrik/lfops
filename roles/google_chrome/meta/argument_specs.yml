@@ -51,7 +51,7 @@ argument_specs:
         type: 'bool'
         required: false
         default: true
-        description: 'Enables or disables the chrome-headless-proxy.socket unit at boot. The Chrome service itself is triggered on demand by the proxy and is not managed directly.'
+        description: 'Enables or disables the google-chrome-headless-proxy.socket unit at boot. The Chrome service itself is triggered on demand by the proxy and is not managed directly.'
 
       google_chrome__service_state:
         type: 'str'
@@ -62,10 +62,10 @@ argument_specs:
           - 'restarted'
           - 'started'
           - 'stopped'
-        description: 'Desired state of the chrome-headless-proxy.socket unit. The Chrome service itself is triggered on demand by the proxy and is not managed directly.'
+        description: 'Desired state of the google-chrome-headless-proxy.socket unit. The Chrome service itself is triggered on demand by the proxy and is not managed directly.'
 
       google_chrome__user_data_dir:
         type: 'str'
         required: false
-        default: '/var/lib/chrome-headless'
+        default: '/var/lib/google-chrome-headless'
         description: 'Home directory of the chrome system user and Chrome user data directory.'
