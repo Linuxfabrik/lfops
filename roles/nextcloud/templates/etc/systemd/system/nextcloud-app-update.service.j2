@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022100401
+# 2026052001
 
 [Unit]
 Description=Nextcloud App Update Service
@@ -8,4 +8,4 @@ Description=Nextcloud App Update Service
 ExecStart=/usr/bin/php occ app:update --all --no-interaction --quiet
 WorkingDirectory=/var/www/html/nextcloud
 Type=oneshot
-User=apache
+User={{ nextcloud__webserver_user }}

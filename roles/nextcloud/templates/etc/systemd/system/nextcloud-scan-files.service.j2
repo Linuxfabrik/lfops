@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022110701
+# 2026052001
 
 [Unit]
 Description=Nextcloud Scan Files Service
@@ -8,4 +8,4 @@ Description=Nextcloud Scan Files Service
 ExecStart=/usr/bin/nice --adjustment 19 /usr/bin/php occ files:scan --all --unscanned
 WorkingDirectory=/var/www/html/nextcloud
 Type=oneshot
-User=apache
+User={{ nextcloud__webserver_user }}
