@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:graylog_datanode**: Fix the `Conditional result ... was of type 'str'` deprecation warning.
 * **role:graylog_server**: Validate that each `graylog_server__system_inputs` entry sets `global: true` or assigns a `node`. Key was marked as mandatory but not enforced. The role now aborts the `graylog_server:configure_defaults` run with a clear message.
 * **role:graylog_server**: Fix the `graylog_server:configure_defaults` run aborting on Graylog 7.0+ with `Status code was 400 and not [200]` / `Unable to map property can_be_default` while creating the default index set, by removing the property from the role. Graylog 7.x dropped it and 6.x ignored it.
 * **role:keycloak**: Fix ownership under `/opt/keycloak/data/`. Previously the post-install build step ran as `root` and left `/opt/keycloak/data/` and `/opt/keycloak/data/tmp/` owned by `root:root`, which the `keycloak` service user could not write into (no `data/cache/` was ever created). The build now runs as the `keycloak` service user, and existing installations get the ownership corrected on the next role run.
