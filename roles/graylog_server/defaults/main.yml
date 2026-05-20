@@ -11,7 +11,6 @@ graylog_server__timezone: 'Europe/Zurich'
 graylog_server__trusted_proxies: []
 
 graylog_server__system_default_index_set:
-  can_be_default: true
   creation_date: '{{ ansible_date_time.iso8601 }}'
   description: 'One index per day; 365 indices max'
   field_type_refresh_interval: 5000
