@@ -1,0 +1,209 @@
+argument_specs:
+  main:
+    options:
+
+      nextcloud__app_configs__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Key-value pairs for configuring apps. Dependent-role injection.'
+
+      nextcloud__app_configs__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Key-value pairs for configuring apps. Group-level override.'
+
+      nextcloud__app_configs__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Key-value pairs for configuring apps. Host-level override.'
+
+      nextcloud__apps__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud apps to install. Dependent-role injection.'
+
+      nextcloud__apps__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud apps to install. Group-level override.'
+
+      nextcloud__apps__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud apps to install. Host-level override.'
+
+      nextcloud__database_host:
+        type: 'str'
+        required: false
+        default: 'localhost'
+        description: 'Host where MariaDB is located.'
+
+      nextcloud__database_name:
+        type: 'str'
+        required: false
+        default: 'nextcloud'
+        description: 'Name of the Nextcloud database in MariaDB.'
+
+      nextcloud__datadir:
+        type: 'str'
+        required: false
+        default: '/data'
+        description: 'Where to store the user files.'
+
+      nextcloud__fqdn:
+        type: 'str'
+        required: true
+        description: 'The FQDN of the Nextcloud instance.'
+
+      nextcloud__icinga2_api_url:
+        type: 'str'
+        required: false
+        description: 'The URL of the Icinga2 API used to set/remove a downtime in the nextcloud-update script.'
+
+      nextcloud__icinga2_api_user_login:
+        type: 'dict'
+        required: false
+        description: 'The Icinga2 API user used to set/remove a downtime in the nextcloud-update script.'
+
+      nextcloud__icinga2_hostname:
+        type: 'str'
+        required: false
+        description: 'The hostname of the Icinga2 host on which the downtime should be set.'
+
+      nextcloud__mariadb_login:
+        type: 'dict'
+        required: false
+        description: 'The database administrator account. The Nextcloud setup will create its own database account.'
+
+      nextcloud__on_calendar_app_update:
+        type: 'str'
+        required: false
+        description: 'Time to update the Nextcloud apps. See systemd.time(7) for the format.'
+
+      nextcloud__on_calendar_jobs:
+        type: 'str'
+        required: false
+        default: '*:0/5'
+        description: 'Run interval of OCC background jobs. See systemd.time(7) for the format.'
+
+      nextcloud__on_calendar_scan_files:
+        type: 'str'
+        required: false
+        default: '*:50:15'
+        description: 'Run interval of rescanning the filesystem. See systemd.time(7) for the format.'
+
+      nextcloud__php_fpm_service_name:
+        type: 'str'
+        required: false
+        description: 'Name of the PHP-FPM systemd service that the role and the nextcloud-update script restart. OS-specific default from vars/.'
+
+      nextcloud__skip_apps:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Completely skips the management of Nextcloud apps.'
+
+      nextcloud__skip_notify_push:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Skips the configuration of notify_push.'
+
+      nextcloud__storage_backend_s3:
+        type: 'dict'
+        required: false
+        description: 'S3 storage backend. If omitted, local storage is used.'
+
+      nextcloud__storage_backend_swift:
+        type: 'dict'
+        required: false
+        description: 'Swift storage backend. If omitted, local storage is used.'
+
+      nextcloud__sysconfig__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud system config settings. Dependent-role injection.'
+
+      nextcloud__sysconfig__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud system config settings. Group-level override.'
+
+      nextcloud__sysconfig__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud system config settings. Host-level override.'
+
+      nextcloud__timer_app_update_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Enables/disables the systemd timer for updating apps.'
+
+      nextcloud__timer_jobs_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables/disables the systemd timer for running OCC background jobs.'
+
+      nextcloud__timer_ldap_show_remnants_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables/disables the systemd timer for mailing LDAP remnants once a month.'
+
+      nextcloud__timer_scan_files_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables/disables the systemd timer for re-scanning the Nextcloud files.'
+
+      nextcloud__users:
+        type: 'list'
+        elements: 'dict'
+        required: true
+        description: 'User accounts to create. The first user has to be the primary administrator account.'
+
+      nextcloud__version:
+        type: 'str'
+        required: false
+        default: 'latest'
+        description: "Which version to install. One of 'latest', 'latest-XX' or 'nextcloud-XX.X.XX'."
+
+      nextcloud__vhost_virtualhost_ip:
+        type: 'str'
+        required: false
+        description: 'Used within the <VirtualHost virtualhost_ip:virtualhost_port> directive.'
+
+      nextcloud__vhost_virtualhost_port:
+        type: 'int'
+        required: false
+        description: 'Used within the <VirtualHost virtualhost_ip:virtualhost_port> directive.'
+
+      nextcloud__webserver_group:
+        type: 'str'
+        required: false
+        description: 'Group of the web server, used for file ownership. OS-specific default from vars/.'
+
+      nextcloud__webserver_user:
+        type: 'str'
+        required: false
+        description: 'User of the web server, used for file ownership, occ commands and as the User= of the deployed systemd services. OS-specific default from vars/.'

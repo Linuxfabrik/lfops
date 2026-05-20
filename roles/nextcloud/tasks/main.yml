@@ -13,7 +13,7 @@
 
   - name: 'Install required packages'
     ansible.builtin.package:
-      name: '{{ __nextcloud__packages }}'
+      name: '{{ __nextcloud__required_packages }}'
       state: 'present'
 
   - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'

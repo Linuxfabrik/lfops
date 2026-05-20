@@ -1,4 +1,4 @@
-__nextcloud__packages:
+__nextcloud__required_packages:
   - 'bzip2'
   - 'jq'
   - 'openldap-clients'
