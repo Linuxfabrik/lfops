@@ -81,7 +81,7 @@ If you use the [Chromium Headless Playbook](https://github.com/Linuxfabrik/lfops
 
 `chromium_headless__listen_address`
 
-* Address the proxy socket binds to. Keep this on `127.0.0.1` unless you intentionally want to expose it to other hosts; neither the proxy nor Chromium enforces TLS or authentication.
+* Address the `chromium-headless-proxy.socket` binds to. Chromium's own debugging port always stays on `127.0.0.1` regardless of this setting, so only the proxy is reachable here. Keep this on `127.0.0.1` unless you intentionally want to expose the proxy to other hosts; it enforces neither TLS nor authentication.
 * Type: String.
 * Default: `'127.0.0.1'`
 
