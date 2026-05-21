@@ -16,6 +16,7 @@ Which Ansible role is proven to run on which OS?
 | bind                                  |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | blocky                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | borg_local                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| chromium_headless                     |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | chrony                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | clamav                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | cloud_init                            |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
@@ -42,7 +43,6 @@ Which Ansible role is proven to run on which OS?
 | gitlab_ce                             |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | glances                               |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | glpi_agent                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
-| google_chrome                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | grafana                               |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | grafana_grizzly                       |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | grav                                  |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
@@ -129,7 +129,6 @@ Which Ansible role is proven to run on which OS?
 | repo_epel                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_gitlab_ce                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_gitlab_runner                    |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| repo_google_chrome                    |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | repo_grafana                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_graylog                          |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_icinga                           |   x    |   x    |   x    |   x    |    x    |     x     |    (x)    |    (x)    |                                              |

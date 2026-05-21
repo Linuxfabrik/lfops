@@ -1,6 +1,6 @@
-- name: 'Playbook linuxfabrik.lfops.repo_google_chrome'
+- name: 'Playbook linuxfabrik.lfops.chromium_headless'
   hosts:
-    - 'lfops_repo_google_chrome'
+    - 'lfops_chromium_headless'
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -12,7 +12,11 @@
 
   roles:
 
-    - role: 'linuxfabrik.lfops.repo_google_chrome'
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'not chromium_headless__skip_repo_epel | d(false) | bool'
+
+    - role: 'linuxfabrik.lfops.chromium_headless'
 
 
   post_tasks:

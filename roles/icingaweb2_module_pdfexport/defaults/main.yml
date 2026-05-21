@@ -1,4 +1,4 @@
 icingaweb2_module_pdfexport__chrome_binary: ''
-icingaweb2_module_pdfexport__chrome_host: '{{ google_chrome__listen_address | d("127.0.0.1") }}'
-icingaweb2_module_pdfexport__chrome_port: '{{ google_chrome__listen_port | d(9222) }}'
+icingaweb2_module_pdfexport__chrome_host: '{{ chromium_headless__listen_address | d("127.0.0.1") }}'
+icingaweb2_module_pdfexport__chrome_port: '{{ chromium_headless__listen_port | d(9222) }}'
 icingaweb2_module_pdfexport__force_temp_storage: false

@@ -6,17 +6,17 @@ argument_specs:
         type: 'str'
         required: false
         default: ''
-        description: 'Path to a local Chrome/Chromium binary. If set, the module spawns Chrome locally on every export and the host/port settings are ignored.'
+        description: 'Path to a local Chrome/Chromium binary. If set, the module spawns Chromium locally on every export and the host/port settings are ignored.'
 
       icingaweb2_module_pdfexport__chrome_host:
         type: 'str'
         required: false
-        description: 'Listen address of the headless Chrome instance the module connects to. Defaults to google_chrome__listen_address.'
+        description: 'Listen address of the headless Chromium instance the module connects to. Defaults to chromium_headless__listen_address.'
 
       icingaweb2_module_pdfexport__chrome_port:
         type: 'raw'
         required: false
-        description: 'Listen port of the headless Chrome instance the module connects to. Defaults to google_chrome__listen_port.'
+        description: 'Listen port of the headless Chromium instance the module connects to. Defaults to chromium_headless__listen_port.'
 
       icingaweb2_module_pdfexport__force_temp_storage:
         type: 'bool'
