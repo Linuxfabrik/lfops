@@ -18,7 +18,8 @@
       when:
         - 'not mongodb__skip_kernel_settings | d(false)'
 
-      # On Rocky 9+ the EPEL and CRB Repo need to be enabled to install python3-virtualenv
+    # On Rocky 9+, CRB (now in the Rocky default repo file, formerly in EPEL) must be
+    # enabled so python3-virtualenv can be installed.
     - role: 'linuxfabrik.lfops.repo_baseos'
       repo_baseos__crb_repo_enabled__dependent_var: '{{
           repo_epel__repo_baseos__crb_repo_enabled__dependent_var
@@ -29,8 +30,7 @@
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'ansible_facts["distribution_major_version"] | int >= 9'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9", "10"]'
         - 'not mongodb__skip_repo_epel | d(false)'
 
     - role: 'linuxfabrik.lfops.python_venv'
@@ -42,7 +42,7 @@
 
     - role: 'linuxfabrik.lfops.repo_mongodb'
       when:
-        - 'not mongodb__skip_repo_mongodb | default(false)'
+        - 'not mongodb__skip_repo_mongodb | d(false)'
 
     - role: 'linuxfabrik.lfops.mongodb'
 
