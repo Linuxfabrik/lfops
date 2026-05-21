@@ -82,7 +82,8 @@
 
   roles:
 
-      # On Rocky 9+ the EPEL and CRB Repo need to be enabled to install python3-virtualenv
+    # On Rocky 9+, CRB (now in the Rocky default repo file, formerly in EPEL) must be
+    # enabled so python3-virtualenv can be installed.
     - role: 'linuxfabrik.lfops.repo_baseos'
       repo_baseos__crb_repo_enabled__dependent_var: '{{
           repo_epel__repo_baseos__crb_repo_enabled__dependent_var
