@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026052101
+# 2026052102
 
 [Unit]
 Description=Headless Chromium
@@ -9,6 +9,7 @@ BindsTo=chromium-headless-proxy.service
 Type=simple
 User=chromium
 Group=chromium
+# The backend always binds 127.0.0.1, never chromium_headless__listen_address. Only the proxy socket is the public endpoint (it may bind a routable listen_address); Chromium's raw remote-debugging port has no authentication, so it must never be reachable off-host. The proxy connects to it locally.
 ExecStart={{ __chromium_headless__binary_path }} \
     --headless=new \
     --disable-gpu \
@@ -16,7 +17,7 @@ ExecStart={{ __chromium_headless__binary_path }} \
     --no-default-browser-check \
     --hide-scrollbars \
     --disable-dev-shm-usage \
-    --remote-debugging-address={{ chromium_headless__listen_address }} \
+    --remote-debugging-address=127.0.0.1 \
     --remote-debugging-port={{ chromium_headless__backend_port }} \
     --remote-allow-origins=http://{{ chromium_headless__listen_address }}:{{ chromium_headless__listen_port }} \
 {% for arg in chromium_headless__extra_args__combined_var if arg['state'] | d('present') != 'absent' %}
@@ -24,7 +25,7 @@ ExecStart={{ __chromium_headless__binary_path }} \
 {% endfor %}
     --user-data-dir={{ chromium_headless__user_data_dir }}
 # Chromium binds its debugging port a moment after the process starts and does not implement systemd socket activation. Block the start job until the port accepts connections, otherwise systemd-socket-proxyd (ordered After= this unit) connects too early and the first request fails with "Connection refused".
-ExecStartPost=/bin/bash -c 'until (echo > /dev/tcp/{{ chromium_headless__listen_address }}/{{ chromium_headless__backend_port }}) 2>/dev/null; do sleep 0.1; done'
+ExecStartPost=/bin/bash -c 'until (echo > /dev/tcp/127.0.0.1/{{ chromium_headless__backend_port }}) 2>/dev/null; do sleep 0.1; done'
 Restart=on-failure
 RestartSec=5
 # Chromium traps SIGTERM and exits 143 (128 + SIGTERM); treat that as a clean shutdown so stopping the bound proxy on idle does not mark this unit failed.
@@ -44,6 +45,7 @@ ProtectControlGroups=true
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 RestrictNamespaces=~cgroup uts ipc
 LockPersonality=true
+# Must stay false: Chromium's V8 JIT maps writable+executable pages, which MemoryDenyWriteExecute=true would kill at startup.
 MemoryDenyWriteExecute=false
 CapabilityBoundingSet=
 AmbientCapabilities=
