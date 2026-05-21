@@ -1,0 +1,4 @@
+__chromium_headless__binary_path: '/usr/lib64/chromium-browser/headless_shell'
+__chromium_headless__packages:
+  - 'chromium-headless'
+  - 'gnu-free-sans-fonts'

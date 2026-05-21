@@ -12,29 +12,13 @@
 
   roles:
 
-    # The google_chrome role needs mesa-libOSMesa, which lives in CRB. On EL9 the CRB
-    # repo is enabled via repo_baseos (Rocky only, like the other playbooks); on EL8 the
-    # equivalent (PowerTools) ships with the repo_epel repo file.
-    - role: 'linuxfabrik.lfops.repo_baseos'
-      repo_baseos__crb_repo_enabled__dependent_var: '{{
-          repo_epel__repo_baseos__crb_repo_enabled__dependent_var
-        }}'
-      when:
-        - 'ansible_facts["distribution"] == "Rocky"'
-        - 'ansible_facts["distribution_major_version"] in ["9", "10"]'
-        - 'not icingaweb2_module_pdfexport__skip_repo_baseos | d(false) | bool'
-
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'not icingaweb2_module_pdfexport__skip_repo_epel | d(false) | bool'
 
-    - role: 'linuxfabrik.lfops.repo_google_chrome'
+    - role: 'linuxfabrik.lfops.chromium_headless'
       when:
-        - 'not icingaweb2_module_pdfexport__skip_repo_google_chrome | d(false) | bool'
-
-    - role: 'linuxfabrik.lfops.google_chrome'
-      when:
-        - 'not icingaweb2_module_pdfexport__skip_google_chrome | d(false) | bool'
+        - 'not icingaweb2_module_pdfexport__skip_chromium_headless | d(false) | bool'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_pdfexport'
 

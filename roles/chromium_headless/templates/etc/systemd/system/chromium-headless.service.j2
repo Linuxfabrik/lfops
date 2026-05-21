@@ -1,0 +1,57 @@
+# {{ ansible_managed }}
+# 2026052101
+
+[Unit]
+Description=Headless Chromium
+BindsTo=chromium-headless-proxy.service
+
+[Service]
+Type=simple
+User=chromium
+Group=chromium
+ExecStart={{ __chromium_headless__binary_path }} \
+    --headless=new \
+    --disable-gpu \
+    --no-first-run \
+    --no-default-browser-check \
+    --hide-scrollbars \
+    --disable-dev-shm-usage \
+    --remote-debugging-address={{ chromium_headless__listen_address }} \
+    --remote-debugging-port={{ chromium_headless__backend_port }} \
+    --remote-allow-origins=http://{{ chromium_headless__listen_address }}:{{ chromium_headless__listen_port }} \
+{% for arg in chromium_headless__extra_args__combined_var if arg['state'] | d('present') != 'absent' %}
+    {{ arg['name'] }} \
+{% endfor %}
+    --user-data-dir={{ chromium_headless__user_data_dir }}
+# Chromium binds its debugging port a moment after the process starts and does not implement systemd socket activation. Block the start job until the port accepts connections, otherwise systemd-socket-proxyd (ordered After= this unit) connects too early and the first request fails with "Connection refused".
+ExecStartPost=/bin/bash -c 'until (echo > /dev/tcp/{{ chromium_headless__listen_address }}/{{ chromium_headless__backend_port }}) 2>/dev/null; do sleep 0.1; done'
+Restart=on-failure
+RestartSec=5
+# Chromium traps SIGTERM and exits 143 (128 + SIGTERM); treat that as a clean shutdown so stopping the bound proxy on idle does not mark this unit failed.
+SuccessExitStatus=143
+
+PrivateDevices=true
+ProtectClock=true
+NoNewPrivileges=true
+RemoveIPC=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ chromium_headless__user_data_dir }}
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=~cgroup uts ipc
+LockPersonality=true
+MemoryDenyWriteExecute=false
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+ProtectKernelLogs=true
+ProtectHostname=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=true
+RestrictRealtime=true
+UMask=0077

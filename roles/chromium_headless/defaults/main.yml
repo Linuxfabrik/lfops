@@ -1,0 +1,18 @@
+chromium_headless__backend_port: 9223
+chromium_headless__extra_args__combined_var: '{{ (
+      chromium_headless__extra_args__role_var +
+      chromium_headless__extra_args__dependent_var +
+      chromium_headless__extra_args__group_var +
+      chromium_headless__extra_args__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+chromium_headless__extra_args__dependent_var: []
+chromium_headless__extra_args__group_var: []
+chromium_headless__extra_args__host_var: []
+chromium_headless__extra_args__role_var: []
+chromium_headless__idle_timeout: 300
+chromium_headless__listen_address: '127.0.0.1'
+chromium_headless__listen_port: 9222
+chromium_headless__service_enabled: true
+chromium_headless__service_state: 'started'
+chromium_headless__user_data_dir: '/var/lib/chromium-headless'

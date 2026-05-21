@@ -1,5 +1,0 @@
-__google_chrome__binary_path: '/usr/bin/google-chrome-stable'
-__google_chrome__packages:
-  - 'gnu-free-sans-fonts'
-  - 'google-chrome-stable'
-  - 'mesa-libOSMesa'
