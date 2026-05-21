@@ -20,9 +20,9 @@ The setup is used as a headless browser backend for tools such as the [Icinga We
 
 ## Mandatory Requirements
 
-* Enable the EPEL repository, which provides `chromium-headless`. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
+* On Red Hat-family systems, enable the EPEL repository, which provides `chromium-headless`. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role. On Debian, the `chromium-headless-shell` package ships in the default repositories, so no extra repository is required.
 
-If you use the [Chromium Headless Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/chromium_headless.yml), this is automatically done for you.
+If you use the [Chromium Headless Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/chromium_headless.yml), the EPEL repository is enabled for you on Red Hat-family systems.
 
 
 ## Tags

@@ -1,0 +1,2 @@
+# EL8 ships systemd 239, which lacks systemd-socket-proxyd --exit-idle-time (added in systemd 246).
+__chromium_headless__proxy_exit_idle_time_supported: false

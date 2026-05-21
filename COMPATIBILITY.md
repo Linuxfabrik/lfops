@@ -16,7 +16,7 @@ Which Ansible role is proven to run on which OS?
 | bind                                  |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | blocky                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | borg_local                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| chromium_headless                     |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| chromium_headless                     |   x    |   x    |   x    |   x    |   (x)   |           |           |           |                                              |
 | chrony                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | clamav                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | cloud_init                            |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |

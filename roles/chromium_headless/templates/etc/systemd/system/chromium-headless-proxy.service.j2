@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026052102
+# 2026052103
 
 [Unit]
 Description=Proxy to on-demand Headless Chromium
@@ -8,8 +8,8 @@ After=chromium-headless.service
 
 [Service]
 {# The proxy always connects to the backend on 127.0.0.1, never chromium_headless__listen_address: Chromium binds its unauthenticated debugging port locally only (see chromium-headless.service). #}
-{# --exit-idle-time was added in systemd 246. EL8 ships systemd 239 and rejects the option, so we omit it there; the proxy (and the Chromium service bound to it) then stays resident once activated. EL9 (systemd 252) and newer support it. #}
-{% if ansible_facts['distribution_major_version'] | int >= 9 %}
+{# --exit-idle-time was added in systemd 246. Platforms whose systemd predates it (EL8 ships 239) omit the option via __chromium_headless__proxy_exit_idle_time_supported; the proxy (and the Chromium service bound to it) then stays resident once activated. #}
+{% if __chromium_headless__proxy_exit_idle_time_supported | bool %}
 ExecStart=/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time={{ chromium_headless__idle_timeout }} 127.0.0.1:{{ chromium_headless__backend_port }}
 {% else %}
 ExecStart=/usr/lib/systemd/systemd-socket-proxyd 127.0.0.1:{{ chromium_headless__backend_port }}
