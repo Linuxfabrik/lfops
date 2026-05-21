@@ -672,6 +672,11 @@ The following roles use techniques that are unusual within LFOps. Roles not in t
 * [grav](https://github.com/Linuxfabrik/lfops/tree/main/roles/grav): Four separate `chmod` passes (files `664`, `bin/` `775`, directories `775`, plus a setgid pass on directories), each registered with `changed_when` based on the `--changes` output for idempotency.
 
 
+#### systemd socket activation with an on-demand backend
+
+* [chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless): Fronts a long-running daemon (Chromium, which does not implement the systemd socket-activation protocol) with a `systemd-socket-proxyd`. A `.socket` unit binds the public port, the proxy forwards to the backend on `127.0.0.1` and exits after an idle timeout, and `BindsTo=` ties the backend's lifecycle to the proxy so it starts on the first request and stops when idle.
+
+
 #### Other
 
 * [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr): Picks the matching OpenJDK package for the configured Solr major version (Solr 9 → OpenJDK 17, Solr 8 → OpenJDK 8) via a per-major-version lookup in `vars/main.yml`.
