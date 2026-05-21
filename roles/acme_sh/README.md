@@ -28,14 +28,14 @@ Manual steps:
 
 * Configure a web server. The playbook does not set this up. If you are using LFOps to manage an Apache reverse proxy, a virtual host working for acme might be defined like this:
 
-    ```yaml
-    apache_httpd__vhosts__host_var:
-      - conf_server_name: 'www.example.com'
-        enabled: true
-        state: 'present'
-        template: 'redirect'
-        virtualhost_port: 80
-    ```
+```yaml
+apache_httpd__vhosts__host_var:
+  - conf_server_name: 'www.example.com'
+    enabled: true
+    state: 'present'
+    template: 'redirect'
+    virtualhost_port: 80
+```
 
 
 ## Tags
