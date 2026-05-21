@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:redis**: Added missing paths for running against Debian.
 * **role:icingaweb2_module_pdfexport**: PDF export now works out of the box. The headless browser backend the module needs is installed and configured automatically via the new `chromium_headless` role (wired into the `icingaweb2_module_pdfexport` and `setup_icinga2_master` playbooks); previously it had to be set up by hand, so fresh deployments ended up without working PDF export.
 * **role:nextcloud**: The `nextcloud-update` script now owns the maintenance mode lifecycle itself instead of expecting callers to enable it beforehand. Previously, callers enabled maintenance mode before invoking the script (to protect the DB dump), which disables the LDAP user provider and causes the `before-update` export (`occ user:list`, `config:list`, `app:list`) to silently omit LDAP users. The script now assumes maintenance mode is **off** at start, runs the `before-update` export with apps loaded, lets `updater.phar` manage maintenance mode itself, and explicitly disables it again before `occ upgrade` and `occ app:update` (since `occ upgrade` does not turn it off on its own) — so all post-upgrade commands (`app:update`, `db:add-missing-*`, `db:convert-filecache-bigint`, the `after-update` export) also run with apps loaded. Callers must drop the manual `maintenance:mode --on` step from their pre-script workflow; the DB dump should rely on `--single-transaction` instead.
 
