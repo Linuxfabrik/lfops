@@ -99,7 +99,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    register: '__chromium_headless__deploy_chrome_result'
+    register: '__chromium_headless__deploy_service_result'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
@@ -121,7 +121,7 @@
     when:
       - '__chromium_headless__deploy_socket_result is changed or
          __chromium_headless__deploy_proxy_result is changed or
-         __chromium_headless__deploy_chrome_result is changed'
+         __chromium_headless__deploy_service_result is changed'
 
   tags:
     - 'chromium_headless'
