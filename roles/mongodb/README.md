@@ -14,12 +14,12 @@ This role is only compatible with the following MongoDB versions:
 
 *Available since LFOps `2.0.0`.*
 
-
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
 * The official [MongoDB repository](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-red-hat/#install-mongodb-community-edition) must be enabled (role: [linuxfabrik.lfops.repo_mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mongodb)).
+* On Rocky 9+, the EPEL repository (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)) and the CRB ("Code Ready Builder") repository (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)) must be enabled so `python3-virtualenv` can be installed.
 
 
 ## Replica Set Setup

@@ -18,7 +18,7 @@ Note that this role does not support running with `--check`, as it first creates
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)). On Rocky 9+, the CRB ("Code Ready Builder") repository must also be enabled (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)) so `python3-virtualenv` can be installed.
 * `duplicity`, `python-swiftclient` and `python-keystoneclient` must be installed into a Python 3 virtual environment in `/opt/python-venv/duplicity` (role: [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv)).
 
 **Attention**
