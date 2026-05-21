@@ -14,6 +14,7 @@
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
+        - 'ansible_facts["os_family"] == "RedHat"'
         - 'not icingaweb2_module_pdfexport__skip_repo_epel | d(false) | bool'
 
     - role: 'linuxfabrik.lfops.chromium_headless'
