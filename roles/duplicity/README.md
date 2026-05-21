@@ -8,26 +8,29 @@ Note that this role does not support running with `--check`, as it first creates
 *Available since LFOps `1.0.0`.*
 
 
-## duba (Duplicity Backup)
+## How the Role Behaves
 
-The role comes with the special Python wrapper script `duba` for duplicity, implemented by Linuxfabrik. The script currently does a massive parallel backup to a Swift storage backend with duplicity, where the number of duplicity processes is ``min(processor count, 6) + 1``. The script's configuration file is located at `/etc/duba/duba.json`.
+* The role ships `duba`, a Linuxfabrik Python wrapper for duplicity. It runs a massively parallel backup to a Swift storage backend, using `min(processor count, 6) + 1` duplicity processes. Its configuration file is `/etc/duba/duba.json`.
+* To start a backup, call `duba` (or `duba --config=/etc/duba/duba.json --command=backup`). See `duba --help` for details.
 
-To start a backup, simply call `duba` (or `duba --config=/etc/duba/duba.json --command=backup`). Have a look at `duba --help` for details.
 
+## Dependent Roles
 
-## Mandatory Requirements
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-* Install `duplicity`, `python-swiftclient` and `python-keystoneclient` into a Python 3 virtual environment in `/opt/python-venv/duplicity`. This can be done using the [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv) role.
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* `duplicity`, `python-swiftclient` and `python-keystoneclient` must be installed into a Python 3 virtual environment in `/opt/python-venv/duplicity` (role: [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv)).
 
 **Attention**
 
 > Make sure the virtual environment is not writable by other users to prevent privilege escalation. This is also done by the [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv) role.
 
 
-## Optional Requirements
+## Requirements
 
-* Create a symbolic link from `/opt/python-venv/duplicity/bin/duplicity` to `/usr/local/bin/duplicity` for easier usage on the command line.
+Manual steps:
+
+* Optionally, create a symbolic link from `/opt/python-venv/duplicity/bin/duplicity` to `/usr/local/bin/duplicity` for easier usage on the command line.
 * Either configure journald to persist your logs and do the rotating, or use logrotated.
 
 

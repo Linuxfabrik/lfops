@@ -6,9 +6,11 @@ This role enables the [IcingaWeb2 Doc Module](https://icinga.com/docs/icinga-web
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Requirements
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
 
 
 ## Tags

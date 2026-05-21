@@ -16,12 +16,12 @@ wget http://www.eicar.org/download/eicarcom2.zip
 *Available since LFOps `3.0.0`.*
 
 
-## Optional Requirements
+## Dependent Roles
 
-* Enable the `antivirus_can_scan_system` and `antivirus_use_jit` SELinux Booleans. This can be done using the [linuxfabrik.lfops.selinux](https://github.com/linuxfabrik/lfops/tree/main/roles/selinux) role.
-* Fangfrisch to download unofficial signatures. This can be done using the [linuxfabrik.lfops.fangfrisch](https://github.com/linuxfabrik/lfops/tree/main/roles/fangfrisch) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [ClamAV Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/clamav.yml), this is automatically done for you.
+* On RHEL-compatible systems, the `antivirus_can_scan_system` and `antivirus_use_jit` SELinux booleans must be enabled (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)) so ClamAV can scan the whole system.
+* Optional: Fangfrisch must be installed to download unofficial ClamAV signatures (role: [linuxfabrik.lfops.fangfrisch](https://github.com/Linuxfabrik/lfops/tree/main/roles/fangfrisch)).
 
 
 ## Tags

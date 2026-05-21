@@ -6,11 +6,11 @@ This role installs and configures [Fangfrisch](https://rseichter.github.io/fangf
 *Available since LFOps `3.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* A Python virtual environment `/opt/python-venv/clamav-fangfrisch/` with `fangfrisch` installed. This can be done using the [linuxfabrik.lfops.python_venv](https://github.com/linuxfabrik/lfops/tree/main/roles/python_venv) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [Fangfrisch Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/fangfrisch.yml), this is automatically done for you.
+* A Python virtual environment `/opt/python-venv/clamav-fangfrisch/` with `fangfrisch` installed must be present (role: [linuxfabrik.lfops.python_venv](https://github.com/linuxfabrik/lfops/tree/main/roles/python_venv)).
 
 
 ## Tags

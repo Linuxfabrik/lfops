@@ -6,10 +6,18 @@ This role creates and manages various [Python 3 virtual environments (venv)](htt
 *Available since LFOps `1.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Install Python 3
-* On Rocky 9+, the EPEL and the CRB Repo ("Code Ready Builder") need to be enabled to be able to install `python3-virtualenv` - otherwise you'll get `No match for argument: python3-virtualenv` or `nothing provides python3-wheel-wheel needed by python3-virtualenv-20.21.1-1.el9.noarch from epel`.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* Python 3 must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
+
+
+## Requirements
+
+Manual steps:
+
+* On Rocky 9+, enable the EPEL repository by running the [repo_epel](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/repo_epel.yml) playbook (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)) and the CRB ("Code Ready Builder") repository by running the [repo_baseos](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/repo_baseos.yml) playbook (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)). Both are required to install `python3-virtualenv`. Otherwise you get `No match for argument: python3-virtualenv` or `nothing provides python3-wheel-wheel needed by python3-virtualenv-20.21.1-1.el9.noarch from epel`.
 
 
 ## Tags

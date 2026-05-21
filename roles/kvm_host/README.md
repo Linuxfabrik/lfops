@@ -6,9 +6,11 @@ This role installs the required packages and configures the host as a KVM host.
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Install Python 3, and the python3-libvirt and python3-lxml modules.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* Python 3 and the `python3-libvirt` and `python3-lxml` modules must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
 
 
 ## Tags

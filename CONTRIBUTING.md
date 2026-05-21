@@ -182,7 +182,7 @@ Commit scopes:
 When creating a new role, make sure to deliver:
 
 * The role itself.
-* `roles/<role-name>/README.md`, following `roles/example/README.md` as a template.
+* `roles/<role-name>/README.md`, following `roles/example/README.md` as a template and the section menu under "README" below.
 * `roles/<role-name>/meta/argument_specs.yml` declaring all user-facing variables.
 * Update `playbooks/README.md`.
 * Update `playbooks/all.yml`.
@@ -246,6 +246,42 @@ When creating a new role, make sure to deliver:
 * All user-facing information should be included in the README. Comments are intended for developers only.
 * Avoid breaking changes as far as possible, but don't let them stand in the way of improvements.
 * Document all changes in the [CHANGELOG.md](https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md) file.
+
+
+#### README
+
+`roles/example/README.md` is the canonical template. Keep the following sections in this order, drop the optional ones that do not apply, and do not invent new top-level sections:
+
+```
+# Ansible Role linuxfabrik.lfops.<name>   + intro paragraph(s)        (mandatory)
+[ "This role is compatible with the following <x> versions:" + list ] (optional)
+*Available since LFOps `X.X.X`.*                                      (mandatory)
+## How the Role Behaves                                               (optional)
+## Known Limitations                                                  (optional)
+## Dependent Roles                                                    (optional)
+## Requirements                                                       (optional)
+## Single-Node Setup / Cluster Setup / Adding a Node ... / <descriptive>  (optional walkthrough)
+## Post-Installation Steps                                            (optional)
+## Tags                                                               (mandatory)
+## Mandatory Role Variables                                           (optional)
+## Recommended Role Variables                                         (optional)
+## Optional Role Variables                                            (optional)
+## Optional Role Variables - <Subgroup>                               (optional, repeatable)
+## Troubleshooting                                                    (optional)
+## License                                                            (mandatory)
+## Author Information                                                 (mandatory)
+```
+
+* **`*Available since LFOps`**: marks the LFOps release in which the role first shipped. Set it once and never change it afterwards. When you add a new role you do not know the next version tag yet, so write the literal line `*Available in the next LFOps release.*` instead; it is rewritten to the real version with `sed` when the next release is cut.
+* **How the Role Behaves**: proactive, non-obvious design/runtime notes (controller-vs-target download split and who needs network access, idempotency / overwrite-on-rerun, the upgrade path, what the role does NOT do, security caveats). Distinct from Troubleshooting (reactive error->fix) and Known Limitations (hard constraints the operator cannot work around).
+* **Dependent Roles vs Requirements**: these answer "which other LFOps roles does the playbook wire in" vs "what must the operator provide themselves". Decide where an item goes by what it is:
+    * Another LFOps role that **this role's own playbook** (`X.yml`, or a bundling `setup_X.yml`) runs goes under `## Dependent Roles`. Write each bullet declaratively as a state ("The X repository must be enabled (role: ...)") and name the role. Roles run by default form the first list, right under the lead-in ("Any LFOps playbook that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables."); mark feature-optional ones with "Optional:". Roles the playbook ships but leaves off by default go under a "These roles are not enabled by default; enable them via the playbook's skip variables if needed:" list-title. Do not list skip-variable names or the exact play order - those live solely in `playbooks/README.md`.
+    * A value the user supplies is a variable: document it under `## ... Role Variables` only, never as a dependency or requirement.
+    * Everything else the operator must provide goes under `## Requirements`: host resources, an external account or subscription, or credentials as plain bullets; hands-on procedures (run a SEPARATE playbook for a dependency, mint a token in a web console, install on the Ansible controller, configure DNS) under a "Manual steps:" list-title, written imperatively. A dependency that needs a separate playbook is a manual step here, not a dependent role. Mark feature-optional items with "Optional:".
+* **Variable subgroups**: large roles MAY split optional (or mandatory) variables into `## Optional Role Variables - <Subgroup>` sections, using the upstream module name, the variable prefix as a code span, or a functional label. These are the same canonical section repeated; give each its own `Example:` block. A subgroup MAY keep its Mandatory and Optional sections paired together (group-by-module, as in `apache_httpd`) instead of forcing all mandatory subgroups before all optional ones. A variable grouping must always be its own `##` section, never a `###` subheading inside `## Optional Role Variables`.
+* **Subheadings and walkthroughs**: `###` subheadings are allowed only as sub-structure inside a section (e.g. procedural steps within a walkthrough), never as a stand-in for a variable subgroup. The walkthrough slot accepts a descriptive role-specific title when none of `Single-Node Setup` / `Cluster Setup` / `Adding a Node to an Existing Cluster` fits (e.g. `bind` `## Primary-Secondary Example`). Sections are separated by two blank lines, including above and below the `*Available since*` marker.
+* **Special roles**: utility/meta roles (e.g. `shared`) MAY replace `## Tags` and the `## *Role Variables` sections with `## Available Tasks` and `## Usage Example`. Controller-side API roles (e.g. `uptimerobot`) MAY add `## Running the Role`, `## Example Inventory` and `## Read-Only Inspection`. Both MUST keep the mandatory frame (title, marker, License, Author Information).
+* **Reference-grade sections**: a role MAY add a focused role-specific section where no canonical section fits (e.g. `monitoring_plugins` `## Installation Methods`, `keycloak` `## Using a reverse proxy`). Keep these to a minimum; prefer folding behaviour notes into `## How the Role Behaves` and error/fix notes into `## Troubleshooting`.
 
 
 #### Tasks

@@ -6,16 +6,26 @@ This role installs and configures [Elastic Agent](https://www.elastic.co/elastic
 *Available since LFOps `6.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Enable the Elasticsearch Package Repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
-* A running Fleet Server. This can be set up using the [linuxfabrik.lfops.elastic_agent_fleet_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/elastic_agent_fleet_server) role.
-* An enrollment token from Kibana Fleet.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The Elasticsearch package repository must be enabled (role: [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch)). The elastic-agent package is served from it.
 
 
-## Optional Requirements
+## Requirements
 
-* CA certificate for verifying the Fleet Server TLS certificate. This is the CA used for Fleet Server, typically the same as Elasticsearch.
+* A Fleet Server must be running and reachable.
+
+Manual steps:
+
+* Deploy a Fleet Server by running the [elastic_agent_fleet_server](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elastic_agent_fleet_server.yml) playbook (role: [linuxfabrik.lfops.elastic_agent_fleet_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/elastic_agent_fleet_server)).
+* Get an enrollment token from Kibana and store it as `elastic_agent__enrollment_token`:
+
+    1. In Kibana, go to Fleet → Enrollment tokens
+    2. Click "Create enrollment token"
+    3. Select the agent policy
+    4. Copy the token
 
 
 ## Tags
@@ -39,18 +49,6 @@ This role installs and configures [Elastic Agent](https://www.elastic.co/elastic
 
 * Manages the state of the elastic-agent service.
 * Triggers: none.
-
-
-## Pre-Installation Steps
-
-### Get Enrollment Token
-
-Get an enrollment token from Kibana:
-
-1. In Kibana, go to Fleet → Enrollment tokens
-2. Click "Create enrollment token"
-3. Select the agent policy
-4. Copy the token
 
 
 ## Mandatory Role Variables
@@ -79,7 +77,7 @@ elastic_agent__fleet_url: 'https://fleet1.example.com:8220'
 
 `elastic_agent__fleet_ca`
 
-* ASCII-armored PEM CA certificate for verifying the Fleet Server TLS certificate.
+* ASCII-armored PEM CA certificate for verifying the Fleet Server TLS certificate, typically the same CA as Elasticsearch.
 * Type: String.
 * Default: unset
 

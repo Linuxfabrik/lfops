@@ -6,16 +6,16 @@ This role installs and configures [LibreNMS](https://www.librenms.org/).
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Install Python 3, and the python3-policycoreutils module (required for the SELinux Ansible tasks). This can be done using the [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) role.
-* Install MariaDB, and create a database and a user for said database. This can be done using the [linuxfabrik.lfops.mariadb-server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb-server) role.
-* Install a web server (for example Apache httpd), and configure a virtual host for LibreNMS. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
-* Install PHP version >= 7.3. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
-* On RHEL-compatible systems, enable the `httpd_can_connect_ldap` and `httpd_setrlimit` SELinux booleans. This can be done using the [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux) role.
-* On RHEL-compatible systems, set the appropriate SELinux file contexts (have a look at `librenms__selinux__fcontexts__dependent_var` in the `defaults/main.yml`). This can be done using the [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the ["Setup LibreNMS" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_librenms.yml), this is automatically done for you.
+* Python 3, and the python3-policycoreutils module (required for the SELinux Ansible tasks) must be installed (role: [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils)).
+* MariaDB must be installed, with a database and a user for said database created (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
+* A web server (for example Apache httpd) must be installed, with a virtual host for LibreNMS configured (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
+* PHP version >= 7.3 must be installed (role: [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
+* On RHEL-compatible systems, the `httpd_can_connect_ldap` and `httpd_setrlimit` SELinux booleans must be enabled (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
+* On RHEL-compatible systems, the appropriate SELinux file contexts must be set (have a look at `librenms__selinux__fcontexts__dependent_var` in the `defaults/main.yml`) (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
 
 
 ## Tags
