@@ -68,7 +68,7 @@ redis__service_timeout_stop_sec: 5
 ```
 
 
-### `redis__conf_*` config directives
+## Optional Role Variables - `redis__conf_*` Config Directives
 
 Variables for `redis.conf` directives and their default values, defined and supported by this role.
 

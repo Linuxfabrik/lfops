@@ -12,7 +12,9 @@ Concretely, this role:
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Requirements
+
+Manual steps:
 
 * Install the [Linux System Roles](https://linux-system-roles.github.io/) on the Ansible control node, e.g. via `ansible-galaxy collection install fedora.linux_system_roles`.
 
@@ -25,7 +27,7 @@ Concretely, this role:
 * Triggers: none.
 
 
-## Role Variables
+## Optional Role Variables
 
 This role does not define its own variables. All configuration is passed straight through to `fedora.linux_system_roles.network`. See the [upstream README](https://github.com/linux-system-roles/network/blob/main/README.md) for the full list (`network_connections`, `network_provider`, `network_state`, ...).
 

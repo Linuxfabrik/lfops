@@ -8,10 +8,15 @@ Ideally, the FreeIPA should be installed on a separate server. If that is not po
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Known Limitations
+
+* The role must be run with Ansible's `linear` strategy (the default). It is incompatible with strategies that reuse the target Python interpreter, such as Mitogen's `mitogen_linear`, because the underlying ansible-freeipa modules use `ipalib`'s global API singleton and fail with `API.bootstrap() already called` on the second module call. The bundled `playbooks/freeipa_server.yml` sets `strategy: 'linear'` explicitly.
+
+
+## Requirements
 
 * At least 2 GB RAM are required.
-* The IPA installer is quite picky about the DNS configuration. The following checks are done by installer:
+* The IPA installer is quite picky about the DNS configuration. The following checks are done by the installer:
 
     * The hostname cannot be `localhost` or `localhost6`.
     * The hostname must be fully-qualified (`server.ipa.test`). Use two-level domain names. Otherwise you'll get error messages like `Invalid realm name: single label realms are not supported`.
@@ -20,8 +25,10 @@ Ideally, the FreeIPA should be installed on a separate server. If that is not po
     * If neither the domain nor the realm being set, you'll get error messages like `In unattended mode you need to provide at least -r, -p and -a options`.
 
 * Do not use an existing domain or hostname unless you own the domain. It's a common mistake to use `example.com`. We recommend to use a reserved top level domain from RFC2606 for private test installations, e.g. `ipa.test`.
-* Install the [ansible-freeipa Ansible Collection](https://github.com/freeipa/ansible-freeipa) on the Ansible control node. This can be done by calling `ansible-galaxy collection install freeipa.ansible_freeipa`.
-* The role must be run with Ansible's `linear` strategy (the default). It is incompatible with strategies that reuse the target Python interpreter, such as Mitogen's `mitogen_linear`, because the underlying ansible-freeipa modules use `ipalib`'s global API singleton and fail with `API.bootstrap() already called` on the second module call. The bundled `playbooks/freeipa_server.yml` sets `strategy: 'linear'` explicitly.
+
+Manual steps:
+
+* Install the [ansible-freeipa Ansible Collection](https://github.com/freeipa/ansible-freeipa) on the Ansible control node by calling `ansible-galaxy collection install freeipa.ansible_freeipa`.
 
 
 ## Tags

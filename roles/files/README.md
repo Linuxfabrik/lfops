@@ -6,9 +6,11 @@ This role manages file system entities such as files, directories and symlinks.
 *Available since LFOps `3.0.0`.*
 
 
-## Optional Requirements
+## Requirements
 
-* It is recommeded to set `inventory_ignore_patterns = '(host|group)_files'` in your `ansible.cfg` on the Ansible Controller to ignore files in `inventory_dir/host_files`.
+Manual steps:
+
+* Optional: set `inventory_ignore_patterns = '(host|group)_files'` in your `ansible.cfg` on the Ansible controller to ignore files in `inventory_dir/host_files`.
 
 
 ## Tags

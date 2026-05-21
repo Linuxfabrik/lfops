@@ -14,22 +14,28 @@ SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-chain.crt
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Install `openssl`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
-* Install `tar`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
-* Have a configured web server. If you are using LFOps to manage an Apache reverse proxy, a virtual host working for acme might be defined like this:
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-```
-apache_httpd__vhosts__host_var:
-  - conf_server_name: 'other.example.com'
-    enabled: true
-    state: 'present'
-    template: 'redirect'
-    virtualhost_port: 80
-```
+* `openssl` must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
+* `tar` must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
 
-If you use the [acme.sh Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/acme_sh.yml), this is automatically done for you (except configuring the webserver).
+
+## Requirements
+
+Manual steps:
+
+* Configure a web server. The playbook does not set this up. If you are using LFOps to manage an Apache reverse proxy, a virtual host working for acme might be defined like this:
+
+    ```yaml
+    apache_httpd__vhosts__host_var:
+      - conf_server_name: 'www.example.com'
+        enabled: true
+        state: 'present'
+        template: 'redirect'
+        virtualhost_port: 80
+    ```
 
 
 ## Tags

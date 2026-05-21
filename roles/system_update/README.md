@@ -10,14 +10,20 @@ This role configures the server to do (weekly) system updates by deploying two s
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Install at. This can be done using the [linuxfabrik.lfops.at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at) role.
-* Install mailx. This can be done using the [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx) role.
-* Install needrestart on Debian. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
-* Install yum-utils on RHEL. This can be done using the [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/system_update.yml), this is automatically done for you.
+* at must be installed (role: [linuxfabrik.lfops.at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at)).
+* mailx must be installed (role: [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx)).
+* yum-utils must be installed on RHEL (role: [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils)).
+
+
+## Requirements
+
+Manual steps:
+
+* On Debian, install needrestart by running the [apps](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apps.yml) playbook (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
 
 
 ## Tags

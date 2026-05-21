@@ -27,17 +27,21 @@ Hardenings that can be covered by this role: See [STIGs](https://github.com/Linu
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* For some machines you might need to set `ansible_python_interpreter: '/usr/bin/python3'` to prevent the error message `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`.
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-* Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* The `python3-PyMySQL` library must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
+* Optional: the official [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/) (role: [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb)) provides a specific MariaDB version.
+* Optional: a repository for [mydumper](https://github.com/mydumper/mydumper) (role: [linuxfabrik.lfops.repo_mydumper](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mydumper)) provides the mydumper backup tool.
 
 
-## Optional Requirements
+## Requirements
 
-* Enable the official [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/). This can be done using the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) role.
-* Enable the a repository for [mydumper](https://github.com/mydumper/mydumper). This can be done using the [linuxfabrik.lfops.repo_mydumper](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mydumper) role.
+Manual steps:
+
+* On some machines you may need to set `ansible_python_interpreter: '/usr/bin/python3'` to prevent the error `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`.
 
 
 ## Tags
@@ -696,7 +700,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'256K'`
 
-`mariadb_server__cnf_local_infile__group_var` `mariadb_server__cnf_local_infile__host_var`
+`mariadb_server__cnf_local_infile__group_var` / `mariadb_server__cnf_local_infile__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#local_infile)
 * Type: String.
@@ -714,7 +718,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `''`
 
-`mariadb_server__cnf_log_bin_trust_function_creators__group_var` `mariadb_server__cnf_log_bin_trust_function_creators__host_var`
+`mariadb_server__cnf_log_bin_trust_function_creators__group_var` / `mariadb_server__cnf_log_bin_trust_function_creators__host_var`
 
 * [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#log_bin_trust_function_creators)
 * Type: String.
@@ -798,7 +802,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'OFF'`
 
-`mariadb_server__cnf_server_id__group_var` `mariadb_server__cnf_server_id__host_var`
+`mariadb_server__cnf_server_id__group_var` / `mariadb_server__cnf_server_id__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables#server_id)
 * Type: Number.

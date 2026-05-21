@@ -18,11 +18,14 @@ This role is tested with the following IcingaWeb2 PDF Export Module versions:
 * This role only installs the IcingaWeb2 module itself. Any runtime dependencies of the module (see the [module documentation](https://github.com/Icinga/icingaweb2-module-pdfexport#requirements)) have to be installed and configured separately.
 
 
-## Mandatory Requirements
+## Requirements
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
-* Internet access from the Ansible controller (downloads from `https://github.com/Icinga/icingaweb2-module-pdfexport/archive/`).
-* The runtime dependencies listed in the [module documentation](https://github.com/Icinga/icingaweb2-module-pdfexport#requirements) (typically a headless browser binary). Install and configure them separately.
+* The Ansible controller must have Internet access (downloads from `https://github.com/Icinga/icingaweb2-module-pdfexport/archive/`).
+
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
+* Install and configure the runtime dependencies listed in the [module documentation](https://github.com/Icinga/icingaweb2-module-pdfexport#requirements) (typically a headless browser binary).
 
 
 ## Tags

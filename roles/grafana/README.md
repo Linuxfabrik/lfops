@@ -6,9 +6,11 @@ This role installs and configures [Grafana](https://grafana.com/).
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Enable the official [Grafana OSS Repository](https://grafana.com/docs/grafana/latest/installation/rpm/). This can be done using the [linuxfabrik.lfops.repo_grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_grafana) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The official [Grafana OSS Repository](https://grafana.com/docs/grafana/latest/installation/rpm/) must be enabled (role: [linuxfabrik.lfops.repo_grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_grafana)).
 
 
 ## Tags

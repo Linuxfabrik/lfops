@@ -10,9 +10,11 @@ This role is tested with the following Icinga for Kubernetes Web versions:
 *Available since LFOps `3.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* A configured IcingaWeb2 must be available (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
 
 
 ## Tags

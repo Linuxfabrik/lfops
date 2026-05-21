@@ -6,9 +6,16 @@ This role creates and manages instances (virtual machines) on [Infomaniak](https
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Known Limitations
 
-* Install the [openstack command line tool](https://docs.openstack.org/newton/user-guide/common/cli-install-openstack-command-line-clients.html).
+* Resizing the separate boot volume currently does not seem to work (it should, according to the documentation). Resizing via the WebGUI works without reboot / downtime.
+
+
+## Requirements
+
+Manual steps:
+
+* Install the [openstack command line tool](https://docs.openstack.org/newton/user-guide/common/cli-install-openstack-command-line-clients.html) on the Ansible controller.
 * Import your public SSH-key into Infomaniak ([here](https://api.pub1.infomaniak.cloud/horizon/project/key_pairs)). Ideally, set the key name to your local username (replace `.` with ` `), then you can use the default value for `infomaniak_vm__key_name`.
 
 
@@ -173,7 +180,7 @@ infomaniak_vm__api_username: 'PCU-123456'
 
 `infomaniak_vm__separate_boot_volume_size`
 
-* The size of the bootable root-volume in GB. This should only be used if the `infomaniak_vm__flavor` does not include a disk. Resizing currently does not seem to work (should work according to the documentation). Resizing via the WebGUI works without reboot / downtime.
+* The size of the bootable root-volume in GB. This should only be used if the `infomaniak_vm__flavor` does not include a disk.
 * Type: Number.
 * Default: unset
 

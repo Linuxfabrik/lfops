@@ -14,18 +14,24 @@ Note that this role does NOT let you specify a particular Graylog Data Node vers
 * This role does not currently support more than one data node.
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-Sizing of disks:
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* `/`: at least 4 GB free disk space (create a 8+ GB partition).
-* `/var`: at least 15 GB free disk space (create a 20+ GB partition).
+* MongoDB must be installed (role: [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb)).
+* The official [Graylog repository](https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm) must be enabled (role: [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog)).
 
-If you use the ["Setup Graylog Data Node" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_graylog_datanode.yml), the following is automatically done for you:
 
-* Install MongoDB. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
-* If you're not using a versioned MongoDB repository, don't forget to protect MongoDB from being updated with newer minor and major versions. This can be done using the [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock) role.
-* Enable the official [Graylog repository](https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm). This can be done using the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) role.
+## Requirements
+
+* Size the disks before running the role:
+
+    * `/`: at least 4 GB free disk space (create a 8+ GB partition).
+    * `/var`: at least 15 GB free disk space (create a 20+ GB partition).
+
+Manual steps:
+
+* If you're not using a versioned MongoDB repository, protect MongoDB from being updated with newer minor and major versions by running the [dnf_versionlock](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/dnf_versionlock.yml) playbook (role: [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock)).
 
 
 ## Tags

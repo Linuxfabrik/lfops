@@ -12,11 +12,11 @@ This Ansible role
 *Available since LFOps `3.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Install Java 11+. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role. Java OpenJDK latest is recommended.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [Apache Solr Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apache_solr.yml), this is automatically done for you.
+* Java 11+ must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)). Java OpenJDK latest is recommended.
 
 
 ## Tags
