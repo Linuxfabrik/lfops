@@ -1,6 +1,6 @@
-- name: 'Playbook linuxfabrik.lfops.icingaweb2_module_pdfexport'
+- name: 'Playbook linuxfabrik.lfops.chromium_headless'
   hosts:
-    - 'lfops_icingaweb2_module_pdfexport'
+    - 'lfops_chromium_headless'
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -15,13 +15,9 @@
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not icingaweb2_module_pdfexport__skip_repo_epel | d(false) | bool'
+        - 'not chromium_headless__skip_repo_epel | d(false) | bool'
 
     - role: 'linuxfabrik.lfops.chromium_headless'
-      when:
-        - 'not icingaweb2_module_pdfexport__skip_chromium_headless | d(false) | bool'
-
-    - role: 'linuxfabrik.lfops.icingaweb2_module_pdfexport'
 
 
   post_tasks:

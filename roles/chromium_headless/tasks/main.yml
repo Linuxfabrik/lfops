@@ -1,0 +1,157 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'groupadd --system chromium'
+    ansible.builtin.group:
+      name: 'chromium'
+      state: 'present'
+      system: true
+
+  - name: 'useradd --system chromium'
+    ansible.builtin.user:
+      name: 'chromium'
+      comment: 'Headless Chromium'
+      group: 'chromium'
+      home: '{{ chromium_headless__user_data_dir }}'
+      shell: '/sbin/nologin'
+      system: true
+      state: 'present'
+
+  - name: 'install --directory --owner chromium --group chromium --mode 0750 {{ chromium_headless__user_data_dir }}'
+    ansible.builtin.file:
+      path: '{{ chromium_headless__user_data_dir }}'
+      state: 'directory'
+      owner: 'chromium'
+      group: 'chromium'
+      mode: 0o750
+
+  - name: 'Install required packages'
+    ansible.builtin.package:
+      name: '{{ __chromium_headless__packages }}'
+      state: 'present'
+
+  tags:
+    - 'chromium_headless'
+
+
+# Chromium itself does not implement the systemd socket-activation protocol (sd_listen_fds() / LISTEN_FDS); it always binds its own --remote-debugging-port. Direct socket activation is therefore not possible, so we deploy a systemd-socket-proxyd in front of Chromium: the .socket unit binds listen_port, the proxy accepts on that activated fd and forwards to backend_port (the port Chromium opens itself). --exit-idle-time on the proxy plus BindsTo= on chromium-headless.service ties Chromium's lifecycle to the proxy, so Chromium stops together with the proxy after the idle timeout.
+# Two SELinux booleans are required: bind_any so the .socket can bind the listen port even when it has an unexpected port type (e.g. on Rocky 9, port 9222 maps to hplip_port_t and would otherwise reject the bind); connect_any so the proxy can connect to Chromium's non-standard backend port, which has no matching SELinux port type.
+- block:
+
+  - name: 'setsebool -P systemd_socket_proxyd_bind_any on'
+    ansible.posix.seboolean:
+      name: 'systemd_socket_proxyd_bind_any'
+      persistent: true
+      state: true
+
+  - name: 'setsebool -P systemd_socket_proxyd_connect_any on'
+    ansible.posix.seboolean:
+      name: 'systemd_socket_proxyd_connect_any'
+      persistent: true
+      state: true
+
+  # block
+  when:
+    - 'ansible_facts["selinux"]["status"] != "disabled"'
+  tags:
+    - 'chromium_headless'
+
+
+- block:
+
+  - name: 'Deploy /etc/systemd/system/chromium-headless-proxy.socket'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/chromium-headless-proxy.socket.j2'
+      dest: '/etc/systemd/system/chromium-headless-proxy.socket'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__chromium_headless__deploy_socket_result'
+    notify:
+      - 'chromium_headless: restart chromium-headless-proxy.socket'
+
+  - name: 'Deploy /etc/systemd/system/chromium-headless-proxy.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/chromium-headless-proxy.service.j2'
+      dest: '/etc/systemd/system/chromium-headless-proxy.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__chromium_headless__deploy_proxy_result'
+
+  - name: 'Deploy /etc/systemd/system/chromium-headless.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/chromium-headless.service.j2'
+      dest: '/etc/systemd/system/chromium-headless.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__chromium_headless__deploy_service_result'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+    loop:
+      - '/etc/systemd/system/chromium-headless-proxy.socket'
+      - '/etc/systemd/system/chromium-headless-proxy.service'
+      - '/etc/systemd/system/chromium-headless.service'
+
+  # Run daemon-reload as a regular task (not as a handler), so it runs before the
+  # state block below and so the restart-socket handler can rely on the registered
+  # __chromium_headless__service_state_result to skip redundant restarts.
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__chromium_headless__deploy_socket_result is changed or
+         __chromium_headless__deploy_proxy_result is changed or
+         __chromium_headless__deploy_service_result is changed'
+
+  tags:
+    - 'chromium_headless'
+    - 'chromium_headless:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ chromium_headless__service_enabled | bool | ternary("enable", "disable") }} chromium-headless-proxy.socket'
+    ansible.builtin.service:
+      name: 'chromium-headless-proxy.socket'
+      enabled: '{{ chromium_headless__service_enabled | bool }}'
+
+  - name: 'systemctl {{ chromium_headless__service_state }} chromium-headless-proxy.socket'
+    ansible.builtin.service:
+      name: 'chromium-headless-proxy.socket'
+      state: '{{ chromium_headless__service_state }}'
+    register: '__chromium_headless__service_state_result'
+
+  tags:
+    - 'chromium_headless'
+    - 'chromium_headless:state'
+
+
+- block:
+
+  - name: 'Flush handlers so that the service is ready for dependent roles'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'chromium_headless'
+    - 'chromium_headless:configure'
+    - 'chromium_headless:state'

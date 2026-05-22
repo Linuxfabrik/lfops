@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:chromium_headless**: New role. Provides a hardened, socket-activated headless Chromium backend (started on the first request, stopped again after an idle timeout, so it uses no RAM while unused) for tools such as the Icinga Web 2 PDF Export Module. Installs `chromium-headless` from EPEL instead of Google's proprietary repository.
 * **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.1.
 * **role:sshd**: Add Debian 13 support.
 * **role:mirror**: Document the new per-repository `newest_only` subkey on `mirror__reposync_repos` entries. Defaults to `true` (only the newest version of each package is mirrored). Set to `false` for repositories that publish multiple versions in parallel, such as Icinga, where older versions must remain available.
@@ -67,6 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:redis**: Added missing paths for running against Debian.
+* **role:icingaweb2_module_pdfexport**: PDF export now works out of the box. The headless browser backend the module needs is installed and configured automatically via the new `chromium_headless` role (wired into the `icingaweb2_module_pdfexport` and `setup_icinga2_master` playbooks); previously it had to be set up by hand, so fresh deployments ended up without working PDF export.
 * **role:graylog_datanode**: Fix the `Conditional result ... was of type 'str'` deprecation warning.
 * **role:graylog_server**: Validate that each `graylog_server__system_inputs` entry sets `global: true` or assigns a `node`. Key was marked as mandatory but not enforced. The role now aborts the `graylog_server:configure_defaults` run with a clear message.
 * **role:graylog_server**: Fix the `graylog_server:configure_defaults` run aborting on Graylog 7.0+ with `Status code was 400 and not [200]` / `Unable to map property can_be_default` while creating the default index set, by removing the property from the role. Graylog 7.x dropped it and 6.x ignored it.

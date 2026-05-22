@@ -7,6 +7,7 @@
 
     setup_icinga2_master__apache_httpd__skip_injections__internal_var: '{{ setup_icinga2_master__apache_httpd__skip_injections | d(setup_icinga2_master__apache_httpd__skip_role__internal_var) }}'
     setup_icinga2_master__apache_httpd__skip_role__internal_var: '{{ setup_icinga2_master__apache_httpd__skip_role | d(false) }}'
+    setup_icinga2_master__chromium_headless__skip_role__internal_var: '{{ setup_icinga2_master__chromium_headless__skip_role | d(setup_icinga2_master__icingaweb2_module_pdfexport__skip_role__internal_var) }}'
     setup_icinga2_master__grafana__skip_role__internal_var: '{{ setup_icinga2_master__grafana__skip_role | d(false) }}'
     setup_icinga2_master__grafana_grizzly__skip_injections__internal_var: '{{ setup_icinga2_master__grafana_grizzly__skip_injections | d(setup_icinga2_master__grafana_grizzly__skip_role__internal_var) }}'
     setup_icinga2_master__grafana_grizzly__skip_role__internal_var: '{{ setup_icinga2_master__grafana_grizzly__skip_role | d(false) }}'
@@ -312,6 +313,10 @@
     - role: 'linuxfabrik.lfops.icingaweb2_module_jira'
       when:
         - 'not setup_icinga2_master__icingaweb2_module_jira__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.chromium_headless'
+      when:
+        - 'not setup_icinga2_master__chromium_headless__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_pdfexport'
       when:

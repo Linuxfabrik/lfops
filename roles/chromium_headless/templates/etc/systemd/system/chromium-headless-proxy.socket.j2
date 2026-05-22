@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2026052002
+
+[Unit]
+Description=Socket for on-demand Headless Chromium
+
+[Socket]
+ListenStream={{ chromium_headless__listen_address }}:{{ chromium_headless__listen_port }}
+
+[Install]
+WantedBy=sockets.target

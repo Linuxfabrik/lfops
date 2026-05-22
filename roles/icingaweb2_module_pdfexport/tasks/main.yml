@@ -5,6 +5,12 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
+  tags:
+    - 'always'
+
+
+- block:
+
   - name: 'mkdir -p /usr/share/icingaweb2/modules/pdfexport'
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/pdfexport'
@@ -13,7 +19,7 @@
       group: 'icingaweb2'
       mode: 0o755
 
-  - name: 'curl https://github.com/Icinga/icingaweb2-module-pdfexport/archive/{{ icingaweb2_module_pdfexport__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+  - name: 'curl https://github.com/Icinga/icingaweb2-module-pdfexport/archive/{{ icingaweb2_module_pdfexport__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz' # noqa risky-file-permissions (temporary file)
     ansible.builtin.get_url:
       url: 'https://github.com/Icinga/icingaweb2-module-pdfexport/archive/{{ icingaweb2_module_pdfexport__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
@@ -22,7 +28,7 @@
     run_once: true
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz to the server'
+  - name: 'copy /tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz to the server' # noqa risky-file-permissions (temporary file)
     ansible.builtin.copy:
       src: '/tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
@@ -47,3 +53,34 @@
 
   tags:
     - 'icingaweb2_module_pdfexport'
+
+
+- block:
+
+  - name: 'mkdir -p /etc/icingaweb2/modules/pdfexport'
+    ansible.builtin.file:
+      path: '/etc/icingaweb2/modules/pdfexport'
+      state: 'directory'
+      owner: '{{ __icingaweb2_module_pdfexport__icingaweb2_owner }}'
+      group: 'icingaweb2'
+      mode: 0o2770
+
+  - name: 'Deploy /etc/icingaweb2/modules/pdfexport/config.ini'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/icingaweb2/modules/pdfexport/config.ini.j2'
+      dest: '/etc/icingaweb2/modules/pdfexport/config.ini'
+      owner: '{{ __icingaweb2_module_pdfexport__icingaweb2_owner }}'
+      group: 'icingaweb2'
+      mode: 0o660
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/icingaweb2/modules/pdfexport/config.ini'
+
+  tags:
+    - 'icingaweb2_module_pdfexport'
+    - 'icingaweb2_module_pdfexport:configure'
