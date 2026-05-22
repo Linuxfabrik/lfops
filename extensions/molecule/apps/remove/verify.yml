@@ -1,4 +1,4 @@
-- name: 'Verify'
+- name: 'Verify apps are not installed'
   hosts: 'systems_under_test'
   gather_facts: true
   tasks:

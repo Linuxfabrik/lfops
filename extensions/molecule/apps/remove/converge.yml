@@ -1,4 +1,4 @@
-- name: 'Converge'
+- name: 'Converge apps role'
   hosts: 'systems_under_test'
   roles:
     - role: 'linuxfabrik.lfops.apps'
