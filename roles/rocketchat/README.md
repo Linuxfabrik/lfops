@@ -6,15 +6,22 @@ This role installs and configures [Rocket.Chat](https://www.rocket.chat/), an Op
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-* Enable the MongoDB repository. This can be done using the [linuxfabrik.lfops.repo_mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mongodb) role.
-* Install MongoDB and configure a replica set. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
-* Create a MongoDB user for Rocket.Chat. Mandatory when authentication in MongoDB is enabled. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the ["Setup Rocket.Chat" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_rocketchat.yml), this is automatically done for you (you still have to take care of providing the required versions).
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* The MongoDB repository must be enabled (role: [linuxfabrik.lfops.repo_mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mongodb)).
+* MongoDB must be installed and a replica set configured (role: [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb)).
+* A MongoDB user for Rocket.Chat must be created. Mandatory when authentication in MongoDB is enabled (role: [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb)).
 
+
+## Requirements
+
+Manual steps:
+
+* Optional: set `Storage=presistent` in `/etc/systemd/journald.conf` to allow the user to use `journalctl --user` by running the [systemd_journald](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/systemd_journald.yml) playbook (role: [linuxfabrik.lfops.systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald)).
+* Optional: if the host should act as a Postfix MTA, make it listen on the IP address so that the container can reach it by running the [postfix](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/postfix.yml) playbook (role: [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix)).
 * Make sure the container can access the MongoDB instance:
 ```yaml
 mongodb__conf_net_bind_ip:
@@ -23,12 +30,6 @@ mongodb__conf_net_bind_ip:
 mongodb__repl_set_members:
   - 'fqdn.example.com' # else the client gets redirected to localhost, which does not work from inside the container
 ```
-
-
-## Optional Requirements
-
-* It is recommended to set `Storage=presistent` in `/etc/systemd/journald.conf` to allow the user to use `journalctl --user`. This can be done using the [linuxfabrik.lfops.systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald) role.
-* If the host should act as a Postfix MTA, make sure it is listening on the IP address so that the container can reach it. This can be done using the [linuxfabrik.lfops.systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald) role.
 
 
 ## Tags

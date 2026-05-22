@@ -18,10 +18,13 @@ This role is tested with the following IcingaWeb2 Company Module versions:
 * `icingacli module enable company` is only invoked when `/etc/icingaweb2/enabledModules/company` does not yet exist (idempotent).
 
 
-## Mandatory Requirements
+## Requirements
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
-* Internet access from the Ansible controller (downloads `https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz`).
+* The Ansible controller must have Internet access (downloads `https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz`).
+
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
 
 
 ## Tags

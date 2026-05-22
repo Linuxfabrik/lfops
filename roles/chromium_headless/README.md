@@ -5,7 +5,7 @@ This role installs the headless [Chromium](https://www.chromium.org/) shell toge
 The setup is used as a headless browser backend for tools such as the [Icinga Web 2 PDF Export Module](https://github.com/Icinga/icingaweb2-module-pdfexport).
 
 
-*Available since LFOps `6.0.2`.*
+*Available in the next LFOps release.*
 
 
 ## How the Role Behaves
@@ -18,11 +18,11 @@ The setup is used as a headless browser backend for tools such as the [Icinga We
 * The service-lifecycle variables (`chromium_headless__service_enabled`, `__service_state`) manage the `chromium-headless-proxy.socket` unit, not the Chromium service directly.
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* On Red Hat-family systems, enable the EPEL repository, which provides `chromium-headless`. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role. On Debian, the `chromium-headless-shell` package ships in the default repositories, so no extra repository is required.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [Chromium Headless Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/chromium_headless.yml), the EPEL repository is enabled for you on Red Hat-family systems.
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)). It provides the `chromium-headless` package. On Debian, the `chromium-headless-shell` package ships in the default repositories, so no extra repository is required.
 
 
 ## Tags

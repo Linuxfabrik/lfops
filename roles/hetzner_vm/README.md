@@ -19,15 +19,22 @@ This role does not configure the VM's network interfaces.
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Known Limitations
+
+It is currently not possible to start a server with only an internal network *and* a fixed IP (see https://github.com/ansible-collections/hetzner.hcloud/issues/172). As a workaround, the server can be created with `hetzner_vm__state: 'stopped'` and then started:
+```bash
+ansible-playbook --inventory=inventory linuxfabrik.lfops.hetzner_vm --extra-vars="hetzner_vm__state='stopped'"
+ansible-playbook --inventory=inventory linuxfabrik.lfops.hetzner_vm --extra-vars="hetzner_vm__state='started'"
+```
+
+
+## Requirements
+
+Manual steps:
 
 * Install the Python library `hcloud` on the Ansible control node (use `pip install --user --upgrade hcloud`).
 * Import your public SSH-key into Hetzner (your project > Security > SSH Keys).
-
-
-## Optional Requirements
-
-* Install the [hcloud command line tool](https://github.com/hetznercloud/cli/releases).
+* Optional: install the [hcloud command line tool](https://github.com/hetznercloud/cli/releases).
 
 
 ## Tags
@@ -250,15 +257,6 @@ hetzner_vm__upgrade_disk: false
 hetzner_vm__volumes:
   - name: '{{ inventory_hostname }}-data'
     size: '100'
-```
-
-
-## Known Limitations
-
-It is currently not possible to start a server with only an internal network *and* a fixed IP (see https://github.com/ansible-collections/hetzner.hcloud/issues/172). As a workaround, the server can be created with `hetzner_vm__state: 'stopped'` and then started:
-```bash
-ansible-playbook --inventory=inventory linuxfabrik.lfops.hetzner_vm --extra-vars="hetzner_vm__state='stopped'"
-ansible-playbook --inventory=inventory linuxfabrik.lfops.hetzner_vm --extra-vars="hetzner_vm__state='started'"
 ```
 
 

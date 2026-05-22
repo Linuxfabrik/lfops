@@ -6,7 +6,14 @@ This role installs [Keycloak](https://www.keycloak.org/guides#getting-started).
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* A MariaDB database and user for Keycloak must be created (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
+
+
+## Requirements
 
 Minimum supported Keycloak version:
 
@@ -17,7 +24,7 @@ Make sure you have OpenJDK installed.
 * Keycloak 25+: OpenJDK 21
 * Keycloak 24+: OpenJDK 17
 
-Install one of the following database servers and create a database and a user for said database. For MariaDB, this can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
+Keycloak supports one of the following database servers; create a database and a user for it. The "Setup Keycloak" playbook wires up MariaDB for you (see Dependent Roles), the others must be provided separately.
 
 * mariadb
 * mssql
@@ -26,8 +33,6 @@ Install one of the following database servers and create a database and a user f
 * postgres
 
 If Keycloak itself should terminate TLS (e.g. when not running behind a reverse proxy, or when using a reverse proxy in reencrypt/passthrough mode), you need to provide SSL/TLS certificates via `keycloak__https_certificate_file` and `keycloak__https_certificate_key_file`. This can be done using the [linuxfabrik.lfops.acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh) role. When running behind a reverse proxy that terminates TLS (edge mode), no certificates are needed, and you can leave the certificate variables empty (the default).
-
-If you use the ["Setup Keycloak" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_keycloak.yml), this installation is automatically done for you (you still have to take care of providing the required versions).
 
 All Keycloak config settings are described here: https://www.keycloak.org/server/all-config
 
@@ -54,13 +59,17 @@ All Keycloak config settings are described here: https://www.keycloak.org/server
 
 `keycloak__admin_login`
 
-* The *temporary* Keycloak Admin login credentials. To harden security, create a permanent admin account after logging in as a temporary admin user, and delete the temporary one.
+* The *temporary* Keycloak bootstrap admin login credentials. Keycloak only honors `KC_BOOTSTRAP_ADMIN_USERNAME` / `KC_BOOTSTRAP_ADMIN_PASSWORD` on the very first start, when no admin user exists in the `master` realm yet. Subsequent restarts ignore these variables.
+* Mandatory only on the first role run. The role writes the credentials to `/etc/sysconfig/keycloak`, restarts Keycloak so it consumes them and provisions the bootstrap admin in the `master` realm, then immediately re-renders the sysconfig file with the credentials removed and marks the bootstrap as done via `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state`. The cleartext password no longer lingers on disk after the role finishes.
+* On subsequent runs the role detects the marker file and renders the sysconfig file without credentials right away. `keycloak__admin_login` can be removed from the inventory at that point.
+* Use a username that visibly marks the account as throwaway (suffix `-temp`), so it is obvious in the Keycloak UI which account must be deleted once a permanent admin has been created.
+* For disaster recovery (e.g. lost database, need to re-bootstrap an admin): remove `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state`, re-add `keycloak__admin_login` to the inventory, and re-run the role.
 * Type: Dictionary.
 * Subkeys:
 
     * `username`:
 
-        * Mandatory. Username.
+        * Mandatory. Username. By convention, end with `-temp` (e.g. `keycloak-admin-temp`) to flag the account as the bootstrap user that must be deleted after the permanent admin is in place.
         * Type: String.
 
     * `password`:
@@ -92,17 +101,18 @@ All Keycloak config settings are described here: https://www.keycloak.org/server
 `keycloak__version`
 
 * The version of Keycloak that should be installed.
+* Possible options: <https://github.com/keycloak/keycloak/releases>.
 * Type: String.
 
 Example:
 ```yaml
 # mandatory
 keycloak__admin_login:
-  password: 'password'
-  username: 'keycloak-admin'
+  username: 'keycloak-admin-temp'
+  password: 'linuxfabrik'
 keycloak__db_login:
-  password: 'password'
   username: 'keycloak'
+  password: 'linuxfabrik'
 keycloak__hostname: 'keycloak.local'
 keycloak__version: '26.1.2'
 ```

@@ -2,6 +2,7 @@
 
 This role installs and configures [bind](https://www.isc.org/bind/) as a DNS server, either as a primary or secondary.
 
+
 *Available since LFOps `2.0.0`.*
 
 
@@ -254,16 +255,15 @@ bind__zones:
       internal-website.example.com     A     192.0.2.3
 ```
 
+Primary-Secondary Example:
 
-## Primary-Secondary Example
+* With this configuration the primary actively notifies the secondary for any zone changes (i.e. changes to the serial).
+* The secondary actively checks the serial for changes every 1 hour (`TIME-TO-REFRESH`).
+* The secondary caches the zone file locally, and uses the cached version during startup.
 
-With this configuration the primary actively notifies the secondary for any zone changes (i.e. changes to the serial).
-The secondary actively checks the serial for changes every 1 hour (`TIME-TO-REFRESH`).
-The secondary caches the zone file locally, and uses the cached version during startup.
+* Note: BIND 9.11 (RHEL8) does not yet support `primary` and `secondary`, use `master` and `slave` instead.
 
-Note: BIND 9.11 (RHEL8) does not yet support `primary` and `secondary`, use `master` and `slave` instead.
-
-Primary:
+* Primary:
 ```yaml
 # either set `bind__allow_transfer` for all zones, or the `allow_transfer` subkey per zone to allow access
 bind__allow_transfer:
@@ -311,7 +311,7 @@ bind__zones:
       3   IN PTR secondary.example.com.
 ```
 
-Secondary:
+* Secondary:
 ```yaml
 bind__zones:
   - name: 'example.com'

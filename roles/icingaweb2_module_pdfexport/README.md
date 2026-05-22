@@ -19,13 +19,20 @@ This role is tested with the following IcingaWeb2 PDF Export Module versions:
 * This role only installs and configures the IcingaWeb2 module itself. The headless browser backend it talks to (see the [module documentation](https://github.com/Icinga/icingaweb2-module-pdfexport#requirements)) is provided separately by the [linuxfabrik.lfops.chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless) role.
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
-* Internet access from the Ansible controller (downloads from `https://github.com/Icinga/icingaweb2-module-pdfexport/archive/`).
-* A running headless Chromium instance providing the remote debugging interface this module talks to. This can be done using the [linuxfabrik.lfops.chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [IcingaWeb2 PDF Export Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2_module_pdfexport.yml), the headless Chromium backend is automatically installed for you.
+* A headless Chromium backend must provide the remote debugging interface this module connects to (role: [linuxfabrik.lfops.chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless)).
+
+
+## Requirements
+
+* The Ansible controller must have Internet access (downloads from `https://github.com/Icinga/icingaweb2-module-pdfexport/archive/`).
+
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
 
 
 ## Tags

@@ -8,12 +8,29 @@ Note that this role does NOT let you specify a particular Kibana version. It sim
 *Available since LFOps `5.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Enable the official Elasticsearch repository (which also provides Kibana packages). This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
-* A running Elasticsearch installation. This can be done using the [linuxfabrik.lfops.elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [kibana playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/kibana.yml), the repository setup is automatically done for you.
+* The official Elasticsearch repository (which also provides Kibana packages) must be enabled (role: [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch)).
+
+
+## Requirements
+
+Manual steps:
+
+* Deploy a running Elasticsearch installation by running the [elasticsearch](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml) playbook (role: [linuxfabrik.lfops.elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch)).
+* Create a service account token for Kibana on an Elasticsearch node:
+
+    ```bash
+    elastic_host='localhost'
+    elastic_cacert='/etc/elasticsearch/certs/http_ca.crt'
+
+    curl --cacert "$elastic_cacert" \
+        --user "elastic:${ELASTIC_PASSWORD}" \
+        --request POST "https://$elastic_host:9200/_security/service/elastic/kibana/credential/token/kibana-token-01?pretty=true" \
+        --header "Content-Type: application/json"
+    ```
 
 
 ## Tags
@@ -32,21 +49,6 @@ If you use the [kibana playbook](https://github.com/Linuxfabrik/lfops/blob/main/
 
 * Manages the state of the Kibana service.
 * Triggers: none.
-
-
-## Pre-Installation Steps
-
-Create a service account token for Kibana on an Elasticsearch node:
-
-```bash
-elastic_host='localhost'
-elastic_cacert='/etc/elasticsearch/certs/http_ca.crt'
-
-curl --cacert "$elastic_cacert" \
-    --user "elastic:${ELASTIC_PASSWORD}" \
-    --request POST "https://$elastic_host:9200/_security/service/elastic/kibana/credential/token/kibana-token-01?pretty=true" \
-    --header "Content-Type: application/json"
-```
 
 
 ## Mandatory Role Variables

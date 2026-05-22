@@ -6,11 +6,15 @@ This role installs and configures either [Collabora Online Development Edition](
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Enable either the official [Collabora CODE Repository](https://docs.fedoraproject.org/en-US/collabora_code/) or your Collabora Enterprise Repository. This can be done using the [linuxfabrik.lfops.repo_collabora_code](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora_code) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the ["Collabora" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/collabora.yml), this is automatically done for you.
+* The official [Collabora CODE Repository](https://docs.fedoraproject.org/en-US/collabora_code/) must be enabled (role: [linuxfabrik.lfops.repo_collabora_code](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora_code)).
+
+These roles are not enabled by default; enable them via the playbook's skip variables if needed:
+
+* The Collabora Enterprise repository can be enabled instead (role: [linuxfabrik.lfops.repo_collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora)).
 
 
 ## Tags

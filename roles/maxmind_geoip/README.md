@@ -20,7 +20,7 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
 * Outbound HTTPS access from the target host to `download.maxmind.com` is required for the script to work.
 
 
-## Mandatory Requirements
+## Requirements
 
 * A free Maxmind license key.
 * Outbound HTTPS access from each target host to `download.maxmind.com`.
@@ -49,19 +49,6 @@ maxmind_geoip__lic: '1a1c5e4202784cec'
 
 
 ## Optional Role Variables
-
-`maxmind_geoip__skip_systemd_unit`
-
-* If `true`, the playbook skips the `linuxfabrik.lfops.systemd_unit` role and therefore does not create the `update-maxmind` service / timer. Use this when you want to manage the schedule yourself (e.g. via cron).
-* Type: Bool.
-* Default: `false`
-
-Example:
-```yaml
-# optional
-maxmind_geoip__skip_systemd_unit: true
-```
-
 
 `maxmind_geoip__systemd_unit__timers__dependent_var`
 

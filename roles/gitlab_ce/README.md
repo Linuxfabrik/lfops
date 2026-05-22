@@ -9,11 +9,11 @@ This role installs and configures [GitLab CE](https://about.gitlab.com/), includ
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Enable the official GitLab CE Repository. This can be done using the [linuxfabrik.lfops.repo_gitlab_ce](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_gitlab_ce) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [gitlab_ce Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/gitlab_ce.yml), this is automatically done for you.
+* The official GitLab CE Repository must be enabled (role: [linuxfabrik.lfops.repo_gitlab_ce](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_gitlab_ce)).
 
 
 ## Tags

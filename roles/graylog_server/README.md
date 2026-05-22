@@ -15,20 +15,25 @@ Note that this role does NOT let you specify a particular Graylog Server version
 * This role only supports Graylog Data Nodes (not OpenSearch or Elasticsearch).
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-Properly set hostnames and ensure that communication via DNS among all participating hosts works. This especially affects clustered systems, because the datanode instance registers itself to the mongodb database with its hostname.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-Sizing of disks:
+* MongoDB must be installed (role: [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb)).
+* The official [Graylog repository](https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm) must be enabled (role: [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog)).
 
-* `/`: at least 4 GB free disk space (create a 8+ GB partition).
-* `/var`: at least 15 GB free disk space (create a 20+ GB partition).
 
-If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_graylog_server.yml), the following is automatically done for you:
+## Requirements
 
-* Install MongoDB. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
-* If you're not using a versioned MongoDB repository, don't forget to protect MongoDB from being updated with newer minor and major versions. This can be done using the [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock) role.
-* Enable the official [Graylog repository](https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm). This can be done using the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) role.
+* Size the disks before running the role:
+
+    * `/`: at least 4 GB free disk space (create a 8+ GB partition).
+    * `/var`: at least 15 GB free disk space (create a 20+ GB partition).
+
+Manual steps:
+
+* Set hostnames properly and ensure that communication via DNS among all participating hosts works. This especially affects clustered systems, because the datanode instance registers itself to the mongodb database with its hostname.
+* If you're not using a versioned MongoDB repository, protect MongoDB from being updated with newer minor and major versions by running the [dnf_versionlock](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/dnf_versionlock.yml) playbook (role: [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock)).
 
 
 ## Tags
@@ -60,13 +65,6 @@ If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/
 
 * Manages the state of the graylog-server service.
 * Triggers: none.
-
-
-## Skip Variables
-
-This role is used in several playbooks that provide skip variables to disable specific dependencies. See the playbooks documentation for details:
-
-* [setup_graylog_server.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_graylog_serveryml)
 
 
 ## Mandatory Role Variables
@@ -177,11 +175,6 @@ graylog_server__root_user:
 * Type: Dictionary.
 * Default: See [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/graylog_server/defaults/main.yml)
 * Subkeys:
-
-    * `can_be_default`:
-
-        * Mandatory. Whether this index set can be default.
-        * Type: Bool.
 
     * `creation_date`:
 
@@ -311,6 +304,7 @@ graylog_server__root_user:
 
         * Mandatory. The type of the input.
         * Type: String.
+        * To list the input types available on your Graylog node, append `/api-browser#?route=get-/system/inputs/types` to your Graylog web interface URL (for example `https://graylog.example.com/api-browser#?route=get-/system/inputs/types`) and click `Execute`. The `/system/inputs/types/all` route additionally returns each type's available `configuration` fields.
 
 `graylog_server__timezone`
 
@@ -341,7 +335,6 @@ graylog_server__opts: '-Xms2g -Xmx2g -server -XX:+UseG1GC -XX:-OmitStackTraceInF
 graylog_server__service_enabled: false
 graylog_server__stale_leader_timeout_ms: 10000
 graylog_server__system_default_index_set:
-  can_be_default: true
   creation_date: '{{ ansible_date_time.iso8601 }}'
   description: 'One index per day; 365 indices max'
   field_type_refresh_interval: 5000

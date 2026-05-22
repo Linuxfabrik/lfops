@@ -8,9 +8,9 @@ By default it only installs `libreoffice-core` plus the writer / calc / impress 
 *Available since LFOps `2.0.0`.*
 
 
-## What `libreoffice__client_apache: true` Does
+## How the Role Behaves
 
-Setting this to `true` triggers a Red Hat-specific block. On Debian / Ubuntu the block is not skipped automatically; the SELinux compile steps will fail there, so do not enable this on Debian-family hosts.
+Setting `libreoffice__client_apache: true` triggers a Red Hat-specific block. On Debian / Ubuntu the block is not skipped automatically; the SELinux compile steps will fail there, so do not enable this on Debian-family hosts.
 
 When enabled, the role:
 
@@ -19,8 +19,6 @@ When enabled, the role:
 * Runs `restorecon -Fvr` on the two directories.
 * Compiles two custom SELinux policy modules (`selinux-sofficebin`, `selinux-java`) via `checkmodule` / `semodule_package` and installs them with `semodule --install`. These grant `httpd_t` the additional permissions LibreOffice needs (`setattr` on directories under `lib_t`, `read` on `cgroup_t` files, etc.).
 * Via the companion playbook: also runs `linuxfabrik.lfops.selinux` to set the SELinux booleans `httpd_can_network_connect` and `httpd_execmem` to `on`, and to register fcontexts mapping `/usr/share/httpd/.cache` and `/usr/share/httpd/.config` to `httpd_sys_rw_content_t`.
-
-The SELinux booleans / fcontexts are injected from `libreoffice__selinux__booleans__dependent_var` and `libreoffice__selinux__fcontexts__dependent_var` in `defaults/main.yml`. They are role-internal and not meant to be overridden from inventory.
 
 
 ## Tags

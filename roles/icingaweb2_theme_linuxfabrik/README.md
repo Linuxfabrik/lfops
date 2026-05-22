@@ -15,10 +15,13 @@ The role does not have a dedicated playbook. It is normally pulled in via the [`
 * `icingacli module enable linuxfabrik` is only invoked when `/etc/icingaweb2/enabledModules/linuxfabrik` does not yet exist (idempotent). The theme has to be selected per user in IcingaWeb2 (or set as the default theme via the `theme` setting in `/etc/icingaweb2/config.ini`).
 
 
-## Mandatory Requirements
+## Requirements
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
-* Internet access from the Ansible controller (downloads from `https://github.com/Linuxfabrik/icingaweb2-theme-linuxfabrik/archive/`).
+* The Ansible controller must have Internet access (downloads from `https://github.com/Linuxfabrik/icingaweb2-theme-linuxfabrik/archive/`).
+
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
 
 
 ## Tags

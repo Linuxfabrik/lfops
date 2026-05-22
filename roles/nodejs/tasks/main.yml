@@ -7,10 +7,19 @@
       state: 'present'
     when: 'nodejs__dnf_module_stream is not defined or not (nodejs__dnf_module_stream | string | length > 0)'
 
-  - name: 'Install @nodejs:{{ nodejs__dnf_module_stream }} -y'
+  - name: 'dnf -y module reset nodejs'
+    ansible.builtin.command: 'dnf -y module reset nodejs'
+    register: '__nodejs__dnf_module_reset_result'
+    changed_when: '"Nothing to do" not in __nodejs__dnf_module_reset_result["stdout"]'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'nodejs__dnf_module_stream is defined'
+      - 'nodejs__dnf_module_stream | string | length > 0'
+
+  - name: 'Install @nodejs:{{ nodejs__dnf_module_stream }}/common -y'
     ansible.builtin.package:
       name:
-        - '@nodejs:{{ nodejs__dnf_module_stream }}'
+        - '@nodejs:{{ nodejs__dnf_module_stream }}/common'
       state: 'present'
     when:
       - 'nodejs__dnf_module_stream is defined'

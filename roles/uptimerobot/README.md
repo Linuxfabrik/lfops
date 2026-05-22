@@ -2,18 +2,15 @@
 
 This role applies a declarative UptimeRobot configuration (monitors, maintenance windows, public status pages, and alert-contact cleanup) against an [UptimeRobot](https://uptimerobot.com/) account.
 
+UptimeRobot is a hosted uptime-monitoring service. You configure *monitors* (HTTP / keyword / port / ping / heartbeat checks), wire them up to *alert contacts* (email, SMS, webhook, Slack, ...), schedule *maintenance windows* during which alerts are suppressed, and optionally publish a *public status page* (PSP) that aggregates a set of monitors. Everything lives in UptimeRobot's cloud; there is no agent on your hosts.
+
 
 *Available since LFOps `6.0.2`.*
 
 
-## What is UptimeRobot
-
-UptimeRobot is a hosted uptime-monitoring service. You configure *monitors* (HTTP / keyword / port / ping / heartbeat checks), wire them up to *alert contacts* (email, SMS, webhook, Slack, ...), schedule *maintenance windows* during which alerts are suppressed, and optionally publish a *public status page* (PSP) that aggregates a set of monitors. Everything lives in UptimeRobot's cloud — there is no agent on your hosts.
+## How the Role Behaves
 
 The role does not deploy any software on the target hosts. It runs on the Ansible controller, talks to the UptimeRobot HTTP API, and brings the account into the desired state. Run it on `localhost` (or any host that has outbound HTTPS to `api.uptimerobot.com`).
-
-
-## Concepts
 
 The role works with five concepts that map 1:1 to UptimeRobot's data model and to one Ansible CRUD module each (plus a parallel set of read-only `*_info` modules — see the migration section below):
 
@@ -28,7 +25,7 @@ The role chains the four CRUD modules in the right order: maintenance windows fi
 The modules currently target UptimeRobot API v2 (POST + form-urlencoded). The full reference for that API — endpoint paths, parameters, return shapes, enumerations — lives at <https://uptimerobot.com/api/legacy/>. A future migration to API v3 stays local to `plugins/module_utils/uptimerobot.py` and does not change the role's variables or task layout.
 
 
-## API Limits and Wire-Format Quirks
+### API Limits and Wire-Format Quirks
 
 UptimeRobot's API has a few sharp edges that are useful to know up front. The modules absorb most of them, but the limits affect playbook design.
 
@@ -44,6 +41,29 @@ UptimeRobot's API has a few sharp edges that are useful to know up front. The mo
 * **PSP `monitors`** is comma-separated (`12345,67890`); ditto.
 * **Alert contacts** can only be created and edited through the UptimeRobot web UI. The API exposes delete only.
 * **Monitor `type` is immutable** — UptimeRobot will not change a monitor's type after creation. Recreate the monitor (`state: 'absent'` then `state: 'present'`) if you need to switch.
+
+
+### Performance / Caching
+
+To keep the per-item API cost down when the role loops a CRUD module over a long list, `module_utils.uptimerobot` writes the four heavy `getX` responses (`getMonitors`, `getAlertContacts`, `getMWindows`, `getPSPs`) to a short-lived on-disk cache under `~/.cache/ansible-uptimerobot/` with a 60-second TTL. Cache files are mode `0600` because they hold the full resource list returned by the API.
+
+* **Read calls** check the cache first; a hit replaces the (paginated) HTTP request entirely. Logged as `cache HIT <endpoint> (...)` in syslog.
+* **Mutating calls** (`newX` / `editX` / `deleteX`) succeed against the API and then invalidate the matching `getX` cache so the next read sees the post-write state.
+* Cache files are per-engineer (the path is in your `$HOME`), so different engineers running against the same UptimeRobot account don't share state.
+* If you need to force a fresh read, delete the directory:
+
+    ```
+    rm -rf ~/.cache/ansible-uptimerobot/
+    ```
+
+Typical impact: a `--check` run over 56 monitors goes from ~56× 4 page `getMonitors` + 56× `getAlertContacts` + 56× `getMWindows` to one of each (the rest hit cache). Idempotent re-runs of the same playbook within a minute are nearly free.
+
+
+## Requirements
+
+* An UptimeRobot account.
+* An UptimeRobot API key with write access (account-wide). Pass it via `uptimerobot__api_key`, via `uptimerobot__api_key_file` (default `~/.uptimerobot`), or via the `UPTIMEROBOT_API_KEY` environment variable. The modules try those three sources in that order.
+* Outbound HTTPS from the controller to `https://api.uptimerobot.com/`.
 
 
 ## Tags
@@ -68,13 +88,6 @@ UptimeRobot's API has a few sharp edges that are useful to know up front. The mo
 `uptimerobot:alert_contact`
 
 * Delete the listed alert contacts only.
-
-
-## Mandatory Requirements
-
-* An UptimeRobot account.
-* An UptimeRobot API key with write access (account-wide). Pass it via `uptimerobot__api_key`, via `uptimerobot__api_key_file` (default `~/.uptimerobot`), or via the `UPTIMEROBOT_API_KEY` environment variable. The modules try those three sources in that order.
-* Outbound HTTPS from the controller to `https://api.uptimerobot.com/`.
 
 
 ## Optional Role Variables
@@ -419,23 +432,46 @@ The `[WARNING] No inventory was parsed, only implicit localhost is available` li
 ```
 
 
-## Performance / Caching
+## Read-Only Inspection
 
-To keep the per-item API cost down when the role loops a CRUD module over a long list, `module_utils.uptimerobot` writes the four heavy `getX` responses (`getMonitors`, `getAlertContacts`, `getMWindows`, `getPSPs`) to a short-lived on-disk cache under `~/.cache/ansible-uptimerobot/` with a 60-second TTL. Cache files are mode `0600` because they hold the full resource list returned by the API.
+Each resource type has a parallel `*_info` module for read-only queries -- useful for ad-hoc inspection, dynamic inventories, or driving downstream tasks:
 
-* **Read calls** check the cache first; a hit replaces the (paginated) HTTP request entirely. Logged as `cache HIT <endpoint> (...)` in syslog.
-* **Mutating calls** (`newX` / `editX` / `deleteX`) succeed against the API and then invalidate the matching `getX` cache so the next read sees the post-write state.
-* Cache files are per-engineer (the path is in your `$HOME`), so different engineers running against the same UptimeRobot account don't share state.
-* If you need to force a fresh read, delete the directory:
+| Resource | Read-only module |
+|---|---|
+| Account | `linuxfabrik.lfops.uptimerobot_account_info` |
+| Monitors | `linuxfabrik.lfops.uptimerobot_monitor_info` |
+| Maintenance windows | `linuxfabrik.lfops.uptimerobot_mwindow_info` |
+| Alert contacts | `linuxfabrik.lfops.uptimerobot_alert_contact_info` |
+| Public status pages | `linuxfabrik.lfops.uptimerobot_psp_info` |
 
-    ```
-    rm -rf ~/.cache/ansible-uptimerobot/
-    ```
+All info modules accept `friendly_name:` to filter to a single resource and (where supported by the API) `search:` for a server-side substring filter. Enum-style fields come back as labels (e.g. `http_method: 'get'`, `status: 'up'`), matching the user-facing parameter values you write in your inventory.
 
-Typical impact: a `--check` run over 56 monitors goes from ~56× 4 page `getMonitors` + 56× `getAlertContacts` + 56× `getMWindows` to one of each (the rest hit cache). Idempotent re-runs of the same playbook within a minute are nearly free.
+```yaml
+- linuxfabrik.lfops.uptimerobot_monitor_info:
+    friendly_name: '001 www.example.com'
+  register: 'ur_monitor'
+
+- ansible.builtin.debug:
+    var: 'ur_monitor.monitors[0].interval'
+```
+
+To bulk-pause / -resume monitors or status pages, loop the matching CRUD module with `state: 'present'` over the result of the `*_info` module:
+
+```yaml
+- linuxfabrik.lfops.uptimerobot_psp_info:
+  register: 'ur_psps'
+
+- linuxfabrik.lfops.uptimerobot_psp:
+    friendly_name: '{{ item.friendly_name }}'
+    status: 'paused'   # or 'active' to resume
+    state: 'present'
+  loop: '{{ ur_psps.psps }}'
+  loop_control:
+    label: '{{ item.friendly_name }}'
+```
 
 
-## Debugging / Verbose Output
+## Troubleshooting
 
 The CRUD modules emit verbose output through three channels — useful when iterating against a live API:
 
@@ -495,45 +531,6 @@ Typical values you will see:
 * `count`: number of items returned (info modules only).
 
 Combined with `--check --diff`, the `debug` dict makes it cheap to investigate false-positive `changed: true` (typically a missing read-side translation or a desired-vs-current normalisation gap).
-
-
-## Read-Only Inspection
-
-Each resource type has a parallel `*_info` module for read-only queries -- useful for ad-hoc inspection, dynamic inventories, or driving downstream tasks:
-
-| Resource | Read-only module |
-|---|---|
-| Account | `linuxfabrik.lfops.uptimerobot_account_info` |
-| Monitors | `linuxfabrik.lfops.uptimerobot_monitor_info` |
-| Maintenance windows | `linuxfabrik.lfops.uptimerobot_mwindow_info` |
-| Alert contacts | `linuxfabrik.lfops.uptimerobot_alert_contact_info` |
-| Public status pages | `linuxfabrik.lfops.uptimerobot_psp_info` |
-
-All info modules accept `friendly_name:` to filter to a single resource and (where supported by the API) `search:` for a server-side substring filter. Enum-style fields come back as labels (e.g. `http_method: 'get'`, `status: 'up'`), matching the user-facing parameter values you write in your inventory.
-
-```yaml
-- linuxfabrik.lfops.uptimerobot_monitor_info:
-    friendly_name: '001 www.example.com'
-  register: 'ur_monitor'
-
-- ansible.builtin.debug:
-    var: 'ur_monitor.monitors[0].interval'
-```
-
-To bulk-pause / -resume monitors or status pages, loop the matching CRUD module with `state: 'present'` over the result of the `*_info` module:
-
-```yaml
-- linuxfabrik.lfops.uptimerobot_psp_info:
-  register: 'ur_psps'
-
-- linuxfabrik.lfops.uptimerobot_psp:
-    friendly_name: '{{ item.friendly_name }}'
-    status: 'paused'   # or 'active' to resume
-    state: 'present'
-  loop: '{{ ur_psps.psps }}'
-  loop_control:
-    label: '{{ item.friendly_name }}'
-```
 
 
 ## License

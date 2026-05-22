@@ -15,11 +15,6 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
-
-Apache has to be installed and at least one `LoadModule` directive already has to exist, otherwise the compile step might fail. If you get `apxs:Error: Activation failed for custom /etc/httpd/conf/httpd.conf file..` or `apxs:Error: At least one 'LoadModule' directive already has to exist..`, check whether `mod_maxminddb.so` has been built (this is the reason why errors of `make install` are ignored — the module is compiled anyway).
-
-
 ## How the Role Behaves
 
 * Build dependencies are OS-specific:
@@ -31,6 +26,11 @@ Apache has to be installed and at least one `LoadModule` directive already has t
 * `./configure && make install` is executed in `~/mod_maxminddb-<version>/`. `make install` errors are ignored because `apxs`-based `LoadModule` activation often fails on a default Apache config; the compiled `.so` is what we care about.
 * The `LoadModule` directive is written to `mod_maxminddb__apache_conf_modules_d` (default is OS-specific, see variable below) and points to the OS-specific module path listed above.
 * On Debian / Ubuntu the role additionally runs the equivalent of `a2enmod maxminddb` (via `community.general.apache2_module`) so the freshly placed `.load` file gets symlinked into `/etc/apache2/mods-enabled/`. On Red Hat-family hosts the module is picked up automatically because it lives in `/etc/httpd/conf.modules.d/`.
+
+
+## Requirements
+
+* Apache httpd must be installed, with at least one `LoadModule` directive already present (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)). Otherwise the compile step may fail with `apxs:Error: At least one 'LoadModule' directive already has to exist..`. See "How the Role Behaves" for why `make install` errors are ignored.
 
 
 ## Tags

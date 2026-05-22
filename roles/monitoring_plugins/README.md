@@ -25,7 +25,7 @@ Notes:
 | Windows  | Source Code | Currently not supported by this role | |
 
 
-## Mandatory Requirements
+## Requirements
 
 * See table above (depends on the use case).
 
