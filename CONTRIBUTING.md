@@ -704,6 +704,63 @@ Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored
     * Drop when: LFOps raises its minimum ansible-core to >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm` accordingly.
 
 
+### Testing
+
+Molecule is used as the framework to test the LFOps playbooks (*not roles*). The test scenarios and configurations live in `extension/molecule` and are structured as follows:
+
+```
+extensions
+└── molecule
+    ├── apps -- test scenario, named after the playbook name
+    │   ├── install -- if needed, sub-scenario
+    │   │   ├── converge.yml
+    │   │   ├── inventory -- scenario-specific inventory with variables that are needed for the playbook under test and optionally additional hosts (e.g. for a cluster test setup). Overwrites the shared inventory (extensions/molecule/inventory)
+    │   │   │   ├── group_vars
+    │   │   │   │   └── systems_under_test.yml
+    │   │   │   └── hosts.yml
+    │   │   ├── molecule.yml -- scenario marker; required even if empty. Can also be used to overwrite, which playbooks are used by Molecule (e.g. to switch between VM and container provisioning playbooks)
+    │   │   └── verify.yml
+    │   └── remove -- additional sub-scenario
+    │       └── ...
+    ├── config.yml -- valid for all scenarios, can be overwritten in each scenario's molecule.yml (same content and structure)
+    ├── default -- we are not using the "default" scenario, but molecule needs this to run at all. could be used to share config (e.g. prepare.yml) across *all* scenarios
+    │   └── molecule.yml
+    ├── inventory -- shared inventory across all scenarios and therefore available in all scenarios. Contains a basic set of VMs/containers that are commonly used.
+    │   ├── hosts.yml -- Required, even if empty, that Ansible can detect this inventory
+    │   └── host_vars
+    │       ├── debian11-container.yml
+    │       ├── debian11-vm.yml
+    │       └── ...
+    ├── monitoring_plugins -- scenario with no sub-scenarios
+    │   ├── converge.yml
+    │   ├── inventory
+    │   │   └── ...
+    │   ├── molecule.yml
+    │   └── verify.yml
+    ├── playbooks -- shared playbooks used by Molecule for running the scenarios
+    │   ├── create-container.yml
+    │   ├── destroy-container.yml
+    │   └── ...
+    └── requirements.yml
+```
+
+Tests can be run against a subset of targets by providing them as a comma-separated list via the project-specific `LFOPS_TEST_TARGETS` environment variable:
+
+```shell
+# for VMs (the hypervisor host needs to be included as well; here `localhost`)
+LFOPS_TEST_TARGETS='localhost,rocky*' molecule test --scenario-name apps/install
+
+# for containers
+LFOPS_TEST_TARGETS='rocky*' molecule test --scenario-name apps/install
+```
+
+
+Known Limitations:
+
+* VM-based testing currently requires passwordless sudo on the Ansible controller.
+* Ansible Navigator does not work out of the box.
+
+
 ### Credits
 
 * <https://github.com/whitecloud/ansible-styleguide>
