@@ -1,4 +1,2 @@
-- name: 'Converge'
-  hosts: 'systems_under_test'
-  roles:
-    - role: 'linuxfabrik.lfops.kernel_settings'
+- name: 'Converge kernel_settings playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.kernel_settings'
