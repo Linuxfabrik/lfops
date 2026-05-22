@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024072301
+# 2026052201
 
 [CollaboraOnline_CODE]
 name = Collabora Office YUM repo
@@ -10,7 +10,7 @@ baseurl = https://www.collaboraoffice.com/repos/CollaboraOnline/CODE-rpm
 {% endif %}
 enabled = 1
 gpgcheck = 0
-{% if repo_collabora_code__basic_auth_login is defined and repo_collabora_code__basic_auth_login | length %}
+{% if repo_collabora_code__mirror_url is defined and repo_collabora_code__mirror_url | length and repo_collabora_code__basic_auth_login is defined and repo_collabora_code__basic_auth_login | length %}
 username={{ repo_collabora_code__basic_auth_login["username"] }}
 password={{ repo_collabora_code__basic_auth_login["password"] }}
 {% endif %}

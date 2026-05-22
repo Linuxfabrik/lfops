@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2026052201
 
 [epel]
 name=Extra Packages for Enterprise Linux 7 - $basearch
@@ -12,7 +12,7 @@ metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch
 enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length and repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
 username={{ repo_epel__basic_auth_login["username"] }}
 password={{ repo_epel__basic_auth_login["password"] }}
 {% endif %}
@@ -28,7 +28,7 @@ metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-7&arch=$base
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
 gpgcheck=1
-{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length and repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
 username={{ repo_epel__basic_auth_login["username"] }}
 password={{ repo_epel__basic_auth_login["password"] }}
 {% endif %}
@@ -44,7 +44,7 @@ metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-7&arch=$bas
 enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
 gpgcheck=1
-{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length and repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
 username={{ repo_epel__basic_auth_login["username"] }}
 password={{ repo_epel__basic_auth_login["password"] }}
 {% endif %}

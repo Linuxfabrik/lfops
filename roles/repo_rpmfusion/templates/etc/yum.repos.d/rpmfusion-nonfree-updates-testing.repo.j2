@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2026052201
 
 [rpmfusion-nonfree-updates-testing]
 name=RPM Fusion for EL 8 - Nonfree - Test Updates
@@ -12,7 +12,7 @@ enabled=0
 type=rpm-md
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8
-{% if repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
 username={{ repo_rpmfusion__basic_auth_login["username"] }}
 password={{ repo_rpmfusion__basic_auth_login["password"] }}
 {% endif %}
@@ -24,7 +24,7 @@ enabled=0
 type=rpm-md
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8
-{% if repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
 username={{ repo_rpmfusion__basic_auth_login["username"] }}
 password={{ repo_rpmfusion__basic_auth_login["password"] }}
 {% endif %}
@@ -36,7 +36,7 @@ enabled=0
 type=rpm-md
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8
-{% if repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
 username={{ repo_rpmfusion__basic_auth_login["username"] }}
 password={{ repo_rpmfusion__basic_auth_login["password"] }}
 {% endif %}

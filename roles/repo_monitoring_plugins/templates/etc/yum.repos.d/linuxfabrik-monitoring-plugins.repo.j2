@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026050701
+# 2026052201
 
 [linuxfabrik-monitoring-plugins-release]
 name=Linuxfabrik Monitoring Plugins (release)
@@ -11,7 +11,7 @@ baseurl=https://repo.linuxfabrik.ch/monitoring-plugins/rhel/$releasever/release/
 enabled={{ 0 if repo_monitoring_plugins__testing | bool else 1 }}
 gpgcheck=1
 gpgkey=https://repo.linuxfabrik.ch/linuxfabrik.key
-{% if repo_monitoring_plugins__basic_auth_login is defined and repo_monitoring_plugins__basic_auth_login | length %}
+{% if repo_monitoring_plugins__mirror_url is defined and repo_monitoring_plugins__mirror_url | length and repo_monitoring_plugins__basic_auth_login is defined and repo_monitoring_plugins__basic_auth_login | length %}
 username={{ repo_monitoring_plugins__basic_auth_login["username"] }}
 password={{ repo_monitoring_plugins__basic_auth_login["password"] }}
 {% endif %}
@@ -26,7 +26,7 @@ baseurl=https://repo.linuxfabrik.ch/monitoring-plugins/rhel/$releasever/testing/
 enabled={{ 1 if repo_monitoring_plugins__testing | bool else 0 }}
 gpgcheck=1
 gpgkey=https://repo.linuxfabrik.ch/linuxfabrik.key
-{% if repo_monitoring_plugins__basic_auth_login is defined and repo_monitoring_plugins__basic_auth_login | length %}
+{% if repo_monitoring_plugins__mirror_url is defined and repo_monitoring_plugins__mirror_url | length and repo_monitoring_plugins__basic_auth_login is defined and repo_monitoring_plugins__basic_auth_login | length %}
 username={{ repo_monitoring_plugins__basic_auth_login["username"] }}
 password={{ repo_monitoring_plugins__basic_auth_login["password"] }}
 {% endif %}

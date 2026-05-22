@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024021301
+# 2026052201
 
 [mydumper]
 name = mydumper
@@ -10,7 +10,7 @@ baseurl=https://repo.linuxfabrik.ch/mydumper/el/{{ ansible_facts["distribution_m
 {% endif %}
 gpgcheck = 0
 enabled = 1
-{% if repo_mydumper__basic_auth_login is defined and repo_mydumper__basic_auth_login | length %}
+{% if repo_mydumper__mirror_url is defined and repo_mydumper__mirror_url | length and repo_mydumper__basic_auth_login is defined and repo_mydumper__basic_auth_login | length %}
 username={{ repo_mydumper__basic_auth_login["username"] }}
 password={{ repo_mydumper__basic_auth_login["password"] }}
 {% endif %}
