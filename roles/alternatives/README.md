@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.alternatives
 
-This role manages symbolic links using the `update-alternatives` tool.     Useful when multiple programs are installed but provide similar functionality (for example, different editors or Python interpreters).
+This role manages symbolic links using the `update-alternatives` tool. Useful when multiple programs are installed but provide similar functionality (for example, different editors or Python interpreters).
 
 Hints:
 
