@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025010901
+# 2026052201
 
 [proxysql-{{ repo_proxysql__version__combined_var }}]
 name=ProxySQL {{ repo_proxysql__version__combined_var }}
@@ -13,7 +13,7 @@ gpgcheck=1
 # gpgkey=https://repo.proxysql.com/ProxySQL/proxysql-{{ repo_proxysql__version__combined_var }}.x/repo_pub_key
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-proxysql
 autorefresh=1
-{% if repo_proxysql__basic_auth_login is defined and repo_proxysql__basic_auth_login | length %}
+{% if repo_proxysql__mirror_url is defined and repo_proxysql__mirror_url | length and repo_proxysql__basic_auth_login is defined and repo_proxysql__basic_auth_login | length %}
 username={{ repo_proxysql__basic_auth_login["username"] }}
 password={{ repo_proxysql__basic_auth_login["password"] }}
 {% endif %}

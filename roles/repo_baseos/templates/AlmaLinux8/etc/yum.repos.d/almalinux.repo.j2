@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2026052201
 
 [baseos]
 name=AlmaLinux 8 - BaseOS
@@ -13,7 +13,7 @@ enabled=1
 gpgcheck=1
 countme=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -30,7 +30,7 @@ enabled=1
 gpgcheck=1
 countme=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -56,7 +56,7 @@ mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/baseos-source
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -68,7 +68,7 @@ mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/appstream-source
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -89,7 +89,7 @@ mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/baseos-debuginfo
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -101,7 +101,7 @@ mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/appstream-debugi
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -113,7 +113,7 @@ mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/extras-debuginfo
 enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}

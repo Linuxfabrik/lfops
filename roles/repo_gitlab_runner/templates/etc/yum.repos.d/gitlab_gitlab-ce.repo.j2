@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2026052201
 
 [runner_gitlab-runner]
 name=runner_gitlab-runner
@@ -17,7 +17,7 @@ gpgkey=https://packages.gitlab.com/runner/gitlab-runner/gpgkey
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 metadata_expire=300
-{% if repo_gitlab_runner__basic_auth_login is defined and repo_gitlab_runner__basic_auth_login | length %}
+{% if repo_gitlab_runner__mirror_url is defined and repo_gitlab_runner__mirror_url | length and repo_gitlab_runner__basic_auth_login is defined and repo_gitlab_runner__basic_auth_login | length %}
 username={{ repo_gitlab_runner__basic_auth_login["username"] }}
 password={{ repo_gitlab_runner__basic_auth_login["password"] }}
 {% endif %}
@@ -38,7 +38,7 @@ gpgkey=https://packages.gitlab.com/runner/gitlab-runner/gpgkey
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 metadata_expire=300
-{% if repo_gitlab_runner__basic_auth_login is defined and repo_gitlab_runner__basic_auth_login | length %}
+{% if repo_gitlab_runner__mirror_url is defined and repo_gitlab_runner__mirror_url | length and repo_gitlab_runner__basic_auth_login is defined and repo_gitlab_runner__basic_auth_login | length %}
 username={{ repo_gitlab_runner__basic_auth_login["username"] }}
 password={{ repo_gitlab_runner__basic_auth_login["password"] }}
 {% endif %}

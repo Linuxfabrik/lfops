@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026010801
+# 2026052201
 
 [epel-testing]
 name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch
@@ -18,7 +18,7 @@ repo_gpgcheck=0
 metadata_expire=24h
 countme=1
 enabled=0
-{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length and repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
 username={{ repo_epel__basic_auth_login["username"] }}
 password={{ repo_epel__basic_auth_login["password"] }}
 {% endif %}
@@ -39,7 +39,7 @@ gpgcheck=1
 repo_gpgcheck=0
 metadata_expire=24h
 enabled=0
-{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length and repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
 username={{ repo_epel__basic_auth_login["username"] }}
 password={{ repo_epel__basic_auth_login["password"] }}
 {% endif %}
@@ -60,7 +60,7 @@ gpgcheck=1
 repo_gpgcheck=0
 metadata_expire=24h
 enabled=0
-{% if repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
+{% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length and repo_epel__basic_auth_login is defined and repo_epel__basic_auth_login | length %}
 username={{ repo_epel__basic_auth_login["username"] }}
 password={{ repo_epel__basic_auth_login["password"] }}
 {% endif %}

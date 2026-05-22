@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026042701
+# 2026052201
 
 [mariadb-main]
 name = MariaDB Server
@@ -14,7 +14,7 @@ enabled = 1
 {% if ansible_facts["distribution_major_version"] | int in [8, 9] %}
 module_hotfixes = 1
 {% endif %}
-{% if repo_mariadb__basic_auth_login is defined and repo_mariadb__basic_auth_login | length %}
+{% if repo_mariadb__mirror_url is defined and repo_mariadb__mirror_url | length and repo_mariadb__basic_auth_login is defined and repo_mariadb__basic_auth_login | length %}
 username={{ repo_mariadb__basic_auth_login["username"] }}
 password={{ repo_mariadb__basic_auth_login["password"] }}
 {% endif %}

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2026052201
 
 [docker-ce-stable]
 name=Docker CE Stable - $basearch
@@ -11,7 +11,7 @@ baseurl=https://download.docker.com/linux/centos/$releasever/$basearch/stable
 enabled=1
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
-{% if repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length and repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
 username={{ repo_docker__basic_auth_login["username"] }}
 password={{ repo_docker__basic_auth_login["password"] }}
 {% endif %}
@@ -26,7 +26,7 @@ baseurl=https://download.docker.com/linux/centos/$releasever/debug-$basearch/sta
 enabled=0
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
-{% if repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length and repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
 username={{ repo_docker__basic_auth_login["username"] }}
 password={{ repo_docker__basic_auth_login["password"] }}
 {% endif %}
@@ -41,7 +41,7 @@ baseurl=https://download.docker.com/linux/centos/$releasever/source/stable
 enabled=0
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
-{% if repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length and repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
 username={{ repo_docker__basic_auth_login["username"] }}
 password={{ repo_docker__basic_auth_login["password"] }}
 {% endif %}
@@ -56,7 +56,7 @@ baseurl=https://download.docker.com/linux/centos/$releasever/$basearch/test
 enabled=0
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
-{% if repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length and repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
 username={{ repo_docker__basic_auth_login["username"] }}
 password={{ repo_docker__basic_auth_login["password"] }}
 {% endif %}
@@ -71,7 +71,7 @@ baseurl=https://download.docker.com/linux/centos/$releasever/debug-$basearch/tes
 enabled=0
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
-{% if repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length and repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
 username={{ repo_docker__basic_auth_login["username"] }}
 password={{ repo_docker__basic_auth_login["password"] }}
 {% endif %}
@@ -86,7 +86,7 @@ baseurl=https://download.docker.com/linux/centos/$releasever/source/test
 enabled=0
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
-{% if repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length and repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
 username={{ repo_docker__basic_auth_login["username"] }}
 password={{ repo_docker__basic_auth_login["password"] }}
 {% endif %}
@@ -101,7 +101,7 @@ baseurl=https://download.docker.com/linux/centos/$releasever/$basearch/nightly
 enabled=0
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
-{% if repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length and repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
 username={{ repo_docker__basic_auth_login["username"] }}
 password={{ repo_docker__basic_auth_login["password"] }}
 {% endif %}
@@ -116,7 +116,7 @@ baseurl=https://download.docker.com/linux/centos/$releasever/debug-$basearch/nig
 enabled=0
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
-{% if repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length and repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
 username={{ repo_docker__basic_auth_login["username"] }}
 password={{ repo_docker__basic_auth_login["password"] }}
 {% endif %}
@@ -131,7 +131,7 @@ baseurl=https://download.docker.com/linux/centos/$releasever/source/nightly
 enabled=0
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
-{% if repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
+{% if repo_docker__mirror_url is defined and repo_docker__mirror_url | length and repo_docker__basic_auth_login is defined and repo_docker__basic_auth_login | length %}
 username={{ repo_docker__basic_auth_login["username"] }}
 password={{ repo_docker__basic_auth_login["password"] }}
 {% endif %}

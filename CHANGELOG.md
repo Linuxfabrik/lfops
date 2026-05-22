@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:repo_\***: HTTP basic auth credentials are now only written to the repository config files when a custom mirror URL is set. Previously, setting `lfops__repo_basic_auth_login` without `lfops__repo_mirror_url` wrote the credentials into repo files that still pointed at the public vendor mirrors, causing the package manager to send them to servers that do not use basic auth. The Icinga repo is intentionally unchanged, since its subscription URL legitimately requires basic auth.
 * **ci**: Scope `GITHUB_TOKEN` permissions in the dependabot-auto-merge workflow to the job level, with top-level now `read-all`. Matches the pattern used by the other LFOps workflows and addresses the OpenSSF Scorecard `Token-Permissions` finding.
 
 ### Removed
