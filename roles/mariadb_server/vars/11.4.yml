@@ -33,6 +33,7 @@ mariadb_server__cnf_innodb_open_files__role_var: 0 # results in autosized
 mariadb_server__cnf_innodb_print_all_deadlocks__role_var: 'OFF'
 mariadb_server__cnf_innodb_purge_batch_size__role_var: '127'
 mariadb_server__cnf_innodb_read_io_threads__role_var: '4'
+mariadb_server__cnf_innodb_snapshot_isolation__role_var: 'ON'
 mariadb_server__cnf_innodb_strict_mode__role_var: 'ON'
 mariadb_server__cnf_innodb_sync_spin_loops__role_var: '30'
 mariadb_server__cnf_innodb_write_io_threads__role_var: '4'

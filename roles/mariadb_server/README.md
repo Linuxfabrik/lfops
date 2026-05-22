@@ -682,6 +682,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: Number.
 * Default: `4`
 
+`mariadb_server__cnf_innodb_snapshot_isolation__group_var` / `mariadb_server__cnf_innodb_snapshot_isolation__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_snapshot_isolation).
+* Type: String.
+* Default: `'ON'`
+
 `mariadb_server__cnf_innodb_strict_mode__group_var` / `mariadb_server__cnf_innodb_strict_mode__host_var`
 
 * [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_strict_mode)
