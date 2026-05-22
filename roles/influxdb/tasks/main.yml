@@ -1,8 +1,9 @@
 - block:
 
-  - name: 'Install influxdb'
+  - name: 'Install curl influxdb'
     ansible.builtin.package:
       name:
+        - 'curl' # required by the `/usr/lib/influxdb/scripts/influxd-systemd-start.sh` script
         - 'influxdb'
       state: 'present'
 

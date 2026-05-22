@@ -68,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:inflxudb**: Always install `curl`, which is required to start influxdb but missing as a package dependency.
 * **role:redis**: Added missing paths for running against Debian.
 * **role:icingaweb2_module_pdfexport**: PDF export now works out of the box. The headless browser backend the module needs is installed and configured automatically via the new `chromium_headless` role (wired into the `icingaweb2_module_pdfexport` and `setup_icinga2_master` playbooks); previously it had to be set up by hand, so fresh deployments ended up without working PDF export.
 * **role:graylog_datanode**: Fix the `Conditional result ... was of type 'str'` deprecation warning.
