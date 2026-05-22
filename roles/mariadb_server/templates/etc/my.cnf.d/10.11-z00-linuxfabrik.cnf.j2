@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026051201
+# 2026052201
 # 10.11
 
 [client]
@@ -59,6 +59,7 @@ innodb_open_files                              = {{ mariadb_server__cnf_innodb_o
 innodb_print_all_deadlocks                     = {{ mariadb_server__cnf_innodb_print_all_deadlocks__combined_var }}
 innodb_purge_batch_size                        = {{ mariadb_server__cnf_innodb_purge_batch_size__combined_var }}
 innodb_read_io_threads                         = {{ mariadb_server__cnf_innodb_read_io_threads__combined_var }}
+innodb_snapshot_isolation                      = {{ mariadb_server__cnf_innodb_snapshot_isolation__combined_var }}
 innodb_strict_mode                             = {{ mariadb_server__cnf_innodb_strict_mode__combined_var }}
 innodb_sync_spin_loops                         = {{ mariadb_server__cnf_innodb_sync_spin_loops__combined_var }}
 innodb_write_io_threads                        = {{ mariadb_server__cnf_innodb_write_io_threads__combined_var }}
