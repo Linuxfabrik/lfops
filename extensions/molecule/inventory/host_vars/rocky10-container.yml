@@ -1,6 +1,7 @@
 ansible_connection: 'containers.podman.podman'
 ansible_host: 'rocky10-container'
 
-container_command: 'sleep 1d'
-container_image: 'docker.io/rockylinux/rockylinux:10'
+container_command: '/usr/sbin/init'
+container_image: 'docker.io/rockylinux/rockylinux:10-ubi-init'
 container_privileged: false
+container_systemd: true
