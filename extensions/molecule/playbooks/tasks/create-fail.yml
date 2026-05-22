@@ -1,13 +1,14 @@
 - name: 'Retrieve container log'
   ansible.builtin.command:
-    cmd: 'podman logs {{ item.container.Name }}'
+    cmd: 'podman logs {{ create_result.container.Name }}'
   changed_when: false
   register: 'logfile_cmd'
+  delegate_to: 'localhost'
 
 - name: 'Display container log and fail'
   ansible.builtin.fail:
     msg: |
-      Container {{ item.container.Name }} failed to start properly.
-      Exit Code: {{ item.container.State.ExitCode }}
-      Running: {{ item.container.State.Running }}
+      Container {{ create_result.container.Name }} failed to start properly.
+      Exit Code: {{ create_result.container.State.ExitCode }}
+      Running: {{ create_result.container.State.Running }}
       Log output: {{ logfile_cmd.stdout | default('No logs available') }}
