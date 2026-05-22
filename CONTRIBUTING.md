@@ -238,6 +238,7 @@ When creating a new role, make sure to deliver:
 * Do not over-engineer the role during the development — it should fulfill its use case, but can grow and be improved on later.
 * There should be one role per software application. If there are multiple versions of the software, e.g. PHP 7.1, 7.2, 7.3, etc., they all should be supported by a single role.
 * Do not use role dependencies via `meta/main.yml`. Dependencies are handled in playbooks.
+* Do not use the general-purpose roles `apps`, `files`, and `systemd_unit` as dependent roles (via `__dependent_var`). They are meant to be driven directly by the user from the inventory; wiring dependencies into them makes the order in which playbooks can run overly restrictive. Perform such tasks in the consuming role directly instead.
 * Whenever the role requires a list as an input, use a list of dictionaries with `state: present/absent`. See "Combined Variables" below.
 * Fail loudly. Avoid constructs that could suppress error messages, like `IfModule` in Apache HTTPd. This makes debugging and troubleshooting a lot easier.
 * Do not support software versions that are EOL.
@@ -295,7 +296,7 @@ When creating a new role, make sure to deliver:
     * `ansible.builtin.template` over `ansible.builtin.copy`, `ansible.builtin.lineinfile` or `ansible.builtin.blockinfile`. Templating the whole file leads to more consistent, deterministic, and expected results.
 * Do not use `state: 'latest'` for the `ansible.builtin.package` module as this is not idempotent. Always use `state: 'present'`.
 * Always use `delegate_to: 'localhost'` instead of `local_action`.
-* Always set `become: false` on every task delegated to localhost. When a play sets `become: true` at the play level (the typical case), it propagates to delegated tasks too and tries to escalate via sudo on the Ansible controller. On a controller without passwordless sudo this fails with `sudo: a password is required`, even though the delegated task only writes to `/tmp` or hits a remote API and does not need root locally. Example:
+* Always set `become: false` on every task delegated to localhost. When a play sets `become: true` at the play level (not typical for lfops, but useful if others import our roles in their playbooks), it propagates to delegated tasks too and tries to escalate via sudo on the Ansible controller. On a controller without passwordless sudo this fails with `sudo: a password is required`, even though the delegated task only writes to `/tmp` or hits a remote API and does not need root locally. Example:
 
     ```yaml
     - name: 'curl --output /tmp/ansible.example.tar.gz https://example.com/releases/example.tar.gz'
@@ -311,6 +312,14 @@ When creating a new role, make sure to deliver:
     ```
 
 * Always provide `changed_when`, `creates`, or `removes` for `ansible.builtin.command` and `ansible.builtin.shell` tasks to ensure idempotency. Use `changed_when: false` for read-only commands.
+* Prefer a `chown -R --changes` command over `ansible.builtin.file` with `recurse: true`; the module's recursive mode is slow on large trees. Register the result and derive `changed_when` from the `--changes` output for idempotency:
+
+    ```yaml
+    - name: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
+      ansible.builtin.command: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
+      register: '__wordpress__chown_result'
+      changed_when: '__wordpress__chown_result["stdout"] | length > 0'
+    ```
 * When deploying files with `ansible.builtin.template`, always set `backup`, `src`, `dest`, `owner`, `group`, and `mode`.
 * Prefer `ansible.builtin.assert` over `ansible.builtin.fail` with `when` for validation checks. There is basically no technical difference; this guideline is only for consistency.
 * Optionally add `ansible.builtin.debug` tasks for `__combined_var` variables so the user can see what the role will do.
@@ -363,6 +372,7 @@ When creating a new role, make sure to deliver:
 * `./defaults`: Default variables for the role, might be overridden by the user in the inventory.
 * Document all user-facing variables in the README. Have a look at `roles/example/README.md` for the format.
 * Do not set defaults for mandatory variables.
+* Software versions must always be mandatory variables, never role defaults. A default version drifts: bumping it in the role silently changes what an existing inventory deploys, effectively a breaking change on every bump. Forcing the user to pin the version keeps inventory and the deployed state consistent.
 * Naming scheme: `<role name>__<optional: config file>_<setting name>`, for example `apache_httpd__server_admin`.
 * No need to invent new names, use the key-names from the config file (if possible), for example `redis__conf_maxmemory`.
 * Prefix role-internal variables with `__`, for example `__example__sysconfig_path`. This makes it easy to determine which variables are user-facing and therefore should be in the README.
@@ -370,6 +380,7 @@ When creating a new role, make sure to deliver:
 * If you need random but predictable/idempotent values, use the `inventory_hostname` as seed. Example for setting the minutes of an hour: `{{ 59 | random(seed=inventory_hostname) }}`.
 * When guarding optional role variables (strings or lists) that may be undefined, use `is defined and my_var | length > 0`. This catches both undefined variables and empty values (e.g. `my_var: ''`). Bare `is defined` is fine for dict subkeys where presence alone is the signal (e.g. `item["cidr"] is defined`) or for result attributes (e.g. `result["failed"] is defined`).
 * Any secrets (passwords, tokens etc.) should not be provided with default values in the role. It is important for a secure-by-default implementation to ensure that an environment is not vulnerable due to the production use of default secrets. Users must be forced to properly provide their own secret variable values.
+* Group credentials as subkeys of a single dictionary variable (e.g. `<role>__login` with `username` and `password` subkeys) rather than as separate top-level variables. This integrates cleanly with the `linuxfabrik.lfops.bitwarden_item` lookup, which returns the whole item as one dict.
 * Always use the `ansible_facts` dictionary (e.g. `ansible_facts["os_family"]` instead of `ansible_os_family`). The old pre-2.5 "facts injected as separate variables" naming system will be deprecated in a future release of Ansible.
 
 
@@ -377,9 +388,7 @@ When creating a new role, make sure to deliver:
 
 Every role should include a `meta/argument_specs.yml` that declares all user-facing variables with their types. Ansible validates these automatically at role entry (before any tasks run), catching type mismatches and missing required variables without manual assert code.
 
-Include all variables documented in the README: mandatory variables, simple optional variables, and the `__host_var`/`__group_var`/`__dependent_var` variants of injection variables. Do not include the purely internal `__role_var` and `__combined_var` slots.
-
-`__dependent_var` must be declared even though it is conceptually internal, because `setup_*` playbooks pass it into the role via `vars:` and Ansible validates role-vars against `argument_specs`. Omitting it causes "Supported parameters include: ..." errors at role entry.
+Include all variables documented in the README: mandatory variables, simple optional variables, and the `__host_var`/`__group_var`/`__dependent_var` variants of injection variables. Do not include the purely internal `__role_var` and `__combined_var` slots. `__dependent_var` must be declared even though it is conceptually internal, because `setup_*` playbooks pass it into the role via `vars:` and Ansible validates role-vars against `argument_specs`. Omitting it causes `Supported parameters include: ...` errors at role entry.
 
 Guidelines for `argument_specs`:
 
@@ -397,11 +406,11 @@ Have a look at the `example` role's `meta/argument_specs.yml` for a complete ref
 
 ##### Combined Variables
 
-The goal of combined variables is that variables can be set in multiple places, and then merged in order to be used in the role. For example, the user can overwrite a specific configuration role default (`__role_var`) from their inventory (`__host_var` / `__group_var`).
+The goal of combined variables is that variables can be set in multiple places, and then merged in order to be used in the role. For example, the user can overwrite *parts* of the role's default (`__role_var`) from their inventory (`__host_var` / `__group_var`).
 
 Furthermore, other roles can also inject their sensible defaults via the `__dependent_var`, with a higher precedence than the role defaults, but lower than the user's inventory.
 
-To enable this behavior, you must define the `__combined_var` as follows:
+To enable this behavior, you must define the `__combined_var` in the `defaults/main.yml` as follows:
 ```yaml
 # for list of dictionaries
 my_role__my_var__dependent_var: []
