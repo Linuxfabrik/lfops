@@ -34,6 +34,12 @@ This role deploys the BaseOS repositories, which can be used to set a custom mir
 * Type: String.
 * Default: `'{{ lfops__repo_mirror_url | default("") }}'`
 
+`repo_baseos__security_repo_enabled__host_var` / `repo_baseos__security_repo_enabled__group_var`
+
+* Whether the Rocky Linux `security` repository should be enabled. This repository delivers critical CVE fixes and is enabled by default in LFOPS (Rocky ships it disabled). Set to `false` to opt out on a specific host or group.
+* Type: Bool.
+* Default: `true`
+
 Example:
 ```yaml
 # optional
@@ -42,6 +48,7 @@ repo_baseos__basic_auth_login:
   password: 'linuxfabrik'
 repo_baseos__crb_repo_enabled__host_var: true
 repo_baseos__mirror_url: 'https://mirror.example.com'
+repo_baseos__security_repo_enabled__host_var: false
 ```
 
 

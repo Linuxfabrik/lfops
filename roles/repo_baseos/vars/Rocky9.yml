@@ -1,3 +1,4 @@
 repo_baseos__repo_files:
   - 'Rocky9/etc/yum.repos.d/rocky.repo'
   - 'Rocky9/etc/yum.repos.d/rocky-extras.repo'
+  - 'Rocky9/etc/yum.repos.d/rocky-security.repo'
