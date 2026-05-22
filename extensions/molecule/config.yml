@@ -50,9 +50,9 @@ ansible:
 
 provisioner:
   playbooks:
-    create: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/create.yml'
-    destroy: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/destroy.yml'
-    prepare: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/prepare.yml'
+    create: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/create-vm.yml'
+    destroy: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/destroy-vm.yml'
+    prepare: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/prepare-vm.yml'
 
 scenario:
   test_sequence:
