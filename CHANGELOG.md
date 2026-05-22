@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:repo_baseos**: Add the Rocky Linux `security` repository (critical CVE fixes), enabled by default. Opt out per host or group via `repo_baseos__security_repo_enabled__host_var` / `repo_baseos__security_repo_enabled__group_var`.
 * **role:chromium_headless**: New role. Provides a hardened, socket-activated headless Chromium backend (started on the first request, stopped again after an idle timeout, so it uses no RAM while unused) for tools such as the Icinga Web 2 PDF Export Module. Installs `chromium-headless` from EPEL instead of Google's proprietary repository.
 * **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.1.
 * **role:sshd**: Add Debian 13 support.
