@@ -1,0 +1,3 @@
+# On RHEL 8 the `alternatives` command is provided by the chkconfig package.
+__alternatives__packages:
+  - 'chkconfig'

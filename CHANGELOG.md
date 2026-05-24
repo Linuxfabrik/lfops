@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:alternatives**: Support managing `subcommands` (slaves/followers) and the Red Hat-only `family` grouping. The role now also ensures the alternatives tooling is installed (`chkconfig` on RHEL 8, `alternatives` on RHEL 9/10; bundled with `dpkg` on Debian/Ubuntu), and can be included without variables as a no-op.
 * **role:mariadb_server**: Add `mariadb_server__cnf_innodb_snapshot_isolation` variable (MariaDB 10.6+), defaulting to `'ON'`.
 
 ### Security
