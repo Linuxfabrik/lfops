@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026052401
+
+# Apply Rocky Linux security hot-fixes from the dedicated `security` repository
+# only, then reboot if needed. Runs on a timer (default twice daily). The reboot
+# is scheduled via `at`; the time comes from the host's group/inventory
+# (e.g. 'now' on test hosts, '19:00' on production hosts).
+
+export LC_ALL=C
+
+# dedicated at queue, so the 10:00 and 16:00 runs don't stack multiple reboots
+AT_QUEUE='s'
+REPOS="{{ system_update__security_repos | join(',') }}"
+
+send_msg () {
+{# note: do not quote the $RECIPIENTS, else they are passed as a single argument #}
+    echo -n "$MSGBODY" | mail -s "$SUBJECT" -r "$SENDER" $RECIPIENTS
+{% if system_update__rocketchat_url is defined and system_update__rocketchat_url | length %}
+    /usr/bin/curl --silent --output /dev/null --data-urlencode \
+        "text=${SUBJECT}
+
+        ${MSGBODY}
+        {{ system_update__rocketchat_msg_suffix }}" \
+        --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
+        "{{ system_update__rocketchat_url }}"
+{% endif %}
+}
+
+SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
+SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
+RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ') }}"
+
+# the security lane only acts when at least one of the configured security
+# repositories is enabled on this host (provided by the repo_baseos role). skip
+# silently otherwise, so the timer can default to enabled without acting on hosts
+# where the repo is absent or was opted out via repo_baseos__security_repo_enabled.
+have_repo=0
+for repo in {{ system_update__security_repos | join(' ') }}; do
+    if dnf repolist --enabled 2> /dev/null | awk 'NR > 1 { print $1 }' | grep -qxF "$repo"; then
+        have_repo=1
+    fi
+done
+if [ "$have_repo" -eq 0 ]; then
+    exit 0
+fi
+
+# install security hot-fixes from the security repo only. --disablerepo / --enablerepo
+# keeps this lane separate from the regular (weekly) update lane and from the frozen
+# mirror snapshot.
+yum --disablerepo="*" --enablerepo="$REPOS" -y upgrade 1> /tmp/security-update 2> /tmp/security-update-stderr
+if [ $? -ne 0 ]; then
+    SUBJECT="$SUBJECT_PREFIX - Security update failed"
+    MSGBODY=$(</tmp/security-update-stderr)
+    send_msg
+    exit 1
+fi
+
+# reboot if a core component (kernel, glibc, ...) needs it, or if running services
+# still use the pre-update libraries.
+needs-restarting --reboothint &> /dev/null
+reboothint_rc=$?
+needs-restarting 2> /dev/null > /tmp/security-needs-restarting
+
+if [ "$reboothint_rc" -eq 1 ] || [ -s /tmp/security-needs-restarting ]; then
+    # drop a reboot scheduled by an earlier run today before scheduling a new one
+    for job in $(atq -q "$AT_QUEUE" | awk '{print $1}'); do
+        atrm "$job"
+    done
+    echo "/usr/local/bin/security-reboot" | at -q "$AT_QUEUE" {{ system_update__security_reboot_time__combined_var }} 2> /dev/null
+    SUBJECT="$SUBJECT_PREFIX - Security update installed, reboot scheduled at {{ system_update__security_reboot_time__combined_var }}"
+    MSGBODY=$(yum history info)
+    send_msg
+    exit 0
+fi
+
+SUBJECT="$SUBJECT_PREFIX - Security update installed without reboot"
+MSGBODY=$(cat /tmp/security-update)
+send_msg
