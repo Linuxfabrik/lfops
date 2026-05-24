@@ -40,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:apache_httpd**: bump Core Rule Set to 4.26.0
 * **role:apache_httpd**: Update the two reverse-proxy snippets in `EXAMPLES.md` to use `ProxyPass` instead of `RewriteRule ^/(.*) ... [proxy,last]`. The RewriteRule variant `%`-decodes the URI pattern and forwards characters such as `?` unencoded to the backend, which breaks WebDAV apps (file-not-found on rename in Nextcloud). The examples now also carry a comment explaining the choice and link to the corresponding [blog post](https://www.linuxfabrik.ch/blog/nextcloud-rewriterules-vs-proxypass).
 
+### Fixed
+
+* **role:kernel_settings**: The `systemd_cpu_affinity` setting is now actually applied. The value was computed and shown in the debug output but never passed to the underlying system role, so a configured CPU affinity had no effect.
+
 ### Added
 
 * **role:repo_baseos**: Add the Rocky Linux `security` repository (critical CVE fixes), enabled by default. Opt out per host or group via `repo_baseos__security_repo_enabled__host_var` / `repo_baseos__security_repo_enabled__group_var`.
