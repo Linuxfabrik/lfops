@@ -5,6 +5,7 @@ Which Ansible role is proven to run on which OS?
 | Role                                  | Deb 12 | Deb 13 | RHEL 8 | RHEL 9 | RHEL 10 | Ubu 22.04 | Ubu 24.04 | Ubu 26.04 | Other                                        |
 |---------------------------------------|:------:|:------:|:------:|:------:|:-------:|:---------:|:---------:|:---------:|----------------------------------------------|
 | acme_sh                               |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
+| ad_integration                        |  (x)   |  (x)   |  (x)   |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | alternatives                          |   x    |   x    |   x    |   x    |   (x)   |     x     |     x     |    (x)    |                                              |
 | ansible_init                          |        |        |        |        |         |           |           |           | Fedora 35+                                   |
 | apache_httpd                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |

@@ -1,0 +1,238 @@
+argument_specs:
+  main:
+    options:
+
+      ad_integration__auto_id_mapping__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: >-
+          Generate UID/GID numbers automatically instead of reading them
+          from the directory (RFC 2307). Dependent-role injection.
+
+      ad_integration__auto_id_mapping__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: >-
+          Generate UID/GID numbers automatically instead of reading them
+          from the directory (RFC 2307). Group-level override.
+
+      ad_integration__auto_id_mapping__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: >-
+          Generate UID/GID numbers automatically instead of reading them
+          from the directory (RFC 2307). Host-level override.
+
+      ad_integration__client_software__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Client software to use with Active Directory (`sssd` or
+          `winbind`). Dependent-role injection.
+
+      ad_integration__client_software__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Client software to use with Active Directory (`sssd` or
+          `winbind`). Group-level override.
+
+      ad_integration__client_software__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Client software to use with Active Directory (`sssd` or
+          `winbind`). Host-level override.
+
+      ad_integration__computer_ou__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Distinguished name of the organizational unit for the computer
+          account. Dependent-role injection.
+
+      ad_integration__computer_ou__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Distinguished name of the organizational unit for the computer
+          account. Group-level override.
+
+      ad_integration__computer_ou__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Distinguished name of the organizational unit for the computer
+          account. Host-level override.
+
+      ad_integration__force_rejoin__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: >-
+          Leave the existing domain before performing the join.
+          Dependent-role injection.
+
+      ad_integration__force_rejoin__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: >-
+          Leave the existing domain before performing the join.
+          Group-level override.
+
+      ad_integration__force_rejoin__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: >-
+          Leave the existing domain before performing the join.
+          Host-level override.
+
+      ad_integration__join_parameters__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Additional parameters appended to the `realm join` command.
+          Dependent-role injection.
+
+      ad_integration__join_parameters__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Additional parameters appended to the `realm join` command.
+          Group-level override.
+
+      ad_integration__join_parameters__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Additional parameters appended to the `realm join` command.
+          Host-level override.
+
+      ad_integration__join_to_dc__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Host name or IP address of the domain controller to join via
+          directly. Dependent-role injection.
+
+      ad_integration__join_to_dc__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Host name or IP address of the domain controller to join via
+          directly. Group-level override.
+
+      ad_integration__join_to_dc__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Host name or IP address of the domain controller to join via
+          directly. Host-level override.
+
+      ad_integration__login:
+        type: 'dict'
+        required: true
+        description: >-
+          Credentials of the Active Directory user used to join the domain.
+          Expected subkeys: `username`, `password`. Integrates with the
+          `linuxfabrik.lfops.bitwarden_item` lookup.
+
+      ad_integration__membership_software__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Software used to join the realm (`adcli` or `samba`).
+          Dependent-role injection.
+
+      ad_integration__membership_software__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Software used to join the realm (`adcli` or `samba`).
+          Group-level override.
+
+      ad_integration__membership_software__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Software used to join the realm (`adcli` or `samba`).
+          Host-level override.
+
+      ad_integration__realm:
+        type: 'str'
+        required: true
+        description: 'Active Directory realm (domain) name to join.'
+
+      ad_integration__sssd_custom_settings__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Settings for the `[domain/<REALM>]` section of `sssd.conf`
+          (`key`/`value`). Dependent-role injection.
+
+      ad_integration__sssd_custom_settings__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Settings for the `[domain/<REALM>]` section of `sssd.conf`
+          (`key`/`value`). Group-level override.
+
+      ad_integration__sssd_custom_settings__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Settings for the `[domain/<REALM>]` section of `sssd.conf`
+          (`key`/`value`). Host-level override.
+
+      ad_integration__sssd_settings__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Settings for the `[sssd]` section of `sssd.conf` (`key`/`value`).
+          Dependent-role injection.
+
+      ad_integration__sssd_settings__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Settings for the `[sssd]` section of `sssd.conf` (`key`/`value`).
+          Group-level override.
+
+      ad_integration__sssd_settings__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Settings for the `[sssd]` section of `sssd.conf` (`key`/`value`).
+          Host-level override.

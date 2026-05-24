@@ -1,0 +1,100 @@
+ad_integration__auto_id_mapping__dependent_var: ''
+ad_integration__auto_id_mapping__group_var: ''
+ad_integration__auto_id_mapping__host_var: ''
+ad_integration__auto_id_mapping__role_var: true
+ad_integration__auto_id_mapping__combined_var: '{{
+    ad_integration__auto_id_mapping__host_var if (ad_integration__auto_id_mapping__host_var | string | length) else
+    ad_integration__auto_id_mapping__group_var if (ad_integration__auto_id_mapping__group_var | string | length) else
+    ad_integration__auto_id_mapping__dependent_var if (ad_integration__auto_id_mapping__dependent_var | string | length) else
+    ad_integration__auto_id_mapping__role_var
+  }}'
+
+ad_integration__client_software__dependent_var: ''
+ad_integration__client_software__group_var: ''
+ad_integration__client_software__host_var: ''
+ad_integration__client_software__role_var: 'sssd'
+ad_integration__client_software__combined_var: '{{
+    ad_integration__client_software__host_var if (ad_integration__client_software__host_var | string | length) else
+    ad_integration__client_software__group_var if (ad_integration__client_software__group_var | string | length) else
+    ad_integration__client_software__dependent_var if (ad_integration__client_software__dependent_var | string | length) else
+    ad_integration__client_software__role_var
+  }}'
+
+ad_integration__computer_ou__dependent_var: ''
+ad_integration__computer_ou__group_var: ''
+ad_integration__computer_ou__host_var: ''
+ad_integration__computer_ou__role_var: ''
+ad_integration__computer_ou__combined_var: '{{
+    ad_integration__computer_ou__host_var if (ad_integration__computer_ou__host_var | string | length) else
+    ad_integration__computer_ou__group_var if (ad_integration__computer_ou__group_var | string | length) else
+    ad_integration__computer_ou__dependent_var if (ad_integration__computer_ou__dependent_var | string | length) else
+    ad_integration__computer_ou__role_var
+  }}'
+
+ad_integration__force_rejoin__dependent_var: ''
+ad_integration__force_rejoin__group_var: ''
+ad_integration__force_rejoin__host_var: ''
+ad_integration__force_rejoin__role_var: false
+ad_integration__force_rejoin__combined_var: '{{
+    ad_integration__force_rejoin__host_var if (ad_integration__force_rejoin__host_var | string | length) else
+    ad_integration__force_rejoin__group_var if (ad_integration__force_rejoin__group_var | string | length) else
+    ad_integration__force_rejoin__dependent_var if (ad_integration__force_rejoin__dependent_var | string | length) else
+    ad_integration__force_rejoin__role_var
+  }}'
+
+ad_integration__join_parameters__dependent_var: ''
+ad_integration__join_parameters__group_var: ''
+ad_integration__join_parameters__host_var: ''
+ad_integration__join_parameters__role_var: ''
+ad_integration__join_parameters__combined_var: '{{
+    ad_integration__join_parameters__host_var if (ad_integration__join_parameters__host_var | string | length) else
+    ad_integration__join_parameters__group_var if (ad_integration__join_parameters__group_var | string | length) else
+    ad_integration__join_parameters__dependent_var if (ad_integration__join_parameters__dependent_var | string | length) else
+    ad_integration__join_parameters__role_var
+  }}'
+
+ad_integration__join_to_dc__dependent_var: ''
+ad_integration__join_to_dc__group_var: ''
+ad_integration__join_to_dc__host_var: ''
+ad_integration__join_to_dc__role_var: ''
+ad_integration__join_to_dc__combined_var: '{{
+    ad_integration__join_to_dc__host_var if (ad_integration__join_to_dc__host_var | string | length) else
+    ad_integration__join_to_dc__group_var if (ad_integration__join_to_dc__group_var | string | length) else
+    ad_integration__join_to_dc__dependent_var if (ad_integration__join_to_dc__dependent_var | string | length) else
+    ad_integration__join_to_dc__role_var
+  }}'
+
+ad_integration__membership_software__dependent_var: ''
+ad_integration__membership_software__group_var: ''
+ad_integration__membership_software__host_var: ''
+ad_integration__membership_software__role_var: 'adcli'
+ad_integration__membership_software__combined_var: '{{
+    ad_integration__membership_software__host_var if (ad_integration__membership_software__host_var | string | length) else
+    ad_integration__membership_software__group_var if (ad_integration__membership_software__group_var | string | length) else
+    ad_integration__membership_software__dependent_var if (ad_integration__membership_software__dependent_var | string | length) else
+    ad_integration__membership_software__role_var
+  }}'
+
+ad_integration__sssd_custom_settings__dependent_var: []
+ad_integration__sssd_custom_settings__group_var: []
+ad_integration__sssd_custom_settings__host_var: []
+ad_integration__sssd_custom_settings__role_var: []
+ad_integration__sssd_custom_settings__combined_var: '{{ (
+      ad_integration__sssd_custom_settings__role_var +
+      ad_integration__sssd_custom_settings__dependent_var +
+      ad_integration__sssd_custom_settings__group_var +
+      ad_integration__sssd_custom_settings__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="key")
+  }}'
+
+ad_integration__sssd_settings__dependent_var: []
+ad_integration__sssd_settings__group_var: []
+ad_integration__sssd_settings__host_var: []
+ad_integration__sssd_settings__role_var: []
+ad_integration__sssd_settings__combined_var: '{{ (
+      ad_integration__sssd_settings__role_var +
+      ad_integration__sssd_settings__dependent_var +
+      ad_integration__sssd_settings__group_var +
+      ad_integration__sssd_settings__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="key")
+  }}'

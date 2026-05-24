@@ -1,0 +1,47 @@
+- block:
+
+  - name: 'Assert that the join credentials are provided'
+    ansible.builtin.assert:
+      that:
+        - 'ad_integration__login["username"] is defined'
+        - 'ad_integration__login["password"] is defined'
+      fail_msg: 'ad_integration__login must define the "username" and "password" subkeys.'
+      quiet: true
+
+  tags:
+    - 'always'
+    - 'ad_integration'
+
+
+- block:
+
+  - ansible.builtin.debug:
+      msg:
+        - 'Realm: {{ ad_integration__realm }}'
+        - 'Join user: {{ ad_integration__login["username"] }}'
+        - 'Client software: {{ ad_integration__client_software__combined_var }}'
+        - 'Membership software: {{ ad_integration__membership_software__combined_var }}'
+        - 'Combined sssd_settings:'
+        - '{{ ad_integration__sssd_settings__combined_var }}'
+        - 'Combined sssd_custom_settings:'
+        - '{{ ad_integration__sssd_custom_settings__combined_var }}'
+
+  - name: 'Use fedora.linux_system_roles.ad_integration role to join the Active Directory domain'
+    ansible.builtin.include_role:
+      name: 'fedora.linux_system_roles.ad_integration'
+    vars:
+      ad_integration_realm: '{{ ad_integration__realm }}' # noqa var-naming[pattern]
+      ad_integration_user: '{{ ad_integration__login["username"] }}' # noqa var-naming[pattern]
+      ad_integration_password: '{{ ad_integration__login["password"] }}' # noqa var-naming[pattern]
+      ad_integration_auto_id_mapping: '{{ ad_integration__auto_id_mapping__combined_var | bool }}' # noqa var-naming[pattern]
+      ad_integration_client_software: '{{ ad_integration__client_software__combined_var }}' # noqa var-naming[pattern]
+      ad_integration_computer_ou: '{{ ad_integration__computer_ou__combined_var }}' # noqa var-naming[pattern]
+      ad_integration_force_rejoin: '{{ ad_integration__force_rejoin__combined_var | bool }}' # noqa var-naming[pattern]
+      ad_integration_join_parameters: '{{ ad_integration__join_parameters__combined_var }}' # noqa var-naming[pattern]
+      ad_integration_join_to_dc: '{{ ad_integration__join_to_dc__combined_var }}' # noqa var-naming[pattern]
+      ad_integration_membership_software: '{{ ad_integration__membership_software__combined_var }}' # noqa var-naming[pattern]
+      ad_integration_sssd_custom_settings: '{{ ad_integration__sssd_custom_settings__combined_var }}' # noqa var-naming[pattern]
+      ad_integration_sssd_settings: '{{ ad_integration__sssd_settings__combined_var }}' # noqa var-naming[pattern]
+
+  tags:
+    - 'ad_integration'

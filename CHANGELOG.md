@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:ad_integration**: New role. Joins a host to an Active Directory domain (`realm join` plus SSSD configuration) so AD users can log in and AD groups can be used for access control and `sudo`. It wraps the upstream Linux System Role, analogous to the `network` and `kernel_settings` roles. Time synchronization, DNS, and crypto policy stay with the dedicated LFOps roles.
 * **role:mariadb_server**: Add `mariadb_server__cnf_innodb_snapshot_isolation` variable (MariaDB 10.6+), defaulting to `'ON'`.
 
 ### Security
