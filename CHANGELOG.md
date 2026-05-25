@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **plugin:gpg_key**: The cleartext passphrase is no longer included in the module's failure output when key generation fails.
 * **role:repo_\***: HTTP basic auth credentials are now only written to the repository config files when a custom mirror URL is set. Previously, setting `lfops__repo_basic_auth_login` without `lfops__repo_mirror_url` wrote the credentials into repo files that still pointed at the public vendor mirrors, causing the package manager to send them to servers that do not use basic auth. The Icinga repo is intentionally unchanged, since its subscription URL legitimately requires basic auth.
 * **ci**: Scope `GITHUB_TOKEN` permissions in the dependabot-auto-merge workflow to the job level, with top-level now `read-all`. Matches the pattern used by the other LFOps workflows and addresses the OpenSSF Scorecard `Token-Permissions` finding.
 
@@ -42,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:sqlite_query**: A `REGEXP` query against a column that contains NULL values no longer fails; a NULL value simply does not match.
 * **plugin:uptimerobot_\***: The modules no longer crash when the UptimeRobot API returns a non-list response for a list endpoint; the response is passed through instead.
 * **plugin:nextcloud_occ_app_config, plugin:nextcloud_occ_system_config, plugin:uptimerobot_monitor, plugin:uptimerobot_psp**: Fixed their documentation so `ansible-doc` renders them again. A unit-test guard now catches this class of error for every in-house plugin.
 * **plugin:bitwarden_item**: Fixed the lookup's documentation so `ansible-doc` renders it again.
