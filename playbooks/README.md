@@ -20,6 +20,13 @@ Calls the following roles (in order):
 * [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh)
 
 
+## ad_integration.yml
+
+Calls the following roles (in order):
+
+* [ad_integration](https://github.com/Linuxfabrik/lfops/tree/main/roles/ad_integration)
+
+
 ## alternatives.yml
 
 Calls the following roles (in order):
