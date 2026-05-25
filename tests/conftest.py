@@ -39,4 +39,7 @@ def _make_collection_importable():
     os.environ.setdefault('ANSIBLE_COLLECTIONS_PATH', str(root))
 
 
+# make the tests/ directory importable so test modules can `import ansible_harness`
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
 _make_collection_importable()
