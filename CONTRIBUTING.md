@@ -739,7 +739,7 @@ The following roles use techniques that are unusual within LFOps. Roles not in t
 
 ### Vendored Plugins
 
-Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored from upstream projects, either because we needed local patches or because the upstream version requires a newer ansible-core than LFOps supports. They are kept in lockstep with their upstream and should be re-synced (or removed) when the listed condition is met.
+Some files under `plugins/modules/` and `plugins/module_utils/` are not authored by Linuxfabrik but vendored from upstream projects, either because we needed local patches, because the upstream version requires a newer ansible-core than LFOps supports, or because the dependency has to ship with the module to the managed node. They are kept in lockstep with their upstream and should be re-synced (or removed) when the listed condition is met.
 
 * `plugins/modules/ipagroup.py`, `ipahbacrule.py`, `ipahostgroup.py`, `ipapwpolicy.py`, `ipasudocmd.py`, `ipasudocmdgroup.py`, `ipasudorule.py`, `ipauser.py`
 
@@ -752,6 +752,12 @@ Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored
     * Upstream: <https://github.com/ansible-collections/community.general> (PR [#10070](https://github.com/ansible-collections/community.general/pull/10070), released in community.general 11.0.0).
     * Reason: community.general 11.0.0 requires ansible-core >= 2.18, which LFOps does not yet mandate (RHEL 8 / Python 3.6 still supported).
     * Drop when: LFOps raises its minimum ansible-core to >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm` accordingly.
+
+* `plugins/module_utils/gnupg.py` (and its `gnupg.py_LICENSE.txt`)
+
+    * Upstream: <https://github.com/vsajip/python-gnupg> (`python-gnupg`). The synced revision is recorded in the file's own `__version__`.
+    * Reason: the `gpg_key` module runs on the managed node and drives the `gpg` binary through this library. Bundling it byte-identical with upstream avoids requiring a `python-gnupg` pip install on every target. The upstream BSD license is kept alongside it.
+    * Drop when: not expected; re-sync with the upstream release when picking up bug fixes or newer-Python support, keeping the file unmodified.
 
 
 ### Plugins
