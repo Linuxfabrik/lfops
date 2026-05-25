@@ -228,6 +228,10 @@ def main():
     if query_type == 'select':
         success, query_result = select(conn, query, named_args, fetchone=fetch_one, as_dict=as_dict)
         changed = False
+        if not success:
+            close(conn)
+            # query_result holds the error message when the query failed
+            module.fail_json(msg=query_result)
     close(conn)
 
     # in the event of a successful module execution, you will want to

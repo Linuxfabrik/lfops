@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:sqlite_query**: A failed query now fails the task instead of reporting success with the error text in `query_result`. Playbooks that relied on the previous silent success will now correctly fail.
 * **plugin:sqlite_query**: A `REGEXP` query against a column that contains NULL values no longer fails; a NULL value simply does not match.
 * **plugin:uptimerobot_\***: The modules no longer crash when the UptimeRobot API returns a non-list response for a list endpoint; the response is passed through instead.
 * **plugin:nextcloud_occ_app_config, plugin:nextcloud_occ_system_config, plugin:uptimerobot_monitor, plugin:uptimerobot_psp**: Fixed their documentation so `ansible-doc` renders them again. A unit-test guard now catches this class of error for every in-house plugin.
