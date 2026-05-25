@@ -19,3 +19,7 @@ min_confidence = 80
 # Unit tests for the in-house plugins. The matrix of Python / ansible-core
 # versions is driven by tox; see tox.ini.
 testpaths = ["tests/unit"]
+# importlib mode lets same-named test files live in different plugin-type
+# directories (e.g. modules/ and lookup/ both have test_bitwarden_item.py)
+# without needing __init__.py packages.
+addopts = ["--import-mode=importlib"]
