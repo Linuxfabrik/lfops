@@ -42,7 +42,7 @@ options:
     monitors:
         description:
             - Monitors to display on the status page. Each item references an existing monitor.
-            - Resolution: when an item has I(id), it is used directly. Otherwise I(friendly_name) is resolved against C(getMonitors); an unknown name fails the play.
+            - When an item has I(id), it is used directly. Otherwise I(friendly_name) is resolved against C(getMonitors); an unknown name fails the play.
         type: list
         elements: dict
         suboptions:
