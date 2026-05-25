@@ -117,6 +117,23 @@ import traceback
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
 
+
+def values_match(current_value, value, value_type):
+    """Decide whether the stored value already matches the desired one.
+
+    For C(array) values both sides are compared as parsed JSON, so an
+    array stored by Nextcloud (returned as a JSON array, e.g. via
+    C(config:list)) compares equal to the user's array literal regardless
+    of whitespace or key ordering. All other types compare as strings.
+    """
+    if value_type == 'array':
+        try:
+            return json.loads(current_value) == json.loads(value)
+        except (json.JSONDecodeError, ValueError, TypeError):
+            return False
+    return current_value == value
+
+
 def main():
     # define available arguments/parameters a user can pass to this module
     module_args = dict(
@@ -187,7 +204,9 @@ def main():
                 current_value = str(raw)
                 current_type = 'float'
             elif isinstance(raw, list):
-                current_value = str(raw)
+                # store canonical JSON so it can be compared as JSON against the
+                # user's array literal (config:list returns an already-parsed list)
+                current_value = json.dumps(raw)
                 current_type = 'array'
             else:
                 current_value = str(raw)
@@ -225,7 +244,7 @@ def main():
 
     if state == 'present':
         # check if the current value and type match the desired settings
-        if current_value == value and current_type == value_type:
+        if current_type == value_type and values_match(current_value, value, value_type):
             module.exit_json(**result)
 
         # else, the value will be changed
