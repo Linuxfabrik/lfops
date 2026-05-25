@@ -17,7 +17,7 @@ description:
   - Drives C(occ config:app:set) and C(config:app:delete) to bring a single app config key into the desired state.
   - The current value and type are read from C(occ config:app:get --details --output=json) (or from a pre-fetched C(occ config:list --output=json --private) listing passed via I(installed_config_json)). C(occ config:app:set) is only called when the stored value or type does not already match.
   - When I(name) contains spaces, each whitespace-separated token is passed as a separate argument to C(occ), matching how Nextcloud addresses nested keys (e.g. C(name="endpoint enabled")).
-  - Booleans are normalized for Nextcloud's storage: I(value) values C(true)/C(1)/C(on)/C(yes) (case-insensitive) become C(1) in the database; everything else becomes C(0). When reading via I(installed_config_json), the type is inferred from the JSON value type (Python C(bool)/C(int)/C(float)/C(list)/C(str)), since C(occ config:list) returns values already cast by C(convertTypedValue()).
+  - Booleans are normalized for Nextcloud's storage. I(value) values C(true)/C(1)/C(on)/C(yes) (case-insensitive) become C(1) in the database; everything else becomes C(0). When reading via I(installed_config_json), the type is inferred from the JSON value type (Python C(bool)/C(int)/C(float)/C(list)/C(str)), since C(occ config:list) returns values already cast by C(convertTypedValue()).
 
 requirements:
   - A working Nextcloud installation with the C(occ) command available.
