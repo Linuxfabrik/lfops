@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:nextcloud_occ_app_config**: An `array` config value is now compared as JSON, so a key whose stored value already matches the desired one no longer reports a change (and re-runs `occ config:app:set`) on every run.
 * **plugin:bitwarden_item**: The module no longer writes to the Bitwarden vault when run in check mode (`--check`); it reports the would-be change instead.
 * **plugin:bitwarden_item**: A run without `password` (the default `None`) no longer overwrites an existing item's password; the current password is preserved, matching the documented behavior.
 * **plugin:sqlite_query**: A failed query now fails the task instead of reporting success with the error text in `query_result`. Playbooks that relied on the previous silent success will now correctly fail.
