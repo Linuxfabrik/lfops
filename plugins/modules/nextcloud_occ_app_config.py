@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -128,10 +130,6 @@ def main():
             installed_config_json=dict(type='raw'),
     )
 
-    # the AnsibleModule object will be our abstraction working with Ansible
-    # this includes instantiation, a couple of common attr would be the
-    # args/params passed to the execution, as well as if this module
-    # supports check mode
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True,
@@ -169,7 +167,7 @@ def main():
             try:
                 installed_config_json = json.loads(installed_config_json)
             except (json.JSONDecodeError, ValueError):
-                module.fail_json(msg=f'Failed to parse installed_config_json')
+                module.fail_json(msg='Failed to parse installed_config_json')
 
         app_configs = installed_config_json.get('apps', {}).get(app, {})
         key_exists = name in app_configs
