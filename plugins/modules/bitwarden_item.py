@@ -28,7 +28,7 @@ notes:
     - Only login items (Bitwarden type 1) are managed. Cards, secure notes and identities are out of scope.
     - TOTP secrets are not managed; the C(totp) field is set to an empty string on creation.
     - I(uris) replaces the URI list on every run. Omitting it on an existing item causes the URI list to be cleared.
-    - I(password) defaults to C(None), which translates to "do not set a password". Use the C(bitwarden_item) lookup plugin to generate one.
+    - I(password) defaults to C(None), which leaves the password unmanaged - a new item is created without one, and an existing item keeps its current password. Use the C(bitwarden_item) lookup plugin to generate one.
     - Attachments are matched by basename only; this module assumes that an attachment with the same basename has the same content. Pre-existing attachments are kept; only missing ones are uploaded.
     - Organization, collection and folder IDs can be copied from the URL in the Bitwarden web vault.
     - The cache file lives in C($XDG_RUNTIME_DIR) (falling back to C(/tmp)) and is shared across this module and the C(bitwarden_item) lookup within the same controller session.
@@ -80,7 +80,7 @@ options:
         required: False
         type: str
     password:
-        description: Password to set on the login item. C(None) (the default) leaves the password field unset; existing passwords on already-existing items are overwritten by every non-C(None) value.
+        description: Password to set on the login item. C(None) (the default) leaves the password unmanaged - a new item gets no password and an existing item keeps its current one. Any non-C(None) value is written on every run.
         required: False
         type: str
     purpose:
@@ -367,18 +367,26 @@ def run_module():
         collection_id,
         folder_id,
     )
+
+    # A None password means "do not manage the password": preserve the existing
+    # item's password instead of overwriting it with null.
+    if password is None and current_item and current_item.get('login'):
+        target_item['login']['password'] = current_item['login'].get('password')
+
     if current_item:
         # check if changed, adjust if necessary
         changed, updated_item = diff_and_update(current_item, target_item)
-        if changed:
+        if changed and not module.check_mode:
             result = bw.edit_item(updated_item, updated_item['id'])
+        elif changed:
+            result = updated_item
         else:
             result = current_item
 
     else:
         # generate a new one
         changed = True
-        result = bw.create_item(target_item)
+        result = target_item if module.check_mode else bw.create_item(target_item)
 
     if attachments:
         current_attachments = set(current_attachment['fileName'] for current_attachment in result.get('attachments', []))
@@ -386,12 +394,14 @@ def run_module():
         for attachment in attachments:
             if os.path.basename(attachment) not in current_attachments:
                 attachments_changed = True
-                bw.add_attachment(result['id'], attachment)
+                if not module.check_mode:
+                    bw.add_attachment(result['id'], attachment)
 
         if attachments_changed:
             changed = True
             # we need to fetch the item again, so that it also contains the newly added attachments
-            result = bw.get_item_by_id(result['id'])
+            if not module.check_mode:
+                result = bw.get_item_by_id(result['id'])
 
     result['changed'] = changed
     # move username and password higher for easier access
