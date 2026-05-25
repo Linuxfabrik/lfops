@@ -1,10 +1,12 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
-# Copyright: (c) 2022, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
-
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
@@ -244,13 +246,13 @@ import os
 import re
 import traceback
 
-logger = logging.getLogger('gnupg')
-logger.setLevel(logging.DEBUG)
-
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils._text import to_native
+from ansible.module_utils.common.text.converters import to_native
 
 from ansible_collections.linuxfabrik.lfops.plugins.module_utils.gnupg import GPG
+
+logger = logging.getLogger('gnupg')
+logger.setLevel(logging.DEBUG)
 
 # taken from https://www.iana.org/assignments/pgp-parameters/pgp-parameters.xhtml#pgp-parameters-12
 algo_ids = {
@@ -362,12 +364,6 @@ def run_module():
         supports_check_mode=True
     )
 
-    # if debug
-    # console_logger = logging.StreamHandler()
-    # console_logger.setLevel(logging.DEBUG)
-    # console_logger.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-    # logger.addHandler(console_logger)
-
     gnupghome = module.params['gnupghome']
     if gnupghome and not os.path.isdir(gnupghome):
 
@@ -384,7 +380,7 @@ def run_module():
             gnupghome=gnupghome,
         )
     except (OSError, ValueError) as e:
-        module.fail_json(msg='There was an error executing gpg: {}'.format(to_native(e)), exception=traceback.format_exc(), **result)
+        module.fail_json(msg=f'There was an error executing gpg: {to_native(e)}', exception=traceback.format_exc(), **result)
 
     # use whatever logic you need to determine whether or not this module
     # made any modifications to your target
@@ -425,11 +421,10 @@ def run_module():
         params['no_protection'] = True
 
     input_data = gpg.gen_key_input(**params)
-    # print(params)
-    # print(input_data)
     new_key = gpg.gen_key(input_data)
     if not new_key:
-        module.fail_json(msg='Failed to generate a new key.', rc=new_key.returncode, stdout=new_key.data, stderr=new_key.stderr, input_data=input_data, **result)
+        # do not echo input_data here: it contains the cleartext passphrase
+        module.fail_json(msg='Failed to generate a new key.', rc=new_key.returncode, stdout=new_key.data, stderr=new_key.stderr, **result)
 
     # list the keys again, as we only got the fingerprint from gen_key()
     keys = gpg.list_keys(secret=True)
