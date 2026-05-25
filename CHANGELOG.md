@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 * **role:repo_remi**: Drop support for RHEL 7 and Fedora 35. Both are EOL (RHEL 7: June 2024, Fedora 35: December 2022). The per-platform `tasks/RedHat7.yml`, `vars/{RedHat7,Fedora}.yml` and `templates/{RedHat7,Fedora}/` trees are removed.
-* **tool:particle**: Remove the `tools/particle` Vagrant-based role test runner, its sample inventories under `tests/`, and the bundled `linuxfabrik/lib` git submodule (whose only consumer was `particle`). The runner and the submodule were tightly wired together, and Dependabot did not have a `gitsubmodule` config for this repo, so the bundled lib was silently drifting behind upstream. Since role testing is moving to Molecule anyway, dropping the whole stack is cleaner than keeping the wiring around. Older revisions remain accessible through git history.
+* **tool:particle**: Remove the `tools/particle` Vagrant-based role test runner, its leftover `particle/Vagrantfile`, its sample inventories under `tests/`, and the bundled `linuxfabrik/lib` git submodule (whose only consumer was `particle`). The runner and the submodule were tightly wired together, and Dependabot did not have a `gitsubmodule` config for this repo, so the bundled lib was silently drifting behind upstream. Since role testing is moving to Molecule anyway, dropping the whole stack is cleaner than keeping the wiring around. Older revisions remain accessible through git history.
 
 ### Breaking Changes
 
