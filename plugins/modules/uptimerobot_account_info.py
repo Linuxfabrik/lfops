@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -100,11 +102,12 @@ def main():
     module.log('uptimerobot_account_info: fetching account details')
     success, account = ur.get_account_details(module, api_key)
     if not success:
-        module.fail_json(msg='Could not fetch UptimeRobot account details: {0}'.format(account))
-    module.log('uptimerobot_account_info: monitor_limit={0} up={1} down={2} paused={3}'.format(
-        account.get('monitor_limit'), account.get('up_monitors'),
-        account.get('down_monitors'), account.get('paused_monitors'),
-    ))
+        module.fail_json(msg=f'Could not fetch UptimeRobot account details: {account}')
+    module.log(
+        f"uptimerobot_account_info: monitor_limit={account.get('monitor_limit')} "
+        f"up={account.get('up_monitors')} down={account.get('down_monitors')} "
+        f"paused={account.get('paused_monitors')}"
+    )
     module.exit_json(changed=False, account=account, debug={
         'operation': 'read',
         'fields': sorted(account.keys()) if isinstance(account, dict) else None,
