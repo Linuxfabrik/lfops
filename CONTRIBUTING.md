@@ -754,6 +754,37 @@ Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored
     * Drop when: LFOps raises its minimum ansible-core to >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm` accordingly.
 
 
+### Plugins
+
+In-house plugins live under `plugins/` following the standard Ansible collection layout: `filter/`, `lookup/`, `modules/` and `module_utils/`. The `## Tasks` rules above (FQCN, meta modules, idempotency) are about role tasks; the points below are specific to writing the plugins themselves.
+
+* Every plugin carries `DOCUMENTATION` (and `RETURN` / `EXAMPLES` where applicable). Keep it valid YAML: in a `description` list, a bullet containing a colon followed by a space is parsed as a mapping and makes `ansible-doc` fail, so rephrase or quote such bullets. Verify with `ansible-doc -t <filter|lookup|module> linuxfabrik.lfops.<name>`.
+* Set `version_added` to the LFOps release the plugin first shipped in, and never change it afterwards.
+* `module_utils` holds code shared between plugins. Do not import the external Linuxfabrik Python Libraries (`lib`) into a plugin; copy what you need and note the origin in a comment.
+
+
+#### Plugin Tests
+
+Unit tests are **mandatory** for every in-house plugin. Any pull request that adds or changes a plugin must add or update its test, and `git grep` should never find a plugin without one.
+
+* **Where**: under `tests/unit/`, mirroring the plugin tree, named `test_<plugin>.py` (e.g. `tests/unit/plugins/filter/test_combine_lod.py`). Load the plugin by path (the plugins are not an importable package) and assert behavior, not implementation details.
+* **Two tiers**, because plugins run in different environments:
+
+    * Controller plugins (`plugins/filter/`, `plugins/lookup/`) are evaluated on the Ansible controller and only ever see the controller's Python (>= 3.10). They run on the standard CI matrix.
+    * Managed-node plugins (`plugins/modules/`, `plugins/module_utils/`) are executed on the target host and must keep working down to the oldest managed-node Python we maintain (Python 3.6 on RHEL 8). That tier runs inside a RHEL 8 / UBI 8 container; it is scaffolded in `tox.ini` (`[testenv:py36-target]`) and gets enabled once such tests exist.
+
+* **How to run / verify** (the matrix of Python and ansible-core versions is driven by `tox`; see `tests/README.md` and `tox.ini`):
+
+    ```bash
+    tox                      # full controller matrix (every Python x ansible-core combination)
+    tox -e py311-ansible216  # a single combination
+    tox -f py311             # every ansible-core for one Python
+    pytest tests/unit        # against the active interpreter (needs pytest, pyyaml, ansible-core)
+    ```
+
+* The `Linuxfabrik: Unit Tests` workflow runs the controller matrix on every push and pull request.
+
+
 ### Credits
 
 * <https://github.com/whitecloud/ansible-styleguide>

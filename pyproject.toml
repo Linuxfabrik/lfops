@@ -14,3 +14,8 @@
 # real issues are fixed.
 paths = ["plugins", ".vulture_whitelist.py"]
 min_confidence = 80
+
+[tool.pytest.ini_options]
+# Unit tests for the in-house plugins. The matrix of Python / ansible-core
+# versions is driven by tox; see tox.ini.
+testpaths = ["tests/unit"]
