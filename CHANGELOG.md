@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **plugin:gpg_key**: Refresh the bundled GPG helper library so the module keeps working on current Python and GnuPG releases. Existing playbooks are unaffected. The `gnupghome` parameter now expands `~` and resolves relative paths, matching its documentation.
 * **docs**: All role READMEs now follow a consistent structure that separates the dependencies a playbook sets up for you from what you must provide yourself. Documentation only, no behavior changes.
 * **role:keycloak**: The role no longer leaves the bootstrap admin credentials lying around in `/etc/sysconfig/keycloak` after the first run. It now writes the credentials, waits for Keycloak to consume them on startup (provisioning the bootstrap admin in the `master` realm), re-renders the sysconfig file with the credentials removed, and stores a state marker at `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state` so subsequent runs skip the credential render entirely. After the first run, `keycloak__admin_login` can be removed from the inventory. Disaster recovery: delete the marker file, re-add the variable, re-run. Also recommend a `-temp` suffix for the initial admin username (example: `keycloak-admin-temp`) so it is visually obvious in the Keycloak UI which account must be deleted once a permanent admin exists.
 * **role:redis**: Bump default for `net.core.somaxconn` from `1024` to `4096` to match the RHEL 9 / RHEL 10 kernel default and the current Redis upstream recommendation. Hosts on RHEL 9 or 10 see no effective change (the override was already below the kernel default); RHEL 8 hosts now get `4096` instead of `1024`.
@@ -43,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:gpg_key**: Corrected the module documentation. The GPG helper library ships with the collection, so no separate `python-gnupg` install is required, and the returned key field is documented as `uids` (matching the actual output).
 * **plugin:nextcloud_occ_app_config**: An `array` config value is now compared as JSON, so a key whose stored value already matches the desired one no longer reports a change (and re-runs `occ config:app:set`) on every run.
 * **plugin:bitwarden_item**: The module no longer writes to the Bitwarden vault when run in check mode (`--check`); it reports the would-be change instead.
 * **plugin:bitwarden_item**: A run without `password` (the default `None`) no longer overwrites an existing item's password; the current password is preserved, matching the documented behavior.
