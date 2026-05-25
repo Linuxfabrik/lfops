@@ -42,7 +42,9 @@ repos:
         # false-positives on the project's own code style (`shell=dict(...)`
         # in argument_spec triggers B604, the literal `'on_create'` sentinel
         # triggers B105). Out of scope for in-tree review.
-        exclude: '^plugins/modules/ipa.*\.py$'
+        # `tests/` holds unit tests whose fixtures use throwaway passwords
+        # (B105/B106); scanning test fixtures for hardcoded secrets is noise.
+        exclude: '^(plugins/modules/ipa.*|tests/.*)\.py$'
         types_or: ['python']
 
   - repo: 'https://github.com/jendrikseipp/vulture'
