@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -145,7 +147,7 @@ def _resolve_monitor_ids(module, api_key, items):
     if needs_resolution:
         success, monitors = ur.get_monitors(module, api_key)
         if not success:
-            module.fail_json(msg='Could not list monitors: {0}'.format(monitors))
+            module.fail_json(msg=f'Could not list monitors: {monitors}')
         by_name = {m.get('friendly_name'): m for m in monitors}
     ids = []
     for item in items:
@@ -153,7 +155,7 @@ def _resolve_monitor_ids(module, api_key, items):
         if mid is None:
             name = item['friendly_name']
             if name not in by_name:
-                module.fail_json(msg='Monitor {0!r} not found on UptimeRobot'.format(name))
+                module.fail_json(msg=f'Monitor {name!r} not found on UptimeRobot')
             mid = int(by_name[name]['id'])
         ids.append(int(mid))
     return ur.monitors_wire(ids)
@@ -184,14 +186,12 @@ def main():
     friendly_name = module.params['friendly_name']
     state = module.params['state']
 
-    module.log('uptimerobot_psp: looking up friendly_name={0!r}'.format(friendly_name))
+    module.log(f'uptimerobot_psp: looking up friendly_name={friendly_name!r}')
     success, psps = ur.get_psps(module, api_key)
     if not success:
-        module.fail_json(msg='Could not list PSPs: {0}'.format(psps))
+        module.fail_json(msg=f'Could not list PSPs: {psps}')
     current = ur.find_by_friendly_name(psps, friendly_name)
-    module.log('uptimerobot_psp: existing={0} (out of {1} PSPs on the account)'.format(
-        bool(current), len(psps),
-    ))
+    module.log(f'uptimerobot_psp: existing={bool(current)} (out of {len(psps)} PSPs on the account)')
 
     if state == 'absent':
         if current is None:
@@ -213,10 +213,10 @@ def main():
                     'friendly_name': friendly_name,
                     'psp_id': current['id'],
                 })
-        module.log('uptimerobot_psp: deleting id={0}'.format(current['id']))
+        module.log(f"uptimerobot_psp: deleting id={current['id']}")
         success, result = ur.delete_psp(module, api_key, current['id'])
         if not success:
-            module.fail_json(msg='Could not delete PSP {0!r}: {1}'.format(friendly_name, result))
+            module.fail_json(msg=f'Could not delete PSP {friendly_name!r}: {result}')
         module.exit_json(changed=True, psp=current,
             diff={'before': delete_before, 'after': {}},
             debug={
@@ -252,12 +252,10 @@ def main():
                     'friendly_name': friendly_name,
                     'sent_keys': sorted(body.keys()),
                 })
-        module.log('uptimerobot_psp: creating friendly_name={0!r} sent_keys={1}'.format(
-            friendly_name, sorted(body.keys()),
-        ))
+        module.log(f'uptimerobot_psp: creating friendly_name={friendly_name!r} sent_keys={sorted(body.keys())}')
         success, result = ur.new_psp(module, api_key, body)
         if not success:
-            module.fail_json(msg='Could not create PSP {0!r}: {1}'.format(friendly_name, result))
+            module.fail_json(msg=f'Could not create PSP {friendly_name!r}: {result}')
         module.exit_json(changed=True, psp=result,
             diff=create_diff,
             debug={
@@ -284,7 +282,7 @@ def main():
     diff_fields = ['monitors', 'custom_domain', 'sort', 'hide_url_links', 'status']
     field_diff = ur.diff_for_update(current_compare, desired_compare, diff_fields)
     if not field_diff and 'password' not in desired:
-        module.log('uptimerobot_psp: id={0} no diff -> changed=false'.format(current['id']))
+        module.log(f"uptimerobot_psp: id={current['id']} no diff -> changed=false")
         module.exit_json(changed=False, psp=current, debug={
             'operation': 'noop',
             'reason': 'no diff',
@@ -292,10 +290,10 @@ def main():
             'psp_id': current['id'],
         })
 
-    module.log('uptimerobot_psp: id={0} diff_fields={1}{2}'.format(
-        current['id'], sorted(field_diff.keys()),
-        ' (+password)' if 'password' in desired else '',
-    ))
+    module.log(
+        f"uptimerobot_psp: id={current['id']} diff_fields={sorted(field_diff.keys())}"
+        f"{' (+password)' if 'password' in desired else ''}"
+    )
 
     update_diff = {
         'before': {k: current_compare.get(k) for k in field_diff},
@@ -322,7 +320,7 @@ def main():
     body['id'] = current['id']
     success, result = ur.edit_psp(module, api_key, body)
     if not success:
-        module.fail_json(msg='Could not edit PSP {0!r}: {1}'.format(friendly_name, result))
+        module.fail_json(msg=f'Could not edit PSP {friendly_name!r}: {result}')
     module.exit_json(changed=True, psp=result,
         diff=update_diff,
         debug={

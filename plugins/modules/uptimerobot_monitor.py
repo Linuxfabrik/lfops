@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -340,7 +342,7 @@ def _build_alert_contacts(module, api_key, items):
     if needs_resolution:
         success, contacts = ur.get_alert_contacts(module, api_key)
         if not success:
-            module.fail_json(msg='Could not list alert contacts: {0}'.format(contacts))
+            module.fail_json(msg=f'Could not list alert contacts: {contacts}')
         by_name = {c.get('friendly_name'): c for c in contacts}
 
     resolved = []
@@ -349,7 +351,7 @@ def _build_alert_contacts(module, api_key, items):
         if contact_id is None:
             name = item['friendly_name']
             if name not in by_name:
-                module.fail_json(msg='Alert contact {0!r} not found on UptimeRobot'.format(name))
+                module.fail_json(msg=f'Alert contact {name!r} not found on UptimeRobot')
             contact_id = int(by_name[name]['id'])
         resolved.append({
             'id': contact_id,
@@ -367,7 +369,7 @@ def _build_mwindows(module, api_key, items):
     if needs_resolution:
         success, mwindows = ur.get_mwindows(module, api_key)
         if not success:
-            module.fail_json(msg='Could not list maintenance windows: {0}'.format(mwindows))
+            module.fail_json(msg=f'Could not list maintenance windows: {mwindows}')
         by_name = {m.get('friendly_name'): m for m in mwindows}
 
     ids = []
@@ -376,7 +378,7 @@ def _build_mwindows(module, api_key, items):
         if wid is None:
             name = item['friendly_name']
             if name not in by_name:
-                module.fail_json(msg='Maintenance window {0!r} not found on UptimeRobot'.format(name))
+                module.fail_json(msg=f'Maintenance window {name!r} not found on UptimeRobot')
             wid = int(by_name[name]['id'])
         ids.append(int(wid))
     return ur.mwindows_wire(ids)
@@ -467,17 +469,15 @@ def main():
     friendly_name = module.params['friendly_name']
     state = module.params['state']
 
-    module.log('uptimerobot_monitor: looking up friendly_name={0!r}'.format(friendly_name))
+    module.log(f'uptimerobot_monitor: looking up friendly_name={friendly_name!r}')
 
     # Step 1: locate the monitor by friendly_name. We can't trust `search` to
     # be exact-match, so list all and filter ourselves.
     success, monitors = ur.get_monitors(module, api_key)
     if not success:
-        module.fail_json(msg='Could not list monitors: {0}'.format(monitors))
+        module.fail_json(msg=f'Could not list monitors: {monitors}')
     current = ur.find_by_friendly_name(monitors, friendly_name)
-    module.log('uptimerobot_monitor: existing={0} (out of {1} monitors on the account)'.format(
-        bool(current), len(monitors),
-    ))
+    module.log(f'uptimerobot_monitor: existing={bool(current)} (out of {len(monitors)} monitors on the account)')
 
     # Step 2: build the desired payload (only fields the user actually set).
     desired = {}
@@ -520,12 +520,10 @@ def main():
                     'friendly_name': friendly_name,
                     'monitor_id': current['id'],
                 })
-        module.log('uptimerobot_monitor: deleting id={0} friendly_name={1!r}'.format(
-            current['id'], friendly_name,
-        ))
+        module.log(f"uptimerobot_monitor: deleting id={current['id']} friendly_name={friendly_name!r}")
         success, result = ur.delete_monitor(module, api_key, current['id'])
         if not success:
-            module.fail_json(msg='Could not delete monitor {0!r}: {1}'.format(friendly_name, result))
+            module.fail_json(msg=f'Could not delete monitor {friendly_name!r}: {result}')
         module.exit_json(changed=True, monitor=current,
             diff={'before': delete_before, 'after': {}},
             debug={
@@ -555,12 +553,10 @@ def main():
                     'friendly_name': friendly_name,
                     'sent_keys': sorted(body.keys()),
                 })
-        module.log('uptimerobot_monitor: creating friendly_name={0!r} sent_keys={1}'.format(
-            friendly_name, sorted(body.keys()),
-        ))
+        module.log(f'uptimerobot_monitor: creating friendly_name={friendly_name!r} sent_keys={sorted(body.keys())}')
         success, result = ur.new_monitor(module, api_key, body)
         if not success:
-            module.fail_json(msg='Could not create monitor {0!r}: {1}'.format(friendly_name, result))
+            module.fail_json(msg=f'Could not create monitor {friendly_name!r}: {result}')
         module.exit_json(changed=True, monitor=result,
             diff=create_diff,
             debug={
@@ -614,7 +610,7 @@ def main():
     field_diff = ur.diff_for_update(current_compare, desired_compare, diff_fields)
 
     if not field_diff:
-        module.log('uptimerobot_monitor: id={0} no diff -> changed=false'.format(current['id']))
+        module.log(f"uptimerobot_monitor: id={current['id']} no diff -> changed=false")
         module.exit_json(changed=False, monitor=current, debug={
             'operation': 'noop',
             'reason': 'no diff',
@@ -622,9 +618,7 @@ def main():
             'monitor_id': current['id'],
         })
 
-    module.log('uptimerobot_monitor: id={0} diff_fields={1}'.format(
-        current['id'], sorted(field_diff.keys()),
-    ))
+    module.log(f"uptimerobot_monitor: id={current['id']} diff_fields={sorted(field_diff.keys())}")
 
     update_diff = {
         'before': {k: current_compare.get(k) for k in field_diff},
@@ -647,7 +641,7 @@ def main():
     body['id'] = current['id']
     success, result = ur.edit_monitor(module, api_key, body)
     if not success:
-        module.fail_json(msg='Could not edit monitor {0!r}: {1}'.format(friendly_name, result))
+        module.fail_json(msg=f'Could not edit monitor {friendly_name!r}: {result}')
     module.exit_json(changed=True, monitor=result,
         diff=update_diff,
         debug={

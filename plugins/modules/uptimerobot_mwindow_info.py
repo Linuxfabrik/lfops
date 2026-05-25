@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -104,7 +106,7 @@ def main():
     module.log('uptimerobot_mwindow_info: fetching maintenance windows')
     success, mwindows = ur.get_mwindows(module, api_key)
     if not success:
-        module.fail_json(msg='Could not list maintenance windows: {0}'.format(mwindows))
+        module.fail_json(msg=f'Could not list maintenance windows: {mwindows}')
 
     if friendly_name:
         match = ur.find_by_friendly_name(mwindows, friendly_name)
