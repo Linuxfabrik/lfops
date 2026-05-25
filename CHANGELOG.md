@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:nextcloud_occ_app_config, plugin:nextcloud_occ_system_config, plugin:uptimerobot_monitor, plugin:uptimerobot_psp**: Fixed their documentation so `ansible-doc` renders them again. A unit-test guard now catches this class of error for every in-house plugin.
 * **plugin:bitwarden_item**: Fixed the lookup's documentation so `ansible-doc` renders it again.
 * **plugin:combine_lod**: The `combine_lod` filter now reports an error when an item is missing part of a composite `unique_key` (a list of keys), instead of silently grouping such items together. Inventories with incomplete composite keys that previously merged by accident now fail loudly and must be corrected. Also fixed its documentation so `ansible-doc` renders it again.
 * **role:kernel_settings**: The `systemd_cpu_affinity` setting is now actually applied. The value was computed and shown in the debug output but never passed to the underlying system role, so a configured CPU affinity had no effect.

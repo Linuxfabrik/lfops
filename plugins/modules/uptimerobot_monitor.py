@@ -167,7 +167,7 @@ options:
     alert_contacts:
         description:
             - Alert contacts to attach to the monitor. Each item references an existing alert contact, plus the per-monitor I(threshold) and I(recurrence). The list is replaced on every run; pass an empty list to clear all attached contacts.
-            - Resolution: when an item has I(id), it is used directly. Otherwise I(friendly_name) is resolved against C(getAlertContacts); an unknown name fails the play.
+            - When an item has I(id), it is used directly. Otherwise I(friendly_name) is resolved against C(getAlertContacts); an unknown name fails the play.
         type: list
         elements: dict
         required: false
@@ -189,7 +189,7 @@ options:
     mwindows:
         description:
             - Maintenance windows to attach to the monitor. Each item references an existing maintenance window. The list is replaced on every run; pass an empty list to detach all windows.
-            - Resolution: when an item has I(id), it is used directly. Otherwise I(friendly_name) is resolved against C(getMWindows); an unknown name fails the play.
+            - When an item has I(id), it is used directly. Otherwise I(friendly_name) is resolved against C(getMWindows); an unknown name fails the play.
         type: list
         elements: dict
         required: false
