@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2022, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -261,9 +263,9 @@ from ansible_collections.linuxfabrik.lfops.plugins.module_utils.bitwarden import
 
 
 def diff_and_update(current, target):
-    '''Diffs the current item with the target item and checks if there are relevant changes.
-    Returns (changed, updated_item). The updated_item can be send to `bw` to update the remote item.
-    '''
+    """Diffs the current item with the target item and checks if there are relevant changes.
+    Returns (changed, updated_item). The updated_item can be sent to `bw` to update the remote item.
+    """
 
     def check_dict_for_changes(current, target):
         changed = False
@@ -273,7 +275,7 @@ def diff_and_update(current, target):
                     changed = True
 
             elif (value != current.get(key)) \
-                and not (not value and not current.get(key)): # compare None to emtpy lists and empty strings
+                and not (not value and not current.get(key)): # compare None to empty lists and empty strings
                 changed = True
 
         return changed
@@ -316,11 +318,11 @@ def run_module():
     if attachments:
         basenames = [os.path.basename(attachment) for attachment in attachments]
         if len(set(basenames)) < len(basenames):
-            module.fail_json('This module cannot handle multiple attachments with the same basename.')
+            module.fail_json(msg='This module cannot handle multiple attachments with the same basename.')
 
         for attachment in attachments:
             if not os.access(attachment, os.R_OK):
-                module.fail_json('Could not read the attachments at "{}".'.format(attachment))
+                module.fail_json(msg=f'Could not read the attachments at "{attachment}".')
 
     # extract the variables to make the code more readable
     collection_id = module.params['collection_id']
@@ -338,7 +340,7 @@ def run_module():
     bw = Bitwarden()
 
     if not bw.is_unlocked:
-        module.fail_json('Not logged into Bitwarden, or Bitwarden Vault is locked. Please run `bw login` and `bw unlock` first.')
+        module.fail_json(msg='Not logged into Bitwarden, or Bitwarden Vault is locked. Please run `bw login` and `bw unlock` first.')
 
     # to be sure we are up to date
     bw.sync()
@@ -353,10 +355,7 @@ def run_module():
         if len(current_items) > 1:
             module.fail_json(msg='Found multiple Bitwarden items with the same name/title and username, cannot decide which one to use. Aborting.')
 
-        try:
-            current_item = current_items[0]
-        except IndexError:
-            current_item = None
+        current_item = current_items[0] if current_items else None
 
     login_uris = bw.get_template_item_login_uri(uris)
     login = bw.get_template_item_login(username, password, login_uris)

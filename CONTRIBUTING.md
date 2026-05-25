@@ -758,6 +758,19 @@ Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored
 
 In-house plugins live under `plugins/` following the standard Ansible collection layout: `filter/`, `lookup/`, `modules/` and `module_utils/`. The `## Tasks` rules above (FQCN, meta modules, idempotency) are about role tasks; the points below are specific to writing the plugins themselves.
 
+* Every in-house plugin starts with the standard file header, followed by `from __future__ import absolute_import, division, print_function` and `__metaclass__ = type`:
+
+    ```python
+    #!/usr/bin/env python3
+    # -*- coding: utf-8; py-indent-offset: 4 -*-
+    #
+    # Author:  Linuxfabrik GmbH, Zurich, Switzerland
+    # Contact: info (at) linuxfabrik (dot) ch
+    #          https://www.linuxfabrik.ch/
+    # License: The Unlicense, see LICENSE file.
+    ```
+
+* Use single quotes and f-strings consistently (vendored plugins keep their upstream style, see below).
 * Every plugin carries `DOCUMENTATION` (and `RETURN` / `EXAMPLES` where applicable). Keep it valid YAML: in a `description` list, a bullet containing a colon followed by a space is parsed as a mapping and makes `ansible-doc` fail, so rephrase or quote such bullets. Verify with `ansible-doc -t <filter|lookup|module> linuxfabrik.lfops.<name>`.
 * Set `version_added` to the LFOps release the plugin first shipped in, and never change it afterwards.
 * `module_utils` holds code shared between plugins. Do not import the external Linuxfabrik Python Libraries (`lib`) into a plugin; copy what you need and note the origin in a comment.
@@ -767,7 +780,7 @@ In-house plugins live under `plugins/` following the standard Ansible collection
 
 Unit tests are **mandatory** for every in-house plugin. Any pull request that adds or changes a plugin must add or update its test, and `git grep` should never find a plugin without one.
 
-* **Where**: under `tests/unit/`, mirroring the plugin tree, named `test_<plugin>.py` (e.g. `tests/unit/plugins/filter/test_combine_lod.py`). Load the plugin by path (the plugins are not an importable package) and assert behavior, not implementation details.
+* **Where**: under `tests/unit/`, mirroring the plugin tree, named `test_<plugin>.py` (e.g. `tests/unit/plugins/filter/test_combine_lod.py`). A plugin with no collection-qualified imports (e.g. the `combine_lod` filter) can be loaded by file path. A plugin that imports `ansible_collections.linuxfabrik.lfops...` (modules, or lookups pulling in a module_util) is imported through that path; `tests/conftest.py` makes this checkout importable as the collection so the imports resolve under plain pytest/tox. Same-named test files in different plugin-type directories are fine (`--import-mode=importlib`). Assert behavior, not implementation details.
 * **Two tiers**, because plugins run in different environments:
 
     * Controller plugins (`plugins/filter/`, `plugins/lookup/`) are evaluated on the Ansible controller and only ever see the controller's Python (>= 3.10). They run on the standard CI matrix.
