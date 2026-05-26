@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+# 2026052401
+
+[Unit]
+Description=security-update Service
+
+[Service]
+ExecStart=/usr/local/bin/security-update
+Type=oneshot
+User=root
+KillMode=process
+
+[Install]
+WantedBy=basic.target

@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -107,14 +109,14 @@ rowcount:
 '''
 
 
+import os
+import re
+import sqlite3
+
 from ansible.module_utils.basic import AnsibleModule
 
-
-# all sqlite functions taken from
+# the close / connect / select / regexp helpers below are taken from
 # https://git.linuxfabrik.ch/linuxfabrik/lib/-/blob/master/db_mysql3.py
-import os
-import sqlite3
-import re
 
 
 def close(conn):
@@ -124,7 +126,7 @@ def close(conn):
     """
     try:
         conn.close()
-    except:
+    except Exception:
         pass
     return True
 
@@ -143,16 +145,18 @@ def connect(path='', filename=''):
         conn.text_factory = str
         conn.create_function("REGEXP", 2, regexp)
     except Exception as e:
-        return(False, 'Connecting to DB {} failed, Error: {}, CWD: {}'.format(db, e, os.getcwd()))
+        return (False, f'Connecting to DB {db} failed, Error: {e}, CWD: {os.getcwd()}')
     return (True, conn)
 
 
-def select(conn, sql, data={}, fetchone=False, as_dict=True):
+def select(conn, sql, data=None, fetchone=False, as_dict=True):
     """The SELECT statement is used to query the database. The result of a
     SELECT is zero or more rows of data where each row has a fixed number
     of columns. A SELECT statement does not make any changes to the
     database.
     """
+    if data is None:
+        data = {}
     c = conn.cursor()
     try:
         if data:
@@ -171,7 +175,7 @@ def select(conn, sql, data={}, fetchone=False, as_dict=True):
             return (True,  c.fetchone())
         return (True, c.fetchall())
     except Exception as e:
-        return(False, 'Query failed: {}, Error: {}, Data: {}'.format(sql, e, data))
+        return (False, f'Query failed: {sql}, Error: {e}, Data: {data}')
 
 
 def regexp(expr, item):
@@ -180,6 +184,9 @@ def regexp(expr, item):
     For Python, you have to implement REGEXP using a Python function at runtime.
     https://stackoverflow.com/questions/5365451/problem-with-regexp-python-and-sqlite/5365533#5365533
     """
+    if item is None:
+        # a NULL column value cannot match a regex (and re.search(None) raises)
+        return False
     reg = re.compile(expr)
     return reg.search(item) is not None
 
@@ -215,12 +222,16 @@ def main():
 
     success, conn = connect(path=path, filename=db)
     if not success:
-        module.fail_json(msg='Unable to connect to database: {}'.format(conn))
+        module.fail_json(msg=f'Unable to connect to database: {conn}')
 
     query_result = []
     if query_type == 'select':
         success, query_result = select(conn, query, named_args, fetchone=fetch_one, as_dict=as_dict)
         changed = False
+        if not success:
+            close(conn)
+            # query_result holds the error message when the query failed
+            module.fail_json(msg=query_result)
     close(conn)
 
     # in the event of a successful module execution, you will want to

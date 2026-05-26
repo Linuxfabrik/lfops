@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -102,7 +104,7 @@ def main():
     module.log('uptimerobot_psp_info: fetching public status pages')
     success, psps = ur.get_psps(module, api_key)
     if not success:
-        module.fail_json(msg='Could not list PSPs: {0}'.format(psps))
+        module.fail_json(msg=f'Could not list PSPs: {psps}')
 
     if friendly_name:
         match = ur.find_by_friendly_name(psps, friendly_name)

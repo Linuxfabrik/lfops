@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -129,10 +131,10 @@ def main():
     search = module.params.get('search') or None
     friendly_name = module.params.get('friendly_name')
 
-    module.log('uptimerobot_monitor_info: fetching monitors search={0!r}'.format(search))
+    module.log(f'uptimerobot_monitor_info: fetching monitors search={search!r}')
     success, monitors = ur.get_monitors(module, api_key, search=search)
     if not success:
-        module.fail_json(msg='Could not list monitors: {0}'.format(monitors))
+        module.fail_json(msg=f'Could not list monitors: {monitors}')
 
     if friendly_name:
         match = ur.find_by_friendly_name(monitors, friendly_name)

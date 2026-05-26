@@ -23,6 +23,7 @@
     vars:
       kernel_settings_sysctl: '{{ kernel_settings__sysctl__combined_var }}' # noqa var-naming[pattern]
       kernel_settings_sysfs: '{{ kernel_settings__sysfs__combined_var }}' # noqa var-naming[pattern]
+      kernel_settings_systemd_cpu_affinity: '{{ kernel_settings__systemd_cpu_affinity__combined_var }}' # noqa var-naming[pattern]
       kernel_settings_transparent_hugepages: '{{ kernel_settings__transparent_hugepages__combined_var }}' # noqa var-naming[pattern]
       kernel_settings_transparent_hugepages_defrag: '{{ kernel_settings__transparent_hugepages_defrag__combined_var }}' # noqa var-naming[pattern]
 
