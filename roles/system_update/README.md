@@ -6,10 +6,17 @@ This role configures the server to do (weekly) system updates by deploying two s
 * applies all updates
 * and, if necessary, automatically reboots the host after the updates.
 
-On Rocky Linux hosts the role additionally runs a separate security lane: a second timer (`security-update`, twice a day by default) that installs only Rocky Linux security hot-fixes from the dedicated `security` repository (provided by the `repo_baseos` role) and reboots the host if needed. It is enabled by default and is a no-op on hosts where the `security` repository is not present; turn it off with `system_update__security_enabled: false`. The reboot time is steered per host group via `system_update__security_reboot_time__*` (for example immediately on test hosts, deferred to the evening on production hosts).
+On Rocky Linux the role additionally sets up a separate security lane that installs only security hot-fixes daily, independent of the weekly update lane.
 
 
 *Available since LFOps `2.0.0`.*
+
+
+## How the Role Behaves
+
+* **Two independent lanes.** The regular lane (`notify-and-schedule` / `update-and-reboot`) applies all available updates on its weekly schedule. On Rocky Linux a second, independent security lane (`security-update`, twice a day by default) installs only security hot-fixes from the dedicated `security` repository, isolated from the regular lane via `--disablerepo` / `--enablerepo`. Both reboot the host when an update requires it.
+* **The security lane is enabled by default, but a no-op without the `security` repository.** That repository is provided by the [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role. On hosts where it is not present, the security lane installs nothing and never reboots. Turn the lane off entirely with `system_update__security_enabled: false`.
+* **Reboots are steered per host group.** A security hot-fix that requires a reboot is scheduled via `at`; the time comes from `system_update__security_reboot_time__*`. This can be used so test hosts reboot immediately (`'now'`) while production hosts defer to the evening (for example `'19:00'`).
 
 
 ## Dependent Roles
@@ -26,7 +33,6 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 Manual steps:
 
 * On Debian, install needrestart by running the [apps](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apps.yml) playbook (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
-* The security lane installs from the Rocky `security` repository, which is provided by the [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role (enabled by default). On hosts where that repository is not present, the security lane is a no-op.
 
 
 ## Tags
