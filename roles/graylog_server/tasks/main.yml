@@ -116,115 +116,71 @@
 
 - block:
 
-  - name: 'Validate that each graylog_server__system_inputs entry is global or assigned to a node'
+  - name: 'Validate that each system input entry is global or assigned to a node'
     ansible.builtin.assert:
       that:
         - '(item["global"] | default(false) | bool) or (item["node"] | default("") | length > 0)'
-      fail_msg: 'Each graylog_server__system_inputs entry must set "global: true" or assign a "node", otherwise Graylog creates the input but never starts it'
+      fail_msg: 'Each system input must set "global: true" or assign a "node", otherwise Graylog creates the input but never starts it'
       quiet: true
-    loop: '{{ graylog_server__system_inputs }}'
+    loop: '{{ graylog_server__system_inputs__combined_var }}'
     loop_control:
       label: '{{ item["title"] | default(item["type"]) }}'
-
-  - name: 'Get all inputs'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'GET'
-      force_basic_auth: true
-      # status_code: 200
-    register: 'graylog_server__input_result'
-    changed_when: false # no actual config change
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Graylog inputs:'
-    ansible.builtin.debug:
-      var: 'graylog_server__input_result.json.inputs'
-
-  - name: 'Terminate input on this node'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs/{{ item }}'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'DELETE'
-      force_basic_auth: true
-      status_code: 204
-      headers:
-        X-Requested-By: 'cli'
-    loop: '{{ graylog_server__input_result | community.general.json_query("json.inputs[*].id") }}'
     when:
-      - 'graylog_server__is_leader | bool' # only run this against one host, else we get duplicate inputs
-      - 'graylog_server__input_result.json.inputs is defined and graylog_server__input_result.json.inputs | length > 0'
+      - 'item["state"] | default("present") != "absent"'
 
-  - name: 'Launch input on this node'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs'
-      user: '{{ graylog_server__root_user["username"] }}'
+  - name: 'Manage Graylog system inputs'
+    linuxfabrik.lfops.graylog_input:
+      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}'
+      username: '{{ graylog_server__root_user["username"] }}'
       password: '{{ graylog_server__root_user["password"] }}'
-      method: 'POST'
-      body: '{{ item | to_json }}'
-      force_basic_auth: true
-      status_code: 201
-      body_format: 'json'
-      headers:
-        Accept: 'application/json'
-        X-Requested-By: 'cli'
-    loop: '{{ graylog_server__system_inputs }}'
-
-  - name: 'Get a list of all index sets'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'GET'
-      force_basic_auth: true
-      # status_code: 200
-    register: 'graylog_server__get_index_sets_result'
-    changed_when: false # no actual config change
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Create index set'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'POST'
-      body: '{{ graylog_server__system_default_index_set | to_json }}'
-      force_basic_auth: true
-      # status_code: 200
-      body_format: 'json'
-      headers:
-        Accept: 'application/json'
-        X-Requested-By: 'cli'
-    when: "graylog_server__get_index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length == 0"
-
-  - name: 'Get a list of all index sets'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'GET'
-      force_basic_auth: true
-      # status_code: 200
-    register: 'graylog_server__get_index_sets_result'
-    changed_when: false # no actual config change
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Set default index set'
-    ansible.builtin.uri:
-      url: "http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets/{{ graylog_server__get_index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | regex_replace(\"\\[\\'|\\'\\]\", \"\") }}/default"
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'PUT'
-      force_basic_auth: true
-      # status_code: 200
-      headers:
-        X-Requested-By: 'cli'
-    when: "graylog_server__get_index_sets_result | community.general.json_query(\"json.index_sets[?index_prefix==`\" ~ graylog_server__system_default_index_set['index_prefix'] ~ \"`].id\") | length > 0"
+      title: '{{ item["title"] }}'
+      type: '{{ item["type"] | default(omit) }}'
+      configuration: '{{ item["configuration"] | default(omit) }}'
+      global: '{{ item["global"] | default(omit) }}'
+      node: '{{ item["node"] | default(omit) }}'
+      state: '{{ item["state"] | default("present") }}'
+    loop: '{{ graylog_server__system_inputs__combined_var }}'
+    loop_control:
+      label: '{{ item["title"] }}, state={{ item["state"] | default("present") }}'
 
   when:
     - 'graylog_server__is_leader | bool' # only run this against one host, else we get duplicate inputs
   tags:
     - 'never'
-    - 'graylog_server:configure_defaults'
+    - 'graylog_server:configure_system_inputs'
+
+
+- block:
+
+  - name: 'Manage Graylog index sets'
+    linuxfabrik.lfops.graylog_index_set:
+      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}'
+      username: '{{ graylog_server__root_user["username"] }}'
+      password: '{{ graylog_server__root_user["password"] }}'
+      index_prefix: '{{ item["index_prefix"] }}'
+      title: '{{ item["title"] | default(omit) }}'
+      description: '{{ item["description"] | default(omit) }}'
+      shards: '{{ item["shards"] | default(omit) }}'
+      replicas: '{{ item["replicas"] | default(omit) }}'
+      writable: '{{ item["writable"] | default(omit) }}'
+      index_analyzer: '{{ item["index_analyzer"] | default(omit) }}'
+      index_optimization_disabled: '{{ item["index_optimization_disabled"] | default(omit) }}'
+      index_optimization_max_num_segments: '{{ item["index_optimization_max_num_segments"] | default(omit) }}'
+      field_type_refresh_interval: '{{ item["field_type_refresh_interval"] | default(omit) }}'
+      use_legacy_rotation: '{{ item["use_legacy_rotation"] | default(omit) }}'
+      data_tiering: '{{ item["data_tiering"] | default(omit) }}'
+      rotation_strategy: '{{ item["rotation_strategy"] | default(omit) }}'
+      rotation_strategy_class: '{{ item["rotation_strategy_class"] | default(omit) }}'
+      retention_strategy: '{{ item["retention_strategy"] | default(omit) }}'
+      retention_strategy_class: '{{ item["retention_strategy_class"] | default(omit) }}'
+      default: '{{ item["default"] | default(omit) }}'
+      state: '{{ item["state"] | default("present") }}'
+    loop: '{{ graylog_server__system_index_sets__combined_var }}'
+    loop_control:
+      label: '{{ item["index_prefix"] }}, state={{ item["state"] | default("present") }}'
+
+  when:
+    - 'graylog_server__is_leader | bool' # only run this against one host, else we get duplicate index sets
+  tags:
+    - 'never'
+    - 'graylog_server:configure_system_index_sets'

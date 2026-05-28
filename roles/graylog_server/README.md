@@ -1,13 +1,19 @@
 # Ansible Role linuxfabrik.lfops.graylog_server
 
-This role installs and configures a [Graylog](https://www.graylog.org) server. Optionally, it allows the creation of a cluster setup.
-
-Additionally this role creates default "System Inputs" and a Linuxfabrik default "index set".
-
-Note that this role does NOT let you specify a particular Graylog Server version. It simply installs the latest available Graylog Server version from the repos configured in the system. If you want or need to install a specific Graylog Server version, use the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) beforehand.
+This role installs and configures a [Graylog](https://www.graylog.org) server. Optionally, it allows the creation of a cluster setup. On-demand, the role can also create or remove Graylog system inputs and index sets via the Graylog API; see [Post-Installation Steps](#post-installation-steps).
 
 
 *Available since LFOps `2.0.0`.*
+
+
+## How the Role Behaves
+
+* The role does not pin the Graylog Server version: it installs whatever the configured repository currently offers. To install a specific version, configure the repository accordingly beforehand (e.g. via [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog)).
+* `/etc/graylog/server/server.conf` and the sysconfig opts file are fully templated and re-rendered on every run, with a timestamped backup kept next to each file, so out-of-band manual edits are overwritten. Manage all settings through the role variables.
+* The role asserts that `graylog_server__password_secret` is at least 16 characters before running any other task.
+* System inputs and index sets are managed only on demand, only on the leader node, and only when the corresponding tag (`graylog_server:configure_system_inputs` / `graylog_server:configure_system_index_sets`) is selected. See [Post-Installation Steps](#post-installation-steps).
+* The role ships default system inputs (Beats, GELF TCP, GELF UDP, Syslog UDP) in `__role_var` but **no default index sets** - a single catch-all set is unsuitable for any non-trivial deployment. The operator must define at least one index set in the inventory and mark exactly one as `default: true`.
+* The role does not manage the firewall or TLS certificates. Open the listener ports and provide certificates separately.
 
 
 ## Known Limitations
@@ -36,6 +42,22 @@ Manual steps:
 * If you're not using a versioned MongoDB repository, protect MongoDB from being updated with newer minor and major versions by running the [dnf_versionlock](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/dnf_versionlock.yml) playbook (role: [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock)).
 
 
+## Post-Installation Steps
+
+Configure the CA for the Data Nodes in the "Graylog Initial Setup" wizard then wait for Graylog to start.
+
+System inputs and index sets are managed on demand via the Graylog API. The role ships with default system inputs in `graylog_server__system_inputs__role_var` but **no default index sets**: rotation, retention, shards and replicas are configured per index set, so a single catch-all set is unsuitable as soon as you have mixed log sources, compliance retention requirements or wildly different volumes. You must define one or more index sets in the inventory, split by use case (typical split: an audit set with long retention, an application set with medium retention, an access/syslog set with short retention). The example in [Optional Role Variables](#optional-role-variables) below uses **data tiering** (Graylog's current model since 6.0); the legacy `rotation_strategy` / `retention_strategy` fields are still supported via `use_legacy_rotation: true` but Graylog has announced they will be deprecated.
+
+To apply, run:
+
+* `--tags graylog_server:configure_system_inputs` to create, update or delete the configured system inputs.
+* `--tags graylog_server:configure_system_index_sets` to create, update or delete the configured index sets.
+
+Both tasks only run on the leader node (`graylog_server__is_leader: true`) to avoid duplicates. Entries are matched by `title` (inputs) and `index_prefix` (index sets); changing other fields on an existing entry updates it in place. To remove an entry, override it in your inventory with `state: 'absent'`. Note that the input `port` and `index_prefix` can not be changed after creation; modifying them in the inventory will create a new entry instead of updating the existing one.
+
+`--check` and `--diff` are supported: a dry-run with both flags prints the per-field delta (only the changed keys) and writes nothing.
+
+
 ## Tags
 
 `graylog_server`
@@ -54,11 +76,17 @@ Manual steps:
 * Creates the message journal directory.
 * Triggers: graylog-server.service restart.
 
-`graylog_server:configure_defaults`
+`graylog_server:configure_system_index_sets`
 
 * Only executed on demand.
-* Configures Graylog system inputs via the API.
-* Creates and sets the default index set.
+* Creates, updates and deletes Graylog index sets via the API.
+* Sets the index set marked with `default: true` as the default in Graylog.
+* Triggers: none.
+
+`graylog_server:configure_system_inputs`
+
+* Only executed on demand.
+* Creates, updates and deletes Graylog system inputs via the API.
 * Triggers: none.
 
 `graylog_server:state`
@@ -169,21 +197,44 @@ graylog_server__root_user:
 * Type: Number.
 * Default: `2000`
 
-`graylog_server__system_default_index_set`
+`graylog_server__system_index_sets__host_var` / `graylog_server__system_index_sets__group_var`
 
-* Creates a default index set. Used with the `graylog_server:configure_defaults` tag.
-* Type: Dictionary.
-* Default: See [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/graylog_server/defaults/main.yml)
+* Index sets to create, update or delete via the Graylog API. Used with the `graylog_server:configure_system_index_sets` tag.
+* The role intentionally ships no defaults; the sysadmin must define at least one index set in the inventory and mark exactly one as `default: true`. See [Post-Installation Steps](#post-installation-steps) for the rationale.
+* Type: List of dictionaries.
+* Default: `[]`
 * Subkeys:
 
-    * `creation_date`:
+    * `data_tiering`:
 
-        * Mandatory. Date in ISO 8601 format.
-        * Type: String.
+        * Mandatory when `use_legacy_rotation` is `false` (recommended). Data tiering is Graylog's current rotation/retention model and replaces the legacy `rotation_strategy` / `retention_strategy` configuration. The legacy strategies still work but Graylog has announced they will be deprecated.
+        * Type: Dictionary.
+        * Subkeys:
+
+            * `type`:
+
+                * Mandatory. `'hot_only'` for Graylog Open. `'hot_warm'` requires Graylog Enterprise and additional `warm_tier_*` settings.
+                * Type: String.
+
+            * `index_lifetime_min`:
+
+                * Mandatory. Minimum time data must stay in the hot tier before becoming eligible for the next lifecycle action. ISO 8601 duration, e.g. `'P7D'` for 7 days.
+                * Type: String.
+
+            * `index_lifetime_max`:
+
+                * Mandatory. Maximum time data may stay in the hot tier; once reached the next lifecycle action (rotation, deletion or migration to warm) is enforced. ISO 8601 duration, e.g. `'P30D'` for 30 days.
+                * Type: String.
+
+    * `default`:
+
+        * Optional. If `true`, this index set is set as the Graylog default after create/update. Only one entry should set this.
+        * Type: Bool.
+        * Default: `false`
 
     * `description`:
 
-        * Mandatory. Description of index set.
+        * Mandatory. Description of the index set.
         * Type: String.
 
     * `field_type_refresh_interval`:
@@ -208,7 +259,7 @@ graylog_server__root_user:
 
     * `index_prefix`:
 
-        * Mandatory. A unique prefix used in indices belonging to this index set. The prefix must start with a letter or number, and can only contain letters, numbers, `_`, `-` and `+`.
+        * Mandatory. A unique prefix used in indices belonging to this index set. The prefix must start with a letter or number, and can only contain letters, numbers, `_`, `-` and `+`. Used as the identity key for create/update/delete; cannot be changed after creation (changing it creates a new index set). It must not start with the same word as another index_prefix, e.g. `lfops` and `lfops02` would conflict.
         * Type: String.
 
     * `replicas`:
@@ -218,7 +269,7 @@ graylog_server__root_user:
 
     * `retention_strategy`:
 
-        * Mandatory. Retention strategy configuration.
+        * Legacy. Mandatory only when `use_legacy_rotation` is `true`; ignored otherwise. Prefer `data_tiering`.
         * Type: Dictionary.
         * Subkeys:
 
@@ -234,12 +285,12 @@ graylog_server__root_user:
 
     * `retention_strategy_class`:
 
-        * Mandatory. Retention strategy class to clean up old indices.
+        * Legacy. Mandatory only when `use_legacy_rotation` is `true`; ignored otherwise. Prefer `data_tiering`.
         * Type: String.
 
     * `rotation_strategy`:
 
-        * Mandatory. Rotation strategy configuration.
+        * Legacy. Mandatory only when `use_legacy_rotation` is `true`; ignored otherwise. Prefer `data_tiering`.
         * Type: Dictionary.
         * Subkeys:
 
@@ -260,7 +311,7 @@ graylog_server__root_user:
 
     * `rotation_strategy_class`:
 
-        * Mandatory. Graylog uses multiple indices to store documents in. You can configure the strategy it uses to determine when to rotate the currently active write index.
+        * Legacy. Mandatory only when `use_legacy_rotation` is `true`; ignored otherwise. Prefer `data_tiering`.
         * Type: String.
 
     * `shards`:
@@ -268,36 +319,54 @@ graylog_server__root_user:
         * Mandatory. Number of shards used per index in this index set. Never set this higher than the number of data nodes.
         * Type: Number.
 
+    * `state`:
+
+        * Optional. State of the index set, one of `present`, `absent`.
+        * Type: String.
+        * Default: `'present'`
+
     * `title`:
 
         * Mandatory. Descriptive name of the index set.
         * Type: String.
+
+    * `use_legacy_rotation`:
+
+        * Optional. `false` (recommended) activates `data_tiering`; `true` falls back to the legacy `rotation_strategy` / `retention_strategy` configuration, which Graylog has announced will be deprecated.
+        * Type: Bool.
+        * Default: `false`
 
     * `writable`:
 
         * Mandatory. Whether this index set is writable.
         * Type: Bool.
 
-`graylog_server__system_inputs`
+`graylog_server__system_inputs__host_var` / `graylog_server__system_inputs__group_var`
 
-* Creates system inputs. Used with the `graylog_server:configure_defaults` tag.
+* System inputs to create, update or delete via the Graylog API. Used with the `graylog_server:configure_system_inputs` tag.
 * Type: List of dictionaries.
-* Default: See [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/graylog_server/defaults/main.yml)
+* Default: `Beats (5044/TCP)`, `Gelf (12201/TCP)`, `Gelf (12201/UDP)` and `Syslog (1514/UDP)`. See [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/graylog_server/defaults/main.yml) for the full content.
 * Subkeys:
 
     * `configuration`:
 
-        * Mandatory. Specific configuration of corresponding input. Please refer to the [API documentation](https://go2docs.graylog.org/current/setting_up_graylog/rest_api.html).
+        * Mandatory. Input-specific configuration; see the [API documentation](https://go2docs.graylog.org/current/setting_up_graylog/rest_api.html). The `port` cannot be changed after creation (changing it creates a new input).
         * Type: Dictionary.
 
     * `global`:
 
-        * Mandatory. Whether this input should start on all nodes.
+        * Mandatory. Whether this input should start on all nodes. Each entry must either set `global: true` or assign a `node`, otherwise Graylog creates the input but never starts it; the role asserts this.
         * Type: Bool.
+
+    * `state`:
+
+        * Optional. State of the input, one of `present`, `absent`.
+        * Type: String.
+        * Default: `'present'`
 
     * `title`:
 
-        * Mandatory. The title for this input.
+        * Mandatory. The title for this input. Used as the identity key for create/update/delete.
         * Type: String.
 
     * `type`:
@@ -334,87 +403,76 @@ graylog_server__mongodb_uri: 'mongodb://graylog01.example.com:27017,username:pas
 graylog_server__opts: '-Xms2g -Xmx2g -server -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow'
 graylog_server__service_enabled: false
 graylog_server__stale_leader_timeout_ms: 10000
-graylog_server__system_default_index_set:
-  creation_date: '{{ ansible_date_time.iso8601 }}'
-  description: 'One index per day; 365 indices max'
-  field_type_refresh_interval: 5000
-  index_analyzer: 'standard'
-  index_optimization_disabled: false
-  index_optimization_max_num_segments: 1
-  index_prefix: 'lfops-default'
-  replicas: 0
-  retention_strategy:
-    max_number_of_indices: 365
-    type: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig'
-  retention_strategy_class: 'org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy'
-  rotation_strategy:
-    rotation_period: 'P1D'
-    rotate_empty_index_set: false
-    type: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig'
-  rotation_strategy_class: 'org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy'
-  shards: 3
-  title: 'Linuxfabrik Index Set (managed by Ansible - do not edit)'
-  writable: true
-graylog_server__system_inputs:
-  - configuration:
+graylog_server__system_index_sets__host_var:
+  # catch-all set, marked as the Graylog default; everything that no stream rule
+  # routes elsewhere lands here. Data tiering keeps data for 25-30 days.
+  - title: 'Default'
+    description: 'Default catch-all index set; 25-30 days - managed by Ansible - do not edit'
+    default: true
+    use_legacy_rotation: false
+    data_tiering:
+      type: 'hot_only'
+      index_lifetime_min: 'P25D'
+      index_lifetime_max: 'P30D'
+    field_type_refresh_interval: 5000
+    index_analyzer: 'standard'
+    index_optimization_disabled: false
+    index_optimization_max_num_segments: 1
+    index_prefix: 'default'
+    replicas: 0
+    shards: 1
+    state: 'present'
+    writable: true
+  # audit logs, long retention
+  - title: 'Audit'
+    description: 'Audit logs; 360-365 days - managed by Ansible - do not edit'
+    use_legacy_rotation: false
+    data_tiering:
+      type: 'hot_only'
+      index_lifetime_min: 'P360D'
+      index_lifetime_max: 'P365D'
+    field_type_refresh_interval: 5000
+    index_analyzer: 'standard'
+    index_optimization_disabled: false
+    index_optimization_max_num_segments: 1
+    index_prefix: 'audit'
+    replicas: 0
+    shards: 1
+    state: 'present'
+    writable: true
+  # high-volume access/syslog logs, short retention
+  - title: 'Access'
+    description: 'Access/syslog logs; 10-14 days - managed by Ansible - do not edit'
+    use_legacy_rotation: false
+    data_tiering:
+      type: 'hot_only'
+      index_lifetime_min: 'P10D'
+      index_lifetime_max: 'P14D'
+    field_type_refresh_interval: 5000
+    index_analyzer: 'standard'
+    index_optimization_disabled: false
+    index_optimization_max_num_segments: 1
+    index_prefix: 'access'
+    replicas: 0
+    shards: 1
+    state: 'present'
+    writable: true
+graylog_server__system_inputs__host_var:
+  # add an additional input alongside the role defaults
+  - title: 'Gelf Audit (12202/UDP - managed by Ansible - do not edit)'
+    configuration:
       bind_address: '0.0.0.0'
-      number_worker_threads: 4
-      override_source: ''
-      port: 5044
-      recv_buffer_size: 1048576
-      tcp_keepalive: false
-      tls_cert_file: ''
-      tls_client_auth: 'disabled'
-      tls_client_auth_cert_file: ''
-      tls_enable: false
-      tls_key_file: ''
-      tls_key_password: ''
-    global: true
-    title: 'Beats (5044/TCP - managed by Ansible - do not edit)'
-    type: 'org.graylog.plugins.beats.Beats2Input'
-  - configuration:
-      bind_address: '0.0.0.0'
+      port: 12202
       decompress_size_limit: 8388608
-      max_message_size: 2097152
       number_worker_threads: 4
       override_source: ''
-      port: 12201
-      recv_buffer_size: 1048576
-      tcp_keepalive: false
-      tls_cert_file: ''
-      tls_client_auth: 'disabled'
-      tls_client_auth_cert_file: ''
-      tls_enable: false
-      tls_key_file: ''
-      tls_key_password: ''
-      use_null_delimiter: true
-    global: true
-    title: 'Gelf (12201/TCP - managed by Ansible - do not edit)'
-    type: 'org.graylog2.inputs.gelf.tcp.GELFTCPInput'
-  - configuration:
-      bind_address: '0.0.0.0'
-      decompress_size_limit: 8388608
-      number_worker_threads: 4
-      override_source: ''
-      port: 12201
       recv_buffer_size: 1048576
     global: true
-    title: 'Gelf (12201/UDP - managed by Ansible - do not edit)'
+    state: 'present'
     type: 'org.graylog2.inputs.gelf.udp.GELFUDPInput'
-  - configuration:
-      allow_override_date: true
-      bind_address: '0.0.0.0'
-      decompress_size_limit: 8388608
-      expand_structured_data: false
-      force_rdns: false
-      number_worker_threads: 4
-      override_source: ''
-      port: 1514
-      recv_buffer_size: 1048576
-      store_full_message: false
-    global: true
-    title: 'Syslog (1514/UDP - managed by Ansible - do not edit)'
-    type: 'org.graylog2.inputs.syslog.udp.SyslogUDPInput'
+  # opt out of one of the role defaults:
+  - title: 'Syslog (1514/UDP - managed by Ansible - do not edit)'
+    state: 'absent'
 graylog_server__timezone: 'Europe/Zurich'
 graylog_server__trusted_proxies:
   - '127.0.0.1/32'
@@ -425,9 +483,9 @@ graylog_server__trusted_proxies:
 
 ## Troubleshooting
 
-Q: `/bin/sh: /opt/python-venv/pymongo/bin/python3: No such file or directory`
+**`/bin/sh: /opt/python-venv/pymongo/bin/python3: No such file or directory`**
 
-A: You either have to run the whole playbook, or python_venv directly: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_server --tags python_venv`
+* The `pymongo` virtualenv that the role's MongoDB-touching tasks rely on is missing. Run the full playbook, or just the `python_venv` role: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_server --tags python_venv`.
 
 
 ## License
