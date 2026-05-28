@@ -411,7 +411,7 @@ php__modules__role_var:
     - name: 'php-opcache'
       state: 'present'
 php__modules__combined_var: '{{ (
-      php__modules__role_var[ansible_facts["os_family"]] +
+      (php__modules__role_var | linuxfabrik.lfops.platform_select(ansible_facts)) +
       php__modules__dependent_var +
       php__modules__group_var +
       php__modules__host_var

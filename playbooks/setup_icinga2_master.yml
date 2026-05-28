@@ -110,7 +110,7 @@
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
           (not setup_icinga2_master__apache_httpd__skip_injections__internal_var) | ternary(apache_httpd__python__modules__dependent_var, []) +
-          (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__python__modules__dependent_var[ansible_facts["os_family"]], [])
+          (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__python__modules__dependent_var, [])
         }}'
       when:
         - 'not setup_icinga2_master__python__skip_role__internal_var'
@@ -191,8 +191,8 @@
       php__modules__dependent_var: '{{
           (not setup_icinga2_master__icingaweb2_module_fileshipper__skip_injections__internal_var) | ternary(icingaweb2_module_fileshipper__php__modules__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections__internal_var) | ternary(icingaweb2_module_vspheredb__php__modules__dependent_var, []) +
-          (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__php__modules__dependent_var[ansible_facts["os_family"]], []) +
-          (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__modules__dependent_var[ansible_facts["os_family"]], [])
+          (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__php__modules__dependent_var, []) +
+          (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__modules__dependent_var, [])
         }}'
       when:
         - 'not setup_icinga2_master__php__skip_role__internal_var'

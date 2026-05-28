@@ -631,6 +631,37 @@ my_role__my_simple_value: '{{ __my_role__my_simple_value }}'
 This allows the user to overwrite `my_role__my_simple_value` in their inventory.
 
 
+#### OS-specific Dependent Variables
+
+A variant of the OS-specific Variables pattern applies when the value has to be consumed by a *different* role that runs *earlier* in the same play (the `__dependent_var` pattern, see "Combined Variables"). `vars/<os>.yml` files cannot be used there because they are loaded only when the publishing role's tasks run, which is too late for an earlier consumer. Instead, in the publishing role's `vars/main.yml`, keep the OS-specific dictionary as a role-internal (`__`-prefixed) variable and expose a public variable that selects from it with the `linuxfabrik.lfops.platform_select` filter:
+
+```yaml
+# roles/mariadb_server/vars/main.yml
+__mariadb_server__python__modules__dependent_var:
+  Debian:
+    - name: 'python3-pymysql'
+  RedHat:
+    - name: 'python3-PyMySQL'
+mariadb_server__python__modules__dependent_var: '{{
+    __mariadb_server__python__modules__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts)
+  }}'
+```
+
+`vars/main.yml` is auto-loaded at play parse, visible to every role in the play, and non-overridable from inventory like other `vars/`. Jinja evaluation is lazy, so the filter only runs when a consumer actually references the public variable.
+
+Consumers stay simple - they reference the public variable directly, with no awareness of the selection mechanism:
+
+```yaml
+- role: 'linuxfabrik.lfops.python'
+  python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var }}'
+
+- role: 'linuxfabrik.lfops.mariadb_server'
+```
+
+The filter mirrors the precedence of `shared/tasks/platform-variables.yml` (least to most specific: `os_family`, `os_family + distribution_major_version`, `os_family + distribution_version`, `distribution`, `distribution + distribution_major_version`, `distribution + distribution_version`) and returns the value of the most specific present key. Pass `default=[]` (or whatever the consumer expects) when the value is optional on platforms not listed in the dict; otherwise an unmatched call raises an error.
+
+
 #### LFOps-wide Shared Variables
 
 A small set of platform values is identical across many roles (currently the Apache httpd user and group). To avoid repeating these in every role's `vars/<os>.yml`, they live once in `roles/shared/vars/<os>.yml` and are loaded into every playbook by `roles/shared/tasks/global-variables.yml`, imported from each playbook's `pre_tasks` next to `log-start.yml`. They are then available to every role in the play. The available variables can be found at `roles/shared/vars/<os>.yml`.

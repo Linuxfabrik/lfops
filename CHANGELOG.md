@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **plugin:platform_select**: New filter plugin for selecting a value from a platform-keyed dictionary by OS family / distribution / version.
 * **role:alternatives**: Support managing `subcommands` (slaves/followers) and the Red Hat-only `family` grouping. The role now also ensures the alternatives tooling is installed (`chkconfig` on RHEL 8, `alternatives` on RHEL 9/10; bundled with `dpkg` on Debian/Ubuntu), and can be included without variables as a no-op.
 * **role:redis**: Add template for version 8.8
 * **role:system_update**: Add a security lane for Rocky Linux. A second timer (twice a day by default) installs only Rocky Linux security hot-fixes from the dedicated `security` repository (provided by `repo_baseos`) and reboots the host if needed. The reboot time is steered per host group (for example immediately on test hosts, deferred to the evening on production hosts). Enabled by default; a no-op where the `security` repository is not enabled, and can be turned off with `system_update__security_enabled: false`. This keeps critical security fixes flowing daily while the regular update lane stays on its weekly schedule.
@@ -35,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **roles:mariadb_server, icingaweb2, icingaweb2_module_x509, duplicity, php, crypto_policy**: Internal refactor of OS-keyed default lookups. Behavior is unchanged on supported platforms. The internal package-selection dicts in `mariadb_server`, `icingaweb2`, `icingaweb2_module_x509` and `duplicity` are no longer overridable from inventory; they were never meant to be.
 * **role:shared**: The Apache httpd user/group (`apache` on RedHat, `www-data` on Debian, `wwwrun`/`www` on Suse) is now defined once in the `shared` role as `__shared__apache_httpd_user` / `__shared__apache_httpd_group` and loaded into every playbook through a new `global-variables.yml` task in `pre_tasks`, instead of being repeated in the `vars/` of around 20 roles. The affected roles now expect this `pre_tasks` import to run, so running them ad-hoc outside the bundled playbooks requires importing `shared`'s `global-variables.yml` first. On Suse, the `monitoring_plugins` web files now use the correct apache group `www` instead of `wwwrun` (on RedHat and Debian the user and group are identical, so file ownership there is unchanged).
 * **role:repo_baseos**: The Rocky 8 `security` repository now matches Rocky 9/10: it adds the `security-debuginfo` and `security-source` sub-repositories (disabled), a 6-hour metadata expiry so emergency hot-fixes are noticed quickly, and the `$rltype` mirrorlist variable.
 * **plugin:gpg_key**: Refresh the bundled GPG helper library so the module keeps working on current Python and GnuPG releases. Existing playbooks are unaffected. The `gnupghome` parameter now expands `~` and resolves relative paths, matching its documentation.
