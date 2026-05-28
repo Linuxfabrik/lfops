@@ -55,6 +55,8 @@ To apply, run:
 
 Both tasks only run on the leader node (`graylog_server__is_leader: true`) to avoid duplicates. Entries are matched by `title` (inputs) and `index_prefix` (index sets); changing other fields on an existing entry updates it in place. To remove an entry, override it in your inventory with `state: 'absent'`. Note that the input `port` and `index_prefix` can not be changed after creation; modifying them in the inventory will create a new entry instead of updating the existing one.
 
+`--check` and `--diff` are supported: a dry-run with both flags prints the per-field delta (only the changed keys) and writes nothing.
+
 
 ## Tags
 

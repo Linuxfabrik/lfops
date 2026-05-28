@@ -73,8 +73,12 @@ def _extract_doc_constants(source):
 def _iter_description_problems(obj, path=''):
     """Yield human-readable paths where a `description` is not str / list[str]."""
     if isinstance(obj, dict):
+        # Inside an `options` / `suboptions` collection the dict keys are
+        # option names (one of which may legitimately be "description"), not
+        # field names. Skip the description field-name check at that level.
+        in_options_collection = path.endswith('.options') or path.endswith('.suboptions')
         for key, value in obj.items():
-            if key == 'description':
+            if key == 'description' and not in_options_collection:
                 if isinstance(value, str):
                     pass
                 elif isinstance(value, list):

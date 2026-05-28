@@ -128,95 +128,20 @@
     when:
       - 'item["state"] | default("present") != "absent"'
 
-  - name: 'Get all inputs'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs'
-      user: '{{ graylog_server__root_user["username"] }}'
+  - name: 'Manage Graylog system inputs'
+    linuxfabrik.lfops.graylog_input:
+      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}'
+      username: '{{ graylog_server__root_user["username"] }}'
       password: '{{ graylog_server__root_user["password"] }}'
-      method: 'GET'
-      force_basic_auth: true
-    register: '__graylog_server__inputs_result'
-    changed_when: false # no actual config change
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Graylog inputs:'
-    ansible.builtin.debug:
-      var: '__graylog_server__inputs_result["json"]["inputs"]'
-
-  - name: 'Update existing inputs'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs/{{ __existing_id }}'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'PUT'
-      body: '{{ (item
-            | combine({"id": __existing_id})
-            | dict2items
-            | rejectattr("key", "equalto", "state")
-            | items2dict)
-          | to_json
-        }}'
-      force_basic_auth: true
-      status_code: 201
-      body_format: 'json'
-      headers:
-        Accept: 'application/json'
-        X-Requested-By: 'cli'
+      title: '{{ item["title"] }}'
+      type: '{{ item["type"] | default(omit) }}'
+      configuration: '{{ item["configuration"] | default(omit) }}'
+      global: '{{ item["global"] | default(omit) }}'
+      node: '{{ item["node"] | default(omit) }}'
+      state: '{{ item["state"] | default("present") }}'
     loop: '{{ graylog_server__system_inputs__combined_var }}'
     loop_control:
       label: '{{ item["title"] }}, state={{ item["state"] | default("present") }}'
-    vars:
-      __existing_id: '{{ __graylog_server__inputs_result["json"]["inputs"]
-          | selectattr("title", "equalto", item["title"])
-          | map(attribute="id")
-          | first
-        }}'
-    when:
-      - 'item["state"] | default("present") != "absent"'
-      - '__graylog_server__inputs_result["json"]["inputs"] | selectattr("title", "equalto", item["title"]) | list | length > 0'
-
-  - name: 'Create inputs'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'POST'
-      body: '{{ item | dict2items | rejectattr("key", "equalto", "state") | items2dict | to_json }}'
-      force_basic_auth: true
-      status_code: 201
-      body_format: 'json'
-      headers:
-        Accept: 'application/json'
-        X-Requested-By: 'cli'
-    loop: '{{ graylog_server__system_inputs__combined_var }}'
-    loop_control:
-      label: '{{ item["title"] }}, state={{ item["state"] | default("present") }}'
-    when:
-      - 'item["state"] | default("present") != "absent"'
-      - '__graylog_server__inputs_result["json"]["inputs"] | selectattr("title", "equalto", item["title"]) | list | length == 0'
-
-  - name: 'Delete inputs'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs/{{ __existing_id }}'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'DELETE'
-      force_basic_auth: true
-      status_code: 204
-      headers:
-        X-Requested-By: 'cli'
-    loop: '{{ graylog_server__system_inputs__combined_var }}'
-    loop_control:
-      label: '{{ item["title"] }}, state={{ item["state"] | default("present") }}'
-    vars:
-      __existing_id: '{{ __graylog_server__inputs_result["json"]["inputs"]
-          | selectattr("title", "equalto", item["title"])
-          | map(attribute="id")
-          | first
-        }}'
-    when:
-      - 'item["state"] | default("present") == "absent"'
-      - '__graylog_server__inputs_result["json"]["inputs"] | selectattr("title", "equalto", item["title"]) | list | length > 0'
 
   when:
     - 'graylog_server__is_leader | bool' # only run this against one host, else we get duplicate inputs
@@ -227,130 +152,32 @@
 
 - block:
 
-  - name: 'Get all index sets'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
-      user: '{{ graylog_server__root_user["username"] }}'
+  - name: 'Manage Graylog index sets'
+    linuxfabrik.lfops.graylog_index_set:
+      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}'
+      username: '{{ graylog_server__root_user["username"] }}'
       password: '{{ graylog_server__root_user["password"] }}'
-      method: 'GET'
-      force_basic_auth: true
-    register: '__graylog_server__index_sets_result'
-    changed_when: false # no actual config change
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Graylog index sets:'
-    ansible.builtin.debug:
-      var: '__graylog_server__index_sets_result["json"]["index_sets"]'
-
-  - name: 'Update existing index sets'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets/{{ __existing_id }}'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'PUT'
-      body: '{{ (item
-            | combine({"id": __existing_id})
-            | dict2items
-            | rejectattr("key", "equalto", "state")
-            | rejectattr("key", "equalto", "default")
-            | items2dict)
-          | to_json
-        }}'
-      force_basic_auth: true
-      status_code: 200
-      body_format: 'json'
-      headers:
-        Accept: 'application/json'
-        X-Requested-By: 'cli'
+      index_prefix: '{{ item["index_prefix"] }}'
+      title: '{{ item["title"] | default(omit) }}'
+      description: '{{ item["description"] | default(omit) }}'
+      shards: '{{ item["shards"] | default(omit) }}'
+      replicas: '{{ item["replicas"] | default(omit) }}'
+      writable: '{{ item["writable"] | default(omit) }}'
+      index_analyzer: '{{ item["index_analyzer"] | default(omit) }}'
+      index_optimization_disabled: '{{ item["index_optimization_disabled"] | default(omit) }}'
+      index_optimization_max_num_segments: '{{ item["index_optimization_max_num_segments"] | default(omit) }}'
+      field_type_refresh_interval: '{{ item["field_type_refresh_interval"] | default(omit) }}'
+      use_legacy_rotation: '{{ item["use_legacy_rotation"] | default(omit) }}'
+      data_tiering: '{{ item["data_tiering"] | default(omit) }}'
+      rotation_strategy: '{{ item["rotation_strategy"] | default(omit) }}'
+      rotation_strategy_class: '{{ item["rotation_strategy_class"] | default(omit) }}'
+      retention_strategy: '{{ item["retention_strategy"] | default(omit) }}'
+      retention_strategy_class: '{{ item["retention_strategy_class"] | default(omit) }}'
+      default: '{{ item["default"] | default(omit) }}'
+      state: '{{ item["state"] | default("present") }}'
     loop: '{{ graylog_server__system_index_sets__combined_var }}'
     loop_control:
       label: '{{ item["index_prefix"] }}, state={{ item["state"] | default("present") }}'
-    vars:
-      __existing_id: '{{ __graylog_server__index_sets_result["json"]["index_sets"]
-          | selectattr("index_prefix", "equalto", item["index_prefix"])
-          | map(attribute="id")
-          | first
-        }}'
-    when:
-      - 'item["state"] | default("present") != "absent"'
-      - '__graylog_server__index_sets_result["json"]["index_sets"] | selectattr("index_prefix", "equalto", item["index_prefix"]) | list | length > 0'
-
-  - name: 'Create index sets'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'POST'
-      body: '{{ item | dict2items | rejectattr("key", "equalto", "state") | rejectattr("key", "equalto", "default") | items2dict | to_json }}'
-      force_basic_auth: true
-      status_code: 200
-      body_format: 'json'
-      headers:
-        Accept: 'application/json'
-        X-Requested-By: 'cli'
-    loop: '{{ graylog_server__system_index_sets__combined_var }}'
-    loop_control:
-      label: '{{ item["index_prefix"] }}, state={{ item["state"] | default("present") }}'
-    when:
-      - 'item["state"] | default("present") != "absent"'
-      - '__graylog_server__index_sets_result["json"]["index_sets"] | selectattr("index_prefix", "equalto", item["index_prefix"]) | list | length == 0'
-
-  - name: 'Delete index sets'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets/{{ __existing_id }}'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'DELETE'
-      force_basic_auth: true
-      status_code: 204
-      headers:
-        X-Requested-By: 'cli'
-    loop: '{{ graylog_server__system_index_sets__combined_var }}'
-    loop_control:
-      label: '{{ item["index_prefix"] }}, state={{ item["state"] | default("present") }}'
-    vars:
-      __existing_id: '{{ __graylog_server__index_sets_result["json"]["index_sets"]
-          | selectattr("index_prefix", "equalto", item["index_prefix"])
-          | map(attribute="id")
-          | first
-        }}'
-    when:
-      - 'item["state"] | default("present") == "absent"'
-      - '__graylog_server__index_sets_result["json"]["index_sets"] | selectattr("index_prefix", "equalto", item["index_prefix"]) | list | length > 0'
-
-  - name: 'Re-read index sets after create/update/delete'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'GET'
-      force_basic_auth: true
-    register: '__graylog_server__index_sets_result'
-    changed_when: false # no actual config change
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Set the default index set'
-    ansible.builtin.uri:
-      url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/indices/index_sets/{{ __existing_id }}/default'
-      user: '{{ graylog_server__root_user["username"] }}'
-      password: '{{ graylog_server__root_user["password"] }}'
-      method: 'PUT'
-      force_basic_auth: true
-      status_code: 200
-      headers:
-        X-Requested-By: 'cli'
-    loop: '{{ graylog_server__system_index_sets__combined_var | selectattr("default", "defined") | selectattr("default", "eq", true) }}'
-    loop_control:
-      label: '{{ item["index_prefix"] }}'
-    vars:
-      __existing_id: '{{ __graylog_server__index_sets_result["json"]["index_sets"]
-          | selectattr("index_prefix", "equalto", item["index_prefix"])
-          | map(attribute="id")
-          | first
-        }}'
-    when:
-      - 'item["state"] | default("present") != "absent"'
-      - '__graylog_server__index_sets_result["json"]["index_sets"] | selectattr("index_prefix", "equalto", item["index_prefix"]) | list | length > 0'
 
   when:
     - 'graylog_server__is_leader | bool' # only run this against one host, else we get duplicate index sets
