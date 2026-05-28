@@ -12,31 +12,43 @@ Hints:
 *Available since LFOps `3.0.0`.*
 
 
+## How the Role Behaves
+
+* The role ensures the alternatives tooling is installed: the `chkconfig` package on RHEL 8, the `alternatives` package on RHEL 9 and 10. On Debian and Ubuntu, `update-alternatives` ships with `dpkg`, so nothing is installed there.
+* On Red Hat-family hosts `link` is mandatory for each entry. On Debian-based hosts it is only required when the alternative `name` is unknown to the system.
+* `family` is only available on Red Hat-family hosts (community.general 10.1.0+); `subcommands` requires community.general 5.1.0+. Both are passed through only when set, so they do not affect entries or platforms that do not use them.
+
+
 ## Tags
 
 `alternatives`
 
-* Manages alternative programs for common commands.
+* Installs the alternatives tooling and manages alternative programs for common commands.
 * Triggers: none.
 
 
-## Mandatory Role Variables
+## Optional Role Variables
 
 `alternatives__alternatives`
 
-* List of alternatives to remove or to deploy.
+* List of alternatives to remove or to deploy. With the default empty list, the role is a no-op.
 * Type: List of dictionaries.
 * Default: `[]`
 * Subkeys:
 
-    * `link`:
-
-        * The path to the symbolic link that should point to the real executable. This option is always required on RHEL-based distributions. On Debian-based distributions this option is required when the alternative `name` is unknown to the system.
-        * Type: String.
-
     * `name`:
 
         * Mandatory. The generic name of the link.
+        * Type: String.
+
+    * `family`:
+
+        * Optional. Groups similar alternatives. Red Hat-family only.
+        * Type: String.
+
+    * `link`:
+
+        * The path to the symbolic link that should point to the real executable. This option is always required on RHEL-based distributions. On Debian-based distributions this option is required when the alternative `name` is unknown to the system.
         * Type: String.
 
     * `path`:
@@ -46,7 +58,7 @@ Hints:
 
     * `priority`:
 
-        * Optional. The priority of the alternative. If no priority is given for creation `50` is used as a fallback.
+        * Optional. The priority of the alternative. If no priority is given, the `alternatives` tool uses `50` as a fallback on creation.
         * Type: Number.
 
     * `state`:
@@ -55,20 +67,31 @@ Hints:
         * Type: String.
         * Default: `'selected'`
 
+    * `subcommands`:
+
+        * Optional. Subcommands (also called slaves or followers) that are switched together with this alternative. Each entry needs `name`, `link`, and `path`.
+        * Type: List of dictionaries.
+
 Example:
 ```yaml
 alternatives__alternatives:
-  - link: '/usr/bin/python3'
-    name: 'python3'
-    path: '/usr/bin/python3.9'
-    priority: '100'  # install python3.9 with higher priority
-    state: 'auto'
-  - link: '/usr/bin/python3'
-    name: 'python3'
+  # set the default python3, also switching its subcommands (slaves)
+  - name: 'python3'
+    link: '/usr/bin/python3'
     path: '/usr/bin/python3.12'
-    priority: '10'
+    priority: 100
     state: 'auto'
-# => results in python3.9
+    subcommands:
+      - name: 'python3-config'
+        link: '/usr/bin/python3-config'
+        path: '/usr/bin/python3.12-config'
+  # Red Hat-family only: select an alternative by family
+  - name: 'java'
+    family: 'java-11-openjdk.x86_64'
+  # remove an alternative
+  - name: 'editor'
+    path: '/usr/bin/vim'
+    state: 'absent'
 ```
 
 
