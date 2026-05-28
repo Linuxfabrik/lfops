@@ -1,3 +1,0 @@
-# Since RHEL 9 the `alternatives` command has its own package.
-__alternatives__packages:
-  - 'alternatives'
