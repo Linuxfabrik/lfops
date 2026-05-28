@@ -739,7 +739,7 @@ The following roles use techniques that are unusual within LFOps. Roles not in t
 
 ### Vendored Plugins
 
-Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored from upstream projects, either because we needed local patches or because the upstream version requires a newer ansible-core than LFOps supports. They are kept in lockstep with their upstream and should be re-synced (or removed) when the listed condition is met.
+Some files under `plugins/modules/` and `plugins/module_utils/` are not authored by Linuxfabrik but vendored from upstream projects, either because we needed local patches, because the upstream version requires a newer ansible-core than LFOps supports, or because the dependency has to ship with the module to the managed node. They are kept in lockstep with their upstream and should be re-synced (or removed) when the listed condition is met.
 
 * `plugins/modules/ipagroup.py`, `ipahbacrule.py`, `ipahostgroup.py`, `ipapwpolicy.py`, `ipasudocmd.py`, `ipasudocmdgroup.py`, `ipasudorule.py`, `ipauser.py`
 
@@ -752,6 +752,56 @@ Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored
     * Upstream: <https://github.com/ansible-collections/community.general> (PR [#10070](https://github.com/ansible-collections/community.general/pull/10070), released in community.general 11.0.0).
     * Reason: community.general 11.0.0 requires ansible-core >= 2.18, which LFOps does not yet mandate (RHEL 8 / Python 3.6 still supported).
     * Drop when: LFOps raises its minimum ansible-core to >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm` accordingly.
+
+* `plugins/module_utils/gnupg.py` (and its `gnupg.py_LICENSE.txt`)
+
+    * Upstream: <https://github.com/vsajip/python-gnupg> (`python-gnupg`). The synced revision is recorded in the file's own `__version__`.
+    * Reason: the `gpg_key` module runs on the managed node and drives the `gpg` binary through this library. Bundling it byte-identical with upstream avoids requiring a `python-gnupg` pip install on every target. The upstream BSD license is kept alongside it.
+    * Drop when: not expected; re-sync with the upstream release when picking up bug fixes or newer-Python support, keeping the file unmodified.
+
+
+### Plugins
+
+In-house plugins live under `plugins/` following the standard Ansible collection layout: `filter/`, `lookup/`, `modules/` and `module_utils/`. The `## Tasks` rules above (FQCN, meta modules, idempotency) are about role tasks; the points below are specific to writing the plugins themselves.
+
+* Every in-house plugin starts with the standard file header, followed by `from __future__ import absolute_import, division, print_function` and `__metaclass__ = type`:
+
+    ```python
+    #!/usr/bin/env python3
+    # -*- coding: utf-8; py-indent-offset: 4 -*-
+    #
+    # Author:  Linuxfabrik GmbH, Zurich, Switzerland
+    # Contact: info (at) linuxfabrik (dot) ch
+    #          https://www.linuxfabrik.ch/
+    # License: The Unlicense, see LICENSE file.
+    ```
+
+* Use single quotes and f-strings consistently (vendored plugins keep their upstream style, see below).
+* Every plugin carries `DOCUMENTATION` (and `RETURN` / `EXAMPLES` where applicable). Keep it valid YAML: in a `description` list, a bullet containing a colon followed by a space is parsed as a mapping and makes `ansible-doc` fail, so rephrase or quote such bullets. Verify with `ansible-doc -t <filter|lookup|module> linuxfabrik.lfops.<name>`; `tests/unit/test_plugin_docs.py` guards against this class of error for all in-house plugins.
+* Set `version_added` to the LFOps release the plugin first shipped in, and never change it afterwards.
+* `module_utils` holds code shared between plugins. Do not import the external Linuxfabrik Python Libraries (`lib`) into a plugin; copy what you need and note the origin in a comment.
+
+
+#### Plugin Tests
+
+Unit tests are **mandatory** for every in-house plugin. Any pull request that adds or changes a plugin must add or update its test, and `git grep` should never find a plugin without one.
+
+* **Where**: under `tests/unit/`, mirroring the plugin tree, named `test_<plugin>.py` (e.g. `tests/unit/plugins/filter/test_combine_lod.py`). A plugin with no collection-qualified imports (e.g. the `combine_lod` filter) can be loaded by file path. A plugin that imports `ansible_collections.linuxfabrik.lfops...` (modules, or lookups pulling in a module_util) is imported through that path; `tests/conftest.py` makes this checkout importable as the collection so the imports resolve under plain pytest/tox. Same-named test files in different plugin-type directories are fine (`--import-mode=importlib`). Assert behavior, not implementation details.
+* **Two tiers**, because plugins run in different environments:
+
+    * Controller plugins (`plugins/filter/`, `plugins/lookup/`) are evaluated on the Ansible controller and only ever see the controller's Python (>= 3.10). They run on the standard CI matrix.
+    * Managed-node plugins (`plugins/modules/`, `plugins/module_utils/`) are executed on the target host and must keep working down to the oldest managed-node Python we maintain (Python 3.6 on RHEL 8). That tier runs inside a RHEL 8 / UBI 8 container; it is scaffolded in `tox.ini` (`[testenv:py36-target]`) and gets enabled once such tests exist.
+
+* **How to run / verify** (the matrix of Python and ansible-core versions is driven by `tox`; see `tests/README.md` and `tox.ini`):
+
+    ```bash
+    tox                      # full controller matrix (every Python x ansible-core combination)
+    tox -e py311-ansible216  # a single combination
+    tox -f py311             # every ansible-core for one Python
+    pytest tests/unit        # against the active interpreter (needs pytest, pyyaml, ansible-core)
+    ```
+
+* The `Linuxfabrik: Unit Tests` workflow runs the controller matrix on every push and pull request.
 
 
 ### Credits

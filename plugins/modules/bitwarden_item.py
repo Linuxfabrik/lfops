@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2022, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -26,7 +28,7 @@ notes:
     - Only login items (Bitwarden type 1) are managed. Cards, secure notes and identities are out of scope.
     - TOTP secrets are not managed; the C(totp) field is set to an empty string on creation.
     - I(uris) replaces the URI list on every run. Omitting it on an existing item causes the URI list to be cleared.
-    - I(password) defaults to C(None), which translates to "do not set a password". Use the C(bitwarden_item) lookup plugin to generate one.
+    - I(password) defaults to C(None), which leaves the password unmanaged - a new item is created without one, and an existing item keeps its current password. Use the C(bitwarden_item) lookup plugin to generate one.
     - Attachments are matched by basename only; this module assumes that an attachment with the same basename has the same content. Pre-existing attachments are kept; only missing ones are uploaded.
     - Organization, collection and folder IDs can be copied from the URL in the Bitwarden web vault.
     - The cache file lives in C($XDG_RUNTIME_DIR) (falling back to C(/tmp)) and is shared across this module and the C(bitwarden_item) lookup within the same controller session.
@@ -78,7 +80,7 @@ options:
         required: False
         type: str
     password:
-        description: Password to set on the login item. C(None) (the default) leaves the password field unset; existing passwords on already-existing items are overwritten by every non-C(None) value.
+        description: Password to set on the login item. C(None) (the default) leaves the password unmanaged - a new item gets no password and an existing item keeps its current one. Any non-C(None) value is written on every run.
         required: False
         type: str
     purpose:
@@ -261,9 +263,9 @@ from ansible_collections.linuxfabrik.lfops.plugins.module_utils.bitwarden import
 
 
 def diff_and_update(current, target):
-    '''Diffs the current item with the target item and checks if there are relevant changes.
-    Returns (changed, updated_item). The updated_item can be send to `bw` to update the remote item.
-    '''
+    """Diffs the current item with the target item and checks if there are relevant changes.
+    Returns (changed, updated_item). The updated_item can be sent to `bw` to update the remote item.
+    """
 
     def check_dict_for_changes(current, target):
         changed = False
@@ -273,7 +275,7 @@ def diff_and_update(current, target):
                     changed = True
 
             elif (value != current.get(key)) \
-                and not (not value and not current.get(key)): # compare None to emtpy lists and empty strings
+                and not (not value and not current.get(key)): # compare None to empty lists and empty strings
                 changed = True
 
         return changed
@@ -316,11 +318,11 @@ def run_module():
     if attachments:
         basenames = [os.path.basename(attachment) for attachment in attachments]
         if len(set(basenames)) < len(basenames):
-            module.fail_json('This module cannot handle multiple attachments with the same basename.')
+            module.fail_json(msg='This module cannot handle multiple attachments with the same basename.')
 
         for attachment in attachments:
             if not os.access(attachment, os.R_OK):
-                module.fail_json('Could not read the attachments at "{}".'.format(attachment))
+                module.fail_json(msg=f'Could not read the attachments at "{attachment}".')
 
     # extract the variables to make the code more readable
     collection_id = module.params['collection_id']
@@ -338,7 +340,7 @@ def run_module():
     bw = Bitwarden()
 
     if not bw.is_unlocked:
-        module.fail_json('Not logged into Bitwarden, or Bitwarden Vault is locked. Please run `bw login` and `bw unlock` first.')
+        module.fail_json(msg='Not logged into Bitwarden, or Bitwarden Vault is locked. Please run `bw login` and `bw unlock` first.')
 
     # to be sure we are up to date
     bw.sync()
@@ -353,10 +355,7 @@ def run_module():
         if len(current_items) > 1:
             module.fail_json(msg='Found multiple Bitwarden items with the same name/title and username, cannot decide which one to use. Aborting.')
 
-        try:
-            current_item = current_items[0]
-        except IndexError:
-            current_item = None
+        current_item = current_items[0] if current_items else None
 
     login_uris = bw.get_template_item_login_uri(uris)
     login = bw.get_template_item_login(username, password, login_uris)
@@ -368,18 +367,26 @@ def run_module():
         collection_id,
         folder_id,
     )
+
+    # A None password means "do not manage the password": preserve the existing
+    # item's password instead of overwriting it with null.
+    if password is None and current_item and current_item.get('login'):
+        target_item['login']['password'] = current_item['login'].get('password')
+
     if current_item:
         # check if changed, adjust if necessary
         changed, updated_item = diff_and_update(current_item, target_item)
-        if changed:
+        if changed and not module.check_mode:
             result = bw.edit_item(updated_item, updated_item['id'])
+        elif changed:
+            result = updated_item
         else:
             result = current_item
 
     else:
         # generate a new one
         changed = True
-        result = bw.create_item(target_item)
+        result = target_item if module.check_mode else bw.create_item(target_item)
 
     if attachments:
         current_attachments = set(current_attachment['fileName'] for current_attachment in result.get('attachments', []))
@@ -387,12 +394,14 @@ def run_module():
         for attachment in attachments:
             if os.path.basename(attachment) not in current_attachments:
                 attachments_changed = True
-                bw.add_attachment(result['id'], attachment)
+                if not module.check_mode:
+                    bw.add_attachment(result['id'], attachment)
 
         if attachments_changed:
             changed = True
             # we need to fetch the item again, so that it also contains the newly added attachments
-            result = bw.get_item_by_id(result['id'])
+            if not module.check_mode:
+                result = bw.get_item_by_id(result['id'])
 
     result['changed'] = changed
     # move username and password higher for easier access

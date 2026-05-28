@@ -13,17 +13,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:alternatives**: Support managing `subcommands` (slaves/followers) and the Red Hat-only `family` grouping. The role now also ensures the alternatives tooling is installed (`chkconfig` on RHEL 8, `alternatives` on RHEL 9/10; bundled with `dpkg` on Debian/Ubuntu), and can be included without variables as a no-op.
+* **role:redis**: Add template for version 8.8
+* **role:system_update**: Add a security lane for Rocky Linux. A second timer (twice a day by default) installs only Rocky Linux security hot-fixes from the dedicated `security` repository (provided by `repo_baseos`) and reboots the host if needed. The reboot time is steered per host group (for example immediately on test hosts, deferred to the evening on production hosts). Enabled by default; a no-op where the `security` repository is not enabled, and can be turned off with `system_update__security_enabled: false`. This keeps critical security fixes flowing daily while the regular update lane stays on its weekly schedule.
 * **role:mariadb_server**: Add `mariadb_server__cnf_innodb_snapshot_isolation` variable (MariaDB 10.6+), defaulting to `'ON'`.
 
 ### Security
 
+* **plugin:gpg_key**: The cleartext passphrase is no longer included in the module's failure output when key generation fails.
 * **role:repo_\***: HTTP basic auth credentials are now only written to the repository config files when a custom mirror URL is set. Previously, setting `lfops__repo_basic_auth_login` without `lfops__repo_mirror_url` wrote the credentials into repo files that still pointed at the public vendor mirrors, causing the package manager to send them to servers that do not use basic auth. The Icinga repo is intentionally unchanged, since its subscription URL legitimately requires basic auth.
 * **ci**: Scope `GITHUB_TOKEN` permissions in the dependabot-auto-merge workflow to the job level, with top-level now `read-all`. Matches the pattern used by the other LFOps workflows and addresses the OpenSSF Scorecard `Token-Permissions` finding.
 
 ### Removed
 
 * **role:repo_remi**: Drop support for RHEL 7 and Fedora 35. Both are EOL (RHEL 7: June 2024, Fedora 35: December 2022). The per-platform `tasks/RedHat7.yml`, `vars/{RedHat7,Fedora}.yml` and `templates/{RedHat7,Fedora}/` trees are removed.
-* **tool:particle**: Remove the `tools/particle` Vagrant-based role test runner, its sample inventories under `tests/`, and the bundled `linuxfabrik/lib` git submodule (whose only consumer was `particle`). The runner and the submodule were tightly wired together, and Dependabot did not have a `gitsubmodule` config for this repo, so the bundled lib was silently drifting behind upstream. Since role testing is moving to Molecule anyway, dropping the whole stack is cleaner than keeping the wiring around. Older revisions remain accessible through git history.
+* **tool:particle**: Remove the `tools/particle` Vagrant-based role test runner, its leftover `particle/Vagrantfile`, its sample inventories under `tests/`, and the bundled `linuxfabrik/lib` git submodule (whose only consumer was `particle`). The runner and the submodule were tightly wired together, and Dependabot did not have a `gitsubmodule` config for this repo, so the bundled lib was silently drifting behind upstream. Since role testing is moving to Molecule anyway, dropping the whole stack is cleaner than keeping the wiring around. Older revisions remain accessible through git history.
 
 ### Breaking Changes
 
@@ -32,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:repo_baseos**: The Rocky 8 `security` repository now matches Rocky 9/10: it adds the `security-debuginfo` and `security-source` sub-repositories (disabled), a 6-hour metadata expiry so emergency hot-fixes are noticed quickly, and the `$rltype` mirrorlist variable.
+* **plugin:gpg_key**: Refresh the bundled GPG helper library so the module keeps working on current Python and GnuPG releases. Existing playbooks are unaffected. The `gnupghome` parameter now expands `~` and resolves relative paths, matching its documentation.
 * **docs**: All role READMEs now follow a consistent structure that separates the dependencies a playbook sets up for you from what you must provide yourself. Documentation only, no behavior changes.
 * **role:keycloak**: The role no longer leaves the bootstrap admin credentials lying around in `/etc/sysconfig/keycloak` after the first run. It now writes the credentials, waits for Keycloak to consume them on startup (provisioning the bootstrap admin in the `master` realm), re-renders the sysconfig file with the credentials removed, and stores a state marker at `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state` so subsequent runs skip the credential render entirely. After the first run, `keycloak__admin_login` can be removed from the inventory. Disaster recovery: delete the marker file, re-add the variable, re-run. Also recommend a `-temp` suffix for the initial admin username (example: `keycloak-admin-temp`) so it is visually obvious in the Keycloak UI which account must be deleted once a permanent admin exists.
 * **role:redis**: Bump default for `net.core.somaxconn` from `1024` to `4096` to match the RHEL 9 / RHEL 10 kernel default and the current Redis upstream recommendation. Hosts on RHEL 9 or 10 see no effective change (the override was already below the kernel default); RHEL 8 hosts now get `4096` instead of `1024`.
@@ -40,6 +45,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:example**: Demonstrate the `delegate_to: 'localhost'` + `become: false` pattern (download on the controller, copy to the target) so role authors can copy it consistently.
 * **role:apache_httpd**: bump Core Rule Set to 4.26.0
 * **role:apache_httpd**: Update the two reverse-proxy snippets in `EXAMPLES.md` to use `ProxyPass` instead of `RewriteRule ^/(.*) ... [proxy,last]`. The RewriteRule variant `%`-decodes the URI pattern and forwards characters such as `?` unencoded to the backend, which breaks WebDAV apps (file-not-found on rename in Nextcloud). The examples now also carry a comment explaining the choice and link to the corresponding [blog post](https://www.linuxfabrik.ch/blog/nextcloud-rewriterules-vs-proxypass).
+
+### Fixed
+
+* **plugin:gpg_key**: Corrected the module documentation. The GPG helper library ships with the collection, so no separate `python-gnupg` install is required, and the returned key field is documented as `uids` (matching the actual output).
+* **plugin:nextcloud_occ_app_config**: An `array` config value is now compared as JSON, so a key whose stored value already matches the desired one no longer reports a change (and re-runs `occ config:app:set`) on every run.
+* **plugin:bitwarden_item**: The module no longer writes to the Bitwarden vault when run in check mode (`--check`); it reports the would-be change instead.
+* **plugin:bitwarden_item**: A run without `password` (the default `None`) no longer overwrites an existing item's password; the current password is preserved, matching the documented behavior.
+* **plugin:sqlite_query**: A failed query now fails the task instead of reporting success with the error text in `query_result`. Playbooks that relied on the previous silent success will now correctly fail.
+* **plugin:sqlite_query**: A `REGEXP` query against a column that contains NULL values no longer fails; a NULL value simply does not match.
+* **plugin:uptimerobot_\***: The modules no longer crash when the UptimeRobot API returns a non-list response for a list endpoint; the response is passed through instead.
+* **plugin:nextcloud_occ_app_config, plugin:nextcloud_occ_system_config, plugin:uptimerobot_monitor, plugin:uptimerobot_psp**: Fixed their documentation so `ansible-doc` renders them again. A unit-test guard now catches this class of error for every in-house plugin.
+* **plugin:bitwarden_item**: Fixed the lookup's documentation so `ansible-doc` renders it again.
+* **plugin:combine_lod**: The `combine_lod` filter now reports an error when an item is missing part of a composite `unique_key` (a list of keys), instead of silently grouping such items together. Inventories with incomplete composite keys that previously merged by accident now fail loudly and must be corrected. Also fixed its documentation so `ansible-doc` renders it again.
+* **role:kernel_settings**: The `systemd_cpu_affinity` setting is now actually applied. The value was computed and shown in the debug output but never passed to the underlying system role, so a configured CPU affinity had no effect.
 
 ### Added
 

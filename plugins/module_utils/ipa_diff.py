@@ -1,12 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
+
 # Temporary diff helpers for ansible-freeipa modules.
 # Remove once https://github.com/freeipa/ansible-freeipa/pull/1415
 # is merged and released.
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from ansible.module_utils._text import to_text
+from ansible.module_utils.common.text.converters import to_text
 
 
 def _compare_key(arg, ipa_arg):
@@ -28,7 +36,7 @@ def _compare_key(arg, ipa_arg):
     return arg == ipa_arg
 
 
-class IPADiffTracker(object):
+class IPADiffTracker:
     """Track before/after state for Ansible --diff output."""
 
     def __init__(self):
@@ -38,17 +46,17 @@ class IPADiffTracker(object):
         """Return kwargs for exit_json (empty dict if no changes)."""
         if not self._diffs:
             return {}
-        return {"diff": self._diffs}
+        return {'diff': self._diffs}
 
     def add_entry_diff(self, name, before, after):
         """Record a diff entry for one IPA object."""
         if before == after:
             return
         self._diffs.append({
-            "before_header": name,
-            "after_header": name,
-            "before": before,
-            "after": after,
+            'before_header': name,
+            'after_header': name,
+            'before': before,
+            'after': after,
         })
 
 

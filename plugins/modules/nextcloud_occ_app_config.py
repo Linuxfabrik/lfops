@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -17,7 +19,7 @@ description:
   - Drives C(occ config:app:set) and C(config:app:delete) to bring a single app config key into the desired state.
   - The current value and type are read from C(occ config:app:get --details --output=json) (or from a pre-fetched C(occ config:list --output=json --private) listing passed via I(installed_config_json)). C(occ config:app:set) is only called when the stored value or type does not already match.
   - When I(name) contains spaces, each whitespace-separated token is passed as a separate argument to C(occ), matching how Nextcloud addresses nested keys (e.g. C(name="endpoint enabled")).
-  - Booleans are normalized for Nextcloud's storage: I(value) values C(true)/C(1)/C(on)/C(yes) (case-insensitive) become C(1) in the database; everything else becomes C(0). When reading via I(installed_config_json), the type is inferred from the JSON value type (Python C(bool)/C(int)/C(float)/C(list)/C(str)), since C(occ config:list) returns values already cast by C(convertTypedValue()).
+  - Booleans are normalized for Nextcloud's storage. I(value) values C(true)/C(1)/C(on)/C(yes) (case-insensitive) become C(1) in the database; everything else becomes C(0). When reading via I(installed_config_json), the type is inferred from the JSON value type (Python C(bool)/C(int)/C(float)/C(list)/C(str)), since C(occ config:list) returns values already cast by C(convertTypedValue()).
 
 requirements:
   - A working Nextcloud installation with the C(occ) command available.
@@ -115,6 +117,23 @@ import traceback
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
 
+
+def values_match(current_value, value, value_type):
+    """Decide whether the stored value already matches the desired one.
+
+    For C(array) values both sides are compared as parsed JSON, so an
+    array stored by Nextcloud (returned as a JSON array, e.g. via
+    C(config:list)) compares equal to the user's array literal regardless
+    of whitespace or key ordering. All other types compare as strings.
+    """
+    if value_type == 'array':
+        try:
+            return json.loads(current_value) == json.loads(value)
+        except (json.JSONDecodeError, ValueError, TypeError):
+            return False
+    return current_value == value
+
+
 def main():
     # define available arguments/parameters a user can pass to this module
     module_args = dict(
@@ -128,10 +147,6 @@ def main():
             installed_config_json=dict(type='raw'),
     )
 
-    # the AnsibleModule object will be our abstraction working with Ansible
-    # this includes instantiation, a couple of common attr would be the
-    # args/params passed to the execution, as well as if this module
-    # supports check mode
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True,
@@ -169,7 +184,7 @@ def main():
             try:
                 installed_config_json = json.loads(installed_config_json)
             except (json.JSONDecodeError, ValueError):
-                module.fail_json(msg=f'Failed to parse installed_config_json')
+                module.fail_json(msg='Failed to parse installed_config_json')
 
         app_configs = installed_config_json.get('apps', {}).get(app, {})
         key_exists = name in app_configs
@@ -189,7 +204,9 @@ def main():
                 current_value = str(raw)
                 current_type = 'float'
             elif isinstance(raw, list):
-                current_value = str(raw)
+                # store canonical JSON so it can be compared as JSON against the
+                # user's array literal (config:list returns an already-parsed list)
+                current_value = json.dumps(raw)
                 current_type = 'array'
             else:
                 current_value = str(raw)
@@ -227,7 +244,7 @@ def main():
 
     if state == 'present':
         # check if the current value and type match the desired settings
-        if current_value == value and current_type == value_type:
+        if current_type == value_type and values_match(current_value, value, value_type):
             module.exit_json(**result)
 
         # else, the value will be changed

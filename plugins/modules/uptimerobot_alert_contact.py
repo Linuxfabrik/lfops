@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -120,15 +122,13 @@ def main():
     contact_id = module.params.get('id')
     friendly_name = module.params.get('friendly_name')
 
-    module.log('uptimerobot_alert_contact: looking up id={0} friendly_name={1!r}'.format(
-        contact_id, friendly_name,
-    ))
+    module.log(f'uptimerobot_alert_contact: looking up id={contact_id} friendly_name={friendly_name!r}')
 
     target = None
     if contact_id is None:
         success, contacts = ur.get_alert_contacts(module, api_key)
         if not success:
-            module.fail_json(msg='Could not list alert contacts: {0}'.format(contacts))
+            module.fail_json(msg=f'Could not list alert contacts: {contacts}')
         target = ur.find_by_friendly_name(contacts, friendly_name)
         if target is None:
             module.exit_json(changed=False, alert_contact={}, debug={
@@ -162,12 +162,13 @@ def main():
             'friendly_name': target.get('friendly_name'),
         })
 
-    module.log('uptimerobot_alert_contact: deleting id={0} friendly_name={1!r}'.format(
-        contact_id, target.get('friendly_name'),
-    ))
+    module.log(
+        f"uptimerobot_alert_contact: deleting id={contact_id} "
+        f"friendly_name={target.get('friendly_name')!r}"
+    )
     success, result = ur.delete_alert_contact(module, api_key, contact_id)
     if not success:
-        module.fail_json(msg='Could not delete alert contact {0!r}: {1}'.format(target, result))
+        module.fail_json(msg=f'Could not delete alert contact {target!r}: {result}')
     module.exit_json(changed=True, alert_contact=target, debug={
         'operation': 'delete',
         'contact_id': contact_id,

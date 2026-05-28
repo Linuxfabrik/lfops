@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -17,7 +19,7 @@ description:
   - Drives C(occ config:system:set) and C(config:system:delete) to bring a single system config key into the desired state.
   - The current value is read from C(occ config:system:get) (or from a pre-fetched C(occ config:list --output=json --private) listing passed via I(installed_config_json)). C(occ config:system:set) is only called when the stored value does not already match I(value).
   - When I(name) contains spaces, each whitespace-separated token is passed as a separate argument to C(occ), matching how Nextcloud addresses nested keys (e.g. C(name="trusted_domains 0"), C(name="forbidden_filename_characters 0")).
-  - Booleans are normalized for C(occ): I(value) values C(true)/C(1)/C(on)/C(yes) (case-insensitive) become the literal string C(true); everything else becomes C(false). This matches what Nextcloud's CastHelper accepts on C(config:system:set). Note that this differs from C(nextcloud_occ_app_config), which stores booleans as C(1)/C(0).
+  - Booleans are normalized for C(occ). I(value) values C(true)/C(1)/C(on)/C(yes) (case-insensitive) become the literal string C(true); everything else becomes C(false). This matches what Nextcloud's CastHelper accepts on C(config:system:set). Note that this differs from C(nextcloud_occ_app_config), which stores booleans as C(1)/C(0).
 
 requirements:
   - A working Nextcloud installation with the C(occ) command available.
@@ -119,10 +121,6 @@ def main():
             installed_config_json=dict(type='raw'),
     )
 
-    # the AnsibleModule object will be our abstraction working with Ansible
-    # this includes instantiation, a couple of common attr would be the
-    # args/params passed to the execution, as well as if this module
-    # supports check mode
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True,
@@ -158,7 +156,7 @@ def main():
             try:
                 installed_config_json = json.loads(installed_config_json)
             except (json.JSONDecodeError, ValueError):
-                module.fail_json(msg=f'Failed to parse installed_config_json')
+                module.fail_json(msg='Failed to parse installed_config_json')
 
         # navigate nested config by path parts (e.g. "trusted_domains 0")
         current = installed_config_json.get('system', {})
