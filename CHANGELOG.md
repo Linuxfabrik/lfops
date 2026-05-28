@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:redis**: Add template for version 8.8
 * **role:system_update**: Add a security lane for Rocky Linux. A second timer (twice a day by default) installs only Rocky Linux security hot-fixes from the dedicated `security` repository (provided by `repo_baseos`) and reboots the host if needed. The reboot time is steered per host group (for example immediately on test hosts, deferred to the evening on production hosts). Enabled by default; a no-op where the `security` repository is not enabled, and can be turned off with `system_update__security_enabled: false`. This keeps critical security fixes flowing daily while the regular update lane stays on its weekly schedule.
 * **role:mariadb_server**: Add `mariadb_server__cnf_innodb_snapshot_isolation` variable (MariaDB 10.6+), defaulting to `'ON'`.
 
