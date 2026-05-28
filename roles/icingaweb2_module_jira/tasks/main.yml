@@ -9,7 +9,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/jira'
       state: 'directory'
-      owner: '{{ icingaweb2_module_jira__icingaweb2_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -17,7 +17,7 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/jira'
       state: 'directory'
-      owner: '{{ icingaweb2_module_jira__icingaweb2_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o755
 
@@ -58,7 +58,7 @@
       backup: true
       src: 'etc/icingaweb2/modules/jira/config.ini.j2'
       dest: '/etc/icingaweb2/modules/jira/config.ini'
-      owner: '{{ icingaweb2_module_jira__icingaweb2_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o664
 

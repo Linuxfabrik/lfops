@@ -206,6 +206,12 @@ When creating a new role, make sure to deliver:
         tags:
           - 'always'
 
+      - ansible.builtin.import_role:
+          name: 'shared'
+          tasks_from: 'global-variables.yml'
+        tags:
+          - 'always'
+
     roles:
 
       - role: 'example'
@@ -623,6 +629,26 @@ my_role__my_simple_value: '{{ __my_role__my_simple_value }}'
 ```
 
 This allows the user to overwrite `my_role__my_simple_value` in their inventory.
+
+
+#### LFOps-wide Shared Variables
+
+A small set of platform values is identical across many roles (currently the Apache httpd user and group). To avoid repeating these in every role's `vars/<os>.yml`, they live once in `roles/shared/vars/<os>.yml` and are loaded into every playbook by `roles/shared/tasks/global-variables.yml`, imported from each playbook's `pre_tasks` next to `log-start.yml`. They are then available to every role in the play. The available variables can be found at `roles/shared/vars/<os>.yml`.
+
+Reference them directly in tasks, templates, and `defaults/main.yml`, for example:
+
+```yaml
+- name: 'Deploy /etc/example/example.conf'
+  ansible.builtin.template:
+    backup: true
+    src: 'etc/example/example.conf.j2'
+    dest: '/etc/example/example.conf'
+    owner: '{{ __shared__apache_httpd_user }}'
+    group: '{{ __shared__apache_httpd_group }}'
+    mode: 0o644
+```
+
+When adding a new LFOps-wide platform value, define it in `roles/shared/vars/<os>.yml` and it becomes available to every role.
 
 
 #### OS-specific Tasks

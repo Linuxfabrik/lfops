@@ -5,7 +5,7 @@
 {% endif %}
 
 # mod_unixd
-Group {{ apache_httpd__group }}
-User {{ apache_httpd__user }}
+Group {{ __shared__apache_httpd_group }}
+User {{ __shared__apache_httpd_user }}
 
 {{ item['raw'] | d() }}

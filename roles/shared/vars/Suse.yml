@@ -1,0 +1,2 @@
+__shared__apache_httpd_group: 'www'
+__shared__apache_httpd_user: 'wwwrun'

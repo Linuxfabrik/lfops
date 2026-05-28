@@ -243,14 +243,15 @@
       mode: 0o400 # contains secrets
     notify: 'example: validate config; restart example'
 
-  # os-specific template selection using first_found
+  # os-specific template selection using first_found, with owner/group taken from the
+  # LFOps-wide shared variables (see CONTRIBUTING.md "LFOps-wide Shared Variables" for details).
   - name: 'Deploy /etc/example/platform.conf'
     ansible.builtin.template:
       backup: true
       src: '{{ lookup("ansible.builtin.first_found", __example__platform_template_file) }}'
       dest: '/etc/example/platform.conf'
-      owner: 'example'
-      group: 'example'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
       mode: 0o644
     vars:
       __example__platform_template_file:

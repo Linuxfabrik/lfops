@@ -10,6 +10,12 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
 
   roles:
 

@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:shared**: The Apache httpd user/group (`apache` on RedHat, `www-data` on Debian, `wwwrun`/`www` on Suse) is now defined once in the `shared` role as `__shared__apache_httpd_user` / `__shared__apache_httpd_group` and loaded into every playbook through a new `global-variables.yml` task in `pre_tasks`, instead of being repeated in the `vars/` of around 20 roles. The affected roles now expect this `pre_tasks` import to run, so running them ad-hoc outside the bundled playbooks requires importing `shared`'s `global-variables.yml` first. On Suse, the `monitoring_plugins` web files now use the correct apache group `www` instead of `wwwrun` (on RedHat and Debian the user and group are identical, so file ownership there is unchanged).
 * **role:repo_baseos**: The Rocky 8 `security` repository now matches Rocky 9/10: it adds the `security-debuginfo` and `security-source` sub-repositories (disabled), a 6-hour metadata expiry so emergency hot-fixes are noticed quickly, and the `$rltype` mirrorlist variable.
 * **plugin:gpg_key**: Refresh the bundled GPG helper library so the module keeps working on current Python and GnuPG releases. Existing playbooks are unaffected. The `gnupghome` parameter now expands `~` and resolves relative paths, matching its documentation.
 * **docs**: All role READMEs now follow a consistent structure that separates the dependencies a playbook sets up for you from what you must provide yourself. Documentation only, no behavior changes.

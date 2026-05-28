@@ -3,8 +3,8 @@ php__fpm_pools__group_var: []
 php__fpm_pools__host_var: []
 php__fpm_pools__role_var:
   - name: 'www'
-    user: '{{ php__webserver_user }}'
-    group: '{{ php__webserver_group }}'
+    user: '{{ __shared__apache_httpd_user }}'
+    group: '{{ __shared__apache_httpd_group }}'
 php__fpm_pools__combined_var: '{{ (
       php__fpm_pools__role_var +
       php__fpm_pools__dependent_var +

@@ -9,7 +9,7 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/company'
       state: 'directory'
-      owner: '{{ __icingaweb2_module_company__icingaweb2_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o755
     register: 'icingaweb2_module_company__mkdir_result'
