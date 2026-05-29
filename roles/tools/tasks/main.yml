@@ -19,7 +19,6 @@
         - 'nano'
         - 'rsync'
         - 'sudo'  # sometimes missing on Debian
-        - 'tmux'
         - 'vim'
         - 'wget'
       state: 'present'

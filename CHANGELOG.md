@@ -12,11 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:tmux**: Installs tmux and deploys a system-wide `/etc/tmux.conf` with sensible defaults, such as a larger scrollback buffer and mouse support.
 * **plugin:platform_select**: New filter plugin for selecting a value from a platform-keyed dictionary by OS family / distribution / version.
 * **role:alternatives**: Support managing `subcommands` (slaves/followers) and the Red Hat-only `family` grouping. The role now also ensures the alternatives tooling is installed (`chkconfig` on RHEL 8, `alternatives` on RHEL 9/10; bundled with `dpkg` on Debian/Ubuntu), and can be included without variables as a no-op.
 * **role:redis**: Add template for version 8.8
 * **role:system_update**: Add a security lane for Rocky Linux. A second timer (twice a day by default) installs only Rocky Linux security hot-fixes from the dedicated `security` repository (provided by `repo_baseos`) and reboots the host if needed. The reboot time is steered per host group (for example immediately on test hosts, deferred to the evening on production hosts). Enabled by default; a no-op where the `security` repository is not enabled, and can be turned off with `system_update__security_enabled: false`. This keeps critical security fixes flowing daily while the regular update lane stays on its weekly schedule.
 * **role:mariadb_server**: Add `mariadb_server__cnf_innodb_snapshot_isolation` variable (MariaDB 10.6+), defaulting to `'ON'`.
+
+### Changed
+
+* **role:tools**: No longer installs tmux. Use the dedicated `tmux` role instead, which also ships a configuration with sensible defaults.
 
 ### Security
 

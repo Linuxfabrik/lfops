@@ -1,0 +1,18 @@
+- block:
+
+  - name: 'Install tmux'
+    ansible.builtin.package:
+      name: 'tmux'
+      state: 'present'
+
+  - name: 'Deploy /etc/tmux.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/tmux.conf.j2'
+      dest: '/etc/tmux.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'tmux'

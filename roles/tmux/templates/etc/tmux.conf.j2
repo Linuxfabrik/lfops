@@ -1,0 +1,27 @@
+# {{ ansible_managed }}
+# 20260529
+
+# Larger scrollback buffer.
+set -g history-limit {{ tmux__history_limit }}
+
+# Mouse support (scroll, select and resize panes/windows).
+set -g mouse {{ tmux__mouse | ternary('on', 'off') }}
+
+# Start window and pane numbering at 1, matching the keyboard layout.
+set -g base-index 1
+setw -g pane-base-index 1
+
+# Renumber windows when one is closed, so there are no gaps.
+set -g renumber-windows on
+
+# Shorten the escape delay, which otherwise gets in the way of editors like vim.
+set -sg escape-time 10
+
+# 256 color support.
+set -g default-terminal 'screen-256color'
+
+# Reflect the active window in the terminal title.
+set -g set-titles on
+
+# vi-style key bindings in copy mode.
+setw -g mode-keys vi
