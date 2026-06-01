@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:monitoring_plugins**: `install_method: 'source'` now reads the per-Python-LTS lockfile under `lockfiles/pyXX/requirements.txt` (`py39` ... `py314`) from both the `monitoring-plugins` and `lib` repos, picking the directory that matches the target host's Python. The previous root-level `requirements.txt` no longer exists upstream. No variable changes; rsync sources updated.
 * **CONTRIBUTING**: `meta/argument_specs.yml` must declare the `__dependent_var` slot for any variable that `setup_*` playbooks inject into the role via `vars:`. Dict variables fed by external lookups like `linuxfabrik.lfops.bitwarden_item` should use `type: 'dict'` without strict sub-options, since the lookup returns the full item with additional keys.
 * **role:example**: Demonstrate the `delegate_to: 'localhost'` + `become: false` pattern (download on the controller, copy to the target) so role authors can copy it consistently.
-* **role:apache_httpd**: bump Core Rule Set to 4.26.0
+* **role:apache_httpd**: bump Core Rule Set to 4.27.0
 * **role:apache_httpd**: Update the two reverse-proxy snippets in `EXAMPLES.md` to use `ProxyPass` instead of `RewriteRule ^/(.*) ... [proxy,last]`. The RewriteRule variant `%`-decodes the URI pattern and forwards characters such as `?` unencoded to the backend, which breaks WebDAV apps (file-not-found on rename in Nextcloud). The examples now also carry a comment explaining the choice and link to the corresponding [blog post](https://www.linuxfabrik.ch/blog/nextcloud-rewriterules-vs-proxypass).
 
 ### Fixed
