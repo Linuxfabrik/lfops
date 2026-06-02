@@ -94,9 +94,6 @@ If you manage RHEL 8 hosts with the default system Python (3.6), use **ansible-c
 ```bash
 # Install the collection and its dependencies
 ansible-galaxy collection install linuxfabrik.lfops
-
-# Alternatively, install from Git directly
-ansible-galaxy collection install git+https://github.com/Linuxfabrik/lfops.git
 ```
 
 To install the dependencies separately:
