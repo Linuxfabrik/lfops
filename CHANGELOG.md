@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:graylog_server**: Make more HTTP, Elasticsearch, processing/output buffer and message journal settings configurable via `graylog_server__http_external_uri`, `graylog_server__http_enable_cors`, `graylog_server__elasticsearch_max_total_connections`, `graylog_server__elasticsearch_max_total_connections_per_route`, `graylog_server__output_batch_size`, `graylog_server__processbuffer_processors`, `graylog_server__outputbuffer_processors`, `graylog_server__ring_size`, `graylog_server__inputbuffer_ring_size`, `graylog_server__message_journal_max_age` and `graylog_server__message_journal_max_size`.
 * **role:mariadb_server**: Make `aria_pagecache_buffer_size`, `key_buffer_size` and `sort_buffer_size` configurable via the corresponding `mariadb_server__cnf_*` variables.
 * **plugin:platform_select**: New filter plugin for selecting a value from a platform-keyed dictionary by OS family / distribution / version.
 * **role:alternatives**: Support managing `subcommands` (slaves/followers) and the Red Hat-only `family` grouping. The role now also ensures the alternatives tooling is installed (`chkconfig` on RHEL 8, `alternatives` on RHEL 9/10; bundled with `dpkg` on Debian/Ubuntu), and can be included without variables as a no-op.
