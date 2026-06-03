@@ -158,6 +158,7 @@ Which Ansible role is proven to run on which OS?
 | telegraf                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | timezone                              |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
 | tools                                 |        |        |   x    |   x    |    x    |           |           |           | Fedora                                       |
+| trend_micro                           |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | unattended_upgrades                   |  (x)   |  (x)   |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
 | uptimerobot                           |        |        |        |        |         |           |           |           | controller-side, talks to UptimeRobot API    |
 | vsftpd                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
