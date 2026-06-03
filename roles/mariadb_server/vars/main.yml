@@ -1,0 +1,9 @@
+__mariadb_server__python__modules__dependent_var:
+  Debian:
+    - name: 'python3-pymysql'
+  RedHat:
+    - name: 'python3-PyMySQL'
+mariadb_server__python__modules__dependent_var: '{{
+    __mariadb_server__python__modules__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts)
+  }}'

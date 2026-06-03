@@ -19,6 +19,13 @@ This role is tested with the following IcingaWeb2 PDF Export Module versions:
 * This role only installs and configures the IcingaWeb2 module itself. The headless browser backend it talks to (see the [module documentation](https://github.com/Icinga/icingaweb2-module-pdfexport#requirements)) is provided separately by the [linuxfabrik.lfops.chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless) role.
 
 
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* A headless Chromium backend must provide the remote debugging interface this module connects to (role: [linuxfabrik.lfops.chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless)).
+
+
 ## Requirements
 
 * The Ansible controller must have Internet access (downloads from `https://github.com/Icinga/icingaweb2-module-pdfexport/archive/`).
@@ -26,7 +33,6 @@ This role is tested with the following IcingaWeb2 PDF Export Module versions:
 Manual steps:
 
 * Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
-* Install and configure the runtime dependencies listed in the [module documentation](https://github.com/Icinga/icingaweb2-module-pdfexport#requirements) (typically a headless browser binary).
 
 
 ## Tags

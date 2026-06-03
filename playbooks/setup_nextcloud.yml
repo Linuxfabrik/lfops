@@ -9,6 +9,12 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -42,7 +48,7 @@
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
           apache_httpd__python__modules__dependent_var +
-          mariadb_server__python__modules__dependent_var[ansible_facts["os_family"]]
+          mariadb_server__python__modules__dependent_var
         }}'
       when:
         - 'not setup_nextcloud__skip_python | d(false)'

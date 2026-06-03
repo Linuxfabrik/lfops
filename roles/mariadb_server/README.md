@@ -490,6 +490,12 @@ mariadb_server__users__host_var:
 
 Variables for `z00-linuxfabrik.cnf` directives and their default values, defined and supported by this role.
 
+`mariadb_server__cnf_aria_pagecache_buffer_size__group_var` / `mariadb_server__cnf_aria_pagecache_buffer_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/aria-system-variables/#aria_pagecache_buffer_size)
+* Type: String.
+* Default: `'128M'`
+
 `mariadb_server__cnf_bind_address__group_var` / `mariadb_server__cnf_bind_address__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bind_address)
@@ -706,6 +712,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'256K'`
 
+`mariadb_server__cnf_key_buffer_size__group_var` / `mariadb_server__cnf_key_buffer_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#key_buffer_size)
+* Type: String.
+* Default: `'128M'`
+
 `mariadb_server__cnf_local_infile__group_var` / `mariadb_server__cnf_local_infile__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#local_infile)
@@ -844,6 +856,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: RHEL: `'/run/mariadb/mariadb.sock'`, Debian: `'/run/mysqld/mysqld.sock'`
 
+`mariadb_server__cnf_sort_buffer_size__group_var` / `mariadb_server__cnf_sort_buffer_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#sort_buffer_size)
+* Type: String.
+* Default: `'2M'`
+
 `mariadb_server__cnf_sql_mode__group_var` / `mariadb_server__cnf_sql_mode__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#sql_mode)
@@ -889,6 +907,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 Example:
 ```yaml
 # optional - cnf directives
+mariadb_server__cnf_aria_pagecache_buffer_size__host_var: '128M'
 mariadb_server__cnf_bind_address__host_var: '0.0.0.0'
 mariadb_server__cnf_binlog_expire_logs_seconds__host_var: '9000' # 2.5hrs
 mariadb_server__cnf_binlog_format__host_var: 'MIXED'
@@ -912,6 +931,7 @@ mariadb_server__cnf_innodb_log_buffer_size__host_var: '20M'
 mariadb_server__cnf_innodb_log_file_size__host_var: '96M'
 mariadb_server__cnf_interactive_timeout__host_var: 28800
 mariadb_server__cnf_join_buffer_size__host_var: '256K'
+mariadb_server__cnf_key_buffer_size__host_var: '128M'
 mariadb_server__cnf_log_bin__host_var: 'log_bin'
 mariadb_server__cnf_log_error__host_var: '/var/log/mariadb/mariadb.log'
 mariadb_server__cnf_log_slave_updates__host_var: 'ON'
@@ -932,6 +952,7 @@ mariadb_server__cnf_skip_name_resolve__host_var: 'ON'
 mariadb_server__cnf_slow_query_log__host_var: 'OFF'
 mariadb_server__cnf_slow_query_log_file__host_var: '/var/log/mariadb/mariadb-slowquery.log'
 mariadb_server__cnf_socket__host_var: '/var/run/mariadb/mariadb.sock' # use /var/run instead of /run to avoid collisions with selinux fcontexts (`File spec /run/mariadb/mariadb\.sock conflicts with equivalency rule '/run /var/run'`)
+mariadb_server__cnf_sort_buffer_size__host_var: '2M'
 mariadb_server__cnf_sql_mode__host_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__host_var: 400
 mariadb_server__cnf_table_open_cache__host_var: 3000

@@ -16,7 +16,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/icingadb'
       state: 'directory'
-      owner: '{{ icingadb_web__icingaweb2_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -25,7 +25,7 @@
       backup: true
       src: 'etc/icingaweb2/modules/icingadb/{{ item }}.j2'
       dest: '/etc/icingaweb2/modules/icingadb/{{ item }}'
-      owner: '{{ icingadb_web__icingaweb2_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o660
     loop:

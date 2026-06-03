@@ -1,4 +1,4 @@
-# Ansible Role linuxfabrik.lfops.duplicity
+s# Ansible Role linuxfabrik.lfops.duplicity
 
 This role configures *daily file-based* backups using [duplicity](https://duplicity.gitlab.io/). Currently, this role is focused on using [OpenStack Object Storage ("Swift")](https://wiki.openstack.org/wiki/Swift) as the storage backend.
 
@@ -18,10 +18,8 @@ Note that this role does not support running with `--check`, as it first creates
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)). On Rocky 9+, the CRB ("Code Ready Builder") repository must also be enabled (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)) so `python3-virtualenv` can be installed.
 * `duplicity`, `python-swiftclient` and `python-keystoneclient` must be installed into a Python 3 virtual environment in `/opt/python-venv/duplicity` (role: [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv)).
-* On RHEL-compatible systems, enable the EPEL repository. On Rocky 9+, also enable the CRB Repo ("Code Ready Builder") to be able to install `python3-virtualenv`. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) and [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) roles.
-* Install `duplicity`, `python-swiftclient` and `python-keystoneclient` into a Python 3 virtual environment in `/opt/python-venv/duplicity`. This can be done using the [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv) role.
 
 **Attention**
 

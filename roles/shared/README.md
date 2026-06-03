@@ -18,6 +18,11 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 * Loads OS-family / distribution / version-specific `vars/<name>.yml` files of the *calling* role, in order from least to most specific (e.g. `RedHat.yml` -> `RedHat8.yml` -> `Rocky.yml` -> `Rocky8.yml` -> `Rocky8.10.yml`). Missing files are skipped silently.
 * Parameters: none. Relies on `ansible_parent_role_paths[0]` (i.e. it must be imported from another role).
 
+`global-variables.yml`
+
+* Loads LFOps-wide platform variables from the shared role's *own* `vars/<name>.yml` files (`role_path`, not the calling role), using the same least-to-most-specific order as `platform-variables.yml`. Imported in every playbook's `pre_tasks` so the variables are available to all roles in the play.
+* Parameters: none.
+
 `clone-lib-repo.yml`
 
 * Clones the [Linuxfabrik Python Libraries](https://github.com/Linuxfabrik/lib) to `/tmp/ansible.lib-repo` on the Ansible controller (`delegate_to: localhost`, `run_once`, `--check`-safe). Includes a rescue path that wipes the directory and retries on failure (e.g. when an existing checkout is on a different ref).
@@ -43,6 +48,13 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 ## Usage Example
 
 ```yaml
+- name: 'Set LFOps-wide platform variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'global-variables.yml'
+  tags:
+    - 'always'
+
 - name: 'Set platform/version specific variables'
   ansible.builtin.import_role:
     name: 'shared'

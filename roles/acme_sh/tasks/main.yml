@@ -49,16 +49,16 @@
     ansible.builtin.file:
       path: '/var/www/html/letsencrypt/.well-known/acme-challenge'
       state: 'directory'
-      owner: '{{ __acme_sh__apache_httpd_user }}'
-      group: '{{ __acme_sh__apache_httpd_group }}'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
       mode: 0o755
 
   - name: "echo 'it works' > /var/www/html/letsencrypt/.well-known/acme-challenge/index.html"
     ansible.builtin.copy:
       content: 'it works'
       dest: '/var/www/html/letsencrypt/.well-known/acme-challenge/index.html'
-      owner: '{{ __acme_sh__apache_httpd_user }}'
-      group: '{{ __acme_sh__apache_httpd_group }}'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
       mode: 0o644
 
   tags:

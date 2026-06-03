@@ -72,3 +72,68 @@
   tags:
     - 'system_update'
     - 'system_update:state'
+
+
+# The security lane applies Rocky Linux security hot-fixes from the dedicated
+# `security` repository (provided by the repo_baseos role) twice a day,
+# independent of the regular (weekly) update lane. Rocky Linux only.
+- block:
+
+  - name: 'Deploy /usr/local/bin/security-update'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/bin/security-update.j2'
+      dest: '/usr/local/bin/security-update'
+      owner: 'root'
+      group: 'root'
+      mode: 0o744
+
+  - name: 'Deploy /usr/local/bin/security-reboot'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/bin/security-reboot.j2'
+      dest: '/usr/local/bin/security-reboot'
+      owner: 'root'
+      group: 'root'
+      mode: 0o744
+
+  - name: 'Deploy /etc/systemd/system/security-update.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/security-update.service.j2'
+      dest: '/etc/systemd/system/security-update.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy /etc/systemd/system/security-update.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/security-update.timer.j2'
+      dest: '/etc/systemd/system/security-update.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  when:
+    - 'ansible_facts["distribution"] == "Rocky"'
+
+  tags:
+    - 'system_update'
+
+
+- block:
+
+  - name: 'systemctl {{ system_update__security_enabled | bool | ternary("enable", "disable") }} security-update.timer --now'
+    ansible.builtin.systemd:
+      name: 'security-update.timer'
+      state: '{{ system_update__security_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ system_update__security_enabled }}'
+      daemon_reload: true
+
+  when:
+    - 'ansible_facts["distribution"] == "Rocky"'
+
+  tags:
+    - 'system_update'
+    - 'system_update:state'

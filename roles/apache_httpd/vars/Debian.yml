@@ -5,7 +5,6 @@ apache_httpd__config_file: '{{ apache_httpd__config_path }}/apache2.conf'
 apache_httpd__config_path: '/etc/apache2'
 apache_httpd__config_prefix: 'lfops-' # deploy our configs into an directory that is not influenced by the package manager
 apache_httpd__config_test_command: 'apachectl -t'
-apache_httpd__group: 'www-data'
 apache_httpd__log_path: '/var/log/apache2'
 apache_httpd__mods__role_var:
   - filename: 'alias'
@@ -298,4 +297,3 @@ apache_httpd__php_socket: '/run/php/www.sock'
 apache_httpd__root_path: '/var/www'
 apache_httpd__roothtml_path: '/var/www/html'
 apache_httpd__service_name: 'apache2'
-apache_httpd__user: 'www-data'
