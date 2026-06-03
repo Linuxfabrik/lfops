@@ -512,17 +512,18 @@ Variables for PHP-FPM Pool Config directives and their default values, defined a
 Example:
 ```yaml
 # optional
-php__fpm_pool_conf_pm__host_var: 'dynamic'
-php__fpm_pool_conf_pm_max_children__host_var: 50
-php__fpm_pool_conf_pm_max_spare_servers__host_var: 35
-php__fpm_pool_conf_pm_min_spare_servers__host_var: 5
-php__fpm_pool_conf_pm_start_servers__host_var: 5
-php__fpm_pool_conf_request_slowlog_timeout__host_var: '10s'
-php__fpm_pool_conf_request_terminate_timeout__host_var: '60s'
 php__fpm_pools__host_var:
   - name: 'librenms'
     user: 'librenms'
     group: 'librenms'
+    pm: 'dynamic'
+    pm_max_children: 50
+    pm_max_spare_servers: 35
+    pm_min_spare_servers: 5
+    pm_start_servers: 5
+    request_slowlog_timeout: '10s'
+    request_terminate_timeout: '60s'
+    php_admin_value_session_save_path: '/var/lib/php/session' # use default session save path instead of /var/lib/php/librenms-session
     raw: |-
       env[PATH] = /usr/local/bin:/usr/bin:/bin
 ```
