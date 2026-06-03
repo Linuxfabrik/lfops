@@ -1,5 +1,25 @@
 - block:
 
+  # User management (DBA, regular users and the dump user) authenticates as the admin user,
+  # which is only created when authorization is enabled. Defining users without authorization
+  # would silently skip them, so fail early instead.
+  - name: 'Check that authorization is enabled when users are defined'
+    ansible.builtin.assert:
+      that:
+        - 'mongodb__conf_security_authorization | bool'
+      quiet: true
+      fail_msg: >-
+        MongoDB users are defined in the inventory but mongodb__conf_security_authorization is
+        disabled. Managing users (admin, regular or dump user) requires authorization to be
+        enabled. Set mongodb__conf_security_authorization to true, or remove the user definitions.
+    when:
+      - >-
+        (mongodb__users__combined_var | length > 0)
+        or (mongodb__admin_user is defined and mongodb__admin_user | length > 0)
+        or (mongodb__dump_user is defined and mongodb__dump_user | length > 0)
+    tags:
+      - 'always'
+
   - name: 'Set platform/version specific variables'
     ansible.builtin.import_role:
       name: 'shared'
@@ -172,7 +192,7 @@
       update_password: 'always'
       create_for_localhost_exception: '/etc/ansible/facts.d/mongodb__dba_created.state'
     when:
-      - 'mongodb__conf_security_authorization'
+      - 'mongodb__conf_security_authorization | bool'
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
 
@@ -195,6 +215,7 @@
       update_password: 'always' # note: sadly 'always' is not idempotent
     loop: '{{ mongodb__users__combined_var }}'
     when:
+      - 'mongodb__conf_security_authorization | bool'
       - 'item["state"] | d("present") != "skip"'
     vars:
       ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
@@ -222,6 +243,7 @@
       state: '{{ mongodb__dump_user["state"] | default("present") }}'
       update_password: 'always' # note: sadly 'always' is not idempotent
     when:
+      - 'mongodb__conf_security_authorization | bool'
       - 'mongodb__dump_user is defined'
       - 'mongodb__dump_user | length > 0'
     vars:
@@ -292,7 +314,7 @@
     - 'mongodb:dump'
 
 
-- debug:
+- ansible.builtin.debug:
     msg: 'NOTE: No user operations were executed as this is not the primary in the replica set. Make sure to run this role against the primary as well.'
   when:
     - 'not mongodb__is_writable_primary_result["transformed_output"]'
