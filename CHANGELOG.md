@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:tmux**: Installs tmux and deploys a system-wide `/etc/tmux.conf` with sensible defaults, such as a larger scrollback buffer and mouse support. Selections are copied to the local clipboard over SSH via OSC 52 (where the terminal emulator supports it), and `prefix + P` dumps a pane's whole scrollback buffer to a file.
+* **role:graylog_server**: Make more HTTP, Elasticsearch, processing/output buffer and message journal settings configurable via `graylog_server__http_external_uri`, `graylog_server__http_enable_cors`, `graylog_server__elasticsearch_max_total_connections`, `graylog_server__elasticsearch_max_total_connections_per_route`, `graylog_server__output_batch_size`, `graylog_server__processbuffer_processors`, `graylog_server__outputbuffer_processors`, `graylog_server__ring_size`, `graylog_server__inputbuffer_ring_size`, `graylog_server__message_journal_max_age` and `graylog_server__message_journal_max_size`.
+* **role:mariadb_server**: Make `aria_pagecache_buffer_size`, `key_buffer_size` and `sort_buffer_size` configurable via the corresponding `mariadb_server__cnf_*` variables.
 * **plugin:platform_select**: New filter plugin for selecting a value from a platform-keyed dictionary by OS family / distribution / version.
 * **role:alternatives**: Support managing `subcommands` (slaves/followers) and the Red Hat-only `family` grouping. The role now also ensures the alternatives tooling is installed (`chkconfig` on RHEL 8, `alternatives` on RHEL 9/10; bundled with `dpkg` on Debian/Ubuntu), and can be included without variables as a no-op.
 * **role:redis**: Add template for version 8.8
@@ -51,11 +53,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:monitoring_plugins**: `install_method: 'source'` now reads the per-Python-LTS lockfile under `lockfiles/pyXX/requirements.txt` (`py39` ... `py314`) from both the `monitoring-plugins` and `lib` repos, picking the directory that matches the target host's Python. The previous root-level `requirements.txt` no longer exists upstream. No variable changes; rsync sources updated.
 * **CONTRIBUTING**: `meta/argument_specs.yml` must declare the `__dependent_var` slot for any variable that `setup_*` playbooks inject into the role via `vars:`. Dict variables fed by external lookups like `linuxfabrik.lfops.bitwarden_item` should use `type: 'dict'` without strict sub-options, since the lookup returns the full item with additional keys.
 * **role:example**: Demonstrate the `delegate_to: 'localhost'` + `become: false` pattern (download on the controller, copy to the target) so role authors can copy it consistently.
-* **role:apache_httpd**: bump Core Rule Set to 4.26.0
+* **role:apache_httpd**: bump Core Rule Set to 4.27.0
 * **role:apache_httpd**: Update the two reverse-proxy snippets in `EXAMPLES.md` to use `ProxyPass` instead of `RewriteRule ^/(.*) ... [proxy,last]`. The RewriteRule variant `%`-decodes the URI pattern and forwards characters such as `?` unencoded to the backend, which breaks WebDAV apps (file-not-found on rename in Nextcloud). The examples now also carry a comment explaining the choice and link to the corresponding [blog post](https://www.linuxfabrik.ch/blog/nextcloud-rewriterules-vs-proxypass).
 
 ### Fixed
 
+* **role:mongodb**: Managing MongoDB users (admin, regular or dump user) requires `mongodb__conf_security_authorization` to be enabled, since the role authenticates as the admin user, which only exists with authorization on. Previously, defining a dump user with authorization disabled caused a confusing authentication failure. The role now aborts early with a clear message when users are defined while authorization is disabled, and the dump config no longer writes login credentials in that case.
 * **plugin:gpg_key**: Corrected the module documentation. The GPG helper library ships with the collection, so no separate `python-gnupg` install is required, and the returned key field is documented as `uids` (matching the actual output).
 * **plugin:nextcloud_occ_app_config**: An `array` config value is now compared as JSON, so a key whose stored value already matches the desired one no longer reports a change (and re-runs `occ config:app:set`) on every run.
 * **plugin:bitwarden_item**: The module no longer writes to the Bitwarden vault when run in check mode (`--check`); it reports the would-be change instead.

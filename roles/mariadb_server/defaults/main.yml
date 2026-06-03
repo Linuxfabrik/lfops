@@ -1,3 +1,13 @@
+mariadb_server__cnf_aria_pagecache_buffer_size__dependent_var: ''
+mariadb_server__cnf_aria_pagecache_buffer_size__group_var: ''
+mariadb_server__cnf_aria_pagecache_buffer_size__host_var: ''
+mariadb_server__cnf_aria_pagecache_buffer_size__combined_var: '{{
+    mariadb_server__cnf_aria_pagecache_buffer_size__host_var if (mariadb_server__cnf_aria_pagecache_buffer_size__host_var | string | length) else
+    mariadb_server__cnf_aria_pagecache_buffer_size__group_var if (mariadb_server__cnf_aria_pagecache_buffer_size__group_var | string | length) else
+    mariadb_server__cnf_aria_pagecache_buffer_size__dependent_var if (mariadb_server__cnf_aria_pagecache_buffer_size__dependent_var | string | length) else
+    mariadb_server__cnf_aria_pagecache_buffer_size__role_var
+  }}'
+
 mariadb_server__cnf_bind_address__dependent_var: ''
 mariadb_server__cnf_bind_address__group_var: ''
 mariadb_server__cnf_bind_address__host_var: ''
@@ -522,6 +532,16 @@ mariadb_server__cnf_join_buffer_size__combined_var: '{{
     mariadb_server__cnf_join_buffer_size__role_var
   }}'
 
+mariadb_server__cnf_key_buffer_size__dependent_var: ''
+mariadb_server__cnf_key_buffer_size__group_var: ''
+mariadb_server__cnf_key_buffer_size__host_var: ''
+mariadb_server__cnf_key_buffer_size__combined_var: '{{
+    mariadb_server__cnf_key_buffer_size__host_var if (mariadb_server__cnf_key_buffer_size__host_var | string | length) else
+    mariadb_server__cnf_key_buffer_size__group_var if (mariadb_server__cnf_key_buffer_size__group_var | string | length) else
+    mariadb_server__cnf_key_buffer_size__dependent_var if (mariadb_server__cnf_key_buffer_size__dependent_var | string | length) else
+    mariadb_server__cnf_key_buffer_size__role_var
+  }}'
+
 mariadb_server__cnf_local_infile__dependent_var: ''
 mariadb_server__cnf_local_infile__group_var: ''
 mariadb_server__cnf_local_infile__host_var: ''
@@ -785,6 +805,16 @@ mariadb_server__cnf_socket__combined_var: '{{
     mariadb_server__cnf_socket__group_var if (mariadb_server__cnf_socket__group_var | string | length) else
     mariadb_server__cnf_socket__dependent_var if (mariadb_server__cnf_socket__dependent_var | string | length) else
     mariadb_server__cnf_socket__role_var
+  }}'
+
+mariadb_server__cnf_sort_buffer_size__dependent_var: ''
+mariadb_server__cnf_sort_buffer_size__group_var: ''
+mariadb_server__cnf_sort_buffer_size__host_var: ''
+mariadb_server__cnf_sort_buffer_size__combined_var: '{{
+    mariadb_server__cnf_sort_buffer_size__host_var if (mariadb_server__cnf_sort_buffer_size__host_var | string | length) else
+    mariadb_server__cnf_sort_buffer_size__group_var if (mariadb_server__cnf_sort_buffer_size__group_var | string | length) else
+    mariadb_server__cnf_sort_buffer_size__dependent_var if (mariadb_server__cnf_sort_buffer_size__dependent_var | string | length) else
+    mariadb_server__cnf_sort_buffer_size__role_var
   }}'
 
 mariadb_server__cnf_sql_mode__dependent_var: ''

@@ -743,7 +743,7 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 
 * The OWASP ModSecurity Core Rule Set (CRS) version number without "v".
 * Type: String.
-* Default: `'4.26.0'`
+* Default: `'4.27.0'`
 
 `apache_httpd__skip_mod_security_coreruleset`
 
@@ -755,7 +755,7 @@ Example:
 ```yaml
 # optional - mod_security
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '4.24.1'
+apache_httpd__mod_security_coreruleset_version: '4.27.0'
 apache_httpd__skip_mod_security_coreruleset: true
 ```
 
