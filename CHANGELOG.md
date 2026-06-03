@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* **role:tmux**: Installs tmux and deploys a system-wide `/etc/tmux.conf` with sensible defaults, such as a larger scrollback buffer and mouse support.
+* **role:tmux**: Installs tmux and deploys a system-wide `/etc/tmux.conf` with sensible defaults, such as a larger scrollback buffer and mouse support. Selections are copied to the local clipboard over SSH via OSC 52 (where the terminal emulator supports it), and `prefix + P` dumps a pane's whole scrollback buffer to a file.
 * **plugin:platform_select**: New filter plugin for selecting a value from a platform-keyed dictionary by OS family / distribution / version.
 * **role:alternatives**: Support managing `subcommands` (slaves/followers) and the Red Hat-only `family` grouping. The role now also ensures the alternatives tooling is installed (`chkconfig` on RHEL 8, `alternatives` on RHEL 9/10; bundled with `dpkg` on Debian/Ubuntu), and can be included without variables as a no-op.
 * **role:redis**: Add template for version 8.8

@@ -17,11 +17,23 @@ set -g renumber-windows on
 # Shorten the escape delay, which otherwise gets in the way of editors like vim.
 set -sg escape-time 10
 
-# 256 color support.
-set -g default-terminal 'screen-256color'
+# Terminal type advertised to programs running inside tmux. tmux-256color adds
+# italics and undercurl (styled underlines) over the older screen-256color, and
+# is shipped by ncurses-base on RHEL 8+ / present on Debian 12+ / Ubuntu 22.04+.
+set -g default-terminal 'tmux-256color'
 
 # Reflect the active window in the terminal title.
 set -g set-titles on
 
 # vi-style key bindings in copy mode.
 setw -g mode-keys vi
+
+# Copy selections to the clipboard of the local terminal emulator via the OSC 52
+# escape sequence. This works over SSH, but only if the local terminal emulator
+# supports OSC 52.
+set -g set-clipboard on
+
+# Dump the whole scrollback buffer of the current pane to a file, regardless of
+# terminal emulator support. The file is per user, session, window and pane, and
+# is created with mode 0600 because the scrollback may contain secrets.
+bind-key P run-shell 'umask 077; f="/tmp/tmux-scrollback-$(id -un)-#{session_name}-#{window_index}.#{pane_index}.txt"; tmux capture-pane -pS - -t "#{pane_id}" > "$f"; tmux display-message "scrollback saved: $f"'
