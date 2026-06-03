@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:tmux**: Installs tmux and deploys a system-wide `/etc/tmux.conf` with sensible defaults, such as a larger scrollback buffer and mouse support. Selections are copied to the local clipboard over SSH via OSC 52 (where the terminal emulator supports it), and `prefix + P` dumps a pane's whole scrollback buffer to a file.
 * **role:graylog_server**: Make more HTTP, Elasticsearch, processing/output buffer and message journal settings configurable via `graylog_server__http_external_uri`, `graylog_server__http_enable_cors`, `graylog_server__elasticsearch_max_total_connections`, `graylog_server__elasticsearch_max_total_connections_per_route`, `graylog_server__output_batch_size`, `graylog_server__processbuffer_processors`, `graylog_server__outputbuffer_processors`, `graylog_server__ring_size`, `graylog_server__inputbuffer_ring_size`, `graylog_server__message_journal_max_age` and `graylog_server__message_journal_max_size`.
 * **role:mariadb_server**: Make `aria_pagecache_buffer_size`, `key_buffer_size` and `sort_buffer_size` configurable via the corresponding `mariadb_server__cnf_*` variables.
 * **plugin:platform_select**: New filter plugin for selecting a value from a platform-keyed dictionary by OS family / distribution / version.
@@ -19,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:redis**: Add template for version 8.8
 * **role:system_update**: Add a security lane for Rocky Linux. A second timer (twice a day by default) installs only Rocky Linux security hot-fixes from the dedicated `security` repository (provided by `repo_baseos`) and reboots the host if needed. The reboot time is steered per host group (for example immediately on test hosts, deferred to the evening on production hosts). Enabled by default; a no-op where the `security` repository is not enabled, and can be turned off with `system_update__security_enabled: false`. This keeps critical security fixes flowing daily while the regular update lane stays on its weekly schedule.
 * **role:mariadb_server**: Add `mariadb_server__cnf_innodb_snapshot_isolation` variable (MariaDB 10.6+), defaulting to `'ON'`.
+
+### Changed
+
+* **role:tools**: No longer installs tmux. Use the dedicated `tmux` role instead, which also ships a configuration with sensible defaults.
 
 ### Security
 

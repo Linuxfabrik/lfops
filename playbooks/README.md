@@ -1007,6 +1007,7 @@ Calls the following roles (in order):
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_basic__skip_python`, `setup_basic__skip_python_venv`
 * [glances](https://github.com/Linuxfabrik/lfops/tree/main/roles/glances): `setup_basic__skip_glances`
 * [tools](https://github.com/Linuxfabrik/lfops/tree/main/roles/tools): `setup_basic__skip_tools`
+* [tmux](https://github.com/Linuxfabrik/lfops/tree/main/roles/tmux): `setup_basic__skip_tmux`
 * [at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at): `setup_basic__skip_at`
 * [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `setup_basic__skip_yum_utils`
 * [lvm](https://github.com/Linuxfabrik/lfops/tree/main/roles/lvm): `setup_basic__skip_lvm`
@@ -1336,6 +1337,13 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [timezone](https://github.com/Linuxfabrik/lfops/tree/main/roles/timezone)
+
+
+## tmux.yml
+
+Calls the following roles (in order):
+
+* [tmux](https://github.com/Linuxfabrik/lfops/tree/main/roles/tmux)
 
 
 ## tools.yml

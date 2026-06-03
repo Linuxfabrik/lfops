@@ -140,6 +140,7 @@
 - import_playbook: 'systemd_unit.yml'
 - import_playbook: 'telegraf.yml'
 - import_playbook: 'timezone.yml'
+- import_playbook: 'tmux.yml'
 - import_playbook: 'tools.yml'
 - import_playbook: 'unattended_upgrades.yml'
 - import_playbook: 'vsftpd.yml'

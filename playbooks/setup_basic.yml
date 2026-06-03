@@ -112,6 +112,10 @@
       when:
         - 'not setup_basic__skip_tools | d(false)'
 
+    - role: 'linuxfabrik.lfops.tmux'
+      when:
+        - 'not setup_basic__skip_tmux | d(false)'
+
     - role: 'linuxfabrik.lfops.at'
       when:
         - 'not setup_basic__skip_at | d(false)'
