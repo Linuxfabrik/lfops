@@ -372,151 +372,134 @@ Variables for PHP-FPM Pool Config directives and their default values, defined a
 
     * `user`:
 
-        * Optional. The Unix user running the pool processes.
+        * Optional. The Unix user running the pool processes. [php.net](https://www.php.net/install.fpm.configuration.php#user)
         * Type: String.
-        * Default: `'apache'`
+        * Default: `'apache'` (RedHat), `www-data` (Debian)
 
     * `group`:
 
-        * Optional. The Unix group running the pool processes.
+        * Optional. The Unix group running the pool processes. [php.net](https://www.php.net/install.fpm.configuration.php#group)
         * Type: String.
-        * Default: `'apache'`
+        * Default: `'apache'` (RedHat), `www-data` (Debian)
 
     * `pm`:
 
-        * Optional. Choose how the process manager will control the number of child processes.
+        * Optional. Choose how the process manager will control the number of child processes. [php.net](https://www.php.net/install.fpm.configuration.php#pm)
         * Type: String.
         * Default: `'dynamic'`
 
     * `pm_max_children`:
 
-        * Optional. The number of child processes to be created when pm is set to `'static'` and the maximum number of child processes when pm is set to `'dynamic'` or `'ondemand'`.
+        * Optional. The number of child processes to be created when pm is set to `'static'` and the maximum number of child processes when pm is set to `'dynamic'` or `'ondemand'`. [php.net](https://www.php.net/install.fpm.configuration.php#pm.max-children)
         * Type: Number.
         * Default: `50`
 
     * `pm_start_servers`:
 
-        * Optional. The number of child processes created on startup. Must be greater than `pm_min_spare_servers` but less than `pm_max_spare_servers`. Used only when `pm` is set to `'dynamic`'.
+        * Optional. The number of child processes created on startup. Must be greater than `pm_min_spare_servers` but less than `pm_max_spare_servers`. Used only when `pm` is set to `'dynamic`'. [php.net](https://www.php.net/install.fpm.configuration.php#pm.start-servers)
         * Type: Number.
         * Default: `5`
 
     * `pm_min_spare_servers`:
 
-        * Optional. The desired minimum number of idle server processes. Used only when `pm` is set to `'dynamic'`.
+        * Optional. The desired minimum number of idle server processes. Used only when `pm` is set to `'dynamic'`. [php.net](https://www.php.net/install.fpm.configuration.php#pm.min-spare-servers)
         * Type: Number.
         * Default: `5`
 
     * `pm_max_spare_servers`:
 
-        * Optional. The desired maximum number of idle server processes. Used only when `pm` is set to `'dynamic'`.
+        * Optional. The desired maximum number of idle server processes. Used only when `pm` is set to `'dynamic'`. [php.net](https://www.php.net/install.fpm.configuration.php#pm.max-spare-servers)
         * Type: Number.
         * Default: `35`
 
+    * `pm_max_spawn_rate`:
+
+        * Optional. The number of rate to spawn child processes at once. Used only when `pm` is set to `'dynamic'`. [php.net](https://www.php.net/install.fpm.configuration.php#pm.max-spawn-rate)
+        * Type: Number.
+        * Default: `32`
+
     * `pm_process_idle_timeout`:
 
-        * Optional. The number of seconds after which an idle process will be killed. Used only when `pm` is set to `'ondemand'`. Defaults to `'10s'` if unset. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
+        * Optional. The number of seconds after which an idle process will be killed. Used only when `pm` is set to `'ondemand'`. Available units: s(econds, default), m(inutes), h(ours), or d(ays). [php.net](https://www.php.net/install.fpm.configuration.php#pm.process-idle-timeout)
         * Type: String.
         * Default: `'10s'`
 
     * `pm_max_requests`:
 
-        * Optional. The number of requests each child process should execute before respawning. This can be useful to work around memory leaks in 3rd party libraries. For endless request processing specify `0`.
+        * Optional. The number of requests each child process should execute before respawning. [php.net](https://www.php.net/install.fpm.configuration.php#pm.max-requests)
         * Type: Number.
         * Default: `0`
 
     * `pm_status_path`:
 
-        * Optional. Path to view FPM status page.
+        * Optional. Path to view FPM status page. [php.net](https://www.php.net/install.fpm.configuration.php#pm.status-path)
         * Type: String.
         * Default: `'/{{ item["name"] }}-fpm-status'`
 
     * `ping_path`:
 
-        * Optional. The ping path to check if FPM is alive and responding.
+        * Optional. The ping path to check if FPM is alive and responding. [php.net](https://www.php.net/install.fpm.configuration.php#ping.path)
         * Type: String.
         * Default: `'/{{ item["name"] }}-fpm-ping'`
 
     * `request_slowlog_timeout`:
 
-        * Optional. The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
+        * Optional. The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). [php.net](https://www.php.net/install.fpm.configuration.php#request-slowlog-timeout)
         * Type: Number.
         * Default: `0`
 
     * `request_slowlog_trace_depth`:
 
-        * Optional. Depth of slow log stack trace.
+        * Optional. Depth of slow log stack trace. [php.net](https://www.php.net/install.fpm.configuration.php#request-slowlog-trace-depth)
         * Type: Number.
         * Default: `20`
 
     * `request_terminate_timeout`:
 
-        * The timeout for serving a single request after which the worker process will be killed. This option should be used when the `max_execution_time` ini option does not stop script execution for some reason. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
+        * Optional. The timeout for serving a single request after which the worker process will be killed. This option should be used when the `max_execution_time` ini option does not stop script execution for some reason. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
+        * [php.net](https://www.php.net/install.fpm.configuration.php#request-terminate-timeout)
         * Type: Number.
         * Default: `0`
 
     * `php_admin_value_session_save_path`:
 
-        * Optional.
+        * Optional. **NOTE:** The session save directory is currently not created automatically.  [php.net](https://www.php.net/session.save_path)
         * Type: String.
-        * Default: `'/var/lib/php/session-{{ item["name"] }}'`
-
-    * `php_admin_value_opcache_file_cache`:
-
-        * Optional.
-        * Type: String.
-        * Default: `'/var/lib/php/opcache-{{ item["name"] }}'`
+        * Default: `'/var/lib/php/{{ item["name"] }}-session'`
 
     * `php_admin_value_max_execution_time`:
 
-        * Optional.
+        * Optional. [php.net](https://www.php.net/max_execution_time)
         * Type: Number.
         * Default: `{{ php__ini_max_execution_time__combined_var }}`
 
     * `php_admin_value_max_input_vars`:
 
-        * Optional.
+        * Optional. [php.net](https://www.php.net/max_input_vars)
         * Type: Number.
         * Default: `{{ php__ini_max_input_vars__combined_var }}`
 
     * `php_admin_value_memory_limit`:
 
-        * Optional.
+        * Optional. [php.net](https://www.php.net/memory_limit)
         * Type: String.
         * Default: `'{{ php__ini_memory_limit__combined_var }}'`
 
-    * `php_admin_value_opcache_interned_strings_buffer`:
-
-        * Optional.
-        * Type: Number.
-        * Default: `{{ php__ini_opcache_interned_strings_buffer__combined_var }}`
-
-    * `php_admin_value_opcache_max_accelerated_files`:
-
-        * Optional.
-        * Type: Number.
-        * Default: `{{ php__ini_opcache_max_accelerated_files__combined_var }}`
-
-    * `php_admin_value_opcache_memory_consumption`:
-
-        * Optional.
-        * Type: Number.
-        * Default: `{{ php__ini_opcache_memory_consumption__combined_var }}`
-
     * `php_admin_value_open_basedir`:
 
-        * Optional.
+        * Optional. [php.net](https://www.php.net/open_basedir)
         * Type: String.
         * Default: unset
 
     * `php_admin_value_post_max_size`:
 
-        * Optional.
+        * Optional. [php.net](https://www.php.net/post_max_size)
         * Type: String.
         * Default: `'{{ php__ini_post_max_size__combined_var }}'`
 
     * `php_admin_value_upload_max_filesize`:
 
-        * Optional.
+        * Optional. [php.net](https://www.php.net/upload_max_filesize)
         * Type: String.
         * Default: `'{{ php__ini_upload_max_filesize__combined_var }}'`
 
