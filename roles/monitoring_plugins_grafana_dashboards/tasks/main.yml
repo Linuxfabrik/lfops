@@ -32,7 +32,6 @@
         cp -- /tmp/ansible.monitoring-plugins-repo/assets/grafana/*.yml /tmp/ansible.monitoring-plugins-repo-flattened/grafana/
     delegate_to: 'localhost'
     become: false
-    run_once: true
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 

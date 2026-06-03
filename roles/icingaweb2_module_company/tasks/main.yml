@@ -26,7 +26,6 @@
       dest: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
     delegate_to: 'localhost'
     become: false
-    run_once: true
     check_mode: false # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz to the server'

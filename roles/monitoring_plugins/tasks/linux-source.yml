@@ -28,7 +28,6 @@
         done
     delegate_to: 'localhost'
     become: false
-    run_once: true
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
@@ -46,7 +45,6 @@
         done
     delegate_to: 'localhost'
     become: false
-    run_once: true
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
@@ -57,7 +55,6 @@
         find /tmp/ansible.monitoring-plugins-repo/check-plugins/*/assets -type f -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets/ \;
     delegate_to: 'localhost'
     become: false
-    run_once: true
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 

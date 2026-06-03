@@ -17,7 +17,6 @@
       depth: 1
     delegate_to: 'localhost'
     become: false
-    run_once: true
     check_mode: false # run task even if `--check` is specified
 
   rescue:
@@ -38,5 +37,4 @@
         depth: 1
       delegate_to: 'localhost'
       become: false
-      run_once: true
       check_mode: false # run task even if `--check` is specified

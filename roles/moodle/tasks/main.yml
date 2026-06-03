@@ -15,7 +15,6 @@
     check_mode: false # run task even if `--check` is specified
     delegate_to: 'localhost'
     become: false
-    run_once: true
 
   - name: 'Get the latest patch version of moodle v{{ moodle__version }}'
     ansible.builtin.set_fact:
