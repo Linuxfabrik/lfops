@@ -107,7 +107,7 @@ argument_specs:
       nextcloud__php_fpm_service_name:
         type: 'str'
         required: false
-        description: 'Name of the PHP-FPM systemd service that the role and the nextcloud-update script restart. OS-specific default from vars/.'
+        description: "Name of the PHP-FPM systemd service that the role and the nextcloud-update script restart. Defaults to the php role's php__fpm_service_name (php-fpm on RedHat, php<version>-fpm on Debian)."
 
       nextcloud__skip_apps:
         type: 'bool'
@@ -197,13 +197,3 @@ argument_specs:
         type: 'int'
         required: false
         description: 'Used within the <VirtualHost virtualhost_ip:virtualhost_port> directive.'
-
-      nextcloud__webserver_group:
-        type: 'str'
-        required: false
-        description: 'Group of the web server, used for file ownership. OS-specific default from vars/.'
-
-      nextcloud__webserver_user:
-        type: 'str'
-        required: false
-        description: 'User of the web server, used for file ownership, occ commands and as the User= of the deployed systemd services. OS-specific default from vars/.'

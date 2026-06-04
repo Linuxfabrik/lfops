@@ -239,9 +239,9 @@ nextcloud__users:
 
 `nextcloud__php_fpm_service_name`
 
-* Name of the PHP-FPM systemd service that the role restarts (and that the `/usr/local/bin/nextcloud-update` script restarts). Defaults to the OS-specific value (`php-fpm` on RHEL, `php<version>-fpm` on Debian).
+* Name of the PHP-FPM systemd service that the role restarts (and that the `/usr/local/bin/nextcloud-update` script restarts). Defaults to the `php` role's `php__fpm_service_name` (`php-fpm` on RHEL, `php<version>-fpm` on Debian).
 * Type: String.
-* Default: Have a look at [vars/](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/vars/)
+* Default: `{{ php__fpm_service_name }}`
 
 `nextcloud__skip_apps`
 
@@ -337,18 +337,6 @@ nextcloud__users:
 * Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive.
 * Type: Number.
 * Default: `80`
-
-`nextcloud__webserver_group`
-
-* Group of the web server, used for file ownership of the Nextcloud installation. Defaults to the OS-specific value (`apache` on RHEL, `www-data` on Debian).
-* Type: String.
-* Default: Have a look at [vars/](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/vars/)
-
-`nextcloud__webserver_user`
-
-* User of the web server, used for file ownership, to run the `occ` commands and as the `User=` of the deployed systemd services. Defaults to the OS-specific value (`apache` on RHEL, `www-data` on Debian).
-* Type: String.
-* Default: Have a look at [vars/](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/vars/)
 
 Example:
 ```yaml

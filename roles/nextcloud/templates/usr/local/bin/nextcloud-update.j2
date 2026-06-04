@@ -11,8 +11,8 @@ error_handler() {
 }
 trap 'error_handler "${LINENO}"' ERR
 
-WEBSERVER_USER="{{ nextcloud__webserver_user }}"
-WEBSERVER_GROUP="{{ nextcloud__webserver_group }}"
+WEBSERVER_USER="{{ __shared__apache_httpd_user }}"
+WEBSERVER_GROUP="{{ __shared__apache_httpd_group }}"
 PHP_SERVICE_NAME="{{ nextcloud__php_fpm_service_name }}"
 
 NC_DIR="/var/www/html/nextcloud"

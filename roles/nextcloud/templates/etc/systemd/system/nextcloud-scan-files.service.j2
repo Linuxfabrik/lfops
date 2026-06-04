@@ -8,4 +8,4 @@ Description=Nextcloud Scan Files Service
 ExecStart=/usr/bin/nice --adjustment 19 /usr/bin/php occ files:scan --all --unscanned
 WorkingDirectory=/var/www/html/nextcloud
 Type=oneshot
-User={{ nextcloud__webserver_user }}
+User={{ __shared__apache_httpd_user }}

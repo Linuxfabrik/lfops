@@ -178,7 +178,8 @@ nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostn
 nextcloud__on_calendar_jobs: '*:0/5'          # every 5 minutes
 nextcloud__on_calendar_scan_files: '*:50:15'  # every hour at hh:50:15
 
-nextcloud__php_fpm_service_name: '{{ __nextcloud__php_fpm_service_name }}'
+# The php role owns the FPM service name (php-fpm on RedHat, php<version>-fpm on Debian); source it from there instead of duplicating it per OS.
+nextcloud__php_fpm_service_name: '{{ php__fpm_service_name }}'
 
 nextcloud__skip_apps: false
 nextcloud__skip_notify_push: false
@@ -312,9 +313,6 @@ nextcloud__timer_scan_files_enabled: true
 
 # 'latest', 'latest-XX' or 'nextcloud-XX.X.XX'
 nextcloud__version: 'latest'
-
-nextcloud__webserver_group: '{{ __nextcloud__webserver_group }}'
-nextcloud__webserver_user: '{{ __nextcloud__webserver_user }}'
 
 # -----------------------------------------------------------------------------
 
@@ -477,41 +475,11 @@ nextcloud__php__ini_memory_limit__dependent_var: '1024M'
 nextcloud__php__ini_opcache_interned_strings_buffer__dependent_var: '20'
 nextcloud__php__ini_post_max_size__dependent_var: '16M'
 nextcloud__php__ini_upload_max_filesize__dependent_var: '10000M'
-nextcloud__php__modules__dependent_var:
-  - name: 'php-bcmath'
-    state: 'present'
-  - name: 'php-gd'
-    state: 'present'
-  - name: 'php-gmp'
-    state: 'present'
-  - name: 'php-imap'
-    state: 'present'
-  - name: 'php-imagick'
-    state: 'present'
-  - name: 'php-intl'
-    state: 'present'
-  - name: 'php-json'
-    state: 'present'
-  - name: 'php-ldap'
-    state: 'present'
-  - name: 'php-mbstring'
-    state: 'present'
-  - name: 'php-memcached'
-    state: 'present'
-  - name: 'php-mysqlnd'
-    state: 'present'
-  - name: 'php-opcache'
-    state: 'present'
-  - name: 'php-pecl-apcu'
-    state: 'present'
-  - name: 'php-process' # posix module for oc
-    state: 'present'
-  - name: 'php-redis'
-    state: 'present'
-  - name: 'php-smbclient'
-    state: 'present'
-  - name: 'php-zip'
-    state: 'present'
+# OS-specific package names live in vars/main.yml (see platform_select). The php role runs earlier in the play and consumes this via the __dependent_var pattern.
+nextcloud__php__modules__dependent_var: '{{
+    __nextcloud__php__modules__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts)
+  }}'
 
 nextcloud__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
@@ -552,6 +520,6 @@ nextcloud__systemd_unit__services__dependent_var:
       Environment=PORT=7867
       ExecStartPre=-/bin/chcon --type bin_t /var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push
       ExecStart=/var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push /var/www/html/nextcloud/config/config.php
-      User={{ nextcloud__webserver_user }}
+      User={{ __shared__apache_httpd_user }}
     enabled: true
     state: 'present'

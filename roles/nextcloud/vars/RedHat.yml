@@ -3,6 +3,3 @@ __nextcloud__required_packages:
   - 'jq'
   - 'openldap-clients'
   - 'samba-client'
-__nextcloud__php_fpm_service_name: 'php-fpm'
-__nextcloud__webserver_group: 'apache'
-__nextcloud__webserver_user: 'apache'
