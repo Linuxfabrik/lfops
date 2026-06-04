@@ -10,7 +10,7 @@ The role does not have a dedicated playbook. It is normally pulled in via the [`
 
 ## How the Role Behaves
 
-* The Tarball for `icingaweb2_theme_linuxfabrik__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
+* The Tarball for `icingaweb2_theme_linuxfabrik__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
 * On every role run the directory `/usr/share/icingaweb2/modules/linuxfabrik` is overwritten with the contents of the configured version. To upgrade or downgrade the theme, change `icingaweb2_theme_linuxfabrik__version` and re-run the role.
 * `icingacli module enable linuxfabrik` is only invoked when `/etc/icingaweb2/enabledModules/linuxfabrik` does not yet exist (idempotent). The theme has to be selected per user in IcingaWeb2 (or set as the default theme via the `theme` setting in `/etc/icingaweb2/config.ini`).
 

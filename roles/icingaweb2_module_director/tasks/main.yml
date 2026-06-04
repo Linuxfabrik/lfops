@@ -49,7 +49,6 @@
       dest: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
     delegate_to: 'localhost'
     become: false
-    run_once: true
     check_mode: false # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz to the server'
@@ -176,7 +175,7 @@
       chdir: '/tmp/ansible.monitoring-plugins-repo/'
     delegate_to: 'localhost'
     become: false
-    run_once: true
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
