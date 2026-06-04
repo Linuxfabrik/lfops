@@ -190,6 +190,15 @@ When creating a new role, make sure to deliver:
 * Update `CHANGELOG.md`.
 
 
+### Changelog
+
+LFOps overrides the project-agnostic "Changelog" rule above (alphabetical sorting): entries are sorted newest first, because operators running playbooks need to see what changed most recently.
+
+* Each subsection (`### Added`, `### Changed`, ...) appears at most once per release section. Never create a duplicate, append to the existing one.
+* Order the subsections as `Breaking Changes`, `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`: the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) order, with the LFOps-specific `Breaking Changes` first. Omit subsections with no entries.
+* Within a subsection, add new entries at the top (newest first), even if this results in multiple entries for the same role.
+
+
 ### Playbooks
 
 * Each playbook must contain all dependencies to run flawlessly against a newly installed machine.
