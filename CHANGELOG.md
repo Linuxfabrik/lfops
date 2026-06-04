@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **playbooks**: Enable the CRB repository on Rocky 10 too, not just Rocky 9. Previously Rocky 10 hosts silently skipped this step, which could leave dependencies such as `python3-virtualenv` uninstallable.
+* **role:grafana**: Apply the systemd/chkconfig workaround on RHEL 10 as well, not just RHEL 9.
+* **role:tools**: Install the German locale package (`glibc-langpack-de`) on RHEL 10 as well.
+* **playbooks**: Roles that target the whole RHEL family now run on any enterprise distribution that is not Fedora, instead of an explicit list of major versions. This adds support for RHEL 10 and future releases without further changes, while Fedora stays excluded as before.
 * **role:tools**: No longer installs tmux. Use the dedicated `tmux` role instead, which also ships a configuration with sensible defaults.
 
 ### Security
