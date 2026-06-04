@@ -243,6 +243,27 @@
       group: 'root'
       mode: 0o600
 
+  rescue:
+
+    # The admin-cli token request above failed. The most common non-transient
+    # cause is the permanent-admin handover (see the role README, "Post-Installation
+    # Steps"): the temporary `-temp` bootstrap account was deleted, but the marker
+    # file is missing (e.g. a fresh Ansible controller, or a lost
+    # `/etc/ansible/facts.d`). The role cannot obtain a token and cannot tell this
+    # apart from a genuine error, so it fails loudly with recovery guidance
+    - name: 'Explain how to recover from a missing bootstrap marker'
+      ansible.builtin.fail:
+        msg: >-
+          Could not obtain an admin-cli token for
+          "{{ keycloak__admin_login["username"] }}" in the master realm. If you
+          already created a permanent admin and deleted this temporary bootstrap
+          account, the bootstrap is effectively done but the marker file is
+          missing. Recreate it on the target and re-run the role:
+          `mkdir --parents /etc/ansible/facts.d &&
+          touch /etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state`.
+          Otherwise verify that keycloak.service is running and that
+          `keycloak__admin_login` matches the bootstrap admin.
+
   # block
   when:
     - 'not (__keycloak__admin_login_bootstrapped | bool)'

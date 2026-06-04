@@ -133,6 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:keycloak**: Role now prints a clear instruction when a re-run can no longer obtain a token because the bootstrap admin was manually switched over to a permanent account (temporary `-temp` user deleted) and the bootstrap marker went missing.
 * **roles**: Controller-side downloads and git clones (those delegated to localhost) are no longer skipped when the first targeted host happens not to need them. Running a role against multiple hosts previously risked leaving later hosts without the downloaded artifact. Such steps now also run safely when the playbook targets many hosts in parallel.
 * **role:mongodb**: Managing MongoDB users (admin, regular or dump user) requires `mongodb__conf_security_authorization` to be enabled, since the role authenticates as the admin user, which only exists with authorization on. Previously, defining a dump user with authorization disabled caused a confusing authentication failure. The role now aborts early with a clear message when users are defined while authorization is disabled, and the dump config no longer writes login credentials in that case.
 * **plugin:gpg_key**: Corrected the module documentation. The GPG helper library ships with the collection, so no separate `python-gnupg` install is required, and the returned key field is documented as `uids` (matching the actual output).
