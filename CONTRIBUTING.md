@@ -706,32 +706,32 @@ Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored
 
 ### Testing
 
-Molecule is used as the framework to test the LFOps playbooks (*not roles*). The test scenarios and configurations live in `extension/molecule` and are structured as follows:
+Molecule is used as the framework to test the LFOps playbooks (and therefore indirectly the roles). The test scenarios and configurations live in `extensions/molecule` and are structured as follows:
 
 ```
 extensions
 └── molecule
     ├── apps -- test scenario, named after the playbook name
     │   ├── install -- if needed, sub-scenario
-    │   │   ├── converge.yml
-    │   │   ├── inventory -- scenario-specific inventory with variables that are needed for the playbook under test and optionally additional hosts (e.g. for a cluster test setup). Overwrites the shared inventory (extensions/molecule/inventory)
+    │   │   ├── converge.yml -- the actual test phase. this is where the playbook under test runs against the hosts
+    │   │   ├── inventory -- scenario-specific inventory with variables that are needed for the playbook under test and optionally additional hosts (e.g. for a cluster test setup). overwrites the shared inventory (extensions/molecule/inventory)
     │   │   │   ├── group_vars
-    │   │   │   │   └── systems_under_test.yml
-    │   │   │   └── hosts.yml
-    │   │   ├── molecule.yml -- scenario marker; required even if empty. Can also be used to overwrite, which playbooks are used by Molecule (e.g. to switch between VM and container provisioning playbooks)
-    │   │   └── verify.yml
+    │   │   │   │   └── systems_under_test.yml -- by convention, the "systems_under_test" group contains all our hosts against which the tests are run
+    │   │   │   └── hosts.yml -- here we select against which hosts we want to run (most of the time the hosts come from the shared inventory) and put them into the correct group for the playbook, here "lfops_apps"
+    │   │   ├── molecule.yml -- scenario marker; the file is required even if empty. can also be used to overwrite settings from the extensions/molecule/config.yml, for example which playbooks are used by Molecule (e.g. to switch between VM and container provisioning playbooks)
+    │   │   └── verify.yml -- runs after the test phase and uses ansible to check if the result is as expected
     │   └── remove -- additional sub-scenario
     │       └── ...
-    ├── config.yml -- valid for all scenarios, can be overwritten in each scenario's molecule.yml (same content and structure)
+    ├── config.yml -- valid for all scenarios, can be overwritten in each scenario's molecule.yml (content and structure are the same)
     ├── default -- we are not using the "default" scenario, but molecule needs this to run at all. could be used to share config (e.g. prepare.yml) across *all* scenarios
     │   └── molecule.yml
-    ├── inventory -- shared inventory across all scenarios and therefore available in all scenarios. Contains a basic set of VMs/containers that are commonly used.
-    │   ├── hosts.yml -- Required, even if empty, that Ansible can detect this inventory
+    ├── inventory -- shared inventory across all scenarios and therefore available in all scenarios. contains a basic set of VMs/containers that are commonly used
+    │   ├── hosts.yml -- required, even if empty, that Ansible can detect this inventory
     │   └── host_vars
     │       ├── debian11-container.yml
     │       ├── debian11-vm.yml
     │       └── ...
-    ├── monitoring_plugins -- scenario with no sub-scenarios
+    ├── monitoring_plugins -- a scenario with no sub-scenarios
     │   ├── converge.yml
     │   ├── inventory
     │   │   └── ...
