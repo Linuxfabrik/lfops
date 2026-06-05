@@ -23,7 +23,7 @@
     # bare minimum and thus do not contain a Python interpreter.
     - name: 'Verify containers are running'
       ansible.builtin.include_tasks:
-        file: 'tasks/create-container-fail.yml'
+        file: 'tasks/container-create-fail.yml'
       when: >
         __molecule__container_result['container']['State']['ExitCode'] != 0 or
         not __molecule__container_result['container']['State']['Running']

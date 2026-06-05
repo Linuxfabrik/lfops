@@ -738,8 +738,8 @@ extensions
     │   ├── molecule.yml
     │   └── verify.yml
     ├── playbooks -- shared playbooks used by Molecule for running the scenarios
-    │   ├── create-container.yml
-    │   ├── destroy-container.yml
+    │   ├── container-create.yml
+    │   ├── container-destroy.yml
     │   └── ...
     └── requirements.yml
 ```

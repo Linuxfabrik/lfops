@@ -59,9 +59,9 @@ dependency:
 
 provisioner:
   playbooks:
-    create: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/create-vm.yml'
-    destroy: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/destroy-vm.yml'
-    prepare: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/prepare-vm.yml'
+    create: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/vm-create.yml'
+    destroy: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/vm-destroy.yml'
+    prepare: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/vm-prepare.yml'
 
 scenario:
   test_sequence:

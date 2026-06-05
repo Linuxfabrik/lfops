@@ -7,4 +7,4 @@
         timeout: 120
 
     - name: 'Gather facts'
-      ansible.builtin.setup:
+      ansible.builtin.setup:  # yamllint disable-line rule:empty-values
