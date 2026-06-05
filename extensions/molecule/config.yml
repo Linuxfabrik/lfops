@@ -1,7 +1,6 @@
-dependency:
-  name: 'galaxy'
-  options:
-    requirements-file: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/requirements.yml'
+# Shared Molecule base config. It is merged into every scenario and is read whenever Molecule
+# resolves a scenario (e.g. `molecule test`, `molecule converge`, `molecule create`). Individual
+# scenarios can override any of these settings in their own molecule.yml.
 
 ansible:
   cfg:
@@ -48,6 +47,16 @@ ansible:
         - '--inventory=${MOLECULE_SCENARIO_DIRECTORY}/inventory/'
         - '--limit=${LFOPS_TEST_TARGETS}'
 
+# The 'galaxy' dependency below installs the collections listed in requirements.yml via
+# `ansible-galaxy collection install`. Molecule only runs the 'dependency' stage when it is part
+# of the sequence being executed. Our custom test_sequence therefore lists
+# 'dependency' explicitly; without it `molecule test` would skip the install and rely on the
+# collections already being present on the controller.
+dependency:
+  name: 'galaxy'
+  options:
+    requirements-file: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/requirements.yml'
+
 provisioner:
   playbooks:
     create: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/create-vm.yml'
@@ -56,6 +65,7 @@ provisioner:
 
 scenario:
   test_sequence:
+    - 'dependency' # must stay in the list so requirements.yml is installed (see header note)
     - 'create'
     - 'prepare'
     - 'converge'

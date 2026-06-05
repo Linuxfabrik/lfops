@@ -1,4 +1,5 @@
 collections:
+  - name: 'community.crypto'
+  - name: 'community.libvirt'
   - name: 'containers.podman'
     version: '>=1.10.0'
-  - name: 'community.libvirt'
