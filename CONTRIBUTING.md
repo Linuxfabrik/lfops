@@ -182,12 +182,21 @@ Commit scopes:
 When creating a new role, make sure to deliver:
 
 * The role itself.
-* `roles/<role-name>/README.md`, following `roles/example/README.md` as a template.
+* `roles/<role-name>/README.md`, following `roles/example/README.md` as a template and the section menu under "README" below.
 * `roles/<role-name>/meta/argument_specs.yml` declaring all user-facing variables.
 * Update `playbooks/README.md`.
 * Update `playbooks/all.yml`.
 * Update `COMPATIBILITY.md`.
 * Update `CHANGELOG.md`.
+
+
+### Changelog
+
+LFOps overrides the project-agnostic "Changelog" rule above (alphabetical sorting): entries are sorted newest first, because operators running playbooks need to see what changed most recently.
+
+* Each subsection (`### Added`, `### Changed`, ...) appears at most once per release section. Never create a duplicate, append to the existing one.
+* Order the subsections as `Breaking Changes`, `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`: the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) order, with the LFOps-specific `Breaking Changes` first. Omit subsections with no entries.
+* Within a subsection, add new entries at the top (newest first), even if this results in multiple entries for the same role.
 
 
 ### Playbooks
@@ -203,6 +212,12 @@ When creating a new role, make sure to deliver:
       - ansible.builtin.import_role:
           name: 'shared'
           tasks_from: 'log-start.yml'
+        tags:
+          - 'always'
+
+      - ansible.builtin.import_role:
+          name: 'shared'
+          tasks_from: 'global-variables.yml'
         tags:
           - 'always'
 
@@ -238,6 +253,7 @@ When creating a new role, make sure to deliver:
 * Do not over-engineer the role during the development — it should fulfill its use case, but can grow and be improved on later.
 * There should be one role per software application. If there are multiple versions of the software, e.g. PHP 7.1, 7.2, 7.3, etc., they all should be supported by a single role.
 * Do not use role dependencies via `meta/main.yml`. Dependencies are handled in playbooks.
+* Do not use the general-purpose roles `apps`, `files`, and `systemd_unit` as dependent roles (via `__dependent_var`). They are meant to be driven directly by the user from the inventory; wiring dependencies into them makes the order in which playbooks can run overly restrictive. Perform such tasks in the consuming role directly instead.
 * Whenever the role requires a list as an input, use a list of dictionaries with `state: present/absent`. See "Combined Variables" below.
 * Fail loudly. Avoid constructs that could suppress error messages, like `IfModule` in Apache HTTPd. This makes debugging and troubleshooting a lot easier.
 * Do not support software versions that are EOL.
@@ -246,6 +262,42 @@ When creating a new role, make sure to deliver:
 * All user-facing information should be included in the README. Comments are intended for developers only.
 * Avoid breaking changes as far as possible, but don't let them stand in the way of improvements.
 * Document all changes in the [CHANGELOG.md](https://github.com/Linuxfabrik/lfops/blob/main/CHANGELOG.md) file.
+
+
+#### README
+
+`roles/example/README.md` is the canonical template. Keep the following sections in this order, drop the optional ones that do not apply, and do not invent new top-level sections:
+
+```
+# Ansible Role linuxfabrik.lfops.<name>   + intro paragraph(s)        (mandatory)
+[ "This role is compatible with the following <x> versions:" + list ] (optional)
+*Available since LFOps `X.X.X`.*                                      (mandatory)
+## How the Role Behaves                                               (optional)
+## Known Limitations                                                  (optional)
+## Dependent Roles                                                    (optional)
+## Requirements                                                       (optional)
+## Single-Node Setup / Cluster Setup / Adding a Node ... / <descriptive>  (optional walkthrough)
+## Post-Installation Steps                                            (optional)
+## Tags                                                               (mandatory)
+## Mandatory Role Variables                                           (optional)
+## Recommended Role Variables                                         (optional)
+## Optional Role Variables                                            (optional)
+## Optional Role Variables - <Subgroup>                               (optional, repeatable)
+## Troubleshooting                                                    (optional)
+## License                                                            (mandatory)
+## Author Information                                                 (mandatory)
+```
+
+* **`*Available since LFOps`**: marks the LFOps release in which the role first shipped. Set it once and never change it afterwards. When you add a new role you do not know the next version tag yet, so write the literal line `*Available in the next LFOps release.*` instead; it is rewritten to the real version with `sed` when the next release is cut.
+* **How the Role Behaves**: proactive, non-obvious design/runtime notes (controller-vs-target download split and who needs network access, idempotency / overwrite-on-rerun, the upgrade path, what the role does NOT do, security caveats). Distinct from Troubleshooting (reactive error->fix) and Known Limitations (hard constraints the operator cannot work around).
+* **Dependent Roles vs Requirements**: these answer "which other LFOps roles does the playbook wire in" vs "what must the operator provide themselves". Decide where an item goes by what it is:
+    * Another LFOps role that **this role's own playbook** (`X.yml`, or a bundling `setup_X.yml`) runs goes under `## Dependent Roles`. Write each bullet declaratively as a state ("The X repository must be enabled (role: ...)") and name the role. Roles run by default form the first list, right under the lead-in ("Any LFOps playbook that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables."); mark feature-optional ones with "Optional:". Roles the playbook ships but leaves off by default go under a "These roles are not enabled by default; enable them via the playbook's skip variables if needed:" list-title. Do not list skip-variable names or the exact play order - those live solely in `playbooks/README.md`.
+    * A value the user supplies is a variable: document it under `## ... Role Variables` only, never as a dependency or requirement.
+    * Everything else the operator must provide goes under `## Requirements`: host resources, an external account or subscription, or credentials as plain bullets; hands-on procedures (run a SEPARATE playbook for a dependency, mint a token in a web console, install on the Ansible controller, configure DNS) under a "Manual steps:" list-title, written imperatively. A dependency that needs a separate playbook is a manual step here, not a dependent role. Mark feature-optional items with "Optional:".
+* **Variable subgroups**: large roles MAY split optional (or mandatory) variables into `## Optional Role Variables - <Subgroup>` sections, using the upstream module name, the variable prefix as a code span, or a functional label. These are the same canonical section repeated; give each its own `Example:` block. A subgroup MAY keep its Mandatory and Optional sections paired together (group-by-module, as in `apache_httpd`) instead of forcing all mandatory subgroups before all optional ones. A variable grouping must always be its own `##` section, never a `###` subheading inside `## Optional Role Variables`.
+* **Subheadings and walkthroughs**: `###` subheadings are allowed only as sub-structure inside a section (e.g. procedural steps within a walkthrough), never as a stand-in for a variable subgroup. The walkthrough slot accepts a descriptive role-specific title when none of `Single-Node Setup` / `Cluster Setup` / `Adding a Node to an Existing Cluster` fits (e.g. `bind` `## Primary-Secondary Example`). Sections are separated by two blank lines, including above and below the `*Available since*` marker.
+* **Special roles**: utility/meta roles (e.g. `shared`) MAY replace `## Tags` and the `## *Role Variables` sections with `## Available Tasks` and `## Usage Example`. Controller-side API roles (e.g. `uptimerobot`) MAY add `## Running the Role`, `## Example Inventory` and `## Read-Only Inspection`. Both MUST keep the mandatory frame (title, marker, License, Author Information).
+* **Reference-grade sections**: a role MAY add a focused role-specific section where no canonical section fits (e.g. `monitoring_plugins` `## Installation Methods`, `keycloak` `## Using a reverse proxy`). Keep these to a minimum; prefer folding behaviour notes into `## How the Role Behaves` and error/fix notes into `## Troubleshooting`.
 
 
 #### Tasks
@@ -259,7 +311,7 @@ When creating a new role, make sure to deliver:
     * `ansible.builtin.template` over `ansible.builtin.copy`, `ansible.builtin.lineinfile` or `ansible.builtin.blockinfile`. Templating the whole file leads to more consistent, deterministic, and expected results.
 * Do not use `state: 'latest'` for the `ansible.builtin.package` module as this is not idempotent. Always use `state: 'present'`.
 * Always use `delegate_to: 'localhost'` instead of `local_action`.
-* Always set `become: false` on every task delegated to localhost. When a play sets `become: true` at the play level (the typical case), it propagates to delegated tasks too and tries to escalate via sudo on the Ansible controller. On a controller without passwordless sudo this fails with `sudo: a password is required`, even though the delegated task only writes to `/tmp` or hits a remote API and does not need root locally. Example:
+* Always set `become: false` on every task delegated to localhost. When a play sets `become: true` at the play level (not typical for lfops, but useful if others import our roles in their playbooks), it propagates to delegated tasks too and tries to escalate via sudo on the Ansible controller. On a controller without passwordless sudo this fails with `sudo: a password is required`, even though the delegated task only writes to `/tmp` or hits a remote API and does not need root locally. Example:
 
     ```yaml
     - name: 'curl --output /tmp/ansible.example.tar.gz https://example.com/releases/example.tar.gz'
@@ -269,12 +321,38 @@ When creating a new role, make sure to deliver:
         mode: 0o644
       delegate_to: 'localhost'
       become: false
-      run_once: true
       changed_when: false # not an actual config change on the target
       check_mode: false # run task even if `--check` is specified
     ```
 
+* Avoid `run_once: true`. It binds the task to the first host of the batch and evaluates the task's `when` (including an enclosing `block:` `when` or a conditional role/task include) against that host only. If the first host skips, the task is skipped for every host, even hosts that needed it. The usual case is a controller-side download or build delegated to localhost: drop `run_once` and let the task run per host.
+
+    * For `ansible.builtin.get_url` writing a single file this is already race-safe and effectively runs once: the module downloads to a unique temp file and atomically renames it into the shared `/tmp` destination, and with a version-pinned `dest` the first host downloads while the rest find the file present. Nothing else is needed.
+    * For tasks that mutate a shared path on the controller in place (`ansible.builtin.git` into a shared working dir, `ansible.builtin.shell`/`ansible.builtin.command` that build or flatten files under `/tmp`), running per host in parallel races across `forks`. Drop `run_once` and add `throttle: 1` so the task still runs per host (no first-host-skip) but only one host at a time touches the shared path:
+
+        ```yaml
+        - name: 'Clone the example git repo to localhost'
+          ansible.builtin.git:
+            repo: 'https://github.com/Linuxfabrik/example.git'
+            dest: '/tmp/ansible.example-repo'
+            depth: 1
+          delegate_to: 'localhost'
+          become: false
+          throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
+          check_mode: false # run task even if `--check` is specified
+        ```
+
+    * Two cases legitimately keep `run_once`. First, a single read-only lookup whose result is shared to all hosts (e.g. querying a GitHub release API once and storing the version with `set_fact`); running it per host would only multiply API calls and risk rate limiting, and there is no shared-path race. Second, a task whose `when` is deliberately computed across `ansible_play_hosts_all` (not against the first host), so the first-host-skip problem does not apply (see `roles/firewall/tasks/main.yml`).
+
 * Always provide `changed_when`, `creates`, or `removes` for `ansible.builtin.command` and `ansible.builtin.shell` tasks to ensure idempotency. Use `changed_when: false` for read-only commands.
+* Prefer a `chown -R --changes` command over `ansible.builtin.file` with `recurse: true`; the module's recursive mode is slow on large trees. Register the result and derive `changed_when` from the `--changes` output for idempotency:
+
+    ```yaml
+    - name: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
+      ansible.builtin.command: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
+      register: '__wordpress__chown_result'
+      changed_when: '__wordpress__chown_result["stdout"] | length > 0'
+    ```
 * When deploying files with `ansible.builtin.template`, always set `backup`, `src`, `dest`, `owner`, `group`, and `mode`.
 * Prefer `ansible.builtin.assert` over `ansible.builtin.fail` with `when` for validation checks. There is basically no technical difference; this guideline is only for consistency.
 * Optionally add `ansible.builtin.debug` tasks for `__combined_var` variables so the user can see what the role will do.
@@ -327,6 +405,7 @@ When creating a new role, make sure to deliver:
 * `./defaults`: Default variables for the role, might be overridden by the user in the inventory.
 * Document all user-facing variables in the README. Have a look at `roles/example/README.md` for the format.
 * Do not set defaults for mandatory variables.
+* Software versions must always be mandatory variables, never role defaults. A default version drifts: bumping it in the role silently changes what an existing inventory deploys, effectively a breaking change on every bump. Forcing the user to pin the version keeps inventory and the deployed state consistent.
 * Naming scheme: `<role name>__<optional: config file>_<setting name>`, for example `apache_httpd__server_admin`.
 * No need to invent new names, use the key-names from the config file (if possible), for example `redis__conf_maxmemory`.
 * Prefix role-internal variables with `__`, for example `__example__sysconfig_path`. This makes it easy to determine which variables are user-facing and therefore should be in the README.
@@ -334,6 +413,7 @@ When creating a new role, make sure to deliver:
 * If you need random but predictable/idempotent values, use the `inventory_hostname` as seed. Example for setting the minutes of an hour: `{{ 59 | random(seed=inventory_hostname) }}`.
 * When guarding optional role variables (strings or lists) that may be undefined, use `is defined and my_var | length > 0`. This catches both undefined variables and empty values (e.g. `my_var: ''`). Bare `is defined` is fine for dict subkeys where presence alone is the signal (e.g. `item["cidr"] is defined`) or for result attributes (e.g. `result["failed"] is defined`).
 * Any secrets (passwords, tokens etc.) should not be provided with default values in the role. It is important for a secure-by-default implementation to ensure that an environment is not vulnerable due to the production use of default secrets. Users must be forced to properly provide their own secret variable values.
+* Group credentials as subkeys of a single dictionary variable (e.g. `<role>__login` with `username` and `password` subkeys) rather than as separate top-level variables. This integrates cleanly with the `linuxfabrik.lfops.bitwarden_item` lookup, which returns the whole item as one dict.
 * Always use the `ansible_facts` dictionary (e.g. `ansible_facts["os_family"]` instead of `ansible_os_family`). The old pre-2.5 "facts injected as separate variables" naming system will be deprecated in a future release of Ansible.
 
 
@@ -341,9 +421,7 @@ When creating a new role, make sure to deliver:
 
 Every role should include a `meta/argument_specs.yml` that declares all user-facing variables with their types. Ansible validates these automatically at role entry (before any tasks run), catching type mismatches and missing required variables without manual assert code.
 
-Include all variables documented in the README: mandatory variables, simple optional variables, and the `__host_var`/`__group_var`/`__dependent_var` variants of injection variables. Do not include the purely internal `__role_var` and `__combined_var` slots.
-
-`__dependent_var` must be declared even though it is conceptually internal, because `setup_*` playbooks pass it into the role via `vars:` and Ansible validates role-vars against `argument_specs`. Omitting it causes "Supported parameters include: ..." errors at role entry.
+Include all variables documented in the README: mandatory variables, simple optional variables, and the `__host_var`/`__group_var`/`__dependent_var` variants of injection variables. Do not include the purely internal `__role_var` and `__combined_var` slots. `__dependent_var` must be declared even though it is conceptually internal, because `setup_*` playbooks pass it into the role via `vars:` and Ansible validates role-vars against `argument_specs`. Omitting it causes `Supported parameters include: ...` errors at role entry.
 
 Guidelines for `argument_specs`:
 
@@ -361,11 +439,11 @@ Have a look at the `example` role's `meta/argument_specs.yml` for a complete ref
 
 ##### Combined Variables
 
-The goal of combined variables is that variables can be set in multiple places, and then merged in order to be used in the role. For example, the user can overwrite a specific configuration role default (`__role_var`) from their inventory (`__host_var` / `__group_var`).
+The goal of combined variables is that variables can be set in multiple places, and then merged in order to be used in the role. For example, the user can overwrite *parts* of the role's default (`__role_var`) from their inventory (`__host_var` / `__group_var`).
 
 Furthermore, other roles can also inject their sensible defaults via the `__dependent_var`, with a higher precedence than the role defaults, but lower than the user's inventory.
 
-To enable this behavior, you must define the `__combined_var` as follows:
+To enable this behavior, you must define the `__combined_var` in the `defaults/main.yml` as follows:
 ```yaml
 # for list of dictionaries
 my_role__my_var__dependent_var: []
@@ -580,6 +658,57 @@ my_role__my_simple_value: '{{ __my_role__my_simple_value }}'
 This allows the user to overwrite `my_role__my_simple_value` in their inventory.
 
 
+#### OS-specific Dependent Variables
+
+A variant of the OS-specific Variables pattern applies when the value has to be consumed by a *different* role that runs *earlier* in the same play (the `__dependent_var` pattern, see "Combined Variables"). `vars/<os>.yml` files cannot be used there because they are loaded only when the publishing role's tasks run, which is too late for an earlier consumer. Instead, in the publishing role's `vars/main.yml`, keep the OS-specific dictionary as a role-internal (`__`-prefixed) variable and expose a public variable that selects from it with the `linuxfabrik.lfops.platform_select` filter:
+
+```yaml
+# roles/mariadb_server/vars/main.yml
+__mariadb_server__python__modules__dependent_var:
+  Debian:
+    - name: 'python3-pymysql'
+  RedHat:
+    - name: 'python3-PyMySQL'
+mariadb_server__python__modules__dependent_var: '{{
+    __mariadb_server__python__modules__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts)
+  }}'
+```
+
+`vars/main.yml` is auto-loaded at play parse, visible to every role in the play, and non-overridable from inventory like other `vars/`. Jinja evaluation is lazy, so the filter only runs when a consumer actually references the public variable.
+
+Consumers stay simple - they reference the public variable directly, with no awareness of the selection mechanism:
+
+```yaml
+- role: 'linuxfabrik.lfops.python'
+  python__modules__dependent_var: '{{ mariadb_server__python__modules__dependent_var }}'
+
+- role: 'linuxfabrik.lfops.mariadb_server'
+```
+
+The filter mirrors the precedence of `shared/tasks/platform-variables.yml` (least to most specific: `os_family`, `os_family + distribution_major_version`, `os_family + distribution_version`, `distribution`, `distribution + distribution_major_version`, `distribution + distribution_version`) and returns the value of the most specific present key. Pass `default=[]` (or whatever the consumer expects) when the value is optional on platforms not listed in the dict; otherwise an unmatched call raises an error.
+
+
+#### LFOps-wide Shared Variables
+
+A small set of platform values is identical across many roles (currently the Apache httpd user and group). To avoid repeating these in every role's `vars/<os>.yml`, they live once in `roles/shared/vars/<os>.yml` and are loaded into every playbook by `roles/shared/tasks/global-variables.yml`, imported from each playbook's `pre_tasks` next to `log-start.yml`. They are then available to every role in the play. The available variables can be found at `roles/shared/vars/<os>.yml`.
+
+Reference them directly in tasks, templates, and `defaults/main.yml`, for example:
+
+```yaml
+- name: 'Deploy /etc/example/example.conf'
+  ansible.builtin.template:
+    backup: true
+    src: 'etc/example/example.conf.j2'
+    dest: '/etc/example/example.conf'
+    owner: '{{ __shared__apache_httpd_user }}'
+    group: '{{ __shared__apache_httpd_group }}'
+    mode: 0o644
+```
+
+When adding a new LFOps-wide platform value, define it in `roles/shared/vars/<os>.yml` and it becomes available to every role.
+
+
 #### OS-specific Tasks
 
 In order to run only certain tasks based on the operating system platform, files need to be placed in `tasks/` with the filename of the supported "os family".
@@ -672,6 +801,11 @@ The following roles use techniques that are unusual within LFOps. Roles not in t
 * [grav](https://github.com/Linuxfabrik/lfops/tree/main/roles/grav): Four separate `chmod` passes (files `664`, `bin/` `775`, directories `775`, plus a setgid pass on directories), each registered with `changed_when` based on the `--changes` output for idempotency.
 
 
+#### systemd socket activation with an on-demand backend
+
+* [chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless): Fronts a long-running daemon (Chromium, which does not implement the systemd socket-activation protocol) with a `systemd-socket-proxyd`. A `.socket` unit binds the public port, the proxy forwards to the backend on `127.0.0.1` and exits after an idle timeout, and `BindsTo=` ties the backend's lifecycle to the proxy so it starts on the first request and stops when idle.
+
+
 #### Other
 
 * [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr): Picks the matching OpenJDK package for the configured Solr major version (Solr 9 → OpenJDK 17, Solr 8 → OpenJDK 8) via a per-major-version lookup in `vars/main.yml`.
@@ -689,7 +823,7 @@ The following roles use techniques that are unusual within LFOps. Roles not in t
 
 ### Vendored Plugins
 
-Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored from upstream projects, either because we needed local patches or because the upstream version requires a newer ansible-core than LFOps supports. They are kept in lockstep with their upstream and should be re-synced (or removed) when the listed condition is met.
+Some files under `plugins/modules/` and `plugins/module_utils/` are not authored by Linuxfabrik but vendored from upstream projects, either because we needed local patches, because the upstream version requires a newer ansible-core than LFOps supports, or because the dependency has to ship with the module to the managed node. They are kept in lockstep with their upstream and should be re-synced (or removed) when the listed condition is met.
 
 * `plugins/modules/ipagroup.py`, `ipahbacrule.py`, `ipahostgroup.py`, `ipapwpolicy.py`, `ipasudocmd.py`, `ipasudocmdgroup.py`, `ipasudorule.py`, `ipauser.py`
 
@@ -702,6 +836,56 @@ Some files under `plugins/modules/` are not authored by Linuxfabrik but vendored
     * Upstream: <https://github.com/ansible-collections/community.general> (PR [#10070](https://github.com/ansible-collections/community.general/pull/10070), released in community.general 11.0.0).
     * Reason: community.general 11.0.0 requires ansible-core >= 2.18, which LFOps does not yet mandate (RHEL 8 / Python 3.6 still supported).
     * Drop when: LFOps raises its minimum ansible-core to >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm` accordingly.
+
+* `plugins/module_utils/gnupg.py` (and its `gnupg.py_LICENSE.txt`)
+
+    * Upstream: <https://github.com/vsajip/python-gnupg> (`python-gnupg`). The synced revision is recorded in the file's own `__version__`.
+    * Reason: the `gpg_key` module runs on the managed node and drives the `gpg` binary through this library. Bundling it byte-identical with upstream avoids requiring a `python-gnupg` pip install on every target. The upstream BSD license is kept alongside it.
+    * Drop when: not expected; re-sync with the upstream release when picking up bug fixes or newer-Python support, keeping the file unmodified.
+
+
+### Plugins
+
+In-house plugins live under `plugins/` following the standard Ansible collection layout: `filter/`, `lookup/`, `modules/` and `module_utils/`. The `## Tasks` rules above (FQCN, meta modules, idempotency) are about role tasks; the points below are specific to writing the plugins themselves.
+
+* Every in-house plugin starts with the standard file header, followed by `from __future__ import absolute_import, division, print_function` and `__metaclass__ = type`:
+
+    ```python
+    #!/usr/bin/env python3
+    # -*- coding: utf-8; py-indent-offset: 4 -*-
+    #
+    # Author:  Linuxfabrik GmbH, Zurich, Switzerland
+    # Contact: info (at) linuxfabrik (dot) ch
+    #          https://www.linuxfabrik.ch/
+    # License: The Unlicense, see LICENSE file.
+    ```
+
+* Use single quotes and f-strings consistently (vendored plugins keep their upstream style, see below).
+* Every plugin carries `DOCUMENTATION` (and `RETURN` / `EXAMPLES` where applicable). Keep it valid YAML: in a `description` list, a bullet containing a colon followed by a space is parsed as a mapping and makes `ansible-doc` fail, so rephrase or quote such bullets. Verify with `ansible-doc -t <filter|lookup|module> linuxfabrik.lfops.<name>`; `tests/unit/test_plugin_docs.py` guards against this class of error for all in-house plugins.
+* Set `version_added` to the LFOps release the plugin first shipped in, and never change it afterwards.
+* `module_utils` holds code shared between plugins. Do not import the external Linuxfabrik Python Libraries (`lib`) into a plugin; copy what you need and note the origin in a comment.
+
+
+#### Plugin Tests
+
+Unit tests are **mandatory** for every in-house plugin. Any pull request that adds or changes a plugin must add or update its test, and `git grep` should never find a plugin without one.
+
+* **Where**: under `tests/unit/`, mirroring the plugin tree, named `test_<plugin>.py` (e.g. `tests/unit/plugins/filter/test_combine_lod.py`). A plugin with no collection-qualified imports (e.g. the `combine_lod` filter) can be loaded by file path. A plugin that imports `ansible_collections.linuxfabrik.lfops...` (modules, or lookups pulling in a module_util) is imported through that path; `tests/conftest.py` makes this checkout importable as the collection so the imports resolve under plain pytest/tox. Same-named test files in different plugin-type directories are fine (`--import-mode=importlib`). Assert behavior, not implementation details.
+* **Two tiers**, because plugins run in different environments:
+
+    * Controller plugins (`plugins/filter/`, `plugins/lookup/`) are evaluated on the Ansible controller and only ever see the controller's Python (>= 3.10). They run on the standard CI matrix.
+    * Managed-node plugins (`plugins/modules/`, `plugins/module_utils/`) are executed on the target host and must keep working down to the oldest managed-node Python we maintain (Python 3.6 on RHEL 8). That tier runs inside a RHEL 8 / UBI 8 container; it is scaffolded in `tox.ini` (`[testenv:py36-target]`) and gets enabled once such tests exist.
+
+* **How to run / verify** (the matrix of Python and ansible-core versions is driven by `tox`; see `tests/README.md` and `tox.ini`):
+
+    ```bash
+    tox                      # full controller matrix (every Python x ansible-core combination)
+    tox -e py311-ansible216  # a single combination
+    tox -f py311             # every ansible-core for one Python
+    pytest tests/unit        # against the active interpreter (needs pytest, pyyaml, ansible-core)
+    ```
+
+* The `Linuxfabrik: Unit Tests` workflow runs the controller matrix on every push and pull request.
 
 
 ### Testing

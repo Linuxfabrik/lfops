@@ -42,7 +42,12 @@ repos:
         # false-positives on the project's own code style (`shell=dict(...)`
         # in argument_spec triggers B604, the literal `'on_create'` sentinel
         # triggers B105). Out of scope for in-tree review.
-        exclude: '^plugins/modules/ipa.*\.py$'
+        # `plugins/module_utils/gnupg.py` is vendored python-gnupg kept
+        # byte-identical with upstream; bandit flags its (expected) subprocess
+        # use (B404/B603) and asserts (B101), which we do not patch out.
+        # `tests/` holds unit tests whose fixtures use throwaway passwords
+        # (B105/B106); scanning test fixtures for hardcoded secrets is noise.
+        exclude: '^(plugins/modules/ipa.*|plugins/module_utils/gnupg|tests/.*)\.py$'
         types_or: ['python']
 
   - repo: 'https://github.com/jendrikseipp/vulture'
@@ -50,4 +55,18 @@ repos:
     hooks:
       - id: 'vulture'
         args: ['--min-confidence=80']
+        types_or: ['python']
+
+  - repo: 'local'
+    hooks:
+      - id: 'pytest-unit'
+        name: 'pytest (plugin unit tests)'
+        # Fast single-interpreter run of the controller-plugin unit tests on
+        # every commit. The full Python x ansible-core matrix runs in CI via
+        # tox; see tests/README.md.
+        entry: 'pytest tests/unit'
+        language: 'python'
+        additional_dependencies: ['ansible-core', 'pytest', 'pyyaml']
+        pass_filenames: false
+        files: '^(plugins/|tests/unit/)'
         types_or: ['python']

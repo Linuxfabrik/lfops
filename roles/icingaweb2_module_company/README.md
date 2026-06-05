@@ -13,15 +13,18 @@ This role is tested with the following IcingaWeb2 Company Module versions:
 ## How the Role Behaves
 
 * The version is hard-coded to `v1.0.0` in `tasks/main.yml`. No version variable is exposed.
-* The Tarball is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
+* The Tarball is downloaded on the Ansible controller (`delegate_to: 'localhost'`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
 * The download and extraction step only run on the *first* role execution (when `mkdir /usr/share/icingaweb2/modules/company` reports `changed`). On subsequent runs the role does not overwrite the directory, so any local customizations to logos or CSS are preserved.
 * `icingacli module enable company` is only invoked when `/etc/icingaweb2/enabledModules/company` does not yet exist (idempotent).
 
 
-## Mandatory Requirements
+## Requirements
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
-* Internet access from the Ansible controller (downloads `https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz`).
+* The Ansible controller must have Internet access (downloads `https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz`).
+
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
 
 
 ## Tags

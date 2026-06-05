@@ -13,6 +13,7 @@ This role is compatible with the following Redis versions:
 * 7.4 (note: not available in the Remi Repo as of 2025-03-05)
 * 8.0
 * 8.2
+* 8.8
 
 
 *Available since LFOps `2.0.0`.*
@@ -68,121 +69,121 @@ redis__service_timeout_stop_sec: 5
 ```
 
 
-### `redis__conf_*` config directives
+## Optional Role Variables - `redis__conf_*` Config Directives
 
 Variables for `redis.conf` directives and their default values, defined and supported by this role.
 
 `redis__conf_appendonly`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: `'no'`
 
 `redis__conf_auto_aof_rewrite_min_size`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: `'64mb'`
 
 `redis__conf_bind`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: `'127.0.0.1'`
 
 `redis__conf_daemonize`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: `'no'`
 
 `redis__conf_databases`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: Number.
 * Default: `16`
 
 `redis__conf_loglevel`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: `'notice'`
 
 `redis__conf_maxmemory`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: `'50M'`
 
 `redis__conf_maxmemory_policy`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: `'noeviction'`
 
 `redis__conf_port`
 
-* If port `0` is specified Redis will not listen on a TCP socket. [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* If port `0` is specified Redis will not listen on a TCP socket. [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: Number.
 * Default: `6379`
 
 `redis__conf_protected_mode`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: `'yes'`
 
 `redis__conf_replica_serve_stale_data`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: `'yes'`
 
 `redis__conf_requirepass`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: unset
 
 `redis__conf_save`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: List.
 * Default: `['3600 1', '300 100', '60 10000']`
 
 `redis__conf_supervised`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: `'auto'`
 
 `redis__conf_tls_auth_clients`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: unset
 
 `redis__conf_tls_ca_cert_file`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: unset
 
 `redis__conf_tls_cert_file`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: unset
 
 `redis__conf_tls_key_file`
 
-* [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
 * Default: unset
 
 `redis__conf_tls_port`
 
-* TLS Port. Set `redis__conf_port: 0` to only listen with TLS. [redis.conf](https://github.com/redis/redis/blob/7.2/redis.conf)
+* TLS Port. Set `redis__conf_port: 0` to only listen with TLS. [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: Number.
 * Default: unset
 

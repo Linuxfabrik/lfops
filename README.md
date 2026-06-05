@@ -94,9 +94,6 @@ If you manage RHEL 8 hosts with the default system Python (3.6), use **ansible-c
 ```bash
 # Install the collection and its dependencies
 ansible-galaxy collection install linuxfabrik.lfops
-
-# Alternatively, install from Git directly
-ansible-galaxy collection install git+https://github.com/Linuxfabrik/lfops.git
 ```
 
 To install the dependencies separately:
@@ -284,11 +281,18 @@ ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.all --tags mari
 
 ### Skipping Roles in a Playbook
 
-The playbooks support skipping individual roles using inventory variables. For example, to skip the firewall role in `setup_basic`:
+Each playbook wires in the roles it needs, gated by per-role skip variables. These let you tailor what a playbook runs without editing it:
+
+* Set a skip variable to `true` to **skip** a role the playbook runs by default.
+* Set it to `false` to **enable** a role the playbook ships but leaves off by default.
+
+For example, to skip the firewall role in `setup_basic`:
 
 ```yaml
 setup_basic__skip_firewall: true
 ```
+
+Every playbook, the roles it runs, and their skip variables (including the defaults) are documented in [playbooks/README.md](playbooks/README.md).
 
 In playbooks that support role injections (like `setup_icinga2_master`), there are two variables:
 

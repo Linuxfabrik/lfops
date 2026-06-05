@@ -116,6 +116,16 @@
 
 - block:
 
+  - name: 'Validate that each graylog_server__system_inputs entry is global or assigned to a node'
+    ansible.builtin.assert:
+      that:
+        - '(item["global"] | default(false) | bool) or (item["node"] | default("") | length > 0)'
+      fail_msg: 'Each graylog_server__system_inputs entry must set "global: true" or assign a "node", otherwise Graylog creates the input but never starts it'
+      quiet: true
+    loop: '{{ graylog_server__system_inputs }}'
+    loop_control:
+      label: '{{ item["title"] | default(item["type"]) }}'
+
   - name: 'Get all inputs'
     ansible.builtin.uri:
       url: 'http://{{ graylog_server__http_bind_address }}:{{ graylog_server__http_bind_port }}/api/system/inputs'

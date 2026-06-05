@@ -1,0 +1,11 @@
+; {{ ansible_managed }}
+; 2026051201
+
+[chrome]
+{% if icingaweb2_module_pdfexport__chrome_binary | length > 0 %}
+binary = "{{ icingaweb2_module_pdfexport__chrome_binary }}"
+{% else %}
+host = "{{ icingaweb2_module_pdfexport__chrome_host }}"
+port = "{{ icingaweb2_module_pdfexport__chrome_port }}"
+{% endif %}
+force_temp_storage = "{{ icingaweb2_module_pdfexport__force_temp_storage | bool | ternary('1', '0') }}"

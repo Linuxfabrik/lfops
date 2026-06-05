@@ -1,0 +1,6 @@
+__chromium_headless__binary_path: '/usr/bin/chromium-headless-shell'
+__chromium_headless__packages:
+  - 'chromium-headless-shell'
+  - 'fonts-freefont-ttf'
+# Debian 12 (systemd 252) and newer support systemd-socket-proxyd --exit-idle-time (added in systemd 246).
+__chromium_headless__proxy_exit_idle_time_supported: true

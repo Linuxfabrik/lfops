@@ -1,28 +1,42 @@
 - block:
 
-  - name: 'Debug Variables:'
+  - name: 'stat /etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state'
+    ansible.builtin.stat:
+      path: '/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state'
+    register: '__keycloak__admin_login_bootstrapped_stat'
+
+  # Read-only fact used in the debug output and as the default value of the per-render
+  # `__keycloak__include_bootstrap_creds` flag below. Do NOT reuse this fact directly in the
+  # sysconfig template: set_fact has higher Ansible variable precedence than task-level `vars:`,
+  # so a task trying to override this fact would be silently ignored.
+  - name: 'Set __keycloak__admin_login_bootstrapped'
+    ansible.builtin.set_fact:
+      __keycloak__admin_login_bootstrapped: '{{ __keycloak__admin_login_bootstrapped_stat["stat"]["exists"] }}'
+
+  - name: 'Debug Variables'
     ansible.builtin.debug:
-      msg: |
-        keycloak__admin_login.username: {{ keycloak__admin_login.username }}
-        keycloak__db_login.username: {{ keycloak__db_login.username }}
-        keycloak__db_url_database: {{ keycloak__db_url_database }}
-        keycloak__db_url_host: {{ keycloak__db_url_host }}
-        keycloak__db_vendor: {{ keycloak__db_vendor }}
-        keycloak__expose_healthcheck_endpoints: {{ keycloak__expose_healthcheck_endpoints }}
-        keycloak__expose_metrics_endpoints: {{ keycloak__expose_metrics_endpoints }}
-        keycloak__hostname: {{ keycloak__hostname }}
-        keycloak__hostname_backchannel_dynamic: {{ keycloak__hostname_backchannel_dynamic }}
-        keycloak__https_certificate_file: {{ keycloak__https_certificate_file }}
-        keycloak__https_certificate_key_file: {{ keycloak__https_certificate_key_file }}
-        keycloak__https_protocols: {{ keycloak__https_protocols }}
-        keycloak__log: {{ keycloak__log }}
-        keycloak__log_file: {{ keycloak__log_file }}
-        keycloak__mode: {{ keycloak__mode }}
-        keycloak__proxy_headers: {{ keycloak__proxy_headers }}
-        keycloak__service_enabled: {{ keycloak__service_enabled }}
-        keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: {{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route }}
-        keycloak__state: {{ keycloak__state }}
-        keycloak__version: {{ keycloak__version }}
+      msg:
+        - 'keycloak__admin_login.username: {{ (keycloak__admin_login | d({}))["username"] | d("(unset)") }}'
+        - '/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state exists: {{ __keycloak__admin_login_bootstrapped }}'
+        - 'keycloak__db_login.username: {{ keycloak__db_login["username"] }}'
+        - 'keycloak__db_url_database: {{ keycloak__db_url_database }}'
+        - 'keycloak__db_url_host: {{ keycloak__db_url_host }}'
+        - 'keycloak__db_vendor: {{ keycloak__db_vendor }}'
+        - 'keycloak__expose_healthcheck_endpoints: {{ keycloak__expose_healthcheck_endpoints }}'
+        - 'keycloak__expose_metrics_endpoints: {{ keycloak__expose_metrics_endpoints }}'
+        - 'keycloak__hostname: {{ keycloak__hostname }}'
+        - 'keycloak__hostname_backchannel_dynamic: {{ keycloak__hostname_backchannel_dynamic }}'
+        - 'keycloak__https_certificate_file: {{ keycloak__https_certificate_file }}'
+        - 'keycloak__https_certificate_key_file: {{ keycloak__https_certificate_key_file }}'
+        - 'keycloak__https_protocols: {{ keycloak__https_protocols }}'
+        - 'keycloak__log: {{ keycloak__log }}'
+        - 'keycloak__log_file: {{ keycloak__log_file }}'
+        - 'keycloak__mode: {{ keycloak__mode }}'
+        - 'keycloak__proxy_headers: {{ keycloak__proxy_headers }}'
+        - 'keycloak__service_enabled: {{ keycloak__service_enabled }}'
+        - 'keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: {{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route }}'
+        - 'keycloak__state: {{ keycloak__state }}'
+        - 'keycloak__version: {{ keycloak__version }}'
 
   tags:
     - 'always'
@@ -95,6 +109,8 @@
       owner: 'root'
       group: 'root'
       mode: 0o640
+    vars:
+      __keycloak__include_bootstrap_creds: '{{ not __keycloak__admin_login_bootstrapped }}'
     notify: 'keycloak: systemctl restart keycloak'
 
   - name: 'Create keycloak.service'
@@ -118,10 +134,14 @@
 
 - block:
 
-  - name: 'Change the working directory to /opt/keycloak and bin/kc.sh build --db {{ keycloak__db_vendor }}'
+  # kc.sh build always rebuilds and gives no reliable idempotency signal in its stdout, hence changed_when: true.
+  - name: 'cd /opt/keycloak && bin/kc.sh build --db {{ keycloak__db_vendor }}'
     ansible.builtin.command: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
     args:
       chdir: '/opt/keycloak'
+    become: true
+    become_user: 'keycloak'
+    changed_when: true
     when: 'keycloak__mode == "production"'
 
   tags:
@@ -144,3 +164,110 @@
     - 'keycloak'
     - 'keycloak:configure'
     - 'keycloak:state'
+
+
+- block:
+
+  - name: 'Flush handlers so Keycloak restarts with the bootstrap credentials loaded'
+    ansible.builtin.meta: 'flush_handlers'
+
+  # Port-up only proves Quarkus is listening, not that the bootstrap admin was provisioned.
+  # The admin-cli token request below is the actual readiness check; this wait_for just
+  # avoids spamming "connection refused" before Keycloak has bound the socket.
+  - name: 'Wait for Keycloak listener on port {{ __keycloak__listen_port }}'
+    ansible.builtin.wait_for:
+      port: '{{ __keycloak__listen_port }}'
+      host: '127.0.0.1'
+      delay: 5
+      sleep: 2
+      timeout: 300
+    vars:
+      __keycloak__listen_port: '{{ (keycloak__https_certificate_file | length > 0) | ternary(8443, 8080) }}'
+
+  # Verify the bootstrap admin actually exists with the configured password before touching
+  # the marker. If this fails, the marker stays absent and a re-run with corrected variables
+  # will re-render the credentials and retry.
+  - name: 'curl --data grant_type=password --data client_id=admin-cli {{ __keycloak__base_url }}/realms/master/protocol/openid-connect/token'
+    ansible.builtin.uri:
+      url: '{{ __keycloak__base_url }}/realms/master/protocol/openid-connect/token'
+      method: 'POST'
+      body_format: 'form-urlencoded'
+      body:
+        client_id: 'admin-cli'
+        grant_type: 'password'
+        password: '{{ keycloak__admin_login["password"] }}'
+        username: '{{ keycloak__admin_login["username"] }}'
+      status_code: 200
+      validate_certs: false
+    register: '__keycloak__admin_token_result'
+    until: '__keycloak__admin_token_result["status"] | d(0) == 200'
+    retries: 30
+    delay: 5
+    no_log: true
+    changed_when: false
+    check_mode: false
+    vars:
+      __keycloak__listen_port: '{{ (keycloak__https_certificate_file | length > 0) | ternary(8443, 8080) }}'
+      __keycloak__scheme: '{{ (keycloak__https_certificate_file | length > 0) | ternary("https", "http") }}'
+      __keycloak__base_url: '{{ __keycloak__scheme }}://127.0.0.1:{{ __keycloak__listen_port }}'
+
+  # `backup: false` is on purpose. The previous file contained the cleartext bootstrap password;
+  # writing a `.<timestamp>~` backup would leave those credentials on disk and defeat the
+  # whole point of this cleanup pass.
+  - name: 'Deploy /etc/sysconfig/keycloak (without bootstrap credentials)'
+    ansible.builtin.template:
+      backup: false
+      src: 'etc/sysconfig/keycloak-sysconfig.j2'
+      dest: '/etc/sysconfig/keycloak'
+      owner: 'root'
+      group: 'root'
+      mode: 0o640
+    vars:
+      __keycloak__include_bootstrap_creds: false
+
+  - name: 'mkdir -p /etc/ansible/facts.d'
+    ansible.builtin.file:
+      path: '/etc/ansible/facts.d'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # `copy` with `content: ''` instead of `file` with `state: touch` so the task does not
+  # report changed on every run after the bootstrap is complete.
+  - name: 'Create state marker /etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state'
+    ansible.builtin.copy:
+      content: ''
+      dest: '/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+
+  rescue:
+
+    # The admin-cli token request above failed. The most common non-transient
+    # cause is the permanent-admin handover (see the role README, "Post-Installation
+    # Steps"): the temporary `-temp` bootstrap account was deleted, but the marker
+    # file is missing (e.g. a fresh Ansible controller, or a lost
+    # `/etc/ansible/facts.d`). The role cannot obtain a token and cannot tell this
+    # apart from a genuine error, so it fails loudly with recovery guidance
+    - name: 'Explain how to recover from a missing bootstrap marker'
+      ansible.builtin.fail:
+        msg: >-
+          Could not obtain an admin-cli token for
+          "{{ keycloak__admin_login["username"] }}" in the master realm. If you
+          already created a permanent admin and deleted this temporary bootstrap
+          account, the bootstrap is effectively done but the marker file is
+          missing. Recreate it on the target and re-run the role:
+          `mkdir --parents /etc/ansible/facts.d &&
+          touch /etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state`.
+          Otherwise verify that keycloak.service is running and that
+          `keycloak__admin_login` matches the bootstrap admin.
+
+  # block
+  when:
+    - 'not (__keycloak__admin_login_bootstrapped | bool)'
+    - 'keycloak__state == "started"'
+  tags:
+    - 'keycloak'
+    - 'keycloak:configure'

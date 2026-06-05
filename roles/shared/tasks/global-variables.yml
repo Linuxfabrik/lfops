@@ -1,0 +1,22 @@
+# Loads LFOps-wide platform variables that are shared across roles (e.g. the webserver
+# user/group, which differs only by OS family: apache on RedHat, www-data on Debian).
+#
+# Imported in every playbook's pre_tasks so the variables are available to all roles in the
+# play, including roles that consume them earlier than the role that would otherwise define
+# them. Unlike platform-variables.yml (which loads the *calling* role's vars via
+# ansible_parent_role_paths), this loads the shared role's *own* vars via role_path.
+#
+# Files are loaded from least to most specific, mirroring platform-variables.yml.
+
+- name: 'Set LFOps-wide platform variables'
+  ansible.builtin.include_vars: '{{ __shared__global_vars_file }}'
+  loop:
+    - '{{ ansible_facts["os_family"] }}.yml'                                                     # "RedHat.yml"
+    - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'    # "RedHat8.yml"
+    - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'          # "RedHat8.3.yml"
+    - '{{ ansible_facts["distribution"] }}.yml'                                                  # "Rocky.yml"
+    - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml' # "Rocky8.yml"
+    - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'       # "Rocky8.10.yml"
+  vars:
+    __shared__global_vars_file: '{{ role_path }}/vars/{{ item }}'
+  when: '__shared__global_vars_file is file'

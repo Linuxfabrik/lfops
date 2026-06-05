@@ -8,7 +8,9 @@ The role does nothing on its own and relies on the [linux_system_roles.kernel_se
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Requirements
+
+Manual steps:
 
 * Install the [Linux System Roles](https://linux-system-roles.github.io/) on the Ansible control node, for example by calling `ansible-galaxy collection install fedora.linux_system_roles`.
 

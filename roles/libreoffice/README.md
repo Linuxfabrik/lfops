@@ -8,9 +8,9 @@ By default it only installs `libreoffice-core` plus the writer / calc / impress 
 *Available since LFOps `2.0.0`.*
 
 
-## What `libreoffice__client_apache: true` Does
+## How the Role Behaves
 
-Setting this to `true` triggers a Red Hat-specific block. On Debian / Ubuntu the block is not skipped automatically; the SELinux compile steps will fail there, so do not enable this on Debian-family hosts.
+Setting `libreoffice__client_apache: true` triggers a Red Hat-specific block. On Debian / Ubuntu the block is not skipped automatically; the SELinux compile steps will fail there, so do not enable this on Debian-family hosts.
 
 When enabled, the role:
 
@@ -18,9 +18,15 @@ When enabled, the role:
 * Runs a one-shot dummy conversion as user `apache` to populate `~/.config/libreoffice/4/`.
 * Runs `restorecon -Fvr` on the two directories.
 * Compiles two custom SELinux policy modules (`selinux-sofficebin`, `selinux-java`) via `checkmodule` / `semodule_package` and installs them with `semodule --install`. These grant `httpd_t` the additional permissions LibreOffice needs (`setattr` on directories under `lib_t`, `read` on `cgroup_t` files, etc.).
-* Via the companion playbook: also runs `linuxfabrik.lfops.selinux` to set the SELinux booleans `httpd_can_network_connect` and `httpd_execmem` to `on`, and to register fcontexts mapping `/usr/share/httpd/.cache` and `/usr/share/httpd/.config` to `httpd_sys_rw_content_t`.
 
-The SELinux booleans / fcontexts are injected from `libreoffice__selinux__booleans__dependent_var` and `libreoffice__selinux__fcontexts__dependent_var` in `defaults/main.yml`. They are role-internal and not meant to be overridden from inventory.
+The SELinux booleans and fcontexts this Apache integration also needs are not set by this role. The `linuxfabrik.lfops.selinux` role, wired in by the playbook, applies them (see Dependent Roles).
+
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* Optional (Red Hat only, when `libreoffice__client_apache: true`): the SELinux booleans `httpd_can_network_connect` and `httpd_execmem` must be `on`, and `/usr/share/httpd/.cache` and `/usr/share/httpd/.config` must map to the `httpd_sys_rw_content_t` fcontext (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
 
 
 ## Tags
@@ -35,7 +41,7 @@ The SELinux booleans / fcontexts are injected from `libreoffice__selinux__boolea
 
 `libreoffice__client_apache`
 
-* If `true`, prepare the host for running LibreOffice from an Apache HTTPd context (directory layout, dummy run, custom SELinux modules; on Red Hat additionally the SELinux booleans / fcontexts via the companion playbook). Red Hat only.
+* If `true`, prepare the host for running LibreOffice from an Apache HTTPd context (directory layout, dummy run, custom SELinux modules; on Red Hat additionally the SELinux booleans / fcontexts applied by the `selinux` role the playbook wires in). Red Hat only.
 * Type: Bool.
 * Default: `false`
 

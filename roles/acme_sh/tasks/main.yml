@@ -49,16 +49,16 @@
     ansible.builtin.file:
       path: '/var/www/html/letsencrypt/.well-known/acme-challenge'
       state: 'directory'
-      owner: '{{ __acme_sh__apache_httpd_user }}'
-      group: '{{ __acme_sh__apache_httpd_group }}'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
       mode: 0o755
 
   - name: "echo 'it works' > /var/www/html/letsencrypt/.well-known/acme-challenge/index.html"
     ansible.builtin.copy:
       content: 'it works'
       dest: '/var/www/html/letsencrypt/.well-known/acme-challenge/index.html'
-      owner: '{{ __acme_sh__apache_httpd_user }}'
-      group: '{{ __acme_sh__apache_httpd_group }}'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
       mode: 0o644
 
   tags:
@@ -69,7 +69,10 @@
 
   - name: 'acme.sh --config-home /etc/acme.sh --upgrade'
     ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --upgrade'
-    changed_when: '"Already uptodate" not in acme_sh__upgrade_result["stdout"]'
+    # acme.sh prints "Already up to date!" when there is nothing to upgrade (and additionally
+    # "Upgrade successful!" because of how its upgrade function exits), so key the change on the
+    # former: report changed only when an actual upgrade happened.
+    changed_when: '"Already up to date!" not in acme_sh__upgrade_result["stdout"]'
     failed_when: '"Upgrade success" not in acme_sh__upgrade_result["stdout"]'
     register: 'acme_sh__upgrade_result'
 
@@ -79,15 +82,60 @@
     check_mode: false # run task even if `--check` is specified
     register: 'acme_sh__list_result'
 
+  # `--listraw` prints one `Main_Domain|"KeyLength"|...` line per issued certificate (plus a
+  # header line). Reduce it to a `name|keylength` list so we can tell whether a certificate
+  # already exists with the requested key type. RSA and ECDSA certificates for the same name
+  # live in separate stores and therefore show up as two separate lines.
+  - name: 'Parse issued certificates into a name|keylength list'
+    ansible.builtin.set_fact:
+      __acme_sh__issued: >-
+        {{ acme_sh__list_result["stdout_lines"]
+           | map("regex_replace", '^([^|]*)\|"?([^"|]*)"?\|.*$', '\1|\2')
+           | list }}
+
+  # Names that do not yet have a certificate with the requested key length, so they need to be
+  # (re)issued. This drives the RSA -> ECDSA conversion too: changing the key length makes the
+  # existing RSA line stop matching, so the name lands here and acme.sh issues a fresh
+  # certificate into the ECC store (a different directory), without needing `--force`.
+  - name: 'Determine which certificates need to be issued'
+    ansible.builtin.set_fact:
+      __acme_sh__to_issue: >-
+        {{ acme_sh__certificates | map(attribute="name")
+           | difference(__acme_sh__issued
+                        | select("search", '\|' ~ (acme_sh__key_length | string) ~ '$')
+                        | map("regex_replace", '\|.*$', '')
+                        | list) }}
+
   - ansible.builtin.include_tasks: 'issue-cert.yml'
     loop: '{{ acme_sh__certificates }}'
     loop_control:
       loop_var: 'certificate'
-    when: 'certificate["name"] is not in (acme_sh__list_result["stdout_lines"] | map("regex_replace", "\|.*", "") | list)'
+    when: 'certificate["name"] in __acme_sh__to_issue'
+
+  # acme.sh re-runs install-cert (copy to /etc/pki + reload) on every renewal by itself, using
+  # the paths it saved on the last install. So this role only needs to install when a
+  # certificate was just (re)issued above, or when the installed file is missing (self-heal).
+  # Installing on every run would reload the web server on every run, which is not idempotent.
+  - name: 'Stat the installed certificates'
+    ansible.builtin.stat:
+      path: '{{ __acme_sh__cert_path }}/{{ item["name"] }}.crt'
+    loop: '{{ acme_sh__certificates }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    register: 'acme_sh__installed_stat_result'
+
+  - name: 'Determine which installed certificates are missing'
+    ansible.builtin.set_fact:
+      __acme_sh__missing_install: >-
+        {{ acme_sh__installed_stat_result["results"]
+           | rejectattr("stat.exists")
+           | map(attribute="item.name")
+           | list }}
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert ...'
     ansible.builtin.command: |-
       /opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert \
+      {{ '--ecc' if (acme_sh__key_length | string) is match('^ec-') else '' }} \
       --domain '{{ item["name"] }}' \
       --ca-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}-chain.crt' \
       --cert-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}.crt' \
@@ -95,10 +143,13 @@
       --key-file '{{ __acme_sh__key_path }}/{{ item["name"] }}.key' \
       --reloadcmd '{{ acme_sh__reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length > 0) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
     loop: '{{ acme_sh__certificates }}'
+    when: 'item["name"] in __acme_sh__to_issue or item["name"] in __acme_sh__missing_install'
+    changed_when: true
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy ...'
     ansible.builtin.command: |-
       /opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy \
+      {{ '--ecc' if (acme_sh__key_length | string) is match('^ec-') else '' }} \
       --domain '{{ item["name"] }}' \
       --deploy-hook {{ acme_sh__deploy_to_host_hook }}
     environment:
@@ -110,7 +161,48 @@
       DEPLOY_SSH_CAFILE: '{{ __acme_sh__cert_path }}/{{ item["name"] }}-chain.crt'
       DEPLOY_SSH_REMOTE_CMD: '{{ acme_sh__deploy_to_host_reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length > 0) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
     loop: '{{ acme_sh__certificates }}'
-    when: 'acme_sh__deploy_to_host is defined and acme_sh__deploy_to_host | length > 0'
+    # acme.sh re-runs the deploy hook on every renewal by itself, so deploy only when the
+    # certificate was just (re)issued above.
+    when:
+      - 'acme_sh__deploy_to_host is defined and acme_sh__deploy_to_host | length > 0'
+      - 'item["name"] in __acme_sh__to_issue'
+    changed_when: true
+
+  # After a RSA -> ECDSA conversion the superseded RSA certificate still sits in acme.sh's
+  # renewal list and would keep getting renewed pointlessly. List the certificates again (the
+  # ECDSA ones now exist) and drop the RSA certificate from renewal for every name that has
+  # both a freshly issued ECDSA certificate and a leftover RSA one. `--remove` without `--ecc`
+  # targets the RSA store; it only detaches the certificate from renewal and leaves the files
+  # in place.
+  - name: 'acme.sh --config-home /etc/acme.sh --list --listraw (after issuing)'
+    ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --list --listraw'
+    changed_when: false # just gathering information
+    check_mode: false # run task even if `--check` is specified
+    register: 'acme_sh__list_after_result'
+    when: '(acme_sh__key_length | string) is match("^ec-")'
+
+  - name: 'Parse issued certificates (after issuing) into a name|keylength list'
+    ansible.builtin.set_fact:
+      __acme_sh__issued_after: >-
+        {{ acme_sh__list_after_result["stdout_lines"]
+           | map("regex_replace", '^([^|]*)\|"?([^"|]*)"?\|.*$', '\1|\2')
+           | list }}
+    when: '(acme_sh__key_length | string) is match("^ec-")'
+
+  - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --remove (superseded RSA cert)'
+    ansible.builtin.command: "/opt/acme.sh/acme.sh --config-home /etc/acme.sh --remove --domain '{{ item['name'] }}'"
+    loop: '{{ acme_sh__certificates }}'
+    when:
+      - '(acme_sh__key_length | string) is match("^ec-")'
+      # the requested ECDSA certificate now exists for this name ...
+      - '(item["name"] ~ "|" ~ (acme_sh__key_length | string)) in __acme_sh__issued_after'
+      # ... and a leftover certificate with a different (RSA) key length still exists for it
+      - >-
+        __acme_sh__issued_after
+        | reject('search', '\|' ~ (acme_sh__key_length | string) ~ '$')
+        | map('regex_replace', '\|.*$', '')
+        | list | select('equalto', item['name']) | list | length > 0
+    changed_when: true
 
   tags:
     - 'acme_sh'

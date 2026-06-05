@@ -1,0 +1,17 @@
+# Only socket-template changes trigger an immediate restart, because the socket unit
+# is what binds the externally-visible listen_address:listen_port. Changes to the
+# proxy or Chromium service templates only need daemon-reload: the running proxy and
+# Chromium process keep going with the old settings until the next idle timeout, and
+# the next socket-activation cycle re-spawns them with the updated unit files.
+#
+# `is not defined` covers the `--tags chromium_headless:configure` run, where the state
+# block is skipped and __chromium_headless__service_state_result is never registered.
+# `is not changed` covers the normal flow: skip the restart if the state task just
+# (re-)started the socket.
+- name: 'chromium_headless: restart chromium-headless-proxy.socket'
+  ansible.builtin.service:
+    name: 'chromium-headless-proxy.socket'
+    state: 'restarted'
+  when:
+    - '__chromium_headless__service_state_result is not defined or __chromium_headless__service_state_result is not changed'
+    - 'chromium_headless__service_state != "stopped"'

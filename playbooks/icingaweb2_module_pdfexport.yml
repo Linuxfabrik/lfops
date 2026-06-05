@@ -9,8 +9,23 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
 
   roles:
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not icingaweb2_module_pdfexport__skip_repo_epel | d(false) | bool'
+
+    - role: 'linuxfabrik.lfops.chromium_headless'
+      when:
+        - 'not icingaweb2_module_pdfexport__skip_chromium_headless | d(false) | bool'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_pdfexport'
 

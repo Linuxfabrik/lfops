@@ -8,18 +8,12 @@ Note that this role does NOT let you specify a particular Elasticsearch server v
 *Available since LFOps `5.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Enable the official Elasticsearch repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml), this is automatically done for you.
-
-
-## Optional Requirements
-
-* Set `vm.swappiness` to 1. This can be done using the [linuxfabrik.lfops.kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings) role.
-
-If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml), this is automatically done for you.
+* The official Elasticsearch repository must be enabled (role: [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch)).
+* Optional: `vm.swappiness` set to 1 (role: [linuxfabrik.lfops.kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings)).
 
 
 ## Single-Node Setup
@@ -27,46 +21,7 @@ If you use the [elasticsearch playbook](https://github.com/Linuxfabrik/lfops/blo
 For a single-node setup, no special configuration is needed beyond the mandatory requirements. When `elasticsearch__discovery_seed_hosts` is not set, the role automatically configures `discovery.type: single-node`. After installation, generate the initial password for the `elastic` user (see Post-Installation Steps below).
 
 
-## Tags
-
-`elasticsearch`
-
-* Installs Elasticsearch and unzip.
-* Creates the data directory and tmp directory.
-* Deploys all configuration files.
-* Deploys TLS certificates (if `elasticsearch__ca_cert` is set).
-* Manages the state of the Elasticsearch service.
-* Triggers: elasticsearch.service restart.
-
-`elasticsearch:certs`
-
-* Deploys TLS certificates (CA, HTTP, transport).
-* Triggers: elasticsearch.service restart.
-
-`elasticsearch:configure`
-
-* Deploys `/etc/elasticsearch/elasticsearch.yml`.
-* Deploys `/etc/elasticsearch/log4j2.properties`.
-* Deploys the sysconfig file.
-* Deploys `/tmp/certutil.yml` (if `elasticsearch__discovery_seed_hosts` is set).
-* Triggers: elasticsearch.service restart.
-
-`elasticsearch:state`
-
-* Manages the state of the Elasticsearch service (`systemctl enable/disable`, `start/stop/restart`).
-* Triggers: none.
-
-
-## Post-Installation Steps
-
-After setting up a single node or cluster, generate the initial password for the `elastic` user:
-
-```bash
-/usr/share/elasticsearch/bin/elasticsearch-reset-password --username elastic
-```
-
-
-## Setting Up an Elasticsearch Cluster
+## Cluster Setup
 
 This role supports creating a multi-node Elasticsearch cluster using manual certificate distribution. Elasticsearch 8.x ships with an enrollment token mechanism for adding nodes to a cluster. However, enrollment tokens expire after 30 minutes, and the process requires interactive commands on the command line. This makes it unsuitable for automation with Ansible. Instead, this role generates TLS certificates manually using `elasticsearch-certutil` and distributes them to all nodes via Ansible.
 
@@ -182,7 +137,7 @@ curl --cacert "$elastic_cacert" \
 The status should be `green` with all nodes listed.
 
 
-## Adding a New Node to an Existing Cluster
+## Adding a Node to an Existing Cluster
 
 1. Generate certificates for the new node using the existing CA (**manual**). On the node where the CA is stored:
 ```bash
@@ -216,6 +171,45 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.elasticsearch --limit n
 ```
 
 6. Roll out the `elasticsearch__discovery_seed_hosts` to all cluster nodes (**automated**)
+
+
+## Post-Installation Steps
+
+After setting up a single node or cluster, generate the initial password for the `elastic` user:
+
+```bash
+/usr/share/elasticsearch/bin/elasticsearch-reset-password --username elastic
+```
+
+
+## Tags
+
+`elasticsearch`
+
+* Installs Elasticsearch and unzip.
+* Creates the data directory and tmp directory.
+* Deploys all configuration files.
+* Deploys TLS certificates (if `elasticsearch__ca_cert` is set).
+* Manages the state of the Elasticsearch service.
+* Triggers: elasticsearch.service restart.
+
+`elasticsearch:certs`
+
+* Deploys TLS certificates (CA, HTTP, transport).
+* Triggers: elasticsearch.service restart.
+
+`elasticsearch:configure`
+
+* Deploys `/etc/elasticsearch/elasticsearch.yml`.
+* Deploys `/etc/elasticsearch/log4j2.properties`.
+* Deploys the sysconfig file.
+* Deploys `/tmp/certutil.yml` (if `elasticsearch__discovery_seed_hosts` is set).
+* Triggers: elasticsearch.service restart.
+
+`elasticsearch:state`
+
+* Manages the state of the Elasticsearch service (`systemctl enable/disable`, `start/stop/restart`).
+* Triggers: none.
 
 
 ## Optional Role Variables

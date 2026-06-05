@@ -16,6 +16,7 @@ Which Ansible role is proven to run on which OS?
 | bind                                  |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | blocky                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | borg_local                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| chromium_headless                     |   x    |  (x)   |   x    |   x    |    x    |           |           |           |                                              |
 | chrony                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | clamav                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | cloud_init                            |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
@@ -156,6 +157,7 @@ Which Ansible role is proven to run on which OS?
 | systemd_unit                          |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | telegraf                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | timezone                              |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
+| tmux                                  |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | tools                                 |        |        |   x    |   x    |    x    |           |           |           | Fedora                                       |
 | unattended_upgrades                   |  (x)   |  (x)   |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
 | uptimerobot                           |        |        |        |        |         |           |           |           | controller-side, talks to UptimeRobot API    |

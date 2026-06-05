@@ -6,30 +6,45 @@ This role configures the server to do (weekly) system updates by deploying two s
 * applies all updates
 * and, if necessary, automatically reboots the host after the updates.
 
+On Rocky Linux the role additionally sets up a separate security lane that installs only security hot-fixes daily, independent of the weekly update lane.
+
 
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## How the Role Behaves
 
-* Install at. This can be done using the [linuxfabrik.lfops.at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at) role.
-* Install mailx. This can be done using the [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx) role.
-* Install needrestart on Debian. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
-* Install yum-utils on RHEL. This can be done using the [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils) role.
+* **Two independent lanes.** The regular lane (`notify-and-schedule` / `update-and-reboot`) applies all available updates on its weekly schedule. On Rocky Linux a second, independent security lane (`security-update`, twice a day by default) installs only security hot-fixes from the dedicated `security` repository, isolated from the regular lane via `--disablerepo` / `--enablerepo`. Both reboot the host when an update requires it.
+* **The security lane is enabled by default, but a no-op without the `security` repository.** That repository is provided by the [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role. On hosts where it is not present, the security lane installs nothing and never reboots. Turn the lane off entirely with `system_update__security_enabled: false`.
+* **Reboots are steered per host group.** A security hot-fix that requires a reboot is scheduled via `at`; the time comes from `system_update__security_reboot_time__*`. This can be used so test hosts reboot immediately (`'now'`) while production hosts defer to the evening (for example `'19:00'`).
 
-If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/system_update.yml), this is automatically done for you.
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* at must be installed (role: [linuxfabrik.lfops.at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at)).
+* mailx must be installed (role: [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx)).
+* yum-utils must be installed on RHEL (role: [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils)).
+
+
+## Requirements
+
+Manual steps:
+
+* On Debian, install needrestart by running the [apps](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apps.yml) playbook (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
 
 
 ## Tags
 
 `system_update`
 
-* Sets up automatic system update via systemd timer.
+* Sets up automatic system update via systemd timer, and on Rocky Linux hosts the optional security-update timer.
 * Triggers: none.
 
 `system_update:state`
 
-* Determines whether notify-and-schedule.timer is enabled.
+* Determines whether notify-and-schedule.timer and security-update.timer are enabled.
 * Triggers: none.
 
 
@@ -119,6 +134,30 @@ If you use the [system_update Playbook](https://github.com/Linuxfabrik/lfops/blo
 * Type: String.
 * Default: unset
 
+`system_update__security_enabled`
+
+* Enables or disables the security lane (the `security-update` timer), analogous to `systemctl enable/disable --now`. Rocky Linux only. When enabled but the `security` repository is not enabled on the host, the lane is a no-op.
+* Type: Bool.
+* Default: `true`
+
+`system_update__security_on_calendar`
+
+* When the security lane checks for and installs security hot-fixes. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* Type: String.
+* Default: `'*-*-* 10,16:00'`
+
+`system_update__security_reboot_time__host_var` / `system_update__security_reboot_time__group_var`
+
+* When to reboot after a security hot-fix that requires it. Passed verbatim to `at`. Use this to steer test versus production hosts via inventory group membership: `'now'` reboots immediately, a time such as `'19:00'` defers the reboot.
+* Type: String.
+* Default: `'now'`
+
+`system_update__security_repos`
+
+* The repositories the security lane installs from. All other repositories are disabled for the security transaction, keeping it separate from the regular update lane.
+* Type: List.
+* Default: `['security']`
+
 `system_update__update_enabled`
 
 * Enables or disables the system-update timer, analogous to `systemctl enable/disable --now`.
@@ -167,6 +206,11 @@ system_update__pre_update_code: |-
   check_dns 192.0.2.11
 system_update__rocketchat_msg_suffix: '@administrator'
 system_update__rocketchat_url: 'https://chat.example.com/hooks/abcd1234'
+system_update__security_enabled: true
+system_update__security_on_calendar: '*-*-* 10,16:00'
+system_update__security_reboot_time__group_var: '19:00'
+system_update__security_repos:
+  - 'security'
 system_update__update_enabled: true
 system_update__update_time: '04:{{ 59 | random(seed=inventory_hostname) }} + 1 days'
 ```

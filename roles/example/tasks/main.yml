@@ -89,6 +89,12 @@
   # always set `become: false` on tasks delegated to localhost. otherwise `become: true`
   # from the playbook level propagates and triggers sudo on the controller, which is
   # unneeded for a download into /tmp and usually fails because no sudo password is set.
+  # do not use `run_once: true` here. `run_once` binds the task to the first host of the
+  # batch and evaluates any `when` against that host, so a host that skips the role (or a
+  # block-level `when`) on the first host skips the download for everyone. `get_url` writes
+  # to a unique temp file and atomically renames into place, so running it per host is
+  # race-safe even when all hosts share the same `/tmp` dest; with the version-pinned dest
+  # the first host downloads and the rest find the file already present.
   - name: 'curl --output /tmp/ansible.example-{{ example__version }}.tar.gz https://example.com/releases/example-{{ example__version }}.tar.gz' # noqa risky-file-permissions (temporary file)
     ansible.builtin.get_url:
       url: 'https://example.com/releases/example-{{ example__version }}.tar.gz'
@@ -96,7 +102,6 @@
       mode: 0o644
     delegate_to: 'localhost'
     become: false
-    run_once: true
     changed_when: false # not an actual config change on the target
     check_mode: false # run task even if `--check` is specified
 
@@ -243,14 +248,15 @@
       mode: 0o400 # contains secrets
     notify: 'example: validate config; restart example'
 
-  # os-specific template selection using first_found
+  # os-specific template selection using first_found, with owner/group taken from the
+  # LFOps-wide shared variables (see CONTRIBUTING.md "LFOps-wide Shared Variables" for details).
   - name: 'Deploy /etc/example/platform.conf'
     ansible.builtin.template:
       backup: true
       src: '{{ lookup("ansible.builtin.first_found", __example__platform_template_file) }}'
       dest: '/etc/example/platform.conf'
-      owner: 'example'
-      group: 'example'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
       mode: 0o644
     vars:
       __example__platform_template_file:

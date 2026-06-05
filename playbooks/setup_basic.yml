@@ -9,6 +9,12 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -105,6 +111,10 @@
     - role: 'linuxfabrik.lfops.tools'
       when:
         - 'not setup_basic__skip_tools | d(false)'
+
+    - role: 'linuxfabrik.lfops.tmux'
+      when:
+        - 'not setup_basic__skip_tmux | d(false)'
 
     - role: 'linuxfabrik.lfops.at'
       when:

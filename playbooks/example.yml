@@ -9,12 +9,28 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
     - role: 'linuxfabrik.lfops.repo_example'
       when:
         - 'not example__skip_repo_example | d(false)'
+
+    # Consumes example__python__modules__dependent_var, which the example role's
+    # vars/main.yml publishes. The role's vars/main.yml is loaded at play parse, so the
+    # value is already in scope here even though the publisher runs later.
+    - role: 'linuxfabrik.lfops.python'
+      python__modules__dependent_var: '{{
+          example__python__modules__dependent_var
+        }}'
+      when:
+        - 'not example__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.example'
 

@@ -65,6 +65,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o755
+    notify: 'blocky: validate config & restart blocky.service'
 
   # if you want to use port 53 or 953 on Linux you should add CAP_NET_BIND_SERVICE capability to
   # the binary

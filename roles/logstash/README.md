@@ -8,11 +8,11 @@ Note that this role does NOT let you specify a particular Logstash version. It s
 *Available since LFOps `6.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* Enable the official elasticsearch repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [logstash playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/logstash.yml), this is automatically done for you.
+* The official elasticsearch repository must be enabled (role: [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch)).
 
 
 ## Tags

@@ -14,10 +14,28 @@ This role is only compatible with the following MongoDB versions:
 
 *Available since LFOps `2.0.0`.*
 
+## Dependent Roles
 
-## Mandatory Requirements
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* Enable the official [MongoDB repository](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-red-hat/#install-mongodb-community-edition). This can be done using the [linuxfabrik.lfops.repo_mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mongodb) role.
+* The official [MongoDB repository](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-red-hat/#install-mongodb-community-edition) must be enabled (role: [linuxfabrik.lfops.repo_mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mongodb)).
+* On Rocky 9+, the EPEL repository (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)) and the CRB ("Code Ready Builder") repository (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)) must be enabled so `python3-virtualenv` can be installed.
+
+
+## Replica Set Setup
+
+Important: When setting up a replica set across members, make sure that there is no data being written on any member until all members have joined the replica set. Else you need to [manually prepare the data files](https://www.mongodb.com/docs/manual/tutorial/expand-replica-set/#data-files) on the to-be-added secondary before joining.
+
+To setup a replica set from scratch:
+
+* Choose a name via the `mongodb__conf_replication_repl_set_name__*_var` (needs to be the same for all members).
+* Make sure that the cluster members can reach each other by setting `mongodb__conf_net_bind_ip` accordingly.
+* For production use, also make sure that `mongodb__conf_security_authorization` is enabled and `mongodb__keyfile_content` is set for all members.
+* Set `mongodb__repl_set_skip_init` for all the secondaries.
+* Rollout against the secondaries.
+* Set `mongodb__repl_set_members` on the primary (see below).
+* Rollout against the primary to initiate the replica set with the given members.
+* Check the state of the cluster by using `mongosh --username mongodb-admin --password --eval 'rs.status()'` on any member. The output should contain all configured members.
 
 
 ## Tags
@@ -65,6 +83,7 @@ This role is only compatible with the following MongoDB versions:
 `mongodb__conf_security_authorization`
 
 * [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-security.authorization)
+* Must be enabled to manage MongoDB users. The role authenticates as `mongodb__admin_user`, which only exists when authorization is enabled. Defining `mongodb__admin_user`, `mongodb__dump_user` or `mongodb__users__*_var` while this is disabled aborts the role.
 * Type: Bool.
 * Default: `false`
 
@@ -215,7 +234,7 @@ mongodb__dump_user:
 
 `mongodb__users__group_var` / `mongodb__users__host_var`
 
-* List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mongodb__admin_user`). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mongodb__admin_user`). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). Requires `mongodb__conf_security_authorization` to be enabled.
 * Type: List of dictionaries.
 * Default: `[]`
 * Subkeys:
@@ -281,20 +300,7 @@ mongodb__repl_set_skip_init: false
 ```
 
 
-### Replica Set across with multiple Members
-
-Important: When setting up a replica set across members, make sure that there is no data being written on any member until all members have joined the replica set. Else you need to [manually prepare the data files](https://www.mongodb.com/docs/manual/tutorial/expand-replica-set/#data-files) on the to-be-added secondary before joining.
-
-To setup a replica set from scratch:
-
-* Choose a name via the `mongodb__conf_replication_repl_set_name__*_var` (needs to be the same for all members).
-* Make sure that the cluster members can reach each other by setting `mongodb__conf_net_bind_ip` accordingly.
-* For production use, also make sure that `mongodb__conf_security_authorization` is enabled and `mongodb__keyfile_content` is set for all members.
-* Set `mongodb__repl_set_skip_init` for all the secondaries.
-* Rollout against the secondaries.
-* Set `mongodb__repl_set_members` on the primary (see below).
-* Rollout against the primary to initiate the replica set with the given members.
-* Check the state of the cluster by using `mongosh --username mongodb-admin --password --eval 'rs.status()'` on any member. The output should contain all configured members.
+## Optional Role Variables - Replica Set
 
 `mongodb__keyfile_content`
 

@@ -85,7 +85,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/navigation'
       state: 'directory'
-      owner: '{{ icingaweb2__webserver_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -94,7 +94,7 @@
       backup: true
       src: 'etc/icingaweb2/{{ item }}.j2'
       dest: "/etc/icingaweb2/{{ item }}"
-      owner: '{{ icingaweb2__webserver_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o660
     loop:
@@ -107,7 +107,7 @@
       backup: true
       src: 'etc/icingaweb2/navigation/host-actions.ini.j2'
       dest: '/etc/icingaweb2/navigation/host-actions.ini'
-      owner: '{{ icingaweb2__webserver_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -116,7 +116,7 @@
       backup: true
       src: 'etc/icingaweb2/navigation/icingadb-host-actions.ini.j2'
       dest: '/etc/icingaweb2/navigation/icingadb-host-actions.ini'
-      owner: '{{ icingaweb2__webserver_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -125,7 +125,7 @@
       backup: true
       src: 'etc/icingaweb2/navigation/icingadb-service-actions.ini.j2'
       dest: '/etc/icingaweb2/navigation/icingadb-service-actions.ini'
-      owner: '{{ icingaweb2__webserver_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -134,7 +134,7 @@
       backup: true
       src: 'etc/icingaweb2/navigation/menu.ini.j2'
       dest: '/etc/icingaweb2/navigation/menu.ini'
-      owner: '{{ icingaweb2__webserver_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -143,7 +143,7 @@
       backup: true
       src: 'etc/icingaweb2/navigation/service-actions.ini.j2'
       dest: '/etc/icingaweb2/navigation/service-actions.ini'
-      owner: '{{ icingaweb2__webserver_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -151,7 +151,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/enabledModules'
       state: 'directory'
-      owner: '{{ icingaweb2__webserver_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -167,7 +167,7 @@
       backup: true
       src: 'etc/icingaweb2/resources.ini.j2'
       dest: '/etc/icingaweb2/resources.ini'
-      owner: '{{ icingaweb2__webserver_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -184,7 +184,7 @@
       backup: true
       src: 'etc/icingaweb2/roles.ini.j2'
       dest: '/etc/icingaweb2/roles.ini'
-      owner: '{{ icingaweb2__webserver_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o660
 

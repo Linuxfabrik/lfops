@@ -7,7 +7,6 @@ tests/output/*
 playbooks/test.yml
 roles/test
 context/
-particle/.vagrant
 extensions/molecule/**/*.retry
 
 # mkdocs documentation

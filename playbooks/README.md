@@ -109,6 +109,14 @@ Calls the following roles (in order):
 * [borg_local](https://github.com/Linuxfabrik/lfops/tree/main/roles/borg_local)
 
 
+## chromium_headless.yml
+
+Calls the following roles (in order):
+
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `chromium_headless__skip_repo_epel`
+* [chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless)
+
+
 ## chrony.yml
 
 Calls the following roles (in order):
@@ -203,7 +211,7 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `duplicity__skip_repo_baseos`
-* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `duplicity__skip_repo_epel`
 * [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv): `duplicity__skip_python_venv`
 * [haveged](https://github.com/Linuxfabrik/lfops/tree/main/roles/haveged): `duplicity__skip_haveged`
 * [duplicity](https://github.com/Linuxfabrik/lfops/tree/main/roles/duplicity)
@@ -258,7 +266,9 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv): `clamav__skip_python_venv`
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `fangfrisch__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `fangfrisch__skip_repo_epel`
+* [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv): `fangfrisch__skip_python_venv`
 * [fangfrisch](https://github.com/Linuxfabrik/lfops/tree/main/roles/fangfrisch)
 
 
@@ -445,6 +455,8 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `icingaweb2_module_pdfexport__skip_repo_epel`
+* [chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless): `icingaweb2_module_pdfexport__skip_chromium_headless`
 * [icingaweb2_module_pdfexport](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_pdfexport)
 
 
@@ -453,6 +465,8 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [repo_influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_influxdb)
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `influxdb__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `influxdb__skip_repo_epel`
 * [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv): `influxdb__skip_python_venv`
 * [influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/influxdb)
 
@@ -607,6 +621,8 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `mongodb__skip_kernel_settings`
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `mongodb__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `mongodb__skip_repo_epel`
 * [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv): `mongodb__skip_python_venv`
 * [repo_mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mongodb): `mongodb__skip_repo_mongodb`
 * [mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb)
@@ -756,6 +772,8 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `python_venv__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `python_venv__skip_repo_epel`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `python_venv__skip_python`
 * [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv)
 
@@ -989,6 +1007,7 @@ Calls the following roles (in order):
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_basic__skip_python`, `setup_basic__skip_python_venv`
 * [glances](https://github.com/Linuxfabrik/lfops/tree/main/roles/glances): `setup_basic__skip_glances`
 * [tools](https://github.com/Linuxfabrik/lfops/tree/main/roles/tools): `setup_basic__skip_tools`
+* [tmux](https://github.com/Linuxfabrik/lfops/tree/main/roles/tmux): `setup_basic__skip_tmux`
 * [at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at): `setup_basic__skip_at`
 * [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `setup_basic__skip_yum_utils`
 * [lvm](https://github.com/Linuxfabrik/lfops/tree/main/roles/lvm): `setup_basic__skip_lvm`
@@ -1097,6 +1116,7 @@ Calls the following roles (in order):
 * [icingaweb2_theme_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_theme_linuxfabrik): `setup_icinga2_master__icingaweb2_theme_linuxfabrik__skip_role`
 * [icingaweb2_module_incubator](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_incubator): `setup_icinga2_master__icingaweb2_module_incubator__skip_role`
 * [icingaweb2_module_jira](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_jira): `setup_icinga2_master__icingaweb2_module_jira__skip_role` (default: `true`)
+* [chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless): `setup_icinga2_master__chromium_headless__skip_role` (default: tracks `icingaweb2_module_pdfexport__skip_role`)
 * [icingaweb2_module_pdfexport](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_pdfexport): `setup_icinga2_master__icingaweb2_module_pdfexport__skip_role` (default: `true`)
 * [icingaweb2_module_vspheredb](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_vspheredb): `setup_icinga2_master__icingaweb2_module_vspheredb__skip_role` (default: `true`)
 * [icingaweb2_module_director](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_director): `setup_icinga2_master__icingaweb2_module_director__skip_role`
@@ -1317,6 +1337,13 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [timezone](https://github.com/Linuxfabrik/lfops/tree/main/roles/timezone)
+
+
+## tmux.yml
+
+Calls the following roles (in order):
+
+* [tmux](https://github.com/Linuxfabrik/lfops/tree/main/roles/tmux)
 
 
 ## tools.yml

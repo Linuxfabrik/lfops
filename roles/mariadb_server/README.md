@@ -27,17 +27,21 @@ Hardenings that can be covered by this role: See [STIGs](https://github.com/Linu
 *Available since LFOps `2.0.0`.*
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-* For some machines you might need to set `ansible_python_interpreter: '/usr/bin/python3'` to prevent the error message `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`.
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-* Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* The `python3-PyMySQL` library must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
+* Optional: the official [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/) (role: [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb)) provides a specific MariaDB version.
+* Optional: a repository for [mydumper](https://github.com/mydumper/mydumper) (role: [linuxfabrik.lfops.repo_mydumper](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mydumper)) provides the mydumper backup tool.
 
 
-## Optional Requirements
+## Requirements
 
-* Enable the official [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/). This can be done using the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) role.
-* Enable the a repository for [mydumper](https://github.com/mydumper/mydumper). This can be done using the [linuxfabrik.lfops.repo_mydumper](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mydumper) role.
+Manual steps:
+
+* On some machines you may need to set `ansible_python_interpreter: '/usr/bin/python3'` to prevent the error `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`.
 
 
 ## Tags
@@ -486,6 +490,12 @@ mariadb_server__users__host_var:
 
 Variables for `z00-linuxfabrik.cnf` directives and their default values, defined and supported by this role.
 
+`mariadb_server__cnf_aria_pagecache_buffer_size__group_var` / `mariadb_server__cnf_aria_pagecache_buffer_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/aria-system-variables/#aria_pagecache_buffer_size)
+* Type: String.
+* Default: `'128M'`
+
 `mariadb_server__cnf_bind_address__group_var` / `mariadb_server__cnf_bind_address__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bind_address)
@@ -678,6 +688,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: Number.
 * Default: `4`
 
+`mariadb_server__cnf_innodb_snapshot_isolation__group_var` / `mariadb_server__cnf_innodb_snapshot_isolation__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_snapshot_isolation).
+* Type: String.
+* Default: `'ON'`
+
 `mariadb_server__cnf_innodb_strict_mode__group_var` / `mariadb_server__cnf_innodb_strict_mode__host_var`
 
 * [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_strict_mode)
@@ -696,7 +712,13 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'256K'`
 
-`mariadb_server__cnf_local_infile__group_var` `mariadb_server__cnf_local_infile__host_var`
+`mariadb_server__cnf_key_buffer_size__group_var` / `mariadb_server__cnf_key_buffer_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#key_buffer_size)
+* Type: String.
+* Default: `'128M'`
+
+`mariadb_server__cnf_local_infile__group_var` / `mariadb_server__cnf_local_infile__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#local_infile)
 * Type: String.
@@ -714,7 +736,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `''`
 
-`mariadb_server__cnf_log_bin_trust_function_creators__group_var` `mariadb_server__cnf_log_bin_trust_function_creators__host_var`
+`mariadb_server__cnf_log_bin_trust_function_creators__group_var` / `mariadb_server__cnf_log_bin_trust_function_creators__host_var`
 
 * [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#log_bin_trust_function_creators)
 * Type: String.
@@ -798,7 +820,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'OFF'`
 
-`mariadb_server__cnf_server_id__group_var` `mariadb_server__cnf_server_id__host_var`
+`mariadb_server__cnf_server_id__group_var` / `mariadb_server__cnf_server_id__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables#server_id)
 * Type: Number.
@@ -833,6 +855,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#socket)
 * Type: String.
 * Default: RHEL: `'/run/mariadb/mariadb.sock'`, Debian: `'/run/mysqld/mysqld.sock'`
+
+`mariadb_server__cnf_sort_buffer_size__group_var` / `mariadb_server__cnf_sort_buffer_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#sort_buffer_size)
+* Type: String.
+* Default: `'2M'`
 
 `mariadb_server__cnf_sql_mode__group_var` / `mariadb_server__cnf_sql_mode__host_var`
 
@@ -879,6 +907,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 Example:
 ```yaml
 # optional - cnf directives
+mariadb_server__cnf_aria_pagecache_buffer_size__host_var: '128M'
 mariadb_server__cnf_bind_address__host_var: '0.0.0.0'
 mariadb_server__cnf_binlog_expire_logs_seconds__host_var: '9000' # 2.5hrs
 mariadb_server__cnf_binlog_format__host_var: 'MIXED'
@@ -902,6 +931,7 @@ mariadb_server__cnf_innodb_log_buffer_size__host_var: '20M'
 mariadb_server__cnf_innodb_log_file_size__host_var: '96M'
 mariadb_server__cnf_interactive_timeout__host_var: 28800
 mariadb_server__cnf_join_buffer_size__host_var: '256K'
+mariadb_server__cnf_key_buffer_size__host_var: '128M'
 mariadb_server__cnf_log_bin__host_var: 'log_bin'
 mariadb_server__cnf_log_error__host_var: '/var/log/mariadb/mariadb.log'
 mariadb_server__cnf_log_slave_updates__host_var: 'ON'
@@ -922,6 +952,7 @@ mariadb_server__cnf_skip_name_resolve__host_var: 'ON'
 mariadb_server__cnf_slow_query_log__host_var: 'OFF'
 mariadb_server__cnf_slow_query_log_file__host_var: '/var/log/mariadb/mariadb-slowquery.log'
 mariadb_server__cnf_socket__host_var: '/var/run/mariadb/mariadb.sock' # use /var/run instead of /run to avoid collisions with selinux fcontexts (`File spec /run/mariadb/mariadb\.sock conflicts with equivalency rule '/run /var/run'`)
+mariadb_server__cnf_sort_buffer_size__host_var: '2M'
 mariadb_server__cnf_sql_mode__host_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__host_var: 400
 mariadb_server__cnf_table_open_cache__host_var: 3000
