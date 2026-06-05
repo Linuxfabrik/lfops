@@ -751,13 +751,13 @@ extensions
 
 The `extensions/molecule/example` scenario mirrors the `example` role: it is a fully commented, non-functional reference that walks through every file of a scenario (a non-functional reference because the `example` playbook installs the fictional "Example" application). Copy it as the starting point when adding a test for a playbook.
 
-Tests can be run against a subset of targets by providing them as a comma-separated list via the project-specific `LFOPS_TEST_TARGETS` environment variable:
+Tests can be run against a subset of targets by providing them as a comma-separated list via the project-specific `LFOPS_TEST_TARGETS` environment variable. The variable is optional: unset, every target in the scenario runs. `localhost` (the hypervisor) is included automatically, so you only ever pass the targets themselves:
 
 ```shell
-# for VMs (the hypervisor host needs to be included as well; here `localhost`)
-LFOPS_TEST_TARGETS='localhost,rocky*' molecule test --scenario-name apps/install
+# all targets in the scenario
+molecule test --scenario-name apps/install
 
-# for containers
+# a subset
 LFOPS_TEST_TARGETS='rocky*' molecule test --scenario-name apps/install
 ```
 

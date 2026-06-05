@@ -37,15 +37,18 @@ ansible:
       ssh_args: '-o ControlMaster=auto -o ControlPersist=60s'
   executor:
     backend: 'ansible-playbook' # or 'ansible-navigator'
+    # The limit always includes localhost (vm-create.yml's controller-setup play targets it) and
+    # defaults LFOPS_TEST_TARGETS to 'all', so the variable is optional: unset runs every target,
+    # and when set you only pass the targets (e.g. 'rocky*'), never localhost.
     args:
       ansible_navigator:
         - '--inventory=${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/inventory/'
         - '--inventory=${MOLECULE_SCENARIO_DIRECTORY}/inventory/'
-        - '--limit=${LFOPS_TEST_TARGETS}'
+        - '--limit=localhost,${LFOPS_TEST_TARGETS:-all}'
       ansible_playbook:
         - '--inventory=${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/inventory/'
         - '--inventory=${MOLECULE_SCENARIO_DIRECTORY}/inventory/'
-        - '--limit=${LFOPS_TEST_TARGETS}'
+        - '--limit=localhost,${LFOPS_TEST_TARGETS:-all}'
 
 # The 'galaxy' dependency below installs the collections listed in requirements.yml via
 # `ansible-galaxy collection install`. Molecule only runs the 'dependency' stage when it is part
