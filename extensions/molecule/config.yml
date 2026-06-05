@@ -16,10 +16,6 @@ ansible:
       gathering: 'smart'
       host_key_checking: false
       inventory: 'hosts'
-      nocows: 1
-      retry_files_enabled: true
-      timeout: 60
-      log_path: '${MOLECULE_EPHEMERAL_DIRECTORY}/ansible.log'
       inventory_ignore_extensions:
         - '~'
         - '.orig'
@@ -32,7 +28,11 @@ ansible:
         - '.csv'
         - '.md'
       inventory_ignore_patterns: '(host|group)_files'
+      log_path: '${MOLECULE_EPHEMERAL_DIRECTORY}/ansible.log'
+      nocows: 1
+      retry_files_enabled: true
       stdout_callback: 'yaml'
+      timeout: 60
     ssh_connections:
       pipelining: true
       ssh_args: '-o ControlMaster=auto -o ControlPersist=60s'

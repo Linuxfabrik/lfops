@@ -1,7 +1,4 @@
-ansible_connection: 'ssh'
 ansible_user: 'root'
-
-vm_image_url: 'https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-genericcloud-amd64.qcow2'
 
 kvm_vm__autostart: false
 kvm_vm__base_image: 'debian-11-genericcloud-amd64.qcow2'
@@ -15,3 +12,5 @@ kvm_vm__network_connections:
 kvm_vm__osinfo: 'debian11'
 kvm_vm__packages: []
 kvm_vm__vcpus: 2
+
+molecule__vm_image_url: 'https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-genericcloud-amd64.qcow2'

@@ -2,19 +2,20 @@
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
+
     - name: 'Create containers from inventory'
       containers.podman.podman_container:
-        capabilities: '{{ container_capabilities | default(omit) }}'
-        command: '{{ container_command | default("sleep 1d") }}'
+        capabilities: '{{ molecule__container_capabilities | default(omit) }}'
+        command: '{{ molecule__container_command | default("sleep 1d") }}'
         hostname: '{{ inventory_hostname }}'
-        image: '{{ container_image }}'
-        log_driver: '{{ container_log_driver | default("json-file") }}'
+        image: '{{ molecule__container_image }}'
+        log_driver: '{{ molecule__container_log_driver | default("json-file") }}'
         name: '{{ inventory_hostname }}'
-        privileged: '{{ container_privileged | default(false) }}'
+        privileged: '{{ molecule__container_privileged | default(false) }}'
         state: 'started'
-        systemd: '{{ container_systemd | default(false) }}'
-        volumes: '{{ container_volumes | default(omit) }}'
-      register: 'create_result'
+        systemd: '{{ molecule__container_systemd | default(false) }}'
+        volumes: '{{ molecule__container_volumes | default(omit) }}'
+      register: '__molecule__container_result'
       delegate_to: 'localhost'
 
     # Not using ansible.builtin.wait_for_connection here as it depends on a working Python
@@ -24,5 +25,5 @@
       ansible.builtin.include_tasks:
         file: 'tasks/create-container-fail.yml'
       when: >
-        create_result.container.State.ExitCode != 0 or
-        not create_result.container.State.Running
+        __molecule__container_result['container']['State']['ExitCode'] != 0 or
+        not __molecule__container_result['container']['State']['Running']

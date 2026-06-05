@@ -1,6 +1,4 @@
 ansible_connection: 'containers.podman.podman'
 ansible_host: 'debian13-container'
 
-container_command: 'sleep 1d'
-container_image: 'docker.io/library/debian:13'
-container_privileged: false
+molecule__container_image: 'docker.io/library/debian:13'

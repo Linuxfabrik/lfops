@@ -1,2 +1,2 @@
-- name: 'Converge'
+- name: 'Converge setup_basic playbook'
   ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_basic'

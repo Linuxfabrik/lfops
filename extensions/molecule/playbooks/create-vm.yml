@@ -2,12 +2,12 @@
   hosts: 'systems_under_test'
   gather_facts: false
   vars:
-    molecule_ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
+    __molecule__ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
   tasks:
 
     - name: 'Generate ephemeral SSH keypair'
       community.crypto.openssh_keypair:
-        path: '{{ molecule_ephemeral_dir }}/molecule_key'
+        path: '{{ __molecule__ephemeral_dir }}/molecule_key'
         type: 'ed25519'
         comment: 'molecule'
       delegate_to: 'localhost'
@@ -15,14 +15,14 @@
 
     - name: 'Read SSH public key'
       ansible.builtin.slurp:
-        src: '{{ molecule_ephemeral_dir }}/molecule_key.pub'
+        src: '{{ __molecule__ephemeral_dir }}/molecule_key.pub'
       delegate_to: 'localhost'
-      register: 'molecule_pubkey_result'
+      register: '__molecule__pubkey_result'
       run_once: true
 
     - name: 'Set SSH public key fact'
       ansible.builtin.set_fact:
-        molecule_ssh_pubkey: '{{ molecule_pubkey_result["content"] | b64decode | trim }}'
+        __molecule__ssh_pubkey: '{{ __molecule__pubkey_result["content"] | b64decode | trim }}'
       delegate_to: 'localhost'
       delegate_facts: true
       run_once: true
@@ -31,23 +31,23 @@
       community.libvirt.virt_pool:
         command: 'info'
       delegate_to: 'localhost'
-      register: 'molecule_pool_info'
+      register: '__molecule__pool_result'
       run_once: true
 
     - name: 'Download cloud images into storage pool'
       ansible.builtin.get_url:
-        url: '{{ vm_image_url }}'
-        dest: '{{ molecule_pool_info["pools"]["default"]["path"] }}/{{ kvm_vm__base_image }}'
-        mode: '0644'
+        url: '{{ molecule__vm_image_url }}'
+        dest: '{{ __molecule__pool_result["pools"]["default"]["path"] }}/{{ kvm_vm__base_image }}'
+        mode: 0o644
       become: true
       delegate_to: 'localhost'
-      when: 'vm_image_url is defined'
+      when: 'molecule__vm_image_url is defined'
 
     - name: 'Ensure ephemeral inventory directory exists'
       ansible.builtin.file:
-        path: '{{ molecule_ephemeral_dir }}/inventory'
+        path: '{{ __molecule__ephemeral_dir }}/inventory'
         state: 'directory'
-        mode: '0755'
+        mode: 0o755
       delegate_to: 'localhost'
       run_once: true
 
@@ -60,7 +60,7 @@
     - role: 'linuxfabrik.lfops.kvm_vm'
   vars:
     kvm_vm__ssh_authorized_keys:
-      - '{{ hostvars["localhost"]["molecule_ssh_pubkey"] }}'
+      - '{{ hostvars["localhost"]["__molecule__ssh_pubkey"] }}'
     kvm_vm__state: 'running'
 
 
@@ -68,14 +68,14 @@
   hosts: 'systems_under_test'
   gather_facts: false
   vars:
-    molecule_ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
+    __molecule__ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
   tasks:
 
     - name: 'Wait for VMs to obtain IP addresses'
       ansible.builtin.command:
         cmd: 'virsh domifaddr {{ inventory_hostname }} --source arp'
-      register: 'domifaddr_result'
-      until: 'domifaddr_result.stdout_lines | select("match", ".*ipv4.*") | list | length > 0'
+      register: '__molecule__vm_ipaddr_result'
+      until: '__molecule__vm_ipaddr_result["stdout_lines"] | select("match", ".*ipv4.*") | list | length > 0'
       retries: 30
       delay: 5
       changed_when: false
@@ -83,9 +83,9 @@
 
     - name: 'Parse VM IP addresses'
       ansible.builtin.set_fact:
-        molecule_vm_ip: >-
+        __molecule__vm_ipaddr: >-
           {{
-            domifaddr_result.stdout_lines
+            __molecule__vm_ipaddr_result['stdout_lines']
             | select('match', '.*ipv4.*')
             | first
             | regex_replace('.*\s+(\d+\.\d+\.\d+\.\d+)\/.*', '\1')
@@ -98,11 +98,11 @@
             hosts:
           {% for host in ansible_play_hosts %}
               {{ host }}:
-                ansible_host: '{{ hostvars[host]["molecule_vm_ip"] }}'
-                ansible_ssh_private_key_file: '{{ molecule_ephemeral_dir }}/molecule_key'
+                ansible_host: '{{ hostvars[host]["__molecule__vm_ipaddr"] }}'
+                ansible_ssh_private_key_file: '{{ __molecule__ephemeral_dir }}/molecule_key'
                 ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
           {% endfor %}
-        dest: '{{ molecule_ephemeral_dir }}/inventory/molecule_vm.yml'
-        mode: '0644'
+        dest: '{{ __molecule__ephemeral_dir }}/inventory/molecule_vm.yml'
+        mode: 0o644
       delegate_to: 'localhost'
       run_once: true

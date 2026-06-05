@@ -1,11 +1,11 @@
 - name: 'Verify apps are not installed'
   hosts: 'systems_under_test'
-  gather_facts: true
+  gather_facts: false
   tasks:
     - name: 'Gather the package facts'
       ansible.builtin.package_facts:
         manager: 'auto'
 
-    - name: 'Assert'
+    - name: 'Assert that less is not installed'
       ansible.builtin.assert:
-        that: '"less" not in ansible_facts.packages'
+        that: '"less" not in ansible_facts["packages"]'

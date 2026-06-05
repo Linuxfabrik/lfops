@@ -12,12 +12,12 @@
   hosts: 'localhost'
   gather_facts: false
   vars:
-    molecule_ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
+    __molecule__ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
   tasks:
 
     - name: 'Remove ephemeral SSH keypair'
       ansible.builtin.file:
-        path: '{{ molecule_ephemeral_dir }}/{{ item }}'
+        path: '{{ __molecule__ephemeral_dir }}/{{ item }}'
         state: 'absent'
       loop:
         - 'molecule_key'
@@ -25,5 +25,5 @@
 
     - name: 'Remove dynamic inventory'
       ansible.builtin.file:
-        path: '{{ molecule_ephemeral_dir }}/inventory'
+        path: '{{ __molecule__ephemeral_dir }}/inventory'
         state: 'absent'

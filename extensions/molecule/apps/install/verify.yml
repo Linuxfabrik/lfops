@@ -6,6 +6,6 @@
       ansible.builtin.package_facts:
         manager: 'auto'
 
-    - name: 'Assert'
+    - name: 'Assert that zsh is installed'
       ansible.builtin.assert:
-        that: '"zsh" in ansible_facts.packages'
+        that: '"zsh" in ansible_facts["packages"]'
