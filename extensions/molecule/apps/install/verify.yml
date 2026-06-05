@@ -3,8 +3,7 @@
   gather_facts: false
   tasks:
     - name: 'Gather the package facts'
-      ansible.builtin.package_facts:
-        manager: 'auto'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
 
     - name: 'Assert that zsh is installed'
       ansible.builtin.assert:
