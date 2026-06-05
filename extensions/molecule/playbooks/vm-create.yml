@@ -54,7 +54,7 @@
     - role: 'linuxfabrik.lfops.kvm_vm'
 
 
-# Discover each VM's address via the qemu guest agent and write it into Molecule's ephemeral
+# Discover each VM's address via its libvirt DHCP lease and write it into Molecule's ephemeral
 # inventory directory. Molecule includes that directory automatically, so converge and verify
 # reach the VMs over SSH. See the inventory-model note in config.yml for why this is hand-written
 # instead of using Molecule's instance_config.
@@ -65,17 +65,22 @@
     __molecule__ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
   tasks:
 
-    - name: 'Wait for the VM to report a non-loopback IPv4 address via the guest agent'
+    # Use --source lease (libvirt reads its own DHCP lease table on the host), not --source agent:
+    # the agent needs qemu-guest-agent running inside the guest, which only the Rocky cloud image
+    # ships preinstalled - the VMs install no extra packages (kvm_vm__packages is []), so on
+    # Debian/Ubuntu the agent never connects. --source lease works for every distro because they
+    # all get their address from the libvirt-managed 'default' network's DHCP.
+    - name: 'Wait for the VM to report a non-loopback IPv4 address via its DHCP lease'
       ansible.builtin.command:
-        cmd: 'virsh --connect {{ kvm_vm__connect_url | d("qemu:///system") }} domifaddr {{ __molecule__instance_name }} --source agent'
+        cmd: 'virsh --connect {{ kvm_vm__connect_url | d("qemu:///system") }} domifaddr {{ __molecule__instance_name }} --source lease'
       register: '__molecule__vm_ipaddr_result'
       until: >-
         __molecule__vm_ipaddr_result['stdout_lines']
         | select('ansible.builtin.search', 'ipv4')
         | reject('ansible.builtin.search', '^\s*lo\s')
         | list | length > 0
-      retries: 30
-      delay: 5
+      retries: 15
+      delay: 2
       changed_when: false
       delegate_to: 'localhost'
 
