@@ -2,17 +2,13 @@
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
-    - name: 'Install Python using raw module (in case it is missing from the container image)'
+    - name: 'Install Python using the raw module (in case it is missing from the container image)'
       ansible.builtin.raw: |
-        sh -c '''
         if command -v dnf > /dev/null 2>&1; then
           dnf install -y python3
-        elif command -v yum > /dev/null 2>&1; then
-          yum install -y python3
         elif command -v apt-get > /dev/null 2>&1; then
           apt-get update && apt-get install -y python3
         fi
-        '''
 
     - name: 'Gather facts after Python is available'
       ansible.builtin.setup:  # yamllint disable-line rule:empty-values

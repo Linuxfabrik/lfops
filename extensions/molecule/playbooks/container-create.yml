@@ -3,27 +3,45 @@
   gather_facts: false
   tasks:
 
-    - name: 'Create containers from inventory'
-      containers.podman.podman_container:
-        capabilities: '{{ molecule__container_capabilities | default(omit) }}'
-        command: '{{ molecule__container_command | default("sleep 1d") }}'
-        hostname: '{{ inventory_hostname }}'
-        image: '{{ molecule__container_image }}'
-        log_driver: '{{ molecule__container_log_driver | default("json-file") }}'
-        name: '{{ inventory_hostname }}'
-        privileged: '{{ molecule__container_privileged | default(false) }}'
-        state: 'started'
-        systemd: '{{ molecule__container_systemd | default(false) }}'
-        volumes: '{{ molecule__container_volumes | default(omit) }}'
-      register: '__molecule__container_result'
-      delegate_to: 'localhost'
+    - name: 'Create the container and confirm it is running'
+      block:
 
-    # Not using ansible.builtin.wait_for_connection here as it depends on a working Python
-    # installation inside the container; however, some container images are shipped with the
-    # bare minimum and thus do not contain a Python interpreter.
-    - name: 'Verify containers are running'
-      ansible.builtin.include_tasks:
-        file: 'tasks/container-create-fail.yml'
-      when: >
-        __molecule__container_result['container']['State']['ExitCode'] != 0 or
-        not __molecule__container_result['container']['State']['Running']
+        - name: 'Create the container from inventory'
+          containers.podman.podman_container:
+            capabilities: '{{ molecule__container_capabilities | default(omit) }}'
+            command: '{{ molecule__container_command | default("sleep 1d") }}'
+            hostname: '{{ inventory_hostname }}'
+            image: '{{ molecule__container_image }}'
+            log_driver: '{{ molecule__container_log_driver | default("json-file") }}'
+            name: '{{ inventory_hostname }}'
+            privileged: '{{ molecule__container_privileged | default(false) }}'
+            state: 'started'
+            systemd: '{{ molecule__container_systemd | default(false) }}'
+            volumes: '{{ molecule__container_volumes | default(omit) }}'
+          register: '__molecule__container_result'
+          delegate_to: 'localhost'
+
+        # podman reports the container as 'started' even when the entrypoint exits immediately,
+        # so assert on the actual state. A failure here drops into the rescue, which surfaces the
+        # container log to explain why it did not come up.
+        - name: 'Assert the container is running'
+          ansible.builtin.assert:
+            that:
+              - '__molecule__container_result["container"]["State"]["ExitCode"] == 0'
+              - '__molecule__container_result["container"]["State"]["Running"]'
+            quiet: true
+
+      rescue:
+
+        - name: 'Retrieve the container log'
+          ansible.builtin.command:
+            cmd: 'podman logs {{ inventory_hostname }}'
+          changed_when: false
+          register: '__molecule__container_log_result'
+          delegate_to: 'localhost'
+
+        - name: 'Fail with the container log'
+          ansible.builtin.fail:
+            msg: |
+              Container {{ inventory_hostname }} failed to start properly.
+              Log output: {{ __molecule__container_log_result["stdout"] | d("No logs available") }}

@@ -1,6 +1,6 @@
-- name: 'Destroy VM instances using kvm_vm role'
-  become: true
+- name: 'Destroy VM instances using the kvm_vm role'
   hosts: 'systems_under_test'
+  become: true
   gather_facts: false
   roles:
     - role: 'linuxfabrik.lfops.kvm_vm'
@@ -8,22 +8,18 @@
     kvm_vm__state: 'absent'
 
 
-- name: 'Clean up Molecule artifacts'
+- name: 'Clean up Molecule artifacts on the controller'
   hosts: 'localhost'
   gather_facts: false
   vars:
     __molecule__ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
   tasks:
 
-    - name: 'Remove ephemeral SSH keypair'
+    - name: 'Remove the ephemeral SSH keypair and dynamic inventory'
       ansible.builtin.file:
         path: '{{ __molecule__ephemeral_dir }}/{{ item }}'
         state: 'absent'
       loop:
         - 'molecule_key'
         - 'molecule_key.pub'
-
-    - name: 'Remove dynamic inventory'
-      ansible.builtin.file:
-        path: '{{ __molecule__ephemeral_dir }}/inventory'
-        state: 'absent'
+        - 'inventory/molecule_vm.yml'

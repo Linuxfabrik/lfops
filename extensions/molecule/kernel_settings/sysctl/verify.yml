@@ -9,4 +9,4 @@
 
     - name: 'Assert that vm.overcommit_memory is set to 1'
       ansible.builtin.assert:
-        that: '__molecule__sysctl_vm_overcommit_memory_result["content"] | b64decode | int == 1'
+        that: '__molecule__sysctl_vm_overcommit_memory_result["content"] | ansible.builtin.b64decode | int == 1'

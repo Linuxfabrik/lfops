@@ -57,6 +57,17 @@ dependency:
   options:
     requirements-file: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/requirements.yml'
 
+# Inventory model (why there is no 'platforms:' block and no managed-driver instance_config):
+# We test playbooks, which are inventory-driven (hosts: lfops_*, group_vars, host_vars). The
+# scenarios therefore use real inventory files (extensions/molecule/inventory plus each
+# scenario's own inventory) so the test inventory mirrors a production one and converge runs the
+# playbook the way an admin would. Molecule's managed driver only injects connection details
+# (ansible_host, ansible_user, ...) for hosts listed under 'platforms:', which the inventory
+# model does not use - so vm-create.yml discovers each VM's IP and writes the connection details
+# into Molecule's ephemeral inventory directory itself (Molecule includes that directory
+# automatically). Host key checking is turned off above (host_key_checking) because the VMs are
+# throwaway and reuse IPs from the libvirt default network.
+
 provisioner:
   playbooks:
     create: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/vm-create.yml'
