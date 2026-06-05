@@ -69,7 +69,10 @@
 
   - name: 'acme.sh --config-home /etc/acme.sh --upgrade'
     ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --upgrade'
-    changed_when: '"Already uptodate" not in acme_sh__upgrade_result["stdout"]'
+    # acme.sh prints "Already up to date!" when there is nothing to upgrade (and additionally
+    # "Upgrade successful!" because of how its upgrade function exits), so key the change on the
+    # former: report changed only when an actual upgrade happened.
+    changed_when: '"Already up to date!" not in acme_sh__upgrade_result["stdout"]'
     failed_when: '"Upgrade success" not in acme_sh__upgrade_result["stdout"]'
     register: 'acme_sh__upgrade_result'
 
