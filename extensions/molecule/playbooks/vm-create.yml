@@ -73,7 +73,7 @@
 
     - name: 'Wait for VMs to obtain IP addresses'
       ansible.builtin.command:
-        cmd: 'virsh domifaddr {{ inventory_hostname }} --source arp'
+        cmd: 'virsh --connect {{ kvm_vm__connect_url | d("qemu:///system") }} domifaddr {{ inventory_hostname }} --source arp'
       register: '__molecule__vm_ipaddr_result'
       until: '__molecule__vm_ipaddr_result["stdout_lines"] | select("match", ".*ipv4.*") | list | length > 0'
       retries: 30
