@@ -10,10 +10,10 @@
           containers.podman.podman_container:
             capabilities: '{{ molecule__container_capabilities | default(omit) }}'
             command: '{{ molecule__container_command | default("sleep 1d") }}'
-            hostname: '{{ inventory_hostname }}'
+            hostname: '{{ __molecule__instance_name }}'
             image: '{{ molecule__container_image }}'
             log_driver: '{{ molecule__container_log_driver | default("json-file") }}'
-            name: '{{ inventory_hostname }}'
+            name: '{{ __molecule__instance_name }}'
             privileged: '{{ molecule__container_privileged | default(false) }}'
             state: 'started'
             systemd: '{{ molecule__container_systemd | default(false) }}'
@@ -35,7 +35,7 @@
 
         - name: 'Retrieve the container log'
           ansible.builtin.command:
-            cmd: 'podman logs {{ inventory_hostname }}'
+            cmd: 'podman logs {{ __molecule__instance_name }}'
           changed_when: false
           register: '__molecule__container_log_result'
           delegate_to: 'localhost'
@@ -43,5 +43,5 @@
         - name: 'Fail with the container log'
           ansible.builtin.fail:
             msg: |
-              Container {{ inventory_hostname }} failed to start properly.
+              Container {{ __molecule__instance_name }} failed to start properly.
               Log output: {{ __molecule__container_log_result["stdout"] | d("No logs available") }}

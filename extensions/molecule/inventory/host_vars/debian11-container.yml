@@ -1,4 +1,4 @@
 ansible_connection: 'containers.podman.podman'
-ansible_host: 'debian11-container'
+ansible_host: '{{ __molecule__instance_name }}'
 
 molecule__container_image: 'docker.io/library/debian:11'

@@ -5,7 +5,7 @@
 
     - name: 'Kill container if running'
       containers.podman.podman_container:
-        name: '{{ inventory_hostname }}'
+        name: '{{ __molecule__instance_name }}'
         state: 'absent'
         timeout: 2
       delegate_to: 'localhost'

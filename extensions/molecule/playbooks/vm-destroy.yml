@@ -5,6 +5,7 @@
   roles:
     - role: 'linuxfabrik.lfops.kvm_vm'
   vars:
+    kvm_vm__name: '{{ __molecule__instance_name }}'
     kvm_vm__state: 'absent'
 
 

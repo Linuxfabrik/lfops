@@ -36,6 +36,7 @@
   become: true
   gather_facts: false
   vars:
+    kvm_vm__name: '{{ __molecule__instance_name }}'
     kvm_vm__ssh_authorized_keys:
       - '{{ hostvars["localhost"]["__molecule__keypair_result"]["public_key"] }}'
     kvm_vm__state: 'running'
@@ -66,7 +67,7 @@
 
     - name: 'Wait for the VM to report a non-loopback IPv4 address via the guest agent'
       ansible.builtin.command:
-        cmd: 'virsh --connect {{ kvm_vm__connect_url | d("qemu:///system") }} domifaddr {{ inventory_hostname }} --source agent'
+        cmd: 'virsh --connect {{ kvm_vm__connect_url | d("qemu:///system") }} domifaddr {{ __molecule__instance_name }} --source agent'
       register: '__molecule__vm_ipaddr_result'
       until: >-
         __molecule__vm_ipaddr_result['stdout_lines']
