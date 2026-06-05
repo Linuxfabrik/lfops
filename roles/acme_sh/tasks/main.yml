@@ -90,15 +90,44 @@
            | map("regex_replace", '^([^|]*)\|"?([^"|]*)"?\|.*$', '\1|\2')
            | list }}
 
-  # (Re)issue when no certificate with the requested key length exists yet for this name. This
-  # also drives the RSA -> ECDSA conversion: changing the key length makes the existing RSA
-  # line stop matching, so acme.sh issues a fresh certificate into the ECC store (a different
-  # directory), without needing `--force`.
+  # Names that do not yet have a certificate with the requested key length, so they need to be
+  # (re)issued. This drives the RSA -> ECDSA conversion too: changing the key length makes the
+  # existing RSA line stop matching, so the name lands here and acme.sh issues a fresh
+  # certificate into the ECC store (a different directory), without needing `--force`.
+  - name: 'Determine which certificates need to be issued'
+    ansible.builtin.set_fact:
+      __acme_sh__to_issue: >-
+        {{ acme_sh__certificates | map(attribute="name")
+           | difference(__acme_sh__issued
+                        | select("search", '\|' ~ (acme_sh__key_length | string) ~ '$')
+                        | map("regex_replace", '\|.*$', '')
+                        | list) }}
+
   - ansible.builtin.include_tasks: 'issue-cert.yml'
     loop: '{{ acme_sh__certificates }}'
     loop_control:
       loop_var: 'certificate'
-    when: '(certificate["name"] ~ "|" ~ (acme_sh__key_length | string)) is not in __acme_sh__issued'
+    when: 'certificate["name"] in __acme_sh__to_issue'
+
+  # acme.sh re-runs install-cert (copy to /etc/pki + reload) on every renewal by itself, using
+  # the paths it saved on the last install. So this role only needs to install when a
+  # certificate was just (re)issued above, or when the installed file is missing (self-heal).
+  # Installing on every run would reload the web server on every run, which is not idempotent.
+  - name: 'Stat the installed certificates'
+    ansible.builtin.stat:
+      path: '{{ __acme_sh__cert_path }}/{{ item["name"] }}.crt'
+    loop: '{{ acme_sh__certificates }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    register: 'acme_sh__installed_stat_result'
+
+  - name: 'Determine which installed certificates are missing'
+    ansible.builtin.set_fact:
+      __acme_sh__missing_install: >-
+        {{ acme_sh__installed_stat_result["results"]
+           | rejectattr("stat.exists")
+           | map(attribute="item.name")
+           | list }}
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert ...'
     ansible.builtin.command: |-
@@ -111,6 +140,8 @@
       --key-file '{{ __acme_sh__key_path }}/{{ item["name"] }}.key' \
       --reloadcmd '{{ acme_sh__reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length > 0) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
     loop: '{{ acme_sh__certificates }}'
+    when: 'item["name"] in __acme_sh__to_issue or item["name"] in __acme_sh__missing_install'
+    changed_when: true
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy ...'
     ansible.builtin.command: |-
@@ -127,7 +158,12 @@
       DEPLOY_SSH_CAFILE: '{{ __acme_sh__cert_path }}/{{ item["name"] }}-chain.crt'
       DEPLOY_SSH_REMOTE_CMD: '{{ acme_sh__deploy_to_host_reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length > 0) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
     loop: '{{ acme_sh__certificates }}'
-    when: 'acme_sh__deploy_to_host is defined and acme_sh__deploy_to_host | length > 0'
+    # acme.sh re-runs the deploy hook on every renewal by itself, so deploy only when the
+    # certificate was just (re)issued above.
+    when:
+      - 'acme_sh__deploy_to_host is defined and acme_sh__deploy_to_host | length > 0'
+      - 'item["name"] in __acme_sh__to_issue'
+    changed_when: true
 
   # After a RSA -> ECDSA conversion the superseded RSA certificate still sits in acme.sh's
   # renewal list and would keep getting renewed pointlessly. List the certificates again (the

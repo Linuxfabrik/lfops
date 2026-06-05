@@ -18,7 +18,7 @@ SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-chain.crt
 
 Certificates are issued with the key type set by `acme_sh__key_length`, which defaults to ECDSA P-256 (`ec-256`). A certificate that was previously issued as RSA is reissued as ECDSA: acme.sh keeps RSA and ECDSA certificates in separate stores, so the ECDSA certificate is issued next to the existing RSA one and then installed to the same paths under `/etc/pki/`. Apache picks up the new certificate on reload without any vHost change. The superseded RSA certificate is dropped from acme.sh's renewal list, and its files are left in place. To keep issuing RSA, set `acme_sh__key_length` to an RSA value such as `4096`.
 
-Renewal of the issued certificates is handled by the `acme-sh` systemd timer, independently of this role.
+The role installs a certificate to `/etc/pki/` and runs the reload command only when it just (re)issued that certificate, or when the installed file is missing (self-heal). It does not reinstall and reload on every run. Ongoing renewals are installed and reloaded by acme.sh itself, driven by the `acme-sh` systemd timer, using the paths saved at install time.
 
 
 ## Dependent Roles
