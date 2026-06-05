@@ -79,15 +79,31 @@
     check_mode: false # run task even if `--check` is specified
     register: 'acme_sh__list_result'
 
+  # `--listraw` prints one `Main_Domain|"KeyLength"|...` line per issued certificate (plus a
+  # header line). Reduce it to a `name|keylength` list so we can tell whether a certificate
+  # already exists with the requested key type. RSA and ECDSA certificates for the same name
+  # live in separate stores and therefore show up as two separate lines.
+  - name: 'Parse issued certificates into a name|keylength list'
+    ansible.builtin.set_fact:
+      __acme_sh__issued: >-
+        {{ acme_sh__list_result["stdout_lines"]
+           | map("regex_replace", '^([^|]*)\|"?([^"|]*)"?\|.*$', '\1|\2')
+           | list }}
+
+  # (Re)issue when no certificate with the requested key length exists yet for this name. This
+  # also drives the RSA -> ECDSA conversion: changing the key length makes the existing RSA
+  # line stop matching, so acme.sh issues a fresh certificate into the ECC store (a different
+  # directory), without needing `--force`.
   - ansible.builtin.include_tasks: 'issue-cert.yml'
     loop: '{{ acme_sh__certificates }}'
     loop_control:
       loop_var: 'certificate'
-    when: 'certificate["name"] is not in (acme_sh__list_result["stdout_lines"] | map("regex_replace", "\|.*", "") | list)'
+    when: '(certificate["name"] ~ "|" ~ (acme_sh__key_length | string)) is not in __acme_sh__issued'
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert ...'
     ansible.builtin.command: |-
       /opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert \
+      {{ '--ecc' if (acme_sh__key_length | string) is match('^ec-') else '' }} \
       --domain '{{ item["name"] }}' \
       --ca-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}-chain.crt' \
       --cert-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}.crt' \
@@ -99,6 +115,7 @@
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy ...'
     ansible.builtin.command: |-
       /opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy \
+      {{ '--ecc' if (acme_sh__key_length | string) is match('^ec-') else '' }} \
       --domain '{{ item["name"] }}' \
       --deploy-hook {{ acme_sh__deploy_to_host_hook }}
     environment:
@@ -111,6 +128,42 @@
       DEPLOY_SSH_REMOTE_CMD: '{{ acme_sh__deploy_to_host_reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length > 0) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
     loop: '{{ acme_sh__certificates }}'
     when: 'acme_sh__deploy_to_host is defined and acme_sh__deploy_to_host | length > 0'
+
+  # After a RSA -> ECDSA conversion the superseded RSA certificate still sits in acme.sh's
+  # renewal list and would keep getting renewed pointlessly. List the certificates again (the
+  # ECDSA ones now exist) and drop the RSA certificate from renewal for every name that has
+  # both a freshly issued ECDSA certificate and a leftover RSA one. `--remove` without `--ecc`
+  # targets the RSA store; it only detaches the certificate from renewal and leaves the files
+  # in place.
+  - name: 'acme.sh --config-home /etc/acme.sh --list --listraw (after issuing)'
+    ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --list --listraw'
+    changed_when: false # just gathering information
+    check_mode: false # run task even if `--check` is specified
+    register: 'acme_sh__list_after_result'
+    when: '(acme_sh__key_length | string) is match("^ec-")'
+
+  - name: 'Parse issued certificates (after issuing) into a name|keylength list'
+    ansible.builtin.set_fact:
+      __acme_sh__issued_after: >-
+        {{ acme_sh__list_after_result["stdout_lines"]
+           | map("regex_replace", '^([^|]*)\|"?([^"|]*)"?\|.*$', '\1|\2')
+           | list }}
+    when: '(acme_sh__key_length | string) is match("^ec-")'
+
+  - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --remove (superseded RSA cert)'
+    ansible.builtin.command: "/opt/acme.sh/acme.sh --config-home /etc/acme.sh --remove --domain '{{ item['name'] }}'"
+    loop: '{{ acme_sh__certificates }}'
+    when:
+      - '(acme_sh__key_length | string) is match("^ec-")'
+      # the requested ECDSA certificate now exists for this name ...
+      - '(item["name"] ~ "|" ~ (acme_sh__key_length | string)) in __acme_sh__issued_after'
+      # ... and a leftover certificate with a different (RSA) key length still exists for it
+      - >-
+        __acme_sh__issued_after
+        | reject('search', '\|' ~ (acme_sh__key_length | string) ~ '$')
+        | map('regex_replace', '\|.*$', '')
+        | list | select('equalto', item['name']) | list | length > 0
+    changed_when: true
 
   tags:
     - 'acme_sh'

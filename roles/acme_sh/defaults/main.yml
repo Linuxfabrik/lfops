@@ -1,6 +1,11 @@
 acme_sh__deploy_to_host_hook: 'ssh'
 acme_sh__deploy_to_host_user: 'root'
-acme_sh__key_length: 4096
+# RSA: 2048, 3072, 4096. ECDSA: ec-256 (P-256), ec-384 (P-384), ec-521 (P-521).
+# ECDSA P-256 is the default: equivalent security to RSA-3072 at a lower handshake
+# cost, and universally supported by current clients. Certificates already issued
+# as RSA are converted to ECDSA on the next run, and the superseded RSA certificate
+# is dropped from acme.sh's renewal list. Set this to an RSA value to keep RSA.
+acme_sh__key_length: 'ec-256'
 acme_sh__timer_enabled: true
 
 # -----------------------------------------------------------------------------

@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:acme_sh**: Issue ECDSA P-256 certificates by default instead of RSA-4096, for faster TLS handshakes at equivalent security. Certificates previously issued as RSA are reissued as ECDSA on the next run, and the superseded RSA certificate is dropped from renewal. Set `acme_sh__key_length` to an RSA value such as `4096` to keep RSA.
 * **playbooks**: Enable the CRB repository on Rocky 10 too, not just Rocky 9. Previously Rocky 10 hosts silently skipped this step, which could leave dependencies such as `python3-virtualenv` uninstallable.
 * **role:grafana**: Apply the systemd/chkconfig workaround on RHEL 10 as well, not just RHEL 9.
 * **role:tools**: Install the German locale package (`glibc-langpack-de`) on RHEL 10 as well.
