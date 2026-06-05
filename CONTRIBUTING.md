@@ -805,6 +805,15 @@ Do assert what only the running system can confirm, that is, that the pieces act
 A useful rule of thumb: if an assertion would still pass while the service is dead or running with the wrong configuration, it is testing the wrong thing.
 
 
+#### Troubleshooting
+
+**`molecule test` aborts with `ansible_compat.errors.InvalidPrerequisiteError: Command ansible-galaxy collection install -vvv --force /path/to/lfops` during prerun while installing the local collection**
+
+* Before running a scenario, Molecule's prerun step tries to install the current repository as a collection with `ansible-galaxy collection install --force <repo>`. That build fails because `galaxy.yml` carries a non-semver `version` (`main`), which `ansible-galaxy` rejects.
+* Option 1: disable the prerun so Molecule stops trying to build and install the local collection, by setting `prerun: false` as a top-level key in the `config.yml`. If you do this, you have to make sure that LFOps is installed yourself.
+* Option 2: If you installed LFOps by symlinking it, make sure the link points to the **same** folder that you are running `molecule` in (`ln -sf "$(pwd)" ~/.ansible/collections/ansible_collections/linuxfabrik/lfops`).
+
+
 ### Credits
 
 * <https://github.com/whitecloud/ansible-styleguide>
