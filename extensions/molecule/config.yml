@@ -52,10 +52,14 @@ ansible:
 # of the sequence being executed. Our custom test_sequence therefore lists
 # 'dependency' explicitly; without it `molecule test` would skip the install and rely on the
 # collections already being present on the controller.
+# The galaxy dependency also runs a roles sub-step that ignores requirements-file and reads
+# role-file instead. We have no Galaxy roles, so role-file points at an empty
+# requirements-roles.yml purely to stop it warning about a missing roles requirements file.
 dependency:
   name: 'galaxy'
   options:
     requirements-file: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/requirements.yml'
+    role-file: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/requirements-roles.yml'
 
 # Inventory model (why there is no 'platforms:' block and no managed-driver instance_config):
 # We test playbooks, which are inventory-driven (hosts: lfops_*, group_vars, host_vars). The
