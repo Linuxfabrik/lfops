@@ -1,0 +1,27 @@
+# Variables the playbook under test needs, applied to every system under test.
+# This is the test's input: set the mandatory variables, plus any optional ones
+# whose behaviour the scenario should exercise.
+
+# Mandatory: the example role requires a version.
+example__version: '3.2.1'
+
+# Skip the fictional repo_example role the playbook pulls in. A test for a real
+# playbook would normally let the repo role run so the package source is set up.
+example__skip_repo_example: true
+
+# Optional simple values, set through the __group_var injection slot so the
+# role's combined_var logic merges them over its defaults.
+example__conf_log_level__group_var: 'debug'
+example__conf_max_connections__group_var: 200
+
+# Combined variables are lists of dicts with a state. The install scenario adds
+# one plugin and one user so verify.yml has concrete state to assert on. The
+# matching remove scenario flips these to state: 'absent'.
+example__plugins__group_var:
+  - name: 'example-plugin-auth-ldap'
+    state: 'present'
+
+example__users__group_var:
+  - name: 'example-admin'
+    password: 'linuxfabrik'
+    state: 'present'

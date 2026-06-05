@@ -1,0 +1,5 @@
+# Same playbook as the install sub-scenario; only the scenario inventory
+# differs. The remove sub-scenario flips the plugin and user to state: 'absent'
+# (see its group_vars), which exercises the role's removal path.
+- name: 'Converge example playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.example'

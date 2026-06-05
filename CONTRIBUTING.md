@@ -725,6 +725,11 @@ extensions
     ├── config.yml -- valid for all scenarios, can be overwritten in each scenario's molecule.yml (content and structure are the same)
     ├── default -- we are not using the "default" scenario, but molecule needs this to run at all. could be used to share config (e.g. prepare.yml) across *all* scenarios
     │   └── molecule.yml
+    ├── example -- fully commented reference scenario (install + remove sub-scenarios); copy it when adding a new test, like the example role
+    │   ├── install
+    │   │   └── ...
+    │   └── remove
+    │       └── ...
     ├── inventory -- shared inventory across all scenarios and therefore available in all scenarios. contains a basic set of VMs/containers that are commonly used
     │   ├── hosts.yml -- required, even if empty, that Ansible can detect this inventory
     │   └── host_vars
@@ -744,6 +749,8 @@ extensions
     └── requirements.yml
 ```
 
+The `extensions/molecule/example` scenario mirrors the `example` role: it is a fully commented, non-functional reference that walks through every file of a scenario (a non-functional reference because the `example` playbook installs the fictional "Example" application). Copy it as the starting point when adding a test for a playbook.
+
 Tests can be run against a subset of targets by providing them as a comma-separated list via the project-specific `LFOPS_TEST_TARGETS` environment variable:
 
 ```shell
@@ -759,6 +766,43 @@ Known Limitations:
 
 * VM-based testing currently requires passwordless sudo on the Ansible controller.
 * Ansible Navigator does not work out of the box.
+
+
+#### How a scenario runs
+
+`molecule test --scenario-name <scenario>` runs the steps listed in the `test_sequence` of `config.yml`, in order:
+
+* `dependency`: installs the collections from `requirements.yml`.
+* `create`: provisions the instances (libvirt/KVM VMs or Podman containers).
+* `prepare`: waits until the instances are reachable and gathers facts.
+* `converge`: runs the playbook under test (`converge.yml`).
+* `verify`: runs `verify.yml` against the converged instances.
+* `idempotence`: runs the playbook a second time and fails if it reports any change.
+* `verify`: runs `verify.yml` again, now against the idempotent state.
+* `destroy`: tears the instances down.
+
+
+#### What to verify
+
+Verify the observable end result, not the steps the role took to get there. Ansible and the role already guarantee their own mechanics, so re-checking those only tests Ansible. The guiding question is "what can only be confirmed by looking at the running system?".
+
+Two guarantees come for free, so do not rebuild them in `verify.yml`:
+
+* If the playbook errors out, the `converge` step fails and `verify.yml` never runs. `verify.yml` is therefore only ever about the *result* of a successful run, not about whether the run crashed.
+* Idempotence is enforced by the dedicated `idempotence` step. Never add tasks that check "running it a second time changes nothing".
+
+Do **not** assert:
+
+* That a templated file exists or contains a given line. If the `template` task ran, the file is there with the rendered content; asserting it only exercises Jinja and the `template` module.
+* That a package was installed or a file was written, as the goal of the test. The module already reports `changed`/`ok` for that. A one-line "the package is installed" smoke check is fine as a floor, but it is not where the value of the test lies.
+
+Do assert what only the running system can confirm, that is, that the pieces actually work together:
+
+* The application is running and enabled (`ansible.builtin.service_facts`), and reachable on its port (`ansible.builtin.wait_for`, or a request that would fail if it were not). A service that starts proves the deployed config is at least valid, which the role's own tasks cannot tell you.
+* The application actually *uses* the configured values. Ask the running application (an API or status endpoint via `ansible.builtin.uri`, or a CLI that prints the effective configuration) and assert it reports the value the scenario set in `group_vars`. This is the important one: it proves the whole chain, `group_vars` to template to the service reading the file to its behaviour, which is exactly what grepping the config file does not.
+* End state managed outside the package and file layer (users, databases, API objects) is present, or absent in a removal scenario.
+
+A useful rule of thumb: if an assertion would still pass while the service is dead or running with the wrong configuration, it is testing the wrong thing.
 
 
 ### Credits
