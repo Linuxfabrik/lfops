@@ -30,7 +30,7 @@ Distinct from Troubleshooting (reactive error->fix) and Known Limitations (hard 
 -->
 ## How the Role Behaves
 
-* The release tarball is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`) and copied to the target, so targets without Internet access can still be provisioned. The controller needs outbound access to `example.com`; the target does not.
+* The release tarball is downloaded on the Ansible controller (`delegate_to: 'localhost'`) and copied to the target, so targets without Internet access can still be provisioned. The controller needs outbound access to `example.com`; the target does not.
 * Configuration is fully templated. On every run the files under `/etc/example/` are re-rendered from the role's templates (a timestamped backup is kept), so out-of-band manual edits are overwritten. Manage all settings through the role variables below.
 * A configuration change notifies a chained handler that first runs `example --validate-config` and then restarts `example.service`. The restart is skipped when the service was just started in the same run or when `example__service_state` is `stopped`.
 * Version-specific defaults are loaded from the *installed* package version (`vars/<version>.yml`), not from `example__version`.

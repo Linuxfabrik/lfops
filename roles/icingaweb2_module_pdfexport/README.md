@@ -12,7 +12,7 @@ This role is tested with the following IcingaWeb2 PDF Export Module versions:
 
 ## How the Role Behaves
 
-* The Tarball for `icingaweb2_module_pdfexport__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
+* The Tarball for `icingaweb2_module_pdfexport__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
 * On every role run the directory `/usr/share/icingaweb2/modules/pdfexport` is overwritten with the contents of the configured version. To upgrade or downgrade the module, change `icingaweb2_module_pdfexport__version` and re-run the role.
 * `icingacli module enable pdfexport` is only invoked when `/etc/icingaweb2/enabledModules/pdfexport` does not yet exist (idempotent).
 * `/etc/icingaweb2/modules/pdfexport/config.ini` is deployed on every run. By default the module is wired to a running headless Chromium over the Chrome DevTools Protocol (CDP); set `icingaweb2_module_pdfexport__chrome_binary` to fall back to spawning Chromium locally on every export.

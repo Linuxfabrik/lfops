@@ -37,6 +37,24 @@ If Keycloak itself should terminate TLS (e.g. when not running behind a reverse 
 All Keycloak config settings are described here: https://www.keycloak.org/server/all-config
 
 
+## Post-Installation Steps
+
+The first role run provisions a *temporary* bootstrap admin (`keycloak__admin_login`, by convention suffixed `-temp`) in the `master` realm. Replace it with a permanent admin and remove the bootstrap account afterwards. The order matters: verify that the permanent admin works *before* deleting the bootstrap one, otherwise you risk locking yourself out of the `master` realm.
+
+1. Log in to the Keycloak admin console (`master` realm) as the bootstrap admin (`keycloak__admin_login["username"]`).
+2. Create the permanent admin via *Users > Add user*: set a username (e.g. `linuxfabrik-admin`), turn *Email verified* on, then *Create*.
+3. *Role mapping > Assign role > Filter by realm roles*: assign the `admin` role.
+4. *Credentials > Set password*: set the password with *Temporary* off (otherwise the user must change it on first login), and store it in your password manager.
+5. Verify the permanent admin: log out, then log in as the permanent admin in a fresh (incognito) session and confirm the admin console is fully accessible (Realms, Clients and Users are visible).
+6. Delete the bootstrap admin: as the permanent admin, go to *Users > `keycloak__admin_login["username"]` > Delete*.
+7. The role already removed the `KC_BOOTSTRAP_ADMIN_*` credentials from `/etc/sysconfig/keycloak` and wrote the marker `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state` after the first run. Verify this:
+
+    ```bash
+    grep --quiet '^KC_BOOTSTRAP_ADMIN_' /etc/sysconfig/keycloak && echo FAIL || echo OK
+    test -f /etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state && echo OK || echo FAIL
+    ```
+
+
 ## Tags
 
 `keycloak`
@@ -62,7 +80,7 @@ All Keycloak config settings are described here: https://www.keycloak.org/server
 * The *temporary* Keycloak bootstrap admin login credentials. Keycloak only honors `KC_BOOTSTRAP_ADMIN_USERNAME` / `KC_BOOTSTRAP_ADMIN_PASSWORD` on the very first start, when no admin user exists in the `master` realm yet. Subsequent restarts ignore these variables.
 * Mandatory only on the first role run. The role writes the credentials to `/etc/sysconfig/keycloak`, restarts Keycloak so it consumes them and provisions the bootstrap admin in the `master` realm, then immediately re-renders the sysconfig file with the credentials removed and marks the bootstrap as done via `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state`. The cleartext password no longer lingers on disk after the role finishes.
 * On subsequent runs the role detects the marker file and renders the sysconfig file without credentials right away. `keycloak__admin_login` can be removed from the inventory at that point.
-* Use a username that visibly marks the account as throwaway (suffix `-temp`), so it is obvious in the Keycloak UI which account must be deleted once a permanent admin has been created.
+* Use a username that visibly marks the account as throwaway (suffix `-temp`), so it is obvious in the Keycloak UI which account must be deleted once a permanent admin has been created. See "Post-Installation Steps" for the handover to a permanent admin.
 * For disaster recovery (e.g. lost database, need to re-bootstrap an admin): remove `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state`, re-add `keycloak__admin_login` to the inventory, and re-run the role.
 * Type: Dictionary.
 * Subkeys:
@@ -262,6 +280,21 @@ keycloak__state: 'started'
 ## Using a reverse proxy
 
 See the [Keycloak reverse proxy documentation](https://www.keycloak.org/server/reverseproxy) for details. When running behind a reverse proxy that terminates TLS (edge mode), leave the HTTPS certificate variables empty. The role will automatically set `http-enabled=true` and `proxy-headers` (default: `xforwarded`). Optionally set `keycloak__proxy_trusted_addresses` to restrict which proxy addresses are trusted. When the reverse proxy does not terminate TLS (reencrypt/passthrough), provide certificate paths via `keycloak__https_certificate_file` and `keycloak__https_certificate_key_file`.
+
+
+## Troubleshooting
+
+**Role fails with `Could not obtain an admin-cli token`**
+
+* On a run where the bootstrap is not yet marked as done (the marker `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state` is missing), the role verifies that the bootstrap admin can obtain a token before writing the marker. This fails when the bootstrap admin no longer exists, which is the expected end state after the permanent-admin handover (see "Post-Installation Steps") once the `-temp` account has been deleted, combined with a missing marker file (e.g. a fresh Ansible controller, or a lost `/etc/ansible/facts.d`).
+* If the handover is already complete, recreate the marker on the target and re-run the role:
+
+    ```bash
+    mkdir --parents /etc/ansible/facts.d
+    touch /etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state
+    ```
+
+* Otherwise, check that `keycloak.service` is running and that `keycloak__admin_login` matches the actual bootstrap admin, then re-run.
 
 
 ## License

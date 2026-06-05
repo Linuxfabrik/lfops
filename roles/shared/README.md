@@ -25,7 +25,7 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 
 `clone-lib-repo.yml`
 
-* Clones the [Linuxfabrik Python Libraries](https://github.com/Linuxfabrik/lib) to `/tmp/ansible.lib-repo` on the Ansible controller (`delegate_to: localhost`, `run_once`, `--check`-safe). Includes a rescue path that wipes the directory and retries on failure (e.g. when an existing checkout is on a different ref).
+* Clones the [Linuxfabrik Python Libraries](https://github.com/Linuxfabrik/lib) to `/tmp/ansible.lib-repo` on the Ansible controller (`delegate_to: localhost`, serialized with `throttle: 1`, `--check`-safe). Includes a rescue path that wipes the directory and retries on failure (e.g. when an existing checkout is on a different ref).
 * Parameters:
 
     * `shared__lib_version`: Mandatory. The git ref to check out. Accepts `'dev'` (resolved to `main`), a tag like `'v1.2.3'`, or a bare version like `'1.2.3'` (auto-prefixed with `v`).

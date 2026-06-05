@@ -190,6 +190,15 @@ When creating a new role, make sure to deliver:
 * Update `CHANGELOG.md`.
 
 
+### Changelog
+
+LFOps overrides the project-agnostic "Changelog" rule above (alphabetical sorting): entries are sorted newest first, because operators running playbooks need to see what changed most recently.
+
+* Each subsection (`### Added`, `### Changed`, ...) appears at most once per release section. Never create a duplicate, append to the existing one.
+* Order the subsections as `Breaking Changes`, `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`: the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) order, with the LFOps-specific `Breaking Changes` first. Omit subsections with no entries.
+* Within a subsection, add new entries at the top (newest first), even if this results in multiple entries for the same role.
+
+
 ### Playbooks
 
 * Each playbook must contain all dependencies to run flawlessly against a newly installed machine.
@@ -312,10 +321,28 @@ When creating a new role, make sure to deliver:
         mode: 0o644
       delegate_to: 'localhost'
       become: false
-      run_once: true
       changed_when: false # not an actual config change on the target
       check_mode: false # run task even if `--check` is specified
     ```
+
+* Avoid `run_once: true`. It binds the task to the first host of the batch and evaluates the task's `when` (including an enclosing `block:` `when` or a conditional role/task include) against that host only. If the first host skips, the task is skipped for every host, even hosts that needed it. The usual case is a controller-side download or build delegated to localhost: drop `run_once` and let the task run per host.
+
+    * For `ansible.builtin.get_url` writing a single file this is already race-safe and effectively runs once: the module downloads to a unique temp file and atomically renames it into the shared `/tmp` destination, and with a version-pinned `dest` the first host downloads while the rest find the file present. Nothing else is needed.
+    * For tasks that mutate a shared path on the controller in place (`ansible.builtin.git` into a shared working dir, `ansible.builtin.shell`/`ansible.builtin.command` that build or flatten files under `/tmp`), running per host in parallel races across `forks`. Drop `run_once` and add `throttle: 1` so the task still runs per host (no first-host-skip) but only one host at a time touches the shared path:
+
+        ```yaml
+        - name: 'Clone the example git repo to localhost'
+          ansible.builtin.git:
+            repo: 'https://github.com/Linuxfabrik/example.git'
+            dest: '/tmp/ansible.example-repo'
+            depth: 1
+          delegate_to: 'localhost'
+          become: false
+          throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
+          check_mode: false # run task even if `--check` is specified
+        ```
+
+    * Two cases legitimately keep `run_once`. First, a single read-only lookup whose result is shared to all hosts (e.g. querying a GitHub release API once and storing the version with `set_fact`); running it per host would only multiply API calls and risk rate limiting, and there is no shared-path race. Second, a task whose `when` is deliberately computed across `ansible_play_hosts_all` (not against the first host), so the first-host-skip problem does not apply (see `roles/firewall/tasks/main.yml`).
 
 * Always provide `changed_when`, `creates`, or `removes` for `ansible.builtin.command` and `ansible.builtin.shell` tasks to ensure idempotency. Use `changed_when: false` for read-only commands.
 * Prefer a `chown -R --changes` command over `ansible.builtin.file` with `recurse: true`; the module's recursive mode is slow on large trees. Register the result and derive `changed_when` from the `--changes` output for idempotency:

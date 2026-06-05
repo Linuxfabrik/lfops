@@ -36,7 +36,7 @@
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9", "10"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
         - 'not mongodb__skip_repo_epel | d(false)'
 
     - role: 'linuxfabrik.lfops.python_venv'

@@ -48,7 +48,6 @@
       dest: '/tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz'
     delegate_to: 'localhost'
     become: false
-    run_once: true
     check_mode: false # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz to the server' # noqa risky-file-permissions (temp file)
@@ -132,7 +131,7 @@
         cp -- /tmp/ansible.monitoring-plugins-repo/assets/icingaweb2-module-grafana/*.ini /tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana/
     delegate_to: 'localhost'
     become: false
-    run_once: true
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
