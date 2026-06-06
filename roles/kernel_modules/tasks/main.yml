@@ -1,0 +1,21 @@
+- block:
+
+  - ansible.builtin.debug:
+      msg:
+        - 'Combined modules:'
+        - '{{ kernel_modules__modules__combined_var }}'
+
+  # An `install <module> /bin/true` line prevents the module from being loaded,
+  # both automatically and via a manual `modprobe`. Already-loaded modules stay
+  # loaded until the next reboot (see README).
+  - name: 'Deploy /etc/modprobe.d/linuxfabrik-kernel-modules.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/modprobe.d/linuxfabrik-kernel-modules.conf.j2'
+      dest: '/etc/modprobe.d/linuxfabrik-kernel-modules.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'kernel_modules'

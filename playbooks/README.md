@@ -492,6 +492,13 @@ Calls the following roles (in order):
 * [keepalived](https://github.com/Linuxfabrik/lfops/tree/main/roles/keepalived)
 
 
+## kernel_modules.yml
+
+Calls the following roles (in order):
+
+* [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules)
+
+
 ## kernel_settings.yml
 
 Calls the following roles (in order):
@@ -993,6 +1000,7 @@ Calls the following roles (in order):
 * [crypto_policy](https://github.com/Linuxfabrik/lfops/tree/main/roles/crypto_policy): `setup_basic__skip_crypto_policy`
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_basic__skip_policycoreutils`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_basic__skip_selinux`
+* [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules): `setup_basic__skip_kernel_modules`
 * [systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald): `setup_basic__skip_systemd_journald`
 * [hostname](https://github.com/Linuxfabrik/lfops/tree/main/roles/hostname): `setup_basic__skip_hostname`
 * [timezone](https://github.com/Linuxfabrik/lfops/tree/main/roles/timezone): `setup_basic__skip_timezone`

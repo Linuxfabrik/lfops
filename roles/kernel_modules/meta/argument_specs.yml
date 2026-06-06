@@ -1,0 +1,33 @@
+argument_specs:
+  main:
+    options:
+
+      kernel_modules__modules__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Kernel modules to manage (`name`, optional `enabled`:
+          `false` blocks the module, `true` allows it).
+          Dependent-role injection.
+
+      kernel_modules__modules__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Kernel modules to manage (`name`, optional `enabled`:
+          `false` blocks the module, `true` allows it). Group-level
+          override.
+
+      kernel_modules__modules__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Kernel modules to manage (`name`, optional `enabled`:
+          `false` blocks the module, `true` allows it). Host-level
+          override.

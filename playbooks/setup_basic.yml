@@ -53,6 +53,10 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_selinux | d(false)'
 
+    - role: 'linuxfabrik.lfops.kernel_modules'
+      when:
+        - 'not setup_basic__skip_kernel_modules | d(false)'
+
     # === Sensible defaults ===
     - role: 'linuxfabrik.lfops.systemd_journald'
       when:

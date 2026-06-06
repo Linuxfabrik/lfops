@@ -77,6 +77,7 @@ Which Ansible role is proven to run on which OS?
 | infomaniak_vm                         |        |        |        |        |         |           |           |           | Fedora 35+                                   |
 | kdump                                 |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | keepalived                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| kernel_modules                        |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | kernel_settings                       |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | keycloak                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | kibana                                |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
