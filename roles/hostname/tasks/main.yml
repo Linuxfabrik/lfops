@@ -4,5 +4,18 @@
     ansible.builtin.hostname:
       name: '{{ hostname__full_hostname }}'
 
+  # /etc/hosts is co-managed by cloud-init (the localhost entries), so we manage
+  # only our own marker block here instead of templating the whole file. Mapping
+  # the FQDN (and short name) to the real interface IP gives proper local name
+  # resolution and avoids mapping the hostname to a loopback address.
+  - name: 'Map {{ hostname__full_hostname }} to {{ hostname__etc_hosts_ip }} in /etc/hosts'
+    ansible.builtin.blockinfile:
+      path: '/etc/hosts'
+      marker: '# {mark} ANSIBLE MANAGED BLOCK linuxfabrik.lfops.hostname'
+      block: '{{ hostname__etc_hosts_ip }} {{ ([hostname__full_hostname, hostname__full_hostname.split(".")[0]] | unique) | join(" ") }}'
+    when:
+      - 'hostname__manage_etc_hosts | bool'
+      - 'hostname__etc_hosts_ip | length > 0'
+
   tags:
     - 'hostname'
