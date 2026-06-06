@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026051301
+# 2026060601
 
 # This is the sshd server system-wide configuration file.  See
 # sshd_config(5) for more information.
@@ -34,8 +34,8 @@ LogLevel {{ sshd__log_level__combined_var }}
 #LoginGraceTime 2m
 PermitRootLogin {{ sshd__permit_root_login }}
 #StrictModes yes
-#MaxAuthTries 6
-#MaxSessions 10
+MaxAuthTries {{ sshd__max_auth_tries }}
+MaxSessions {{ sshd__max_sessions }}
 
 #PubkeyAuthentication yes
 
@@ -88,20 +88,20 @@ GSSAPIAuthentication {{ sshd__gssapi_authentication | bool | ternary('yes', 'no'
 # and KbdInteractiveAuthentication to 'no'.
 UsePAM yes
 
-#AllowAgentForwarding yes
-#AllowTcpForwarding yes
+AllowAgentForwarding {{ sshd__allow_agent_forwarding | bool | ternary("yes", "no") }}
+AllowTcpForwarding {{ sshd__allow_tcp_forwarding | bool | ternary("yes", "no") }}
 #GatewayPorts no
-X11Forwarding yes
+X11Forwarding {{ sshd__x11_forwarding | bool | ternary("yes", "no") }}
 #X11DisplayOffset 10
 #X11UseLocalhost yes
 #PermitTTY yes
 PrintMotd no
 #PrintLastLog yes
-#TCPKeepAlive yes
+TCPKeepAlive {{ sshd__tcp_keep_alive | bool | ternary("yes", "no") }}
 #PermitUserEnvironment no
 #Compression delayed
 #ClientAliveInterval 0
-#ClientAliveCountMax 3
+ClientAliveCountMax {{ sshd__client_alive_count_max }}
 UseDNS {{ sshd__use_dns | bool | ternary('yes', 'no') }}
 #PidFile /run/sshd.pid
 #MaxStartups 10:30:100
