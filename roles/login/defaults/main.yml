@@ -12,3 +12,8 @@ login__users__combined_var: '{{ (
   }}'
 
 login__passwordless_sudo_group: ''
+
+login__login_defs_pass_max_days: 365
+login__login_defs_pass_min_days: 1
+login__login_defs_pass_warn_age: 7
+login__login_defs_umask: '027'

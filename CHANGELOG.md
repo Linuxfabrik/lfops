@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:login**: Sets a password-aging policy and a stricter default umask in `/etc/login.defs` (configurable). Applies to newly created accounts and password changes, not retroactively to existing accounts.
 * **role:kernel_modules**: New role that hardens a host by blocking rarely used or risky kernel modules (FireWire, legacy filesystems, uncommon network protocols) following the CIS Benchmark recommendations. Runs as part of `setup_basic`. The defaults stay clear of modules that would break common workloads (containers, snap, USB storage); those can be blocked explicitly where wanted.
 * **role:sshd**: Add Ubuntu 22.04 / 24.04 / 26.04 support and run on Fedora. On Debian and Ubuntu the role now manages the correct service unit (`ssh.service`) and disables OpenSSH socket activation (`ssh.socket`) so the daemon is managed consistently across distributions. Red Hat-family releases without a version-specific template (in particular Fedora) now fall back to a generic `RedHat` `sshd_config` template instead of failing.
 * **role:hostname**: Maintains an `/etc/hosts` entry mapping the FQDN (and short name) to the host's primary IPv4 address for proper local name resolution. The IP is configurable via `hostname__etc_hosts_ip`, and the whole behaviour can be disabled with `hostname__manage_etc_hosts: false`.
