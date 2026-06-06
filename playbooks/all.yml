@@ -16,6 +16,7 @@
 - import_playbook: 'cloud_init.yml'
 - import_playbook: 'cockpit.yml'
 - import_playbook: 'collabora.yml'
+- import_playbook: 'core_dumps.yml'
 - import_playbook: 'coturn.yml'
 - import_playbook: 'crypto_policy.yml'
 - import_playbook: 'dnf_makecache.yml'

@@ -57,6 +57,10 @@
       when:
         - 'not setup_basic__skip_kernel_modules | d(false)'
 
+    - role: 'linuxfabrik.lfops.core_dumps'
+      when:
+        - 'not setup_basic__skip_core_dumps | d(false)'
+
     # === Sensible defaults ===
     - role: 'linuxfabrik.lfops.systemd_journald'
       when:

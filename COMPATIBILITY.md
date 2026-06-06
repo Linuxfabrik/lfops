@@ -23,6 +23,7 @@ Which Ansible role is proven to run on which OS?
 | cockpit                               |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 | collabora                             |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | collect_rpmnew_rpmsave                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
+| core_dumps                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | coturn                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | crypto_policy                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |

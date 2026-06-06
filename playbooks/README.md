@@ -167,6 +167,13 @@ Calls the following roles (in order):
 * [collect_rpmnew_rpmsave](https://github.com/Linuxfabrik/lfops/tree/main/roles/collect_rpmnew_rpmsave)
 
 
+## core_dumps.yml
+
+Calls the following roles (in order):
+
+* [core_dumps](https://github.com/Linuxfabrik/lfops/tree/main/roles/core_dumps)
+
+
 ## coturn.yml
 
 Calls the following roles (in order):
@@ -1001,6 +1008,7 @@ Calls the following roles (in order):
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_basic__skip_policycoreutils`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_basic__skip_selinux`
 * [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules): `setup_basic__skip_kernel_modules`
+* [core_dumps](https://github.com/Linuxfabrik/lfops/tree/main/roles/core_dumps): `setup_basic__skip_core_dumps`
 * [systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald): `setup_basic__skip_systemd_journald`
 * [hostname](https://github.com/Linuxfabrik/lfops/tree/main/roles/hostname): `setup_basic__skip_hostname`
 * [timezone](https://github.com/Linuxfabrik/lfops/tree/main/roles/timezone): `setup_basic__skip_timezone`
