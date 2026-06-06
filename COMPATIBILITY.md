@@ -151,7 +151,7 @@ Which Ansible role is proven to run on which OS?
 | shell                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | snmp                                  |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | squid                                 |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
-| sshd                                  |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
+| sshd                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
 | system_update                         |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | systemd_journald                      |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | systemd_unit                          |        |        |   x    |   x    |    x    |           |           |           |                                              |

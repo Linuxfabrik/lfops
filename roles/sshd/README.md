@@ -16,6 +16,8 @@ The role ships hardened defaults for several options that differ from the OpenSS
 
 `MaxAuthTries` defaults to `3`. Every public key an SSH agent offers counts as one attempt, so a client with more than three keys loaded in its agent may be rejected before the matching key is tried. In that case use `IdentitiesOnly yes` / an explicit `IdentityFile` on the client, or raise `sshd__max_auth_tries`.
 
+On Debian and Ubuntu the SSH daemon unit is `ssh.service` and OpenSSH ships socket activation (`ssh.socket`) enabled by default. The role manages the daemon through its service unit like on Red Hat, so on these systems it disables and stops `ssh.socket` and enables `ssh.service` instead. Red Hat-family systems for which no version-specific template exists (in particular Fedora) fall back to the generic `RedHat` template.
+
 
 ## Dependent Roles
 
