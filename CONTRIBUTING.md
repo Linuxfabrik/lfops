@@ -190,6 +190,15 @@ When creating a new role, make sure to deliver:
 * Update `CHANGELOG.md`.
 
 
+### OS Coverage
+
+When creating a new role or changing an existing one, pull through the **full operating-system matrix** declared in [COMPATIBILITY.md](COMPATIBILITY.md) (currently Debian 12 and 13, RHEL 8, 9 and 10, and Ubuntu 22.04, 24.04 and 26.04). COMPATIBILITY.md is the authoritative list; support what it lists, and add a column there before supporting a new release.
+
+* Abstract OS differences (package names, configuration paths, service / unit names, users, ...) into per-OS vars files; see "OS-specific Variables" below for the mechanism and the explicit-`vars/Ubuntu.yml` rule. Reference roles: `sshd`, `clamav`.
+* Validate empirically on each family before claiming support. Spin up a container per OS (podman, e.g. `rockylinux/rockylinux:10`, `debian:13`, `ubuntu:24.04`) and confirm the role runs end to end. A full systemd run (service enable / start / reload) needs a systemd-enabled container.
+* Only mark a cell `x` in COMPATIBILITY.md once it is proven to run; use `(x)` for "expected to work but not verified".
+
+
 ### Changelog
 
 LFOps overrides the project-agnostic "Changelog" rule above (alphabetical sorting): entries are sorted newest first, because operators running playbooks need to see what changed most recently.
@@ -630,6 +639,8 @@ Variables with the same name are overridden by the files in `vars/` in order fro
 * `distribution` (e.g. `CentOS`) is more specific than os_family
 * `distribution_major_version` (e.g. `CentOS7`) is more specific than distribution
 * `distribution_version` (e.g. `CentOS7.9`) is the most specific
+
+When a role has a `vars/Debian.yml`, always create an explicit `vars/Ubuntu.yml` too, even if it is currently an identical copy. Ubuntu (a `distribution`) is loaded on top of its `Debian` os_family, so a full copy is redundant today, but it keeps Ubuntu visible at a glance and gives later Ubuntu-specific drift a dedicated home instead of silently inheriting Debian values.
 
 To load the variables include the `platform-variables.yml` in the `tasks/main.yml` like this:
 ```yaml
