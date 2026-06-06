@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:clamav**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and unknown variables.
 * **role:core_dumps**: New role that disables core dumps (which can leak sensitive process memory to disk) following the CIS Benchmark recommendations. Runs as part of `setup_basic`.
 * **role:login**: Sets a password-aging policy and a stricter default umask in `/etc/login.defs` (configurable). Applies to newly created accounts and password changes, not retroactively to existing accounts.
 * **role:kernel_modules**: New role that hardens a host by blocking rarely used or risky kernel modules (FireWire, legacy filesystems, uncommon network protocols) following the CIS Benchmark recommendations. Runs as part of `setup_basic`. The defaults stay clear of modules that would break common workloads (containers, snap, USB storage); those can be blocked explicitly where wanted.
