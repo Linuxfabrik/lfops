@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:clamav**: Now runs on Debian and Ubuntu in addition to Red Hat-family systems, and works on RHEL 10. The role seeds the signature database on first install so the scanner starts reliably, and runs an EICAR self-test (also available on its own via the `clamav:test` tag) that confirms detection actually works.
 * **role:sshd**: Ship hardened SSH defaults: X11 forwarding, agent forwarding and TCP keepalives are now off, `MaxAuthTries` is `3`, `ClientAliveCountMax` is `2`, and the log level is `VERBOSE`. All are overridable via the new `sshd__allow_agent_forwarding`, `sshd__allow_tcp_forwarding`, `sshd__client_alive_count_max`, `sshd__max_auth_tries`, `sshd__max_sessions`, `sshd__tcp_keep_alive` and `sshd__x11_forwarding` variables. Note: a client offering more than three keys from its SSH agent can be rejected by `MaxAuthTries 3`; use an explicit identity on the client or raise `sshd__max_auth_tries`.
 * **role:acme_sh**: Issue ECDSA P-256 certificates by default instead of RSA-4096, for faster TLS handshakes at equivalent security. Certificates previously issued as RSA are reissued as ECDSA on the next run, and the superseded RSA certificate is dropped from renewal. Set `acme_sh__key_length` to an RSA value such as `4096` to keep RSA.
 * **playbooks**: Enable the CRB repository on Rocky 10 too, not just Rocky 9. Previously Rocky 10 hosts silently skipped this step, which could leave dependencies such as `python3-virtualenv` uninstallable.
