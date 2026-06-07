@@ -145,6 +145,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:php**: php-fpm workers now run with a defined `PATH`. Previously the worker environment was cleared, leaving `getenv("PATH")` empty, which broke PHP code that shells out to system binaries and tripped Nextcloud's "PHP getenv" setup warning.
 * **role:redis**: The Redis configuration file is no longer world-readable. It is now deployed as `root:redis` with mode `0640`, so its contents (e.g. a configured password) can no longer be read by other local users.
 * **role:acme_sh**: No longer reinstalls every certificate and reloads the web server on every run. Certificates are only reinstalled when they were just (re)issued or when the installed file is missing, so repeated runs are idempotent.
 * **role:keycloak**: Role now prints a clear instruction when a re-run can no longer obtain a token because the bootstrap admin was manually switched over to a permanent account (temporary `-temp` user deleted) and the bootstrap marker went missing.
