@@ -1,0 +1,198 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+#
+# the cross-role injection defaults this role publishes (e.g.
+# nextcloud__apache_httpd__vhosts__dependent_var, nextcloud__php__modules__dependent_var)
+# are consumed by other roles, not passed into this role, so they are not declared here.
+#
+# argument_specs evaluates every declared option's current value at role entry. the
+# following README variables are therefore intentionally NOT declared, because their
+# defaults reference variables that are only guaranteed once the full setup_nextcloud
+# playbook context is assembled (other roles' defaults / gathered facts). declaring them
+# would force those references to resolve on every role entry, even for tag runs that
+# never touch the feature, so they are validated in the tasks where they are used instead:
+#   * nextcloud__icinga2_api_user_login -> '{{ system_update__icinga2_api_user_login }}'
+#   * nextcloud__icinga2_hostname        -> '{{ ansible_facts["nodename"] }}'
+#   * nextcloud__mariadb_login           -> '{{ mariadb_server__admin_user }}'
+argument_specs:
+  main:
+    options:
+
+      nextcloud__app_configs__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Key-value pairs for configuring apps. Dependent-role injection.'
+
+      nextcloud__app_configs__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Key-value pairs for configuring apps. Group-level override.'
+
+      nextcloud__app_configs__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Key-value pairs for configuring apps. Host-level override.'
+
+      nextcloud__apps__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud apps to install. Dependent-role injection.'
+
+      nextcloud__apps__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud apps to install. Group-level override.'
+
+      nextcloud__apps__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud apps to install. Host-level override.'
+
+      nextcloud__database_host:
+        type: 'str'
+        required: false
+        default: 'localhost'
+        description: 'Host where MariaDB is located.'
+
+      nextcloud__database_name:
+        type: 'str'
+        required: false
+        default: 'nextcloud'
+        description: 'Name of the Nextcloud database in MariaDB.'
+
+      nextcloud__datadir:
+        type: 'str'
+        required: false
+        default: '/data'
+        description: 'Where to store the user files.'
+
+      nextcloud__fqdn:
+        type: 'str'
+        required: true
+        description: 'The FQDN of the Nextcloud instance.'
+
+      nextcloud__icinga2_api_url:
+        type: 'str'
+        required: false
+        description: 'The URL of the Icinga2 API used to set a downtime during a server update.'
+
+      nextcloud__on_calendar_app_update:
+        type: 'str'
+        required: false
+        description: 'systemd OnCalendar expression for the app update timer.'
+
+      nextcloud__on_calendar_jobs:
+        type: 'str'
+        required: false
+        default: '*:0/5'
+        description: 'systemd OnCalendar expression for the OCC background jobs timer.'
+
+      nextcloud__on_calendar_scan_files:
+        type: 'str'
+        required: false
+        default: '*:50:15'
+        description: 'systemd OnCalendar expression for the file rescan timer.'
+
+      nextcloud__skip_apps:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Completely skip the management of Nextcloud apps.'
+
+      nextcloud__skip_notify_push:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Skip the configuration of notify_push.'
+
+      nextcloud__storage_backend_s3:
+        type: 'dict'
+        required: false
+        description: 'S3 storage backend. If omitted, local storage is used.'
+
+      nextcloud__storage_backend_swift:
+        type: 'dict'
+        required: false
+        description: 'Swift storage backend. If omitted, local storage is used.'
+
+      nextcloud__sysconfig__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud system config settings. Dependent-role injection.'
+
+      nextcloud__sysconfig__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud system config settings. Group-level override.'
+
+      nextcloud__sysconfig__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Nextcloud system config settings. Host-level override.'
+
+      nextcloud__timer_app_update_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enable/disable the systemd timer for updating apps.'
+
+      nextcloud__timer_jobs_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enable/disable the systemd timer for running OCC background jobs.'
+
+      nextcloud__timer_ldap_show_remnants_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enable/disable the systemd timer for mailing LDAP remnants.'
+
+      nextcloud__timer_scan_files_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enable/disable the systemd timer for re-scanning the Nextcloud files.'
+
+      nextcloud__users:
+        type: 'list'
+        elements: 'dict'
+        required: true
+        description: 'User accounts to create. The first user is the primary administrator account.'
+
+      nextcloud__version:
+        type: 'str'
+        required: false
+        default: 'latest'
+        description: "Which version to install. One of 'latest', 'latest-XX' or 'nextcloud-XX.X.XX'."
+
+      nextcloud__vhost_virtualhost_ip:
+        type: 'str'
+        required: false
+        default: '*'
+        description: 'IP used within the Apache <VirtualHost> directive.'
+
+      nextcloud__vhost_virtualhost_port:
+        type: 'int'
+        required: false
+        default: 80
+        description: 'Port used within the Apache <VirtualHost> directive.'
