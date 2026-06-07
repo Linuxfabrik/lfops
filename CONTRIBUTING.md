@@ -421,6 +421,7 @@ Controlled vocabulary of standard `role_name:section` tags (alphabetical):
 * `role_name:logrotate`: Deploys the role's logrotate configuration.
 * `role_name:modules`: Installs, enables and removes the role's pluggable modules (e.g. PHP, SELinux, Apache modules).
 * `role_name:networks`: Manages the role's networks (cloud VM, libvirt or container networks).
+* `role_name:plugins`: Installs and removes the role's optional application plugins / add-ons (distinct from OS-level `:modules`; e.g. Grafana or CMS plugins).
 * `role_name:remove`: Uninstalls the managed software and removes its artifacts.
 * `role_name:state`: Manages the runtime state of the role's services, timers and sockets (start / stop / enable / disable).
 * `role_name:update`: Updates the managed application to a newer version.
