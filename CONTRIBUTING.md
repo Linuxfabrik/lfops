@@ -406,6 +406,28 @@ LFOps overrides the project-agnostic "Changelog" rule above (alphabetical sortin
 * The tags should be set in the role itself. Do not set them in the playbook.
 * Blocks/tasks that install base packages do not require tags such as `apache:pkgs`, `apache:setup` or `apache:install`. There is no real world scenario where it makes sense to only run the installation via Ansible, some configuration is always required.
 * For each task, consider to which areas it belongs. A task will usually have multiple tags.
+* Reuse a section name from the controlled vocabulary below whenever one fits, so that `--tags` / `--skip-tags` behave the same way across roles. Only invent a role-specific section name (e.g. `apache_httpd:vhosts`, `mariadb_server:galera_new_cluster`) when a task covers an area that none of the standard names describe.
+
+Controlled vocabulary of standard `role_name:section` tags (alphabetical):
+
+* `role_name:certs`: Deploys and renews the role's TLS certificates and private keys.
+* `role_name:configure`: Renders and deploys the role's configuration files and applies settings. The most common section; everything that is neither install, state, nor one of the more specific sections below belongs here.
+* `role_name:containers`: Manages the role's containers and their systemd container units.
+* `role_name:cron`: Deploys the role's scheduled jobs (cron entries or systemd timers).
+* `role_name:database`: Creates, updates and deletes the databases managed by the role.
+* `role_name:dump`: Sets up scheduled dumps / backups of the role's data.
+* `role_name:enroll`: Registers (enrolls) the node with a remote service or controller.
+* `role_name:firewalls`: Manages the cloud provider firewall / security-group rules (VM provisioning roles).
+* `role_name:logrotate`: Deploys the role's logrotate configuration.
+* `role_name:modules`: Installs, enables and removes the role's pluggable modules (e.g. PHP, SELinux, Apache modules).
+* `role_name:networks`: Manages the role's networks (cloud VM, libvirt or container networks).
+* `role_name:remove`: Uninstalls the managed software and removes its artifacts.
+* `role_name:state`: Manages the runtime state of the role's services, timers and sockets (start / stop / enable / disable).
+* `role_name:update`: Updates the managed application to a newer version.
+* `role_name:upgrade`: Runs the post-update migration / upgrade steps after the package itself was updated.
+* `role_name:user`: Creates, updates and deletes the application or service user accounts managed by the role.
+
+The Ansible built-in tags `always` and `never` are reserved for their built-in meaning: tag the platform-variable loading and `assert` validation tasks with `always` so the variables and checks are present even when the role runs with a specific `--tags` selection.
 
 
 #### Variables

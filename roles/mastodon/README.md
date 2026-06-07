@@ -64,7 +64,7 @@ Manual steps:
 * Deploys the Elasticsearch indices.
 * Triggers: none.
 
-`mastodon:users`
+`mastodon:user`
 
 * Creates Mastodon users.
 * Triggers: none.
