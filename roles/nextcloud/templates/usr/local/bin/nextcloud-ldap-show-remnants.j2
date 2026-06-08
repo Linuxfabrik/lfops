@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026042001
+# 2026060801
 
 output=$(/usr/bin/php /var/www/html/nextcloud/occ ldap:show-remnants)
 if [ -z "$output" ]; then
@@ -8,11 +8,10 @@ if [ -z "$output" ]; then
     exit 0
 fi
 
-{% if setup_basic__skip_mailto_root %}
-echo "$output"
-exit 0
+{% if nextcloud__mailto_root__to | length > 0 %}
+# only mail the output if recipients are configured
+echo "$output" | /usr/bin/mail -s "$(hostname --short) - Users not available on LDAP anymore, but have remnants in Nextcloud" {{ nextcloud__mailto_root__to | join(' ') }}
 {% else %}
-# only send output if there is any
-echo "$output" | /usr/bin/mail -s "$(hostname --short) - Users not available on LDAP anymore, but have remnants in Nextcloud" {{ mailto_root__to | join(' ') }}
-exit 0
+echo "$output"
 {% endif %}
+exit 0

@@ -90,6 +90,12 @@ argument_specs:
         required: false
         description: 'The URL of the Icinga2 API used to set a downtime during a server update.'
 
+      nextcloud__mailto_root__to:
+        type: 'list'
+        elements: 'str'
+        required: false
+        description: 'Recipients of the ldap-show-remnants report. Defaults to the global mailto_root__to; empty means stdout only.'
+
       nextcloud__on_calendar_app_update:
         type: 'str'
         required: false

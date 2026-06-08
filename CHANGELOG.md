@@ -146,6 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: The `nextcloud-ldap-show-remnants` script no longer aborts the `nextcloud:cron` deploy with `'setup_basic__skip_mailto_root' is undefined` when the role runs outside the `setup_basic` playbook (e.g. via `--tags nextcloud:cron` in `setup_nextcloud`). The report recipients now come from the new role variable `nextcloud__mailto_root__to` (defaulting to the global `mailto_root__to`); the report is mailed when recipients are set and printed to stdout otherwise.
 * **role:php**: php-fpm workers now run with a defined `PATH`. Previously the worker environment was cleared, leaving `getenv("PATH")` empty, which broke PHP code that shells out to system binaries and tripped Nextcloud's "PHP getenv" setup warning.
 * **role:redis**: The Redis configuration file is no longer world-readable. It is now deployed as `root:redis` with mode `0640`, so its contents (e.g. a configured password) can no longer be read by other local users.
 * **role:acme_sh**: No longer reinstalls every certificate and reloads the web server on every run. Certificates are only reinstalled when they were just (re)issued or when the installed file is missing, so repeated runs are idempotent.
