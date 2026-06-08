@@ -129,3 +129,37 @@
 
   tags:
     - 'login'
+
+
+- block:
+
+  # /etc/login.defs is owned by the shadow-utils (RHEL) / login (Debian) package, and its
+  # content differs heavily between distributions and even minor releases. We only manage a
+  # handful of policy keys, so we edit those lines in place with lineinfile instead of
+  # templating the whole distro-owned file (which would mean maintaining one verbatim copy
+  # per OS release for four settings). This is a deliberate exception to the
+  # template-over-lineinfile preference in CONTRIBUTING.
+  #
+  # Note: login.defs applies to newly created accounts and the next password change only; it
+  # does not retroactively re-age existing accounts (the role does not run chage on them).
+  - name: 'Set password policy and umask in /etc/login.defs'
+    ansible.builtin.lineinfile:
+      path: '/etc/login.defs'
+      regexp: '^{{ item["key"] }}\b'
+      line: '{{ item["key"] }} {{ item["value"] }}'
+      backup: true
+    loop:
+      - key: 'PASS_MAX_DAYS'
+        value: '{{ login__login_defs_pass_max_days }}'
+      - key: 'PASS_MIN_DAYS'
+        value: '{{ login__login_defs_pass_min_days }}'
+      - key: 'PASS_WARN_AGE'
+        value: '{{ login__login_defs_pass_warn_age }}'
+      - key: 'UMASK'
+        value: '{{ login__login_defs_umask }}'
+    loop_control:
+      label: '{{ item["key"] }}'
+
+  tags:
+    - 'login'
+    - 'login:login_defs'

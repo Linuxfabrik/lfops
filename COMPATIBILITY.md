@@ -18,11 +18,12 @@ Which Ansible role is proven to run on which OS?
 | borg_local                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | chromium_headless                     |   x    |  (x)   |   x    |   x    |    x    |           |           |           |                                              |
 | chrony                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| clamav                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| clamav                                |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | cloud_init                            |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | cockpit                               |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 | collabora                             |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | collect_rpmnew_rpmsave                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
+| core_dumps                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | coturn                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | crypto_policy                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
@@ -77,6 +78,7 @@ Which Ansible role is proven to run on which OS?
 | infomaniak_vm                         |        |        |        |        |         |           |           |           | Fedora 35+                                   |
 | kdump                                 |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | keepalived                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| kernel_modules                        |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | kernel_settings                       |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | keycloak                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | kibana                                |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
@@ -151,7 +153,7 @@ Which Ansible role is proven to run on which OS?
 | shell                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | snmp                                  |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | squid                                 |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
-| sshd                                  |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
+| sshd                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
 | system_update                         |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | systemd_journald                      |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | systemd_unit                          |        |        |   x    |   x    |    x    |           |           |           |                                              |

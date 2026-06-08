@@ -12,6 +12,12 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* App updates are applied automatically by the `nextcloud-app-update.timer` (disabled by default, enable via `nextcloud__timer_app_update_enabled`). The timer runs `/usr/local/bin/nextcloud-app-update`, which first checks whether any app update is pending. Nextcloud is switched into maintenance mode only when there is something to update; when everything is up to date the instance keeps serving requests untouched. After updating, the recommended database migrations (`db:add-missing-indices`, `db:add-missing-columns`, `db:add-missing-primary-keys`) are applied. A failed run leaves maintenance mode disabled again, so the instance does not stay offline, and reports the failure to systemd.
+* This automatic update covers app updates only. Updating the Nextcloud server itself is a separate, manual step via `/usr/local/bin/nextcloud-update`.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -56,7 +62,7 @@ Manual steps:
 
 `nextcloud:cron`
 
-* Sets the Nextcloud background job setting to cron, deploys and manages the state of `nextcloud-app-update.{service,timer}`, `nextcloud-jobs.{service,timer}`, `nextcloud-ldap-show-remnants.{service,timer}`, `nextcloud-ldap-show-remnants` script, `nextcloud-scan-files.{service,timer}`.
+* Sets the Nextcloud background job setting to cron, deploys and manages the state of `nextcloud-app-update.{service,timer}`, `nextcloud-app-update` script, `nextcloud-jobs.{service,timer}`, `nextcloud-ldap-show-remnants.{service,timer}`, `nextcloud-ldap-show-remnants` script, `nextcloud-scan-files.{service,timer}`.
 * Triggers: none.
 
 `nextcloud:notify_push`
@@ -300,7 +306,7 @@ nextcloud__users:
 
 * Enables/disables Systemd-Timer for updating apps.
 * Type: Bool.
-* Default: `false`
+* Default: `true`
 
 `nextcloud__timer_jobs_enabled`
 

@@ -137,7 +137,7 @@
 
   tags:
     - 'postgresql_server'
-    - 'postgresql_server:users'
+    - 'postgresql_server:user'
 
 
 - block:
@@ -159,7 +159,7 @@
 
   tags:
     - 'postgresql_server'
-    - 'postgresql_server:databases'
+    - 'postgresql_server:database'
 
 
 - block:

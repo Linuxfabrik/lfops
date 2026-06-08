@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+# 2026060601
+{% for item in kernel_modules__modules__combined_var if not (item['enabled'] | d(false) | bool) %}
+install {{ item['name'] }} /bin/true
+{% endfor %}

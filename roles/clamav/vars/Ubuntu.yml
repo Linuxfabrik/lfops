@@ -1,0 +1,16 @@
+__clamav__packages:
+  - 'clamav'
+  - 'clamav-daemon'
+  - 'clamav-freshclam'
+__clamav__clamd_config: '/etc/clamav/clamd.conf'
+__clamav__clamd_log: '/var/log/clamav/clamav.log'
+__clamav__clamd_pid: '/run/clamav/clamd.pid'
+__clamav__clamd_service: 'clamav-daemon'
+__clamav__clamd_socket: '/var/run/clamav/clamd.ctl'
+__clamav__clamd_user: 'clamav'
+__clamav__db_owner: 'clamav' # the user freshclam drops to when writing the database
+__clamav__filelist: '/etc/clamav/clamdscan.filelist'
+__clamav__freshclam_config: '/etc/clamav/freshclam.conf'
+__clamav__freshclam_log: '/var/log/clamav/freshclam.log'
+# the clamav-daemon / clamav-freshclam packages ship their own logrotate configs
+__clamav__manage_logrotate: false

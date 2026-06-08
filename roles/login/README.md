@@ -1,7 +1,7 @@
 # Ansible Role linuxfabrik.lfops.login
 
 This role creates users, adds them to additional groups, and sets their SSH authorized_keys to allow them to login to the system.
-Aditionally, a group can be added to the sudoers for password-less `sudo` access.
+Aditionally, a group can be added to the sudoers for password-less `sudo` access. It also sets the system-wide password-aging policy and default umask in `/etc/login.defs`.
 
 IMPORTANT:
 
@@ -9,6 +9,11 @@ IMPORTANT:
 
 
 *Available since LFOps `2.0.0`.*
+
+
+## How the Role Behaves
+
+The role sets a few policy keys in `/etc/login.defs` (`PASS_MAX_DAYS`, `PASS_MIN_DAYS`, `PASS_WARN_AGE`, `UMASK`) in place, leaving the rest of the distribution-provided file untouched. These settings apply to newly created accounts and the next password change only; the role does not retroactively re-age existing accounts (it does not run `chage`). Adjust an existing account's aging manually with `chage` if needed.
 
 
 ## Requirements
@@ -30,8 +35,37 @@ Manual steps:
 * Manages SSH authorized_keys.
 * Triggers: none.
 
+`login:login_defs`
+
+* Sets the password-aging policy and default umask in `/etc/login.defs`.
+* Triggers: none.
+
 
 ## Optional Role Variables
+
+`login__login_defs_pass_max_days`
+
+* Maximum number of days a password is valid (`PASS_MAX_DAYS`). Use a value below `99999` to satisfy the policy.
+* Type: Number.
+* Default: `365`
+
+`login__login_defs_pass_min_days`
+
+* Minimum number of days between password changes (`PASS_MIN_DAYS`).
+* Type: Number.
+* Default: `1`
+
+`login__login_defs_pass_warn_age`
+
+* Number of days a user is warned before the password expires (`PASS_WARN_AGE`).
+* Type: Number.
+* Default: `7`
+
+`login__login_defs_umask`
+
+* Default umask for user login sessions (`UMASK`).
+* Type: String.
+* Default: `'027'`
 
 `login__passwordless_sudo_group`
 

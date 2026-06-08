@@ -1,3 +1,21 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+#
+# the cross-role injection defaults this role publishes (e.g.
+# nextcloud__apache_httpd__vhosts__dependent_var, nextcloud__php__modules__dependent_var)
+# are consumed by other roles, not passed into this role, so they are not declared here.
+#
+# argument_specs evaluates every declared option's current value at role entry. the
+# following README variables are therefore intentionally NOT declared, because their
+# defaults reference variables that are only guaranteed once the full setup_nextcloud
+# playbook context is assembled (other roles' defaults / gathered facts). declaring them
+# would force those references to resolve on every role entry, even for tag runs that
+# never touch the feature, so they are validated in the tasks where they are used instead:
+#   * nextcloud__icinga2_api_user_login -> '{{ system_update__icinga2_api_user_login }}'
+#   * nextcloud__icinga2_hostname        -> '{{ ansible_facts["nodename"] }}'
+#   * nextcloud__mariadb_login           -> '{{ mariadb_server__admin_user }}'
+#   * nextcloud__php_fpm_service_name    -> '{{ php__fpm_service_name }}'
 argument_specs:
   main:
     options:
@@ -70,56 +88,36 @@ argument_specs:
       nextcloud__icinga2_api_url:
         type: 'str'
         required: false
-        description: 'The URL of the Icinga2 API used to set/remove a downtime in the nextcloud-update script.'
-
-      nextcloud__icinga2_api_user_login:
-        type: 'dict'
-        required: false
-        description: 'The Icinga2 API user used to set/remove a downtime in the nextcloud-update script.'
-
-      nextcloud__icinga2_hostname:
-        type: 'str'
-        required: false
-        description: 'The hostname of the Icinga2 host on which the downtime should be set.'
-
-      nextcloud__mariadb_login:
-        type: 'dict'
-        required: false
-        description: 'The database administrator account. The Nextcloud setup will create its own database account.'
+        description: 'The URL of the Icinga2 API used to set a downtime during a server update.'
 
       nextcloud__on_calendar_app_update:
         type: 'str'
         required: false
-        description: 'Time to update the Nextcloud apps. See systemd.time(7) for the format.'
+        description: 'systemd OnCalendar expression for the app update timer.'
 
       nextcloud__on_calendar_jobs:
         type: 'str'
         required: false
         default: '*:0/5'
-        description: 'Run interval of OCC background jobs. See systemd.time(7) for the format.'
+        description: 'systemd OnCalendar expression for the OCC background jobs timer.'
 
       nextcloud__on_calendar_scan_files:
         type: 'str'
         required: false
         default: '*:50:15'
-        description: 'Run interval of rescanning the filesystem. See systemd.time(7) for the format.'
-
-      nextcloud__php_fpm_service_name:
-        type: 'str'
-        required: false
-        description: "Name of the PHP-FPM systemd service that the role and the nextcloud-update script restart. Defaults to the php role's php__fpm_service_name (php-fpm on RedHat, php<version>-fpm on Debian)."
+        description: 'systemd OnCalendar expression for the file rescan timer.'
 
       nextcloud__skip_apps:
         type: 'bool'
         required: false
         default: false
-        description: 'Completely skips the management of Nextcloud apps.'
+        description: 'Completely skip the management of Nextcloud apps.'
 
       nextcloud__skip_notify_push:
         type: 'bool'
         required: false
         default: false
-        description: 'Skips the configuration of notify_push.'
+        description: 'Skip the configuration of notify_push.'
 
       nextcloud__storage_backend_s3:
         type: 'dict'
@@ -155,32 +153,32 @@ argument_specs:
       nextcloud__timer_app_update_enabled:
         type: 'bool'
         required: false
-        default: false
-        description: 'Enables/disables the systemd timer for updating apps.'
+        default: true
+        description: 'Enable/disable the systemd timer for updating apps.'
 
       nextcloud__timer_jobs_enabled:
         type: 'bool'
         required: false
         default: true
-        description: 'Enables/disables the systemd timer for running OCC background jobs.'
+        description: 'Enable/disable the systemd timer for running OCC background jobs.'
 
       nextcloud__timer_ldap_show_remnants_enabled:
         type: 'bool'
         required: false
         default: true
-        description: 'Enables/disables the systemd timer for mailing LDAP remnants once a month.'
+        description: 'Enable/disable the systemd timer for mailing LDAP remnants.'
 
       nextcloud__timer_scan_files_enabled:
         type: 'bool'
         required: false
         default: true
-        description: 'Enables/disables the systemd timer for re-scanning the Nextcloud files.'
+        description: 'Enable/disable the systemd timer for re-scanning the Nextcloud files.'
 
       nextcloud__users:
         type: 'list'
         elements: 'dict'
         required: true
-        description: 'User accounts to create. The first user has to be the primary administrator account.'
+        description: 'User accounts to create. The first user is the primary administrator account.'
 
       nextcloud__version:
         type: 'str'
@@ -191,9 +189,11 @@ argument_specs:
       nextcloud__vhost_virtualhost_ip:
         type: 'str'
         required: false
-        description: 'Used within the <VirtualHost virtualhost_ip:virtualhost_port> directive.'
+        default: '*'
+        description: 'IP used within the Apache <VirtualHost> directive.'
 
       nextcloud__vhost_virtualhost_port:
         type: 'int'
         required: false
-        description: 'Used within the <VirtualHost virtualhost_ip:virtualhost_port> directive.'
+        default: 80
+        description: 'Port used within the Apache <VirtualHost> directive.'

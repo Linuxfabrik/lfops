@@ -1,0 +1,29 @@
+- name: 'Playbook linuxfabrik.lfops.kernel_modules'
+  hosts:
+    - 'lfops_kernel_modules'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.kernel_modules'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'
