@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:icinga2_master, role:icingadb, role:icingaweb2, role:icingaweb2_module_reporting, role:icingaweb2_module_x509**: Add explicit Ubuntu variable files, making Ubuntu support visible alongside Debian. The Icinga repository, GPG key and package names were verified on Debian 13 and Ubuntu 24.04.
 * **role:nextcloud**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and missing mandatory variables.
 * **role:clamav**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and unknown variables.
 * **role:core_dumps**: New role that disables core dumps (which can leak sensitive process memory to disk) following the CIS Benchmark recommendations. Runs as part of `setup_basic`.
@@ -68,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:icinga2_master, role:icingadb**: Validate the Icinga 2 configuration before restarting the service. A faulty config now fails the playbook run loudly instead of bouncing the daemon into a broken state and leaving Icinga 2 down.
 * **role:nextcloud**: Automatic app updates are now enabled by default (`nextcloud__timer_app_update_enabled`). The scheduled app update only switches Nextcloud into maintenance mode when an app update is actually pending, so an instance that is already up to date keeps serving requests without interruption. After updating, the recommended database migrations are applied automatically. A failed run no longer leaves the instance stuck in maintenance mode.
 * **role:clamav**: Now runs on Debian and Ubuntu in addition to Red Hat-family systems, and works on RHEL 10. The role seeds the signature database on first install so the scanner starts reliably, and runs an EICAR self-test (also available on its own via the `clamav:test` tag) that confirms detection actually works.
 * **role:sshd**: Ship hardened SSH defaults: X11 forwarding, agent forwarding and TCP keepalives are now off, `MaxAuthTries` is `3`, `ClientAliveCountMax` is `2`, and the log level is `VERBOSE`. All are overridable via the new `sshd__allow_agent_forwarding`, `sshd__allow_tcp_forwarding`, `sshd__client_alive_count_max`, `sshd__max_auth_tries`, `sshd__max_sessions`, `sshd__tcp_keep_alive` and `sshd__x11_forwarding` variables. Note: a client offering more than three keys from its SSH agent can be rejected by `MaxAuthTries 3`; use an explicit identity on the client or raise `sshd__max_auth_tries`.
