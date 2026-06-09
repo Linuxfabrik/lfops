@@ -1,9 +1,8 @@
 - block:
 
-  - ansible.builtin.debug:
-      msg:
-        - 'Combined modules:'
-        - '{{ kernel_modules__modules__combined_var }}'
+  - name: 'Combined kernel modules'
+    ansible.builtin.debug:
+      var: 'kernel_modules__modules__combined_var'
 
   # An `install <module> /bin/true` line prevents the module from being loaded,
   # both automatically and via a manual `modprobe`. Already-loaded modules stay
