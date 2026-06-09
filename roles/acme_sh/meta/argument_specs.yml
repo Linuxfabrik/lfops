@@ -1,0 +1,64 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      acme_sh__account_email:
+        type: 'str'
+        required: true
+        description: 'Email address for the Let''s Encrypt account. Receives certificate expiry notifications.'
+
+      acme_sh__certificates:
+        type: 'list'
+        elements: 'dict'
+        required: true
+        description: 'Certificates to issue. Each item has a mandatory `name` and optional `alternative_names` and `reload_cmd`.'
+
+      acme_sh__deploy_to_host:
+        type: 'str'
+        required: false
+        description: 'Host the issued certificates should be deployed to. Leave unset to disable deployment.'
+
+      acme_sh__deploy_to_host_hook:
+        type: 'str'
+        required: false
+        default: 'ssh'
+        description: 'acme.sh deploy hook used to deploy the certificates to the deploy host.'
+
+      acme_sh__deploy_to_host_reload_cmd:
+        type: 'str'
+        required: false
+        description: 'Reload command executed on the deploy host after the certificates were deployed.'
+
+      acme_sh__deploy_to_host_user:
+        type: 'str'
+        required: false
+        default: 'root'
+        description: 'Remote user account used to deploy the certificates to the deploy host.'
+
+      acme_sh__key_length:
+        type: 'str'
+        required: false
+        default: 'ec-256'
+        choices:
+          - '2048'
+          - '3072'
+          - '4096'
+          - '8192'
+          - 'ec-256'
+          - 'ec-384'
+          - 'ec-521'
+        description: 'Key type and length of the certificates to issue. RSA (2048, 3072, 4096, 8192) or ECDSA (ec-256, ec-384, ec-521).'
+
+      acme_sh__reload_cmd:
+        type: 'str'
+        required: false
+        description: 'Reload command executed on the local host after the certificates were installed.'
+
+      acme_sh__timer_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the weekly acme.sh timer.'

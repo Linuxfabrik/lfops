@@ -1,11 +1,11 @@
 # {{ ansible_managed }}
-# 2023071801
+# 2026060601
 
 [Unit]
 Description=ClamAV Full Scan via clamdscan
 
 [Service]
-ExecStart=/bin/clamdscan --fdpass --multiscan --log=/var/log/clamd.log --file-list=/etc/clamd.d/clamdscan.filelist
+ExecStart=/usr/bin/clamdscan --fdpass --multiscan --config-file={{ __clamav__clamd_config }} --log={{ __clamav__clamd_log }} --file-list={{ __clamav__filelist }}
 Type=simple
 User=root
 # RETURN CODES (see `man clamdscan`)

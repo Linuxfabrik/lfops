@@ -1,0 +1,5 @@
+# The galaxy dependency always runs both a roles and a collections sub-step. We have no Galaxy
+# roles to install (everything is a local collection, see requirements.yml), but pointing the
+# roles sub-step at this empty file gives it something to read so it does not warn "Missing roles
+# requirements file: requirements.yml" on every run.
+roles: []

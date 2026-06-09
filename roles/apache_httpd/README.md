@@ -71,7 +71,7 @@ Manual steps:
 * Ensures httpd service is in the desired state.
 * Triggers: httpd.service reload.
 
-`apache_httpd:config`
+`apache_httpd:configure`
 
 * Creates or updates the global Apache configuration (`httpd.conf`).
 * Removes rpmnew/rpmsave files (and Debian equivalents).

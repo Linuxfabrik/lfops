@@ -1,0 +1,4 @@
+__example__required_packages:
+  - 'example-server'
+  - 'example-tools'
+__example__sysconfig_path: '/etc/default/example'

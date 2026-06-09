@@ -1,26 +1,18 @@
 # {{ ansible_managed }}
-# 2024080201
-
-#	$OpenBSD: sshd_config,v 1.104 2021/07/02 05:11:21 dtucker Exp $
+# 2026060601
 
 # This is the sshd server system-wide configuration file.  See
 # sshd_config(5) for more information.
 
-# This sshd was compiled with PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
+# This sshd was compiled with PATH=/usr/local/bin:/usr/bin:/bin:/usr/games
 
 # The strategy used for options in the default sshd_config shipped with
 # OpenSSH is to specify options with their default value where
 # possible, but leave them commented.  Uncommented options override the
 # default value.
 
-# To modify the system-wide sshd configuration, create a  *.conf  file under
-#  /etc/ssh/sshd_config.d/  which will be automatically included below
 Include /etc/ssh/sshd_config.d/*.conf
 
-# If you want to change the port on a SELinux system, you have to tell
-# SELinux about this change.
-# semanage port -a -t ssh_port_t -p tcp #PORTNUMBER
-#
 Port {{ sshd__port }}
 AddressFamily {{ sshd__address_family }}
 #ListenAddress 0.0.0.0
@@ -42,14 +34,13 @@ LogLevel {{ sshd__log_level__combined_var }}
 #LoginGraceTime 2m
 PermitRootLogin {{ sshd__permit_root_login }}
 #StrictModes yes
-#MaxAuthTries 6
-#MaxSessions 10
+MaxAuthTries {{ sshd__max_auth_tries }}
+MaxSessions {{ sshd__max_sessions }}
 
 #PubkeyAuthentication yes
 
-# The default is to check both .ssh/authorized_keys and .ssh/authorized_keys2
-# but this is overridden so installations will only check .ssh/authorized_keys
-AuthorizedKeysFile	.ssh/authorized_keys
+# Expect .ssh/authorized_keys2 to be disregarded by default in future.
+#AuthorizedKeysFile	.ssh/authorized_keys .ssh/authorized_keys2
 
 #AuthorizedPrincipalsFile none
 
@@ -64,26 +55,27 @@ AuthorizedKeysFile	.ssh/authorized_keys
 # Don't read the user's ~/.rhosts and ~/.shosts files
 #IgnoreRhosts yes
 
-# To disable tunneled clear text passwords, change to no here!
-PasswordAuthentication {{ sshd__password_authentication | bool | ternary("yes", "no") }}
+# To disable tunneled clear text passwords, change to "no" here!
+PasswordAuthentication {{ sshd__password_authentication | bool | ternary('yes', 'no') }}
 #PermitEmptyPasswords no
 
-# Change to no to disable s/key passwords
-#KbdInteractiveAuthentication yes
+# Change to "yes" to enable keyboard-interactive authentication.  Depending on
+# the system's configuration, this may involve passwords, challenge-response,
+# one-time passwords or some combination of these and other methods.
+# Beware issues with some PAM modules and threads.
+KbdInteractiveAuthentication no
 
 # Kerberos options
 #KerberosAuthentication no
 #KerberosOrLocalPasswd yes
 #KerberosTicketCleanup yes
 #KerberosGetAFSToken no
-#KerberosUseKuserok yes
 
 # GSSAPI options
-GSSAPIAuthentication {{ sshd__gssapi_authentication | bool | ternary("yes", "no") }}
+GSSAPIAuthentication {{ sshd__gssapi_authentication | bool | ternary('yes', 'no') }}
 #GSSAPICleanupCredentials yes
 #GSSAPIStrictAcceptorCheck yes
 #GSSAPIKeyExchange no
-#GSSAPIEnablek5users no
 
 # Set this to 'yes' to enable PAM authentication, account processing,
 # and session processing. If this is enabled, PAM authentication will
@@ -94,33 +86,34 @@ GSSAPIAuthentication {{ sshd__gssapi_authentication | bool | ternary("yes", "no"
 # If you just want the PAM account and session checks to run without
 # PAM authentication, then enable this but set PasswordAuthentication
 # and KbdInteractiveAuthentication to 'no'.
-# WARNING: 'UsePAM no' is not supported in Fedora and may cause several
-# problems.
-#UsePAM no
+UsePAM yes
 
-#AllowAgentForwarding yes
-#AllowTcpForwarding yes
+AllowAgentForwarding {{ sshd__allow_agent_forwarding | bool | ternary("yes", "no") }}
+AllowTcpForwarding {{ sshd__allow_tcp_forwarding | bool | ternary("yes", "no") }}
 #GatewayPorts no
-#X11Forwarding no
+X11Forwarding {{ sshd__x11_forwarding | bool | ternary("yes", "no") }}
 #X11DisplayOffset 10
 #X11UseLocalhost yes
 #PermitTTY yes
-#PrintMotd yes
+PrintMotd no
 #PrintLastLog yes
-#TCPKeepAlive yes
+TCPKeepAlive {{ sshd__tcp_keep_alive | bool | ternary("yes", "no") }}
 #PermitUserEnvironment no
 #Compression delayed
 #ClientAliveInterval 0
-#ClientAliveCountMax 3
-UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}
-#PidFile /var/run/sshd.pid
+ClientAliveCountMax {{ sshd__client_alive_count_max }}
+UseDNS {{ sshd__use_dns | bool | ternary('yes', 'no') }}
+#PidFile /run/sshd.pid
 #MaxStartups 10:30:100
 #PermitTunnel no
 #ChrootDirectory none
 #VersionAddendum none
 
 # no default banner path
-Banner /etc/issue.net
+#Banner none
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG LC_*
 
 # override default of no subsystems
 Subsystem	sftp	{{ sshd__sftp_subsystem }}

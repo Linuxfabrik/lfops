@@ -1,0 +1,5 @@
+# Prefix host-visible resource names (libvirt domains, podman containers, and the guest hostname
+# the kvm_vm role derives from kvm_vm__name) so Molecule's throwaway instances are easy to spot
+# in `virsh list` / `podman ps` and never clash with anything else on the host. inventory_hostname
+# stays the short name that Ansible itself uses to identify the host.
+__molecule__instance_name: 'lfops-molecule-{{ inventory_hostname }}'
