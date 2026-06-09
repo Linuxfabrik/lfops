@@ -1,7 +1,7 @@
-php__conf_dest:
+__php__conf_dest:
   - '/etc/php.d/z00-linuxfabrik.ini'
-php__fpm_pools_path: '/etc/php-fpm.d'
-php__fpm_runtime_path: '/run/php-fpm'
-php__fpm_service_name: 'php-fpm'
-php__webserver_user: 'apache'
-php__webserver_group: 'apache'
+__php__fpm_opcache_path: '/var/lib/php/opcache'
+__php__fpm_pools_path: '/etc/php-fpm.d'
+__php__fpm_runtime_path: '/run/php-fpm'
+__php__fpm_service_name: 'php-fpm'
+__php__fpm_session_path: '/var/lib/php/session'

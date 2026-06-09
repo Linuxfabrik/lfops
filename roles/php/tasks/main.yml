@@ -49,7 +49,7 @@
 
   - name: 'Get PHP version'
     ansible.builtin.set_fact:
-      php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
+      __php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
 
   tags:
     - 'php'
@@ -104,18 +104,18 @@
 
 - block:
 
-  - name: 'Load default values for {{ php__installed_version }}'
-    ansible.builtin.include_vars: 'vars/{{ php__installed_version }}.yml'
+  - name: 'Load default values for {{ __php__installed_version }}'
+    ansible.builtin.include_vars: 'vars/{{ __php__installed_version }}.yml'
 
   - name: 'Deploy the PHP configs'
     ansible.builtin.template:
       backup: true
-      src: 'etc/php.d/{{ php__installed_version }}-z00-linuxfabrik.ini.j2'
+      src: 'etc/php.d/{{ __php__installed_version }}-z00-linuxfabrik.ini.j2'
       dest: '{{ item }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
-    loop: '{{ php__conf_dest }}'
+    loop: '{{ __php__conf_dest }}'
     notify: 'php: restart php-fpm'
 
   tags:
@@ -126,20 +126,53 @@
 
 - block:
 
-  - name: 'Remove absent pools from {{ php__fpm_pools_path }}'
+  # opcache is shared among all php-fpm pools, so a single shared directory is
+  # enough. On RedHat the package ships it; create it for parity on Debian.
+  - name: 'Ensure the shared opcache directory {{ __php__fpm_opcache_path }} exists'
     ansible.builtin.file:
-      path: '{{ php__fpm_pools_path }}/{{ item["name"] }}.conf'
+      path: '{{ __php__fpm_opcache_path }}'
+      state: 'directory'
+      owner: 'root'
+      group: '{{ __shared__apache_httpd_group }}'
+      mode: 0o770
+
+  # each pool gets its own session directory below the distro's session base, so
+  # the pools cannot read each other's sessions. On RedHat this inherits the
+  # `httpd_var_run_t` SELinux type from the parent; on Debian the packaged
+  # `sessionclean` timer recurses the base and reaps stale files.
+  - name: 'Create the per-pool session directories'
+    ansible.builtin.file:
+      path: '{{ item["php_admin_value_session_save_path"] | d(__php__fpm_session_path ~ "/" ~ item["name"]) }}'
+      state: 'directory'
+      owner: '{{ item["user"] | d(__shared__apache_httpd_user) }}'
+      group: '{{ item["group"] | d(__shared__apache_httpd_group) }}'
+      mode: 0o700
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ php__fpm_pools__combined_var }}'
+
+  - name: 'restorecon -Fvr {{ __php__fpm_session_path }} {{ __php__fpm_opcache_path }}'
+    ansible.builtin.command: 'restorecon -Fvr {{ __php__fpm_session_path }} {{ __php__fpm_opcache_path }}'
+    register: '__php__restorecon_result'
+    changed_when: '__php__restorecon_result["stdout"] | length > 0'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+  - name: 'Remove absent pools from {{ __php__fpm_pools_path }}'
+    ansible.builtin.file:
+      path: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'
       state: 'absent'
     when:
       - 'item["state"] | d("present") == "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
-  - name: 'Deploy the pools to {{ php__fpm_pools_path }}'
+  - name: 'Deploy the pools to {{ __php__fpm_pools_path }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/php-fpm.d/pool.conf.j2'
-      dest: '{{ php__fpm_pools_path }}/{{ item["name"] }}.conf'
+      dest: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -155,9 +188,9 @@
 
 - block:
 
-  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now {{ php__fpm_service_name }}'
+  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now {{ __php__fpm_service_name }}'
     ansible.builtin.service:
-      name: '{{ php__fpm_service_name }}'
+      name: '{{ __php__fpm_service_name }}'
       enabled: '{{ php__fpm_service_enabled }}'
       state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
 

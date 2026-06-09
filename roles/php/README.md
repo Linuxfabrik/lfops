@@ -2,7 +2,7 @@
 
 This role installs and configures PHP (and PHP-FPM) on the system, optionally with additional modules.
 
-Note that this role does NOT let you specify a particular PHP version. It simply installs the latest available PHP version from the repos configured in the system. If you want or need to install a specific or the latest PHP version available, use the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) beforehand.
+Note that this role does NOT let you specify a particular PHP version. It simply installs the latest available PHP version from the repos configured in the system. If you want or need to install a specific or the latest PHP version available, use the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) (Red Hat family) or [linuxfabrik.lfops.repo_sury](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_sury) (Debian family) beforehand.
 
 This role is compatible with the following PHP versions:
 
@@ -33,7 +33,8 @@ This role never exposes to the world that PHP is installed on the server, no mat
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* Optional: [Remi's RPM repository](https://rpms.remirepo.net/) (role: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi)) provides newer PHP versions.
+* Optional: [Remi's RPM repository](https://rpms.remirepo.net/) (role: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi)) provides newer PHP versions on the Red Hat family.
+* [Sury repository](https://deb.sury.org/) (role: [linuxfabrik.lfops.repo_sury](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_sury)) provides newer PHP versions on the Debian family.
 
 
 ## Tags
@@ -45,15 +46,19 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Ensure PHP modules are absent.
 * Ensure PHP modules are present.
 * Get PHP version.
-* Load default values for `{{ php__installed_version }}`.
+* Load default values for `{{ __php__installed_version }}`.
 * Deploy the /etc/php.d/z00-linuxfabrik.ini.
 * `systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`.
+* Ensure the shared opcache directory exists.
+* Create the per-pool session directories.
 * Remove absent pools from `/etc/php-fpm.d`.
 * Deploy the pools to `/etc/php-fpm.d/`.
 * Triggers: php-fpm.service restart.
 
 `php:fpm`
 
+* Ensure the shared opcache directory exists.
+* Create the per-pool session directories.
 * Remove absent pools from /etc/php-fpm.d.
 * Deploy the pools to /etc/php-fpm.d/.
 * Triggers: php-fpm.service restart.
@@ -61,7 +66,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `php:ini`
 
 * Get PHP version.
-* Load default values for `{{ php__installed_version }}`.
+* Load default values for `{{ __php__installed_version }}`.
 * Deploy the `/etc/php.d/z00-linuxfabrik.ini`.
 * Triggers: php-fpm.service restart.
 
@@ -153,7 +158,7 @@ Variables for `php.ini` directives and their default values, defined and support
 
 * Set the error reporting level. [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)
 * Type: String.
-* Default: `'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT'`
+* Default: 7.2 - 8.4: `'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT'`, 8.5: `'E_ALL & ~E_NOTICE & ~E_DEPRECATED'` (`E_STRICT` is deprecated as of PHP 8.4)
 
 `php__ini_max_execution_time__group_var` / `php__ini_max_execution_time__host_var`
 
@@ -273,7 +278,7 @@ Variables for `php.ini` directives and their default values, defined and support
 
 * [php.net](https://www.php.net/manual/en/session.configuration.php)
 * Type: Number.
-* Default: `32`
+* Default: 7.2 - 8.4: `32`. Not managed on 8.5, where PHP's built-in default applies.
 
 `php__ini_session_trans_sid_tags__group_var` / `php__ini_session_trans_sid_tags__host_var`
 
@@ -308,6 +313,10 @@ php__ini_upload_max_filesize__host_var: '10000M'
 ## Optional Role Variables - PHP-FPM Pool Config Directives
 
 Variables for PHP-FPM Pool Config directives and their default values, defined and supported by this role.
+
+For every pool the role creates a dedicated session directory below the distribution's session base (`/var/lib/php/session` on RedHat, `/var/lib/php/sessions` on Debian) and a single shared opcache directory (`/var/lib/php/opcache`). On Debian, stale session files are reaped by the packaged `sessionclean` timer, which recurses the session base using the global `session.gc_maxlifetime`. A per-pool `session.gc_maxlifetime` is therefore not honored by the cleanup on Debian, and a session that stays open but idle longer than the lifetime may be removed.
+
+Each pool listens on its own Unix socket below the FPM runtime directory (`/run/php-fpm/{{ item["name"] }}.sock` on RedHat, `/run/php/{{ item["name"] }}.sock` on Debian). On Debian, the packaged php-fpm systemd unit additionally maintains a version-agnostic `update-alternatives` alias at `/run/php/php-fpm.sock` that points at the socket of the default `www` pool. This alias only ever tracks `www`, not the pools created by this role, so configure your web server with the explicit per-pool socket path rather than the generic `/run/php/php-fpm.sock`. RedHat ships no such alias.
 
 `php__fpm_pool_conf_pm__group_var` / `php__fpm_pool_conf_pm__host_var`
 
@@ -386,31 +395,31 @@ Variables for PHP-FPM Pool Config directives and their default values, defined a
 
         * Optional. Choose how the process manager will control the number of child processes. [php.net](https://www.php.net/install.fpm.configuration.php#pm)
         * Type: String.
-        * Default: `'dynamic'`
+        * Default: `{{ php__fpm_pool_conf_pm__combined_var }}` (which defaults to `'dynamic'`)
 
     * `pm_max_children`:
 
         * Optional. The number of child processes to be created when pm is set to `'static'` and the maximum number of child processes when pm is set to `'dynamic'` or `'ondemand'`. [php.net](https://www.php.net/install.fpm.configuration.php#pm.max-children)
         * Type: Number.
-        * Default: `50`
+        * Default: `{{ php__fpm_pool_conf_pm_max_children__combined_var }}` (which defaults to `50`)
 
     * `pm_start_servers`:
 
         * Optional. The number of child processes created on startup. Must be greater than `pm_min_spare_servers` but less than `pm_max_spare_servers`. Used only when `pm` is set to `'dynamic`'. [php.net](https://www.php.net/install.fpm.configuration.php#pm.start-servers)
         * Type: Number.
-        * Default: `5`
+        * Default: `{{ php__fpm_pool_conf_pm_start_servers__combined_var }}` (which defaults to `5`)
 
     * `pm_min_spare_servers`:
 
         * Optional. The desired minimum number of idle server processes. Used only when `pm` is set to `'dynamic'`. [php.net](https://www.php.net/install.fpm.configuration.php#pm.min-spare-servers)
         * Type: Number.
-        * Default: `5`
+        * Default: `{{ php__fpm_pool_conf_pm_min_spare_servers__combined_var }}` (which defaults to `5`)
 
     * `pm_max_spare_servers`:
 
         * Optional. The desired maximum number of idle server processes. Used only when `pm` is set to `'dynamic'`. [php.net](https://www.php.net/install.fpm.configuration.php#pm.max-spare-servers)
         * Type: Number.
-        * Default: `35`
+        * Default: `{{ php__fpm_pool_conf_pm_max_spare_servers__combined_var }}` (which defaults to `35`)
 
     * `pm_max_spawn_rate`:
 
@@ -426,9 +435,9 @@ Variables for PHP-FPM Pool Config directives and their default values, defined a
 
     * `pm_max_requests`:
 
-        * Optional. The number of requests each child process should execute before respawning. [php.net](https://www.php.net/install.fpm.configuration.php#pm.max-requests)
+        * Optional. The number of requests each child process should execute before respawning. For endless request processing specify `0`. [php.net](https://www.php.net/install.fpm.configuration.php#pm.max-requests)
         * Type: Number.
-        * Default: `0`
+        * Default: `500`
 
     * `pm_status_path`:
 
@@ -446,7 +455,7 @@ Variables for PHP-FPM Pool Config directives and their default values, defined a
 
         * Optional. The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). [php.net](https://www.php.net/install.fpm.configuration.php#request-slowlog-timeout)
         * Type: Number.
-        * Default: `0`
+        * Default: `{{ php__fpm_pool_conf_request_slowlog_timeout__combined_var }}` (which defaults to `0`)
 
     * `request_slowlog_trace_depth`:
 
@@ -459,13 +468,13 @@ Variables for PHP-FPM Pool Config directives and their default values, defined a
         * Optional. The timeout for serving a single request after which the worker process will be killed. This option should be used when the `max_execution_time` ini option does not stop script execution for some reason. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
         * [php.net](https://www.php.net/install.fpm.configuration.php#request-terminate-timeout)
         * Type: Number.
-        * Default: `0`
+        * Default: `{{ php__fpm_pool_conf_request_terminate_timeout__combined_var }}` (which defaults to `0`)
 
     * `php_admin_value_session_save_path`:
 
-        * Optional. **NOTE:** The session save directory is currently not created automatically.  [php.net](https://www.php.net/session.save_path)
+        * Optional. The role creates this directory, owned by the pool's `user` / `group` with mode `0700`, so pools cannot read each other's sessions. On RedHat it inherits the `httpd_var_run_t` SELinux type from the session base; if you point it outside the session base, you have to label it yourself. [php.net](https://www.php.net/session.save_path)
         * Type: String.
-        * Default: `'/var/lib/php/{{ item["name"] }}-session'`
+        * Default: `/var/lib/php/session/{{ item["name"] }}` (RedHat), `/var/lib/php/sessions/{{ item["name"] }}` (Debian)
 
     * `php_admin_value_max_execution_time`:
 
@@ -523,7 +532,7 @@ php__fpm_pools__host_var:
     pm_start_servers: 5
     request_slowlog_timeout: '10s'
     request_terminate_timeout: '60s'
-    php_admin_value_session_save_path: '/var/lib/php/session' # use default session save path instead of /var/lib/php/librenms-session
+    php_admin_value_session_save_path: '/var/lib/php/session' # use the shared session dir instead of the per-pool default /var/lib/php/session/librenms
     raw: |-
       env[PATH] = /usr/local/bin:/usr/bin:/bin
 ```
