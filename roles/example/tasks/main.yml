@@ -458,7 +458,7 @@
 
   tags:
     - 'example'
-    - 'example:user'
+    - 'example:users'
 
 
 - block:
@@ -473,4 +473,4 @@
     - 'example:configure'
     - 'example:plugins'
     - 'example:state'
-    - 'example:user'
+    - 'example:users'

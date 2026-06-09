@@ -74,7 +74,7 @@ Manual steps:
 * Deploys the keyfile for the [File Key Management Encryption Plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin/) and restarts MariaDB if necessary.
 * Triggers: mariadb.service restart.
 
-`mariadb_server:database`
+`mariadb_server:databases`
 
 * Create or delete mariadb databases.
 * Triggers: none.
@@ -121,7 +121,7 @@ Manual steps:
 * Must be explicitly called.
 * Triggers: mariadb.service restart.
 
-`mariadb_server:user`
+`mariadb_server:users`
 
 * Create DBA.
 * Create, update or delete MariaDB users.

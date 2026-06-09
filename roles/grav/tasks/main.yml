@@ -114,7 +114,7 @@
     - 'not grav__skip_admin'
   tags:
     - 'grav'
-    - 'grav:user'
+    - 'grav:users'
 
 
 - block:
