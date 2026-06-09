@@ -9,7 +9,10 @@ kvm_vm__network_connections:
   - name: 'enp1s0'
     network_name: 'default'
     dhcp4: true
-kvm_vm__osinfo: 'ubuntu26.04'
+# libosinfo does not ship a dedicated 'ubuntu26.04' entry yet, so use the LTS-latest alias. It
+# only seeds hypervisor hardware defaults (identical for recent Ubuntu) and starts resolving to
+# 26.04 once libosinfo learns it.
+kvm_vm__osinfo: 'ubuntu-lts-latest'
 kvm_vm__packages: []
 kvm_vm__vcpus: 2
 
