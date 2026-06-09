@@ -1,0 +1,18 @@
+# The remove scenario runs the same playbook but flips the plugin and user to
+# state: 'absent'. This exercises the list-with-state removal pattern the LFOps
+# roles use, and gives verify.yml something concrete to assert is gone.
+#
+# In a real suite, run the install sub-scenario first to create the state, then
+# this one to remove it. As a standalone run it still demonstrates that a second
+# converge with state: 'absent' leaves the host without the plugin/user.
+
+example__version: '3.2.1'
+example__skip_repo_example: true
+
+example__plugins__group_var:
+  - name: 'example-plugin-auth-ldap'
+    state: 'absent'
+
+example__users__group_var:
+  - name: 'example-admin'
+    state: 'absent'

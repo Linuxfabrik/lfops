@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **testing**: Add a Molecule-based test framework that runs the playbooks (and through them the roles) against throwaway libvirt/KVM VMs or Podman containers. Scenarios live under `extensions/molecule`; see the Testing section in `CONTRIBUTING.md`.
 * **role:icinga2_master, role:icingadb, role:icingaweb2, role:icingaweb2_module_reporting, role:icingaweb2_module_x509**: Add explicit Ubuntu variable files, making Ubuntu support visible alongside Debian. The Icinga repository, GPG key and package names were verified on Debian 13 and Ubuntu 24.04.
 * **role:nextcloud**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and missing mandatory variables.
 * **role:clamav**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and unknown variables.

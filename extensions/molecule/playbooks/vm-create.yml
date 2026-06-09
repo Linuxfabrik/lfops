@@ -1,0 +1,129 @@
+# Shared, controller-side setup. Runs once on localhost (the hypervisor), so there is no
+# delegate_to / run_once juggling. The keypair and pool info become normal facts on localhost
+# that the later plays read via hostvars["localhost"].
+- name: 'Prepare the controller for VM creation'
+  hosts: 'localhost'
+  gather_facts: false
+  vars:
+    __molecule__ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
+  tasks:
+
+    - name: 'Generate the ephemeral SSH keypair'
+      community.crypto.openssh_keypair:
+        path: '{{ __molecule__ephemeral_dir }}/molecule_key'
+        type: 'ed25519'
+        comment: 'molecule'
+      register: '__molecule__keypair_result'
+
+    - name: 'Get the libvirt storage pool info'
+      community.libvirt.virt_pool:
+        command: 'info'
+        uri: '{{ kvm_vm__connect_url | d("qemu:///system") }}'
+      register: '__molecule__pool_result'
+
+    - name: 'Ensure the ephemeral inventory directory exists'
+      ansible.builtin.file:
+        path: '{{ __molecule__ephemeral_dir }}/inventory'
+        state: 'directory'
+        mode: 0o755
+
+
+# One VM per host in systems_under_test. The kvm_vm role delegates to kvm_vm__host, so this play
+# never connects to the (not yet existing) target; the play-level become is for the role's
+# privileged libvirt operations and the image download into the root-owned pool.
+- name: 'Create VM instances using the kvm_vm role'
+  hosts: 'systems_under_test'
+  become: true
+  gather_facts: false
+  vars:
+    kvm_vm__name: '{{ __molecule__instance_name }}'
+    # Throwaway test VMs: set a known root password for console login during debugging. SSH still
+    # uses the ephemeral keypair below.
+    kvm_vm__root_password: 'linuxfabrik'
+    kvm_vm__ssh_authorized_keys:
+      - '{{ hostvars["localhost"]["__molecule__keypair_result"]["public_key"] }}'
+    kvm_vm__state: 'running'
+  pre_tasks:
+
+    # Raise timeout well above the 10s default: the cloud images are several hundred MB and one
+    # play downloads all of them at once (forks), so individual connections stall past 10s under
+    # the shared bandwidth and hit "read operation timed out". get_url defaults to force: false, so
+    # an image already present in the pool is left untouched and only a missing one is fetched.
+    - name: 'Download the cloud image into the storage pool'
+      ansible.builtin.get_url:
+        url: '{{ molecule__vm_image_url }}'
+        dest: '{{ hostvars["localhost"]["__molecule__pool_result"]["pools"][kvm_vm__pool | d("default")]["path"] }}/{{ kvm_vm__base_image }}'
+        mode: 0o644
+        timeout: 120
+      delegate_to: 'localhost'
+      when: 'molecule__vm_image_url is defined'
+
+  roles:
+    - role: 'linuxfabrik.lfops.kvm_vm'
+
+
+# Discover each VM's address via its libvirt DHCP lease and write it into Molecule's ephemeral
+# inventory directory. Molecule includes that directory automatically, so converge and verify
+# reach the VMs over SSH. See the inventory-model note in config.yml for why this is hand-written
+# instead of using Molecule's instance_config.
+- name: 'Discover VM addresses and write the dynamic inventory'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  vars:
+    __molecule__ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
+  tasks:
+
+    # Use --source arp: libvirt reads the host's neighbour cache (ip neigh on the bridge), so it
+    # only ever reports addresses currently live on the network. We rejected the two alternatives:
+    #   --source lease reads libvirt's DHCP lease table, which keeps every still-unexpired lease.
+    #     The VMs reuse a stable MAC across destroy/create cycles but regenerate their machine-id
+    #     (hence DHCP client-id) on each rebuilt boot disk, so dnsmasq hands out a fresh IP every
+    #     time and the old leases linger. domifaddr then returns several IPs for one MAC and there
+    #     is no way to tell the live one from the stale ones without sorting by lease expiry.
+    #   --source agent needs qemu-guest-agent running inside the guest, which only the Rocky cloud
+    #     image ships preinstalled - the VMs install no extra packages (kvm_vm__packages is []), so
+    #     on Debian/Ubuntu the agent never connects.
+    # --source arp sidesteps both: the neighbour cache holds only what is reachable now, so stale
+    # leases never appear, and it needs nothing inside the guest. The entry is populated once the
+    # VM emits traffic (its DHCP exchange does this within seconds), so the retry loop below covers
+    # the short boot window where it is not yet there.
+    - name: 'Wait for the VM to report a non-loopback IPv4 address via the host ARP table'
+      ansible.builtin.command:
+        cmd: 'virsh --connect {{ kvm_vm__connect_url | d("qemu:///system") }} domifaddr {{ __molecule__instance_name }} --source arp'
+      register: '__molecule__vm_ipaddr_result'
+      until: >-
+        __molecule__vm_ipaddr_result['stdout_lines']
+        | select('ansible.builtin.search', 'ipv4')
+        | reject('ansible.builtin.search', '^\s*lo\s')
+        | list | length > 0
+      retries: 15
+      delay: 2
+      changed_when: false
+      delegate_to: 'localhost'
+
+    - name: 'Parse the VM IPv4 address'
+      ansible.builtin.set_fact:
+        __molecule__vm_ipaddr: >-
+          {{
+            __molecule__vm_ipaddr_result['stdout_lines']
+            | select('ansible.builtin.search', 'ipv4')
+            | reject('ansible.builtin.search', '^\s*lo\s')
+            | first
+            | ansible.builtin.regex_search('([0-9]{1,3}\.){3}[0-9]{1,3}')
+          }}
+
+    - name: 'Write the dynamic VM inventory'
+      ansible.builtin.copy:
+        content: |
+          molecule:
+            hosts:
+          {% for host in ansible_play_hosts %}
+              {{ host }}:
+                ansible_host: '{{ hostvars[host]["__molecule__vm_ipaddr"] }}'
+                ansible_ssh_private_key_file: '{{ __molecule__ephemeral_dir }}/molecule_key'
+                ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+          {% endfor %}
+        dest: '{{ __molecule__ephemeral_dir }}/inventory/molecule_vm.yml'
+        mode: 0o644
+      delegate_to: 'localhost'
+      run_once: true # single write that loops over ansible_play_hosts to emit every host at once

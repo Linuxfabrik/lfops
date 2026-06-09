@@ -1,0 +1,6 @@
+ansible_connection: 'containers.podman.podman'
+ansible_host: '{{ __molecule__instance_name }}'
+
+molecule__container_command: '/usr/sbin/init'
+molecule__container_image: 'docker.io/rockylinux/rockylinux:10-ubi-init'
+molecule__container_systemd: true

@@ -1,0 +1,92 @@
+# Shared Molecule base config. It is merged into every scenario and is read whenever Molecule
+# resolves a scenario (e.g. `molecule test`, `molecule converge`, `molecule create`). Individual
+# scenarios can override any of these settings in their own molecule.yml.
+
+ansible:
+  cfg:
+    defaults:
+      ansible_managed: 'This file is managed by Ansible - do not edit'
+      callbacks_enabled: 'profile_tasks'
+      fact_caching: 'jsonfile'
+      fact_caching_connection: '${MOLECULE_EPHEMERAL_DIRECTORY}/.ansible_cache'
+      fact_caching_timeout: 86400
+      forks: 30
+      gathering: 'smart'
+      host_key_checking: false
+      inventory: 'hosts'
+      inventory_ignore_extensions:
+        - '~'
+        - '.orig'
+        - '.bak'
+        - '.ini'
+        - '.cfg'
+        - '.retry'
+        - '.pyc'
+        - '.pyo'
+        - '.csv'
+        - '.md'
+      inventory_ignore_patterns: '(host|group)_files'
+      log_path: '${MOLECULE_EPHEMERAL_DIRECTORY}/ansible.log'
+      nocows: 1
+      retry_files_enabled: true
+      stdout_callback: 'yaml'
+      timeout: 60
+    ssh_connections:
+      pipelining: true
+      ssh_args: '-o ControlMaster=auto -o ControlPersist=60s'
+  executor:
+    backend: 'ansible-playbook' # or 'ansible-navigator'
+    # The limit always includes localhost (vm-create.yml's controller-setup play targets it) and
+    # defaults LFOPS_TEST_TARGETS to 'all', so the variable is optional: unset runs every target,
+    # and when set you only pass the targets (e.g. 'rocky*'), never localhost.
+    args:
+      ansible_navigator:
+        - '--inventory=${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/inventory/'
+        - '--inventory=${MOLECULE_SCENARIO_DIRECTORY}/inventory/'
+        - '--limit=localhost,${LFOPS_TEST_TARGETS:-all}'
+      ansible_playbook:
+        - '--inventory=${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/inventory/'
+        - '--inventory=${MOLECULE_SCENARIO_DIRECTORY}/inventory/'
+        - '--limit=localhost,${LFOPS_TEST_TARGETS:-all}'
+
+# The 'galaxy' dependency below installs the collections listed in requirements.yml via
+# `ansible-galaxy collection install`. Molecule only runs the 'dependency' stage when it is part
+# of the sequence being executed. Our custom test_sequence therefore lists
+# 'dependency' explicitly; without it `molecule test` would skip the install and rely on the
+# collections already being present on the controller.
+# The galaxy dependency also runs a roles sub-step that ignores requirements-file and reads
+# role-file instead. We have no Galaxy roles, so role-file points at an empty
+# requirements-roles.yml purely to stop it warning about a missing roles requirements file.
+dependency:
+  name: 'galaxy'
+  options:
+    requirements-file: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/requirements.yml'
+    role-file: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/requirements-roles.yml'
+
+# Inventory model (why there is no 'platforms:' block and no managed-driver instance_config):
+# We test playbooks, which are inventory-driven (hosts: lfops_*, group_vars, host_vars). The
+# scenarios therefore use real inventory files (extensions/molecule/inventory plus each
+# scenario's own inventory) so the test inventory mirrors a production one and converge runs the
+# playbook the way an admin would. Molecule's managed driver only injects connection details
+# (ansible_host, ansible_user, ...) for hosts listed under 'platforms:', which the inventory
+# model does not use - so vm-create.yml discovers each VM's IP and writes the connection details
+# into Molecule's ephemeral inventory directory itself (Molecule includes that directory
+# automatically). Host key checking is turned off above (host_key_checking) because the VMs are
+# throwaway and reuse IPs from the libvirt default network.
+
+provisioner:
+  playbooks:
+    create: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/vm-create.yml'
+    destroy: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/vm-destroy.yml'
+    prepare: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/playbooks/vm-prepare.yml'
+
+scenario:
+  test_sequence:
+    - 'dependency' # must stay in the list so requirements.yml is installed (see header note)
+    - 'create'
+    - 'prepare'
+    - 'converge'
+    - 'verify'
+    - 'idempotence'
+    - 'verify'
+    - 'destroy'

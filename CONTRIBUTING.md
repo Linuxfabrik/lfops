@@ -922,6 +922,116 @@ Unit tests are **mandatory** for every in-house plugin. Any pull request that ad
 * The `Linuxfabrik: Unit Tests` workflow runs the controller matrix on every push and pull request.
 
 
+### Testing
+
+Molecule is used as the framework to test the LFOps playbooks (and therefore indirectly the roles). The test scenarios and configurations live in `extensions/molecule` and are structured as follows:
+
+```
+extensions
+└── molecule
+    ├── apps -- test scenario, named after the playbook name
+    │   ├── install -- if needed, sub-scenario
+    │   │   ├── converge.yml -- the actual test phase. this is where the playbook under test runs against the hosts
+    │   │   ├── inventory -- scenario-specific inventory with variables that are needed for the playbook under test and optionally additional hosts (e.g. for a cluster test setup). overwrites the shared inventory (extensions/molecule/inventory)
+    │   │   │   ├── group_vars
+    │   │   │   │   └── systems_under_test.yml -- by convention, the "systems_under_test" group contains all our hosts against which the tests are run
+    │   │   │   └── hosts.yml -- here we select against which hosts we want to run (most of the time the hosts come from the shared inventory) and put them into the correct group for the playbook, here "lfops_apps"
+    │   │   ├── molecule.yml -- scenario marker; the file is required even if empty. can also be used to overwrite settings from the extensions/molecule/config.yml, for example which playbooks are used by Molecule (e.g. to switch between VM and container provisioning playbooks)
+    │   │   └── verify.yml -- runs after the test phase and uses ansible to check if the result is as expected
+    │   └── remove -- additional sub-scenario
+    │       └── ...
+    ├── config.yml -- valid for all scenarios, can be overwritten in each scenario's molecule.yml (content and structure are the same)
+    ├── default -- we are not using the "default" scenario, but molecule needs this to run at all. could be used to share config (e.g. prepare.yml) across *all* scenarios
+    │   └── molecule.yml
+    ├── example -- fully commented reference scenario (install + remove sub-scenarios); copy it when adding a new test, like the example role
+    │   ├── install
+    │   │   └── ...
+    │   └── remove
+    │       └── ...
+    ├── inventory -- shared inventory across all scenarios and therefore available in all scenarios. contains a basic set of VMs/containers that are commonly used
+    │   ├── hosts.yml -- required, even if empty, that Ansible can detect this inventory
+    │   └── host_vars
+    │       ├── debian11-container.yml
+    │       ├── debian11-vm.yml
+    │       └── ...
+    ├── monitoring_plugins -- a scenario with no sub-scenarios
+    │   ├── converge.yml
+    │   ├── inventory
+    │   │   └── ...
+    │   ├── molecule.yml
+    │   └── verify.yml
+    ├── playbooks -- shared playbooks used by Molecule for running the scenarios
+    │   ├── container-create.yml
+    │   ├── container-destroy.yml
+    │   └── ...
+    └── requirements.yml
+```
+
+The `extensions/molecule/example` scenario mirrors the `example` role: it is a fully commented, non-functional reference that walks through every file of a scenario (a non-functional reference because the `example` playbook installs the fictional "Example" application). Copy it as the starting point when adding a test for a playbook.
+
+Tests can be run against a subset of targets by providing them as a comma-separated list via the project-specific `LFOPS_TEST_TARGETS` environment variable. The variable is optional: unset, every target in the scenario runs. `localhost` (the hypervisor) is included automatically, so you only ever pass the targets themselves:
+
+```shell
+# all targets in the scenario
+molecule test --scenario-name apps/install
+
+# a subset
+LFOPS_TEST_TARGETS='rocky*' molecule test --scenario-name apps/install
+```
+
+
+Known Limitations:
+
+* VM-based testing requires passwordless sudo on the Ansible controller. The cloud image and per-VM disks are written and built directly in the root-owned libvirt pool directory (`get_url`, `qemu-img`, `virt-customize`), which is plain filesystem I/O and needs root. The read-only libvirt API calls already run unprivileged via the `libvirt` group; it is only the pool writes that require sudo. Trying to make the whole run rootless is not worth it: the only way to provision VMs without root-equivalent rights at all is the user session (`qemu:///session`), which the test cannot use because its address discovery reads the host's ARP/neighbour table for the libvirt-managed `default` network that only the system connection (`qemu:///system`) provides. Every other route still grants effective root: a member of the `libvirt` group (which the read-only calls already require) can define a domain backed by any host device and drive QEMU as root. Swapping the `sudo` for a user-owned `qemu:///system` pool therefore only trades an explicit, on-demand escalation for a standing root-equivalent privilege plus looser filesystem permissions, which is a worse posture, not a better one.
+* Does not work inside an Ansible Execution Environment (Ansible Navigator). Provisioning runs as `localhost`, which inside an EE is the container, yet it has to act on the host's libvirt and podman. The disk-build tools (`qemu-img`, `virt-customize`, `virt-sysprep`) are filesystem-bound to the pool and have no libvirt-socket equivalent, so an EE would have to bind-mount the host libvirt/podman sockets and the pool directory and use host networking, which removes most of the isolation an EE exists to provide.
+
+
+#### How a scenario runs
+
+`molecule test --scenario-name <scenario>` runs the steps listed in the `test_sequence` of `config.yml`, in order:
+
+* `dependency`: installs the collections from `requirements.yml`.
+* `create`: provisions the instances (libvirt/KVM VMs or Podman containers).
+* `prepare`: waits until the instances are reachable and gathers facts.
+* `converge`: runs the playbook under test (`converge.yml`).
+* `verify`: runs `verify.yml` against the converged instances.
+* `idempotence`: runs the playbook a second time and fails if it reports any change.
+* `verify`: runs `verify.yml` again, now against the idempotent state.
+* `destroy`: tears the instances down.
+
+
+#### What to verify
+
+Verify the observable end result, not the steps the role took to get there. Ansible and the role already guarantee their own mechanics, so re-checking those only tests Ansible. The guiding question is "what can only be confirmed by looking at the running system?".
+
+Two guarantees come for free, so do not rebuild them in `verify.yml`:
+
+* If the playbook errors out, the `converge` step fails and `verify.yml` never runs. `verify.yml` is therefore only ever about the *result* of a successful run, not about whether the run crashed.
+* Idempotence is enforced by the dedicated `idempotence` step. Never add tasks that check "running it a second time changes nothing".
+
+Do **not** assert:
+
+* That a templated file exists or contains a given line. If the `template` task ran, the file is there with the rendered content; asserting it only exercises Jinja and the `template` module.
+* That a package was installed or a file was written, as the goal of the test. The module already reports `changed`/`ok` for that. A one-line "the package is installed" smoke check is fine as a floor, but it is not where the value of the test lies.
+
+Do assert what only the running system can confirm, that is, that the pieces actually work together:
+
+* The application is running and enabled (`ansible.builtin.service_facts`), and reachable on its port (`ansible.builtin.wait_for`, or a request that would fail if it were not). A service that starts proves the deployed config is at least valid, which the role's own tasks cannot tell you.
+* The application actually *uses* the configured values. Ask the running application (an API or status endpoint via `ansible.builtin.uri`, or a CLI that prints the effective configuration) and assert it reports the value the scenario set in `group_vars`. This is the important one: it proves the whole chain, `group_vars` to template to the service reading the file to its behaviour, which is exactly what grepping the config file does not.
+* End state managed outside the package and file layer (users, databases, API objects) is present, or absent in a removal scenario.
+
+A useful rule of thumb: if an assertion would still pass while the service is dead or running with the wrong configuration, it is testing the wrong thing.
+
+
+#### Troubleshooting
+
+**`molecule test` aborts with `ansible_compat.errors.InvalidPrerequisiteError: Command ansible-galaxy collection install -vvv --force /path/to/lfops` during prerun while installing the local collection**
+
+* Before running a scenario, Molecule's prerun step tries to install the current repository as a collection with `ansible-galaxy collection install --force <repo>`. That build fails because `galaxy.yml` carries a non-semver `version` (`main`), which `ansible-galaxy` rejects.
+* Option 1: disable the prerun so Molecule stops trying to build and install the local collection, by setting `prerun: false` as a top-level key in the `config.yml`. If you do this, you have to make sure that LFOps is installed yourself.
+* Option 2: If you installed LFOps by symlinking it, make sure the link points to the **same** folder that you are running `molecule` in (`ln -sf "$(pwd)" ~/.ansible/collections/ansible_collections/linuxfabrik/lfops`).
+
+
 ### Credits
 
 * <https://github.com/whitecloud/ansible-styleguide>
