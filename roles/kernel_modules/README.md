@@ -33,7 +33,7 @@ To re-enable a module that the role disables by default, set its `enabled` to `t
 
 * List of kernel modules to manage. Each item has a `name` and an optional `enabled`: `false` (the default; the module is blocked from loading) or `true` (the module is left loadable, e.g. to override a module the role disables by default).
 * Type: List of dictionaries.
-* Default: unset (the role default disables `atm`, `can`, `cramfs`, `dccp`, `firewire-core`, `firewire-ohci`, `firewire-sbp2`, `freevxfs`, `hfs`, `hfsplus`, `jffs2`, `rds`, `sctp` and `tipc`).
+* Default: `atm`, `can`, `cramfs`, `dccp`, `firewire-core`, `firewire-ohci`, `firewire-sbp2`, `freevxfs`, `hfs`, `hfsplus`, `jffs2`, `rds`, `sctp` and `tipc` are disabled.
 
 Example:
 ```yaml
