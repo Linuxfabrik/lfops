@@ -11,9 +11,7 @@ When using on-access scanning, one might need to increase the `inotify/max_user_
 
 ## How the Role Behaves
 
-The role supports both the Red Hat and the Debian package layouts, which differ substantially (package names, config paths such as `/etc/clamd.d/scan.conf` vs `/etc/clamav/clamd.conf`, and the daemon unit `clamd@scan` vs `clamav-daemon`). These differences are abstracted in `vars/`.
-
-On a fresh host the role downloads the signature database once (a synchronous `freshclam` run) before starting clamd, because clamd refuses to start without a database (on Debian/Ubuntu `clamav-daemon.service` even guards this with a `ConditionPathExistsGlob`). The freshclam service then keeps the database updated. The database directory `/var/lib/clamav` is given to the freshclam database owner so freshclam can write to it.
+On a fresh host the role downloads the signature database once (a synchronous `freshclam` run) before starting clamd, because clamd refuses to start without a database. The freshclam service then keeps the database updated. The database directory `/var/lib/clamav` is given to the freshclam database owner so freshclam can write to it.
 
 On every run (and on demand via `--tags clamav:test`) the role runs a self-test that confirms ClamAV detects the EICAR test signature. It feeds the EICAR string to the standalone `clamscan` over stdin, so the test triggers neither the `VirusEvent` mail notification nor an on-access detection, and writes nothing to disk.
 
@@ -41,7 +39,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `clamav:configure`
 
 * Manages the various ClamAV config files.
-* Triggers: clamd and clamav-clamonacc.service restart.
+* Triggers: clamd and clamav-clamonacc service restarts.
 
 `clamav:test`
 

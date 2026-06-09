@@ -22,7 +22,7 @@ The `hard core` limit applies to login sessions started after the change. The sy
 `core_dumps`
 
 * Deploys the core dump configuration.
-* Triggers: `core_dumps: sysctl --system`.
+* Triggers: `sysctl --system`.
 
 
 ## Optional Role Variables
