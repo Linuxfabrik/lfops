@@ -174,7 +174,7 @@ Commit scopes:
     fix(roles/graylog_server): prevent warn on receiveBufferSize (fix #341)
     ```
 
-* For the first commit, use the message `Add roles/<role-name>` or `Add playbooks/<playbook-name>`.
+* For the first commit, use the message `feat(roles/<role-name>): add role` or `feat(playbooks/<playbook-name>): add playbook`.
 
 
 ### Deliverables
