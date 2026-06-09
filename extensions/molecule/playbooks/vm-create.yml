@@ -37,16 +37,24 @@
   gather_facts: false
   vars:
     kvm_vm__name: '{{ __molecule__instance_name }}'
+    # Throwaway test VMs: set a known root password for console login during debugging. SSH still
+    # uses the ephemeral keypair below.
+    kvm_vm__root_password: 'linuxfabrik'
     kvm_vm__ssh_authorized_keys:
       - '{{ hostvars["localhost"]["__molecule__keypair_result"]["public_key"] }}'
     kvm_vm__state: 'running'
   pre_tasks:
 
+    # Raise timeout well above the 10s default: the cloud images are several hundred MB and one
+    # play downloads all of them at once (forks), so individual connections stall past 10s under
+    # the shared bandwidth and hit "read operation timed out". get_url defaults to force: false, so
+    # an image already present in the pool is left untouched and only a missing one is fetched.
     - name: 'Download the cloud image into the storage pool'
       ansible.builtin.get_url:
         url: '{{ molecule__vm_image_url }}'
         dest: '{{ hostvars["localhost"]["__molecule__pool_result"]["pools"][kvm_vm__pool | d("default")]["path"] }}/{{ kvm_vm__base_image }}'
         mode: 0o644
+        timeout: 120
       delegate_to: 'localhost'
       when: 'molecule__vm_image_url is defined'
 
@@ -65,14 +73,23 @@
     __molecule__ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
   tasks:
 
-    # Use --source lease (libvirt reads its own DHCP lease table on the host), not --source agent:
-    # the agent needs qemu-guest-agent running inside the guest, which only the Rocky cloud image
-    # ships preinstalled - the VMs install no extra packages (kvm_vm__packages is []), so on
-    # Debian/Ubuntu the agent never connects. --source lease works for every distro because they
-    # all get their address from the libvirt-managed 'default' network's DHCP.
-    - name: 'Wait for the VM to report a non-loopback IPv4 address via its DHCP lease'
+    # Use --source arp: libvirt reads the host's neighbour cache (ip neigh on the bridge), so it
+    # only ever reports addresses currently live on the network. We rejected the two alternatives:
+    #   --source lease reads libvirt's DHCP lease table, which keeps every still-unexpired lease.
+    #     The VMs reuse a stable MAC across destroy/create cycles but regenerate their machine-id
+    #     (hence DHCP client-id) on each rebuilt boot disk, so dnsmasq hands out a fresh IP every
+    #     time and the old leases linger. domifaddr then returns several IPs for one MAC and there
+    #     is no way to tell the live one from the stale ones without sorting by lease expiry.
+    #   --source agent needs qemu-guest-agent running inside the guest, which only the Rocky cloud
+    #     image ships preinstalled - the VMs install no extra packages (kvm_vm__packages is []), so
+    #     on Debian/Ubuntu the agent never connects.
+    # --source arp sidesteps both: the neighbour cache holds only what is reachable now, so stale
+    # leases never appear, and it needs nothing inside the guest. The entry is populated once the
+    # VM emits traffic (its DHCP exchange does this within seconds), so the retry loop below covers
+    # the short boot window where it is not yet there.
+    - name: 'Wait for the VM to report a non-loopback IPv4 address via the host ARP table'
       ansible.builtin.command:
-        cmd: 'virsh --connect {{ kvm_vm__connect_url | d("qemu:///system") }} domifaddr {{ __molecule__instance_name }} --source lease'
+        cmd: 'virsh --connect {{ kvm_vm__connect_url | d("qemu:///system") }} domifaddr {{ __molecule__instance_name }} --source arp'
       register: '__molecule__vm_ipaddr_result'
       until: >-
         __molecule__vm_ipaddr_result['stdout_lines']
@@ -109,4 +126,4 @@
         dest: '{{ __molecule__ephemeral_dir }}/inventory/molecule_vm.yml'
         mode: 0o644
       delegate_to: 'localhost'
-      run_once: true
+      run_once: true # single write that loops over ansible_play_hosts to emit every host at once

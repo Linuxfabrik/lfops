@@ -8,3 +8,13 @@
 
     - name: 'Gather facts'
       ansible.builtin.setup:  # yamllint disable-line rule:empty-values
+
+    # Debian/Ubuntu genericcloud images ship with an empty apt index (/var/lib/apt/lists is cleaned
+    # at image-build time), so the first package install cannot resolve any package until the cache
+    # is refreshed. Scenarios that pull in a repo_* role get this for free; ones that install a bare
+    # package (e.g. apps) would otherwise fail with "No package matching '<pkg>' is available".
+    - name: 'apt-get update'
+      ansible.builtin.apt:
+        update_cache: true
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
