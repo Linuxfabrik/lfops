@@ -638,7 +638,7 @@ Make sure to use the following format when passing multiple injections to avoid 
 * Do not use `{{ template_run_date }}` inside the template. It is the date that the template was rendered, which is done during every Ansible run. This means that the task will always be changed, even if nothing else changed in the template, therefore breaking idempotency.
 * Use the target path for the file in the `template` folder, for example: `templates/etc/httpd/sites-available/default.conf.j2`. This makes it clear what the file is for, and avoids name collisions.
 * Always use the `.j2` file extension for files in the `template` folder.
-* If deploying self-written scripts, copy them to `/usr/local/sbin` (due to SELinux).
+* If deploying self-written scripts, copy them to `/usr/local/sbin` (due to SELinux). Internal helper scripts that are only ever run by a systemd unit (not invoked by an admin and not exec'd by a confined domain) MAY instead live in `/usr/local/libexec`. Files there get the `usr_t` type, and the targeted policy lets a root `oneshot` service (which runs in `init_t`) execute them in place via `execute_no_trans`, so there is no AVC denial on RHEL/Rocky 8, 9 and 10. Keep admin-invokable commands in `/usr/local/sbin`, and never put a script a confined domain must exec under `/usr/local/libexec`.
 * Keep templates as close to the original file as possible. This makes handling of rpmnew/rpmsave files easier.
 * Add the following task after deploying a file that might get rpmnew or rpmsave files (or their Debian equivalents):
     ```yaml
