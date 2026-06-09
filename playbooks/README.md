@@ -171,6 +171,7 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `core_dumps__skip_kernel_settings`
 * [core_dumps](https://github.com/Linuxfabrik/lfops/tree/main/roles/core_dumps)
 
 
@@ -1008,6 +1009,7 @@ Calls the following roles (in order):
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_basic__skip_policycoreutils`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_basic__skip_selinux`
 * [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules): `setup_basic__skip_kernel_modules`
+* [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_basic__skip_kernel_settings`
 * [core_dumps](https://github.com/Linuxfabrik/lfops/tree/main/roles/core_dumps): `setup_basic__skip_core_dumps`
 * [systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald): `setup_basic__skip_systemd_journald`
 * [hostname](https://github.com/Linuxfabrik/lfops/tree/main/roles/hostname): `setup_basic__skip_hostname`

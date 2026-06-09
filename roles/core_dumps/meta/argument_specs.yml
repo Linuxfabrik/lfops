@@ -10,18 +10,6 @@ argument_specs:
           `hard core` limit in `/etc/security/limits.d/`. `0` disables
           core dumps for all users.
 
-      core_dumps__sysctl_suid_dumpable:
-        type: 'int'
-        required: false
-        default: 0
-        choices:
-          - 0
-          - 1
-          - 2
-        description: >-
-          `fs.suid_dumpable` sysctl. `0` prevents core dumps of setuid /
-          setgid processes.
-
       core_dumps__systemd_process_size_max:
         type: 'int'
         required: false
