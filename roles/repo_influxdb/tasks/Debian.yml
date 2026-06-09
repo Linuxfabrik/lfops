@@ -35,6 +35,15 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/influxdb.list'
 
+  - name: 'deploy /etc/apt/preferences.d/influxdata-archive-keyring.pref'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/apt/preferences.d/influxdata-archive-keyring.pref.j2'
+      dest: '/etc/apt/preferences.d/influxdata-archive-keyring.pref'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true

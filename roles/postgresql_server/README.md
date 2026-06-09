@@ -26,12 +26,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Manages the state of the PostgreSQL service.
 * Triggers: none.
 
-`postgresql_server:users`
+`postgresql_server:user`
 
 * Creates, updates and deletes PostgreSQL users.
 * Triggers: none.
 
-`postgresql_server:databases`
+`postgresql_server:database`
 
 * Creates, updates and deletes PostgreSQL databases.
 * Triggers: none.

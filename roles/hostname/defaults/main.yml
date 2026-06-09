@@ -1,3 +1,5 @@
 hostname__domain_part: ''
+hostname__etc_hosts_ip: '{{ ansible_facts["default_ipv4"]["address"] | default("") }}'
 hostname__full_hostname: '{{ (hostname__host_part ~ "." ~ hostname__domain_part) | trim(".") }}'
 hostname__host_part: '{{ inventory_hostname }}'
+hostname__manage_etc_hosts: true

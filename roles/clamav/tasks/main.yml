@@ -1,11 +1,13 @@
 - block:
 
-  - name: 'install clamav clamav-update clamd'
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  - name: 'Install {{ __clamav__packages | join(" ") }}'
     ansible.builtin.package:
-      name:
-        - 'clamav'
-        - 'clamav-update' # provides freshclam
-        - 'clamd'
+      name: '{{ __clamav__packages }}'
       state: 'present'
 
   - name: 'mkdir -p /etc/systemd/system/clamav-clamonacc.service.d/'
@@ -52,6 +54,8 @@
       group: 'root'
       mode: 0o755
 
+  # On Debian/Ubuntu the clamav-daemon / clamav-freshclam packages ship their own
+  # logrotate configs, so we only manage logrotate on Red Hat-family systems.
   - name: 'Deploy /etc/logrotate.d/clamav'
     ansible.builtin.template:
       backup: true
@@ -60,6 +64,8 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    when:
+      - '__clamav__manage_logrotate | bool'
 
   tags:
     - 'clamav'
@@ -67,16 +73,16 @@
 
 - block:
 
-  - name: 'Deploy /etc/clamd.d/scan.conf'
+  - name: 'Deploy {{ __clamav__clamd_config }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/clamd.d/scan.conf.j2'
-      dest: '/etc/clamd.d/scan.conf'
+      dest: '{{ __clamav__clamd_config }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
     notify:
-      - 'clamav: restart clamd@scan'
+      - 'clamav: restart clamd'
       - 'clamav: restart clamav-clamonacc'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
@@ -84,24 +90,26 @@
       name: 'shared'
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
-      shared__remove_rpmnew_rpmsave_config_file: '/etc/clamd.d/scan.conf'
+      shared__remove_rpmnew_rpmsave_config_file: '{{ __clamav__clamd_config }}'
 
-  - name: 'Deploy /etc/freshclam.conf'
+  - name: 'Deploy {{ __clamav__freshclam_config }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/freshclam.conf.j2'
-      dest: '/etc/freshclam.conf'
+      dest: '{{ __clamav__freshclam_config }}'
       owner: 'root'
       group: 'root'
       mode: 0o600
-    # no notify required, as it is run by a timer
+    # no notify required, as it is run by a timer.
+    # freshclam reads this as root (before dropping to its database owner), so 0600
+    # root:root is enough and also protects any proxy credentials in the file.
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
       name: 'shared'
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
-      shared__remove_rpmnew_rpmsave_config_file: '/etc/freshclam.conf'
+      shared__remove_rpmnew_rpmsave_config_file: '{{ __clamav__freshclam_config }}'
 
   - name: 'Deploy /var/lib/clamav/lfops_whitelist.ign2'
     ansible.builtin.template:
@@ -111,7 +119,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify: 'clamav: restart clamd@scan'
+    notify: 'clamav: restart clamd'
 
   - name: 'Deploy /var/lib/clamav/lfops_whitelist.fp'
     ansible.builtin.template:
@@ -121,13 +129,13 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify: 'clamav: restart clamd@scan'
+    notify: 'clamav: restart clamd'
 
-  - name: 'Deploy /etc/clamd.d/clamdscan.filelist'
+  - name: 'Deploy {{ __clamav__filelist }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/clamd.d/clamdscan.filelist.j2'
-      dest: '/etc/clamd.d/clamdscan.filelist'
+      dest: '{{ __clamav__filelist }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -139,9 +147,34 @@
 
 - block:
 
-  - name: 'systemctl {{ clamav__clamd_service_enabled | bool | ternary("enable", "disable") }} --now clamd@scan.service'
+  # On EPEL the database directory ships as root:root, but freshclam drops to its
+  # database owner (clamupdate on RHEL, clamav on Debian/Ubuntu) before writing and
+  # then cannot create the database. Make the directory owned by that user. clamd
+  # reads the database via the world-readable mode.
+  - name: 'chown {{ __clamav__db_owner }} /var/lib/clamav'
+    ansible.builtin.file:
+      path: '/var/lib/clamav'
+      state: 'directory'
+      owner: '{{ __clamav__db_owner }}'
+      group: '{{ __clamav__db_owner }}'
+      mode: 0o755
+
+  # clamd refuses to start without a signature database, and on Debian/Ubuntu
+  # clamav-daemon.service additionally guards this with
+  # ConditionPathExistsGlob=.../daily.{cvd,cld}. The freshclam daemon below would
+  # eventually fetch the database, but not before this play tries to start clamd.
+  # So seed the database once, up front, guarded by `creates` so it only downloads
+  # on a fresh host (no lock conflict with the not-yet-started freshclam daemon).
+  - name: 'freshclam (seed the signature database so clamd can start)'
+    ansible.builtin.command: 'freshclam --config-file={{ __clamav__freshclam_config }}'
+    args:
+      creates: '/var/lib/clamav/daily.c?d'
+    when:
+      - 'clamav__clamd_service_enabled | bool'
+
+  - name: 'systemctl {{ clamav__clamd_service_enabled | bool | ternary("enable", "disable") }} --now {{ __clamav__clamd_service }}'
     ansible.builtin.service:
-      name: 'clamd@scan'
+      name: '{{ __clamav__clamd_service }}'
       enabled: '{{ clamav__clamd_service_enabled }}'
       state: '{{ clamav__clamd_service_enabled | bool | ternary("started", "stopped") }}'
 
@@ -168,3 +201,25 @@
   tags:
     - 'clamav'
     - 'clamav:state'
+
+
+- block:
+
+  # Self-test: confirm the engine plus signature database actually detect malware,
+  # using the EICAR test string. We feed it to the standalone `clamscan` over stdin
+  # on purpose, NOT `clamdscan`: routing it through clamd would fire the configured
+  # VirusEvent (a "malware found" mail on every run) and, with on-access scanning
+  # enabled, a detection event. Reading from stdin also means nothing is ever written
+  # to disk. The EICAR string is assembled from two halves so that this role's own
+  # files are not flagged when a clamav scan runs across the collection.
+  - name: 'Verify ClamAV detects the EICAR test signature'
+    ansible.builtin.command: 'clamscan --no-summary -'
+    args:
+      stdin: '{{ "X5O!P%@AP[4\\PZX54(P^)7CC)7}" ~ "$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*" }}'
+    register: '__clamav__eicar_result'
+    changed_when: false
+    failed_when: '"FOUND" not in __clamav__eicar_result["stdout"]'
+
+  tags:
+    - 'clamav'
+    - 'clamav:test'

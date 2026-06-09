@@ -1,0 +1,4 @@
+core_dumps__limits_hard_core: 0
+core_dumps__sysctl_suid_dumpable: 0
+core_dumps__systemd_process_size_max: 0
+core_dumps__systemd_storage: 'none'

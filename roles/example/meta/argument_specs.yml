@@ -5,6 +5,12 @@ argument_specs:
   main:
     options:
 
+      example__backup_target:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Where nightly dumps are written. Empty disables backups.'
+
       example__conf_log_level__dependent_var:
         type: 'str'
         required: false
@@ -40,6 +46,12 @@ argument_specs:
         required: false
         default: ''
         description: 'Maximum number of concurrent connections. Host-level override.'
+
+      example__conf_tls_protocols:
+        type: 'str'
+        required: false
+        default: 'TLSv1.2 TLSv1.3'
+        description: 'Allowed TLS protocol versions.'
 
       example__conf_worker_threads:
         type: 'int'

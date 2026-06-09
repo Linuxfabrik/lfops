@@ -151,7 +151,7 @@ ansible-playbook --inventory=myinv linuxfabrik.lfops.shell
 * Configure access to optional web apps.
 * Triggers: tomcat.service restart.
 
-`apache_tomcat:users`
+`apache_tomcat:user`
 
 * Create users and roles.
 * Triggers: tomcat.service restart.

@@ -174,7 +174,7 @@ Commit scopes:
     fix(roles/graylog_server): prevent warn on receiveBufferSize (fix #341)
     ```
 
-* For the first commit, use the message `Add roles/<role-name>` or `Add playbooks/<playbook-name>`.
+* For the first commit, use the message `feat(roles/<role-name>): add role` or `feat(playbooks/<playbook-name>): add playbook`.
 
 
 ### Deliverables
@@ -188,6 +188,15 @@ When creating a new role, make sure to deliver:
 * Update `playbooks/all.yml`.
 * Update `COMPATIBILITY.md`.
 * Update `CHANGELOG.md`.
+
+
+### OS Coverage
+
+When creating a new role or changing an existing one, pull through the **full operating-system matrix** declared in [COMPATIBILITY.md](COMPATIBILITY.md) (currently Debian 12 and 13, RHEL 8, 9 and 10, and Ubuntu 22.04, 24.04 and 26.04). COMPATIBILITY.md is the authoritative list; support what it lists, and add a column there before supporting a new release.
+
+* Abstract OS differences (package names, configuration paths, service / unit names, users, ...) into per-OS vars files; see "OS-specific Variables" below for the mechanism and the explicit-`vars/Ubuntu.yml` rule. Reference roles: `sshd`, `clamav`.
+* Validate empirically on each family before claiming support. Spin up a container per OS (podman, e.g. `rockylinux/rockylinux:10`, `debian:13`, `ubuntu:24.04`) and confirm the role runs end to end. A full systemd run (service enable / start / reload) needs a systemd-enabled container.
+* Only mark a cell `x` in COMPATIBILITY.md once it is proven to run; use `(x)` for "expected to work but not verified".
 
 
 ### Changelog
@@ -397,6 +406,29 @@ LFOps overrides the project-agnostic "Changelog" rule above (alphabetical sortin
 * The tags should be set in the role itself. Do not set them in the playbook.
 * Blocks/tasks that install base packages do not require tags such as `apache:pkgs`, `apache:setup` or `apache:install`. There is no real world scenario where it makes sense to only run the installation via Ansible, some configuration is always required.
 * For each task, consider to which areas it belongs. A task will usually have multiple tags.
+* Reuse a section name from the controlled vocabulary below whenever one fits, so that `--tags` / `--skip-tags` behave the same way across roles. Only invent a role-specific section name (e.g. `apache_httpd:vhosts`, `mariadb_server:galera_new_cluster`) when a task covers an area that none of the standard names describe.
+
+Controlled vocabulary of standard `role_name:section` tags (alphabetical):
+
+* `role_name:certs`: Deploys and renews the role's TLS certificates and private keys.
+* `role_name:configure`: Renders and deploys the role's configuration files and applies settings. The most common section; everything that is neither install, state, nor one of the more specific sections below belongs here.
+* `role_name:containers`: Manages the role's containers and their systemd container units.
+* `role_name:cron`: Deploys the role's scheduled jobs (cron entries or systemd timers).
+* `role_name:database`: Creates, updates and deletes the databases managed by the role.
+* `role_name:dump`: Sets up scheduled dumps / backups of the role's data.
+* `role_name:enroll`: Registers (enrolls) the node with a remote service or controller.
+* `role_name:firewalls`: Manages the cloud provider firewall / security-group rules (VM provisioning roles).
+* `role_name:logrotate`: Deploys the role's logrotate configuration.
+* `role_name:modules`: Installs, enables and removes the role's pluggable modules (e.g. PHP, SELinux, Apache modules).
+* `role_name:networks`: Manages the role's networks (cloud VM, libvirt or container networks).
+* `role_name:plugins`: Installs and removes the role's optional application plugins / add-ons (distinct from OS-level `:modules`; e.g. Grafana or CMS plugins).
+* `role_name:remove`: Uninstalls the managed software and removes its artifacts.
+* `role_name:state`: Manages the runtime state of the role's services, timers and sockets (start / stop / enable / disable).
+* `role_name:update`: Updates the managed application to a newer version.
+* `role_name:upgrade`: Runs the post-update migration / upgrade steps after the package itself was updated.
+* `role_name:user`: Creates, updates and deletes the application or service user accounts managed by the role.
+
+The Ansible built-in tags `always` and `never` are reserved for their built-in meaning: tag the platform-variable loading and `assert` validation tasks with `always` so the variables and checks are present even when the role runs with a specific `--tags` selection.
 
 
 #### Variables
@@ -630,6 +662,8 @@ Variables with the same name are overridden by the files in `vars/` in order fro
 * `distribution` (e.g. `CentOS`) is more specific than os_family
 * `distribution_major_version` (e.g. `CentOS7`) is more specific than distribution
 * `distribution_version` (e.g. `CentOS7.9`) is the most specific
+
+When a role has a `vars/Debian.yml`, always create an explicit `vars/Ubuntu.yml` too, even if it is currently an identical copy. Ubuntu (a `distribution`) is loaded on top of its `Debian` os_family, so a full copy is redundant today, but it keeps Ubuntu visible at a glance and gives later Ubuntu-specific drift a dedicated home instead of silently inheriting Debian values.
 
 To load the variables include the `platform-variables.yml` in the `tasks/main.yml` like this:
 ```yaml

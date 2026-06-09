@@ -1,0 +1,155 @@
+argument_specs:
+  main:
+    options:
+
+      sshd__address_family:
+        type: 'str'
+        required: false
+        default: 'any'
+        choices:
+          - 'any'
+          - 'inet'
+          - 'inet6'
+        description: >-
+          Address family sshd uses: `any`, `inet` (IPv4 only) or
+          `inet6` (IPv6 only).
+
+      sshd__allow_agent_forwarding:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Whether `ssh-agent` forwarding is permitted.
+
+      sshd__allow_tcp_forwarding:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Whether TCP forwarding is permitted. For the `local` / `remote`
+          / `all` variants use `sshd__raw`.
+
+      sshd__client_alive_count_max:
+        type: 'int'
+        required: false
+        default: 2
+        description: >-
+          Number of client alive messages sent without a reply before
+          sshd disconnects the session.
+
+      sshd__gssapi_authentication:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Whether user authentication based on GSSAPI is allowed.
+
+      sshd__log_level__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Dependent-role override for the sshd log level. See
+          `sshd__log_level` in the README.
+
+      sshd__log_level__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Group-level override for the sshd log level. See
+          `sshd__log_level` in the README.
+
+      sshd__log_level__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Host-level override for the sshd log level. See
+          `sshd__log_level` in the README.
+
+      sshd__max_auth_tries:
+        type: 'int'
+        required: false
+        default: 3
+        description: >-
+          Maximum number of authentication attempts permitted per
+          connection. Each key offered by an SSH agent counts as one.
+
+      sshd__max_sessions:
+        type: 'int'
+        required: false
+        default: 10
+        description: >-
+          Maximum number of open shell, login or subsystem sessions
+          permitted per network connection.
+
+      sshd__password_authentication:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Whether password authentication is allowed.
+
+      sshd__permit_root_login:
+        type: 'str'
+        required: false
+        default: 'yes'
+        description: >-
+          Whether root can log in via ssh: `yes`, `prohibit-password`,
+          `forced-commands-only` or `no`.
+
+      sshd__port:
+        type: 'int'
+        required: false
+        default: 22
+        description: >-
+          TCP port sshd listens on.
+
+      sshd__raw:
+        type: 'str'
+        required: false
+        description: >-
+          Raw configuration appended to the end of `sshd_config`. Useful
+          for `Match` directives.
+
+      sshd__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Whether the sshd service is enabled at boot.
+
+      sshd__service_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'started'
+          - 'stopped'
+          - 'restarted'
+          - 'reloaded'
+        description: >-
+          Runtime state of the sshd service.
+
+      sshd__sftp_subsystem:
+        type: 'str'
+        required: false
+        description: >-
+          Command used for the sftp subsystem. Defaults to the
+          platform-specific path in `vars/`.
+
+      sshd__use_dns:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Whether sshd looks up the remote hostname and verifies it
+          resolves back to the connecting IP address.
+
+      sshd__x11_forwarding:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Whether X11 forwarding is permitted.
