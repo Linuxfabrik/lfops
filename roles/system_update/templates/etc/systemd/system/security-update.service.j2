@@ -1,11 +1,14 @@
 # {{ ansible_managed }}
-# 2026052401
+# 2026060901
 
 [Unit]
 Description=security-update Service
+# order-only (no Wants/Requires): run before the reboot actor so the reboot waits
+# for this security transaction to finish. Before= an unqueued unit is a no-op.
+Before=schedule-reboot.service
 
 [Service]
-ExecStart=/usr/local/bin/security-update
+ExecStart=/usr/local/sbin/security-update
 Type=oneshot
 User=root
 KillMode=process

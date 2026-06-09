@@ -124,10 +124,6 @@
       when:
         - 'not setup_basic__skip_tmux | d(false)'
 
-    - role: 'linuxfabrik.lfops.at'
-      when:
-        - 'not setup_basic__skip_at | d(false)'
-
     - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'not setup_basic__skip_yum_utils | d(false)'
@@ -176,6 +172,10 @@
 
 
     # === Automatic updates ===
+    - role: 'linuxfabrik.lfops.schedule_reboot'
+      when:
+        - 'not setup_basic__skip_schedule_reboot | d(false)'
+
     - role: 'linuxfabrik.lfops.system_update'
       when:
         - 'not setup_basic__skip_system_update | d(false)'

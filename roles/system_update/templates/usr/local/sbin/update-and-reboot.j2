@@ -1,42 +1,24 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2023121201
+# 2026060901
+
+# Apply all available updates, then request a reboot if one is needed by dropping a
+# file into the /run/schedule-reboot spool. This script never reboots itself; the
+# schedule-reboot.service (ordered After= this one) performs the reboot at the window.
 
 export LC_ALL=C
 
-PIDOF=$(which pidof)
-REBOOT=$(which reboot)
-
-schedule_downtime_and_reboot () {
-    {% if system_update__icinga2_api_user_login is defined and system_update__icinga2_api_user_login | length %}
-        # needed for Icinga to set downtime (max. 5 minutes downtime)
-        START_TIME=$(date +%s)
-        END_TIME=$(( START_TIME + 300 ))
-        curl --connect-timeout 5 --insecure --silent --user '{{ system_update__icinga2_api_user_login["username"] }}:{{ system_update__icinga2_api_user_login["password"] }}' --header 'Accept: application/json' --request POST '{{ system_update__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
-        {
-            "type": "Host",
-            "filter": "match(\"{{ system_update__icinga2_hostname }}\", host.name)",
-            "start_time": "$START_TIME",
-            "end_time": "$END_TIME",
-            "author": "{{ system_update__icinga2_hostname }}",
-            "comment": "Automatic reboot due to updates.",
-            "all_services": true
-        }
-EOF
-    {% endif %}
-
-    echo "$REBOOT" | at now +1 minutes 2> /dev/null
-    exit 0
-}
-
 send_msg () {
-{% if ansible_facts['distribution'] == 'Debian' %}
-{# note: do not quote the $RECIPIENTS, else they are passed as a single argument #}
-    echo -n "$MSGBODY" | mail -s "$SUBJECT" -a "From: $SENDER" $RECIPIENTS
-{% else %}
-{# note: do not quote the $RECIPIENTS, else they are passed as a single argument #}
-    echo -n "$MSGBODY" | mail -s "$SUBJECT" -r "$SENDER" $RECIPIENTS
-{% endif %}
+    # feed a complete message to sendmail (-t reads the recipients from the headers).
+    # sendmail has a stable CLI across MTAs, unlike mailx's -r / -a "From:" split.
+    {
+        printf 'From: %s\n' "$SENDER"
+        printf 'To: %s\n' "${RECIPIENTS// /, }"
+        printf 'Subject: %s\n' "$SUBJECT"
+        printf 'Content-Type: text/plain; charset="utf-8"\n'
+        printf 'Content-Transfer-Encoding: 8bit\n'
+        printf '\n%s\n' "$MSGBODY"
+    } | sendmail -oi -t -f "$SENDER"
 {% if system_update__rocketchat_url is defined and system_update__rocketchat_url | length %}
     /usr/bin/curl --silent --output /dev/null --data-urlencode \
         "text=${SUBJECT}
@@ -57,6 +39,9 @@ post_update_code () {
 SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
 SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ' ) }}"
+RECIPIENTS_NEW_CONFIGFILES="{{ system_update__mail_recipients_new_configfiles | join(' ' ) }}"
+
+# the reboot-request spool is owned and created by the schedule_reboot role (tmpfiles.d)
 
 {% if system_update__pre_update_code is defined and system_update__pre_update_code | length %}
 # start raw system_update__pre_update_code
@@ -73,8 +58,7 @@ fi
 
 # do the update, and print only critical errors about which we must be told
 {% if ansible_facts['os_family'] == 'RedHat' %}
-yum -y update {{ system_update__cache_only | bool | ternary("--cacheonly --setopt=metadata_timer_sync=0", "") }} 1> /dev/null 2> /tmp/system-update-stderr
-if [ $? -ne 0 ]; then
+if ! yum -y update {{ system_update__cache_only | bool | ternary("--cacheonly --setopt=metadata_timer_sync=0", "") }} 1> /dev/null 2> /tmp/system-update-stderr; then
     SUBJECT="$SUBJECT_PREFIX - System update failed"
     MSGBODY=$(</tmp/system-update-stderr)
     send_msg
@@ -94,61 +78,56 @@ export DEBIAN_FRONTEND=noninteractive
 yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output
 {% endif %}
 
-{% if ansible_facts['os_family'] == 'RedHat' %}
-# after any update, notify root user about new rpmsave or rpmnew files
-# ignore messages like 'find: ‘/proc/26144’: No such file or directory'
-find / -mount -name '*.rpmnew' -exec /root/send-mail "{{ system_update__mail_subject_prefix }}$(hostname --short) - rpmnew File found" "{}"  "{{ system_update__mail_recipients_new_configfiles | join(' ' ) }}" \; 2> /dev/null
-find / -mount -name '*.rpmsave' -exec /root/send-mail "{{ system_update__mail_subject_prefix }}$(hostname --short) - rpmsave File found" "{}" "{{ system_update__mail_recipients_new_configfiles | join(' ' ) }}" \; 2> /dev/null
-{% endif %}
+# after any update, notify about new config-file stubs (*.rpmnew / *.rpmsave on RHEL,
+# *.dpkg-dist / *.ucf-dist on Debian). one mail per file, sent via sendmail.
+# 2> /dev/null hides messages like 'find: '/proc/26144': No such file or directory'.
+find / -mount \( -name '*.rpmnew' -o -name '*.rpmsave' -o -name '*.dpkg-dist' -o -name '*.ucf-dist' \) -print0 2> /dev/null \
+        | while IFS= read -r -d '' configfile; do
+    {
+        printf 'From: %s\n' "$SENDER"
+        printf 'To: %s\n' "${RECIPIENTS_NEW_CONFIGFILES// /, }"
+        printf 'Subject: %s - config-file stub found: %s\n' "$SUBJECT_PREFIX" "$configfile"
+        printf 'Content-Type: text/plain; charset="utf-8"\n'
+        printf 'Content-Transfer-Encoding: 8bit\n'
+        printf '\n%s\n' "$configfile"
+    } | sendmail -oi -t -f "$SENDER"
+done
 
-{% if ansible_facts['os_family'] == 'Debian' %}
-# after any update, notify root user about new rpmsave or rpmnew files
-# ignore messages like 'find: ‘/proc/26144’: No such file or directory'
-find / -mount -name '*.dpkg-dist' -exec /root/send-mail "{{ system_update__mail_subject_prefix }}$(hostname --short) - dpkg-dist File found" "{}"  "{{ system_update__mail_recipients_new_configfiles | join(' ' ) }}" \; 2> /dev/null
-find / -mount -name '*.ucf-dist' -exec /root/send-mail "{{ system_update__mail_subject_prefix }}$(hostname --short) - ucf-dist File found" "{}"  "{{ system_update__mail_recipients_new_configfiles | join(' ' )}}" \; 2> /dev/null
-{% endif %}
-
-# any restarts needed?
+# any restarts needed? if so, request a reboot via the spool (do not reboot here)
 {% if ansible_facts['os_family'] == 'RedHat' %}
 needs-restarting --reboothint &> /dev/null
 if [ $? -eq 1 ]; then
-    # save time and don't wait for any apache graceful finishing
-    kill -9 "$($PIDOF httpd)" 2> /dev/null
-    SUBJECT="$SUBJECT_PREFIX - Reboot due to Kernel Updates"
     MSGBODY=$(yum history info)
 {% if system_update__post_update_code is defined and system_update__post_update_code | length %}
     post_update_code
 {% endif %}
-    send_msg
-    schedule_downtime_and_reboot
+    # request a reboot; do-reboot sends the single notification at reboot time
+    printf '%s\n' "$MSGBODY" > /run/schedule-reboot/system_update
+    exit 0
 fi
 
 needs-restarting 2> /dev/null > /tmp/needs-restarting
 if [ -s /tmp/needs-restarting ]; then
-    # save time and don't wait for any graceful finishing apache
-    kill -9 "$($PIDOF httpd)" 2> /dev/null
-    SUBJECT="$SUBJECT_PREFIX - Reboot due to Service Updates"
     MSGBODY=$(cat /tmp/needs-restarting; yum history info)
 {% if system_update__post_update_code is defined and system_update__post_update_code | length %}
     post_update_code
 {% endif %}
-    send_msg
-    schedule_downtime_and_reboot
+    # request a reboot; do-reboot sends the single notification at reboot time
+    printf '%s\n' "$MSGBODY" > /run/schedule-reboot/system_update
+    exit 0
 fi
 {% endif %}
 
 {% if ansible_facts['os_family'] == 'Debian' %}
 # we call needrestart with the -p option so it behaves like a nagios plugin. any exit code != 0 means a reboot is required
 if [ -f /var/run/reboot-required ] || ! needrestart -p 1> /dev/null; then
-    # save time and don't wait for any apache graceful finishing
-    kill -9 "$($PIDOF apache2)" 2> /dev/null
-    SUBJECT="$SUBJECT_PREFIX - Reboot due to Updates"
     MSGBODY=$(cat /tmp/update_output)
 {% if system_update__post_update_code is defined and system_update__post_update_code | length %}
     post_update_code
 {% endif %}
-    send_msg
-    schedule_downtime_and_reboot
+    # request a reboot; do-reboot sends the single notification at reboot time
+    printf '%s\n' "$MSGBODY" > /run/schedule-reboot/system_update
+    exit 0
 fi
 {% endif %}
 

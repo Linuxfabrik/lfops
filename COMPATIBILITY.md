@@ -148,6 +148,7 @@ Which Ansible role is proven to run on which OS?
 | repo_sury                             |   x    |   x    |   -    |   -    |         |    (x)    |    (x)    |    (x)    |                                              |
 | rocketchat                            |        |        |   x    |  (x)   |   (x)   |           |           |           | Fedora 35                                    |
 | rsyslog                               |        |        |   x    |   x    |    x    |           |           |           |                                              |
+| schedule_reboot                       |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | selinux                               |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | shared                                |        |        |        |        |         |           |           |           | controller-side helper, target OS irrelevant |
 | shell                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
