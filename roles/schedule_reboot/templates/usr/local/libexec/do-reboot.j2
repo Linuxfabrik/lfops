@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026060901
+
+# The single reboot actor. Run by schedule-reboot.service (a timer at the reboot
+# window, ordered After= the update lanes) and by `schedule-reboot --now`. Reboots
+# the host if, and only if, at least one reboot request file is present in the spool
+# directory. Each request file's name is a category and its content is included in
+# the notification mail. Multiple requests coalesce into a single reboot.
+
+export LC_ALL=C
+
+SPOOL_DIR='/run/schedule-reboot'
+REBOOT=$(which reboot)
+
+send_msg () {
+    # feed a complete message to sendmail (-t reads the recipients from the headers).
+    # sendmail has a stable CLI across MTAs, unlike mailx's -r / -a "From:" split.
+    {
+        printf 'From: %s\n' "$SENDER"
+        printf 'To: %s\n' "${RECIPIENTS// /, }"
+        printf 'Subject: %s\n' "$SUBJECT"
+        printf 'Content-Type: text/plain; charset="utf-8"\n'
+        printf 'Content-Transfer-Encoding: 8bit\n'
+        printf '\n%s\n' "$MSGBODY"
+    } | sendmail -oi -t -f "$SENDER"
+{% if schedule_reboot__rocketchat_url is defined and schedule_reboot__rocketchat_url | length %}
+    /usr/bin/curl --silent --output /dev/null --data-urlencode \
+        "text=${SUBJECT}
+
+        ${MSGBODY}
+        {{ schedule_reboot__rocketchat_msg_suffix }}" \
+        --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
+        "{{ schedule_reboot__rocketchat_url }}"
+{% endif %}
+}
+
+SUBJECT_PREFIX="{{ schedule_reboot__mail_subject_prefix }}{{ schedule_reboot__mail_subject_hostname }}"
+SENDER="$SUBJECT_PREFIX <{{ schedule_reboot__mail_from }}>"
+RECIPIENTS="{{ schedule_reboot__mail_recipients | join(' ') }}"
+
+# no reboot requested -> nothing to do (the common case on most days).
+# -v tests whether the first element is set, so an empty (or absent) spool exits here.
+shopt -s nullglob
+requests=("$SPOOL_DIR"/*)
+if [[ ! -v requests[0] ]]; then
+    exit 0
+fi
+
+# build the notification: one section per request, file name as header, content below
+MSGBODY=''
+for request in "${requests[@]}"; do
+    MSGBODY+="=== $(basename "$request") ==="$'\n'
+    MSGBODY+="$(cat "$request")"$'\n\n'
+done
+SUBJECT="$SUBJECT_PREFIX - Rebooting ($(printf '%s ' "${requests[@]##*/}"))"
+send_msg
+
+{% if schedule_reboot__icinga2_api_user_login is defined and schedule_reboot__icinga2_api_user_login | length %}
+# needed for Icinga to set downtime (max. 5 minutes downtime)
+START_TIME=$(date +%s)
+END_TIME=$(( START_TIME + 300 ))
+curl --connect-timeout 5 --insecure --silent --user '{{ schedule_reboot__icinga2_api_user_login["username"] }}:{{ schedule_reboot__icinga2_api_user_login["password"] }}' --header 'Accept: application/json' --request POST '{{ schedule_reboot__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
+{
+    "type": "Host",
+    "filter": "match(\"{{ schedule_reboot__icinga2_hostname }}\", host.name)",
+    "start_time": "$START_TIME",
+    "end_time": "$END_TIME",
+    "author": "{{ schedule_reboot__icinga2_hostname }}",
+    "comment": "Automatic reboot due to pending reboot requests.",
+    "all_services": true
+}
+EOF
+{% endif %}
+
+# save time and don't wait for any apache graceful finishing
+{% if ansible_facts['os_family'] == 'Debian' %}
+kill -9 "$(pidof apache2)" 2> /dev/null
+{% else %}
+kill -9 "$(pidof httpd)" 2> /dev/null
+{% endif %}
+
+# the spool lives on tmpfs (/run), so the reboot itself clears all request files
+"$REBOOT"

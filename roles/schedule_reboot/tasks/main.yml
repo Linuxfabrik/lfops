@@ -1,0 +1,79 @@
+- block:
+
+  - name: 'Deploy /usr/local/libexec/do-reboot'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/libexec/do-reboot.j2'
+      dest: '/usr/local/libexec/do-reboot'
+      owner: 'root'
+      group: 'root'
+      mode: 0o744
+
+  - name: 'Deploy /usr/local/sbin/schedule-reboot'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/sbin/schedule-reboot.j2'
+      dest: '/usr/local/sbin/schedule-reboot'
+      owner: 'root'
+      group: 'root'
+      mode: 0o744
+
+  - name: 'Deploy /etc/systemd/system/schedule-reboot.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/schedule-reboot.service.j2'
+      dest: '/etc/systemd/system/schedule-reboot.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__schedule_reboot__service_result'
+
+  - name: 'Deploy /etc/systemd/system/schedule-reboot.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/schedule-reboot.timer.j2'
+      dest: '/etc/systemd/system/schedule-reboot.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__schedule_reboot__timer_result'
+
+  - name: 'Deploy /etc/tmpfiles.d/schedule-reboot.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/tmpfiles.d/schedule-reboot.conf.j2'
+      dest: '/etc/tmpfiles.d/schedule-reboot.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__schedule_reboot__tmpfiles_result'
+
+  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/schedule-reboot.conf' # noqa no-handler no-changed-when (no easy way to detect changes)
+    ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/schedule-reboot.conf'
+    when:
+      - '__schedule_reboot__tmpfiles_result is changed'
+
+  tags:
+    - 'schedule_reboot'
+
+
+- block:
+
+  # run daemon-reload as a regular task (not a handler) before the state task, so the
+  # enable/start acts on the freshly deployed unit. gated on any unit-file change.
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__schedule_reboot__service_result is changed or
+         __schedule_reboot__timer_result is changed'
+
+  - name: 'systemctl {{ schedule_reboot__enabled | bool | ternary("enable", "disable") }} schedule-reboot.timer --now'
+    ansible.builtin.systemd:
+      name: 'schedule-reboot.timer'
+      state: '{{ schedule_reboot__enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ schedule_reboot__enabled }}'
+
+  tags:
+    - 'schedule_reboot'
+    - 'schedule_reboot:state'

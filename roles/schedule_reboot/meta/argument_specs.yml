@@ -1,0 +1,80 @@
+argument_specs:
+  main:
+    options:
+
+      schedule_reboot__enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether the schedule-reboot timer is enabled at boot.'
+
+      schedule_reboot__icinga2_api_url:
+        type: 'str'
+        required: false
+        description: 'The URL of the Icinga2 API used to set a downtime around the reboot.'
+
+      schedule_reboot__icinga2_api_user_login:
+        type: 'dict'
+        required: false
+        description: 'The Icinga2 API user (username/password) used to set the downtime. Downtime is skipped when unset.'
+
+      schedule_reboot__icinga2_hostname:
+        type: 'str'
+        required: false
+        description: 'The Icinga2 host name on which the downtime is set.'
+
+      schedule_reboot__mail_from:
+        type: 'str'
+        required: false
+        description: 'The "from" address for the reboot notification.'
+
+      schedule_reboot__mail_recipients:
+        type: 'raw'
+        required: false
+        description: 'The recipients of the reboot notification.'
+
+      schedule_reboot__mail_subject_hostname:
+        type: 'str'
+        required: false
+        default: '$(hostname --short)'
+        description: 'The hostname string used in the mail subject. May contain $() shell code.'
+
+      schedule_reboot__mail_subject_prefix:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'A prefix shown in front of the hostname in the mail subject.'
+
+      schedule_reboot__on_calendar:
+        type: 'str'
+        required: false
+        description: 'systemd OnCalendar for the reboot actor. Defaults to daily at the reboot window.'
+
+      schedule_reboot__reboot_time__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The reboot window (time of day). Dependent-role injection.'
+
+      schedule_reboot__reboot_time__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The reboot window (time of day). Group-level override.'
+
+      schedule_reboot__reboot_time__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The reboot window (time of day). Host-level override.'
+
+      schedule_reboot__rocketchat_msg_suffix:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'A suffix to the Rocket.Chat notification, for example to mention users.'
+
+      schedule_reboot__rocketchat_url:
+        type: 'str'
+        required: false
+        description: 'The URL of a Rocket.Chat server to send the reboot notification to.'
