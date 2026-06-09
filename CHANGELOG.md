@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **testing**: Add a Molecule-based test framework that runs the playbooks (and through them the roles) against throwaway libvirt/KVM VMs or Podman containers. Scenarios live under `extensions/molecule`; see the Testing section in `CONTRIBUTING.md`.
 * **role:tmux**: Installs tmux and deploys a system-wide `/etc/tmux.conf` with sensible defaults, such as a larger scrollback buffer and mouse support. Selections are copied to the local clipboard over SSH via OSC 52 (where the terminal emulator supports it), and `prefix + P` dumps a pane's whole scrollback buffer to a file.
 * **role:graylog_server**: Make more HTTP, Elasticsearch, processing/output buffer and message journal settings configurable via `graylog_server__http_external_uri`, `graylog_server__http_enable_cors`, `graylog_server__elasticsearch_max_total_connections`, `graylog_server__elasticsearch_max_total_connections_per_route`, `graylog_server__output_batch_size`, `graylog_server__processbuffer_processors`, `graylog_server__outputbuffer_processors`, `graylog_server__ring_size`, `graylog_server__inputbuffer_ring_size`, `graylog_server__message_journal_max_age` and `graylog_server__message_journal_max_size`.
 * **role:mariadb_server**: Make `aria_pagecache_buffer_size`, `key_buffer_size` and `sort_buffer_size` configurable via the corresponding `mariadb_server__cnf_*` variables.
