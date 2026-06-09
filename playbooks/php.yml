@@ -29,6 +29,10 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not php__skip_repo_remi | default(false)'
 
+    - role: 'linuxfabrik.lfops.repo_sury'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
     - role: 'linuxfabrik.lfops.php'
 
 
