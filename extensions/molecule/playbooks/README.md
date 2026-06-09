@@ -46,7 +46,7 @@ Depending on the backend a scenario uses:
 
 `container-create.yml`
 
-* Starts one Podman container per host. Fails early and prints the container log when a container does not come up (via `tasks/container-create-fail.yml`).
+* Starts one Podman container per host. Fails early and prints the container log when a container does not come up.
 
 `container-prepare.yml`
 

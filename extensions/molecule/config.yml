@@ -5,7 +5,6 @@
 ansible:
   cfg:
     defaults:
-      accelerate_timeout: 5
       ansible_managed: 'This file is managed by Ansible - do not edit'
       callbacks_enabled: 'profile_tasks'
       fact_caching: 'jsonfile'
