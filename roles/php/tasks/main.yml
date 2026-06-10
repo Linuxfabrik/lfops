@@ -136,6 +136,18 @@
       group: '{{ __shared__apache_httpd_group }}'
       mode: 0o770
 
+  # php-fpm writes the per-pool error_log and slowlog into this directory but does
+  # not create it itself. On RedHat the package ships /var/log/php-fpm; create it
+  # for parity on Debian, where the package only ships a single
+  # /var/log/<service>.log file.
+  - name: 'Ensure the php-fpm log directory /var/log/{{ __php__fpm_service_name }} exists'
+    ansible.builtin.file:
+      path: '/var/log/{{ __php__fpm_service_name }}'
+      state: 'directory'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: 'root'
+      mode: 0o770
+
   # each pool gets its own session directory below the distro's session base, so
   # the pools cannot read each other's sessions. On RedHat this inherits the
   # `httpd_var_run_t` SELinux type from the parent; on Debian the packaged
@@ -180,6 +192,21 @@
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
+
+  # On Debian the packaged logrotate config only covers the single
+  # /var/log/<service>.log file, not the per-pool logs in the directory above, so
+  # ship our own. On RedHat the package's /etc/logrotate.d/php-fpm already rotates
+  # /var/log/php-fpm/*log.
+  - name: 'Deploy /etc/logrotate.d/linuxfabrik-php-fpm'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/logrotate.d/linuxfabrik-php-fpm.j2'
+      dest: '/etc/logrotate.d/linuxfabrik-php-fpm'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when:
+      - 'ansible_facts["os_family"] == "Debian"'
 
   tags:
     - 'php'

@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# 2026060901
+
+/var/log/{{ __php__fpm_service_name }}/*log {
+    rotate 12
+    weekly
+    missingok
+    notifempty
+    compress
+    delaycompress
+    postrotate
+        if [ -x /usr/lib/php/{{ __php__fpm_service_name }}-reopenlogs ]; then
+            /usr/lib/php/{{ __php__fpm_service_name }}-reopenlogs;
+        fi
+    endscript
+}

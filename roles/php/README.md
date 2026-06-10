@@ -50,17 +50,21 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Deploy the /etc/php.d/z00-linuxfabrik.ini.
 * `systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`.
 * Ensure the shared opcache directory exists.
+* Ensure the php-fpm log directory exists.
 * Create the per-pool session directories.
 * Remove absent pools from `/etc/php-fpm.d`.
 * Deploy the pools to `/etc/php-fpm.d/`.
+* Deploy `/etc/logrotate.d/linuxfabrik-php-fpm` (Debian only).
 * Triggers: php-fpm.service restart.
 
 `php:fpm`
 
 * Ensure the shared opcache directory exists.
+* Ensure the php-fpm log directory exists.
 * Create the per-pool session directories.
 * Remove absent pools from /etc/php-fpm.d.
 * Deploy the pools to /etc/php-fpm.d/.
+* Deploy /etc/logrotate.d/linuxfabrik-php-fpm (Debian only).
 * Triggers: php-fpm.service restart.
 
 `php:ini`
@@ -315,6 +319,8 @@ php__ini_upload_max_filesize__host_var: '10000M'
 Variables for PHP-FPM Pool Config directives and their default values, defined and supported by this role.
 
 For every pool the role creates a dedicated session directory below the distribution's session base (`/var/lib/php/session` on RedHat, `/var/lib/php/sessions` on Debian) and a single shared opcache directory (`/var/lib/php/opcache`). On Debian, stale session files are reaped by the packaged `sessionclean` timer, which recurses the session base using the global `session.gc_maxlifetime`. A per-pool `session.gc_maxlifetime` is therefore not honored by the cleanup on Debian, and a session that stays open but idle longer than the lifetime may be removed.
+
+Each pool writes its `error_log` and `slowlog` into a per-service log directory (`/var/log/php-fpm` on RedHat, `/var/log/<service>` on Debian, e.g. `/var/log/php8.4-fpm`), which the role creates. On RedHat the package's logrotate config already rotates `/var/log/php-fpm/*log`; on Debian the role ships `/etc/logrotate.d/linuxfabrik-php-fpm` to rotate the per-pool logs, since the packaged config only covers the single global log file.
 
 Each pool listens on its own Unix socket below the FPM runtime directory (`/run/php-fpm/{{ item["name"] }}.sock` on RedHat, `/run/php/{{ item["name"] }}.sock` on Debian). On Debian, the packaged php-fpm systemd unit additionally maintains a version-agnostic `update-alternatives` alias at `/run/php/php-fpm.sock` that points at the socket of the default `www` pool. This alias only ever tracks `www`, not the pools created by this role, so configure your web server with the explicit per-pool socket path rather than the generic `/run/php/php-fpm.sock`. RedHat ships no such alias.
 
