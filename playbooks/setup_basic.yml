@@ -57,6 +57,13 @@
       when:
         - 'not setup_basic__skip_kernel_modules | d(false)'
 
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{
+          (not setup_basic__skip_core_dumps | d(false)) | ternary(core_dumps__kernel_settings__sysctl__dependent_var, []) | d([])
+        }}'
+      when:
+        - 'not setup_basic__skip_kernel_settings | d(false)'
+
     - role: 'linuxfabrik.lfops.core_dumps'
       when:
         - 'not setup_basic__skip_core_dumps | d(false)'

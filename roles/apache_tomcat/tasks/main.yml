@@ -42,7 +42,7 @@
   tags:
     - 'apache_tomcat'
     - 'apache_tomcat:configure'
-    - 'apache_tomcat:user'
+    - 'apache_tomcat:users'
     - 'apache_tomcat:state'
 
 
@@ -178,7 +178,7 @@
 
   tags:
     - 'apache_tomcat'
-    - 'apache_tomcat:user'
+    - 'apache_tomcat:users'
 
 
 - block:

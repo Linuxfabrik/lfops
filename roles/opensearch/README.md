@@ -228,7 +228,7 @@ curl 'https://localhost:9200' --user admin:your-password --insecure
 * Manages the state of the OpenSearch service (`systemctl enable/disable --now`).
 * Triggers: none.
 
-`opensearch:user`
+`opensearch:users`
 
 * Manages internal users (generates hashed passwords, deploys `internal_users.yml`).
 * Triggers: opensearch.service restart, `securityadmin.sh`.

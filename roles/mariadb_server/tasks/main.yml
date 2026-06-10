@@ -112,14 +112,14 @@
     - 'mariadb_server:clone_datadir'
     - 'mariadb_server:configure'
     - 'mariadb_server:dare'
-    - 'mariadb_server:database'
+    - 'mariadb_server:databases'
     - 'mariadb_server:dump'
     - 'mariadb_server:galera_new_cluster'
     - 'mariadb_server:secure_installation'
     - 'mariadb_server:state'
     - 'mariadb_server:sys_schema'
     - 'mariadb_server:upgrade'
-    - 'mariadb_server:user'
+    - 'mariadb_server:users'
 
 
 - block:
@@ -488,7 +488,7 @@
 
   tags:
     - 'mariadb_server'
-    - 'mariadb_server:user'
+    - 'mariadb_server:users'
 
 
 # mysql_secure_installation including some CIS hardenings
@@ -726,7 +726,7 @@
 
   tags:
     - 'mariadb_server'
-    - 'mariadb_server:database'
+    - 'mariadb_server:databases'
 
 
 # user management
@@ -801,7 +801,7 @@
 
   tags:
     - 'mariadb_server'
-    - 'mariadb_server:user'
+    - 'mariadb_server:users'
 
 
 # sys schema
@@ -888,10 +888,10 @@
   tags:
     - 'mariadb_server'
     - 'mariadb_server:configure'
-    - 'mariadb_server:database'
+    - 'mariadb_server:databases'
     - 'mariadb_server:dump'
     - 'mariadb_server:secure_installation'
     - 'mariadb_server:state'
     - 'mariadb_server:sys_schema'
     - 'mariadb_server:upgrade'
-    - 'mariadb_server:user'
+    - 'mariadb_server:users'
