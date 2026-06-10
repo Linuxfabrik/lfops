@@ -148,6 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:proxysql**: `mysql_servers` entries are now deduplicated by their actual `address` field. The merge key referenced a non-existent `hostname` field, so multiple backends sharing a host group and port were silently collapsed into one.
 * **role:repo_influxdb**: prevent the `influxdata-archive-keyring` package from being installed on both Enterprise Linux and Debian, as it would drop a second repo file pointing at upstream that is not managed by LFOps.
 * **role:php**: php-fpm workers now run with a defined `PATH`. Previously the worker environment was cleared, leaving `getenv("PATH")` empty, which broke PHP code that shells out to system binaries and tripped Nextcloud's "PHP getenv" setup warning.
 * **role:redis**: The Redis configuration file is no longer world-readable. It is now deployed as `root:redis` with mode `0640`, so its contents (e.g. a configured password) can no longer be read by other local users.
