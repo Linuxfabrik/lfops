@@ -373,9 +373,8 @@ mariadb_server__dump_user:
 
     * `host`:
 
-        * Optional. Host-part.
+        * Mandatory. Host-part. Part of the entry's unique identity, so it must be set explicitly (commonly `'localhost'`).
         * Type: String.
-        * Default: `'localhost'`
 
     * `password`:
 

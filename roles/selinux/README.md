@@ -157,9 +157,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
     * `proto`:
 
-        * Optional. Protocol for the specified port (range).
+        * Mandatory. Protocol for the specified port (range). Part of the entry's unique identity, so it must be set explicitly (commonly `'tcp'`).
         * Type: String.
-        * Default: `'tcp'`
 
     * `state`:
 
