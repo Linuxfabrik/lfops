@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+tbd
+
+
+## [v7.0.0] - 2026-06-11
+
 ### Breaking Changes
 
 * **plugin:combine_lod, role:apache_httpd, role:mariadb_server, role:proxysql, role:selinux**: A composite `unique_key` (a list of keys) now requires every component to be set on each item, instead of letting one be filled by a downstream default. Set the previously optional component explicitly: `virtualhost_port` on every `apache_httpd` vHost, `host` on every `mariadb_server` user/role, `port` on every `proxysql` server, and `proto` on every `selinux` port. Otherwise the play fails with a clear error.
@@ -906,7 +911,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **module_util:gnupg**: Add new module util
 
 
-[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v6.0.1...HEAD
+[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v7.0.0...HEAD
+[v7.0.0]: https://github.com/Linuxfabrik/lfops/compare/v6.0.1...v7.0.0
 [v6.0.1]: https://github.com/Linuxfabrik/lfops/compare/v6.0.0...v6.0.1
 [v6.0.0]: https://github.com/Linuxfabrik/lfops/compare/v5.1.0...v6.0.0
 [v5.1.0]: https://github.com/Linuxfabrik/lfops/compare/v5.0.0...v5.1.0

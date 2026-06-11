@@ -3,7 +3,7 @@
 This role disables kernel modules by deploying `/etc/modprobe.d/linuxfabrik-kernel-modules.conf`. It is used to harden a system by preventing rarely used or potentially dangerous drivers (FireWire storage, uncommon network protocols, USB storage, ...) from being loaded.
 
 
-*Available in the next LFOps release.*
+*Available since LFOps `7.0.0`.*
 
 
 ## How the Role Behaves

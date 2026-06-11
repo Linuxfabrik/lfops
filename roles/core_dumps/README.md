@@ -3,7 +3,7 @@
 This role hardens a system by disabling core dumps. Core dumps can leak sensitive data (passwords, keys) from a crashed process's memory to disk, so they are usually unwanted on production servers.
 
 
-*Available in the next LFOps release.*
+*Available since LFOps `7.0.0`.*
 
 
 ## How the Role Behaves
