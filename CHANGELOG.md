@@ -13,7 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-tbd
+### Added
+
+* **role:graylog_datanode**: Add `graylog_datanode__http_publish_uri` to set the REST API URI the DataNode advertises, needed when the bind address is not directly reachable (multiple interfaces, a NAT gateway, or a `0.0.0.0` bind address).
 
 
 ## [v7.0.0] - 2026-06-11
@@ -157,6 +159,8 @@ tbd
 
 ### Fixed
 
+* **role:repo_elasticsearch, role:repo_grafana, role:repo_graylog, role:repo_icinga, role:repo_influxdb, role:repo_mariadb, role:repo_mongodb, role:repo_monitoring_plugins, role:repo_mydumper, role:repo_opensearch, role:repo_proxysql, role:repo_redis, role:repo_sury**: Refreshing the apt cache is no longer reported as a change on every run.
+* **role:repo_remi**: Enabling the php, composer and Redis module streams is now idempotent. Repeated runs no longer report a change or briefly disable and re-enable the stream on every run.
 * **role:proxysql**: `mysql_servers` entries are now deduplicated by their actual `address` field. The merge key referenced a non-existent `hostname` field, so multiple backends sharing a host group and port were silently collapsed into one.
 * **role:repo_influxdb**: prevent the `influxdata-archive-keyring` package from being installed on both Enterprise Linux and Debian, as it would drop a second repo file pointing at upstream that is not managed by LFOps.
 * **role:php**: php-fpm workers now run with a defined `PATH`. Previously the worker environment was cleared, leaving `getenv("PATH")` empty, which broke PHP code that shells out to system binaries and tripped Nextcloud's "PHP getenv" setup warning.

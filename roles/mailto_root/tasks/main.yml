@@ -7,9 +7,13 @@
 
   - name: 'Send test mail to internal root (should be delivered to {{ mailto_root__to }})' # noqa no-changed-when
     ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to root" root'
+    args:
+      executable: '/bin/bash'
 
   - name: 'Send test mail to {{ mailto_root__to[0] }}' # noqa no-changed-when
     ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to {{ mailto_root__to[0] }}" {{ mailto_root__from_command }} {{ mailto_root__to[0] }}'
+    args:
+      executable: '/bin/bash'
 
   tags:
     - 'mailto_root'
