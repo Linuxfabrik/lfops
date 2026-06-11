@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026051601
+# 2026061001
 # 7.1
 # see https://go2docs.graylog.org/7-1/setting_up_graylog/data_node_configuration_file.htm
 #####################################
@@ -96,7 +96,11 @@ datanode_http_port = {{ graylog_datanode__datanode_http_port }}
 # This configuration should be used if you want to connect to this Graylog DataNode's REST API and it is available on
 # another network interface than $http_bind_address,
 # for example if the machine has multiple network interfaces or is behind a NAT gateway.
+{% if graylog_datanode__http_publish_uri | length %}
+http_publish_uri = {{ graylog_datanode__http_publish_uri }}
+{% else %}
 # http_publish_uri =
+{% endif %}
 
 #### OpenSearch HTTP port
 #
