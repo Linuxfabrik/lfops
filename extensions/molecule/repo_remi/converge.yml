@@ -1,0 +1,2 @@
+- name: 'Converge repo_remi playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.repo_remi'
