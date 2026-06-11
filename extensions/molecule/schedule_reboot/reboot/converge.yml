@@ -1,0 +1,4 @@
+# Same playbook as the no_reboot sub-scenario; only verify.yml differs (it
+# performs a real reboot instead of the non-destructive checks).
+- name: 'Converge schedule_reboot playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.schedule_reboot'
