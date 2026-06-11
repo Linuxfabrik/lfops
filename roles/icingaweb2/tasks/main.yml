@@ -6,7 +6,7 @@
     - 'icingaweb2'
     - 'icingaweb2:configure'
     - 'icingaweb2:resources'
-    - 'icingaweb2:user'
+    - 'icingaweb2:users'
 
 - block:
 
@@ -239,4 +239,4 @@
 
   tags:
     - 'icingaweb2'
-    - 'icingaweb2:user'
+    - 'icingaweb2:users'

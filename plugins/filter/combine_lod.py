@@ -25,7 +25,8 @@ DOCUMENTATION = r'''
     - Sub-dictionaries and sub-lists are replaced wholesale, not merged recursively. To merge nested structures, build the nested values up using this filter at each level.
     - The result keeps the order in which each unique key is first seen across all input lists; later updates to an existing key do not move it.
     - Every list item must be a dictionary; a non-dictionary item raises an error.
-    - Every input dictionary must contain the unique key (or all of them, when a list of keys is passed). A missing or falsy key value (C(None), C(0), empty string) raises an error.
+    - Every input dictionary must contain the unique key (or all of them, when a list of keys is passed). Each key is the item's identity and must be set explicitly; it may not rely on a default applied elsewhere.
+    - Only an absent key raises an error. A key that is present with a falsy value (C(0), empty string, C(False)) is kept as a distinct identity, so e.g. a port of C(0) is valid. This applies to a single key and to every component of a key list alike.
   positional: _input, _dicts
   options:
     _input:
@@ -185,24 +186,35 @@ def combine_lod(*args, **kwargs):
             if not isinstance(item, collections.abc.MutableMapping):
                 raise AnsibleFilterError('found a non-dictionary item in the list, this is not supported')
 
+            # A unique_key is the item's identity, so every key must be set
+            # explicitly and may not be left to a default applied elsewhere:
+            # otherwise one item omitting it and another stating that same
+            # default would resolve to the same identity yet not merge.
+            # Presence is checked, not truthiness, so a legitimately falsy
+            # identity value (e.g. `port: 0` for a unix socket) is still
+            # accepted. Single and composite keys behave the same way.
             if isinstance(unique_key, collections.abc.MutableSequence):
-                key_components = [item.get(k, None) for k in unique_key]
-                # a tuple is always truthy, even `(None, None)`, so the `not key`
-                # check used for single keys would not catch a composite key with
-                # missing components. Validate each component explicitly instead.
-                if not all(key_components):
+                missing = [k for k in unique_key if k not in item]
+                if missing:
+                    # Show the unique-key components the item does set, so the
+                    # offending item can be located in a long inventory. These
+                    # are identifiers, never secrets (a password is never a
+                    # unique_key). Fall back to the item's field names if none
+                    # of the components are set.
+                    set_keys = {k: item[k] for k in unique_key if k in item}
                     raise AnsibleFilterError(
-                        f'found a dictionary missing one of the unique keys {unique_key}, '
-                        'this is not supported'
+                        f'found a dictionary missing the unique key(s) {missing} '
+                        f'(required by unique_key={list(unique_key)}); '
+                        f'the item sets {set_keys or sorted(item.keys())}'
                     )
-                key = tuple(key_components)
+                key = tuple(item[k] for k in unique_key)
             else:
-                key = item.get(unique_key, None)
-                if not key:
+                if unique_key not in item:
                     raise AnsibleFilterError(
-                        f"found a dictionary without the unique key '{unique_key}', "
-                        'this is not supported'
+                        f"found a dictionary missing the unique key '{unique_key}'; "
+                        f'the item sets the keys {sorted(item.keys())}'
                     )
+                key = item[unique_key]
 
             # the python dict.update function does exactly what we want.
             # it is also used for ansible.builtin.combine(..., recurse=False, list_merge='replace').

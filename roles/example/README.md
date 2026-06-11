@@ -145,7 +145,7 @@ The example role is a single standalone service, so it has no walkthrough.
 * Manages optional example plugins (install/remove).
 * Triggers: none.
 
-`example:user`
+`example:users`
 
 * Manages application users via the REST API.
 * Triggers: none.

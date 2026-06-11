@@ -9,15 +9,8 @@
       group: 'root'
       mode: 0o644
 
-  - name: 'Deploy /etc/sysctl.d/linuxfabrik-core-dumps.conf'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/sysctl.d/linuxfabrik-core-dumps.conf.j2'
-      dest: '/etc/sysctl.d/linuxfabrik-core-dumps.conf'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-    notify: 'core_dumps: sysctl --system'
+  # fs.suid_dumpable is set via the kernel_settings role (see the playbook),
+  # not here, so sysctl management stays in a single place.
 
   - name: 'mkdir -p /etc/systemd/coredump.conf.d'
     ansible.builtin.file:

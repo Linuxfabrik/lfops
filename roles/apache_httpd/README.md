@@ -447,6 +447,11 @@ apache_httpd__systemd_state: 'started'
         * Mandatory. Set this variable for each vHost definition. Although this is just best practice, we would never use a vHost without a ServerName.
         * Type: String.
 
+    * `virtualhost_port`:
+
+        * Mandatory. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. Part of the vHost's unique identity, so it must be set explicitly (`443`, or `80` for a redirect vHost).
+        * Type: Number.
+
 Example:
 ```yaml
 # mandatory
@@ -692,8 +697,8 @@ This role creates a vHost named `localhost` by default. See [defaults/main.yml](
 `virtualhost_port`
 
 * Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive.
+* Mandatory. Part of the vHost's unique identity, so it must be set explicitly (`443`, or `80` for a redirect vHost).
 * Type: Number.
-* Default: `443`, redirect `80`
 
 Example: See [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md).
 

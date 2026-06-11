@@ -28,7 +28,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Deploys the /etc/influxdb/influxdb.conf config file.
 * Triggers: influxdb.service restart.
 
-`influxdb:database`
+`influxdb:databases`
 
 * Creates or deletes InfluxDB databases.
 * Triggers: none.
@@ -43,7 +43,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Manages the state of the InfluxDB service.
 * Triggers: none.
 
-`influxdb:user`
+`influxdb:users`
 
 * Creates, updates or deletes InfluxDB users.
 * Triggers: none.

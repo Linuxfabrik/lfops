@@ -172,7 +172,7 @@
   tags:
     - 'mongodb'
     - 'mongodb:dump'
-    - 'mongodb:user'
+    - 'mongodb:users'
     - 'mongodb:status'
 
 - block:
@@ -224,7 +224,7 @@
     - 'mongodb__is_writable_primary_result["transformed_output"]'
   tags:
     - 'mongodb'
-    - 'mongodb:user'
+    - 'mongodb:users'
 
 
 - block:
@@ -254,7 +254,7 @@
   tags:
     - 'mongodb'
     - 'mongodb:dump'
-    - 'mongodb:user'
+    - 'mongodb:users'
 
 
 - block:

@@ -31,7 +31,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Manages the state of `solr.service`.
 * Triggers: none.
 
-`apache_solr:user`
+`apache_solr:users`
 
 * Generates hashed passwords and deploys `security.json`.
 * Triggers: solr.service restart.
