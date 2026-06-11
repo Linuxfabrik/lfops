@@ -73,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:mailto_root**: Send the verification mails via `sendmail` (provided by `postfix`) instead of the `mail` (mailx) command, completing the move off `mailx` (see Breaking Changes). The role no longer needs the `mailx` package installed.
 * **role:icinga2_master, role:icingadb**: Validate the Icinga 2 configuration before restarting the service. A faulty config now fails the playbook run loudly instead of bouncing the daemon into a broken state and leaving Icinga 2 down.
 * **role:nextcloud**: Automatic app updates are now enabled by default (`nextcloud__timer_app_update_enabled`). The scheduled app update only switches Nextcloud into maintenance mode when an app update is actually pending, so an instance that is already up to date keeps serving requests without interruption. After updating, the recommended database migrations are applied automatically. A failed run no longer leaves the instance stuck in maintenance mode.
 * **role:clamav**: Now runs on Debian and Ubuntu in addition to Red Hat-family systems, and works on RHEL 10. The role seeds the signature database on first install so the scanner starts reliably, and runs an EICAR self-test (also available on its own via the `clamav:test` tag) that confirms detection actually works.

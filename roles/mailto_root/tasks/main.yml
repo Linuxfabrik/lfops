@@ -1,15 +1,34 @@
 - block:
 
-  - name: 'Set platform/version specific variables'
-    ansible.builtin.import_role:
-      name: 'shared'
-      tasks_from: 'platform-variables.yml'
+  # send via sendmail (provided by postfix), so the role needs no mailx package
+  # and one invocation works across distros (mailx's -r / -a "From:" split does
+  # not). -t reads the recipient from the To: header. changed_when: false because
+  # sending a verification mail does not change managed system state.
+  - name: 'Send test mail to internal root (should be delivered to {{ mailto_root__to }})'
+    ansible.builtin.shell: |
+      set -o pipefail
+      {
+          printf 'From: %s\n' '{{ mailto_root__from }}'
+          printf 'To: root\n'
+          printf 'Subject: Test from %s to root\n' "$(hostname)"
+          printf '\nTestmail\n'
+      } | /usr/sbin/sendmail -oi -t -f '{{ mailto_root__from }}'
+    args:
+      executable: '/usr/bin/bash'
+    changed_when: false
 
-  - name: 'Send test mail to internal root (should be delivered to {{ mailto_root__to }})' # noqa no-changed-when
-    ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to root" root'
-
-  - name: 'Send test mail to {{ mailto_root__to[0] }}' # noqa no-changed-when
-    ansible.builtin.shell: 'echo "Testmail" | mail -s "Test from $(hostname) to {{ mailto_root__to[0] }}" {{ mailto_root__from_command }} {{ mailto_root__to[0] }}'
+  - name: 'Send test mail to {{ mailto_root__to[0] }}'
+    ansible.builtin.shell: |
+      set -o pipefail
+      {
+          printf 'From: %s\n' '{{ mailto_root__from }}'
+          printf 'To: %s\n' '{{ mailto_root__to[0] }}'
+          printf 'Subject: Test from %s to %s\n' "$(hostname)" '{{ mailto_root__to[0] }}'
+          printf '\nTestmail\n'
+      } | /usr/sbin/sendmail -oi -t -f '{{ mailto_root__from }}'
+    args:
+      executable: '/usr/bin/bash'
+    changed_when: false
 
   tags:
     - 'mailto_root'
