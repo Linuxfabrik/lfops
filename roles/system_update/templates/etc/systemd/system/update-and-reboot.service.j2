@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2026060901
+# 2026061001
 
 [Unit]
 Description=update-and-reboot Service
-# order-only edges (no Wants/Requires): run after the security transaction so two
-# dnf transactions never overlap, and before the reboot actor so the reboot waits
-# for this update to finish. After=/Before= a unit that is not queued is a no-op.
-After=security-update.service
+# order-only edge (no Wants/Requires): run before the reboot actor so a requested
+# reboot waits for this update to finish. Before= an unqueued unit is a no-op. The
+# security lane orders itself After= this service (see security-update.service for
+# why the weekly lane runs first).
 Before=schedule-reboot.service
 
 [Service]
