@@ -50,6 +50,12 @@ argument_specs:
         required: false
         description: 'systemd OnCalendar for the reboot actor. Defaults to daily at the reboot window.'
 
+      schedule_reboot__reboot_grace_period:
+        type: 'int'
+        required: false
+        default: 60
+        description: 'Seconds to wait after sending the reboot notification before rebooting, so the mail can leave the queue. 0 disables.'
+
       schedule_reboot__reboot_time__dependent_var:
         type: 'str'
         required: false

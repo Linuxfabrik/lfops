@@ -6,6 +6,7 @@ schedule_reboot__mail_recipients: '{{ mailto_root__to }}'
 schedule_reboot__mail_subject_hostname: '$(hostname --short)'
 schedule_reboot__mail_subject_prefix: ''
 schedule_reboot__on_calendar: '*-*-* {{ schedule_reboot__reboot_time__combined_var }}'
+schedule_reboot__reboot_grace_period: 60
 schedule_reboot__reboot_time__dependent_var: ''
 schedule_reboot__reboot_time__group_var: ''
 schedule_reboot__reboot_time__host_var: ''

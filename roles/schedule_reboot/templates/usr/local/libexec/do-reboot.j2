@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026060901
+# 2026061001
 
 # The single reboot actor. Run by schedule-reboot.service (a timer at the reboot
 # window, ordered After= the update lanes) and by `schedule-reboot --now`. Reboots
@@ -14,21 +14,22 @@ SPOOL_DIR='/run/schedule-reboot'
 REBOOT=$(which reboot)
 
 send_msg () {
+    local subject="$1" body="$2"
     # feed a complete message to sendmail (-t reads the recipients from the headers).
     # sendmail has a stable CLI across MTAs, unlike mailx's -r / -a "From:" split.
     {
         printf 'From: %s\n' "$SENDER"
         printf 'To: %s\n' "${RECIPIENTS// /, }"
-        printf 'Subject: %s\n' "$SUBJECT"
+        printf 'Subject: %s\n' "$subject"
         printf 'Content-Type: text/plain; charset="utf-8"\n'
         printf 'Content-Transfer-Encoding: 8bit\n'
-        printf '\n%s\n' "$MSGBODY"
+        printf '\n%s\n' "$body"
     } | sendmail -oi -t -f "$SENDER"
 {% if schedule_reboot__rocketchat_url is defined and schedule_reboot__rocketchat_url | length %}
     /usr/bin/curl --silent --output /dev/null --data-urlencode \
-        "text=${SUBJECT}
+        "text=${subject}
 
-        ${MSGBODY}
+        ${body}
         {{ schedule_reboot__rocketchat_msg_suffix }}" \
         --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
         "{{ schedule_reboot__rocketchat_url }}"
@@ -53,8 +54,9 @@ for request in "${requests[@]}"; do
     MSGBODY+="=== $(basename "$request") ==="$'\n'
     MSGBODY+="$(cat "$request")"$'\n\n'
 done
-SUBJECT="$SUBJECT_PREFIX - Rebooting ($(printf '%s ' "${requests[@]##*/}"))"
-send_msg
+# the reboot reasons are the request file names, comma-separated for the subject
+reasons=$(printf '%s, ' "${requests[@]##*/}")
+send_msg "$SUBJECT_PREFIX - Automatic reboot due to ${reasons%, }" "$MSGBODY"
 
 {% if schedule_reboot__icinga2_api_user_login is defined and schedule_reboot__icinga2_api_user_login | length %}
 # needed for Icinga to set downtime (max. 5 minutes downtime)
@@ -72,6 +74,12 @@ curl --connect-timeout 5 --insecure --silent --user '{{ schedule_reboot__icinga2
 }
 EOF
 {% endif %}
+
+# give the notification mail time to leave the local postfix queue before we go
+# down. the queue is persistent so the mail is never lost, but this makes the
+# heads-up arrive before the reboot rather than after the host is back. the host
+# keeps serving during the wait; apache is only killed below, right before reboot.
+sleep {{ schedule_reboot__reboot_grace_period }}
 
 # save time and don't wait for any apache graceful finishing
 {% if ansible_facts['os_family'] == 'Debian' %}

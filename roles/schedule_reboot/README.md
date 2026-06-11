@@ -117,6 +117,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: String.
 * Default: `'*-*-* {{ schedule_reboot__reboot_time__combined_var }}'`
 
+`schedule_reboot__reboot_grace_period`
+
+* The number of seconds to wait after sending the reboot notification before the host actually reboots. This gives the notification mail time to leave the local mail queue (which is persistent, so the mail is never lost, but otherwise the heads-up can arrive after the host is already back). The host keeps serving during the wait. Set to `0` to reboot immediately.
+* Type: Integer.
+* Default: `60`
+
 `schedule_reboot__reboot_time__host_var` / `schedule_reboot__reboot_time__group_var`
 
 * The reboot window: the time of day at which the actor (and the producers ordered before it) run. Steer it per inventory group. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
@@ -149,6 +155,7 @@ schedule_reboot__mail_recipients:
   - 'info@example.com'
   - 'support@example.com'
 schedule_reboot__mail_subject_prefix: '001-'
+schedule_reboot__reboot_grace_period: 60
 schedule_reboot__reboot_time__group_var: '19:00'
 schedule_reboot__rocketchat_msg_suffix: '@administrator'
 schedule_reboot__rocketchat_url: 'https://chat.example.com/hooks/abcd1234'
