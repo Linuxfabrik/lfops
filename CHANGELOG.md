@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+tbd
+
+
+## [v7.0.0] - 2026-06-11
+
 ### Breaking Changes
 
 * **role:php**: The PHP-FPM pool config changed for existing hosts. Sessions now live in a per-pool directory (the default `www` pool moves from `/var/lib/php/session` to `/var/lib/php/session/www`), so logged-in users are signed out once after the upgrade. `memory_limit`, `max_execution_time`, `max_input_vars`, `post_max_size`, `upload_max_filesize` and `session.save_path` are now enforced as `php_admin_value`, so applications can no longer raise them at runtime via `ini_set()`. The FPM status path moved from `/fpm-status` to `/www-fpm-status`, and `soap.wsdl_cache_dir` is no longer set (PHP default applies). Worker processes now recycle after 500 requests (`pm.max_requests`), where previously they ran indefinitely.
@@ -908,7 +913,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **module_util:gnupg**: Add new module util
 
 
-[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v6.0.1...HEAD
+[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v7.0.0...HEAD
+[v7.0.0]: https://github.com/Linuxfabrik/lfops/compare/v6.0.1...v7.0.0
 [v6.0.1]: https://github.com/Linuxfabrik/lfops/compare/v6.0.0...v6.0.1
 [v6.0.0]: https://github.com/Linuxfabrik/lfops/compare/v5.1.0...v6.0.0
 [v5.1.0]: https://github.com/Linuxfabrik/lfops/compare/v5.0.0...v5.1.0

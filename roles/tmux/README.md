@@ -3,7 +3,7 @@
 This role installs [tmux](https://github.com/tmux/tmux) and deploys a system-wide `/etc/tmux.conf` with sensible defaults, for example a larger scrollback buffer.
 
 
-*Available in the next LFOps release.*
+*Available since LFOps `7.0.0`.*
 
 
 ## How the Role Behaves
