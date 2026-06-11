@@ -157,6 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_remi**: Enabling the php, composer and Redis module streams is now idempotent. Repeated runs no longer report a change or briefly disable and re-enable the stream on every run.
 * **role:proxysql**: `mysql_servers` entries are now deduplicated by their actual `address` field. The merge key referenced a non-existent `hostname` field, so multiple backends sharing a host group and port were silently collapsed into one.
 * **role:repo_influxdb**: prevent the `influxdata-archive-keyring` package from being installed on both Enterprise Linux and Debian, as it would drop a second repo file pointing at upstream that is not managed by LFOps.
 * **role:php**: php-fpm workers now run with a defined `PATH`. Previously the worker environment was cleared, leaving `getenv("PATH")` empty, which broke PHP code that shells out to system binaries and tripped Nextcloud's "PHP getenv" setup warning.
