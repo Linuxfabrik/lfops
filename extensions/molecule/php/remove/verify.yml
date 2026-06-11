@@ -1,0 +1,51 @@
+# Verify the removal. Same mindset as install/verify.yml: check the observable
+# result, and confirm the removal did not break the still-running pool. The
+# install sub-scenario already proved the www pool actually serves; here we only
+# need to show the app1 pool is gone and php-fpm survived it.
+- name: 'Verify the app1 pool is removed and php-fpm survives'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Set OS-specific php-fpm facts'
+      ansible.builtin.set_fact:
+        __molecule__php_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
+        __molecule__php_runtime_path: '{{ "/run/php-fpm" if ansible_facts["os_family"] == "RedHat" else "/run/php" }}'
+
+    - name: 'Set the php-fpm service name'
+      ansible.builtin.set_fact:
+        __molecule__php_service: '{{ "php-fpm" if ansible_facts["os_family"] == "RedHat" else "php" ~ __molecule__php_version ~ "-fpm" }}'
+
+    # Removing a pool must not take the service down with it, so the most
+    # important check here is that php-fpm is still running.
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert php-fpm is still running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"][__molecule__php_service ~ ".service"]["state"] == "running"'
+
+    # The app1 pool socket disappears once its pool is reloaded away; the default
+    # www pool socket must still be there. php-fpm recreates pool sockets on
+    # (re)start, so a present www.sock alongside a running service means the www
+    # pool came back up after the reload.
+    - name: 'stat the pool sockets'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '{{ __molecule__php_runtime_path }}/app1.sock'
+        - '{{ __molecule__php_runtime_path }}/www.sock'
+      register: '__molecule__pool_socket_stat_result'
+
+    - name: 'Assert the app1 socket is gone and the www socket remains'
+      ansible.builtin.assert:
+        that:
+          - 'not __molecule__pool_socket_stat_result["results"][0]["stat"]["exists"]'
+          - '__molecule__pool_socket_stat_result["results"][1]["stat"]["exists"]'
+
+    # Note: we deliberately do not assert the app1 session directory is gone.
+    # Absent pools currently leave their session dir behind (known open item).

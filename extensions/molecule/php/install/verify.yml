@@ -1,0 +1,255 @@
+# verify.yml runs after converge and again after the idempotence step. It checks
+# the observable end result, never by re-running the role. The guiding question
+# is "what can only be confirmed by looking at the running system?".
+#
+# The headline check here is the PR's core promise: a pool's
+# php_admin_value[memory_limit] is enforced by the running workers and cannot be
+# raised with ini_set(). We prove it by speaking FastCGI to each pool's unix
+# socket and asking the running PHP what its effective config is, rather than
+# grepping the rendered pool file.
+#
+# We talk FastCGI with a tiny stdlib-only Python client instead of cgi-fcgi: the
+# fcgi / libfcgi-bin package is not available across the whole OS matrix (no EPEL
+# is enabled by the php playbook, and EPEL 10 does not ship it), whereas python3
+# is always present on a managed node.
+- name: 'Verify the php-fpm pools are configured and enforced at runtime'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    # The role's __php__ internals are not visible here, so recompute the few
+    # OS-specific names/paths we need from ansible_facts (mirrors the role).
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Set OS-specific php-fpm facts'
+      ansible.builtin.set_fact:
+        __molecule__php_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
+        __molecule__php_runtime_path: '{{ "/run/php-fpm" if ansible_facts["os_family"] == "RedHat" else "/run/php" }}'
+
+    - name: 'Set the php-fpm service name'
+      ansible.builtin.set_fact:
+        __molecule__php_service: '{{ "php-fpm" if ansible_facts["os_family"] == "RedHat" else "php" ~ __molecule__php_version ~ "-fpm" }}'
+
+    # Floor check: did the install happen at all? On its own this would pass even
+    # if the service never starts, so it is the start, not the goal.
+    - name: 'Assert the php packages are installed'
+      ansible.builtin.assert:
+        that:
+          - '"composer" in ansible_facts["packages"]'
+          - '"php" in ansible_facts["packages"]'
+          - '"php-fpm" in ansible_facts["packages"]'
+
+    # Real check: is the service up and enabled? A pool config that deployed
+    # without error but crashes php-fpm on start is only caught here. This also
+    # guards the Debian log-dir regression (missing dir -> php-fpm fails to
+    # start).
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert php-fpm is running and enabled'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"][__molecule__php_service ~ ".service"]["state"] == "running"'
+          - 'ansible_facts["services"][__molecule__php_service ~ ".service"]["status"] == "enabled"'
+
+    # Place the probe under /var/www/html so the php-fpm worker can read it: it
+    # survives the service's PrivateTmp (which namespaces /tmp away from the
+    # worker) and, after restorecon, carries the httpd_sys_content_t SELinux type
+    # the worker is allowed to read on RedHat.
+    - name: 'Create the probe directory'
+      ansible.builtin.file:
+        path: '/var/www/html/molecule-php'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    # One probe per pool, on its own path. opcache SHM is shared across all pools
+    # of a single FPM master, so if both pools requested the same script path the
+    # first pool to compile it would serve its cached copy (and its
+    # php_admin_value-affected runtime values) to the other within
+    # revalidate_freq. A distinct path per pool keeps each probe isolated.
+    - name: 'Deploy a per-pool php probe script'
+      ansible.builtin.copy:
+        dest: '/var/www/html/molecule-php/probe-{{ item }}.php'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+        content: |
+          <?php
+          echo 'memory_limit=' . ini_get('memory_limit') . "\n";
+          // php_admin_value must block this raise; the value has to stay put.
+          @ini_set('memory_limit', '1024M');
+          echo 'memory_limit_after=' . ini_get('memory_limit') . "\n";
+          echo 'session_save_path=' . ini_get('session.save_path') . "\n";
+      loop:
+        - 'app1'
+        - 'www'
+
+    - name: 'restorecon -Rv /var/www/html/molecule-php'
+      ansible.builtin.command: 'restorecon -Rv /var/www/html/molecule-php'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    # Minimal FastCGI client: connects to a pool's unix socket, sends one GET
+    # request with the given SCRIPT_NAME / SCRIPT_FILENAME and prints the
+    # response body. Stdlib only, so no package install is needed.
+    - name: 'Deploy the FastCGI probe client'
+      ansible.builtin.copy:
+        dest: '/usr/local/sbin/molecule-fcgi-request.py'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+        content: |
+          #!/usr/bin/env python3
+          import socket
+          import struct
+          import sys
+
+          FCGI_VERSION = 1
+          FCGI_BEGIN_REQUEST = 1
+          FCGI_END_REQUEST = 3
+          FCGI_PARAMS = 4
+          FCGI_STDIN = 5
+          FCGI_STDOUT = 6
+          FCGI_STDERR = 7
+          FCGI_RESPONDER = 1
+          REQ_ID = 1
+
+          sock_path, script_name, script_filename = sys.argv[1], sys.argv[2], sys.argv[3]
+
+          def enc_len(n):
+              if n < 128:
+                  return struct.pack('!B', n)
+              return struct.pack('!I', n | 0x80000000)
+
+          def encode_pair(name, value):
+              nb, vb = name.encode(), value.encode()
+              return enc_len(len(nb)) + enc_len(len(vb)) + nb + vb
+
+          def record(rtype, content):
+              return struct.pack('!BBHHBx', FCGI_VERSION, rtype, REQ_ID, len(content), 0) + content
+
+          params = {
+              'DOCUMENT_ROOT': '/var/www/html',
+              'GATEWAY_INTERFACE': 'CGI/1.1',
+              'QUERY_STRING': '',
+              'REQUEST_METHOD': 'GET',
+              'REQUEST_URI': script_name,
+              'SCRIPT_FILENAME': script_filename,
+              'SCRIPT_NAME': script_name,
+              'SERVER_PROTOCOL': 'HTTP/1.1',
+          }
+
+          data = record(FCGI_BEGIN_REQUEST, struct.pack('!HB5x', FCGI_RESPONDER, 0))
+          data += record(FCGI_PARAMS, b''.join(encode_pair(k, v) for k, v in params.items()))
+          data += record(FCGI_PARAMS, b'')
+          data += record(FCGI_STDIN, b'')
+
+          s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+          s.connect(sock_path)
+          s.sendall(data)
+
+          out, err = b'', b''
+          while True:
+              header = b''
+              while len(header) < 8:
+                  chunk = s.recv(8 - len(header))
+                  if not chunk:
+                      break
+                  header += chunk
+              if len(header) < 8:
+                  break
+              _, rtype, _, clen, plen, _ = struct.unpack('!BBHHBB', header)
+              content = b''
+              while len(content) < clen:
+                  chunk = s.recv(clen - len(content))
+                  if not chunk:
+                      break
+                  content += chunk
+              if plen:
+                  s.recv(plen)
+              if rtype == FCGI_STDOUT:
+                  out += content
+              elif rtype == FCGI_STDERR:
+                  err += content
+              elif rtype == FCGI_END_REQUEST:
+                  break
+          s.close()
+          sys.stdout.write(out.decode('utf-8', 'replace'))
+          sys.stderr.write(err.decode('utf-8', 'replace'))
+
+    # pm mode reaches the running pool: the status page reports the live process
+    # manager, which differs per pool (www: dynamic default, app1: static
+    # override). This fails if the value never made it into the running pool.
+    - name: 'Query the www pool status over its socket'
+      ansible.builtin.command:
+        argv:
+          - '/usr/local/sbin/molecule-fcgi-request.py'
+          - '{{ __molecule__php_runtime_path }}/www.sock'
+          - '/www-fpm-status'
+          - '/www-fpm-status'
+      register: '__molecule__www_status_result'
+      changed_when: false
+
+    - name: 'Assert the www pool runs with pm dynamic'
+      ansible.builtin.assert:
+        that: '__molecule__www_status_result["stdout"] is search("process manager:\s+dynamic")'
+
+    - name: 'Query the app1 pool status over its socket'
+      ansible.builtin.command:
+        argv:
+          - '/usr/local/sbin/molecule-fcgi-request.py'
+          - '{{ __molecule__php_runtime_path }}/app1.sock'
+          - '/app1-fpm-status'
+          - '/app1-fpm-status'
+      register: '__molecule__app1_status_result'
+      changed_when: false
+
+    - name: 'Assert the app1 pool runs with pm static'
+      ansible.builtin.assert:
+        that: '__molecule__app1_status_result["stdout"] is search("process manager:\s+static")'
+
+    # The headline check: run the same probe through each socket and confirm the
+    # workers enforce their own php_admin_value. app1 must report 256M, the value
+    # must not budge after ini_set (php_admin_value, not php_value), and the
+    # session path must be the per-pool directory.
+    - name: 'Run the php probe through the app1 pool socket'
+      ansible.builtin.command:
+        argv:
+          - '/usr/local/sbin/molecule-fcgi-request.py'
+          - '{{ __molecule__php_runtime_path }}/app1.sock'
+          - '/molecule-php/probe-app1.php'
+          - '/var/www/html/molecule-php/probe-app1.php'
+      register: '__molecule__app1_probe_result'
+      changed_when: false
+
+    - name: 'Assert app1 enforces its own php_admin_value memory_limit and session path'
+      ansible.builtin.assert:
+        that:
+          - '"memory_limit=256M" in __molecule__app1_probe_result["stdout"]'
+          - '"memory_limit_after=256M" in __molecule__app1_probe_result["stdout"]'
+          - '__molecule__app1_probe_result["stdout"] is search("session_save_path=.*/app1")'
+        fail_msg: 'app1 probe returned: {{ __molecule__app1_probe_result["stdout"] }}'
+
+    # Same script, different pool: www must report the role-default 128M. This is
+    # the isolation proof - one shared script, a different effective config per
+    # pool.
+    - name: 'Run the php probe through the www pool socket'
+      ansible.builtin.command:
+        argv:
+          - '/usr/local/sbin/molecule-fcgi-request.py'
+          - '{{ __molecule__php_runtime_path }}/www.sock'
+          - '/molecule-php/probe-www.php'
+          - '/var/www/html/molecule-php/probe-www.php'
+      register: '__molecule__www_probe_result'
+      changed_when: false
+
+    - name: 'Assert www uses the default memory_limit, proving pool isolation'
+      ansible.builtin.assert:
+        that: '"memory_limit=128M" in __molecule__www_probe_result["stdout"]'
+        fail_msg: 'www probe returned: {{ __molecule__www_probe_result["stdout"] }}'

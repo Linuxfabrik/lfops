@@ -1,0 +1,23 @@
+# Variables the php playbook needs, applied to every system under test.
+
+# RedHat only: repo_remi enables the php and composer module streams only when a
+# version is set. Without it the composer package is filtered out by dnf
+# modularity and the install fails. Debian's repo_sury needs no version. The php
+# role itself autodetects whichever version ends up installed.
+repo_remi__enabled_php_version: '8.3'
+
+# Debian only: repo_sury activates a package repo only for the repos listed here.
+repo_sury__enabled_repos:
+  - 'php'
+
+# Add a second pool with non-default values through the __group_var injection
+# slot, so the role's combine_lod merges it over the default 'www' pool. The two
+# differing pools let verify.yml prove each running pool uses its own config
+# (isolation), not just that a pool exists. 'www' stays at the role defaults
+# (pm dynamic, memory_limit 128M).
+php__fpm_pools__group_var:
+  - name: 'app1'
+    pm: 'static'
+    pm_max_children: 4
+    php_admin_value_memory_limit: '256M'
+    state: 'present'

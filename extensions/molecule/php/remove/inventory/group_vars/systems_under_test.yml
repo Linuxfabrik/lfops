@@ -1,0 +1,17 @@
+# The remove scenario runs the same playbook but flips the app1 pool to
+# state: 'absent', exercising the list-with-state removal path. The default
+# 'www' pool is untouched and must keep running.
+#
+# In a real suite, run the install sub-scenario first to create app1, then this
+# one to remove it.
+
+# Same repo inputs as the install sub-scenario (see its group_vars for why these
+# are needed). RedHat: enable the php/composer module streams. Debian: activate
+# the sury php repo.
+repo_remi__enabled_php_version: '8.3'
+repo_sury__enabled_repos:
+  - 'php'
+
+php__fpm_pools__group_var:
+  - name: 'app1'
+    state: 'absent'
