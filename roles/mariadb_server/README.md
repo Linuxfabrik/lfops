@@ -835,7 +835,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#skip_name_resolve)
 * Type: String.
-* Default: `'ON'`
+* Default: `'OFF'`
 
 `mariadb_server__cnf_slow_query_log__group_var` / `mariadb_server__cnf_slow_query_log__host_var`
 

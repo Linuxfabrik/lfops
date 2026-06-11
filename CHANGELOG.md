@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking Changes
+
+* **role:mariadb_server**: The default for `skip_name_resolve` is now `OFF` instead of `ON`. Hosts that relied on the previous default and grant access by hostname keep working, but connections are now resolved via DNS again. Set `mariadb_server__cnf_skip_name_resolve__group_var: 'ON'` (or the `__host_var`) to restore the previous behaviour.
+
 ### Added
 
 * **role:graylog_datanode**: Add `graylog_datanode__http_publish_uri` to set the REST API URI the DataNode advertises, needed when the bind address is not directly reachable (multiple interfaces, a NAT gateway, or a `0.0.0.0` bind address).
