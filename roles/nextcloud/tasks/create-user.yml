@@ -11,6 +11,7 @@
     - '" already exists" not in nextcloud__create_user_result["stdout"] | lower'
   changed_when: '" already exists" not in nextcloud__create_user_result["stdout"] | lower'
   args:
+    executable: '/bin/bash'
     chdir: '/var/www/html/nextcloud/'
 
 - name: 'Update Nextcloud settings for user {{ ncuser["username"] }}'

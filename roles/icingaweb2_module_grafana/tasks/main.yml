@@ -129,6 +129,7 @@
         done
 
         cp -- /tmp/ansible.monitoring-plugins-repo/assets/icingaweb2-module-grafana/*.ini /tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana/
+      executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
