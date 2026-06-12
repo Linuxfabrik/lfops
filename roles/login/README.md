@@ -182,7 +182,9 @@ login__users__group_var: []
 
 ## Troubleshooting
 
-`[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library for continued encryption functionality. This feature will be removed in version 2.17.`: Make sure to install the `passlib` Python module on the Ansible Controller (`dnf install python3-passlib` on Fedora).
+**`[DEPRECATION WARNING]: Encryption using the Python crypt module is deprecated. The Python crypt module is deprecated and will be removed from Python 3.13. Install the passlib library for continued encryption functionality. This feature will be removed in version 2.17.`**
+
+* Make sure to install the `passlib` Python module on the Ansible Controller (`dnf install python3-passlib` on Fedora).
 
 
 ## License

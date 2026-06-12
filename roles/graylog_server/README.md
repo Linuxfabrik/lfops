@@ -502,9 +502,9 @@ graylog_server__trusted_proxies:
 
 ## Troubleshooting
 
-Q: `/bin/sh: /opt/python-venv/pymongo/bin/python3: No such file or directory`
+**`/bin/sh: /opt/python-venv/pymongo/bin/python3: No such file or directory`**
 
-A: You either have to run the whole playbook, or python_venv directly: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_server --tags python_venv`
+* You either have to run the whole playbook, or python_venv directly: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_server --tags python_venv`
 
 
 ## License

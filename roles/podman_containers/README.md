@@ -301,7 +301,9 @@ podman_containers__volumes__host_var:
 
 ## Troubleshooting
 
-`Failed to enable unit: Unit ... is transient or generated.`: Since the units are generated, `systemctl enable/disable` has no effect. Autostarting is handled by the `podman-system-generator` based on the `WantedBy` setting in the quadlet. Have a look at `man podman-systemd.unit` for details.
+**`Failed to enable unit: Unit ... is transient or generated.`**
+
+* Since the units are generated, `systemctl enable/disable` has no effect. Autostarting is handled by the `podman-system-generator` based on the `WantedBy` setting in the quadlet. Have a look at `man podman-systemd.unit` for details.
 
 
 ## License
