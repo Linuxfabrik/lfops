@@ -13,7 +13,7 @@ trap 'error_handler "${LINENO}"' ERR
 
 WEBSERVER_USER="{{ __shared__apache_httpd_user }}"
 WEBSERVER_GROUP="{{ __shared__apache_httpd_group }}"
-PHP_SERVICE_NAME="{{ nextcloud__php_fpm_service_name }}"
+PHP_SERVICE_NAME="{{ __nextcloud__php_fpm_service_name }}"
 
 NC_DIR="/var/www/html/nextcloud"
 DATA_DIR=$(sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" config:system:get datadirectory)

@@ -15,7 +15,6 @@
 #   * nextcloud__icinga2_api_user_login -> '{{ system_update__icinga2_api_user_login }}'
 #   * nextcloud__icinga2_hostname        -> '{{ ansible_facts["nodename"] }}'
 #   * nextcloud__mariadb_login           -> '{{ mariadb_server__admin_user }}'
-#   * nextcloud__php_fpm_service_name    -> '{{ php__fpm_service_name }}'
 argument_specs:
   main:
     options:

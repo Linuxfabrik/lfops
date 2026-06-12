@@ -125,9 +125,9 @@
 
   # do this straight after the installation to get NC up and running
   # otherwise subsequent occ commands might fail
-  - name: 'restart {{ nextcloud__php_fpm_service_name }}'
+  - name: 'restart {{ __nextcloud__php_fpm_service_name }}'
     ansible.builtin.service:
-      name: '{{ nextcloud__php_fpm_service_name }}'
+      name: '{{ __nextcloud__php_fpm_service_name }}'
       state: 'restarted'
 
   tags:
@@ -175,9 +175,9 @@
     become_user: '{{ __shared__apache_httpd_user }}'
     loop: '{{ nextcloud__app_configs__combined_var }}'
 
-  - name: 'restart {{ nextcloud__php_fpm_service_name }}'
+  - name: 'restart {{ __nextcloud__php_fpm_service_name }}'
     ansible.builtin.service:
-      name: '{{ nextcloud__php_fpm_service_name }}'
+      name: '{{ __nextcloud__php_fpm_service_name }}'
       state: 'restarted'
 
   when:

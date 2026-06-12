@@ -37,3 +37,4 @@ __nextcloud__php__modules__dependent_var:
       state: 'present'
     - name: 'php-zip'
       state: 'present'
+__nextcloud__php_fpm_service_name: '{{ php__fpm_service_name }}'

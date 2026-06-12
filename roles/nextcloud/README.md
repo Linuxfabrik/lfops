@@ -249,12 +249,6 @@ nextcloud__users:
 * Type: String.
 * Default: `'*:50:15'`
 
-`nextcloud__php_fpm_service_name`
-
-* Name of the PHP-FPM systemd service that the role restarts (and that the `/usr/local/bin/nextcloud-update` script restarts). Defaults to the `php` role's `php__fpm_service_name` (`php-fpm` on RHEL, `php<version>-fpm` on Debian).
-* Type: String.
-* Default: `{{ php__fpm_service_name }}`
-
 `nextcloud__skip_apps`
 
 * Completely skips the management of Nextcloud apps. Set this to prevent changes via the WebGUI from being overwritten.
