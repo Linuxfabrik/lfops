@@ -119,6 +119,17 @@
       when:
         - 'not setup_basic__skip_python | d(false)'
 
+    # python_venv must run before glances: on RHEL 10 glances has no distro package and is installed
+    # into a venv via glances__python_venv__venvs__dependent_var. duplicity also consumes this role's
+    # venvs (further down in the Backups section).
+    - role: 'linuxfabrik.lfops.python_venv'
+      python_venv__venvs__dependent_var: '{{
+          duplicity__python_venv__venvs__dependent_var +
+          glances__python_venv__venvs__dependent_var
+        }}'
+      when:
+        - 'not setup_basic__skip_python_venv | d(false)'
+
     - role: 'linuxfabrik.lfops.glances'
       when:
         - 'not setup_basic__skip_glances | d(false)'
@@ -189,14 +200,6 @@
 
 
     # === Backups ===
-    - role: 'linuxfabrik.lfops.python_venv'
-      python_venv__venvs__dependent_var: '{{
-          duplicity__python_venv__venvs__dependent_var +
-          glances__python_venv__venvs__dependent_var
-        }}'
-      when:
-        - 'not setup_basic__skip_python_venv | d(false)'
-
     - role: 'linuxfabrik.lfops.duplicity'
       when:
         - 'not setup_basic__skip_duplicity | d(false)'
