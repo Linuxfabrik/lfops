@@ -105,7 +105,7 @@ Which Ansible role is proven to run on which OS?
 | motd                                  |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | mount                                 |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | network                               |   -    |   -    |   x    |   x    |    x    |           |           |           |                                              |
-| nextcloud                             |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| nextcloud                             |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nfs_client                            |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nfs_server                            |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nodejs                                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
