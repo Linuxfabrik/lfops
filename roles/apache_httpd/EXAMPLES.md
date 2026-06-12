@@ -688,13 +688,21 @@ As a starting point. Replace ``<MYVHOST>`` with your ``conf_server_name`` or FQD
 
 ### Matomo Realtime Tracking
 
+Store the Matomo auth token in a config file instead of passing it via `--token-auth` (deprecated, since command line options are visible in the process list). Restrict the file to the user running the import script - piped log programs run as the user that started httpd, which is `root` (mode `0600`):
+
+```
+# /etc/matomo-auth.conf
+[auth]
+token_auth=linuxfabrik
+```
+
 ```
 # Matomo Realtime Logging
 LogFormat "%v %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" matomo
 CustomLog "||/usr/local/sbin/import_logs.py \
 --debug --enable-http-errors --enable-http-redirects --enable-bots \
 --url=https://analytics.example.com --output=/var/log/matomo.log --recorders=1 \
---recorder-max-payload-size=1 --log-format-name=common_complete --token-auth=2ac48e93-2ca7-4df3-9e7c-c81b36d0a474 \
+--recorder-max-payload-size=1 --log-format-name=common_complete --auth-config=/etc/matomo-auth.conf \
 -" matomo
 ```
 
