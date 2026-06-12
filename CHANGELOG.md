@@ -162,6 +162,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: App configuration no longer aborts on current Nextcloud. The `text` app's `workspace_available` setting is now applied with the boolean type the Nextcloud config lexicon requires, instead of the string type that newer Nextcloud rejects.
 * **role:nextcloud**: The IMAP PHP extension now installs on current PHP. On PHP 8.4 and newer IMAP was removed from PHP core, so the role installs it from the PECL package instead, where previously the install aborted because the old `php-imap` package no longer exists for that PHP version.
 * **role:php**: Running the role with a specific tag (for example `--tags php:state`) on Debian and Ubuntu no longer fails with an undefined PHP version. Roles that build on php and only restart php-fpm (such as nextcloud) now also work when run with their own tags.
 * **role:nextcloud**: The `nextcloud-ldap-show-remnants` script no longer aborts the `nextcloud:cron` deploy with `'setup_basic__skip_mailto_root' is undefined` when the role runs outside the `setup_basic` playbook (e.g. via `--tags nextcloud:cron` in `setup_nextcloud`). The report recipients now come from the new role variable `nextcloud__mail_recipients` (defaulting to the global `mailto_root__to`); the report is always printed to stdout and additionally mailed when recipients are set.
