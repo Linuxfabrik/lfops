@@ -1,0 +1,19 @@
+# glances is not packaged in EPEL 10, so on RHEL 10 and clones it is installed into a Python venv
+# via the python_venv role (injected by the playbook). On every other platform glances comes from
+# the distribution package, so no venv is needed and this stays empty.
+#
+# Not using the platform_select filter here: it picks a value by exact platform key and has no
+# ">=" semantics, so it cannot express "RedHat family major >= 10" without enumerating every major.
+# It would also have to stay in lockstep with the role's package-skip `when` (also `>= 10`);
+# expressing the same threshold inline in both places keeps them from drifting. platform_select is
+# for dependent_var values that genuinely differ per platform (e.g. package names), not an on/off
+# version gate like this one.
+glances__python_venv__venvs__dependent_var: '{{
+    [
+      {
+        "name": "glances",
+        "packages": ["glances"],
+        "exposed_binaries": ["glances"]
+      }
+    ] if (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10) else []
+  }}'

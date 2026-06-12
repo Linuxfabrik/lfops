@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:glances**: Add RHEL 10 / Rocky 10 / Alma 10 support by installing glances into a Python venv via the `python_venv` role, since the package is not available in EPEL 10. RHEL 10 is now marked proven (`x`) in COMPATIBILITY.
 * **role:graylog_datanode**: Add `graylog_datanode__http_publish_uri` to set the REST API URI the DataNode advertises, needed when the bind address is not directly reachable (multiple interfaces, a NAT gateway, or a `0.0.0.0` bind address).
 
 

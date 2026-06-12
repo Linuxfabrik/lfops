@@ -1,0 +1,2 @@
+- name: 'Converge glances playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.glances'
