@@ -952,8 +952,8 @@ extensions
     ├── inventory -- shared inventory across all scenarios and therefore available in all scenarios. contains a basic set of VMs/containers that are commonly used
     │   ├── hosts.yml -- required, even if empty, that Ansible can detect this inventory
     │   └── host_vars
-    │       ├── debian11-container.yml
-    │       ├── debian11-vm.yml
+    │       ├── debian12-container.yml
+    │       ├── debian12-vm.yml
     │       └── ...
     ├── monitoring_plugins -- a scenario with no sub-scenarios
     │   ├── converge.yml
