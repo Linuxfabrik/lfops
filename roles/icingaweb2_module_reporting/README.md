@@ -7,14 +7,16 @@ This role is tested with the following IcingaWeb2 Reporting Module versions:
 * 1.0.2
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
-* A SQL database and user. This can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
 
-If you use the [Setup Icinga2 Master Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_icinga2_master.yml) and set `setup_icinga2_master__skip_icingaweb2_module_reporting: false`, this is automatically done for you.
+## Requirements
 
-* Additionally, the [IcingaWeb2 PDF Export Module](https://github.com/Icinga/icingaweb2-module-pdfexport) for exporting to PDF (else only CSV and JSON are available).
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
+* Deploy a SQL database server and create the database and user by running the [mariadb_server](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/mariadb_server.yml) playbook (role: [linuxfabrik.lfops.mariadb_server](https://github.com/linuxfabrik/lfops/tree/main/roles/mariadb_server)).
+* Optional: deploy the IcingaWeb2 PDF Export Module by running the [icingaweb2_module_pdfexport](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2_module_pdfexport.yml) playbook (role: [linuxfabrik.lfops.icingaweb2_module_pdfexport](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_pdfexport)). It enables exporting to PDF (else only CSV and JSON are available).
 
 
 ## Tags

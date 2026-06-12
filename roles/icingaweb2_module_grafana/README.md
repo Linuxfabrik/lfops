@@ -8,12 +8,15 @@ This role is tested with the following IcingaWeb2 Grafana Module versions:
 * 3.1.3
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
-* A configured Grafana. This can be done using the [linuxfabrik.lfops.grafana](https://github.com/linuxfabrik/lfops/tree/main/roles/grafana) role.
 
-If you use the [Setup Icinga2 Master Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_icinga2_master.yml), this is automatically done for you.
+## Requirements
+
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
+* Deploy a configured Grafana by running the [grafana](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/grafana.yml) playbook (role: [linuxfabrik.lfops.grafana](https://github.com/linuxfabrik/lfops/tree/main/roles/grafana)).
 
 
 ## Tags

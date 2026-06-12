@@ -3,6 +3,9 @@
 This role installs and configures [NFS](http://linux-nfs.org/) as a server.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `nfs_server`

@@ -3,6 +3,9 @@
 This role deploys the [Sury repository](https://deb.sury.org/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_sury`

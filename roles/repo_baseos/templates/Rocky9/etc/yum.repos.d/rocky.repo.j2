@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024120501
+# 2026061001
 
 # rocky.repo
 #
@@ -24,12 +24,12 @@ enabled=1
 countme=1
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
 
-[baseos-debug]
+[baseos-debuginfo]
 name=Rocky Linux $releasever - BaseOS - Debug
 {% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/9/BaseOS/x86_64/debug/tree/
@@ -41,7 +41,7 @@ gpgcheck=1
 enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -59,7 +59,7 @@ enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
 
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -77,12 +77,12 @@ enabled=1
 countme=1
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
 
-[appstream-debug]
+[appstream-debuginfo]
 name=Rocky Linux $releasever - AppStream - Debug
 {% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/9/AppStream/x86_64/debug/tree/
@@ -94,7 +94,7 @@ gpgcheck=1
 enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -111,7 +111,7 @@ gpgcheck=1
 enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -129,7 +129,7 @@ enabled={{ repo_baseos__crb_repo_enabled__combined_var | ternary(1, 0) }}
 countme=1
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -146,7 +146,7 @@ gpgcheck=1
 enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
@@ -163,7 +163,7 @@ gpgcheck=1
 enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
-{% if repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}

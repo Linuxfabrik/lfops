@@ -1,0 +1,26 @@
+/* Linuxfabrik LFOps documentation site - extra styles.
+ *
+ * mkdocs-material's default table styling sets `min-width: 5rem` on `<th>`
+ * cells, which keeps the OS columns of the 160-row Compatibility matrix
+ * (and every plugin parameter table) much wider than their content. Drop
+ * that minimum, shrink padding, font-size and line-height, so the same
+ * data renders compactly without horizontal scroll.
+ */
+
+.md-typeset table:not([class]) {
+    width: auto;
+    font-size: 0.72rem;
+    line-height: 1.3;
+}
+
+.md-typeset table:not([class]) th,
+.md-typeset table:not([class]) td {
+    padding: 0.25em 0.55em;
+    min-width: 0;
+}
+
+/* Vertically align cell content; centred OS columns look misaligned with
+ * top-aligned padding when only some columns have content. */
+.md-typeset table:not([class]) td {
+    vertical-align: middle;
+}

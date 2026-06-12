@@ -1,0 +1,90 @@
+- block:
+
+  - name: 'Deploy /etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el{{ ansible_facts["distribution_major_version"] }}'
+    ansible.builtin.copy:
+      src: '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el{{ ansible_facts["distribution_major_version"] }}'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-remi.el{{ ansible_facts["distribution_major_version"] }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'repo_remi'
+
+
+# note: the remi repo still uses modularity with RHEL10 even though `modularity is deprecated, and functionality will be removed in a future release of DNF5.` have a look at https://github.com/remicollet/remirepo/issues/265#issuecomment-2298206332
+# `dnf module reset` followed by `dnf module enable` is not idempotent on its own:
+# every run the reset undoes the previously enabled stream and the enable redoes
+# it, so both always report `changed`. Query the currently enabled stream first
+# and only reset/enable when it is not already the desired one. `dnf module list
+# --enabled <module>` exits non-zero with empty stdout when no stream is enabled.
+- block:
+
+  - name: 'dnf -y module list --enabled php'
+    ansible.builtin.command: 'dnf -y module list --enabled php'
+    register: '__repo_remi__dnf_module_php_enabled_result'
+    changed_when: false
+    failed_when: false
+
+  - name: 'dnf -y module reset php'
+    ansible.builtin.command: 'dnf -y module reset php'
+    changed_when: true
+    when: '("remi-" ~ repo_remi__enabled_php_version ~ " [e]") not in __repo_remi__dnf_module_php_enabled_result["stdout"]'
+
+  - name: 'dnf -y module enable php:remi-{{ repo_remi__enabled_php_version }}'
+    ansible.builtin.command: 'dnf -y module enable php:remi-{{ repo_remi__enabled_php_version }}'
+    changed_when: true
+    when: '("remi-" ~ repo_remi__enabled_php_version ~ " [e]") not in __repo_remi__dnf_module_php_enabled_result["stdout"]'
+
+  # block
+  when: 'repo_remi__enabled_php_version is defined and repo_remi__enabled_php_version | length > 0'
+  tags:
+    - 'repo_remi'
+
+
+- block:
+
+  - name: 'dnf -y module list --enabled composer'
+    ansible.builtin.command: 'dnf -y module list --enabled composer'
+    register: '__repo_remi__dnf_module_composer_enabled_result'
+    changed_when: false
+    failed_when: false
+
+  - name: 'dnf -y module reset composer'
+    ansible.builtin.command: 'dnf -y module reset composer'
+    changed_when: true
+    when: '"composer" not in __repo_remi__dnf_module_composer_enabled_result["stdout"]'
+
+  - name: 'dnf -y module enable composer'
+    ansible.builtin.command: 'dnf -y module enable composer'
+    changed_when: true
+    when: '"composer" not in __repo_remi__dnf_module_composer_enabled_result["stdout"]'
+
+  # block
+  when: 'repo_remi__enabled_php_version is defined and repo_remi__enabled_php_version | length > 0'
+  tags:
+    - 'repo_remi'
+
+
+- block:
+
+  - name: 'dnf -y module list --enabled redis'
+    ansible.builtin.command: 'dnf -y module list --enabled redis'
+    register: '__repo_remi__dnf_module_redis_enabled_result'
+    changed_when: false
+    failed_when: false
+
+  - name: 'dnf -y module reset redis'
+    ansible.builtin.command: 'dnf -y module reset redis'
+    changed_when: true
+    when: '("remi-" ~ repo_remi__enabled_redis_version ~ " [e]") not in __repo_remi__dnf_module_redis_enabled_result["stdout"]'
+
+  - name: 'dnf -y module enable redis:remi-{{ repo_remi__enabled_redis_version }}'
+    ansible.builtin.command: 'dnf -y module enable redis:remi-{{ repo_remi__enabled_redis_version }}'
+    changed_when: true
+    when: '("remi-" ~ repo_remi__enabled_redis_version ~ " [e]") not in __repo_remi__dnf_module_redis_enabled_result["stdout"]'
+
+  # block
+  when: 'repo_remi__enabled_redis_version is defined and repo_remi__enabled_redis_version | length > 0'
+  tags:
+    - 'repo_remi'

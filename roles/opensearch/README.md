@@ -15,11 +15,14 @@ Hints for configuring TLS:
 * Node certificates must either have `extendedKeyUsage = serverAuth, clientAuth` (`TLS Web Server Authentication`, `TLS Web Client Authentication`, respectively) set, or no `Extended Key Usage` at all. Otherwise `securityadmin.sh` fails with: `ERR: An unexpected SSLHandshakeException occured: Received fatal alert: certificate_unknown`
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* Enable the official OpenSearch repository. This can be done using the [linuxfabrik.lfops.repo_opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_opensearch) role.
 
-If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/opensearch.yml), this is automatically done for you.
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The official OpenSearch repository must be enabled (role: [linuxfabrik.lfops.repo_opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_opensearch)).
 
 
 ## Single-Node Setup
@@ -27,63 +30,7 @@ If you use the [opensearch playbook](https://github.com/Linuxfabrik/lfops/blob/m
 For a single-node setup, no special configuration is needed beyond the mandatory variables. When `opensearch__discovery_seed_hosts` is not set, OpenSearch 2.x automatically runs in single-node mode (`discovery.type: single-node`). After installation, verify that OpenSearch is running (see Post-Installation Steps below).
 
 
-## Tags
-
-`opensearch`
-
-* Installs OpenSearch.
-* Deploys all configuration files.
-* Deploys TLS certificates and runs `securityadmin.sh` (if security plugin is enabled).
-* Manages the state of the OpenSearch service.
-* Triggers: opensearch.service restart.
-
-`opensearch:configure`
-
-* Deploys `/etc/opensearch/opensearch.yml`.
-* Deploys `/etc/sysconfig/opensearch`.
-* Deploys internal users configuration (if security plugin is enabled).
-* Triggers: opensearch.service restart.
-
-`opensearch:generate_certs`
-
-* Generates self-signed TLS certificates on the Ansible controller using the SearchGuard TLS Tool.
-* Triggers: none.
-
-`opensearch:state`
-
-* Manages the state of the OpenSearch service (`systemctl enable/disable --now`).
-* Triggers: none.
-
-`opensearch:user`
-
-* Manages internal users (generates hashed passwords, deploys `internal_users.yml`).
-* Triggers: opensearch.service restart, `securityadmin.sh`.
-
-
-## Mandatory Role Variables
-
-`opensearch__opensearch_initial_admin_password`
-
-* For new installations of OpenSearch 2.12 and later, a custom admin password is required. Minimum 8 characters, must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.
-* Type: String.
-
-Example:
-```yaml
-# mandatory
-opensearch__opensearch_initial_admin_password: 'linuxfabrik'
-```
-
-
-## Post-Installation Steps
-
-After setting up a single node or cluster, verify that OpenSearch is running:
-
-```bash
-curl 'https://localhost:9200' --user admin:your-password --insecure
-```
-
-
-## Setting Up an OpenSearch Cluster
+## Cluster Setup
 
 This role supports creating a multi-node OpenSearch cluster using manual certificate distribution. TLS certificates are generated beforehand and distributed to all nodes via Ansible. The security plugin is configured with the certificate distinguished names of all cluster members.
 
@@ -225,7 +172,7 @@ curl 'https://node1.example.com:9200/_cat/nodes?v' --user admin:your-password --
 The status should be `green` with all nodes listed.
 
 
-## Adding a New Node to an Existing Cluster
+## Adding a Node to an Existing Cluster
 
 1. Generate certificates for the new node using the same CA as the existing cluster.
 2. Add the certificate files to your Ansible inventory.
@@ -242,6 +189,62 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch --limit new-
 
 ```bash
 ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch --tags opensearch:configure
+```
+
+
+## Post-Installation Steps
+
+After setting up a single node or cluster, verify that OpenSearch is running:
+
+```bash
+curl 'https://localhost:9200' --user admin:your-password --insecure
+```
+
+
+## Tags
+
+`opensearch`
+
+* Installs OpenSearch.
+* Deploys all configuration files.
+* Deploys TLS certificates and runs `securityadmin.sh` (if security plugin is enabled).
+* Manages the state of the OpenSearch service.
+* Triggers: opensearch.service restart.
+
+`opensearch:configure`
+
+* Deploys `/etc/opensearch/opensearch.yml`.
+* Deploys `/etc/sysconfig/opensearch`.
+* Deploys internal users configuration (if security plugin is enabled).
+* Triggers: opensearch.service restart.
+
+`opensearch:generate_certs`
+
+* Generates self-signed TLS certificates on the Ansible controller using the SearchGuard TLS Tool.
+* Triggers: none.
+
+`opensearch:state`
+
+* Manages the state of the OpenSearch service (`systemctl enable/disable --now`).
+* Triggers: none.
+
+`opensearch:users`
+
+* Manages internal users (generates hashed passwords, deploys `internal_users.yml`).
+* Triggers: opensearch.service restart, `securityadmin.sh`.
+
+
+## Mandatory Role Variables
+
+`opensearch__opensearch_initial_admin_password`
+
+* For new installations of OpenSearch 2.12 and later, a custom admin password is required. Minimum 8 characters, must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.
+* Type: String.
+
+Example:
+```yaml
+# mandatory
+opensearch__opensearch_initial_admin_password: 'linuxfabrik'
 ```
 
 
@@ -476,9 +479,9 @@ opensearch__plugins_security_nodes_dns:
 ```
 
 
-## TLS Certificate Generation Variables
+## Optional Role Variables - TLS Certificate Generation
 
-These variables are only needed when using the built-in certificate generator (see "Setting Up an OpenSearch Cluster" above). The tasks run against the Ansible controller. Internally, the [SearchGuard TLS Tool](https://docs.search-guard.com/latest/offline-tls-tool) is used, with the generated config at `/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml`.
+These variables are only needed when using the built-in certificate generator (see "Cluster Setup" above). The tasks run against the Ansible controller. Internally, the [SearchGuard TLS Tool](https://docs.search-guard.com/latest/offline-tls-tool) is used, with the generated config at `/tmp/opensearch-certs/config/{{ inventory_hostname }}-tlsconfig.yml`.
 
 `opensearch__generate_certs_admin_cn`
 

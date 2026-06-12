@@ -86,6 +86,8 @@
 
   - name: 'semodule --list-modules | grep --quiet http_fping # check for http_fping'
     ansible.builtin.shell: 'semodule --list-modules | grep --quiet http_fping'
+    args:
+      executable: '/bin/bash'
     register: 'librenms__http_fping_exists_result'
     failed_when: 'librenms__http_fping_exists_result["rc"] >= 2'
     changed_when: false # just gathering information

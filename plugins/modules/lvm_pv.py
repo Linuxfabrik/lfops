@@ -9,7 +9,7 @@ from __future__ import annotations
 DOCUMENTATION = r"""
 module: lvm_pv
 short_description: Manage LVM Physical Volumes
-version_added: "11.0.0"
+version_added: "6.0.0"
 description:
   - Creates, resizes or removes LVM Physical Volumes.
 author:

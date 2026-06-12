@@ -3,6 +3,9 @@
 This role installs and configures [squid](https://www.squid-cache.org/) as a caching proxy for the web.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `squid`

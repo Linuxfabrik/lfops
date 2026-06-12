@@ -5,7 +5,12 @@ This role configures kernel settings. The settings are made permanently and acti
 The role does nothing on its own and relies on the [linux_system_roles.kernel_settings role](https://github.com/linux-system-roles/kernel_settings).
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
+
+
+## Requirements
+
+Manual steps:
 
 * Install the [Linux System Roles](https://linux-system-roles.github.io/) on the Ansible control node, for example by calling `ansible-galaxy collection install fedora.linux_system_roles`.
 

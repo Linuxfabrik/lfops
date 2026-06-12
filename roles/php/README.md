@@ -26,9 +26,14 @@ Rules of thumb:
 This role never exposes to the world that PHP is installed on the server, no matter what.
 
 
-## Optional Requirements
+*Available since LFOps `2.0.0`.*
 
-* Enable the [Remi's RPM repository](https://rpms.remirepo.net/) to get newer versions of PHP. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) role.
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* Optional: [Remi's RPM repository](https://rpms.remirepo.net/) (role: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi)) provides newer PHP versions.
 
 
 ## Tags
@@ -152,7 +157,7 @@ php__modules__host_var:
 ```
 
 
-### `php__ini_*` Config Directives
+## Optional Role Variables - `php__ini_*` Config Directives
 
 Variables for `php.ini` directives and their default values, defined and supported by this role.
 
@@ -336,7 +341,7 @@ php__ini_upload_max_filesize__host_var: '10000M'
 ```
 
 
-### PHP-FPM Pool Config Directives
+## Optional Role Variables - PHP-FPM Pool Config Directives
 
 Variables for `php.ini` directives and their default values, defined and supported by this role.
 

@@ -1,0 +1,15 @@
+__clamav__packages:
+  - 'clamav'
+  - 'clamav-freshclam' # provides freshclam (obsoletes the former clamav-update)
+  - 'clamd'
+__clamav__clamd_config: '/etc/clamd.d/scan.conf'
+__clamav__clamd_log: '/var/log/clamd.log'
+__clamav__clamd_pid: '/run/clamd.scan/clamd.pid'
+__clamav__clamd_service: 'clamd@scan'
+__clamav__clamd_socket: '/run/clamd.scan/clamd.sock'
+__clamav__clamd_user: 'clamscan'
+__clamav__db_owner: 'clamupdate' # the user freshclam drops to when writing the database
+__clamav__filelist: '/etc/clamd.d/clamdscan.filelist'
+__clamav__freshclam_config: '/etc/freshclam.conf'
+__clamav__freshclam_log: '/var/log/freshclam.log'
+__clamav__manage_logrotate: true

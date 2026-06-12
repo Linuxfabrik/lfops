@@ -18,9 +18,14 @@ Notes on high availability / Icinga2 Master clusters:
 * Have a look at the [official documentation](https://icinga.com/docs/icinga-db/latest/doc/05-Distributed-Setups/).
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
 
-* A configured Icinga2 Master Setup. This can be done using the [linuxfabrik.lfops.setup_icinga2_master](https://github.com/linuxfabrik/lfops/tree/main/playbooks/setup_icinga2_master.yml) playbook.
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* A configured Icinga2 Master must be available (role: [linuxfabrik.lfops.icinga2_master](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_master)).
 
 
 ## Tags

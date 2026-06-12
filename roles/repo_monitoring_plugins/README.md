@@ -3,6 +3,9 @@
 This role deploys the repository at repo.linuxfabrik.ch for the Linuxfabrik Monitoring Plugins.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_monitoring_plugins`
@@ -15,7 +18,7 @@ This role deploys the repository at repo.linuxfabrik.ch for the Linuxfabrik Moni
 
 `repo_monitoring_plugins__basic_auth_login`
 
-* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
 * Type: String.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
 
@@ -25,6 +28,12 @@ This role deploys the repository at repo.linuxfabrik.ch for the Linuxfabrik Moni
 * Type: String.
 * Default: `'{{ lfops__repo_mirror_url | default("") }}'`
 
+`repo_monitoring_plugins__testing`
+
+* If `true`, switch to the `testing` channel: the `release` repository is disabled and the `testing` repository is enabled. On Debian/Ubuntu, the `-release` suffix in the apt sources file is replaced with `-testing`. By default, the `release` channel is used.
+* Type: Bool.
+* Default: `false`
+
 Example:
 ```yaml
 # optional
@@ -32,6 +41,7 @@ repo_monitoring_plugins__basic_auth_login:
   username: 'my-username'
   password: 'linuxfabrik'
 repo_monitoring_plugins__mirror_url: 'https://mirror.example.com'
+repo_monitoring_plugins__testing: true
 ```
 
 

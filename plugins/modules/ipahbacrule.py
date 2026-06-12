@@ -37,6 +37,7 @@ DOCUMENTATION = """
 ---
 module: ipahbacrule
 short_description: Manage FreeIPA HBAC rules
+version_added: "6.0.0"
 description: Manage FreeIPA HBAC rules
 extends_documentation_fragment:
   - ipamodule_base_docs

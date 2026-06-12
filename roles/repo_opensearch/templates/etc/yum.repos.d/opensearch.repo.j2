@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024050101
+# 2026052201
 
 [opensearch-{{ repo_opensearch__version__combined_var }}]
 name=OpenSearch {{ repo_opensearch__version__combined_var }}
@@ -15,7 +15,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-opensearch
 autorefresh=1
 type=rpm-md
-{% if repo_opensearch__basic_auth_login is defined and repo_opensearch__basic_auth_login | length %}
+{% if repo_opensearch__mirror_url is defined and repo_opensearch__mirror_url | length and repo_opensearch__basic_auth_login is defined and repo_opensearch__basic_auth_login | length %}
 username={{ repo_opensearch__basic_auth_login["username"] }}
 password={{ repo_opensearch__basic_auth_login["password"] }}
 {% endif %}

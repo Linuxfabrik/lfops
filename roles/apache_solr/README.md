@@ -9,11 +9,14 @@ This Ansible role
 * but currently does not create any cores or collections.
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
 
-* Install Java 11+. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role. Java OpenJDK latest is recommended.
 
-If you use the [Apache Solr Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apache_solr.yml), this is automatically done for you.
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* Java 11+ must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)). Java OpenJDK latest is recommended.
 
 
 ## Tags
@@ -28,7 +31,7 @@ If you use the [Apache Solr Playbook](https://github.com/Linuxfabrik/lfops/blob/
 * Manages the state of `solr.service`.
 * Triggers: none.
 
-`apache_solr:user`
+`apache_solr:users`
 
 * Generates hashed passwords and deploys `security.json`.
 * Triggers: solr.service restart.

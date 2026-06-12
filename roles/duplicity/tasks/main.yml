@@ -56,6 +56,8 @@
 
   - name: "echo '{{ duplicity__gpg_encrypt_master_key }}:6:' | gpg --import-ownertrust # set trust to ultimate"
     ansible.builtin.shell: "echo '{{ duplicity__gpg_encrypt_master_key }}:6:' | gpg --import-ownertrust"
+    args:
+      executable: '/bin/bash'
     register: 'duplicity__gpg_import_ownertrust_result'
     changed_when: '"ownertrust" in duplicity__gpg_import_ownertrust_result.stderr'
 

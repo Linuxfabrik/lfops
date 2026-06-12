@@ -1,0 +1,11 @@
+mailto_root__from: 'root@localhost'
+mailto_root__to:
+  - 'root@localhost'
+
+monitoring_plugins__version: '5.0.0'
+
+postfix__relayhost: 'mail.example.com'
+
+setup_basic__skip_duplicity: true
+setup_basic__skip_repo_icinga: true
+setup_basic__skip_icinga2_agent: true

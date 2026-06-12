@@ -51,6 +51,9 @@ lfops
 The resulting set of files can then be further analyzed, for example by hand or using the `list-rpmnew-rpmsave` tool. This methodical approach helps to maintain system updates efficiently.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `collect_rpmnew_rpmsave`

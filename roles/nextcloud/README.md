@@ -9,25 +9,37 @@ This role installs Nextcloud including the tools needed by the most popular busi
 After installing Nextcloud, head over to your http(s)://nextcloud/index.php/settings/admin to set or verify your email server configuration. Afterwards, use the "Send email" button below the form to verify your settings.
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-* Install a web server (for example Apache httpd), and configure a virtual host for Nextcloud. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
-* Install MariaDB 10.6+. This can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
-* Install PHP 8.1+. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
-* Install Redis 7+. This can be done using the [linuxfabrik.lfops.repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) role.
-* Set the size of your `/tmp` partition accordingly. For example: If you want to allow 5x simultaneous uploads with files each 10 GB in size, set it to 50 GB+.
+
+## How the Role Behaves
+
+* App updates are applied automatically by the `nextcloud-app-update.timer` (managed via `nextcloud__timer_app_update_enabled`). The timer runs `/usr/local/bin/nextcloud-app-update`, which first checks whether any app update is pending. Nextcloud is switched into maintenance mode only when there is something to update; when everything is up to date the instance keeps serving requests untouched. After updating, the recommended database migrations (`db:add-missing-indices`, `db:add-missing-columns`, `db:add-missing-primary-keys`) are applied. A failed run leaves maintenance mode disabled again, so the instance does not stay offline, and reports the failure to systemd. This automatic update covers app updates only. Updating the Nextcloud server itself is a separate, manual step via `/usr/local/bin/nextcloud-update`.
+
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* A web server (for example Apache httpd) must be installed, with a virtual host for Nextcloud (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
+* MariaDB 10.6+ must be installed (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
+* PHP 8.1+ must be installed (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
+* Redis 7+ must be installed (roles: [linuxfabrik.lfops.repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
+* Optional: Collabora (role: [linuxfabrik.lfops.collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora)) provides online document editing.
+* Optional: Coturn (role: [linuxfabrik.lfops.coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn)) provides the TURN server for Nextcloud Talk.
+
+These roles are not enabled by default; enable them via the playbook's skip variables if needed:
+
+* The Collabora repository (role: [linuxfabrik.lfops.repo_collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora)) serves the Collabora packages from the official Collabora repository instead of the CODE repository.
+
+
+## Requirements
+
+Manual steps:
+
+* Size the `/tmp` partition for your upload load. For example, to allow 5 simultaneous uploads of 10 GB each, set it to 50 GB+.
 * Configure the systemd service for [notify_push](https://github.com/nextcloud/notify_push).
-
-If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you (you still have to take care of providing the required versions).
-
-
-## Optional Requirements
-
-* Install Collabora. This can be done using the [linuxfabrik.lfops.collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora) role.
-* Install Coturn for Nextcloud Talk. This can be done using the [linuxfabrik.lfops.coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn) role.
-
-If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_nextcloud.yml), this is automatically done for you.
 
 
 ## Tags
@@ -49,7 +61,7 @@ If you use the ["Setup Nextcloud" Playbook](https://github.com/Linuxfabrik/lfops
 
 `nextcloud:cron`
 
-* Sets the Nextcloud background job setting to cron, deploys and manages the state of `nextcloud-app-update.{service,timer}`, `nextcloud-jobs.{service,timer}`, `nextcloud-ldap-show-remnants.{service,timer}`, `nextcloud-ldap-show-remnants` script, `nextcloud-scan-files.{service,timer}`.
+* Sets the Nextcloud background job setting to cron, deploys and manages the state of `nextcloud-app-update.{service,timer}`, `nextcloud-app-update` script, `nextcloud-jobs.{service,timer}`, `nextcloud-ldap-show-remnants.{service,timer}`, `nextcloud-ldap-show-remnants` script, `nextcloud-scan-files.{service,timer}`.
 * Triggers: none.
 
 `nextcloud:notify_push`
@@ -287,7 +299,7 @@ nextcloud__users:
 
 * Enables/disables Systemd-Timer for updating apps.
 * Type: Bool.
-* Default: `false`
+* Default: `true`
 
 `nextcloud__timer_jobs_enabled`
 

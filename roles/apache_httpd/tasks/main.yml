@@ -4,7 +4,7 @@
     tasks_from: 'platform-variables.yml'
   tags:
     - 'apache_httpd'
-    - 'apache_httpd:config'
+    - 'apache_httpd:configure'
     - 'apache_httpd:htpasswd'
     - 'apache_httpd:matomo'
     - 'apache_httpd:mod_security_coreruleset'
@@ -100,7 +100,7 @@
 
   tags:
     - 'apache_httpd'
-    - 'apache_httpd:config'
+    - 'apache_httpd:configure'
 
 
 - block:
@@ -118,7 +118,7 @@
 
   tags:
     - 'apache_httpd'
-    - 'apache_httpd:config'
+    - 'apache_httpd:configure'
 
 
 - block:
@@ -159,8 +159,8 @@
   - name: 'chown -R apache:apache {{ apache_httpd__conf_document_root }}'
     ansible.builtin.file:
       path: '{{ apache_httpd__conf_document_root }}'
-      owner: '{{ apache_httpd__user }}'
-      group: '{{ apache_httpd__group }}'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
       recurse: true
     ignore_errors: true
     when: 'not apache_httpd__skip_document_root_chown'

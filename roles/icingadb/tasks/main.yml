@@ -30,7 +30,7 @@
       owner: '{{ icingadb__icinga_user }}'
       group: '{{ icingadb__icinga_user }}'
       mode: 0o640
-    notify: 'icingadb: restart icinga2'
+    notify: 'icingadb: icinga2 daemon --validate'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
@@ -43,7 +43,7 @@
     community.general.icinga2_feature:
       name: 'icingadb'
       state: 'present'
-    notify: 'icingadb: restart icinga2'
+    notify: 'icingadb: icinga2 daemon --validate'
 
   - name: 'Flush handlers so that the icinga2 icingadb feature is active' # else /var/lib/icinga2/icingadb.env is missing later on
     ansible.builtin.meta: 'flush_handlers'

@@ -7,13 +7,6 @@
     vars:
       shared__monitoring_plugins_version: '{{ monitoring_plugins__version }}'
 
-  - name: 'Clone the lib repo'
-    ansible.builtin.import_role:
-      name: 'shared'
-      tasks_from: 'clone-lib-repo.yml'
-    vars:
-      shared__lib_version: '{{ monitoring_plugins__version }}'
-
   - name: 'Flatten check-plugins locally using shell'
     ansible.builtin.shell:
       cmd: |
@@ -26,8 +19,10 @@
             cp -- "$file" /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/"$base"
           fi
         done
+      executable: '/bin/bash'
     delegate_to: 'localhost'
-    run_once: true
+    become: false
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
@@ -43,8 +38,10 @@
             cp -- "$file" /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/"$base"
           fi
         done
+      executable: '/bin/bash'
     delegate_to: 'localhost'
-    run_once: true
+    become: false
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
@@ -53,8 +50,10 @@
       cmd: |
         mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets
         find /tmp/ansible.monitoring-plugins-repo/check-plugins/*/assets -type f -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets/ \;
+      executable: '/bin/bash'
     delegate_to: 'localhost'
-    run_once: true
+    become: false
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
@@ -63,16 +62,19 @@
       name: 'rsync'
       state: 'present'
 
-  - name: 'rsync requirements.txt to remote host'
-    ansible.posix.synchronize:
-      src: '/tmp/ansible.monitoring-plugins-repo/requirements.txt'
-      dest: '/tmp'
-      mode: 'push'
+  # Both repos ship per-Python-LTS lockfiles under
+  # `lockfiles/pyXX/requirements.txt` (py39 ... py314). Pick the one
+  # that matches the target's Python interpreter (the same one
+  # Ansible used to run modules; pip3 will install into the same
+  # major.minor unless an alternative interpreter is explicitly used).
+  - name: 'Set per-host Python lockfile tag fact'
+    ansible.builtin.set_fact:
+      __monitoring_plugins__py_tag: 'py{{ ansible_python["version"]["major"] }}{{ ansible_python["version"]["minor"] }}'
 
-  - name: 'rsync lib requirements.txt to remote host'
+  - name: 'rsync lockfiles/{{ __monitoring_plugins__py_tag }}/requirements.txt to remote host'
     ansible.posix.synchronize:
-      src: '/tmp/ansible.lib-repo/requirements.txt'
-      dest: '/tmp/lib-requirements.txt'
+      src: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__py_tag }}/requirements.txt'
+      dest: '/tmp/requirements.txt'
       mode: 'push'
 
   tags:
@@ -95,24 +97,6 @@
       - name: 'Retry pip3 install with --break-system-packages for user root'
         ansible.builtin.pip:
           requirements: '/tmp/requirements.txt'
-          extra_args: '--user --require-hashes --break-system-packages'
-          executable: 'pip3'
-        when:
-          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
-
-  - block:
-
-      - name: '`pip3 install --requirement=/tmp/lib-requirements.txt --user --require-hashes` for user root'
-        ansible.builtin.pip:
-          requirements: '/tmp/lib-requirements.txt'
-          extra_args: '--user --require-hashes'
-          executable: 'pip3'
-
-    rescue:
-
-      - name: 'Retry pip3 install lib requirements with --break-system-packages for user root'
-        ansible.builtin.pip:
-          requirements: '/tmp/lib-requirements.txt'
           extra_args: '--user --require-hashes --break-system-packages'
           executable: 'pip3'
         when:
@@ -160,34 +144,6 @@
       - '__monitoring_plugins__icinga_user_check["getent"]["passwd"] is defined'
       - '__monitoring_plugins__icinga_user_check["getent"]["passwd"][monitoring_plugins__icinga_user] is defined'
 
-  - block:
-
-      - name: '`pip3 install --requirement=/tmp/lib-requirements.txt --user --require-hashes` for user {{ monitoring_plugins__icinga_user }}'
-        ansible.builtin.pip:
-          requirements: '/tmp/lib-requirements.txt'
-          extra_args: '--user --require-hashes'
-          executable: 'pip3'
-        become: true
-        become_user: '{{ monitoring_plugins__icinga_user }}'
-
-    rescue:
-
-      - name: 'Retry pip3 install lib requirements with --break-system-packages for user {{ monitoring_plugins__icinga_user }}'
-        ansible.builtin.pip:
-          requirements: '/tmp/lib-requirements.txt'
-          extra_args: '--user --require-hashes --break-system-packages'
-          executable: 'pip3'
-        become: true
-        become_user: '{{ monitoring_plugins__icinga_user }}'
-        when:
-          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
-
-    when:
-      - '__monitoring_plugins__icinga_user_check is defined'
-      - '__monitoring_plugins__icinga_user_check["getent"] is defined'
-      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"] is defined'
-      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"][monitoring_plugins__icinga_user] is defined'
-
   tags:
     - 'monitoring_plugins'
 
@@ -211,15 +167,6 @@
       src: '/tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/'
       dest: '/usr/lib64/nagios/plugins/notifications/'
       mode: 'push'
-
-  - name: 'rsync lib to remote host'
-    ansible.posix.synchronize:
-      src: '/tmp/ansible.lib-repo/'
-      dest: '/usr/lib64/nagios/plugins/lib/'
-      mode: 'push'
-      rsync_opts:
-        - '--include=*.py'
-        - '--exclude=*'
 
   - name: 'restorecon -Fvr /usr/lib64/nagios/plugins/'
     ansible.builtin.command: 'restorecon -Fvr /usr/lib64/nagios/plugins/'

@@ -5,10 +5,18 @@ argument_specs:
       alternatives__alternatives:
         type: 'list'
         elements: 'dict'
-        required: true
+        required: false
+        default: []
         description: >-
           List of `update-alternatives` entries to manage.
         options:
+
+          family:
+            type: 'str'
+            required: false
+            description: >-
+              Groups similar alternatives. Red Hat-family only
+              (community.general 10.1.0+).
 
           link:
             type: 'str'
@@ -33,8 +41,8 @@ argument_specs:
             type: 'int'
             required: false
             description: >-
-              Priority weight for `auto` mode (default fallback for
-              creation: 50).
+              Priority weight for `auto` mode. If unset, the module
+              falls back to 50 on creation.
 
           state:
             type: 'str'
@@ -47,3 +55,27 @@ argument_specs:
               - 'selected'
             description: >-
               `selected` (default), `present`, `auto`, or `absent`.
+
+          subcommands:
+            type: 'list'
+            elements: 'dict'
+            required: false
+            description: >-
+              Subcommands (also called slaves or followers) switched
+              together with this alternative (community.general 5.1.0+).
+            options:
+
+              link:
+                type: 'str'
+                required: true
+                description: 'Path to the subcommand symlink.'
+
+              name:
+                type: 'str'
+                required: true
+                description: 'The generic name of the subcommand.'
+
+              path:
+                type: 'str'
+                required: true
+                description: 'Path to the real subcommand executable.'

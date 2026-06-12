@@ -3,6 +3,9 @@
 This role installs at, a daemon that allows commands to be run at a specified time.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `at`

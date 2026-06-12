@@ -3,6 +3,9 @@
 This role installs NFS client utilities and controls active and configured NFS mount points in `/etc/fstab`.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `nfs_client`

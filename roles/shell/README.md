@@ -5,6 +5,9 @@ This role executes arbitrary shell commands on the host.
 Note that this role is not idempotent by default, consider setting `creates`, `removes` or `run_once` (see below).
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `shell`

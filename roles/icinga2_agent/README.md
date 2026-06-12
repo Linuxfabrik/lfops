@@ -5,10 +5,21 @@ This role installs [Icinga2](https://icinga.com/), configures it to act as an ag
 Currently, this role only works if the host can reach the Icinga2 master API.
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* Enable the [Icinga Package Repository](https://packages.icinga.com/). This can be done using the [linuxfabrik.lfops.repo_icinga](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga) role.
-* A configured Icinga2 Master. This can be done using the [linuxfabrik.lfops.icinga2_master](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_master) role.
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The [Icinga Package Repository](https://packages.icinga.com/) must be enabled (role: [linuxfabrik.lfops.repo_icinga](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga)).
+
+
+## Requirements
+
+Manual steps:
+
+* Deploy a configured Icinga2 Master, reachable from this host, by running the [setup_icinga2_master](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_icinga2_master.yml) playbook (role: [linuxfabrik.lfops.icinga2_master](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_master)). The master runs on a separate host and is not set up by this role's playbook.
 
 
 ## Tags
@@ -53,7 +64,7 @@ Currently, this role only works if the host can reach the Icinga2 master API.
 
 `icinga2_agent__windows_version`
 
-* Mandatory for Windows. The version of the Icinga2 Agent to install. Possible options: https://packages.icinga.com/windows/.
+* Mandatory for Windows. The version of the Icinga2 Agent to install. Possible options: <https://packages.icinga.com/windows/?C=N;O=D>.
 * Type: String.
 
 Example:

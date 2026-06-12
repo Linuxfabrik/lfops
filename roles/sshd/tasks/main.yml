@@ -16,8 +16,13 @@
     vars:
       __sshd__sshd_config_template_file:
         files:
+          # most specific (distribution + major version, e.g. Ubuntu24) first, then
+          # os_family + major version (e.g. RedHat9, Debian13), then the os_family
+          # fallback (e.g. RedHat) which covers Fedora, where we do not ship a
+          # template per release.
           - 'etc/ssh/{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}-sshd_config.j2'
           - 'etc/ssh/{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}-sshd_config.j2'
+          - 'etc/ssh/{{ ansible_facts["os_family"] }}-sshd_config.j2'
         paths:
           - '{{ role_path }}/templates'
     notify: 'sshd: sshd -t; reload sshd'
@@ -43,14 +48,27 @@
 
 - block:
 
-  - name: 'systemctl: sshd enabled = {{ sshd__service_enabled }}'
+  # On Debian/Ubuntu, OpenSSH ships socket activation (ssh.socket) enabled by
+  # default, and the daemon unit is ssh.service (sshd.service is only an alias
+  # that exists once ssh.service has been enabled). This role manages the daemon
+  # through its service unit like on RHEL, so disable the socket first to avoid
+  # both ssh.socket and ssh.service binding the SSH port.
+  - name: 'systemctl disable --now ssh.socket'
     ansible.builtin.systemd:
-      name: 'sshd.service'
+      name: 'ssh.socket'
+      enabled: false
+      state: 'stopped'
+    when:
+      - 'ansible_facts["os_family"] == "Debian"'
+
+  - name: 'systemctl: {{ __sshd__service_name }} enabled = {{ sshd__service_enabled }}'
+    ansible.builtin.systemd:
+      name: '{{ __sshd__service_name }}.service'
       enabled: '{{ sshd__service_enabled }}'
 
-  - name: 'systemctl: sshd state = {{ sshd__service_state }}'
+  - name: 'systemctl: {{ __sshd__service_name }} state = {{ sshd__service_state }}'
     ansible.builtin.systemd:
-      name: 'sshd.service'
+      name: '{{ __sshd__service_name }}.service'
       state: '{{ sshd__service_state }}'
 
   tags:

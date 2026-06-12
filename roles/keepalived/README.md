@@ -3,7 +3,10 @@
 This role installs and configures [keepalived](https://www.keepalived.org/).
 
 
-## Scope
+*Available since LFOps `3.0.0`.*
+
+
+## How the Role Behaves
 
 The role intentionally covers a minimal VRRP setup:
 

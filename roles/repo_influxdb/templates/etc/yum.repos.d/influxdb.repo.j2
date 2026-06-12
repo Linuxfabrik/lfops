@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023122901
+# 2026060901
 
 [influxdb]
 name = InfluxDB Repository - RHEL $releasever
@@ -8,10 +8,15 @@ baseurl={{ repo_influxdb__mirror_url }}/influxdb/rhel/$releasever/x86_64/stable
 {% else %}
 baseurl = https://repos.influxdata.com/rhel/$releasever/$basearch/stable
 {% endif %}
+# influxdata-archive-keyring is a "recommended" / optional package for influxdb and gets
+# pulled in automatically when influxdb is installed.
+# installing influxdata-archive-keyring adds a second repo ("influxdata") on the server
+# that also provides the influxdb package, colliding with the influxdb repo managed by lfops.
+exclude = influxdata-archive-keyring
 enabled = 1
 gpgcheck = 1
 gpgkey = file:///etc/pki/rpm-gpg/influxdata-archive.key
-{% if repo_influxdb__basic_auth_login is defined and repo_influxdb__basic_auth_login | length %}
+{% if repo_influxdb__mirror_url is defined and repo_influxdb__mirror_url | length and repo_influxdb__basic_auth_login is defined and repo_influxdb__basic_auth_login | length %}
 username={{ repo_influxdb__basic_auth_login["username"] }}
 password={{ repo_influxdb__basic_auth_login["password"] }}
 {% endif %}

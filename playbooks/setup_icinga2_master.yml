@@ -7,6 +7,7 @@
 
     setup_icinga2_master__apache_httpd__skip_injections__internal_var: '{{ setup_icinga2_master__apache_httpd__skip_injections | d(setup_icinga2_master__apache_httpd__skip_role__internal_var) }}'
     setup_icinga2_master__apache_httpd__skip_role__internal_var: '{{ setup_icinga2_master__apache_httpd__skip_role | d(false) }}'
+    setup_icinga2_master__chromium_headless__skip_role__internal_var: '{{ setup_icinga2_master__chromium_headless__skip_role | d(setup_icinga2_master__icingaweb2_module_pdfexport__skip_role__internal_var) }}'
     setup_icinga2_master__grafana__skip_role__internal_var: '{{ setup_icinga2_master__grafana__skip_role | d(false) }}'
     setup_icinga2_master__grafana_grizzly__skip_injections__internal_var: '{{ setup_icinga2_master__grafana_grizzly__skip_injections | d(setup_icinga2_master__grafana_grizzly__skip_role__internal_var) }}'
     setup_icinga2_master__grafana_grizzly__skip_role__internal_var: '{{ setup_icinga2_master__grafana_grizzly__skip_role | d(false) }}'
@@ -78,21 +79,28 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
+    # On Rocky 9+, CRB (now in the Rocky default repo file, formerly in EPEL) must be
+    # enabled so python3-virtualenv can be installed.
     - role: 'linuxfabrik.lfops.repo_baseos'
       repo_baseos__crb_repo_enabled__dependent_var: '{{
           repo_epel__repo_baseos__crb_repo_enabled__dependent_var
         }}'
-      # Since the CRB repository is included in Rocky9 default repo file now, this will be done on Rocky9 Systems only. Formerly it came from epel repository.
       when:
-        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] == "9"'
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] | int >= 9'
         - 'not setup_icinga2_master__skip_repo_baseos | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
         - 'not setup_icinga2_master__repo_epel__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
@@ -102,7 +110,7 @@
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
           (not setup_icinga2_master__apache_httpd__skip_injections__internal_var) | ternary(apache_httpd__python__modules__dependent_var, []) +
-          (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__python__modules__dependent_var[ansible_facts["os_family"]], [])
+          (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__python__modules__dependent_var, [])
         }}'
       when:
         - 'not setup_icinga2_master__python__skip_role__internal_var'
@@ -170,7 +178,7 @@
 
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
         - 'not setup_icinga2_master__repo_remi__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.repo_sury'
@@ -183,8 +191,8 @@
       php__modules__dependent_var: '{{
           (not setup_icinga2_master__icingaweb2_module_fileshipper__skip_injections__internal_var) | ternary(icingaweb2_module_fileshipper__php__modules__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections__internal_var) | ternary(icingaweb2_module_vspheredb__php__modules__dependent_var, []) +
-          (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__php__modules__dependent_var[ansible_facts["os_family"]], []) +
-          (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__modules__dependent_var[ansible_facts["os_family"]], [])
+          (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__php__modules__dependent_var, []) +
+          (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__modules__dependent_var, [])
         }}'
       when:
         - 'not setup_icinga2_master__php__skip_role__internal_var'
@@ -311,6 +319,10 @@
     - role: 'linuxfabrik.lfops.icingaweb2_module_jira'
       when:
         - 'not setup_icinga2_master__icingaweb2_module_jira__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.chromium_headless'
+      when:
+        - 'not setup_icinga2_master__chromium_headless__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.icingaweb2_module_pdfexport'
       when:

@@ -1,0 +1,55 @@
+# verify.yml runs after converge and again after the idempotence step. The
+# idempotence step is what guards the reset/enable idempotency fix (a second
+# converge must report no changes); here we assert the observable end result:
+# the role left the system on the module streams the inventory asked for.
+#
+# Asserting the enabled stream is a genuine "ask the system" check (the live dnf
+# module state, queried independently), and the candidate package version proves
+# the stream selection actually drives package resolution - not just that a flag
+# was set. The configured versions come straight from group_vars, so the test
+# stays in lockstep with what converge requested.
+- name: 'Verify repo_remi enabled the requested module streams'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'dnf -y module list --enabled php'
+      ansible.builtin.command: 'dnf -y module list --enabled php'
+      register: '__molecule__php_module_result'
+      changed_when: false
+
+    - name: 'Assert the remi php stream is enabled'
+      ansible.builtin.assert:
+        that: '("remi-" ~ repo_remi__enabled_php_version ~ " [e]") in __molecule__php_module_result["stdout"]'
+        fail_msg: 'enabled php modules:\n{{ __molecule__php_module_result["stdout"] }}'
+
+    - name: 'dnf -y info php'
+      ansible.builtin.command: 'dnf -y info php'
+      register: '__molecule__php_info_result'
+      changed_when: false
+
+    - name: 'Assert the installable php version comes from the requested stream'
+      ansible.builtin.assert:
+        that: '__molecule__php_info_result["stdout"] is search("Version\s*:\s*" ~ repo_remi__enabled_php_version)'
+        fail_msg: '{{ __molecule__php_info_result["stdout"] }}'
+
+    - name: 'dnf -y module list --enabled composer'
+      ansible.builtin.command: 'dnf -y module list --enabled composer'
+      register: '__molecule__composer_module_result'
+      changed_when: false
+
+    - name: 'Assert the composer stream is enabled'
+      ansible.builtin.assert:
+        that: '"composer" in __molecule__composer_module_result["stdout"]'
+        fail_msg: 'enabled composer modules:\n{{ __molecule__composer_module_result["stdout"] }}'
+
+    - name: 'dnf -y module list --enabled redis'
+      ansible.builtin.command: 'dnf -y module list --enabled redis'
+      register: '__molecule__redis_module_result'
+      changed_when: false
+
+    - name: 'Assert the remi redis stream is enabled'
+      ansible.builtin.assert:
+        that: '("remi-" ~ repo_remi__enabled_redis_version ~ " [e]") in __molecule__redis_module_result["stdout"]'
+        fail_msg: 'enabled redis modules:\n{{ __molecule__redis_module_result["stdout"] }}'

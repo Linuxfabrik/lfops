@@ -3,13 +3,16 @@
 This role installs and configures [github_project_createrepo](https://github.com/Linuxfabrik/github-project-createrepo).
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
 
-* Install Python 3. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
-* Install `createrepo`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
-* Install `git`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
 
-If you use the [`github_project_createrepo` Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/github_project_createrepo.yml), this is automatically done for you.
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* Python 3 must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
+* `createrepo` must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
+* `git` must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
 
 
 ## Tags

@@ -3,9 +3,14 @@
 This role installs [Podman](https://podman.io/) and deploys [Quadlets](https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html) to configure containers, networks and volumes. The role supports running rootless containers.
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
 
-* When running rootless containers, make sure to create a user with lingering enabled. This can be done using the [linuxfabrik.lfops.login](https://github.com/Linuxfabrik/lfops/tree/main/roles/login) role:
+
+## Requirements
+
+Manual steps:
+
+* Optional: when running rootless containers, create a user with lingering enabled by running the [login](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/login.yml) playbook (role: [linuxfabrik.lfops.login](https://github.com/Linuxfabrik/lfops/tree/main/roles/login)):
 ```yaml
 login__users__host_var:
   - name: 'example'

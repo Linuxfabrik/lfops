@@ -3,6 +3,9 @@
 This role deploys the package repository for [Redis](https://redis.io/) (an in-memory key/value store, typically used as a cache, session store or message broker).
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `repo_redis`

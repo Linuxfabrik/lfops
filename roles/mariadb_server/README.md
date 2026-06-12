@@ -24,17 +24,24 @@ By default, Ansible runs each task on all hosts affected by a play before starti
 Hardenings that can be covered by this role: See [STIGs](https://github.com/Linuxfabrik/lfops/blob/main/STIGs.md)
 
 
-## Mandatory Requirements
-
-* For some machines you might need to set `ansible_python_interpreter: '/usr/bin/python3'` to prevent the error message `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`.
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-* Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
+*Available since LFOps `2.0.0`.*
 
 
-## Optional Requirements
+## Dependent Roles
 
-* Enable the official [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/). This can be done using the [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb) role.
-* Enable the a repository for [mydumper](https://github.com/mydumper/mydumper). This can be done using the [linuxfabrik.lfops.repo_mydumper](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mydumper) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* The `python3-PyMySQL` library must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
+* Optional: the official [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/) (role: [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb)) provides a specific MariaDB version.
+* Optional: a repository for [mydumper](https://github.com/mydumper/mydumper) (role: [linuxfabrik.lfops.repo_mydumper](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mydumper)) provides the mydumper backup tool.
+
+
+## Requirements
+
+Manual steps:
+
+* On some machines you may need to set `ansible_python_interpreter: '/usr/bin/python3'` to prevent the error `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`.
 
 
 ## Tags
@@ -67,7 +74,7 @@ Hardenings that can be covered by this role: See [STIGs](https://github.com/Linu
 * Deploys the keyfile for the [File Key Management Encryption Plugin](https://mariadb.com/kb/en/file-key-management-encryption-plugin/) and restarts MariaDB if necessary.
 * Triggers: mariadb.service restart.
 
-`mariadb_server:database`
+`mariadb_server:databases`
 
 * Create or delete mariadb databases.
 * Triggers: none.
@@ -114,7 +121,7 @@ Hardenings that can be covered by this role: See [STIGs](https://github.com/Linu
 * Must be explicitly called.
 * Triggers: mariadb.service restart.
 
-`mariadb_server:user`
+`mariadb_server:users`
 
 * Create DBA.
 * Create, update or delete MariaDB users.
@@ -366,9 +373,8 @@ mariadb_server__dump_user:
 
     * `host`:
 
-        * Optional. Host-part.
+        * Mandatory. Host-part. Part of the entry's unique identity, so it must be set explicitly (commonly `'localhost'`).
         * Type: String.
-        * Default: `'localhost'`
 
     * `password`:
 
@@ -483,11 +489,23 @@ mariadb_server__users__host_var:
 
 Variables for `z00-linuxfabrik.cnf` directives and their default values, defined and supported by this role.
 
+`mariadb_server__cnf_aria_pagecache_buffer_size__group_var` / `mariadb_server__cnf_aria_pagecache_buffer_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/aria-system-variables/#aria_pagecache_buffer_size)
+* Type: String.
+* Default: `'128M'`
+
 `mariadb_server__cnf_bind_address__group_var` / `mariadb_server__cnf_bind_address__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#bind_address)
 * Type: String.
 * Default: `''`
+
+`mariadb_server__cnf_binlog_cache_size__group_var` / `mariadb_server__cnf_binlog_cache_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#binlog_cache_size)
+* Type: Number.
+* Default: `32768`
 
 `mariadb_server__cnf_binlog_expire_logs_seconds__group_var` / `mariadb_server__cnf_binlog_expire_logs_seconds__host_var`
 
@@ -531,6 +549,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'InnoDB'`
 
+`mariadb_server__cnf_eq_range_index_dive_limit__group_var` / `mariadb_server__cnf_eq_range_index_dive_limit__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables#eq_range_index_dive_limit)
+* Type: Number.
+* Default: `200`
+
 `mariadb_server__cnf_extra_max_connections__group_var` / `mariadb_server__cnf_extra_max_connections__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/thread-pool-system-status-variables/#extra_max_connections)
@@ -555,6 +579,18 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'/var/log/mariadb/mariadb-general.log'`
 
+`mariadb_server__cnf_innodb_adaptive_hash_index__group_var` / `mariadb_server__cnf_innodb_adaptive_hash_index__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables#innodb_adaptive_hash_index)
+* Type: String.
+* Default: `'OFF'`
+
+`mariadb_server__cnf_innodb_adaptive_hash_index_parts__group_var` / `mariadb_server__cnf_innodb_adaptive_hash_index_parts__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables#innodb_adaptive_hash_index_parts)
+* Type: Number.
+* Default: `8`
+
 `mariadb_server__cnf_innodb_autoinc_lock_mode__group_var` / `mariadb_server__cnf_innodb_autoinc_lock_mode__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_autoinc_lock_mode)
@@ -563,7 +599,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 `mariadb_server__cnf_innodb_buffer_pool_chunk_size__group_var` / `mariadb_server__cnf_innodb_buffer_pool_chunk_size__host_var`
 
-* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_chunk_size)
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_chunk_size) (Deprecated and ignored: MariaDB 10.11.12, MariaDB 11.4.6, MariaDB 11.8.2; no longer written to the generated config on these versions, value is derived automatically from `innodb_buffer_pool_size`)
 * Type: String or Number.
 * Default: 10.08-: `'128M'`, 10.8+: `0` (autosize)
 
@@ -581,7 +617,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 `mariadb_server__cnf_innodb_file_per_table__group_var` / `mariadb_server__cnf_innodb_file_per_table__host_var`
 
-* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table) (Deprecated: MariaDB 11.0.1)
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_file_per_table) (Deprecated: MariaDB 11.0; no longer written to the generated config on MariaDB 11.x)
 * Type: String.
 * Default: `'ON'`
 
@@ -609,6 +645,54 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'32M'`
 
+`mariadb_server__cnf_innodb_max_dirty_pages_pct__group_var` / `mariadb_server__cnf_innodb_max_dirty_pages_pct__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_max_dirty_pages_pct)
+* Type: Number.
+* Default: `90`
+
+`mariadb_server__cnf_innodb_max_purge_lag__group_var` / `mariadb_server__cnf_innodb_max_purge_lag__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_max_purge_lag)
+* Type: Number.
+* Default: `0`
+
+`mariadb_server__cnf_innodb_monitor_disable__group_var` / `mariadb_server__cnf_innodb_monitor_disable__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_monitor_disable)
+* Type: String.
+* Default: `''`
+
+`mariadb_server__cnf_innodb_open_files__group_var` / `mariadb_server__cnf_innodb_open_files__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_open_files)
+* Type: Number.
+* Default: `0`
+
+`mariadb_server__cnf_innodb_print_all_deadlocks__group_var` / `mariadb_server__cnf_innodb_print_all_deadlocks__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_print_all_deadlocks)
+* Type: String.
+* Default: `'OFF'`
+
+`mariadb_server__cnf_innodb_purge_batch_size__group_var` / `mariadb_server__cnf_innodb_purge_batch_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_purge_batch_size)
+* Type: Number.
+* Default: `127`
+
+`mariadb_server__cnf_innodb_read_io_threads__group_var` / `mariadb_server__cnf_innodb_read_io_threads__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_read_io_threads)
+* Type: Number.
+* Default: `4`
+
+`mariadb_server__cnf_innodb_snapshot_isolation__group_var` / `mariadb_server__cnf_innodb_snapshot_isolation__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_snapshot_isolation).
+* Type: String.
+* Default: `'ON'`
+
 `mariadb_server__cnf_innodb_strict_mode__group_var` / `mariadb_server__cnf_innodb_strict_mode__host_var`
 
 * [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_strict_mode)
@@ -627,11 +711,35 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'256K'`
 
+`mariadb_server__cnf_key_buffer_size__group_var` / `mariadb_server__cnf_key_buffer_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#key_buffer_size)
+* Type: String.
+* Default: `'128M'`
+
+`mariadb_server__cnf_local_infile__group_var` / `mariadb_server__cnf_local_infile__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#local_infile)
+* Type: String.
+* Default: `'ON'`
+
+`mariadb_server__cnf_lock_wait_timeout__group_var` / `mariadb_server__cnf_lock_wait_timeout__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#lock_wait_timeout)
+* Type: Number.
+* Default: `86400`
+
 `mariadb_server__cnf_log_bin__group_var` / `mariadb_server__cnf_log_bin__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#log_bin). Attention: the variable is *not* a boolean! Instead it either requires a string to enable it, or has to be unset. For convenience this role unsets the variable if it is set to `'OFF'`.
 * Type: String.
 * Default: `''`
+
+`mariadb_server__cnf_log_bin_trust_function_creators__group_var` / `mariadb_server__cnf_log_bin_trust_function_creators__host_var`
+
+* [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#log_bin_trust_function_creators)
+* Type: String.
+* Default: `'OFF'`
 
 `mariadb_server__cnf_log_error__group_var` / `mariadb_server__cnf_log_error__host_var`
 
@@ -644,6 +752,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/docs/server/ha-and-performance/standard-replication/replication-and-binary-log-system-variables#log_slave_updates)
 * Type: String.
 * Default: `'OFF'`
+
+`mariadb_server__cnf_long_query_time__group_var` / `mariadb_server__cnf_long_query_time__host_var`
+
+* [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#long_query_time)
+* Type: Number.
+* Default: `10`
 
 `mariadb_server__cnf_lower_case_table_names__group_var` / `mariadb_server__cnf_lower_case_table_names__host_var`
 
@@ -669,6 +783,18 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'16M'`
 
+`mariadb_server__cnf_net_read_timeout__group_var` / `mariadb_server__cnf_net_read_timeout__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables#net_read_timeout)
+* Type: Number.
+* Default: `30`
+
+`mariadb_server__cnf_net_write_timeout__group_var` / `mariadb_server__cnf_net_write_timeout__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables#net_write_timeout)
+* Type: Number.
+* Default: `60`
+
 `mariadb_server__cnf_performance_schema__group_var` / `mariadb_server__cnf_performance_schema__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/performance-schema-system-variables/#performance_schema)
@@ -693,6 +819,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'OFF'`
 
+`mariadb_server__cnf_server_id__group_var` / `mariadb_server__cnf_server_id__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-system-variables#server_id)
+* Type: Number.
+* Default: `1`
+
 `mariadb_server__cnf_server_raw`
 
 * Raw content which will be appended to the `[server]` section of the MariaDB cnf.
@@ -703,7 +835,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#skip_name_resolve)
 * Type: String.
-* Default: `'ON'`
+* Default: `'OFF'`
 
 `mariadb_server__cnf_slow_query_log__group_var` / `mariadb_server__cnf_slow_query_log__host_var`
 
@@ -722,6 +854,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#socket)
 * Type: String.
 * Default: RHEL: `'/run/mariadb/mariadb.sock'`, Debian: `'/run/mysqld/mysqld.sock'`
+
+`mariadb_server__cnf_sort_buffer_size__group_var` / `mariadb_server__cnf_sort_buffer_size__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#sort_buffer_size)
+* Type: String.
+* Default: `'2M'`
 
 `mariadb_server__cnf_sql_mode__group_var` / `mariadb_server__cnf_sql_mode__host_var`
 
@@ -768,6 +906,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 Example:
 ```yaml
 # optional - cnf directives
+mariadb_server__cnf_aria_pagecache_buffer_size__host_var: '128M'
 mariadb_server__cnf_bind_address__host_var: '0.0.0.0'
 mariadb_server__cnf_binlog_expire_logs_seconds__host_var: '9000' # 2.5hrs
 mariadb_server__cnf_binlog_format__host_var: 'MIXED'
@@ -791,6 +930,7 @@ mariadb_server__cnf_innodb_log_buffer_size__host_var: '20M'
 mariadb_server__cnf_innodb_log_file_size__host_var: '96M'
 mariadb_server__cnf_interactive_timeout__host_var: 28800
 mariadb_server__cnf_join_buffer_size__host_var: '256K'
+mariadb_server__cnf_key_buffer_size__host_var: '128M'
 mariadb_server__cnf_log_bin__host_var: 'log_bin'
 mariadb_server__cnf_log_error__host_var: '/var/log/mariadb/mariadb.log'
 mariadb_server__cnf_log_slave_updates__host_var: 'ON'
@@ -811,6 +951,7 @@ mariadb_server__cnf_skip_name_resolve__host_var: 'ON'
 mariadb_server__cnf_slow_query_log__host_var: 'OFF'
 mariadb_server__cnf_slow_query_log_file__host_var: '/var/log/mariadb/mariadb-slowquery.log'
 mariadb_server__cnf_socket__host_var: '/var/run/mariadb/mariadb.sock' # use /var/run instead of /run to avoid collisions with selinux fcontexts (`File spec /run/mariadb/mariadb\.sock conflicts with equivalency rule '/run /var/run'`)
+mariadb_server__cnf_sort_buffer_size__host_var: '2M'
 mariadb_server__cnf_sql_mode__host_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__host_var: 400
 mariadb_server__cnf_table_open_cache__host_var: 3000
@@ -968,7 +1109,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 `mariadb_server__cnf_plugin_load_add__group_var` / `mariadb_server__cnf_plugin_load_add__host_var`
 
-* [mariadb.com](https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/plugin-load-add/)
+* [mariadb.com](https://mariadb.com/docs/server/reference/plugins/plugin-overview#installing-a-plugin-with-plugin-load-add)
 * Type: String.
 * Default: `'file_key_management'`
 

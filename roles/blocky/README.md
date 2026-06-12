@@ -5,6 +5,9 @@ This role installs and configures blocky, a DNS proxy and ad-blocker for the loc
 This Ansible role does not provide a way to template the blocky configuration file -- it is simply far too dynamic. Also it does not currently support multiple blocky instances synchronizing their caches and locking state via redis. If you have multiple instances, just deploy the same config.yml to a group of blocky instances, and you will be fine.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `blocky`

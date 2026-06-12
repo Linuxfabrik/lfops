@@ -7,9 +7,16 @@ By default, this role requires an OS image that has been modified using cloud-in
 If you want to create a VM with an existing disk, see the `kvm_vm__existing_boot_disk` variable.
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* Install Python 3, and the python3-libvirt and python3-lxml modules on the KVM host. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role. If you use the [kvm_host Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/kvm_host.yml) to setup the KVM host, this is automatically done for you.
+
+## Requirements
+
+* Python 3, and the python3-libvirt and python3-lxml modules must be installed on the KVM host (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
+
+Manual steps:
+
+* Set up the KVM host first by running the [kvm_host](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/kvm_host.yml) playbook (role: [linuxfabrik.lfops.kvm_host](https://github.com/Linuxfabrik/lfops/tree/main/roles/kvm_host)), which installs Python 3 and the required libvirt/lxml modules on the host.
 * Place the base image in the `kvm_vm__pool` on the KVM host. If `kvm_vm__pool` is `default`, you get the storage path by running `virsh pool-dumpxml default | grep -i path` on the KVM host.
 
 

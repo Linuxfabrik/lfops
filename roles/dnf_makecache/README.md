@@ -5,6 +5,9 @@ This role manages the `dnf-makecache.service` and `dnf-makecache.timer` units. B
 This role is Red Hat-family only (DNF / YUM). It does not run on Debian / Ubuntu.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `dnf_makecache`

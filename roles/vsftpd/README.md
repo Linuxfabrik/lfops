@@ -3,6 +3,9 @@
 This role installs and configures [vsftpd](https://security.appspot.com/vsftpd.html), optionally with SSL (FTPS) and user-specific configs.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `vsftpd`

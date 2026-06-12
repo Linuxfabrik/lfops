@@ -3,18 +3,15 @@
 This role installs and configures a [PostgreSQL](https://www.postgresql.org/) server.
 
 
-## Mandatory Requirements
-
-* Install the `python3-psycopg2` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
-
-If you use the [postgresql_server Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/postgresql_server.yml), this is automatically done for you.
+*Available since LFOps `2.0.0`.*
 
 
-## Optional Requirements
+## Dependent Roles
 
-* Enable the official [PostgreSQL Yum Repository](https://yum.postgresql.org/). This can be done using the [linuxfabrik.lfops.repo_postgresql](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_postgresql) role.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-If you use the [postgresql_server Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/postgresql_server.yml), this is automatically done for you.
+* The `python3-psycopg2` library must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
+* Optional: the official [PostgreSQL Yum Repository](https://yum.postgresql.org/) enabled (role: [linuxfabrik.lfops.repo_postgresql](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_postgresql)).
 
 
 ## Tags

@@ -3,6 +3,9 @@
 [Cockpit](https://cockpit-project.org/) is a web-based admin UI for Linux servers (services, logs, networking, terminal, container management). This role can either install all `cockpit*` packages or remove them again from a host (for hardening / attack-surface-reduction reasons).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `cockpit`

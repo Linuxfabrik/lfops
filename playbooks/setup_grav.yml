@@ -9,6 +9,12 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -32,7 +38,7 @@
 
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
         - 'not grav__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'

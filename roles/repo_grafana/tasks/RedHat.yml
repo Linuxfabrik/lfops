@@ -5,7 +5,7 @@
       url: 'https://packages.grafana.com/gpg.key'
       dest: '/tmp/ansible.grafana.key'
     delegate_to: 'localhost'
-    run_once: true
+    become: false
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 

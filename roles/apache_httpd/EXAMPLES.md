@@ -67,7 +67,11 @@ apache_httpd__vhosts__host_var:
       <Proxy *>
           Require all granted
       </Proxy>
-      RewriteRule ^/(.*) http://webserver/$1 [proxy,last]
+      # ProxyPass instead of `RewriteRule [proxy,last]`: the latter %-decodes
+      # the URI pattern and forwards e.g. "?" unencoded to the backend, which
+      # breaks WebDAV apps such as Nextcloud (file-not-found on rename).
+      # See https://www.linuxfabrik.ch/blog/nextcloud-rewriterules-vs-proxypass.
+      ProxyPass / http://webserver/
       ProxyPassReverse / http://webserver/
       ProxyPassReverse / http://www.example.com/
 ```
@@ -149,7 +153,11 @@ apache_httpd__vhosts__host_var:
       <Proxy *>
           Require all granted
       </Proxy>
-      RewriteRule ^/(.*) http://webserver/$1 [proxy,last]
+      # ProxyPass instead of `RewriteRule [proxy,last]`: the latter %-decodes
+      # the URI pattern and forwards e.g. "?" unencoded to the backend, which
+      # breaks WebDAV apps such as Nextcloud (file-not-found on rename).
+      # See https://www.linuxfabrik.ch/blog/nextcloud-rewriterules-vs-proxypass.
+      ProxyPass / http://webserver/
       ProxyPassReverse / http://webserver/
       ProxyPassReverse / http://www.example.com/
 ```

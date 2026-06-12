@@ -10,6 +10,9 @@ The role auto-selects the right backend per OS:
 The lock list is rendered as a template, so every run replaces the file with the current `dnf_versionlock__versionlocks` content. Manual edits to `versionlock.list` are overwritten.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `dnf_versionlock`

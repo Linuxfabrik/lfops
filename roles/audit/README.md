@@ -3,6 +3,9 @@
 This role installs and configures [audit](http://people.redhat.com/sgrubb/audit/), including the daemon's logrotating behaviour.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `audit`

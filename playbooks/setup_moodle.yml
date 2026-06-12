@@ -9,6 +9,12 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -29,7 +35,7 @@
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
-          mariadb_server__python__modules__dependent_var[ansible_facts["os_family"]] +
+          mariadb_server__python__modules__dependent_var +
           apache_httpd__python__modules__dependent_var
         }}'
       when:
@@ -44,7 +50,7 @@
       # === Redis, PHP and PHP-FPM from Remi Repo
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
         - 'not setup_moodle__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
@@ -61,7 +67,7 @@
       # === MariaDB
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
         - 'not setup_moodle__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'

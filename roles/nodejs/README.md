@@ -7,6 +7,9 @@ By default, the role installs the latest available `nodejs` package from the con
 After installation the role creates a symlink `/bin/nodejs -> /bin/node`. This keeps scripts and tooling that hard-code `/bin/nodejs` working on distributions that only ship `/bin/node` (or vice versa).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `nodejs`

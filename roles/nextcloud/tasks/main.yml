@@ -216,7 +216,7 @@
 
   tags:
     - 'nextcloud'
-    - 'nextcloud:user'
+    - 'nextcloud:users'
 
 
 - block:
@@ -262,6 +262,15 @@
     become: true
     become_user: 'apache'
     # changed_when: there is no easy way to check for changes
+
+  - name: 'Deploy /usr/local/bin/nextcloud-app-update'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/bin/nextcloud-app-update.j2'
+      dest: '/usr/local/bin/nextcloud-app-update'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
 
   - name: 'Deploy /etc/systemd/system/nextcloud-app-update.service'
     ansible.builtin.template:

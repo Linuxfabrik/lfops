@@ -3,11 +3,14 @@
 This role deploys the [RPM Fusion](https://rpmfusion.org/RPM%20Fusion) free and nonfree Repositories.
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
 
-* Enable the EPEL Repository. This can be done using the [linuxfabrik.lfops.epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/epel) role.
 
-If you use the ["Repo RPM Fusion" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/repo_rpmfusion.yml), this is automatically done for you.
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
 
 
 ## Tags
@@ -22,7 +25,7 @@ If you use the ["Repo RPM Fusion" Playbook](https://github.com/Linuxfabrik/lfops
 
 `repo_rpmfusion__basic_auth_login`
 
-* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
 * Type: String.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
 

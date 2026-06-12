@@ -3,6 +3,9 @@
 This role ensures that login warning banners are configured properly (according to CIS).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `motd`
@@ -61,7 +64,7 @@ motd__legal_notice: |+
   * monitored and recorded by system personnel. Anyone using this        *
   * system expressly consents to such monitoring and is advised that     *
   * if such monitoring reveals possible evidence of criminal activity    *
-  * system personal may provide the evidence of such monitoring to law   *
+  * system personnel may provide the evidence of such monitoring to law  *
   * enforcement officials.                                               *
   *                                                                      *
   ************************************************************************

@@ -3,14 +3,17 @@
 This role installs and configures [mirror](https://github.com/Linuxfabrik/mirror).
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
 
-* Install Python 3. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
-* Install `createrepo`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
-* Install `git`. This can be done using the [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps) role.
-* Install `yum-utils`. This can be done using the [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils) role.
 
-If you use the [`mirror` Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/mirror.yml), this is automatically done for you.
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* Python 3 must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
+* `createrepo` must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
+* `git` must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
+* `yum-utils` must be installed (role: [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils)).
 
 
 ## Tags
@@ -50,6 +53,9 @@ mirror__reposync_repos:
     relative_target_path: 'rocky/8/extras/x86_64/os/'
   - repoid: 'powertools'
     relative_target_path: 'rocky/8/PowerTools/x86_64/os/'
+  - repoid: 'mirror-rhel8-icinga-stable-release'
+    relative_target_path: 'icinga/epel/8/release/'
+    newest_only: false
 ```
 
 

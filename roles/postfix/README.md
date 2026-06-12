@@ -3,6 +3,9 @@
 This role installs and configures [postfix](https://www.postfix.org/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `postfix`

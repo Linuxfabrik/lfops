@@ -1,0 +1,30 @@
+argument_specs:
+  main:
+    options:
+
+      icingaweb2_module_pdfexport__chrome_binary:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Path to a local Chrome/Chromium binary. If set, the module spawns Chromium locally on every export and the host/port settings are ignored.'
+
+      icingaweb2_module_pdfexport__chrome_host:
+        type: 'str'
+        required: false
+        description: 'Listen address of the headless Chromium instance the module connects to. Defaults to chromium_headless__listen_address.'
+
+      icingaweb2_module_pdfexport__chrome_port:
+        type: 'raw'
+        required: false
+        description: 'Listen port of the headless Chromium instance the module connects to. Defaults to chromium_headless__listen_port.'
+
+      icingaweb2_module_pdfexport__force_temp_storage:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'When true, the module renders every PDF to a temporary file on disk before sending it to the browser instead of streaming it directly. Useful as a workaround on memory-constrained hosts.'
+
+      icingaweb2_module_pdfexport__version:
+        type: 'str'
+        required: true
+        description: 'The IcingaWeb2 PDF Export Module version to install. See https://github.com/Icinga/icingaweb2-module-pdfexport/releases.'

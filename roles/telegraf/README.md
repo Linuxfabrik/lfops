@@ -3,11 +3,14 @@
 This role installs and configures [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/).
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* Enable the official [InfluxDB repository](https://docs.influxdata.com/influxdb/v1.8/introduction/install/?t=Red+Hat+%26amp%3B+CentOS). This can be done using the [linuxfabrik.lfops.repo_influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_influxdb) role.
 
-If you use the [telegraf playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/telegraf.yml), this is automatically done for you.
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The official [InfluxDB repository](https://docs.influxdata.com/influxdb/v1.8/introduction/install/?t=Red+Hat+%26amp%3B+CentOS) must be enabled (role: [linuxfabrik.lfops.repo_influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_influxdb)).
 
 
 ## Tags

@@ -1,0 +1,2 @@
+tmux__history_limit: 100000
+tmux__mouse: true

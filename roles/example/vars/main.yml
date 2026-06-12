@@ -1,0 +1,25 @@
+# OS-specific dependent_var, published by this role and consumed by an earlier role in
+# the play via the `__dependent_var` slot of the consumer (see "OS-specific Dependent
+# Variables" in CONTRIBUTING.md).
+#
+# `vars/<os>.yml` cannot serve this case because those files are loaded only when this
+# role's own tasks run, which is too late for a role that runs earlier. `vars/main.yml`
+# is loaded at play parse and visible to every role in the play, so it works.
+#
+# The OS selection happens here, inside the publishing role, so consumers reference the
+# public variable directly and stay simple:
+#
+#     - role: 'linuxfabrik.lfops.python'
+#       python__modules__dependent_var: '{{ example__python__modules__dependent_var }}'
+#
+# Jinja evaluation is lazy, so the filter only runs when a consumer actually reads the
+# variable. Internal (`__`-prefixed) dict first, public variable second.
+__example__python__modules__dependent_var:
+  Debian:
+    - name: 'python-example'
+  RedHat:
+    - name: 'python3-example'
+example__python__modules__dependent_var: '{{
+    __example__python__modules__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts)
+  }}'

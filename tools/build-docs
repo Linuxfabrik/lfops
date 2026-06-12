@@ -9,14 +9,24 @@
 """Generates the docs/ directory structure with symlinks and the mkdocs.yml navigation
 for the Linuxfabrik LFOps documentation site.
 
+For roles, the existing README.md is symlinked into docs/roles/<role>.md.
+For Ansible plugins (modules, lookup, filter), the embedded DOCUMENTATION /
+EXAMPLES / RETURN blocks are extracted and rendered into Markdown under
+docs/modules/<name>.md, docs/lookup/<name>.md, docs/filter/<name>.md and
+collected under a single 'Modules' section in the nav.
+
 Run this tool from the repository root directory.
 """
 
+import ast
 import os
+import re
 import sys
 
+import yaml
+
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026040701'
+__version__ = '2026042901'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 DOCS_DIR = os.path.join(REPO_ROOT, 'docs')
@@ -24,16 +34,25 @@ DOCS_DIR = os.path.join(REPO_ROOT, 'docs')
 # Top-level markdown files to include in the documentation.
 # Format: (source filename, target filename in docs/, nav title or None for hidden)
 TOP_LEVEL_DOCS = [
+    ('README.md', 'index.md', 'Home'),
     ('CHANGELOG.md', 'CHANGELOG.md', None),
     ('CODE_OF_CONDUCT.md', 'CODE_OF_CONDUCT.md', None),
     ('COMPATIBILITY.md', 'compatibility.md', 'Compatibility'),
     ('CONTRIBUTING.md', 'contributing.md', 'Contributing'),
     ('SECURITY.md', 'security.md', 'Security'),
-    ('STIGs.md', 'stigs.md', 'STIGs'),
 ]
 
 # Playbooks README
 PLAYBOOKS_README = ('playbooks/README.md', 'playbooks.md', 'Playbooks')
+
+# Plugin types we render. Each entry: (subdir under plugins/, subdir under docs/, label).
+# Order matters for the alphabetical merge in the nav: a module wins over a same-named
+# lookup/filter only because we sort the merged list and append the suffix to break ties.
+PLUGIN_KINDS = [
+    ('modules', 'modules', 'module'),
+    ('lookup', 'lookup', 'lookup'),
+    ('filter', 'filter', 'filter'),
+]
 
 
 def create_symlink(source, target):
@@ -62,7 +81,390 @@ def scan_roles():
     return roles
 
 
-def generate_mkdocs_yml(roles):
+def extract_plugin_docs(filepath):
+    """Parse a plugin Python file and return its DOCUMENTATION / EXAMPLES / RETURN
+    blocks. Returns a dict with keys 'doc' (parsed YAML), 'examples' (raw string),
+    'return' (parsed YAML), or None if no DOCUMENTATION block is found.
+    """
+    try:
+        with open(filepath, encoding='utf-8') as fh:
+            source = fh.read()
+        tree = ast.parse(source)
+    except (OSError, SyntaxError) as exc:
+        print(f'WARNING: could not parse {filepath}: {exc}', file=sys.stderr)
+        return None
+
+    raw = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        for target in node.targets:
+            if not isinstance(target, ast.Name):
+                continue
+            if target.id not in ('DOCUMENTATION', 'EXAMPLES', 'RETURN'):
+                continue
+            if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                raw[target.id] = node.value.value
+
+    if not raw.get('DOCUMENTATION'):
+        return None
+
+    try:
+        doc = yaml.safe_load(raw['DOCUMENTATION'])
+    except yaml.YAMLError as exc:
+        print(f'WARNING: invalid YAML in DOCUMENTATION of {filepath}: {exc}',
+              file=sys.stderr)
+        return None
+
+    parsed_return = None
+    if raw.get('RETURN'):
+        try:
+            parsed_return = yaml.safe_load(raw['RETURN'])
+        except yaml.YAMLError as exc:
+            print(f'WARNING: invalid YAML in RETURN of {filepath}: {exc}',
+                  file=sys.stderr)
+
+    return {
+        'doc': doc or {},
+        'examples': (raw.get('EXAMPLES') or '').strip(),
+        'return': parsed_return,
+    }
+
+
+_ANSIBLE_DOC_MARKUP = re.compile(r'([CIBLMOPRUV])\(([^)]+)\)')
+
+
+def _convert_ansible_markup(text):
+    """Convert Ansible's `C(foo)` / `I(foo)` / `B(foo)` / `M(module)` / `U(url)` / `L(text,url)`
+    inline markup to Markdown. Stays close to Ansible's own rendering: code-span for
+    C / O / V, italic for I, bold for B, plain text for L's display part.
+    """
+    if not text:
+        return text
+    def _sub(match):
+        kind, body = match.group(1), match.group(2)
+        if kind in ('C', 'O', 'V'):
+            return f'`{body}`'
+        if kind == 'I':
+            return f'*{body}*'
+        if kind == 'B':
+            return f'**{body}**'
+        if kind == 'M':
+            return f'`{body}`'
+        if kind == 'U':
+            return f'<{body}>'
+        if kind == 'L':
+            # L(label, url)
+            if ',' in body:
+                label, url = (s.strip() for s in body.split(',', 1))
+                return f'[{label}]({url})'
+            return body
+        if kind in ('P', 'R'):
+            return f'`{body}`'
+        return match.group(0)
+    return _ANSIBLE_DOC_MARKUP.sub(_sub, text)
+
+
+def _flatten_description(value):
+    """Description fields can be a string or a list of strings; return a single string
+    with Ansible inline markup converted to Markdown.
+    """
+    if value is None:
+        return ''
+    if isinstance(value, list):
+        joined = ' '.join(str(line).strip() for line in value if line is not None)
+    else:
+        joined = str(value).strip()
+    return _convert_ansible_markup(joined)
+
+
+_TYPE_LABELS = {
+    'str': 'String',
+    'int': 'Number',
+    'float': 'Number',
+    'bool': 'Bool',
+    'list': 'List',
+    'dict': 'Dictionary',
+    'path': 'Path',
+    'raw': 'Raw',
+    'json': 'JSON',
+    'jsonarg': 'JSON',
+}
+
+
+def _pretty_type(otype):
+    """Map Ansible's wire-level type names to the labels the role-style READMEs use
+    (`str` -> `String`, `int` -> `Number`, etc.).
+    """
+    if isinstance(otype, list):
+        return ' / '.join(_pretty_type(t) for t in otype)
+    if not otype:
+        return ''
+    key = str(otype).lower()
+    return _TYPE_LABELS.get(key, str(otype).capitalize())
+
+
+def _format_default(value):
+    """Render an option's default value the same way the role-style READMEs do."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return f'`{str(value).lower()}`'
+    if isinstance(value, str) and value == '':
+        return "`''`"
+    return f'`{value}`'
+
+
+def _format_type(opt):
+    """Render `Type: <type>[. One of <a>, <b>, <c>.]` for an option dict, using the
+    role-style type labels (`String`, `Number`, `Bool`, `List`, `Dictionary`, ...).
+    """
+    type_str = _pretty_type(opt.get('type', ''))
+    choices = opt.get('choices') or []
+    if choices:
+        choices_str = ', '.join(f'`{c}`' for c in choices)
+        return f'Type: {type_str}. One of {choices_str}.'
+    return f'Type: {type_str}.'
+
+
+def _render_option_block(name, opt, depth=0):
+    """Render one option in the LFOps role-style definition format.
+
+    At depth=0 (top-level option), the variable name is a bare heading-like
+    line and the bullets sit at column 0:
+
+        `name`
+
+        * Description.
+        * Type: ...
+        * Default: ...
+
+    At depth>=1 (suboption), the name becomes a bullet item indented under
+    its parent's "Subkeys:" line and its own bullets indent one more level.
+    The pattern matches `roles/example/README.md`.
+    """
+    opt = opt or {}
+    if depth == 0:
+        heading = f'`{name}`'
+        heading_indent = ''
+    else:
+        heading = f'* `{name}`:'
+        heading_indent = '    ' * (2 * depth - 1)
+    bullet_indent = '    ' * (2 * depth)
+
+    lines = [f'{heading_indent}{heading}', '']
+
+    description = _flatten_description(opt.get('description')) or '(no description)'
+    lines.append(f'{bullet_indent}* {description}')
+    lines.append(f'{bullet_indent}* {_format_type(opt)}')
+
+    default = _format_default(opt.get('default'))
+    if default is not None:
+        lines.append(f'{bullet_indent}* Default: {default}')
+
+    suboptions = opt.get('suboptions') or {}
+    if suboptions:
+        lines.append(f'{bullet_indent}* Subkeys:')
+        lines.append('')
+        for sub_name in sorted(suboptions):
+            lines.extend(_render_option_block(sub_name, suboptions[sub_name], depth + 1))
+    lines.append('')
+    return lines
+
+
+def _render_options_section(options):
+    """Render an options block as role-style "Mandatory" / "Optional" sections.
+    Returns a list of Markdown lines (with H2 headings already emitted).
+    """
+    if not options:
+        return []
+    mandatory = [n for n in sorted(options) if (options[n] or {}).get('required')]
+    optional = [n for n in sorted(options) if not (options[n] or {}).get('required')]
+
+    lines = []
+    if mandatory:
+        lines.append('## Mandatory Parameters')
+        lines.append('')
+        for name in mandatory:
+            lines.extend(_render_option_block(name, options[name]))
+    if optional:
+        lines.append('## Optional Parameters')
+        lines.append('')
+        for name in optional:
+            lines.extend(_render_option_block(name, options[name]))
+    return lines
+
+
+def _render_return_section(returns):
+    """Render the RETURN block as a role-style definition list."""
+    if not returns:
+        return []
+    lines = ['## Return Values', '']
+    for ret_name in sorted(returns):
+        ret = returns[ret_name] or {}
+        lines.append(f'`{ret_name}`')
+        lines.append('')
+        description = _flatten_description(ret.get('description')) or '(no description)'
+        lines.append(f'* {description}')
+        rtype = ret.get('type', '')
+        if rtype:
+            lines.append(f'* Type: {_pretty_type(rtype)}.')
+        returned = ret.get('returned')
+        if returned:
+            lines.append(f'* Returned: {returned}.')
+        sample = ret.get('sample')
+        if sample is not None:
+            if isinstance(sample, (dict, list)):
+                lines.append('* Sample:')
+                lines.append('')
+                lines.append('    ```yaml')
+                for sline in yaml.safe_dump(sample, default_flow_style=False).rstrip().split('\n'):
+                    lines.append(f'    {sline}')
+                lines.append('    ```')
+            else:
+                lines.append(f'* Sample: `{sample}`')
+        lines.append('')
+    return lines
+
+
+def render_plugin_md(kind, name, parsed):
+    """Render a plugin's parsed docs as a Markdown page."""
+    doc = parsed['doc']
+    short = doc.get('short_description', '').strip()
+    description = doc.get('description')
+    requirements = doc.get('requirements')
+    options = doc.get('options') or {}
+    notes = doc.get('notes')
+    version_added = doc.get('version_added')
+    authors = doc.get('author')
+    deprecated = doc.get('deprecated')
+
+    fqcn = f'linuxfabrik.lfops.{name}'
+    title = fqcn if kind == 'module' else f'{fqcn} ({kind})'
+
+    lines = [f'# `{title}`', '']
+
+    if short:
+        lines.append(f'> {_convert_ansible_markup(short)}')
+        lines.append('')
+
+    if deprecated:
+        why = _flatten_description(deprecated.get('why'))
+        alt = _flatten_description(deprecated.get('alternative'))
+        removed_in = deprecated.get('removed_in', '')
+        lines.append('!!! warning "Deprecated"')
+        if why:
+            lines.append(f'    {why}')
+        if alt:
+            lines.append(f'    Alternative: {alt}')
+        if removed_in:
+            lines.append(f'    Scheduled removal: {removed_in}')
+        lines.append('')
+
+    if description:
+        lines.append('## Synopsis')
+        lines.append('')
+        if isinstance(description, str):
+            description = [description]
+        for paragraph in description:
+            lines.append(f'* {_convert_ansible_markup(str(paragraph).strip())}')
+        lines.append('')
+
+    if version_added:
+        lines.append(f'*Available since LFOps `{version_added}`.*')
+        lines.append('')
+
+    if requirements:
+        lines.append('## Requirements')
+        lines.append('')
+        for req in (requirements if isinstance(requirements, list) else [requirements]):
+            lines.append(f'* {_convert_ansible_markup(str(req).strip())}')
+        lines.append('')
+
+    if options:
+        lines.extend(_render_options_section(options))
+
+    if parsed.get('examples'):
+        lines.append('## Examples')
+        lines.append('')
+        lines.append('```yaml')
+        lines.append(parsed['examples'])
+        lines.append('```')
+        lines.append('')
+
+    if parsed.get('return'):
+        lines.extend(_render_return_section(parsed['return']))
+
+    if notes:
+        lines.append('## Notes')
+        lines.append('')
+        for note in (notes if isinstance(notes, list) else [notes]):
+            lines.append(f'* {_convert_ansible_markup(str(note).strip())}')
+        lines.append('')
+
+    if authors:
+        lines.append('## Authors')
+        lines.append('')
+        for author in (authors if isinstance(authors, list) else [authors]):
+            lines.append(f'* {_convert_ansible_markup(str(author).strip())}')
+        lines.append('')
+
+    return '\n'.join(lines).rstrip() + '\n'
+
+
+def scan_plugins():
+    """Scan plugins/{modules,lookup,filter}/ for .py files with a DOCUMENTATION block.
+    Returns a list of (kind, name, source_path) tuples, sorted by name then kind.
+    """
+    found = []
+    for src_subdir, _, kind in PLUGIN_KINDS:
+        plugin_dir = os.path.join(REPO_ROOT, 'plugins', src_subdir)
+        if not os.path.isdir(plugin_dir):
+            continue
+        for entry in sorted(os.listdir(plugin_dir)):
+            if not entry.endswith('.py') or entry.startswith('_'):
+                continue
+            filepath = os.path.join(plugin_dir, entry)
+            parsed = extract_plugin_docs(filepath)
+            if parsed is None:
+                continue
+            name = entry[:-3]
+            found.append((kind, name, filepath, parsed))
+    # Stable sort: name asc, then kind asc.
+    found.sort(key=lambda triple: (triple[1], triple[0]))
+    return found
+
+
+def write_plugin_pages(plugins):
+    """Render each plugin to its docs/<kind>/<name>.md page. Returns the list of
+    (kind, name, target_path) tuples actually written, in nav order.
+    """
+    written = []
+    # Wipe stale auto-generated files in each plugin docs subdir before writing.
+    for _src_subdir, doc_subdir, _kind in PLUGIN_KINDS:
+        target_dir = os.path.join(DOCS_DIR, doc_subdir)
+        if os.path.isdir(target_dir):
+            for entry in os.listdir(target_dir):
+                entry_path = os.path.join(target_dir, entry)
+                if entry.endswith('.md') and (
+                    os.path.isfile(entry_path) or os.path.islink(entry_path)
+                ):
+                    os.unlink(entry_path)
+
+    kind_to_subdir = {kind: subdir for _, subdir, kind in PLUGIN_KINDS}
+    for kind, name, _filepath, parsed in plugins:
+        doc_subdir = kind_to_subdir[kind]
+        target_dir = os.path.join(DOCS_DIR, doc_subdir)
+        os.makedirs(target_dir, exist_ok=True)
+        target_path = os.path.join(target_dir, f'{name}.md')
+        content = render_plugin_md(kind, name, parsed)
+        with open(target_path, 'w', encoding='utf-8') as fh:
+            fh.write(content)
+        written.append((kind, name, f'{doc_subdir}/{name}.md'))
+    return written
+
+
+def generate_mkdocs_yml(roles, plugin_pages):
     """Generate the mkdocs.yml content."""
     lines = []
     lines.append("# This file is auto-generated by tools/build-docs. Do not edit manually.")
@@ -103,12 +505,20 @@ def generate_mkdocs_yml(roles):
     lines.append("  - admonition")
     lines.append("  - attr_list")
     lines.append("  - def_list")
+    # md_in_html lets python-markdown process Markdown syntax inside HTML
+    # blocks, which the README's `<div align=\"center\" id=\"badges\">…</div>`
+    # block needs so the inline `![…](…)` shields.io image links render as
+    # actual badges instead of raw text.
+    lines.append("  - md_in_html")
     lines.append("  - tables")
     lines.append("  - toc:")
     lines.append("      permalink: true")
     lines.append("")
     lines.append("plugins:")
     lines.append("  - search")
+    lines.append("")
+    lines.append("extra_css:")
+    lines.append("  - stylesheets/extra.css")
     lines.append("")
     lines.append("validation:")
     lines.append("  links:")
@@ -119,17 +529,36 @@ def generate_mkdocs_yml(roles):
     lines.append("  CODE_OF_CONDUCT.md")
     lines.append("")
 
-    # Build nav
+    # Build nav. Project meta pages (Home, Compatibility, ...) live at the top
+    # level; the technical content (Roles, Plugins) is grouped into collapsible
+    # sections below. Plugins is split into Modules / Lookup / Filter so each
+    # plugin kind gets its own subsection.
     lines.append("nav:")
     lines.append("  - 'Home': 'index.md'")
     lines.append("  - 'Compatibility': 'compatibility.md'")
     lines.append("  - 'Playbooks': 'playbooks.md'")
+    lines.append("  - 'Security': 'security.md'")
+    lines.append("  - 'Contributing': 'contributing.md'")
     lines.append("  - 'Roles':")
     for role in roles:
         lines.append(f"      - '{role}': 'roles/{role}.md'")
-    lines.append("  - 'STIGs': 'stigs.md'")
-    lines.append("  - 'Contributing': 'contributing.md'")
-    lines.append("  - 'Security': 'security.md'")
+
+    if plugin_pages:
+        # Group by plugin kind so the nav has Plugins > Modules / Lookup / Filter.
+        by_kind = {'module': [], 'lookup': [], 'filter': []}
+        for kind, name, path in plugin_pages:
+            by_kind.setdefault(kind, []).append((name, path))
+        kind_label = {'module': 'Modules', 'lookup': 'Lookup', 'filter': 'Filter'}
+
+        lines.append("  - 'Plugins':")
+        for kind in ('module', 'lookup', 'filter'):
+            entries = sorted(by_kind.get(kind, []), key=lambda t: t[0])
+            if not entries:
+                continue
+            lines.append(f"      - '{kind_label[kind]}':")
+            for name, path in entries:
+                lines.append(f"          - '{name}': '{path}'")
+
     lines.append("")
 
     return '\n'.join(lines)
@@ -161,11 +590,10 @@ def main():
     target_dir = os.path.join(DOCS_DIR, 'roles')
     os.makedirs(target_dir, exist_ok=True)
 
-    # Remove stale symlinks
-    expected_files = {f'{role}.md' for role in roles}
+    expected_role_files = {f'{role}.md' for role in roles}
     for entry in os.listdir(target_dir):
         entry_path = os.path.join(target_dir, entry)
-        if os.path.islink(entry_path) and entry not in expected_files:
+        if os.path.islink(entry_path) and entry not in expected_role_files:
             os.unlink(entry_path)
 
     for role in roles:
@@ -173,15 +601,21 @@ def main():
         target = os.path.join(target_dir, f'{role}.md')
         create_symlink(source, target)
 
+    # Render plugin docs (modules, lookup, filter)
+    plugins = scan_plugins()
+    plugin_pages = write_plugin_pages(plugins)
+
     # Generate mkdocs.yml
-    mkdocs_content = generate_mkdocs_yml(roles)
+    mkdocs_content = generate_mkdocs_yml(roles, plugin_pages)
     mkdocs_path = os.path.join(REPO_ROOT, 'mkdocs.yml')
-    with open(mkdocs_path, 'w') as f:
-        f.write(mkdocs_content)
+    with open(mkdocs_path, 'w', encoding='utf-8') as fh:
+        fh.write(mkdocs_content)
 
     total_symlinks = len(TOP_LEVEL_DOCS) + 1 + len(roles)  # +1 for playbooks README
     print(f'Created {total_symlinks} symlinks in docs/')
-    print(f'Generated mkdocs.yml with {len(roles)} role entries')
+    print(f'Rendered {len(plugin_pages)} plugin docs in docs/{{modules,lookup,filter}}/')
+    print(f'Generated mkdocs.yml with {len(roles)} role entries '
+          f'and {len(plugin_pages)} plugin entries')
 
     return 0
 

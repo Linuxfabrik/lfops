@@ -15,7 +15,7 @@
       url: 'https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
       dest: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
     delegate_to: 'localhost'
-    run_once: true
+    become: false
     check_mode: false # run task even if `--check` is specified
 
   - name: 'mkdir -p {{ ansible_env["HOME"] }}/mod_maxminddb-{{ mod_maxminddb__version }}'

@@ -3,12 +3,17 @@
 This role creates and manages instances (virtual machines) on [Exoscale](https://www.exoscale.com/). It also allows creating other compontents for the instance, such as networks and firewall rules.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Known Limitations
 
 * Resizing / scaling of instances is currently not supported
 
 
-## Mandatory Requirements
+## Requirements
+
+Manual steps:
 
 * Install the [exo command line tool](https://github.com/exoscale/cli/releases) and configure your Exoscale account using `exo config` on the Ansible control node.
 * Install the `python3-cs` library on the Ansible control node.

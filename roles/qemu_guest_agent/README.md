@@ -3,6 +3,9 @@
 This role installs the [QEMU Guest Agent](https://wiki.qemu.org/Features/GuestAgent/) inside a KVM/QEMU guest. The agent runs as a daemon (`qemu-guest-agent.service`) and exposes a virtio-serial channel that the hypervisor uses for things the host can't otherwise observe: graceful shutdown, filesystem freeze/thaw for consistent disk snapshots, host-side queries for guest hostname/IP/network info, and time synchronization after a host suspend. Without the agent, hypervisor-side actions like `virsh shutdown`, snapshot quiescing or `virsh domifaddr` either fall back to ACPI (less reliable) or simply don't return useful data.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `qemu_guest_agent`

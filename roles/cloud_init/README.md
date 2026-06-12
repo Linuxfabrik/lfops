@@ -11,6 +11,9 @@ Concretely, the role:
 Depending on the cloud provider, `cloud-init` changes SSH security settings, which we do not want. Note that removing `cloud-init` may break first-boot integrations of the cloud provider (metadata, SSH key injection, hostname provisioning, ...). Run this role only on hosts that have already been provisioned, or on installations where you do not rely on cloud-init at all.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `cloud_init`

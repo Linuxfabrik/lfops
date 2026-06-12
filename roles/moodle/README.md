@@ -12,14 +12,21 @@ Setting the version manually:
 * `ansible-playbook --inventory=myansinv linuxfabrik.lfops.setup_moodle --tags=moodle --extra-vars="moodle__github_version=v4.1.12"`
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
+
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* A web server (for example Apache httpd) must be installed and a virtual host for Moodle configured (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
+* PHP v8.1 must be installed (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
+* Redis v7.2 must be installed (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
+
+
+## Requirements
 
 * Attention: Moodle has very specific version requirements regarding PHP and Redis. See https://moodledev.io/general/development/policies/php.
-* Install a web server (for example Apache httpd), and configure a virtual host for Moodle. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
-* Install PHP v8.1. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
-* Install Redis v7.2. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) role.
-
-If you use the ["Setup Moodle" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_moodle.yml), this is automatically done for you.
 
 
 ## Tags

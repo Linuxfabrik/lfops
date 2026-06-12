@@ -7,12 +7,15 @@ This role is tested with the following IcingaWeb2 x509 Module versions:
 * 1.3.1
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
-* A SQL database and user. This can be done using the [linuxfabrik.lfops.mariadb_server](https://github.com/linuxfabrik/lfops/tree/main/roles/mariadb_server) role.
 
-If you use the [Setup Icinga2 Master Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_icinga2_master.yml) and set `setup_icinga2_master__skip_icingaweb2_module_x509: false`, this is automatically done for you.
+## Requirements
+
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
+* Deploy a SQL database server and create the database and user by running the [mariadb_server](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/mariadb_server.yml) playbook (role: [linuxfabrik.lfops.mariadb_server](https://github.com/linuxfabrik/lfops/tree/main/roles/mariadb_server)).
 
 
 ## Tags

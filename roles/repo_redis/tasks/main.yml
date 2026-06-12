@@ -6,7 +6,7 @@
       dest: '/tmp/ansible.redis.gpg'
       mode: 0o644
     delegate_to: 'localhost'
-    run_once: true
+    become: false
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
@@ -37,6 +37,7 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
+    changed_when: false # refreshing the package cache is not a config change
 
   tags:
     - 'repo_redis'

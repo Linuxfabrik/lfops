@@ -5,24 +5,33 @@ This role installs and configures a [Graylog](https://www.graylog.org) Data Node
 Note that this role does NOT let you specify a particular Graylog Data Node version. It simply installs the latest available Graylog Data Node version from the repos configured in the system.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Known Limitations
 
 * To secure your data node(s), you can either upload an existing Certificate Authority (CA) or provision a certificate directly from the Graylog interface. This role does not currently support certificate handling - it assumes that you are using the automatic data node setup.
 * This role does not currently support more than one data node.
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-Sizing of disks:
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* `/`: at least 4 GB free disk space (create a 8+ GB partition).
-* `/var`: at least 15 GB free disk space (create a 20+ GB partition).
+* MongoDB must be installed (role: [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb)).
+* The official [Graylog repository](https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm) must be enabled (role: [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog)).
 
-If you use the ["Setup Graylog Data Node" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_graylog_datanode.yml), the following is automatically done for you:
 
-* Install MongoDB. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
-* If you're not using a versioned MongoDB repository, don't forget to protect MongoDB from being updated with newer minor and major versions. This can be done using the [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock) role.
-* Enable the official [Graylog repository](https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm). This can be done using the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) role.
+## Requirements
+
+* Size the disks before running the role:
+
+    * `/`: at least 4 GB free disk space (create a 8+ GB partition).
+    * `/var`: at least 15 GB free disk space (create a 20+ GB partition).
+
+Manual steps:
+
+* If you're not using a versioned MongoDB repository, protect MongoDB from being updated with newer minor and major versions by running the [dnf_versionlock](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/dnf_versionlock.yml) playbook (role: [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock)).
 
 
 ## Tags
@@ -63,6 +72,7 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 `graylog_datanode__bind_address`
 
 * The network interface used by the Graylog DataNode to bind all services.
+* If you set this to `0.0.0.0`, you must also set `graylog_datanode__http_publish_uri` to a URL the other nodes and clients can actually reach, otherwise the DataNode advertises an unreachable `0.0.0.0` for its REST API.
 * Type: String.
 * Default: `'127.0.0.1'`
 
@@ -71,6 +81,12 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 * The port where the DataNode REST api is listening.
 * Type: Number.
 * Default: `8999`
+
+`graylog_datanode__http_publish_uri`
+
+* The URI the DataNode publishes for its REST API, for clients that reach it on a different interface than `graylog_datanode__bind_address` (multiple interfaces, a NAT gateway, or a bind address of `0.0.0.0`). Left empty, the DataNode derives the address from the bind address.
+* Type: String.
+* Default: `''`
 
 `graylog_datanode__mongodb_uri`
 
@@ -119,6 +135,7 @@ Example:
 # optional
 graylog_datanode__bind_address: '127.0.0.1'
 graylog_datanode__datanode_http_port: 8999
+graylog_datanode__http_publish_uri: 'http://198.51.100.10:8999/'
 graylog_datanode__mongodb_uri: 'mongodb://127.0.0.1/graylog'
 graylog_datanode__node_search_cache_size: '5gb'
 graylog_datanode__opensearch_data_location: '/data/opensearch'

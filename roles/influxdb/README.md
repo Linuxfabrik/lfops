@@ -3,10 +3,16 @@
 This role installs and configures [InfluxDB](https://www.influxdata.com/products/influxdb-overview/).
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* Install `influxdb` and `requests` into a Python 3 virtual environment in `/opt/python-venv/influxdb`. This can be done using the [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv) role.
-* Enable the official [InfluxDB repository](https://docs.influxdata.com/influxdb/v1.8/introduction/install/?t=Red+Hat+%26amp%3B+CentOS). This can be done using the [linuxfabrik.lfops.repo_influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_influxdb) role.
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* `influxdb` and `requests` must be installed into a Python 3 virtual environment in `/opt/python-venv/influxdb` (role: [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv)).
+* On Rocky 9+, the EPEL repository (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)) and the CRB ("Code Ready Builder") repository (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)) must be enabled so `python3-virtualenv` can be installed.
+* The official [InfluxDB repository](https://docs.influxdata.com/influxdb/v1.8/introduction/install/?t=Red+Hat+%26amp%3B+CentOS) must be enabled (role: [linuxfabrik.lfops.repo_influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_influxdb)).
 
 
 ## Tags
@@ -21,7 +27,7 @@ This role installs and configures [InfluxDB](https://www.influxdata.com/products
 * Deploys the /etc/influxdb/influxdb.conf config file.
 * Triggers: influxdb.service restart.
 
-`influxdb:database`
+`influxdb:databases`
 
 * Creates or deletes InfluxDB databases.
 * Triggers: none.
@@ -36,7 +42,7 @@ This role installs and configures [InfluxDB](https://www.influxdata.com/products
 * Manages the state of the InfluxDB service.
 * Triggers: none.
 
-`influxdb:user`
+`influxdb:users`
 
 * Creates, updates or deletes InfluxDB users.
 * Triggers: none.

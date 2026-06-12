@@ -11,3 +11,14 @@ repo_baseos__crb_repo_enabled__combined_var: '{{
     repo_baseos__crb_repo_enabled__dependent_var if (repo_baseos__crb_repo_enabled__dependent_var | bool) else
     repo_baseos__crb_repo_enabled__role_var
   }}'
+
+repo_baseos__security_repo_enabled__dependent_var: ''
+repo_baseos__security_repo_enabled__group_var: ''
+repo_baseos__security_repo_enabled__host_var: ''
+repo_baseos__security_repo_enabled__role_var: true
+repo_baseos__security_repo_enabled__combined_var: '{{
+    repo_baseos__security_repo_enabled__host_var if (repo_baseos__security_repo_enabled__host_var | string | length) else
+    repo_baseos__security_repo_enabled__group_var if (repo_baseos__security_repo_enabled__group_var | string | length) else
+    repo_baseos__security_repo_enabled__dependent_var if (repo_baseos__security_repo_enabled__dependent_var | string | length) else
+    repo_baseos__security_repo_enabled__role_var
+  }}'

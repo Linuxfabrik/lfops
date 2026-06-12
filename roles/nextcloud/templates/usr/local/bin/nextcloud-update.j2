@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026042101
+# 2026051102
 
 set -euo pipefail
 
@@ -133,6 +133,7 @@ echo
 echo 'occ app:update --all --no-interaction'
 echo '-------------------------------------'
 if ! grep -q "app_done" "${STATE_FILE}"; then
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" maintenance:mode --off
     sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" app:update --all --no-interaction
     echo "app_done" >> "${STATE_FILE}"
 else

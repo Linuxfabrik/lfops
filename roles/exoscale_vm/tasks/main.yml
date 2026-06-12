@@ -8,6 +8,7 @@
       name: '{{ exoscale_vm__name }}'
       state: 'present'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
       - 'exoscale_vm__state != "absent"'
@@ -26,6 +27,7 @@
       type: '{{ item["type"] | default("ingress") }}'
     loop: '{{ exoscale_vm__security_group_rules }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
       - 'exoscale_vm__state != "absent"'
@@ -61,6 +63,7 @@
       --output-format json
     register: 'exoscale_vm__instance_list_result'
     delegate_to: 'localhost'
+    become: false
     changed_when: false # just gathering information, no actual change happening here
 
   - name: 'Create the VM at Exoscale'
@@ -82,6 +85,7 @@
       {% endif %}
       '{{ exoscale_vm__name }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'exoscale_vm__state != "absent"'
       - 'exoscale_vm__name not in  exoscale_vm__instance_list_result["stdout"] | from_json | map(attribute="name")'
@@ -95,6 +99,7 @@
       --force
       '{{ exoscale_vm__name }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'exoscale_vm__state == "absent"'
       - 'exoscale_vm__name in exoscale_vm__instance_list_result["stdout"] | from_json | map(attribute="name")'
@@ -122,6 +127,7 @@
       - 'exoscale_vm__state != "absent"'
       - 'item["cidr"] is defined'
     delegate_to: 'localhost'
+    become: false
 
   - name: "Manage the VM's networks"
     ngine_io.cloudstack.cs_instance_nic:
@@ -135,6 +141,7 @@
     loop: '{{ exoscale_vm__private_networks }}'
     when: 'exoscale_vm__state != "absent"'
     delegate_to: 'localhost'
+    become: false
 
   tags:
     - 'exoscale_vm'
@@ -151,6 +158,7 @@
       name: '{{ exoscale_vm__name }}'
       state: 'absent'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
       - 'exoscale_vm__state == "absent"'

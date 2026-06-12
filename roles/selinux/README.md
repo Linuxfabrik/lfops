@@ -10,9 +10,14 @@
 * compiles and installs custom SELinux policy modules from source (.te, .fc, .if files). Note: Module installation is not idempotent - modules with `state: present` will always be compiled and installed on each run
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* Install the SELinux python bindings. This can be done using the [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) role.
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The SELinux python bindings must be installed (role: [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils)).
 
 
 ## Tags
@@ -152,9 +157,8 @@
 
     * `proto`:
 
-        * Optional. Protocol for the specified port (range).
+        * Mandatory. Protocol for the specified port (range). Part of the entry's unique identity, so it must be set explicitly (commonly `'tcp'`).
         * Type: String.
-        * Default: `'tcp'`
 
     * `state`:
 

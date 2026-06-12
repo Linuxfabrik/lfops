@@ -7,10 +7,15 @@ This role is tested with the following IcingaWeb2 Jira Module versions:
 * 1.3.4
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
-* The module requires you to create two custom fields in Jira that represent "icingaKey" and "icingaStatus". Have a look at `icingaweb2_module_jira__key_fields_icinga_key` and `icingaweb2_module_jira__key_fields_icinga_status`.
+
+## Requirements
+
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
+* Create two custom fields in Jira that represent "icingaKey" and "icingaStatus", then reference them via `icingaweb2_module_jira__key_fields_icinga_key` and `icingaweb2_module_jira__key_fields_icinga_status`.
 
 
 ## Tags

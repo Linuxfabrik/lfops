@@ -1,31 +1,36 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
-# Copyright: (c) 2022, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
-
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
 DOCUMENTATION = r'''
 module: gpg_key
 
-short_description: Create and fetch GPG keys
+short_description: Find or create a GPG private key
 
 description:
-    - This Ansible module returns a GPG key by listing all available key on the host and matching them with the given options.
-    - If no GPG key is found, a new one is generated with the given options.
-    - This module heavily relies on the U(https://github.com/vsajip/python-gnupg) library.
-    - On success, this module returns the GPG private key as described L(here,https://gnupg.readthedocs.io/en/latest/#listing-keys). The output is augmented with the armored ASCII representation of both the private and public key.
+    - Ensures that a GPG private key matching the given attributes exists on the host. Lists all secret keys via C(gpg) and matches them against the supplied options. If a matching key is found, it is returned as is; otherwise a new one is generated.
+    - The C(uid) of an existing key is parsed back into its C(name_real), C(name_comment) and C(name_email) parts and compared against the parameters; key type, key length and (if present) subkey type and subkey length must match as well.
+    - When the key has subkeys, at least one subkey must match I(subkey_type) and I(subkey_length); GPG's unattended generator can only create a single subkey per key but more can be added later, hence the partial match.
+    - The passphrase is never used to decide whether a key matches, since it is not visible in the secret key listing.
+    - On success, the module returns the matched or newly generated key (the same dict shape as L(python-gnupg's list_keys(),https://gnupg.readthedocs.io/en/latest/#listing-keys)) plus the ASCII-armored exports of the private and public key.
+    - Internally relies on U(https://github.com/vsajip/python-gnupg).
 
 notes:
-    - When checking if there is an existing GPG key, we match it using all the provided options, besides the passphrase.
-    - However, if there is a subkey option specified, and there is a key with multiple subkey present, only one has to match for us to assume that it is the correct key.
-    - This module currently only provides a small subset of the available GPG options. If you require more, issues and pull requests are very welcome.
+    - Only a small subset of the available GPG options is exposed (single name/email/comment, key type, key length, optional one subkey, optional passphrase). Issues and pull requests for additional options are welcome.
+    - If multiple keys match the supplied options, the module fails because it cannot decide which one to return.
+    - In check mode, the module reports C(changed=true) when no matching key is found, but it does not generate one.
 
 requirements:
-    - Requires the GNU Privacy Guard command line tool C(gpg).
+    - GNU Privacy Guard command line tool C(gpg) on the host where the module runs.
+    - "No separate C(python-gnupg) install is required: a copy of the library is bundled with the collection and shipped together with the module."
 
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
@@ -34,42 +39,51 @@ version_added: "1.0.0"
 
 options:
     gnupghome:
-        description: The path to the gnupg directory.
+        description: Path to the GnuPG home directory. When unset, falls back to whatever C(gpg) itself uses (typically C($HOME/.gnupg)). The directory is created with mode C(0o700) if it does not exist.
         required: False
-        default: What gpg itself would use, for example on RHEL ~/.gnupg
+        type: path
     gpgbinary:
-        description: The explicit executable or pathname for the C(gpg) executable.
+        description: Name of, or path to, the C(gpg) executable.
         required: False
-        default: gpg
+        type: str
+        default: 'gpg'
     key_length:
-        description: The length used for the GPG key.
+        description: Key length in bits. Used both as a match criterion against existing keys and as the bit length for newly generated keys.
         required: False
+        type: int
         default: 1024
     key_type:
-        description: The type (algorithm) used for the GPG key.
+        description: Key algorithm. Used both as a match criterion (compared against the human-readable algorithm name C(RSA), C(DSA), C(Elgamal), C(ECDH), C(ECDSA)) and as the algorithm for newly generated keys.
         required: False
-        default: RSA
+        type: str
+        default: 'RSA'
     name_comment:
-        description: The comment used for the GPG key.
+        description: Comment portion of the GPG user ID (the text in parentheses).
         required: False
-        default: Generated by Ansible.
+        type: str
+        default: 'Generated by Ansible.'
     name_email:
-        description: The email used for the GPG key.
+        description: Email portion of the GPG user ID (the text in angle brackets).
         required: False
-        default: info@example.com
+        type: str
+        default: 'info@example.com'
     name_real:
-        description: The name used for the GPG key.
+        description: Real-name portion of the GPG user ID (the text before the comment / email).
         required: False
-        default: Autogenerated Key
+        type: str
+        default: 'Autogenerated Key'
     passphrase:
-        description: The passphrase used for the GPG key.
+        description: Passphrase for the secret key. When empty (the default), the generated key is unprotected (C(no_protection)). Never used to decide whether an existing key matches.
         required: False
+        type: str
     subkey_length:
-        description: The length used for the GPG subkey.
+        description: Length in bits of the (single) subkey to generate, and to match against existing subkeys. Only meaningful together with I(subkey_type).
         required: False
+        type: int
     subkey_type:
-        description: The type (algorithm) used for the GPG subkey.
+        description: Algorithm of the (single) subkey to generate, and to match against existing subkeys. Only meaningful together with I(subkey_length).
         required: False
+        type: str
 '''
 
 EXAMPLES = r'''
@@ -94,42 +108,42 @@ EXAMPLES = r'''
 
 RETURN = r'''
 ascii_armored_private_key:
-    description: The exported armored ascii representation of both the private key.
+    description: ASCII-armored export of the private key.
     returned: success
     type: str
     sample: '-----BEGIN PGP PRIVATE KEY BLOCK-----\n\n...\n-----END PGP PRIVATE KEY BLOCK-----\n'
 ascii_armored_public_key:
-    description: The exported armored ascii representation of both the public key.
+    description: ASCII-armored export of the public key.
     returned: success
     type: str
     sample: '-----BEGIN PGP PUBLIC KEY BLOCK-----\n\n...\n-----END PGP PUBLIC KEY BLOCK-----\n'
-algo:
-    description: The GPG key.
+key:
+    description: The matched or newly generated GPG key, in the dict shape returned by python-gnupg's L(list_keys(),https://gnupg.readthedocs.io/en/latest/#listing-keys).
     returned: success
     type: dict
     contains:
         algo:
-            description: Public key algorithm.
+            description: Public key algorithm number (IANA PGP-parameters; 1/2/3 = RSA, 16 = Elgamal, 17 = DSA, 18 = ECDH, 19 = ECDSA).
             returned: success
             type: int
             sample: 1
         cap:
-            description: Key capabilities.
+            description: Key capabilities (encrypt/sign/certify/authenticate). Uppercase letters indicate the primary key, lowercase the subkeys.
             returned: success
             type: str
             sample: escaESCA
         compliance:
-            description: Compliance flags.
+            description: Compliance flags reported by GPG (e.g. C(8) for OpenPGP, C(23) for FIPS).
             returned: success
             type: str
             sample: ''
         curve:
-            description: Curve name for elliptic curve cryptography (ECC) keys.
+            description: Curve name for elliptic curve cryptography (ECC) keys. Empty for RSA/DSA/Elgamal.
             returned: success
             type: str
             sample: ''
         date:
-            description: The creation date of the key in UTC as a Unix timestamp.
+            description: Creation date of the key in UTC as a Unix timestamp.
             returned: success
             type: int
             sample: 1645019144
@@ -139,61 +153,61 @@ algo:
             type: str
             sample: ''
         expires:
-            description: The expiry date of the key in UTC as a timestamp, if specified.
+            description: Expiry date of the key in UTC as a Unix timestamp, or empty if the key does not expire.
             returned: success
             type: str
             sample: ''
         fingerprint:
-            description: The fingerprint of the key.
+            description: Full key fingerprint.
             returned: success
             type: str
             sample: ECA3505F5A6F61A528D6A5087EFF958551A5481E
         flag:
-            description: A flag field.
+            description: Flag field as reported by GPG. Reserved; usually empty.
             returned: success
             type: str
             sample: ''
         hash:
-            description: Hash algorithm.
+            description: Hash algorithm used by the key.
             returned: success
             type: str
             sample: ''
         issuer:
-            description: Issuer information.
+            description: Issuer information (only set on signature records).
             returned: success
             type: str
             sample: ''
         keyid:
-            description: The key ID.
+            description: Short (16-character) key ID.
             returned: success
             type: str
             sample: 7EFF958551A5481E
         length:
-            description: The length of the key in bits.
+            description: Key length in bits.
             returned: success
             type: int
             sample: 1024
         origin:
-            description: Origin of keys.
+            description: Origin of the key as reported by GPG.
             returned: success
             type: int
             sample: 0
         ownertrust:
-            description: The level of owner trust for the key.
+            description: Owner trust level (C(u) ultimate, C(f) full, C(m) marginal, C(n) never, C(-) unknown).
             returned: success
             type: str
             sample: u
         sig:
-            description: Signature class.
+            description: Signature class (only set on signature records).
             returned: success
             type: str
             sample: ''
         subkey_info:
-            description: A dictionary of subkey information keyed on subkey id.
+            description: Dictionary of subkey records keyed by subkey ID. Each record has the same shape as the parent key record.
             returned: success
             type: dict
         subkeys:
-            description: A list containing [keyid, type] elements for each subkey.
+            description: List of C([keyid, type]) entries for each subkey.
             returned: success
             type: list
             sample:
@@ -201,27 +215,27 @@ algo:
                 - null
                 - D002B0EB3BF40CF209930E74524C9D5EB862A934
         token:
-            description: Token serial number.
+            description: Smartcard / token serial number, or C(+) when the key is on a token without a readable serial.
             returned: success
             type: str
             sample: +
         trust:
-            description: The validity of the key.
+            description: Key validity (C(u) ultimate, C(f) full, C(m) marginal, C(n) never, C(-) unknown, C(e) expired).
             returned: success
             type: str
             sample: u
         type:
-            description: Type of key.
+            description: Record type (C(sec) secret primary key, C(pub) public primary key, C(ssb)/C(sub) subkey).
             returned: success
             type: str
             sample: sec
-        uid:
-            description: The user ID.
+        uids:
+            description: List of user IDs attached to the key.
             returned: success
             type: list
             sample: ['Autogenerated Key (Generated by Ansible.) <info@example.com>']
         updated:
-            description: Last updated timestamp.
+            description: Last update timestamp.
             returned: success
             type: str
             sample: ''
@@ -232,13 +246,13 @@ import os
 import re
 import traceback
 
-logger = logging.getLogger('gnupg')
-logger.setLevel(logging.DEBUG)
-
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils._text import to_native
+from ansible.module_utils.common.text.converters import to_native
 
 from ansible_collections.linuxfabrik.lfops.plugins.module_utils.gnupg import GPG
+
+logger = logging.getLogger('gnupg')
+logger.setLevel(logging.DEBUG)
 
 # taken from https://www.iana.org/assignments/pgp-parameters/pgp-parameters.xhtml#pgp-parameters-12
 algo_ids = {
@@ -325,7 +339,7 @@ def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         gpgbinary=dict(type='str', required=False, default='gpg'),
-        gnupghome=dict(type='str', required=False),
+        gnupghome=dict(type='path', required=False),
 
         name_real=dict(type='str', required=False, default='Autogenerated Key'),
         name_comment=dict(type='str', required=False, default='Generated by Ansible.'),
@@ -350,12 +364,6 @@ def run_module():
         supports_check_mode=True
     )
 
-    # if debug
-    # console_logger = logging.StreamHandler()
-    # console_logger.setLevel(logging.DEBUG)
-    # console_logger.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-    # logger.addHandler(console_logger)
-
     gnupghome = module.params['gnupghome']
     if gnupghome and not os.path.isdir(gnupghome):
 
@@ -372,7 +380,7 @@ def run_module():
             gnupghome=gnupghome,
         )
     except (OSError, ValueError) as e:
-        module.fail_json(msg='There was an error executing gpg: {}'.format(to_native(e)), exception=traceback.format_exc(), **result)
+        module.fail_json(msg=f'There was an error executing gpg: {to_native(e)}', exception=traceback.format_exc(), **result)
 
     # use whatever logic you need to determine whether or not this module
     # made any modifications to your target
@@ -413,11 +421,10 @@ def run_module():
         params['no_protection'] = True
 
     input_data = gpg.gen_key_input(**params)
-    # print(params)
-    # print(input_data)
     new_key = gpg.gen_key(input_data)
     if not new_key:
-        module.fail_json(msg='Failed to generate a new key.', rc=new_key.returncode, stdout=new_key.data, stderr=new_key.stderr, input_data=input_data, **result)
+        # do not echo input_data here: it contains the cleartext passphrase
+        module.fail_json(msg='Failed to generate a new key.', rc=new_key.returncode, stdout=new_key.data, stderr=new_key.stderr, **result)
 
     # list the keys again, as we only got the fingerprint from gen_key()
     keys = gpg.list_keys(secret=True)

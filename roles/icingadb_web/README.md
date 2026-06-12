@@ -3,9 +3,14 @@
 [IcingaDB](https://icinga.com/docs/icinga-db/latest/doc/01-About/) consists of multiple components. This role only installs [IcingaDB Web](https://icinga.com/docs/icinga-db-web). Generally, the [IcingaDB daemon](https://github.com/Icinga/icingadb) is also required, use the [linuxfabrik.lfops.icingadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingadb) role for that. Run the linuxfabrik.lfops.icingadb role first to initialise the database.
 
 
-## Mandatory Requirements
+*Available since LFOps `3.0.0`.*
 
-* A configured Icinga2 Master Setup. This can be done using the [linuxfabrik.lfops.setup_icinga2_master](https://github.com/linuxfabrik/lfops/tree/main/playbooks/setup_icinga2_master.yml) playbook.
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* A configured Icinga2 Master must be available (role: [linuxfabrik.lfops.icinga2_master](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_master)).
 
 
 ## Tags

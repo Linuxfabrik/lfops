@@ -3,38 +3,43 @@
 This role installs and configures [Mastodon](https://joinmastodon.org/), a federated microblogging platform, as Podman containers.
 
 
-## Mandatory Requirements
+*Available since LFOps `4.0.0`.*
 
-* Enable the PostgreSQL repository. This can be done using the [linuxfabrik.lfops.repo_postgresql](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_postgresql) role.
-* Install the PostgreSQL server. This can be done using the [linuxfabrik.lfops.postgresql_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/postgresql_server) role.
-* Create a PostgreSQL user for Mastodon. This can be done using the [linuxfabrik.lfops.postgresql_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/postgresql_server) role.
-* Install Redis. This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) role.
-* Enable the Elasticsearch repository (optional). This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
-* Install Elasticsearch (optional). This can be done using the [linuxfabrik.lfops.elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch) role.
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-* Install Apache HTTPd. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
 
-If you use the ["Setup Mastodon" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_mastodon.yml), this is automatically done for you (you still have to take care of providing the required versions).
+## Dependent Roles
 
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The PostgreSQL repository must be enabled (role: [linuxfabrik.lfops.repo_postgresql](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_postgresql)).
+* The PostgreSQL server must be installed (role: [linuxfabrik.lfops.postgresql_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/postgresql_server)).
+* A PostgreSQL user for Mastodon must be created (role: [linuxfabrik.lfops.postgresql_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/postgresql_server)).
+* Redis must be installed (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* Apache HTTPd must be installed (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
+* Optional: the Elasticsearch repository enabled (role: [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch)).
+* Optional: Elasticsearch installed (role: [linuxfabrik.lfops.elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch)).
+
+
+## Requirements
+
+Manual steps:
+
+* Optional: to allow the user to use `journalctl --user`, set `Storage=persistent` in `/etc/systemd/journald.conf` by running the [systemd_journald](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/systemd_journald.yml) playbook (role: [linuxfabrik.lfops.systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald)).
+* Optional: if the host should act as a Postfix MTA, make it listen on the IP address so that the container can reach it by running the [postfix](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/postfix.yml) playbook (role: [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix)).
 * Make sure the container can access the databases:
-```yaml
-# PostgreSQL
-postgresql_server__conf_listen_addresses:
-  - 'localhost'
-  - 'fqdn.example.com' # Allow access from container. Make sure the DNS entry (or /etc/hosts) points to the correct ip (not 127.)
 
-# Redis
-redis__conf_bind: 'fqdn.example.com' # Allow access from container. Make sure the DNS entry (or /etc/hosts) points to the correct ip (not 127.)
+    ```yaml
+    # PostgreSQL
+    postgresql_server__conf_listen_addresses:
+      - 'localhost'
+      - 'fqdn.example.com' # Allow access from container. Make sure the DNS entry (or /etc/hosts) points to the correct ip (not 127.)
 
-# Elasticsearch (if needed)
-elasticsearch__network_host: 'fqdn.example.com' # Allow access from container. Make sure the DNS entry (or /etc/hosts) points to the correct ip (not 127.)
-```
+    # Redis
+    redis__conf_bind: 'fqdn.example.com' # Allow access from container. Make sure the DNS entry (or /etc/hosts) points to the correct ip (not 127.)
 
-
-## Optional Requirements
-
-* It is recommended to set `Storage=presistent` in `/etc/systemd/journald.conf` to allow the user to use `journalctl --user`. This can be done using the [linuxfabrik.lfops.systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald) role.
-* If the host should act as a Postfix MTA, make sure it is listening on the IP address so that the container can reach it. This can be done using the [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix) role.
+    # Elasticsearch (if needed)
+    elasticsearch__network_host: 'fqdn.example.com' # Allow access from container. Make sure the DNS entry (or /etc/hosts) points to the correct ip (not 127.)
+    ```
 
 
 ## Tags

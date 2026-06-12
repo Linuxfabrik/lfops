@@ -28,12 +28,12 @@ jobs:
     steps:
 
       - name: 'Harden the runner (Audit all outbound calls)'
-        uses: 'step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40' # v2.19.0
+        uses: 'step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411' # v2.19.4
         with:
           egress-policy: 'audit'
 
       - name: 'git clone https://github.com/Linuxfabrik/lfops'
-        uses: 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd' # v6.0.2
+        uses: 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10' # v6.0.3
 
       - name: 'Log in to GitHub Container Registry'
         uses: 'redhat-actions/podman-login@4934294ad0449894bcd1e9f191899d7292469603' # v1.7
@@ -75,7 +75,7 @@ jobs:
 
       - name: 'Strip badges from README.md (not rendered correctly on Galaxy)'
         run: |
-          sed --in-place '/<div align="center" id="badges">/,/<\/div>/d' README.md
+          sed --in-place '/<div align="center" id="badges"[^>]*>/,/<\/div>/d' README.md
 
       - name: 'Build Collection'
         run: |

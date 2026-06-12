@@ -1,0 +1,35 @@
+- block:
+
+  - name: 'curl https://repo.linuxfabrik.ch/linuxfabrik.key --output /tmp/ansible.linuxfabrik.key'
+    ansible.builtin.get_url:
+      url: 'https://repo.linuxfabrik.ch/linuxfabrik.key'
+      dest: '/tmp/ansible.linuxfabrik.key'
+      mode: 0o644
+    delegate_to: 'localhost'
+    become: false
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Copy /tmp/ansible.linuxfabrik.key to the remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.linuxfabrik.key'
+      dest: '/tmp/ansible.linuxfabrik.key'
+      mode: 0o644
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'rpm --import /tmp/ansible.linuxfabrik.key'
+    ansible.builtin.rpm_key:
+      state: 'present'
+      key: '/tmp/ansible.linuxfabrik.key'
+
+  - name: 'Deploy /etc/zypp/repos.d/linuxfabrik-monitoring-plugins.repo'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/zypp/repos.d/linuxfabrik-monitoring-plugins.repo.j2'
+      dest: '/etc/zypp/repos.d/linuxfabrik-monitoring-plugins.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'repo_monitoring_plugins'

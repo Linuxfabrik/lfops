@@ -7,16 +7,19 @@ tests/output/*
 playbooks/test.yml
 roles/test
 context/
-particle/.vagrant
+extensions/molecule/**/*.retry
 
 # mkdocs documentation
 /docs/CHANGELOG.md
 /docs/CODE_OF_CONDUCT.md
 /docs/compatibility.md
 /docs/contributing.md
+/docs/filter/
+/docs/index.md
+/docs/lookup/
+/docs/modules/
 /docs/playbooks.md
 /docs/roles/
 /docs/security.md
-/docs/stigs.md
 /mkdocs.yml
 /site

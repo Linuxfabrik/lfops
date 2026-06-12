@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -11,15 +13,12 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 ---
 module: uptimerobot_alert_contact
-short_description: Manage UptimeRobot alert contacts
-version_added: '6.1.0'
+short_description: Delete an UptimeRobot alert contact
+version_added: '6.0.2'
 description:
-    - Delete an alert contact on UptimeRobot. UptimeRobot's API v2 does not
-      expose creation or editing of alert contacts (those are only doable
-      through the web UI), so this module only implements C(state=absent).
-      C(state=present) is rejected with a clear error.
-    - Identification is by C(friendly_name) or C(id). C(id) wins if both
-      are given.
+    - Deletes a single alert contact on UptimeRobot. Creation and editing are deliberately not implemented because UptimeRobot's API v2 does not expose them - new contacts have to be added through the web UI (which sends an opt-in mail), and existing ones have to be edited there too. Calling this module with I(state=present) is rejected up front with an explanatory error.
+    - Identification is by either I(friendly_name) or I(id); exactly one must be given. When I(id) is set, the lookup goes straight to the numeric ID. When only I(friendly_name) is given, the module lists all alert contacts and matches the C(friendly_name) exactly.
+    - When the contact does not exist (no match by either ID or friendly name, or the listing call failed), the module exits with C(changed=false) instead of failing - so a sweep over a static list of contacts to remove stays idempotent.
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:
@@ -28,18 +27,18 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key. Default C(~/.uptimerobot).
+        description: Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
+        default: '~/.uptimerobot'
     friendly_name:
-        description: Friendly name of the alert contact to delete.
+        description: Friendly name of the alert contact to delete. Exact match. Required if I(id) is not given.
         type: str
     id:
-        description: Numeric ID of the alert contact (alternative to C(friendly_name)).
+        description: Numeric ID of the alert contact. Required if I(friendly_name) is not given. Takes precedence when both are set.
         type: int
     state:
         description:
-            - Only C(absent) is supported. C(present) is rejected because
-              UptimeRobot's API v2 does not expose contact creation.
+            - Only C(absent) is supported. C(present) is rejected because UptimeRobot's v2 API does not expose contact creation or editing.
         type: str
         choices: ['absent', 'present']
         default: 'absent'
@@ -79,9 +78,17 @@ EXAMPLES = r'''
 
 RETURN = r'''
 alert_contact:
-    description: The deleted alert contact, if it existed. Empty dict otherwise.
+    description: The alert contact that was deleted (or that would have been deleted, in check mode), as returned by C(getAlertContacts). Empty dict when there was nothing to delete.
     type: dict
     returned: always
+debug:
+    description: Diagnostic information about the operation (one of C(delete), C(delete (check_mode)) or C(noop)). Stable enough to assert against, not stable enough to be load-bearing.
+    type: dict
+    returned: always
+    sample:
+        operation: 'delete'
+        contact_id: 7068316
+        friendly_name: 'monitoring@example.com'
 '''
 
 
@@ -92,7 +99,7 @@ from ansible_collections.linuxfabrik.lfops.plugins.module_utils import uptimerob
 def main():
     argument_spec = dict(
         api_key=dict(type='str', no_log=True),
-        api_key_file=dict(type='str'),
+        api_key_file=dict(type='str', default='~/.uptimerobot'),
         friendly_name=dict(type='str'),
         id=dict(type='int'),
         state=dict(type='str', choices=['absent', 'present'], default='absent'),
@@ -115,15 +122,13 @@ def main():
     contact_id = module.params.get('id')
     friendly_name = module.params.get('friendly_name')
 
-    module.log('uptimerobot_alert_contact: looking up id={0} friendly_name={1!r}'.format(
-        contact_id, friendly_name,
-    ))
+    module.log(f'uptimerobot_alert_contact: looking up id={contact_id} friendly_name={friendly_name!r}')
 
     target = None
     if contact_id is None:
         success, contacts = ur.get_alert_contacts(module, api_key)
         if not success:
-            module.fail_json(msg='Could not list alert contacts: {0}'.format(contacts))
+            module.fail_json(msg=f'Could not list alert contacts: {contacts}')
         target = ur.find_by_friendly_name(contacts, friendly_name)
         if target is None:
             module.exit_json(changed=False, alert_contact={}, debug={
@@ -157,12 +162,13 @@ def main():
             'friendly_name': target.get('friendly_name'),
         })
 
-    module.log('uptimerobot_alert_contact: deleting id={0} friendly_name={1!r}'.format(
-        contact_id, target.get('friendly_name'),
-    ))
+    module.log(
+        f"uptimerobot_alert_contact: deleting id={contact_id} "
+        f"friendly_name={target.get('friendly_name')!r}"
+    )
     success, result = ur.delete_alert_contact(module, api_key, contact_id)
     if not success:
-        module.fail_json(msg='Could not delete alert contact {0!r}: {1}'.format(target, result))
+        module.fail_json(msg=f'Could not delete alert contact {target!r}: {result}')
     module.exit_json(changed=True, alert_contact=target, debug={
         'operation': 'delete',
         'contact_id': contact_id,

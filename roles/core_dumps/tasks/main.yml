@@ -1,0 +1,33 @@
+- block:
+
+  - name: 'Deploy /etc/security/limits.d/linuxfabrik-core-dumps.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/security/limits.d/linuxfabrik-core-dumps.conf.j2'
+      dest: '/etc/security/limits.d/linuxfabrik-core-dumps.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  # fs.suid_dumpable is set via the kernel_settings role (see the playbook),
+  # not here, so sysctl management stays in a single place.
+
+  - name: 'mkdir -p /etc/systemd/coredump.conf.d'
+    ansible.builtin.file:
+      path: '/etc/systemd/coredump.conf.d'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/coredump.conf.d/linuxfabrik.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/coredump.conf.d/linuxfabrik.conf.j2'
+      dest: '/etc/systemd/coredump.conf.d/linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'core_dumps'

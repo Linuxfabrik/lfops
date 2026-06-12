@@ -3,42 +3,25 @@
 This role installs and configures [Elastic Agent](https://www.elastic.co/elastic-agent) as a Fleet Server. The Fleet Server acts as the control plane for managing Elastic Agents and connecting them to Elasticsearch and Kibana.
 
 
-## Mandatory Requirements
-
-* Enable the Elasticsearch Package Repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
-* A running Elasticsearch cluster.
-* A Fleet Server service token. Generate one using the Elasticsearch API or Kibana (Fleet -> Add Fleet Server).
+*Available since LFOps `6.0.0`.*
 
 
-## Optional Requirements
+## Dependent Roles
 
-* TLS certificates for the Fleet Server. Generate them using the Elasticsearch `certutil` tool (see below).
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-
-## Tags
-
-`elastic_agent_fleet_server`
-
-* Installs and configures elastic-agent as Fleet Server.
-* Triggers: none.
-
-`elastic_agent_fleet_server:certs`
-
-* Deploys TLS certificates.
-* Triggers: none.
-
-`elastic_agent_fleet_server:enroll`
-
-* Enrolls the agent as Fleet Server.
-* Triggers: none.
-
-`elastic_agent_fleet_server:state`
-
-* Manages the state of the elastic-agent service.
-* Triggers: none.
+* The Elasticsearch package repository must be enabled (role: [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch)).
 
 
-## Pre-Installation Steps
+## Requirements
+
+* A running Elasticsearch cluster must be reachable.
+
+Manual steps:
+
+* Deploy Elasticsearch by running the [elasticsearch](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/elasticsearch.yml) playbook (role: [linuxfabrik.lfops.elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch)).
+* Generate a Fleet Server service token using the Elasticsearch API or Kibana (Fleet -> Add Fleet Server). See below.
+* Optionally, generate TLS certificates for the Fleet Server using the Elasticsearch `certutil` tool. See below.
 
 ### Generate Service Token
 
@@ -90,6 +73,29 @@ Copy the generated certificates to the Ansible inventory. The certificates are u
 * `elastic_agent_fleet_server__elasticsearch_ca` - The CA certificate (same as Elasticsearch CA)
 * `elastic_agent_fleet_server__ssl_cert` - The Fleet Server certificate
 * `elastic_agent_fleet_server__ssl_key` - The Fleet Server private key
+
+
+## Tags
+
+`elastic_agent_fleet_server`
+
+* Installs and configures elastic-agent as Fleet Server.
+* Triggers: none.
+
+`elastic_agent_fleet_server:certs`
+
+* Deploys TLS certificates.
+* Triggers: none.
+
+`elastic_agent_fleet_server:enroll`
+
+* Enrolls the agent as Fleet Server.
+* Triggers: none.
+
+`elastic_agent_fleet_server:state`
+
+* Manages the state of the elastic-agent service.
+* Triggers: none.
 
 
 ## Mandatory Role Variables

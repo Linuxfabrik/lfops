@@ -9,6 +9,9 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
 3. maxmind_geoip (this role)
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## How the Role Behaves
 
 * The role itself only deploys the update script. The companion `linuxfabrik.lfops.systemd_unit` role (called by the playbook) creates the `update-maxmind.service` (oneshot) and `update-maxmind.timer` (`OnCalendar=weekly`). The service is *not* enabled directly; the timer is what fires it.
@@ -17,7 +20,7 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
 * Outbound HTTPS access from the target host to `download.maxmind.com` is required for the script to work.
 
 
-## Mandatory Requirements
+## Requirements
 
 * A free Maxmind license key.
 * Outbound HTTPS access from each target host to `download.maxmind.com`.
@@ -47,24 +50,15 @@ maxmind_geoip__lic: '1a1c5e4202784cec'
 
 ## Optional Role Variables
 
-`maxmind_geoip__skip_systemd_unit`
+`maxmind_geoip__systemd_unit__timers__dependent_var`
 
-* If `true`, the playbook skips the `linuxfabrik.lfops.systemd_unit` role and therefore does not create the `update-maxmind` service / timer. Use this when you want to manage the schedule yourself (e.g. via cron).
-* Type: Bool.
-* Default: `false`
+* Schedule of the `update-maxmind` timer (passed through to the `linuxfabrik.lfops.systemd_unit` role). Override the whole list in your inventory to change `OnCalendar=` or any other timer directive.
+* Type: List.
+* Default: `OnCalendar=weekly` (see `defaults/main.yml`).
 
 Example:
 ```yaml
 # optional
-maxmind_geoip__skip_systemd_unit: true
-```
-
-
-## Advanced: Changing the Schedule
-
-The default `OnCalendar=weekly` schedule is set via `maxmind_geoip__systemd_unit__timers__dependent_var` in `defaults/main.yml`. To change it, override the whole list in your inventory:
-
-```yaml
 maxmind_geoip__systemd_unit__timers__dependent_var:
   - name: 'update-maxmind'
     raw_timer: |-

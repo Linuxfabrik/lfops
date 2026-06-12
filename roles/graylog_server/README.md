@@ -7,25 +7,33 @@ Additionally this role creates default "System Inputs" and a Linuxfabrik default
 Note that this role does NOT let you specify a particular Graylog Server version. It simply installs the latest available Graylog Server version from the repos configured in the system. If you want or need to install a specific Graylog Server version, use the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) beforehand.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Known Limitations
 
 * This role only supports Graylog Data Nodes (not OpenSearch or Elasticsearch).
 
 
-## Mandatory Requirements
+## Dependent Roles
 
-Properly set hostnames and ensure that communication via DNS among all participating hosts works. This especially affects clustered systems, because the datanode instance registers itself to the mongodb database with its hostname.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-Sizing of disks:
+* MongoDB must be installed (role: [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb)).
+* The official [Graylog repository](https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm) must be enabled (role: [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog)).
 
-* `/`: at least 4 GB free disk space (create a 8+ GB partition).
-* `/var`: at least 15 GB free disk space (create a 20+ GB partition).
 
-If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_graylog_server.yml), the following is automatically done for you:
+## Requirements
 
-* Install MongoDB. This can be done using the [linuxfabrik.lfops.mongodb](https://github.com/Linuxfabrik/lfops/tree/main/roles/mongodb) role.
-* If you're not using a versioned MongoDB repository, don't forget to protect MongoDB from being updated with newer minor and major versions. This can be done using the [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock) role.
-* Enable the official [Graylog repository](https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm). This can be done using the [linuxfabrik.lfops.repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog) role.
+* Size the disks before running the role:
+
+    * `/`: at least 4 GB free disk space (create a 8+ GB partition).
+    * `/var`: at least 15 GB free disk space (create a 20+ GB partition).
+
+Manual steps:
+
+* Set hostnames properly and ensure that communication via DNS among all participating hosts works. This especially affects clustered systems, because the datanode instance registers itself to the mongodb database with its hostname.
+* If you're not using a versioned MongoDB repository, protect MongoDB from being updated with newer minor and major versions by running the [dnf_versionlock](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/dnf_versionlock.yml) playbook (role: [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock)).
 
 
 ## Tags
@@ -57,13 +65,6 @@ If you use the ["Setup Graylog Server" Playbook](https://github.com/Linuxfabrik/
 
 * Manages the state of the graylog-server service.
 * Triggers: none.
-
-
-## Skip Variables
-
-This role is used in several playbooks that provide skip variables to disable specific dependencies. See the playbooks documentation for details:
-
-* [setup_graylog_server.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_graylog_serveryml)
 
 
 ## Mandatory Role Variables
@@ -114,6 +115,18 @@ graylog_server__root_user:
 * Type: List of strings.
 * Default: unset
 
+`graylog_server__elasticsearch_max_total_connections`
+
+* Maximum number of total connections to Elasticsearch/OpenSearch.
+* Type: Number.
+* Default: `200`
+
+`graylog_server__elasticsearch_max_total_connections_per_route`
+
+* Maximum number of total connections per Elasticsearch/OpenSearch route (normally this means per server).
+* Type: Number.
+* Default: `20`
+
 `graylog_server__http_bind_address`
 
 * The network interface used by the Graylog HTTP interface.
@@ -126,11 +139,29 @@ graylog_server__root_user:
 * Type: Number.
 * Default: `9000`
 
+`graylog_server__http_enable_cors`
+
+* Whether to send CORS headers from the HTTP interface, allowing browsers to make Cross-Origin requests from any origin. Typically only needed when running Graylog with a separate frontend development server.
+* Type: Bool.
+* Default: `false`
+
+`graylog_server__http_external_uri`
+
+* The public URI of Graylog used by the web interface to communicate with the Graylog REST API. Usually required when Graylog runs behind a reverse proxy or load balancer. When left empty, `graylog_server__http_publish_uri` is used.
+* Type: String.
+* Default: `''`
+
 `graylog_server__http_publish_uri`
 
 * The absolute HTTP URI of this Graylog node which is used to communicate with the other Graylog nodes in the cluster and by users to access the Graylog web interface.
 * Type: String.
 * Default: `''`
+
+`graylog_server__inputbuffer_ring_size`
+
+* Size of the internal input ring buffer. Must be a power of 2 (512, 1024, 2048, ...).
+* Type: Number.
+* Default: `65536`
 
 `graylog_server__is_leader`
 
@@ -144,6 +175,18 @@ graylog_server__root_user:
 * Type: String.
 * Default: `'/var/lib/graylog-server/journal'`
 
+`graylog_server__message_journal_max_age`
+
+* Maximum age messages are held in the journal before they are written to Elasticsearch/OpenSearch (whichever of maximum age or maximum size is reached first).
+* Type: String.
+* Default: `'12h'`
+
+`graylog_server__message_journal_max_size`
+
+* Maximum size of the message journal before messages are written to Elasticsearch/OpenSearch (whichever of maximum age or maximum size is reached first).
+* Type: String.
+* Default: `'5gb'`
+
 `graylog_server__mongodb_uri`
 
 * MongoDB connection string. See https://docs.mongodb.com/manual/reference/connection-string/ for details.
@@ -155,6 +198,30 @@ graylog_server__root_user:
 * The Java options like heapsize used by Graylog.
 * Type: String.
 * Default: `'-Xms1g -Xmx1g -server -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow'`
+
+`graylog_server__output_batch_size`
+
+* Batch size for the Elasticsearch/OpenSearch output, i.e. the maximum accumulated size of messages written in a single batch call. Can be an absolute number of messages or a data unit (e.g. `'10mb'`).
+* Type: Number or String.
+* Default: `500`
+
+`graylog_server__outputbuffer_processors`
+
+* Number of output buffer processors running in parallel. When unset, Graylog determines the value automatically based on the number of available CPU cores. Raise this if your buffers are filling up.
+* Type: Number.
+* Default: unset
+
+`graylog_server__processbuffer_processors`
+
+* Number of process buffer processors running in parallel. When unset, Graylog determines the value automatically based on the number of available CPU cores. Raise this if your buffers are filling up.
+* Type: Number.
+* Default: unset
+
+`graylog_server__ring_size`
+
+* Size of the internal output ring buffer. Raise this if raising `graylog_server__outputbuffer_processors` does not help anymore. Must be a power of 2 (512, 1024, 2048, ...).
+* Type: Number.
+* Default: `65536`
 
 `graylog_server__service_enabled`
 
@@ -174,11 +241,6 @@ graylog_server__root_user:
 * Type: Dictionary.
 * Default: See [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/graylog_server/defaults/main.yml)
 * Subkeys:
-
-    * `can_be_default`:
-
-        * Mandatory. Whether this index set can be default.
-        * Type: Bool.
 
     * `creation_date`:
 
@@ -308,6 +370,7 @@ graylog_server__root_user:
 
         * Mandatory. The type of the input.
         * Type: String.
+        * To list the input types available on your Graylog node, append `/api-browser#?route=get-/system/inputs/types` to your Graylog web interface URL (for example `https://graylog.example.com/api-browser#?route=get-/system/inputs/types`) and click `Execute`. The `/system/inputs/types/all` route additionally returns each type's available `configuration` fields.
 
 `graylog_server__timezone`
 
@@ -328,17 +391,27 @@ graylog_server__elasticsearch_hosts:
   - 'https://opensearch1.example.com:9200'
   - 'https://opensearch2.example.com:9200'
   - 'https://opensearch3.example.com:9200'
+graylog_server__elasticsearch_max_total_connections: 200
+graylog_server__elasticsearch_max_total_connections_per_route: 20
 graylog_server__http_bind_address: '192.0.2.1'
 graylog_server__http_bind_port: 9000
+graylog_server__http_enable_cors: false
+graylog_server__http_external_uri: 'https://graylog.example.com/'
 graylog_server__http_publish_uri: 'http://graylog.example.com:9000/'
+graylog_server__inputbuffer_ring_size: 65536
 graylog_server__is_leader: true
 graylog_server__message_journal_dir: '/data/graylog/journal'
+graylog_server__message_journal_max_age: '12h'
+graylog_server__message_journal_max_size: '5gb'
 graylog_server__mongodb_uri: 'mongodb://graylog01.example.com:27017,username:password@graylog02.example.com:27017,graylog03.example.com:27017/graylog?replicaSet=rs01'
 graylog_server__opts: '-Xms2g -Xmx2g -server -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow'
+graylog_server__output_batch_size: 500
+graylog_server__outputbuffer_processors: 3
+graylog_server__processbuffer_processors: 5
+graylog_server__ring_size: 65536
 graylog_server__service_enabled: false
 graylog_server__stale_leader_timeout_ms: 10000
 graylog_server__system_default_index_set:
-  can_be_default: true
   creation_date: '{{ ansible_date_time.iso8601 }}'
   description: 'One index per day; 365 indices max'
   field_type_refresh_interval: 5000

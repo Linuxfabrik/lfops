@@ -5,11 +5,14 @@ This role installs and configures a Logstash server with support for multiple pi
 Note that this role does NOT let you specify a particular Logstash version. It simply installs the latest available Logstash version from the repos configured in the system. If you want or need to install a specific version, have a look at the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role (Logstash uses the Elasticsearch repository).
 
 
-## Mandatory Requirements
+*Available since LFOps `6.0.0`.*
 
-* Enable the official elasticsearch repository. This can be done using the [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch) role.
 
-If you use the [logstash playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/logstash.yml), this is automatically done for you.
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The official elasticsearch repository must be enabled (role: [linuxfabrik.lfops.repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch)).
 
 
 ## Tags

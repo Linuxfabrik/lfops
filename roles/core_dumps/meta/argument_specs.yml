@@ -1,0 +1,31 @@
+argument_specs:
+  main:
+    options:
+
+      core_dumps__limits_hard_core:
+        type: 'int'
+        required: false
+        default: 0
+        description: >-
+          `hard core` limit in `/etc/security/limits.d/`. `0` disables
+          core dumps for all users.
+
+      core_dumps__systemd_process_size_max:
+        type: 'int'
+        required: false
+        default: 0
+        description: >-
+          `ProcessSizeMax` in `/etc/systemd/coredump.conf.d/`. `0`
+          disables processing of core dumps by systemd-coredump.
+
+      core_dumps__systemd_storage:
+        type: 'str'
+        required: false
+        default: 'none'
+        choices:
+          - 'none'
+          - 'external'
+          - 'journal'
+        description: >-
+          `Storage` in `/etc/systemd/coredump.conf.d/`. `none` keeps
+          systemd-coredump from storing core dumps.

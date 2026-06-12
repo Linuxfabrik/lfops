@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2022, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -11,26 +13,28 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 lookup: bitwarden_item
 
-short_description: Returns a password item from Bitwarden. If no password item is found, a new item is created
+short_description: Fetch (or create) a Bitwarden login item
 
 description:
-    - This Ansible lookup plugin returns a password item from Bitwarden by searching for an item name or an item ID.
-    - If no password item is found, a new item is created. Useful for automation.
-    - If you do not specify a name or Bitwarden ID, it searches using the name/title.
-    - If a search returns multiple entries, this lookup plugin throws an error, since it cannot decide which one to use.
-    - On success, this lookup plugin returns the complete Bitwarden item object.
-    - If you don't specify a name/title for a password item, a name/title will be created automatically, using C(hostname - purpose) (for example "C(dbserver - MariaDB)") or just C(hostname) (for example "C(dbserver)", depending on what is provided).
-    - For password generation, we use the Python C(secrets) module. The secrets module is used for generating cryptographically strong random numbers suitable for managing data such as passwords, account authentication, security tokens, and related secrets - using the highest-quality sources provided by the operating system.
+    - Looks up a password item in Bitwarden by name (and optional username, folder, collection and organization), or directly by Bitwarden item ID.
+    - If the lookup is by name and no matching item is found, a new login item is created on the fly. This makes the plugin idempotent for automation. The first run creates the secret, every subsequent run returns the same item.
+    - If the lookup is by I(id) and the item is not in the local cache, the plugin falls back to a single API call. If the ID still does not resolve, the plugin fails - IDs are never auto-created.
+    - If a name-based search returns more than one match, the plugin fails because it cannot decide which item to use.
+    - On success, the plugin returns the full Bitwarden item object. C(username) and C(password) are additionally lifted to the top level so they can be addressed without going through the C(login) sub-dictionary.
+    - When I(name) is omitted, a title is generated automatically as C(hostname - purpose) (e.g. C(dbserver - MariaDB)) or just C(hostname) when no purpose is given.
+    - Generated passwords use Python's C(secrets) module (cryptographically strong RNG), not the Bitwarden generator. This lifts the 128-character limit and allows arbitrary character sets, including hex.
+    - Items are read from a local on-disk cache backed by C(bw serve). A cached C(bw sync) is performed at most every 60 seconds, so consecutive lookups in the same play do not hammer the API.
 
 notes:
-    - Tested with C(bw) version 2023.5.0
-    - This lookup plugin just handles password items, nothing else.
-    - It does not handle TOTP at all.
-    - You can get the organization, collection and folder IDs from the URL in the Bitwarden webgui.
+    - Only login items (Bitwarden type 1) are supported. Cards, secure notes and identities are ignored.
+    - TOTP secrets are not managed; the C(totp) field is set to an empty string on creation.
+    - URIs on existing items are not edited by this lookup; they are only set at item creation time.
+    - Organization, collection and folder IDs can be copied from the URL in the Bitwarden web vault.
+    - The cache file lives in C($XDG_RUNTIME_DIR) (falling back to C(/tmp)) and is shared across this plugin and the C(bitwarden_item) module within the same controller session.
 
 requirements:
-    - Requires the Bitwarden CLI tool C(bw) version v2022.9.0+. Have a look at U(https://bitwarden.com/help/article/cli/) for installation instructions.
-    - You must already be logged in to Bitwarden using the CLI tool and have the client API running. You can login to the vault using `bw login` and `bw unlock`, then start the client RESTful API webserver by running `bw serve --hostname 127.0.0.1`.
+    - Bitwarden CLI C(bw) version v2022.9.0 or newer. See U(https://bitwarden.com/help/article/cli/) for installation instructions.
+    - You must be logged in and unlocked (C(bw login) followed by C(bw unlock)), and have the local API running, e.g. C(bw serve --hostname 127.0.0.1 --port 8087). The plugin connects to C(127.0.0.1:8087) by default.
 
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
@@ -39,55 +43,54 @@ version_added: "1.0.0"
 
 options:
     collection_id:
-        description: Bitwarden collection IDs in which the password item is stored.
+        description: Bitwarden collection ID the item belongs to. Used both as a search filter and, if the item has to be created, as the target collection.
         required: False
         type: str
     folder_id:
-        description: Bitwarden folder ID in which the password item is stored.
-        default: None
+        description: Bitwarden folder ID the item belongs to. Used both as a search filter and, if the item has to be created, as the target folder.
         required: False
         type: str
     hostname:
-        description: Hostname to which the password belongs. Used for automatic name/title generation if I(name) is not specified.
+        description: Hostname the password belongs to. Used to generate the item name when I(name) is not given.
         required: False
         type: str
     id:
-        description: If specified, searches for the specified item ID instead of the name. This also means all other filters will be ignored.
+        description: Look up an existing item by its Bitwarden item ID. When set, all other search filters are ignored. The plugin fails if the ID does not exist (no auto-creation).
         required: False
         type: str
     name:
-        description: Name/Title of the password item. If set, automatic name/title generation is switched off.
+        description: Explicit name/title of the item. When set, disables automatic name generation from I(hostname) and I(purpose).
         required: False
         type: str
     notes:
-        description: Any notes on the password item. This is limited to 10000 characters by Bitwarden.
+        description: Notes to set when the item is created. Bitwarden limits notes to 10000 characters. Existing items are not modified by this lookup.
         default: 'Generated by Ansible.'
         required: False
         type: str
     organization_id:
-        description: Bitwarden Organization ID to which the password item belongs.
+        description: Bitwarden organization ID the item belongs to. Used both as a search filter and, if the item has to be created, as the target organization.
         required: False
         type: str
     password_length:
-        description: Password length for automatic password generation.
+        description: Length of the password generated when the item does not yet exist. Must be positive. When generating hex passwords (see I(password_choice)), it must also be even, otherwise the lookup fails.
         default: 60
         required: False
         type: int
     password_choice:
-        description: Provide the sequence of characters to include for automatic password generation. If you want to generate a hex-based password, ensure that password_length is positive and even (as hex characters typically come in pairs representing bytes), and that password_choice is set to '0123456789abcdef'.
+        description: Character set used for generating new passwords. To produce a hex password, set this to C('0123456789abcdef') and ensure I(password_length) is even. Existing passwords are never regenerated.
         default: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
         required: False
         type: str
     purpose:
-        description: The purpose of the password. What is it for? Used for automatic name/title generation if I(name) is not specified. For example, C(MariaDB) or C(Rocky).
+        description: What the password is for (e.g. C(MariaDB), C(Rocky)). Combined with I(hostname) to build the item name when I(name) is not given.
         required: False
         type: str
     uris:
-        description: List of URIs on the password item.
+        description: List of URIs to attach when the item is created. Has no effect on already existing items.
         required: False
         type: list
     username:
-        description: Username of the password item.
+        description: Username for the login item. Used both as a search filter and, if the item has to be created, as the C(login.username) value.
         required: False
         type: str
 '''
@@ -266,7 +269,7 @@ revisionDate:
     returned: always
     sample: '2019-01-28T15:31:34.300Z'
 type:
-    description: Unclear from upstream documentation.
+    description: Bitwarden item type. Always C(1) (login) for items handled by this plugin. Other Bitwarden types (C(2) secure note, C(3) card, C(4) identity) are filtered out and never returned.
     type: int
     returned: always
     sample: 1
@@ -283,7 +286,7 @@ from ansible.utils.display import Display
 from ansible_collections.linuxfabrik.lfops.plugins.module_utils.bitwarden import \
     Bitwarden
 
-display = Display() # lfbwlp = Linuxfabrik Bitwarden Lookup Plugin
+display = Display()  # log prefix "lfbwlp" = Linuxfabrik Bitwarden Lookup Plugin
 
 # https://docs.ansible.com/ansible/latest/dev_guide/developing_plugins.html#developing-lookup-plugins
 # inspired by the lookup plugins lastpass (same topic) and redis (more modern)
@@ -301,7 +304,7 @@ class LookupModule(LookupBase):
 
         ret = []
         for term in terms:
-            display.vvv('lfbwlp - run - lookup term: {}'.format(term))
+            display.vvv(f'lfbwlp - run - lookup term: {term}')
             try:
                 collection_id = term.get('collection_id', None)
                 folder_id = term.get('folder_id', None)
@@ -316,11 +319,11 @@ class LookupModule(LookupBase):
                 uris = term.get('uris', [])
                 username = term.get('username', None)
             except Exception as e:
-                raise AnsibleError('Encountered exception while fetching {}: {}'.format(term, e))
+                raise AnsibleError(f'Encountered exception while fetching {term}: {e}')
 
             if id_:
                 result = bw.get_item_by_id(id_)
-                display.vvv('lfbwlp - run - get item by id: {}'.format(id_))
+                display.vvv(f'lfbwlp - run - get item by id: {id_}')
                 if result:
                     # move username and password higher for easier access
                     result['username'] = result['login']['username']
@@ -329,10 +332,10 @@ class LookupModule(LookupBase):
                     continue # done here, go to next term
                 else:
                     # item not found by ID. if there is an ID given we expect it to exist
-                    raise AnsibleError('Item with id {} not found.'.format(id_))
+                    raise AnsibleError(f'Item with id {id_} not found.')
 
             name = Bitwarden.get_pretty_name(name, hostname, purpose)
-            display.vvv('lfbwlp - run - get item: {}'.format(name))
+            display.vvv(f'lfbwlp - run - get item: {name}')
             result = bw.get_items(name, username, folder_id, collection_id, organization_id)
 
             if len(result) > 1:
@@ -379,30 +382,5 @@ class LookupModule(LookupBase):
                 out['password'] = out['login']['password']
                 ret.append(out)
 
-        # always returns a list of dicts
-        #
-        # example:
-        #
-        # - collectionIds:
-        #   - 47b22450-fb65-4ad2-836a-03f25c982fb1
-        #   favorite: false
-        #   folderId: null
-        #   id: 2656edf2-3600-4d8d-88e8-bcdda35d1ccf
-        #   login:
-        #     password: d2Dft5FqGK4yhzmsDcjWJD5LMAPGDsN8oZpXsxx6
-        #     passwordRevisionDate: null
-        #     totp: null
-        #     uris:
-        #     - match: null
-        #       uri: https://www.example.com
-        #     - match: null
-        #       uri: https://git.example.com
-        #     username: mariadb-admin
-        #   name: app4711 - MariaDB
-        #   notes: Automatically generated by Ansible.
-        #   object: item
-        #   organizationId: 5ae8f510-1f84-4243-8c35-bec35091706c
-        #   reprompt: 0
-        #   revisionDate: '2019-01-28T15:31:34.300Z'
-        ##  type: 1
+        # always returns a list of dicts; see the RETURN block above for the shape
         return ret

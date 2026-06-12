@@ -3,7 +3,10 @@
 This role installs and configures a CIS-compliant [Apache httpd](https://httpd.apache.org/).
 
 
-## What this Role does
+*Available since LFOps `2.0.0`.*
+
+
+## How the Role Behaves
 
 This role configures Apache using a Debian-style layout with `conf-available/conf-enabled`, `mods-available/mods-enabled`, and `sites-available/sites-enabled` directories. On Red Hat-based systems, this means a significant restructuring of the default Apache configuration. The goal is to make adding and removing mods, virtual hosts, and extra configuration directives as flexible as possible, regardless of the underlying platform.
 
@@ -22,53 +25,38 @@ The config is split into several files forming the configuration hierarchy outli
 
 We avoid using `<IfModule>` in vHost definitions and in the global `httpd.conf` to facilitate debugging. Without `<IfModule>`, a missing module causes a clear startup error instead of silently dropping configuration. `<IfModule>` is only used in `mods-available/` and `conf-available/` where it is necessary to guard module-specific configuration.
 
-For flexibility, use the `raw` variable to configure the following topics (have a look at the "Apache vHost Configs" section for some examples):
+For flexibility, use the `raw` variable to configure the following topics (see [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md) for vHost configuration examples):
 
 * SSL/TLS Certificates.
 * Quality of Service (`mod_qos` directives).
 * Proxy passing rules.
 * Any other configuration instructions not covered in the "Role Variables" chapters.
 
-If you want to check Apache with [our STIG audit script](https://github.com/Linuxfabrik/stig), run it like this:
-
-* Apache Application Server:<br>`./audit.py --lengthy --profile-name='CIS Apache HTTP Server 2.4' --profile-version='v2.0.0' --hostname=web --control-name-exclude='2\.4|2\.6|2\.8|5\.7|6\.6|6\.7`
-* Apache Reverse Proxy Server:<br>`./audit.py --lengthy --profile-name='CIS Apache HTTP Server 2.4' --profile-version='v2.0.0' --hostname=proxy --control-name-exclude='2\.4|2\.6|2\.8|5\.7`
-
-
-## What this Role doesn't do
-
-* PHP: This role prefers the use of PHP-FPM over PHP, but it does not install either.
-* SELinux: Use specialized roles to set specific SELinux Booleans, Policies etc.
-
-
-## Platform-Specific Behavior
-
-This role supports both Red Hat and Debian-based systems. Paths and service names differ between platforms:
+This role supports both Red Hat and Debian-based systems. The following paths and service names differ between platforms; the differences are handled automatically and all documentation below uses Red Hat paths:
 
 * Config path: Red Hat `/etc/httpd`, Debian `/etc/apache2`
 * Service name: Red Hat `httpd`, Debian `apache2`
 * User/Group: Red Hat `apache`/`apache`, Debian `www-data`/`www-data`
 * PHP-FPM socket: Red Hat `/run/php-fpm/www.sock`, Debian `/run/php/www.sock`
 
-These differences are handled automatically. All documentation below uses Red Hat paths.
+This role does NOT:
+
+* install PHP or PHP-FPM. It prefers PHP-FPM over mod_php, but installs neither.
 
 
-## Config Examples for vHosts
+## Dependent Roles
 
-See [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md).
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-
-
-## Mandatory Requirements
-
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-* Install the `python3-passlib` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role.
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* The `python3-passlib` library must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
 
 
-## Optional Requirements
+## Requirements
 
-* Install PHP and configure PHP-FPM. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
+Manual steps:
 
+* Optional: deploy PHP and configure PHP-FPM by running the [php](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/php.yml) playbook (role: [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 
 
 ## Tags
@@ -83,7 +71,7 @@ See [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_ht
 * Ensures httpd service is in the desired state.
 * Triggers: httpd.service reload.
 
-`apache_httpd:config`
+`apache_httpd:configure`
 
 * Creates or updates the global Apache configuration (`httpd.conf`).
 * Removes rpmnew/rpmsave files (and Debian equivalents).
@@ -131,21 +119,6 @@ See [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_ht
 Tip:
 
 * To deploy a single vHost only, supplement the `apache_httpd:vhosts` tag with the extra variable `--extra-vars='apache_httpd__limit_vhosts=["www.example.com"]'`. See [Optional Role Variables - Specific to this role](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd#optional-role-variables---specific-to-this-role).
-
-
-
-## Skip Variables
-
-This role is used in several playbooks that provide skip variables to disable specific dependencies. See the playbooks documentation for details:
-
-* [apache_httpd.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#apache_httpdyml)
-* [setup_grav.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_gravyml)
-* [setup_icinga2_master.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_icinga2_masteryml)
-* [setup_librenms.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_librenmsyml)
-* [setup_mastodon.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_mastodonyml)
-* [setup_moodle.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_moodleyml)
-* [setup_nextcloud.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_nextcloudyml)
-* [setup_wordpress.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md#setup_wordpressyml)
 
 
 ## Mandatory Role Variables - Global Apache Config (core)
@@ -474,6 +447,11 @@ apache_httpd__systemd_state: 'started'
         * Mandatory. Set this variable for each vHost definition. Although this is just best practice, we would never use a vHost without a ServerName.
         * Type: String.
 
+    * `virtualhost_port`:
+
+        * Mandatory. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. Part of the vHost's unique identity, so it must be set explicitly (`443`, or `80` for a redirect vHost).
+        * Type: Number.
+
 Example:
 ```yaml
 # mandatory
@@ -719,11 +697,10 @@ This role creates a vHost named `localhost` by default. See [defaults/main.yml](
 `virtualhost_port`
 
 * Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive.
+* Mandatory. Part of the vHost's unique identity, so it must be set explicitly (`443`, or `80` for a redirect vHost).
 * Type: Number.
-* Default: `443`, redirect `80`
 
 Example: See [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md).
-
 
 
 ## Optional Role Variables - mod_dir
@@ -771,7 +748,7 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 
 * The OWASP ModSecurity Core Rule Set (CRS) version number without "v".
 * Type: String.
-* Default: `'4.24.1'`
+* Default: `'4.27.0'`
 
 `apache_httpd__skip_mod_security_coreruleset`
 
@@ -783,7 +760,7 @@ Example:
 ```yaml
 # optional - mod_security
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '4.24.1'
+apache_httpd__mod_security_coreruleset_version: '4.27.0'
 apache_httpd__skip_mod_security_coreruleset: true
 ```
 
@@ -1045,7 +1022,6 @@ apache_httpd__wsgi_python_home: '/opt/python'
 apache_httpd__wsgi_python_path: '/var/www/html/python/'
 apache_httpd__wsgi_script_alias: '/ /var/www/html/python/index.py'
 ```
-
 
 
 ## License

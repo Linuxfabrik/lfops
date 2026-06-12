@@ -3,6 +3,9 @@
 On Red Hat-family systems, `update-crypto-policies` is a system-wide switch that picks the allowed TLS / SSH / IPsec / Kerberos algorithm sets for *all* crypto-aware services in one place (e.g. `DEFAULT`, `LEGACY`, `FUTURE`, `FIPS`). This role sets that policy and additionally ships custom sub-policies defined by Linuxfabrik, e.g. to support CIS hardening.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `crypto_policy`

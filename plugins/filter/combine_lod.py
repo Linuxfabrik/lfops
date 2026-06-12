@@ -1,10 +1,13 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
-# Copyright: (c) 2022, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
-
-# Make coding more python3-ish
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import collections
@@ -13,12 +16,18 @@ from ansible.errors import AnsibleFilterError
 
 DOCUMENTATION = r'''
   name: combine_lod
-  version_added: "2.0.1"
-  short_description: combine a list of dictionaries
+  version_added: "3.0.0"
+  short_description: Merge lists of dictionaries by a unique key
   description:
-    - Create list a dictionaries (hashes/associative arrays) as a result of merging existing lists of dictionaries.
-    - This is very useful if you want to set sensible defaults in a role, while still allowing the user to selectively overwrite specific parts of the defaults in their inventory.
-  positional: _input, _dicts, unique_key
+    - Merges one or more lists of dictionaries into a single list. Dictionaries that share the same value under I(unique_key) are folded into one entry; later entries overwrite earlier ones (non-recursive, like Python C(dict.update)).
+    - The folding also collapses duplicates inside a single input list, so passing one list with duplicates is a valid way to deduplicate it.
+    - Useful for layering inventory. A role can ship sensible defaults, and the user can selectively override individual keys per item from their inventory without having to redeclare the whole list.
+    - Sub-dictionaries and sub-lists are replaced wholesale, not merged recursively. To merge nested structures, build the nested values up using this filter at each level.
+    - The result keeps the order in which each unique key is first seen across all input lists; later updates to an existing key do not move it.
+    - Every list item must be a dictionary; a non-dictionary item raises an error.
+    - Every input dictionary must contain the unique key (or all of them, when a list of keys is passed). Each key is the item's identity and must be set explicitly; it may not rely on a default applied elsewhere.
+    - Only an absent key raises an error. A key that is present with a falsy value (C(0), empty string, C(False)) is kept as a distinct identity, so e.g. a port of C(0) is valid. This applies to a single key and to every component of a key list alike.
+  positional: _input, _dicts
   options:
     _input:
       description: First list of dictionaries to combine.
@@ -26,17 +35,15 @@ DOCUMENTATION = r'''
       elements: dictionary
       required: true
     _dicts:
-      description: The other lists of dictionaries to combine.
+      description: Zero or more additional lists of dictionaries to combine. Items are folded in the order the lists are passed; the last occurrence of a unique key wins.
       type: list
       elements: dictionary
-      required: true
+      required: false
     unique_key:
       description:
-        The dictionary key to be used as an indicator to merge the related dictionaries together.
-        The key has to be unique.
-        It is possible to pass a list of keys in case a single key would not be unique.
-      type: str or list
-      elements: str
+        - Dictionary key (or list of keys, for composite keys) used to decide which entries belong together.
+        - Pass a list when no single key is unique on its own (e.g. C(["server_name", "server_port"]) for vHosts where the same hostname can appear on multiple ports).
+      type: raw
       default: name
 '''
 
@@ -49,7 +56,7 @@ EXAMPLES = r'''
         first_value: 'sensible default for first value'
         second_value: 'sensible default for second value'
       - name: 'setting 2'
-        allow_all: False
+        allow_all: false
         allowed_users:
           - 'root'
 
@@ -66,8 +73,7 @@ EXAMPLES = r'''
   debug:
     msg: '{{ role_defaults | linuxfabrik.lfops.combine_lod(my_user_adjustments) }}'
 
-# =>
-# (reordered for readability)
+# => (keys keep their first-seen order)
 # - name: setting 1
 #   first_value: better setting for me
 #   second_value: sensible default for second value
@@ -75,6 +81,24 @@ EXAMPLES = r'''
 #   allow_all: false
 #   allowed_users:
 #   - linuxfabrik
+
+
+# composite unique_key: the same server_name on different ports stays separate
+- name: 'merge vhosts by name + port'
+  debug:
+    msg: >-
+      {{ [{'server_name': 'example.com', 'server_port': 80, 'root': '/var/www'},
+          {'server_name': 'example.com', 'server_port': 443, 'root': '/var/www'}]
+         | linuxfabrik.lfops.combine_lod([{'server_name': 'example.com', 'server_port': 443, 'root': '/srv/tls'}],
+                                         unique_key=['server_name', 'server_port']) }}
+
+# =>
+# - server_name: example.com
+#   server_port: 80
+#   root: /var/www
+# - server_name: example.com
+#   server_port: 443
+#   root: /srv/tls
 
 
 # more complicated example
@@ -160,15 +184,37 @@ def combine_lod(*args, **kwargs):
     for lod in list(args):
         for item in lod:
             if not isinstance(item, collections.abc.MutableMapping):
-                raise AnsibleFilterError("found non-dictionary item in the list, this is not supported")
+                raise AnsibleFilterError('found a non-dictionary item in the list, this is not supported')
 
+            # A unique_key is the item's identity, so every key must be set
+            # explicitly and may not be left to a default applied elsewhere:
+            # otherwise one item omitting it and another stating that same
+            # default would resolve to the same identity yet not merge.
+            # Presence is checked, not truthiness, so a legitimately falsy
+            # identity value (e.g. `port: 0` for a unix socket) is still
+            # accepted. Single and composite keys behave the same way.
             if isinstance(unique_key, collections.abc.MutableSequence):
-                key = tuple(item.get(k, None) for k in unique_key)
+                missing = [k for k in unique_key if k not in item]
+                if missing:
+                    # Show the unique-key components the item does set, so the
+                    # offending item can be located in a long inventory. These
+                    # are identifiers, never secrets (a password is never a
+                    # unique_key). Fall back to the item's field names if none
+                    # of the components are set.
+                    set_keys = {k: item[k] for k in unique_key if k in item}
+                    raise AnsibleFilterError(
+                        f'found a dictionary missing the unique key(s) {missing} '
+                        f'(required by unique_key={list(unique_key)}); '
+                        f'the item sets {set_keys or sorted(item.keys())}'
+                    )
+                key = tuple(item[k] for k in unique_key)
             else:
-                key = item.get(unique_key, None)
-
-            if not key:
-                raise AnsibleFilterError("found an dictionary without the unique key, this is not supported")
+                if unique_key not in item:
+                    raise AnsibleFilterError(
+                        f"found a dictionary missing the unique key '{unique_key}'; "
+                        f'the item sets the keys {sorted(item.keys())}'
+                    )
+                key = item[unique_key]
 
             # the python dict.update function does exactly what we want.
             # it is also used for ansible.builtin.combine(..., recurse=False, list_merge='replace').
@@ -185,328 +231,3 @@ class FilterModule(object):
         return {
             'combine_lod': combine_lod,
         }
-
-
-
-if __name__ == '__main__':
-    import textwrap
-    import unittest
-
-    import yaml
-
-    class Test(unittest.TestCase):
-
-        def test_combine_lod_non_dict_item(self):
-            '''
-            non-dictionaries list elements are not supported
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'test1'
-            - 'im a string'
-            '''))
-
-            with self.assertRaises(AnsibleFilterError):
-                combine_lod(input1)
-
-
-        def test_combine_lod_last(self):
-            '''
-            the last element should always win and overwrite the earlier ones
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'test1'
-            '''))
-
-            input2 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'test2'
-            '''))
-
-            expected = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'test2'
-            '''))
-
-            result = combine_lod(input1, input2)
-
-            # print('input1:')
-            # print(yaml.dump(input1, default_flow_style=False))
-            # print('input2:')
-            # print(yaml.dump(input2, default_flow_style=False))
-            # print('result:')
-            # print(yaml.dump(result, default_flow_style=False))
-            # print('expected:')
-            # print(yaml.dump(expected, default_flow_style=False))
-
-            self.assertEqual(result, expected)
-
-
-        def test_combine_lod_multiple(self):
-            '''
-            test the basic functionality if there are multiple list elements
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - name: 'first variable'
-              value: 'test1'
-            - name: 'second variable'
-              value: 'test2'
-            - name: 'other_var'
-              value: 'linuxfabrik'
-            '''))
-
-            input2 = yaml.safe_load(textwrap.dedent('''
-            - name: 'first variable'
-              value: 'test1 - edited'
-            - name: 'second variable'
-              value: 'test2 - edited'
-              new_value: 'new here'
-            '''))
-
-            expected = yaml.safe_load(textwrap.dedent('''
-            - name: 'first variable'
-              value: 'test1'
-              value: 'test1 - edited'
-            - name: 'second variable'
-              value: 'test2 - edited'
-              new_value: 'new here'
-            - name: 'other_var'
-              value: 'linuxfabrik'
-            '''))
-
-            result = combine_lod(input1, input2)
-            self.assertEqual(result, expected)
-
-
-        def test_combine_lod_single_input(self):
-            '''
-            test if everything works if the lists are already combined beforehand
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'test1'
-            - name: 'myvar'
-              value: 'test2'
-            '''))
-
-            expected = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'test2'
-            '''))
-
-            result = combine_lod(input1)
-            self.assertEqual(result, expected)
-
-
-        def test_combine_lod_replace_given_keys(self):
-            '''
-            only the given keys are overwritten, not the whole list element
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'value 1'
-              my_list:
-                - 'input1'
-                - 'lots of default entries'
-            '''))
-
-            input2 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'value 2'
-            '''))
-
-            expected = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'value 2'
-              my_list:
-                - 'input1'
-                - 'lots of default entries'
-            '''))
-
-            result = combine_lod(input1, input2)
-            self.assertEqual(result, expected)
-
-
-        def test_combine_lod_different_single_unique_key(self):
-            '''
-            test if using a different single unique_key works
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - filename: 'myvar 1'
-              value: 'value 1'
-            - filename: 'myvar 2'
-              value: 'value 1'
-            '''))
-
-            input2 = yaml.safe_load(textwrap.dedent('''
-            - filename: 'myvar 1'
-              value: 'value 1 - edited'
-            '''))
-
-            expected = yaml.safe_load(textwrap.dedent('''
-            - filename: 'myvar 1'
-              value: 'value 1 - edited'
-            - filename: 'myvar 2'
-              value: 'value 1'
-            '''))
-
-            result = combine_lod(input1, input2, unique_key="filename")
-            self.assertEqual(result, expected)
-
-
-        def test_combine_lod_different_list_unique_key(self):
-            '''
-            test if using a a list of unique_keys works
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - server_name: 'myvar'
-              server_port: 80
-              value: 'value 80'
-            - server_name: 'myvar'
-              server_port: 443
-              value: 'value 443'
-            '''))
-
-            input2 = yaml.safe_load(textwrap.dedent('''
-            - server_name: 'myvar'
-              server_port: 80
-              value: 'value 81'
-            '''))
-
-            expected = yaml.safe_load(textwrap.dedent('''
-            - server_name: 'myvar'
-              server_port: 80
-              value: 'value 81'
-            - server_name: 'myvar'
-              server_port: 443
-              value: 'value 443'
-            '''))
-
-            result = combine_lod(input1, input2, unique_key=["server_name", "server_port"])
-            self.assertEqual(result, expected)
-
-
-        def test_combine_lod_missing_unique_key(self):
-            '''
-            the plugin should throw an error if it cannot find the unique_key for all list elements
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'value 1'
-            '''))
-
-            input2 = yaml.safe_load(textwrap.dedent('''
-            - wrong_name: 'myvar'
-              value: 'value 1'
-            '''))
-
-            with self.assertRaises(AnsibleFilterError):
-                combine_lod(input1, input2)
-
-
-        def test_combine_lod_list_merge(self):
-            '''
-            if one of the keys in the dictionaries contains a list,
-            the list should just replace the previous lists.
-            no append / prepend of the list elements
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              my_list:
-                - 'input1'
-                - 'input_repeated'
-            '''))
-
-            input2 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              my_list:
-                - 'input2'
-                - 'input_repeated'
-            '''))
-
-            expected = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              my_list:
-                - 'input2'
-                - 'input_repeated'
-            '''))
-
-            result = combine_lod(input1, input2)
-            self.assertEqual(result, expected)
-
-
-        def test_combine_lod_no_recursion(self):
-            '''
-            the plugin should not recurse into dicts or lists
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'value 1'
-              my_list:
-                - 'input1'
-                - name: 'my sub var'
-                  value: 'sub value 1'
-                - 'input_repeated'
-            '''))
-
-            input2 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'value 2'
-              my_dict:
-                name: 'my sub var'
-                value: 'sub value 1'
-            '''))
-
-            expected = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'value 2'
-              my_list:
-                - 'input1'
-                - name: 'my sub var'
-                  value: 'sub value 1'
-                - 'input_repeated'
-              my_dict:
-                name: 'my sub var'
-                value: 'sub value 1'
-            '''))
-
-            result = combine_lod(input1, input2)
-            self.assertEqual(result, expected)
-
-
-        def test_combine_lod_no_modification(self):
-            '''
-            in this case the plugin should not modify anything
-            '''
-
-            input1 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'value 1'
-            '''))
-
-            input2 = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'value 1'
-            '''))
-
-            expected = yaml.safe_load(textwrap.dedent('''
-            - name: 'myvar'
-              value: 'value 1'
-            '''))
-
-            result = combine_lod(input1, input2)
-            self.assertEqual(result, expected)
-
-
-    unittest.main()

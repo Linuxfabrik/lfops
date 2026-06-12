@@ -110,6 +110,7 @@
       - 'monitoring_plugins__icinga2_api_user is defined and monitoring_plugins__icinga2_api_user | length > 0'
       - 'monitoring_plugins__icinga2_api_password is defined and monitoring_plugins__icinga2_api_password | length > 0'
     delegate_to: 'localhost'
+    become: false
     ignore_errors: true
 
   tags:
@@ -215,8 +216,8 @@
       src: '/usr/lib64/nagios/plugins/assets/monitoring.php'
       dest: '/var/www/html/localhost/monitoring.php'
       remote_src: true
-      owner: '{{ __monitoring_plugins__webserver_user }}'
-      group: '{{ __monitoring_plugins__webserver_user }}'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
       mode: 0o644
     when:
       - 'monitoring_plugins__stat_var_www_html_localhost_result["stat"]["exists"]'
@@ -240,7 +241,10 @@
         mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/icons
         find /tmp/ansible.monitoring-plugins-repo/check-plugins -name *.svg -exec cp {} /tmp/ansible.monitoring-plugins-repo-flattened/icons/ \;
         cp -- /tmp/ansible.monitoring-plugins-repo/assets/icons/*.svg /tmp/ansible.monitoring-plugins-repo-flattened/icons/
+      args:
+        executable: '/bin/bash'
       delegate_to: 'localhost'
+      become: false
       check_mode: false # run task even if `--check` is specified
       changed_when: false # no change on the remote host
 
@@ -271,6 +275,7 @@
     ansible.builtin.stat:
       path: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
     delegate_to: 'localhost'
+    become: false
     changed_when: false
     register: '__monitoring_plugins__custom_plugins'
 
@@ -318,6 +323,7 @@
       - 'monitoring_plugins__icinga2_api_user is defined and monitoring_plugins__icinga2_api_user | length > 0'
       - 'monitoring_plugins__icinga2_api_password is defined and monitoring_plugins__icinga2_api_password | length > 0'
     delegate_to: 'localhost'
+    become: false
     ignore_errors: true # we still want to start the icinga2 service again
 
   tags:

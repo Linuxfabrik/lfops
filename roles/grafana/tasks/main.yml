@@ -142,15 +142,15 @@
   # Synchronizing state of grafana-server.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
   # Executing: /usr/lib/systemd/systemd-sysv-install enable grafana-server
   # ```
-  # when trying to `systemctl enable --now grafana-server.service` on RHEL 9 (removed by Red Hat
-  # according to https://github.com/redhat-plumbers/systemd-rhel9/blob/main/README)
+  # when trying to `systemctl enable --now grafana-server.service` on RHEL 9 and newer (removed by
+  # Red Hat according to https://github.com/redhat-plumbers/systemd-rhel9/blob/main/README)
   - name: 'install chkconfig'
     ansible.builtin.package:
       name:
         - 'chkconfig'
       state: 'present'
     when:
-      - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["9"]'
+      - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora" and ansible_facts["distribution_major_version"] | int >= 9'
 
   - name: 'systemctl {{ grafana__service_enabled | bool | ternary("enable", "disable") }} --now grafana-server.service'
     ansible.builtin.systemd:
@@ -272,6 +272,7 @@
     loop_control:
       label: '{{ item["json"]["name"] | d(item) }}'
     delegate_to: 'localhost'
+    become: false
     when:
       - 'not grafana__skip_token_to_bitwarden'
       - 'not (item["skipped"] is defined and item["skipped"])'

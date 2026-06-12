@@ -6,9 +6,10 @@
   <span>&#8226;</span>
   <b>made by <a href="https://linuxfabrik.ch/">Linuxfabrik</a></b>
 </p>
-<div align="center" id="badges"> <!-- Do not change this line. It is used by .github/workflows/lf-build.yml to strip badges before publishing to Galaxy. -->
+<div align="center" id="badges" markdown="1"> <!-- Do not change this line. It is used by .github/workflows/lf-build.yml to strip badges before publishing to Galaxy. -->
 
 ![GitHub Stars](https://img.shields.io/github/stars/linuxfabrik/lfops)
+[![Star History Chart](https://api.star-history.com/svg?repos=Linuxfabrik/lfops&type=Date)](https://star-history.com/#Linuxfabrik/lfops&Date)
 ![License](https://img.shields.io/github/license/linuxfabrik/lfops)
 ![Version](https://img.shields.io/github/v/release/linuxfabrik/lfops?sort=semver)
 ![Ansible](https://img.shields.io/badge/ansible--core-≥2.16-EE0000)
@@ -26,9 +27,17 @@
 
 LFOps is a comprehensive Ansible Collection providing 145+ playbooks and 160+ roles to bootstrap and manage Linux-based IT infrastructures. It covers the full server lifecycle -- from initial provisioning and hardening to application deployment, monitoring, and automated backups. LFOps supports RHEL 8/9/10, Debian, and Ubuntu.
 
+> If these Ansible roles and playbooks help you running your Linux infrastructure, please give it a star.
+
+
+## Documentation
+
+Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfabrik.github.io/lfops/). It is automatically built and deployed on every push to `main`.
+
 
 ## Table of Contents
 
+* [Documentation](#documentation)
 * [Requirements](#requirements)
 * [Installation](#installation)
 
@@ -54,7 +63,6 @@ LFOps is a comprehensive Ansible Collection providing 145+ playbooks and 160+ ro
     * [Recommended ansible.cfg](#recommended-ansiblecfg)
     * [LFOps-wide Variables](#lfops-wide-variables)
     * [Bitwarden Integration](#bitwarden-integration)
-* [Documentation](#documentation)
 * [Compatibility](#compatibility)
 * [Tips, Tricks & Troubleshooting](#tips-tricks--troubleshooting)
 * [Contributing](#contributing)
@@ -86,9 +94,6 @@ If you manage RHEL 8 hosts with the default system Python (3.6), use **ansible-c
 ```bash
 # Install the collection and its dependencies
 ansible-galaxy collection install linuxfabrik.lfops
-
-# Alternatively, install from Git directly
-ansible-galaxy collection install git+https://github.com/Linuxfabrik/lfops.git
 ```
 
 To install the dependencies separately:
@@ -276,11 +281,18 @@ ansible-playbook --inventory path/to/inventory linuxfabrik.lfops.all --tags mari
 
 ### Skipping Roles in a Playbook
 
-The playbooks support skipping individual roles using inventory variables. For example, to skip the firewall role in `setup_basic`:
+Each playbook wires in the roles it needs, gated by per-role skip variables. These let you tailor what a playbook runs without editing it:
+
+* Set a skip variable to `true` to **skip** a role the playbook runs by default.
+* Set it to `false` to **enable** a role the playbook ships but leaves off by default.
+
+For example, to skip the firewall role in `setup_basic`:
 
 ```yaml
 setup_basic__skip_firewall: true
 ```
+
+Every playbook, the roles it runs, and their skip variables (including the defaults) are documented in [playbooks/README.md](playbooks/README.md).
 
 In playbooks that support role injections (like `setup_icinga2_master`), there are two variables:
 
@@ -418,14 +430,9 @@ LFOps also ships a small set of custom modules for resource types that are not c
 * **`lvm_pv`** — manage LVM physical volumes.
 * **`nextcloud_occ_app`**, **`nextcloud_occ_app_config`**, **`nextcloud_occ_system_config`** — drive Nextcloud `occ` from a playbook.
 * **`sqlite_query`** — run SQLite queries.
-* **`uptimerobot_*`** — manage UptimeRobot monitors, maintenance windows, public status pages and alert contacts; covers everything the standalone `utr` CLI does, with full idempotency, `--check`, `--diff` and a parallel set of `*_info` modules for read-only inspection. See the [`uptimerobot` role README](roles/uptimerobot/) for the full reference.
+* **`uptimerobot_*`** — manage UptimeRobot monitors, maintenance windows, public status pages and alert contacts via the [UptimeRobot API v2](https://uptimerobot.com/api/legacy/), with full idempotency, `--check`, `--diff` and a parallel set of `*_info` modules for read-only inspection. See the [`uptimerobot` role README](roles/uptimerobot/) for the full reference.
 
 Each custom module ships its own `DOCUMENTATION`, `EXAMPLES` and `RETURN` blocks; browse them with `ansible-doc linuxfabrik.lfops.<module>`.
-
-
-## Documentation
-
-Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfabrik.github.io/lfops/). It is automatically built and deployed on every push to `main`.
 
 
 ## Compatibility

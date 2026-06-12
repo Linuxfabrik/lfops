@@ -3,6 +3,9 @@
 This role deploys the [Extra Packages for Enterprise Linux (EPEL) Repository](https://docs.fedoraproject.org/en-US/epel/).
 
 
+*Available since LFOps `1.0.0`.*
+
+
 ## Tags
 
 `repo_epel`
@@ -15,7 +18,7 @@ This role deploys the [Extra Packages for Enterprise Linux (EPEL) Repository](ht
 
 `repo_epel__basic_auth_login`
 
-* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
 * Type: String.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
 

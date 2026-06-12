@@ -13,18 +13,10 @@ argument_specs:
         required: true
         description: >-
           User account used by the Reporting module to access its SQL
-          database (currently MySQL).
-        options:
-
-          password:
-            type: 'str'
-            required: true
-            description: 'Password for the database user.'
-
-          username:
-            type: 'str'
-            required: true
-            description: 'Database username.'
+          database (currently MySQL). Must contain the keys `username`
+          and `password`. Typically fed by
+          `linuxfabrik.lfops.bitwarden_item`, which returns the full
+          Bitwarden item; extra keys are ignored.
 
       icingaweb2_module_reporting__database_name:
         type: 'str'

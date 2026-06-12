@@ -3,11 +3,14 @@
 This role installs and configures [docker](https://www.docker.com/).
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* Enable the official [docker repository](https://docs.docker.com/engine/install/centos/#install-using-the-repository). This can be done using the [linuxfabrik.lfops.repo_docker](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_docker) role.
 
-If you use the ["docker" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/docker.yml), this is automatically done for you.
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The official [docker repository](https://docs.docker.com/engine/install/centos/#install-using-the-repository) must be enabled (role: [linuxfabrik.lfops.repo_docker](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_docker)).
 
 
 ## Tags

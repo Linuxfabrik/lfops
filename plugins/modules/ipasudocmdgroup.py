@@ -39,6 +39,7 @@ DOCUMENTATION = """
 ---
 module: ipasudocmdgroup
 short_description: Manage FreeIPA sudocmd groups
+version_added: "6.0.0"
 description: Manage FreeIPA sudocmd groups
 extends_documentation_fragment:
   - ipamodule_base_docs

@@ -10,7 +10,7 @@
   - name: 'Validate that graylog_datanode__node_search_cache_size follows OpenSearch Bytes format'
     ansible.builtin.assert:
       that:
-        - 'graylog_datanode__node_search_cache_size | ansible.builtin.regex_search("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
+        - 'graylog_datanode__node_search_cache_size is search("^[0-9]+(b|kb|mb|gb|tb|pb)$")'
       fail_msg: '`graylog_datanode__node_search_cache_size: {{ graylog_datanode__node_search_cache_size }}` does not follow OpenSearch Bytes format'
       quiet: true
 

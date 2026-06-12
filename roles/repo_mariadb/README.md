@@ -3,6 +3,9 @@
 This role deploys the [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_mariadb`
@@ -29,7 +32,7 @@ repo_mariadb__version: '10.6'
 
 `repo_mariadb__basic_auth_login`
 
-* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
 * Type: String.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
 

@@ -19,6 +19,23 @@ Notes:
 * If activating AJP, this role currently sets `secretRequired` to `false`.
 
 
+*Available since LFOps `2.0.0`.*
+
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+
+
+## Requirements
+
+Manual steps:
+
+* Set the required SELinux booleans and policies by running the [selinux](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/selinux.yml) playbook (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
+
+
 ## Multiple Tomcat Instances
 
 How to deploy multiple Tomcat instances on a single server using this and other roles? Imagine you want to run an 'author' and a 'public' instance. Place your config files in `host_files` (for example `host_files/{{ inventory_hostname }}/var/lib/tomcats/{author,public}/conf/{context,server}.xml` and deploy like this:
@@ -115,14 +132,6 @@ ansible-playbook --inventory=myinv linuxfabrik.lfops.apache_tomcat
 ansible-playbook --inventory=myinv linuxfabrik.lfops.files
 ansible-playbook --inventory=myinv linuxfabrik.lfops.shell
 ```
-
-
-## Mandatory Requirements
-
-* On RHEL-compatible systems, enable the EPEL repository. This can be done using the [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) role.
-* Set SELinux Booleans and Policies properly. This can be done using the [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux) role.
-
-If you use the [Apache Tomcat Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apache_tomcat.yml), this is automatically done for you.
 
 
 ## Tags

@@ -37,6 +37,7 @@ DOCUMENTATION = """
 ---
 module: ipauser
 short_description: Manage FreeIPA users
+version_added: "6.0.0"
 description: Manage FreeIPA users
 extends_documentation_fragment:
   - ipamodule_base_docs

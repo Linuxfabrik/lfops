@@ -1,0 +1,39 @@
+kernel_modules__modules__dependent_var: []
+kernel_modules__modules__group_var: []
+kernel_modules__modules__host_var: []
+kernel_modules__modules__role_var:
+  - name: 'atm'
+    enabled: false
+  - name: 'can'
+    enabled: false
+  - name: 'cramfs'
+    enabled: false
+  - name: 'dccp'
+    enabled: false
+  - name: 'firewire-core'
+    enabled: false
+  - name: 'firewire-ohci'
+    enabled: false
+  - name: 'firewire-sbp2'
+    enabled: false
+  - name: 'freevxfs'
+    enabled: false
+  - name: 'hfs'
+    enabled: false
+  - name: 'hfsplus'
+    enabled: false
+  - name: 'jffs2'
+    enabled: false
+  - name: 'rds'
+    enabled: false
+  - name: 'sctp'
+    enabled: false
+  - name: 'tipc'
+    enabled: false
+kernel_modules__modules__combined_var: '{{ (
+      kernel_modules__modules__role_var +
+      kernel_modules__modules__dependent_var +
+      kernel_modules__modules__group_var +
+      kernel_modules__modules__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'

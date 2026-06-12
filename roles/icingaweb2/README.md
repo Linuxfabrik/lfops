@@ -3,17 +3,25 @@
 This role installs and configures [IcingaWeb2](https://icinga.com/docs/icinga-web-2/latest/doc/01-About/).
 
 
-## Mandatory Requirements
-
-* Install MariaDB, and create a database and a user for said database. This can be done using the [linuxfabrik.lfops.mariadb-server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb-server) role.
-* Install a web server (for example Apache httpd), and configure a virtual host for IcingaWeb2.  This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
-* Install PHP version >= 7.3. This can be done using the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
+*Available since LFOps `2.0.0`.*
 
 
-## Optional Requirements
+## Dependent Roles
 
-* For exports to PDF also the following PHP modules are required: mbstring, GD, Imagick.
-* LDAP PHP library when using Active Directory or LDAP for authentication.
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* MariaDB must be installed, with a database and a user for it (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
+* PHP >= 7.3 must be installed (role: [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
+
+
+## Requirements
+
+* Optional: the `mbstring`, `GD` and `Imagick` PHP modules are required for PDF exports.
+* Optional: an LDAP PHP library is required when using Active Directory or LDAP for authentication.
+
+Manual steps:
+
+* Deploy a web server (for example Apache httpd) with a virtual host for IcingaWeb2 by running the [apache_httpd](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apache_httpd.yml) playbook (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
 
 
 ## Tags
@@ -33,7 +41,7 @@ This role installs and configures [IcingaWeb2](https://icinga.com/docs/icinga-we
 * Deploys `/etc/icingaweb2/resources.ini`.
 * Triggers: none.
 
-`icingaweb2:user`
+`icingaweb2:users`
 
 * Creates user accounts and deploys the role config.
 * Triggers: none.

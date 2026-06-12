@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -11,57 +13,55 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 module: nextcloud_occ_app
 
-short_description: Manage Nextcloud apps using occ commands.
+short_description: Install, enable, disable or remove a Nextcloud app via occ
 
 description:
-  - This module manages Nextcloud apps using C(occ).
-  - It retrieves the current app state via C(app:list --output=json) and
-    only performs actions if the current state differs from the desired one.
+  - Drives the Nextcloud C(occ app:install), C(app:enable), C(app:disable) and C(app:remove) commands to bring a single app into the desired state.
+  - The current state is determined from C(occ app:list --output=json) (or from a pre-fetched listing passed via I(installed_apps_json)) and is one of C(enabled), C(disabled) or C(absent). Subsequent C(occ) commands are only run when the current state does not already match I(state).
+  - Going from C(absent) to C(enabled) installs the app with C(--keep-disabled) and then enables it as a separate step, so the install path is the same regardless of whether the app should end up enabled or just present.
 
 requirements:
-  - Nextcloud installation with C(occ) available.
+  - A working Nextcloud installation with the C(occ) command available.
 
 author:
   - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 
-version_added: "2.0.1"
+version_added: "6.0.0"
 
 options:
   name:
     description:
-      - The name of the app to manage.
+      - Name of the Nextcloud app (the app ID, e.g. C(notify_push), C(comments)).
     type: str
     required: true
   state:
     description:
-      - The desired state of the app.
-      - C(enabled) installs (if absent) and enables the app.
-      - C(disabled) disables the app if it is currently enabled.
-      - C(present) installs the app but keeps it disabled.
-      - C(absent) removes the app.
+      - Desired state of the app.
+      - C(enabled) - install the app if missing and enable it.
+      - C(disabled) - disable the app if it is currently enabled. Does nothing if the app is already disabled or absent.
+      - C(present) - install the app if missing but leave it disabled. Does nothing if the app already exists in any state.
+      - C(absent) - remove the app entirely.
     type: str
     choices: ['absent', 'disabled', 'enabled', 'present']
     default: 'enabled'
   force:
     description:
-      - Whether to use the C(--force) flag for C(app:install) and C(app:enable).
+      - Pass C(--force) to C(app:install) and C(app:enable) so that Nextcloud installs apps that are not officially compatible with the running version.
     type: bool
     default: false
   occ_path:
     description:
-      - The full path to the C(occ) command.
+      - Absolute path to the Nextcloud C(occ) command.
     type: str
     default: '/var/www/html/nextcloud/occ'
   php_path:
     description:
-      - The full path to the PHP binary to use.
+      - PHP binary to invoke C(occ) with. A bare C(php) relies on C($PATH); pass an absolute path to pin a specific PHP version.
     type: str
     default: 'php'
   installed_apps_json:
     description:
-      - Pre-fetched JSON output from C(occ app:list --output=json).
-      - When provided, the module skips calling C(app:list) itself,
-        avoiding repeated occ invocations in a loop.
+      - Pre-fetched output of C(occ app:list --output=json), as either a JSON string or an already-parsed dict. When set, the module skips the C(app:list) call and reads the current state from this value, which avoids running C(occ) once per app when looping over a list.
     type: raw
 '''
 
@@ -90,24 +90,24 @@ EXAMPLES = r'''
 
 RETURN = r'''
 changed:
-  description: Indicates if the app state was changed.
+  description: Whether the app state had to be changed.
   returned: always
   type: bool
 current_state:
-  description: The current state of the app before any changes.
+  description: State of the app before any changes were applied. One of C(enabled), C(disabled) or C(absent).
   returned: always
   type: str
 rc:
-  description: The return code from the last C(occ) command.
-  returned: when changed
+  description: Exit code of the last C(occ) command that was executed. Only the last one is reported, since failure of any earlier one aborts the module.
+  returned: when changed and not in check mode
   type: int
 stderr:
-  description: The standard error from the last C(occ) command.
-  returned: when changed
+  description: Standard error of the last C(occ) command that was executed.
+  returned: when changed and not in check mode
   type: str
 stdout:
-  description: The standard output from the last C(occ) command.
-  returned: when changed
+  description: Standard output of the last C(occ) command that was executed.
+  returned: when changed and not in check mode
   type: str
 '''
 

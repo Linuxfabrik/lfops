@@ -8,6 +8,9 @@ Notes:
 * This role allows you to deploy custom plugins which are placed under `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins` on the Ansible control node.
 
 
+*Available since LFOps `1.0.0`.*
+
+
 ## Installation Methods
 
  Taken from the Linuxfabrik Monitoring Plugins [INSTALL](https://github.com/Linuxfabrik/monitoring-plugins/blob/main/INSTALL.rst) document:
@@ -22,7 +25,7 @@ Notes:
 | Windows  | Source Code | Currently not supported by this role | |
 
 
-## Mandatory Requirements
+## Requirements
 
 * See table above (depends on the use case).
 

@@ -1,0 +1,1 @@
+ansible_python_interpreter: '/usr/bin/python3' # needs to point to the python3 version that has the libvirt module (`python3 -c 'import libvirt'` has to work)

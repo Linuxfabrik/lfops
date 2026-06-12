@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -11,66 +13,63 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 module: nextcloud_occ_app_config
 
-short_description: Manage Nextcloud App configuration using occ commands.
+short_description: Manage a Nextcloud app configuration value via occ
 
 description:
-  - This module sets Nextcloud configuration values using C(occ).
-  - It retrieves the current value via C(config:app:get) and
-    only changes it if the value differs from the desired one.
+  - Drives C(occ config:app:set) and C(config:app:delete) to bring a single app config key into the desired state.
+  - The current value and type are read from C(occ config:app:get --details --output=json) (or from a pre-fetched C(occ config:list --output=json --private) listing passed via I(installed_config_json)). C(occ config:app:set) is only called when the stored value or type does not already match.
+  - When I(name) contains spaces, each whitespace-separated token is passed as a separate argument to C(occ), matching how Nextcloud addresses nested keys (e.g. C(name="endpoint enabled")).
+  - Booleans are normalized for Nextcloud's storage. I(value) values C(true)/C(1)/C(on)/C(yes) (case-insensitive) become C(1) in the database; everything else becomes C(0). When reading via I(installed_config_json), the type is inferred from the JSON value type (Python C(bool)/C(int)/C(float)/C(list)/C(str)), since C(occ config:list) returns values already cast by C(convertTypedValue()).
 
 requirements:
-  - Nextcloud installation with C(occ) available.
+  - A working Nextcloud installation with the C(occ) command available.
 
 author:
   - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
 
-version_added: "2.0.1"
+version_added: "6.0.0"
 
 options:
   app:
     description:
-      - The app for which the configuration should be managed.
+      - App ID whose configuration is being managed (e.g. C(core), C(files_sharing), C(notify_push)).
     type: str
     required: true
   name:
     description:
-      - Name of the configuration key to manage.
+      - Configuration key. Multiple whitespace-separated tokens are forwarded as separate arguments to C(occ), which is how Nextcloud addresses nested keys.
     type: str
     required: true
   value:
     description:
-      - The desired value for the configuration key.
-      - Must be a valid JSON array if C(type) is set to C(array).
-      - Required when C(state=present).
+      - Target value for the configuration key. Required when I(state=C(present)).
+      - When I(type=C(array)), pass a valid JSON array literal; this module forwards the string verbatim and lets C(occ) parse it.
     type: str
   type:
     description:
-      - The data type of the configuration value.
+      - Data type C(occ config:app:set) records for the value.
     type: str
     choices: ['string', 'integer', 'float', 'boolean', 'array']
     default: 'string'
   state:
     description:
-      - The state of the config key. If C(present) the key will be set to the value,
-        if C(absent) the config key will be deleted.
+      - C(present) creates or updates the key, C(absent) deletes it.
     type: str
     choices: ['absent', 'present']
     default: 'present'
   occ_path:
     description:
-      - The full path to the C(occ) command.
+      - Absolute path to the Nextcloud C(occ) command.
     type: str
     default: '/var/www/html/nextcloud/occ'
   php_path:
     description:
-      - The full path to the PHP binary to use.
+      - PHP binary to invoke C(occ) with. A bare C(php) relies on C($PATH); pass an absolute path to pin a specific PHP version.
     type: str
     default: 'php'
   installed_config_json:
     description:
-      - Pre-fetched JSON output from C(occ config:list --output=json --private).
-      - When provided, the module skips calling C(config:app:get) itself,
-        avoiding repeated occ invocations in a loop.
+      - Pre-fetched output of C(occ config:list --output=json --private), as either a JSON string or an already-parsed dict. When set, the module skips the C(config:app:get) call and reads the current value from this value, which avoids running C(occ) once per key when looping over many keys.
     type: raw
 '''
 
@@ -87,28 +86,28 @@ EXAMPLES = r'''
 
 RETURN = r'''
 changed:
-  description: Indicates if the configuration was changed.
+  description: Whether the value or type had to be changed.
   returned: always
   type: bool
 current_type:
-  description: The current configuration type.
+  description: Stored type before any changes were applied. Empty string when the key did not exist.
   returned: always
   type: str
 current_value:
-  description: The current configuration value.
+  description: Stored value (as a string) before any changes were applied. Empty string when the key did not exist. Booleans are normalized to C(1)/C(0) to match how Nextcloud stores them.
   returned: always
   type: str
 rc:
-  description: The return code from the C(occ config:app:set) command.
-  returned: when changed
+  description: Exit code of the C(occ config:app:set) or C(config:app:delete) command.
+  returned: when changed and not in check mode
   type: int
 stderr:
-  description: The standard error from the C(occ config:app:set) command.
-  returned: when changed
+  description: Standard error of the C(occ config:app:set) or C(config:app:delete) command.
+  returned: when changed and not in check mode
   type: str
 stdout:
-  description: The standard output from the C(occ config:app:set) command.
-  returned: when changed
+  description: Standard output of the C(occ config:app:set) or C(config:app:delete) command.
+  returned: when changed and not in check mode
   type: str
 '''
 
@@ -117,6 +116,23 @@ import traceback
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
+
+
+def values_match(current_value, value, value_type):
+    """Decide whether the stored value already matches the desired one.
+
+    For C(array) values both sides are compared as parsed JSON, so an
+    array stored by Nextcloud (returned as a JSON array, e.g. via
+    C(config:list)) compares equal to the user's array literal regardless
+    of whitespace or key ordering. All other types compare as strings.
+    """
+    if value_type == 'array':
+        try:
+            return json.loads(current_value) == json.loads(value)
+        except (json.JSONDecodeError, ValueError, TypeError):
+            return False
+    return current_value == value
+
 
 def main():
     # define available arguments/parameters a user can pass to this module
@@ -131,10 +147,6 @@ def main():
             installed_config_json=dict(type='raw'),
     )
 
-    # the AnsibleModule object will be our abstraction working with Ansible
-    # this includes instantiation, a couple of common attr would be the
-    # args/params passed to the execution, as well as if this module
-    # supports check mode
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True,
@@ -172,7 +184,7 @@ def main():
             try:
                 installed_config_json = json.loads(installed_config_json)
             except (json.JSONDecodeError, ValueError):
-                module.fail_json(msg=f'Failed to parse installed_config_json')
+                module.fail_json(msg='Failed to parse installed_config_json')
 
         app_configs = installed_config_json.get('apps', {}).get(app, {})
         key_exists = name in app_configs
@@ -192,7 +204,9 @@ def main():
                 current_value = str(raw)
                 current_type = 'float'
             elif isinstance(raw, list):
-                current_value = str(raw)
+                # store canonical JSON so it can be compared as JSON against the
+                # user's array literal (config:list returns an already-parsed list)
+                current_value = json.dumps(raw)
                 current_type = 'array'
             else:
                 current_value = str(raw)
@@ -230,7 +244,7 @@ def main():
 
     if state == 'present':
         # check if the current value and type match the desired settings
-        if current_value == value and current_type == value_type:
+        if current_type == value_type and values_match(current_value, value, value_type):
             module.exit_json(**result)
 
         # else, the value will be changed

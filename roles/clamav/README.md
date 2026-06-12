@@ -1,24 +1,27 @@
 # Ansible Role linuxfabrik.lfops.clamav
 
-This role installs and configures [ClamAV](https://www.clamav.net/), "an open-source antivirus engine for detecting trojans, viruses, malware & other malicious threats." It also configures freshclam to regularly update the official ClamAV signatures (12 times a day).
+This role installs and configures [ClamAV](https://www.clamav.net/), "an open-source antivirus engine for detecting trojans, viruses, malware & other malicious threats." It also configures freshclam to regularly update the official ClamAV signatures (12 times a day). It runs on Red Hat-family systems as well as Debian and Ubuntu.
 This role exposes options for enabling on-access scanning and / or periodic full-scans and configures mail notifications for found viruses.
 
 When using on-access scanning, one might need to increase the `inotify/max_user_watches`. Have a look at the [official documentation](https://docs.clamav.net/manual/OnAccess.html?highlight=inotify#troubleshooting). This can be done using the [linuxfabrik.lfops.kernel_settings](https://github.com/linuxfabrik/lfops/tree/main/roles/kernel_settings) role.
-ClamAV can be tested using the EICAR test virus:
-```bash
-wget http://www.eicar.org/download/eicar.com
-wget http://www.eicar.org/download/eicar.com.txt
-wget http://www.eicar.org/download/eicar_com.zip
-wget http://www.eicar.org/download/eicarcom2.zip
-```
 
 
-## Optional Requirements
+*Available since LFOps `3.0.0`.*
 
-* Enable the `antivirus_can_scan_system` and `antivirus_use_jit` SELinux Booleans. This can be done using the [linuxfabrik.lfops.selinux](https://github.com/linuxfabrik/lfops/tree/main/roles/selinux) role.
-* Fangfrisch to download unofficial signatures. This can be done using the [linuxfabrik.lfops.fangfrisch](https://github.com/linuxfabrik/lfops/tree/main/roles/fangfrisch) role.
 
-If you use the [ClamAV Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/clamav.yml), this is automatically done for you.
+## How the Role Behaves
+
+On a fresh host the role downloads the signature database once (a synchronous `freshclam` run) before starting clamd, because clamd refuses to start without a database. The freshclam service then keeps the database updated. The database directory `/var/lib/clamav` is given to the freshclam database owner so freshclam can write to it.
+
+On every run (and on demand via `--tags clamav:test`) the role runs a self-test that confirms ClamAV detects the EICAR test signature. It feeds the EICAR string to the standalone `clamscan` over stdin, so the test triggers neither the `VirusEvent` mail notification nor an on-access detection, and writes nothing to disk.
+
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* On RHEL-compatible systems, the `antivirus_can_scan_system` and `antivirus_use_jit` SELinux booleans must be enabled (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)) so ClamAV can scan the whole system.
+* Optional: Fangfrisch must be installed to download unofficial ClamAV signatures (role: [linuxfabrik.lfops.fangfrisch](https://github.com/Linuxfabrik/lfops/tree/main/roles/fangfrisch)).
 
 
 ## Tags
@@ -36,7 +39,12 @@ If you use the [ClamAV Playbook](https://github.com/Linuxfabrik/lfops/blob/main/
 `clamav:configure`
 
 * Manages the various ClamAV config files.
-* Triggers: clamav-clamonacc.service restart, clamd@scan.service restart.
+* Triggers: clamd and clamav-clamonacc service restarts.
+
+`clamav:test`
+
+* Runs the EICAR self-test that confirms ClamAV detects malware. Can be run on its own to verify a host.
+* Triggers: none.
 
 
 ## Optional Role Variables

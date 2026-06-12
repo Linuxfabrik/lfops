@@ -4,4 +4,3 @@ icingaweb2__required_packages:
   - 'icingacli'
   - 'icingaweb2'
   - 'icingaweb2-selinux'
-icingaweb2__webserver_owner: 'apache'

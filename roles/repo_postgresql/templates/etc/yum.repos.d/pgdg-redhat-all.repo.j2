@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026011201
+# 2026052201
 {# taken from the RPM package at https://yum.postgresql.org/repopackages/ #}
 
 #########################################################################
@@ -20,7 +20,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
@@ -39,7 +39,7 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
@@ -57,7 +57,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
@@ -73,7 +73,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
@@ -89,7 +89,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
@@ -105,7 +105,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
@@ -121,7 +121,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
-{% if repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
+{% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}

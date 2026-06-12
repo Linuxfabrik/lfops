@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -11,14 +13,13 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 ---
 module: uptimerobot_mwindow
-short_description: Manage UptimeRobot maintenance windows
-version_added: '6.1.0'
+short_description: Create, update or delete an UptimeRobot maintenance window
+version_added: '6.0.2'
 description:
-    - Create, update or delete a maintenance window on UptimeRobot.
-    - Identification is by C(friendly_name). The window is auto-named
-      C("<type> [<value>] <start_time>-<end_time>") when no C(friendly_name)
-      is given (e.g. C("weekly mon 03:30-05:30")), matching the convention
-      used by the C(utr) CLI.
+    - Manages a single UptimeRobot maintenance window (create, update of the editable parts, pause/resume, delete) against the v2 API.
+    - Identification is by I(friendly_name). When omitted on I(state=present), the module synthesises one as C("<type> [<value>] <start_time>-<end_time>") (e.g. C(weekly mon 03:30-05:30), C(daily 02:00-02:30)) so re-runs stay idempotent without having to invent a name.
+    - Update is intentionally narrow - only I(duration) and I(status) are diffed against the existing window. Changing the schedule itself (I(type), I(value), I(start_time), I(end_time)) means changing I(friendly_name) too (or the synthesised one), which results in a *new* window being created next to the old one rather than an in-place edit. This also avoids UptimeRobot's inconsistent C(start_time) storage (older windows are kept as local C(HH:MM), newer ones as UTC C(HH:MM:SS)) confusing the diff.
+    - Provide either I(end_time) or I(duration), not both. When I(end_time) is given, the duration in minutes is computed automatically (wrapping over midnight when C(end_time < start_time)).
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:
@@ -27,43 +28,42 @@ options:
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key. Default C(~/.uptimerobot).
+        description: Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
+        default: '~/.uptimerobot'
     friendly_name:
         description:
-            - Display name of the window. If omitted, it is synthesised from
-              C(type), C(value), C(start_time) and C(end_time).
+            - Display name of the window. When omitted on I(state=present), the module synthesises one from I(type), I(value), I(start_time) and I(end_time); in that case all four must be given. Required on I(state=absent).
         type: str
     state:
-        description: C(present) creates or updates, C(absent) deletes.
+        description: C(present) creates or updates, C(absent) deletes. When the window does not exist on I(state=absent), the module exits with C(changed=false).
         type: str
         choices: ['absent', 'present']
         default: 'present'
     type:
-        description: Recurrence type.
+        description: Recurrence type. Required when creating a new window.
         type: str
         choices: ['daily', 'monthly', 'once', 'weekly']
     value:
         description:
-            - For C(weekly): day of week (C(mon)..C(sun)).
-            - For C(monthly): day of the month (C(1)..C(31)).
-            - For C(once): unused.
+            - For I(type=C(weekly)), the weekday as a label (C(mon), C(tue), ..., C(sun)). Multiple weekdays can be passed as a dash-joined list (e.g. C(mon-wed-fri)).
+            - For I(type=C(monthly)), the day of the month as a number C(1)..C(31) (passed through unchanged).
+            - For I(type=C(once)) and I(type=C(daily)), unused.
         type: str
     start_time:
         description:
-            - For C(once): RFC3339 timestamp.
-            - For C(daily) / C(weekly) / C(monthly): C(HH:MM).
+            - For I(type=C(once)), an RFC3339 timestamp.
+            - For I(type=C(daily))/C(weekly)/C(monthly), an C(HH:MM) wall-clock time.
         type: str
     end_time:
         description:
-            - C(HH:MM). Used together with C(start_time) to compute C(duration).
-              You can give either C(end_time) or C(duration), not both.
+            - C(HH:MM) wall-clock time. Combined with I(start_time) to compute I(duration) automatically; wraps over midnight when end < start. Mutually exclusive with I(duration).
         type: str
     duration:
-        description: Duration of the window in minutes.
+        description: Duration of the window in minutes. Mutually exclusive with I(end_time).
         type: int
     status:
-        description: C(active) or C(paused). Only honoured on edit.
+        description: C(active) un-pauses the window, C(paused) pauses it. Only honoured on edit; UptimeRobot rejects this field on create.
         type: str
         choices: ['active', 'paused']
 '''
@@ -111,9 +111,21 @@ EXAMPLES = r'''
 
 RETURN = r'''
 mwindow:
-    description: The maintenance window object as returned by UptimeRobot. Empty dict if just deleted.
+    description:
+        - On create or update, the maintenance window as returned by UptimeRobot's C(newMWindow) / C(editMWindow). On delete, the last known state of the window.
+        - Empty dict when there was nothing to delete.
+        - In check mode, a synthetic preview reflecting what the run would have written.
     type: dict
     returned: always
+debug:
+    description: Diagnostic information about the operation (one of C(create), C(update), C(delete), C(noop), each optionally suffixed with C( (check_mode))). Stable enough to assert against, not stable enough to be load-bearing.
+    type: dict
+    returned: always
+    sample:
+        operation: 'update'
+        friendly_name: 'weekly mon 03:30-05:30'
+        mwindow_id: 12345
+        diff_fields: ['duration']
 '''
 
 
@@ -142,14 +154,14 @@ def _synthesise_name(params):
     parts = [params['type']]
     if params.get('value'):
         parts.append(str(params['value']))
-    parts.append('{0}-{1}'.format(params['start_time'], params['end_time']))
+    parts.append(f"{params['start_time']}-{params['end_time']}")
     return ' '.join(parts)
 
 
 def main():
     argument_spec = dict(
         api_key=dict(type='str', no_log=True),
-        api_key_file=dict(type='str'),
+        api_key_file=dict(type='str', default='~/.uptimerobot'),
         friendly_name=dict(type='str'),
         state=dict(type='str', choices=['absent', 'present'], default='present'),
         type=dict(type='str', choices=['daily', 'monthly', 'once', 'weekly']),
@@ -176,14 +188,12 @@ def main():
             module.fail_json(msg='Either pass `friendly_name` or pass `type`, `start_time`, `end_time` so it can be synthesised.')
         friendly_name = _synthesise_name(module.params)
 
-    module.log('uptimerobot_mwindow: looking up friendly_name={0!r}'.format(friendly_name))
+    module.log(f'uptimerobot_mwindow: looking up friendly_name={friendly_name!r}')
     success, mwindows = ur.get_mwindows(module, api_key)
     if not success:
-        module.fail_json(msg='Could not list maintenance windows: {0}'.format(mwindows))
+        module.fail_json(msg=f'Could not list maintenance windows: {mwindows}')
     current = ur.find_by_friendly_name(mwindows, friendly_name) if friendly_name else None
-    module.log('uptimerobot_mwindow: existing={0} (out of {1} mwindows on the account)'.format(
-        bool(current), len(mwindows),
-    ))
+    module.log(f'uptimerobot_mwindow: existing={bool(current)} (out of {len(mwindows)} mwindows on the account)')
 
     if state == 'absent':
         if current is None:
@@ -205,10 +215,10 @@ def main():
                     'friendly_name': friendly_name,
                     'mwindow_id': current['id'],
                 })
-        module.log('uptimerobot_mwindow: deleting id={0}'.format(current['id']))
+        module.log(f"uptimerobot_mwindow: deleting id={current['id']}")
         success, result = ur.delete_mwindow(module, api_key, current['id'])
         if not success:
-            module.fail_json(msg='Could not delete maintenance window {0!r}: {1}'.format(friendly_name, result))
+            module.fail_json(msg=f'Could not delete maintenance window {friendly_name!r}: {result}')
         module.exit_json(changed=True, mwindow=current,
             diff={'before': delete_before, 'after': {}},
             debug={
@@ -238,7 +248,7 @@ def main():
         # Create. type/start_time/duration are required for new mwindows.
         for required in ('type', 'start_time'):
             if not desired.get(required):
-                module.fail_json(msg='`{0}` is required when creating a new maintenance window.'.format(required))
+                module.fail_json(msg=f'`{required}` is required when creating a new maintenance window.')
         if not desired.get('duration'):
             module.fail_json(msg='Either `end_time` or `duration` is required when creating a new maintenance window.')
         # `status` not honoured on create.
@@ -253,12 +263,10 @@ def main():
                     'friendly_name': friendly_name,
                     'sent_keys': sorted(body.keys()),
                 })
-        module.log('uptimerobot_mwindow: creating friendly_name={0!r} sent_keys={1}'.format(
-            friendly_name, sorted(body.keys()),
-        ))
+        module.log(f'uptimerobot_mwindow: creating friendly_name={friendly_name!r} sent_keys={sorted(body.keys())}')
         success, result = ur.new_mwindow(module, api_key, body)
         if not success:
-            module.fail_json(msg='Could not create maintenance window {0!r}: {1}'.format(friendly_name, result))
+            module.fail_json(msg=f'Could not create maintenance window {friendly_name!r}: {result}')
         module.exit_json(changed=True, mwindow=result,
             diff=create_diff,
             debug={
@@ -278,7 +286,7 @@ def main():
     current_compare = {field: current.get(field) for field in diff_fields}
     field_diff = ur.diff_for_update(current_compare, desired, diff_fields)
     if not field_diff:
-        module.log('uptimerobot_mwindow: id={0} no diff -> changed=false'.format(current['id']))
+        module.log(f"uptimerobot_mwindow: id={current['id']} no diff -> changed=false")
         module.exit_json(changed=False, mwindow=current, debug={
             'operation': 'noop',
             'reason': 'no diff',
@@ -286,9 +294,7 @@ def main():
             'mwindow_id': current['id'],
         })
 
-    module.log('uptimerobot_mwindow: id={0} diff_fields={1}'.format(
-        current['id'], sorted(field_diff.keys()),
-    ))
+    module.log(f"uptimerobot_mwindow: id={current['id']} diff_fields={sorted(field_diff.keys())}")
 
     update_diff = {
         'before': {k: current_compare.get(k) for k in field_diff},
@@ -311,7 +317,7 @@ def main():
     body['id'] = current['id']
     success, result = ur.edit_mwindow(module, api_key, body)
     if not success:
-        module.fail_json(msg='Could not edit maintenance window {0!r}: {1}'.format(friendly_name, result))
+        module.fail_json(msg=f'Could not edit maintenance window {friendly_name!r}: {result}')
     module.exit_json(changed=True, mwindow=result,
         diff=update_diff,
         debug={

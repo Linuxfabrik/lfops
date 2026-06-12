@@ -30,7 +30,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/grafana'
       state: 'directory'
-      owner: '{{ icingaweb2_module_grafana__icingaweb2_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -38,7 +38,7 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/grafana'
       state: 'directory'
-      owner: '{{ icingaweb2_module_grafana__icingaweb2_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o755
 
@@ -47,7 +47,7 @@
       url: 'https://github.com/NETWAYS/icingaweb2-module-grafana/archive/{{ icingaweb2_module_grafana__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz'
     delegate_to: 'localhost'
-    run_once: true
+    become: false
     check_mode: false # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz to the server' # noqa risky-file-permissions (temp file)
@@ -84,7 +84,7 @@
       backup: true
       src: 'etc/icingaweb2/modules/grafana/config.ini.j2'
       dest: '/etc/icingaweb2/modules/grafana/config.ini'
-      owner: '{{ icingaweb2_module_grafana__icingaweb2_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -129,8 +129,10 @@
         done
 
         cp -- /tmp/ansible.monitoring-plugins-repo/assets/icingaweb2-module-grafana/*.ini /tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana/
+      executable: '/bin/bash'
     delegate_to: 'localhost'
-    run_once: true
+    become: false
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
@@ -139,6 +141,7 @@
       content: '{{ icingaweb2_module_grafana__custom_graphs_config }}'
       dest: '/tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana/z00-custom.ini'
     delegate_to: 'localhost'
+    become: false
     check_mode: false # run task even if `--check` is specified
 
   - name: 'Assemble /tmp/ansible.icingaweb2-module-grafana-combined.ini' # noqa risky-file-permissions (temp file)
@@ -147,6 +150,7 @@
       dest: '/tmp/ansible.icingaweb2-module-grafana-combined.ini'
       delimiter: '\n\n'
     delegate_to: 'localhost'
+    become: false
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
@@ -154,7 +158,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.icingaweb2-module-grafana-combined.ini'
       dest: '/etc/icingaweb2/modules/grafana/graphs.ini'
-      owner: '{{ icingaweb2_module_grafana__icingaweb2_owner }}'
+      owner: '{{ __shared__apache_httpd_user }}'
       group: 'icingaweb2'
       mode: 0o664
 

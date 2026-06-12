@@ -3,6 +3,9 @@
 This role manages LVM (Logical Volume Manager) including partitions, physical volumes, volume groups, and logical volumes. It can also create filesystems and mount the logical volumes.
 
 
+*Available since LFOps `6.0.0`.*
+
+
 ## Tags
 
 `lvm`

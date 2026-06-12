@@ -7,19 +7,25 @@ This role is tested with the following IcingaWeb2 Fileshipper Module versions:
 * 1.2.0
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## How the Role Behaves
 
-* The Tarball for `icingaweb2_module_fileshipper__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
+* The Tarball for `icingaweb2_module_fileshipper__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
 * On every role run the directory `/usr/share/icingaweb2/modules/fileshipper` is overwritten with the contents of the configured version. To upgrade or downgrade the module, change `icingaweb2_module_fileshipper__version` and re-run the role.
 * `icingacli module enable fileshipper` is only invoked when `/etc/icingaweb2/enabledModules/fileshipper` does not yet exist (idempotent).
 * PHP runtime dependencies (`php-xml`, `php-yaml`, `php-zip`) are not installed by this role directly; they are injected into the `php` role via the `icingaweb2_module_fileshipper__php__modules__dependent_var` default. Install them via the [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role (the bundled playbook does this for you).
 
 
-## Mandatory Requirements
+## Requirements
 
-* A configured IcingaWeb2. This can be done using the [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2) role.
-* PHP with the `php-xml`, `php-yaml` and `php-zip` modules installed (see above).
-* Internet access from the Ansible controller (downloads from `https://github.com/Icinga/icingaweb2-module-fileshipper/archive/`).
+* The Ansible controller must have Internet access (downloads from `https://github.com/Icinga/icingaweb2-module-fileshipper/archive/`).
+
+Manual steps:
+
+* Deploy a configured IcingaWeb2 by running the [icingaweb2](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/icingaweb2.yml) playbook (role: [linuxfabrik.lfops.icingaweb2](https://github.com/linuxfabrik/lfops/tree/main/roles/icingaweb2)).
+* Deploy PHP with the `php-xml`, `php-yaml` and `php-zip` modules by running the [php](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/php.yml) playbook (role: [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 
 
 ## Tags

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026031902
+# 2026052901
 # 11.4
 
 [client]
@@ -22,6 +22,7 @@ disable_ssl_verify_server_cert
 # https://mariadb.com/kb/en/library/server-system-variables/
 
 [server]
+aria_pagecache_buffer_size                     = {{ mariadb_server__cnf_aria_pagecache_buffer_size__combined_var }}
 {% if mariadb_server__cnf_bind_address__combined_var | length %}
 bind_address                                   = {{ mariadb_server__cnf_bind_address__combined_var }}
 {% endif %}
@@ -43,7 +44,6 @@ general_log_file                               = {{ mariadb_server__cnf_general_
 innodb_adaptive_hash_index                     = {{ mariadb_server__cnf_innodb_adaptive_hash_index__combined_var }}
 innodb_adaptive_hash_index_parts                   = {{ mariadb_server__cnf_innodb_adaptive_hash_index_parts__combined_var }}
 innodb_autoinc_lock_mode                       = {{ mariadb_server__cnf_innodb_autoinc_lock_mode__combined_var }}
-innodb_buffer_pool_chunk_size                  = {{ mariadb_server__cnf_innodb_buffer_pool_chunk_size__combined_var }}
 innodb_buffer_pool_size                        = {{ mariadb_server__cnf_innodb_buffer_pool_size__combined_var }}
 innodb_doublewrite                             = {{ mariadb_server__cnf_innodb_doublewrite__combined_var }}
 innodb_flush_log_at_trx_commit                 = {{ mariadb_server__cnf_innodb_flush_log_at_trx_commit__combined_var }}
@@ -59,11 +59,13 @@ innodb_open_files                              = {{ mariadb_server__cnf_innodb_o
 innodb_print_all_deadlocks                     = {{ mariadb_server__cnf_innodb_print_all_deadlocks__combined_var }}
 innodb_purge_batch_size                        = {{ mariadb_server__cnf_innodb_purge_batch_size__combined_var }}
 innodb_read_io_threads                         = {{ mariadb_server__cnf_innodb_read_io_threads__combined_var }}
+innodb_snapshot_isolation                      = {{ mariadb_server__cnf_innodb_snapshot_isolation__combined_var }}
 innodb_strict_mode                             = {{ mariadb_server__cnf_innodb_strict_mode__combined_var }}
 innodb_sync_spin_loops                         = {{ mariadb_server__cnf_innodb_sync_spin_loops__combined_var }}
 innodb_write_io_threads                        = {{ mariadb_server__cnf_innodb_write_io_threads__combined_var }}
 interactive_timeout                            = {{ mariadb_server__cnf_interactive_timeout__combined_var }}
 join_buffer_size                               = {{ mariadb_server__cnf_join_buffer_size__combined_var }}
+key_buffer_size                                = {{ mariadb_server__cnf_key_buffer_size__combined_var }}
 local_infile                                   = {{ mariadb_server__cnf_local_infile__combined_var }}
 lock_wait_timeout                              = {{ mariadb_server__cnf_lock_wait_timeout__combined_var }}
 {% if mariadb_server__cnf_log_bin__combined_var | length and mariadb_server__cnf_log_bin__combined_var | lower != 'off' %}
@@ -93,6 +95,7 @@ skip_name_resolve                              = {{ mariadb_server__cnf_skip_nam
 slow_query_log                                 = {{ mariadb_server__cnf_slow_query_log__combined_var }}
 slow_query_log_file                            = {{ mariadb_server__cnf_slow_query_log_file__combined_var }}
 socket                                         = {{ mariadb_server__cnf_socket__combined_var }}
+sort_buffer_size                               = {{ mariadb_server__cnf_sort_buffer_size__combined_var }}
 sql_mode                                       = {{ mariadb_server__cnf_sql_mode__combined_var }}
 ssl_ca                                         = {{ mariadb_server__cnf_ssl_ca__combined_var }}
 ssl_cert                                       = {{ mariadb_server__cnf_ssl_cert__combined_var }}

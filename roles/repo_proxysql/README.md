@@ -3,6 +3,9 @@
 This role deploys the [ProxySQL Package Repository](https://proxysql.com/documentation/installing-proxysql/).
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `repo_proxysql`
@@ -29,7 +32,7 @@ repo_proxysql__version__host_var: '2.7'  # or '2.6', '2.5', '2.4', '2.3', '2.2'
 
 `repo_proxysql__basic_auth_login`
 
-* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
 * Type: Dictionary.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
 

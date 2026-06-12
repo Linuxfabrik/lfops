@@ -5,12 +5,22 @@ This role installs Grav (a simple file-based flat-file CMS platform) using PHP c
 It is possible to configure whether the Grav Admin Panel should be installed (it is installed by default). By default, you can access the admin by pointing your browser to http://grav.example.com/admin. You can simply log in with the username and password set in the role variables.
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* Install a web server (for example Apache httpd), and configure a virtual host for Grav. This can be done using the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role.
-* Install PHP 7.3.6+ (**PHP 8.1 recommended** (20220930)). This can be done using the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role.
 
-If you use the ["Grav" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/grav.yml), this is automatically done for you.
+## Known Limitations
+
+There might be more to implement:
+
+* https://learn.getgrav.org/17/security/configuration
+
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* A web server (for example Apache httpd) with a virtual host configured for Grav must be available (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
+* PHP 7.3.6+ (**PHP 8.1 recommended** (20220930)) must be installed (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 
 
 ## Tags
@@ -51,7 +61,7 @@ If you use the ["Grav" Playbook](https://github.com/Linuxfabrik/lfops/blob/main/
 * `systemctl enable/disable grav-update.timer --now`.
 * Triggers: none.
 
-`grav:user`
+`grav:users`
 
 * Install the Administration Panel plugin for Grav.
 * Create Grav User Accounts.
@@ -120,13 +130,6 @@ grav__users:
 * Enables/disables Systemd-Timer for updating Grav Plugins and Themes.
 * Type: Bool.
 * Default: `true`
-
-
-## Known Limitations
-
-There might be more to implement:
-
-* https://learn.getgrav.org/17/security/configuration
 
 
 ## License

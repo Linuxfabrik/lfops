@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 """Shared client for the UptimeRobot API used by the linuxfabrik.lfops.uptimerobot_*
 modules.
@@ -137,21 +139,21 @@ def resolve_api_key(module, api_key, api_key_file):
             with open(path) as fh:
                 value = fh.read().strip()
                 if value:
-                    module.log('uptimerobot: api_key resolved from file {0}'.format(path))
+                    module.log(f'uptimerobot: api_key resolved from file {path}')
                     return value
         except OSError:
             pass
 
     env = os.environ.get(ENV_API_KEY, '').strip()
     if env:
-        module.log('uptimerobot: api_key resolved from env {0}'.format(ENV_API_KEY))
+        module.log(f'uptimerobot: api_key resolved from env {ENV_API_KEY}')
         return env
 
     module.fail_json(msg=(
         'No UptimeRobot API key found. Provide one via the `api_key` parameter, '
-        'an `api_key_file` (default: {default}), or the {env} environment '
-        'variable.'
-    ).format(default=DEFAULT_API_KEY_FILE, env=ENV_API_KEY))
+        f'an `api_key_file` (default: {DEFAULT_API_KEY_FILE}), or the {ENV_API_KEY} '
+        'environment variable.'
+    ))
 
 
 # --- Wire format helpers -----------------------------------------------------
@@ -166,11 +168,9 @@ def alert_contacts_wire(items):
     """
     parts = []
     for item in items:
-        parts.append('{id}_{t}_{r}'.format(
-            id=item['id'],
-            t=item.get('threshold', 0),
-            r=item.get('recurrence', 0),
-        ))
+        parts.append(
+            f"{item['id']}_{item.get('threshold', 0)}_{item.get('recurrence', 0)}"
+        )
     return '-'.join(parts)
 
 
@@ -202,17 +202,15 @@ def _safe_keys(params):
     without leaking secrets to syslog.
     """
     return sorted(
-        '{0}=<redacted>'.format(k) if k in _SENSITIVE_KEYS else k
+        f'{k}=<redacted>' if k in _SENSITIVE_KEYS else k
         for k in params
     )
 
 
 def _cache_key(endpoint, api_key, params):
     """Stable hash of endpoint + api_key + params; truncated for filename use."""
-    blob = '{e}|{k}|{p}'.format(
-        e=endpoint, k=api_key,
-        p=json.dumps(params or {}, sort_keys=True, default=str),
-    )
+    serialized = json.dumps(params or {}, sort_keys=True, default=str)
+    blob = f'{endpoint}|{api_key}|{serialized}'
     return hashlib.sha256(blob.encode('utf-8')).hexdigest()[:16]
 
 
@@ -221,9 +219,10 @@ def _cache_path(endpoint, api_key, params):
         os.makedirs(CACHE_DIR, exist_ok=True)
     except OSError:
         return None
-    return os.path.join(CACHE_DIR, '{e}-{h}.json'.format(
-        e=endpoint, h=_cache_key(endpoint, api_key, params),
-    ))
+    return os.path.join(
+        CACHE_DIR,
+        f'{endpoint}-{_cache_key(endpoint, api_key, params)}.json',
+    )
 
 
 def _cache_read(endpoint, api_key, params):
@@ -286,11 +285,8 @@ def _request(module, api_key, endpoint, params, result_key):
     if endpoint in _CACHEABLE_GETS:
         cached = _cache_read(endpoint, api_key, params)
         if cached is not None:
-            module.log('uptimerobot: cache HIT {endpoint} ({n} items, ttl={ttl}s)'.format(
-                endpoint=endpoint,
-                n=len(cached) if isinstance(cached, list) else 1,
-                ttl=CACHE_TTL_SECONDS,
-            ))
+            n = len(cached) if isinstance(cached, list) else 1
+            module.log(f'uptimerobot: cache HIT {endpoint} ({n} items, ttl={CACHE_TTL_SECONDS}s)')
             return True, cached
 
     success, result = _request_uncached(module, api_key, endpoint, params, result_key)
@@ -310,13 +306,10 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
     body['api_key'] = api_key
     body['format'] = 'json'
 
-    module.log('uptimerobot: POST {endpoint} keys={keys}'.format(
-        endpoint=endpoint, keys=_safe_keys(params),
-    ))
+    module.log(f'uptimerobot: POST {endpoint} keys={_safe_keys(params)}')
 
     aggregated = []
     offset = 0
-    is_paginated_field = None
     pages = 0
 
     while True:
@@ -341,9 +334,7 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
             retry_after = int(info.get('retry-after') or DEFAULT_RATE_LIMIT_RETRY_SECONDS)
             sleep_for = min(retry_after, 60)
             module.warn(
-                'uptimerobot: rate limited on {endpoint} (HTTP 429); sleeping {sec}s and retrying once'.format(
-                    endpoint=endpoint, sec=sleep_for,
-                ),
+                f'uptimerobot: rate limited on {endpoint} (HTTP 429); sleeping {sleep_for}s and retrying once',
             )
             time.sleep(sleep_for)
             resp, info = fetch_url(
@@ -357,46 +348,31 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
             status = info.get('status', -1)
 
         if status < 200 or status >= 300:
-            module.log('uptimerobot: POST {endpoint} -> HTTP {status}'.format(
-                endpoint=endpoint, status=status,
-            ))
-            return False, 'HTTP {status} from {url}: {msg}'.format(
-                status=status,
-                url=url,
-                msg=info.get('msg') or info.get('body') or '',
-            )
+            module.log(f'uptimerobot: POST {endpoint} -> HTTP {status}')
+            msg = info.get('msg') or info.get('body') or ''
+            return False, f'HTTP {status} from {url}: {msg}'
 
         try:
             payload = json.loads(resp.read().decode('utf-8'))
         except (ValueError, AttributeError) as exc:
-            return False, 'Could not parse JSON from {url}: {exc}'.format(url=url, exc=exc)
+            return False, f'Could not parse JSON from {url}: {exc}'
 
         if payload.get('stat') != 'ok':
             err = payload.get('error') or {}
-            module.log('uptimerobot: POST {endpoint} stat=fail type={type}'.format(
-                endpoint=endpoint, type=err.get('type', 'unknown'),
-            ))
-            return False, '{type}: {message}'.format(
-                type=err.get('type', 'unknown'),
-                message=err.get('message', payload),
-            )
+            module.log(f"uptimerobot: POST {endpoint} stat=fail type={err.get('type', 'unknown')}")
+            return False, f"{err.get('type', 'unknown')}: {err.get('message', payload)}"
 
         if payload.get(result_key) is None:
             # Some endpoints return only `stat: 'ok'` (e.g. delete, edit when no
             # detail is included). Fall back to the message field if present.
-            module.log('uptimerobot: POST {endpoint} stat=ok (no {key} in payload)'.format(
-                endpoint=endpoint, key=result_key,
-            ))
+            module.log(f'uptimerobot: POST {endpoint} stat=ok (no {result_key} in payload)')
             return True, payload.get('message', payload)
 
         item = payload[result_key]
         if isinstance(item, list):
             aggregated += item
-            is_paginated_field = True
         else:
-            module.log('uptimerobot: POST {endpoint} stat=ok pages={pages}'.format(
-                endpoint=endpoint, pages=pages,
-            ))
+            module.log(f'uptimerobot: POST {endpoint} stat=ok pages={pages}')
             return True, item
 
         pagination = payload.get('pagination') or {}
@@ -407,10 +383,8 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
             break
         offset += PAGE_SIZE
 
-    module.log('uptimerobot: POST {endpoint} stat=ok pages={pages} items={n}'.format(
-        endpoint=endpoint, pages=pages, n=len(aggregated),
-    ))
-    return True, aggregated if is_paginated_field else aggregated
+    module.log(f'uptimerobot: POST {endpoint} stat=ok pages={pages} items={len(aggregated)}')
+    return True, aggregated
 
 
 def _filter_keys(params, allowed):
@@ -481,6 +455,9 @@ def get_monitors(module, api_key, search=None):
     success, monitors = _request(module, api_key, 'getMonitors', params, 'monitors')
     if not success:
         return success, monitors
+    if not isinstance(monitors, list):
+        # an endpoint that returned only `stat: ok` yields the message fallback
+        return True, monitors
     for item in monitors:
         _translate_monitor_response(item)
     return True, monitors
@@ -552,6 +529,8 @@ def get_mwindows(module, api_key):
     success, mwindows = _request(module, api_key, 'getMWindows', {}, 'mwindows')
     if not success:
         return success, mwindows
+    if not isinstance(mwindows, list):
+        return True, mwindows
     for item in mwindows:
         _translate_mwindow_response(item)
     return True, mwindows
@@ -616,6 +595,8 @@ def get_psps(module, api_key):
     success, psps = _request(module, api_key, 'getPSPs', {}, 'psps')
     if not success:
         return success, psps
+    if not isinstance(psps, list):
+        return True, psps
     for item in psps:
         _translate_psp_response(item)
     return True, psps
@@ -676,6 +657,8 @@ def get_alert_contacts(module, api_key):
     success, contacts = _request(module, api_key, 'getAlertContacts', {}, 'alert_contacts')
     if not success:
         return success, contacts
+    if not isinstance(contacts, list):
+        return True, contacts
     for item in contacts:
         _translate_alert_contact_response(item)
     return True, contacts
@@ -728,9 +711,7 @@ def resolve_friendly_names(items, names, kind):
     for name in names:
         if name not in by_name:
             raise ValueError(
-                '{kind} with friendly_name {name!r} not found on UptimeRobot'.format(
-                    kind=kind, name=name,
-                ),
+                f'{kind} with friendly_name {name!r} not found on UptimeRobot',
             )
         out.append(int(by_name[name]['id']))
     return out

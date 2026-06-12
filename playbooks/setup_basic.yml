@@ -9,6 +9,12 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -40,11 +46,27 @@
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_basic__skip_policycoreutils | d(false)'
 
     - role: 'linuxfabrik.lfops.selinux'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_selinux | d(false)'
+
+    - role: 'linuxfabrik.lfops.kernel_modules'
+      when:
+        - 'not setup_basic__skip_kernel_modules | d(false)'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{
+          (not setup_basic__skip_core_dumps | d(false)) | ternary(core_dumps__kernel_settings__sysctl__dependent_var, []) | d([])
+        }}'
+      when:
+        - 'not setup_basic__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.core_dumps'
+      when:
+        - 'not setup_basic__skip_core_dumps | d(false)'
 
     # === Sensible defaults ===
     - role: 'linuxfabrik.lfops.systemd_journald'
@@ -104,6 +126,10 @@
     - role: 'linuxfabrik.lfops.tools'
       when:
         - 'not setup_basic__skip_tools | d(false)'
+
+    - role: 'linuxfabrik.lfops.tmux'
+      when:
+        - 'not setup_basic__skip_tmux | d(false)'
 
     - role: 'linuxfabrik.lfops.at'
       when:

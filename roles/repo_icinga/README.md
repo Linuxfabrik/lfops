@@ -3,7 +3,10 @@
 This role deploys the [Icinga Package Repository](https://packages.icinga.com/).
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
+
+
+## Requirements
 
 * For RHEL (and compatible) hosts an [Icinga Repo Subscription](https://www.linuxfabrik.ch/en/products/icinga-subscriptions) is required.
 

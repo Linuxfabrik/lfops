@@ -1,8 +1,9 @@
 - block:
 
-  - name: 'Install influxdb'
+  - name: 'Install curl influxdb'
     ansible.builtin.package:
       name:
+        - 'curl' # required by the `/usr/lib/influxdb/scripts/influxd-systemd-start.sh` script
         - 'influxdb'
       state: 'present'
 
@@ -180,7 +181,7 @@
 
   tags:
     - 'influxdb'
-    - 'influxdb:database'
+    - 'influxdb:databases'
 
 
 - name: 'Create, update or delete influxdb users'
@@ -199,4 +200,4 @@
     ansible_python_interpreter: '/opt/python-venv/influxdb/bin/python3'
   tags:
     - 'influxdb'
-    - 'influxdb:user'
+    - 'influxdb:users'

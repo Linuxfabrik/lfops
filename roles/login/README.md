@@ -1,13 +1,24 @@
 # Ansible Role linuxfabrik.lfops.login
 
 This role creates users, adds them to additional groups, and sets their SSH authorized_keys to allow them to login to the system.
-Aditionally, a group can be added to the sudoers for password-less `sudo` access.
+Additionally, a group can be added to the sudoers for password-less `sudo` access. It also sets the system-wide password-aging policy and default umask in `/etc/login.defs`.
 
 IMPORTANT:
 
 * The default behavior of this role is that it distributes SSH keys that it knows from the host/group variables and deletes any other keys that already exist on the target system in `.ssh/authorized_keys`. This might break things. Set `remove_other_sshd_authorized_keys` accordingly.
 
-## Mandatory Requirements
+
+*Available since LFOps `2.0.0`.*
+
+
+## How the Role Behaves
+
+The role sets a few policy keys in `/etc/login.defs` (`PASS_MAX_DAYS`, `PASS_MIN_DAYS`, `PASS_WARN_AGE`, `UMASK`) in place, leaving the rest of the distribution-provided file untouched. These settings apply to newly created accounts and the next password change only; the role does not retroactively re-age existing accounts (it does not run `chage`). Adjust an existing account's aging manually with `chage` if needed.
+
+
+## Requirements
+
+Manual steps:
 
 * Install the `passlib` Python module on the Ansible Controller (`dnf install python3-passlib` on Fedora). If you use the [LFOps Execution Environment](https://github.com/Linuxfabrik/lfops/pkgs/container/lfops_ee), this is already done for you.
 
@@ -24,8 +35,37 @@ IMPORTANT:
 * Manages SSH authorized_keys.
 * Triggers: none.
 
+`login:login_defs`
+
+* Sets the password-aging policy and default umask in `/etc/login.defs`.
+* Triggers: none.
+
 
 ## Optional Role Variables
+
+`login__login_defs_pass_max_days`
+
+* Maximum number of days a password is valid (`PASS_MAX_DAYS`). Use a value below `99999` to satisfy the policy.
+* Type: Number.
+* Default: `365`
+
+`login__login_defs_pass_min_days`
+
+* Minimum number of days between password changes (`PASS_MIN_DAYS`).
+* Type: Number.
+* Default: `1`
+
+`login__login_defs_pass_warn_age`
+
+* Number of days a user is warned before the password expires (`PASS_WARN_AGE`).
+* Type: Number.
+* Default: `7`
+
+`login__login_defs_umask`
+
+* Default umask for user login sessions (`UMASK`).
+* Type: String.
+* Default: `'027'`
 
 `login__passwordless_sudo_group`
 

@@ -3,10 +3,15 @@
 This role enables relaying all mail that is sent to the root user (or other service accounts on the system) to an actual mail account. For example, any output of crontab is sent tho the configured address if this role is applied to the system.
 
 
-## Mandatory Requirements
+*Available since LFOps `2.0.0`.*
 
-* Install and configure postfix. This can be done using the [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix) role.
-* Install mailx. This can be done using the [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx) role.
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* postfix must be installed and configured (role: [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix)).
+* mailx must be installed (role: [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx)).
 
 
 ## Tags

@@ -16,7 +16,8 @@
       version: '{{ __shared__monitoring_plugins_version }}'
       depth: 1
     delegate_to: 'localhost'
-    run_once: true
+    become: false
+    throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
 
   rescue:
@@ -26,6 +27,8 @@
         path: '/tmp/ansible.monitoring-plugins-repo'
         state: 'absent'
       delegate_to: 'localhost'
+      become: false
+      throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
       changed_when: false # no change on the remote host
 
     - name: 'Clone the monitoring plugins git repo to localhost (version: {{ __shared__monitoring_plugins_version }})'
@@ -35,5 +38,6 @@
         version: '{{ __shared__monitoring_plugins_version }}'
         depth: 1
       delegate_to: 'localhost'
-      run_once: true
+      become: false
+      throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
       check_mode: false # run task even if `--check` is specified

@@ -9,6 +9,12 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -16,18 +22,18 @@
       repo_baseos__crb_repo_enabled__dependent_var: '{{
           repo_epel__repo_baseos__crb_repo_enabled__dependent_var
         }}'
-      # Since the CRB repository is included in Rocky9 default repo file now, this will be done on Rocky9 Systems only. Formerly it came from epel repository.
+      # CRB is shipped in the Rocky default repo file (Rocky 9+, formerly from EPEL), so enable it there only.
       when:
-        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] == "9"'
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] | int >= 9'
         - 'not setup_keycloak__skip_repo_baseos | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]'
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
 
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] in ["7", "8", "9"]' # currently doesn't work for fedora
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
         - 'not keycloak__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
@@ -36,7 +42,7 @@
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
-          mariadb_server__python__modules__dependent_var[ansible_facts["os_family"]]
+          mariadb_server__python__modules__dependent_var
         }}'
       when:
         - 'not mariadb_server__skip_python | d(false)'

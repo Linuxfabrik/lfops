@@ -3,6 +3,9 @@
 This role installs and configures [ProxySQL](https://proxysql.com/). Note that running this role always reloads the config from `/etc/proxysql.cnf` into ProxySQL's internal database.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `proxysql`
@@ -163,9 +166,8 @@ proxysql__monitor_user:
 
     * `port`:
 
-        * Optional. Port.
+        * Mandatory. Port. Part of the entry's unique identity, so it must be set explicitly (commonly `3306`, or `0` for a unix socket).
         * Type: Number.
-        * Default: `3306`
 
     * `use_ssl`:
 
@@ -206,9 +208,8 @@ proxysql__monitor_user:
 
     * `password`:
 
-        * Optional. Port.
-        * Type: Number.
-        * Default: `3306`
+        * Mandatory. Password.
+        * Type: String.
 
     * `use_ssl`:
 
@@ -236,16 +237,15 @@ proxysql__monitor_user:
 * Default: `[]`
 * Subkeys:
 
-    * `hostnaem`:
+    * `hostname`:
 
         * Mandatory. Hostname / Address.
         * Type: String.
 
     * `port`:
 
-        * Optional. Port.
+        * Mandatory. Port. Part of the entry's unique identity, so it must be set explicitly (commonly `6032`).
         * Type: Number.
-        * Default: `6032`
 
     * `state`:
 

@@ -156,7 +156,7 @@
     tags:
       - 'opensearch'
       - 'opensearch:configure'
-      - 'opensearch:user'
+      - 'opensearch:users'
 
   notify: 'opensearch: /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh ...'
   when:
@@ -183,7 +183,7 @@
   tags:
     - 'opensearch'
     - 'opensearch:configure'
-    - 'opensearch:user'
+    - 'opensearch:users'
 
 
 # this is completely unrelated to the rest of the tasks, just a convenience feature to help the admin generate TLS certificates.
@@ -239,6 +239,7 @@
     changed_when: true
 
   delegate_to: 'localhost'
+  become: false
   tags:
     - 'never'
     - 'opensearch:generate_certs'

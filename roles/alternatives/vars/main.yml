@@ -1,0 +1,3 @@
+# Base default. The alternatives tooling ships with dpkg on Debian/Ubuntu, so
+# nothing needs to be installed there. Red Hat-family overrides this per version.
+__alternatives__packages: []

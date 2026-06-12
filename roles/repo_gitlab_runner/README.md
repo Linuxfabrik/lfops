@@ -3,6 +3,9 @@
 This role deploys the package repository for [GitLab Runner](https://docs.gitlab.com/runner/) (the agent that runs CI/CD jobs scheduled by a GitLab server).
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `repo_gitlab_runner`
@@ -15,7 +18,7 @@ This role deploys the package repository for [GitLab Runner](https://docs.gitlab
 
 `repo_gitlab_runner__basic_auth_login`
 
-* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
 * Type: String.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
 

@@ -3,6 +3,9 @@
 This role installs Python 2 or Python 3 on the system, optionally with additional modules.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `python`

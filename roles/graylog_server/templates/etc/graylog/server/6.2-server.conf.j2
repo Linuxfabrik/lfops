@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026032701
+# 2026060201
 # 6.2
 ############################
 # GRAYLOG CONFIGURATION FILE
@@ -47,7 +47,7 @@
 
 # If you are running more than one instances of Graylog server you have to select one of these
 # instances as leader. The leader will perform some periodical tasks that non-leaders won't perform.
-is_leader = {{ graylog_server__is_leader | lower }}
+is_leader = {{ graylog_server__is_leader | string | lower }}
 
 # The auto-generated node ID will be stored in this file and read after restarts. It is a good idea
 # to use an absolute file path here if you are starting Graylog server from init scripts or similar.
@@ -140,6 +140,9 @@ http_publish_uri = {{ graylog_server__http_publish_uri }}
 #
 # Default: $http_publish_uri
 #http_external_uri =
+{% if graylog_server__http_external_uri | length %}
+http_external_uri = {{ graylog_server__http_external_uri }}
+{% endif %}
 
 #### Enable CORS headers for HTTP interface
 #
@@ -149,6 +152,7 @@ http_publish_uri = {{ graylog_server__http_publish_uri }}
 #
 # Default: false
 #http_enable_cors = false
+http_enable_cors = {{ graylog_server__http_enable_cors | string | lower }}
 
 #### Enable GZIP support for HTTP interface
 #
@@ -236,12 +240,14 @@ elasticsearch_hosts = {{ graylog_server__elasticsearch_hosts | join(',') }}
 #
 # Default: 200
 #elasticsearch_max_total_connections = 200
+elasticsearch_max_total_connections = {{ graylog_server__elasticsearch_max_total_connections }}
 
 # Maximum number of total connections per Elasticsearch route (normally this means per
 # elasticsearch server).
 #
 # Default: 20
 #elasticsearch_max_total_connections_per_route = 20
+elasticsearch_max_total_connections_per_route = {{ graylog_server__elasticsearch_max_total_connections_per_route }}
 
 # Maximum number of times Graylog will retry failed requests to Elasticsearch.
 #
@@ -468,7 +474,7 @@ field_value_suggestion_mode = on
 # Elasticsearch, so increasing this value will also increase the memory requirements of the Graylog server.
 # Batch sizes can be specified in data units (e.g. bytes, kilobytes, megabytes) or as an absolute number of messages.
 # Example: output_batch_size = 10mb
-output_batch_size = 500
+output_batch_size = {{ graylog_server__output_batch_size }}
 
 # Flush interval (in seconds) for the Elasticsearch output. This is the maximum amount of time between two
 # batches of messages written to Elasticsearch. It is only effective at all if your minimum number of messages
@@ -487,6 +493,9 @@ output_fault_penalty_seconds = 30
 # Set this value explicitly to override the dynamically calculated value. Try raising the number if your buffers are
 # filling up.
 #processbuffer_processors = 5
+{% if graylog_server__processbuffer_processors is defined %}
+processbuffer_processors = {{ graylog_server__processbuffer_processors }}
+{% endif %}
 
 # Number of output buffer processors running in parallel.
 # By default, the value will be determined automatically based on the number of CPU cores available to the JVM, using
@@ -494,6 +503,9 @@ output_fault_penalty_seconds = 30
 # Set this value explicitly to override the dynamically calculated value. Try raising the number if your buffers are
 # filling up.
 #outputbuffer_processors = 3
+{% if graylog_server__outputbuffer_processors is defined %}
+outputbuffer_processors = {{ graylog_server__outputbuffer_processors }}
+{% endif %}
 
 # The size of the thread pool in the output buffer processor.
 # Default: 3
@@ -517,9 +529,9 @@ processor_wait_strategy = blocking
 # Size of internal ring buffers. Raise this if raising outputbuffer_processors does not help anymore.
 # For optimum performance your LogMessage objects in the ring buffer should fit in your CPU L3 cache.
 # Must be a power of 2. (512, 1024, 2048, ...)
-ring_size = 65536
+ring_size = {{ graylog_server__ring_size }}
 
-inputbuffer_ring_size = 65536
+inputbuffer_ring_size = {{ graylog_server__inputbuffer_ring_size }}
 inputbuffer_wait_strategy = blocking
 
 # Number of input buffer processors running in parallel.
@@ -545,7 +557,9 @@ message_journal_dir = {{ graylog_server__message_journal_dir }}
 # For a maximum of 12 hours or 5 GB whichever happens first.
 # During normal operation the journal will be smaller.
 #message_journal_max_age = 12h
+message_journal_max_age = {{ graylog_server__message_journal_max_age }}
 #message_journal_max_size = 5gb
+message_journal_max_size = {{ graylog_server__message_journal_max_size }}
 
 #message_journal_flush_age = 1m
 #message_journal_flush_interval = 1000000

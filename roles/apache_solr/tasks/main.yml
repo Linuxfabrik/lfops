@@ -11,6 +11,7 @@
       dest: '/tmp/solr-{{ apache_solr__version }}.tgz'
       checksum: '{{ apache_solr__checksum }}'
     delegate_to: 'localhost'
+    become: false
     check_mode: false # run task even if `--check` is specified
     changed_when: false # just gathering info, no actual change
     when:
@@ -22,6 +23,7 @@
       dest: '/tmp/solr-{{ apache_solr__version }}.tgz'
       checksum: '{{ apache_solr__checksum }}'
     delegate_to: 'localhost'
+    become: false
     check_mode: false # run task even if `--check` is specified
     changed_when: false # just gathering info, no actual change
     when:
@@ -181,6 +183,8 @@
       echo "$(echo -n "$SALT$PW" | sha256sum --binary | xxd -r -p | sha256sum --binary | xxd -r -p | base64 --wrap=1024) $(echo -n "$SALT" | base64 --wrap=1024)"
       echo '{{ item["role"] }}'
       echo '{{ item["state"] }}'
+    args:
+      executable: '/bin/bash'
     loop: '{{ apache_solr__users__combined_var }}'
     register: 'apache_solr__pwhashes'
     when:
@@ -197,4 +201,4 @@
 
   tags:
     - 'apache_solr'
-    - 'apache_solr:user'
+    - 'apache_solr:users'

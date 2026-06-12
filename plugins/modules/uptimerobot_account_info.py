@@ -1,8 +1,10 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2026, Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
-# The Unlicense (see LICENSE or https://unlicense.org/)
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
 
 from __future__ import absolute_import, division, print_function
 
@@ -12,26 +14,28 @@ DOCUMENTATION = r'''
 ---
 module: uptimerobot_account_info
 short_description: Read UptimeRobot account details
-version_added: '6.1.0'
+version_added: '6.0.2'
 description:
-    - Returns account-level facts (email, monitor limit, monitor counters, ...) from UptimeRobot.
-    - Read-only. Reports C(changed=false).
+    - Calls C(getAccountDetails) on the UptimeRobot v2 API and returns the resulting account record (email, monitor limit, current up/down/paused counters, subscription expiry date, ...).
+    - Read-only; the module always reports C(changed=false) and is safe to run in check mode.
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:
     api_key:
-        description: UptimeRobot API key. See C(uptimerobot_monitor) for the resolution order.
+        description:
+            - UptimeRobot API key. When unset, the module reads I(api_key_file) (default C(~/.uptimerobot)) and finally falls back to the C(UPTIMEROBOT_API_KEY) environment variable.
         type: str
         no_log: true
     api_key_file:
-        description: Path to a file containing the API key. Default C(~/.uptimerobot).
+        description: Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
+        default: '~/.uptimerobot'
 '''
 
 
 EXAMPLES = r'''
-# 1) Read account quota and current usage (equivalent to `utr get account`).
-#    The API key comes from ~/.uptimerobot when no parameter is given.
+# 1) Read account quota and current usage. The API key comes from
+#    ~/.uptimerobot when no parameter is given.
 - name: 'Capture UptimeRobot account info'
   linuxfabrik.lfops.uptimerobot_account_info:
   register: 'ur_account'
@@ -59,7 +63,7 @@ EXAMPLES = r'''
 
 RETURN = r'''
 account:
-    description: Account details as returned by UptimeRobot.
+    description: Account details as returned by C(getAccountDetails).
     type: dict
     returned: always
     sample:
@@ -69,6 +73,13 @@ account:
         up_monitors: 10
         down_monitors: 0
         paused_monitors: 0
+debug:
+    description: Diagnostic information about the API call. Stable enough to assert against, not stable enough to be load-bearing.
+    type: dict
+    returned: always
+    sample:
+        operation: 'read'
+        fields: ['down_monitors', 'email', 'monitor_interval', 'monitor_limit', 'paused_monitors', 'up_monitors']
 '''
 
 
@@ -79,7 +90,7 @@ from ansible_collections.linuxfabrik.lfops.plugins.module_utils import uptimerob
 def main():
     argument_spec = dict(
         api_key=dict(type='str', no_log=True),
-        api_key_file=dict(type='str'),
+        api_key_file=dict(type='str', default='~/.uptimerobot'),
     )
 
     module = AnsibleModule(
@@ -91,11 +102,12 @@ def main():
     module.log('uptimerobot_account_info: fetching account details')
     success, account = ur.get_account_details(module, api_key)
     if not success:
-        module.fail_json(msg='Could not fetch UptimeRobot account details: {0}'.format(account))
-    module.log('uptimerobot_account_info: monitor_limit={0} up={1} down={2} paused={3}'.format(
-        account.get('monitor_limit'), account.get('up_monitors'),
-        account.get('down_monitors'), account.get('paused_monitors'),
-    ))
+        module.fail_json(msg=f'Could not fetch UptimeRobot account details: {account}')
+    module.log(
+        f"uptimerobot_account_info: monitor_limit={account.get('monitor_limit')} "
+        f"up={account.get('up_monitors')} down={account.get('down_monitors')} "
+        f"paused={account.get('paused_monitors')}"
+    )
     module.exit_json(changed=False, account=account, debug={
         'operation': 'read',
         'fields': sorted(account.keys()) if isinstance(account, dict) else None,

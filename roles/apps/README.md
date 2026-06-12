@@ -5,6 +5,9 @@ This role manages a list of applications using the OS's package manager. Interna
 Items with `state: 'absent'` are removed first, then everything else is installed in a single `present` call.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `apps`

@@ -1,5 +1,25 @@
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  # Debian/Ubuntu ship update-alternatives with dpkg, so __alternatives__packages
+  # is empty there and this task is skipped.
+  - name: 'Install the alternatives tooling'
+    ansible.builtin.package:
+      name: '{{ __alternatives__packages }}'
+      state: 'present'
+    when:
+      - '__alternatives__packages | length > 0'
+
   - name: 'Debug'
     ansible.builtin.debug:
       msg:
@@ -9,11 +29,13 @@
   # alternatives --install <link> <name> <path> <priority>
   - name: 'Manages alternative programs for common commands'
     community.general.alternatives:
-      link: '{{ item["link"] }}'
       name: '{{ item["name"] }}'
-      path: '{{ item["path"] }}'
-      priority: '{{ item["priority"] | d(50) }}'
+      link: '{{ item["link"] | default(omit) }}'
+      path: '{{ item["path"] | default(omit) }}'
+      priority: '{{ item["priority"] | default(omit) }}'
       state: '{{ item["state"] | d("selected") }}'
+      subcommands: '{{ item["subcommands"] | default(omit) }}'
+      family: '{{ item["family"] | default(omit) }}'
     loop: '{{ alternatives__alternatives }}'
 
   tags:

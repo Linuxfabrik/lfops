@@ -154,20 +154,12 @@ argument_specs:
       mastodon__postgresql_login:
         type: 'dict'
         required: true
-        description: 'Login credentials for the PostgreSQL database.'
-        options:
-
-          password:
-            type: 'str'
-            required: true
-
-          state:
-            type: 'str'
-            required: true
-
-          username:
-            type: 'str'
-            required: true
+        description: >-
+          Login credentials for the PostgreSQL database. Must contain
+          the keys `username`, `password` and `state` (`present` /
+          `absent`). Typically fed by
+          `linuxfabrik.lfops.bitwarden_item`, which returns the full
+          Bitwarden item; extra keys are ignored.
 
       mastodon__postgresql_port:
         type: 'int'

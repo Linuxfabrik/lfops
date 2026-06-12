@@ -5,6 +5,18 @@ argument_specs:
   main:
     options:
 
+      example__backup_target:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Where nightly dumps are written. Empty disables backups.'
+
+      example__conf_log_level__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The log level. Dependent-role injection.'
+
       example__conf_log_level__group_var:
         type: 'str'
         required: false
@@ -16,6 +28,12 @@ argument_specs:
         required: false
         default: ''
         description: 'The log level. Host-level override.'
+
+      example__conf_max_connections__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of concurrent connections. Dependent-role injection.'
 
       example__conf_max_connections__group_var:
         type: 'raw'
@@ -29,6 +47,12 @@ argument_specs:
         default: ''
         description: 'Maximum number of concurrent connections. Host-level override.'
 
+      example__conf_tls_protocols:
+        type: 'str'
+        required: false
+        default: 'TLSv1.2 TLSv1.3'
+        description: 'Allowed TLS protocol versions.'
+
       example__conf_worker_threads:
         type: 'int'
         required: false
@@ -38,6 +62,13 @@ argument_specs:
         type: 'str'
         required: false
         description: 'The version of the Linuxfabrik Python Libraries to install.'
+
+      example__listeners__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Network listeners. Dependent-role injection.'
 
       example__listeners__group_var:
         type: 'list'
@@ -62,6 +93,13 @@ argument_specs:
         type: 'int'
         required: false
         description: 'Minute of the hour at which the maintenance cron job runs.'
+
+      example__plugins__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Optional plugins to install as OS packages. Dependent-role injection.'
 
       example__plugins__group_var:
         type: 'list'
@@ -93,6 +131,13 @@ argument_specs:
           - 'started'
           - 'stopped'
         description: 'Desired state of the example service.'
+
+      example__users__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Application users to manage. Dependent-role injection.'
 
       example__users__group_var:
         type: 'list'

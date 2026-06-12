@@ -3,6 +3,9 @@
 This role installs NFS and CIFS client utilities when necessary and configures mount points in `/etc/fstab`.
 
 
+*Available since LFOps `3.0.0`.*
+
+
 ## Tags
 
 `mount`

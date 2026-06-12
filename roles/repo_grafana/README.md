@@ -3,6 +3,9 @@
 This role deploys the package repository for [Grafana OSS](https://grafana.com/oss/grafana/) (an open-source dashboard and metrics-visualization platform).
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_grafana`
@@ -15,7 +18,7 @@ This role deploys the package repository for [Grafana OSS](https://grafana.com/o
 
 `repo_grafana__basic_auth_login`
 
-* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
 * Type: String.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
 

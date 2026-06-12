@@ -5,6 +5,9 @@ This role deploys the [Elasticsearch Repository](https://www.elastic.co/guide/en
 **Warning**: Regarding **Graylog** we caution you not to install or upgrade Elasticsearch to 7.11 and later! It is not supported. If you do so, it will break your instance! Use Elasticsearch 6.x or 7.10.2-1 max.
 
 
+*Available since LFOps `2.0.0`.*
+
+
 ## Tags
 
 `repo_elasticsearch`
@@ -31,7 +34,7 @@ repo_elasticsearch__version: '8.x'
 
 `repo_elasticsearch__basic_auth_login`
 
-* Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
+* Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
 * Type: String.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
 
