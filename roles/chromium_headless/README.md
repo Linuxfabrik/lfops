@@ -5,7 +5,7 @@ This role installs the headless [Chromium](https://www.chromium.org/) shell toge
 The setup is used as a headless browser backend for tools such as the [Icinga Web 2 PDF Export Module](https://github.com/Icinga/icingaweb2-module-pdfexport).
 
 
-*Available in the next LFOps release.*
+*Available since LFOps `7.0.0`.*
 
 
 ## How the Role Behaves

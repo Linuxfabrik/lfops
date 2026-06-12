@@ -41,7 +41,7 @@ Manual steps:
 * Deploys `/etc/icingaweb2/resources.ini`.
 * Triggers: none.
 
-`icingaweb2:user`
+`icingaweb2:users`
 
 * Creates user accounts and deploys the role config.
 * Triggers: none.

@@ -222,11 +222,38 @@ class Test(unittest.TestCase):
           value: 'value 1'
         '''))
 
-        with self.assertRaises(AnsibleFilterError):
+        with self.assertRaisesRegex(AnsibleFilterError, "unique key 'name'"):
             combine_lod(input1, input2)
 
+    def test_combine_lod_single_key_falsy_value_allowed(self):
+        """
+        A single unique_key must be present but may be falsy: presence is
+        checked, not truthiness, consistent with composite keys. An id of 0 is a
+        real identity and must be kept and folded, not rejected.
+        """
+
+        input1 = yaml.safe_load(textwrap.dedent('''
+        - id: 0
+          value: 'first'
+        - id: 0
+          value: 'second'
+        '''))
+
+        expected = yaml.safe_load(textwrap.dedent('''
+        - id: 0
+          value: 'second'
+        '''))
+
+        result = combine_lod(input1, unique_key="id")
+        self.assertEqual(result, expected)
+
     def test_combine_lod_composite_key_missing_component(self):
-        """a composite key with a missing component must raise, not silently group under None"""
+        """
+        Each component of a composite key is part of the item's identity and
+        must be set explicitly. An item missing one component must raise,
+        instead of silently grouping under a `(value, None)` key and failing to
+        merge with an item that states the same component's default explicitly.
+        """
 
         input1 = yaml.safe_load(textwrap.dedent('''
         - server_name: 'myvar'
@@ -236,8 +263,14 @@ class Test(unittest.TestCase):
           value: 'no port here'
         '''))
 
-        with self.assertRaises(AnsibleFilterError):
+        # the error must name the missing key and show the present identifier
+        with self.assertRaisesRegex(AnsibleFilterError, "server_port"):
             combine_lod(input1, unique_key=["server_name", "server_port"])
+        try:
+            combine_lod(input1, unique_key=["server_name", "server_port"])
+        except AnsibleFilterError as exc:
+            self.assertIn('server_port', str(exc))
+            self.assertIn('myvar', str(exc))  # the present server_name, to locate the item
 
     def test_combine_lod_composite_key_all_components_missing(self):
         """a composite key where every component is missing must raise as well"""
@@ -248,6 +281,33 @@ class Test(unittest.TestCase):
 
         with self.assertRaises(AnsibleFilterError):
             combine_lod(input1, unique_key=["server_name", "server_port"])
+
+    def test_combine_lod_composite_key_falsy_component_allowed(self):
+        """
+        A composite-key component must be present but may be falsy: presence is
+        checked, not truthiness. A port of 0 (proxysql treats it as a unix
+        socket) is a real identity and must be kept and folded, not rejected.
+        """
+
+        input1 = yaml.safe_load(textwrap.dedent('''
+        - address: '/var/lib/mysql/mysql.sock'
+          hostgroup: 1
+          port: 0
+        - address: '/var/lib/mysql/mysql.sock'
+          hostgroup: 1
+          port: 0
+          max_connections: 100
+        '''))
+
+        expected = yaml.safe_load(textwrap.dedent('''
+        - address: '/var/lib/mysql/mysql.sock'
+          hostgroup: 1
+          port: 0
+          max_connections: 100
+        '''))
+
+        result = combine_lod(input1, unique_key=["hostgroup", "address", "port"])
+        self.assertEqual(result, expected)
 
     def test_combine_lod_list_merge(self):
         """a key holding a list should be replaced wholesale, no append / prepend"""

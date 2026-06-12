@@ -61,7 +61,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * `systemctl enable/disable grav-update.timer --now`.
 * Triggers: none.
 
-`grav:user`
+`grav:users`
 
 * Install the Administration Panel plugin for Grav.
 * Create Grav User Accounts.

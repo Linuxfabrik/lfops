@@ -318,6 +318,7 @@ LFOps overrides the project-agnostic "Changelog" rule above (alphabetical sortin
 * Use the following modules in preference to their alternatives:
     * `ansible.builtin.command` or `ansible.windows.win_command` over `ansible.builtin.shell` over `ansible.builtin.raw`
     * `ansible.builtin.template` over `ansible.builtin.copy`, `ansible.builtin.lineinfile` or `ansible.builtin.blockinfile`. Templating the whole file leads to more consistent, deterministic, and expected results.
+* When you must use `ansible.builtin.shell`, pin the interpreter with `executable: '/bin/bash'` (in the task's `args:`, or as a sibling of `cmd:`). On Debian `/bin/sh` is `dash`, which rejects bashisms such as `set -o pipefail`, `[[ ... ]]` and `source` (Debian 12's dash errors on `set -o pipefail` outright); pinning bash keeps shell tasks working across the Red Hat family and Debian/Ubuntu. Use `/bin/bash`, not `/usr/bin/bash`, so it resolves with or without usrmerge.
 * Do not use `state: 'latest'` for the `ansible.builtin.package` module as this is not idempotent. Always use `state: 'present'`.
 * Always use `delegate_to: 'localhost'` instead of `local_action`.
 * Always set `become: false` on every task delegated to localhost. When a play sets `become: true` at the play level (not typical for lfops, but useful if others import our roles in their playbooks), it propagates to delegated tasks too and tries to escalate via sudo on the Ansible controller. On a controller without passwordless sudo this fails with `sudo: a password is required`, even though the delegated task only writes to `/tmp` or hits a remote API and does not need root locally. Example:
@@ -401,7 +402,7 @@ LFOps overrides the project-agnostic "Changelog" rule above (alphabetical sortin
 #### Tags
 
 * Naming scheme: `role_name` and `role_name:section`. For example `apache_httpd` and `apache_httpd:vhosts`.
-* The role should only do what one expects from the tag name. For example, the `mariadb:user` tag only manages MariaDB users.
+* The role should only do what one expects from the tag name. For example, the `mariadb:users` tag only manages MariaDB users.
 * The README of a role should provide a list of the available tags and what they do.
 * The tags should be set in the role itself. Do not set them in the playbook.
 * Blocks/tasks that install base packages do not require tags such as `apache:pkgs`, `apache:setup` or `apache:install`. There is no real world scenario where it makes sense to only run the installation via Ansible, some configuration is always required.
@@ -414,7 +415,7 @@ Controlled vocabulary of standard `role_name:section` tags (alphabetical):
 * `role_name:configure`: Renders and deploys the role's configuration files and applies settings. The most common section; everything that is neither install, state, nor one of the more specific sections below belongs here.
 * `role_name:containers`: Manages the role's containers and their systemd container units.
 * `role_name:cron`: Deploys the role's scheduled jobs (cron entries or systemd timers).
-* `role_name:database`: Creates, updates and deletes the databases managed by the role.
+* `role_name:databases`: Creates, updates and deletes the databases managed by the role.
 * `role_name:dump`: Sets up scheduled dumps / backups of the role's data.
 * `role_name:enroll`: Registers (enrolls) the node with a remote service or controller.
 * `role_name:firewalls`: Manages the cloud provider firewall / security-group rules (VM provisioning roles).
@@ -426,7 +427,7 @@ Controlled vocabulary of standard `role_name:section` tags (alphabetical):
 * `role_name:state`: Manages the runtime state of the role's services, timers and sockets (start / stop / enable / disable).
 * `role_name:update`: Updates the managed application to a newer version.
 * `role_name:upgrade`: Runs the post-update migration / upgrade steps after the package itself was updated.
-* `role_name:user`: Creates, updates and deletes the application or service user accounts managed by the role.
+* `role_name:users`: Creates, updates and deletes the application or service user accounts managed by the role.
 
 The Ansible built-in tags `always` and `never` are reserved for their built-in meaning: tag the platform-variable loading and `assert` validation tasks with `always` so the variables and checks are present even when the role runs with a specific `--tags` selection.
 

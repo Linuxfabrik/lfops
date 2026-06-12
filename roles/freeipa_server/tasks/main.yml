@@ -195,7 +195,7 @@
   tags:
     - 'freeipa_server'
     - 'freeipa_server:configure'
-    - 'freeipa_server:user'
+    - 'freeipa_server:users'
 
 
 # HBAC rule management

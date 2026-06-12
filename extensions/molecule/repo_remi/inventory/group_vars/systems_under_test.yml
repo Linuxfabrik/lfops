@@ -1,0 +1,6 @@
+# Enable a php and a redis module stream. This exercises all three reset/enable
+# blocks the role manages (php, the composer block gated by the php version, and
+# redis), which is exactly where the idempotency fix lives. verify.yml asserts
+# the running system actually ended up on these streams.
+repo_remi__enabled_php_version: '8.3'
+repo_remi__enabled_redis_version: '7.2'

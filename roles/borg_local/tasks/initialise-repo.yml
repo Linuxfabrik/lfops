@@ -3,4 +3,5 @@
     source /etc/borg/borg.conf
     borg init --encryption=repokey-blake2 '{{ borg_local__backup_dir }}/{{ repo }}'
   args:
+    executable: '/bin/bash'
     creates: '{{ borg_local__backup_dir }}/{{ repo }}/config'

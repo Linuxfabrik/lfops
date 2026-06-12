@@ -1,2 +1,0 @@
-- name: 'core_dumps: sysctl --system'
-  ansible.builtin.command: 'sysctl --system'
