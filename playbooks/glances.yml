@@ -31,6 +31,16 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
 
+    # On RHEL 10 and clones glances is not in EPEL 10, so install it into a Python venv. The
+    # dependent_var is empty on every other platform, so the role is skipped there.
+    - role: 'linuxfabrik.lfops.python_venv'
+      python_venv__venvs__dependent_var: '{{
+          glances__python_venv__venvs__dependent_var
+        }}'
+      when:
+        - 'glances__python_venv__venvs__dependent_var | length > 0'
+        - 'not glances__skip_python_venv | d(false)'
+
     - role: 'linuxfabrik.lfops.glances'
 
 

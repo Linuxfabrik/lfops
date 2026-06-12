@@ -1,5 +1,8 @@
 - block:
 
+  # On RHEL 10 and clones glances is installed into a Python venv by the python_venv role, which the
+  # playbook runs via the glances__python_venv__venvs__dependent_var injection (glances is not
+  # packaged in EPEL 10). Everywhere else it comes from the distribution package.
   - name: 'Install glances'
     ansible.builtin.package:
       name:
@@ -7,19 +10,6 @@
       state: 'present'
     when:
       - 'not (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10)'
-
-  - name: 'Install glances into a Python venv (RHEL 10+)'
-    ansible.builtin.include_role:
-      name: 'linuxfabrik.lfops.python_venv'
-    vars:
-      python_venv__venvs__role_var:
-        - name: 'glances'
-          packages:
-            - 'glances'
-          exposed_binaries:
-            - 'glances'
-    when:
-      - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10'
 
   - name: 'Deploy /etc/profile.d/glances.sh'
     ansible.builtin.template:
