@@ -219,7 +219,7 @@ nextcloud__users:
 * Type: String.
 * Default: `'{{ ansible_facts["nodename"] }}'`
 
-`nextcloud__mailto_root__to`
+`nextcloud__mail_recipients`
 
 * Recipients of the monthly `ldap:show-remnants` report (users removed from LDAP that still have remnants in Nextcloud) sent by `/usr/local/bin/nextcloud-ldap-show-remnants`. Defaults to the global `mailto_root__to`; when empty the report is printed to stdout instead of being mailed.
 * Type: List.

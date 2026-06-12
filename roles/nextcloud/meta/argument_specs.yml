@@ -89,7 +89,7 @@ argument_specs:
         required: false
         description: 'The URL of the Icinga2 API used to set a downtime during a server update.'
 
-      nextcloud__mailto_root__to:
+      nextcloud__mail_recipients:
         type: 'list'
         elements: 'str'
         required: false
