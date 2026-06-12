@@ -1,0 +1,38 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state rather than "package installed": Nextcloud answers occ as installed (CLI side), and it
+# actually serves over HTTP. `occ status` only returns installed=true once the database, config.php
+# and the web server user line up; requesting status.php then proves the Apache -> mod_proxy_fcgi ->
+# PHP-FPM -> Nextcloud request path works end to end, not just that the FPM unit is running.
+- name: 'Verify Nextcloud is installed and serving'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'php occ status --output=json (as the web server user)'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ status --output=json'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become_user: 'apache'
+      register: '__molecule__nextcloud_status_result'
+      changed_when: false
+
+    - name: 'Assert Nextcloud reports itself installed'
+      ansible.builtin.assert:
+        that:
+          - '(__molecule__nextcloud_status_result["stdout"] | from_json)["installed"] | bool'
+        fail_msg: 'Nextcloud is not installed. occ status: {{ __molecule__nextcloud_status_result["stdout"] }}'
+
+    - name: 'GET status.php through Apache and PHP-FPM (Host: {{ nextcloud__fqdn }})'
+      ansible.builtin.uri:
+        url: 'http://localhost/status.php'
+        headers:
+          Host: '{{ nextcloud__fqdn }}'
+        return_content: true
+      register: '__molecule__nextcloud_statusphp_result'
+
+    - name: 'Assert Nextcloud serves status.php as installed'
+      ansible.builtin.assert:
+        that:
+          - '(__molecule__nextcloud_statusphp_result["content"] | from_json)["installed"] | bool'
+        fail_msg: 'status.php did not report installed. response: {{ __molecule__nextcloud_statusphp_result["content"] | d("") }}'
