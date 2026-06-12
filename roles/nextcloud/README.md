@@ -221,7 +221,7 @@ nextcloud__users:
 
 `nextcloud__mail_recipients`
 
-* Recipients of the monthly `ldap:show-remnants` report (users removed from LDAP that still have remnants in Nextcloud) sent by `/usr/local/bin/nextcloud-ldap-show-remnants`. Defaults to the global `mailto_root__to`; when empty the report is printed to stdout instead of being mailed.
+* Recipients of the monthly `ldap:show-remnants` report (users removed from LDAP that still have remnants in Nextcloud) sent by `/usr/local/bin/nextcloud-ldap-show-remnants`. Defaults to the global `mailto_root__to`. The report is always printed to stdout; when recipients are set it is additionally mailed to them.
 * Type: List.
 * Default: `'{{ mailto_root__to | d([]) }}'`
 
