@@ -21,6 +21,7 @@
         --accountconf /etc/acme.sh/account.conf \
         --no-cron
     args:
+      executable: '/bin/bash'
       creates: '/opt/acme.sh/acme.sh'
     register: 'acme_sh__install_result'
     failed_when:

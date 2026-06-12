@@ -78,7 +78,7 @@ Manual steps:
 * Deploys `/etc/systemd/system/pki-tomcatd@.service.d/override.conf`.
 * Triggers: none.
 
-`freeipa_server:user`
+`freeipa_server:users`
 
 * Manages FreeIPA users and their group memberships.
 * Triggers: none.

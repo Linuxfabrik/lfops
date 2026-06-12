@@ -1,0 +1,12 @@
+- name: 'Verify vm.overcommit_memory is set'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+    - name: 'Read sysctl vm.overcommit_memory from procfs'
+      ansible.builtin.slurp:
+        src: '/proc/sys/vm/overcommit_memory'
+      register: '__molecule__sysctl_vm_overcommit_memory_result'
+
+    - name: 'Assert that vm.overcommit_memory is set to 1'
+      ansible.builtin.assert:
+        that: '__molecule__sysctl_vm_overcommit_memory_result["content"] | ansible.builtin.b64decode | int == 1'

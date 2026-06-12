@@ -1,0 +1,31 @@
+# Verify the removal. Same mindset as install/verify.yml: check the observable
+# result, and confirm the removal did not break the still-installed application.
+- name: 'Verify the example plugin and user are removed'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    # Removing a plugin and a user must not take the application down with them,
+    # so the most important check here is that the service is still running.
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that example.service is still running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["example.service"]["state"] == "running"'
+
+    # The plugin is an OS package, so its removal is observable in the package
+    # facts - the counterpart to install's "is present" check.
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that the example plugin package is absent'
+      ansible.builtin.assert:
+        that: '"example-plugin-auth-ldap" not in ansible_facts["packages"]'
+
+    # The user is managed over the REST API, so assert its absence the same way
+    # install asserts its presence: a GET for it now returns 404.
+    - name: 'curl http://127.0.0.1:8080/api/user/example-admin'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8080/api/user/example-admin'
+        status_code: 404

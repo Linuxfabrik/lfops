@@ -36,7 +36,7 @@ proxysql__mysql_servers__combined_var: '{{ (
       proxysql__mysql_servers__dependent_var +
       proxysql__mysql_servers__group_var +
       proxysql__mysql_servers__host_var
-    ) | linuxfabrik.lfops.combine_lod(unique_key=["hostgroup", "hostname", "port"])
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["hostgroup", "address", "port"])
   }}'
 proxysql__mysql_servers__dependent_var: []
 proxysql__mysql_servers__group_var: []

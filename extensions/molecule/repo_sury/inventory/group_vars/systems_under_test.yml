@@ -1,0 +1,4 @@
+# Activate the sury php repo. verify.yml then confirms the repo is actually the
+# source apt would install php from.
+repo_sury__enabled_repos:
+  - 'php'

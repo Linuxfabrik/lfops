@@ -7,6 +7,7 @@ tests/output/*
 playbooks/test.yml
 roles/test
 context/
+extensions/molecule/**/*.retry
 
 # mkdocs documentation
 /docs/CHANGELOG.md

@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2026060901
+
+# influxdata-archive-keyring is a "recommended" / optional package for influxdb / influxdb2 and
+# gets pulled in automatically when one of them is installed. its postinst drops a second
+# /etc/apt/sources.list.d/influxdata.list pointing at upstream, colliding with the influxdb repo
+# managed by lfops. a pin priority below 0 makes the package uninstallable, so the recommends is
+# skipped. check with `apt-cache policy influxdata-archive-keyring`.
+
+Package: influxdata-archive-keyring
+Pin: release *
+Pin-Priority: -1

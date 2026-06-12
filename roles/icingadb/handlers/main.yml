@@ -1,3 +1,13 @@
+# Validation runs before the icinga2 restart: it is defined first, so when both
+# are notified in the same flush it executes first, and it chains into the
+# restart. `icinga2 daemon --validate` (-C) catches a broken icingadb feature
+# config before the running daemon is bounced, so a bad deploy fails loudly here
+# instead of leaving icinga2 down after the restart.
+- name: 'icingadb: icinga2 daemon --validate'
+  ansible.builtin.command: 'icinga2 daemon --validate'
+  changed_when: true # must report changed so the chained restart handler is triggered
+  notify: 'icingadb: restart icinga2'
+
 - name: 'icingadb: restart icinga2'
   ansible.builtin.service:
     name: 'icinga2'

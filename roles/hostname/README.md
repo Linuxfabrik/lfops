@@ -50,7 +50,7 @@ If cloud-init is configured with `manage_etc_hosts: true`, it rewrites `/etc/hos
 `hostname__manage_etc_hosts`
 
 * Whether to maintain the `/etc/hosts` entry that maps the hostname to `hostname__etc_hosts_ip`. Set to `false` to leave `/etc/hosts` untouched.
-* Type: Boolean.
+* Type: Bool.
 * Default: `true`
 
 Example:

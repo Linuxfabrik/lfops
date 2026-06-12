@@ -1,8 +1,8 @@
-login__users__dependent_var: []
-login__users__group_var: []
-login__users__host_var: []
-login__users__role_var: []
-
+login__login_defs_pass_max_days: 365
+login__login_defs_pass_min_days: 1
+login__login_defs_pass_warn_age: 7
+login__login_defs_umask: '027'
+login__passwordless_sudo_group: ''
 login__users__combined_var: '{{ (
       login__users__role_var +
       login__users__dependent_var +
@@ -10,10 +10,7 @@ login__users__combined_var: '{{ (
       login__users__host_var
     ) | linuxfabrik.lfops.combine_lod
   }}'
-
-login__passwordless_sudo_group: ''
-
-login__login_defs_pass_max_days: 365
-login__login_defs_pass_min_days: 1
-login__login_defs_pass_warn_age: 7
-login__login_defs_umask: '027'
+login__users__dependent_var: []
+login__users__group_var: []
+login__users__host_var: []
+login__users__role_var: []

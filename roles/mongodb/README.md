@@ -55,7 +55,7 @@ To setup a replica set from scratch:
 * Manages the state of the mongod service.
 * Triggers: none.
 
-`mongodb:user`
+`mongodb:users`
 
 * Manages the MongoDB users.
 * Triggers: none.

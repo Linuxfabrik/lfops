@@ -187,6 +187,8 @@
 
   - name: 'icingacli director basket restore < /tmp/icingaweb2-module-director-basket.json' # noqa no-changed-when
     ansible.builtin.shell: 'icingacli director basket restore < /tmp/icingaweb2-module-director-basket.json'
+    args:
+      executable: '/bin/bash'
 
   - name: 'rm /tmp/icingaweb2-module-director-basket.json'
     ansible.builtin.file:

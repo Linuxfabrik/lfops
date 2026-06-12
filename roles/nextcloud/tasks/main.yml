@@ -227,7 +227,7 @@
 
   tags:
     - 'nextcloud'
-    - 'nextcloud:user'
+    - 'nextcloud:users'
 
 
 - block:

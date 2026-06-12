@@ -27,6 +27,7 @@ running the role: controller-vs-target download split and who needs network acce
 idempotency / overwrite-on-rerun, the upgrade path, hard-coded versions, OS-specific build
 dependencies, what the role does NOT do, and security caveats (e.g. cleartext secrets).
 Distinct from Troubleshooting (reactive error->fix) and Known Limitations (hard constraints).
+Keep this user-facing: developer-oriented notes belong in source-code comments, not here.
 -->
 ## How the Role Behaves
 
@@ -144,7 +145,7 @@ The example role is a single standalone service, so it has no walkthrough.
 * Manages optional example plugins (install/remove).
 * Triggers: none.
 
-`example:user`
+`example:users`
 
 * Manages application users via the REST API.
 * Triggers: none.

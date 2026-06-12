@@ -1,0 +1,47 @@
+- name: 'Create container instances'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'Create the container and confirm it is running'
+      block:
+
+        - name: 'Create the container from inventory'
+          containers.podman.podman_container:
+            capabilities: '{{ molecule__container_capabilities | default(omit) }}'
+            command: '{{ molecule__container_command | default("sleep 1d") }}'
+            hostname: '{{ __molecule__instance_name }}'
+            image: '{{ molecule__container_image }}'
+            log_driver: '{{ molecule__container_log_driver | default("json-file") }}'
+            name: '{{ __molecule__instance_name }}'
+            privileged: '{{ molecule__container_privileged | default(false) | bool }}'
+            state: 'started'
+            systemd: '{{ molecule__container_systemd | default(false) | bool }}'
+            volumes: '{{ molecule__container_volumes | default(omit) }}'
+          register: '__molecule__container_result'
+          delegate_to: 'localhost'
+
+        # podman reports the container as 'started' even when the entrypoint exits immediately,
+        # so assert on the actual state. A failure here drops into the rescue, which surfaces the
+        # container log to explain why it did not come up.
+        - name: 'Assert the container is running'
+          ansible.builtin.assert:
+            that:
+              - '__molecule__container_result["container"]["State"]["ExitCode"] == 0'
+              - '__molecule__container_result["container"]["State"]["Running"]'
+            quiet: true
+
+      rescue:
+
+        - name: 'Retrieve the container log'
+          ansible.builtin.command:
+            cmd: 'podman logs {{ __molecule__instance_name }}'
+          changed_when: false
+          register: '__molecule__container_log_result'
+          delegate_to: 'localhost'
+
+        - name: 'Fail with the container log'
+          ansible.builtin.fail:
+            msg: |
+              Container {{ __molecule__instance_name }} failed to start properly.
+              Log output: {{ __molecule__container_log_result["stdout"] | d("No logs available") }}

@@ -1,7 +1,7 @@
 # Ansible Role linuxfabrik.lfops.login
 
 This role creates users, adds them to additional groups, and sets their SSH authorized_keys to allow them to login to the system.
-Aditionally, a group can be added to the sudoers for password-less `sudo` access. It also sets the system-wide password-aging policy and default umask in `/etc/login.defs`.
+Additionally, a group can be added to the sudoers for password-less `sudo` access. It also sets the system-wide password-aging policy and default umask in `/etc/login.defs`.
 
 IMPORTANT:
 

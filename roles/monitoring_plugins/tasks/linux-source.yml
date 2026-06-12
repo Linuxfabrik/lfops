@@ -19,6 +19,7 @@
             cp -- "$file" /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/"$base"
           fi
         done
+      executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
@@ -37,6 +38,7 @@
             cp -- "$file" /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/"$base"
           fi
         done
+      executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
@@ -48,6 +50,7 @@
       cmd: |
         mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets
         find /tmp/ansible.monitoring-plugins-repo/check-plugins/*/assets -type f -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets/ \;
+      executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts

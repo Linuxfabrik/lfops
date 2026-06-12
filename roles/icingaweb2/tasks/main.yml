@@ -6,7 +6,7 @@
     - 'icingaweb2'
     - 'icingaweb2:configure'
     - 'icingaweb2:resources'
-    - 'icingaweb2:user'
+    - 'icingaweb2:users'
 
 - block:
 
@@ -200,6 +200,8 @@
         (name, active, password_hash)
         VALUES ('{{ item.username }}', 1, '$(php -r 'echo password_hash("{{ item.password }}", PASSWORD_DEFAULT);')')
       ;"
+    args:
+      executable: '/bin/bash'
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: "{{ icingaweb2__users__combined_var }}"
@@ -220,6 +222,8 @@
         SET password_hash = '$(php -r 'echo password_hash("{{ item.password }}", PASSWORD_DEFAULT);')'
         WHERE name = '{{ item.username }}'
       ;"
+    args:
+      executable: '/bin/bash'
     when:
       - 'item["state"] | d("present") == "updated"'
     loop: "{{ icingaweb2__users__combined_var }}"
@@ -239,4 +243,4 @@
 
   tags:
     - 'icingaweb2'
-    - 'icingaweb2:user'
+    - 'icingaweb2:users'
