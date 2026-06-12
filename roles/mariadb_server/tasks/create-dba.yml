@@ -1,7 +1,7 @@
 - block:
 
   - name: 'Create DBA "{{ mariadb_server__admin_user["username"] }}"'
-    community.mysql.mysql_user:
+    ansible.mysql.mysql_user:
       check_implicit_admin: true
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
@@ -20,7 +20,7 @@
     when: 'mariadb_server__admin_user["old_password"] is not defined or not mariadb_server__admin_user["old_password"] | length > 0'
 
   - name: 'Create DBA "{{ mariadb_server__admin_user["username"] }}" (with old_password)'
-    community.mysql.mysql_user:
+    ansible.mysql.mysql_user:
       check_implicit_admin: true
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["old_password"] }}'

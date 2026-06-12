@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:icingadb, role:icingaweb2, role:icingaweb2_module_reporting, role:icingaweb2_module_x509, role:mariadb_server**: Move the MariaDB tasks from the deprecated `community.mysql` collection to its replacement `ansible.mysql`. Behaviour is unchanged, but the deprecation warnings printed on every run are gone and the roles keep working once `community.mysql` is removed upstream.
 * **role:apache_httpd**: Update the Matomo log-analytics import script (`import_logs.py`) to the latest upstream version. The auth token can now be provided via a `--auth-config` file instead of the command line (passing `--token-auth`, `--login` or `--password` as options is deprecated, since they are visible in the process list and now log a deprecation warning). Also adds support for the Traefik access-log format and fixes a possible endless loop when reading a config file.
 
 

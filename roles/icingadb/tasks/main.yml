@@ -56,7 +56,7 @@
 - block:
 
   - name: 'Check if the icingadb tables exist'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ icingadb__database_login["username"] }}'
       login_password: '{{ icingadb__database_login["password"] }}'
       login_host: '{{ icingadb__database_host }}'
@@ -67,7 +67,7 @@
     check_mode: false # run task even if `--check` is specified
 
   - name: 'import schema for icingadb database'
-    community.mysql.mysql_db:
+    ansible.mysql.mysql_db:
       login_user: '{{ icingadb__database_login["username"] }}'
       login_password: '{{ icingadb__database_login["password"] }}'
       login_host: '{{ icingadb__database_host }}'
@@ -110,7 +110,7 @@
 - block:
 
   - name: 'SELECT MIN(event_time)/1000 FROM icingadb.history; get latest entry in the icingadb for the migration from ido'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ icingadb__database_login["username"] }}'
       login_password: '{{ icingadb__database_login["password"] }}'
       login_host: '{{ icingadb__database_host }}'
