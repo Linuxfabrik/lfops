@@ -15,13 +15,16 @@ Numishare itself is end-of-life upstream but stable; this role pins to the upstr
 This role is intended to be used together with [linuxfabrik.lfops.existdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/existdb), [linuxfabrik.lfops.apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr), [linuxfabrik.lfops.apache_tomcat](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_tomcat), and [linuxfabrik.lfops.orbeon_forms](https://github.com/Linuxfabrik/lfops/tree/main/roles/orbeon_forms). The [setup_numishare](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_numishare.yml) playbook wires them all up in the right order.
 
 
-## Mandatory Requirements
+*Available in the next LFOps release.*
 
-* Apache Solr running with `solr.solr.home` set to `numishare__solr_data_dir` — done by [linuxfabrik.lfops.apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr).
-* eXist-db running and reachable at `numishare__exist_url` — done by [linuxfabrik.lfops.existdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/existdb).
-* Apache Tomcat installed (creates the `tomcat` user that owns Numishare's config files) — done by [linuxfabrik.lfops.apache_tomcat](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_tomcat).
 
-If you use the [setup_numishare playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_numishare.yml), this is automatically done for you in the right order.
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* Apache Solr must be running with `solr.solr.home` set to `numishare__solr_data_dir` (role: [linuxfabrik.lfops.apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr)).
+* eXist-db must be running and reachable at `numishare__exist_url` (role: [linuxfabrik.lfops.existdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/existdb)).
+* Apache Tomcat must be installed — it creates the `tomcat` user that owns Numishare's config files (role: [linuxfabrik.lfops.apache_tomcat](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_tomcat)).
 
 
 ## Tags

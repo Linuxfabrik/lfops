@@ -26,6 +26,11 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Installs and configures the whole Apache Solr server and deploys `bin/solr.in.sh`, `log4j.xml.j2` and `security.json`.
 * Triggers: solr.service restart.
 
+`apache_solr:dump`
+
+* Limits the run to the backup pipeline (dump script and conf, `apache-solr-dump.service` / `.timer`, dump directories).
+* Triggers: none.
+
 `apache_solr:state`
 
 * Manages the state of `solr.service`.

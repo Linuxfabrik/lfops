@@ -12,13 +12,16 @@ The role:
 * Optionally deploys a `mariadb-dump`-style backup pipeline (`existdb-dump.service` + `.timer`).
 
 
+*Available in the next LFOps release.*
+
+
 ## Tags
 
 `existdb`
 
 * Installs and configures the whole eXist-db service, plus the backup units.
 
-`existdb:backup`
+`existdb:dump`
 
 * Limits the run to the backup pipeline (script, conf, service, timer).
 

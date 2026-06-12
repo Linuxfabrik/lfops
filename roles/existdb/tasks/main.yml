@@ -243,4 +243,4 @@
 
   tags:
     - 'existdb'
-    - 'existdb:backup'
+    - 'existdb:dump'

@@ -15,13 +15,20 @@ The role:
 * Recursively `chown`s `<orbeon_home>` to the Tomcat user/group and restarts Tomcat.
 
 
-## Mandatory Requirements
+*Available in the next LFOps release.*
 
-* Apache Tomcat installed and running, with the `tomcat` user/group present — done by [linuxfabrik.lfops.apache_tomcat](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_tomcat).
-* Numishare checked out at `orbeon_forms__numishare_dir` — done by [linuxfabrik.lfops.numishare](https://github.com/Linuxfabrik/lfops/tree/main/roles/numishare).
-* Container roles configured in `apache_tomcat__roles__*` and matching `apache_tomcat__users__*` so the BASIC/FORM-auth login against `/numishare/admin/*` works.
 
-If you use the [setup_numishare playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_numishare.yml), Numishare and Tomcat are deployed in the right order before this role runs.
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* Apache Tomcat must be installed and running, with the `tomcat` user/group present (role: [linuxfabrik.lfops.apache_tomcat](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_tomcat)).
+* Numishare must be checked out at `orbeon_forms__numishare_dir` (role: [linuxfabrik.lfops.numishare](https://github.com/Linuxfabrik/lfops/tree/main/roles/numishare)).
+
+
+## Requirements
+
+* Container roles must be configured in `apache_tomcat__roles__*` with matching `apache_tomcat__users__*` entries, so that the BASIC/FORM-auth login against `/numishare/admin/*` works.
 
 
 ## Tags

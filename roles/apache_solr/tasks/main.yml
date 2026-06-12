@@ -299,4 +299,4 @@
 
   tags:
     - 'apache_solr'
-    - 'apache_solr:backup'
+    - 'apache_solr:dump'
