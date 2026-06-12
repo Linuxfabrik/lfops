@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.glances
 
-This role installs [glances](https://nicolargo.github.io/glances/) and drops a snippet into `/etc/profile.d/glances.sh` that aliases `top` and `glances` to `glances -t 1`. On RHEL 7 the aliases additionally pass `--disable-docker` to avoid the slow Docker probe.
+This role installs [glances](https://nicolargo.github.io/glances/) and drops a snippet into `/etc/profile.d/glances.sh` that aliases `top` and `glances` to `glances -t 1`.
 
 
 ## Mandatory Requirements

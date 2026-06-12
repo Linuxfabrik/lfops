@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:glances**: Add RHEL 10 / Rocky 10 / Alma 10 support by installing glances into a Python venv via pip, since the package is not available in EPEL 10.
 * **role:uptimerobot, plugins/modules/uptimerobot_***: New role and a set of nine custom modules to manage UptimeRobot resources directly from a playbook. CRUD modules: `uptimerobot_monitor`, `uptimerobot_mwindow`, `uptimerobot_psp`, plus `uptimerobot_alert_contact` (delete only — UptimeRobot API v2 does not expose creating contacts). Read-only info modules for inspection and dynamic inventories: `uptimerobot_account_info`, `uptimerobot_monitor_info`, `uptimerobot_mwindow_info`, `uptimerobot_alert_contact_info`, `uptimerobot_psp_info` — together replacing all `utr get …` subcommands. All CRUD modules support `--check` and `--diff`, are idempotent on re-run, and translate API integer IDs to user-facing labels in both directions. The role accepts the same YAML structure as the existing `utr` CLI's `utr.yml` / `mwindows.yml` / `psps.yml` / `alertcontacts.yml`, so existing inventories migrate by copying the lists into `uptimerobot__monitors` / `__mwindows` / `__psps` / `__alert_contacts`. API key resolution: `api_key` parameter, `api_key_file` (default `~/.uptimerobot`, matching `utr` convention), or `UPTIMEROBOT_API_KEY` environment variable.
 * **role:at**: Add optional variable `at__service_state` (`reloaded` / `restarted` / `started` / `stopped`) to control the running state of `atd.service` independently from boot autostart. Default behaviour is unchanged: `at__service_enabled: true` keeps the service started, `false` stops it.
 * **role:dnf_makecache**: Add optional variables `dnf_makecache__service_state` and `dnf_makecache__timer_state` to control the running state of `dnf-makecache.service` and `dnf-makecache.timer` independently from boot autostart. Default behaviour is unchanged.
@@ -44,7 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-* **role:glances**: Add RHEL 10 / Rocky 10 / Alma 10 support by installing glances into a Python venv via pip, since the package is not available in EPEL 10.
 * **role:network**: README still claimed the role disables zeroconf, but the corresponding `NOZEROCONF=yes` task was removed in 2024 (NetworkManager no longer adds the zeroconf route by default). Bring the README in line with what the role actually does and call out the Hetzner-specific `hc-utils` cleanup explicitly.
 * **role:haveged**: Setting `haveged__service_state: 'stopped'` produced the invalid systemctl command `stopp` because of a `[:-2]` slice in the task name. The role now uses `ansible.builtin.service` directly with the configured state, so all four valid values (`reloaded` / `restarted` / `started` / `stopped`) work as expected.
 * **role:unattended_upgrades**: Correct README description; the role deactivates Unattended Upgrades by setting both `APT::Periodic` flags to `0` in `/etc/apt/apt.conf.d/20auto-upgrades` (Debian/Ubuntu), it does not remove the `unattended-upgrades` package.

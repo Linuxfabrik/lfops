@@ -27,6 +27,7 @@
       src: 'etc/profile.d/glances.sh.j2'
       dest: '/etc/profile.d/glances.sh'
       owner: 'root'
+      group: 'root'
       mode: 0o644
 
   tags:
