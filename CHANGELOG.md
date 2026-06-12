@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:icingadb, role:icingaweb2, role:icingaweb2_module_reporting, role:icingaweb2_module_x509, role:mariadb_server**: Move the MariaDB tasks from the deprecated `community.mysql` collection to its replacement `ansible.mysql`. Behaviour is unchanged, but the deprecation warnings printed on every run are gone and the roles keep working once `community.mysql` is removed upstream.
 * **role:apache_httpd**: Update the Matomo log-analytics import script (`import_logs.py`) to the latest upstream version. The auth token can now be provided via a `--auth-config` file instead of the command line (passing `--token-auth`, `--login` or `--password` as options is deprecated, since they are visible in the process list and now log a deprecation warning). Also adds support for the Traefik access-log format and fixes a possible endless loop when reading a config file.
 
+### Fixed
+
+* **role:kvm_vm**: Use `kvm_vm__connect_url` for every libvirt operation. Disk resizes (`virsh blockresize`) and a few other steps previously ignored the configured connection URL and always talked to the local default, so they failed or acted on the wrong libvirt when `kvm_vm__connect_url` pointed at a non-default or remote host.
+
 
 ## [v7.0.0] - 2026-06-11
 
