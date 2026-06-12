@@ -172,6 +172,7 @@ nextcloud__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d("
 nextcloud__icinga2_api_user_login: '{{ system_update__icinga2_api_user_login }}'
 nextcloud__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
 
+nextcloud__mail_from: '{{ mailto_root__from }}'
 nextcloud__mail_recipients: '{{ mailto_root__to | d([]) }}'
 
 nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
