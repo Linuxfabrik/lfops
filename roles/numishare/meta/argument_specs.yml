@@ -47,6 +47,26 @@ argument_specs:
         default: '/opt/numishare'
         description: 'Where Numishare is checked out to.'
 
+      numishare__projects__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Per-collection Numishare projects to deploy. Group-level override.'
+
+      numishare__projects__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Per-collection Numishare projects to deploy. Host-level override.'
+
+      numishare__projects_dir:
+        type: 'str'
+        required: false
+        default: '/opt/numishare-projects'
+        description: 'Root directory for Numishare projects. The orbeon_forms role symlinks the Orbeon oxf:/numishare-projects/ resource path to this directory.'
+
       numishare__solr_core_name:
         type: 'str'
         required: false

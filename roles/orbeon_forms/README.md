@@ -8,6 +8,7 @@ The role:
 * Rewrites `WEB-INF/resources/config/log4j2.xml` to absolute log paths under `orbeon_forms__log_dir` (default `/var/log/tomcat`). Orbeon's relative `../logs/` paths resolve to `/usr/share/logs/` on RHEL 10 Tomcat, where the `tomcat` user can not create files; the FileAppenders silently fail and surface only as generic "Page Not Found" responses.
 * Deploys `Catalina/localhost/orbeon.xml` with `allowLinking="true"` so Tomcat follows the symlinks the role creates. The `path` attribute is intentionally omitted (Tomcat ignores it for context descriptors and emits a warning).
 * Symlinks `numishare` → `<orbeon_home>/WEB-INF/resources/apps/numishare` and copies the eXist-db XQJ libraries from `<numishare>/vendor/exist-xqj-api-1.0.1/*.jar` into `<orbeon_home>/WEB-INF/lib/`.
+* Symlinks `orbeon_forms__numishare_projects_dir` (default `/opt/numishare-projects`) → `<orbeon_home>/WEB-INF/resources/numishare-projects` so Numishare's page-flow resolves the public `/numishare/<collection>/` pages through `oxf:/numishare-projects/<collection>/...`. The projects themselves are deployed by the `numishare` role (`numishare__projects__*`).
 * Provides a Numishare-branded favicon at `<orbeon_home>/WEB-INF/resources/ops/images/orbeon-icon-16.{ico,png}` (Numishare's xforms templates hardcode that path; Orbeon 2023.1 dropped the file from the WAR).
 * Copies `properties-local.xml.template` to `properties-local.xml` and injects a managed Numishare block via `blockinfile` markers (epilogue theme, container auth method and roles).
 * Replaces Orbeon's shipped `<login-config>` with a configurable BASIC or FORM auth block, replaces `<session-config>` with `orbeon_forms__session_timeout`, and injects a managed Numishare block before `</web-app>` (security-constraint for `/numishare/admin/*`, security-roles, and the `/themes/*` default-servlet mapping).
@@ -80,6 +81,12 @@ None. All variables have defaults that match the Numishare stack layout.
 * Where Numishare is checked out. Must match `numishare__install_dir`.
 * Type: String.
 * Default: `'/opt/numishare'`
+
+`orbeon_forms__numishare_projects_dir`
+
+* Directory holding the Numishare projects, symlinked into the Orbeon `oxf:/numishare-projects/` resource path (`<orbeon_home>/WEB-INF/resources/numishare-projects`). Must match `numishare__projects_dir`.
+* Type: String.
+* Default: `'/opt/numishare-projects'`
 
 `orbeon_forms__roles`
 

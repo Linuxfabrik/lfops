@@ -44,6 +44,12 @@ argument_specs:
         default: '/opt/numishare'
         description: 'Where Numishare is checked out. Must match numishare__install_dir.'
 
+      orbeon_forms__numishare_projects_dir:
+        type: 'str'
+        required: false
+        default: '/opt/numishare-projects'
+        description: 'Directory holding the Numishare projects, symlinked into the Orbeon oxf:/numishare-projects/ resource path. Must match numishare__projects_dir.'
+
       orbeon_forms__roles:
         type: 'list'
         elements: 'str'

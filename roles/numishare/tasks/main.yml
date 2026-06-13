@@ -84,6 +84,107 @@
       force: true
 
   # ----------------------------------------------------------------------------
+  # Projects — per-collection Numishare projects deployed from git_url or
+  # tarball_url. Each project lands in {{ numishare__projects_dir }}/<name>/ and
+  # is resolved by Numishare's page-flow via oxf:/numishare-projects/<name>/...
+  # (the orbeon_forms role symlinks that Orbeon resource path to this directory).
+  # A project is the upstream Numishare per-collection deployment (XPL pipelines,
+  # views, XSLT); distinct from a theme, which carries only static UI assets.
+  # ----------------------------------------------------------------------------
+
+  - name: 'mkdir -p {{ numishare__projects_dir }}'
+    ansible.builtin.file:
+      path: '{{ numishare__projects_dir }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Combined Projects:'
+    ansible.builtin.debug:
+      var: 'numishare__projects__combined_var'
+
+  - name: 'Remove absent projects from {{ numishare__projects_dir }}/'
+    ansible.builtin.file:
+      path: '{{ numishare__projects_dir }}/{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ numishare__projects__combined_var
+        | selectattr("state", "defined")
+        | selectattr("state", "eq", "absent")
+        | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'git clone present projects (git_url)'
+    ansible.builtin.git:
+      repo: '{{ item["git_url"] }}'
+      dest: '{{ numishare__projects_dir }}/{{ item["name"] }}'
+      version: '{{ item["git_version"] | d(omit) }}'
+      update: '{{ item["git_update"] | d(false) }}'
+    loop: '{{ (numishare__projects__combined_var | selectattr("state", "undefined") | selectattr("git_url", "defined") | list)
+          + (numishare__projects__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | selectattr("git_url", "defined") | list)
+        }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'mkdir -p {{ numishare__projects_dir }}/<name> for tarball-based projects'
+    ansible.builtin.file:
+      path: '{{ numishare__projects_dir }}/{{ item["name"] }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    loop: '{{ (numishare__projects__combined_var | selectattr("state", "undefined") | selectattr("tarball_url", "defined") | list)
+          + (numishare__projects__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | selectattr("tarball_url", "defined") | list)
+        }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Download tarball-based projects to /tmp/'
+    ansible.builtin.get_url:
+      url: '{{ item["tarball_url"] }}'
+      dest: '/tmp/ansible-numishare-project-{{ item["name"] }}.archive'
+      mode: 0o644
+    loop: '{{ (numishare__projects__combined_var | selectattr("state", "undefined") | selectattr("tarball_url", "defined") | list)
+          + (numishare__projects__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | selectattr("tarball_url", "defined") | list)
+        }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Extract tarball-based projects into {{ numishare__projects_dir }}/<name>/'
+    ansible.builtin.unarchive:
+      src: '/tmp/ansible-numishare-project-{{ item["name"] }}.archive'
+      dest: '{{ numishare__projects_dir }}/{{ item["name"] }}/'
+      remote_src: true
+      extra_opts:
+        - '--strip-components={{ item["tarball_strip_components"] | d(1) }}'
+    loop: '{{ (numishare__projects__combined_var | selectattr("state", "undefined") | selectattr("tarball_url", "defined") | list)
+          + (numishare__projects__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | selectattr("tarball_url", "defined") | list)
+        }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  # A project checkout ships its own exist-config.xml with the upstream default
+  # (http://localhost:8080/exist/rest/db/). Numishare's xpl/models/config.xpl
+  # reads it via the project-relative `../../exist-config.xml` to build the
+  # collection config URL, so without this rewrite the project pipelines hit the
+  # wrong eXist endpoint and every /numishare/<collection>/ page 404s on
+  # config.xml. Template it just like the main install's exist-config.xml.
+  - name: 'Deploy {{ numishare__projects_dir }}/<name>/exist-config.xml'
+    ansible.builtin.template:
+      backup: true
+      src: 'opt/numishare/exist-config.xml.j2'
+      dest: '{{ numishare__projects_dir }}/{{ item["name"] }}/exist-config.xml'
+      owner: '{{ numishare__app_user }}'
+      group: '{{ numishare__app_group }}'
+      mode: 0o640  # contains the eXist-db admin password in plaintext
+    loop: '{{ (numishare__projects__combined_var | selectattr("state", "undefined") | list)
+          + (numishare__projects__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+        }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  # ----------------------------------------------------------------------------
   # Custom themes — deployed from git_url or tarball_url. Each theme lands in
   # {{ numishare__themes_dir }}/<name>/ and is automatically picked up by
   # Numishare's directory-scanner (Discovery) and the Orbeon `/themes/*` mapping.

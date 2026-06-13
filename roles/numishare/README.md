@@ -9,6 +9,7 @@ The role:
 * Deploys `solr-home/<core_version>/core.properties` so Solr can pick up the Numishare core, and creates the `<solr_data_dir>/<core_name>` symlink Solr's `solr.solr.home` scanner expects. Notifies a Solr restart so the core is loaded.
 * Creates `numishare__themes_dir` (default `/opt/themes`) and exposes Numishare's bundled UI assets as the `default` theme via a symlink.
 * Deploys custom themes from git or tarball sources via the `numishare__themes__*` variable family.
+* Deploys per-collection Numishare projects (the XPL pipelines / views the public `/numishare/<collection>/` pages render through) from git or tarball sources via the `numishare__projects__*` variable family, into `numishare__projects_dir`, and rewrites each project's own `exist-config.xml` to `numishare__exist_url` (project pipelines read it via the project-relative `../../exist-config.xml`, so the upstream `localhost:8080` default would otherwise make every collection page 404). The `orbeon_forms` role wires this into the Orbeon `oxf:/numishare-projects/` resource path.
 
 Numishare itself is end-of-life upstream but stable; this role pins to the upstream `main` branch (one-time clone, updates handled out-of-band) and adapts the surrounding integration layer instead.
 
@@ -83,6 +84,69 @@ None. All variables have defaults; the eXist-db admin password defaults to `'lin
 * Where Numishare is checked out to.
 * Type: String.
 * Default: `'/opt/numishare'`
+
+`numishare__projects_dir`
+
+* Root directory for Numishare projects. Each direct subdirectory is one project, resolved by Numishare's page-flow via `oxf:/numishare-projects/<name>/...`. The `orbeon_forms` role symlinks the Orbeon resource path `WEB-INF/resources/numishare-projects` to this directory.
+* Type: String.
+* Default: `'/opt/numishare-projects'`
+
+`numishare__projects__host_var` / `numishare__projects__group_var`
+
+* List of per-collection Numishare projects to deploy under `numishare__projects_dir`. A project is the upstream Numishare per-collection deployment (XPL pipelines, views, XSLT) that the public `/numishare/<collection>/` pages render through; distinct from a theme, which carries only static UI assets. Each entry is one of two source types: `git_url` (clones the repo) or `tarball_url` (downloads + extracts).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Project directory name under `numishare__projects_dir`. Must match the collection name used in the URL (`/numishare/<name>/`).
+        * Type: String.
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`. `absent` removes `<projects_dir>/<name>`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `git_url`:
+
+        * Mandatory if the project is git-sourced. Mutually exclusive with `tarball_url`.
+        * Type: String.
+
+    * `git_version`:
+
+        * Optional. Branch, tag, or commit to check out.
+        * Type: String.
+        * Default: HEAD of the cloned default branch
+
+    * `git_update`:
+
+        * Optional. Whether subsequent runs should `git pull`.
+        * Type: Bool.
+        * Default: `false`
+
+    * `tarball_url`:
+
+        * Mandatory if the project is tarball-sourced. Mutually exclusive with `git_url`. `tar.gz`, `tgz`, `tar.bz2` and `zip` are auto-detected. ZIP requires `unzip` on the target.
+        * Type: String.
+
+    * `tarball_strip_components`:
+
+        * Optional. `--strip-components=N` for the unarchive step. Use `0` for tarballs without a wrapping top-level directory.
+        * Type: Number.
+        * Default: `1`
+
+Example:
+
+```yaml
+numishare__projects__host_var:
+  - name: 'oscar'
+    git_url: 'https://github.com/ewg118/numishare.git'
+    git_version: 'oscar'
+    git_update: false
+    state: 'present'
+```
 
 `numishare__solr_core_name`
 

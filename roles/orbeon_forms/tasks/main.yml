@@ -65,6 +65,17 @@
       state: 'link'
       force: true
 
+  # Numishare's page-flow renders the public /numishare/<collection>/ pages through
+  # oxf:/numishare-projects/<collection>/..., which the Orbeon resource manager
+  # resolves under WEB-INF/resources/. Point that path at the directory the
+  # numishare role deploys projects into (numishare__projects_dir).
+  - name: 'Symlink {{ orbeon_forms__numishare_projects_dir }} -> {{ orbeon_forms__home }}/WEB-INF/resources/numishare-projects'
+    ansible.builtin.file:
+      src: '{{ orbeon_forms__numishare_projects_dir }}'
+      dest: '{{ orbeon_forms__home }}/WEB-INF/resources/numishare-projects'
+      state: 'link'
+      force: true
+
   # Numishare's xhtml templates hardcode `/ops/images/orbeon-icon-16.{ico,png}`,
   # a path Orbeon shipped in older versions but dropped in 2023.1 (the WAR no
   # longer carries `WEB-INF/resources/ops/` at all). Wire Numishare's own favicon
