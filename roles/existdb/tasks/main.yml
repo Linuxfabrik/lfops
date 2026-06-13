@@ -17,7 +17,7 @@
       name: '{{ existdb__user }}'
       group: '{{ existdb__group }}'
       home: '{{ existdb__install_dir }}'
-      create_home: false  # {{ existdb__install_dir }} wird vom Tarball-Move angelegt; sonst kollidiert mv
+      create_home: false  # {{ existdb__install_dir }} is created by the extraction task below
       shell: '/usr/sbin/nologin'
       comment: 'eXist-db Service Account'
       system: true
@@ -40,18 +40,29 @@
       dest: '/tmp/ansible.exist-distribution-{{ existdb__version }}-unix.tar.bz2'
       mode: 0o644
 
-  - name: 'tar -xjf /tmp/ansible.exist-distribution-{{ existdb__version }}-unix.tar.bz2 -C /opt/'
+  - name: 'mkdir -p {{ existdb__install_dir }}'
+    ansible.builtin.file:
+      path: '{{ existdb__install_dir }}'
+      state: 'directory'
+      owner: '{{ existdb__user }}'
+      group: '{{ existdb__group }}'
+      mode: 0o755
+
+  # Extract straight into {{ existdb__install_dir }}, stripping the tarball's
+  # exist-distribution-<version>/ wrapper directory. This avoids the former
+  # extract-to-/opt + mv dance, which broke whenever {{ existdb__install_dir }}
+  # already existed: both steps guarded on the directory, so a leftover empty
+  # dir made them skip (no etc/conf.xml -> every later task failed), and mv into
+  # an existing dir would nest the tree one level too deep. Guarding on the real
+  # marker etc/conf.xml makes a re-run repopulate an incomplete install instead.
+  - name: 'tar -xjf /tmp/ansible.exist-distribution-{{ existdb__version }}-unix.tar.bz2 --strip-components=1 -C {{ existdb__install_dir }}'
     ansible.builtin.unarchive:
       src: '/tmp/ansible.exist-distribution-{{ existdb__version }}-unix.tar.bz2'
-      dest: '/opt/'
+      dest: '{{ existdb__install_dir }}'
       remote_src: true
-      creates: '{{ existdb__install_dir }}'  # Endzustand pruefen, nicht den Zwischenpfad - sonst doppelt extrahiert
-
-  - name: 'mv /opt/exist-distribution-{{ existdb__version }} {{ existdb__install_dir }}'
-    ansible.builtin.command: 'mv /opt/exist-distribution-{{ existdb__version }} {{ existdb__install_dir }}'
-    args:
-      creates: '{{ existdb__install_dir }}'
-      removes: '/opt/exist-distribution-{{ existdb__version }}'
+      extra_opts:
+        - '--strip-components=1'
+      creates: '{{ existdb__install_dir }}/etc/conf.xml'
 
   - name: 'chown -R {{ existdb__user }}:{{ existdb__group }} {{ existdb__install_dir }}'
     ansible.builtin.file:
