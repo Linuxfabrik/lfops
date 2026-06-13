@@ -184,6 +184,33 @@
     loop_control:
       label: '{{ item["name"] }}'
 
+  # Each project is a full Numishare checkout and ships its own ui/. Expose it as
+  # a theme named after the project (mirrors the `default` theme -> install ui/),
+  # so a collection whose config.xml sets <orbeon_theme>name</orbeon_theme>
+  # resolves to /themes/<name> out of the box without a separate theme entry.
+  - name: 'Remove theme symlink for absent projects'
+    ansible.builtin.file:
+      path: '{{ numishare__themes_dir }}/{{ item["name"] }}'
+      state: 'absent'
+    loop: '{{ numishare__projects__combined_var
+        | selectattr("state", "defined")
+        | selectattr("state", "eq", "absent")
+        | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'Symlink {{ numishare__themes_dir }}/<name> -> {{ numishare__projects_dir }}/<name>/ui'
+    ansible.builtin.file:
+      src: '{{ numishare__projects_dir }}/{{ item["name"] }}/ui'
+      dest: '{{ numishare__themes_dir }}/{{ item["name"] }}'
+      state: 'link'
+      force: true
+    loop: '{{ (numishare__projects__combined_var | selectattr("state", "undefined") | list)
+          + (numishare__projects__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
+        }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
   # ----------------------------------------------------------------------------
   # Custom themes — deployed from git_url or tarball_url. Each theme lands in
   # {{ numishare__themes_dir }}/<name>/ and is automatically picked up by

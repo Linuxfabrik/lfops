@@ -10,6 +10,7 @@ The role:
 * Creates `numishare__themes_dir` (default `/opt/themes`) and exposes Numishare's bundled UI assets as the `default` theme via a symlink.
 * Deploys custom themes from git or tarball sources via the `numishare__themes__*` variable family.
 * Deploys per-collection Numishare projects (the XPL pipelines / views the public `/numishare/<collection>/` pages render through) from git or tarball sources via the `numishare__projects__*` variable family, into `numishare__projects_dir`, and rewrites each project's own `exist-config.xml` to `numishare__exist_url` (project pipelines read it via the project-relative `../../exist-config.xml`, so the upstream `localhost:8080` default would otherwise make every collection page 404). The `orbeon_forms` role wires this into the Orbeon `oxf:/numishare-projects/` resource path.
+* Exposes each deployed project's bundled `ui/` as a theme named after the project (symlink `numishare__themes_dir/<name>` → `numishare__projects_dir/<name>/ui`, mirroring the `default` theme → install `ui/`), so a collection whose `config.xml` sets `<orbeon_theme><name></orbeon_theme>` resolves to `/themes/<name>` without a separate `numishare__themes__*` entry.
 
 Numishare itself is end-of-life upstream but stable; this role pins to the upstream `main` branch (one-time clone, updates handled out-of-band) and adapts the surrounding integration layer instead.
 
