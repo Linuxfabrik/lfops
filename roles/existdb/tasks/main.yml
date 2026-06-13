@@ -94,7 +94,7 @@
       regexp: '<Property name="logs">.*</Property>'
       replace: '<Property name="logs">{{ existdb__log_dir }}</Property>'
 
-  # Point the bundled CLI tools (client.sh / backup.sh / restore.sh) at the
+  # Point the bundled CLI tools (client.sh / backup.sh) at the
   # configured HTTP port. They read the connection URI from
   # $EXIST_HOME/etc/client.properties (default: localhost:8080). We also
   # replace `localhost` with `127.0.0.1` because eXist-db's Jetty binds IPv4

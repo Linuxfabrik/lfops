@@ -152,21 +152,21 @@ The role can deploy a `mariadb-dump`-style backup pipeline. On every run the dum
     ...
     ```
 
-2. With eXist-db running, replay the backup via `bin/restore.sh`:
+2. With eXist-db running, replay the backup via `bin/backup.sh -r` (eXist-db ships no separate `restore.sh`; `backup.sh` both exports with `-b` and restores with `-r`):
 
     ```bash
-    runuser -u existdb -- /opt/existdb/bin/restore.sh \
+    runuser -u existdb -- /opt/existdb/bin/backup.sh \
+        -r /backup/existdb-dump/db/__contents__.xml \
         -u admin \
         -p '<admin password>' \
-        -r /backup/existdb-dump/db/__contents__.xml \
         -ouri=xmldb:exist://127.0.0.1:8888/exist/xmlrpc
     ```
 
-    The path passed to `-r` must be the `__contents__.xml` at the root of the backup tree. The `-ouri=...` (no space, as in the eXist-db docs) is required because `bin/restore.sh` ignores `$EXIST_HOME/etc/client.properties` at runtime and falls back to the compiled-in default `xmldb:exist://localhost:8080/exist/xmlrpc`. On dual-stack hosts `localhost` resolves to `::1` first but eXist-db's Jetty binds IPv4 only, surfacing as `HTTP server returned unexpected status: null`. `runuser` is preferred over `sudo` for the same reason as in the dump script — `sudo`'s PAM session swallows the Java stderr without a TTY.
+    The path passed to `-r` must be the `__contents__.xml` of the tree to restore — the one at the backup root restores everything, a sub-collection's `__contents__.xml` (e.g. `.../db/<sub-collection>/__contents__.xml`) restores just that collection into the path recorded in it. The `-ouri=...` (no space, as in the eXist-db docs) is required because `backup.sh` ignores `$EXIST_HOME/etc/client.properties` at runtime and falls back to the compiled-in default `xmldb:exist://localhost:8080/exist/xmlrpc`. On dual-stack hosts `localhost` resolves to `::1` first but eXist-db's Jetty binds IPv4 only, surfacing as `HTTP server returned unexpected status: null`. `runuser` is preferred over `sudo` for the same reason as in the dump script — `sudo`'s PAM session swallows the Java stderr without a TTY.
 
 3. The restore overwrites collections in place. Verify via the eXist-db admin UI at `http://<host>:{{ existdb__http_port }}/exist/`.
 
-For full disaster recovery (host loss): re-run the role first to reinstall eXist-db at the same version with the same admin password, then run `restore.sh`.
+For full disaster recovery (host loss): re-run the role first to reinstall eXist-db at the same version with the same admin password, then run `backup.sh -r`.
 
 
 ## License
