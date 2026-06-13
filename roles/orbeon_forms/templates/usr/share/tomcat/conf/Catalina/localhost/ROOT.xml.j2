@@ -3,6 +3,8 @@
 <!--
   When this descriptor lives at Catalina/localhost/<name>.xml the context path is
   derived from the file name; setting `path` here is redundant and triggers a
-  startup warning, so it is omitted on purpose.
+  startup warning, so it is omitted on purpose. The file is named after the
+  webapp directory (ROOT.xml -> context path "/"), so Numishare's root-absolute
+  resource paths (/themes/..., /numishare/...) resolve without an /orbeon prefix.
 -->
 <Context><Resources allowLinking="true"/></Context>

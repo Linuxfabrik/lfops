@@ -4,9 +4,9 @@ This role deploys [Orbeon Forms](https://www.orbeon.com/) (Community Edition) in
 
 The role:
 
-* Downloads the Orbeon CE release zip from `orbeon_forms__zip_url` and extracts `orbeon.war` exploded into `orbeon_forms__home` (default `/var/lib/tomcat/webapps/orbeon`). Tomcat then picks it up as the `/orbeon` webapp.
+* Downloads the Orbeon CE release zip from `orbeon_forms__zip_url` and extracts `orbeon.war` exploded into `orbeon_forms__home` (default `/var/lib/tomcat/webapps/ROOT`). The directory name sets the Tomcat context path, so the default serves Orbeon at the **root context** (`http://<host>:8080/numishare/...`). Numishare requires this: its XSLT/JS emit root-absolute resource paths (`/themes/...`, `/numishare/...`) that 404 under an `/orbeon` prefix. The matching `apache_tomcat__skip_root_webapp: true` keeps Tomcat from installing its stock ROOT webapp into the same slot.
 * Rewrites `WEB-INF/resources/config/log4j2.xml` to absolute log paths under `orbeon_forms__log_dir` (default `/var/log/tomcat`). Orbeon's relative `../logs/` paths resolve to `/usr/share/logs/` on RHEL 10 Tomcat, where the `tomcat` user can not create files; the FileAppenders silently fail and surface only as generic "Page Not Found" responses.
-* Deploys `Catalina/localhost/orbeon.xml` with `allowLinking="true"` so Tomcat follows the symlinks the role creates. The `path` attribute is intentionally omitted (Tomcat ignores it for context descriptors and emits a warning).
+* Deploys the context descriptor `Catalina/localhost/<webapp>.xml` (named after `orbeon_forms__home`, e.g. `ROOT.xml`) with `allowLinking="true"` so Tomcat follows the symlinks the role creates. The `path` attribute is intentionally omitted (the file name sets the context path; Tomcat ignores `path` for context descriptors and emits a warning).
 * Symlinks `numishare` → `<orbeon_home>/WEB-INF/resources/apps/numishare` and copies the eXist-db XQJ libraries from `<numishare>/vendor/exist-xqj-api-1.0.1/*.jar` into `<orbeon_home>/WEB-INF/lib/`.
 * Symlinks `orbeon_forms__numishare_projects_dir` (default `/opt/numishare-projects`) → `<orbeon_home>/WEB-INF/resources/numishare-projects` so Numishare's page-flow resolves the public `/numishare/<collection>/` pages through `oxf:/numishare-projects/<collection>/...`. The projects themselves are deployed by the `numishare` role (`numishare__projects__*`).
 * Provides a Numishare-branded favicon at `<orbeon_home>/WEB-INF/resources/ops/images/orbeon-icon-16.{ico,png}` (Numishare's xforms templates hardcode that path; Orbeon 2023.1 dropped the file from the WAR).
@@ -66,9 +66,9 @@ None. All variables have defaults that match the Numishare stack layout.
 
 `orbeon_forms__home`
 
-* Exploded-WAR deployment directory. Tomcat must scan this path for webapps.
+* Exploded-WAR deployment directory. The directory name sets the Tomcat context path (`ROOT` → `/`), and the role names the context descriptor (`Catalina/localhost/<name>.xml`) after it. The default deploys Orbeon at the root context, which Numishare requires for its root-absolute `/themes` and `/numishare` paths.
 * Type: String.
-* Default: `'/var/lib/tomcat/webapps/orbeon'`
+* Default: `'/var/lib/tomcat/webapps/ROOT'`
 
 `orbeon_forms__log_dir`
 
@@ -108,7 +108,7 @@ None. All variables have defaults that match the Numishare stack layout.
 
 `orbeon_forms__tomcat_conf_dir`
 
-* Tomcat configuration root. The role writes `<orbeon_forms__tomcat_conf_dir>/Catalina/localhost/orbeon.xml`.
+* Tomcat configuration root. The role writes the context descriptor `<orbeon_forms__tomcat_conf_dir>/Catalina/localhost/<webapp>.xml` (named after `orbeon_forms__home`, e.g. `ROOT.xml`).
 * Type: String.
 * Default: `'/usr/share/tomcat/conf'`
 
