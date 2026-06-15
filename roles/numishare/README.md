@@ -4,7 +4,8 @@ This role checks out [Numishare](https://github.com/ewg118/numishare) — an ope
 
 The role:
 
-* Installs `git-core` and shallow-clones the Numishare repository into `numishare__install_dir` (default `/opt/numishare`).
+* Installs `git-core` and shallow-clones the Numishare repository into `numishare__install_dir` (default `/opt/numishare`), pinned to the git ref `numishare__git_version`.
+* Installs `fontconfig` and a font (`numishare__captcha_font_packages`) so Orbeon's on-premise CAPTCHA can render on the headless JVM; without a font Numishare's feedback form breaks.
 * Deploys `exist-config.xml` so Numishare knows how to reach eXist-db.
 * Deploys `solr-home/<core_version>/core.properties` so Solr can pick up the Numishare core, and creates the `<solr_data_dir>/<core_name>` symlink Solr's `solr.solr.home` scanner expects. Notifies a Solr restart so the core is loaded.
 * Creates `numishare__themes_dir` (default `/opt/themes`) and exposes Numishare's bundled UI assets as the `default` theme via a symlink.
@@ -12,7 +13,7 @@ The role:
 * Deploys per-collection Numishare projects (the XPL pipelines / views the public `/numishare/<collection>/` pages render through) from git or tarball sources via the `numishare__projects__*` variable family, into `numishare__projects_dir`, and rewrites each project's own `exist-config.xml` to `numishare__exist_url` (project pipelines read it via the project-relative `../../exist-config.xml`, so the upstream `localhost:8080` default would otherwise make every collection page 404). The `orbeon_forms` role wires this into the Orbeon `oxf:/numishare-projects/` resource path.
 * Exposes each deployed project's bundled `ui/` as a theme named after the project (symlink `numishare__themes_dir/<name>` → `numishare__projects_dir/<name>/ui`, mirroring the `default` theme → install `ui/`), so a collection whose `config.xml` sets `<orbeon_theme><name></orbeon_theme>` resolves to `/themes/<name>` without a separate `numishare__themes__*` entry.
 
-Numishare itself is end-of-life upstream but stable; this role pins to the upstream `main` branch (one-time clone, updates handled out-of-band) and adapts the surrounding integration layer instead.
+Numishare is only slowly developed upstream but stable; this role pins the core to a mandatory git ref (`numishare__git_version`, e.g. the release tag `v1.2`) as a one-time clone (updates handled out-of-band) and adapts the surrounding integration layer instead.
 
 This role is intended to be used together with [linuxfabrik.lfops.existdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/existdb), [linuxfabrik.lfops.apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr), [linuxfabrik.lfops.apache_tomcat](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_tomcat), and [linuxfabrik.lfops.orbeon_forms](https://github.com/Linuxfabrik/lfops/tree/main/roles/orbeon_forms). The [setup_numishare](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/setup_numishare.yml) playbook wires them all up in the right order.
 
@@ -33,13 +34,18 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `numishare`
 
-* Installs `git-core`, clones Numishare, deploys `exist-config.xml`, wires the Solr core, creates `/opt/themes/` plus the `default` theme symlink, and deploys all custom themes listed in `numishare__themes__*`.
+* Installs `git-core` and the CAPTCHA fonts, clones Numishare at `numishare__git_version`, deploys `exist-config.xml`, wires the Solr core, creates `/opt/themes/` plus the `default` theme symlink, and deploys all custom themes listed in `numishare__themes__*`.
 * Triggers: solr.service restart on Solr-core changes.
 
 
 ## Mandatory Role Variables
 
-None. All variables have defaults; the eXist-db admin password defaults to `'linuxfabrik'` and **must** be overridden via `numishare__exist_password` (or by setting `existdb__admin_password` and inheriting it) for any non-throwaway install.
+`numishare__git_version`
+
+* Git ref (tag, branch or commit) the Numishare core is pinned to, e.g. the release tag `'v1.2'`. Mandatory so the deployed state matches the inventory instead of drifting to upstream HEAD.
+* Type: String.
+
+The eXist-db admin password defaults to `'linuxfabrik'` and **must** be overridden via `numishare__exist_password` (or by setting `existdb__admin_password` and inheriting it) for any non-throwaway install.
 
 
 ## Optional Role Variables
@@ -55,6 +61,12 @@ None. All variables have defaults; the eXist-db admin password defaults to `'lin
 * User that owns Numishare config files (must match the application server user).
 * Type: String.
 * Default: `'tomcat'`
+
+`numishare__captcha_font_packages`
+
+* Packages installed so Orbeon's on-premise CAPTCHA (Kaptcha) can render on the headless JVM. Without a font the feedback form breaks.
+* Type: List of strings.
+* Default: `['fontconfig', 'dejavu-sans-fonts']`
 
 `numishare__exist_password`
 

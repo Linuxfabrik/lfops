@@ -6,10 +6,18 @@
         - 'git-core'
       state: 'present'
 
-  - name: 'git clone --depth 1 {{ numishare__git_url }} {{ numishare__install_dir }}'
+  # fontconfig + a font: without them Orbeon's on-premise CAPTCHA (Kaptcha) cannot
+  # render an image on the headless JVM, which breaks Numishare's feedback form.
+  - name: 'Install the fonts Orbeon needs to render the feedback-form CAPTCHA'
+    ansible.builtin.package:
+      name: '{{ numishare__captcha_font_packages }}'
+      state: 'present'
+
+  - name: 'git clone --depth 1 --branch {{ numishare__git_version }} {{ numishare__git_url }} {{ numishare__install_dir }}'
     ansible.builtin.git:
       repo: '{{ numishare__git_url }}'
       dest: '{{ numishare__install_dir }}'
+      version: '{{ numishare__git_version }}'
       depth: 1
       update: false  # Numishare is checked out once; updates handled out-of-band
 

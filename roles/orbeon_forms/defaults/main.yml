@@ -1,7 +1,7 @@
 orbeon_forms__auth_method: 'BASIC'  # 'BASIC' or 'FORM'
 orbeon_forms__form_error_page: '/numishare/login-failed'
 orbeon_forms__form_login_page: '/numishare/login'
-orbeon_forms__home: '/var/lib/tomcat/webapps/ROOT'
+orbeon_forms__home: '/var/lib/tomcat/webapps/orbeon'
 orbeon_forms__log_dir: '/var/log/tomcat'
 orbeon_forms__numishare_dir: '/opt/numishare'
 orbeon_forms__numishare_projects_dir: '/opt/numishare-projects'

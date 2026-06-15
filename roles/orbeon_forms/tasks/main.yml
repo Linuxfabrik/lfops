@@ -49,15 +49,15 @@
       regexp: '\.\./logs/'
       replace: '{{ orbeon_forms__log_dir }}/'
 
-  # The context-descriptor file name sets the context path (ROOT.xml -> "/"), so
-  # it is derived from the webapp directory name. With the default
-  # orbeon_forms__home (.../webapps/ROOT) Orbeon serves at the root context, which
-  # Numishare requires: its XSLT/JS emit root-absolute resource paths
-  # (/themes/..., /numishare/...) that would 404 under an /orbeon prefix.
+  # The context-descriptor file name sets the context path, so it is derived from
+  # the webapp directory name. With the default orbeon_forms__home
+  # (.../webapps/orbeon) Orbeon serves at the /orbeon context. The reverse proxy in
+  # front maps Numishare's root-absolute public URLs (/id/..., /themes/...,
+  # /numishare/..., /admin/) onto this /orbeon backend.
   - name: 'Deploy {{ orbeon_forms__tomcat_conf_dir }}/Catalina/localhost/{{ orbeon_forms__home | basename }}.xml'
     ansible.builtin.template:
       backup: true
-      src: 'usr/share/tomcat/conf/Catalina/localhost/ROOT.xml.j2'
+      src: 'usr/share/tomcat/conf/Catalina/localhost/orbeon.xml.j2'
       dest: '{{ orbeon_forms__tomcat_conf_dir }}/Catalina/localhost/{{ orbeon_forms__home | basename }}.xml'
       owner: '{{ orbeon_forms__tomcat_user }}'
       group: '{{ orbeon_forms__tomcat_group }}'

@@ -65,6 +65,9 @@
         - 'not setup_numishare__existdb__skip_role__internal_var'
 
     # Orbeon WAR deployment + Numishare-specific properties / web.xml / themes wiring.
+    # Orbeon runs under the /orbeon context; the reverse proxy that maps the clean
+    # public URLs onto it runs on a separate host (see roles/orbeon_forms/README.md)
+    # and is NOT part of this playbook.
     - role: 'linuxfabrik.lfops.orbeon_forms'
       when:
         - 'not setup_numishare__orbeon_forms__skip_role__internal_var'

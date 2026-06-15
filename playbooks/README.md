@@ -1256,12 +1256,16 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps): `setup_numishare__skip_apps`
-* [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr): `setup_numishare__skip_apache_solr`, `setup_numishare__apache_solr__skip_injections`
-* [apache_tomcat](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_tomcat): `setup_numishare__skip_apache_tomcat`
-* [numishare](https://github.com/Linuxfabrik/lfops/tree/main/roles/numishare): `setup_numishare__skip_numishare`
-* [existdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/existdb): `setup_numishare__skip_existdb`
-* [orbeon_forms](https://github.com/Linuxfabrik/lfops/tree/main/roles/orbeon_forms): `setup_numishare__skip_orbeon_forms`
+* [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps): `setup_numishare__apps__skip_role`
+* [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr): `setup_numishare__apache_solr__skip_role`, `setup_numishare__apache_solr__skip_injections`
+* [apache_tomcat](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_tomcat): `setup_numishare__apache_tomcat__skip_role`
+* [numishare](https://github.com/Linuxfabrik/lfops/tree/main/roles/numishare): `setup_numishare__numishare__skip_role`
+* [existdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/existdb): `setup_numishare__existdb__skip_role`
+* [orbeon_forms](https://github.com/Linuxfabrik/lfops/tree/main/roles/orbeon_forms): `setup_numishare__orbeon_forms__skip_role`
+
+Orbeon runs under the `/orbeon` context; the reverse proxy that maps the clean public URLs onto it (and denies `/orbeon/fr`) runs on a separate host and is not part of this playbook.
+
+The feedback-form CAPTCHA renders headless once a font is installed (the `numishare` role installs `fontconfig` + `dejavu-sans-fonts`). If Kaptcha ever throws `java.awt.HeadlessException`, append `-Djava.awt.headless=true` to Tomcat's `CATALINA_OPTS`.
 
 
 ## setup_rocketchat.yml

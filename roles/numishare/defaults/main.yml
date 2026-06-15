@@ -1,5 +1,8 @@
 numishare__app_group: 'tomcat'
 numishare__app_user: 'tomcat'
+numishare__captcha_font_packages:
+  - 'fontconfig'
+  - 'dejavu-sans-fonts'
 numishare__exist_password: 'linuxfabrik'
 numishare__exist_url: 'http://127.0.0.1:8888/exist/rest/db/'
 numishare__exist_username: 'admin'

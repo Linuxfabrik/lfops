@@ -17,6 +17,15 @@ argument_specs:
         default: 'tomcat'
         description: 'User that owns Numishare config files; must match the application server user.'
 
+      numishare__captcha_font_packages:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'fontconfig'
+          - 'dejavu-sans-fonts'
+        description: 'Packages installed so Orbeon''s on-premise CAPTCHA (Kaptcha) can render on the headless JVM; without a font the feedback form breaks.'
+
       numishare__exist_password:
         type: 'str'
         required: false
@@ -40,6 +49,11 @@ argument_specs:
         required: false
         default: 'https://github.com/ewg118/numishare.git'
         description: 'Upstream Numishare repository to clone.'
+
+      numishare__git_version:
+        type: 'str'
+        required: true
+        description: 'Git ref (tag, branch or commit) the Numishare core is pinned to, e.g. the release tag "v1.2". Mandatory so the deployed state matches the inventory and does not drift to upstream HEAD.'
 
       numishare__install_dir:
         type: 'str'

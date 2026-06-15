@@ -29,8 +29,8 @@ argument_specs:
       orbeon_forms__home:
         type: 'str'
         required: false
-        default: '/var/lib/tomcat/webapps/ROOT'
-        description: 'Exploded-WAR deployment directory. The directory name sets the Tomcat context path (ROOT -> "/"); the default deploys Orbeon at the root context, which Numishare requires for its root-absolute /themes and /numishare paths.'
+        default: '/var/lib/tomcat/webapps/orbeon'
+        description: 'Exploded-WAR deployment directory. The directory name sets the Tomcat context path (orbeon -> "/orbeon"); the default deploys Orbeon at the /orbeon context, with a reverse proxy in front mapping the clean public URLs onto it.'
 
       orbeon_forms__log_dir:
         type: 'str'
@@ -74,7 +74,7 @@ argument_specs:
         type: 'str'
         required: false
         default: '/usr/share/tomcat/conf'
-        description: 'Tomcat configuration root. The role writes the context descriptor <orbeon_forms__tomcat_conf_dir>/Catalina/localhost/<webapp>.xml (named after orbeon_forms__home, e.g. ROOT.xml).'
+        description: 'Tomcat configuration root. The role writes the context descriptor <orbeon_forms__tomcat_conf_dir>/Catalina/localhost/<webapp>.xml (named after orbeon_forms__home, e.g. orbeon.xml).'
 
       orbeon_forms__tomcat_group:
         type: 'str'
