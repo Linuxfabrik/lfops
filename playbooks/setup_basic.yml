@@ -115,6 +115,10 @@
         - 'not setup_basic__skip_motd | d(false)'
 
     # === Various tools / dependencies ===
+    - role: 'linuxfabrik.lfops.at'
+      when:
+        - 'not setup_basic__skip_at | d(false)'
+
     - role: 'linuxfabrik.lfops.python'
       when:
         - 'not setup_basic__skip_python | d(false)'

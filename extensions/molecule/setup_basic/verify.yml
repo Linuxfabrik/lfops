@@ -20,3 +20,19 @@
       ansible.builtin.assert:
         that:
           - '__molecule__glances_version_result["rc"] == 0'
+
+    - name: 'systemctl is-active / is-enabled atd.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl {{ item }} atd.service'
+      loop:
+        - 'is-active'
+        - 'is-enabled'
+      register: '__molecule__atd_state_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that atd.service is running and enabled (at is available as a sysadmin utility)'
+      ansible.builtin.assert:
+        that: 'item["stdout"] in ["active", "enabled"]'
+      loop: '{{ __molecule__atd_state_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'

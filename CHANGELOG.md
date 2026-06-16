@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
-* **playbook:setup_basic**: The `at` role is no longer installed by `setup_basic`, as nothing in the base setup uses `at` anymore. Existing hosts keep it; new installs do not get it. If you rely on `at` / `atd`, install it separately with the `linuxfabrik.lfops.at` role.
 * **role:system_update**: Host reboots are now performed at one configurable maintenance window by the new `schedule_reboot` role (see Added). Adjust in your inventory: `system_update__update_time` to `schedule_reboot__reboot_time__group_var` (now a plain time of day, e.g. `'04:00'`), and any `system_update__icinga2_*` reboot-downtime settings to `schedule_reboot__icinga2_*`. Also, in most cases `system_update__update_day` should be used instead of `system_update__notify_and_schedule_on_calendar`.
 * **role:mariadb_server**: The default for `skip_name_resolve` is now `OFF` instead of `ON`. Hosts that relied on the previous default and grant access by hostname keep working, but connections are now resolved via DNS again. Set `mariadb_server__cnf_skip_name_resolve__group_var: 'ON'` (or the `__host_var`) to restore the previous behaviour.
 
