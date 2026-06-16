@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026061001
+
+# Apply all available updates, then request a reboot if one is needed by dropping a
+# file into the /run/schedule-reboot spool. This script never reboots itself; the
+# schedule-reboot.service (ordered After= this one) performs the reboot at the window.
+
+export LC_ALL=C
+
+# log progress to stdout so systemd captures it in the journal (journalctl -u
+# update-and-reboot.service); journald already prefixes a timestamp and the unit name.
+log () {
+    printf '%s\n' "$*"
+}
+
+send_msg () {
+    local subject="$1" body="$2"
+    # feed a complete message to sendmail (-t reads the recipients from the headers).
+    # sendmail has a stable CLI across MTAs, unlike mailx's -r / -a "From:" split.
+    {
+        printf 'From: %s\n' "$SENDER"
+        printf 'To: %s\n' "${RECIPIENTS// /, }"
+        printf 'Subject: %s\n' "$subject"
+        printf 'Content-Type: text/plain; charset="utf-8"\n'
+        printf 'Content-Transfer-Encoding: 8bit\n'
+        printf '\n%s\n' "$body"
+    } | sendmail -oi -t -f "$SENDER"
+{% if system_update__rocketchat_url is defined and system_update__rocketchat_url | length %}
+    /usr/bin/curl --silent --output /dev/null --data-urlencode \
+        "text=${subject}
+
+        ${body}
+        {{ system_update__rocketchat_msg_suffix }}" \
+        --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
+        "{{ system_update__rocketchat_url }}"
+{% endif %}
+}
+
+{% if system_update__post_update_code is defined and system_update__post_update_code | length %}
+post_update_code () {
+{{ system_update__post_update_code | indent(4, first=True) }}
+}
+{% endif %}
+
+SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
+SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
+RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ' ) }}"
+RECIPIENTS_NEW_CONFIGFILES="{{ system_update__mail_recipients_new_configfiles | join(' ' ) }}"
+
+# the reboot-request spool is owned and created by the schedule_reboot role (tmpfiles.d)
+
+log "Starting system update"
+
+{% if system_update__pre_update_code is defined and system_update__pre_update_code | length %}
+# start raw system_update__pre_update_code
+{{ system_update__pre_update_code }}
+# end raw system_update__pre_update_code
+{% endif %}
+
+if systemctl is-active --quiet aide-check.timer && systemctl is-failed --quiet aide-check.service; then
+    cp /var/log/aide/aide.log /var/log/aide/aide.log-pre-system-update
+    send_msg "$SUBJECT_PREFIX - aide-check.service state was failed before System Update" "Please check the logfile at /var/log/aide/aide.log-pre-system-update (saved before the update ran)."
+fi
+
+# do the update, and print only critical errors about which we must be told
+log "Applying all available updates"
+{% if ansible_facts['os_family'] == 'RedHat' %}
+if ! yum -y update {{ system_update__cache_only | bool | ternary("--cacheonly --setopt=metadata_timer_sync=0", "") }} 1> /dev/null 2> /tmp/system-update-stderr; then
+    log "System update failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/system-update-stderr)"
+    exit 1
+fi
+{% endif %}
+
+if systemctl is-active --quiet aide-check.timer; then
+    aide --update 1> /dev/null
+    \mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+    systemctl restart aide-check.service
+fi
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+apt-get update {{ system_update__cache_only | bool | ternary("--no-download", "") }} 1> /dev/null
+export DEBIAN_FRONTEND=noninteractive
+yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output
+{% endif %}
+
+# after any update, notify about new config-file stubs (*.rpmnew / *.rpmsave on RHEL,
+# *.dpkg-dist / *.ucf-dist on Debian). one mail per file, sent via sendmail.
+# 2> /dev/null hides messages like 'find: '/proc/26144': No such file or directory'.
+find / -mount \( -name '*.rpmnew' -o -name '*.rpmsave' -o -name '*.dpkg-dist' -o -name '*.ucf-dist' \) -print0 2> /dev/null \
+        | while IFS= read -r -d '' configfile; do
+    # the body keeps the full path; only the subject is elided when very long (e.g.
+    # files deep inside container storage), so the Subject stays readable. the bash
+    # length operator below is wrapped in a Jinja raw block so its brace-hash is not
+    # taken as a Jinja comment when Ansible renders this template.
+    subject_path="$configfile"
+    if [ "{% raw %}${#subject_path}{% endraw %}" -gt 100 ]; then
+        subject_path="${configfile:0:35}...${configfile: -60}"
+    fi
+    {
+        printf 'From: %s\n' "$SENDER"
+        printf 'To: %s\n' "${RECIPIENTS_NEW_CONFIGFILES// /, }"
+        printf 'Subject: %s - config-file stub found: %s\n' "$SUBJECT_PREFIX" "$subject_path"
+        printf 'Content-Type: text/plain; charset="utf-8"\n'
+        printf 'Content-Transfer-Encoding: 8bit\n'
+        printf '\n%s\n' "$configfile"
+    } | sendmail -oi -t -f "$SENDER"
+done
+
+# any restarts needed? if so, request a reboot via the spool (do not reboot here)
+{% if ansible_facts['os_family'] == 'RedHat' %}
+needs-restarting --reboothint &> /dev/null
+if [ $? -eq 1 ]; then
+    log "Reboot required (kernel/core component update); requesting reboot via the spool"
+    MSGBODY=$(yum history info)
+{% if system_update__post_update_code is defined and system_update__post_update_code | length %}
+    post_update_code
+{% endif %}
+    # request a reboot; do-reboot sends the single notification at reboot time
+    printf '%s\n' "$MSGBODY" > /run/schedule-reboot/system_update
+    exit 0
+fi
+
+needs-restarting 2> /dev/null > /tmp/needs-restarting
+if [ -s /tmp/needs-restarting ]; then
+    log "Reboot required (running services still use pre-update libraries); requesting reboot via the spool"
+    MSGBODY=$(cat /tmp/needs-restarting; yum history info)
+{% if system_update__post_update_code is defined and system_update__post_update_code | length %}
+    post_update_code
+{% endif %}
+    # request a reboot; do-reboot sends the single notification at reboot time
+    printf '%s\n' "$MSGBODY" > /run/schedule-reboot/system_update
+    exit 0
+fi
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+# we call needrestart with the -p option so it behaves like a nagios plugin. any exit code != 0 means a reboot is required
+if [ -f /var/run/reboot-required ] || ! needrestart -p 1> /dev/null; then
+    log "Reboot required; requesting reboot via the spool"
+    MSGBODY=$(cat /tmp/update_output)
+{% if system_update__post_update_code is defined and system_update__post_update_code | length %}
+    post_update_code
+{% endif %}
+    # request a reboot; do-reboot sends the single notification at reboot time
+    printf '%s\n' "$MSGBODY" > /run/schedule-reboot/system_update
+    exit 0
+fi
+{% endif %}
+
+{% if system_update__post_update_code is defined and system_update__post_update_code | length %}
+post_update_code
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'RedHat' %}
+log "System updated, no reboot required"
+send_msg "$SUBJECT_PREFIX - System updated without Reboot" "$(yum history info)"
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+send_msg "$SUBJECT_PREFIX - System updated without Reboot" "$(cat /tmp/update_output)"
+{% endif %}

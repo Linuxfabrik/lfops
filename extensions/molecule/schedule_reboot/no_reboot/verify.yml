@@ -1,0 +1,74 @@
+# Verify the schedule_reboot mechanism on the running system: the timer is
+# armed, the spool exists, the actor runs as a no-op on an empty spool (which
+# also proves /usr/local/libexec/do-reboot executes under systemd and SELinux),
+# and the schedule-reboot CLI files a request. No real reboot happens here -
+# that is the schedule_reboot/reboot scenario.
+- name: 'Verify schedule_reboot is armed and functional'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'systemctl is-enabled schedule-reboot.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-enabled schedule-reboot.timer'
+      register: '__molecule__schedule_reboot_timer_enabled_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl is-active schedule-reboot.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active schedule-reboot.timer'
+      register: '__molecule__schedule_reboot_timer_active_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that schedule-reboot.timer is enabled and active'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__schedule_reboot_timer_enabled_result["stdout"] == "enabled"'
+          - '__molecule__schedule_reboot_timer_active_result["stdout"] == "active"'
+
+    - name: 'stat /run/schedule-reboot'
+      ansible.builtin.stat:
+        path: '/run/schedule-reboot'
+      register: '__molecule__spool_stat_result'
+
+    - name: 'Assert that the spool directory exists with mode 0755'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__spool_stat_result["stat"]["isdir"]'
+          - '__molecule__spool_stat_result["stat"]["mode"] == "0755"'
+
+    # Run the actor against the empty post-converge spool. do-reboot must exit 0
+    # without rebooting; that it runs at all proves the usr_t libexec script is
+    # executable under systemd/SELinux (the FHS-placement concern).
+    - name: 'systemctl start schedule-reboot.service (empty spool, expected no-op)' # noqa command-instead-of-module (need to run the oneshot actor and read its Result)
+      ansible.builtin.command: 'systemctl start schedule-reboot.service'
+      changed_when: false
+
+    - name: 'systemctl show --property=Result schedule-reboot.service' # noqa command-instead-of-module (no module reads a oneshot Result)
+      ansible.builtin.command: 'systemctl show --property=Result --value schedule-reboot.service'
+      register: '__molecule__do_reboot_result'
+      changed_when: false
+
+    - name: 'Assert that do-reboot completed successfully without rebooting'
+      ansible.builtin.assert:
+        that: '__molecule__do_reboot_result["stdout"] == "success"'
+
+    # Exercise the request CLI, then remove the request so nothing can trigger a
+    # reboot afterwards (the timer is at 03:00 and will not fire during the run).
+    - name: 'schedule-reboot ci-verify hello-from-molecule'
+      ansible.builtin.command: 'schedule-reboot ci-verify hello-from-molecule'
+      changed_when: false
+
+    - name: 'slurp /run/schedule-reboot/ci-verify'
+      ansible.builtin.slurp:
+        src: '/run/schedule-reboot/ci-verify'
+      register: '__molecule__ci_verify_request_result'
+
+    - name: 'Assert the request file holds the detail text passed to the CLI'
+      ansible.builtin.assert:
+        that: '__molecule__ci_verify_request_result["content"] | ansible.builtin.b64decode == "hello-from-molecule\n"'
+
+    - name: 'rm /run/schedule-reboot/ci-verify'
+      ansible.builtin.file:
+        path: '/run/schedule-reboot/ci-verify'
+        state: 'absent'

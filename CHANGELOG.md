@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:system_update**: Host reboots are now performed at one configurable maintenance window by the new `schedule_reboot` role (see Added). Adjust in your inventory: `system_update__update_time` to `schedule_reboot__reboot_time__group_var` (now a plain time of day, e.g. `'04:00'`), and any `system_update__icinga2_*` reboot-downtime settings to `schedule_reboot__icinga2_*`. Also, in most cases `system_update__update_day` should be used instead of `system_update__notify_and_schedule_on_calendar`.
 * **role:mariadb_server**: The default for `skip_name_resolve` is now `OFF` instead of `ON`. Hosts that relied on the previous default and grant access by hostname keep working, but connections are now resolved via DNS again. Set `mariadb_server__cnf_skip_name_resolve__group_var: 'ON'` (or the `__host_var`) to restore the previous behaviour.
 
 ### Added
@@ -49,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:schedule_reboot**: New role. Provides a single, windowed reboot mechanism: a request spool (`/run/schedule-reboot/`), an ad-hoc `schedule-reboot` command, and one actor that performs a single reboot for all pending requests at a configurable window (`schedule_reboot__reboot_time__*`), setting an Icinga downtime around it. Other roles request a reboot instead of rebooting themselves; `system_update` uses it.
 * **testing**: Add a Molecule-based test framework that runs the playbooks (and through them the roles) against throwaway libvirt/KVM VMs or Podman containers. Scenarios live under `extensions/molecule`; see the Testing section in `CONTRIBUTING.md`.
 * **role:icinga2_master, role:icingadb, role:icingaweb2, role:icingaweb2_module_reporting, role:icingaweb2_module_x509**: Add explicit Ubuntu variable files, making Ubuntu support visible alongside Debian. The Icinga repository, GPG key and package names were verified on Debian 13 and Ubuntu 24.04.
 * **role:nextcloud**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and missing mandatory variables.
@@ -64,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **plugin:platform_select**: New filter plugin for selecting a value from a platform-keyed dictionary by OS family / distribution / version.
 * **role:alternatives**: Support managing `subcommands` (slaves/followers) and the Red Hat-only `family` grouping. The role now also ensures the alternatives tooling is installed (`chkconfig` on RHEL 8, `alternatives` on RHEL 9/10; bundled with `dpkg` on Debian/Ubuntu), and can be included without variables as a no-op.
 * **role:redis**: Add template for version 8.8
-* **role:system_update**: Add a security lane for Rocky Linux. A second timer (twice a day by default) installs only Rocky Linux security hot-fixes from the dedicated `security` repository (provided by `repo_baseos`) and reboots the host if needed. The reboot time is steered per host group (for example immediately on test hosts, deferred to the evening on production hosts). Enabled by default; a no-op where the `security` repository is not enabled, and can be turned off with `system_update__security_enabled: false`. This keeps critical security fixes flowing daily while the regular update lane stays on its weekly schedule.
+* **role:system_update**: Add a security lane for Rocky Linux. A daily timer installs only Rocky Linux security hot-fixes from the dedicated `security` repository (provided by `repo_baseos`) and requests a reboot if needed, which is performed at the host's maintenance window (`schedule_reboot__reboot_time__*`). Enabled by default; a no-op where the `security` repository is not enabled, and can be turned off with `system_update__security_enabled: false`. This keeps critical security fixes flowing daily while the regular update lane stays on its weekly schedule.
 * **role:mariadb_server**: Add `mariadb_server__cnf_innodb_snapshot_isolation` variable (MariaDB 10.6+), defaulting to `'ON'`.
 * **role:repo_baseos**: Add the Rocky Linux `security` repository (critical CVE fixes), enabled by default. Opt out per host or group via `repo_baseos__security_repo_enabled__host_var` / `repo_baseos__security_repo_enabled__group_var`.
 * **role:chromium_headless**: New role. Provides a hardened, socket-activated headless Chromium backend (started on the first request, stopped again after an idle timeout, so it uses no RAM while unused) for tools such as the Icinga Web 2 PDF Export Module. Installs `chromium-headless` from EPEL instead of Google's proprietary repository.
@@ -98,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:mailto_root**: Send the verification mails via `sendmail` (provided by `postfix`) instead of the `mail` (mailx) command, completing the move off `mailx` (see Breaking Changes). The role no longer needs the `mailx` package installed.
 * **role:icinga2_master, role:icingadb**: Validate the Icinga 2 configuration before restarting the service. A faulty config now fails the playbook run loudly instead of bouncing the daemon into a broken state and leaving Icinga 2 down.
 * **role:nextcloud**: Automatic app updates are now enabled by default (`nextcloud__timer_app_update_enabled`). The scheduled app update only switches Nextcloud into maintenance mode when an app update is actually pending, so an instance that is already up to date keeps serving requests without interruption. After updating, the recommended database migrations are applied automatically. A failed run no longer leaves the instance stuck in maintenance mode.
 * **role:clamav**: Now runs on Debian and Ubuntu in addition to Red Hat-family systems, and works on RHEL 10. The role seeds the signature database on first install so the scanner starts reliably, and runs an EICAR self-test (also available on its own via the `clamav:test` tag) that confirms detection actually works.

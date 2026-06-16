@@ -1,0 +1,12 @@
+# Opt-in, DESTRUCTIVE sub-scenario: it triggers a real reboot to prove the
+# do-reboot actor reboots the host and the tmpfs spool clears. The reduced
+# test_sequence drops the idempotence loop and the trailing verify, so the
+# reboot happens exactly once per run.
+scenario:
+  test_sequence:
+    - 'dependency'
+    - 'create'
+    - 'prepare'
+    - 'converge'
+    - 'verify'
+    - 'destroy'

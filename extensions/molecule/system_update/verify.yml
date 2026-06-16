@@ -1,0 +1,86 @@
+# Verify system_update on the running system: both regular-lane timers and the
+# schedule-reboot timer it pulls in are armed; on Rocky the security lane exists
+# and is a clean no-op without the security repo; off Rocky the security lane is
+# absent. sendmail (the transport the scripts now use) is available.
+#
+# gather_facts is on here because the security-lane checks branch on
+# ansible_facts["distribution"].
+- name: 'Verify system_update timers and the security lane'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  tasks:
+
+    - name: 'systemctl is-enabled the regular-lane and reboot timers' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-enabled {{ item }}'
+      loop:
+        - 'notify-and-schedule.timer'
+        - 'update-and-reboot.timer'
+        - 'schedule-reboot.timer'
+      register: '__molecule__update_timers_enabled_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the regular-lane and reboot timers are enabled'
+      ansible.builtin.assert:
+        that: 'item["stdout"] == "enabled"'
+      loop: '{{ __molecule__update_timers_enabled_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    - name: 'systemctl is-active security-update.timer (Rocky only)' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active security-update.timer'
+      register: '__molecule__security_timer_active_result'
+      changed_when: false
+      failed_when: false
+      when: 'ansible_facts["distribution"] == "Rocky"'
+
+    - name: 'Assert the security lane is armed on Rocky'
+      ansible.builtin.assert:
+        that: '__molecule__security_timer_active_result["stdout"] == "active"'
+      when: 'ansible_facts["distribution"] == "Rocky"'
+
+    - name: 'stat /etc/systemd/system/security-update.timer (non-Rocky)'
+      ansible.builtin.stat:
+        path: '/etc/systemd/system/security-update.timer'
+      register: '__molecule__security_timer_stat_result'
+      when: 'ansible_facts["distribution"] != "Rocky"'
+
+    - name: 'Assert the security lane is absent off Rocky'
+      ansible.builtin.assert:
+        that: 'not __molecule__security_timer_stat_result["stat"]["exists"]'
+      when: 'ansible_facts["distribution"] != "Rocky"'
+
+    # Without the security repo (system_update.yml does not pull in repo_baseos),
+    # security-update must exit 0 and request no reboot.
+    - name: 'systemctl start security-update.service (Rocky no-op)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+      ansible.builtin.command: 'systemctl start security-update.service'
+      changed_when: false
+      when: 'ansible_facts["distribution"] == "Rocky"'
+
+    - name: 'systemctl show --property=Result security-update.service' # noqa command-instead-of-module (no module reads a oneshot Result)
+      ansible.builtin.command: 'systemctl show --property=Result --value security-update.service'
+      register: '__molecule__security_update_result'
+      changed_when: false
+      when: 'ansible_facts["distribution"] == "Rocky"'
+
+    - name: 'stat /run/schedule-reboot/security_update'
+      ansible.builtin.stat:
+        path: '/run/schedule-reboot/security_update'
+      register: '__molecule__security_request_stat_result'
+      when: 'ansible_facts["distribution"] == "Rocky"'
+
+    - name: 'Assert the security lane ran clean and requested no reboot'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__security_update_result["stdout"] == "success"'
+          - 'not __molecule__security_request_stat_result["stat"]["exists"]'
+      when: 'ansible_facts["distribution"] == "Rocky"'
+
+    - name: 'stat /usr/sbin/sendmail'
+      ansible.builtin.stat:
+        path: '/usr/sbin/sendmail'
+      register: '__molecule__sendmail_stat_result'
+
+    - name: 'Assert sendmail is available for the update notifications'
+      ansible.builtin.assert:
+        that: '__molecule__sendmail_stat_result["stat"]["exists"]'
