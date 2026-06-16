@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:repo_baseos**: The Rocky Linux `security` repository now always points at the upstream mirrorlist, even when a custom `repo_baseos__mirror_url` is set, so critical CVE fixes keep coming straight from upstream instead of a potentially lagging mirror. Hosts that previously pulled the `security` repository from their custom mirror now reach upstream directly. Set `repo_baseos__security_repo_use_upstream: false` to restore the previous behaviour and have the `security` repository follow `repo_baseos__mirror_url` again.
 * **role:mariadb_server**: The default for `skip_name_resolve` is now `OFF` instead of `ON`. Hosts that relied on the previous default and grant access by hostname keep working, but connections are now resolved via DNS again. Set `mariadb_server__cnf_skip_name_resolve__group_var: 'ON'` (or the `__host_var`) to restore the previous behaviour.
 
 ### Added
