@@ -95,6 +95,7 @@ Which Ansible role is proven to run on which OS?
 | mailx                                 |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora                                       |
 | mariadb_server                        |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Galera on Debian is untested                 |
 | mastodon                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| matomo_import_logs                    |  (x)   |   x    |  (x)   |  (x)   |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | maxmind_geoip                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | mirror                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | mod_maxminddb                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |

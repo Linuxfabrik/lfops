@@ -1,0 +1,48 @@
+- name: 'Verify the matomo_import_logs site artifacts are removed'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  vars:
+    __molecule__site: 'test.example.com'
+  tasks:
+
+    # the script is deployed unconditionally, so removing a site must not remove it.
+    - name: 'stat /usr/local/sbin/import_logs.py'
+      ansible.builtin.stat:
+        path: '/usr/local/sbin/import_logs.py'
+      register: '__molecule__import_logs_script'
+
+    - name: 'Assert that import_logs.py is still present'
+      ansible.builtin.assert:
+        that: '__molecule__import_logs_script["stat"]["exists"]'
+
+    - name: 'stat the per-site auth file'
+      ansible.builtin.stat:
+        path: '/etc/matomo-import-logs/{{ __molecule__site }}.conf'
+      register: '__molecule__auth_file'
+
+    - name: 'stat the per-site timer unit'
+      ansible.builtin.stat:
+        path: '/etc/systemd/system/matomo-import-logs-{{ __molecule__site }}.timer'
+      register: '__molecule__timer_unit'
+
+    - name: 'stat the per-site service unit'
+      ansible.builtin.stat:
+        path: '/etc/systemd/system/matomo-import-logs-{{ __molecule__site }}.service'
+      register: '__molecule__service_unit'
+
+    - name: 'Assert that the per-site artifacts are gone'
+      ansible.builtin.assert:
+        that:
+          - 'not __molecule__auth_file["stat"]["exists"]'
+          - 'not __molecule__timer_unit["stat"]["exists"]'
+          - 'not __molecule__service_unit["stat"]["exists"]'
+
+    - name: 'systemctl is-enabled the timer'
+      ansible.builtin.command: 'systemctl is-enabled matomo-import-logs-{{ __molecule__site }}.timer'
+      register: '__molecule__timer_enabled'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that the timer is no longer enabled'
+      ansible.builtin.assert:
+        that: '__molecule__timer_enabled["rc"] != 0'

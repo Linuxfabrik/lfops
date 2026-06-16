@@ -1,0 +1,26 @@
+# the per-site subkeys are not declared as a sub-option spec, because the items are
+# merged from several injection slots. they are documented in the README instead.
+argument_specs:
+  main:
+    options:
+
+      matomo_import_logs__sites__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Matomo log-import sites. Dependent-role injection.'
+
+      matomo_import_logs__sites__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Matomo log-import sites. Group-level override.'
+
+      matomo_import_logs__sites__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Matomo log-import sites. Host-level override.'

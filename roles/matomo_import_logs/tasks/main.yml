@@ -1,0 +1,159 @@
+- block:
+
+  - name: 'Combined Sites'
+    ansible.builtin.debug:
+      var: 'matomo_import_logs__sites__combined_var'
+
+  # note: realtime piped-log tracking (apache_httpd role) reuses this script too.
+  - name: 'Deploy /usr/local/sbin/import_logs.py'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/sbin/import_logs.py.j2'
+      dest: '/usr/local/sbin/import_logs.py'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  tags:
+    - 'matomo_import_logs'
+
+
+- block:
+
+  - name: 'mkdir -p /etc/matomo-import-logs'
+    ansible.builtin.file:
+      path: '/etc/matomo-import-logs'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o700
+
+  - name: 'Deploy /etc/matomo-import-logs/{{ item["name"] }}.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/matomo-import-logs/auth.conf.j2'
+      dest: '/etc/matomo-import-logs/{{ item["name"] }}.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+    loop: '{{ matomo_import_logs__sites__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  - name: 'Deploy /etc/systemd/system/matomo-import-logs-{{ item["name"] }}.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/matomo-import-logs.service.j2'
+      dest: '/etc/systemd/system/matomo-import-logs-{{ item["name"] }}.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    loop: '{{ matomo_import_logs__sites__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    notify: 'matomo_import_logs: systemctl daemon-reload'
+
+  - name: 'Deploy /etc/systemd/system/matomo-import-logs-{{ item["name"] }}.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/matomo-import-logs.timer.j2'
+      dest: '/etc/systemd/system/matomo-import-logs-{{ item["name"] }}.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    loop: '{{ matomo_import_logs__sites__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    notify: 'matomo_import_logs: systemctl daemon-reload'
+
+  tags:
+    - 'matomo_import_logs'
+    - 'matomo_import_logs:configure'
+
+
+- block:
+
+  - name: 'systemctl disable --now matomo-import-logs-{{ item["name"] }}.timer'
+    ansible.builtin.service:
+      name: 'matomo-import-logs-{{ item["name"] }}.timer'
+      state: 'stopped'
+      enabled: false
+    loop: '{{ matomo_import_logs__sites__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    failed_when: false # the timer may already be gone
+
+  - name: 'rm -f /etc/systemd/system/matomo-import-logs-{{ item["name"] }}.timer'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/matomo-import-logs-{{ item["name"] }}.timer'
+      state: 'absent'
+    loop: '{{ matomo_import_logs__sites__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    notify: 'matomo_import_logs: systemctl daemon-reload'
+
+  - name: 'rm -f /etc/systemd/system/matomo-import-logs-{{ item["name"] }}.service'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/matomo-import-logs-{{ item["name"] }}.service'
+      state: 'absent'
+    loop: '{{ matomo_import_logs__sites__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    notify: 'matomo_import_logs: systemctl daemon-reload'
+
+  - name: 'rm -f /etc/matomo-import-logs/{{ item["name"] }}.conf'
+    ansible.builtin.file:
+      path: '/etc/matomo-import-logs/{{ item["name"] }}.conf'
+      state: 'absent'
+    loop: '{{ matomo_import_logs__sites__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+
+  tags:
+    - 'matomo_import_logs'
+    - 'matomo_import_logs:configure'
+
+
+- block:
+
+  # flush so daemon-reload runs before a brand-new timer is started.
+  - name: 'Flush handlers'
+    ansible.builtin.meta: 'flush_handlers'
+
+  - name: 'systemctl {{ (item["enabled"] | d(true)) | ternary("enable", "disable") }} matomo-import-logs-{{ item["name"] }}.timer'
+    ansible.builtin.service:
+      name: 'matomo-import-logs-{{ item["name"] }}.timer'
+      enabled: '{{ item["enabled"] | d(true) }}'
+    loop: '{{ matomo_import_logs__sites__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  - name: 'systemctl {{ (item["enabled"] | d(true)) | ternary("start", "stop") }} matomo-import-logs-{{ item["name"] }}.timer'
+    ansible.builtin.service:
+      name: 'matomo-import-logs-{{ item["name"] }}.timer'
+      state: '{{ (item["enabled"] | d(true)) | ternary("started", "stopped") }}'
+    loop: '{{ matomo_import_logs__sites__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  tags:
+    - 'matomo_import_logs'
+    - 'matomo_import_logs:state'

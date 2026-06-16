@@ -1,0 +1,3 @@
+# Same playbook as install; the remove inventory flips the site to state: 'absent'.
+- name: 'Converge matomo_import_logs playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.matomo_import_logs'

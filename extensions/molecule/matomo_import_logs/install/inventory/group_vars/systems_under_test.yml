@@ -1,0 +1,10 @@
+# Test input: one site to import. on_calendar is set far enough away that the
+# timer does not fire during the test (the oneshot service would otherwise try to
+# reach a non-existent Matomo). The matching remove scenario flips it to absent.
+matomo_import_logs__sites__group_var:
+  - name: 'test.example.com'
+    idsite: 1
+    url: 'https://analytics.example.com'
+    token_auth: 'linuxfabrik'
+    log_file: '/var/log/httpd/test.example.com-access.log-%Y%m%d'
+    on_calendar: '06:30'
