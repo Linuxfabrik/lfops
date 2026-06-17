@@ -1,0 +1,11 @@
+matomo_import_logs__sites__dependent_var: []
+matomo_import_logs__sites__group_var: []
+matomo_import_logs__sites__host_var: []
+matomo_import_logs__sites__role_var: []
+matomo_import_logs__sites__combined_var: '{{ (
+      matomo_import_logs__sites__role_var +
+      matomo_import_logs__sites__dependent_var +
+      matomo_import_logs__sites__group_var +
+      matomo_import_logs__sites__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'

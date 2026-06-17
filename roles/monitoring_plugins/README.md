@@ -131,7 +131,9 @@ monitoring_plugins__skip_package_versionlock: false
 
 ## Troubleshooting
 
-If you get `No package linuxfabrik-monitoring-plugins-main available. msg: Failed to install some of the specified packages` while setting `monitoring_plugins__version: 'dev'`, you simply forgot to also set `monitoring_plugins__install_method: 'source'`.
+**`No package linuxfabrik-monitoring-plugins-main available. msg: Failed to install some of the specified packages`**
+
+* Appears when setting `monitoring_plugins__version: 'dev'` without also setting `monitoring_plugins__install_method: 'source'`. Set the install method to `'source'`.
 
 
 ## License

@@ -176,11 +176,22 @@
     when:
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
-  - name: 'Copy the /etc/sudoers.d/monitoring-plugins file to the server'
+  - name: 'Copy the /etc/sudoers.d/linuxfabrik-monitoring-plugins file to the server'
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}.sudoers'
-      dest: '/etc/sudoers.d/monitoring-plugins'
+      # same file name as the rpm/deb packages
+      dest: '/etc/sudoers.d/linuxfabrik-monitoring-plugins'
       mode: 0o440
+
+  - name: 'Make sure sudoers drop-ins placed under earlier names are absent (each would duplicate the Cmnd_Alias)'
+    ansible.builtin.file:
+      # monitoring-plugins: the name this role used before; icinga2-plugins: the manual scp
+      # deployment documented in the monitoring-plugins README before the Ansible/package era.
+      path: '/etc/sudoers.d/{{ item }}'
+      state: 'absent'
+    loop:
+      - 'icinga2-plugins'
+      - 'monitoring-plugins'
 
   tags:
     - 'monitoring_plugins'

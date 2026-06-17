@@ -35,6 +35,16 @@
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 
+  - name: 'Make sure sudoers drop-ins placed under earlier names are absent (each would duplicate the Cmnd_Alias of the packaged /etc/sudoers.d/linuxfabrik-monitoring-plugins)'
+    ansible.builtin.file:
+      # monitoring-plugins: the name the source install used before; icinga2-plugins: the manual
+      # scp deployment documented in the monitoring-plugins README before the Ansible/package era.
+      path: '/etc/sudoers.d/{{ item }}'
+      state: 'absent'
+    loop:
+      - 'icinga2-plugins'
+      - 'monitoring-plugins'
+
   tags:
     - 'monitoring_plugins'
 

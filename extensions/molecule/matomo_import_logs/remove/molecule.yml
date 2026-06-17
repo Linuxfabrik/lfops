@@ -1,0 +1,2 @@
+# Molecule scenario marker. Required even when empty, so that Molecule
+# discovers the scenario. Settings from extensions/molecule/config.yml apply.

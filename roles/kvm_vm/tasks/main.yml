@@ -3,6 +3,7 @@
   - name: 'get info on storage pools'
     community.libvirt.virt_pool:
       command: 'info'
+      uri: '{{ kvm_vm__connect_url }}'
     register: 'kvm_vm__pool_info_result'
 
   delegate_to: '{{ kvm_vm__host }}'
@@ -140,6 +141,7 @@
   - name: 'get vm list'
     community.libvirt.virt:
       command: 'list_vms'
+      uri: '{{ kvm_vm__connect_url }}'
     register: 'kvm_vm__virt_info_result'
     check_mode: false # run task even if `--check` is specified
 
@@ -276,12 +278,12 @@
       - '(kvm_vm__boot_disk_info_result["stdout"] | from_json)["virtual-size"] < kvm_vm__boot_disk_size | ansible.builtin.human_to_bytes'
 
   - name: >-
-      boot disk: virsh blockresize {{ kvm_vm__name }}
+      boot disk: virsh --connect {{ kvm_vm__connect_url }} blockresize {{ kvm_vm__name }}
       {{ __kvm_vm__boot_disk_path | quote }}
       {{ kvm_vm__boot_disk_size }}
     ansible.builtin.command:
       cmd: >-
-        virsh blockresize {{ kvm_vm__name }}
+        virsh --connect {{ kvm_vm__connect_url }} blockresize {{ kvm_vm__name }}
         {{ __kvm_vm__boot_disk_path | quote }}
         {{ kvm_vm__boot_disk_size }}
     when:
@@ -316,6 +318,7 @@
     community.libvirt.virt:
       command: 'destroy'
       name: '{{ kvm_vm__name }}'
+      uri: '{{ kvm_vm__connect_url }}'
     register: 'kvm_vm__destroy_result'
     # ignore errors if vm is already destroyed or undefined
     failed_when:
@@ -329,6 +332,7 @@
       flags:
         - 'nvram'
       name: '{{ kvm_vm__name }}'
+      uri: '{{ kvm_vm__connect_url }}'
     register: 'kvm_vm__undefine_result'
     # ignore errors if vm is already undefined
     failed_when:

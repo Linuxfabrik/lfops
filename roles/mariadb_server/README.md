@@ -1368,18 +1368,17 @@ mariadb_server__cnf_wsrep_sst_method: 'mariabackup'
 
 ## Troubleshooting
 
-Q: `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`
+**`A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`**
 
-A: Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role, or run the full `mariadb_server` playbook, not limited by some tags.
+* Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role, or run the full `mariadb_server` playbook, not limited by some tags.
 
+**I always get `[Warning] Access denied for user 'root'@'localhost'` in mariadb.log when running this role.**
 
-Q: I always get `[Warning] Access denied for user 'root'@'localhost'` in mariadb.log when running this role.
+* This is due to `check_implicit_admin: true`. This checks if MariaDB allows login as root/nopassword before trying the supplied credentials. If successful, the login_user/login_password passed will be ignored. This is especially needed for the first run of this role.
 
-A: This is due to `check_implicit_admin: true`. This checks if MariaDB allows login as root/nopassword before trying the supplied credentials. If successful, the login_user/login_password passed will be ignored. This is especially needed for the first run of this role.
+**I get `IndexError: list index out of range` during "Create, update or delete MariaDB users".**
 
-Q: I get `IndexError: list index out of range` during "Create, update or delete MariaDB users".
-
-A: Check that the user's `priv` is not set to `[]`. The lowest privileges allowed are `['*.*:USAGE']`.
+* Check that the user's `priv` is not set to `[]`. The lowest privileges allowed are `['*.*:USAGE']`.
 
 
 ## License

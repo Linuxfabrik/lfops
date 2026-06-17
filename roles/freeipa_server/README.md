@@ -625,9 +625,9 @@ freeipa_server__users__host_var:
 
 ## Troubleshooting
 
-Q: `Kerberos authentication failed: kinit: Configuration file does not specify default realm when parsing name admin`
+**`Kerberos authentication failed: kinit: Configuration file does not specify default realm when parsing name admin`**
 
-A: Raised by the `ipa*` resource management tasks (groups, users, HBAC rules, etc.) after a previous run aborted partway through `ipaserver_setup_*`. The aborted run did not write `/etc/krb5.conf` and `/etc/ipa/default.conf` with a `default_realm`, and the next run's `ipaserver_setup_*` steps consider the install "already done" and skip. Verify on the target with `cat /etc/ipa/default.conf` and `grep default_realm /etc/krb5.conf`. Reset the partial install with `ipa-server-install --uninstall --unattended` and re-run the playbook. **Caution:** this wipes the LDAP backend; only run it on a host that has no production IPA data.
+* Raised by the `ipa*` resource management tasks (groups, users, HBAC rules, etc.) after a previous run aborted partway through `ipaserver_setup_*`. The aborted run did not write `/etc/krb5.conf` and `/etc/ipa/default.conf` with a `default_realm`, and the next run's `ipaserver_setup_*` steps consider the install "already done" and skip. Verify on the target with `cat /etc/ipa/default.conf` and `grep default_realm /etc/krb5.conf`. Reset the partial install with `ipa-server-install --uninstall --unattended` and re-run the playbook. **Caution:** this wipes the LDAP backend; only run it on a host that has no production IPA data.
 
 
 ## License

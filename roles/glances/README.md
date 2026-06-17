@@ -1,24 +1,23 @@
 # Ansible Role linuxfabrik.lfops.glances
 
-This role installs [glances](https://nicolargo.github.io/glances/) and drops a snippet into `/etc/profile.d/glances.sh` that aliases `top` and `glances` to `glances -t 1`. On RHEL 7 the aliases additionally pass `--disable-docker` to avoid the slow Docker probe.
+This role installs [glances](https://nicolargo.github.io/glances/) and drops a snippet into `/etc/profile.d/glances.sh` that aliases `top` and `glances` to `glances -t 1`.
 
 
 *Available since LFOps `2.0.0`.*
+
+
+## How the Role Behaves
+
+On RHEL 8 / 9 (and clones) and on Debian / Ubuntu, glances is installed from the distribution package. On RHEL 10 and clones (Rocky / Alma 10), `glances` is not packaged in EPEL 10, so it is installed into a dedicated Python venv at `/opt/python-venv/glances` (the `glances` binary is exposed in `/usr/local/bin`).
 
 
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)). It provides the `glances` package.
-* On Rocky Linux 9, the CRB repository must be enabled (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)). The `glances` package moved from EPEL into the base repository on Rocky 9.
-
-
-## Requirements
-
-Manual steps:
-
-* On RHEL 10 and clones (Rocky / Alma 10), `glances` is not packaged in EPEL 10, so this role fails with `No package glances available.`. Install glances manually there (for example via `pip install glances` in a venv, or from a third-party repo) and skip this role.
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)). On RHEL 8 / 9 it provides the `glances` package; on RHEL 10 it provides `python3-virtualenv` for the Python venv.
+* On Rocky Linux 9 and 10, the CRB repository must be enabled (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)). On Rocky 9 the `glances` package moved from EPEL into the base repository; on Rocky 10 it provides dependencies for `python3-virtualenv`.
+* On RHEL 10 and clones, the Python venv that holds glances is created by [linuxfabrik.lfops.python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv). Skip it with `glances__skip_python_venv`.
 
 
 ## Tags

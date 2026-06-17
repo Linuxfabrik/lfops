@@ -606,6 +606,14 @@ Calls the following roles (in order):
 * [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)
 
 
+## matomo_import_logs.yml
+
+Calls the following roles (in order):
+
+* [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `matomo_import_logs__skip_python`
+* [matomo_import_logs](https://github.com/Linuxfabrik/lfops/tree/main/roles/matomo_import_logs)
+
+
 ## maxmind_geoip.yml
 
 Calls the following roles (in order):
