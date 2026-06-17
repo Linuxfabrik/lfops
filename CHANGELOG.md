@@ -21,18 +21,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:duplicity**: Add Debian and Ubuntu support (proven on Debian 12, Debian 13, Ubuntu 22.04, Ubuntu 24.04 and Ubuntu 26.04). The role now installs the `gnupg` package itself, so backups also work on minimal installs that ship without `gpg`.
+* **role:python_venv**: Add an optional per-venv `pip_constraints` key that pins transitive dependencies through a pip constraints file, without having to list them as direct packages.
 * **role:matomo_import_logs**: New role that imports Apache access logs into Matomo on a schedule, one systemd timer per site, and ships the Matomo log-analytics import script (`import_logs.py`). The `token_auth` is provided via a per-site auth file instead of the command line (passing `--token-auth`, `--login` or `--password` is deprecated, since they are visible in the process list and now log a deprecation warning). The script also supports the Traefik access-log format and fixes a possible endless loop when reading a config file.
 * **role:glances**: Add RHEL 10 / Rocky 10 / Alma 10 support by installing glances into a Python venv via the `python_venv` role, since the package is not available in EPEL 10. RHEL 10 is now marked proven (`x`) in COMPATIBILITY.
 * **role:graylog_datanode**: Add `graylog_datanode__http_publish_uri` to set the REST API URI the DataNode advertises, needed when the bind address is not directly reachable (multiple interfaces, a NAT gateway, or a `0.0.0.0` bind address).
 
 ### Changed
 
+* **role:duplicity**: Validate the role variables at start, and align the task tags with the LFOps vocabulary. The `duplicity:script` tag is gone (the `duba` script now deploys under `duplicity:configure`), and the new `duplicity:dump` tag manages the backup schedule.
 * **role:collabora**: Support Collabora Online CODE 25.04.10. The role ships one `coolwsd.xml` template per CODE release and had none for this version, so it aborted the deploy on hosts that had updated to it.
 * **role:clamav**: Send notification mails through `sendmail` (provided by postfix) instead of the `mail` command (mailx). One invocation works across distributions, and delivery no longer depends on mailx being installed.
 * **role:icingadb, role:icingaweb2, role:icingaweb2_module_reporting, role:icingaweb2_module_x509, role:mariadb_server**: Move the MariaDB tasks from the deprecated `community.mysql` collection to its replacement `ansible.mysql`. Behaviour is unchanged, but the deprecation warnings printed on every run are gone and the roles keep working once `community.mysql` is removed upstream.
 
 ### Fixed
 
+* **role:duplicity**: Swift backups now work out of the box on Python 3.10 and newer (all supported RHEL, Debian and Ubuntu releases). The role pins a modern `oslo.*` stack in the venv, which fixes the `collections.Mapping` crash (the previously required manual workaround is gone) and drops the deprecated, source-only `netifaces` dependency. As a result the role no longer installs a C compiler (`gcc`) or development headers on backup hosts: the build toolchain is gone from production machines, which is a significant reduction of the attack surface.
 * **role:monitoring_plugins**: A source install now deploys the sudoers drop-in as `/etc/sudoers.d/linuxfabrik-monitoring-plugins`, the same file name the rpm/deb packages use. Both install methods remove the drop-in under the former name `/etc/sudoers.d/monitoring-plugins`, so sudo no longer warns about a duplicate `Cmnd_Alias` on hosts that got the drop-in twice (for example after switching the install method or after running the monitoring-plugins one-liner installer).
 * **role:collect_rpmnew_rpmsave**: Stop emitting an Ansible deprecation warning on every run by making the `when` conditions explicitly boolean. Keeps the role working on Ansible 2.19 and later.
 * **role:kvm_vm**: Use `kvm_vm__connect_url` for every libvirt operation. Disk resizes (`virsh blockresize`) and a few other steps previously ignored the configured connection URL and always talked to the local default, so they failed or acted on the wrong libvirt when `kvm_vm__connect_url` pointed at a non-default or remote host.
