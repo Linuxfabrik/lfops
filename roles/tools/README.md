@@ -11,7 +11,6 @@ Tools that this role installs:
 * nano
 * rsync
 * sudo
-* tmux
 * vim
 * wget
 

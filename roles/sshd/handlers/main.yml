@@ -5,5 +5,5 @@
 
 - name: 'sshd: reload sshd'
   ansible.builtin.service:
-    name: 'sshd'
+    name: '{{ __sshd__service_name }}'
     state: 'reloaded'

@@ -174,7 +174,7 @@ Commit scopes:
     fix(roles/graylog_server): prevent warn on receiveBufferSize (fix #341)
     ```
 
-* For the first commit, use the message `Add roles/<role-name>` or `Add playbooks/<playbook-name>`.
+* For the first commit, use the message `feat(roles/<role-name>): add role` or `feat(playbooks/<playbook-name>): add playbook`.
 
 
 ### Deliverables
@@ -188,6 +188,24 @@ When creating a new role, make sure to deliver:
 * Update `playbooks/all.yml`.
 * Update `COMPATIBILITY.md`.
 * Update `CHANGELOG.md`.
+
+
+### OS Coverage
+
+When creating a new role or changing an existing one, pull through the **full operating-system matrix** declared in [COMPATIBILITY.md](COMPATIBILITY.md) (currently Debian 12 and 13, RHEL 8, 9 and 10, and Ubuntu 22.04, 24.04 and 26.04). COMPATIBILITY.md is the authoritative list; support what it lists, and add a column there before supporting a new release.
+
+* Abstract OS differences (package names, configuration paths, service / unit names, users, ...) into per-OS vars files; see "OS-specific Variables" below for the mechanism and the explicit-`vars/Ubuntu.yml` rule. Reference roles: `sshd`, `clamav`.
+* Validate empirically on each family before claiming support. Spin up a container per OS (podman, e.g. `rockylinux/rockylinux:10`, `debian:13`, `ubuntu:24.04`) and confirm the role runs end to end. A full systemd run (service enable / start / reload) needs a systemd-enabled container.
+* Only mark a cell `x` in COMPATIBILITY.md once it is proven to run; use `(x)` for "expected to work but not verified".
+
+
+### Changelog
+
+LFOps overrides the project-agnostic "Changelog" rule above (alphabetical sorting): entries are sorted newest first, because operators running playbooks need to see what changed most recently.
+
+* Each subsection (`### Added`, `### Changed`, ...) appears at most once per release section. Never create a duplicate, append to the existing one.
+* Order the subsections as `Breaking Changes`, `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`: the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) order, with the LFOps-specific `Breaking Changes` first. Omit subsections with no entries.
+* Within a subsection, add new entries at the top (newest first), even if this results in multiple entries for the same role.
 
 
 ### Playbooks
@@ -300,6 +318,7 @@ When creating a new role, make sure to deliver:
 * Use the following modules in preference to their alternatives:
     * `ansible.builtin.command` or `ansible.windows.win_command` over `ansible.builtin.shell` over `ansible.builtin.raw`
     * `ansible.builtin.template` over `ansible.builtin.copy`, `ansible.builtin.lineinfile` or `ansible.builtin.blockinfile`. Templating the whole file leads to more consistent, deterministic, and expected results.
+* When you must use `ansible.builtin.shell`, pin the interpreter with `executable: '/bin/bash'` (in the task's `args:`, or as a sibling of `cmd:`). On Debian `/bin/sh` is `dash`, which rejects bashisms such as `set -o pipefail`, `[[ ... ]]` and `source` (Debian 12's dash errors on `set -o pipefail` outright); pinning bash keeps shell tasks working across the Red Hat family and Debian/Ubuntu. Use `/bin/bash`, not `/usr/bin/bash`, so it resolves with or without usrmerge.
 * Do not use `state: 'latest'` for the `ansible.builtin.package` module as this is not idempotent. Always use `state: 'present'`.
 * Always use `delegate_to: 'localhost'` instead of `local_action`.
 * Always set `become: false` on every task delegated to localhost. When a play sets `become: true` at the play level (not typical for lfops, but useful if others import our roles in their playbooks), it propagates to delegated tasks too and tries to escalate via sudo on the Ansible controller. On a controller without passwordless sudo this fails with `sudo: a password is required`, even though the delegated task only writes to `/tmp` or hits a remote API and does not need root locally. Example:
@@ -312,10 +331,28 @@ When creating a new role, make sure to deliver:
         mode: 0o644
       delegate_to: 'localhost'
       become: false
-      run_once: true
       changed_when: false # not an actual config change on the target
       check_mode: false # run task even if `--check` is specified
     ```
+
+* Avoid `run_once: true`. It binds the task to the first host of the batch and evaluates the task's `when` (including an enclosing `block:` `when` or a conditional role/task include) against that host only. If the first host skips, the task is skipped for every host, even hosts that needed it. The usual case is a controller-side download or build delegated to localhost: drop `run_once` and let the task run per host.
+
+    * For `ansible.builtin.get_url` writing a single file this is already race-safe and effectively runs once: the module downloads to a unique temp file and atomically renames it into the shared `/tmp` destination, and with a version-pinned `dest` the first host downloads while the rest find the file present. Nothing else is needed.
+    * For tasks that mutate a shared path on the controller in place (`ansible.builtin.git` into a shared working dir, `ansible.builtin.shell`/`ansible.builtin.command` that build or flatten files under `/tmp`), running per host in parallel races across `forks`. Drop `run_once` and add `throttle: 1` so the task still runs per host (no first-host-skip) but only one host at a time touches the shared path:
+
+        ```yaml
+        - name: 'Clone the example git repo to localhost'
+          ansible.builtin.git:
+            repo: 'https://github.com/Linuxfabrik/example.git'
+            dest: '/tmp/ansible.example-repo'
+            depth: 1
+          delegate_to: 'localhost'
+          become: false
+          throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
+          check_mode: false # run task even if `--check` is specified
+        ```
+
+    * Two cases legitimately keep `run_once`. First, a single read-only lookup whose result is shared to all hosts (e.g. querying a GitHub release API once and storing the version with `set_fact`); running it per host would only multiply API calls and risk rate limiting, and there is no shared-path race. Second, a task whose `when` is deliberately computed across `ansible_play_hosts_all` (not against the first host), so the first-host-skip problem does not apply (see `roles/firewall/tasks/main.yml`).
 
 * Always provide `changed_when`, `creates`, or `removes` for `ansible.builtin.command` and `ansible.builtin.shell` tasks to ensure idempotency. Use `changed_when: false` for read-only commands.
 * Prefer a `chown -R --changes` command over `ansible.builtin.file` with `recurse: true`; the module's recursive mode is slow on large trees. Register the result and derive `changed_when` from the `--changes` output for idempotency:
@@ -365,11 +402,34 @@ When creating a new role, make sure to deliver:
 #### Tags
 
 * Naming scheme: `role_name` and `role_name:section`. For example `apache_httpd` and `apache_httpd:vhosts`.
-* The role should only do what one expects from the tag name. For example, the `mariadb:user` tag only manages MariaDB users.
+* The role should only do what one expects from the tag name. For example, the `mariadb:users` tag only manages MariaDB users.
 * The README of a role should provide a list of the available tags and what they do.
 * The tags should be set in the role itself. Do not set them in the playbook.
 * Blocks/tasks that install base packages do not require tags such as `apache:pkgs`, `apache:setup` or `apache:install`. There is no real world scenario where it makes sense to only run the installation via Ansible, some configuration is always required.
 * For each task, consider to which areas it belongs. A task will usually have multiple tags.
+* Reuse a section name from the controlled vocabulary below whenever one fits, so that `--tags` / `--skip-tags` behave the same way across roles. Only invent a role-specific section name (e.g. `apache_httpd:vhosts`, `mariadb_server:galera_new_cluster`) when a task covers an area that none of the standard names describe.
+
+Controlled vocabulary of standard `role_name:section` tags (alphabetical):
+
+* `role_name:certs`: Deploys and renews the role's TLS certificates and private keys.
+* `role_name:configure`: Renders and deploys the role's configuration files and applies settings. The most common section; everything that is neither install, state, nor one of the more specific sections below belongs here.
+* `role_name:containers`: Manages the role's containers and their systemd container units.
+* `role_name:cron`: Deploys the role's scheduled jobs (cron entries or systemd timers).
+* `role_name:databases`: Creates, updates and deletes the databases managed by the role.
+* `role_name:dump`: Sets up scheduled dumps / backups of the role's data.
+* `role_name:enroll`: Registers (enrolls) the node with a remote service or controller.
+* `role_name:firewalls`: Manages the cloud provider firewall / security-group rules (VM provisioning roles).
+* `role_name:logrotate`: Deploys the role's logrotate configuration.
+* `role_name:modules`: Installs, enables and removes the role's pluggable modules (e.g. PHP, SELinux, Apache modules).
+* `role_name:networks`: Manages the role's networks (cloud VM, libvirt or container networks).
+* `role_name:plugins`: Installs and removes the role's optional application plugins / add-ons (distinct from OS-level `:modules`; e.g. Grafana or CMS plugins).
+* `role_name:remove`: Uninstalls the managed software and removes its artifacts.
+* `role_name:state`: Manages the runtime state of the role's services, timers and sockets (start / stop / enable / disable).
+* `role_name:update`: Updates the managed application to a newer version.
+* `role_name:upgrade`: Runs the post-update migration / upgrade steps after the package itself was updated.
+* `role_name:users`: Creates, updates and deletes the application or service user accounts managed by the role.
+
+The Ansible built-in tags `always` and `never` are reserved for their built-in meaning: tag the platform-variable loading and `assert` validation tasks with `always` so the variables and checks are present even when the role runs with a specific `--tags` selection.
 
 
 #### Variables
@@ -603,6 +663,8 @@ Variables with the same name are overridden by the files in `vars/` in order fro
 * `distribution` (e.g. `CentOS`) is more specific than os_family
 * `distribution_major_version` (e.g. `CentOS7`) is more specific than distribution
 * `distribution_version` (e.g. `CentOS7.9`) is the most specific
+
+When a role has a `vars/Debian.yml`, always create an explicit `vars/Ubuntu.yml` too, even if it is currently an identical copy. Ubuntu (a `distribution`) is loaded on top of its `Debian` os_family, so a full copy is redundant today, but it keeps Ubuntu visible at a glance and gives later Ubuntu-specific drift a dedicated home instead of silently inheriting Debian values.
 
 To load the variables include the `platform-variables.yml` in the `tasks/main.yml` like this:
 ```yaml
@@ -859,6 +921,116 @@ Unit tests are **mandatory** for every in-house plugin. Any pull request that ad
     ```
 
 * The `Linuxfabrik: Unit Tests` workflow runs the controller matrix on every push and pull request.
+
+
+### Testing
+
+Molecule is used as the framework to test the LFOps playbooks (and therefore indirectly the roles). The test scenarios and configurations live in `extensions/molecule` and are structured as follows:
+
+```
+extensions
+└── molecule
+    ├── apps -- test scenario, named after the playbook name
+    │   ├── install -- if needed, sub-scenario
+    │   │   ├── converge.yml -- the actual test phase. this is where the playbook under test runs against the hosts
+    │   │   ├── inventory -- scenario-specific inventory with variables that are needed for the playbook under test and optionally additional hosts (e.g. for a cluster test setup). overwrites the shared inventory (extensions/molecule/inventory)
+    │   │   │   ├── group_vars
+    │   │   │   │   └── systems_under_test.yml -- by convention, the "systems_under_test" group contains all our hosts against which the tests are run
+    │   │   │   └── hosts.yml -- here we select against which hosts we want to run (most of the time the hosts come from the shared inventory) and put them into the correct group for the playbook, here "lfops_apps"
+    │   │   ├── molecule.yml -- scenario marker; the file is required even if empty. can also be used to overwrite settings from the extensions/molecule/config.yml, for example which playbooks are used by Molecule (e.g. to switch between VM and container provisioning playbooks)
+    │   │   └── verify.yml -- runs after the test phase and uses ansible to check if the result is as expected
+    │   └── remove -- additional sub-scenario
+    │       └── ...
+    ├── config.yml -- valid for all scenarios, can be overwritten in each scenario's molecule.yml (content and structure are the same)
+    ├── default -- we are not using the "default" scenario, but molecule needs this to run at all. could be used to share config (e.g. prepare.yml) across *all* scenarios
+    │   └── molecule.yml
+    ├── example -- fully commented reference scenario (install + remove sub-scenarios); copy it when adding a new test, like the example role
+    │   ├── install
+    │   │   └── ...
+    │   └── remove
+    │       └── ...
+    ├── inventory -- shared inventory across all scenarios and therefore available in all scenarios. contains a basic set of VMs/containers that are commonly used
+    │   ├── hosts.yml -- required, even if empty, that Ansible can detect this inventory
+    │   └── host_vars
+    │       ├── debian12-container.yml
+    │       ├── debian12-vm.yml
+    │       └── ...
+    ├── monitoring_plugins -- a scenario with no sub-scenarios
+    │   ├── converge.yml
+    │   ├── inventory
+    │   │   └── ...
+    │   ├── molecule.yml
+    │   └── verify.yml
+    ├── playbooks -- shared playbooks used by Molecule for running the scenarios
+    │   ├── container-create.yml
+    │   ├── container-destroy.yml
+    │   └── ...
+    └── requirements.yml
+```
+
+The `extensions/molecule/example` scenario mirrors the `example` role: it is a fully commented, non-functional reference that walks through every file of a scenario (a non-functional reference because the `example` playbook installs the fictional "Example" application). Copy it as the starting point when adding a test for a playbook.
+
+Tests can be run against a subset of targets by providing them as a comma-separated list via the project-specific `LFOPS_TEST_TARGETS` environment variable. The variable is optional: unset, every target in the scenario runs. `localhost` (the hypervisor) is included automatically, so you only ever pass the targets themselves:
+
+```shell
+# all targets in the scenario
+molecule test --scenario-name apps/install
+
+# a subset
+LFOPS_TEST_TARGETS='rocky*' molecule test --scenario-name apps/install
+```
+
+
+Known Limitations:
+
+* VM-based testing requires passwordless sudo on the Ansible controller. The cloud image and per-VM disks are written and built directly in the root-owned libvirt pool directory (`get_url`, `qemu-img`, `virt-customize`), which is plain filesystem I/O and needs root. The read-only libvirt API calls already run unprivileged via the `libvirt` group; it is only the pool writes that require sudo. Trying to make the whole run rootless is not worth it: the only way to provision VMs without root-equivalent rights at all is the user session (`qemu:///session`), which the test cannot use because its address discovery reads the host's ARP/neighbour table for the libvirt-managed `default` network that only the system connection (`qemu:///system`) provides. Every other route still grants effective root: a member of the `libvirt` group (which the read-only calls already require) can define a domain backed by any host device and drive QEMU as root. Swapping the `sudo` for a user-owned `qemu:///system` pool therefore only trades an explicit, on-demand escalation for a standing root-equivalent privilege plus looser filesystem permissions, which is a worse posture, not a better one.
+* Does not work inside an Ansible Execution Environment (Ansible Navigator). Provisioning runs as `localhost`, which inside an EE is the container, yet it has to act on the host's libvirt and podman. The disk-build tools (`qemu-img`, `virt-customize`, `virt-sysprep`) are filesystem-bound to the pool and have no libvirt-socket equivalent, so an EE would have to bind-mount the host libvirt/podman sockets and the pool directory and use host networking, which removes most of the isolation an EE exists to provide.
+
+
+#### How a scenario runs
+
+`molecule test --scenario-name <scenario>` runs the steps listed in the `test_sequence` of `config.yml`, in order:
+
+* `dependency`: installs the collections from `requirements.yml`.
+* `create`: provisions the instances (libvirt/KVM VMs or Podman containers).
+* `prepare`: waits until the instances are reachable and gathers facts.
+* `converge`: runs the playbook under test (`converge.yml`).
+* `verify`: runs `verify.yml` against the converged instances.
+* `idempotence`: runs the playbook a second time and fails if it reports any change.
+* `verify`: runs `verify.yml` again, now against the idempotent state.
+* `destroy`: tears the instances down.
+
+
+#### What to verify
+
+Verify the observable end result, not the steps the role took to get there. Ansible and the role already guarantee their own mechanics, so re-checking those only tests Ansible. The guiding question is "what can only be confirmed by looking at the running system?".
+
+Two guarantees come for free, so do not rebuild them in `verify.yml`:
+
+* If the playbook errors out, the `converge` step fails and `verify.yml` never runs. `verify.yml` is therefore only ever about the *result* of a successful run, not about whether the run crashed.
+* Idempotence is enforced by the dedicated `idempotence` step. Never add tasks that check "running it a second time changes nothing".
+
+Do **not** assert:
+
+* That a templated file exists or contains a given line. If the `template` task ran, the file is there with the rendered content; asserting it only exercises Jinja and the `template` module.
+* That a package was installed or a file was written, as the goal of the test. The module already reports `changed`/`ok` for that. A one-line "the package is installed" smoke check is fine as a floor, but it is not where the value of the test lies.
+
+Do assert what only the running system can confirm, that is, that the pieces actually work together:
+
+* The application is running and enabled (`ansible.builtin.service_facts`), and reachable on its port (`ansible.builtin.wait_for`, or a request that would fail if it were not). A service that starts proves the deployed config is at least valid, which the role's own tasks cannot tell you.
+* The application actually *uses* the configured values. Ask the running application (an API or status endpoint via `ansible.builtin.uri`, or a CLI that prints the effective configuration) and assert it reports the value the scenario set in `group_vars`. This is the important one: it proves the whole chain, `group_vars` to template to the service reading the file to its behaviour, which is exactly what grepping the config file does not.
+* End state managed outside the package and file layer (users, databases, API objects) is present, or absent in a removal scenario.
+
+A useful rule of thumb: if an assertion would still pass while the service is dead or running with the wrong configuration, it is testing the wrong thing.
+
+
+#### Troubleshooting
+
+**`molecule test` aborts with `ansible_compat.errors.InvalidPrerequisiteError: Command ansible-galaxy collection install -vvv --force /path/to/lfops` during prerun while installing the local collection**
+
+* Before running a scenario, Molecule's prerun step tries to install the current repository as a collection with `ansible-galaxy collection install --force <repo>`. That build fails because `galaxy.yml` carries a non-semver `version` (`main`), which `ansible-galaxy` rejects.
+* Option 1: disable the prerun so Molecule stops trying to build and install the local collection, by setting `prerun: false` as a top-level key in the `config.yml`. If you do this, you have to make sure that LFOps is installed yourself.
+* Option 2: If you installed LFOps by symlinking it, make sure the link points to the **same** folder that you are running `molecule` in (`ln -sf "$(pwd)" ~/.ansible/collections/ansible_collections/linuxfabrik/lfops`).
 
 
 ### Credits

@@ -167,6 +167,14 @@ Calls the following roles (in order):
 * [collect_rpmnew_rpmsave](https://github.com/Linuxfabrik/lfops/tree/main/roles/collect_rpmnew_rpmsave)
 
 
+## core_dumps.yml
+
+Calls the following roles (in order):
+
+* [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `core_dumps__skip_kernel_settings`
+* [core_dumps](https://github.com/Linuxfabrik/lfops/tree/main/roles/core_dumps)
+
+
 ## coturn.yml
 
 Calls the following roles (in order):
@@ -492,6 +500,13 @@ Calls the following roles (in order):
 * [keepalived](https://github.com/Linuxfabrik/lfops/tree/main/roles/keepalived)
 
 
+## kernel_modules.yml
+
+Calls the following roles (in order):
+
+* [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules)
+
+
 ## kernel_settings.yml
 
 Calls the following roles (in order):
@@ -589,6 +604,14 @@ Calls the following roles (in order):
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `mariadb_server__skip_python`
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `mariadb_server__skip_policycoreutils`
 * [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)
+
+
+## matomo_import_logs.yml
+
+Calls the following roles (in order):
+
+* [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `matomo_import_logs__skip_python`
+* [matomo_import_logs](https://github.com/Linuxfabrik/lfops/tree/main/roles/matomo_import_logs)
 
 
 ## maxmind_geoip.yml
@@ -993,6 +1016,9 @@ Calls the following roles (in order):
 * [crypto_policy](https://github.com/Linuxfabrik/lfops/tree/main/roles/crypto_policy): `setup_basic__skip_crypto_policy`
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_basic__skip_policycoreutils`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_basic__skip_selinux`
+* [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules): `setup_basic__skip_kernel_modules`
+* [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_basic__skip_kernel_settings`
+* [core_dumps](https://github.com/Linuxfabrik/lfops/tree/main/roles/core_dumps): `setup_basic__skip_core_dumps`
 * [systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald): `setup_basic__skip_systemd_journald`
 * [hostname](https://github.com/Linuxfabrik/lfops/tree/main/roles/hostname): `setup_basic__skip_hostname`
 * [timezone](https://github.com/Linuxfabrik/lfops/tree/main/roles/timezone): `setup_basic__skip_timezone`
@@ -1007,6 +1033,7 @@ Calls the following roles (in order):
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_basic__skip_python`, `setup_basic__skip_python_venv`
 * [glances](https://github.com/Linuxfabrik/lfops/tree/main/roles/glances): `setup_basic__skip_glances`
 * [tools](https://github.com/Linuxfabrik/lfops/tree/main/roles/tools): `setup_basic__skip_tools`
+* [tmux](https://github.com/Linuxfabrik/lfops/tree/main/roles/tmux): `setup_basic__skip_tmux`
 * [at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at): `setup_basic__skip_at`
 * [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `setup_basic__skip_yum_utils`
 * [lvm](https://github.com/Linuxfabrik/lfops/tree/main/roles/lvm): `setup_basic__skip_lvm`
@@ -1336,6 +1363,13 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [timezone](https://github.com/Linuxfabrik/lfops/tree/main/roles/timezone)
+
+
+## tmux.yml
+
+Calls the following roles (in order):
+
+* [tmux](https://github.com/Linuxfabrik/lfops/tree/main/roles/tmux)
 
 
 ## tools.yml

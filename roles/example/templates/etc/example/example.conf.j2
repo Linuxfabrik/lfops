@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026041201
+# 2026060701
 
 [server]
 log_level = {{ example__conf_log_level__combined_var }}
@@ -8,6 +8,9 @@ worker_threads = {{ example__conf_worker_threads }}
 {% if __example__installed_server_version is ansible.builtin.version('2.0.0', '>=') %}
 data_format = v2
 {% endif %}
+
+[tls]
+protocols = {{ example__conf_tls_protocols }}
 
 [plugins]
 {% for item in example__plugins__combined_var if item['state'] | d('present') != 'absent' %}

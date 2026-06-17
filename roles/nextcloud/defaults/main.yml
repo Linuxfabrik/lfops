@@ -302,7 +302,7 @@ nextcloud__sysconfig__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod(unique_key="key")
   }}'
 
-nextcloud__timer_app_update_enabled: false
+nextcloud__timer_app_update_enabled: true
 nextcloud__timer_jobs_enabled: true
 nextcloud__timer_ldap_show_remnants_enabled: true
 nextcloud__timer_scan_files_enabled: true

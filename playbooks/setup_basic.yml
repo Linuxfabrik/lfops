@@ -53,6 +53,21 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_selinux | d(false)'
 
+    - role: 'linuxfabrik.lfops.kernel_modules'
+      when:
+        - 'not setup_basic__skip_kernel_modules | d(false)'
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{
+          (not setup_basic__skip_core_dumps | d(false)) | ternary(core_dumps__kernel_settings__sysctl__dependent_var, []) | d([])
+        }}'
+      when:
+        - 'not setup_basic__skip_kernel_settings | d(false)'
+
+    - role: 'linuxfabrik.lfops.core_dumps'
+      when:
+        - 'not setup_basic__skip_core_dumps | d(false)'
+
     # === Sensible defaults ===
     - role: 'linuxfabrik.lfops.systemd_journald'
       when:
@@ -104,6 +119,17 @@
       when:
         - 'not setup_basic__skip_python | d(false)'
 
+    # python_venv must run before glances: on RHEL 10 glances has no distro package and is installed
+    # into a venv via glances__python_venv__venvs__dependent_var. duplicity also consumes this role's
+    # venvs (further down in the Backups section).
+    - role: 'linuxfabrik.lfops.python_venv'
+      python_venv__venvs__dependent_var: '{{
+          duplicity__python_venv__venvs__dependent_var +
+          glances__python_venv__venvs__dependent_var
+        }}'
+      when:
+        - 'not setup_basic__skip_python_venv | d(false)'
+
     - role: 'linuxfabrik.lfops.glances'
       when:
         - 'not setup_basic__skip_glances | d(false)'
@@ -111,6 +137,10 @@
     - role: 'linuxfabrik.lfops.tools'
       when:
         - 'not setup_basic__skip_tools | d(false)'
+
+    - role: 'linuxfabrik.lfops.tmux'
+      when:
+        - 'not setup_basic__skip_tmux | d(false)'
 
     - role: 'linuxfabrik.lfops.at'
       when:
@@ -170,13 +200,6 @@
 
 
     # === Backups ===
-    - role: 'linuxfabrik.lfops.python_venv'
-      python_venv__venvs__dependent_var: '{{
-          duplicity__python_venv__venvs__dependent_var
-        }}'
-      when:
-        - 'not setup_basic__skip_python_venv | d(false)'
-
     - role: 'linuxfabrik.lfops.duplicity'
       when:
         - 'not setup_basic__skip_duplicity | d(false)'

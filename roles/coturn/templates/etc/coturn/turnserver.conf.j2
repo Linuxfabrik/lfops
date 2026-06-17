@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025081501
+# 2026061601
 
 # Coturn TURN SERVER configuration file
 #
@@ -167,11 +167,54 @@ listening-port={{ coturn__listening_port | default(3478) }}
 #
 #relay-threads=0
 
+# Override system CPU count detection. Use this number instead of the
+# auto-detected CPU count. Useful in virtualized/containerized environments
+# where the system reports the host CPU count instead of the allocated
+# container CPUs. This affects the default number of relay threads when
+# relay-threads is not explicitly specified.
+#
+#cpus=2
+
 # Lower and upper bounds of the UDP relay endpoints:
 # (default values are 49152 and 65535)
 #
+#min-port=49152
+#max-port=65535
 min-port={{ coturn__min_port | default(49152) }}
 max-port={{ coturn__max_port | default(65535) }}
+
+# Socket buffer size (in bytes).
+# (default value is 2097152 which is 2MB)
+#
+#sock-buf-size=2097152
+
+# Linux-only UDP fast paths and multiplex-peer mode.
+# All three flags are off by default; enable per workload. See
+# docs/multiplex-peer.md for the multiplex-peer design.
+#
+# Batched UDP receive via recvmmsg(2). Auto-enabled when multiplex-peer
+# is set; pass `udp-recvmmsg=0` to override.
+#udp-recvmmsg
+#
+# Log recvmmsg batch occupancy stats every 10 seconds.
+#udp-recvmmsg-log
+#
+# UDP-GSO (UDP_SEGMENT cmsg) on the relay send path. Requires
+# multiplex-peer (which enables sendmmsg batching). Passing udp-gso
+# alone is a silent no-op.
+#udp-gso
+#
+# Peer-side multiplexing relay mode (non-standard). Per-thread shared
+# IPv4+IPv6 relay socket pair instead of per-allocation port binds;
+# lifts the ~16k relay-port cap and cuts kernel UDP rcvbuf drops.
+# Incompatible with EVEN-PORT (rejected with 400). Implies sendmmsg
+# batching and default-enables udp-recvmmsg.
+#multiplex-peer
+#
+# Base UDP port for multiplex-peer relay sockets (default: 3480).
+# Thread i binds <base>+2i (IPv4) and <base>+2i+1 (IPv6); a 4-thread
+# server consumes <base>..<base>+7.
+#multiplex-peer-port=3480
 
 # Uncomment to run TURN server in 'normal' 'moderate' verbose mode.
 # By default the verbose mode is off.
@@ -727,11 +770,11 @@ no-multicast-peers
 #
 #proc-group=<group-name>
 
-# Turn OFF the CLI support.
-# By default it is always ON.
+# Enable CLI support.
+# By default it is always OFF.
 # See also options cli-ip and cli-port.
 #
-#no-cli
+#cli
 
 #Local system IP address to be used for CLI server endpoint. Default value
 # is 127.0.0.1.
@@ -792,12 +835,16 @@ no-multicast-peers
 #
 #cli-max-output-sessions
 
-# Set network engine type for the process (for internal purposes).
+# Network engine type (for internal purposes).
+# Only one engine is available: NEV_UDP_SOCKET_PER_THREAD.
+# This option is ignored and kept for backwards compatibility only.
 #
-#ne=[1|2|3]
+#ne=3
 
-# Do not allow an TLS/DTLS version of protocol
+# Enable older TLS/DTLS protocol versions (disabled by default; default minimum is TLSv1.2)
 #
+#tlsv1
+#tlsv1_1
 #no-tlsv1_2
 
 # Enable RFC5780 (NAT behavior discovery).
@@ -828,6 +875,15 @@ no-multicast-peers
 # diagnosing connection problems. A "400 Not supported" response is currently
 # returned.
 #respond-http-unsupported
+
+# Include descriptive reason strings in STUN/TURN error responses.
+# By default, only the standard reason phrase for the error code is sent
+# (e.g. "Unauthorized", "Forbidden"). Enabling this option adds detailed
+# error descriptions (e.g. "User name is too long", "Wrong Transport Field")
+# which may aid debugging but can also expose internal server information.
+# Disabled by default.
+#
+#include-reason-string
 
 # don't let the relay ever try to connect to private IP address ranges within your network (if any)
 # given the turn server is likely behind your firewall, remember to include any privileged public IPs too.

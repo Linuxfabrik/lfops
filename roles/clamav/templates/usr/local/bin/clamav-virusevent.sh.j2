@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2023071203
+# 2026061201
 
 set -e
 
@@ -16,4 +16,11 @@ RECIPIENTS="${*:2}"
 SUBJECT="{{ clamav__mail_subject_prefix }}$(cat /etc/hostname): Malware found"
 MESSAGE="$CLAM_VIRUSEVENT_FILENAME $CLAM_VIRUSEVENT_VIRUSNAME($(sigtool --md5 $CLAM_VIRUSEVENT_FILENAME)) FOUND"
 
-echo -n "$MESSAGE" | mail -s "$SUBJECT" -r "$SENDER" $RECIPIENTS
+{
+    printf 'From: %s\n' "$SENDER"
+    printf 'To: %s\n' "${RECIPIENTS// /, }"
+    printf 'Subject: %s\n' "$SUBJECT"
+    printf 'Content-Type: text/plain; charset="utf-8"\n'
+    printf 'Content-Transfer-Encoding: 8bit\n'
+    printf '\n%s\n' "$MESSAGE"
+} | /usr/sbin/sendmail -oi -t -f "$SENDER"

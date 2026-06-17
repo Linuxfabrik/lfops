@@ -12,7 +12,7 @@ This role is tested with the following IcingaWeb2 GenericTTS Module versions:
 
 ## How the Role Behaves
 
-* The Tarball for `icingaweb2_module_generictts__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
+* The Tarball for `icingaweb2_module_generictts__version` is downloaded on the Ansible controller (`delegate_to: 'localhost'`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
 * On every role run the directory `/usr/share/icingaweb2/modules/generictts` is overwritten with the contents of the configured version. To upgrade or downgrade the module, change `icingaweb2_module_generictts__version` and re-run the role.
 * `icingacli module enable generictts` is only invoked when `/etc/icingaweb2/enabledModules/generictts` does not yet exist (idempotent).
 

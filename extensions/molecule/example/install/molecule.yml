@@ -1,0 +1,12 @@
+# Molecule scenario marker. Required even when empty, so that Molecule
+# discovers the scenario. Settings from extensions/molecule/config.yml can be
+# overridden here when a scenario needs it, for example to point the
+# create/prepare/destroy hooks at the container playbooks instead of the VM
+# ones.
+#
+# Like the 'example' role, this 'example' scenario is a non-functional
+# reference: the 'example' playbook installs the fictional "Example"
+# application, so the scenario does not converge against a real system. It
+# exists to show how a Molecule test for an LFOps playbook is structured and
+# commented. Copy it as the starting point when adding a test for a real
+# playbook.

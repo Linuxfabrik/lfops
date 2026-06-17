@@ -64,7 +64,7 @@ Manual steps:
 
 `icinga2_agent__windows_version`
 
-* Mandatory for Windows. The version of the Icinga2 Agent to install. Possible options: https://packages.icinga.com/windows/.
+* Mandatory for Windows. The version of the Icinga2 Agent to install. Possible options: <https://packages.icinga.com/windows/?C=N;O=D>.
 * Type: String.
 
 Example:

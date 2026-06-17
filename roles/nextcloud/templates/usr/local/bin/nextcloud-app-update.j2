@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026060701
+#
+# Automatic Nextcloud app update.
+#
+# Nextcloud is only switched into maintenance mode when at least one app update
+# is actually pending. When everything is up to date the instance keeps running
+# untouched. After updating, the recommended (lazily added) database migrations
+# are applied.
+
+set -euo pipefail
+
+NC_DIR="/var/www/html/nextcloud"
+
+occ() {
+    php "${NC_DIR}/occ" "$@"
+}
+
+# Detect pending app updates without touching maintenance mode (read-only).
+# `app:update --showonly` exits 0 in both cases, so gate on the output marker.
+# An unreachable app store also yields no marker, so a transient network issue
+# never triggers a pointless maintenance window.
+if ! occ app:update --all --showonly | grep --quiet 'new version available'; then
+    echo 'No app updates available, nothing to do.'
+    exit 0
+fi
+
+echo 'App updates available, enabling maintenance mode.'
+occ maintenance:mode --on
+
+# Always leave maintenance mode again, even if a step below fails, so a failed
+# automatic run does not keep the instance offline. The non-zero exit is still
+# propagated, so systemd marks the unit as failed.
+trap 'occ maintenance:mode --off || true' EXIT
+
+echo 'Updating all apps.'
+occ app:update --all --no-interaction
+
+# App updates run their own schema migrations during `app:update`. The commands
+# below add indices, columns and primary keys that apps recommend but Nextcloud
+# adds lazily to avoid long table locks during the update. They are idempotent
+# and a no-op when nothing is missing.
+echo 'Applying recommended database migrations.'
+occ db:add-missing-indices
+occ db:add-missing-columns
+occ db:add-missing-primary-keys
+
+echo 'App update finished.'

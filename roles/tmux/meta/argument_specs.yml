@@ -1,0 +1,18 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      tmux__history_limit:
+        type: 'int'
+        required: false
+        default: 100000
+        description: 'Maximum number of lines kept in the scrollback buffer per pane.'
+
+      tmux__mouse:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enable mouse support (scroll, select and resize panes/windows).'

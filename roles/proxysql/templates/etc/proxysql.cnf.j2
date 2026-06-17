@@ -116,7 +116,7 @@ mysql_servers =
     {% for item in proxysql__mysql_servers__combined_var if item['state'] | d('present') != 'absent' %}
     {
         address = "{{ item['address'] }}",
-        port = {{ item['port'] | d(3306) }},
+        port = {{ item['port'] }},
         use_ssl = {{ item['use_ssl'] | d(false) | ternary(1, 0) }},
         hostgroup = {{ item['hostgroup'] }},
         weight = {{ item['weight'] | d(1) }},
@@ -243,7 +243,7 @@ proxysql_servers =
     {% for item in proxysql__proxysql_servers__combined_var if item['state'] | d('present') != 'absent' %}
     {
         hostname = "{{ item['hostname'] }}",
-        port = {{ item['port'] | d(6032) }},
+        port = {{ item['port'] }},
     },
     {% endfor %}
 )

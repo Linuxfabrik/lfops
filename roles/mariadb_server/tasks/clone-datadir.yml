@@ -1,5 +1,5 @@
 - name: 'Get current datadir'
-  community.mysql.mysql_variables:
+  ansible.mysql.mysql_variables:
     login_user: '{{ mariadb_server__admin_user["username"] }}'
     login_password: '{{ mariadb_server__admin_user["password"] }}'
     login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'

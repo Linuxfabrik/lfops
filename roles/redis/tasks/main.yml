@@ -28,8 +28,8 @@
       src: 'etc/redis/{{ redis__installed_version }}-redis.conf.j2'
       dest: '{{ __redis__config_dir }}/{{ __redis__config_file }}'
       owner: 'root'
-      group: 'root'
-      mode: 0o644
+      group: 'redis'
+      mode: 0o640
     notify: 'redis: restart redis'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'

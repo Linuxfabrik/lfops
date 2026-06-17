@@ -1,8 +1,0 @@
-- name: 'Deploy Matomo Log Analytics Python Script to /usr/local/sbin/import_logs.py'
-  ansible.builtin.template:
-    backup: true
-    src: 'usr/local/sbin/import_logs.py.j2'
-    dest: '/usr/local/sbin/import_logs.py'
-    owner: '{{ __shared__apache_httpd_user }}'
-    group: '{{ __shared__apache_httpd_group }}'
-    mode: 0o755

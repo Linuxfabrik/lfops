@@ -54,7 +54,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify: 'icinga2_master: restart icinga2'
+    notify: 'icinga2_master: icinga2 daemon --validate'
     tags:
       - 'icinga2_master:api_users'
 
@@ -62,13 +62,13 @@
     community.general.icinga2_feature:
       name: 'api'
       state: 'present'
-    notify: 'icinga2_master: restart icinga2'
+    notify: 'icinga2_master: icinga2 daemon --validate'
 
   - name: 'icinga2 feature enable notification'
     community.general.icinga2_feature:
       name: 'notification'
       state: 'present'
-    notify: 'icinga2_master: restart icinga2'
+    notify: 'icinga2_master: icinga2 daemon --validate'
 
   - name: 'Deploy /etc/icinga2/features-available/influxdb.conf'
     ansible.builtin.template:
@@ -78,13 +78,13 @@
       owner: '{{ icinga2_master__icinga_user }}'
       group: '{{ icinga2_master__icinga_user }}'
       mode: 0o640
-    notify: 'icinga2_master: restart icinga2'
+    notify: 'icinga2_master: icinga2 daemon --validate'
 
   - name: 'icinga2 feature enable influxdb'
     community.general.icinga2_feature:
       name: 'influxdb'
       state: 'present'
-    notify: 'icinga2_master: restart icinga2'
+    notify: 'icinga2_master: icinga2 daemon --validate'
 
   tags:
     - 'icinga2_master'
@@ -105,7 +105,7 @@
     args:
       creates: '/var/lib/icinga2/certs/{{ icinga2_master__cn }}.crt'
     register: 'icinga2_master__node_setup_result'
-    notify: 'icinga2_master: restart icinga2'
+    notify: 'icinga2_master: icinga2 daemon --validate'
 
   - name: 'Output of the node setup'
     ansible.builtin.debug:
@@ -172,7 +172,7 @@
       {% endif %}
     args:
       creates: "/var/lib/icinga2/certs/{{ icinga2_master__cn }}.crt"
-    notify: 'icinga2_master: restart icinga2'
+    notify: 'icinga2_master: icinga2 daemon --validate'
 
   - name: 'Make sure that the api-users.conf is included in /etc/icinga2/icinga2.conf'
     ansible.builtin.lineinfile:
@@ -198,7 +198,7 @@
       owner: '{{ icinga2_master__icinga_user }}'
       group: '{{ icinga2_master__icinga_user }}'
       mode: 0o640
-    notify: 'icinga2_master: restart icinga2'
+    notify: 'icinga2_master: icinga2 daemon --validate'
 
   tags:
     - 'icinga2_master'

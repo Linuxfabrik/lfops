@@ -1,6 +1,7 @@
 - name: 'Run commands'
   ansible.builtin.shell:
     cmd: '{{ item["commands"] }}'
+    executable: '/bin/bash'
     chdir: '{{ item["chdir"] | d(omit) }}'
     creates: '{{ (item["run_once"] | d(false)) | ternary("/etc/ansible/facts.d/shell_" ~ item["name"] ~ ".state", item["creates"]) | d(omit) }}'
     removes: '{{ item["removes"] | d(omit) }}'

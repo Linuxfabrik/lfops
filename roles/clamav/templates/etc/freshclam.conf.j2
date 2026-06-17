@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023071901
+# 2026060601
 
 ##
 ## Example config file for freshclam
@@ -17,7 +17,7 @@
 
 # Path to the log file (make sure it has proper permissions)
 # Default: disabled
-UpdateLogFile /var/log/freshclam.log
+UpdateLogFile {{ __clamav__freshclam_log }}
 
 # Maximum size of the log file.
 # Value of 0 disables the limit.
@@ -75,9 +75,6 @@ LogSyslog yes
 # geographic endpoint.
 # If the old db.XY.clamav.net domains are set, freshclam will automatically
 # use database.clamav.net instead.
-DatabaseMirror db.ch.clamav.net
-DatabaseMirror db.de.clamav.net
-DatabaseMirror db.at.clamav.net
 DatabaseMirror database.clamav.net
 
 # How many attempts to make before giving up.

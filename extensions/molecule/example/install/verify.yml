@@ -1,0 +1,55 @@
+# verify.yml runs after converge, and again after the idempotence step (see the
+# test_sequence in config.yml). It checks the observable end result with Ansible
+# facts and read-only modules - never by re-running the role.
+#
+# The guiding question is "what can only be confirmed by looking at the running
+# system?". We do not assert that /etc/example/example.conf exists or contains a
+# certain line: if the template task ran, that is already guaranteed, so it would
+# only test Jinja and the template module. We confirm instead that the service
+# runs and that it actually uses the values this scenario set in group_vars.
+- name: 'Verify example is installed and configured'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    # Floor check: did the install happen at all? On its own this would still
+    # pass even if the service never starts, so it is the start, not the goal.
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that the example-server package is installed'
+      ansible.builtin.assert:
+        that: '"example-server" in ansible_facts["packages"]'
+
+    # Real check: is the service up? This catches a config that deployed without
+    # error but makes the service crash on start - something the role's own
+    # tasks cannot detect.
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that example.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["example.service"]["state"] == "running"'
+
+    # The important check: does the running application actually use the value we
+    # configured? Ask the application (here an illustrative status endpoint), not
+    # the config file. This scenario sets example__conf_max_connections to 200,
+    # so the live configuration must report 200. This proves the whole chain
+    # works: group_vars -> template -> service reads the file -> behaviour.
+    - name: 'curl http://127.0.0.1:8080/api/status'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8080/api/status'
+        return_content: true
+      register: '__molecule__example_status_result'
+
+    - name: 'Assert the running application uses the configured max_connections'
+      ansible.builtin.assert:
+        that: '__molecule__example_status_result["json"]["max_connections"] == 200'
+
+    # End state managed over the REST API is invisible to package/service facts,
+    # so query it directly. The install scenario creates this user, so a GET for
+    # it returns 200.
+    - name: 'curl http://127.0.0.1:8080/api/user/example-admin'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8080/api/user/example-admin'
+        status_code: 200

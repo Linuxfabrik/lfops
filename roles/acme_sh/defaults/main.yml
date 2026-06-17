@@ -1,6 +1,6 @@
 acme_sh__deploy_to_host_hook: 'ssh'
 acme_sh__deploy_to_host_user: 'root'
-acme_sh__key_length: 4096
+acme_sh__key_length: 'ec-256'
 acme_sh__timer_enabled: true
 
 # -----------------------------------------------------------------------------

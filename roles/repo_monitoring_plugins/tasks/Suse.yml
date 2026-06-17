@@ -7,7 +7,6 @@
       mode: 0o644
     delegate_to: 'localhost'
     become: false
-    run_once: true
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 

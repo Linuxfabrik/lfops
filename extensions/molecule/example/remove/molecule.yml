@@ -1,0 +1,8 @@
+# Molecule scenario marker for the 'remove' sub-scenario. A scenario can have
+# several sub-scenarios (here 'install' and 'remove'); each is a directory with
+# its own converge/inventory/verify, run with
+# `molecule test --scenario-name example/remove`.
+#
+# Like the 'install' sub-scenario, this is a non-functional reference: the
+# 'example' playbook targets the fictional "Example" application. It shows how
+# to test the removal half of the role's list-with-state pattern.

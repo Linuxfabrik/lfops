@@ -1,0 +1,164 @@
+argument_specs:
+  main:
+    options:
+
+      clamav__clamd_service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Enable / disable the clamd daemon (required for on-access and
+          full scans).
+
+      clamav__clamdscan_on_calendar:
+        type: 'str'
+        required: false
+        description: >-
+          systemd OnCalendar expression for the periodic full scan.
+
+      clamav__clamdscan_paths:
+        type: 'list'
+        elements: 'str'
+        required: false
+        description: >-
+          Paths scanned during the periodic full scan. Defaults to
+          `clamav__scan_on_access_include_paths`.
+
+      clamav__clamdscan_timer_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Enable / disable the timer for the periodic full scan.
+
+      clamav__clamonacc_service_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Enable / disable on-access scanning.
+
+      clamav__freshclam_private_mirror:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: >-
+          Private freshclam mirrors (freshclam.conf `PrivateMirror`).
+
+      clamav__freshclam_service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Enable / disable the freshclam database update service.
+
+      clamav__mail_from:
+        type: 'str'
+        required: false
+        description: >-
+          Sender address for virus notification mails. Defaults to
+          `mailto_root__from`.
+
+      clamav__mail_recipients:
+        type: 'list'
+        elements: 'str'
+        required: false
+        description: >-
+          Recipient addresses for virus notification mails. Defaults to
+          `mailto_root__to`.
+
+      clamav__mail_subject_prefix:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Prefix shown before the hostname in notification mail subjects.
+
+      clamav__scan_alert_broken_executables:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Alert on broken PE / ELF executables.
+
+      clamav__scan_detect_pua:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Detect Possibly Unwanted Applications.
+
+      clamav__scan_max_directory_recursion:
+        type: 'int'
+        required: false
+        default: 20
+        description: >-
+          Maximum directory depth that is scanned.
+
+      clamav__scan_max_file_size:
+        type: 'str'
+        required: false
+        default: '450M'
+        description: >-
+          Full scan: files larger than this are not scanned.
+
+      clamav__scan_max_recursion:
+        type: 'int'
+        required: false
+        default: 30
+        description: >-
+          Maximum archive nesting depth that is scanned.
+
+      clamav__scan_max_scan_size:
+        type: 'str'
+        required: false
+        default: '450M'
+        description: >-
+          Maximum amount of data scanned per input file.
+
+      clamav__scan_on_access_exclude_paths:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: >-
+          On-access: paths (and their subdirectories) excluded from scanning.
+
+      clamav__scan_on_access_include_paths:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: >-
+          On-access: paths whose files are scanned.
+
+      clamav__scan_on_access_max_file_size:
+        type: 'str'
+        required: false
+        default: '500M'
+        description: >-
+          On-access: files larger than this are not scanned.
+
+      clamav__scan_on_access_prevention:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          On-access: block access to a file when a virus is found.
+
+      clamav__whitelist_files:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: >-
+          File allow-list entries (`sigtool --md5` output).
+
+      clamav__whitelist_signatures:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: >-
+          Signature ignore-list entries.

@@ -1,0 +1,9 @@
+# converge.yml is the test phase. Molecule runs it after 'create' and
+# 'prepare' have provisioned and readied the systems under test.
+#
+# Import the playbook under test by its collection FQCN, so the test exercises
+# the real playbook (and through it, the roles) instead of a copy that could
+# drift. Keep this file to the single import; the test inputs live in the
+# scenario inventory, and the checks live in verify.yml.
+- name: 'Converge example playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.example'

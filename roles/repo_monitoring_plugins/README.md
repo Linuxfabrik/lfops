@@ -31,7 +31,7 @@ This role deploys the repository at repo.linuxfabrik.ch for the Linuxfabrik Moni
 `repo_monitoring_plugins__testing`
 
 * If `true`, switch to the `testing` channel: the `release` repository is disabled and the `testing` repository is enabled. On Debian/Ubuntu, the `-release` suffix in the apt sources file is replaced with `-testing`. By default, the `release` channel is used.
-* Type: Boolean.
+* Type: Bool.
 * Default: `false`
 
 Example:

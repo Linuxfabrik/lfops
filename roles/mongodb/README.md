@@ -55,7 +55,7 @@ To setup a replica set from scratch:
 * Manages the state of the mongod service.
 * Triggers: none.
 
-`mongodb:user`
+`mongodb:users`
 
 * Manages the MongoDB users.
 * Triggers: none.
@@ -83,6 +83,7 @@ To setup a replica set from scratch:
 `mongodb__conf_security_authorization`
 
 * [mongodb.com](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-security.authorization)
+* Must be enabled to manage MongoDB users. The role authenticates as `mongodb__admin_user`, which only exists when authorization is enabled. Defining `mongodb__admin_user`, `mongodb__dump_user` or `mongodb__users__*_var` while this is disabled aborts the role.
 * Type: Bool.
 * Default: `false`
 
@@ -233,7 +234,7 @@ mongodb__dump_user:
 
 `mongodb__users__group_var` / `mongodb__users__host_var`
 
-* List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mongodb__admin_user`). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* List of dictionaries of users to create (this is NOT used for the first DBA user - here, use `mongodb__admin_user`). For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). Requires `mongodb__conf_security_authorization` to be enabled.
 * Type: List of dictionaries.
 * Default: `[]`
 * Subkeys:

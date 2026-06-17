@@ -18,11 +18,12 @@ Which Ansible role is proven to run on which OS?
 | borg_local                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | chromium_headless                     |   x    |  (x)   |   x    |   x    |    x    |           |           |           |                                              |
 | chrony                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| clamav                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| clamav                                |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | cloud_init                            |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | cockpit                               |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 | collabora                             |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | collect_rpmnew_rpmsave                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
+| core_dumps                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | coturn                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | crypto_policy                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
@@ -41,7 +42,7 @@ Which Ansible role is proven to run on which OS?
 | freeipa_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | github_project_createrepo             |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | gitlab_ce                             |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| glances                               |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| glances                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | glpi_agent                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | grafana                               |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | grafana_grizzly                       |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
@@ -77,6 +78,7 @@ Which Ansible role is proven to run on which OS?
 | infomaniak_vm                         |        |        |        |        |         |           |           |           | Fedora 35+                                   |
 | kdump                                 |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | keepalived                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| kernel_modules                        |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | kernel_settings                       |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | keycloak                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | kibana                                |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
@@ -93,6 +95,7 @@ Which Ansible role is proven to run on which OS?
 | mailx                                 |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora                                       |
 | mariadb_server                        |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Galera on Debian is untested                 |
 | mastodon                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| matomo_import_logs                    |  (x)   |   x    |  (x)   |  (x)   |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | maxmind_geoip                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | mirror                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | mod_maxminddb                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
@@ -151,12 +154,13 @@ Which Ansible role is proven to run on which OS?
 | shell                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | snmp                                  |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | squid                                 |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
-| sshd                                  |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
+| sshd                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
 | system_update                         |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | systemd_journald                      |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | systemd_unit                          |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | telegraf                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | timezone                              |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
+| tmux                                  |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | tools                                 |        |        |   x    |   x    |    x    |           |           |           | Fedora                                       |
 | trend_micro                           |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | unattended_upgrades                   |  (x)   |  (x)   |        |        |         |    (x)    |    (x)    |    (x)    |                                              |

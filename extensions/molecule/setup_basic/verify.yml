@@ -1,0 +1,22 @@
+- name: 'Verify setup_basic installed the monitoring plugins'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+    - name: 'stat /usr/lib64/nagios/plugins/about-me'
+      ansible.builtin.stat:
+        path: '/usr/lib64/nagios/plugins/about-me'
+      register: '__molecule__about_me_plugin_stat_result'
+
+    - name: 'Assert that the about-me monitoring plugin is installed'
+      ansible.builtin.assert:
+        that: '__molecule__about_me_plugin_stat_result["stat"]["exists"]'
+
+    - name: 'glances --version'
+      ansible.builtin.command: 'glances --version'
+      changed_when: false
+      register: '__molecule__glances_version_result'
+
+    - name: 'Assert that glances is installed and runnable (venv on RHEL 10, distro package elsewhere)'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__glances_version_result["rc"] == 0'

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023071901
+# 2026060601
 
 ##
 ## Example config file for the Clam AV daemon
@@ -14,7 +14,7 @@
 # LogFile must be writable for the user running daemon.
 # A full path is required.
 # Default: disabled
-LogFile /var/log/clamd.log
+LogFile {{ __clamav__clamd_log }}
 
 # By default the log file is locked for writing - the lock protects against
 # running clamd multiple times (if want to run another clamd, please
@@ -77,7 +77,7 @@ ExtendedDetectionInfo yes
 # It is recommended that the directory where this file is stored is
 # also owned by root to keep other users from tampering with it.
 # Default: disabled
-PidFile /run/clamd.scan/clamd.pid
+PidFile {{ __clamav__clamd_pid }}
 
 # Optional path to the global temporary directory.
 # Default: system specific (usually /tmp or /var/tmp).
@@ -97,7 +97,7 @@ PidFile /run/clamd.scan/clamd.pid
 # Path to a local socket file the daemon will listen on.
 # Default: disabled (must be specified by a user)
 # LF: we need the socket to run clamonacc with the --fdpass option
-LocalSocket /run/clamd.scan/clamd.sock
+LocalSocket {{ __clamav__clamd_socket }}
 
 # Sets the group ownership on the unix socket.
 # Default: disabled (the primary group of the user running clamd)
@@ -220,7 +220,7 @@ VirusEvent /usr/local/bin/clamav-virusevent.sh {{ clamav__mail_from }} {{ clamav
 
 # Run as another user (clamd must be started by root for this option to work)
 # Default: don't drop privileges
-User clamscan
+User {{ __clamav__clamd_user }}
 
 # Stop daemon when libclamav reports out of memory condition.
 #ExitOnOOM yes
@@ -764,7 +764,7 @@ OnAccessExtraScanning yes
 # It has the same potential race condition limitations of the
 # OnAccessExcludeUID option.
 # Default: disabled
-OnAccessExcludeUname clamscan
+OnAccessExcludeUname {{ __clamav__clamd_user }}
 
 # Number of times the OnAccess client will retry a failed scan due to
 # connection problems (or other issues).

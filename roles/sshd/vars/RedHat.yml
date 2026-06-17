@@ -1,1 +1,2 @@
+__sshd__service_name: 'sshd'
 sshd__sftp_subsystem: '/usr/libexec/openssh/sftp-server'

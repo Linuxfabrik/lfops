@@ -6,7 +6,7 @@
     - 'icingaweb2'
     - 'icingaweb2:configure'
     - 'icingaweb2:resources'
-    - 'icingaweb2:user'
+    - 'icingaweb2:users'
 
 - block:
 
@@ -48,7 +48,7 @@
     register: 'icingaweb2__old_sql_schema_stat_result'
 
   - name: 'import schema for icingaweb2 database (icingaweb2 < 2.11.4)'
-    community.mysql.mysql_db:
+    ansible.mysql.mysql_db:
       login_user: "{{ icingaweb2__database_login.username }}"
       login_password: "{{ icingaweb2__database_login.password }}"
       login_host: "{{ icingaweb2__database_host }}"
@@ -62,7 +62,7 @@
       - 'icingaweb2__old_sql_schema_stat_result["stat"]["exists"]'
 
   - name: 'import schema for icingaweb2 database (icingaweb2 >= 2.11.4)'
-    community.mysql.mysql_db:
+    ansible.mysql.mysql_db:
       login_user: "{{ icingaweb2__database_login.username }}"
       login_password: "{{ icingaweb2__database_login.password }}"
       login_host: "{{ icingaweb2__database_host }}"
@@ -200,6 +200,8 @@
         (name, active, password_hash)
         VALUES ('{{ item.username }}', 1, '$(php -r 'echo password_hash("{{ item.password }}", PASSWORD_DEFAULT);')')
       ;"
+    args:
+      executable: '/bin/bash'
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: "{{ icingaweb2__users__combined_var }}"
@@ -220,13 +222,15 @@
         SET password_hash = '$(php -r 'echo password_hash("{{ item.password }}", PASSWORD_DEFAULT);')'
         WHERE name = '{{ item.username }}'
       ;"
+    args:
+      executable: '/bin/bash'
     when:
       - 'item["state"] | d("present") == "updated"'
     loop: "{{ icingaweb2__users__combined_var }}"
     register: 'icingaweb2__mysql_user_insert_result'
 
   - name: 'remove users from the icingaweb2 database'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ icingaweb2__database_login["username"] }}'
       login_password: '{{ icingaweb2__database_login["password"] }}'
       login_host: '{{ icingaweb2__database_host }}'
@@ -239,4 +243,4 @@
 
   tags:
     - 'icingaweb2'
-    - 'icingaweb2:user'
+    - 'icingaweb2:users'

@@ -27,7 +27,6 @@
       dest: '/tmp/ansible.icingaweb2-module-x509-{{ icingaweb2_module_x509__version }}.tar.gz'
     delegate_to: 'localhost'
     become: false
-    run_once: true
     check_mode: false # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.icingaweb2-module-x509-{{ icingaweb2_module_x509__version }}.tar.gz to /tmp/ansible.icingaweb2-module-x509-{{ icingaweb2_module_x509__version }}.tar.gz'
@@ -63,7 +62,7 @@
       mode: 0o664
 
   - name: 'Check if the x509 tables exist'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ icingaweb2_module_x509__database_login["username"] }}'
       login_password: '{{ icingaweb2_module_x509__database_login["password"] }}'
       login_host: '{{ icingaweb2_module_x509__database_host }}'
@@ -74,7 +73,7 @@
     check_mode: false # run task even if `--check` is specified
 
   - name: 'import schema for x509 database'
-    community.mysql.mysql_db:
+    ansible.mysql.mysql_db:
       login_user: '{{ icingaweb2_module_x509__database_login["username"] }}'
       login_password: '{{ icingaweb2_module_x509__database_login["password"] }}'
       login_host: '{{ icingaweb2_module_x509__database_host }}'

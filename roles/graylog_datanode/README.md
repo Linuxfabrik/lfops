@@ -72,6 +72,7 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 `graylog_datanode__bind_address`
 
 * The network interface used by the Graylog DataNode to bind all services.
+* If you set this to `0.0.0.0`, you must also set `graylog_datanode__http_publish_uri` to a URL the other nodes and clients can actually reach, otherwise the DataNode advertises an unreachable `0.0.0.0` for its REST API.
 * Type: String.
 * Default: `'127.0.0.1'`
 
@@ -80,6 +81,12 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 * The port where the DataNode REST api is listening.
 * Type: Number.
 * Default: `8999`
+
+`graylog_datanode__http_publish_uri`
+
+* The URI the DataNode publishes for its REST API, for clients that reach it on a different interface than `graylog_datanode__bind_address` (multiple interfaces, a NAT gateway, or a bind address of `0.0.0.0`). Left empty, the DataNode derives the address from the bind address.
+* Type: String.
+* Default: `''`
 
 `graylog_datanode__mongodb_uri`
 
@@ -128,6 +135,7 @@ Example:
 # optional
 graylog_datanode__bind_address: '127.0.0.1'
 graylog_datanode__datanode_http_port: 8999
+graylog_datanode__http_publish_uri: 'http://198.51.100.10:8999/'
 graylog_datanode__mongodb_uri: 'mongodb://127.0.0.1/graylog'
 graylog_datanode__node_search_cache_size: '5gb'
 graylog_datanode__opensearch_data_location: '/data/opensearch'
@@ -142,9 +150,9 @@ graylog_datanode__service_enabled: true
 
 ## Troubleshooting
 
-Q: `/bin/sh: /opt/python-venv/pymongo/bin/python3: No such file or directory`
+**`/bin/sh: /opt/python-venv/pymongo/bin/python3: No such file or directory`**
 
-A: You either have to run the whole playbook, or python_venv directly: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_datanode --tags python_venv`
+* You either have to run the whole playbook, or python_venv directly: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_datanode --tags python_venv`
 
 
 ## License

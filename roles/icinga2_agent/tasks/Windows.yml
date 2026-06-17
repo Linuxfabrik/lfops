@@ -6,7 +6,6 @@
       dest: '/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
     delegate_to: 'localhost'
     become: false
-    run_once: true
     check_mode: false # run task even if `--check` is specified
 
   - name: 'copy msi file from "/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi" to "{{ icinga2_agent__windows_download_path }}\Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi"'

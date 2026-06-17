@@ -27,12 +27,13 @@ running the role: controller-vs-target download split and who needs network acce
 idempotency / overwrite-on-rerun, the upgrade path, hard-coded versions, OS-specific build
 dependencies, what the role does NOT do, and security caveats (e.g. cleartext secrets).
 Distinct from Troubleshooting (reactive error->fix) and Known Limitations (hard constraints).
+Keep this user-facing: developer-oriented notes belong in source-code comments, not here.
 -->
 ## How the Role Behaves
 
-* The release tarball is downloaded on the Ansible controller (`delegate_to: 'localhost'`, `run_once: true`) and copied to the target, so targets without Internet access can still be provisioned. The controller needs outbound access to `example.com`; the target does not.
+* The release tarball is downloaded on the Ansible controller (`delegate_to: 'localhost'`) and copied to the target, so targets without Internet access can still be provisioned. The controller needs outbound access to `example.com`; the target does not.
 * Configuration is fully templated. On every run the files under `/etc/example/` are re-rendered from the role's templates (a timestamped backup is kept), so out-of-band manual edits are overwritten. Manage all settings through the role variables below.
-* A configuration change notifies a chained handler that first runs `example --validate-config` and then restarts `example.service`. The restart is skipped when the service was just started in the same run or when `example__service_state` is `stopped`.
+* A configuration change notifies a chained handler that first runs `example --validate-config` and then restarts `example.service`. A change to the platform settings (`platform.conf`) triggers a lighter `example.service` reload instead. Both are skipped when the service was just started in the same run or when `example__service_state` is `stopped`.
 * Version-specific defaults are loaded from the *installed* package version (`vars/<version>.yml`), not from `example__version`.
 * On Red Hat-family hosts the role manages the SELinux port type and the `httpd_can_network_connect` boolean, but only when SELinux is not disabled.
 * This role does not manage the firewall or TLS certificates. Open the listener ports and provide certificates separately.
@@ -120,25 +121,31 @@ The example role is a single standalone service, so it has no walkthrough.
 * Installs required packages and plugins.
 * Creates the example system user and group.
 * Deploys the configuration files.
+* Deploys the backup cron job (when `example__backup_target` is set).
 * Ensures the example service is in the desired state.
 * Triggers: example.service restart.
 
 `example:configure`
 
 * Deploys configuration files.
-* Triggers: example.service restart.
+* Triggers: example.service restart, example.service reload.
+
+`example:dump`
+
+* Deploys the backup cron job (only when `example__backup_target` is set).
+* Triggers: none.
 
 `example:state`
 
 * Manages the service state (start, stop, enable, disable).
 * Triggers: none.
 
-`example:plugin`
+`example:plugins`
 
 * Manages optional example plugins (install/remove).
 * Triggers: none.
 
-`example:user`
+`example:users`
 
 * Manages application users via the REST API.
 * Triggers: none.
@@ -357,7 +364,7 @@ example__conf_tls_protocols: 'TLSv1.3'
 ```
 
 
-<!-- optional. Reactive Q&A: concrete error messages or symptoms and how to fix them. -->
+<!-- optional. Concrete error messages or symptoms as a bold heading, the fix as bullet(s) below. -->
 ## Troubleshooting
 
 **`example.service` fails to start with `bind: address already in use`**

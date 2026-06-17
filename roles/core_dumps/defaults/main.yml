@@ -1,0 +1,10 @@
+core_dumps__limits_hard_core: 0
+core_dumps__systemd_process_size_max: 0
+core_dumps__systemd_storage: 'none'
+
+# Injected into the kernel_settings role by the playbook, so that fs.suid_dumpable
+# is managed through the single sysctl path provided by kernel_settings. Override via
+# kernel_settings__sysctl__host_var / __group_var if a non-zero value is ever needed.
+core_dumps__kernel_settings__sysctl__dependent_var:
+  - name: 'fs.suid_dumpable'
+    value: 0

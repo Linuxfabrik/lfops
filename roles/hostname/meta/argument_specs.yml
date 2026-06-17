@@ -10,6 +10,14 @@ argument_specs:
           DNS domain that gets appended to `hostname__host_part` to
           form the FQDN. Leave empty for an unqualified hostname.
 
+      hostname__etc_hosts_ip:
+        type: 'str'
+        required: false
+        description: >-
+          IP address the hostname is mapped to in `/etc/hosts`. Defaults
+          to the host's primary IPv4 address (`ansible_facts.default_ipv4`).
+          When empty, the `/etc/hosts` entry is skipped.
+
       hostname__full_hostname:
         type: 'str'
         required: false
@@ -23,3 +31,12 @@ argument_specs:
         required: false
         description: >-
           Hostname-only part. Defaults to `inventory_hostname`.
+
+      hostname__manage_etc_hosts:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Whether to maintain an `/etc/hosts` entry mapping the hostname
+          to `hostname__etc_hosts_ip`. Set to `false` to leave `/etc/hosts`
+          untouched.

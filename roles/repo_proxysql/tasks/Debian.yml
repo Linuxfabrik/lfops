@@ -38,6 +38,7 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
+    changed_when: false # refreshing the package cache is not a config change
 
   tags:
     - 'repo_proxysql'

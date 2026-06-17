@@ -1,0 +1,23 @@
+# verify.yml runs after converge and again after the idempotence step. The
+# idempotence step guards the apt-cache-refresh idempotency fix (a second
+# converge must report no changes). Here we assert the observable end result:
+# the sury repo is active and is the source apt would install php from.
+#
+# Asking apt which repo wins for a php package is a genuine "ask the system"
+# check, not a "the sources.list file exists" check: it proves the keyring,
+# repo file and cache refresh actually combined into a usable package source.
+- name: 'Verify repo_sury activated the sury php repo'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'apt-cache policy php-common'
+      ansible.builtin.command: 'apt-cache policy php-common'
+      register: '__molecule__sury_policy_result'
+      changed_when: false
+
+    - name: 'Assert php-common is served from the sury repo'
+      ansible.builtin.assert:
+        that: '"packages.sury.org" in __molecule__sury_policy_result["stdout"]'
+        fail_msg: '{{ __molecule__sury_policy_result["stdout"] }}'
