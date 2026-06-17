@@ -1,0 +1,143 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      duplicity__backup_backend:
+        type: 'str'
+        required: false
+        default: 'swift'
+        choices:
+          - 'sftp'
+          - 'swift'
+        description: 'The backup backend being used.'
+
+      duplicity__backup_dest:
+        type: 'str'
+        required: false
+        description: 'The backup destination, combined with the backup source path to form the target URL for duplicity.'
+
+      duplicity__backup_dest_container:
+        type: 'str'
+        required: false
+        description: 'The Swift container, used to separate backups on the destination.'
+
+      duplicity__backup_full_if_older_than:
+        type: 'str'
+        required: false
+        default: '30D'
+        description: 'After how long a full backup instead of an incremental one is done.'
+
+      duplicity__backup_retention_time:
+        type: 'str'
+        required: false
+        default: '30D'
+        description: 'The retention time of the backups.'
+
+      duplicity__backup_sources__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Directories to back up. Dependent-role injection.'
+
+      duplicity__backup_sources__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Directories to back up. Group-level override.'
+
+      duplicity__backup_sources__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Directories to back up. Host-level override.'
+
+      duplicity__excludes:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - '**/*.git*'
+          - '**/*.svn*'
+          - '**/*.temp'
+          - '**/*.tmp'
+          - '**/.cache'
+          - '**/cache'
+          - '**/log'
+        description: 'Global exclude shell patterns for duplicity.'
+
+      duplicity__gpg_encrypt_master_key:
+        type: 'str'
+        required: true
+        description: 'The long key ID of the master GPG key.'
+
+      duplicity__gpg_encrypt_master_key_block:
+        type: 'str'
+        required: true
+        description: 'The ASCII-armored public master GPG key, used in addition to the local key to encrypt the backups.'
+
+      duplicity__loglevel:
+        type: 'str'
+        required: false
+        default: 'notice'
+        choices:
+          - 'debug'
+          - 'error'
+          - 'info'
+          - 'notice'
+          - 'warning'
+        description: 'The duplicity log level.'
+
+      duplicity__logrotate:
+        type: 'int'
+        required: false
+        description: 'Number of days log files are kept before being rotated out.'
+
+      duplicity__on_calendar:
+        type: 'str'
+        required: false
+        description: 'The OnCalendar definition for the daily systemd timer.'
+
+      duplicity__on_calendar_hour:
+        type: 'str'
+        required: false
+        default: '23'
+        description: 'Shorthand to set the hour of duplicity__on_calendar.'
+
+      duplicity__sftp_password:
+        type: 'str'
+        required: false
+        description: 'Password for the SSH user used by the SFTP connection. Required when duplicity__backup_backend is sftp.'
+
+      duplicity__swift_authurl:
+        type: 'str'
+        required: false
+        default: 'https://swiss-backup02.infomaniak.com/identity/v3'
+        description: 'The authentication URL for Swift.'
+
+      duplicity__swift_authversion:
+        type: 'str'
+        required: false
+        default: '3'
+        description: 'The authentication version for Swift.'
+
+      duplicity__swift_login:
+        type: 'dict'
+        required: false
+        description: 'The Swift username and password (subkeys username and password). Required when duplicity__backup_backend is swift.'
+
+      duplicity__swift_tenantname:
+        type: 'str'
+        required: false
+        description: 'The Swift tenant name.'
+
+      duplicity__timer_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'The state of the daily systemd timer.'

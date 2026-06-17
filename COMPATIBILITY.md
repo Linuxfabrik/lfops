@@ -29,7 +29,7 @@ Which Ansible role is proven to run on which OS?
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_versionlock                       |        |        |   x    |   x    |         |           |           |           | Fedora 40                                    |
 | docker                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| duplicity                             |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
+| duplicity                             |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
 | elastic_agent                         |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | elastic_agent_fleet_server            |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | elasticsearch                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |

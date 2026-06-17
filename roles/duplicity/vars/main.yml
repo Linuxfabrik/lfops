@@ -1,16 +1,41 @@
+# duplicity ships prebuilt manylinux wheels, so nothing here needs to be compiled and no
+# compiler or development headers are required: package_requirements only installs the Python
+# interpreter (plus python3-venv on Debian/Ubuntu, which provides the venv module).
+#
+# pip_constraints force a modern oslo.* stack. Without them, duplicity's unconditional pyrax
+# dependency (the Rackspace backend we never use) drags in an ancient python-keystoneclient and
+# oslo.utils. That old oslo.utils both requires the deprecated, source-only `netifaces` (which
+# would need a compiler) and uses `collections.Mapping`, removed in Python 3.10, which crashes
+# the Swift backend. Pinning modern oslo.* avoids netifaces entirely and fixes the crash.
+#
+# The single `Debian` key (os_family) covers both Debian and Ubuntu, where the distribution
+# default `python3` is the right interpreter and the package names do not differ by version.
 __duplicity__python_venv__venvs__dependent_var:
+  Debian:
+    - name: 'duplicity'
+      packages:
+        - 'duplicity'
+      package_requirements:
+        - 'python3-venv'
+      pip_constraints:
+        - 'oslo.config>=9'
+        - 'oslo.i18n>=5'
+        - 'oslo.serialization>=5'
+        - 'oslo.utils>=7'
+      python_executable: 'python3'
+      exposed_binaries:
+        - 'duplicity'
   RedHat8:
     - name: 'duplicity'
       packages:
         - 'duplicity'
-        # If we add these, we get "SetuptoolsDeprecationWarning: Invalid dash-separated options",
-        # and current versions of duplicity (now) installs these as well:
-        # - 'python-keystoneclient'
-        # - 'python-swiftclient'
       package_requirements:
-        - 'gcc'
-        - 'librsync-devel'
-        - 'python3.11-devel'
+        - 'python3.11'
+      pip_constraints:
+        - 'oslo.config>=9'
+        - 'oslo.i18n>=5'
+        - 'oslo.serialization>=5'
+        - 'oslo.utils>=7'
       python_executable: 'python3.11'
       exposed_binaries:
         - 'duplicity'
@@ -18,14 +43,13 @@ __duplicity__python_venv__venvs__dependent_var:
     - name: 'duplicity'
       packages:
         - 'duplicity'
-        # If we add these, we get "SetuptoolsDeprecationWarning: Invalid dash-separated options",
-        # and current versions of duplicity (now) installs these as well:
-        # - 'python-keystoneclient'
-        # - 'python-swiftclient'
       package_requirements:
-        - 'gcc'
-        - 'librsync-devel'
-        - 'python3.11-devel'
+        - 'python3.11'
+      pip_constraints:
+        - 'oslo.config>=9'
+        - 'oslo.i18n>=5'
+        - 'oslo.serialization>=5'
+        - 'oslo.utils>=7'
       python_executable: 'python3.11'
       exposed_binaries:
         - 'duplicity'
@@ -33,14 +57,13 @@ __duplicity__python_venv__venvs__dependent_var:
     - name: 'duplicity'
       packages:
         - 'duplicity'
-        # If we add these, we get "SetuptoolsDeprecationWarning: Invalid dash-separated options",
-        # and current versions of duplicity (now) installs these as well:
-        # - 'python-keystoneclient'
-        # - 'python-swiftclient'
       package_requirements:
-        - 'gcc'
-        - 'librsync-devel'
-        - 'python3.13-devel'
+        - 'python3.13'
+      pip_constraints:
+        - 'oslo.config>=9'
+        - 'oslo.i18n>=5'
+        - 'oslo.serialization>=5'
+        - 'oslo.utils>=7'
       python_executable: 'python3.13'
       exposed_binaries:
         - 'duplicity'
