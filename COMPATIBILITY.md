@@ -111,7 +111,7 @@ Which Ansible role is proven to run on which OS?
 | nfs_server                            |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nodejs                                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | open_vm_tools                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
-| opensearch                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| opensearch                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | openvpn_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | php                                   |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | podman_containers                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
