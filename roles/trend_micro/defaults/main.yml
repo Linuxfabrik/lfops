@@ -1,10 +1,5 @@
 trend_micro__group_id: 0
-trend_micro__path_dsa: '/opt/ds_agent/dsa_control'
-trend_micro__path_identity_file: '/opt/TrendMicro/EndpointBasecamp/etc/.identity'
 trend_micro__policy_id: 0
-trend_micro__proxy_addr: ''
-trend_micro__proxy_login: {}
-trend_micro__proxy_port: ''
 trend_micro__relay_group_id: 0
 trend_micro__xbc_env: 'prod-eu1'
 trend_micro__xbc_fqdn: 'api-eu1.xbc.trendmicro.com'

@@ -13,45 +13,11 @@ argument_specs:
         default: 0
         description: 'Agent group for organisation. 0 means no specific choice.'
 
-      trend_micro__path_dsa:
-        type: 'str'
-        required: false
-        default: '/opt/ds_agent/dsa_control'
-        description: 'Path to the dsa_control binary.'
-
-      trend_micro__path_identity_file:
-        type: 'str'
-        required: false
-        default: '/opt/TrendMicro/EndpointBasecamp/etc/.identity'
-        description: 'Path polled to confirm agent registration.'
-
       trend_micro__policy_id:
         type: 'int'
         required: false
         default: 0
         description: 'Security policy to apply. 0 means no specific choice.'
-
-      trend_micro__proxy_addr:
-        type: 'str'
-        required: false
-        default: ''
-        description: 'Proxy hostname or IP. Leave empty for a direct connection.'
-
-      trend_micro__proxy_login:
-        type: 'dict'
-        required: false
-        default: {}
-        description: >-
-          Proxy credentials. May contain the keys `username` and `password`.
-          Typically fed by `linuxfabrik.lfops.bitwarden_item`, which returns the
-          full Bitwarden item; extra keys are ignored. Omit for a proxy that
-          needs no authentication.
-
-      trend_micro__proxy_port:
-        type: 'str'
-        required: false
-        default: ''
-        description: 'Proxy port.'
 
       trend_micro__relay_group_id:
         type: 'int'
@@ -69,9 +35,7 @@ argument_specs:
         required: true
         description: >-
           Server & Workload Protection activation credentials. Must contain the
-          keys `tenant_id` and `token`. Typically fed by
-          `linuxfabrik.lfops.bitwarden_item`, which returns the full Bitwarden
-          item; extra keys are ignored.
+          keys `tenant_id` and `token`.
 
       trend_micro__xbc_env:
         type: 'str'
@@ -85,24 +49,19 @@ argument_specs:
         default: 'api-eu1.xbc.trendmicro.com'
         description: 'XBC backend FQDN. Use the FQDN matching your region.'
 
-      trend_micro__xbc_installer_aarch64_company_id:
-        type: 'str'
-        required: true
-        description: 'Company ID for the aarch64 installer API request.'
-
       trend_micro__xbc_installer_aarch64_scenario_ids:
         type: 'list'
         elements: 'str'
-        required: true
-        description: 'List of scenario IDs for the aarch64 installer API request.'
+        required: false
+        description: 'List of scenario IDs for the aarch64 installer API request. Required on aarch64 hosts only.'
 
-      trend_micro__xbc_installer_x86_64_company_id:
+      trend_micro__xbc_installer_company_id:
         type: 'str'
         required: true
-        description: 'Company ID for the x86_64 installer API request.'
+        description: 'Company ID for the installer API request. Same value for both architectures.'
 
       trend_micro__xbc_installer_x86_64_scenario_ids:
         type: 'list'
         elements: 'str'
-        required: true
-        description: 'List of scenario IDs for the x86_64 installer API request.'
+        required: false
+        description: 'List of scenario IDs for the x86_64 installer API request. Required on x86_64 hosts only.'

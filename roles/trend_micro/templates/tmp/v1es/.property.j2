@@ -1,0 +1,2 @@
+{#- no ansible_managed header: tmxbc parses this file as strict JSON, which has no comment syntax -#}
+{{ {"xbc_env": trend_micro__xbc_env, "xbc_agent_token": __trend_micro__xbc_agent_token, "full_package": true} | ansible.builtin.to_json }}
