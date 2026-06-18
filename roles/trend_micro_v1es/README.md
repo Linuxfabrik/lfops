@@ -1,4 +1,4 @@
-# Ansible Role linuxfabrik.lfops.trend_micro
+# Ansible Role linuxfabrik.lfops.trend_micro_v1es
 
 This role installs and activates the [Trend Vision One Endpoint Security](https://www.trendmicro.com/en_us/business/products/hybrid-cloud/vision-one-endpoint-security.html) agent (`v1es`) on Linux servers. It covers pre-flight checks, agent download and installation via the XBC API, agent registration, and Server & Workload Protection (SWP) activation.
 
@@ -56,22 +56,22 @@ The script is a `bash` installer. Map its values to the role variables as follow
 
 | Role variable                                    | Where it appears in the deployment script                                     |
 | -------------                                    | -----------------------------------------                                     |
-| `trend_micro__customer_id`                       | `CUSTOMER_ID="..."`                                                           |
-| `trend_micro__group_id`                          | `GROUP_ID=...` (optional, defaults to `0`)                                    |
-| `trend_micro__policy_id`                         | `POLICY_ID=...` (optional, defaults to `0`)                                   |
-| `trend_micro__relay_group_id`                    | `RELAY_GROUP_ID=...` (optional, defaults to `0`)                              |
-| `trend_micro__swp_dsm_fqdn`                      | the host in `dsa_control -a dsm://<host>:443/`                                |
-| `trend_micro__swp_login.tenant_id`               | `tenantID:...` in the `dsa_control` activation line                           |
-| `trend_micro__swp_login.token`                   | `token:...` in the `dsa_control` activation line                              |
-| `trend_micro__xbc_env`                           | `XBC_ENV="..."` (optional, defaults to `prod-eu1`)                            |
-| `trend_micro__xbc_fqdn`                          | `XBC_FQDN="..."`                                                              |
-| `trend_micro__xbc_installer_company_id`          | `company_id` in the `HTTP_BODY` (identical in both `archType` blocks)         |
-| `trend_micro__xbc_installer_<arch>_scenario_ids` | `scenario_ids` in the `HTTP_BODY` of the matching `archType` block (both IDs) |
+| `trend_micro_v1es__customer_id`                  | `CUSTOMER_ID="..."`                                                           |
+| `trend_micro_v1es__group_id`                     | `GROUP_ID=...` (optional, defaults to `0`)                                    |
+| `trend_micro_v1es__policy_id`                    | `POLICY_ID=...` (optional, defaults to `0`)                                   |
+| `trend_micro_v1es__relay_group_id`               | `RELAY_GROUP_ID=...` (optional, defaults to `0`)                              |
+| `trend_micro_v1es__swp_dsm_fqdn`                 | the host in `dsa_control -a dsm://<host>:443/`                                |
+| `trend_micro_v1es__swp_login.tenant_id`          | `tenantID:...` in the `dsa_control` activation line                           |
+| `trend_micro_v1es__swp_login.token`              | `token:...` in the `dsa_control` activation line                              |
+| `trend_micro_v1es__xbc_env`                      | `XBC_ENV="..."` (optional, defaults to `prod-eu1`)                            |
+| `trend_micro_v1es__xbc_fqdn`                     | `XBC_FQDN="..."`                                                              |
+| `trend_micro_v1es__xbc_installer_company_id`     | `company_id` in the `HTTP_BODY` (identical in both `archType` blocks)         |
+| `trend_micro_v1es__xbc_installer_<arch>_scenario_ids`| `scenario_ids` in the `HTTP_BODY` of the matching `archType` block (both IDs) |
 
 
 ## Tags
 
-`trend_micro`
+`trend_micro_v1es`
 
 * Runs the pre-flight checks (supported architecture, scenario IDs, writable `/tmp`, minimum RAM).
 * Installs the required packages (`curl`, `tar`).
@@ -83,17 +83,17 @@ The script is a `bash` installer. Map its values to the role variables as follow
 
 ## Mandatory Role Variables
 
-`trend_micro__customer_id`
+`trend_micro_v1es__customer_id`
 
 * Customer ID used in the installer API request.
 * Type: String.
 
-`trend_micro__swp_dsm_fqdn`
+`trend_micro_v1es__swp_dsm_fqdn`
 
 * Deep Security Manager FQDN used to activate Server & Workload Protection.
 * Type: String.
 
-`trend_micro__swp_login`
+`trend_micro_v1es__swp_login`
 
 * Server & Workload Protection activation credentials.
 * Type: Dictionary.
@@ -109,17 +109,17 @@ The script is a `bash` installer. Map its values to the role variables as follow
         * Mandatory. Activation token used to activate Server & Workload Protection.
         * Type: String.
 
-`trend_micro__xbc_installer_aarch64_scenario_ids`
+`trend_micro_v1es__xbc_installer_aarch64_scenario_ids`
 
 * List of scenario IDs for the aarch64 installer API request. Include all IDs from the deployment script (endpoint sensor and SWP). Required on aarch64 hosts only.
 * Type: List of strings.
 
-`trend_micro__xbc_installer_company_id`
+`trend_micro_v1es__xbc_installer_company_id`
 
 * Company ID for the installer API request. The same value for both architectures.
 * Type: String.
 
-`trend_micro__xbc_installer_x86_64_scenario_ids`
+`trend_micro_v1es__xbc_installer_x86_64_scenario_ids`
 
 * List of scenario IDs for the x86_64 installer API request. Include all IDs from the deployment script (endpoint sensor and SWP). Required on x86_64 hosts only.
 * Type: List of strings.
@@ -127,16 +127,16 @@ The script is a `bash` installer. Map its values to the role variables as follow
 Example:
 ```yaml
 # mandatory
-trend_micro__customer_id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-trend_micro__swp_dsm_fqdn: 'agents.workload.de-1.cloudone.trendmicro.com'
-trend_micro__swp_login:
+trend_micro_v1es__customer_id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+trend_micro_v1es__swp_dsm_fqdn: 'agents.workload.de-1.cloudone.trendmicro.com'
+trend_micro_v1es__swp_login:
   tenant_id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
   token: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-trend_micro__xbc_installer_aarch64_scenario_ids:
+trend_micro_v1es__xbc_installer_aarch64_scenario_ids:
   - 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
   - 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-trend_micro__xbc_installer_company_id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-trend_micro__xbc_installer_x86_64_scenario_ids:
+trend_micro_v1es__xbc_installer_company_id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+trend_micro_v1es__xbc_installer_x86_64_scenario_ids:
   - 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
   - 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
 ```
@@ -144,31 +144,31 @@ trend_micro__xbc_installer_x86_64_scenario_ids:
 
 ## Optional Role Variables
 
-`trend_micro__group_id`
+`trend_micro_v1es__group_id`
 
 * Agent group for organisation.
 * Type: Number.
 * Default: `0`
 
-`trend_micro__policy_id`
+`trend_micro_v1es__policy_id`
 
 * Security policy to apply. `0` means no specific policy.
 * Type: Number.
 * Default: `0`
 
-`trend_micro__relay_group_id`
+`trend_micro_v1es__relay_group_id`
 
 * Relay group for agent communication.
 * Type: Number.
 * Default: `0`
 
-`trend_micro__xbc_env`
+`trend_micro_v1es__xbc_env`
 
 * XBC environment identifier.
 * Type: String.
 * Default: `'prod-eu1'`
 
-`trend_micro__xbc_fqdn`
+`trend_micro_v1es__xbc_fqdn`
 
 * XBC backend FQDN. Use the FQDN matching your region.
 * Type: String.
@@ -177,10 +177,10 @@ trend_micro__xbc_installer_x86_64_scenario_ids:
 Example:
 ```yaml
 # optional
-trend_micro__group_id: 10
-trend_micro__policy_id: 42
-trend_micro__relay_group_id: 5
-trend_micro__xbc_fqdn: 'api-us1.xbc.trendmicro.com'
+trend_micro_v1es__group_id: 10
+trend_micro_v1es__policy_id: 42
+trend_micro_v1es__relay_group_id: 5
+trend_micro_v1es__xbc_fqdn: 'api-us1.xbc.trendmicro.com'
 ```
 
 

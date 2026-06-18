@@ -2,65 +2,65 @@ argument_specs:
   main:
     options:
 
-      trend_micro__customer_id:
+      trend_micro_v1es__customer_id:
         type: 'str'
         required: true
         description: 'Customer ID used in the installer API request.'
 
-      trend_micro__group_id:
+      trend_micro_v1es__group_id:
         type: 'int'
         required: false
         default: 0
         description: 'Agent group for organisation. 0 means no specific choice.'
 
-      trend_micro__policy_id:
+      trend_micro_v1es__policy_id:
         type: 'int'
         required: false
         default: 0
         description: 'Security policy to apply. 0 means no specific choice.'
 
-      trend_micro__relay_group_id:
+      trend_micro_v1es__relay_group_id:
         type: 'int'
         required: false
         default: 0
         description: 'Relay group for agent communication. 0 means no specific choice.'
 
-      trend_micro__swp_dsm_fqdn:
+      trend_micro_v1es__swp_dsm_fqdn:
         type: 'str'
         required: true
         description: 'Deep Security Manager FQDN used to activate Server & Workload Protection.'
 
-      trend_micro__swp_login:
+      trend_micro_v1es__swp_login:
         type: 'dict'
         required: true
         description: >-
           Server & Workload Protection activation credentials. Must contain the
           keys `tenant_id` and `token`.
 
-      trend_micro__xbc_env:
+      trend_micro_v1es__xbc_env:
         type: 'str'
         required: false
         default: 'prod-eu1'
         description: 'XBC environment identifier.'
 
-      trend_micro__xbc_fqdn:
+      trend_micro_v1es__xbc_fqdn:
         type: 'str'
         required: false
         default: 'api-eu1.xbc.trendmicro.com'
         description: 'XBC backend FQDN. Use the FQDN matching your region.'
 
-      trend_micro__xbc_installer_aarch64_scenario_ids:
+      trend_micro_v1es__xbc_installer_aarch64_scenario_ids:
         type: 'list'
         elements: 'str'
         required: false
         description: 'List of scenario IDs for the aarch64 installer API request. Required on aarch64 hosts only.'
 
-      trend_micro__xbc_installer_company_id:
+      trend_micro_v1es__xbc_installer_company_id:
         type: 'str'
         required: true
         description: 'Company ID for the installer API request. Same value for both architectures.'
 
-      trend_micro__xbc_installer_x86_64_scenario_ids:
+      trend_micro_v1es__xbc_installer_x86_64_scenario_ids:
         type: 'list'
         elements: 'str'
         required: false

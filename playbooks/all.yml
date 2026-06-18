@@ -145,7 +145,7 @@
 - import_playbook: 'timezone.yml'
 - import_playbook: 'tmux.yml'
 - import_playbook: 'tools.yml'
-- import_playbook: 'trend_micro.yml'
+- import_playbook: 'trend_micro_v1es.yml'
 - import_playbook: 'unattended_upgrades.yml'
 - import_playbook: 'vsftpd.yml'
 - import_playbook: 'yum_utils.yml'
