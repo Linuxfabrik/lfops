@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:opensearch**: Add `opensearch__heap` to set the JVM heap size via a drop-in at `/etc/opensearch/jvm.options.d/heap.options`. Defaults to 50% of system memory, capped at 31 GB.
 * **role:trend_micro_v1es**: Add a role to install and activate the Trend Vision One Endpoint Security agent (Endpoint Sensor and Server & Workload Protection).
 * **role:matomo_import_logs**: New role that imports Apache access logs into Matomo on a schedule, one systemd timer per site, and ships the Matomo log-analytics import script (`import_logs.py`). The `token_auth` is provided via a per-site auth file instead of the command line (passing `--token-auth`, `--login` or `--password` is deprecated, since they are visible in the process list and now log a deprecation warning). The script also supports the Traefik access-log format and fixes a possible endless loop when reading a config file.
 * **role:glances**: Add RHEL 10 / Rocky 10 / Alma 10 support by installing glances into a Python venv via the `python_venv` role, since the package is not available in EPEL 10. RHEL 10 is now marked proven (`x`) in COMPATIBILITY.

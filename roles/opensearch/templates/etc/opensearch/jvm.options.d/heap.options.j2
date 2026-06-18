@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2026061801
+
+# JVM heap settings.
+#
+# Set the minimum (-Xms) and maximum (-Xmx) heap to the same value to avoid
+# stop-the-world GC pauses while the heap resizes. Keep it at most 50% of system
+# memory and below ~32 GB, so the JVM can use compressed object pointers.
+-Xms{{ opensearch__heap }}
+-Xmx{{ opensearch__heap }}
