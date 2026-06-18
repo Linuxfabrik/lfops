@@ -25,7 +25,7 @@
 
 # LFOps
 
-LFOps is a comprehensive Ansible Collection providing 145+ playbooks and 160+ roles to bootstrap and manage Linux-based IT infrastructures. It covers the full server lifecycle -- from initial provisioning and hardening to application deployment, monitoring, and automated backups. LFOps supports RHEL 8/9/10, Debian, and Ubuntu.
+LFOps is a comprehensive Ansible Collection providing 145+ playbooks and 160+ roles to bootstrap and manage Linux-based IT infrastructures. It covers the full server lifecycle - from initial provisioning and hardening to application deployment, monitoring, and automated backups. LFOps supports RHEL 8/9/10, Debian, and Ubuntu.
 
 > If these Ansible roles and playbooks help you running your Linux infrastructure, please give it a star.
 
@@ -80,9 +80,9 @@ Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfa
 
 | ansible-core | Controller Python | Managed Node Python | RHEL 8 (Python 3.6) |
 |--------------|-------------------|---------------------|----------------------|
-| 2.16         | 3.10 -- 3.12      | 3.6 -- 3.12        | works out of the box |
-| 2.17         | 3.10 -- 3.12      | 3.7 -- 3.12        | needs Python >= 3.7  |
-| 2.18         | 3.11 -- 3.14      | 3.8 -- 3.13        | needs Python >= 3.8  |
+| 2.16         | 3.10 - 3.12       | 3.6 - 3.12          | works out of the box |
+| 2.17         | 3.10 - 3.12       | 3.7 - 3.12          | needs Python >= 3.7  |
+| 2.18         | 3.11 - 3.14       | 3.8 - 3.13          | needs Python >= 3.8  |
 
 If you manage RHEL 8 hosts with the default system Python (3.6), use **ansible-core 2.16**. If all your managed nodes have Python >= 3.8 (e.g. RHEL 9+, Debian 12+, Ubuntu 22.04+), you can use **ansible-core 2.18** for the latest features.
 
@@ -176,9 +176,9 @@ strategy = mitogen_linear
 
 | ansible-core | Mitogen  | Controller Python |
 |--------------|----------|-------------------|
-| 2.16         | >= 0.3.7 | 3.10 -- 3.14      |
-| 2.17         | >= 0.3.7 | 3.10 -- 3.14      |
-| 2.18         | >= 0.3.7 | 3.11 -- 3.14      |
+| 2.16         | >= 0.3.7 | 3.10 - 3.14       |
+| 2.17         | >= 0.3.7 | 3.10 - 3.14       |
+| 2.18         | >= 0.3.7 | 3.11 - 3.14       |
 
 Always keep Mitogen up to date (`pip install --upgrade mitogen`). If you encounter `SyntaxError: future feature annotations is not defined`, either the Mitogen version is outdated or the Python version on the remote host is too old (< 3.7).
 
@@ -424,13 +424,13 @@ See `ansible-doc -t lookup linuxfabrik.lfops.bitwarden_item` for all options.
 
 LFOps also ships a small set of custom modules for resource types that are not covered by Ansible core:
 
-* **`bitwarden_item`** — create / update / fetch Bitwarden items.
-* **`gpg_key`** — manage GPG keys.
-* **`ipa*`** (`ipagroup`, `ipahbacrule`, `ipasudorule`, ...) — FreeIPA resource management.
-* **`lvm_pv`** — manage LVM physical volumes.
-* **`nextcloud_occ_app`**, **`nextcloud_occ_app_config`**, **`nextcloud_occ_system_config`** — drive Nextcloud `occ` from a playbook.
-* **`sqlite_query`** — run SQLite queries.
-* **`uptimerobot_*`** — manage UptimeRobot monitors, maintenance windows, public status pages and alert contacts via the [UptimeRobot API v2](https://uptimerobot.com/api/legacy/), with full idempotency, `--check`, `--diff` and a parallel set of `*_info` modules for read-only inspection. See the [`uptimerobot` role README](roles/uptimerobot/) for the full reference.
+* **`bitwarden_item`**: create / update / fetch Bitwarden items.
+* **`gpg_key`**: manage GPG keys.
+* **`ipa*`** (`ipagroup`, `ipahbacrule`, `ipasudorule`, ...) - FreeIPA resource management.
+* **`lvm_pv`**: manage LVM physical volumes.
+* **`nextcloud_occ_app`**, **`nextcloud_occ_app_config`**, **`nextcloud_occ_system_config`**: drive Nextcloud `occ` from a playbook.
+* **`sqlite_query`**: run SQLite queries.
+* **`uptimerobot_*`**: manage UptimeRobot monitors, maintenance windows, public status pages and alert contacts via the [UptimeRobot API v2](https://uptimerobot.com/api/legacy/), with full idempotency, `--check`, `--diff` and a parallel set of `*_info` modules for read-only inspection. See the [`uptimerobot` role README](roles/uptimerobot/) for the full reference.
 
 Each custom module ships its own `DOCUMENTATION`, `EXAMPLES` and `RETURN` blocks; browse them with `ansible-doc linuxfabrik.lfops.<module>`.
 
@@ -442,73 +442,75 @@ Which Ansible role is proven to run on which OS? See [COMPATIBILITY.md](https://
 
 ## Tips, Tricks & Troubleshooting
 
-**Q: Where should I set `ansible_become: true`?**
+**Where should I set `ansible_become: true`?**
 
-Don't use `become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars only (not in `all.yml` -- `localhost` must not be part of the group, otherwise you'll get errors like `sudo: a password is required`).
-
-
-**Q: How do I find all groups a host belongs to?**
-
-```bash
-ansible --inventory path/to/inventory myhost -m debug -a "var=group_names"
-```
+* Don't use `become: true` in role playbooks. Instead, set `ansible_become: true` in your group_vars or host_vars only (not in `all.yml` - `localhost` must not be part of the group, otherwise you'll get errors like `sudo: a password is required`).
 
 
-**Q: How do I connect as an unprivileged user?**
+**How do I find all groups a host belongs to?**
 
-Make sure the user is allowed to switch to all other accounts, not just root. Otherwise tasks using `become_user: 'apache'` etc. will fail. The sudoers entry must use `(ALL)`:
+* Run:
 
-```
-ansible-user ALL=(ALL) NOPASSWD: ALL
-```
-
-
-**Q: How do I route a role's outbound traffic through an HTTP proxy?**
-
-Some roles download installers or contact external APIs directly from the managed node. LFOps does not expose per-role proxy variables. Instead, set the proxy globally on the target in `/etc/environment`; the variables are picked up by tasks running over SSH, including key-based logins:
-
-```
-HTTP_PROXY=http://192.0.2.30:8080/
-HTTPS_PROXY=http://192.0.2.30:8080/
-http_proxy=http://192.0.2.30:8080/
-https_proxy=http://192.0.2.30:8080/
-```
-
-Set `NO_PROXY` / `no_proxy` (comma-separated hosts, domains or CIDRs) for destinations that must be reached directly.
+    ```bash
+    ansible --inventory path/to/inventory myhost -m debug -a "var=group_names"
+    ```
 
 
-**Q: How do I find out which playbooks ran against a host?**
+**How do I connect as an unprivileged user?**
 
-All playbooks log every run to `/var/log/linuxfabrik-lfops.log` on the target host:
+* Make sure the user is allowed to switch to all other accounts, not just root. Otherwise tasks using `become_user: 'apache'` etc. will fail. The sudoers entry must use `(ALL)`:
 
-```
-2024-05-23 11:15:26.604794 - Playbook linuxfabrik.lfops.apps: START
-2024-05-23 11:15:32.877064 - Playbook linuxfabrik.lfops.apps: END
-```
-
-
-**Q: Debian: `No package matching '...' is available`**
-
-Run `apt update` before running the specific role.
+    ```
+    ansible-user ALL=(ALL) NOPASSWD: ALL
+    ```
 
 
-**Q: `[WARNING]: Collection x.y does not support Ansible version 2.16.xx`**
+**How do I route a role's outbound traffic through an HTTP proxy?**
 
-Install a newer Ansible version and update all collections:
+* Some roles download installers or contact external APIs directly from the managed node. LFOps does not expose per-role proxy variables. Instead, set the proxy globally on the target in `/etc/environment`; the variables are picked up by tasks running over SSH, including key-based logins:
 
-```bash
-python3 -m venv ~/venvs/ansible-2.18
-source ~/venvs/ansible-2.18/bin/activate
-pip install --upgrade pip
-pip install 'ansible-core~=2.18.0'
+    ```
+    HTTP_PROXY=http://192.0.2.30:8080/
+    HTTPS_PROXY=http://192.0.2.30:8080/
+    http_proxy=http://192.0.2.30:8080/
+    https_proxy=http://192.0.2.30:8080/
+    ```
 
-ansible-galaxy collection install -r requirements.yml --upgrade
-```
+* Set `NO_PROXY` / `no_proxy` (comma-separated hosts, domains or CIDRs) for destinations that must be reached directly.
 
 
-**Q: `error creating bridge interface ...: Numerical result out of range`**
+**How do I find out which playbooks ran against a host?**
 
-On Linux an interface name must not exceed 15 characters. Choose a shorter bridge name.
+* All playbooks log every run to `/var/log/linuxfabrik-lfops.log` on the target host:
+
+    ```
+    2024-05-23 11:15:26.604794 - Playbook linuxfabrik.lfops.apps: START
+    2024-05-23 11:15:32.877064 - Playbook linuxfabrik.lfops.apps: END
+    ```
+
+
+**Debian: `No package matching '...' is available`**
+
+* Run `apt update` before running the specific role.
+
+
+**`[WARNING]: Collection x.y does not support Ansible version 2.16.xx`**
+
+* Install a newer Ansible version and update all collections:
+
+    ```bash
+    python3 -m venv ~/venvs/ansible-2.18
+    source ~/venvs/ansible-2.18/bin/activate
+    pip install --upgrade pip
+    pip install 'ansible-core~=2.18.0'
+
+    ansible-galaxy collection install -r requirements.yml --upgrade
+    ```
+
+
+**`error creating bridge interface ...: Numerical result out of range`**
+
+* On Linux an interface name must not exceed 15 characters. Choose a shorter bridge name.
 
 
 ## Contributing
@@ -518,4 +520,4 @@ See [CONTRIBUTING.rst](CONTRIBUTING.rst) for guidelines.
 
 ## License
 
-This project is licensed under the [Unlicense](https://unlicense.org/).
+[The Unlicense](https://unlicense.org/)
