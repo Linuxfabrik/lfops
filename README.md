@@ -463,6 +463,20 @@ ansible-user ALL=(ALL) NOPASSWD: ALL
 ```
 
 
+**Q: How do I route a role's outbound traffic through an HTTP proxy?**
+
+Some roles download installers or contact external APIs directly from the managed node. LFOps does not expose per-role proxy variables. Instead, set the proxy globally on the target in `/etc/environment`; the variables are picked up by tasks running over SSH, including key-based logins:
+
+```
+HTTP_PROXY=http://192.0.2.30:8080/
+HTTPS_PROXY=http://192.0.2.30:8080/
+http_proxy=http://192.0.2.30:8080/
+https_proxy=http://192.0.2.30:8080/
+```
+
+Set `NO_PROXY` / `no_proxy` (comma-separated hosts, domains or CIDRs) for destinations that must be reached directly.
+
+
 **Q: How do I find out which playbooks ran against a host?**
 
 All playbooks log every run to `/var/log/linuxfabrik-lfops.log` on the target host:
