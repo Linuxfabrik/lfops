@@ -717,8 +717,8 @@
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: '{{ item["name"] }}'
-      collation: '{{ item["collation"] | default("utf8_general_ci") }}'
-      encoding: '{{ item["encoding"] | default("utf8") }}'
+      collation: '{{ item["collation"] | default(omit) }}'
+      encoding: '{{ item["encoding"] | default(omit) }}'
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ mariadb_server__databases__combined_var }}'
     loop_control:
