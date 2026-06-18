@@ -92,11 +92,6 @@
         __trend_micro_v1es__xbc_agent_token: "{{ trend_micro_v1es__xbc_installer_aarch64_scenario_ids | join('|') }}"
       when: "ansible_facts['architecture'] == 'aarch64'"
 
-    - name: 'rm -f /tmp/v1es_installer.tgz # force a fresh download'
-      ansible.builtin.file:
-        path: '/tmp/v1es_installer.tgz'
-        state: 'absent'
-
     - name: 'curl --request POST --output /tmp/v1es_installer.tgz https://{{ trend_micro_v1es__xbc_fqdn }}/apk/installer'
       ansible.builtin.uri:
         url: 'https://{{ trend_micro_v1es__xbc_fqdn }}/apk/installer'
