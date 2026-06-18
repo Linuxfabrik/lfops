@@ -15,6 +15,7 @@ Trend Vision One Endpoint Security combines two products on the same host, and t
 
 The "Server & Workload Protection (SWP)" deployment script generated in the Vision One console contains every value the role needs. It bundles both products in one full package: it lists two scenario IDs (one for the Endpoint Sensor, one for SWP) and carries the SWP activation values. The role installs that package, waits for the SWP agent to come up, and then activates it against the DSM.
 
+The role decides whether to run the install and activation by checking two files that the agents create once they are registered: `/opt/TrendMicro/EndpointBasecamp/etc/.identity` (Endpoint Sensor) and `/var/opt/ds_agent/dsa_core/ds_agent.crt` (SWP). Once both exist the role is a no-op, so re-running it against an installed host changes nothing. If either file is missing (a partial install, or one of the agents was removed) the role downloads the package again and reinstalls and reactivates both agents. To force a clean reinstall, remove the agents so both files are gone before running the role.
 
 Further reading:
 
