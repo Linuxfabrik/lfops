@@ -262,6 +262,8 @@ hetzner_vm__volumes:
 
 ## Troubleshooting
 
+**Resizing the disk while rescaling**
+
 * When a small VM is later rescaled to a larger one, the disk size stays the same. This is intentional: Hetzner disks cannot be shrunk, so growing the disk would block any later scale-down. To resize the disk anyway, scale the VM back down, set `hetzner_vm__upgrade_disk` to `true`, and then scale it back up.
 
 
