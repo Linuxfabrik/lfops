@@ -213,6 +213,7 @@ curl 'https://localhost:9200' --user admin:your-password --insecure
 
 `opensearch:configure`
 
+* Deploys `/etc/opensearch/jvm.options.d/heap.options`.
 * Deploys `/etc/opensearch/opensearch.yml`.
 * Deploys `/etc/sysconfig/opensearch`.
 * Deploys internal users configuration (if security plugin is enabled).
@@ -265,6 +266,12 @@ Only optional if `opensearch__plugins_security_disabled` is `true`.
 * For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: String.
 * Default: `'my-application'`
+
+`opensearch__heap`
+
+* The JVM heap size, deployed as a drop-in at `/etc/opensearch/jvm.options.d/heap.options`. Sets both the minimum (`-Xms`) and maximum (`-Xmx`) heap to this value. Keep it at most 50% of system memory and below ~32 GB, so the JVM can use compressed object pointers.
+* Type: String.
+* Default: 50% of system memory, capped at `31744m`
 
 `opensearch__internal_users__host_var` / `opensearch__internal_users__group_var`
 
@@ -404,6 +411,7 @@ Example:
 # optional
 opensearch__action_auto_create_index__host_var: false
 opensearch__cluster_name__host_var: 'my-cluster'
+opensearch__heap: '8192m'
 opensearch__internal_users__host_var:
   - username: 'opensearch-admin'
     password: 'linuxfabrik'

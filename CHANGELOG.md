@@ -21,12 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:opensearch**: Add `opensearch__heap` to set the JVM heap size via a drop-in at `/etc/opensearch/jvm.options.d/heap.options`. Defaults to 50% of system memory, capped at 31 GB.
+* **role:trend_micro_v1es**: Add a role to install and activate the Trend Vision One Endpoint Security agent (Endpoint Sensor and Server & Workload Protection).
 * **role:matomo_import_logs**: New role that imports Apache access logs into Matomo on a schedule, one systemd timer per site, and ships the Matomo log-analytics import script (`import_logs.py`). The `token_auth` is provided via a per-site auth file instead of the command line (passing `--token-auth`, `--login` or `--password` is deprecated, since they are visible in the process list and now log a deprecation warning). The script also supports the Traefik access-log format and fixes a possible endless loop when reading a config file.
 * **role:glances**: Add RHEL 10 / Rocky 10 / Alma 10 support by installing glances into a Python venv via the `python_venv` role, since the package is not available in EPEL 10. RHEL 10 is now marked proven (`x`) in COMPATIBILITY.
 * **role:graylog_datanode**: Add `graylog_datanode__http_publish_uri` to set the REST API URI the DataNode advertises, needed when the bind address is not directly reachable (multiple interfaces, a NAT gateway, or a `0.0.0.0` bind address).
 
 ### Changed
 
+* **role:mariadb_server**: Databases created via `mariadb_server__databases` without an explicit `collation` or `encoding` now inherit the server default character set and collation (utf8mb4) instead of being pinned to the legacy `utf8` / `utf8_general_ci` (utf8mb3, no full Unicode). Existing databases are unaffected; set `collation` / `encoding` per database to override.
 * **role:collabora**: Support Collabora Online CODE 25.04.10. The role ships one `coolwsd.xml` template per CODE release and had none for this version, so it aborted the deploy on hosts that had updated to it.
 * **role:clamav**: Send notification mails through `sendmail` (provided by postfix) instead of the `mail` command (mailx). One invocation works across distributions, and delivery no longer depends on mailx being installed.
 * **role:icingadb, role:icingaweb2, role:icingaweb2_module_reporting, role:icingaweb2_module_x509, role:mariadb_server**: Move the MariaDB tasks from the deprecated `community.mysql` collection to its replacement `ansible.mysql`. Behaviour is unchanged, but the deprecation warnings printed on every run are gone and the roles keep working once `community.mysql` is removed upstream.

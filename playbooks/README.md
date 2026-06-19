@@ -1381,6 +1381,13 @@ Calls the following roles (in order):
 * [tools](https://github.com/Linuxfabrik/lfops/tree/main/roles/tools)
 
 
+## trend_micro_v1es.yml
+
+Calls the following roles (in order):
+
+* [trend_micro_v1es](https://github.com/Linuxfabrik/lfops/tree/main/roles/trend_micro_v1es)
+
+
 ## unattended_upgrades.yml
 
 Calls the following roles (in order):

@@ -227,11 +227,13 @@ mariadb_server__dump_user:
 
         * Optional. DB collation.
         * Type: String.
+        * Default: empty; the database inherits the server default (`mariadb_server__cnf_collation_server__combined_var`).
 
     * `encoding`:
 
-        * Optional. DB encoding.
+        * Optional. DB encoding (character set).
         * Type: String.
+        * Default: empty; the database inherits the server default (`mariadb_server__cnf_character_set_server__combined_var`).
 
     * `state`:
 
