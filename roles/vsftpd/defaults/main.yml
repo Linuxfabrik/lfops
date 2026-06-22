@@ -19,6 +19,7 @@ vsftpd__conf_virtual_use_local_privs: false
 vsftpd__conf_xferlog_std_format: false
 
 vsftpd__pam_use_sss: false
+vsftpd__pam_use_userdb: false
 vsftpd__service_enabled: true
 
 vsftpd__user_config__dependent_var: []
