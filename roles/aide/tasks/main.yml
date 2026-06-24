@@ -1,0 +1,88 @@
+- block:
+
+  - name: 'Install AIDE'
+    ansible.builtin.package:
+      name:
+        - 'aide'
+      state: 'present'
+
+  - name: 'Initialize AIDE database'
+    ansible.builtin.command: 'aide --init --before "database_out=file:/var/lib/aide/aide.db.gz"'
+    args:
+      creates: '/var/lib/aide/aide.db.gz'
+
+  tags:
+    - 'aide'
+
+
+- block:
+
+  - name: 'Deploy /etc/aide.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/aide.conf.j2'
+      dest: '/etc/aide.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'aide'
+    - 'aide:configure'
+
+
+- block:
+
+  - name: 'Deploy /etc/systemd/system/aide-check.service'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/aide-check.service.j2'
+      dest: '/etc/systemd/system/aide-check.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__aide__service_unit_result'
+
+  - name: 'Deploy /etc/systemd/system/aide-check.timer'
+    ansible.builtin.template:
+      src: 'etc/systemd/system/aide-check.timer.j2'
+      dest: '/etc/systemd/system/aide-check.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__aide__timer_unit_result'
+
+  - name: 'Reload systemd'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__aide__service_unit_result is changed or __aide__timer_unit_result is changed'
+
+  tags:
+    - 'aide'
+
+
+- block:
+
+  - name: 'systemctl {{ aide__timer_enabled | bool | ternary("enable", "disable") }} aide-check.timer'
+    ansible.builtin.service:
+      name: 'aide-check.timer'
+      enabled: '{{ aide__timer_enabled | bool }}'
+
+  - name: 'systemctl {{ aide__timer_state }} aide-check.timer'
+    ansible.builtin.service:
+      name: 'aide-check.timer'
+      state: '{{ aide__timer_state }}'
+
+  tags:
+    - 'aide'
+    - 'aide:state'
+
+
+- block:
+
+  - name: 'Update AIDE database'
+    ansible.builtin.command: "aide --init --before 'database_out=file:/var/lib/aide/aide.db.gz'"
+
+  tags:
+    - 'never'
+    - 'aide:update_db'
