@@ -5,6 +5,7 @@ This role installs and configures [InfluxDB](https://www.influxdata.com/products
 
 *Available since LFOps `2.0.0`.*
 
+## Dependent Roles
 
 ## Dependent Roles
 

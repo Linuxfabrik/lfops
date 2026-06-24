@@ -405,7 +405,7 @@ php__modules__group_var: []
 php__modules__host_var: []
 php__modules__role_var:
   Debian:
-    - name: 'php{{ php__installed_version }}-opcache'
+    - name: 'php{{ __php__installed_version }}-opcache'
       state: 'present'
   RedHat:
     - name: 'php-opcache'
