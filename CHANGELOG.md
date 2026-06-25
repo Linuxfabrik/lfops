@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:python_venv**: Install `python3-packaging` on EL10 (RHEL/Rocky/Alma 10). EL10 ships Python 3.12, which dropped the stdlib `distutils`, so Ansible's `pip` module needs the external `packaging` library to run. Without it, creating a venv (e.g. during `setup_basic`) failed.
 * **role:icingaweb2_module_vspheredb**: Download the module tarball from the canonical `archive/refs/tags/<version>.tar.gz` URL instead of `archive/<version>.tar.gz`, so the pinned release tag is fetched reliably.
 * **role:monitoring_plugins**: A source install now deploys the sudoers drop-in as `/etc/sudoers.d/linuxfabrik-monitoring-plugins`, the same file name the rpm/deb packages use. Both install methods remove the drop-in under the former name `/etc/sudoers.d/monitoring-plugins`, so sudo no longer warns about a duplicate `Cmnd_Alias` on hosts that got the drop-in twice (for example after switching the install method or after running the monitoring-plugins one-liner installer).
 * **role:collect_rpmnew_rpmsave**: Stop emitting an Ansible deprecation warning on every run by making the `when` conditions explicitly boolean. Keeps the role working on Ansible 2.19 and later.
