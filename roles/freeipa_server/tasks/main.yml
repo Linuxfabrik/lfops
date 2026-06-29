@@ -63,6 +63,12 @@
 # group management
 - block:
 
+  - name: 'Limit freeipa_server__groups__combined_var if freeipa_server__limit_groups is set'
+    ansible.builtin.set_fact:
+      freeipa_server__groups__combined_var: '{{ freeipa_server__groups__combined_var | selectattr("name", "in", freeipa_server__limit_groups) | list }}'
+    when:
+      - 'freeipa_server__limit_groups is defined and freeipa_server__limit_groups | length > 0'
+
   - name: 'Combined Groups:'
     ansible.builtin.debug:
       var: 'freeipa_server__groups__combined_var'
@@ -103,6 +109,12 @@
 # host group management
 - block:
 
+  - name: 'Limit freeipa_server__hostgroups__combined_var if freeipa_server__limit_hostgroups is set'
+    ansible.builtin.set_fact:
+      freeipa_server__hostgroups__combined_var: '{{ freeipa_server__hostgroups__combined_var | selectattr("name", "in", freeipa_server__limit_hostgroups) | list }}'
+    when:
+      - 'freeipa_server__limit_hostgroups is defined and freeipa_server__limit_hostgroups | length > 0'
+
   - name: 'Combined Host Groups:'
     ansible.builtin.debug:
       var: 'freeipa_server__hostgroups__combined_var'
@@ -141,6 +153,12 @@
 
 # user management
 - block:
+
+  - name: 'Limit freeipa_server__users__combined_var if freeipa_server__limit_users is set'
+    ansible.builtin.set_fact:
+      freeipa_server__users__combined_var: '{{ freeipa_server__users__combined_var | selectattr("name", "in", freeipa_server__limit_users) | list }}'
+    when:
+      - 'freeipa_server__limit_users is defined and freeipa_server__limit_users | length > 0'
 
   - name: 'Combined Users:'
     ansible.builtin.debug:
@@ -200,6 +218,12 @@
 
 # HBAC rule management
 - block:
+
+  - name: 'Limit freeipa_server__hbacrules__combined_var if freeipa_server__limit_hbacrules is set'
+    ansible.builtin.set_fact:
+      freeipa_server__hbacrules__combined_var: '{{ freeipa_server__hbacrules__combined_var | selectattr("name", "in", freeipa_server__limit_hbacrules) | list }}'
+    when:
+      - 'freeipa_server__limit_hbacrules is defined and freeipa_server__limit_hbacrules | length > 0'
 
   - name: 'Combined HBAC Rules:'
     ansible.builtin.debug:
@@ -272,6 +296,12 @@
 # password policy management
 - block:
 
+  - name: 'Limit freeipa_server__pwpolicies__combined_var if freeipa_server__limit_pwpolicies is set'
+    ansible.builtin.set_fact:
+      freeipa_server__pwpolicies__combined_var: '{{ freeipa_server__pwpolicies__combined_var | selectattr("name", "in", freeipa_server__limit_pwpolicies) | list }}'
+    when:
+      - 'freeipa_server__limit_pwpolicies is defined and freeipa_server__limit_pwpolicies | length > 0'
+
   - name: 'Combined Password Policies:'
     ansible.builtin.debug:
       var: 'freeipa_server__pwpolicies__combined_var'
@@ -317,6 +347,12 @@
 # sudo command and command group management
 - block:
 
+  - name: 'Limit freeipa_server__sudocmds__combined_var if freeipa_server__limit_sudocmds is set'
+    ansible.builtin.set_fact:
+      freeipa_server__sudocmds__combined_var: '{{ freeipa_server__sudocmds__combined_var | selectattr("name", "in", freeipa_server__limit_sudocmds) | list }}'
+    when:
+      - 'freeipa_server__limit_sudocmds is defined and freeipa_server__limit_sudocmds | length > 0'
+
   - name: 'Combined Sudo Commands:'
     ansible.builtin.debug:
       var: 'freeipa_server__sudocmds__combined_var'
@@ -344,6 +380,12 @@
             + (freeipa_server__sudocmds__combined_var | selectattr("state", "undefined") | list) }}'
     loop_control:
       label: '{{ item["name"] }}'
+
+  - name: 'Limit freeipa_server__sudocmdgroups__combined_var if freeipa_server__limit_sudocmdgroups is set'
+    ansible.builtin.set_fact:
+      freeipa_server__sudocmdgroups__combined_var: '{{ freeipa_server__sudocmdgroups__combined_var | selectattr("name", "in", freeipa_server__limit_sudocmdgroups) | list }}'
+    when:
+      - 'freeipa_server__limit_sudocmdgroups is defined and freeipa_server__limit_sudocmdgroups | length > 0'
 
   - name: 'Combined Sudo Command Groups:'
     ansible.builtin.debug:
@@ -382,6 +424,12 @@
 
 # sudo rule management
 - block:
+
+  - name: 'Limit freeipa_server__sudorules__combined_var if freeipa_server__limit_sudorules is set'
+    ansible.builtin.set_fact:
+      freeipa_server__sudorules__combined_var: '{{ freeipa_server__sudorules__combined_var | selectattr("name", "in", freeipa_server__limit_sudorules) | list }}'
+    when:
+      - 'freeipa_server__limit_sudorules is defined and freeipa_server__limit_sudorules | length > 0'
 
   - name: 'Combined Sudo Rules:'
     ansible.builtin.debug:

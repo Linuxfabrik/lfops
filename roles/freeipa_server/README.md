@@ -83,6 +83,10 @@ Manual steps:
 * Manages FreeIPA users and their group memberships.
 * Triggers: none.
 
+Tip:
+
+To manage a single resource (or a few) instead of all of them, supplement the matching tag with the corresponding `freeipa_server__limit_*` extra variable, e.g. `--tags freeipa_server:users --extra-vars='freeipa_server__limit_users=["jdoe"]'`. See [Optional Role Variables](https://github.com/Linuxfabrik/lfops/tree/main/roles/freeipa_server#optional-role-variables).
+
 
 ## Mandatory Role Variables
 
@@ -268,6 +272,12 @@ freeipa_server__ipa_admin_password: 'linuxfabrik'
 * The Kerberos principal used for IPA admin authentication.
 * Type: String.
 * Default: `'admin'`
+
+`freeipa_server__limit_groups` / `freeipa_server__limit_hbacrules` / `freeipa_server__limit_hostgroups` / `freeipa_server__limit_pwpolicies` / `freeipa_server__limit_sudocmdgroups` / `freeipa_server__limit_sudocmds` / `freeipa_server__limit_sudorules` / `freeipa_server__limit_users`
+
+* Each checks if the `name` of a resource is in the list and only manages those. Can be used on the CLI to speed up the deployment by managing a single resource (or a few) instead of all of them, e.g. `--extra-vars='freeipa_server__limit_users=["jdoe"]'`. Combine with the matching tag, e.g. `--tags freeipa_server:users`.
+* Type: List.
+* Default: unset
 
 `freeipa_server__pwpolicies__host_var` / `freeipa_server__pwpolicies__group_var`
 
@@ -578,6 +588,8 @@ freeipa_server__hostgroups__host_var:
       - 'web01.example.com'
       - 'web02.example.com'
 freeipa_server__ipa_admin_principal: 'admin'
+freeipa_server__limit_users:
+  - 'jdoe'
 freeipa_server__pwpolicies__host_var:
   - name: 'developers'
     maxlife: 90
