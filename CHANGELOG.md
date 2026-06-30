@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:icinga2_agent**: The `icinga2_agent:update` tag now refreshes the apt cache before the upgrade on Debian-family hosts, so it reliably installs the latest package (e.g. to roll out security updates) instead of running against a stale cache. RHEL-family hosts are unaffected, since dnf refreshes its metadata on its own.
 * **role:mariadb_server**: Databases created via `mariadb_server__databases` without an explicit `collation` or `encoding` now inherit the server default character set and collation (utf8mb4) instead of being pinned to the legacy `utf8` / `utf8_general_ci` (utf8mb3, no full Unicode). Existing databases are unaffected; set `collation` / `encoding` per database to override.
 * **role:collabora**: Support Collabora Online CODE 25.04.10. The role ships one `coolwsd.xml` template per CODE release and had none for this version, so it aborted the deploy on hosts that had updated to it.
 * **role:clamav**: Send notification mails through `sendmail` (provided by postfix) instead of the `mail` command (mailx). One invocation works across distributions, and delivery no longer depends on mailx being installed.
