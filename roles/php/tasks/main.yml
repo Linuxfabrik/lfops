@@ -3,12 +3,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'php'
-    - 'php:fpm'
-    - 'php:ini'
-    - 'php:modules'
-    - 'php:state'
-    - 'php:update'
+    - 'always'
 
 
 - block:
@@ -51,11 +46,11 @@
     ansible.builtin.set_fact:
       php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
 
+  # 'always': php__installed_version / php__fpm_service_name are prerequisites referenced by
+  # the php:state block and by consuming roles (e.g. nextcloud) under their own --tags runs,
+  # where the php-specific blocks are filtered out. Tagging the discovery 'always' keeps them defined.
   tags:
-    - 'php'
-    - 'php:ini'
-    - 'php:modules'
-    - 'php:update'
+    - 'always'
 
 
 - block:

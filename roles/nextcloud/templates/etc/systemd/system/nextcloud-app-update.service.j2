@@ -8,4 +8,4 @@ Description=Nextcloud App Update Service
 ExecStart=/usr/local/bin/nextcloud-app-update
 WorkingDirectory=/var/www/html/nextcloud
 Type=oneshot
-User=apache
+User={{ __shared__apache_httpd_user }}

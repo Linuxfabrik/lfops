@@ -108,6 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:nextcloud**: Adds Debian and Ubuntu support alongside Red Hat-family systems. Package names are verified on Debian 13; the role is marked `(x)` (expected to work, not yet verified end to end) for Debian and Ubuntu in `COMPATIBILITY.md`. SELinux relabeling is now skipped automatically on hosts where SELinux is disabled.
 * **role:icinga2_master, role:icingadb**: Validate the Icinga 2 configuration before restarting the service. A faulty config now fails the playbook run loudly instead of bouncing the daemon into a broken state and leaving Icinga 2 down.
 * **role:nextcloud**: Automatic app updates are now enabled by default (`nextcloud__timer_app_update_enabled`). The scheduled app update only switches Nextcloud into maintenance mode when an app update is actually pending, so an instance that is already up to date keeps serving requests without interruption. After updating, the recommended database migrations are applied automatically. A failed run no longer leaves the instance stuck in maintenance mode.
 * **role:clamav**: Now runs on Debian and Ubuntu in addition to Red Hat-family systems, and works on RHEL 10. The role seeds the signature database on first install so the scanner starts reliably, and runs an EICAR self-test (also available on its own via the `clamav:test` tag) that confirms detection actually works.
@@ -185,6 +186,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: App configuration no longer aborts on current Nextcloud. The `text` app's `workspace_available` setting is now applied with the boolean type the Nextcloud config lexicon requires, instead of the string type that newer Nextcloud rejects.
+* **role:nextcloud**: The IMAP PHP extension now installs on current PHP. On PHP 8.4 and newer IMAP was removed from PHP core, so the role installs it from the PECL package instead, where previously the install aborted because the old `php-imap` package no longer exists for that PHP version.
+* **role:php**: Running the role with a specific tag (for example `--tags php:state`) on Debian and Ubuntu no longer fails with an undefined PHP version. Roles that build on php and only restart php-fpm (such as nextcloud) now also work when run with their own tags.
+* **role:nextcloud**: The `nextcloud-ldap-show-remnants` script no longer aborts the `nextcloud:cron` deploy with `'setup_basic__skip_mailto_root' is undefined` when the role runs outside the `setup_basic` playbook (e.g. via `--tags nextcloud:cron` in `setup_nextcloud`). The report recipients now come from the new role variable `nextcloud__mail_recipients` (defaulting to the global `mailto_root__to`); the report is always printed to stdout and additionally mailed when recipients are set.
 * **role:repo_elasticsearch, role:repo_grafana, role:repo_graylog, role:repo_icinga, role:repo_influxdb, role:repo_mariadb, role:repo_mongodb, role:repo_monitoring_plugins, role:repo_mydumper, role:repo_opensearch, role:repo_proxysql, role:repo_redis, role:repo_sury**: Refreshing the apt cache is no longer reported as a change on every run.
 * **role:repo_remi**: Enabling the php, composer and Redis module streams is now idempotent. Repeated runs no longer report a change or briefly disable and re-enable the stream on every run.
 * **role:proxysql**: `mysql_servers` entries are now deduplicated by their actual `address` field. The merge key referenced a non-existent `hostname` field, so multiple backends sharing a host group and port were silently collapsed into one.
