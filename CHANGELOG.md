@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins, role:mod_maxminddb**: The role no longer aborts at start with an `undefined` error demanding a variable that has an OS-specific default (`monitoring_plugins__icinga_user` respectively `mod_maxminddb__apache_conf_modules_d`). The role now derives the default on its own again, so there is no need to set the variable in the inventory.
 * **role:monitoring_plugins**: A source install no longer aborts on RHEL 8. The role used to fail because the system Python 3.6 is older than the required 3.9; it now installs and uses Python 3.9 automatically.
 * **role:python_venv**: Install `python3-packaging` on EL10 (RHEL/Rocky/Alma 10). EL10 ships Python 3.12, which dropped the stdlib `distutils`, so Ansible's `pip` module needs the external `packaging` library to run. Without it, creating a venv (e.g. during `setup_basic`) failed.
 * **role:icingaweb2_module_vspheredb**: Download the module tarball from the canonical `archive/refs/tags/<version>.tar.gz` URL instead of `archive/<version>.tar.gz`, so the pinned release tag is fetched reliably.

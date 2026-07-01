@@ -32,14 +32,6 @@ argument_specs:
           The common name / host name. Used to schedule a downtime for Windows
           hosts. Defaults to the node name.
 
-      monitoring_plugins__icinga_user:
-        type: 'str'
-        required: false
-        description: >-
-          The user that owns the deployed plugins, the Linuxfabrik library and the
-          source virtual environment. Only relevant for the source install method.
-          Defaults to `icinga` on RHEL and `nagios` on Debian.
-
       monitoring_plugins__install_method:
         type: 'str'
         required: false
