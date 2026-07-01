@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:monitoring_plugins**: A source install now deploys the plugins into a self-contained Python virtual environment and provisions a suitable Python by itself, so it works on RHEL 8 (where the system Python 3.6 is too old) without any manual Python setup. The Linuxfabrik library (an independent project) is deployed newest straight from GitHub and the third-party dependencies are installed unpinned, so a source install always tracks the newest code for the selected `monitoring_plugins__version`. The dependencies the former source install placed into the home directories of root and the icinga user (`pip --user`) are cleaned up on the next run.
 * **role:icinga2_agent**: The `icinga2_agent:update` tag now refreshes the apt cache before the upgrade on Debian-family hosts, so it reliably installs the latest package (e.g. to roll out security updates) instead of running against a stale cache. RHEL-family hosts are unaffected, since dnf refreshes its metadata on its own.
 * **role:mariadb_server**: Databases created via `mariadb_server__databases` without an explicit `collation` or `encoding` now inherit the server default character set and collation (utf8mb4) instead of being pinned to the legacy `utf8` / `utf8_general_ci` (utf8mb3, no full Unicode). Existing databases are unaffected; set `collation` / `encoding` per database to override.
 * **role:collabora**: Support Collabora Online CODE 25.04.10. The role ships one `coolwsd.xml` template per CODE release and had none for this version, so it aborted the deploy on hosts that had updated to it.
@@ -39,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins**: A source install no longer aborts on RHEL 8. The role used to fail because the system Python 3.6 is older than the required 3.9; it now installs and uses Python 3.9 automatically.
 * **role:python_venv**: Install `python3-packaging` on EL10 (RHEL/Rocky/Alma 10). EL10 ships Python 3.12, which dropped the stdlib `distutils`, so Ansible's `pip` module needs the external `packaging` library to run. Without it, creating a venv (e.g. during `setup_basic`) failed.
 * **role:icingaweb2_module_vspheredb**: Download the module tarball from the canonical `archive/refs/tags/<version>.tar.gz` URL instead of `archive/<version>.tar.gz`, so the pinned release tag is fetched reliably.
 * **role:monitoring_plugins**: A source install now deploys the sudoers drop-in as `/etc/sudoers.d/linuxfabrik-monitoring-plugins`, the same file name the rpm/deb packages use. Both install methods remove the drop-in under the former name `/etc/sudoers.d/monitoring-plugins`, so sudo no longer warns about a duplicate `Cmnd_Alias` on hosts that got the drop-in twice (for example after switching the install method or after running the monitoring-plugins one-liner installer).

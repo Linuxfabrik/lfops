@@ -1,7 +1,9 @@
+# Ubuntu is loaded on top of its Debian os_family and currently needs no
+# Ubuntu-specific overrides. It is kept as an explicit copy of Debian.yml so
+# later Ubuntu-specific drift has a dedicated home instead of silently
+# inheriting Debian values.
 __monitoring_plugins__icinga_user: 'nagios'
 __monitoring_plugins__package_version_separator: '='
-# Debian/Ubuntu ship python3 >= 3.9, but ensurepip lives in a separate package,
-# so `python3 -m venv` needs python3-venv to bootstrap pip.
 __monitoring_plugins__source_python_interpreter: 'python3'
 __monitoring_plugins__source_python_packages:
   - 'python3-venv'
