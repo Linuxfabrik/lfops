@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:mariadb_server**: Add `mariadb_server__cnf_innodb_flush_neighbors__group_var` / `__host_var` to configure the `innodb_flush_neighbors` InnoDB system variable. Defaults to `0` (disabled), which is the recommended value for SSD/NVMe storage.
 * **role:freeipa_server**: Add `freeipa_server__limit_groups`, `freeipa_server__limit_hbacrules`, `freeipa_server__limit_hostgroups`, `freeipa_server__limit_pwpolicies`, `freeipa_server__limit_sudocmdgroups`, `freeipa_server__limit_sudocmds`, `freeipa_server__limit_sudorules` and `freeipa_server__limit_users` to manage only specific resources via `--extra-vars` instead of all of them, e.g. `--tags freeipa_server:users --extra-vars='freeipa_server__limit_users=["jdoe"]'`. Speeds up deployments on servers with many FreeIPA resources.
 * **role:vsftpd**: Add `vsftpd__pam_use_userdb` to authenticate virtual users via `pam_userdb` against `/etc/vsftpd/login.db`. Previously the role could set `guest_enable=YES` in `vsftpd.conf` but always rendered a local-user PAM stack, so virtual-user logins failed; enabling this option renders the matching `pam_userdb` PAM configuration.
 * **role:opensearch**: Add `opensearch__heap` to set the JVM heap size via a drop-in at `/etc/opensearch/jvm.options.d/heap.options`. Defaults to 50% of system memory, capped at 31 GB.
