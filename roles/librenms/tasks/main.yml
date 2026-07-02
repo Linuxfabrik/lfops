@@ -238,8 +238,8 @@
   - name: 'Set DB connection settings in /opt/librenms/.env'
     ansible.builtin.lineinfile:
       path: '/opt/librenms/.env'
-      regexp: '^#?{{ item.key }}'
-      line: '{{ item.key }}={{ item.value | quote }}'
+      regexp: '^#?{{ item["key"] }}'
+      line: '{{ item["key"] }}={{ item["value"] | quote }}'
       mode: 0o600 # file contains secrets
       state: 'present'
     loop:
@@ -251,6 +251,20 @@
         value: '{{ librenms__database_login["username"] }}'
       - key: 'DB_PASSWORD'
         value: '{{ librenms__database_login["password"] }}'
+
+  - name: 'Set app settings in /opt/librenms/.env'
+    ansible.builtin.lineinfile:
+      path: '/opt/librenms/.env'
+      regexp: '^#?{{ item["key"] }}'
+      line: '{{ item["key"] }}={{ item["value"] | quote }}'
+      mode: 0o600 # file contains secrets
+      state: 'present'
+    loop:
+      - key: 'APP_TRUSTED_PROXIES'
+        value: '{{ librenms__config_app_trusted_proxies | join(",") }}'
+      - key: 'APP_URL'
+        value: '{{ librenms__config_app_url }}'
+    when: 'item["value"] | length > 0'
 
   tags:
     - 'librenms'
