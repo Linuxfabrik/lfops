@@ -169,7 +169,7 @@ Variables for `php.ini` directives and their default values, defined and support
 
 `php__ini_default_socket_timeout__group_var` / `php__ini_default_socket_timeout__host_var`
 
-* [php.net](https://www.php.net/manual/en/filesystem.configuration.php)
+* Default timeout in seconds for socket based streams (e.g. HTTP, FTP). [php.net](https://www.php.net/manual/en/filesystem.configuration.php)
 * Type: Number.
 * Default: `10`
 
@@ -189,7 +189,7 @@ Variables for `php.ini` directives and their default values, defined and support
 
 * Set the error reporting level. [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)
 * Type: String.
-* Default: `'E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT'`
+* Default: `'E_ALL & ~E_NOTICE & ~E_DEPRECATED'`
 
 `php__ini_max_execution_time__group_var` / `php__ini_max_execution_time__host_var`
 
@@ -225,7 +225,7 @@ Variables for `php.ini` directives and their default values, defined and support
 
 * A blacklist file is a text file containing the names of files that should not be accelerated, one per line. Wildcards are allowed, and prefixes can also be provided. Lines starting with a semi-colon are ignored as comments. [php.net](https://www.php.net/manual/en/opcache.configuration.php)
 * Type: String.
-* Default: `'/etc/php-zts.d/opcache*.blacklist'`
+* Default: `'/etc/opcache.blacklist'`
 
 `php__ini_opcache_enable__group_var` / `php__ini_opcache_enable__host_var`
 
@@ -241,7 +241,7 @@ Variables for `php.ini` directives and their default values, defined and support
 
 `php__ini_opcache_huge_code_pages__group_var` / `php__ini_opcache_huge_code_pages__host_var`
 
-* [php.net](https://www.php.net/manual/en/opcache.configuration.php)
+* Enables or disables copying of PHP code (text segment) into HUGE PAGES. This should improve performance, but requires appropriate OS configuration. [php.net](https://www.php.net/manual/en/opcache.configuration.php)
 * Type: Number.
 * Default: `0`
 
@@ -289,37 +289,37 @@ Variables for `php.ini` directives and their default values, defined and support
 
 `php__ini_session_cookie_httponly__group_var` / `php__ini_session_cookie_httponly__host_var`
 
-* [php.net](https://www.php.net/manual/en/session.configuration.php)
+* Marks the session cookie as HttpOnly, so it is not accessible to JavaScript via `document.cookie`, mitigating cookie theft via XSS. [php.net](https://www.php.net/manual/en/session.configuration.php)
 * Type: String.
-* Default: `'Off'`
+* Default: `'On'`
 
 `php__ini_session_cookie_secure__group_var` / `php__ini_session_cookie_secure__host_var`
 
-* [php.net](https://www.php.net/manual/en/session.configuration.php)
+* Sends the session cookie only over HTTPS. Leave off on hosts that also serve sessions over plain HTTP. [php.net](https://www.php.net/manual/en/session.configuration.php)
 * Type: String.
 * Default: `'Off'`
 
 `php__ini_session_gc_maxlifetime__group_var` / `php__ini_session_gc_maxlifetime__host_var`
 
-* [php.net](https://www.php.net/manual/en/session.configuration.php)
+* Number of seconds after which session data is treated as garbage and cleaned up by the session garbage collector. [php.net](https://www.php.net/manual/en/session.configuration.php)
 * Type: Number.
 * Default: `1440`
 
 `php__ini_session_sid_length__group_var` / `php__ini_session_sid_length__host_var`
 
-* [php.net](https://www.php.net/manual/en/session.configuration.php)
+* Length of the session ID string. Only takes effect on PHP versions that still honor the directive; PHP deprecates any value other than the built-in `32`. [php.net](https://www.php.net/manual/en/session.configuration.php)
 * Type: Number.
 * Default: `32`
 
 `php__ini_session_trans_sid_tags__group_var` / `php__ini_session_trans_sid_tags__host_var`
 
-* [php.net](https://www.php.net/manual/en/session.configuration.php)
+* HTML tags whose attributes are rewritten to include the session ID when transparent SID support is enabled. [php.net](https://www.php.net/manual/en/session.configuration.php)
 * Type: String.
 * Default: `'a=href,area=href,frame=src,input=src,form=fakeentry'`
 
 `php__ini_smtp__group_var` / `php__ini_smtp__host_var`
 
-* [php.net](https://www.php.net/manual/en/mail.configuration.php)
+* Host used by the `mail()` function to send mail (Windows only; ignored on Unix, where the `sendmail_path` binary is used). [php.net](https://www.php.net/manual/en/mail.configuration.php)
 * Type: String.
 * Default: `'localhost'`
 
@@ -343,7 +343,7 @@ php__ini_upload_max_filesize__host_var: '10000M'
 
 ## Optional Role Variables - PHP-FPM Pool Config Directives
 
-Variables for `php.ini` directives and their default values, defined and supported by this role.
+Variables for PHP-FPM pool directives and their default values, defined and supported by this role.
 
 `php__fpm_pool_conf_pm__group_var` / `php__fpm_pool_conf_pm__host_var`
 
