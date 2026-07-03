@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026061001
+# 2026070301
 
 # Check for available updates and notify the administrators. This is informational
 # only: the update is applied later by update-and-reboot.service at the maintenance
@@ -37,6 +37,22 @@ send_msg () {
 {% endif %}
 }
 
+{% if ansible_facts['os_family'] == 'RedHat' %}
+makecache_with_retry () {
+    # Rocky's mirrorlist service intermittently answers with an empty list
+    # ("No URLs in mirrorlist") during upstream degraded windows. Retry only the
+    # metadata refresh so those blips self-heal without re-running the transaction.
+    local attempt
+    for attempt in 1 2 3; do
+        if yum "$@" makecache 1> /dev/null 2> /tmp/makecache-stderr; then
+            return 0
+        fi
+        [ "$attempt" -lt 3 ] && { log "Metadata refresh attempt $attempt failed; retrying in 60s"; sleep 60; }
+    done
+    return 1
+}
+{% endif %}
+
 SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
 SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ') }}"
@@ -63,6 +79,11 @@ log "Checking for available updates"
 {% if ansible_facts['os_family'] == 'RedHat' %}
 {% if not system_update__cache_only | bool %}
 yum clean all 1> /dev/null 2>&1
+if ! makecache_with_retry; then
+    log "Metadata refresh failed; see /tmp/makecache-stderr"
+    send_msg "$SUBJECT_PREFIX - System update check failed" "$(</tmp/makecache-stderr)"
+    exit 1
+fi
 {% endif %}
 yum check-update {{ system_update__cache_only | bool | ternary("--cacheonly", "") }} >> /tmp/check-update 2> /tmp/system-update-check-stderr
 retc=$?

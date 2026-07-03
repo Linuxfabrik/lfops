@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026061001
+# 2026070301
 
 # Apply Rocky Linux security hot-fixes from the dedicated `security` repository
 # only, then request a reboot if one is needed by dropping a file into the
@@ -40,6 +40,20 @@ send_msg () {
 {% endif %}
 }
 
+makecache_with_retry () {
+    # Rocky's mirrorlist service intermittently answers with an empty list
+    # ("No URLs in mirrorlist") during upstream degraded windows. Retry only the
+    # metadata refresh so those blips self-heal without re-running the transaction.
+    local attempt
+    for attempt in 1 2 3; do
+        if yum "$@" makecache 1> /dev/null 2> /tmp/makecache-stderr; then
+            return 0
+        fi
+        [ "$attempt" -lt 3 ] && { log "Metadata refresh attempt $attempt failed; retrying in 60s"; sleep 60; }
+    done
+    return 1
+}
+
 SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
 SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ') }}"
@@ -61,6 +75,14 @@ done
 if [ "$have_repo" -eq 0 ]; then
     log "No configured security repository enabled (looked for: $REPOS); nothing to do"
     exit 0
+fi
+
+# refresh the security repo metadata first, retrying transient mirrorlist failures;
+# check-update and upgrade below then run against the freshly cached metadata.
+if ! makecache_with_retry --disablerepo="*" --enablerepo="$REPOS"; then
+    log "Security metadata refresh failed; see /tmp/makecache-stderr"
+    send_msg "$SUBJECT_PREFIX - Security update check failed" "$(</tmp/makecache-stderr)"
+    exit 1
 fi
 
 # only act when the security repo actually has updates pending. check-update exits

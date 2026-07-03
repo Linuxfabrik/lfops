@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026061001
+# 2026070301
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -43,6 +43,22 @@ post_update_code () {
 }
 {% endif %}
 
+{% if ansible_facts['os_family'] == 'RedHat' %}
+makecache_with_retry () {
+    # Rocky's mirrorlist service intermittently answers with an empty list
+    # ("No URLs in mirrorlist") during upstream degraded windows. Retry only the
+    # metadata refresh so those blips self-heal without re-running the transaction.
+    local attempt
+    for attempt in 1 2 3; do
+        if yum "$@" makecache 1> /dev/null 2> /tmp/makecache-stderr; then
+            return 0
+        fi
+        [ "$attempt" -lt 3 ] && { log "Metadata refresh attempt $attempt failed; retrying in 60s"; sleep 60; }
+    done
+    return 1
+}
+{% endif %}
+
 SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
 SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ' ) }}"
@@ -66,6 +82,15 @@ fi
 # do the update, and print only critical errors about which we must be told
 log "Applying all available updates"
 {% if ansible_facts['os_family'] == 'RedHat' %}
+{% if not system_update__cache_only | bool %}
+# refresh metadata first, retrying transient mirrorlist failures; the transaction
+# below then runs once against the freshly cached metadata.
+if ! makecache_with_retry; then
+    log "Metadata refresh failed; see /tmp/makecache-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/makecache-stderr)"
+    exit 1
+fi
+{% endif %}
 if ! yum -y update {{ system_update__cache_only | bool | ternary("--cacheonly --setopt=metadata_timer_sync=0", "") }} 1> /dev/null 2> /tmp/system-update-stderr; then
     log "System update failed; see /tmp/system-update-stderr"
     send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/system-update-stderr)"

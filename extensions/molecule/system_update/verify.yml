@@ -1,7 +1,9 @@
 # Verify system_update on the running system: both regular-lane timers and the
-# schedule-reboot timer it pulls in are armed; on Rocky the security lane exists
-# and is a clean no-op without the security repo; off Rocky the security lane is
-# absent. sendmail (the transport the scripts now use) is available.
+# schedule-reboot timer it pulls in are armed; the regular check lane runs clean,
+# which exercises the metadata refresh (with its transient-mirrorlist retry) before
+# any update; on Rocky the security lane exists and is a clean no-op without the
+# security repo; off Rocky the security lane is absent. sendmail (the transport the
+# scripts now use) is available.
 #
 # gather_facts is on here because the security-lane checks branch on
 # ansible_facts["distribution"].
@@ -26,6 +28,22 @@
       loop: '{{ __molecule__update_timers_enabled_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
+
+    # The regular check lane is non-mutating (metadata refresh + check-update, no
+    # package changes). Running it exercises makecache_with_retry on the happy path
+    # and proves the retry wrapper integrates cleanly into the update flow.
+    - name: 'systemctl start notify-and-schedule.service (regular check lane)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+      ansible.builtin.command: 'systemctl start notify-and-schedule.service'
+      changed_when: false
+
+    - name: 'systemctl show --property=Result notify-and-schedule.service' # noqa command-instead-of-module (no module reads a oneshot Result)
+      ansible.builtin.command: 'systemctl show --property=Result --value notify-and-schedule.service'
+      register: '__molecule__notify_and_schedule_result'
+      changed_when: false
+
+    - name: 'Assert the regular check lane (incl. the metadata refresh) ran clean'
+      ansible.builtin.assert:
+        that: '__molecule__notify_and_schedule_result["stdout"] == "success"'
 
     - name: 'systemctl is-active security-update.timer (Rocky only)' # noqa command-instead-of-module (read-only state query)
       ansible.builtin.command: 'systemctl is-active security-update.timer'
