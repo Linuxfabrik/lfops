@@ -44,6 +44,11 @@ Manual steps:
 * Manages the state of the Icinga2 service.
 * Triggers: none.
 
+`icinga2_agent:systemd_override`
+
+* Deploys: `/etc/systemd/system/icinga2.service.d/z00-after-sssd.conf`.
+* Triggers: none.
+
 `icinga2_agent:update`
 
 * Updates the Icinga2 package and restarts the service.

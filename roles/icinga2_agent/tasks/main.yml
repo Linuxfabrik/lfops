@@ -12,6 +12,31 @@
 
 - block:
 
+  - name: 'mkdir -p /etc/systemd/system/icinga2.service.d'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/icinga2.service.d'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/system/icinga2.service.d/z00-after-sssd.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/icinga2.service.d/z00-after-sssd.conf.j2'
+      dest: '/etc/systemd/system/icinga2.service.d/z00-after-sssd.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  when: 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'icinga2_agent'
+    - 'icinga2_agent:systemd_override'
+
+
+- block:
+
   # refresh the apt cache so the following `state: latest` upgrade resolves
   # against current metadata, e.g. to roll out security updates. apt does not
   # auto-expire its cache the way dnf does, so without this the upgrade can
