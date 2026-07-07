@@ -423,6 +423,16 @@
       path: '/root/linuxfabrik-remove-plugins.sh'
       state: 'absent'
 
+  - name: 'Make sure the source venv is absent (a source install is not covered by the package removal)'
+    ansible.builtin.file:
+      path: '/usr/lib64/linuxfabrik-monitoring-plugins'
+      state: 'absent'
+
+  - name: 'Make sure the sudoers file is absent (a source install is not covered by the package removal)'
+    ansible.builtin.file:
+      path: '/etc/sudoers.d/linuxfabrik-monitoring-plugins'
+      state: 'absent'
+
   - name: 'Make sure the legacy sudoers file is absent'
     ansible.builtin.file:
       path: '/etc/sudoers.d/icinga2-plugins'

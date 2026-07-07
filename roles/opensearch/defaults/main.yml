@@ -23,6 +23,8 @@ opensearch__cluster_name__combined_var: '{{
 opensearch__generate_certs_admin_cn: 'OpenSearch Admin'
 opensearch__generate_certs_ca_cn: 'OpenSearch Self-signed RootCA'
 
+opensearch__heap: '{{ [((ansible_facts["memtotal_mb"] * 0.5) | int), 31744] | min }}m'
+
 opensearch__internal_users__dependent_var: []
 opensearch__internal_users__group_var: []
 opensearch__internal_users__host_var: []

@@ -1,7 +1,14 @@
 #%PAM-1.0
 # {{ ansible_managed }}
-# 2024042601
+# 2026062201
 
+{% if vsftpd__pam_use_userdb %}
+session    optional     pam_keyinit.so    force revoke
+auth       required     pam_userdb.so db=/etc/vsftpd/login
+account    required     pam_userdb.so db=/etc/vsftpd/login
+session    required     pam_loginuid.so
+session    include      password-auth
+{% else %}
 {% if vsftpd__pam_use_sss %}
 auth       required      pam_env.so
 auth       sufficient    pam_sss.so
@@ -16,3 +23,4 @@ auth       include	password-auth
 account    include	password-auth
 session    required     pam_loginuid.so
 session    include	password-auth
+{% endif %}

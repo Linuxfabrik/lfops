@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025112101
+# 2026061601
 
 # This is the configuration file for Icinga DB.
 
@@ -113,7 +113,7 @@ logging:
 #  interval: 20s
 
   # Map of component-logging level pairs to define a different log level than the default value for each component.
-  options:
+#  options:
 #    config-sync:
 #    database:
 #    dump-signals:
@@ -148,10 +148,11 @@ retention:
   # Number of old historical entries a single query can delete in a "DELETE FROM ... LIMIT count" manner.
   # By default, this is limited to 5000 entries.
 #  count: 5000
+
   # Map of history category to number of days to retain its data in order to
   # enable retention only for specific categories or to
   # override the number that has been configured in history-days.
-  options:
+#  options:
 #    acknowledgement:
 #    comment:
 #    downtime:

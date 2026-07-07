@@ -1,0 +1,4 @@
+# ansible.builtin.service cannot daemon-reload, so ansible.builtin.systemd is used here.
+- name: 'matomo_import_logs: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

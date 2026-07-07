@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026052201
+# 2026061601
 
 # rocky-security.repo
 #
@@ -13,7 +13,7 @@
 
 [security]
 name=Rocky Linux $releasever - Security
-{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/10/security/x86_64/os/
 {% else %}
 mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever$rltype
@@ -24,14 +24,14 @@ enabled={{ repo_baseos__security_repo_enabled__combined_var | bool | ternary(1, 
 countme=1
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
-{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
 
 [security-debuginfo]
 name=Rocky Linux $releasever - Security Debug
-{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/10/security/x86_64/debug/tree/
 {% else %}
 mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever-debug$rltype
@@ -41,14 +41,14 @@ gpgcheck=1
 enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
-{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}
 
 [security-source]
 name=Rocky Linux $releasever - Security Source
-{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/10/security/source/tree/
 {% else %}
 mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever-source$rltype
@@ -58,7 +58,7 @@ gpgcheck=1
 enabled=0
 metadata_expire=6h
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
-{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
+{% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) and repo_baseos__basic_auth_login is defined and repo_baseos__basic_auth_login | length %}
 username={{ repo_baseos__basic_auth_login["username"] }}
 password={{ repo_baseos__basic_auth_login["password"] }}
 {% endif %}

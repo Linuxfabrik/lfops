@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2026070301
+
+# Ensure Icinga 2 starts after SSSD to prevent sudo errors like
+# "problem with defaults entries" caused by sudo calls before SSSD is ready.
+
+[Unit]
+After=sssd.target

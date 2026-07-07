@@ -95,6 +95,7 @@ Which Ansible role is proven to run on which OS?
 | mailx                                 |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora                                       |
 | mariadb_server                        |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Galera on Debian is untested                 |
 | mastodon                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| matomo_import_logs                    |  (x)   |   x    |  (x)   |  (x)   |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | maxmind_geoip                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | mirror                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | mod_maxminddb                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
@@ -110,7 +111,7 @@ Which Ansible role is proven to run on which OS?
 | nfs_server                            |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nodejs                                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | open_vm_tools                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
-| opensearch                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| opensearch                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | openvpn_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | php                                   |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | podman_containers                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
@@ -162,6 +163,7 @@ Which Ansible role is proven to run on which OS?
 | timezone                              |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
 | tmux                                  |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | tools                                 |        |        |   x    |   x    |    x    |           |           |           | Fedora                                       |
+| trend_micro_v1es                      |        |        |   x    |   x    |    x    |           |     x     |           |                                              |
 | unattended_upgrades                   |  (x)   |  (x)   |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
 | uptimerobot                           |        |        |        |        |         |           |           |           | controller-side, talks to UptimeRobot API    |
 | vsftpd                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |

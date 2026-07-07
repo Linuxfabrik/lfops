@@ -1,3 +1,5 @@
+librenms__config_app_trusted_proxies: []
+librenms__config_app_url: ''
 librenms__config_auth_mechanism: 'mysql'
 librenms__config_rrd_purge: 0
 librenms__config_update_channel: 'release'
@@ -62,8 +64,8 @@ librenms__mariadb_server__databases__dependent_var:
     state: 'present'
 
 librenms__mariadb_server__users__dependent_var:
-  - username: '{{ librenms__database_login.username }}'
-    password: '{{ librenms__database_login.password }}'
+  - username: '{{ librenms__database_login["username"] }}'
+    password: '{{ librenms__database_login["password"] }}'
     host: '{{ librenms__database_host }}'
     priv:
       - '{{ librenms__database_name | replace("_", "\_") | replace("%", "\%") }}.*:ALL'

@@ -391,6 +391,8 @@ apache_tomcat__skip_root_webapp: false
 
 ## Troubleshooting
 
+**Tomcat cannot connect to its database**
+
 ```
 WARN org.hibernate.engine.jdbc.internal.JdbcServicesImpl:169 - HHH000342: Could not obtain connection to query metadata : Cannot create PoolableConnectionFactory (Communications link failure`
 The last packet sent successfully to the server was 0 milliseconds ago. The driver has not received any packets from the server.

@@ -217,7 +217,9 @@ redis__conf_supervised: 'auto'
 
 ## Troubleshooting
 
-Not really a problem: The role configures systemd correctly, even if you get `WARNING supervised by systemd - you MUST set appropriate values for TimeoutStartSec and TimeoutStopSec in your service unit' in `/var/log/redis/redis.log`. This can be safely ignored [according to this GitHub issue](https://github.com/redis/redis/issues/8024).
+**`WARNING supervised by systemd - you MUST set appropriate values for TimeoutStartSec and TimeoutStopSec in your service unit` in `/var/log/redis/redis.log`**
+
+* Not really a problem: the role configures systemd correctly. This can be safely ignored [according to this GitHub issue](https://github.com/redis/redis/issues/8024).
 
 
 ## License

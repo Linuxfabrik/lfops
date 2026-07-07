@@ -1,0 +1,4 @@
+python_venv__required_packages:
+  - 'python3-packaging'
+  - 'python3-virtualenv'
+  - 'python3-devel'

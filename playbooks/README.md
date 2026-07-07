@@ -606,6 +606,14 @@ Calls the following roles (in order):
 * [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)
 
 
+## matomo_import_logs.yml
+
+Calls the following roles (in order):
+
+* [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `matomo_import_logs__skip_python`
+* [matomo_import_logs](https://github.com/Linuxfabrik/lfops/tree/main/roles/matomo_import_logs)
+
+
 ## maxmind_geoip.yml
 
 Calls the following roles (in order):
@@ -1380,6 +1388,13 @@ Calls the following roles (in order):
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `tools__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)
 * [tools](https://github.com/Linuxfabrik/lfops/tree/main/roles/tools)
+
+
+## trend_micro_v1es.yml
+
+Calls the following roles (in order):
+
+* [trend_micro_v1es](https://github.com/Linuxfabrik/lfops/tree/main/roles/trend_micro_v1es)
 
 
 ## unattended_upgrades.yml

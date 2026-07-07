@@ -6,7 +6,6 @@
     - 'apache_httpd'
     - 'apache_httpd:configure'
     - 'apache_httpd:htpasswd'
-    - 'apache_httpd:matomo'
     - 'apache_httpd:mod_security_coreruleset'
     - 'apache_httpd:mods'
     - 'apache_httpd:state'
@@ -137,15 +136,6 @@
   tags:
     - 'apache_httpd'
     - 'apache_httpd:vhosts'
-
-
-- block:
-
-  - ansible.builtin.include_tasks: 'matomo.yml'
-
-  tags:
-    - 'apache_httpd'
-    - 'apache_httpd:matomo'
 
 
 - block:

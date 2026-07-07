@@ -952,8 +952,8 @@ extensions
     ├── inventory -- shared inventory across all scenarios and therefore available in all scenarios. contains a basic set of VMs/containers that are commonly used
     │   ├── hosts.yml -- required, even if empty, that Ansible can detect this inventory
     │   └── host_vars
-    │       ├── debian11-container.yml
-    │       ├── debian11-vm.yml
+    │       ├── debian12-container.yml
+    │       ├── debian12-vm.yml
     │       └── ...
     ├── monitoring_plugins -- a scenario with no sub-scenarios
     │   ├── converge.yml
@@ -1031,6 +1031,19 @@ A useful rule of thumb: if an assertion would still pass while the service is de
 * Before running a scenario, Molecule's prerun step tries to install the current repository as a collection with `ansible-galaxy collection install --force <repo>`. That build fails because `galaxy.yml` carries a non-semver `version` (`main`), which `ansible-galaxy` rejects.
 * Option 1: disable the prerun so Molecule stops trying to build and install the local collection, by setting `prerun: false` as a top-level key in the `config.yml`. If you do this, you have to make sure that LFOps is installed yourself.
 * Option 2: If you installed LFOps by symlinking it, make sure the link points to the **same** folder that you are running `molecule` in (`ln -sf "$(pwd)" ~/.ansible/collections/ansible_collections/linuxfabrik/lfops`).
+
+
+#### Why libvirt VMs and Podman containers, and not microVMs
+
+The `create` step uses one of two drivers: libvirt/KVM VMs (`vm-create.yml`, the default, via the `kvm_vm` role) for full-fidelity tests, and Podman containers (`container-create.yml`) for lightweight roles. microVMs via libkrun (`podman run --runtime=krun`, booting an OCI image behind KVM with its own kernel) were evaluated as a third driver and deliberately not adopted. The evaluation, recorded here so it does not get repeated:
+
+* Confirmed upside: a krun guest has its own kernel, so kernel-level roles that a shared-kernel container cannot test (for example writing an isolated sysctl to `/proc/sys`, which a container rejects with `Read-only file system`) do work, while staying isolated from the host.
+* systemd as PID 1 works and is *not* the blocker. It initially fails with `Couldn't find an alternative telinit implementation to spawn`, but that is [libkrun#223](https://github.com/libkrun/libkrun/issues/223), fixed by the `KRUN_INIT_PID1=1` environment variable (libkrun v1.16.0+).
+* The blocker is that `podman exec` fails: the krun handler cannot inject a process into a running microVM ([crun#2090](https://github.com/containers/crun/issues/2090), open). Ansible's `podman` connection plugin relies on `podman exec`, so a krun driver would have to be SSH-based (sshd in the guest, key injection, port publishing), which just rebuilds the libvirt `vm-create.yml` model on a less mature stack.
+* No per-distro kernel: every krun guest runs libkrun's single bundled kernel regardless of the image, so it never exercises the distro's real kernel. The libvirt VM path boots each distro's actual cloud-image kernel and already handles isolated sysctls, covering krun's one advantage.
+* Image gap: first-party init OCI images exist only for the Red Hat family (`rockylinux:{8,9,10}-ubi-init`). Debian and Ubuntu, which we also target, have none.
+
+Net: not worth it right now. Revisit if [crun#2090](https://github.com/containers/crun/issues/2090) lands `podman exec` support, which would remove the SSH-driver requirement.
 
 
 ### Credits
