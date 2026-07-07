@@ -18,25 +18,41 @@
     - 'always'
 
 
+# Regular lane, deployed on all hosts:
+# - notify-and-schedule: informational "updates pending" mail
+# - update-and-reboot:   applies all updates at the window, drops a reboot request if
+#                        needed. The reboot itself is handled by the schedule_reboot role.
 - block:
 
-  - name: 'Deploy /usr/local/bin/notify-and-schedule'
+  - name: 'Deploy /usr/local/libexec/notify-and-schedule'
     ansible.builtin.template:
       backup: true
-      src: 'usr/local/bin/notify-and-schedule.j2'
-      dest: '/usr/local/bin/notify-and-schedule'
+      src: 'usr/local/libexec/notify-and-schedule.j2'
+      dest: '/usr/local/libexec/notify-and-schedule'
       owner: 'root'
       group: 'root'
       mode: 0o744
 
-  - name: 'Deploy /usr/local/bin/update-and-reboot'
+  - name: 'Deploy /usr/local/sbin/update-and-reboot'
     ansible.builtin.template:
       backup: true
-      src: 'usr/local/bin/update-and-reboot.j2'
-      dest: '/usr/local/bin/update-and-reboot'
+      src: 'usr/local/sbin/update-and-reboot.j2'
+      dest: '/usr/local/sbin/update-and-reboot'
       owner: 'root'
       group: 'root'
       mode: 0o744
+
+  # the scripts used to live in /usr/local/bin; remove the stale copies after relocating
+  # them to FHS-correct /usr/local/sbin (admin commands) and /usr/local/libexec (helpers).
+  - name: 'rm -f the pre-FHS /usr/local/bin script locations'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    loop:
+      - '/usr/local/bin/notify-and-schedule'
+      - '/usr/local/bin/security-reboot'
+      - '/usr/local/bin/security-update'
+      - '/usr/local/bin/update-and-reboot'
 
   - name: 'Deploy /etc/systemd/system/notify-and-schedule.service'
     ansible.builtin.template:
@@ -46,6 +62,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__system_update__notify_service_result'
 
   - name: 'Deploy /etc/systemd/system/notify-and-schedule.timer'
     ansible.builtin.template:
@@ -55,44 +72,41 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__system_update__notify_timer_result'
 
-  tags:
-    - 'system_update'
-
-
-- block:
-
-  - name: 'systemctl {{ system_update__update_enabled | bool | ternary("enable", "disable") }} notify-and-schedule.timer --now'
-    ansible.builtin.systemd:
-      name: 'notify-and-schedule.timer'
-      state: '{{ system_update__update_enabled | bool | ternary("started", "stopped") }}'
-      enabled: '{{ system_update__update_enabled }}'
-      daemon_reload: true
-
-  tags:
-    - 'system_update'
-    - 'system_update:state'
-
-
-# The security lane applies Rocky Linux security hot-fixes from the dedicated
-# `security` repository (provided by the repo_baseos role) twice a day,
-# independent of the regular (weekly) update lane. Rocky Linux only.
-- block:
-
-  - name: 'Deploy /usr/local/bin/security-update'
+  - name: 'Deploy /etc/systemd/system/update-and-reboot.service'
     ansible.builtin.template:
       backup: true
-      src: 'usr/local/bin/security-update.j2'
-      dest: '/usr/local/bin/security-update'
+      src: 'etc/systemd/system/update-and-reboot.service.j2'
+      dest: '/etc/systemd/system/update-and-reboot.service'
       owner: 'root'
       group: 'root'
-      mode: 0o744
+      mode: 0o644
+    register: '__system_update__update_service_result'
 
-  - name: 'Deploy /usr/local/bin/security-reboot'
+  - name: 'Deploy /etc/systemd/system/update-and-reboot.timer'
     ansible.builtin.template:
       backup: true
-      src: 'usr/local/bin/security-reboot.j2'
-      dest: '/usr/local/bin/security-reboot'
+      src: 'etc/systemd/system/update-and-reboot.timer.j2'
+      dest: '/etc/systemd/system/update-and-reboot.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__system_update__update_timer_result'
+
+  tags:
+    - 'system_update'
+
+
+# Security lane (Rocky Linux only): applies security hot-fixes from the dedicated
+# `security` repository at the window and drops a reboot request into the shared spool.
+- block:
+
+  - name: 'Deploy /usr/local/sbin/security-update'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/sbin/security-update.j2'
+      dest: '/usr/local/sbin/security-update'
       owner: 'root'
       group: 'root'
       mode: 0o744
@@ -105,6 +119,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__system_update__security_service_result'
 
   - name: 'Deploy /etc/systemd/system/security-update.timer'
     ansible.builtin.template:
@@ -114,6 +129,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__system_update__security_timer_result'
 
   when:
     - 'ansible_facts["distribution"] == "Rocky"'
@@ -124,12 +140,45 @@
 
 - block:
 
+  # run daemon-reload as a regular task (not a handler) before the state block, so the
+  # enable/start tasks act on the freshly deployed units. gated on any unit-file change
+  # (service or timer, regular or security) to stay idempotent. skipped Rocky tasks
+  # register a non-changed result, so referencing them on non-Rocky hosts is safe.
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__system_update__notify_service_result is changed or
+         __system_update__notify_timer_result is changed or
+         __system_update__update_service_result is changed or
+         __system_update__update_timer_result is changed or
+         __system_update__security_service_result is changed or
+         __system_update__security_timer_result is changed'
+
+  - name: 'systemctl {{ system_update__update_enabled | bool | ternary("enable", "disable") }} notify-and-schedule.timer --now'
+    ansible.builtin.systemd:
+      name: 'notify-and-schedule.timer'
+      state: '{{ system_update__update_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ system_update__update_enabled }}'
+
+  - name: 'systemctl {{ system_update__update_enabled | bool | ternary("enable", "disable") }} update-and-reboot.timer --now'
+    ansible.builtin.systemd:
+      name: 'update-and-reboot.timer'
+      state: '{{ system_update__update_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ system_update__update_enabled }}'
+
+  tags:
+    - 'system_update'
+    - 'system_update:state'
+
+
+- block:
+
   - name: 'systemctl {{ system_update__security_enabled | bool | ternary("enable", "disable") }} security-update.timer --now'
     ansible.builtin.systemd:
       name: 'security-update.timer'
       state: '{{ system_update__security_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ system_update__security_enabled }}'
-      daemon_reload: true
 
   when:
     - 'ansible_facts["distribution"] == "Rocky"'

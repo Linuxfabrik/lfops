@@ -1,6 +1,6 @@
-- name: 'Playbook linuxfabrik.lfops.system_update'
+- name: 'Playbook linuxfabrik.lfops.schedule_reboot'
   hosts:
-    - 'lfops_system_update'
+    - 'lfops_schedule_reboot'
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -18,11 +18,6 @@
 
   roles:
 
-    - role: 'linuxfabrik.lfops.yum_utils'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not system_update__skip_yum_utils | d(false)'
-
     - role: 'linuxfabrik.lfops.postfix'
       postfix__aliases__dependent_var: '{{
           mailto_root__postfix__aliases__dependent_var
@@ -31,15 +26,13 @@
           mailto_root__postfix__sender_canonicals__dependent_var
         }}'
       when:
-        - 'not system_update__skip_postfix | d(false)'
+        - 'not schedule_reboot__skip_postfix | d(false)'
 
     - role: 'linuxfabrik.lfops.mailto_root'
       when:
-        - 'not system_update__skip_mailto_root | d(false)'
+        - 'not schedule_reboot__skip_mailto_root | d(false)'
 
     - role: 'linuxfabrik.lfops.schedule_reboot'
-
-    - role: 'linuxfabrik.lfops.system_update'
 
 
   post_tasks:
