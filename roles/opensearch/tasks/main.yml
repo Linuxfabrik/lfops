@@ -44,7 +44,7 @@
       state: 'directory'
       owner: 'opensearch'
       group: 'opensearch'
-      mode: '2755'
+      mode: 0o750 # keeps other out of the data root, matching the OpenSearch package default.
 
   - name: 'Deploy /etc/sysconfig/opensearch'
     ansible.builtin.template:

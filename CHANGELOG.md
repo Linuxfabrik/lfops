@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:opensearch**: The OpenSearch data directory is no longer readable by other local users. Its root now uses mode `0750` instead of `2755`, so only the `opensearch` user and group can reach the stored index data, matching the OpenSearch package default.
 * **role:monitoring_plugins**: A source install now leaves the plugins, the bundled library and the dependency venv owned by root instead of the monitoring user. The whitelisted plugins run as root via sudo, so monitoring-user ownership let that account edit a plugin, a library module or the venv interpreter and gain root; ownership is now root, closing that local privilege escalation.
 
 
