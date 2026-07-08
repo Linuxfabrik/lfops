@@ -31,3 +31,25 @@
           - '"Traceback" not in __molecule__cpu_usage_run["stderr"]'
           - '"ModuleNotFoundError" not in __molecule__cpu_usage_run["stdout"]'
           - '"ModuleNotFoundError" not in __molecule__cpu_usage_run["stderr"]'
+
+    # The plugins run as root via sudo, so a plugin, a library module or the venv interpreter
+    # that the monitoring user could write would be arbitrary root code execution. Assert the
+    # whole sudo-run chain is owned by root.
+    - name: 'Stat the plugin, the bundled library and the venv interpreter'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/usr/lib64/nagios/plugins/cpu-usage'
+        - '/usr/lib64/nagios/plugins/lib/base.py'
+        - '/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python'
+      register: '__molecule__ownership'
+      changed_when: false
+
+    - name: 'Assert the plugins, the library and the venv are owned by root'
+      ansible.builtin.assert:
+        that:
+          - 'item["stat"]["pw_name"] == "root"'
+        fail_msg: '{{ item["item"] }} is owned by {{ item["stat"]["pw_name"] }}, not root; the monitoring user could edit code that runs as root via sudo'
+      loop: '{{ __molecule__ownership["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'

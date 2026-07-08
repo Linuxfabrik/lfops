@@ -59,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:collect_rpmnew_rpmsave**: Stop emitting an Ansible deprecation warning on every run by making the `when` conditions explicitly boolean. Keeps the role working on Ansible 2.19 and later.
 * **role:kvm_vm**: Use `kvm_vm__connect_url` for every libvirt operation. Disk resizes (`virsh blockresize`) and a few other steps previously ignored the configured connection URL and always talked to the local default, so they failed or acted on the wrong libvirt when `kvm_vm__connect_url` pointed at a non-default or remote host.
 
+### Security
+
+* **role:monitoring_plugins**: A source install now leaves the plugins, the bundled library and the dependency venv owned by root instead of the monitoring user. The whitelisted plugins run as root via sudo, so monitoring-user ownership let that account edit a plugin, a library module or the venv interpreter and gain root; ownership is now root, closing that local privilege escalation.
+
 
 ## [v7.0.0] - 2026-06-11
 
