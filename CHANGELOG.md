@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: The update and security-update jobs no longer send a failure mail when a mirror hiccups briefly (e.g. Rocky's mirrorlist intermittently returning "No URLs in mirrorlist"). Repository metadata is now refreshed with a few retries before updates are applied, so short-lived upstream outages are ridden out instead of paging you.
 * **role:monitoring_plugins, role:mod_maxminddb**: The role no longer aborts at start with an `undefined` error demanding a variable that has an OS-specific default (`monitoring_plugins__icinga_user` respectively `mod_maxminddb__apache_conf_modules_d`). The role now derives the default on its own again, so there is no need to set the variable in the inventory.
 * **role:monitoring_plugins**: A source install no longer aborts on RHEL 8. The role used to fail because the system Python 3.6 is older than the required 3.9; it now installs and uses Python 3.9 automatically.
 * **role:python_venv**: Install `python3-packaging` on EL10 (RHEL/Rocky/Alma 10). EL10 ships Python 3.12, which dropped the stdlib `distutils`, so Ansible's `pip` module needs the external `packaging` library to run. Without it, creating a venv (e.g. during `setup_basic`) failed.
@@ -54,10 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:monitoring_plugins**: A source install now deploys the sudoers drop-in as `/etc/sudoers.d/linuxfabrik-monitoring-plugins`, the same file name the rpm/deb packages use. Both install methods remove the drop-in under the former name `/etc/sudoers.d/monitoring-plugins`, so sudo no longer warns about a duplicate `Cmnd_Alias` on hosts that got the drop-in twice (for example after switching the install method or after running the monitoring-plugins one-liner installer).
 * **role:collect_rpmnew_rpmsave**: Stop emitting an Ansible deprecation warning on every run by making the `when` conditions explicitly boolean. Keeps the role working on Ansible 2.19 and later.
 * **role:kvm_vm**: Use `kvm_vm__connect_url` for every libvirt operation. Disk resizes (`virsh blockresize`) and a few other steps previously ignored the configured connection URL and always talked to the local default, so they failed or acted on the wrong libvirt when `kvm_vm__connect_url` pointed at a non-default or remote host.
-
-### Fixed
-
-* **role:system_update**: The update and security-update jobs no longer send a failure mail when a mirror hiccups briefly (e.g. Rocky's mirrorlist intermittently returning "No URLs in mirrorlist"). Repository metadata is now refreshed with a few retries before updates are applied, so short-lived upstream outages are ridden out instead of paging you.
 
 
 ## [v7.0.0] - 2026-06-11
