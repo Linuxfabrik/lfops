@@ -10,7 +10,7 @@ Other roles reuse this mechanism instead of rebooting themselves: they drop a re
 
 ## How the Role Behaves
 
-* **One reboot window.** `schedule_reboot__reboot_time__*` sets a single time of day at which the actor runs. Steer it per inventory group, for example an earlier window for infrastructure hosts so they reboot before the rest.
+* **One reboot window.** `schedule_reboot__reboot_time__*` sets a single time of day at which the actor runs. Steer it per inventory group, for example an earlier window for infrastructure hosts so they reboot before the rest. Without an explicit value each host is assigned a deterministic minute within `04:00`-`04:59` (seeded by its hostname), so a fleet does not reboot in lockstep.
 * **Reboots are modelled as state.** A pending reboot is a file in `/run/schedule-reboot/`; the file name is a category and its content is included in the notification mail. Several pending reasons coalesce into a single reboot. The spool lives on tmpfs, so it clears on the reboot itself.
 * **Producers order themselves before the actor.** A role that runs work at the same window (such as a system update) declares its unit `Before=schedule-reboot.service` (order-only, no `Wants=`/`Requires=`). systemd then runs the reboot only after that work finishes; on a window where no producer runs, the actor runs alone and reboots only if a request is pending.
 * **An Icinga downtime is set around the reboot.** When `schedule_reboot__icinga2_api_user_login` is set, the actor schedules a short host downtime before rebooting, so the reboot does not raise alerts. Without it, the reboot happens without a downtime.
@@ -127,7 +127,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The reboot window: the time of day at which the actor (and the producers ordered before it) run. Steer it per inventory group. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 * Type: String.
-* Default: `'04:00'`
+* Default: a deterministic per-host minute within `04:00`-`04:59`, staggered by hostname so a fleet does not reboot in lockstep. Pin a fixed value to override, e.g. `'04:00'`.
 
 `schedule_reboot__rocketchat_msg_suffix`
 
