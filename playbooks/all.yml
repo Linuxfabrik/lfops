@@ -121,6 +121,7 @@
 - import_playbook: 'repo_rpmfusion.yml'
 - import_playbook: 'repo_sury.yml'
 - import_playbook: 'rsyslog.yml'
+- import_playbook: 'schedule_reboot.yml'
 - import_playbook: 'selinux.yml'
 - import_playbook: 'setup_basic.yml'
 - import_playbook: 'setup_grav.yml'

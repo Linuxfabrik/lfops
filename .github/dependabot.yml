@@ -7,6 +7,10 @@ updates:
       day: 'friday'
       time: '05:00'
       timezone: 'Etc/UTC'
+    groups:
+      github-actions:
+        patterns:
+          - '*'
 
   - package-ecosystem: 'pip'
     directory: '/.github/pre-commit'

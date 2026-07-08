@@ -1,0 +1,33 @@
+- name: 'Verify the source install of the monitoring plugins'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'Read the shebang of the cpu-usage plugin'
+      ansible.builtin.command: 'head -1 /usr/lib64/nagios/plugins/cpu-usage'
+      register: '__molecule__cpu_usage_shebang'
+      changed_when: false
+
+    - name: 'Assert the plugin shebang points at the source venv interpreter'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__cpu_usage_shebang["stdout"] == "#!/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python"'
+
+    - name: 'Run the cpu-usage plugin'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/cpu-usage'
+      register: '__molecule__cpu_usage_run'
+      changed_when: false
+      failed_when: false
+
+    # A plugin that runs proves the whole chain works: the venv interpreter is used, the
+    # Linuxfabrik library deployed from GitHub is importable, and the third-party
+    # dependencies installed into the venv resolve. A broken import chain would surface as a
+    # Python traceback / ModuleNotFoundError instead of a Nagios-style plugin result.
+    - name: 'Assert the plugin runs under the venv (Linuxfabrik library and dependencies resolve)'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__cpu_usage_run["rc"] != 127'
+          - '__molecule__cpu_usage_run["stdout"] | length > 0'
+          - '"Traceback" not in __molecule__cpu_usage_run["stderr"]'
+          - '"ModuleNotFoundError" not in __molecule__cpu_usage_run["stdout"]'
+          - '"ModuleNotFoundError" not in __molecule__cpu_usage_run["stderr"]'

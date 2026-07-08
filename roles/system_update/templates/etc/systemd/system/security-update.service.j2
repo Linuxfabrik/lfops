@@ -1,11 +1,23 @@
 # {{ ansible_managed }}
-# 2026052401
+# 2026061001
 
 [Unit]
 Description=security-update Service
+# order-only edges (no Wants/Requires); the Rocky-only security lane is the outlier,
+# so it owns the ordering relative to the regular lane.
+# After=update-and-reboot.service: on a day where both fire, let the weekly lane
+# apply the frozen mirror snapshot first, then top up only the delta from the live
+# security repo here (if the snapshot already covers it, this lane's check-update
+# finds nothing and exits). It also serializes the two dnf runs so they never hit
+# the rpmdb lock at once.
+# Before=schedule-reboot.service: finish before the reboot actor so a requested
+# reboot waits for this transaction.
+# After=/Before= an unqueued unit is a no-op, so non-shared days are unaffected.
+After=update-and-reboot.service
+Before=schedule-reboot.service
 
 [Service]
-ExecStart=/usr/local/bin/security-update
+ExecStart=/usr/local/sbin/security-update
 Type=oneshot
 User=root
 KillMode=process

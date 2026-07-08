@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2026060401
+
+[Unit]
+Description=schedule-reboot Timer
+
+[Timer]
+OnCalendar={{ schedule_reboot__on_calendar }}
+Unit=schedule-reboot.service
+
+[Install]
+WantedBy=timers.target

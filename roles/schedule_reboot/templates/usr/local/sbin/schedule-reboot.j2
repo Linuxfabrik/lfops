@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026060901
+
+# Request a reboot at the next maintenance window. Writes a request file into the
+# spool directory that schedule-reboot.service (running at the window) acts on. The
+# file name is a free-form category; the optional detail text is included in the
+# notification mail. Use this after an ad-hoc change that needs a reboot.
+#
+# Usage:
+#   schedule-reboot <reason> [detail ...]         request a reboot at the next window
+#   schedule-reboot --now <reason> [detail ...]   request and reboot now
+
+export LC_ALL=C
+
+SPOOL_DIR='/run/schedule-reboot'
+
+NOW=0
+if [ "$1" = '--now' ]; then
+    NOW=1
+    shift
+fi
+
+REASON="$1"
+if [ -z "$REASON" ]; then
+    echo 'usage: schedule-reboot [--now] <reason> [detail ...]' >&2
+    exit 2
+fi
+shift
+DETAIL="$*"
+
+# the spool directory is owned and created by the schedule_reboot role (tmpfiles.d)
+# keep the reason a single path component
+REASON_FILE="${REASON//\//_}"
+printf '%s\n' "${DETAIL:-reboot requested via schedule-reboot}" > "$SPOOL_DIR/$REASON_FILE"
+
+if [ "$NOW" -eq 1 ]; then
+    systemctl start schedule-reboot.service
+fi

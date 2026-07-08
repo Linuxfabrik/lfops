@@ -1,0 +1,20 @@
+schedule_reboot__enabled: true
+schedule_reboot__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
+schedule_reboot__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
+schedule_reboot__mail_from: '{{ mailto_root__from }}'
+schedule_reboot__mail_recipients: '{{ mailto_root__to }}'
+schedule_reboot__mail_subject_hostname: '$(hostname --short)'
+schedule_reboot__mail_subject_prefix: ''
+schedule_reboot__on_calendar: '*-*-* {{ schedule_reboot__reboot_time__combined_var }}'
+schedule_reboot__reboot_grace_period: 60
+schedule_reboot__reboot_time__dependent_var: ''
+schedule_reboot__reboot_time__group_var: ''
+schedule_reboot__reboot_time__host_var: ''
+schedule_reboot__reboot_time__role_var: '04:{{ "%02d" | format(59 | random(seed=inventory_hostname)) }}'
+schedule_reboot__reboot_time__combined_var: '{{
+    schedule_reboot__reboot_time__host_var if (schedule_reboot__reboot_time__host_var | string | length) else
+    schedule_reboot__reboot_time__group_var if (schedule_reboot__reboot_time__group_var | string | length) else
+    schedule_reboot__reboot_time__dependent_var if (schedule_reboot__reboot_time__dependent_var | string | length) else
+    schedule_reboot__reboot_time__role_var
+  }}'
+schedule_reboot__rocketchat_msg_suffix: ''

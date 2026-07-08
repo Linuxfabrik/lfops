@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+# 2026060901
+
+[Unit]
+Description=schedule-reboot Service
+# This is the generic reboot actor. Producers that run at the same window order
+# themselves Before=schedule-reboot.service (order-only, no Wants/Requires), so the
+# reboot deterministically waits for their work to finish; on a window where no
+# producer runs, this runs alone and reboots only if the spool has a pending request.
+
+[Service]
+ExecStart=/usr/local/libexec/do-reboot
+Type=oneshot
+User=root
+KillMode=process
+
+[Install]
+WantedBy=basic.target

@@ -9,7 +9,7 @@ php__ini_max_file_uploads__role_var: 50
 php__ini_max_input_time__role_var: -1
 php__ini_max_input_vars__role_var: 1000
 php__ini_memory_limit__role_var: '128M'
-php__ini_opcache_blacklist_filename__role_var: '/etc/php-zts.d/opcache*.blacklist'
+php__ini_opcache_blacklist_filename__role_var: '/etc/opcache.blacklist'
 php__ini_opcache_enable__role_var: 1
 php__ini_opcache_enable_cli__role_var: 1
 php__ini_opcache_huge_code_pages__role_var: 0
@@ -20,7 +20,7 @@ php__ini_opcache_revalidate_freq__role_var: 60
 php__ini_opcache_save_comments__role_var: 1
 php__ini_opcache_validate_timestamps__role_var: 1
 php__ini_post_max_size__role_var: '8M'
-php__ini_session_cookie_httponly__role_var: 'Off'
+php__ini_session_cookie_httponly__role_var: 'On'
 php__ini_session_cookie_secure__role_var: 'Off'
 php__ini_session_gc_maxlifetime__role_var: 1440
 php__ini_session_sid_length__role_var: 32

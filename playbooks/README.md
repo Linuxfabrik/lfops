@@ -998,6 +998,15 @@ Calls the following roles (in order):
 * [rsyslog](https://github.com/Linuxfabrik/lfops/tree/main/roles/rsyslog)
 
 
+## schedule_reboot.yml
+
+Calls the following roles (in order):
+
+* [postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix): `schedule_reboot__skip_postfix`
+* [mailto_root](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailto_root): `schedule_reboot__skip_mailto_root`
+* [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot)
+
+
 ## selinux.yml
 
 Calls the following roles (in order):
@@ -1030,11 +1039,11 @@ Calls the following roles (in order):
 * [kdump](https://github.com/Linuxfabrik/lfops/tree/main/roles/kdump): `setup_basic__skip_kdump`
 * [chrony](https://github.com/Linuxfabrik/lfops/tree/main/roles/chrony): `setup_basic__skip_chrony`
 * [motd](https://github.com/Linuxfabrik/lfops/tree/main/roles/motd): `setup_basic__skip_motd`
+* [at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at): `setup_basic__skip_at`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_basic__skip_python`, `setup_basic__skip_python_venv`
 * [glances](https://github.com/Linuxfabrik/lfops/tree/main/roles/glances): `setup_basic__skip_glances`
 * [tools](https://github.com/Linuxfabrik/lfops/tree/main/roles/tools): `setup_basic__skip_tools`
 * [tmux](https://github.com/Linuxfabrik/lfops/tree/main/roles/tmux): `setup_basic__skip_tmux`
-* [at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at): `setup_basic__skip_at`
 * [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `setup_basic__skip_yum_utils`
 * [lvm](https://github.com/Linuxfabrik/lfops/tree/main/roles/lvm): `setup_basic__skip_lvm`
 * [sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd): `setup_basic__skip_sshd`
@@ -1043,6 +1052,7 @@ Calls the following roles (in order):
 * [mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx): `setup_basic__skip_mailx`
 * [postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix): `setup_basic__skip_postfix`
 * [mailto_root](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailto_root): `setup_basic__skip_mailto_root`
+* [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot): `setup_basic__skip_schedule_reboot`
 * [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update): `setup_basic__skip_system_update`
 * [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv): `setup_basic__skip_python_venv`
 * [duplicity](https://github.com/Linuxfabrik/lfops/tree/main/roles/duplicity): `setup_basic__skip_duplicity`
@@ -1329,10 +1339,9 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `system_update__skip_yum_utils`
-* [at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at)
-* [mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx)
 * [postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix): `system_update__skip_postfix`
 * [mailto_root](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailto_root): `system_update__skip_mailto_root`
+* [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot)
 * [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update)
 
 
