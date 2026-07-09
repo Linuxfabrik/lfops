@@ -27,7 +27,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 ## Single-Node Setup
 
-For a single-node setup, no special configuration is needed beyond the mandatory variables. When `opensearch__discovery_seed_hosts` is not set, OpenSearch 2.x automatically runs in single-node mode (`discovery.type: single-node`). After installation, verify that OpenSearch is running (see Post-Installation Steps below).
+For a single-node setup, no special configuration is needed beyond the mandatory variables. When `opensearch__discovery_seed_hosts` is not set, OpenSearch 2.x automatically runs in single-node mode (`discovery.type: single-node`). After installation, verify that OpenSearch is running and set the default replica count to 0, otherwise the cluster health stays `yellow` (see Post-Installation Steps below).
 
 
 ## Cluster Setup
@@ -197,8 +197,34 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch --tags opens
 After setting up a single node or cluster, verify that OpenSearch is running:
 
 ```bash
-curl 'https://localhost:9200' --user admin:your-password --insecure
+curl 'https://localhost:9200' --user admin:linuxfabrik --insecure
 ```
+
+### Single-Node: Set the Default Replica Count to 0
+
+On a single-node setup the cluster health stays `yellow` permanently. OpenSearch never places a replica shard on the node that already holds the corresponding primary, so every replica remains unassigned. Several system indices are created without `auto_expand_replicas` and thus inherit the default `index.number_of_replicas: 1`, among them `.opendistro-job-scheduler-lock`, `.opendistro-ism-config` and the daily `security-auditlog-*` indices. The data is complete and searchable, only the redundancy is missing, which a single node cannot provide anyway.
+
+Set the cluster-wide default to `0` (available since OpenSearch 2.5). It applies to every index created from that point on, including the ones created by plugins:
+
+```bash
+curl --request PUT 'https://localhost:9200/_cluster/settings' \
+    --user admin:linuxfabrik \
+    --insecure \
+    --header 'Content-Type: application/json' \
+    --data '{"persistent": {"cluster.default_number_of_replicas": 0}}'
+```
+
+Then fix the indices that already exist. Use `curl '.../_cat/indices?v&expand_wildcards=all&h=health,index,pri,rep'` to find out which ones are affected:
+
+```bash
+curl --request PUT 'https://localhost:9200/.opendistro-job-scheduler-lock,.opendistro-ism-config,security-auditlog-*/_settings' \
+    --user admin:linuxfabrik \
+    --insecure \
+    --header 'Content-Type: application/json' \
+    --data '{"index": {"number_of_replicas": 0}}'
+```
+
+This is a post-installation step and not managed by the role, because `cluster.default_number_of_replicas` only takes effect through the cluster settings API. Writing it into `opensearch.yml` has no effect: OpenSearch reads the value from the cluster metadata when creating an index, not from the node settings. Once set, it lives in the persistent cluster state and survives restarts.
 
 
 ## Tags
