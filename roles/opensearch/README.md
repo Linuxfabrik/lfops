@@ -321,6 +321,12 @@ Only optional if `opensearch__plugins_security_disabled` is `true`.
 * Type: String.
 * Default: `'/var/lib/opensearch'`
 
+`opensearch__path_repo`
+
+* List of shared file system paths registered as `path.repo`. This is required to register a file system based snapshot repository (`type: fs`) for backups. The role only writes the setting to `opensearch.yml`; it does not create the directories. Each path must already exist, be owned by the `opensearch` user and be readable and writable by it. In a multi-node cluster, every path must point to the same shared storage (e.g. NFS) mounted at the identical path on all nodes; a purely local directory only works on a single-node cluster. On shared storage, make sure the `opensearch` user resolves to the same numeric UID/GID on every node (the package assigns it dynamically) and that the export does not squash that access away (e.g. `root_squash`), otherwise individual nodes cannot read or write the repository.
+* Type: List of strings.
+* Default: `[]`
+
 `opensearch__plugins_security_admin_certificate`
 
 * The ASCII-armored public PEM admin certificate.
@@ -420,6 +426,8 @@ opensearch__internal_users__host_var:
 opensearch__network_host: '127.0.0.1'
 opensearch__node_name: 'my-node1'
 opensearch__path_data__host_var: '/var/lib/opensearch'
+opensearch__path_repo:
+  - '/mnt/opensearch-snapshots'
 opensearch__plugins_security_admin_certificate: '{{ lookup("ansible.builtin.file",
     "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/admin.pem")
   }}'

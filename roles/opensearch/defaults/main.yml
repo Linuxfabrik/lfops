@@ -51,6 +51,7 @@ opensearch__path_data__combined_var: '{{
     opensearch__path_data__role_var
   }}'
 
+opensearch__path_repo: []
 opensearch__plugins_security_allow_unsafe_democertificates: false
 opensearch__plugins_security_authcz_admin_dns: []
 opensearch__plugins_security_disabled: false

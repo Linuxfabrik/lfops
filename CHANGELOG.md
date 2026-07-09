@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:opensearch**: Add `opensearch__path_repo` to register file system paths as `path.repo` in `opensearch.yml`, required for file system based snapshot repositories.
 * **role:nextcloud**: Add `nextcloud__jobs_timeout_start_sec` to configure the start-up timeout of the `nextcloud-jobs.service`. Defaults to `10m`. Raise it on instances where background jobs regularly need longer than 10 minutes.
 * **role:icinga2_agent, role:icinga2_master**: Deploy a systemd drop-in override ensuring the Icinga 2 service starts after SSSD on hosts where SSSD is installed.
 * **role:librenms**: Add `librenms__config_app_trusted_proxies` and `librenms__config_app_url` to set the `APP_TRUSTED_PROXIES` and `APP_URL` variables in `/opt/librenms/.env`, needed when running LibreNMS behind a reverse proxy.
