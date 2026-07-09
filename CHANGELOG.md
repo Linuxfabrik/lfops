@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+**role:nextcloud**: Set the `text workspace_available` app config key as `boolean` instead of `string`. Newer Nextcloud enforces the config lexicon - the text app declares the key as `ValueType::BOOL`
 * **role:php**: The `php:update` tag now refreshes the apt cache before the upgrade on Debian-family hosts, so it reliably installs the latest packages (e.g. to roll out security updates) instead of running against a stale cache. RHEL-family hosts are unaffected, since dnf refreshes its metadata on its own.
 * **role:monitoring_plugins**: The role now refreshes the apt cache before installing the monitoring-plugins package on Debian-family hosts, so it reliably installs the latest version (e.g. to roll out security updates) instead of running against a stale cache. RHEL-family hosts are unaffected, since dnf refreshes its metadata on its own.
 * **role:mariadb_server**: The `mariadb_server:upgrade` tag now refreshes the apt cache before the upgrade on Debian-family hosts, so it reliably installs the latest packages (e.g. to roll out security updates) instead of running against a stale cache. RHEL-family hosts are unaffected, since dnf refreshes its metadata on its own.
