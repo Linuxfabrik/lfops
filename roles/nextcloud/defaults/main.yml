@@ -34,8 +34,8 @@ nextcloud__app_configs__role_var:
     type: 'boolean'
     state: 'present'
   - key: 'text workspace_available'
-    value: 0
-    type: 'string' # for some reason this has to be string, not integer or boolean
+    value: false
+    type: 'boolean'
     state: 'present'
   - key: 'theming imprintUrl'
     value: 'https://www.linuxfabrik.ch/ueber-uns/agb/'
@@ -171,6 +171,8 @@ nextcloud__database_name: 'nextcloud'
 nextcloud__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
 nextcloud__icinga2_api_user_login: '{{ system_update__icinga2_api_user_login }}'
 nextcloud__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
+
+nextcloud__jobs_timeout_start_sec: '10m'
 
 nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 

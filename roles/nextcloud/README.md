@@ -218,6 +218,12 @@ nextcloud__users:
 * Type: String.
 * Default: `'{{ ansible_facts["nodename"] }}'`
 
+`nextcloud__jobs_timeout_start_sec`
+
+* Time the `nextcloud-jobs.service` may take to finish before systemd considers the start-up failed and kills it. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* Type: String.
+* Default: `'10m'`
+
 `nextcloud__mariadb_login`
 
 * The user account for the database administrator. The Nextcloud setup will create its own database account.

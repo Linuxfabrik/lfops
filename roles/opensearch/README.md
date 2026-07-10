@@ -27,7 +27,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 ## Single-Node Setup
 
-For a single-node setup, no special configuration is needed beyond the mandatory variables. When `opensearch__discovery_seed_hosts` is not set, OpenSearch 2.x automatically runs in single-node mode (`discovery.type: single-node`). After installation, verify that OpenSearch is running (see Post-Installation Steps below).
+For a single-node setup, no special configuration is needed beyond the mandatory variables. When `opensearch__discovery_seed_hosts` is not set, OpenSearch 2.x automatically runs in single-node mode (`discovery.type: single-node`). After installation, verify that OpenSearch is running and set the default replica count to 0, otherwise the cluster health stays `yellow` (see Post-Installation Steps below).
 
 
 ## Cluster Setup
@@ -197,8 +197,34 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch --tags opens
 After setting up a single node or cluster, verify that OpenSearch is running:
 
 ```bash
-curl 'https://localhost:9200' --user admin:your-password --insecure
+curl 'https://localhost:9200' --user admin:linuxfabrik --insecure
 ```
+
+### Single-Node: Set the Default Replica Count to 0
+
+On a single-node setup the cluster health stays `yellow` permanently. OpenSearch never places a replica shard on the node that already holds the corresponding primary, so every replica remains unassigned. Several system indices are created without `auto_expand_replicas` and thus inherit the default `index.number_of_replicas: 1`, among them `.opendistro-job-scheduler-lock`, `.opendistro-ism-config` and the daily `security-auditlog-*` indices. The data is complete and searchable, only the redundancy is missing, which a single node cannot provide anyway.
+
+Set the cluster-wide default to `0` (available since OpenSearch 2.5). It applies to every index created from that point on, including the ones created by plugins:
+
+```bash
+curl --request PUT 'https://localhost:9200/_cluster/settings' \
+    --user admin:linuxfabrik \
+    --insecure \
+    --header 'Content-Type: application/json' \
+    --data '{"persistent": {"cluster.default_number_of_replicas": 0}}'
+```
+
+Then fix the indices that already exist. Use `curl '.../_cat/indices?v&expand_wildcards=all&h=health,index,pri,rep'` to find out which ones are affected:
+
+```bash
+curl --request PUT 'https://localhost:9200/.opendistro-job-scheduler-lock,.opendistro-ism-config,security-auditlog-*/_settings' \
+    --user admin:linuxfabrik \
+    --insecure \
+    --header 'Content-Type: application/json' \
+    --data '{"index": {"number_of_replicas": 0}}'
+```
+
+This is a post-installation step and not managed by the role, because `cluster.default_number_of_replicas` only takes effect through the cluster settings API. Writing it into `opensearch.yml` has no effect: OpenSearch reads the value from the cluster metadata when creating an index, not from the node settings. Once set, it lives in the persistent cluster state and survives restarts.
 
 
 ## Tags
@@ -213,6 +239,7 @@ curl 'https://localhost:9200' --user admin:your-password --insecure
 
 `opensearch:configure`
 
+* Deploys `/etc/opensearch/jvm.options.d/heap.options`.
 * Deploys `/etc/opensearch/opensearch.yml`.
 * Deploys `/etc/sysconfig/opensearch`.
 * Deploys internal users configuration (if security plugin is enabled).
@@ -266,6 +293,12 @@ Only optional if `opensearch__plugins_security_disabled` is `true`.
 * Type: String.
 * Default: `'my-application'`
 
+`opensearch__heap`
+
+* The JVM heap size, deployed as a drop-in at `/etc/opensearch/jvm.options.d/heap.options`. Sets both the minimum (`-Xms`) and maximum (`-Xmx`) heap to this value. Keep it at most 50% of system memory and below ~32 GB, so the JVM can use compressed object pointers.
+* Type: String.
+* Default: 50% of system memory, capped at `31744m`
+
 `opensearch__internal_users__host_var` / `opensearch__internal_users__group_var`
 
 * Internal users that can access OpenSearch via HTTP Basic Auth.
@@ -313,6 +346,12 @@ Only optional if `opensearch__plugins_security_disabled` is `true`.
 * For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: String.
 * Default: `'/var/lib/opensearch'`
+
+`opensearch__path_repo`
+
+* List of shared file system paths registered as `path.repo`. This is required to register a file system based snapshot repository (`type: fs`) for backups. The role only writes the setting to `opensearch.yml`; it does not create the directories. Each path must already exist, be owned by the `opensearch` user and be readable and writable by it. In a multi-node cluster, every path must point to the same shared storage (e.g. NFS) mounted at the identical path on all nodes; a purely local directory only works on a single-node cluster. On shared storage, make sure the `opensearch` user resolves to the same numeric UID/GID on every node (the package assigns it dynamically) and that the export does not squash that access away (e.g. `root_squash`), otherwise individual nodes cannot read or write the repository.
+* Type: List of strings.
+* Default: `[]`
 
 `opensearch__plugins_security_admin_certificate`
 
@@ -404,6 +443,7 @@ Example:
 # optional
 opensearch__action_auto_create_index__host_var: false
 opensearch__cluster_name__host_var: 'my-cluster'
+opensearch__heap: '8192m'
 opensearch__internal_users__host_var:
   - username: 'opensearch-admin'
     password: 'linuxfabrik'
@@ -412,6 +452,8 @@ opensearch__internal_users__host_var:
 opensearch__network_host: '127.0.0.1'
 opensearch__node_name: 'my-node1'
 opensearch__path_data__host_var: '/var/lib/opensearch'
+opensearch__path_repo:
+  - '/mnt/opensearch-snapshots'
 opensearch__plugins_security_admin_certificate: '{{ lookup("ansible.builtin.file",
     "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/admin.pem")
   }}'

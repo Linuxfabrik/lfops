@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023041802
+# 2026070801
 
 [Unit]
 Description=Nextcloud Background Jobs Service
@@ -9,4 +9,4 @@ ExecStart=/usr/bin/php --file /var/www/html/nextcloud/cron.php
 Type=oneshot
 User=apache
 KillMode=process
-TimeoutStartSec=10m
+TimeoutStartSec={{ nextcloud__jobs_timeout_start_sec }}

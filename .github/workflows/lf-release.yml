@@ -17,12 +17,12 @@ jobs:
     steps:
 
       - name: 'Harden the runner (Audit all outbound calls)'
-        uses: 'step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411' # v2.19.4
+        uses: 'step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920' # v2.20.0
         with:
           egress-policy: 'audit'
 
       - name: 'Create GitHub Release for ${{ github.ref_name }}'
-        uses: 'softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda' # v3.0.0
+        uses: 'softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b' # v3.0.1
         with:
           tag_name: '${{ github.ref_name }}'
           body: |

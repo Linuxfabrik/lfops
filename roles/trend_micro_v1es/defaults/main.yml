@@ -1,0 +1,5 @@
+trend_micro_v1es__group_id: 0
+trend_micro_v1es__policy_id: 0
+trend_micro_v1es__relay_group_id: 0
+trend_micro_v1es__xbc_env: 'prod-eu1'
+trend_micro_v1es__xbc_fqdn: 'api-eu1.xbc.trendmicro.com'

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023112101
+# 2026070801
 # 2.x
 # ======================== OpenSearch Configuration =========================
 #
@@ -39,6 +39,13 @@ path.data: {{ opensearch__path_data__combined_var | d('/var/lib/opensearch') }}
 # Path to log files:
 #
 path.logs: /var/log/opensearch
+#
+# Path to shared file system repositories used for snapshots (separate multiple locations by comma):
+#
+#path.repo: ["/mnt/snapshots"]
+{% if opensearch__path_repo | length %}
+path.repo: {{ opensearch__path_repo | ansible.builtin.to_yaml }}
+{% endif %}
 #
 # ----------------------------------- Memory -----------------------------------
 #

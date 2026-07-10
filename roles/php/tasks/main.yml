@@ -27,6 +27,16 @@
 
 - block:
 
+  # refresh the apt cache so the following `state: latest` upgrade resolves
+  # against current metadata, e.g. to roll out security updates. apt does not
+  # auto-expire its cache the way dnf does, so without this the upgrade can
+  # silently run against a stale cache and miss newer versions.
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+    changed_when: false # refreshing the package cache is not a config change
+    when: 'ansible_facts["os_family"] == "Debian"'
+
   - name: 'Update php php-fpm composer' # noqa package-latest (we explicitly want latest here)
     ansible.builtin.package:
       name:
@@ -87,6 +97,16 @@
   - name: 'Combined Modules:'
     ansible.builtin.debug:
       var: 'php__modules__combined_var'
+
+  # refresh the apt cache so the following `state: latest` upgrade resolves
+  # against current metadata, e.g. to roll out security updates. apt does not
+  # auto-expire its cache the way dnf does, so without this the upgrade can
+  # silently run against a stale cache and miss newer versions.
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+    changed_when: false # refreshing the package cache is not a config change
+    when: 'ansible_facts["os_family"] == "Debian"'
 
   - name: 'Update PHP modules' # noqa package-latest (we explicitly want latest here)
     # providing the packages as a list is much more faster than looping for each

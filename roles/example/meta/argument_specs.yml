@@ -1,6 +1,12 @@
 # argument_specs validates required variables and types automatically at role entry.
 # use this for simple "is defined" / type checks. for complex validations
 # (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+#
+# do NOT list options whose default in defaults/main.yml references an OS-specific
+# variable (e.g. '{{ __example__conf_worker_threads }}'). validation runs before
+# tasks/main.yml, so those __-variables from vars/<platform>.yml are not loaded yet
+# and validation fails with "'__example__...' is undefined" unless the caller
+# overrides the variable. document such variables in the README instead.
 argument_specs:
   main:
     options:
@@ -52,11 +58,6 @@ argument_specs:
         required: false
         default: 'TLSv1.2 TLSv1.3'
         description: 'Allowed TLS protocol versions.'
-
-      example__conf_worker_threads:
-        type: 'int'
-        required: false
-        description: 'Number of worker threads for request processing.'
 
       example__lib_version:
         type: 'str'

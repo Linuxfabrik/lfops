@@ -109,7 +109,7 @@ rocketchat__root_url: 'https://rocketchat.example.com'
 
 `rocketchat__version`
 
-* Which Rocket.Chat version to install. Have a at the available [releases](https://github.com/RocketChat/Rocket.Chat/releases).
+* Which Rocket.Chat version to install. Have a look at the available [releases](https://github.com/RocketChat/Rocket.Chat/releases).
 * Type: String.
 * Default: `'latest'`
 

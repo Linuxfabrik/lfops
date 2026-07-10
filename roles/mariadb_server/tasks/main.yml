@@ -42,6 +42,16 @@
         - 'mariadb-server'
       state: 'absent'
 
+  # refresh the apt cache so the following `state: latest` upgrade resolves
+  # against current metadata, e.g. to roll out security updates. apt does not
+  # auto-expire its cache the way dnf does, so without this the upgrade can
+  # silently run against a stale cache and miss newer versions.
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+    changed_when: false # refreshing the package cache is not a config change
+    when: 'ansible_facts["os_family"] == "Debian"'
+
   - name: 'Install latest mariadb-server' # noqa package-latest (latest is necessary for upgrade)
     ansible.builtin.package:
       name:
@@ -717,8 +727,8 @@
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: '{{ item["name"] }}'
-      collation: '{{ item["collation"] | default("utf8_general_ci") }}'
-      encoding: '{{ item["encoding"] | default("utf8") }}'
+      collation: '{{ item["collation"] | default(omit) }}'
+      encoding: '{{ item["encoding"] | default(omit) }}'
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ mariadb_server__databases__combined_var }}'
     loop_control:

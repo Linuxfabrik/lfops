@@ -1,0 +1,6 @@
+# RHEL 8's system python3 is 3.6, too old for the monitoring plugins. Install the
+# python39 module package and build the source venv with python3.9, mirroring the
+# rpm package build (which also pins python3.9 on RHEL 8).
+__monitoring_plugins__source_python_interpreter: 'python3.9'
+__monitoring_plugins__source_python_packages:
+  - 'python39'

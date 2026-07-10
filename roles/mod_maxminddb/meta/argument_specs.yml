@@ -2,16 +2,6 @@ argument_specs:
   main:
     options:
 
-      mod_maxminddb__apache_conf_modules_d:
-        type: 'str'
-        required: false
-        description: >-
-          Path of the file that contains the `LoadModule` directive for
-          Apache. Default is OS-specific
-          (`/etc/httpd/conf.modules.d/20-mod_maxminddb.conf` on Red
-          Hat-family, `/etc/apache2/mods-available/maxminddb.load` on
-          Debian / Ubuntu).
-
       mod_maxminddb__version:
         type: 'str'
         required: false

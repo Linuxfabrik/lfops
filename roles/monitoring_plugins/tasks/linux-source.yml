@@ -7,6 +7,17 @@
     vars:
       shared__monitoring_plugins_version: '{{ monitoring_plugins__version }}'
 
+  # The Linuxfabrik library and the monitoring plugins are independent projects with their
+  # own, unrelated version numbers, so the library version is deliberately NOT derived from
+  # `monitoring_plugins__version`. Matching the "newest, unpinned" dependency policy of the
+  # source install, the library is always deployed from its main branch.
+  - name: 'Clone the lib repo'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'clone-lib-repo.yml'
+    vars:
+      shared__lib_version: 'dev'
+
   - name: 'Flatten check-plugins locally using shell'
     ansible.builtin.shell:
       cmd: |
@@ -62,87 +73,133 @@
       name: 'rsync'
       state: 'present'
 
-  # Both repos ship per-Python-LTS lockfiles under
-  # `lockfiles/pyXX/requirements.txt` (py39 ... py314). Pick the one
-  # that matches the target's Python interpreter (the same one
-  # Ansible used to run modules; pip3 will install into the same
-  # major.minor unless an alternative interpreter is explicitly used).
-  - name: 'Set per-host Python lockfile tag fact'
+  tags:
+    - 'monitoring_plugins'
+
+
+# Clean up the artifacts of the former source install, which used `pip --user` to place the
+# dependencies into the home directories of root and the icinga user. The venv-based install
+# no longer uses them, so remove them beforehand. The dependency closure is taken from the
+# lockfile the former install used (matching the system python3). Only packages installed
+# under the respective user's ~/.local are touched; system/site packages are never removed,
+# so this cannot damage OS-managed Python packages.
+- block:
+
+  - name: 'Set the legacy pip --user lockfile tag (the former source install used the system python3)'
     ansible.builtin.set_fact:
-      __monitoring_plugins__py_tag: 'py{{ ansible_python["version"]["major"] }}{{ ansible_python["version"]["minor"] }}'
+      __monitoring_plugins__legacy_py_tag: 'py{{ ansible_facts["python"]["version"]["major"] }}{{ ansible_facts["python"]["version"]["minor"] }}'
 
-  - name: 'rsync lockfiles/{{ __monitoring_plugins__py_tag }}/requirements.txt to remote host'
-    ansible.posix.synchronize:
-      src: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__py_tag }}/requirements.txt'
-      dest: '/tmp/requirements.txt'
-      mode: 'push'
-
-  tags:
-    - 'monitoring_plugins'
-
-
-- block:
-
-  # needed for plugins that run with "sudo"
-  - block:
-
-      - name: '`pip3 install --requirement=/tmp/requirements.txt --user --require-hashes` for user root'
-        ansible.builtin.pip:
-          requirements: '/tmp/requirements.txt'
-          extra_args: '--user --require-hashes'
-          executable: 'pip3'
-
-    rescue:
-
-      - name: 'Retry pip3 install with --break-system-packages for user root'
-        ansible.builtin.pip:
-          requirements: '/tmp/requirements.txt'
-          extra_args: '--user --require-hashes --break-system-packages'
-          executable: 'pip3'
-        when:
-          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
-
-  tags:
-    - 'monitoring_plugins'
-
-
-- block:
-
-  - name: 'Check if user {{ monitoring_plugins__icinga_user }} exists'
-    ansible.builtin.getent:
-      database: 'passwd'
-      key: "{{ monitoring_plugins__icinga_user }}"
-    register: '__monitoring_plugins__icinga_user_check'
+  - name: 'Check whether a lockfile exists for the legacy interpreter'
+    ansible.builtin.stat:
+      path: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__legacy_py_tag }}/requirements.txt'
+    delegate_to: 'localhost'
+    become: false
     changed_when: false
-    failed_when: false
+    register: '__monitoring_plugins__legacy_lockfile'
 
   - block:
 
-      - name: '`pip3 install --requirement=/tmp/requirements.txt --user --require-hashes` for user {{ monitoring_plugins__icinga_user }}'
-        ansible.builtin.pip:
-          requirements: '/tmp/requirements.txt'
-          extra_args: '--user --require-hashes'
-          executable: 'pip3'
-        become: true
-        become_user: '{{ monitoring_plugins__icinga_user }}'
+    - name: 'rsync the legacy dependency list to the remote host'
+      ansible.posix.synchronize:
+        src: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__legacy_py_tag }}/requirements.txt'
+        dest: '/tmp/ansible.monitoring-plugins-legacy-requirements.txt'
+        mode: 'push'
 
-    rescue:
+    - name: 'Uninstall the former `pip --user` dependencies from root'
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          command -v pip3 >/dev/null 2>&1 || exit 0
+          pkgs="$(grep -oE '^[A-Za-z0-9][A-Za-z0-9._-]*==' /tmp/ansible.monitoring-plugins-legacy-requirements.txt | sed 's/==$//')"
+          removed=''
+          for pkg in $pkgs; do
+            loc="$(pip3 show "$pkg" 2>/dev/null | awk -F': ' '/^Location:/ {print $2}')"
+            case "$loc" in
+              "$HOME/.local/"*)
+                pip3 uninstall --yes "$pkg" >/dev/null 2>&1 && removed="$removed $pkg"
+                ;;
+            esac
+          done
+          [ -n "$removed" ] && echo "removed:$removed"
+          exit 0
+        executable: '/bin/bash'
+      register: '__monitoring_plugins__legacy_cleanup_root'
+      changed_when: '"removed:" in __monitoring_plugins__legacy_cleanup_root["stdout"]'
 
-      - name: 'Retry pip3 install with --break-system-packages for user {{ monitoring_plugins__icinga_user }}'
-        ansible.builtin.pip:
-          requirements: '/tmp/requirements.txt'
-          extra_args: '--user --require-hashes --break-system-packages'
-          executable: 'pip3'
-        become: true
-        become_user: '{{ monitoring_plugins__icinga_user }}'
-        when:
-          - '"externally-managed-environment" in ansible_failed_result["msg"] or "break-system-packages" in ansible_failed_result["msg"]'
+    - name: 'Check if user {{ monitoring_plugins__icinga_user }} exists'
+      ansible.builtin.getent:
+        database: 'passwd'
+        key: '{{ monitoring_plugins__icinga_user }}'
+      register: '__monitoring_plugins__legacy_icinga_user_check'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Uninstall the former `pip --user` dependencies from {{ monitoring_plugins__icinga_user }}'
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          command -v pip3 >/dev/null 2>&1 || exit 0
+          pkgs="$(grep -oE '^[A-Za-z0-9][A-Za-z0-9._-]*==' /tmp/ansible.monitoring-plugins-legacy-requirements.txt | sed 's/==$//')"
+          removed=''
+          for pkg in $pkgs; do
+            loc="$(pip3 show "$pkg" 2>/dev/null | awk -F': ' '/^Location:/ {print $2}')"
+            case "$loc" in
+              "$HOME/.local/"*)
+                pip3 uninstall --yes "$pkg" >/dev/null 2>&1 && removed="$removed $pkg"
+                ;;
+            esac
+          done
+          [ -n "$removed" ] && echo "removed:$removed"
+          exit 0
+        executable: '/bin/bash'
+      become: true
+      become_user: '{{ monitoring_plugins__icinga_user }}'
+      register: '__monitoring_plugins__legacy_cleanup_icinga'
+      changed_when: '"removed:" in __monitoring_plugins__legacy_cleanup_icinga["stdout"]'
+      when:
+        - '__monitoring_plugins__legacy_icinga_user_check["getent"] is defined'
+        - '__monitoring_plugins__legacy_icinga_user_check["getent"]["passwd"] is defined'
+        - '__monitoring_plugins__legacy_icinga_user_check["getent"]["passwd"][monitoring_plugins__icinga_user] is defined'
 
     when:
-      - '__monitoring_plugins__icinga_user_check is defined'
-      - '__monitoring_plugins__icinga_user_check["getent"] is defined'
-      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"] is defined'
-      - '__monitoring_plugins__icinga_user_check["getent"]["passwd"][monitoring_plugins__icinga_user] is defined'
+      - '__monitoring_plugins__legacy_lockfile["stat"]["exists"] | bool'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+# Provision a suitable Python and build a self-contained venv, mirroring the rpm/deb
+# package. On RHEL 8 the system python3 is 3.6, too old for the plugins, so the role
+# installs python3.9 (package `python39`) and uses it; every other supported platform
+# already ships python3 >= 3.9. Unlike the package (built once per release with pinned
+# dependencies), the source install pulls the newest third-party dependencies from
+# `requirements.in` and deploys the newest Linuxfabrik library straight from GitHub (see
+# below). The plugin code itself follows the `monitoring_plugins__version` ref (`dev` ->
+# main) instead of a frozen release.
+- block:
+
+  - name: 'Install the Python interpreter and venv support for the source install'
+    ansible.builtin.package:
+      name: '{{ __monitoring_plugins__source_python_packages }}'
+      state: 'present'
+    when:
+      - '__monitoring_plugins__source_python_packages | length > 0'
+
+  - name: '{{ __monitoring_plugins__source_python_interpreter }} --version'
+    ansible.builtin.command: '{{ __monitoring_plugins__source_python_interpreter }} --version'
+    register: '__monitoring_plugins__source_python_version_result'
+    changed_when: false
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Make sure the source venv interpreter is Python 3.9 or newer'
+    ansible.builtin.assert:
+      that:
+        - '__monitoring_plugins__source_python_version_result["stdout"].split()[1] is version("3.9", ">=")'
+      fail_msg: >-
+        {{ __monitoring_plugins__source_python_interpreter }} is
+        {{ __monitoring_plugins__source_python_version_result["stdout"].split()[1] }},
+        but the monitoring plugins need Python 3.9 or newer. Install a newer Python
+        and point __monitoring_plugins__source_python_interpreter at it.
 
   tags:
     - 'monitoring_plugins'
@@ -153,6 +210,12 @@
   - name: 'mkdir -p /usr/lib64/nagios/plugins/notifications/'
     ansible.builtin.file:
       path: '/usr/lib64/nagios/plugins/notifications/'
+      state: 'directory'
+      mode: 0o755
+
+  - name: 'mkdir -p /usr/lib64/nagios/plugins/lib/'
+    ansible.builtin.file:
+      path: '/usr/lib64/nagios/plugins/lib/'
       state: 'directory'
       mode: 0o755
 
@@ -168,8 +231,82 @@
       dest: '/usr/lib64/nagios/plugins/notifications/'
       mode: 'push'
 
-  - name: 'restorecon -Fvr /usr/lib64/nagios/plugins/'
-    ansible.builtin.command: 'restorecon -Fvr /usr/lib64/nagios/plugins/'
+  # The Linuxfabrik library is deployed straight from its GitHub repo (not via pip),
+  # into the plugin directory. The plugins import it as `lib.*`, which resolves because a
+  # script's own directory is first on sys.path, so `lib/` next to the plugins wins over
+  # any site-packages copy. Development cruft is left behind via the excludes.
+  - name: 'rsync the Linuxfabrik library from GitHub to /usr/lib64/nagios/plugins/lib/'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.lib-repo/'
+      dest: '/usr/lib64/nagios/plugins/lib/'
+      mode: 'push'
+      delete: true
+      rsync_opts:
+        - '--exclude=.git'
+        - '--exclude=.github'
+        - '--exclude=dist'
+        - '--exclude=lockfiles'
+        - '--exclude=tests'
+        - '--exclude=*.egg-info'
+
+  # linuxfabrik-lib is removed here because the library is deployed from GitHub above; the
+  # rest of `requirements.in` (unpinned) provides the newest third-party dependencies.
+  - name: 'Deploy the venv requirements (requirements.in without linuxfabrik-lib)'
+    ansible.builtin.copy:
+      content: |
+        {{ lookup("ansible.builtin.file", "/tmp/ansible.monitoring-plugins-repo/requirements.in").split("\n")
+           | reject("match", "^linuxfabrik-lib")
+           | join("\n") }}
+      dest: '/tmp/requirements.txt'
+      mode: 0o644
+
+  - name: 'Create the dependency venv and install the newest plugin dependencies into it'
+    ansible.builtin.pip:
+      requirements: '/tmp/requirements.txt'
+      virtualenv: '/usr/lib64/linuxfabrik-monitoring-plugins/venv'
+      virtualenv_command: '{{ __monitoring_plugins__source_python_interpreter }} -m venv'
+
+  # Point every plugin at the venv interpreter so the third-party dependencies resolve no
+  # matter which user runs it. Only the executable plugins in the plugin directory and the
+  # notifications directory are touched, not the imported `lib/` modules or the assets.
+  - name: 'Point the plugin shebangs at the venv interpreter'
+    ansible.builtin.shell:
+      cmd: |
+        set -o pipefail
+        venv_python='/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python'
+        find /usr/lib64/nagios/plugins /usr/lib64/nagios/plugins/notifications -maxdepth 1 -type f | while read -r plugin; do
+          first_line="$(head -1 "$plugin")"
+          case "$first_line" in
+            '#!'*python*)
+              if [ "$first_line" != "#!${venv_python}" ]; then
+                sed -i "1s|^#!.*|#!${venv_python}|" "$plugin"
+                echo "$plugin"
+              fi
+              ;;
+          esac
+        done
+      executable: '/bin/bash'
+    register: '__monitoring_plugins__shebang_result'
+    changed_when: '__monitoring_plugins__shebang_result["stdout"] | length > 0'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  # The plugins, the bundled lib and the venv interpreter must be owned by root, not by the
+  # monitoring user. The whitelisted plugins run as root via sudo, so if the monitoring user
+  # owned any of them it could edit a plugin, a lib module or the venv Python and gain
+  # arbitrary root code execution. The monitoring user only needs to traverse, read and
+  # execute, which the 0755/0644 modes already grant.
+  - name: 'chown --recursive --changes root the plugins and the venv'
+    ansible.builtin.command: 'chown --recursive --changes root:root /usr/lib64/nagios/plugins /usr/lib64/linuxfabrik-monitoring-plugins'
+    register: '__monitoring_plugins__chown_result'
+    changed_when: '__monitoring_plugins__chown_result["stdout"] | length > 0'
+
+  - name: 'restorecon -Fvr the plugins and the venv'
+    ansible.builtin.command: 'restorecon -Fvr /usr/lib64/nagios/plugins/ /usr/lib64/linuxfabrik-monitoring-plugins/'
     register: '__monitoring_plugins__restorecon_result'
     changed_when:
       - '__monitoring_plugins__restorecon_result["stdout"] | length > 0'

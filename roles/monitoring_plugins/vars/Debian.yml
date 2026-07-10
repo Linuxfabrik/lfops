@@ -1,4 +1,9 @@
 __monitoring_plugins__icinga_user: 'nagios'
 __monitoring_plugins__package_version_separator: '='
+# Debian/Ubuntu ship python3 >= 3.9, but ensurepip lives in a separate package,
+# so `python3 -m venv` needs python3-venv to bootstrap pip.
+__monitoring_plugins__source_python_interpreter: 'python3'
+__monitoring_plugins__source_python_packages:
+  - 'python3-venv'
 __monitoring_plugins__versionlock_lock_command: 'apt-mark hold'
 __monitoring_plugins__versionlock_unlock_command: 'apt-mark unhold'

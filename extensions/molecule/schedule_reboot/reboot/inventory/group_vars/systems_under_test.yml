@@ -1,0 +1,13 @@
+# Same inputs as the no_reboot sub-scenario.
+mailto_root__from: 'root@localhost'
+mailto_root__to:
+  - 'root@localhost'
+
+postfix__relayhost: 'mail.example.com'
+
+schedule_reboot__reboot_time__group_var: '03:00'
+
+# reboot immediately on --now: this scenario asserts the reboot via a boot_id change
+# after wait_for_connection, so the default grace sleep would keep the host up past
+# the reconnect and make the check flap. The grace period itself is not under test here.
+schedule_reboot__reboot_grace_period: 0
