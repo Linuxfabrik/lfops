@@ -9,4 +9,6 @@
     - '{{ shared__remove_rpmnew_rpmsave_config_file }}.ucf-dist'
   loop_control:
     loop_var: 'file_path'
-  when: 'lfops__remove_rpmnew_rpmsave | d(false)'
+  # `| bool` is required: `--extra-vars 'lfops__remove_rpmnew_rpmsave=false'` passes the string
+  # "false", which is truthy on its own and would delete the files despite the opt-out.
+  when: 'lfops__remove_rpmnew_rpmsave | d(false) | bool'
