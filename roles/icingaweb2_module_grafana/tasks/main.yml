@@ -96,7 +96,7 @@
       owner: 'apache'
       group: 'icingaweb2'
       mode: 0o644
-    when: 'icingaweb2_module_grafana__auth_jwt'
+    when: 'icingaweb2_module_grafana__auth_jwt | bool'
 
   tags:
     - 'icingaweb2_module_grafana'

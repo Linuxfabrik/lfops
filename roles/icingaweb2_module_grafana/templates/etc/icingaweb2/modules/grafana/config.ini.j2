@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2026032601
+; 2026071001
 
 [grafana]
 accessmode = "iframe"
@@ -18,7 +18,7 @@ timerangeAll = "1w/w"
 ssl_verifypeer = "0"
 ssl_verifyhost = "0"
 dashboardlink = "0"
-{% if icingaweb2_module_grafana__auth_jwt %}
+{% if icingaweb2_module_grafana__auth_jwt | bool %}
 jwtEnable = "1"
 jwtUser = "grafana-admin"
 jwtIssuer = "{{ icingaweb2_module_grafana__url }}"
