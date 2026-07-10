@@ -8,7 +8,7 @@
     # ignore errors if the service does not exist
     failed_when: 'kdump__service_enabled_result["failed"] is defined and kdump__service_enabled_result["failed"] and not "Could not find the requested service" in kdump__service_enabled_result["msg"]'
 
-  - name: "systemctl: kdump state = {{ kdump__service_state }}"
+  - name: 'systemctl {{ kdump__service_state | regex_replace("p?ed$", "") }} kdump.service'
     ansible.builtin.service:
       name: 'kdump'
       state: "{{ kdump__service_state }}"

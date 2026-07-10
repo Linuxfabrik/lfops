@@ -105,7 +105,7 @@
     loop_control:
       label: '{{ item["name"] }}.service - enabled: {{ item["enabled"] | d(true) }}'
 
-  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}.service'
+  - name: 'systemctl {{ (item["state"] | d("started")) | regex_replace("p?ed$", "") }} {{ item["name"] }}.service'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.service'
       state: '{{ item["state"] | d("started") }}'
@@ -125,7 +125,7 @@
     loop_control:
       label: '{{ item["name"] }}.timer - enabled: {{ item["enabled"] | d(true) }}'
 
-  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}.timer'
+  - name: 'systemctl {{ (item["state"] | d("started")) | regex_replace("p?ed$", "") }} {{ item["name"] }}.timer'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.timer'
       state: '{{ item["state"] | d("started") }}'
@@ -145,7 +145,7 @@
     loop_control:
       label: '{{ item["name"] }}.mount - enabled: {{ item["enabled"] | d(true) }}'
 
-  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}.mount'
+  - name: 'systemctl {{ (item["state"] | d("started")) | regex_replace("p?ed$", "") }} {{ item["name"] }}.mount'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.mount'
       state: '{{ item["state"] | d("started") }}'

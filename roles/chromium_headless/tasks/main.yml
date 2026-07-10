@@ -135,7 +135,7 @@
       name: 'chromium-headless-proxy.socket'
       enabled: '{{ chromium_headless__service_enabled | bool }}'
 
-  - name: 'systemctl {{ chromium_headless__service_state }} chromium-headless-proxy.socket'
+  - name: 'systemctl {{ chromium_headless__service_state | regex_replace("p?ed$", "") }} chromium-headless-proxy.socket'
     ansible.builtin.service:
       name: 'chromium-headless-proxy.socket'
       state: '{{ chromium_headless__service_state }}'

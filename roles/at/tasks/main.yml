@@ -13,7 +13,7 @@
       name: 'atd.service'
       enabled: '{{ at__service_enabled | bool }}'
 
-  - name: 'systemctl {{ at__service_state }} atd.service'
+  - name: 'systemctl {{ at__service_state | regex_replace("p?ed$", "") }} atd.service'
     ansible.builtin.service:
       name: 'atd.service'
       state: '{{ at__service_state }}'
