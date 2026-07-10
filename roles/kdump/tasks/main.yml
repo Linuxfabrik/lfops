@@ -1,20 +1,20 @@
 - block:
 
-  - name: "systemctl: kdump enabled = {{ kdump__service_enabled }}"
+  - name: 'systemctl {{ kdump__service_enabled | bool | ternary("enable", "disable") }} kdump.service'
     ansible.builtin.service:
       name: 'kdump'
-      enabled: "{{ kdump__service_enabled }}"
-    register: 'kdump__service_enabled_result'
+      enabled: '{{ kdump__service_enabled }}'
+    register: '__kdump__service_enabled_result'
     # ignore errors if the service does not exist
-    failed_when: 'kdump__service_enabled_result["failed"] is defined and kdump__service_enabled_result["failed"] and not "Could not find the requested service" in kdump__service_enabled_result["msg"]'
+    failed_when: '__kdump__service_enabled_result["failed"] is defined and __kdump__service_enabled_result["failed"] and not "Could not find the requested service" in __kdump__service_enabled_result["msg"]'
 
   - name: 'systemctl {{ kdump__service_state | regex_replace("p?ed$", "") }} kdump.service'
     ansible.builtin.service:
       name: 'kdump'
-      state: "{{ kdump__service_state }}"
-    register: 'kdump__service_state_result'
+      state: '{{ kdump__service_state }}'
+    register: '__kdump__service_state_result'
     # ignore errors if the service does not exist
-    failed_when: 'kdump__service_state_result["failed"] is defined and kdump__service_state_result["failed"] and not "Could not find the requested service" in kdump__service_state_result["msg"]'
+    failed_when: '__kdump__service_state_result["failed"] is defined and __kdump__service_state_result["failed"] and not "Could not find the requested service" in __kdump__service_state_result["msg"]'
 
   tags:
     - 'kdump'
