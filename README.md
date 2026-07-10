@@ -363,6 +363,26 @@ This variable is used as the default across all `repo_*` roles if it is set. Can
 lfops__repo_mirror_url: 'https://mirror.example.com'
 ```
 
+#### `lfops__skip_restart_handlers`
+
+Set this to `true` to deploy configuration changes without restarting the affected services. Every role's restart handler is skipped, so a config change is written to disk but the running process keeps its old configuration. Reload handlers are not affected, because a reload applies the new configuration without an outage.
+
+```bash
+ansible-playbook linuxfabrik.lfops.nextcloud --limit myhost \
+  --extra-vars='lfops__skip_restart_handlers=true'
+```
+
+**The skipped restart is not remembered.** A later ordinary run finds the configuration files already correct, notifies nothing, and therefore does not restart either. The service keeps running its old configuration until you restart it explicitly. Do that by setting the role's service state variable for one run:
+
+```bash
+ansible-playbook linuxfabrik.lfops.nextcloud --limit myhost \
+  --tags nextcloud:state --extra-vars='nextcloud__service_state=restarted'
+```
+
+Some roles restart a service and then talk to it in the same run, for example `keycloak` (provisions the bootstrap admin), `influxdb` (creates users and databases) and `opensearch` (runs `securityadmin.sh`). Do not use this variable during an initial installation of those roles.
+
+The `icingadb` role restarts `icinga2`, which it does not own. A restart deferred there cannot be flushed through `icingadb`; use the `icinga2_master` role instead (`--tags icinga2_master:state --extra-vars='icinga2_master__service_state=restarted'`).
+
 ### Bitwarden Integration
 
 LFOps includes a Bitwarden lookup plugin that fetches secrets from your vault (and creates items if they do not exist). Requires the [bw CLI](https://bitwarden.com/help/article/cli/) version v2022.9.0+.

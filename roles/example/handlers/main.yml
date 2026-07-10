@@ -6,7 +6,11 @@
   changed_when: false # no config change
   notify: 'example: restart example'
 
-# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# skip restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers), if
+# the service was just started (redundant), or if the user wants it stopped.
+# `| bool` is mandatory on the flag: `--extra-vars 'lfops__skip_restart_handlers=false'` passes
+# the string "false", which is truthy on its own. Only restart handlers carry the flag, never
+# reload handlers, because a reload applies the config without an outage.
 # __example__service_state_result is registered on a dedicated state-only task (not the enabled task),
 # so that enabled-only changes don't prevent the restart.
 # `is not defined` covers a run that skips the state block (`--skip-tags example:state`), where
@@ -19,6 +23,7 @@
     name: 'example'
     state: 'restarted'
   when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__example__service_state_result is not defined or __example__service_state_result is not changed'
     - 'example__service_state != "stopped"'
 

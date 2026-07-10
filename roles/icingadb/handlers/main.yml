@@ -9,14 +9,19 @@
   notify: 'icingadb: restart icinga2'
 
 # icinga2 is owned by the icinga2_master / icinga2_agent roles, not by this one, so there is no
-# state task here whose result could tell us whether icinga2 was just started. Left unguarded on
-# purpose.
+# state task here whose result could tell us whether icinga2 was just started. Only
+# lfops__skip_restart_handlers applies; the redundant-restart and stopped guards cannot be
+# expressed here. Note that a restart deferred via that flag cannot be flushed through this role
+# either, since icinga2 is not its service: use the icinga2_master role for that.
 - name: 'icingadb: restart icinga2'
   ansible.builtin.service:
     name: 'icinga2'
     state: 'restarted'
+  when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
 
-# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# skip restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers), if
+# the service was just started (redundant), or if the user wants it stopped.
 # __icingadb__service_state_result is registered on a dedicated state-only task (not the enabled
 # task), so that enabled-only changes don't prevent the restart.
 # `is not defined` covers a run that skips the state block (`--skip-tags icingadb`), where the
@@ -26,5 +31,6 @@
     name: 'icingadb'
     state: 'restarted'
   when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__icingadb__service_state_result is not defined or __icingadb__service_state_result is not changed'
     - 'icingadb__service_state != "stopped"'

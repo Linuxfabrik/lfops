@@ -1,4 +1,5 @@
-# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# skip restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers), if
+# the service was just started (redundant), or if the user wants it stopped.
 # __opensearch__service_state_result is registered on a dedicated state-only task (not the enabled
 # task), so that enabled-only changes don't prevent the restart.
 # `is not defined` covers a run that skips the state block (`--skip-tags opensearch:state`), where
@@ -8,6 +9,7 @@
     name: 'opensearch'
     state: 'restarted'
   when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__opensearch__service_state_result is not defined or __opensearch__service_state_result is not changed'
     - 'opensearch__service_state != "stopped"'
 

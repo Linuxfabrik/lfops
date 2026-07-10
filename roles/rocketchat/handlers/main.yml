@@ -1,4 +1,5 @@
-# skip the restart if the user wants the container stopped.
+# skip the restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers) or
+# if the user wants the container stopped.
 # The `is not changed` half of the usual guard is not expressible here: the container service is
 # managed by the podman_containers role via rocketchat__podman_containers__containers__dependent_var,
 # so this role has no state task of its own whose result could tell us whether the service was
@@ -11,4 +12,5 @@
   become: true
   become_user: 'rocketchat'
   when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - 'rocketchat__container_state != "stopped"'

@@ -1,4 +1,5 @@
-# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# skip restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers), if
+# the service was just started (redundant), or if the user wants it stopped.
 # __clamav__<unit>_service_state_result is registered on a dedicated state-only task (not the
 # enabled task), so that enabled-only changes don't prevent the restart. The state variables
 # default to `stopped` whenever the matching `_service_enabled` is false, so these guards also
@@ -10,6 +11,7 @@
     name: '{{ __clamav__clamd_service }}'
     state: 'restarted'
   when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__clamav__clamd_service_state_result is not defined or __clamav__clamd_service_state_result is not changed'
     - 'clamav__clamd_service_state != "stopped"'
 
@@ -18,5 +20,6 @@
     name: 'clamav-clamonacc'
     state: 'restarted'
   when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__clamav__clamonacc_service_state_result is not defined or __clamav__clamonacc_service_state_result is not changed'
     - 'clamav__clamonacc_service_state != "stopped"'

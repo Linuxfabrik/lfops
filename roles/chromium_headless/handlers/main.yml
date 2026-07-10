@@ -4,6 +4,7 @@
 # Chromium process keep going with the old settings until the next idle timeout, and
 # the next socket-activation cycle re-spawns them with the updated unit files.
 #
+# lfops__skip_restart_handlers lets the operator defer the restart LFOps-wide.
 # `is not defined` covers the `--tags chromium_headless:configure` run, where the state
 # block is skipped and __chromium_headless__service_state_result is never registered.
 # `is not changed` covers the normal flow: skip the restart if the state task just
@@ -13,5 +14,6 @@
     name: 'chromium-headless-proxy.socket'
     state: 'restarted'
   when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__chromium_headless__service_state_result is not defined or __chromium_headless__service_state_result is not changed'
     - 'chromium_headless__service_state != "stopped"'
