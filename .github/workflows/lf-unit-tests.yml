@@ -34,15 +34,29 @@ jobs:
       - name: 'Checkout repository'
         uses: 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0' # v7.0.0
 
-      - name: 'Set up Python'
+      # The interpreter tox builds the test env for. Its absolute path is
+      # handed to tox via `--discover` below, so this step does not rely on
+      # the executable staying on PATH once the next step runs.
+      - name: 'Set up the target Python ${{ matrix.python-version }}'
+        id: 'target-python'
         uses: 'actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1' # v6.3.0
         with:
           python-version: '${{ matrix.python-version }}'
 
+      # The interpreter tox itself runs under. Pinned to one version so that
+      # a single hash-pinned requirements file covers the whole matrix:
+      # tox cannot be resolved for 3.9 and 3.10+ at once, because virtualenv
+      # requires `filelock >= 3.24.2` from 3.10 on and no filelock that new
+      # supports 3.9. Listed last, so `python` and `pip` refer to it.
+      - name: 'Set up the Python that runs tox'
+        uses: 'actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1' # v6.3.0
+        with:
+          python-version: '3.13'
+
       - name: 'Install tox'
-        run: 'pip install tox'
+        run: 'pip install --require-hashes --requirement .github/tox/requirements.txt'
 
       - name: 'Run tox for this Python (all matching ansible-core envs)'
         # `-f pyXYZ` selects every tox env carrying this Python's factor,
         # e.g. py311 -> py311-ansible215/216/217/218.
-        run: 'tox -f py$(echo "${{ matrix.python-version }}" | tr -d ".")'
+        run: 'tox --discover "${{ steps.target-python.outputs.python-path }}" -f "py$(echo "${{ matrix.python-version }}" | tr -d ".")"'
