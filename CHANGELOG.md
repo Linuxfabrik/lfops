@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:duplicity**: Add Debian and Ubuntu support (proven on Debian 12, Debian 13, Ubuntu 22.04, Ubuntu 24.04 and Ubuntu 26.04). The role now installs the `gnupg` package itself, so backups also work on minimal installs that ship without `gpg`.
+* **role:python_venv**: Add an optional per-venv `pip_constraints` key that pins transitive dependencies through a pip constraints file, without having to list them as direct packages.
 * **role:opensearch**: Add `opensearch__path_repo` to register file system paths as `path.repo` in `opensearch.yml`, required for file system based snapshot repositories.
 * **role:nextcloud**: Add `nextcloud__jobs_timeout_start_sec` to configure the start-up timeout of the `nextcloud-jobs.service`. Defaults to `10m`. Raise it on instances where background jobs regularly need longer than 10 minutes.
 * **role:icinga2_agent, role:icinga2_master**: Deploy a systemd drop-in override ensuring the Icinga 2 service starts after SSSD on hosts where SSSD is installed.
@@ -39,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:duplicity**: Validate the role variables at start, and align the task tags with the LFOps vocabulary. The `duplicity:script` tag is gone (the `duba` script now deploys under `duplicity:configure`), and the new `duplicity:dump` tag manages the backup schedule.
 * **role:schedule_reboot**: Hosts without an explicit reboot window no longer all reboot at exactly 04:00. Each host is now assigned a deterministic minute within the 04:00-04:59 window (staggered by hostname), so a fleet does not reboot in lockstep. Pin `schedule_reboot__reboot_time__group_var` (or the `__host_var`) to a fixed time to keep a specific window.
 * **role:monitoring_plugins**: A source install now deploys the plugins into a self-contained Python virtual environment and provisions a suitable Python by itself, so it works on RHEL 8 (where the system Python 3.6 is too old) without any manual Python setup. The Linuxfabrik library (an independent project) is deployed newest straight from GitHub and the third-party dependencies are installed unpinned, so a source install always tracks the newest code for the selected `monitoring_plugins__version`. The dependencies the former source install placed into the home directories of root and the icinga user (`pip --user`) are cleaned up on the next run.
 * **role:icinga2_agent**: The `icinga2_agent:update` tag now refreshes the apt cache before the upgrade on Debian-family hosts, so it reliably installs the latest package (e.g. to roll out security updates) instead of running against a stale cache. RHEL-family hosts are unaffected, since dnf refreshes its metadata on its own.
@@ -49,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:duplicity**: Swift backups now work out of the box on Python 3.10 and newer (all supported RHEL, Debian and Ubuntu releases). The role pins a modern `oslo.*` stack in the venv, which fixes the `collections.Mapping` crash (the previously required manual workaround is gone) and drops the deprecated, source-only `netifaces` dependency. As a result the role no longer installs a C compiler (`gcc`) or development headers on backup hosts: the build toolchain is gone from production machines, which is a significant reduction of the attack surface.
 * **role:keycloak**: Keycloak is no longer restarted a second time right after it was started on a fresh install, and a configuration change no longer starts the service on hosts that pin `keycloak__state` to `stopped`.
 * **role:nextcloud**: Set the `text workspace_available` app config key as `boolean` instead of `string`. Newer Nextcloud enforces the config lexicon - the text app declares the key as `ValueType::BOOL`
 * **role:php**: The `php:update` tag now refreshes the apt cache before the upgrade on Debian-family hosts, so it reliably installs the latest packages (e.g. to roll out security updates) instead of running against a stale cache. RHEL-family hosts are unaffected, since dnf refreshes its metadata on its own.

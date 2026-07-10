@@ -5,6 +5,17 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Install required packages'
+    ansible.builtin.package:
+      name: '{{ __duplicity__required_packages }}'
+      state: 'present'
+
   - name: 'mkdir /etc/duba'
     ansible.builtin.file:
       path: '/etc/duba'
@@ -19,7 +30,7 @@
 
 - block:
 
-  - name: 'Combined Paths:'
+  - name: 'Combined Paths'
     ansible.builtin.debug:
       var: 'duplicity__backup_sources__combined_var'
 
@@ -37,11 +48,6 @@
       content: '{{ duplicity__gpg_encrypt_master_key_block }}'
       mode: 0o600
     changed_when: false
-
-  - name: 'gpg --import /tmp/public-master-key'
-    ansible.builtin.command: 'gpg --import /tmp/public-master-key'
-    register: 'duplicity__gpg_import_result'
-    changed_when: '"not changed" not in duplicity__gpg_import_result.stderr'
 
   - name: 'gpg --import /tmp/public-master-key'
     ansible.builtin.command: 'gpg --import /tmp/public-master-key'
@@ -66,6 +72,8 @@
       backup: true
       src: 'etc/duba/duba.json.j2'
       dest: '/etc/duba/duba.json'
+      owner: 'root'
+      group: 'root'
       mode: 0o600 # file contains secrets
 
   - name: 'Deploy /etc/systemd/system/duba.service'
@@ -77,6 +85,31 @@
       group: 'root'
       mode: 0o644
 
+  - name: 'Deploy /usr/local/bin/duba'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/bin/duba.j2'
+      dest: '/usr/local/bin/duba'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/logrotate.d/duplicity'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/logrotate.d/duplicity.j2'
+      dest: '/etc/logrotate.d/duplicity'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'duplicity'
+    - 'duplicity:configure'
+
+
+- block:
+
   - name: 'Deploy /etc/systemd/system/duba.timer'
     ansible.builtin.template:
       backup: true
@@ -87,33 +120,10 @@
       mode: 0o644
     register: 'duplicity__systemd_duba_timer_result'
 
-  - name: 'Deploy /etc/logrotate.d/duplicity'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/logrotate.d/duplicity.j2'
-      dest: '/etc/logrotate.d/duplicity'
-      owner: 'root'
-      mode: 0o644
-
   tags:
     - 'duplicity'
     - 'duplicity:configure'
-
-
-- block:
-
-  - name: 'Deploy /usr/local/bin/duba'
-    ansible.builtin.template:
-      backup: true
-      src: 'usr/local/bin/duba.j2'
-      dest: '/usr/local/bin/duba'
-      owner: 'root'
-      mode: 0o755
-
-  tags:
-    - 'duplicity'
-    - 'duplicity:configure'
-    - 'duplicity:script'
+    - 'duplicity:dump'
 
 
 - block:
@@ -122,9 +132,10 @@
     ansible.builtin.systemd:
       name: 'duba.timer'
       state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
-      enabled: '{{ duplicity__timer_enabled }}'
+      enabled: '{{ duplicity__timer_enabled | bool }}'
       daemon_reload: '{{ duplicity__systemd_duba_timer_result | d({}) is changed }}'
 
   tags:
     - 'duplicity'
+    - 'duplicity:dump'
     - 'duplicity:state'
