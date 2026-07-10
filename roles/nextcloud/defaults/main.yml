@@ -50,7 +50,7 @@ nextcloud__app_configs__role_var:
     value: 'powered by Linuxfabrik GmbH, Zürich'
     state: 'present'
   - key: 'theming url'
-    value: 'https:\/\/ws.linuxfabrik.io'
+    value: 'https:\/\/www.linuxfabrik.ch'
     state: 'present'
 nextcloud__app_configs__combined_var: '{{ (
       nextcloud__app_configs__role_var +
