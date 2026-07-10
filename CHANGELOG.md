@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:freeipa_server**: The `pki-tomcatd` start-up timeout configured via `freeipa_server__systemd_timeoutstartsec` is now actually in effect. Previously it was written to the systemd override only, without reloading systemd, while FreeIPA itself kept waiting just 90 seconds for Dogtag. On slow machines this made `ipactl start`, server upgrades and CA certificate renewals fail with a timeout even though the CA was still coming up. The role now applies the same value to systemd and to FreeIPA.
 * **role:duplicity**: Swift backups now work out of the box on Python 3.10 and newer (all supported RHEL, Debian and Ubuntu releases). The role pins a modern `oslo.*` stack in the venv, which fixes the `collections.Mapping` crash (the previously required manual workaround is gone) and drops the deprecated, source-only `netifaces` dependency. As a result the role no longer installs a C compiler (`gcc`) or development headers on backup hosts: the build toolchain is gone from production machines, which is a significant reduction of the attack surface.
 * **role:keycloak**: Keycloak is no longer restarted a second time right after it was started on a fresh install, and a configuration change no longer starts the service on hosts that pin `keycloak__state` to `stopped`.
 * **role:nextcloud**: Set the `text workspace_available` app config key as `boolean` instead of `string`. Newer Nextcloud enforces the config lexicon - the text app declares the key as `ValueType::BOOL`

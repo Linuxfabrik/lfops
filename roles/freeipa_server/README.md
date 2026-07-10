@@ -75,8 +75,8 @@ Manual steps:
 
 `freeipa_server:systemd_override`
 
-* Deploys `/etc/systemd/system/pki-tomcatd@.service.d/override.conf`.
-* Triggers: none.
+* Deploys `/etc/systemd/system/pki-tomcatd@.service.d/override.conf` and sets the matching `startup_timeout` in `/etc/ipa/default.conf`.
+* Triggers: `systemctl daemon-reload`.
 
 `freeipa_server:users`
 
@@ -499,7 +499,7 @@ freeipa_server__ipa_admin_password: 'linuxfabrik'
 
 `freeipa_server__systemd_timeoutstartsec`
 
-* The `TimeoutStartSec` value for the `pki-tomcatd@.service` systemd override.
+* The start-up timeout for `pki-tomcatd`, in seconds. Sets both `TimeoutStartSec` in the `pki-tomcatd@.service` systemd override and `startup_timeout` in `/etc/ipa/default.conf`, so that systemd and FreeIPA wait equally long for Dogtag to come up. Raise it on slow machines, where the FreeIPA built-in default of 90 seconds is not enough and `ipactl start` reports that the CA did not start.
 * Type: Number.
 * Default: `300`
 

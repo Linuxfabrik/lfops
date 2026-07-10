@@ -44,12 +44,38 @@
     ansible.builtin.file:
       path: '/etc/systemd/system/pki-tomcatd@.service.d'
       state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
 
   - name: 'deploy /etc/systemd/system/pki-tomcatd@.service.d/override.conf'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/pki-tomcatd@.service.d/override.conf.j2'
       dest: '/etc/systemd/system/pki-tomcatd@.service.d/override.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'freeipa_server: systemctl daemon-reload'
+
+  # The installer writes its own drop-in to
+  # /etc/systemd/system/pki-tomcatd@pki-tomcat.service.d/ipa.conf. We do not touch it: systemd
+  # sorts drop-ins by file name across all *.d directories, so "override.conf" is applied after
+  # "ipa.conf" and wins, even though "ipa.conf" sits in the more specific instance directory.
+  #
+  # FreeIPA keeps its own copy of the timeout in /etc/ipa/default.conf and uses it whenever it
+  # waits for pki-tomcatd to come up (ipactl, Dogtag install and upgrade, ipa-cacert-manage).
+  # If that value stays at the built-in default of 90 seconds, FreeIPA gives up on a slow
+  # starting Dogtag long before systemd would, so both have to carry the same value. The file
+  # cannot be deployed beforehand, because ipa-server-install rewrites it from scratch.
+  - name: 'set startup_timeout in /etc/ipa/default.conf'
+    community.general.ini_file:
+      backup: true
+      create: false # ipa-server-install has to have written the file already
+      path: '/etc/ipa/default.conf'
+      section: 'global'
+      option: 'startup_timeout'
+      value: '{{ freeipa_server__systemd_timeoutstartsec }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
