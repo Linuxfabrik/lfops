@@ -62,11 +62,16 @@
 
 - block:
 
-  - name: 'systemctl {{ bind__named_service_enabled | bool | ternary("enable", "disable") }} --now named.service'
+  - name: 'systemctl {{ bind__named_service_enabled | bool | ternary("enable", "disable") }} named.service'
     ansible.builtin.systemd:
       name: 'named.service'
       enabled: '{{ bind__named_service_enabled }}'
-      state: '{{ bind__named_service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ bind__named_service_state | regex_replace("p?ed$", "") }} named.service'
+    ansible.builtin.systemd:
+      name: 'named.service'
+      state: '{{ bind__named_service_state }}'
+    register: '__bind__named_service_state_result'
 
   tags:
     - 'bind'

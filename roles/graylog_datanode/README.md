@@ -126,9 +126,15 @@ graylog_datanode__password_secret: 'Linuxfabrik_GmbH'
 
 `graylog_datanode__service_enabled`
 
-* Enables or disables the graylog-datanode service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the graylog-datanode service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`graylog_datanode__service_state`
+
+* Changes the state of the graylog-datanode service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `graylog_datanode__service_enabled` is `true`, else `'stopped'`
 
 Example:
 ```yaml
@@ -145,6 +151,7 @@ graylog_datanode__path_repos:
 graylog_datanode__raw: |-
   insecure_startup = false
 graylog_datanode__service_enabled: true
+graylog_datanode__service_state: 'started'
 ```
 
 

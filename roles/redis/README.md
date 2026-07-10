@@ -36,9 +36,15 @@ This role is compatible with the following Redis versions:
 
 `redis__service_enabled`
 
-* Enables or disables the redis service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the redis service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`redis__service_state`
+
+* Changes the state of the redis service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `redis__service_enabled` is `true`, else `'stopped'`
 
 `redis__service_limit_nofile`
 
@@ -64,6 +70,7 @@ Example:
 # optional
 redis__service_enabled: true
 redis__service_limit_nofile: 10240
+redis__service_state: 'started'
 redis__service_timeout_start_sec: 5
 redis__service_timeout_stop_sec: 5
 ```

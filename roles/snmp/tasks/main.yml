@@ -31,11 +31,16 @@
 
 - block:
 
-  - name: 'systemctl {{ snmp__snmpd_service_enabled | bool | ternary("enable", "disable") }} --now snmpd'
+  - name: 'systemctl {{ snmp__snmpd_service_enabled | bool | ternary("enable", "disable") }} snmpd'
     ansible.builtin.service:
       name: 'snmpd'
       enabled: '{{ snmp__snmpd_service_enabled }}'
-      state: '{{ snmp__snmpd_service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ snmp__snmpd_service_state | regex_replace("p?ed$", "") }} snmpd'
+    ansible.builtin.service:
+      name: 'snmpd'
+      state: '{{ snmp__snmpd_service_state }}'
+    register: '__snmp__snmpd_service_state_result'
 
   tags:
     - 'snmp'

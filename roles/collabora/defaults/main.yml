@@ -111,4 +111,5 @@ collabora__language_packages__combined_var: '{{ (
   }}'
 
 collabora__service_enabled: true
+collabora__service_state: '{{ collabora__service_enabled | bool | ternary("started", "stopped") }}'
 collabora__use_code: true

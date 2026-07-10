@@ -1,9 +1,15 @@
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __mongodb__service_state_result is registered on a dedicated state-only task (not the enabled
+# task), so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags mongodb:state`), where
+# the result is never registered.
 - name: 'mongodb: systemctl restart mongod.service'
   ansible.builtin.systemd:
     name: 'mongod.service'
     state: 'restarted'
   when:
-    - 'mongodb__service_state_result is not changed'
+    - '__mongodb__service_state_result is not defined or __mongodb__service_state_result is not changed'
+    - 'mongodb__service_state != "stopped"'
     - 'mongodb__repl_set_name is not defined'
 
 - name: 'mongodb: manually execute systemctl restart mongod.service'
@@ -11,5 +17,6 @@
     msg: 'The variable "mongodb_replSetName" is set! Please restart your MongoDB instances manually...'
   listen: 'mongodb: systemctl restart mongod.service'
   when:
-    - 'mongodb__service_state_result is not changed'
+    - '__mongodb__service_state_result is not defined or __mongodb__service_state_result is not changed'
+    - 'mongodb__service_state != "stopped"'
     - 'mongodb__repl_set_name is defined and mongodb__repl_set_name | length > 0'

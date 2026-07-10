@@ -26,6 +26,7 @@ icinga2_master__influxdb_ssl_enable: false
 icinga2_master__node_role: 'primary'
 icinga2_master__primary_port: 5665
 icinga2_master__service_enabled: true
+icinga2_master__service_state: '{{ icinga2_master__service_enabled | bool | ternary("started", "stopped") }}'
 
 # -----------------------------------------------------------------------------
 

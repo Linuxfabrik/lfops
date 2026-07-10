@@ -325,7 +325,7 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\
 
 `apache_tomcat__service_enabled`
 
-* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
 
@@ -333,7 +333,7 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\
 
 * Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options: `reloaded`, `restarted`, `started`, `stopped`.
 * Type: String.
-* Default: `'started'`
+* Default: `'started'` if `apache_tomcat__service_enabled` is `true`, else `'stopped'`
 
 `apache_tomcat__skip_admin_webapps`
 

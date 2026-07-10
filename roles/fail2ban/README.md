@@ -112,9 +112,15 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `fail2ban__service_enabled`
 
-* Enables or disables the fail2ban service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the fail2ban service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`fail2ban__service_state`
+
+* Changes the state of the fail2ban service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `fail2ban__service_enabled` is `true`, else `'stopped'`
 
 Example:
 ```yaml
@@ -149,6 +155,7 @@ fail2ban__jails__host_var:
       maxretry = 600
       port     = http,https
 fail2ban__service_enabled: true
+fail2ban__service_state: 'started'
 ```
 
 

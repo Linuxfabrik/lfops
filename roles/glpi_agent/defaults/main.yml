@@ -1,4 +1,5 @@
 glpi_agent__conf_local: '/tmp'
 glpi_agent__conf_no_ssl_check: false
 glpi_agent__service_enabled: true
+glpi_agent__service_state: '{{ glpi_agent__service_enabled | bool | ternary("started", "stopped") }}'
 glpi_agent__version: 'latest'

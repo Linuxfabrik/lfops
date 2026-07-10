@@ -208,9 +208,15 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 
 `collabora__service_enabled`
 
-* Enables or disables the coolwsd service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the coolwsd service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`collabora__service_state`
+
+* Changes the state of the coolwsd service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `collabora__service_enabled` is `true`, else `'stopped'`
 
 `collabora__use_code`
 
@@ -268,6 +274,7 @@ collabora__language_packages__host_var:
   - name: 'mythes-es'
 collabora__logrotate: 7
 collabora__service_enabled: true
+collabora__service_state: 'started'
 collabora__use_code: false
 ```
 

@@ -427,9 +427,15 @@ Only optional if `opensearch__plugins_security_disabled` is `true`.
 
 `opensearch__service_enabled`
 
-* Enables or disables the OpenSearch service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the OpenSearch service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`opensearch__service_state`
+
+* Changes the state of the OpenSearch service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `opensearch__service_enabled` is `true`, else `'stopped'`
 
 `opensearch__version__host_var` / `opensearch__version__group_var`
 

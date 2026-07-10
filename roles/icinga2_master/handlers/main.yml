@@ -8,7 +8,15 @@
   changed_when: true # must report changed so the chained restart handler is triggered
   notify: 'icinga2_master: restart icinga2'
 
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __icinga2_master__service_state_result is registered on a dedicated state-only task (not the
+# enabled task), so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags icinga2_master:state`),
+# where the result is never registered.
 - name: 'icinga2_master: restart icinga2'
   ansible.builtin.service:
     name: 'icinga2'
     state: 'restarted'
+  when:
+    - '__icinga2_master__service_state_result is not defined or __icinga2_master__service_state_result is not changed'
+    - 'icinga2_master__service_state != "stopped"'

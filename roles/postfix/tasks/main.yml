@@ -105,10 +105,11 @@
 
 - block:
 
-  - name: 'systemctl {{ postfix__service_state[:-2] }} postfix.service'
+  - name: 'systemctl {{ postfix__service_state | regex_replace("p?ed$", "") }} postfix.service'
     ansible.builtin.systemd:
       name: 'postfix.service'
       state: '{{ postfix__service_state }}'
+    register: '__postfix__service_state_result'
 
   - name: 'systemctl {{ postfix__service_enabled | bool | ternary("enable", "disable") }} postfix.service'
     ansible.builtin.systemd:

@@ -96,11 +96,16 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/icingadb/config.yml'
 
-  - name: 'systemctl {{ icingadb__service_enabled | bool | ternary("enable", "disable") }} --now icingadb.service'
+  - name: 'systemctl {{ icingadb__service_enabled | bool | ternary("enable", "disable") }} icingadb.service'
     ansible.builtin.systemd:
       name: 'icingadb.service'
       enabled: '{{ icingadb__service_enabled }}'
-      state: '{{ icingadb__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ icingadb__service_state | regex_replace("p?ed$", "") }} icingadb.service'
+    ansible.builtin.systemd:
+      name: 'icingadb.service'
+      state: '{{ icingadb__service_state }}'
+    register: '__icingadb__service_state_result'
 
   tags:
     - 'icingadb'

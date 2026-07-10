@@ -8,7 +8,7 @@
       owner: 'rocketchat'
       group: 'rocketchat'
       mode: 0o600
-    notify: 'systemctl --user restart rocketchat-container.service'
+    notify: 'rocketchat: systemctl --user restart rocketchat-container.service'
 
   tags:
     - 'rocketchat'

@@ -1,6 +1,12 @@
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __elasticsearch__service_state_result is registered on a dedicated state-only task (not the
+# enabled task), so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags elasticsearch:state`),
+# where the result is never registered.
 - name: 'elasticsearch: restart elasticsearch'
   ansible.builtin.service:
     name: 'elasticsearch'
     state: 'restarted'
   when:
+    - '__elasticsearch__service_state_result is not defined or __elasticsearch__service_state_result is not changed'
     - 'elasticsearch__service_state != "stopped"'

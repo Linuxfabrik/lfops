@@ -36,11 +36,16 @@
 
 - block:
 
-  - name: 'systemctl {{ squid__service_enabled | bool | ternary("enable", "disable") }} --now squid.service'
+  - name: 'systemctl {{ squid__service_enabled | bool | ternary("enable", "disable") }} squid.service'
     ansible.builtin.systemd:
       name: 'squid.service'
       enabled: '{{ squid__service_enabled }}'
-      state: '{{ squid__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ squid__service_state | regex_replace("p?ed$", "") }} squid.service'
+    ansible.builtin.systemd:
+      name: 'squid.service'
+      state: '{{ squid__service_state }}'
+    register: '__squid__service_state_result'
 
   tags:
     - 'squid'

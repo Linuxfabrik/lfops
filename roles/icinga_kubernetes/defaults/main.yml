@@ -17,6 +17,7 @@ icinga_kubernetes__database_host: '127.0.0.1'
 icinga_kubernetes__database_login_host: '127.0.0.1'
 icinga_kubernetes__database_name: 'icinga_kubernetes'
 icinga_kubernetes__service_enabled: true
+icinga_kubernetes__service_state: '{{ icinga_kubernetes__service_enabled | bool | ternary("started", "stopped") }}'
 
 # -----------------------------------------------------------------------------
 

@@ -59,6 +59,7 @@ opensearch__plugins_security_nodes_dns: []
 opensearch__plugins_security_transport_enforce_hostname_verification: true
 opensearch__plugins_security_transport_resolve_hostname: true
 opensearch__service_enabled: true
+opensearch__service_state: '{{ opensearch__service_enabled | bool | ternary("started", "stopped") }}'
 
 opensearch__version__dependent_var: ''
 opensearch__version__group_var: ''

@@ -183,11 +183,16 @@
 
 - block:
 
-  - name: 'systemctl {{ apache_tomcat__service_enabled | bool | ternary("enable", "disable") }} --now tomcat.service'
+  - name: 'systemctl {{ apache_tomcat__service_enabled | bool | ternary("enable", "disable") }} tomcat.service'
     ansible.builtin.systemd:
       name: 'tomcat.service'
       enabled: '{{ apache_tomcat__service_enabled }}'
-      state: '{{ apache_tomcat__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ apache_tomcat__service_state | regex_replace("p?ed$", "") }} tomcat.service'
+    ansible.builtin.systemd:
+      name: 'tomcat.service'
+      state: '{{ apache_tomcat__service_state }}'
+    register: '__apache_tomcat__service_state_result'
 
   tags:
     - 'apache_tomcat'

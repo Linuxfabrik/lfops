@@ -152,12 +152,16 @@
     when:
       - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora" and ansible_facts["distribution_major_version"] | int >= 9'
 
-  - name: 'systemctl {{ grafana__service_enabled | bool | ternary("enable", "disable") }} --now grafana-server.service'
+  - name: 'systemctl {{ grafana__service_enabled | bool | ternary("enable", "disable") }} grafana-server.service'
     ansible.builtin.systemd:
       name: 'grafana-server.service'
       enabled: '{{ grafana__service_enabled }}'
-      state: '{{ grafana__service_enabled | bool | ternary("started", "stopped") }}'
-    register: 'grafana__systemctl_result'
+
+  - name: 'systemctl {{ grafana__service_state | regex_replace("p?ed$", "") }} grafana-server.service'
+    ansible.builtin.systemd:
+      name: 'grafana-server.service'
+      state: '{{ grafana__service_state }}'
+    register: '__grafana__service_state_result'
 
   tags:
     - 'grafana'
@@ -170,7 +174,7 @@
   - name: 'wait 10 seconds for grafana to start'
     ansible.builtin.pause:
       seconds: 10
-    when: 'grafana__systemctl_result["changed"] | bool'
+    when: '__grafana__service_state_result["changed"] | bool'
 
   - name: 'set the password for admin'
     ansible.builtin.command: "grafana cli admin reset-admin-password '{{ grafana__admin_login[\"password\"] }}'"

@@ -26,11 +26,16 @@
 
 - block:
 
-  - name: 'systemctl {{ chrony__service_enabled | bool | ternary("enable", "disable") }} --now chronyd.service'
+  - name: 'systemctl {{ chrony__service_enabled | bool | ternary("enable", "disable") }} chronyd.service'
     ansible.builtin.systemd:
       name: 'chronyd.service'
       enabled: '{{ chrony__service_enabled }}'
-      state: '{{ chrony__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ chrony__service_state | regex_replace("p?ed$", "") }} chronyd.service'
+    ansible.builtin.systemd:
+      name: 'chronyd.service'
+      state: '{{ chrony__service_state }}'
+    register: '__chrony__service_state_result'
 
   tags:
     - 'chrony'

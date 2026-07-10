@@ -1,3 +1,8 @@
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __squid__service_state_result is registered on a dedicated state-only task (not the enabled
+# task), so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags squid:state`), where
+# the result is never registered.
 - name: 'squid: squid -k parse # and then restart' # noqa no-changed-when no config change
   ansible.builtin.command: 'squid -k parse'
   notify:
@@ -7,3 +12,6 @@
   ansible.builtin.service:
     state: 'restarted'
     name: 'squid'
+  when:
+    - '__squid__service_state_result is not defined or __squid__service_state_result is not changed'
+    - 'squid__service_state != "stopped"'

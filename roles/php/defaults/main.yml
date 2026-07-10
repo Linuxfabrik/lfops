@@ -91,6 +91,7 @@ php__fpm_pool_conf_request_terminate_timeout__combined_var: '{{
   }}'
 
 php__fpm_service_enabled: true
+php__fpm_service_state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
 
 php__ini_date_timezone__dependent_var: ''
 php__ini_date_timezone__group_var: ''

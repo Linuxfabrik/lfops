@@ -82,9 +82,15 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `php__fpm_service_enabled`
 
-* Enables or disables the php-fpm service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the php-fpm service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`php__fpm_service_state`
+
+* Changes the state of the php-fpm service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `php__fpm_service_enabled` is `true`, else `'stopped'`
 
 `php__fpm_pools__host_var` / `php__fpm_pools__group_var`
 
@@ -145,6 +151,7 @@ Example:
 ```yaml
 # optional
 php__fpm_service_enabled: true
+php__fpm_service_state: 'started'
 php__fpm_pools__host_var:
   - name: 'librenms'
     user: 'librenms'

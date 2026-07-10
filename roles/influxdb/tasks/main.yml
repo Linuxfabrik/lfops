@@ -54,12 +54,16 @@
 
 - block:
 
-  - name: 'systemctl {{ influxdb__service_enabled | bool | ternary("enable", "disable") }} --now influxdb.service'
+  - name: 'systemctl {{ influxdb__service_enabled | bool | ternary("enable", "disable") }} influxdb.service'
     ansible.builtin.systemd:
       name: 'influxdb.service'
       enabled: '{{ influxdb__service_enabled }}'
-      state: '{{ influxdb__service_enabled | bool | ternary("started", "stopped") }}'
-    register: 'influxdb__systemctl_result'
+
+  - name: 'systemctl {{ influxdb__service_state | regex_replace("p?ed$", "") }} influxdb.service'
+    ansible.builtin.systemd:
+      name: 'influxdb.service'
+      state: '{{ influxdb__service_state }}'
+    register: '__influxdb__service_state_result'
 
   tags:
     - 'influxdb'
@@ -71,7 +75,7 @@
   - name: 'wait 5 seconds for influxdb to start'
     ansible.builtin.pause:
       seconds: 5
-    when: 'influxdb__systemctl_result["changed"] | d(false) | bool'
+    when: '__influxdb__service_state_result["changed"] | d(false) | bool'
 
   - block:
 

@@ -109,10 +109,11 @@
       name: '{{ postgresql_server__service_name }}'
       enabled: '{{ postgresql_server__enabled }}'
 
-  - name: 'systemctl {{ postgresql_server__state[:-2] }} {{ postgresql_server__service_name }}'
+  - name: 'systemctl {{ postgresql_server__state | regex_replace("p?ed$", "") }} {{ postgresql_server__service_name }}'
     ansible.builtin.service:
       name: '{{ postgresql_server__service_name }}'
       state: '{{ postgresql_server__state }}'
+    register: '__postgresql_server__service_state_result'
 
   tags:
     - 'postgresql_server'

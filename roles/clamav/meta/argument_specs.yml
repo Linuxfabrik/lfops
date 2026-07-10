@@ -10,6 +10,17 @@ argument_specs:
           Enable / disable the clamd daemon (required for on-access and
           full scans).
 
+      clamav__clamd_service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          Changes the state of the clamd service.
+
       clamav__clamdscan_on_calendar:
         type: 'str'
         required: false
@@ -37,6 +48,17 @@ argument_specs:
         default: false
         description: >-
           Enable / disable on-access scanning.
+
+      clamav__clamonacc_service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          Changes the state of the on-access scanning service.
 
       clamav__freshclam_private_mirror:
         type: 'list'

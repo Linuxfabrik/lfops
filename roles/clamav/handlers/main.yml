@@ -1,13 +1,22 @@
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __clamav__<unit>_service_state_result is registered on a dedicated state-only task (not the
+# enabled task), so that enabled-only changes don't prevent the restart. The state variables
+# default to `stopped` whenever the matching `_service_enabled` is false, so these guards also
+# subsume the enablement check they replace.
+# `is not defined` covers a run that skips the state block (`--skip-tags clamav:state`), where
+# the results are never registered.
 - name: 'clamav: restart clamd'
   ansible.builtin.service:
     name: '{{ __clamav__clamd_service }}'
     state: 'restarted'
   when:
-    - 'clamav__clamd_service_enabled'
+    - '__clamav__clamd_service_state_result is not defined or __clamav__clamd_service_state_result is not changed'
+    - 'clamav__clamd_service_state != "stopped"'
 
 - name: 'clamav: restart clamav-clamonacc'
   ansible.builtin.service:
     name: 'clamav-clamonacc'
     state: 'restarted'
   when:
-    - 'clamav__clamonacc_service_enabled'
+    - '__clamav__clamonacc_service_state_result is not defined or __clamav__clamonacc_service_state_result is not changed'
+    - 'clamav__clamonacc_service_state != "stopped"'

@@ -178,11 +178,16 @@
 
 - block:
 
-  - name: 'systemctl {{ opensearch__service_enabled | bool | ternary("enable", "disable") }} --now opensearch.service'
+  - name: 'systemctl {{ opensearch__service_enabled | bool | ternary("enable", "disable") }} opensearch.service'
     ansible.builtin.service:
       name: 'opensearch.service'
       enabled: '{{ opensearch__service_enabled }}'
-      state: '{{ opensearch__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ opensearch__service_state | regex_replace("p?ed$", "") }} opensearch.service'
+    ansible.builtin.service:
+      name: 'opensearch.service'
+      state: '{{ opensearch__service_state }}'
+    register: '__opensearch__service_state_result'
 
   tags:
     - 'opensearch'

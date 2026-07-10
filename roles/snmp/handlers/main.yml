@@ -1,4 +1,12 @@
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __snmp__snmpd_service_state_result is registered on a dedicated state-only task (not the enabled
+# task), so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags snmp:state`), where
+# the result is never registered.
 - name: 'snmp: restart snmpd'
   ansible.builtin.service:
     state: 'restarted'
     name: 'snmpd'
+  when:
+    - '__snmp__snmpd_service_state_result is not defined or __snmp__snmpd_service_state_result is not changed'
+    - 'snmp__snmpd_service_state != "stopped"'

@@ -3,7 +3,15 @@
   notify:
     - 'sshd: reload sshd'
 
+# skip reload if the service was just started (redundant) or if the user wants it stopped.
+# __sshd__service_state_result is registered on a dedicated state-only task (not the enabled
+# task), so that enabled-only changes don't prevent the reload.
+# `is not defined` covers a run that skips the state block (`--skip-tags sshd:state`), where
+# the result is never registered.
 - name: 'sshd: reload sshd'
   ansible.builtin.service:
     name: '{{ __sshd__service_name }}'
     state: 'reloaded'
+  when:
+    - '__sshd__service_state_result is not defined or __sshd__service_state_result is not changed'
+    - 'sshd__service_state != "stopped"'

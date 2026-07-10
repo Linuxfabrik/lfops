@@ -1,3 +1,8 @@
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __logstash__service_state_result is registered on a dedicated state-only task (not the enabled
+# task), so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags logstash:state`), where
+# the result is never registered.
 - name: 'logstash: validate config and reload logstash' # noqa: no-changed-when - we need the task to always be changed, else the reload handler won't be triggered
   ansible.builtin.command: '/usr/share/logstash/bin/logstash --config.test_and_exit --path.settings /etc/logstash'
   become_user: 'logstash'
@@ -10,6 +15,7 @@
     name: 'logstash'
     state: 'reloaded'
   when:
+    - '__logstash__service_state_result is not defined or __logstash__service_state_result is not changed'
     - 'logstash__service_state != "stopped"'
 
 - name: 'logstash: restart logstash'
@@ -17,4 +23,5 @@
     name: 'logstash'
     state: 'restarted'
   when:
+    - '__logstash__service_state_result is not defined or __logstash__service_state_result is not changed'
     - 'logstash__service_state != "stopped"'

@@ -55,6 +55,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: Bool.
 * Default: `true`
 
+`clamav__clamd_service_state`
+
+* Changes the state of the clamd service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `clamav__clamd_service_enabled` is `true`, else `'stopped'`
+
 `clamav__clamdscan_on_calendar`
 
 * When the full-scan should be run. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
@@ -78,6 +84,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Enables or disables the on-access scanning service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `false`
+
+`clamav__clamonacc_service_state`
+
+* Changes the state of the on-access scanning service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `clamav__clamonacc_service_enabled` is `true`, else `'stopped'`
 
 `clamav__freshclam_private_mirror`
 

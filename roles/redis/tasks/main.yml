@@ -59,12 +59,17 @@
 
 - block:
 
-  - name: 'systemctl {{ redis__service_enabled | bool | ternary("enable", "disable") }} --now {{ redis__service_name }}'
+  - name: 'systemctl {{ redis__service_enabled | bool | ternary("enable", "disable") }} {{ redis__service_name }}'
     ansible.builtin.systemd:
       name: '{{ redis__service_name }}'
       enabled: '{{ redis__service_enabled }}'
-      state: '{{ redis__service_enabled | bool | ternary("started", "stopped") }}'
       daemon_reload: true
+
+  - name: 'systemctl {{ redis__service_state | regex_replace("p?ed$", "") }} {{ redis__service_name }}'
+    ansible.builtin.systemd:
+      name: '{{ redis__service_name }}'
+      state: '{{ redis__service_state }}'
+    register: '__redis__service_state_result'
 
   tags:
     - 'redis'

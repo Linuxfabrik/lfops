@@ -100,11 +100,16 @@
 
 - block:
 
-  - name: 'systemctl {{ collabora__service_enabled | bool | ternary("enable", "disable") }} --now coolwsd.service'
+  - name: 'systemctl {{ collabora__service_enabled | bool | ternary("enable", "disable") }} coolwsd.service'
     ansible.builtin.systemd:
       name: 'coolwsd.service'
       enabled: '{{ collabora__service_enabled }}'
-      state: '{{ collabora__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ collabora__service_state | regex_replace("p?ed$", "") }} coolwsd.service'
+    ansible.builtin.systemd:
+      name: 'coolwsd.service'
+      state: '{{ collabora__service_state }}'
+    register: '__collabora__service_state_result'
 
   tags:
     - 'collabora'

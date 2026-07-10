@@ -162,11 +162,17 @@
 # Manage Systemd start and enable
 - block:
 
-  - name: 'Ensure that httpd service is in a desired state'
+  - name: 'systemctl {{ apache_httpd__systemd_enabled | bool | ternary("enable", "disable") }} {{ apache_httpd__service_name }}'
     ansible.builtin.systemd:
       name: '{{ apache_httpd__service_name }}'
       enabled: '{{ apache_httpd__systemd_enabled }}'
+    ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
+
+  - name: 'systemctl {{ apache_httpd__systemd_state | regex_replace("p?ed$", "") }} {{ apache_httpd__service_name }}'
+    ansible.builtin.systemd:
+      name: '{{ apache_httpd__service_name }}'
       state: '{{ apache_httpd__systemd_state }}'
+    register: '__apache_httpd__service_state_result'
     ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
 
   tags:

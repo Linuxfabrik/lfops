@@ -81,9 +81,15 @@ coturn__static_auth_secret: 'egi7eesa9eik4kae9ov9quohpheequ9XighaivobuThoo7ooKuo
 
 `coturn__service_enabled`
 
-* Enables or disables the coturn service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the coturn service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`coturn__service_state`
+
+* Changes the state of the coturn service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `coturn__service_enabled` is `true`, else `'stopped'`
 
 `coturn__state_nonce`
 
@@ -100,6 +106,7 @@ coturn__listening_port: 3478
 coturn__max_port: 65535
 coturn__min_port: 49152
 coturn__service_enabled: true
+coturn__service_state: 'started'
 coturn__state_nonce: 0
 ```
 

@@ -130,12 +130,6 @@
     when:
       - 'blocky__systemd_service_template_result is changed'
 
-  - name: 'systemctl {{ blocky__service_enabled | bool | ternary("enable", "disable") }} --now blocky.service'
-    ansible.builtin.systemd:
-      name: 'blocky.service'
-      enabled: '{{ blocky__service_enabled }}'
-      state: '{{ blocky__service_enabled | bool | ternary("started", "stopped") }}'
-
   tags:
     - 'blocky'
     - 'blocky:state'
@@ -157,3 +151,23 @@
   tags:
     - 'blocky'
     - 'blocky:configure'
+
+
+# runs last, after /etc/blocky/config.yml above, so that a fresh installation starts blocky with
+# the deployed configuration and the restart handler can skip the redundant bounce.
+- block:
+
+  - name: 'systemctl {{ blocky__service_enabled | bool | ternary("enable", "disable") }} blocky.service'
+    ansible.builtin.systemd:
+      name: 'blocky.service'
+      enabled: '{{ blocky__service_enabled }}'
+
+  - name: 'systemctl {{ blocky__service_state | regex_replace("p?ed$", "") }} blocky.service'
+    ansible.builtin.systemd:
+      name: 'blocky.service'
+      state: '{{ blocky__service_state }}'
+    register: '__blocky__service_state_result'
+
+  tags:
+    - 'blocky'
+    - 'blocky:state'

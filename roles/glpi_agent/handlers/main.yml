@@ -1,4 +1,12 @@
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __glpi_agent__service_state_result is registered on a dedicated state-only task (not the enabled
+# task), so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags glpi_agent:state`), where
+# the result is never registered.
 - name: 'glpi_agent: restart glpi-agent'
   ansible.builtin.service:
     name: 'glpi-agent'
     state: 'restarted'
+  when:
+    - '__glpi_agent__service_state_result is not defined or __glpi_agent__service_state_result is not changed'
+    - 'glpi_agent__service_state != "stopped"'

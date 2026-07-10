@@ -103,9 +103,15 @@ keepalived__virtual_ipaddress: '192.0.2.1'
 
 `keepalived__service_enabled`
 
-* Enables or disables the keepalived service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the keepalived service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`keepalived__service_state`
+
+* Changes the state of the keepalived service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `keepalived__service_enabled` is `true`, else `'stopped'`
 
 `keepalived__smtp_server`
 
@@ -126,6 +132,7 @@ keepalived__instance_id: 1
 keepalived__interface: 'eth'
 keepalived__notification_email_from: 'root@server.loc'
 keepalived__service_enabled: true
+keepalived__service_state: 'started'
 keepalived__smtp_server: 'smtp.example.com'
 keepalived__virtual_router_id: 1
 ```

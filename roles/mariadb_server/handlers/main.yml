@@ -1,9 +1,16 @@
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __mariadb_server__service_state_result is registered on a dedicated state-only task (not the
+# enabled task), so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags mariadb_server:state`),
+# where the result is never registered.
 - name: 'mariadb_server: systemctl restart mariadb'
   ansible.builtin.service:
     name: 'mariadb.service'
     state: 'restarted'
   notify: 'mariadb_server: wait for port 3306 (for galera cluster)'
   when:
+    - '__mariadb_server__service_state_result is not defined or __mariadb_server__service_state_result is not changed'
+    - 'mariadb_server__state != "stopped"'
     - 'mariadb_server__run_galera_new_cluster is false'
 
 - name: 'mariadb_server: wait for port 3306 (for galera cluster)'

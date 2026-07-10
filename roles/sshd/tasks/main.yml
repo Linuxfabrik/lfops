@@ -66,10 +66,11 @@
       name: '{{ __sshd__service_name }}.service'
       enabled: '{{ sshd__service_enabled }}'
 
-  - name: 'systemctl: {{ __sshd__service_name }} state = {{ sshd__service_state }}'
+  - name: 'systemctl {{ sshd__service_state | regex_replace("p?ed$", "") }} {{ __sshd__service_name }}.service'
     ansible.builtin.systemd:
       name: '{{ __sshd__service_name }}.service'
       state: '{{ sshd__service_state }}'
+    register: '__sshd__service_state_result'
 
   tags:
     - 'sshd'

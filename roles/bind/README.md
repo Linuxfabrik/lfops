@@ -192,9 +192,15 @@ bind__zones:
 
 `bind__named_service_enabled`
 
-* Enables or disables the named service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the named service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`bind__named_service_state`
+
+* Changes the state of the named service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `bind__named_service_enabled` is `true`, else `'stopped'`
 
 `bind__recursion`
 
@@ -234,6 +240,7 @@ bind__named_conf_raw: |-
       inet * port 953 allow { localhost; 192.0.2.3; 127.0.0.1; } keys { "rndc-key"; "rndc-key-192.0.2.3"; };
   };
 bind__named_service_enabled: true
+bind__named_service_state: 'started'
 bind__recursion: false
 bind__rpz_zone: 'rpz'
 bind__zones:

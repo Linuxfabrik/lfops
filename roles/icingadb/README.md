@@ -128,9 +128,15 @@ icingadb__database_login:
 
 `icingadb__service_enabled`
 
-* Enables or disables the IcingaDB service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the IcingaDB service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`icingadb__service_state`
+
+* Changes the state of the IcingaDB service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `icingadb__service_enabled` is `true`, else `'stopped'`
 
 Example:
 ```yaml
@@ -147,6 +153,7 @@ icingadb__redis_port: 6379
 icingadb__redis_tls: true
 icingadb__retention_history_days: 360
 icingadb__service_enabled: true
+icingadb__service_state: 'started'
 ```
 
 

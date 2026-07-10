@@ -41,11 +41,16 @@
   - name: 'Flush handlers'
     ansible.builtin.meta: 'flush_handlers'
 
-  - name: 'systemctl {{ icinga_kubernetes__service_enabled | bool | ternary("enable", "disable") }} --now icinga-kubernetes.service'
+  - name: 'systemctl {{ icinga_kubernetes__service_enabled | bool | ternary("enable", "disable") }} icinga-kubernetes.service'
     ansible.builtin.systemd:
       name: 'icinga-kubernetes.service'
       enabled: '{{ icinga_kubernetes__service_enabled }}'
-      state: '{{ icinga_kubernetes__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ icinga_kubernetes__service_state | regex_replace("p?ed$", "") }} icinga-kubernetes.service'
+    ansible.builtin.systemd:
+      name: 'icinga-kubernetes.service'
+      state: '{{ icinga_kubernetes__service_state }}'
+    register: '__icinga_kubernetes__service_state_result'
 
   tags:
     - 'icinga_kubernetes'

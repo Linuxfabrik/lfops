@@ -230,11 +230,16 @@
 
 - block:
 
-  - name: 'systemctl {{ icinga2_master__service_enabled | bool | ternary("enable", "disable") }} --now icinga2.service'
+  - name: 'systemctl {{ icinga2_master__service_enabled | bool | ternary("enable", "disable") }} icinga2.service'
     ansible.builtin.systemd:
       name: 'icinga2.service'
       enabled: '{{ icinga2_master__service_enabled }}'
-      state: '{{ icinga2_master__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ icinga2_master__service_state | regex_replace("p?ed$", "") }} icinga2.service'
+    ansible.builtin.systemd:
+      name: 'icinga2.service'
+      state: '{{ icinga2_master__service_state }}'
+    register: '__icinga2_master__service_state_result'
 
   tags:
     - 'icinga2_master'

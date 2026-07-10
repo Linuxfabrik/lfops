@@ -174,11 +174,16 @@
 
 - block:
 
-  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now {{ php__fpm_service_name }}'
+  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} {{ php__fpm_service_name }}'
     ansible.builtin.service:
       name: '{{ php__fpm_service_name }}'
       enabled: '{{ php__fpm_service_enabled }}'
-      state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ php__fpm_service_state | regex_replace("p?ed$", "") }} {{ php__fpm_service_name }}'
+    ansible.builtin.service:
+      name: '{{ php__fpm_service_name }}'
+      state: '{{ php__fpm_service_state }}'
+    register: '__php__fpm_service_state_result'
 
   tags:
     - 'php'

@@ -9,12 +9,17 @@
 # skip restart if the service was just started (redundant) or if the user wants it stopped.
 # __example__service_state_result is registered on a dedicated state-only task (not the enabled task),
 # so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags example:state`), where
+# the result is never registered.
+# this guard is only sound because the state task runs after every task that notifies a handler.
+# keep it that way: a state task placed before the config tasks would start the service, report
+# changed, and then suppress the very restart the new config needs.
 - name: 'example: restart example'
   ansible.builtin.service:
     name: 'example'
     state: 'restarted'
   when:
-    - '__example__service_state_result is not changed'
+    - '__example__service_state_result is not defined or __example__service_state_result is not changed'
     - 'example__service_state != "stopped"'
 
 - name: 'example: reload example'
@@ -22,5 +27,5 @@
     name: 'example'
     state: 'reloaded'
   when:
-    - '__example__service_state_result is not changed'
+    - '__example__service_state_result is not defined or __example__service_state_result is not changed'
     - 'example__service_state != "stopped"'

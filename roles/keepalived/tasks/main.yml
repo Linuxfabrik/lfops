@@ -29,11 +29,16 @@
 
 - block:
 
-  - name: 'systemctl {{ keepalived__service_enabled | bool | ternary("enable", "disable") }} --now keepalived.service'
+  - name: 'systemctl {{ keepalived__service_enabled | bool | ternary("enable", "disable") }} keepalived.service'
     ansible.builtin.systemd:
       name: 'keepalived.service'
       enabled: '{{ keepalived__service_enabled }}'
-      state: '{{ keepalived__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ keepalived__service_state | regex_replace("p?ed$", "") }} keepalived.service'
+    ansible.builtin.systemd:
+      name: 'keepalived.service'
+      state: '{{ keepalived__service_state }}'
+    register: '__keepalived__service_state_result'
 
   tags:
     - 'keepalived'

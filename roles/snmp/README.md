@@ -29,9 +29,15 @@
 
 `snmp__snmpd_service_enabled`
 
-* Enables or disables the snmpd service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the snmpd service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`snmp__snmpd_service_state`
+
+* Changes the state of the snmpd service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `snmp__snmpd_service_enabled` is `true`, else `'stopped'`
 
 `snmp__syscontact`
 
@@ -51,6 +57,7 @@ Example:
 # optional
 snmp__rocommunity: 'myreadonlycommunity'
 snmp__snmpd_service_enabled: true
+snmp__snmpd_service_state: 'started'
 snmp__syscontact: 'webmaster@example.com'
 snmp__syslocation: 'Datacenter Zurich'
 ```

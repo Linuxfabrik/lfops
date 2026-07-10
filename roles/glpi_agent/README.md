@@ -68,9 +68,15 @@ glpi_agent__conf_server: 'https://glpi.example.com'
 
 `glpi_agent__service_enabled`
 
-* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`glpi_agent__service_state`
+
+* Changes the state of the GLPI Agent service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `glpi_agent__service_enabled` is `true`, else `'stopped'`
 
 `glpi_agent__version`
 
@@ -85,6 +91,7 @@ glpi_agent__conf_local: '/tmp'
 glpi_agent__conf_no_ssl_check: false
 glpi_agent__conf_ssl_fingerprint: 'sha256$...'
 glpi_agent__service_enabled: true
+glpi_agent__service_state: 'started'
 glpi_agent__version: 'latest'
 ```
 

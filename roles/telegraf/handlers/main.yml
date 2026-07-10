@@ -1,6 +1,12 @@
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __telegraf__service_state_result is registered on a dedicated state-only task (not the enabled
+# task), so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags telegraf:state`), where
+# the result is never registered.
 - name: 'telegraf: systemctl restart telegraf.service'
   ansible.builtin.systemd:
     name: 'telegraf.service'
     state: 'restarted'
   when:
-    - 'telegraf__service_state_result is not changed'
+    - '__telegraf__service_state_result is not defined or __telegraf__service_state_result is not changed'
+    - 'telegraf__service_state != "stopped"'

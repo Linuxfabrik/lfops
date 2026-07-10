@@ -98,11 +98,16 @@
 
 - block:
 
-  - name: 'systemctl {{ graylog_datanode__service_enabled | bool | ternary("enable", "disable") }} --now graylog-datanode.service'
+  - name: 'systemctl {{ graylog_datanode__service_enabled | bool | ternary("enable", "disable") }} graylog-datanode.service'
     ansible.builtin.systemd:
       name: 'graylog-datanode.service'
       enabled: '{{ graylog_datanode__service_enabled }}'
-      state: '{{ graylog_datanode__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ graylog_datanode__service_state | regex_replace("p?ed$", "") }} graylog-datanode.service'
+    ansible.builtin.systemd:
+      name: 'graylog-datanode.service'
+      state: '{{ graylog_datanode__service_state }}'
+    register: '__graylog_datanode__service_state_result'
 
   tags:
     - 'graylog_datanode'

@@ -59,3 +59,4 @@ squid__conf_refresh_pattern:
   - '-i (/cgi-bin/|\?) 0  0%  0'
   - '.    0 20% 4320'
 squid__service_enabled: true
+squid__service_state: '{{ squid__service_enabled | bool | ternary("started", "stopped") }}'

@@ -225,9 +225,15 @@ graylog_server__root_user:
 
 `graylog_server__service_enabled`
 
-* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`graylog_server__service_state`
+
+* Changes the state of the graylog-server service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `graylog_server__service_enabled` is `true`, else `'stopped'`
 
 `graylog_server__stale_leader_timeout_ms`
 

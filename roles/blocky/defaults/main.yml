@@ -1,2 +1,3 @@
 blocky__service_enabled: true
+blocky__service_state: '{{ blocky__service_enabled | bool | ternary("started", "stopped") }}'
 blocky__version: 'latest' # or something like 'v0.24'

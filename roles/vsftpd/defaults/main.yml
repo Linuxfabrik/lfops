@@ -21,6 +21,7 @@ vsftpd__conf_xferlog_std_format: false
 vsftpd__pam_use_sss: false
 vsftpd__pam_use_userdb: false
 vsftpd__service_enabled: true
+vsftpd__service_state: '{{ vsftpd__service_enabled | bool | ternary("started", "stopped") }}'
 
 vsftpd__user_config__dependent_var: []
 vsftpd__user_config__group_var: []

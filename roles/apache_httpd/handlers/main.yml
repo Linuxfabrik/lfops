@@ -1,3 +1,8 @@
+# skip restart if the service was just started (redundant) or if the user wants it stopped.
+# __apache_httpd__service_state_result is registered on a dedicated state-only task (not the
+# enabled task), so that enabled-only changes don't prevent the restart.
+# `is not defined` covers a run that skips the state block (`--skip-tags apache_httpd:state`),
+# where the result is never registered.
 - name: 'apache_httpd: httpd -t; systemctl reload httpd'
   ansible.builtin.command: '{{ apache_httpd__config_test_command }}'
   notify:
@@ -7,6 +12,9 @@
   ansible.builtin.service:
     name: '{{ apache_httpd__service_name }}'
     state: 'reloaded'
+  when:
+    - '__apache_httpd__service_state_result is not defined or __apache_httpd__service_state_result is not changed'
+    - 'apache_httpd__systemd_state != "stopped"'
 
 - name: 'apache_httpd: httpd -t; systemctl restart httpd'
   ansible.builtin.command: '{{ apache_httpd__config_test_command }}'
@@ -17,3 +25,6 @@
   ansible.builtin.service:
     name: '{{ apache_httpd__service_name }}'
     state: 'restarted'
+  when:
+    - '__apache_httpd__service_state_result is not defined or __apache_httpd__service_state_result is not changed'
+    - 'apache_httpd__systemd_state != "stopped"'
