@@ -9,7 +9,7 @@
 <div align="center" id="badges" markdown="1"> <!-- Do not change this line. It is used by .github/workflows/lf-build.yml to strip badges before publishing to Galaxy. -->
 
 ![GitHub Stars](https://img.shields.io/github/stars/linuxfabrik/lfops)
-[![Star History Chart](https://api.star-history.com/svg?repos=Linuxfabrik/lfops&type=Date)](https://star-history.com/#Linuxfabrik/lfops&Date)
+[![Star History Chart](https://api.star-history.com/chart?repos=Linuxfabrik/lfops&type=date&legend=top-left&sealed_token=6SUm1801mnVVflh1FjdwjwI1jTKV5frTQxeT9BI5GQvcCSalOiWVA9ZX6pLrUmxtmvs1v6KGVThzjW1gGciZf7jpiQbS4713HMIMiGkG-9v7I5GQhnnPIw)](https://www.star-history.com/?repos=Linuxfabrik%2Flfops&type=date&legend=top-left)
 ![License](https://img.shields.io/github/license/linuxfabrik/lfops)
 ![Version](https://img.shields.io/github/v/release/linuxfabrik/lfops?sort=semver)
 ![Ansible](https://img.shields.io/badge/ansible--core-≥2.16-EE0000)
