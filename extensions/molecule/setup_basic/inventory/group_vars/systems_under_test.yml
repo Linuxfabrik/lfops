@@ -4,7 +4,15 @@ mailto_root__to:
 
 monitoring_plugins__version: '5.0.0'
 
+postfix__recipient_canonicals__host_var:
+  - pattern: '/^.+@example.com$/'
+    address: 'team@example.com'
+    state: 'present'
 postfix__relayhost: 'mail.example.com'
+postfix__sender_canonicals__host_var:
+  - pattern: '/^.+@example.com$/'
+    address: 'noreply@example.com'
+    state: 'present'
 
 setup_basic__skip_duplicity: true
 setup_basic__skip_repo_icinga: true

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025072401
+# 2026071201
 # note: adapted from /etc/postfix/main.cf.proto as /etc/postfix/main.cf is dynamically generated via debconf
 
 # Global Postfix configuration file. This file lists only a subset
@@ -728,6 +728,7 @@ bounce_queue_lifetime = {{ postfix__bounce_queue_lifetime }}
 mailbox_size_limit = {{ postfix__mailbox_size_limit }}
 maximal_queue_lifetime = {{ postfix__maximal_queue_lifetime }}
 message_size_limit = {{ postfix__message_size_limit }}
+recipient_canonical_maps = regexp:/etc/postfix/recipient_canonical
 sender_canonical_maps = regexp:/etc/postfix/canonical
 smtp_destination_concurrency_limit = {{ postfix__smtp_destination_concurrency_limit }}
 smtp_destination_recipient_limit = {{ postfix__smtp_destination_recipient_limit }}
