@@ -65,6 +65,14 @@
       mode: 0o644
     notify: 'postfix: postmap /etc/postfix/canonical'
 
+  - name: 'Deploy /etc/postfix/recipient_canonical'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/postfix/recipient_canonical.j2'
+      dest: '/etc/postfix/recipient_canonical'
+      mode: 0o644
+    notify: 'postfix: postmap /etc/postfix/recipient_canonical'
+
   - block:
 
     - name: 'Deploy /etc/postfix/sasl_passwd'

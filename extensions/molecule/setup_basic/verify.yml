@@ -36,3 +36,31 @@
       loop: '{{ __molecule__atd_state_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
+
+    - name: 'postconf -h sender_canonical_maps recipient_canonical_maps'
+      ansible.builtin.command: 'postconf -h sender_canonical_maps recipient_canonical_maps'
+      changed_when: false
+      register: '__molecule__postfix_canonical_maps_result'
+
+    - name: 'Assert that postfix loaded the sender and recipient canonical maps'
+      ansible.builtin.assert:
+        that:
+          - '"regexp:/etc/postfix/canonical" in __molecule__postfix_canonical_maps_result["stdout_lines"]'
+          - '"regexp:/etc/postfix/recipient_canonical" in __molecule__postfix_canonical_maps_result["stdout_lines"]'
+
+    - name: 'postmap -q against the sender and recipient canonical tables'
+      ansible.builtin.command: 'postmap -q "user@example.com" regexp:{{ item }}'
+      changed_when: false
+      register: '__molecule__postfix_postmap_query_result'
+      loop:
+        - '/etc/postfix/canonical'
+        - '/etc/postfix/recipient_canonical'
+
+    - name: 'Assert that the canonical rules rewrite addresses as configured'
+      ansible.builtin.assert:
+        that: 'item["stdout"] == __molecule__expected'
+      vars:
+        __molecule__expected: '{{ (item["item"] == "/etc/postfix/canonical") | ternary("noreply@example.com", "team@example.com") }}'
+      loop: '{{ __molecule__postfix_postmap_query_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
