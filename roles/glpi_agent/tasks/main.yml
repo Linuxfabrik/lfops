@@ -76,6 +76,82 @@
 
 - block:
 
+  - name: 'Assert that the database inventory credentials are set'
+    ansible.builtin.assert:
+      that:
+        - 'glpi_agent__database_inventory_credentials | length > 0'
+      fail_msg: 'glpi_agent__database_inventory_credentials must be set when glpi_agent__database_inventory_enabled is true.'
+    when: 'glpi_agent__database_inventory_enabled | bool'
+
+  - name: 'Deploy /etc/glpi-agent/db-inventory.env'
+    ansible.builtin.template:
+      backup: false # contains secrets
+      src: 'etc/glpi-agent/db-inventory.env.j2'
+      dest: '/etc/glpi-agent/db-inventory.env'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600 # contains secrets
+    when: 'glpi_agent__database_inventory_enabled | bool'
+
+  - name: 'Deploy /etc/systemd/system/glpi-agent-database-inventory.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/glpi-agent-database-inventory.service.j2'
+      dest: '/etc/systemd/system/glpi-agent-database-inventory.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when: 'glpi_agent__database_inventory_enabled | bool'
+    notify: 'glpi_agent: systemctl daemon-reload'
+
+  - name: 'Deploy /etc/systemd/system/glpi-agent-database-inventory.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/glpi-agent-database-inventory.timer.j2'
+      dest: '/etc/systemd/system/glpi-agent-database-inventory.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when: 'glpi_agent__database_inventory_enabled | bool'
+    notify: 'glpi_agent: systemctl daemon-reload'
+
+  - name: 'systemctl enable and start glpi-agent-database-inventory.timer'
+    ansible.builtin.systemd:
+      daemon_reload: true
+      enabled: true
+      name: 'glpi-agent-database-inventory.timer'
+      state: 'started'
+    when: 'glpi_agent__database_inventory_enabled | bool'
+
+  - name: 'systemctl stop and disable glpi-agent-database-inventory.timer'
+    ansible.builtin.systemd:
+      enabled: false
+      name: 'glpi-agent-database-inventory.timer'
+      state: 'stopped'
+    register: '__glpi_agent__database_inventory_timer_result'
+    failed_when:
+      - '__glpi_agent__database_inventory_timer_result is failed'
+      - '"Could not find" not in (__glpi_agent__database_inventory_timer_result["msg"] | d(""))'
+    when: 'not (glpi_agent__database_inventory_enabled | bool)'
+
+  - name: 'Remove the database inventory units and environment file'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    loop:
+      - '/etc/glpi-agent/db-inventory.env'
+      - '/etc/systemd/system/glpi-agent-database-inventory.service'
+      - '/etc/systemd/system/glpi-agent-database-inventory.timer'
+    when: 'not (glpi_agent__database_inventory_enabled | bool)'
+    notify: 'glpi_agent: systemctl daemon-reload'
+
+  tags:
+    - 'glpi_agent'
+    - 'glpi_agent:database_inventory'
+
+
+- block:
+
   - name: 'systemctl {{ glpi_agent__service_enabled | bool | ternary("enable", "disable") }} glpi-agent.service'
     ansible.builtin.systemd:
       name: 'glpi-agent.service'

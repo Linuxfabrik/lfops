@@ -1,5 +1,9 @@
 glpi_agent__conf_local: '/tmp'
+glpi_agent__conf_no_category: []
 glpi_agent__conf_no_ssl_check: false
+glpi_agent__database_inventory_credentials: ''
+glpi_agent__database_inventory_enabled: false
+glpi_agent__database_inventory_on_calendar: '*-*-* 00/6:17:00'
 glpi_agent__service_enabled: true
 glpi_agent__service_state: '{{ glpi_agent__service_enabled | bool | ternary("started", "stopped") }}'
 glpi_agent__version: 'latest'

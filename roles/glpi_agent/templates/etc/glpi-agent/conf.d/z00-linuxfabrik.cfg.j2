@@ -1,7 +1,11 @@
 # {{ ansible_managed }}
-# 2024101701
+# 2026071301
 
+{% set glpi_agent__no_category = (glpi_agent__conf_no_category + (['database'] if glpi_agent__database_inventory_enabled | bool else [])) | unique | sort %}
 local = {{ glpi_agent__conf_local }}
+{% if glpi_agent__no_category | length %}
+no-category = {{ glpi_agent__no_category | join(',') }}
+{% endif %}
 no-ssl-check = {{ glpi_agent__conf_no_ssl_check | ternary('1', '0') }}
 server = {{ glpi_agent__conf_server }}
 {% if glpi_agent__conf_ssl_fingerprint is defined and glpi_agent__conf_ssl_fingerprint | length %}
