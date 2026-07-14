@@ -1,4 +1,5 @@
 - import_playbook: 'acme_sh.yml'
+- import_playbook: 'aide.yml'
 - import_playbook: 'alternatives.yml'
 - import_playbook: 'ansible_init.yml'
 - import_playbook: 'apache_httpd.yml'
