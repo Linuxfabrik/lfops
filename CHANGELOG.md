@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:fail2ban**: README documents the `state` subkey of the filter and jail entries as optional (defaults to `present`), notes that `raw` only applies to entries using the `raw` template, and states up front that filters and jails are defined in the inventory.
 * **role:nextcloud**: Adds Debian and Ubuntu support alongside Red Hat-family systems. Package names are verified on Debian 13; the role is marked `(x)` (expected to work, not yet verified end to end) for Debian and Ubuntu in `COMPATIBILITY.md`. SELinux relabeling is now skipped automatically on hosts where SELinux is disabled.
 * **role:apache_solr, role:blocky, role:fail2ban, role:rsyslog**: The service is now started after its configuration has been deployed, not before. On a fresh installation the service therefore comes up with the configuration the role just wrote, instead of starting on the package defaults and being restarted afterwards.
 * **role:duplicity**: Validate the role variables at start, and align the task tags with the LFOps vocabulary. The `duplicity:script` tag is gone (the `duba` script now deploys under `duplicity:configure`), and the new `duplicity:dump` tag manages the backup schedule.

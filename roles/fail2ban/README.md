@@ -2,6 +2,8 @@
 
 This role installs and configures [fail2ban](https://www.fail2ban.org).
 
+Filters and jails are defined in the inventory (`fail2ban__filters__*_var` / `fail2ban__jails__*_var`). Each entry either references one of the templates shipped with the role, or uses the `raw` template to deploy an arbitrary filter or jail definition.
+
 This role provides two additional filters:
 
 * apache-dos: Matches all incoming requests to Apache. Can be used to limit the number of allowed requests per client.
@@ -42,24 +44,25 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Default: `apache-dos`, `portscan`
 * Subkeys:
 
-    * `template`:
-
-        * Mandatory. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban/templates/etc/fail2ban/filter.d), or `raw`.
-        * Type: String.
-
     * `filename`:
 
         * Mandatory. Destination filename in `filter.d/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.
         * Type: String.
 
-    * `state`:
-
-        * Mandatory. State of the filter. Possible options: `absent`, `present`.
-        * Type: String.
-
     * `raw`:
 
-        * Optional. Raw content for the filter.
+        * Optional. Raw content for the filter. Only used if `template` is `raw`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `template`:
+
+        * Mandatory. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban/templates/etc/fail2ban/filter.d), or `raw`.
         * Type: String.
 
 `fail2ban__jail_default_action`
@@ -117,24 +120,25 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Default: `z10-portscan`, `z10-sshd`
 * Subkeys:
 
-    * `template`:
-
-        * Mandatory. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban/templates/etc/fail2ban/jail.d), or `raw`.
-        * Type: String.
-
     * `filename`:
 
         * Mandatory. Destination filename in `jail.d/`, and normally is equal to the name of the source `template` used. Will be suffixed with `.conf`.
         * Type: String.
 
-    * `state`:
-
-        * Mandatory. State of the jail. Possible options: `absent`, `present`.
-        * Type: String.
-
     * `raw`:
 
-        * Optional. Raw content for the jail.
+        * Optional. Raw content for the jail. Only used if `template` is `raw`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+    * `template`:
+
+        * Mandatory. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban/templates/etc/fail2ban/jail.d), or `raw`.
         * Type: String.
 
 `fail2ban__service_enabled`
