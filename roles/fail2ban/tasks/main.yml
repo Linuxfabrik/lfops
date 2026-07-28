@@ -67,7 +67,7 @@
     notify:
       - 'fail2ban: restart fail2ban'
 
-  - name: 'Combined Jails:'
+  - name: 'Combined Jails'
     ansible.builtin.debug:
       var: 'fail2ban__jails__combined_var'
 
