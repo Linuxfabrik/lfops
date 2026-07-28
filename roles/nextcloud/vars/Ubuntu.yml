@@ -1,0 +1,5 @@
+__nextcloud__required_packages:
+  - 'bzip2'
+  - 'jq'
+  - 'ldap-utils'
+  - 'smbclient'

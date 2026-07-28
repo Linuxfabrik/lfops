@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:nextcloud**: Adds Debian and Ubuntu support alongside Red Hat-family systems. Package names are verified on Debian 13; the role is marked `(x)` (expected to work, not yet verified end to end) for Debian and Ubuntu in `COMPATIBILITY.md`. SELinux relabeling is now skipped automatically on hosts where SELinux is disabled.
 * **role:apache_solr, role:blocky, role:fail2ban, role:rsyslog**: The service is now started after its configuration has been deployed, not before. On a fresh installation the service therefore comes up with the configuration the role just wrote, instead of starting on the package defaults and being restarted afterwards.
 * **role:duplicity**: Validate the role variables at start, and align the task tags with the LFOps vocabulary. The `duplicity:script` tag is gone (the `duba` script now deploys under `duplicity:configure`), and the new `duplicity:dump` tag manages the backup schedule.
 * **role:schedule_reboot**: Hosts without an explicit reboot window no longer all reboot at exactly 04:00. Each host is now assigned a deterministic minute within the 04:00-04:59 window (staggered by hostname), so a fleet does not reboot in lockstep. Pin `schedule_reboot__reboot_time__group_var` (or the `__host_var`) to a fixed time to keep a specific window.
@@ -56,6 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: The IMAP PHP extension now installs on current PHP. On PHP 8.4 and newer IMAP was removed from PHP core, so the role installs it from the PECL package instead, where previously the install aborted because the old `php-imap` package no longer exists for that PHP version.
+* **role:php**: Running the role with a specific tag (for example `--tags php:state`) on Debian and Ubuntu no longer fails with an undefined PHP version. Roles that build on php and only restart php-fpm (such as nextcloud) now also work when run with their own tags.
+* **role:nextcloud**: The `nextcloud-ldap-show-remnants` script no longer aborts the `nextcloud:cron` deploy with `'setup_basic__skip_mailto_root' is undefined` when the role runs outside the `setup_basic` playbook (e.g. via `--tags nextcloud:cron` in `setup_nextcloud`). The report recipients now come from the new role variable `nextcloud__mail_recipients` (defaulting to the global `mailto_root__to`); the report is always printed to stdout and additionally mailed when recipients are set.
 * **role:nextcloud**: replace ws.linuxfabrik.io with www.linuxfabrik.ch since ws.linuxfabrik.io is decommissioned.
 * **role:icingaweb2_module_grafana**: `icingaweb2_module_grafana__auth_jwt` now honours a quoted `'false'`. Written as a string instead of a boolean, it enabled JWT authentication in `config.ini` and deployed the private key anyway. Unquoted `true` / `false` behaved correctly before and are unaffected.
 * **role:shared**: `lfops__remove_rpmnew_rpmsave` now honours an explicit opt-out. Deploying with `--extra-vars='lfops__remove_rpmnew_rpmsave=false'` removed the `.rpmnew`, `.rpmsave`, `.dpkg-dist` and `.ucf-dist` files instead of keeping them, because the value arrived as the string `false`, which was treated as true. Leaving the variable unset was, and still is, safe.

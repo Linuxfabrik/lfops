@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026051102
+# 2026052001
 
 set -euo pipefail
 
@@ -11,9 +11,9 @@ error_handler() {
 }
 trap 'error_handler "${LINENO}"' ERR
 
-WEBSERVER_USER="apache"
-WEBSERVER_GROUP="apache"
-PHP_SERVICE_NAME="php-fpm"
+WEBSERVER_USER="{{ __shared__apache_httpd_user }}"
+WEBSERVER_GROUP="{{ __shared__apache_httpd_group }}"
+PHP_SERVICE_NAME="{{ __nextcloud__php_fpm_service_name }}"
 
 NC_DIR="/var/www/html/nextcloud"
 DATA_DIR=$(sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" config:system:get datadirectory)
@@ -84,7 +84,7 @@ else
     echo 'skipping.'
 fi
 
-{% if ansible_os_family == "RedHat" %}
+{% if ansible_facts["os_family"] == "RedHat" %}
 echo
 echo 'setsebool httpd_unified on'
 echo '--------------------------'
@@ -140,7 +140,7 @@ else
     echo 'skipping.'
 fi
 
-{% if ansible_os_family == "RedHat" %}
+{% if ansible_facts["os_family"] == "RedHat" %}
 echo
 echo 'setsebool httpd_unified off'
 echo '---------------------------'
@@ -186,7 +186,7 @@ else
     echo 'skipping.'
 fi
 
-{% if ansible_os_family == "RedHat" %}
+{% if ansible_facts["os_family"] == "RedHat" %}
 echo
 echo "restorecon"
 echo '----------'
