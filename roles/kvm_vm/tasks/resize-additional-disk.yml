@@ -23,12 +23,12 @@
     - '(__kvm_vm__additional_disk_info_result["stdout"] | from_json)["virtual-size"] < kvm_vm__resize_disk_item["size"] | ansible.builtin.human_to_bytes'
 
 - name: >-
-    additional disk {{ kvm_vm__resize_disk_item["name"] }}: virsh blockresize {{ kvm_vm__name }}
+    additional disk {{ kvm_vm__resize_disk_item["name"] }}: virsh --connect {{ kvm_vm__connect_url }} blockresize {{ kvm_vm__name }}
     {{ (kvm_vm__pool_info_result["pools"][kvm_vm__resize_disk_item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ kvm_vm__resize_disk_item["name"] ~ ".qcow2") | quote }}
     {{ kvm_vm__resize_disk_item["size"] }}
   ansible.builtin.command:
     cmd: >-
-      virsh blockresize {{ kvm_vm__name }}
+      virsh --connect {{ kvm_vm__connect_url }} blockresize {{ kvm_vm__name }}
       {{ (kvm_vm__pool_info_result["pools"][kvm_vm__resize_disk_item["pool"] | d(kvm_vm__pool)]["path"] ~ "/" ~ kvm_vm__name ~ "-" ~ kvm_vm__resize_disk_item["name"] ~ ".qcow2") | quote }}
       {{ kvm_vm__resize_disk_item["size"] }}
   when:

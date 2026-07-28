@@ -54,7 +54,8 @@ tags:
 #
 # note: do not forget to update collections in requirements.yml
 dependencies:
-  'ansible.posix': '*' # note: "*" selects the highest version available
+  'ansible.mysql': '*' # note: "*" selects the highest version available
+  'ansible.posix': '*'
   'ansible.utils': '*'
   'ansible.windows': '*'
   'community.crypto': '<3.0.0' # we need python 3.6 support to run against rhel8
@@ -62,7 +63,6 @@ dependencies:
   'community.grafana': '*'
   'community.libvirt': '*'
   'community.mongodb': '*'
-  'community.mysql': '*'
   'community.postgresql': '*'
   'community.windows': '*'
   'fedora.linux_system_roles': '*'

@@ -364,7 +364,7 @@ example__conf_tls_protocols: 'TLSv1.3'
 ```
 
 
-<!-- optional. Reactive Q&A: concrete error messages or symptoms and how to fix them. -->
+<!-- optional. Concrete error messages or symptoms as a bold heading, the fix as bullet(s) below. -->
 ## Troubleshooting
 
 **`example.service` fails to start with `bind: address already in use`**

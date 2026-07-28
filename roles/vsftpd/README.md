@@ -170,11 +170,23 @@ This role installs and configures [vsftpd](https://security.appspot.com/vsftpd.h
 * Type: Bool.
 * Default: `false`
 
+`vsftpd__pam_use_userdb`
+
+* If true, PAM authenticates virtual users against the Berkeley DB `/etc/vsftpd/login.db` via `pam_userdb`, instead of against local users or SSSD. Use in combination with `vsftpd__conf_guest_enable: true`. Mutually exclusive with `vsftpd__pam_use_sss` (takes precedence if both are set). Note: populating `login.db` (e.g. with `db_load` from a `logins.txt`) is not managed by this role.
+* Type: Bool.
+* Default: `false`
+
 `vsftpd__service_enabled`
 
-* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`vsftpd__service_state`
+
+* Changes the state of the vsftpd service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `vsftpd__service_enabled` is `true`, else `'stopped'`
 
 `vsftpd__user_config__host_var` / `vsftpd__user_config__group_var`
 
@@ -234,6 +246,7 @@ vsftpd__conf_virtual_use_local_privs: false
 vsftpd__conf_xferlog_std_format: false
 
 vsftpd__service_enabled: true
+vsftpd__service_state: 'started'
 
 vsftpd__user_config__host_var:
   - name: 'user1@example.com'

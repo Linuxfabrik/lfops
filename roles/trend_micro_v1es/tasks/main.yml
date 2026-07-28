@@ -1,0 +1,198 @@
+# This role is adapted from the Server & Workload Protection (SWP) deployment script,
+# a bash installer generated in the Trend Vision One console. Comments below that refer
+# to "the original script" point to that installer.
+
+- block:
+
+  - name: 'Assert supported architecture'
+    ansible.builtin.assert:
+      that:
+        - "ansible_facts['architecture'] in ['x86_64', 'aarch64']"
+      quiet: true
+      fail_msg: 'Architecture {{ ansible_facts["architecture"] }} is not supported.'
+
+  - name: 'Assert x86_64 scenario IDs are set'
+    ansible.builtin.assert:
+      that:
+        - 'trend_micro_v1es__xbc_installer_x86_64_scenario_ids | d([]) | length > 0'
+      quiet: true
+      fail_msg: 'trend_micro_v1es__xbc_installer_x86_64_scenario_ids must be set on an x86_64 host.'
+    when: "ansible_facts['architecture'] == 'x86_64'"
+
+  - name: 'Assert aarch64 scenario IDs are set'
+    ansible.builtin.assert:
+      that:
+        - 'trend_micro_v1es__xbc_installer_aarch64_scenario_ids | d([]) | length > 0'
+      quiet: true
+      fail_msg: 'trend_micro_v1es__xbc_installer_aarch64_scenario_ids must be set on an aarch64 host.'
+    when: "ansible_facts['architecture'] == 'aarch64'"
+
+  - name: 'stat /tmp'
+    ansible.builtin.stat:
+      path: '/tmp'
+    register: '__trend_micro_v1es__tmp_stat'
+
+  - name: 'Assert /tmp is writable'
+    ansible.builtin.assert:
+      that:
+        - '__trend_micro_v1es__tmp_stat["stat"]["writeable"]'
+      quiet: true
+      fail_msg: '/tmp is not writable. Please check the permissions of /tmp.'
+
+  # ds_agent enforces this minimum during its own pre-check
+  - name: 'Assert at least 2 GB of RAM (Server & Workload Protection requirement)'
+    ansible.builtin.assert:
+      that:
+        - 'ansible_facts["memtotal_mb"] | int >= 2048'
+      quiet: true
+      fail_msg: >-
+        Server & Workload Protection requires at least 2 GB of RAM;
+        this host has {{ ansible_facts["memtotal_mb"] }} MB. ds_agent will not install.
+
+  # gate the install/activate pipeline on the two artifacts the agents create once they
+  # are registered: .identity for the Endpoint Sensor (XDR/EDR), ds_agent.crt for SWP.
+  # the pipeline runs when either is missing, so a partial or removed install self-heals,
+  # and is skipped (idempotent) once both are present.
+  - name: 'stat /opt/TrendMicro/EndpointBasecamp/etc/.identity # Endpoint Sensor (XDR/EDR) registration'
+    ansible.builtin.stat:
+      path: '/opt/TrendMicro/EndpointBasecamp/etc/.identity'
+    register: '__trend_micro_v1es__identity_stat'
+
+  - name: 'stat /var/opt/ds_agent/dsa_core/ds_agent.crt # Server & Workload Protection (SWP) initialization'
+    ansible.builtin.stat:
+      path: '/var/opt/ds_agent/dsa_core/ds_agent.crt'
+    register: '__trend_micro_v1es__ds_agent_crt_stat'
+
+
+  - block:
+
+    - name: 'Install required packages'
+      ansible.builtin.package:
+        name:
+          - 'curl'
+          - 'tar'
+        state: 'present'
+
+    # in original script, this part below is being done by a platform detection script https://api-eu1.xbc.trendmicro.com/apk/platform-detection-script
+    - name: 'Set x86_64 installer facts'
+      ansible.builtin.set_fact:
+        __trend_micro_v1es__installer_body:
+          company_id: '{{ trend_micro_v1es__xbc_installer_company_id }}'
+          platform: 'linux64'
+          scenario_ids: '{{ trend_micro_v1es__xbc_installer_x86_64_scenario_ids }}'
+        __trend_micro_v1es__xbc_agent_token: "{{ trend_micro_v1es__xbc_installer_x86_64_scenario_ids | join('|') }}"
+      when: "ansible_facts['architecture'] == 'x86_64'"
+
+    - name: 'Set aarch64 installer facts'
+      ansible.builtin.set_fact:
+        __trend_micro_v1es__installer_body:
+          company_id: '{{ trend_micro_v1es__xbc_installer_company_id }}'
+          platform: 'linuxaarch64'
+          scenario_ids: '{{ trend_micro_v1es__xbc_installer_aarch64_scenario_ids }}'
+        __trend_micro_v1es__xbc_agent_token: "{{ trend_micro_v1es__xbc_installer_aarch64_scenario_ids | join('|') }}"
+      when: "ansible_facts['architecture'] == 'aarch64'"
+
+    - name: 'curl --request POST --output /tmp/v1es_installer.tgz https://{{ trend_micro_v1es__xbc_fqdn }}/apk/installer'
+      ansible.builtin.uri:
+        url: 'https://{{ trend_micro_v1es__xbc_fqdn }}/apk/installer'
+        method: 'POST'
+        headers:
+          X-Customer-Id: '{{ trend_micro_v1es__customer_id }}'
+        body: '{{ __trend_micro_v1es__installer_body }}'
+        body_format: 'json'
+        dest: '/tmp/v1es_installer.tgz'
+        follow_redirects: 'all'  # the API answers with 303, then 200
+      changed_when: false # transient download into /tmp, not a config change on the target
+
+    - name: 'mkdir -p /tmp/v1es'
+      ansible.builtin.file:
+        path: '/tmp/v1es'
+        state: 'directory'
+        mode: 0o755
+
+    - name: 'tar xzf /tmp/v1es_installer.tgz -C /tmp/v1es'
+      ansible.builtin.unarchive:
+        src: '/tmp/v1es_installer.tgz'
+        dest: '/tmp/v1es'
+        remote_src: true
+
+    - name: 'Deploy /tmp/v1es/.property'
+      ansible.builtin.template:
+        backup: true
+        src: 'tmp/v1es/.property.j2'
+        dest: '/tmp/v1es/.property'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    # tmxbc installs the Endpoint Basecamp agent on a fresh install that Basecamp socket may not exist yet, so the command exits non-zero
+    - name: '/tmp/v1es/tmxbc install --connection ...'
+      ansible.builtin.command: >-
+        /tmp/v1es/tmxbc install
+          --connection {{ {"fps": [{"connections": [{"type": "DIRECT_CONNECT"}]}]} | ansible.builtin.to_json | ansible.builtin.b64encode }}
+      register: '__trend_micro_v1es__install_result'
+      until: '__trend_micro_v1es__install_result["rc"] == 0'
+      retries: 6
+      delay: 10
+      changed_when: true # only runs on a fresh/incomplete install (block is gated), so it always installs
+
+    - name: 'Wait for /opt/TrendMicro/EndpointBasecamp/etc/.identity # agent registration'
+      ansible.builtin.wait_for:
+        path: '/opt/TrendMicro/EndpointBasecamp/etc/.identity'
+        timeout: 300
+
+    # the SWP agent (ds_agent) ships inside the XBC full package, so it is deployed by tmxbc; wait for its service to come up and initialize, then activate it
+    - name: 'systemctl is-active --quiet ds_agent # wait for SWP to install and start'
+      ansible.builtin.command: 'systemctl is-active --quiet ds_agent' # noqa: command-instead-of-module
+      register: '__trend_micro_v1es__ds_agent_status'
+      until: '__trend_micro_v1es__ds_agent_status["rc"] == 0'
+      retries: 60 # sadly this really needs to be this large
+      delay: 10
+      changed_when: false
+      check_mode: false
+
+    - name: 'Wait for /var/opt/ds_agent/dsa_core/ds_agent.crt # SWP initialization'
+      ansible.builtin.wait_for:
+        path: '/var/opt/ds_agent/dsa_core/ds_agent.crt'
+        timeout: 300
+
+    # the full package installs ds_agent but does not self-activate it against the SWP DSM; activation must be done explicitly with the tenant credentials, mirroring the vendor deployment script which always runs `dsa_control -a`
+    - name: 'sleep 15 # let ds_agent finish initializing before activation'
+      ansible.builtin.pause:
+        seconds: 15
+
+    - name: '/opt/ds_agent/dsa_control -a dsm://{{ trend_micro_v1es__swp_dsm_fqdn }}:443/ ... # activate SWP'
+      ansible.builtin.command: >-
+        /opt/ds_agent/dsa_control
+          -a dsm://{{ trend_micro_v1es__swp_dsm_fqdn }}:443/
+          tenantID:{{ trend_micro_v1es__swp_login["tenant_id"] }}
+          token:{{ trend_micro_v1es__swp_login["token"] }}
+          policyid:{{ trend_micro_v1es__policy_id }}
+          relaygroupid:{{ trend_micro_v1es__relay_group_id }}
+          groupid:{{ trend_micro_v1es__group_id }}
+      register: '__trend_micro_v1es__activation_result'
+      # ds_agent needs a moment after install before it can talk to the DSM
+      until: >-
+        '200' in __trend_micro_v1es__activation_result["stdout"] or
+        'reset agent first' in __trend_micro_v1es__activation_result["stdout"]
+      retries: 12
+      delay: 10
+      changed_when: "'200' in __trend_micro_v1es__activation_result['stdout']"
+      failed_when: false
+
+    - name: 'Assert SWP is activated'
+      ansible.builtin.assert:
+        that:
+          - >-
+            '200' in __trend_micro_v1es__activation_result["stdout"] or
+            'reset agent first' in __trend_micro_v1es__activation_result["stdout"]
+        quiet: true
+        fail_msg: >-
+          Server & Workload Protection activation failed. Output:
+          {{ __trend_micro_v1es__activation_result["stdout"] | default('n/a') }}.
+
+    when:
+      - 'not (__trend_micro_v1es__identity_stat["stat"]["exists"] and __trend_micro_v1es__ds_agent_crt_stat["stat"]["exists"])'
+
+  tags:
+    - 'trend_micro_v1es'

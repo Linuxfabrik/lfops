@@ -28,11 +28,16 @@
 
 - block:
 
-  - name: 'systemctl {{ coturn__service_enabled | bool | ternary("enable", "disable") }} --now coturn.service'
+  - name: 'systemctl {{ coturn__service_enabled | bool | ternary("enable", "disable") }} coturn.service'
     ansible.builtin.systemd:
       name: 'coturn.service'
       enabled: '{{ coturn__service_enabled }}'
-      state: '{{ coturn__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ coturn__service_state | regex_replace("p?ed$", "") }} coturn.service'
+    ansible.builtin.systemd:
+      name: 'coturn.service'
+      state: '{{ coturn__service_state }}'
+    register: '__coturn__service_state_result'
 
   tags:
     - 'coturn'

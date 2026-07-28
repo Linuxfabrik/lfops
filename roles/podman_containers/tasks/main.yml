@@ -171,7 +171,7 @@
   # Note about enabling / disabling units todo
   # also, we always do a `daemon_reload`. this is easier here than via a handler, as the daemon needs to be reloaded for the correct users.
 
-  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}-network.service'
+  - name: 'systemctl {{ (item["state"] | d("started")) | regex_replace("p?ed$", "") }} {{ item["name"] }}-network.service'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}-network.service'
       scope: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary("user", omit) }}'
@@ -185,7 +185,7 @@
     loop_control:
       label: '{{ item["name"] }}'
 
-  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}-volume.service'
+  - name: 'systemctl {{ (item["state"] | d("started")) | regex_replace("p?ed$", "") }} {{ item["name"] }}-volume.service'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}-volume.service'
       scope: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary("user", omit) }}'
@@ -199,7 +199,7 @@
     loop_control:
       label: '{{ item["name"] }}'
 
-  - name: 'systemctl {{ (item["state"] | d("started"))[:-2] }} {{ item["name"] }}-container.service'
+  - name: 'systemctl {{ (item["state"] | d("started")) | regex_replace("p?ed$", "") }} {{ item["name"] }}-container.service'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}-container.service'
       scope: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary("user", omit) }}'

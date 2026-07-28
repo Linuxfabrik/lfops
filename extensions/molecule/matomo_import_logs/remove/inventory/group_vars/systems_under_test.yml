@@ -1,0 +1,7 @@
+# The remove scenario runs the same playbook but flips the site to state:
+# 'absent'. This exercises the list-with-state removal pattern: the timer,
+# service and auth file of the site are removed. The import script itself stays,
+# as the role always deploys it.
+matomo_import_logs__sites__group_var:
+  - name: 'test.example.com'
+    state: 'absent'

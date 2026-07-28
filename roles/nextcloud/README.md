@@ -219,6 +219,12 @@ nextcloud__users:
 * Type: String.
 * Default: `'{{ ansible_facts["nodename"] }}'`
 
+`nextcloud__jobs_timeout_start_sec`
+
+* Time the `nextcloud-jobs.service` may take to finish before systemd considers the start-up failed and kills it. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* Type: String.
+* Default: `'10m'`
+
 `nextcloud__mail_from`
 
 * Sender used in the `From:` header and as the envelope sender (`sendmail -f`) of the monthly `ldap:show-remnants` report. Defaults to the global `mailto_root__from`.

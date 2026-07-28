@@ -1,0 +1,5 @@
+# Non-destructive sub-scenario: deploys the schedule_reboot mechanism and checks
+# it is armed (timer, spool, CLI, empty-spool actor no-op) without rebooting.
+# Marker only - inherits the VM backend and the full test_sequence (including
+# idempotence) from extensions/molecule/config.yml. The reboot sub-scenario does
+# the real reboot.

@@ -688,19 +688,45 @@ As a starting point. Replace ``<MYVHOST>`` with your ``conf_server_name`` or FQD
 
 ### Matomo Realtime Tracking
 
+In addition to the scheduled (batch) imports, access logs can be piped to Matomo in realtime. Configure the site in the [linuxfabrik.lfops.matomo_import_logs](https://github.com/Linuxfabrik/lfops/tree/main/roles/matomo_import_logs) role with `enabled: false`. This deploys the import script (`/usr/local/sbin/import_logs.py`) and the per-site auth file (`/etc/matomo-import-logs/<name>.conf`, mode `0600`, which keeps the `token_auth` out of the process list) while leaving the scheduled batch timer inactive, since the realtime piping below replaces it:
+
+```yaml
+matomo_import_logs__sites__host_var:
+  - name: 'www.example.com'
+    idsite: 1
+    url: 'https://matomo.example.com'
+    token_auth: 'linuxfabrik'
+    # still required, as the (inactive) timer's service unit is rendered; not used by the realtime pipe.
+    log_file: '/var/log/httpd/www.example.com-access.log-%Y%m%d'
+    enabled: false
 ```
-# Matomo Realtime Logging
-LogFormat "%v %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" matomo
-CustomLog "||/usr/local/sbin/import_logs.py \
---debug --enable-http-errors --enable-http-redirects --enable-bots \
---url=https://analytics.example.com --output=/var/log/matomo.log --recorders=1 \
---recorder-max-payload-size=1 --log-format-name=common_complete --token-auth=2ac48e93-2ca7-4df3-9e7c-c81b36d0a474 \
--" matomo
+
+Then add the piped `CustomLog` to the vHost you want to track, via its `raw` variable. It reuses the `matomo` LogFormat this role already ships. The piped program runs as the user that started httpd (`root`), which can read the `0600` auth file. Using `raw` keeps the vHost's regular file access log (`conf_custom_log`) and adds the Matomo pipe as a second `CustomLog`; set `conf_custom_log` to the pipe instead if you want it to be the only access log.
+
+```yaml
+apache_httpd__vhosts__host_var:
+  - template: 'proxy'
+    conf_server_name: 'www.example.com'
+    raw: !unsafe |-
+      # Matomo realtime logging
+      CustomLog "|/usr/local/sbin/import_logs.py \
+      --debug --enable-http-errors --enable-http-redirects --enable-bots \
+      --url=https://matomo.example.com --output=/var/log/matomo.log --recorders=1 \
+      --recorder-max-payload-size=1 --log-format-name=common_complete \
+      --auth-config=/etc/matomo-import-logs/www.example.com.conf \
+      -" matomo
 ```
 
 ### GELF Realtime Tracking
 
-```
-# GELF Realtime Logging
-CustomLog "|/usr/bin/nc --udp graylog.example.com 12201" gelf
+Pipe access logs to a Graylog GELF input via the vHost's `raw` variable. Define the `gelf` LogFormat (the fields Graylog should parse) and the piped `CustomLog`:
+
+```yaml
+apache_httpd__vhosts__host_var:
+  - template: 'proxy'
+    conf_server_name: 'www.example.com'
+    raw: !unsafe |-
+      # GELF realtime logging
+      LogFormat "%v %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" gelf
+      CustomLog "|/usr/bin/nc --udp graylog.example.com 12201" gelf
 ```

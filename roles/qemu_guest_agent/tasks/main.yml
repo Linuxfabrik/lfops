@@ -17,7 +17,7 @@
       name: 'qemu-guest-agent.service'
       enabled: '{{ qemu_guest_agent__service_enabled | bool }}'
 
-  - name: 'systemctl {{ qemu_guest_agent__service_state }} qemu-guest-agent.service'
+  - name: 'systemctl {{ qemu_guest_agent__service_state | regex_replace("p?ed$", "") }} qemu-guest-agent.service'
     ansible.builtin.service:
       name: 'qemu-guest-agent.service'
       state: '{{ qemu_guest_agent__service_state }}'

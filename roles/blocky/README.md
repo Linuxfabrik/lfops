@@ -36,9 +36,15 @@ This Ansible role does not provide a way to template the blocky configuration fi
 
 `blocky__service_enabled`
 
-* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`blocky__service_state`
+
+* Changes the state of the blocky service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `blocky__service_enabled` is `true`, else `'stopped'`
 
 `blocky__version`
 
@@ -53,6 +59,7 @@ blocky__config_yml: '{{ lookup("ansible.builtin.file",
     "{{ inventory_dir }}/group_vars/blocky/files/etc/blocky/config.yml")
   }}'  # example of how to deploy the config as a file
 blocky__service_enabled: true
+blocky__service_state: 'started'
 blocky__version: 'latest'
 ```
 

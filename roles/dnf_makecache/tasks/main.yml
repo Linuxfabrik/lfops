@@ -5,7 +5,7 @@
       name: 'dnf-makecache.service'
       enabled: '{{ dnf_makecache__service_enabled | bool }}'
 
-  - name: 'systemctl {{ dnf_makecache__service_state }} dnf-makecache.service'
+  - name: 'systemctl {{ dnf_makecache__service_state | regex_replace("p?ed$", "") }} dnf-makecache.service'
     ansible.builtin.service:
       name: 'dnf-makecache.service'
       state: '{{ dnf_makecache__service_state }}'
@@ -15,7 +15,7 @@
       name: 'dnf-makecache.timer'
       enabled: '{{ dnf_makecache__timer_enabled | bool }}'
 
-  - name: 'systemctl {{ dnf_makecache__timer_state }} dnf-makecache.timer'
+  - name: 'systemctl {{ dnf_makecache__timer_state | regex_replace("p?ed$", "") }} dnf-makecache.timer'
     ansible.builtin.service:
       name: 'dnf-makecache.timer'
       state: '{{ dnf_makecache__timer_state }}'

@@ -71,29 +71,25 @@ freeipa_client__ipa_admin_user:
 
 ## Troubleshooting
 
-Q: `msg: Unable to discover domain, not provided on command line`
+**`msg: Unable to discover domain, not provided on command line`**
 
-A: Check your DNS server configuration - `IN SOA` and `IN NS` options, as well as a correct `_ldap._tcp IN SRV 10 10 389 freeipa-server.example.com.` in your forward zone.
+* Check your DNS server configuration - `IN SOA` and `IN NS` options, as well as a correct `_ldap._tcp IN SRV 10 10 389 freeipa-server.example.com.` in your forward zone.
 
+**`Joining realm failed: JSON-RPC call failed: Couldn't connect to server`**
 
-Q: `Joining realm failed: JSON-RPC call failed: Couldn't connect to server`
+* Check firewall settings, perhaps a port like LDAP or HTTPS is blocked.
 
-A: Check firewall settings, perhaps a port like LDAP or HTTPS is blocked.
+**`msg: krb5.keytab missing! Retry with ipaclient_force_join=yes to generate a new one`**
 
+* Re-join an unprovisioned host: `ansible-playbook ... --extra-vars='ipaclient_force_join=true'`
 
-Q: `msg: krb5.keytab missing! Retry with ipaclient_force_join=yes to generate a new one`
+**`IPA client already installed with a conflicting domain`**
 
-A: Re-join an unprovisioned host: `ansible-playbook ... --extra-vars='ipaclient_force_join=true'`
+* Follow [Manually Unconfiguring Client Machines](https://access.redhat.com/documentation/de-de/red_hat_enterprise_linux/6/html/identity_management_guide/manually-unconfig-machines)
 
+**`Kerberos authentication failed: kinit: Cannot read password while getting initial credentials`**
 
-Q: `IPA client already installed with a conflicting domain`
-
-A: Follow [Manually Unconfiguring Client Machines](https://access.redhat.com/documentation/de-de/red_hat_enterprise_linux/6/html/identity_management_guide/manually-unconfig-machines)
-
-
-Q: `Kerberos authentication failed: kinit: Cannot read password while getting initial credentials`
-
-A: Check that your admin credentials have not expired by logging into the FreeIPA Web GUI.
+* Check that your admin credentials have not expired by logging into the FreeIPA Web GUI.
 
 
 ## License

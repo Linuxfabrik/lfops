@@ -83,11 +83,6 @@ Manual steps:
 * Creates or updates htpasswd flat-files for basic authentication.
 * Triggers: none.
 
-`apache_httpd:matomo`
-
-* Deploys Matomo Log Analytics Python Script to `/usr/local/sbin/import_logs.py`.
-* Triggers: none.
-
 `apache_httpd:mod_security_coreruleset`
 
 * Installs `tar`.

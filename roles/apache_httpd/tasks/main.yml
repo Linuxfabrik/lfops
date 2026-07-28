@@ -6,7 +6,6 @@
     - 'apache_httpd'
     - 'apache_httpd:configure'
     - 'apache_httpd:htpasswd'
-    - 'apache_httpd:matomo'
     - 'apache_httpd:mod_security_coreruleset'
     - 'apache_httpd:mods'
     - 'apache_httpd:state'
@@ -141,15 +140,6 @@
 
 - block:
 
-  - ansible.builtin.include_tasks: 'matomo.yml'
-
-  tags:
-    - 'apache_httpd'
-    - 'apache_httpd:matomo'
-
-
-- block:
-
   - name: 'chmod -R g-w {{ apache_httpd__config_path }} # enhance security a little bit'
     ansible.builtin.file:
       path: '{{ apache_httpd__config_path }}'
@@ -172,11 +162,17 @@
 # Manage Systemd start and enable
 - block:
 
-  - name: 'Ensure that httpd service is in a desired state'
+  - name: 'systemctl {{ apache_httpd__systemd_enabled | bool | ternary("enable", "disable") }} {{ apache_httpd__service_name }}'
     ansible.builtin.systemd:
       name: '{{ apache_httpd__service_name }}'
       enabled: '{{ apache_httpd__systemd_enabled }}'
+    ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
+
+  - name: 'systemctl {{ apache_httpd__systemd_state | regex_replace("p?ed$", "") }} {{ apache_httpd__service_name }}'
+    ansible.builtin.systemd:
+      name: '{{ apache_httpd__service_name }}'
       state: '{{ apache_httpd__systemd_state }}'
+    register: '__apache_httpd__service_state_result'
     ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
 
   tags:

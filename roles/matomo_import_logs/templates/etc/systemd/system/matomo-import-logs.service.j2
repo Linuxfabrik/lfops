@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+# 20260616
+
+[Unit]
+Description=Matomo log import for {{ item["name"] }}
+
+[Service]
+# bash -c is required for the $(date ...) substitution that resolves the dated
+# access-log file at runtime. Literal % is escaped to %% so systemd passes a
+# single % through to date.
+ExecStart=/usr/bin/env bash -c '/usr/local/sbin/import_logs.py --idsite={{ item["idsite"] }} --url={{ item["url"] }} --auth-config=/etc/matomo-import-logs/{{ item["name"] }}.conf --log-format-name={{ item["log_format_name"] | d("common_complete") }} --output={{ item["output"] | d("/var/log/matomo.log") }} --recorders={{ item["recorders"] | d(1) }}{% for option in item["options"] | d([]) %} {{ option }}{% endfor %} "$(date --date="{{ item["log_file_date"] | d("today") }}" "+{{ item["log_file"] | regex_replace("%", "%%") }}")"'
+Type=oneshot
+User=root
+Group=root
+
+[Install]
+WantedBy=basic.target

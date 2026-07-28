@@ -96,11 +96,16 @@
 
 - block:
 
-  - name: 'systemctl {{ kibana__service_enabled | bool | ternary("enable", "disable") }} --now kibana.service'
+  - name: 'systemctl {{ kibana__service_enabled | bool | ternary("enable", "disable") }} kibana.service'
     ansible.builtin.systemd:
       name: 'kibana.service'
       enabled: '{{ kibana__service_enabled }}'
+
+  - name: 'systemctl {{ kibana__service_state | regex_replace("p?ed$", "") }} kibana.service'
+    ansible.builtin.systemd:
+      name: 'kibana.service'
       state: '{{ kibana__service_state }}'
+    register: '__kibana__service_state_result'
 
   tags:
     - 'kibana'

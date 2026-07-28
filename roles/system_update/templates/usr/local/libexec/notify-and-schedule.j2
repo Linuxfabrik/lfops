@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026070301
+
+# Check for available updates and notify the administrators. This is informational
+# only: the update is applied later by update-and-reboot.service at the maintenance
+# window, and a reboot, if needed, follows via schedule-reboot.service.
+
+export LC_ALL=C
+
+# log progress to stdout so systemd captures it in the journal (journalctl -u
+# notify-and-schedule.service); journald already prefixes a timestamp and the unit name.
+log () {
+    printf '%s\n' "$*"
+}
+
+send_msg () {
+    local subject="$1" body="$2"
+    # feed a complete message to sendmail (-t reads the recipients from the headers).
+    # sendmail has a stable CLI across MTAs, unlike mailx's -r / -a "From:" split.
+    {
+        printf 'From: %s\n' "$SENDER"
+        printf 'To: %s\n' "${RECIPIENTS// /, }"
+        printf 'Subject: %s\n' "$subject"
+        printf 'Content-Type: text/plain; charset="utf-8"\n'
+        printf 'Content-Transfer-Encoding: 8bit\n'
+        printf '\n%s\n' "$body"
+    } | sendmail -oi -t -f "$SENDER"
+{% if system_update__rocketchat_url is defined and system_update__rocketchat_url | length %}
+    /usr/bin/curl --silent --output /dev/null --data-urlencode \
+        "text=${subject}
+
+        ${body}
+        {{ system_update__rocketchat_msg_suffix }}" \
+        --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
+        "{{ system_update__rocketchat_url }}"
+{% endif %}
+}
+
+{% if ansible_facts['os_family'] == 'RedHat' %}
+makecache_with_retry () {
+    # Rocky's mirrorlist service intermittently answers with an empty list
+    # ("No URLs in mirrorlist") during upstream degraded windows. Retry only the
+    # metadata refresh so those blips self-heal without re-running the transaction.
+    local attempt
+    for attempt in 1 2 3; do
+        if yum "$@" makecache 1> /dev/null 2> /tmp/makecache-stderr; then
+            return 0
+        fi
+        [ "$attempt" -lt 3 ] && { log "Metadata refresh attempt $attempt failed; retrying in 60s"; sleep 60; }
+    done
+    return 1
+}
+{% endif %}
+
+SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
+SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
+RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ') }}"
+
+# the next scheduled run of the regular update lane, so the admin sees when the
+# pending updates will actually be applied. update-and-reboot.timer is deployed and
+# enabled by this role; systemctl prints the next elapse as a formatted local time
+# (or 'n/a' if the timer is disabled, in which case we keep the generic wording).
+NEXT_RUN=$(systemctl show update-and-reboot.timer --property=NextElapseUSecRealtime --value 2> /dev/null)
+if [ -z "$NEXT_RUN" ] || [ "$NEXT_RUN" = "n/a" ]; then
+    NEXT_RUN="the next maintenance window"
+fi
+
+cat > /tmp/check-update << EOF
+Please reply to this mail if you have any concerns.
+These updates will be applied automatically at $NEXT_RUN.
+A reboot, if necessary, follows.
+---------------------------------------------------
+
+EOF
+
+log "Checking for available updates"
+
+{% if ansible_facts['os_family'] == 'RedHat' %}
+{% if not system_update__cache_only | bool %}
+yum clean all 1> /dev/null 2>&1
+if ! makecache_with_retry; then
+    log "Metadata refresh failed; see /tmp/makecache-stderr"
+    send_msg "$SUBJECT_PREFIX - System update check failed" "$(</tmp/makecache-stderr)"
+    exit 1
+fi
+{% endif %}
+yum check-update {{ system_update__cache_only | bool | ternary("--cacheonly", "") }} >> /tmp/check-update 2> /tmp/system-update-check-stderr
+retc=$?
+
+if [ "$retc" -eq 100 ]; then
+    # updates are available, so inform
+    log "Updates pending; notification sent (will be applied at $NEXT_RUN)"
+    send_msg "$SUBJECT_PREFIX - Update at $NEXT_RUN" "$(cat /tmp/check-update)"
+elif [ "$retc" -eq 1 ]; then
+    log "Update check failed; see /tmp/system-update-check-stderr"
+    send_msg "$SUBJECT_PREFIX - System update check failed" "$(</tmp/system-update-check-stderr)"
+    exit 1
+else
+    log "No updates pending"
+fi
+{% endif %}
+
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+{% if not system_update__cache_only | bool %}
+apt clean 1> /dev/null 2>&1
+apt update 1> /dev/null 2>&1
+{% endif %}
+apt list --upgradable >> /tmp/check-update
+
+if [ $(grep upgradable /tmp/check-update | wc -l) -gt 0 ]; then
+    # updates are available, so inform
+    log "Updates pending; notification sent"
+    send_msg "$SUBJECT_PREFIX - Update at $NEXT_RUN" "$(cat /tmp/check-update)"
+else
+    log "No updates pending"
+fi
+{% endif %}

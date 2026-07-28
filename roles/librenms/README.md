@@ -55,6 +55,18 @@ librenms__fqdn: 'librenms.example.com'
 
 ## Optional Role Variables
 
+`librenms__config_app_trusted_proxies`
+
+* A list of trusted reverse proxy IPs or CIDR ranges, joined into the comma separated `APP_TRUSTED_PROXIES` setting in `/opt/librenms/.env`. Have a look at https://docs.librenms.org/Support/Environment-Variables/. An empty list leaves the setting untouched.
+* Type: List.
+* Default: `[]`
+
+`librenms__config_app_url`
+
+* The base URL used for generated URLs, for example when running behind a reverse proxy. Have a look at https://docs.librenms.org/Support/Environment-Variables/. An empty string leaves the `APP_URL` setting in `/opt/librenms/.env` untouched.
+* Type: String.
+* Default: `''`
+
 `librenms__config_auth_mechanism`
 
 * Which authentication mechanism LibreNMS should use. Have a look at https://docs.librenms.org/Extensions/Authentication/. Note that only one mechanism can be active at the same time. Possible options: `active_directory`, `http-auth`, `ldap`, `ldap-authorization`, `mysql`, `sso`.
@@ -88,6 +100,10 @@ librenms__fqdn: 'librenms.example.com'
 Example:
 ```yaml
 # optional
+librenms__config_app_trusted_proxies:
+  - '192.0.2.0/24'
+  - '198.51.100.7'
+librenms__config_app_url: 'https://librenms.example.com'
 librenms__config_auth_mechanism: 'mysql'
 librenms__config_rrd_purge: 730
 librenms__config_update_channel: 'release'

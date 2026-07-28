@@ -48,7 +48,7 @@
     register: 'icingaweb2__old_sql_schema_stat_result'
 
   - name: 'import schema for icingaweb2 database (icingaweb2 < 2.11.4)'
-    community.mysql.mysql_db:
+    ansible.mysql.mysql_db:
       login_user: "{{ icingaweb2__database_login.username }}"
       login_password: "{{ icingaweb2__database_login.password }}"
       login_host: "{{ icingaweb2__database_host }}"
@@ -62,7 +62,7 @@
       - 'icingaweb2__old_sql_schema_stat_result["stat"]["exists"]'
 
   - name: 'import schema for icingaweb2 database (icingaweb2 >= 2.11.4)'
-    community.mysql.mysql_db:
+    ansible.mysql.mysql_db:
       login_user: "{{ icingaweb2__database_login.username }}"
       login_password: "{{ icingaweb2__database_login.password }}"
       login_host: "{{ icingaweb2__database_host }}"
@@ -230,7 +230,7 @@
     register: 'icingaweb2__mysql_user_insert_result'
 
   - name: 'remove users from the icingaweb2 database'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ icingaweb2__database_login["username"] }}'
       login_password: '{{ icingaweb2__database_login["password"] }}'
       login_host: '{{ icingaweb2__database_host }}'

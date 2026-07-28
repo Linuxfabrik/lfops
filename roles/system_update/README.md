@@ -1,12 +1,8 @@
 # Ansible Role linuxfabrik.lfops.system_update
 
-This role configures the server to do (weekly) system updates by deploying two shell scripts: The first script `notify-and-schedule` checks for available updates (normally during the day), and notifies the system administrators either via email or [Rocket.Chat](https://rocket.chat/). On update time (usually the next morning at round about 4 AM), the second script `update-and-reboot`
+This role configures the server to do system updates. A weekly regular lane applies all available updates, and on Rocky Linux a daily security lane applies only security hot-fixes from the dedicated `security` repository. Both run at one configurable maintenance window per host and reboot the host afterwards if an update requires it. A `notify-and-schedule` script informs the administrators (via email or [Rocket.Chat](https://rocket.chat/)) when and which updates are pending.
 
-* sets a downtime for the host and all its services in Icinga
-* applies all updates
-* and, if necessary, automatically reboots the host after the updates.
-
-On Rocky Linux the role additionally sets up a separate security lane that installs only security hot-fixes daily, independent of the weekly update lane.
+Reboots are not performed by the update scripts themselves. They are delegated to the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) role: an update that needs a reboot drops a request into that role's spool, and `schedule_reboot` reboots the host once, at the window.
 
 
 *Available since LFOps `2.0.0`.*
@@ -14,18 +10,18 @@ On Rocky Linux the role additionally sets up a separate security lane that insta
 
 ## How the Role Behaves
 
-* **Two independent lanes.** The regular lane (`notify-and-schedule` / `update-and-reboot`) applies all available updates on its weekly schedule. On Rocky Linux a second, independent security lane (`security-update`, twice a day by default) installs only security hot-fixes from the dedicated `security` repository, isolated from the regular lane via `--disablerepo` / `--enablerepo`. Both reboot the host when an update requires it.
-* **The security lane is enabled by default, but a no-op without the `security` repository.** That repository is provided by the [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role. On hosts where it is not present, the security lane installs nothing and never reboots. Turn the lane off entirely with `system_update__security_enabled: false`.
-* **Reboots are steered per host group.** A security hot-fix that requires a reboot is scheduled via `at`; the time comes from `system_update__security_reboot_time__*`. This can be used so test hosts reboot immediately (`'now'`) while production hosts defer to the evening (for example `'19:00'`).
+* **Updates run at the reboot window.** The regular lane (weekly) and the Rocky security lane (daily) both run at the maintenance window defined by `schedule_reboot__reboot_time__*` (the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) role). When an update needs a reboot it drops a request into that role's spool; the update unit is ordered before the reboot actor, so the reboot waits for the update to finish before it runs.
+* **The security lane is enabled by default, but a no-op without the `security` repository.** That repository is provided by the [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role. On hosts where it is not present, the security lane installs nothing and requests no reboot. Turn the lane off entirely with `system_update__security_enabled: false`.
 
 
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* at must be installed (role: [linuxfabrik.lfops.at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at)).
-* mailx must be installed (role: [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx)).
-* yum-utils must be installed on RHEL (role: [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils)).
+* Optional: the root mail aliases are configured (role: [linuxfabrik.lfops.mailto_root](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailto_root)).
+* Optional: postfix provides the `sendmail` interface and mail relay used for the notifications (role: [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix)).
+* The reboot mechanism must be present (role: [linuxfabrik.lfops.schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot)). It owns the reboot window (`schedule_reboot__reboot_time__*`) and performs the reboot an update requests.
+* Optional: yum-utils is installed on RHEL (role: [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils)).
 
 
 ## Requirements
@@ -39,12 +35,12 @@ Manual steps:
 
 `system_update`
 
-* Sets up automatic system update via systemd timer, and on Rocky Linux hosts the optional security-update timer.
+* Deploys the notify-and-schedule and update-and-reboot scripts and their systemd timers/services. On Rocky Linux hosts it also deploys the security-update lane.
 * Triggers: none.
 
 `system_update:state`
 
-* Determines whether notify-and-schedule.timer and security-update.timer are enabled.
+* Determines whether the notify-and-schedule, update-and-reboot and (Rocky) security-update timers are enabled.
 * Triggers: none.
 
 
@@ -55,24 +51,6 @@ Manual steps:
 * Whether to install updates from cache only. This implies to have the cache built beforehand.
 * Type: Bool.
 * Default: `false`
-
-`system_update__icinga2_api_url`
-
-* The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `reboot` alias.
-* Type: String.
-* Default: `'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'`
-
-`system_update__icinga2_api_user_login`
-
-* The Icinga2 API User to set the downtime for the corresponding host and all its services.
-* Type: Dictionary.
-* Default: unset
-
-`system_update__icinga2_hostname`
-
-* The hostname of the Icinga2 host on which the downtime should be set.
-* Type: String.
-* Default: `'{{ ansible_facts["nodename"] }}'`
 
 `system_update__mail_from`
 
@@ -106,9 +84,9 @@ Manual steps:
 
 `system_update__notify_and_schedule_on_calendar`
 
-* When the notification for the expected updates should be sent. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* When the informational "updates pending" notification is sent. This is purely a heads-up; the update is applied later at the maintenance window. By default it is sent at 10:00 on the day before `system_update__update_day`, so it always arrives before the update runs. If you set a multi-day or date-based `system_update__update_day`, set this explicitly. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 * Type: String.
-* Default: `'mon 10:00'`
+* Default: 10:00 on the day before `system_update__update_day` (for example `'Mon 10:00'` when the update day is `Tue`)
 
 `system_update__post_update_code`
 
@@ -142,15 +120,9 @@ Manual steps:
 
 `system_update__security_on_calendar`
 
-* When the security lane checks for and installs security hot-fixes. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* When the security lane checks for and installs security hot-fixes. Defaults to the reboot window (`schedule_reboot__reboot_time__*`) so the reboot follows right after. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 * Type: String.
-* Default: `'*-*-* 10,16:00'`
-
-`system_update__security_reboot_time__host_var` / `system_update__security_reboot_time__group_var`
-
-* When to reboot after a security hot-fix that requires it. Passed verbatim to `at`. Use this to steer test versus production hosts via inventory group membership: `'now'` reboots immediately, a time such as `'19:00'` defers the reboot.
-* Type: String.
-* Default: `'now'`
+* Default: `'*-*-* {{ schedule_reboot__reboot_time__combined_var | d("04:00") }}'`
 
 `system_update__security_repos`
 
@@ -158,27 +130,22 @@ Manual steps:
 * Type: List.
 * Default: `['security']`
 
+`system_update__update_day`
+
+* The weekday on which the regular (weekly) update lane runs. Combined with the maintenance window to build the timer schedule, for example `Tue 04:00`. Defaults to `Tue` so the Monday notification (`system_update__notify_and_schedule_on_calendar`) arrives before the update. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* Type: String.
+* Default: `'Tue'`
+
 `system_update__update_enabled`
 
-* Enables or disables the system-update timer, analogous to `systemctl enable/disable --now`.
+* Enables or disables the regular update lane (the notify-and-schedule and update-and-reboot timers), analogous to `systemctl enable/disable --now`.
 * Type: Bool.
 * Default: `true`
-
-`system_update__update_time`
-
-* The time when to actually execute the updates (and automatically reboot if necessary), relative to `system_update__notify_and_schedule_on_calendar`. Passed verbatim to `at`. The default schedules the update for the next day between 04:00 and 04:59, with the exact minute derived deterministically from `inventory_hostname` so multiple hosts spread across the hour instead of all updating at 04:00.
-* Type: String.
-* Default: `'04:{{ 59 | random(seed=inventory_hostname) }} + 1 days'`
 
 Example:
 ```yaml
 # optional
 system_update__cache_only: true
-system_update__icinga2_api_url: 'https://icinga.example.com:5665'
-system_update__icinga2_api_user_login:
-  username: 'downtime-user'
-  password: 'linuxfabrik'
-system_update__icinga2_hostname: 'myhost.example.com'
 system_update__mail_from: 'noreply@example.com'
 system_update__mail_recipients_new_configfiles:
   - 'info@example.com'
@@ -207,12 +174,10 @@ system_update__pre_update_code: |-
 system_update__rocketchat_msg_suffix: '@administrator'
 system_update__rocketchat_url: 'https://chat.example.com/hooks/abcd1234'
 system_update__security_enabled: true
-system_update__security_on_calendar: '*-*-* 10,16:00'
-system_update__security_reboot_time__group_var: '19:00'
 system_update__security_repos:
   - 'security'
+system_update__update_day: 'Tue'
 system_update__update_enabled: true
-system_update__update_time: '04:{{ 59 | random(seed=inventory_hostname) }} + 1 days'
 ```
 
 

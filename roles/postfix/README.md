@@ -214,6 +214,30 @@ postfix__relayhost: 'mail.example.com:587'
 * Type: Multiline string.
 * Default: unset
 
+`postfix__recipient_canonicals__group_var` / `postfix__recipient_canonicals__host_var`
+
+* List of dictionaries for `/etc/postfix/recipient_canonical`, used to rewrite the recipient addresses.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `pattern`:
+
+        * Mandatory. Regular expression to match the entire recipient address.
+        * Type: String.
+
+    * `address`:
+
+        * Mandatory. The rewrite address.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. State of the entry. Either `'present'` or `'absent'`.
+        * Type: String.
+        * Default: `'present'`
+
 `postfix__recipient_delimiter`
 
 * See https://www.postfix.org/postconf.5.html#recipient_delimiter
@@ -406,6 +430,10 @@ postfix__raw: |-
   # DKIM
   smtpd_milters = inet:localhost:8891
   non_smtpd_milters = $smtpd_milters
+postfix__recipient_canonicals__host_var:
+  - pattern: '/^.+@example.com$/'
+    address: 'team@example.com'
+    state: 'present'
 postfix__recipient_delimiter: ''
 postfix__relayhost_password: ''
 postfix__relayhost_username: ''

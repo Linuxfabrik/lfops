@@ -156,12 +156,6 @@
     when:
       - 'apache_solr__systemd_service_template_result is changed'
 
-  - name: 'systemctl {{ apache_solr__service_enabled | bool | ternary("enable", "disable") }} --now solr.service'
-    ansible.builtin.systemd:
-      name: 'solr.service'
-      enabled: '{{ apache_solr__service_enabled }}'
-      state: '{{ apache_solr__service_enabled | bool | ternary("started", "stopped") }}'
-
   tags:
     - 'apache_solr'
     - 'apache_solr:state'
@@ -202,3 +196,23 @@
   tags:
     - 'apache_solr'
     - 'apache_solr:users'
+
+
+# runs last, after security.json above, so that a fresh installation starts Solr with the deployed
+# configuration and the restart handler can skip the redundant bounce.
+- block:
+
+  - name: 'systemctl {{ apache_solr__service_enabled | bool | ternary("enable", "disable") }} solr.service'
+    ansible.builtin.systemd:
+      name: 'solr.service'
+      enabled: '{{ apache_solr__service_enabled }}'
+
+  - name: 'systemctl {{ apache_solr__service_state | regex_replace("p?ed$", "") }} solr.service'
+    ansible.builtin.systemd:
+      name: 'solr.service'
+      state: '{{ apache_solr__service_state }}'
+    register: '__apache_solr__service_state_result'
+
+  tags:
+    - 'apache_solr'
+    - 'apache_solr:state'

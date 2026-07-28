@@ -26,6 +26,7 @@ fail2ban__jails__role_var:
     state: 'present'
     template: 'sshd'
 fail2ban__service_enabled: true
+fail2ban__service_state: '{{ fail2ban__service_enabled | bool | ternary("started", "stopped") }}'
 
 # -----------------------------------------------------------------------------
 

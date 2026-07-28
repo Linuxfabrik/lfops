@@ -61,6 +61,11 @@ Manual steps:
         * Mandatory. These packages will be installed in the virtual environment using `pip`.
         * Type: List.
 
+    * `pip_constraints`:
+
+        * Optional. List of pip [constraints](https://pip.pypa.io/en/stable/user_guide/#constraints-files) applied when installing `packages`. They are written to `/opt/python-venv/name/constraints.txt` and passed to `pip` via `--constraint`. Use this to pin transitive dependencies (for example to force a version that drops a deprecated, compiler-requiring sub-dependency) without listing them as direct `packages`.
+        * Type: List.
+
     * `system_site_packages`:
 
         * Optional. Allows the virtual environment to access the system site-packages dir.
@@ -101,11 +106,14 @@ python_venv__venvs__host_var:
   - name: 'duplicity'
     packages:
       - 'duplicity'
-      - 'python-swiftclient'
-      - 'python-keystoneclient'
     package_requirements:
-      - 'gcc'
-      - 'librsync-devel'
+      - 'python3.11'
+    pip_constraints:
+      - 'oslo.config>=9'
+      - 'oslo.i18n>=5'
+      - 'oslo.serialization>=5'
+      - 'oslo.utils>=7'
+    python_executable: 'python3.11'
     exposed_binaries:
       - 'duplicity'
 python_venv__venvs__group_var: []

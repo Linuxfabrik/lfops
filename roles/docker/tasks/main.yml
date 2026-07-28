@@ -41,11 +41,11 @@
       name: 'docker.service'
       enabled: '{{ docker__service_enabled }}'
 
-  - name: 'systemctl {{ docker__service_state[:-2] }} docker.service'
+  - name: 'systemctl {{ docker__service_state | regex_replace("p?ed$", "") }} docker.service'
     ansible.builtin.systemd:
       name: 'docker.service'
       state: '{{ docker__service_state }}'
-    register: 'docker__service_state_result'
+    register: '__docker__service_state_result'
 
   tags:
     - 'docker'

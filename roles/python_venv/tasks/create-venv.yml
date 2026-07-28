@@ -27,12 +27,28 @@
     virtualenv: '/opt/python-venv/{{ venv["name"] }}'
     extra_args: '{{ ("--cert " ~ python_venv__pip_cert) if python_venv__pip_cert is defined and python_venv__pip_cert | length }}'
 
+# A constraints file pins transitive dependencies (e.g. to force a modern version that drops a
+# deprecated, compiler-requiring sub-dependency) without having to list them as direct packages.
+- name: 'Deploy /opt/python-venv/{{ venv["name"] }}/constraints.txt'
+  ansible.builtin.template:
+    backup: true
+    src: 'opt/python-venv/constraints.txt.j2'
+    dest: '/opt/python-venv/{{ venv["name"] }}/constraints.txt'
+    owner: 'root'
+    group: 'root'
+    mode: 0o644
+  when:
+    - 'venv["pip_constraints"] | d([]) | length > 0'
+
 - name: 'Install packages using pip'
   ansible.builtin.pip:
     name: '{{ venv["packages"] }}'
     state: 'present'
     virtualenv: '/opt/python-venv/{{ venv["name"] }}'
-    extra_args: '{{ ("--cert " ~ python_venv__pip_cert) if python_venv__pip_cert is defined and python_venv__pip_cert | length }}'
+    extra_args: '{{
+        (("--cert " ~ python_venv__pip_cert) if (python_venv__pip_cert is defined and python_venv__pip_cert | length > 0) else "")
+        ~ ((" --constraint /opt/python-venv/" ~ venv["name"] ~ "/constraints.txt") if (venv["pip_constraints"] | d([]) | length > 0) else "")
+      }}'
 
 - name: 'Link choosen binaries to /usr/local/bin'
   ansible.builtin.file:

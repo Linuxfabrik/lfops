@@ -59,6 +59,6 @@ grafana__provisioning_service_accounts__combined_var: '{{ (
 
 grafana__serve_from_sub_path: false
 grafana__service_enabled: true
+grafana__service_state: '{{ grafana__service_enabled | bool | ternary("started", "stopped") }}'
 grafana__skip_token_to_bitwarden: false
 grafana__validate_certs: true
-

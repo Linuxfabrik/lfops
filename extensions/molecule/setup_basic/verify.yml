@@ -10,3 +10,57 @@
     - name: 'Assert that the about-me monitoring plugin is installed'
       ansible.builtin.assert:
         that: '__molecule__about_me_plugin_stat_result["stat"]["exists"]'
+
+    - name: 'glances --version'
+      ansible.builtin.command: 'glances --version'
+      changed_when: false
+      register: '__molecule__glances_version_result'
+
+    - name: 'Assert that glances is installed and runnable (venv on RHEL 10, distro package elsewhere)'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__glances_version_result["rc"] == 0'
+
+    - name: 'systemctl is-active / is-enabled atd.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl {{ item }} atd.service'
+      loop:
+        - 'is-active'
+        - 'is-enabled'
+      register: '__molecule__atd_state_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that atd.service is running and enabled (at is available as a sysadmin utility)'
+      ansible.builtin.assert:
+        that: 'item["stdout"] in ["active", "enabled"]'
+      loop: '{{ __molecule__atd_state_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    - name: 'postconf -h sender_canonical_maps recipient_canonical_maps'
+      ansible.builtin.command: 'postconf -h sender_canonical_maps recipient_canonical_maps'
+      changed_when: false
+      register: '__molecule__postfix_canonical_maps_result'
+
+    - name: 'Assert that postfix loaded the sender and recipient canonical maps'
+      ansible.builtin.assert:
+        that:
+          - '"regexp:/etc/postfix/canonical" in __molecule__postfix_canonical_maps_result["stdout_lines"]'
+          - '"regexp:/etc/postfix/recipient_canonical" in __molecule__postfix_canonical_maps_result["stdout_lines"]'
+
+    - name: 'postmap -q against the sender and recipient canonical tables'
+      ansible.builtin.command: 'postmap -q "user@example.com" regexp:{{ item }}'
+      changed_when: false
+      register: '__molecule__postfix_postmap_query_result'
+      loop:
+        - '/etc/postfix/canonical'
+        - '/etc/postfix/recipient_canonical'
+
+    - name: 'Assert that the canonical rules rewrite addresses as configured'
+      ansible.builtin.assert:
+        that: 'item["stdout"] == __molecule__expected'
+      vars:
+        __molecule__expected: '{{ (item["item"] == "/etc/postfix/canonical") | ternary("noreply@example.com", "team@example.com") }}'
+      loop: '{{ __molecule__postfix_postmap_query_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'

@@ -10,8 +10,7 @@ This role enables relaying all mail that is sent to the root user (or other serv
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* postfix must be installed and configured (role: [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix)).
-* mailx must be installed (role: [linuxfabrik.lfops.mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx)).
+* postfix must be installed and configured; it provides the `sendmail` interface used to send the relayed mail (role: [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix)).
 
 
 ## Tags

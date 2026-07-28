@@ -1,0 +1,24 @@
+- name: 'Verify the glances playbook installed a runnable glances'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+    - name: 'glances --version'
+      ansible.builtin.command: 'glances --version'
+      changed_when: false
+      register: '__molecule__glances_version_result'
+
+    - name: 'Assert that glances is installed and runnable (venv on RHEL 10, distro package elsewhere)'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__glances_version_result["rc"] == 0'
+          - '"Glances" in __molecule__glances_version_result["stdout"]'
+
+    - name: 'stat /etc/profile.d/glances.sh'
+      ansible.builtin.stat:
+        path: '/etc/profile.d/glances.sh'
+      register: '__molecule__glances_profile_stat_result'
+
+    - name: 'Assert that the profile.d alias snippet is deployed'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__glances_profile_stat_result["stat"]["exists"]'

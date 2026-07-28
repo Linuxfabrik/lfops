@@ -50,7 +50,7 @@ nextcloud__app_configs__role_var:
     value: 'powered by Linuxfabrik GmbH, Zürich'
     state: 'present'
   - key: 'theming url'
-    value: 'https:\/\/ws.linuxfabrik.io'
+    value: 'https:\/\/www.linuxfabrik.ch'
     state: 'present'
 nextcloud__app_configs__combined_var: '{{ (
       nextcloud__app_configs__role_var +
@@ -171,6 +171,8 @@ nextcloud__database_name: 'nextcloud'
 nextcloud__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
 nextcloud__icinga2_api_user_login: '{{ system_update__icinga2_api_user_login }}'
 nextcloud__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
+
+nextcloud__jobs_timeout_start_sec: '10m'
 
 nextcloud__mail_from: '{{ mailto_root__from }}'
 nextcloud__mail_recipients: '{{ mailto_root__to | d([]) }}'

@@ -1,4 +1,5 @@
 chrony__service_enabled: true
+chrony__service_state: '{{ chrony__service_enabled | bool | ternary("started", "stopped") }}'
 chrony__allow: []
 chrony__ntp_pools: []
 chrony__ntp_servers: []

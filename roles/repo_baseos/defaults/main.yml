@@ -22,3 +22,5 @@ repo_baseos__security_repo_enabled__combined_var: '{{
     repo_baseos__security_repo_enabled__dependent_var if (repo_baseos__security_repo_enabled__dependent_var | string | length) else
     repo_baseos__security_repo_enabled__role_var
   }}'
+
+repo_baseos__security_repo_use_upstream: true

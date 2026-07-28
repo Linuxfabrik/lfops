@@ -80,11 +80,16 @@
 
 - block:
 
-  - name: 'systemctl {{ graylog_server__service_enabled | bool | ternary("enable", "disable") }} --now graylog-server.service'
+  - name: 'systemctl {{ graylog_server__service_enabled | bool | ternary("enable", "disable") }} graylog-server.service'
     ansible.builtin.systemd:
       name: 'graylog-server.service'
       enabled: '{{ graylog_server__service_enabled }}'
-      state: '{{ graylog_server__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ graylog_server__service_state | regex_replace("p?ed$", "") }} graylog-server.service'
+    ansible.builtin.systemd:
+      name: 'graylog-server.service'
+      state: '{{ graylog_server__service_state }}'
+    register: '__graylog_server__service_state_result'
 
   tags:
     - 'graylog_server'

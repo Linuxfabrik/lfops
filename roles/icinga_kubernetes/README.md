@@ -95,9 +95,15 @@ icinga_kubernetes__clusters__role_var:
 
 `icinga_kubernetes__service_enabled`
 
-* Enables or disables the Icinga for Kubernetes service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the Icinga for Kubernetes service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`icinga_kubernetes__service_state`
+
+* Changes the state of the Icinga for Kubernetes service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `icinga_kubernetes__service_enabled` is `true`, else `'stopped'`
 
 Example:
 ```yaml
@@ -112,6 +118,7 @@ icinga_kubernetes__database_host: '127.0.0.1'
 icinga_kubernetes__database_login_host: 'localhost'
 icinga_kubernetes__database_name: 'icinga_kubernetes'
 icinga_kubernetes__service_enabled: true
+icinga_kubernetes__service_state: 'started'
 ```
 
 

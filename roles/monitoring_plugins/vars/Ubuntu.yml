@@ -1,0 +1,11 @@
+# Ubuntu is loaded on top of its Debian os_family and currently needs no
+# Ubuntu-specific overrides. It is kept as an explicit copy of Debian.yml so
+# later Ubuntu-specific drift has a dedicated home instead of silently
+# inheriting Debian values.
+__monitoring_plugins__icinga_user: 'nagios'
+__monitoring_plugins__package_version_separator: '='
+__monitoring_plugins__source_python_interpreter: 'python3'
+__monitoring_plugins__source_python_packages:
+  - 'python3-venv'
+__monitoring_plugins__versionlock_lock_command: 'apt-mark hold'
+__monitoring_plugins__versionlock_unlock_command: 'apt-mark unhold'

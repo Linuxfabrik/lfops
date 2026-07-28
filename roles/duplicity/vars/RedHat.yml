@@ -1,0 +1,3 @@
+# gpg is required for key generation, key import and duplicity's encryption at backup time.
+__duplicity__required_packages:
+  - 'gnupg2'

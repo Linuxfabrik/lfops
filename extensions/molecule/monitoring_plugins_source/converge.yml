@@ -1,0 +1,2 @@
+- name: 'Converge monitoring_plugins playbook (source install)'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.monitoring_plugins'

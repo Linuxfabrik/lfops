@@ -56,7 +56,7 @@
 - block:
 
   - name: 'Check if the icingadb tables exist'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ icingadb__database_login["username"] }}'
       login_password: '{{ icingadb__database_login["password"] }}'
       login_host: '{{ icingadb__database_host }}'
@@ -67,7 +67,7 @@
     check_mode: false # run task even if `--check` is specified
 
   - name: 'import schema for icingadb database'
-    community.mysql.mysql_db:
+    ansible.mysql.mysql_db:
       login_user: '{{ icingadb__database_login["username"] }}'
       login_password: '{{ icingadb__database_login["password"] }}'
       login_host: '{{ icingadb__database_host }}'
@@ -96,11 +96,16 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/icingadb/config.yml'
 
-  - name: 'systemctl {{ icingadb__service_enabled | bool | ternary("enable", "disable") }} --now icingadb.service'
+  - name: 'systemctl {{ icingadb__service_enabled | bool | ternary("enable", "disable") }} icingadb.service'
     ansible.builtin.systemd:
       name: 'icingadb.service'
       enabled: '{{ icingadb__service_enabled }}'
-      state: '{{ icingadb__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ icingadb__service_state | regex_replace("p?ed$", "") }} icingadb.service'
+    ansible.builtin.systemd:
+      name: 'icingadb.service'
+      state: '{{ icingadb__service_state }}'
+    register: '__icingadb__service_state_result'
 
   tags:
     - 'icingadb'
@@ -110,7 +115,7 @@
 - block:
 
   - name: 'SELECT MIN(event_time)/1000 FROM icingadb.history; get latest entry in the icingadb for the migration from ido'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ icingadb__database_login["username"] }}'
       login_password: '{{ icingadb__database_login["password"] }}'
       login_host: '{{ icingadb__database_host }}'

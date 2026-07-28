@@ -118,9 +118,15 @@ This role installs and configures [squid](https://www.squid-cache.org/) as a cac
 
 `squid__service_enabled`
 
-* Enables or disables the squid service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the squid service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`squid__service_state`
+
+* Changes the state of the squid service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `squid__service_enabled` is `true`, else `'stopped'`
 
 Example:
 ```yaml
@@ -156,6 +162,7 @@ squid__conf_refresh_pattern:
   - '-i (/cgi-bin/|\?) 0  0%  0'
   - '.    0 20% 4320'
 squid__service_enabled: true
+squid__service_state: 'started'
 ```
 
 

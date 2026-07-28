@@ -167,15 +167,18 @@ acme_sh__reload_cmd: 'systemctl reload nginx'
 
 ## Troubleshooting
 
-`Request failed: <urlopen error timed out>'`: Check if your Reverse Proxy is available over the Internet (Ports on Provider- and Host-Firewall, DNS set correctly, DNAT configured), and check if it is hosting the requested domain on Port 80.
+**`Request failed: <urlopen error timed out>'`**
 
-Replace an issued certificate:
+* Check if your Reverse Proxy is available over the Internet (Ports on Provider- and Host-Firewall, DNS set correctly, DNAT configured), and check if it is hosting the requested domain on Port 80.
 
-```bash
-# on the control node:
-ansible MYHOST --inventory=$INV --module-name=shell --args "acme.sh --remove --domain www.example.com; rm -rf /etc/acme.sh/certs/www.example.com/"
-ansible-playbook --inventory=$INV linuxfabrik.lfops.acme_sh
-```
+**Replace an issued certificate**
+
+* Run on the control node:
+
+    ```bash
+    ansible MYHOST --inventory=$INV --module-name=shell --args "acme.sh --remove --domain www.example.com; rm -rf /etc/acme.sh/certs/www.example.com/"
+    ansible-playbook --inventory=$INV linuxfabrik.lfops.acme_sh
+    ```
 
 
 ## License

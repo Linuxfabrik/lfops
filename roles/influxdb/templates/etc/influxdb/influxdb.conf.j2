@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025100301
+# 2026061601
 
 ### Welcome to the InfluxDB configuration file.
 
@@ -345,12 +345,15 @@ reporting-disabled = true
   https-private-key = "{{ influxdb__conf_https['private_key_path'] }}"
   {% else %}
 
-  # The SSL certificate to use when HTTPS is enabled.
+  # The TLS certificate to use when HTTPS is enabled.
   # https-certificate = "/etc/ssl/influxdb.pem"
 
   # Use a separate private key location.
   # https-private-key = ""
   {% endif %}
+
+  # Allows insecure file permissions for https-certificate and https-private-key when enabled.
+  # https-insecure-certificate = false
 
   # The JWT auth shared secret to validate requests using JSON web tokens.
   # shared-secret = ""
@@ -540,8 +543,18 @@ reporting-disabled = true
   # database = "opentsdb"
   # retention-policy = ""
   # consistency-level = "one"
+
+  # Turns on TLS for this OpenTSDB instance.
   # tls-enabled = false
+
+  # TLS certificate to use when TLS is enabled.
   # certificate= "/etc/ssl/influxdb.pem"
+
+  # TLS private key when TLS is enabled. If blank, defaults to assuming key is in certificate.
+  # private-key = ""
+
+  # Allows insecure file permissions on certificate and private-key when enabled.
+  # insecure-certificate = false
 
   # Log an error for every malformed point.
   # log-point-errors = true

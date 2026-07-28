@@ -40,6 +40,12 @@ This role deploys the BaseOS repositories, which can be used to set a custom mir
 * Type: Bool.
 * Default: `true`
 
+`repo_baseos__security_repo_use_upstream`
+
+* Whether the Rocky Linux `security` repository always points at the upstream mirrorlist, even when `repo_baseos__mirror_url` is set. This keeps critical CVE fixes coming straight from upstream instead of a potentially lagging custom mirror. Set to `false` to make the `security` repository follow `repo_baseos__mirror_url` like the other repositories.
+* Type: Bool.
+* Default: `true`
+
 Example:
 ```yaml
 # optional
@@ -49,6 +55,7 @@ repo_baseos__basic_auth_login:
 repo_baseos__crb_repo_enabled__host_var: true
 repo_baseos__mirror_url: 'https://mirror.example.com'
 repo_baseos__security_repo_enabled__host_var: false
+repo_baseos__security_repo_use_upstream: false
 ```
 
 

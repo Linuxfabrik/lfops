@@ -44,13 +44,23 @@
       state: 'directory'
       owner: 'opensearch'
       group: 'opensearch'
-      mode: '2755'
+      mode: 0o750 # keeps other out of the data root, matching the OpenSearch package default.
 
   - name: 'Deploy /etc/sysconfig/opensearch'
     ansible.builtin.template:
       backup: true
       src: 'etc/sysconfig/opensearch.j2'
       dest: '/etc/sysconfig/opensearch'
+      owner: 'opensearch'
+      group: 'opensearch'
+      mode: 0o644
+    notify: 'opensearch: restart opensearch'
+
+  - name: 'Deploy /etc/opensearch/jvm.options.d/heap.options'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/opensearch/jvm.options.d/heap.options.j2'
+      dest: '/etc/opensearch/jvm.options.d/heap.options'
       owner: 'opensearch'
       group: 'opensearch'
       mode: 0o644
@@ -168,11 +178,16 @@
 
 - block:
 
-  - name: 'systemctl {{ opensearch__service_enabled | bool | ternary("enable", "disable") }} --now opensearch.service'
+  - name: 'systemctl {{ opensearch__service_enabled | bool | ternary("enable", "disable") }} opensearch.service'
     ansible.builtin.service:
       name: 'opensearch.service'
       enabled: '{{ opensearch__service_enabled }}'
-      state: '{{ opensearch__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ opensearch__service_state | regex_replace("p?ed$", "") }} opensearch.service'
+    ansible.builtin.service:
+      name: 'opensearch.service'
+      state: '{{ opensearch__service_state }}'
+    register: '__opensearch__service_state_result'
 
   tags:
     - 'opensearch'

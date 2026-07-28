@@ -36,9 +36,15 @@ This role is compatible with the following Redis versions:
 
 `redis__service_enabled`
 
-* Enables or disables the redis service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the redis service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`redis__service_state`
+
+* Changes the state of the redis service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `redis__service_enabled` is `true`, else `'stopped'`
 
 `redis__service_limit_nofile`
 
@@ -64,6 +70,7 @@ Example:
 # optional
 redis__service_enabled: true
 redis__service_limit_nofile: 10240
+redis__service_state: 'started'
 redis__service_timeout_start_sec: 5
 redis__service_timeout_stop_sec: 5
 ```
@@ -217,7 +224,9 @@ redis__conf_supervised: 'auto'
 
 ## Troubleshooting
 
-Not really a problem: The role configures systemd correctly, even if you get `WARNING supervised by systemd - you MUST set appropriate values for TimeoutStartSec and TimeoutStopSec in your service unit' in `/var/log/redis/redis.log`. This can be safely ignored [according to this GitHub issue](https://github.com/redis/redis/issues/8024).
+**`WARNING supervised by systemd - you MUST set appropriate values for TimeoutStartSec and TimeoutStopSec in your service unit` in `/var/log/redis/redis.log`**
+
+* Not really a problem: the role configures systemd correctly. This can be safely ignored [according to this GitHub issue](https://github.com/redis/redis/issues/8024).
 
 
 ## License

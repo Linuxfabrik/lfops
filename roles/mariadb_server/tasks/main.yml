@@ -42,6 +42,16 @@
         - 'mariadb-server'
       state: 'absent'
 
+  # refresh the apt cache so the following `state: latest` upgrade resolves
+  # against current metadata, e.g. to roll out security updates. apt does not
+  # auto-expire its cache the way dnf does, so without this the upgrade can
+  # silently run against a stale cache and miss newer versions.
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+    changed_when: false # refreshing the package cache is not a config change
+    when: 'ansible_facts["os_family"] == "Debian"'
+
   - name: 'Install latest mariadb-server' # noqa package-latest (latest is necessary for upgrade)
     ansible.builtin.package:
       name:
@@ -427,10 +437,11 @@
       name: 'mariadb.service'
       enabled: '{{ mariadb_server__enabled }}'
 
-  - name: 'systemctl {{ mariadb_server__state[:-2] }} mariadb.service'
+  - name: 'systemctl {{ mariadb_server__state | regex_replace("p?ed$", "") }} mariadb.service'
     ansible.builtin.service:
       name: 'mariadb.service'
       state: '{{ mariadb_server__state }}'
+    register: '__mariadb_server__service_state_result'
 
   - name: 'Flush handlers to make sure that MariaDB is using the correct socket from here on'
     ansible.builtin.meta: 'flush_handlers'
@@ -495,7 +506,7 @@
 - block:
 
   - name: 'Secure installation (Linuxfabrik): Remove all "root" users'
-    community.mysql.mysql_user:
+    ansible.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
@@ -506,7 +517,7 @@
       - 'mariadb_server__admin_user["username"] != "root"'
 
   - name: 'Secure installation: Remove anonymous users'
-    community.mysql.mysql_user:
+    ansible.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
@@ -515,7 +526,7 @@
       state: 'absent'
 
   - name: 'Secure installation: Remove test database'
-    community.mysql.mysql_db:
+    ansible.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
@@ -523,21 +534,21 @@
       state: 'absent'
 
   - name: 'Secure installation: Remove test database (privileges)'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       query: 'delete from mysql.db where db="test" or db="test\\_%";'
 
   - name: 'Secure installation: Reload privilege tables'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       query: 'flush privileges;'
 
   - name: 'Secure installation (Linuxfabrik): Remove users ignored in --skip-name-resolve mode'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
@@ -635,7 +646,7 @@
       mode: 0o600
 
   - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost'
-    community.mysql.mysql_user:
+    ansible.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
@@ -712,13 +723,13 @@
       var: 'mariadb_server__databases__combined_var'
 
   - name: 'Create or delete mariadb databases'
-    community.mysql.mysql_db:
+    ansible.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       name: '{{ item["name"] }}'
-      collation: '{{ item["collation"] | default("utf8_general_ci") }}'
-      encoding: '{{ item["encoding"] | default("utf8") }}'
+      collation: '{{ item["collation"] | default(omit) }}'
+      encoding: '{{ item["encoding"] | default(omit) }}'
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ mariadb_server__databases__combined_var }}'
     loop_control:
@@ -737,7 +748,7 @@
       var: 'mariadb_server__users__combined_var'
 
   - name: 'Create, update or delete MariaDB users'
-    community.mysql.mysql_user:
+    ansible.mysql.mysql_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
@@ -775,7 +786,7 @@
       var: '__mariadb_server__roles2members'
 
   - name: 'Create, update or delete MariaDB roles'
-    community.mysql.mysql_role:
+    ansible.mysql.mysql_role:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
@@ -788,7 +799,7 @@
       label: '{{ item["name"] }}'
 
   - name: 'SET DEFAULT ROLE `{{ item["default_role"] }}` FOR `{{ item["username"] }}`@`{{ item["host"] }}`'
-    community.mysql.mysql_query:
+    ansible.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
@@ -808,7 +819,7 @@
 - block:
 
   - name: 'Show databases'
-    community.mysql.mysql_info:
+    ansible.mysql.mysql_info:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
@@ -852,7 +863,7 @@
       remote_src: true
 
   - name: 'mysql --user "{{ mariadb_server__admin_user["username"] }}" --password < ./sys_10.sql'
-    community.mysql.mysql_db:
+    ansible.mysql.mysql_db:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'

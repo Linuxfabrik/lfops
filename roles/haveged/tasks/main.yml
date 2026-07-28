@@ -16,7 +16,7 @@
       name: 'haveged.service'
       enabled: '{{ haveged__service_enabled | bool }}'
 
-  - name: 'systemctl {{ haveged__service_state }} haveged.service'
+  - name: 'systemctl {{ haveged__service_state | regex_replace("p?ed$", "") }} haveged.service'
     ansible.builtin.service:
       name: 'haveged.service'
       state: '{{ haveged__service_state }}'

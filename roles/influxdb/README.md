@@ -155,9 +155,15 @@ influxdb__admin_login:
 
 `influxdb__service_enabled`
 
-* Enables or disables the influxdb service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the influxdb service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`influxdb__service_state`
+
+* Changes the state of the influxdb service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `influxdb__service_enabled` is `true`, else `'stopped'`
 
 `influxdb__users__host_var` / `influxdb__users__group_var`
 
@@ -225,6 +231,7 @@ influxdb__users__host_var:
       - database: 'database1'
         privilege: 'ALL'
 influxdb__service_enabled: true
+influxdb__service_state: 'started'
 influxdb__validate_certs: false
 ```
 

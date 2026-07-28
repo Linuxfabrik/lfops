@@ -1,0 +1,43 @@
+- name: 'Playbook linuxfabrik.lfops.schedule_reboot'
+  hosts:
+    - 'lfops_schedule_reboot'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.postfix'
+      postfix__aliases__dependent_var: '{{
+          mailto_root__postfix__aliases__dependent_var
+        }}'
+      postfix__sender_canonicals__dependent_var: '{{
+          mailto_root__postfix__sender_canonicals__dependent_var
+        }}'
+      when:
+        - 'not schedule_reboot__skip_postfix | d(false)'
+
+    - role: 'linuxfabrik.lfops.mailto_root'
+      when:
+        - 'not schedule_reboot__skip_mailto_root | d(false)'
+
+    - role: 'linuxfabrik.lfops.schedule_reboot'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

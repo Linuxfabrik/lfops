@@ -216,11 +216,16 @@
 
 - block:
 
-  - name: 'systemctl {{ elasticsearch__service_enabled | bool | ternary("enable", "disable") }} --now elasticsearch.service'
+  - name: 'systemctl {{ elasticsearch__service_enabled | bool | ternary("enable", "disable") }} elasticsearch.service'
     ansible.builtin.systemd:
       name: 'elasticsearch.service'
       enabled: '{{ elasticsearch__service_enabled }}'
+
+  - name: 'systemctl {{ elasticsearch__service_state | regex_replace("p?ed$", "") }} elasticsearch.service'
+    ansible.builtin.systemd:
+      name: 'elasticsearch.service'
       state: '{{ elasticsearch__service_state }}'
+    register: '__elasticsearch__service_state_result'
 
   tags:
     - 'elasticsearch'

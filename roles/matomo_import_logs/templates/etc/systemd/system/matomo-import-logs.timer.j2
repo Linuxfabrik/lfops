@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 20260616
+
+[Unit]
+Description=Matomo log import timer for {{ item["name"] }}
+
+[Timer]
+OnCalendar={{ item["on_calendar"] | d("06:30") }}
+Persistent=true
+Unit=matomo-import-logs-{{ item["name"] }}.service
+
+[Install]
+WantedBy=timers.target

@@ -146,9 +146,15 @@ apache_solr__version: '9.4.0'
 
 `apache_solr__service_enabled`
 
-* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`apache_solr__service_state`
+
+* Changes the state of the Apache Solr service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `apache_solr__service_enabled` is `true`, else `'stopped'`
 
 `apache_solr__stop_wait`
 
@@ -210,6 +216,7 @@ apache_solr__logs_dir: '/var/log/solr'
 apache_solr__pid_dir: '/var/solr'
 apache_solr__service: 'solr'
 apache_solr__service_enabled: true
+apache_solr__service_state: 'started'
 apache_solr__stop_wait: 15
 apache_solr__user: 'solr'
 apache_solr__var_dir: '/var/solr'

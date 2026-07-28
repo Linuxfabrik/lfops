@@ -1,0 +1,2 @@
+monitoring_plugins__install_method: 'source'
+monitoring_plugins__version: '5.0.0'

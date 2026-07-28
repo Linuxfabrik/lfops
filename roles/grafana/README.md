@@ -321,9 +321,15 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
 
 `grafana__service_enabled`
 
-* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`grafana__service_state`
+
+* Changes the state of the grafana service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `grafana__service_enabled` is `true`, else `'stopped'`
 
 `grafana__skip_token_to_bitwarden`
 
@@ -471,6 +477,7 @@ grafana__provisioning_service_accounts__host_var:
     role: 'Admin'
 grafana__serve_from_sub_path: false
 grafana__service_enabled: true
+grafana__service_state: 'started'
 grafana__skip_token_to_bitwarden: true
 grafana__smtp_config:
   host: 'mail.example.com:25'

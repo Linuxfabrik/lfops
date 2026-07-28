@@ -61,9 +61,15 @@ This role does not have any mandatory variables. However, either `chrony__ntp_po
 
 `chrony__service_enabled`
 
-* Enables or disables the chrony service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the chrony service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`chrony__service_state`
+
+* Changes the state of the chrony service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `chrony__service_enabled` is `true`, else `'stopped'`
 
 Example:
 ```yaml
@@ -78,6 +84,7 @@ chrony__ntp_pools:
 chrony__ntp_servers:
   - '192.0.2.2'
 chrony__service_enabled: true
+chrony__service_state: 'started'
 ```
 
 

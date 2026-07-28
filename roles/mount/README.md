@@ -88,7 +88,9 @@ mount__mounts__host_var:
 
 ## Troubleshooting
 
-`mount.nfs: access denied by server while mounting`: Run `exportfs -rv` on the NFS server and try again.
+**`mount.nfs: access denied by server while mounting`**
+
+* Run `exportfs -rv` on the NFS server and try again.
 
 
 ## License

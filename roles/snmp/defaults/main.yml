@@ -1,1 +1,2 @@
 snmp__snmpd_service_enabled: true
+snmp__snmpd_service_state: '{{ snmp__snmpd_service_enabled | bool | ternary("started", "stopped") }}'

@@ -1,0 +1,52 @@
+- name: 'Verify the matomo_import_logs timer is installed and active'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  vars:
+    __molecule__site: 'test.example.com'
+  tasks:
+
+    - name: 'stat /usr/local/sbin/import_logs.py'
+      ansible.builtin.stat:
+        path: '/usr/local/sbin/import_logs.py'
+      register: '__molecule__import_logs_script'
+
+    - name: 'Assert that import_logs.py is present and executable'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__import_logs_script["stat"]["exists"]'
+          - '__molecule__import_logs_script["stat"]["mode"] == "0755"'
+
+    - name: 'stat the per-site auth file'
+      ansible.builtin.stat:
+        path: '/etc/matomo-import-logs/{{ __molecule__site }}.conf'
+      register: '__molecule__auth_file'
+
+    - name: 'Assert that the auth file exists and is mode 0600'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__auth_file["stat"]["exists"]'
+          - '__molecule__auth_file["stat"]["mode"] == "0600"'
+
+    # catches a malformed ExecStart (the date/%% escaping) that the template task
+    # itself would not detect.
+    - name: 'systemd-analyze verify the generated service unit'
+      ansible.builtin.command: 'systemd-analyze verify /etc/systemd/system/matomo-import-logs-{{ __molecule__site }}.service'
+      changed_when: false
+
+    - name: 'systemctl is-enabled the timer'
+      ansible.builtin.command: 'systemctl is-enabled matomo-import-logs-{{ __molecule__site }}.timer'
+      register: '__molecule__timer_enabled'
+      changed_when: false
+
+    - name: 'Assert that the timer is enabled'
+      ansible.builtin.assert:
+        that: '__molecule__timer_enabled["stdout"] == "enabled"'
+
+    - name: 'systemctl is-active the timer'
+      ansible.builtin.command: 'systemctl is-active matomo-import-logs-{{ __molecule__site }}.timer'
+      register: '__molecule__timer_active'
+      changed_when: false
+
+    - name: 'Assert that the timer is active'
+      ansible.builtin.assert:
+        that: '__molecule__timer_active["stdout"] == "active"'

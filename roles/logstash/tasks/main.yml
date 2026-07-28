@@ -205,11 +205,16 @@
 
 - block:
 
-  - name: 'systemctl {{ logstash__service_enabled | bool | ternary("enable", "disable") }} --now logstash.service'
+  - name: 'systemctl {{ logstash__service_enabled | bool | ternary("enable", "disable") }} logstash.service'
     ansible.builtin.systemd:
       name: 'logstash.service'
       enabled: '{{ logstash__service_enabled }}'
+
+  - name: 'systemctl {{ logstash__service_state | regex_replace("p?ed$", "") }} logstash.service'
+    ansible.builtin.systemd:
+      name: 'logstash.service'
       state: '{{ logstash__service_state }}'
+    register: '__logstash__service_state_result'
 
   tags:
     - 'logstash'

@@ -1,0 +1,63 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      monitoring_plugins__icinga2_api_password:
+        type: 'str'
+        required: false
+        description: >-
+          The password of the `monitoring_plugins__icinga2_api_user`. Required to
+          schedule a downtime for Windows hosts.
+
+      monitoring_plugins__icinga2_api_url:
+        type: 'str'
+        required: false
+        description: >-
+          The address of the Icinga2 master API. Required to schedule a downtime
+          for Windows hosts.
+
+      monitoring_plugins__icinga2_api_user:
+        type: 'str'
+        required: false
+        description: >-
+          The Icinga2 API user. Required to schedule a downtime for Windows hosts.
+
+      monitoring_plugins__icinga2_cn:
+        type: 'str'
+        required: false
+        description: >-
+          The common name / host name. Used to schedule a downtime for Windows
+          hosts. Defaults to the node name.
+
+      monitoring_plugins__install_method:
+        type: 'str'
+        required: false
+        default: 'package'
+        choices:
+          - 'archive'
+          - 'package'
+          - 'source'
+        description: >-
+          Which variant of the monitoring plugins to deploy: `package` (rpm/deb/msi),
+          `source` (source code into a virtual environment, Linux only) or `archive`
+          (zipped binaries, Windows only).
+
+      monitoring_plugins__skip_package_versionlock:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Skip locking the version of the `linuxfabrik-monitoring-plugins` package
+          after installation (and never unlock the version pinning again).
+
+      monitoring_plugins__version:
+        type: 'str'
+        required: false
+        description: >-
+          Which version of the monitoring plugins to deploy: a specific release (e.g.
+          `2.2.1`) or `dev` (the development version / main branch, source install
+          only). Mandatory; defaults to `lfops__monitoring_plugins_version`. Enforced
+          by an assert at role entry.

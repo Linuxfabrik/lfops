@@ -23,6 +23,8 @@ opensearch__cluster_name__combined_var: '{{
 opensearch__generate_certs_admin_cn: 'OpenSearch Admin'
 opensearch__generate_certs_ca_cn: 'OpenSearch Self-signed RootCA'
 
+opensearch__heap: '{{ [((ansible_facts["memtotal_mb"] * 0.5) | int), 31744] | min }}m'
+
 opensearch__internal_users__dependent_var: []
 opensearch__internal_users__group_var: []
 opensearch__internal_users__host_var: []
@@ -49,6 +51,7 @@ opensearch__path_data__combined_var: '{{
     opensearch__path_data__role_var
   }}'
 
+opensearch__path_repo: []
 opensearch__plugins_security_allow_unsafe_democertificates: false
 opensearch__plugins_security_authcz_admin_dns: []
 opensearch__plugins_security_disabled: false
@@ -56,6 +59,7 @@ opensearch__plugins_security_nodes_dns: []
 opensearch__plugins_security_transport_enforce_hostname_verification: true
 opensearch__plugins_security_transport_resolve_hostname: true
 opensearch__service_enabled: true
+opensearch__service_state: '{{ opensearch__service_enabled | bool | ternary("started", "stopped") }}'
 
 opensearch__version__dependent_var: ''
 opensearch__version__group_var: ''

@@ -1,0 +1,33 @@
+- name: 'Playbook linuxfabrik.lfops.matomo_import_logs'
+  hosts:
+    - 'lfops_matomo_import_logs'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.python'
+      when:
+        - 'not matomo_import_logs__skip_python | d(false)'
+
+    - role: 'linuxfabrik.lfops.matomo_import_logs'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

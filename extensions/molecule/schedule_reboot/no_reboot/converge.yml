@@ -1,0 +1,5 @@
+# Import the playbook under test by its FQCN, so the test exercises the real
+# playbook (and through it, the roles) instead of a copy that could drift. The
+# test inputs live in the scenario inventory, the checks in verify.yml.
+- name: 'Converge schedule_reboot playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.schedule_reboot'

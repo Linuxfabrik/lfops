@@ -87,11 +87,16 @@
 
 - block:
 
-  - name: 'systemctl {{ vsftpd__service_enabled | bool | ternary("enable", "disable") }} --now vsftpd.service'
+  - name: 'systemctl {{ vsftpd__service_enabled | bool | ternary("enable", "disable") }} vsftpd.service'
     ansible.builtin.systemd:
       name: 'vsftpd.service'
       enabled: '{{ vsftpd__service_enabled }}'
-      state: '{{ vsftpd__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ vsftpd__service_state | regex_replace("p?ed$", "") }} vsftpd.service'
+    ansible.builtin.systemd:
+      name: 'vsftpd.service'
+      state: '{{ vsftpd__service_state }}'
+    register: '__vsftpd__service_state_result'
 
   tags:
     - 'vsftpd'

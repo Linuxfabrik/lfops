@@ -227,11 +227,13 @@ mariadb_server__dump_user:
 
         * Optional. DB collation.
         * Type: String.
+        * Default: empty; the database inherits the server default (`mariadb_server__cnf_collation_server__combined_var`).
 
     * `encoding`:
 
-        * Optional. DB encoding.
+        * Optional. DB encoding (character set).
         * Type: String.
+        * Default: empty; the database inherits the server default (`mariadb_server__cnf_character_set_server__combined_var`).
 
     * `state`:
 
@@ -627,6 +629,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: Number.
 * Default: `1`
 
+`mariadb_server__cnf_innodb_flush_neighbors__group_var` / `mariadb_server__cnf_innodb_flush_neighbors__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_neighbors)
+* Type: Number.
+* Default: `0`
+
 `mariadb_server__cnf_innodb_io_capacity__group_var` / `mariadb_server__cnf_innodb_io_capacity__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_io_capacity)
@@ -925,6 +933,7 @@ mariadb_server__cnf_innodb_buffer_pool_size__host_var: '{{ (ansible_facts["memto
 mariadb_server__cnf_innodb_doublewrite__host_var: 1
 mariadb_server__cnf_innodb_file_per_table__host_var: 'ON'
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__host_var: 1
+mariadb_server__cnf_innodb_flush_neighbors__host_var: 0
 mariadb_server__cnf_innodb_io_capacity__host_var: 200
 mariadb_server__cnf_innodb_log_buffer_size__host_var: '20M'
 mariadb_server__cnf_innodb_log_file_size__host_var: '96M'
@@ -1368,18 +1377,17 @@ mariadb_server__cnf_wsrep_sst_method: 'mariabackup'
 
 ## Troubleshooting
 
-Q: `A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`
+**`A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version.`**
 
-A: Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role, or run the full `mariadb_server` playbook, not limited by some tags.
+* Install the `python3-PyMySQL` library. This can be done using the [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python) role, or run the full `mariadb_server` playbook, not limited by some tags.
 
+**I always get `[Warning] Access denied for user 'root'@'localhost'` in mariadb.log when running this role.**
 
-Q: I always get `[Warning] Access denied for user 'root'@'localhost'` in mariadb.log when running this role.
+* This is due to `check_implicit_admin: true`. This checks if MariaDB allows login as root/nopassword before trying the supplied credentials. If successful, the login_user/login_password passed will be ignored. This is especially needed for the first run of this role.
 
-A: This is due to `check_implicit_admin: true`. This checks if MariaDB allows login as root/nopassword before trying the supplied credentials. If successful, the login_user/login_password passed will be ignored. This is especially needed for the first run of this role.
+**I get `IndexError: list index out of range` during "Create, update or delete MariaDB users".**
 
-Q: I get `IndexError: list index out of range` during "Create, update or delete MariaDB users".
-
-A: Check that the user's `priv` is not set to `[]`. The lowest privileges allowed are `['*.*:USAGE']`.
+* Check that the user's `priv` is not set to `[]`. The lowest privileges allowed are `['*.*:USAGE']`.
 
 
 ## License

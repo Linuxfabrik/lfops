@@ -17,7 +17,7 @@
       name: 'vmtoolsd.service'
       enabled: '{{ open_vm_tools__service_enabled | bool }}'
 
-  - name: 'systemctl {{ open_vm_tools__service_state }} vmtoolsd.service'
+  - name: 'systemctl {{ open_vm_tools__service_state | regex_replace("p?ed$", "") }} vmtoolsd.service'
     ansible.builtin.service:
       name: 'vmtoolsd.service'
       state: '{{ open_vm_tools__service_state }}'

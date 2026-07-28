@@ -40,6 +40,17 @@ postfix__maximal_queue_lifetime: '5d'
 postfix__message_size_limit: 10240000
 postfix__mydestination: '$myhostname, localhost.$mydomain, localhost'
 postfix__myorigin: '$myhostname'
+postfix__recipient_canonicals__combined_var: '{{ (
+      postfix__recipient_canonicals__role_var +
+      postfix__recipient_canonicals__dependent_var +
+      postfix__recipient_canonicals__group_var +
+      postfix__recipient_canonicals__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="pattern")
+  }}'
+postfix__recipient_canonicals__dependent_var: []
+postfix__recipient_canonicals__group_var: []
+postfix__recipient_canonicals__host_var: []
+postfix__recipient_canonicals__role_var: []
 postfix__recipient_delimiter: ''
 postfix__relayhost_password: ''
 postfix__relayhost_username: '{{ mailto_root__from }}'

@@ -225,9 +225,15 @@ graylog_server__root_user:
 
 `graylog_server__service_enabled`
 
-* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`graylog_server__service_state`
+
+* Changes the state of the graylog-server service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `graylog_server__service_enabled` is `true`, else `'stopped'`
 
 `graylog_server__stale_leader_timeout_ms`
 
@@ -502,9 +508,9 @@ graylog_server__trusted_proxies:
 
 ## Troubleshooting
 
-Q: `/bin/sh: /opt/python-venv/pymongo/bin/python3: No such file or directory`
+**`/bin/sh: /opt/python-venv/pymongo/bin/python3: No such file or directory`**
 
-A: You either have to run the whole playbook, or python_venv directly: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_server --tags python_venv`
+* You either have to run the whole playbook, or python_venv directly: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_server --tags python_venv`
 
 
 ## License

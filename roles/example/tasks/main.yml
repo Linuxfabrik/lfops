@@ -368,7 +368,7 @@
       name: 'example.service'
       enabled: '{{ example__service_enabled | bool }}'
 
-  - name: 'systemctl {{ example__service_state }} example.service'
+  - name: 'systemctl {{ example__service_state | regex_replace("p?ed$", "") }} example.service'
     ansible.builtin.service:
       name: 'example.service'
       state: '{{ example__service_state }}'

@@ -3,7 +3,12 @@
     name: 'firewalld'
     state: 'reloaded'
 
+# skip restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers). The
+# role manages no service state variable for fwb, so the redundant-restart and stopped guards
+# cannot be expressed here.
 - name: 'firewall: restart fwb'
   ansible.builtin.systemd:
     name: 'fwb'
     state: 'restarted'
+  when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'

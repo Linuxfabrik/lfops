@@ -11,24 +11,6 @@
 
 - block:
 
-  - name: 'systemctl {{ rsyslog__service_enabled | bool | ternary("enable", "disable") }} rsyslog.service'
-    ansible.builtin.systemd:
-      name: 'rsyslog.service'
-      enabled: '{{ rsyslog__service_enabled }}'
-
-  - name: 'systemctl {{ rsyslog__service_state[:-2] }} rsyslog.service'
-    ansible.builtin.systemd:
-      name: 'rsyslog.service'
-      state: '{{ rsyslog__service_state }}'
-    register: 'rsyslog__service_state_result'
-
-  tags:
-    - 'rsyslog'
-    - 'rsyslog:state'
-
-
-- block:
-
   - name: 'Combined Configs:'
     ansible.builtin.debug:
       var: 'rsyslog__conf__combined_var'
@@ -59,3 +41,23 @@
   tags:
     - 'rsyslog'
     - 'rsyslog:configure'
+
+
+# runs last, after the config files above, so that a fresh installation starts rsyslog with the
+# deployed configuration and the restart handler can skip the redundant bounce.
+- block:
+
+  - name: 'systemctl {{ rsyslog__service_enabled | bool | ternary("enable", "disable") }} rsyslog.service'
+    ansible.builtin.systemd:
+      name: 'rsyslog.service'
+      enabled: '{{ rsyslog__service_enabled }}'
+
+  - name: 'systemctl {{ rsyslog__service_state | regex_replace("p?ed$", "") }} rsyslog.service'
+    ansible.builtin.systemd:
+      name: 'rsyslog.service'
+      state: '{{ rsyslog__service_state }}'
+    register: '__rsyslog__service_state_result'
+
+  tags:
+    - 'rsyslog'
+    - 'rsyslog:state'

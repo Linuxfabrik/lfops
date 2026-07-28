@@ -76,11 +76,16 @@
 
 - block:
 
-  - name: 'systemctl {{ glpi_agent__service_enabled | bool | ternary("enable", "disable") }} --now glpi-agent.service'
+  - name: 'systemctl {{ glpi_agent__service_enabled | bool | ternary("enable", "disable") }} glpi-agent.service'
     ansible.builtin.systemd:
       name: 'glpi-agent.service'
       enabled: '{{ glpi_agent__service_enabled }}'
-      state: '{{ glpi_agent__service_enabled | bool | ternary("started", "stopped") }}'
+
+  - name: 'systemctl {{ glpi_agent__service_state | regex_replace("p?ed$", "") }} glpi-agent.service'
+    ansible.builtin.systemd:
+      name: 'glpi-agent.service'
+      state: '{{ glpi_agent__service_state }}'
+    register: '__glpi_agent__service_state_result'
 
   tags:
     - 'glpi_agent'

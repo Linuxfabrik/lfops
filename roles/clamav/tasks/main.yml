@@ -172,18 +172,28 @@
     when:
       - 'clamav__clamd_service_enabled | bool'
 
-  - name: 'systemctl {{ clamav__clamd_service_enabled | bool | ternary("enable", "disable") }} --now {{ __clamav__clamd_service }}'
+  - name: 'systemctl {{ clamav__clamd_service_enabled | bool | ternary("enable", "disable") }} {{ __clamav__clamd_service }}'
     ansible.builtin.service:
       name: '{{ __clamav__clamd_service }}'
       enabled: '{{ clamav__clamd_service_enabled }}'
-      state: '{{ clamav__clamd_service_enabled | bool | ternary("started", "stopped") }}'
 
-  - name: 'systemctl {{ clamav__clamonacc_service_enabled | bool | ternary("enable", "disable") }} --now clamav-clamonacc.service'
+  - name: 'systemctl {{ clamav__clamd_service_state | regex_replace("p?ed$", "") }} {{ __clamav__clamd_service }}'
+    ansible.builtin.service:
+      name: '{{ __clamav__clamd_service }}'
+      state: '{{ clamav__clamd_service_state }}'
+    register: '__clamav__clamd_service_state_result'
+
+  - name: 'systemctl {{ clamav__clamonacc_service_enabled | bool | ternary("enable", "disable") }} clamav-clamonacc.service'
     ansible.builtin.service:
       name: 'clamav-clamonacc.service'
       enabled: '{{ clamav__clamonacc_service_enabled }}'
-      state: '{{ clamav__clamonacc_service_enabled | bool | ternary("started", "stopped") }}'
       daemon_reload: '{{ clamav__clamonacc_fdpass_result is changed }}'
+
+  - name: 'systemctl {{ clamav__clamonacc_service_state | regex_replace("p?ed$", "") }} clamav-clamonacc.service'
+    ansible.builtin.service:
+      name: 'clamav-clamonacc.service'
+      state: '{{ clamav__clamonacc_service_state }}'
+    register: '__clamav__clamonacc_service_state_result'
 
   - name: 'systemctl {{ clamav__clamdscan_timer_enabled | bool | ternary("enable", "disable") }} --now clamav-clamdscan.timer'
     ansible.builtin.service:

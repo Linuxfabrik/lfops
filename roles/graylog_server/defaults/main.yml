@@ -15,6 +15,7 @@ graylog_server__opts: '-Xms1g -Xmx1g -server -XX:+UseG1GC -XX:-OmitStackTraceInF
 graylog_server__output_batch_size: 500
 graylog_server__ring_size: 65536
 graylog_server__service_enabled: true
+graylog_server__service_state: '{{ graylog_server__service_enabled | bool | ternary("started", "stopped") }}'
 graylog_server__stale_leader_timeout_ms: 2000
 graylog_server__timezone: 'Europe/Zurich'
 graylog_server__trusted_proxies: []

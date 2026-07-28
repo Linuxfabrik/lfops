@@ -36,6 +36,11 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Manages the state of the Icinga2 service.
 * Triggers: none.
 
+`icinga2_agent:systemd_override`
+
+* Deploys: `/etc/systemd/system/icinga2.service.d/z00-after-sssd.conf`.
+* Triggers: none.
+
 
 ## Mandatory Role Variables
 
@@ -122,9 +127,15 @@ icinga2_master__influxdb_login:
 
 `icinga2_master__service_enabled`
 
-* Enables or disables the Icinga2 service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the Icinga2 service, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`icinga2_master__service_state`
+
+* Changes the state of the Icinga2 service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `icinga2_master__service_enabled` is `true`, else `'stopped'`
 
 Example:
 ```yaml
@@ -174,6 +185,7 @@ icinga2_master__influxdb_database_name: 'icinga2'
 icinga2_master__influxdb_host: 'localhost'
 icinga2_master__influxdb_retention: '216d'
 icinga2_master__service_enabled: true
+icinga2_master__service_state: 'started'
 ```
 
 

@@ -11,19 +11,6 @@
 
 - block:
 
-  - name: 'systemctl {{ fail2ban__service_enabled | bool | ternary("enable", "disable") }} --now fail2ban.service'
-    ansible.builtin.systemd:
-      name: 'fail2ban.service'
-      enabled: '{{ fail2ban__service_enabled }}'
-      state: '{{ fail2ban__service_enabled | bool | ternary("started", "stopped") }}'
-
-  tags:
-    - 'fail2ban'
-    - 'fail2ban:state'
-
-
-- block:
-
   - name: 'Deploy actions'
     ansible.builtin.template:
       backup: true
@@ -92,3 +79,23 @@
 
   tags:
     - 'fail2ban'
+
+
+# runs last, after the jails and filters above, so that a fresh installation starts fail2ban with
+# the deployed configuration and the restart handler can skip the redundant bounce.
+- block:
+
+  - name: 'systemctl {{ fail2ban__service_enabled | bool | ternary("enable", "disable") }} fail2ban.service'
+    ansible.builtin.systemd:
+      name: 'fail2ban.service'
+      enabled: '{{ fail2ban__service_enabled }}'
+
+  - name: 'systemctl {{ fail2ban__service_state | regex_replace("p?ed$", "") }} fail2ban.service'
+    ansible.builtin.systemd:
+      name: 'fail2ban.service'
+      state: '{{ fail2ban__service_state }}'
+    register: '__fail2ban__service_state_result'
+
+  tags:
+    - 'fail2ban'
+    - 'fail2ban:state'

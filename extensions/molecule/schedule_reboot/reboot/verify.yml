@@ -1,0 +1,44 @@
+# Destructive verify: actually reboot the host through the CLI and confirm it
+# came back (boot_id changed) with an empty spool (tmpfs cleared on reboot).
+- name: 'Verify schedule_reboot performs a real reboot'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'slurp /proc/sys/kernel/random/boot_id (before)'
+      ansible.builtin.slurp:
+        src: '/proc/sys/kernel/random/boot_id'
+      register: '__molecule__boot_id_before_result'
+
+    # Fire and forget: schedule-reboot --now starts schedule-reboot.service,
+    # which reboots the host and drops this SSH connection. async + poll: 0 lets
+    # Ansible move on instead of waiting on the dying connection.
+    - name: 'schedule-reboot --now ci-reboot molecule-reboot-test'
+      ansible.builtin.command: 'schedule-reboot --now ci-reboot molecule-reboot-test'
+      async: 1
+      poll: 0 # fire and forget: the reboot drops the connection, do not wait on it
+      changed_when: false
+
+    - name: 'Wait for the host to come back after the reboot'
+      ansible.builtin.wait_for_connection:
+        delay: 15
+        sleep: 5
+        timeout: 300
+
+    - name: 'slurp /proc/sys/kernel/random/boot_id (after)'
+      ansible.builtin.slurp:
+        src: '/proc/sys/kernel/random/boot_id'
+      register: '__molecule__boot_id_after_result'
+
+    - name: 'Assert the boot_id changed, proving a real reboot happened'
+      ansible.builtin.assert:
+        that: '__molecule__boot_id_after_result["content"] != __molecule__boot_id_before_result["content"]'
+
+    - name: 'find /run/schedule-reboot'
+      ansible.builtin.find:
+        paths: '/run/schedule-reboot'
+      register: '__molecule__spool_after_result'
+
+    - name: 'Assert the spool is empty (tmpfs cleared by the reboot)'
+      ansible.builtin.assert:
+        that: '__molecule__spool_after_result["matched"] == 0'

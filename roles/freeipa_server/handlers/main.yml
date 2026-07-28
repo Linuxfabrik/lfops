@@ -1,0 +1,3 @@
+- name: 'freeipa_server: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

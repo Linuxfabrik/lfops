@@ -1,0 +1,38 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      python_venv__pip_cert:
+        type: 'str'
+        required: false
+        description: 'Path to a PEM-encoded CA certificate bundle for pip to use instead of its built-in certificates.'
+
+      python_venv__pip_conf_global_retries:
+        type: 'int'
+        required: false
+        default: 0
+        description: 'Number of retries pip performs on a failed network operation, written to /etc/pip.conf.'
+
+      python_venv__venvs__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Virtual environments to manage. Dependent-role injection.'
+
+      python_venv__venvs__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Virtual environments to manage. Group-level override.'
+
+      python_venv__venvs__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Virtual environments to manage. Host-level override.'

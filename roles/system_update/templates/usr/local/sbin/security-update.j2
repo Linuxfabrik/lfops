@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026070301
+
+# Apply Rocky Linux security hot-fixes from the dedicated `security` repository
+# only, then request a reboot if one is needed by dropping a file into the
+# /run/schedule-reboot spool. This script never reboots itself; the
+# schedule-reboot.service (ordered After= this one) performs the reboot at the window.
+
+export LC_ALL=C
+
+REPOS="{{ system_update__security_repos | join(',') }}"
+
+# log progress to stdout so systemd captures it in the journal (journalctl -u
+# security-update.service); journald already prefixes a timestamp and the unit name.
+log () {
+    printf '%s\n' "$*"
+}
+
+send_msg () {
+    local subject="$1" body="$2"
+    # feed a complete message to sendmail (-t reads the recipients from the headers).
+    # sendmail has a stable CLI across MTAs, unlike mailx's -r / -a "From:" split.
+    {
+        printf 'From: %s\n' "$SENDER"
+        printf 'To: %s\n' "${RECIPIENTS// /, }"
+        printf 'Subject: %s\n' "$subject"
+        printf 'Content-Type: text/plain; charset="utf-8"\n'
+        printf 'Content-Transfer-Encoding: 8bit\n'
+        printf '\n%s\n' "$body"
+    } | sendmail -oi -t -f "$SENDER"
+{% if system_update__rocketchat_url is defined and system_update__rocketchat_url | length %}
+    /usr/bin/curl --silent --output /dev/null --data-urlencode \
+        "text=${subject}
+
+        ${body}
+        {{ system_update__rocketchat_msg_suffix }}" \
+        --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
+        "{{ system_update__rocketchat_url }}"
+{% endif %}
+}
+
+makecache_with_retry () {
+    # Rocky's mirrorlist service intermittently answers with an empty list
+    # ("No URLs in mirrorlist") during upstream degraded windows. Retry only the
+    # metadata refresh so those blips self-heal without re-running the transaction.
+    local attempt
+    for attempt in 1 2 3; do
+        if yum "$@" makecache 1> /dev/null 2> /tmp/makecache-stderr; then
+            return 0
+        fi
+        [ "$attempt" -lt 3 ] && { log "Metadata refresh attempt $attempt failed; retrying in 60s"; sleep 60; }
+    done
+    return 1
+}
+
+SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
+SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
+RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ') }}"
+
+# the reboot-request spool is owned and created by the schedule_reboot role (tmpfiles.d)
+
+log "Starting security update run"
+
+# the security lane only acts when at least one of the configured security
+# repositories is enabled on this host (provided by the repo_baseos role). skip
+# silently otherwise, so the timer can default to enabled without acting on hosts
+# where the repo is absent or was opted out via repo_baseos__security_repo_enabled.
+have_repo=0
+for repo in {{ system_update__security_repos | join(' ') }}; do
+    if dnf repolist --enabled 2> /dev/null | awk 'NR > 1 { print $1 }' | grep -qxF "$repo"; then
+        have_repo=1
+    fi
+done
+if [ "$have_repo" -eq 0 ]; then
+    log "No configured security repository enabled (looked for: $REPOS); nothing to do"
+    exit 0
+fi
+
+# refresh the security repo metadata first, retrying transient mirrorlist failures;
+# check-update and upgrade below then run against the freshly cached metadata.
+if ! makecache_with_retry --disablerepo="*" --enablerepo="$REPOS"; then
+    log "Security metadata refresh failed; see /tmp/makecache-stderr"
+    send_msg "$SUBJECT_PREFIX - Security update check failed" "$(</tmp/makecache-stderr)"
+    exit 1
+fi
+
+# only act when the security repo actually has updates pending. check-update exits
+# 100 if updates are available, 0 if there is nothing to do, 1 on error. exit quietly
+# on 0 so the daily timer does not send a "Nothing to do" mail.
+yum --disablerepo="*" --enablerepo="$REPOS" check-update 1> /dev/null 2> /tmp/security-check-stderr
+retc=$?
+if [ "$retc" -eq 0 ]; then
+    log "No security updates pending; nothing to do"
+    exit 0
+elif [ "$retc" -ne 100 ]; then
+    log "Security update check failed; see /tmp/security-check-stderr"
+    send_msg "$SUBJECT_PREFIX - Security update check failed" "$(</tmp/security-check-stderr)"
+    exit 1
+fi
+
+# install security hot-fixes from the security repo only. --disablerepo / --enablerepo
+# keeps this lane separate from the regular (weekly) update lane and from the frozen
+# mirror snapshot.
+log "Applying security hot-fixes from: $REPOS"
+if ! yum --disablerepo="*" --enablerepo="$REPOS" -y upgrade 1> /tmp/security-update 2> /tmp/security-update-stderr; then
+    log "Security update failed; see /tmp/security-update-stderr"
+    send_msg "$SUBJECT_PREFIX - Security update failed" "$(</tmp/security-update-stderr)"
+    exit 1
+fi
+
+# request a reboot if a core component (kernel, glibc, ...) needs it, or if running
+# services still use the pre-update libraries.
+needs-restarting --reboothint &> /dev/null
+reboothint_rc=$?
+needs-restarting 2> /dev/null > /tmp/security-needs-restarting
+
+if [ "$reboothint_rc" -eq 1 ] || [ -s /tmp/security-needs-restarting ]; then
+    log "Reboot required after security update; requesting reboot via the spool"
+    # request a reboot; do-reboot sends the single notification at reboot time
+    yum history info > /run/schedule-reboot/security_update
+    exit 0
+fi
+
+log "Security update installed, no reboot required"
+send_msg "$SUBJECT_PREFIX - Security update installed without reboot" "$(cat /tmp/security-update)"

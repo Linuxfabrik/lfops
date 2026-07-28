@@ -1,0 +1,15 @@
+# Inputs for the schedule_reboot playbook (postfix + mailto_root + schedule_reboot).
+
+# mailto_root is mandatory: it needs a from and a list of recipients. A local
+# address is enough; the test never sends real mail.
+mailto_root__from: 'root@localhost'
+mailto_root__to:
+  - 'root@localhost'
+
+# postfix needs a relayhost; an unreachable example host is fine, the test does
+# not deliver mail.
+postfix__relayhost: 'mail.example.com'
+
+# Reboot window far from the test run, so the timer never fires mid-test. The
+# actor is exercised explicitly in verify.yml instead.
+schedule_reboot__reboot_time__group_var: '03:00'

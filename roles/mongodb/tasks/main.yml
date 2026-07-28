@@ -96,11 +96,11 @@
       name: 'mongod.service'
       enabled: '{{ mongodb__service_enabled }}'
 
-  - name: 'systemctl {{ mongodb__service_state[:-2] }} mongod.service'
+  - name: 'systemctl {{ mongodb__service_state | regex_replace("p?ed$", "") }} mongod.service'
     ansible.builtin.systemd:
       name: 'mongod.service'
       state: '{{ mongodb__service_state }}'
-    register: 'mongodb__service_state_result'
+    register: '__mongodb__service_state_result'
 
   tags:
     - 'mongodb'

@@ -1,0 +1,2 @@
+- name: 'Converge matomo_import_logs playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.matomo_import_logs'

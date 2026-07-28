@@ -23,13 +23,13 @@
       - 'package_info["rc"] != 0'
       - '"No such file or directory" not in package_info["stderr"]'
     when:
-      - 'found_files.files'
+      - 'found_files.files | length > 0'
 
   - name: 'Set fact for OS name and version'
     ansible.builtin.set_fact:
       os_name_version: '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}'
     when:
-      - 'found_files.files'
+      - 'found_files.files | length > 0'
 
   - name: 'Map files to their package info'
     ansible.builtin.set_fact:
@@ -38,7 +38,7 @@
     loop_control:
       label: '{{ item.item.path }}'
     when:
-      - 'found_files.files'
+      - 'found_files.files | length > 0'
       - 'item["rc"] == 0' # skip files which do not belong to a package anymore
 
   - name: 'Delete orphaned files'
@@ -49,7 +49,7 @@
     loop_control:
       label: '{{ item.item.path }}'
     when:
-      - 'found_files.files'
+      - 'found_files.files | length > 0'
       - 'item["rc"] != 0'
 
   - name: 'Download rpmnew/rpmsave files to control node'
@@ -61,7 +61,7 @@
     loop_control:
       label: '{{ item.key }}'
     when:
-      - 'found_files.files'
+      - 'found_files.files | length > 0'
       - 'package_file_mappings is defined and package_file_mappings | length > 0'
 
   - name: 'Download original files to control node'
@@ -73,7 +73,7 @@
     loop_control:
       label: '{{ item.key }}'
     when:
-      - 'found_files.files'
+      - 'found_files.files | length > 0'
       - 'package_file_mappings is defined and package_file_mappings | length > 0'
 
   tags:

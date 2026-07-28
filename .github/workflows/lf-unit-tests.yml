@@ -27,22 +27,36 @@ jobs:
           - '3.13'
     steps:
       - name: 'Harden the runner (Audit all outbound calls)'
-        uses: 'step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411' # v2.19.4
+        uses: 'step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920' # v2.20.0
         with:
           egress-policy: 'audit'
 
       - name: 'Checkout repository'
-        uses: 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10' # v6.0.3
+        uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' # v7.0.1
 
-      - name: 'Set up Python'
-        uses: 'actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405' # v6.2.0
+      # The interpreter tox builds the test env for. Its absolute path is
+      # handed to tox via `--discover` below, so this step does not rely on
+      # the executable staying on PATH once the next step runs.
+      - name: 'Set up the target Python ${{ matrix.python-version }}'
+        id: 'target-python'
+        uses: 'actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97' # v7.0.0
         with:
           python-version: '${{ matrix.python-version }}'
 
+      # The interpreter tox itself runs under. Pinned to one version so that
+      # a single hash-pinned requirements file covers the whole matrix:
+      # tox cannot be resolved for 3.9 and 3.10+ at once, because virtualenv
+      # requires `filelock >= 3.24.2` from 3.10 on and no filelock that new
+      # supports 3.9. Listed last, so `python` and `pip` refer to it.
+      - name: 'Set up the Python that runs tox'
+        uses: 'actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97' # v7.0.0
+        with:
+          python-version: '3.13'
+
       - name: 'Install tox'
-        run: 'pip install tox'
+        run: 'pip install --require-hashes --requirement .github/tox/requirements.txt'
 
       - name: 'Run tox for this Python (all matching ansible-core envs)'
         # `-f pyXYZ` selects every tox env carrying this Python's factor,
         # e.g. py311 -> py311-ansible215/216/217/218.
-        run: 'tox -f py$(echo "${{ matrix.python-version }}" | tr -d ".")'
+        run: 'tox --discover "${{ steps.target-python.outputs.python-path }}" -f "py$(echo "${{ matrix.python-version }}" | tr -d ".")"'

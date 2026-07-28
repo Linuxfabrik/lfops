@@ -1,0 +1,5 @@
+# Import the playbook under test by its FQCN. system_update.yml also pulls in
+# postfix, mailto_root and schedule_reboot, so the converge exercises the whole
+# update + reboot chain.
+- name: 'Converge system_update playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.system_update'
