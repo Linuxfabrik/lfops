@@ -75,9 +75,11 @@
     ansible.builtin.file:
       path: '/etc/fail2ban/jail.d/{{ item["filename"] }}.conf'
       state: 'absent'
+    loop: '{{ fail2ban__jails__combined_var }}'
+    loop_control:
+      label: '{{ item["filename"] }}'
     when:
       - 'item["state"] | d("present") == "absent"'
-    loop: '{{ fail2ban__jails__combined_var }}'
     notify:
       - 'fail2ban: restart fail2ban'
 
@@ -89,9 +91,11 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    loop: '{{ fail2ban__jails__combined_var }}'
+    loop_control:
+      label: '{{ item["filename"] }}'
     when:
       - 'item["state"] | d("present") != "absent"'
-    loop: '{{ fail2ban__jails__combined_var }}'
     notify:
       - 'fail2ban: restart fail2ban'
 
