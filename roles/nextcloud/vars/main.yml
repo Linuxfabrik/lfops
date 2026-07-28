@@ -9,11 +9,11 @@ __nextcloud__php__modules__dependent_var:
       state: 'present'
     - name: 'php-gmp'
       state: 'present'
+    - name: 'php-imagick'
+      state: 'present'
     # IMAP was removed from PHP core in 8.4 and ships as the PECL package php-pecl-imap there; on
     # <= 8.3 it is still the core php-imap. Pick the name from the PHP version the php role detected.
     - name: '{{ "php-pecl-imap" if php__installed_version is version("8.4", ">=") else "php-imap" }}'
-      state: 'present'
-    - name: 'php-imagick'
       state: 'present'
     - name: 'php-intl'
       state: 'present'
