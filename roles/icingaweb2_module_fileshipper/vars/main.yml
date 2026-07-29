@@ -11,11 +11,11 @@
 # schedule and would drag a second PHP runtime onto the host.
 __icingaweb2_module_fileshipper__php__modules__dependent_var:
   Debian:
-    - name: 'php{{ php__installed_version }}-xml'
+    - name: 'php{{ __php__installed_version }}-xml'
       state: 'present'
-    - name: 'php{{ php__installed_version }}-yaml'
+    - name: 'php{{ __php__installed_version }}-yaml'
       state: 'present'
-    - name: 'php{{ php__installed_version }}-zip'
+    - name: 'php{{ __php__installed_version }}-zip'
       state: 'present'
   RedHat:
     - name: 'php-xml'

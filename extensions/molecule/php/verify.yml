@@ -74,7 +74,7 @@
       failed_when: '__molecule__php_fpm_active_result["stdout"] != "active"'
 
     # The apache2 path only exists once libapache2-mod-phpX.Y is installed, which it is not here.
-    # The role creates the directory so php__conf_dest can stay a static list, so all three must be
+    # The role creates the directory so __php__conf_dest can stay a static list, so all three must be
     # present even on an FPM-only host.
     - name: 'stat the deployed ini files'
       ansible.builtin.stat:

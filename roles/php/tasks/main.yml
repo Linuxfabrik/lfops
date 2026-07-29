@@ -55,12 +55,12 @@
   # behaviour, and is the only option on RedHat, where the 'php' package always exists.
   - name: 'Get PHP version'
     ansible.builtin.set_fact:
-      php__installed_version: '{{
+      __php__installed_version: '{{
           php__version if (php__version | string | length)
           else (ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d"))
         }}'
 
-  # 'always': php__installed_version / php__fpm_service_name are prerequisites referenced by
+  # 'always': __php__installed_version / __php__fpm_service_name are prerequisites referenced by
   # the php:state block and by consuming roles (e.g. nextcloud) under their own --tags runs,
   # where the php-specific blocks are filtered out. Tagging the discovery 'always' keeps them defined.
   tags:
@@ -122,12 +122,12 @@
 
 - block:
 
-  - name: 'Load default values for {{ php__installed_version }}'
-    ansible.builtin.include_vars: 'vars/{{ php__installed_version }}.yml'
+  - name: 'Load default values for {{ __php__installed_version }}'
+    ansible.builtin.include_vars: 'vars/{{ __php__installed_version }}.yml'
 
   # On Debian every SAPI has its own conf.d, and the apache2 one is shipped by
   # libapache2-mod-phpX.Y, which is not installed when only FPM is used. Creating the directories
-  # unconditionally keeps php__conf_dest a plain static list instead of a conditional one. dpkg
+  # unconditionally keeps __php__conf_dest a plain static list instead of a conditional one. dpkg
   # takes ownership of a pre-existing directory without complaining, so installing mod_php later
   # still works and our ini survives both that install and a later purge of the module.
   # On a host without mod_php the apache2 ini is simply never read.
@@ -138,18 +138,18 @@
       owner: 'root'
       group: 'root'
       mode: 0o755
-    loop: '{{ php__conf_dest }}'
+    loop: '{{ __php__conf_dest }}'
     when: 'ansible_facts["os_family"] == "Debian"'
 
   - name: 'Deploy the PHP configs'
     ansible.builtin.template:
       backup: true
-      src: 'etc/php.d/{{ php__installed_version }}-z00-linuxfabrik.ini.j2'
+      src: 'etc/php.d/{{ __php__installed_version }}-z00-linuxfabrik.ini.j2'
       dest: '{{ item }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
-    loop: '{{ php__conf_dest }}'
+    loop: '{{ __php__conf_dest }}'
     notify: 'php: restart php-fpm'
 
   tags:
@@ -160,20 +160,20 @@
 
 - block:
 
-  - name: 'Remove absent pools from {{ php__fpm_pools_path }}'
+  - name: 'Remove absent pools from {{ __php__fpm_pools_path }}'
     ansible.builtin.file:
-      path: '{{ php__fpm_pools_path }}/{{ item["name"] }}.conf'
+      path: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'
       state: 'absent'
     when:
       - 'item["state"] | d("present") == "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
-  - name: 'Deploy the pools to {{ php__fpm_pools_path }}'
+  - name: 'Deploy the pools to {{ __php__fpm_pools_path }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/php-fpm.d/{{ ansible_facts["os_family"] }}-pool.conf.j2'
-      dest: '{{ php__fpm_pools_path }}/{{ item["name"] }}.conf'
+      dest: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -182,7 +182,7 @@
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
-  # 'php:update' is included because a version change moves php__fpm_pools_path to the new
+  # 'php:update' is included because a version change moves __php__fpm_pools_path to the new
   # version's tree, which the package ships with nothing but its own default pool.
   tags:
     - 'php'
@@ -192,18 +192,18 @@
 
 - block:
 
-  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} {{ php__fpm_service_name }}'
+  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} {{ __php__fpm_service_name }}'
     ansible.builtin.service:
-      name: '{{ php__fpm_service_name }}'
+      name: '{{ __php__fpm_service_name }}'
       enabled: '{{ php__fpm_service_enabled }}'
 
-  - name: 'systemctl {{ php__fpm_service_state | regex_replace("p?ed$", "") }} {{ php__fpm_service_name }}'
+  - name: 'systemctl {{ php__fpm_service_state | regex_replace("p?ed$", "") }} {{ __php__fpm_service_name }}'
     ansible.builtin.service:
-      name: '{{ php__fpm_service_name }}'
+      name: '{{ __php__fpm_service_name }}'
       state: '{{ php__fpm_service_state }}'
     register: '__php__fpm_service_state_result'
 
-  # 'php:update' is included because a version change moves php__fpm_service_name to a new,
+  # 'php:update' is included because a version change moves __php__fpm_service_name to a new,
   # not yet enabled unit. Without this the migrated host would come up without its FPM service.
   tags:
     - 'php'

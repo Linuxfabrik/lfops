@@ -4,17 +4,17 @@
 # version the php role manages.
 __icingaweb2__php__modules__dependent_var:
   Debian:
-    - name: 'php{{ php__installed_version }}-bz2'
+    - name: 'php{{ __php__installed_version }}-bz2'
       state: 'present'
-    - name: 'php{{ php__installed_version }}-curl'
+    - name: 'php{{ __php__installed_version }}-curl'
       state: 'present'
-    - name: 'php{{ php__installed_version }}-imagick'
+    - name: 'php{{ __php__installed_version }}-imagick'
       state: 'present'
-    - name: 'php{{ php__installed_version }}-intl'
+    - name: 'php{{ __php__installed_version }}-intl'
       state: 'present'
-    - name: 'php{{ php__installed_version }}-mbstring'
+    - name: 'php{{ __php__installed_version }}-mbstring'
       state: 'present'
-    - name: 'php{{ php__installed_version }}-xml'
+    - name: 'php{{ __php__installed_version }}-xml'
       state: 'present'
   RedHat:
     - name: 'php-curl'

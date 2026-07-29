@@ -3,7 +3,7 @@
 # and would drag a second PHP runtime onto the host.
 __icingaweb2_module_x509__php__modules__dependent_var:
   Debian:
-    - name: 'php{{ php__installed_version }}-gmp'
+    - name: 'php{{ __php__installed_version }}-gmp'
       state: 'present'
   RedHat:
     - name: 'php-gmp'

@@ -11,7 +11,7 @@
 # and would drag a second PHP runtime onto the host.
 __icingaweb2_module_vspheredb__php__modules__dependent_var:
   Debian:
-    - name: 'php{{ php__installed_version }}-soap'
+    - name: 'php{{ __php__installed_version }}-soap'
       state: 'present'
   RedHat:
     - name: 'php-soap'

@@ -6,7 +6,7 @@ By default this role does not select a PHP version. It installs the latest versi
 
 Debian has no repo-level equivalent. Its unversioned metapackages (`php-cli`, `php-fpm`, `php-curl`, ...) point at whatever the configured repo declares as its default, which never moves within a Debian release but does move with the [sury](https://packages.sury.org/php/) repo, whenever sury promotes a new PHP version. On a sury host an ordinary `apt upgrade` therefore migrates PHP to a new major version without anyone deciding to. Set `php__version` to take that decision yourself.
 
-Consuming roles that inject `php__modules__dependent_var` on Debian must build the package names from the detected version, for example `php{{ php__installed_version }}-curl`, because the unversioned names would reintroduce exactly that drift. See `roles/nextcloud/vars/main.yml` for the platform-keyed pattern.
+Consuming roles that inject `php__modules__dependent_var` on Debian must build the package names from the detected version, for example `php{{ __php__installed_version }}-curl`, because the unversioned names would reintroduce exactly that drift. See `roles/nextcloud/vars/main.yml` for the platform-keyed pattern.
 
 This role is compatible with the following PHP versions:
 
@@ -49,7 +49,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Ensure PHP modules are absent.
 * Ensure PHP modules are present.
 * Get PHP version.
-* Load default values for `{{ php__installed_version }}`.
+* Load default values for `{{ __php__installed_version }}`.
 * Deploy the /etc/php.d/z00-linuxfabrik.ini.
 * `systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`.
 * Remove absent pools from `/etc/php-fpm.d`.
@@ -65,7 +65,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `php:ini`
 
 * Get PHP version.
-* Load default values for `{{ php__installed_version }}`.
+* Load default values for `{{ __php__installed_version }}`.
 * Deploy the `/etc/php.d/z00-linuxfabrik.ini`.
 * Triggers: php-fpm.service restart.
 

@@ -5,7 +5,7 @@ __php__base_packages:
   - 'php-fpm'
   - 'composer'
 
-php__conf_dest:
+__php__conf_dest:
   - '/etc/php.d/z00-linuxfabrik.ini'
-php__fpm_pools_path: '/etc/php-fpm.d'
-php__fpm_service_name: 'php-fpm'
+__php__fpm_pools_path: '/etc/php-fpm.d'
+__php__fpm_service_name: 'php-fpm'
