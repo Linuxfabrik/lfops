@@ -418,3 +418,5 @@ php__modules__combined_var: '{{ (
       php__modules__host_var
     ) | linuxfabrik.lfops.combine_lod
   }}'
+
+php__version: ''

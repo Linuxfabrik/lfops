@@ -2,7 +2,11 @@
 
 This role installs and configures PHP (and PHP-FPM) on the system, optionally with additional modules.
 
-Note that this role does NOT let you specify a particular PHP version. It simply installs the latest available PHP version from the repos configured in the system. If you want or need to install a specific or the latest PHP version available, use the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) beforehand.
+By default this role does not select a PHP version. It installs the latest version the configured repos offer. On RedHat that is deterministic, because the module stream pins the version at repo level: use [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) beforehand to choose it.
+
+Debian has no repo-level equivalent. Its unversioned metapackages (`php-cli`, `php-fpm`, `php-curl`, ...) point at whatever the configured repo declares as its default, which never moves within a Debian release but does move with the [sury](https://packages.sury.org/php/) repo, whenever sury promotes a new PHP version. On a sury host an ordinary `apt upgrade` therefore migrates PHP to a new major version without anyone deciding to. Set `php__version` to take that decision yourself.
+
+Consuming roles that inject `php__modules__dependent_var` on Debian must build the package names from the detected version, for example `php{{ php__installed_version }}-curl`, because the unversioned names would reintroduce exactly that drift. See `roles/nextcloud/vars/main.yml` for the platform-keyed pattern.
 
 This role is compatible with the following PHP versions:
 
@@ -72,13 +76,31 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Deploy the pools to `/etc/php-fpm.d/`.
 * Triggers: none.
 
+`php:alternatives`
+
+* Debian with `php__version` set only. Pins the `php`, `phar` and `phar.phar` alternatives to the declared version, so installing another version does not silently switch the CLI.
+* Triggers: none.
+
 `php:update`
 
 * Updates the PHP Packages and the configuration. Do not forget to update the repo beforehand.
+* On Debian with `php__version` set, this is also how a major version change is carried out: raise `php__version`, then run this tag. It installs the declared version, moves the pools, alternatives and the FPM service over to it, and purges the stacks of all other versions.
 * Triggers: php-fpm.service restart.
 
 
 ## Optional Role Variables
+
+`php__version`
+
+* Debian only. The PHP version this host runs, for example `'8.4'`. Makes the role install the versioned packages (`php8.4-cli`, `php8.4-fpm`, ...) instead of the unversioned metapackages, pin the `php` alternatives to it, and purge other versions on `php:update`. Empty adopts whatever version the configured repos provide, which is correct without the sury repo. Has no effect on RedHat, where the module stream pins the version at repo level.
+* Type: String.
+* Default: `''`
+
+Example:
+```yaml
+# optional
+php__version: '8.4'
+```
 
 `php__fpm_service_enabled`
 

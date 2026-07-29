@@ -1,0 +1,11 @@
+# A value that matches neither the PHP default (128M) nor the role default for 8.3, so verify.yml
+# can prove the deployed ini is actually read by the running interpreter rather than just present
+# on disk.
+php__ini_memory_limit__group_var: '256M'
+# 8.3 is deliberately neither the Debian default (8.2 on Debian 12, 8.4 on Debian 13) nor the sury
+# default (8.4, as of 2026-07). Declaring a third version proves the role installs and holds what it
+# was told to, instead of adopting whatever the configured repos happen to offer.
+php__version: '8.3'
+
+repo_sury__enabled_repos:
+  - 'php'

@@ -742,6 +742,7 @@ Calls the following roles (in order):
 
 * [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `php__skip_yum_utils`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `php__skip_repo_remi`
+* [repo_sury](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_sury): `php__skip_repo_sury`
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)
 
 

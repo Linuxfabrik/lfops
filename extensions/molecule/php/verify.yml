@@ -1,0 +1,105 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state of the Debian version handling, not that individual tasks ran.
+#
+# The core claim under test: with php__version set, the host runs exactly the declared version and
+# nothing else. On a sury host that is not automatic. The unversioned php-defaults metapackages
+# (php-cli, php-fpm, php-curl, ...) resolve to whatever sury currently declares as its default, so
+# any of them slipping into the dependency graph drags a second, undeclared PHP stack onto the
+# machine. Asserting "no foreign phpX.Y-* package exists" catches that regardless of which
+# metapackage caused it, which is why it is the primary assertion here.
+- name: 'Verify php installed and pinned the declared version'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Get the list of installed packages'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert no PHP stack other than {{ php__version }} is installed'
+      ansible.builtin.assert:
+        that: '__molecule__php_foreign_stacks | length == 0'
+        fail_msg: 'foreign PHP stacks installed: {{ __molecule__php_foreign_stacks | join(", ") }}'
+      vars:
+        __molecule__php_foreign_stacks: '{{
+            ansible_facts["packages"] | list
+            | select("match", "^(libapache2-mod-)?php[0-9]+\.[0-9]+")
+            | reject("match", "^(libapache2-mod-)?php" ~ (php__version | regex_escape) ~ "(-|$)")
+            | list | sort
+          }}'
+
+    # composer is installed from the Debian package and depends on php-cli. It must be satisfied by
+    # the versioned packages via their Provides, not by pulling the metapackage in.
+    - name: 'Assert the unversioned SAPI metapackages are absent'
+      ansible.builtin.assert:
+        that: 'item not in ansible_facts["packages"]'
+        fail_msg: '{{ item }} is installed; a versioned package should have provided it'
+      loop:
+        - 'php'
+        - 'php-cli'
+        - 'php-fpm'
+
+    - name: 'Assert composer is installed'
+      ansible.builtin.assert:
+        that: '"composer" in ansible_facts["packages"]'
+
+    # update-alternatives runs in auto mode by default, where the highest installed version wins.
+    # This proves the role pinned the link groups to the declared version instead.
+    - name: 'php --version'
+      ansible.builtin.command: 'php --version'
+      register: '__molecule__php_version_result'
+      changed_when: false
+
+    - name: 'Assert the CLI runs the declared version'
+      ansible.builtin.assert:
+        that: '__molecule__php_version_result["stdout"] is match("PHP " ~ (php__version | regex_escape) ~ "\.")'
+        fail_msg: '{{ __molecule__php_version_result["stdout_lines"][0] }}'
+
+    - name: 'update-alternatives --query php'
+      ansible.builtin.command: 'update-alternatives --query php'
+      register: '__molecule__php_alternatives_result'
+      changed_when: false
+
+    - name: 'Assert the php link group is pinned rather than following the highest version'
+      ansible.builtin.assert:
+        that:
+          - '"Status: manual" in __molecule__php_alternatives_result["stdout"]'
+          - '("Value: /usr/bin/php" ~ php__version) in __molecule__php_alternatives_result["stdout"]'
+        fail_msg: '{{ __molecule__php_alternatives_result["stdout"] }}'
+
+    - name: 'systemctl is-active php{{ php__version }}-fpm' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active php{{ php__version }}-fpm'
+      register: '__molecule__php_fpm_active_result'
+      changed_when: false
+      failed_when: '__molecule__php_fpm_active_result["stdout"] != "active"'
+
+    # The apache2 path only exists once libapache2-mod-phpX.Y is installed, which it is not here.
+    # The role creates the directory so php__conf_dest can stay a static list, so all three must be
+    # present even on an FPM-only host.
+    - name: 'stat the deployed ini files'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      register: '__molecule__php_ini_result'
+      loop:
+        - '/etc/php/{{ php__version }}/apache2/conf.d/z00-linuxfabrik.ini'
+        - '/etc/php/{{ php__version }}/cli/conf.d/z00-linuxfabrik.ini'
+        - '/etc/php/{{ php__version }}/fpm/conf.d/z00-linuxfabrik.ini'
+
+    - name: 'Assert the ini was deployed for every SAPI'
+      ansible.builtin.assert:
+        that: 'item["stat"]["exists"]'
+        fail_msg: '{{ item["item"] }} is missing'
+      loop: '{{ __molecule__php_ini_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # Not "the file exists" but "the interpreter uses the value", which is what actually matters.
+    - name: 'Read memory_limit from the running interpreter'
+      ansible.builtin.command: 'php --run "echo ini_get(''memory_limit'');"'
+      register: '__molecule__php_memory_limit_result'
+      changed_when: false
+
+    - name: 'Assert the deployed ini is in effect'
+      ansible.builtin.assert:
+        that: '__molecule__php_memory_limit_result["stdout"] == php__ini_memory_limit__group_var'
+        fail_msg: 'memory_limit is {{ __molecule__php_memory_limit_result["stdout"] }}, expected {{ php__ini_memory_limit__group_var }}'
