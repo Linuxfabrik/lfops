@@ -39,44 +39,44 @@ __nextcloud__php__modules__dependent_var:
       state: 'present'
     - name: 'php-zip'
       state: 'present'
-  # Debian/Ubuntu install PHP from Sury (php<version>-* packages, pulled in via the php-<module>
-  # metapackages). Verified against Debian 13 / PHP 8.4. Differences from the RedHat list:
-  #   * php-mysqlnd  -> php-mysql, php-pecl-apcu -> php-apcu (different upstream package names)
-  #   * php-imap     -> php<version>-imap: the php-imap metapackage pins php8.3-imap (IMAP is
-  #                  unbundled from PHP 8.4), which would drag a second PHP runtime onto the host;
-  #                  the versioned package is the clean per-version build (core on <= 8.3, PECL on >= 8.4)
+  # Debian/Ubuntu name every extension per PHP version. The unversioned php-<module> metapackages
+  # resolve to whatever the configured repo declares as its default, which under Sury moves on
+  # Sury's schedule - so they would drag a second PHP runtime onto the host, exactly as the
+  # php-imap metapackage already did. Always build the name from the version the php role manages.
+  # Package names verified against Sury. Differences from the RedHat list:
+  #   * php-mysqlnd  -> mysql, php-pecl-apcu -> apcu (different upstream package names)
   #   * php-opcache  dropped: php<version>-opcache is pulled in by the php base package already
   #   * php-process  dropped: the posix extension is built into the Debian php-cli/-common packages
   #   * php-json     dropped: JSON is compiled into PHP 8 core (php-json is only a transitional dummy)
+  # imap is core on <= 8.3 and PECL on >= 8.4, but Sury names the versioned package uniformly, so
+  # no version branch is needed here.
   Debian:
-    - name: 'php-apcu'
+    - name: 'php{{ php__installed_version }}-apcu'
       state: 'present'
-    - name: 'php-bcmath'
+    - name: 'php{{ php__installed_version }}-bcmath'
       state: 'present'
-    - name: 'php-gd'
+    - name: 'php{{ php__installed_version }}-gd'
       state: 'present'
-    - name: 'php-gmp'
+    - name: 'php{{ php__installed_version }}-gmp'
       state: 'present'
-    - name: 'php-imagick'
+    - name: 'php{{ php__installed_version }}-imagick'
       state: 'present'
-    # Versioned PECL/core package; Sury names it uniformly across PHP versions, so unlike the
-    # php-imap metapackage it does not drag a second PHP runtime onto the host.
     - name: 'php{{ php__installed_version }}-imap'
       state: 'present'
-    - name: 'php-intl'
+    - name: 'php{{ php__installed_version }}-intl'
       state: 'present'
-    - name: 'php-ldap'
+    - name: 'php{{ php__installed_version }}-ldap'
       state: 'present'
-    - name: 'php-mbstring'
+    - name: 'php{{ php__installed_version }}-mbstring'
       state: 'present'
-    - name: 'php-memcached'
+    - name: 'php{{ php__installed_version }}-memcached'
       state: 'present'
-    - name: 'php-mysql'
+    - name: 'php{{ php__installed_version }}-mysql'
       state: 'present'
-    - name: 'php-redis'
+    - name: 'php{{ php__installed_version }}-redis'
       state: 'present'
-    - name: 'php-smbclient'
+    - name: 'php{{ php__installed_version }}-smbclient'
       state: 'present'
-    - name: 'php-zip'
+    - name: 'php{{ php__installed_version }}-zip'
       state: 'present'
 __nextcloud__php_fpm_service_name: '{{ php__fpm_service_name }}'

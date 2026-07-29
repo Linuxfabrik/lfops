@@ -1,6 +1,9 @@
+# Debian names every extension per PHP version. The unversioned php-gmp metapackage resolves to
+# whatever the configured repo declares as its default, which under Sury moves on Sury's schedule
+# and would drag a second PHP runtime onto the host.
 __icingaweb2_module_x509__php__modules__dependent_var:
   Debian:
-    - name: 'php-gmp'
+    - name: 'php{{ php__installed_version }}-gmp'
       state: 'present'
   RedHat:
     - name: 'php-gmp'

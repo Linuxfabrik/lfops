@@ -29,9 +29,11 @@ icingaweb2_module_vspheredb__mariadb_server__users__dependent_var:
       - '{{ icingaweb2_module_vspheredb__database_name | replace("_", "\_") | replace("%", "\%") }}.*:ALL'
     state: 'present'
 
-icingaweb2_module_vspheredb__php__modules__dependent_var:
-  - name: 'php-soap'
-    state: 'present'
+# OS-specific package names live in vars/main.yml (see platform_select). The php role runs earlier in the play and consumes this via the __dependent_var pattern.
+icingaweb2_module_vspheredb__php__modules__dependent_var: '{{
+    __icingaweb2_module_vspheredb__php__modules__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts)
+  }}'
 
 icingaweb2_module_vspheredb__selinux__fcontexts__dependent_var:
   - setype: 'icingaweb2_rw_content_t'

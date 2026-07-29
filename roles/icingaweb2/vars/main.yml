@@ -1,16 +1,20 @@
+# Debian names every extension per PHP version. The unversioned php-<module> metapackages resolve
+# to whatever the configured repo declares as its default, which under Sury moves on Sury's
+# schedule and would drag a second PHP runtime onto the host. Always build the name from the
+# version the php role manages.
 __icingaweb2__php__modules__dependent_var:
   Debian:
-    - name: 'php-bz2'
+    - name: 'php{{ php__installed_version }}-bz2'
       state: 'present'
-    - name: 'php-curl'
+    - name: 'php{{ php__installed_version }}-curl'
       state: 'present'
-    - name: 'php-intl'
+    - name: 'php{{ php__installed_version }}-imagick'
       state: 'present'
-    - name: 'php-mbstring'
+    - name: 'php{{ php__installed_version }}-intl'
       state: 'present'
-    - name: 'php-imagick'
+    - name: 'php{{ php__installed_version }}-mbstring'
       state: 'present'
-    - name: 'php-xml'
+    - name: 'php{{ php__installed_version }}-xml'
       state: 'present'
   RedHat:
     - name: 'php-curl'
