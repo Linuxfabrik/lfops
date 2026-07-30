@@ -109,8 +109,8 @@
         - 'not setup_mastodon__skip_selinux | default(false)'
 
     - role: 'linuxfabrik.lfops.apache_httpd'
-      apache_httpd__mods__host_var: '{{
-          mastodon__apache_httpd__mods__host_var
+      apache_httpd__mods__dependent_var: '{{
+          mastodon__apache_httpd__mods__dependent_var
         }}'
       apache_httpd__vhosts__dependent_var: '{{
           mastodon__apache_httpd__vhosts__dependent_var
