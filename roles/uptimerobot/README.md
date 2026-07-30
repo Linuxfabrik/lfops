@@ -330,6 +330,9 @@ uptimerobot__api_key: "{{ lookup('linuxfabrik.lfops.bitwarden_item', {
     'organization_id': lfops__bitwarden_organization_id,
   })['password'] }}"
 
+# alternatively, point at a file holding the key instead of setting it inline
+# uptimerobot__api_key_file: '~/.uptimerobot'
+
 uptimerobot__mwindows:
   - type: 'weekly'
     value: 'mon'

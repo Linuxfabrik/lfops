@@ -174,6 +174,12 @@ example__version: '3.2.1'
 * Type: String.
 * Default: `''` (no backups)
 
+Example:
+```yaml
+# recommended
+example__backup_target: '/backup/example'
+```
+
 
 ## Optional Role Variables
 

@@ -355,9 +355,33 @@ Note that setting `php__ini_opcache_huge_code_pages__group_var` or `php__ini_opc
 Example:
 ```yaml
 # optional
+php__ini_date_timezone__host_var: 'Europe/Zurich'
+php__ini_default_socket_timeout__host_var: 10
+php__ini_display_errors__host_var: 'Off'
+php__ini_display_startup_errors__host_var: 'Off'
+php__ini_error_reporting__host_var: 'E_ALL & ~E_NOTICE & ~E_DEPRECATED'
 php__ini_max_execution_time__host_var: 3600
 php__ini_max_file_uploads__host_var: 100
+php__ini_max_input_time__host_var: -1
+php__ini_max_input_vars__host_var: 1000
 php__ini_memory_limit__host_var: '1024M'
+php__ini_opcache_blacklist_filename__host_var: '/etc/opcache.blacklist'
+php__ini_opcache_enable__host_var: 1
+php__ini_opcache_enable_cli__host_var: 1
+php__ini_opcache_huge_code_pages__host_var: 0
+php__ini_opcache_interned_strings_buffer__host_var: 12
+php__ini_opcache_max_accelerated_files__host_var: 7963
+php__ini_opcache_memory_consumption__host_var: 128
+php__ini_opcache_revalidate_freq__host_var: 60
+php__ini_opcache_save_comments__host_var: 1
+php__ini_opcache_validate_timestamps__host_var: 1
+php__ini_post_max_size__host_var: '8M'
+php__ini_session_cookie_httponly__host_var: 'On'
+php__ini_session_cookie_secure__host_var: 'Off'
+php__ini_session_gc_maxlifetime__host_var: 1440
+php__ini_session_sid_length__host_var: 32
+php__ini_session_trans_sid_tags__host_var: 'a=href,area=href,frame=src,input=src,form=fakeentry'
+php__ini_smtp__host_var: 'localhost'
 php__ini_upload_max_filesize__host_var: '10000M'
 ```
 

@@ -46,7 +46,9 @@ Example:
 ```yaml
 # optional
 dnf_makecache__service_enabled: false
+dnf_makecache__service_state: 'stopped'
 dnf_makecache__timer_enabled: false
+dnf_makecache__timer_state: 'stopped'
 ```
 
 

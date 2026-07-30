@@ -194,6 +194,11 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Default: `[]`
 * Subkeys:
 
+    * `roles`:
+
+        * Mandatory. List of roles the privileges are granted to or revoked from.
+        * Type: List of strings.
+
     * `privs`:
 
         * Optional. List of privileges to grant/revoke.
@@ -213,9 +218,15 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
     * `grant_option`:
 
-        * Mandatory. Whether the role may grant/revoke the specified privileges/group memberships to others.
+        * Optional. Whether the roles may grant/revoke the specified privileges/group memberships to others. Only has an effect when `state` is `present`.
         * Type: Bool.
-        * Default: unset
+        * Default: `false`
+
+    * `state`:
+
+        * Optional. Whether the privileges are granted or revoked. Possible options: `present`, `absent`.
+        * Type: String.
+        * Default: `'present'`
 
 `postgresql_server__state`
 
@@ -275,6 +286,8 @@ postgresql_server__databases__host_var:
     lc_collate: 'en_US.UTF-8'
     lc_ctype: 'en_US.UTF-8'
     state: 'present'
+postgresql_server__dump_directory: '/backup/postgresql-dump'
+postgresql_server__dump_on_calendar: '*-*-* 21:30:00'
 postgresql_server__enabled: true
 postgresql_server__login_password: 'linuxfabrik'
 postgresql_server__pg_hba_entries:
@@ -284,6 +297,15 @@ postgresql_server__pg_hba_entries:
   - type: 'host'
     database: 'all'
     user: 'all'
+postgresql_server__privs__host_var:
+  - privs:
+      - 'CONNECT'
+    type: 'database'
+    objs:
+      - 'database1'
+    roles:
+      - 'user1'
+    state: 'present'
 postgresql_server__state: 'started'
 postgresql_server__users__host_var:
   - username: 'user1'

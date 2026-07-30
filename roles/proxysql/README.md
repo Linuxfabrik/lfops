@@ -31,7 +31,7 @@ This role installs and configures [ProxySQL](https://proxysql.com/). Note that r
 * The ProxySQL account for administrating ProxySQL.
 * Type: List of dictionaries.
 
-`proxysql__monitor_users`
+`proxysql__monitor_user`
 
 * The MariaDB account for monitoring the backend SQL nodes. The user has to exist in MariaDB and have `USAGE, REPLICATION CLIENT,REPLICA MONITOR` privileges.
 * Type: Dictionary.

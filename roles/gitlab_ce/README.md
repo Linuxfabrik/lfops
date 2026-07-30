@@ -221,6 +221,12 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 * Type: Number.
 * Default: `10`
 
+`gitlab_ce__rb_gitlab_rails_registry_path`
+
+* The directory in which the GitLab application expects the Container Registry images. Set it together with `gitlab_ce__rb_registry_storage_filesystem_rootdirectory`, which is where the registry itself stores them. [Docs](https://docs.gitlab.com/administration/packages/container_registry/#configure-storage-for-the-container-registry)
+* Type: String.
+* Default: `'/var/opt/gitlab/gitlab-rails/shared/registry'`
+
 `gitlab_ce__rb_gitlab_rails_time_zone`
 
 * The time zone for GitLab. [Docs](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/gitlab.yml.md)
@@ -263,6 +269,12 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 * Type: String.
 * Default: unset
 
+`gitlab_ce__rb_registry_database_enabled`
+
+* Whether the Container Registry uses the metadata database instead of keeping its metadata on the storage backend. Required for online garbage collection. [Docs](https://docs.gitlab.com/administration/packages/container_registry_metadata_database/)
+* Type: Bool.
+* Default: `true`
+
 `gitlab_ce__rb_registry_external_url`
 
 * The URL of the GitLab Container registry.
@@ -292,6 +304,18 @@ gitlab_ce__rb_external_url: 'http://git.example.com'
 * Nginx headers for the Container Registry.
 * Type: Dictionary.
 * Default: `{'X-Forwarded-Proto': 'https', 'X-Forwarded-Ssl': 'on'}`
+
+`gitlab_ce__rb_registry_storage_filesystem_rootdirectory`
+
+* The directory in which the Container Registry stores its images. Set it together with `gitlab_ce__rb_gitlab_rails_registry_path`, which is where the GitLab application expects them. [Docs](https://docs.gitlab.com/administration/packages/container_registry/#configure-storage-for-the-container-registry)
+* Type: String.
+* Default: `'/var/opt/gitlab/gitlab-rails/shared/registry'`
+
+`gitlab_ce__rb_registry_storage_maintenance_readonly_enabled`
+
+* Set this to `true` to put the Container Registry into read-only mode, which is required before running a manual garbage collection. [Docs](https://docs.gitlab.com/administration/packages/container_registry/#performing-garbage-collection-without-downtime)
+* Type: Bool.
+* Default: `false`
 
 `gitlab_ce__version`
 
@@ -362,13 +386,17 @@ gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_ip_whitelist:
   - '127.0.0.1'
 gitlab_ce__rb_gitlab_rails_rack_attack_git_basic_auth_maxretry: 10
 
+gitlab_ce__rb_gitlab_rails_registry_path: '/srv/gitlab-registry'
 gitlab_ce__rb_gitlab_rails_time_zone: 'Europe/Zurich'
+gitlab_ce__rb_gitlab_rails_uploads_directory: '/srv/gitlab-uploads'
 
 gitlab_ce__rb_letsencrypt_enable: false
 
+gitlab_ce__rb_nginx_listen_https: false
 gitlab_ce__rb_nginx_listen_port: '80'
 gitlab_ce__rb_nginx_ssl_certificate: '/etc/pki/tls/certs/git.example.com.crt'
 gitlab_ce__rb_nginx_ssl_certificate_key: '/etc/pki/tls/private/git.example.com.key'
+gitlab_ce__rb_registry_database_enabled: true
 gitlab_ce__rb_registry_external_url: 'https://registry.example.com'
 gitlab_ce__rb_registry_nginx_enable: true
 gitlab_ce__rb_registry_nginx_listen_https: false
@@ -376,6 +404,8 @@ gitlab_ce__rb_registry_nginx_listen_port: 5050
 gitlab_ce__rb_registry_nginx_proxy_set_headers:
   'X-Forwarded-Proto': 'https'
   'X-Forwarded-Ssl': 'on'
+gitlab_ce__rb_registry_storage_filesystem_rootdirectory: '/srv/gitlab-registry'
+gitlab_ce__rb_registry_storage_maintenance_readonly_enabled: false
 
 gitlab_ce__version: '14.8.2'
 ```

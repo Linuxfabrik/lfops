@@ -50,7 +50,7 @@ argument_specs:
         default: ''
         description: >-
           Dependent-role override for the sshd log level. See
-          `sshd__log_level` in the README.
+          `sshd__log_level__group_var` in the README.
 
       sshd__log_level__group_var:
         type: 'str'
@@ -58,7 +58,7 @@ argument_specs:
         default: ''
         description: >-
           Group-level override for the sshd log level. See
-          `sshd__log_level` in the README.
+          `sshd__log_level__group_var` in the README.
 
       sshd__log_level__host_var:
         type: 'str'
@@ -66,7 +66,7 @@ argument_specs:
         default: ''
         description: >-
           Host-level override for the sshd log level. See
-          `sshd__log_level` in the README.
+          `sshd__log_level__group_var` in the README.
 
       sshd__max_auth_tries:
         type: 'int'

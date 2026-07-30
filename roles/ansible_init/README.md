@@ -55,6 +55,12 @@ ansible_init__url: 'git@example.com:my-ansinv.git'
 
 ## Optional Role Variables
 
+`ansible_init__ansinv_path`
+
+* The directory holding the ansinv checkout. LFOps, the extra roles and the inventories are placed relative to it. Defaults to the parent of the inventory directory the role is run against, which is the layout `ansinv` itself creates.
+* Type: String.
+* Default: `'{{ inventory_dir }}/../'`
+
 `ansible_init__ansible_collections`
 
 * List of dictionaries of Ansible collections to install.
@@ -138,6 +144,7 @@ Example:
 
 ```yaml
 # optional
+ansible_init__ansinv_path: '/home/linuxfabrik/ansinv/'
 ansible_init__ansible_collections:
   - name: 'community.mysql'
   - name: 'ngine_io.cloudstack'

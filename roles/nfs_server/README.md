@@ -50,13 +50,13 @@ This role installs and configures [NFS](http://linux-nfs.org/) as a server.
 
         * Optional. Owner of the export directory.
         * Type: String.
-        * Default: `'nobody'`
+        * Default: `{{ nfs_server__owner }}`
 
     * `group`:
 
         * Optional. Group of the export directory.
         * Type: String.
-        * Default: `'nogroup'` (`'nobody'` for RHEL, CentOS, Fedora, Rocky)
+        * Default: `{{ nfs_server__group }}`
 
     * `mode`:
 
@@ -83,6 +83,18 @@ nfs_server__exports:
 
 ## Optional Role Variables
 
+`nfs_server__group`
+
+* The group applied to an export directory whose entry in `nfs_server__exports` does not set `group` itself. Set this to change the default for all exports at once.
+* Type: String.
+* Default: `'nogroup'` (`'nobody'` for RHEL, CentOS, Fedora, Rocky)
+
+`nfs_server__owner`
+
+* The owner applied to an export directory whose entry in `nfs_server__exports` does not set `owner` itself. Set this to change the default for all exports at once.
+* Type: String.
+* Default: `'nobody'`
+
 `nfs_server__service_enabled`
 
 * Enables or disables the nfs-server service, analogous to `systemctl enable/disable --now`.
@@ -92,6 +104,8 @@ nfs_server__exports:
 Example:
 ```yaml
 # optional
+nfs_server__group: 'root'
+nfs_server__owner: 'root'
 nfs_server__service_enabled: true
 ```
 

@@ -411,6 +411,8 @@ grafana__auth_anonymous_org_role: 'Viewer'
 grafana__auth_jwt: false
 grafana__auth_jwt__priv_key_file: '/etc/grafana/jwt.key.priv'
 grafana__auth_jwt__pub_key_file: '/etc/grafana/jwt.key.pub'
+grafana__bitwarden_collection_id: '00000000-0000-0000-0000-000000000000'
+grafana__bitwarden_organization_id: '00000000-0000-0000-0000-000000000000'
 grafana__cookie_samesite: 'lax'
 grafana__https_config:
   cert_file: '/etc/ssl/ssl-certificate.crt'

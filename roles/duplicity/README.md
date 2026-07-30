@@ -235,6 +235,7 @@ duplicity__swift_login:
 Example:
 ```yaml
 # optional
+duplicity__backup_backend: 'swift'
 duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | regex_replace("/$", "") }}'
 duplicity__backup_dest_container: '{{ ansible_nodename }}'
 duplicity__backup_full_if_older_than: '30D'
@@ -263,6 +264,7 @@ duplicity__loglevel: 'notice'
 duplicity__logrotate: 7
 duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 45 | random(seed=inventory_hostname) }}'
 duplicity__on_calendar_hour: '23'
+duplicity__sftp_password: 'linuxfabrik'
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
 duplicity__swift_authversion: '3'
 duplicity__swift_tenantname: 'sb_project_SBI-MF827483'

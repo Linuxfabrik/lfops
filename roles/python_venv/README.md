@@ -36,6 +36,12 @@ Manual steps:
 * Type: String.
 * Default: unset
 
+`python_venv__pip_conf_global_retries`
+
+* Number of times pip retries a failed network operation, written to `/etc/pip.conf`. Raise this on hosts with a flaky connection to the package index.
+* Type: Number.
+* Default: `0`
+
 `python_venv__venvs__host_var` / `python_venv__venvs__group_var`
 
 * Dictionary containing definitions for the virtual environments.
@@ -93,6 +99,7 @@ Example:
 ```yaml
 # optional
 python_venv__pip_cert: '/etc/pki/tls/certs/ca-bundle.crt' # system CA bundle on RHEL 8
+python_venv__pip_conf_global_retries: 3
 python_venv__venvs__host_var:
   - name: 'clamav-fangfrisch'
     packages:

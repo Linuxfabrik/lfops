@@ -131,6 +131,17 @@ grav__users:
 * Type: Bool.
 * Default: `true`
 
+Example:
+```yaml
+# optional
+grav__install_dir: '/var/www/html/grav'
+grav__on_calendar_selfupgrade: '22:30'
+grav__on_calendar_update: '23:30'
+grav__skip_admin: false
+grav__timer_selfupgrade_enabled: true
+grav__timer_update_enabled: true
+```
+
 
 ## License
 

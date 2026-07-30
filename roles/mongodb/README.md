@@ -110,6 +110,7 @@ To setup a replica set from scratch:
         * Mandatory. Password.
         * Type: String.
 
+Example:
 ```yaml
 # recommended
 mongodb__admin_user:
@@ -297,6 +298,12 @@ mongodb__dump_use_oplog: true
 mongodb__service_enabled: true
 mongodb__service_state: 'started'
 mongodb__repl_set_skip_init: false
+mongodb__users__host_var:
+  - username: 'app1'
+    password: 'linuxfabrik'
+    database: 'app1'
+    roles: 'readWrite'
+    state: 'present'
 ```
 
 

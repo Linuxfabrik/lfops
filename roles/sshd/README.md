@@ -71,7 +71,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: Bool.
 * Default: `true`
 
-`sshd__log_level`
+`sshd__log_level__group_var` / `sshd__log_level__host_var`
 
 * Verbosity level used when logging messages from sshd. Possible values: `QUIET`, `FATAL`, `ERROR`, `INFO`, `VERBOSE`, `DEBUG`, `DEBUG1`, `DEBUG2`, `DEBUG3`. `VERBOSE` additionally logs the key fingerprint used for each login. `DEBUG*` levels violate user privacy and are not recommended.
 * Type: String.
@@ -158,7 +158,7 @@ sshd__allow_agent_forwarding: false
 sshd__allow_tcp_forwarding: true
 sshd__client_alive_count_max: 2
 sshd__gssapi_authentication: false
-sshd__log_level: 'VERBOSE'
+sshd__log_level__host_var: 'VERBOSE'
 sshd__max_auth_tries: 3
 sshd__max_sessions: 10
 sshd__password_authentication: false
@@ -171,6 +171,7 @@ sshd__raw: |-
     ForceCommand internal-sftp
 sshd__service_enabled: true
 sshd__service_state: 'started'
+sshd__sftp_subsystem: '/usr/libexec/openssh/sftp-server'
 sshd__tcp_keep_alive: false
 sshd__use_dns: false
 sshd__x11_forwarding: false

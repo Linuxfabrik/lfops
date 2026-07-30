@@ -379,6 +379,10 @@ nextcloud__icinga2_api_user_login:
   username: 'downtime-user'
   password: 'linuxfabrik'
 nextcloud__icinga2_hostname: 'myhost.example.com'
+nextcloud__jobs_timeout_start_sec: '10m'
+nextcloud__mail_from: '{{ mailto_root__from }}'
+nextcloud__mail_recipients:
+  - 'info@example.com'
 nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'

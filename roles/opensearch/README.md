@@ -488,6 +488,7 @@ opensearch__plugins_security_transport_certificate_key: '{{ lookup("ansible.buil
 opensearch__plugins_security_transport_enforce_hostname_verification: false
 opensearch__plugins_security_transport_resolve_hostname: true
 opensearch__service_enabled: false
+opensearch__service_state: 'stopped'
 opensearch__version__host_var: '-2.15.0' # rhel
 opensearch__version__host_var: '=2.15.0*' # debian
 ```

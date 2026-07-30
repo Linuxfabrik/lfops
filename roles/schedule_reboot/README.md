@@ -154,7 +154,9 @@ schedule_reboot__mail_from: 'noreply@example.com'
 schedule_reboot__mail_recipients:
   - 'info@example.com'
   - 'support@example.com'
+schedule_reboot__mail_subject_hostname: '$(hostname --long)'
 schedule_reboot__mail_subject_prefix: '001-'
+schedule_reboot__on_calendar: '*-*-* 19:00'
 schedule_reboot__reboot_grace_period: 60
 schedule_reboot__reboot_time__group_var: '19:00'
 schedule_reboot__rocketchat_msg_suffix: '@administrator'
