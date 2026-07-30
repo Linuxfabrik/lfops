@@ -37,6 +37,7 @@ This role never exposes to the world that PHP is installed on the server, no mat
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
+* Optional: The EPEL repository, and CRB on Rocky 9 and newer, must be enabled (roles: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) and [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)). Remi's packages link against EPEL content: on RedHat 8 for example `php-opcache` needs `libcapstone`, which neither the default repositories nor PowerTools carry.
 * Optional: [Remi's RPM repository](https://rpms.remirepo.net/) (role: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi)) provides newer PHP versions.
 
 
