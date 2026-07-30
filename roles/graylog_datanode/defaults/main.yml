@@ -11,10 +11,10 @@ graylog_datanode__service_state: '{{ graylog_datanode__service_enabled | bool | 
 
 # ------
 
-graylog_datanode__kernel_settings__transparent_hugepages__dependent_var: 'never'
 graylog_datanode__kernel_settings__sysctl__dependent_var:
   - name: 'vm.max_map_count'
     value: 262144
+graylog_datanode__kernel_settings__transparent_hugepages__dependent_var: 'never'
 graylog_datanode__selinux__fcontexts__dependent_var:
   - setype: 'var_lib_t'
     target: '{{ graylog_datanode__opensearch_data_location | ansible.builtin.regex_escape }}(/.*)?'

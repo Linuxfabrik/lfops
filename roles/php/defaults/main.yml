@@ -1,10 +1,80 @@
-php__fpm_pools__dependent_var: []
-php__fpm_pools__group_var: []
-php__fpm_pools__host_var: []
-php__fpm_pools__role_var:
-  - name: 'www'
-    user: '{{ __shared__apache_httpd_user }}'
-    group: '{{ __shared__apache_httpd_group }}'
+php__fpm_pool_conf_pm__combined_var: '{{
+    php__fpm_pool_conf_pm__host_var if (php__fpm_pool_conf_pm__host_var | string | length) else
+    php__fpm_pool_conf_pm__group_var if (php__fpm_pool_conf_pm__group_var | string | length) else
+    php__fpm_pool_conf_pm__dependent_var if (php__fpm_pool_conf_pm__dependent_var | string | length) else
+    php__fpm_pool_conf_pm__role_var
+  }}'
+
+php__fpm_pool_conf_pm__dependent_var: ''
+php__fpm_pool_conf_pm__group_var: ''
+php__fpm_pool_conf_pm__host_var: ''
+php__fpm_pool_conf_pm__role_var: 'dynamic'
+php__fpm_pool_conf_pm_max_children__combined_var: '{{
+    php__fpm_pool_conf_pm_max_children__host_var if (php__fpm_pool_conf_pm_max_children__host_var | string | length) else
+    php__fpm_pool_conf_pm_max_children__group_var if (php__fpm_pool_conf_pm_max_children__group_var | string | length) else
+    php__fpm_pool_conf_pm_max_children__dependent_var if (php__fpm_pool_conf_pm_max_children__dependent_var | string | length) else
+    php__fpm_pool_conf_pm_max_children__role_var
+  }}'
+
+php__fpm_pool_conf_pm_max_children__dependent_var: ''
+php__fpm_pool_conf_pm_max_children__group_var: ''
+php__fpm_pool_conf_pm_max_children__host_var: ''
+php__fpm_pool_conf_pm_max_children__role_var: 50
+php__fpm_pool_conf_pm_max_spare_servers__combined_var: '{{
+    php__fpm_pool_conf_pm_max_spare_servers__host_var if (php__fpm_pool_conf_pm_max_spare_servers__host_var | string | length) else
+    php__fpm_pool_conf_pm_max_spare_servers__group_var if (php__fpm_pool_conf_pm_max_spare_servers__group_var | string | length) else
+    php__fpm_pool_conf_pm_max_spare_servers__dependent_var if (php__fpm_pool_conf_pm_max_spare_servers__dependent_var | string | length) else
+    php__fpm_pool_conf_pm_max_spare_servers__role_var
+  }}'
+
+php__fpm_pool_conf_pm_max_spare_servers__dependent_var: ''
+php__fpm_pool_conf_pm_max_spare_servers__group_var: ''
+php__fpm_pool_conf_pm_max_spare_servers__host_var: ''
+php__fpm_pool_conf_pm_max_spare_servers__role_var: 35
+php__fpm_pool_conf_pm_min_spare_servers__combined_var: '{{
+    php__fpm_pool_conf_pm_min_spare_servers__host_var if (php__fpm_pool_conf_pm_min_spare_servers__host_var | string | length) else
+    php__fpm_pool_conf_pm_min_spare_servers__group_var if (php__fpm_pool_conf_pm_min_spare_servers__group_var | string | length) else
+    php__fpm_pool_conf_pm_min_spare_servers__dependent_var if (php__fpm_pool_conf_pm_min_spare_servers__dependent_var | string | length) else
+    php__fpm_pool_conf_pm_min_spare_servers__role_var
+  }}'
+
+php__fpm_pool_conf_pm_min_spare_servers__dependent_var: ''
+php__fpm_pool_conf_pm_min_spare_servers__group_var: ''
+php__fpm_pool_conf_pm_min_spare_servers__host_var: ''
+php__fpm_pool_conf_pm_min_spare_servers__role_var: 5
+php__fpm_pool_conf_pm_start_servers__combined_var: '{{
+    php__fpm_pool_conf_pm_start_servers__host_var if (php__fpm_pool_conf_pm_start_servers__host_var | string | length) else
+    php__fpm_pool_conf_pm_start_servers__group_var if (php__fpm_pool_conf_pm_start_servers__group_var | string | length) else
+    php__fpm_pool_conf_pm_start_servers__dependent_var if (php__fpm_pool_conf_pm_start_servers__dependent_var | string | length) else
+    php__fpm_pool_conf_pm_start_servers__role_var
+  }}'
+
+php__fpm_pool_conf_pm_start_servers__dependent_var: ''
+php__fpm_pool_conf_pm_start_servers__group_var: ''
+php__fpm_pool_conf_pm_start_servers__host_var: ''
+php__fpm_pool_conf_pm_start_servers__role_var: 5
+php__fpm_pool_conf_request_slowlog_timeout__combined_var: '{{
+    php__fpm_pool_conf_request_slowlog_timeout__host_var if (php__fpm_pool_conf_request_slowlog_timeout__host_var | string | length) else
+    php__fpm_pool_conf_request_slowlog_timeout__group_var if (php__fpm_pool_conf_request_slowlog_timeout__group_var | string | length) else
+    php__fpm_pool_conf_request_slowlog_timeout__dependent_var if (php__fpm_pool_conf_request_slowlog_timeout__dependent_var | string | length) else
+    php__fpm_pool_conf_request_slowlog_timeout__role_var
+  }}'
+
+php__fpm_pool_conf_request_slowlog_timeout__dependent_var: ''
+php__fpm_pool_conf_request_slowlog_timeout__group_var: ''
+php__fpm_pool_conf_request_slowlog_timeout__host_var: ''
+php__fpm_pool_conf_request_slowlog_timeout__role_var: 0
+php__fpm_pool_conf_request_terminate_timeout__combined_var: '{{
+    php__fpm_pool_conf_request_terminate_timeout__host_var if (php__fpm_pool_conf_request_terminate_timeout__host_var | string | length) else
+    php__fpm_pool_conf_request_terminate_timeout__group_var if (php__fpm_pool_conf_request_terminate_timeout__group_var | string | length) else
+    php__fpm_pool_conf_request_terminate_timeout__dependent_var if (php__fpm_pool_conf_request_terminate_timeout__dependent_var | string | length) else
+    php__fpm_pool_conf_request_terminate_timeout__role_var
+  }}'
+
+php__fpm_pool_conf_request_terminate_timeout__dependent_var: ''
+php__fpm_pool_conf_request_terminate_timeout__group_var: ''
+php__fpm_pool_conf_request_terminate_timeout__host_var: ''
+php__fpm_pool_conf_request_terminate_timeout__role_var: 0
 php__fpm_pools__combined_var: '{{ (
       php__fpm_pools__role_var +
       php__fpm_pools__dependent_var +
@@ -13,90 +83,16 @@ php__fpm_pools__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
-php__fpm_pool_conf_pm__dependent_var: ''
-php__fpm_pool_conf_pm__group_var: ''
-php__fpm_pool_conf_pm__host_var: ''
-php__fpm_pool_conf_pm__role_var: 'dynamic'
-php__fpm_pool_conf_pm__combined_var: '{{
-    php__fpm_pool_conf_pm__host_var if (php__fpm_pool_conf_pm__host_var | string | length) else
-    php__fpm_pool_conf_pm__group_var if (php__fpm_pool_conf_pm__group_var | string | length) else
-    php__fpm_pool_conf_pm__dependent_var if (php__fpm_pool_conf_pm__dependent_var | string | length) else
-    php__fpm_pool_conf_pm__role_var
-  }}'
-
-php__fpm_pool_conf_pm_max_children__dependent_var: ''
-php__fpm_pool_conf_pm_max_children__group_var: ''
-php__fpm_pool_conf_pm_max_children__host_var: ''
-php__fpm_pool_conf_pm_max_children__role_var: 50
-php__fpm_pool_conf_pm_max_children__combined_var: '{{
-    php__fpm_pool_conf_pm_max_children__host_var if (php__fpm_pool_conf_pm_max_children__host_var | string | length) else
-    php__fpm_pool_conf_pm_max_children__group_var if (php__fpm_pool_conf_pm_max_children__group_var | string | length) else
-    php__fpm_pool_conf_pm_max_children__dependent_var if (php__fpm_pool_conf_pm_max_children__dependent_var | string | length) else
-    php__fpm_pool_conf_pm_max_children__role_var
-  }}'
-
-php__fpm_pool_conf_pm_max_spare_servers__dependent_var: ''
-php__fpm_pool_conf_pm_max_spare_servers__group_var: ''
-php__fpm_pool_conf_pm_max_spare_servers__host_var: ''
-php__fpm_pool_conf_pm_max_spare_servers__role_var: 35
-php__fpm_pool_conf_pm_max_spare_servers__combined_var: '{{
-    php__fpm_pool_conf_pm_max_spare_servers__host_var if (php__fpm_pool_conf_pm_max_spare_servers__host_var | string | length) else
-    php__fpm_pool_conf_pm_max_spare_servers__group_var if (php__fpm_pool_conf_pm_max_spare_servers__group_var | string | length) else
-    php__fpm_pool_conf_pm_max_spare_servers__dependent_var if (php__fpm_pool_conf_pm_max_spare_servers__dependent_var | string | length) else
-    php__fpm_pool_conf_pm_max_spare_servers__role_var
-  }}'
-
-php__fpm_pool_conf_pm_min_spare_servers__dependent_var: ''
-php__fpm_pool_conf_pm_min_spare_servers__group_var: ''
-php__fpm_pool_conf_pm_min_spare_servers__host_var: ''
-php__fpm_pool_conf_pm_min_spare_servers__role_var: 5
-php__fpm_pool_conf_pm_min_spare_servers__combined_var: '{{
-    php__fpm_pool_conf_pm_min_spare_servers__host_var if (php__fpm_pool_conf_pm_min_spare_servers__host_var | string | length) else
-    php__fpm_pool_conf_pm_min_spare_servers__group_var if (php__fpm_pool_conf_pm_min_spare_servers__group_var | string | length) else
-    php__fpm_pool_conf_pm_min_spare_servers__dependent_var if (php__fpm_pool_conf_pm_min_spare_servers__dependent_var | string | length) else
-    php__fpm_pool_conf_pm_min_spare_servers__role_var
-  }}'
-
-php__fpm_pool_conf_pm_start_servers__dependent_var: ''
-php__fpm_pool_conf_pm_start_servers__group_var: ''
-php__fpm_pool_conf_pm_start_servers__host_var: ''
-php__fpm_pool_conf_pm_start_servers__role_var: 5
-php__fpm_pool_conf_pm_start_servers__combined_var: '{{
-    php__fpm_pool_conf_pm_start_servers__host_var if (php__fpm_pool_conf_pm_start_servers__host_var | string | length) else
-    php__fpm_pool_conf_pm_start_servers__group_var if (php__fpm_pool_conf_pm_start_servers__group_var | string | length) else
-    php__fpm_pool_conf_pm_start_servers__dependent_var if (php__fpm_pool_conf_pm_start_servers__dependent_var | string | length) else
-    php__fpm_pool_conf_pm_start_servers__role_var
-  }}'
-
-php__fpm_pool_conf_request_slowlog_timeout__dependent_var: ''
-php__fpm_pool_conf_request_slowlog_timeout__group_var: ''
-php__fpm_pool_conf_request_slowlog_timeout__host_var: ''
-php__fpm_pool_conf_request_slowlog_timeout__role_var: 0
-php__fpm_pool_conf_request_slowlog_timeout__combined_var: '{{
-    php__fpm_pool_conf_request_slowlog_timeout__host_var if (php__fpm_pool_conf_request_slowlog_timeout__host_var | string | length) else
-    php__fpm_pool_conf_request_slowlog_timeout__group_var if (php__fpm_pool_conf_request_slowlog_timeout__group_var | string | length) else
-    php__fpm_pool_conf_request_slowlog_timeout__dependent_var if (php__fpm_pool_conf_request_slowlog_timeout__dependent_var | string | length) else
-    php__fpm_pool_conf_request_slowlog_timeout__role_var
-  }}'
-
-php__fpm_pool_conf_request_terminate_timeout__dependent_var: ''
-php__fpm_pool_conf_request_terminate_timeout__group_var: ''
-php__fpm_pool_conf_request_terminate_timeout__host_var: ''
-php__fpm_pool_conf_request_terminate_timeout__role_var: 0
-php__fpm_pool_conf_request_terminate_timeout__combined_var: '{{
-    php__fpm_pool_conf_request_terminate_timeout__host_var if (php__fpm_pool_conf_request_terminate_timeout__host_var | string | length) else
-    php__fpm_pool_conf_request_terminate_timeout__group_var if (php__fpm_pool_conf_request_terminate_timeout__group_var | string | length) else
-    php__fpm_pool_conf_request_terminate_timeout__dependent_var if (php__fpm_pool_conf_request_terminate_timeout__dependent_var | string | length) else
-    php__fpm_pool_conf_request_terminate_timeout__role_var
-  }}'
-
+php__fpm_pools__dependent_var: []
+php__fpm_pools__group_var: []
+php__fpm_pools__host_var: []
+php__fpm_pools__role_var:
+  - name: 'www'
+    user: '{{ __shared__apache_httpd_user }}'
+    group: '{{ __shared__apache_httpd_group }}'
 php__fpm_service_enabled: true
 php__fpm_service_state: '{{ php__fpm_service_enabled | bool | ternary("started", "stopped") }}'
 
-php__ini_date_timezone__dependent_var: ''
-php__ini_date_timezone__group_var: ''
-php__ini_date_timezone__host_var: ''
-php__ini_date_timezone__role_var: ''
 php__ini_date_timezone__combined_var: '{{
     php__ini_date_timezone__host_var if (php__ini_date_timezone__host_var | string | length) else
     php__ini_date_timezone__group_var if (php__ini_date_timezone__group_var | string | length) else
@@ -104,10 +100,10 @@ php__ini_date_timezone__combined_var: '{{
     php__ini_date_timezone__role_var
   }}'
 
-php__ini_default_socket_timeout__dependent_var: ''
-php__ini_default_socket_timeout__group_var: ''
-php__ini_default_socket_timeout__host_var: ''
-php__ini_default_socket_timeout__role_var: ''
+php__ini_date_timezone__dependent_var: ''
+php__ini_date_timezone__group_var: ''
+php__ini_date_timezone__host_var: ''
+php__ini_date_timezone__role_var: ''
 php__ini_default_socket_timeout__combined_var: '{{
     php__ini_default_socket_timeout__host_var if (php__ini_default_socket_timeout__host_var | string | length) else
     php__ini_default_socket_timeout__group_var if (php__ini_default_socket_timeout__group_var | string | length) else
@@ -115,10 +111,10 @@ php__ini_default_socket_timeout__combined_var: '{{
     php__ini_default_socket_timeout__role_var
   }}'
 
-php__ini_display_errors__dependent_var: ''
-php__ini_display_errors__group_var: ''
-php__ini_display_errors__host_var: ''
-php__ini_display_errors__role_var: ''
+php__ini_default_socket_timeout__dependent_var: ''
+php__ini_default_socket_timeout__group_var: ''
+php__ini_default_socket_timeout__host_var: ''
+php__ini_default_socket_timeout__role_var: ''
 php__ini_display_errors__combined_var: '{{
     php__ini_display_errors__host_var if (php__ini_display_errors__host_var | string | length) else
     php__ini_display_errors__group_var if (php__ini_display_errors__group_var | string | length) else
@@ -126,10 +122,10 @@ php__ini_display_errors__combined_var: '{{
     php__ini_display_errors__role_var
   }}'
 
-php__ini_display_startup_errors__dependent_var: ''
-php__ini_display_startup_errors__group_var: ''
-php__ini_display_startup_errors__host_var: ''
-php__ini_display_startup_errors__role_var: ''
+php__ini_display_errors__dependent_var: ''
+php__ini_display_errors__group_var: ''
+php__ini_display_errors__host_var: ''
+php__ini_display_errors__role_var: ''
 php__ini_display_startup_errors__combined_var: '{{
     php__ini_display_startup_errors__host_var if (php__ini_display_startup_errors__host_var | string | length) else
     php__ini_display_startup_errors__group_var if (php__ini_display_startup_errors__group_var | string | length) else
@@ -137,10 +133,10 @@ php__ini_display_startup_errors__combined_var: '{{
     php__ini_display_startup_errors__role_var
   }}'
 
-php__ini_error_reporting__dependent_var: ''
-php__ini_error_reporting__group_var: ''
-php__ini_error_reporting__host_var: ''
-php__ini_error_reporting__role_var: ''
+php__ini_display_startup_errors__dependent_var: ''
+php__ini_display_startup_errors__group_var: ''
+php__ini_display_startup_errors__host_var: ''
+php__ini_display_startup_errors__role_var: ''
 php__ini_error_reporting__combined_var: '{{
     php__ini_error_reporting__host_var if (php__ini_error_reporting__host_var | string | length) else
     php__ini_error_reporting__group_var if (php__ini_error_reporting__group_var | string | length) else
@@ -148,10 +144,10 @@ php__ini_error_reporting__combined_var: '{{
     php__ini_error_reporting__role_var
   }}'
 
-php__ini_max_execution_time__dependent_var: ''
-php__ini_max_execution_time__group_var: ''
-php__ini_max_execution_time__host_var: ''
-php__ini_max_execution_time__role_var: ''
+php__ini_error_reporting__dependent_var: ''
+php__ini_error_reporting__group_var: ''
+php__ini_error_reporting__host_var: ''
+php__ini_error_reporting__role_var: ''
 php__ini_max_execution_time__combined_var: '{{
     php__ini_max_execution_time__host_var if (php__ini_max_execution_time__host_var | string | length) else
     php__ini_max_execution_time__group_var if (php__ini_max_execution_time__group_var | string | length) else
@@ -159,10 +155,10 @@ php__ini_max_execution_time__combined_var: '{{
     php__ini_max_execution_time__role_var
   }}'
 
-php__ini_max_file_uploads__dependent_var: ''
-php__ini_max_file_uploads__group_var: ''
-php__ini_max_file_uploads__host_var: ''
-php__ini_max_file_uploads__role_var: ''
+php__ini_max_execution_time__dependent_var: ''
+php__ini_max_execution_time__group_var: ''
+php__ini_max_execution_time__host_var: ''
+php__ini_max_execution_time__role_var: ''
 php__ini_max_file_uploads__combined_var: '{{
     php__ini_max_file_uploads__host_var if (php__ini_max_file_uploads__host_var | string | length) else
     php__ini_max_file_uploads__group_var if (php__ini_max_file_uploads__group_var | string | length) else
@@ -170,10 +166,10 @@ php__ini_max_file_uploads__combined_var: '{{
     php__ini_max_file_uploads__role_var
   }}'
 
-php__ini_max_input_time__dependent_var: ''
-php__ini_max_input_time__group_var: ''
-php__ini_max_input_time__host_var: ''
-php__ini_max_input_time__role_var: ''
+php__ini_max_file_uploads__dependent_var: ''
+php__ini_max_file_uploads__group_var: ''
+php__ini_max_file_uploads__host_var: ''
+php__ini_max_file_uploads__role_var: ''
 php__ini_max_input_time__combined_var: '{{
     php__ini_max_input_time__host_var if (php__ini_max_input_time__host_var | string | length) else
     php__ini_max_input_time__group_var if (php__ini_max_input_time__group_var | string | length) else
@@ -181,10 +177,10 @@ php__ini_max_input_time__combined_var: '{{
     php__ini_max_input_time__role_var
   }}'
 
-php__ini_max_input_vars__dependent_var: ''
-php__ini_max_input_vars__group_var: ''
-php__ini_max_input_vars__host_var: ''
-php__ini_max_input_vars__role_var: ''
+php__ini_max_input_time__dependent_var: ''
+php__ini_max_input_time__group_var: ''
+php__ini_max_input_time__host_var: ''
+php__ini_max_input_time__role_var: ''
 php__ini_max_input_vars__combined_var: '{{
     php__ini_max_input_vars__host_var if (php__ini_max_input_vars__host_var | string | length) else
     php__ini_max_input_vars__group_var if (php__ini_max_input_vars__group_var | string | length) else
@@ -192,10 +188,10 @@ php__ini_max_input_vars__combined_var: '{{
     php__ini_max_input_vars__role_var
   }}'
 
-php__ini_memory_limit__dependent_var: ''
-php__ini_memory_limit__group_var: ''
-php__ini_memory_limit__host_var: ''
-php__ini_memory_limit__role_var: ''
+php__ini_max_input_vars__dependent_var: ''
+php__ini_max_input_vars__group_var: ''
+php__ini_max_input_vars__host_var: ''
+php__ini_max_input_vars__role_var: ''
 php__ini_memory_limit__combined_var: '{{
     php__ini_memory_limit__host_var if (php__ini_memory_limit__host_var | string | length) else
     php__ini_memory_limit__group_var if (php__ini_memory_limit__group_var | string | length) else
@@ -203,10 +199,10 @@ php__ini_memory_limit__combined_var: '{{
     php__ini_memory_limit__role_var
   }}'
 
-php__ini_opcache_blacklist_filename__dependent_var: ''
-php__ini_opcache_blacklist_filename__group_var: ''
-php__ini_opcache_blacklist_filename__host_var: ''
-php__ini_opcache_blacklist_filename__role_var: ''
+php__ini_memory_limit__dependent_var: ''
+php__ini_memory_limit__group_var: ''
+php__ini_memory_limit__host_var: ''
+php__ini_memory_limit__role_var: ''
 php__ini_opcache_blacklist_filename__combined_var: '{{
     php__ini_opcache_blacklist_filename__host_var if (php__ini_opcache_blacklist_filename__host_var | string | length) else
     php__ini_opcache_blacklist_filename__group_var if (php__ini_opcache_blacklist_filename__group_var | string | length) else
@@ -214,10 +210,10 @@ php__ini_opcache_blacklist_filename__combined_var: '{{
     php__ini_opcache_blacklist_filename__role_var
   }}'
 
-php__ini_opcache_enable__dependent_var: ''
-php__ini_opcache_enable__group_var: ''
-php__ini_opcache_enable__host_var: ''
-php__ini_opcache_enable__role_var: ''
+php__ini_opcache_blacklist_filename__dependent_var: ''
+php__ini_opcache_blacklist_filename__group_var: ''
+php__ini_opcache_blacklist_filename__host_var: ''
+php__ini_opcache_blacklist_filename__role_var: ''
 php__ini_opcache_enable__combined_var: '{{
     php__ini_opcache_enable__host_var if (php__ini_opcache_enable__host_var | string | length) else
     php__ini_opcache_enable__group_var if (php__ini_opcache_enable__group_var | string | length) else
@@ -225,10 +221,10 @@ php__ini_opcache_enable__combined_var: '{{
     php__ini_opcache_enable__role_var
   }}'
 
-php__ini_opcache_enable_cli__dependent_var: ''
-php__ini_opcache_enable_cli__group_var: ''
-php__ini_opcache_enable_cli__host_var: ''
-php__ini_opcache_enable_cli__role_var: ''
+php__ini_opcache_enable__dependent_var: ''
+php__ini_opcache_enable__group_var: ''
+php__ini_opcache_enable__host_var: ''
+php__ini_opcache_enable__role_var: ''
 php__ini_opcache_enable_cli__combined_var: '{{
     php__ini_opcache_enable_cli__host_var if (php__ini_opcache_enable_cli__host_var | string | length) else
     php__ini_opcache_enable_cli__group_var if (php__ini_opcache_enable_cli__group_var | string | length) else
@@ -236,10 +232,10 @@ php__ini_opcache_enable_cli__combined_var: '{{
     php__ini_opcache_enable_cli__role_var
   }}'
 
-php__ini_opcache_huge_code_pages__dependent_var: ''
-php__ini_opcache_huge_code_pages__group_var: ''
-php__ini_opcache_huge_code_pages__host_var: ''
-php__ini_opcache_huge_code_pages__role_var: ''
+php__ini_opcache_enable_cli__dependent_var: ''
+php__ini_opcache_enable_cli__group_var: ''
+php__ini_opcache_enable_cli__host_var: ''
+php__ini_opcache_enable_cli__role_var: ''
 php__ini_opcache_huge_code_pages__combined_var: '{{
     php__ini_opcache_huge_code_pages__host_var if (php__ini_opcache_huge_code_pages__host_var | string | length) else
     php__ini_opcache_huge_code_pages__group_var if (php__ini_opcache_huge_code_pages__group_var | string | length) else
@@ -247,10 +243,10 @@ php__ini_opcache_huge_code_pages__combined_var: '{{
     php__ini_opcache_huge_code_pages__role_var
   }}'
 
-php__ini_opcache_interned_strings_buffer__dependent_var: ''
-php__ini_opcache_interned_strings_buffer__group_var: ''
-php__ini_opcache_interned_strings_buffer__host_var: ''
-php__ini_opcache_interned_strings_buffer__role_var: ''
+php__ini_opcache_huge_code_pages__dependent_var: ''
+php__ini_opcache_huge_code_pages__group_var: ''
+php__ini_opcache_huge_code_pages__host_var: ''
+php__ini_opcache_huge_code_pages__role_var: ''
 php__ini_opcache_interned_strings_buffer__combined_var: '{{
     php__ini_opcache_interned_strings_buffer__host_var if (php__ini_opcache_interned_strings_buffer__host_var | string | length) else
     php__ini_opcache_interned_strings_buffer__group_var if (php__ini_opcache_interned_strings_buffer__group_var | string | length) else
@@ -258,10 +254,10 @@ php__ini_opcache_interned_strings_buffer__combined_var: '{{
     php__ini_opcache_interned_strings_buffer__role_var
   }}'
 
-php__ini_opcache_max_accelerated_files__dependent_var: ''
-php__ini_opcache_max_accelerated_files__group_var: ''
-php__ini_opcache_max_accelerated_files__host_var: ''
-php__ini_opcache_max_accelerated_files__role_var: ''
+php__ini_opcache_interned_strings_buffer__dependent_var: ''
+php__ini_opcache_interned_strings_buffer__group_var: ''
+php__ini_opcache_interned_strings_buffer__host_var: ''
+php__ini_opcache_interned_strings_buffer__role_var: ''
 php__ini_opcache_max_accelerated_files__combined_var: '{{
     php__ini_opcache_max_accelerated_files__host_var if (php__ini_opcache_max_accelerated_files__host_var | string | length) else
     php__ini_opcache_max_accelerated_files__group_var if (php__ini_opcache_max_accelerated_files__group_var | string | length) else
@@ -269,10 +265,10 @@ php__ini_opcache_max_accelerated_files__combined_var: '{{
     php__ini_opcache_max_accelerated_files__role_var
   }}'
 
-php__ini_opcache_memory_consumption__dependent_var: ''
-php__ini_opcache_memory_consumption__group_var: ''
-php__ini_opcache_memory_consumption__host_var: ''
-php__ini_opcache_memory_consumption__role_var: ''
+php__ini_opcache_max_accelerated_files__dependent_var: ''
+php__ini_opcache_max_accelerated_files__group_var: ''
+php__ini_opcache_max_accelerated_files__host_var: ''
+php__ini_opcache_max_accelerated_files__role_var: ''
 php__ini_opcache_memory_consumption__combined_var: '{{
     php__ini_opcache_memory_consumption__host_var if (php__ini_opcache_memory_consumption__host_var | string | length) else
     php__ini_opcache_memory_consumption__group_var if (php__ini_opcache_memory_consumption__group_var | string | length) else
@@ -280,10 +276,10 @@ php__ini_opcache_memory_consumption__combined_var: '{{
     php__ini_opcache_memory_consumption__role_var
   }}'
 
-php__ini_opcache_revalidate_freq__dependent_var: ''
-php__ini_opcache_revalidate_freq__group_var: ''
-php__ini_opcache_revalidate_freq__host_var: ''
-php__ini_opcache_revalidate_freq__role_var: ''
+php__ini_opcache_memory_consumption__dependent_var: ''
+php__ini_opcache_memory_consumption__group_var: ''
+php__ini_opcache_memory_consumption__host_var: ''
+php__ini_opcache_memory_consumption__role_var: ''
 php__ini_opcache_revalidate_freq__combined_var: '{{
     php__ini_opcache_revalidate_freq__host_var if (php__ini_opcache_revalidate_freq__host_var | string | length) else
     php__ini_opcache_revalidate_freq__group_var if (php__ini_opcache_revalidate_freq__group_var | string | length) else
@@ -291,10 +287,10 @@ php__ini_opcache_revalidate_freq__combined_var: '{{
     php__ini_opcache_revalidate_freq__role_var
   }}'
 
-php__ini_opcache_save_comments__dependent_var: ''
-php__ini_opcache_save_comments__group_var: ''
-php__ini_opcache_save_comments__host_var: ''
-php__ini_opcache_save_comments__role_var: ''
+php__ini_opcache_revalidate_freq__dependent_var: ''
+php__ini_opcache_revalidate_freq__group_var: ''
+php__ini_opcache_revalidate_freq__host_var: ''
+php__ini_opcache_revalidate_freq__role_var: ''
 php__ini_opcache_save_comments__combined_var: '{{
     php__ini_opcache_save_comments__host_var if (php__ini_opcache_save_comments__host_var | string | length) else
     php__ini_opcache_save_comments__group_var if (php__ini_opcache_save_comments__group_var | string | length) else
@@ -302,10 +298,10 @@ php__ini_opcache_save_comments__combined_var: '{{
     php__ini_opcache_save_comments__role_var
   }}'
 
-php__ini_opcache_validate_timestamps__dependent_var: ''
-php__ini_opcache_validate_timestamps__group_var: ''
-php__ini_opcache_validate_timestamps__host_var: ''
-php__ini_opcache_validate_timestamps__role_var: ''
+php__ini_opcache_save_comments__dependent_var: ''
+php__ini_opcache_save_comments__group_var: ''
+php__ini_opcache_save_comments__host_var: ''
+php__ini_opcache_save_comments__role_var: ''
 php__ini_opcache_validate_timestamps__combined_var: '{{
     php__ini_opcache_validate_timestamps__host_var if (php__ini_opcache_validate_timestamps__host_var | string | length) else
     php__ini_opcache_validate_timestamps__group_var if (php__ini_opcache_validate_timestamps__group_var | string | length) else
@@ -313,10 +309,10 @@ php__ini_opcache_validate_timestamps__combined_var: '{{
     php__ini_opcache_validate_timestamps__role_var
   }}'
 
-php__ini_post_max_size__dependent_var: ''
-php__ini_post_max_size__group_var: ''
-php__ini_post_max_size__host_var: ''
-php__ini_post_max_size__role_var: ''
+php__ini_opcache_validate_timestamps__dependent_var: ''
+php__ini_opcache_validate_timestamps__group_var: ''
+php__ini_opcache_validate_timestamps__host_var: ''
+php__ini_opcache_validate_timestamps__role_var: ''
 php__ini_post_max_size__combined_var: '{{
     php__ini_post_max_size__host_var if (php__ini_post_max_size__host_var | string | length) else
     php__ini_post_max_size__group_var if (php__ini_post_max_size__group_var | string | length) else
@@ -324,10 +320,10 @@ php__ini_post_max_size__combined_var: '{{
     php__ini_post_max_size__role_var
   }}'
 
-php__ini_session_cookie_httponly__dependent_var: ''
-php__ini_session_cookie_httponly__group_var: ''
-php__ini_session_cookie_httponly__host_var: ''
-php__ini_session_cookie_httponly__role_var: ''
+php__ini_post_max_size__dependent_var: ''
+php__ini_post_max_size__group_var: ''
+php__ini_post_max_size__host_var: ''
+php__ini_post_max_size__role_var: ''
 php__ini_session_cookie_httponly__combined_var: '{{
     php__ini_session_cookie_httponly__host_var if (php__ini_session_cookie_httponly__host_var | string | length) else
     php__ini_session_cookie_httponly__group_var if (php__ini_session_cookie_httponly__group_var | string | length) else
@@ -335,10 +331,10 @@ php__ini_session_cookie_httponly__combined_var: '{{
     php__ini_session_cookie_httponly__role_var
   }}'
 
-php__ini_session_cookie_secure__dependent_var: ''
-php__ini_session_cookie_secure__group_var: ''
-php__ini_session_cookie_secure__host_var: ''
-php__ini_session_cookie_secure__role_var: ''
+php__ini_session_cookie_httponly__dependent_var: ''
+php__ini_session_cookie_httponly__group_var: ''
+php__ini_session_cookie_httponly__host_var: ''
+php__ini_session_cookie_httponly__role_var: ''
 php__ini_session_cookie_secure__combined_var: '{{
     php__ini_session_cookie_secure__host_var if (php__ini_session_cookie_secure__host_var | string | length) else
     php__ini_session_cookie_secure__group_var if (php__ini_session_cookie_secure__group_var | string | length) else
@@ -346,10 +342,10 @@ php__ini_session_cookie_secure__combined_var: '{{
     php__ini_session_cookie_secure__role_var
   }}'
 
-php__ini_session_gc_maxlifetime__dependent_var: ''
-php__ini_session_gc_maxlifetime__group_var: ''
-php__ini_session_gc_maxlifetime__host_var: ''
-php__ini_session_gc_maxlifetime__role_var: ''
+php__ini_session_cookie_secure__dependent_var: ''
+php__ini_session_cookie_secure__group_var: ''
+php__ini_session_cookie_secure__host_var: ''
+php__ini_session_cookie_secure__role_var: ''
 php__ini_session_gc_maxlifetime__combined_var: '{{
     php__ini_session_gc_maxlifetime__host_var if (php__ini_session_gc_maxlifetime__host_var | string | length) else
     php__ini_session_gc_maxlifetime__group_var if (php__ini_session_gc_maxlifetime__group_var | string | length) else
@@ -357,10 +353,10 @@ php__ini_session_gc_maxlifetime__combined_var: '{{
     php__ini_session_gc_maxlifetime__role_var
   }}'
 
-php__ini_session_sid_length__dependent_var: ''
-php__ini_session_sid_length__group_var: ''
-php__ini_session_sid_length__host_var: ''
-php__ini_session_sid_length__role_var: ''
+php__ini_session_gc_maxlifetime__dependent_var: ''
+php__ini_session_gc_maxlifetime__group_var: ''
+php__ini_session_gc_maxlifetime__host_var: ''
+php__ini_session_gc_maxlifetime__role_var: ''
 php__ini_session_sid_length__combined_var: '{{
     php__ini_session_sid_length__host_var if (php__ini_session_sid_length__host_var | string | length) else
     php__ini_session_sid_length__group_var if (php__ini_session_sid_length__group_var | string | length) else
@@ -368,10 +364,10 @@ php__ini_session_sid_length__combined_var: '{{
     php__ini_session_sid_length__role_var
   }}'
 
-php__ini_session_trans_sid_tags__dependent_var: ''
-php__ini_session_trans_sid_tags__group_var: ''
-php__ini_session_trans_sid_tags__host_var: ''
-php__ini_session_trans_sid_tags__role_var: ''
+php__ini_session_sid_length__dependent_var: ''
+php__ini_session_sid_length__group_var: ''
+php__ini_session_sid_length__host_var: ''
+php__ini_session_sid_length__role_var: ''
 php__ini_session_trans_sid_tags__combined_var: '{{
     php__ini_session_trans_sid_tags__host_var if (php__ini_session_trans_sid_tags__host_var | string | length) else
     php__ini_session_trans_sid_tags__group_var if (php__ini_session_trans_sid_tags__group_var | string | length) else
@@ -379,10 +375,10 @@ php__ini_session_trans_sid_tags__combined_var: '{{
     php__ini_session_trans_sid_tags__role_var
   }}'
 
-php__ini_smtp__dependent_var: ''
-php__ini_smtp__group_var: ''
-php__ini_smtp__host_var: ''
-php__ini_smtp__role_var: ''
+php__ini_session_trans_sid_tags__dependent_var: ''
+php__ini_session_trans_sid_tags__group_var: ''
+php__ini_session_trans_sid_tags__host_var: ''
+php__ini_session_trans_sid_tags__role_var: ''
 php__ini_smtp__combined_var: '{{
     php__ini_smtp__host_var if (php__ini_smtp__host_var | string | length) else
     php__ini_smtp__group_var if (php__ini_smtp__group_var | string | length) else
@@ -390,15 +386,27 @@ php__ini_smtp__combined_var: '{{
     php__ini_smtp__role_var
   }}'
 
-php__ini_upload_max_filesize__dependent_var: ''
-php__ini_upload_max_filesize__group_var: ''
-php__ini_upload_max_filesize__host_var: ''
-php__ini_upload_max_filesize__role_var: ''
+php__ini_smtp__dependent_var: ''
+php__ini_smtp__group_var: ''
+php__ini_smtp__host_var: ''
+php__ini_smtp__role_var: ''
 php__ini_upload_max_filesize__combined_var: '{{
     php__ini_upload_max_filesize__host_var if (php__ini_upload_max_filesize__host_var | string | length) else
     php__ini_upload_max_filesize__group_var if (php__ini_upload_max_filesize__group_var | string | length) else
     php__ini_upload_max_filesize__dependent_var if (php__ini_upload_max_filesize__dependent_var | string | length) else
     php__ini_upload_max_filesize__role_var
+  }}'
+
+php__ini_upload_max_filesize__dependent_var: ''
+php__ini_upload_max_filesize__group_var: ''
+php__ini_upload_max_filesize__host_var: ''
+php__ini_upload_max_filesize__role_var: ''
+php__modules__combined_var: '{{ (
+      (php__modules__role_var | linuxfabrik.lfops.platform_select(ansible_facts)) +
+      php__modules__dependent_var +
+      php__modules__group_var +
+      php__modules__host_var
+    ) | linuxfabrik.lfops.combine_lod
   }}'
 
 php__modules__dependent_var: []
@@ -411,12 +419,4 @@ php__modules__role_var:
   RedHat:
     - name: 'php-opcache'
       state: 'present'
-php__modules__combined_var: '{{ (
-      (php__modules__role_var | linuxfabrik.lfops.platform_select(ansible_facts)) +
-      php__modules__dependent_var +
-      php__modules__group_var +
-      php__modules__host_var
-    ) | linuxfabrik.lfops.combine_lod
-  }}'
-
 php__version: ''

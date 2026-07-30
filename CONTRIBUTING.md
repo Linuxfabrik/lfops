@@ -476,13 +476,9 @@ The goal of combined variables is that variables can be set in multiple places, 
 
 Furthermore, other roles can also inject their sensible defaults via the `__dependent_var`, with a higher precedence than the role defaults, but lower than the user's inventory.
 
-To enable this behavior, you must define the `__combined_var` in the `defaults/main.yml` as follows:
+To enable this behavior, you must define the `__combined_var` in the `defaults/main.yml` as follows. Like every other variable, the slots are sorted alphabetically, which puts the `__combined_var` first:
 ```yaml
 # for list of dictionaries
-my_role__my_var__dependent_var: []
-my_role__my_var__group_var: []
-my_role__my_var__host_var: []
-my_role__my_var__role_var: []
 my_role__my_var__combined_var: '{{ (
       my_role__my_var__role_var +
       my_role__my_var__dependent_var +
@@ -490,19 +486,25 @@ my_role__my_var__combined_var: '{{ (
       my_role__my_var__host_var
     ) | linuxfabrik.lfops.combine_lod
   }}'
+my_role__my_var__dependent_var: []
+my_role__my_var__group_var: []
+my_role__my_var__host_var: []
+my_role__my_var__role_var: []
 
 # for simple values like strings, numbers or booleans
-my_role__my_var__dependent_var: ''
-my_role__my_var__group_var: ''
-my_role__my_var__host_var: ''
-my_role__my_var__role_var: ''
 my_role__my_var__combined_var: '{{
     my_role__my_var__host_var if (my_role__my_var__host_var | string | length) else
     my_role__my_var__group_var if (my_role__my_var__group_var | string | length) else
     my_role__my_var__dependent_var if (my_role__my_var__dependent_var | string | length) else
     my_role__my_var__role_var
   }}'
+my_role__my_var__dependent_var: ''
+my_role__my_var__group_var: ''
+my_role__my_var__host_var: ''
+my_role__my_var__role_var: ''
 ```
+
+Note that the alphabetical order of the slots is unrelated to their precedence. Precedence is expressed inside the `__combined_var` expression itself, which is evaluated lazily, so the slots may be defined in any order.
 
 The `__combined_var` will then be used in the tasks or templates of the role.
 

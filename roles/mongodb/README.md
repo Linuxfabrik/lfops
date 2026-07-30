@@ -173,29 +173,29 @@ mongodb__dump_user:
 * Type: Bool.
 * Default: `true`
 
-`mongodb__dump_method_file_based_backup_dir`
-
-* Where to store the file-based backup.
-* Type: String.
-* Default: `'/backup/var-lib-mongo'`
-
 `mongodb__dump_method_file_based`
 
 * Use this to create file based backups by locking the instance and copying `/var/lib/mongo`. This is recommended when using `mongodb__dump_method_mongodump` is too slow.
 * Type: Bool.
 * Default: `false`
 
-`mongodb__dump_method_mongodump_backup_dir`
+`mongodb__dump_method_file_based_backup_dir`
 
-* Where to store the `mongodump`-based backup.
+* Where to store the file-based backup.
 * Type: String.
-* Default: `'/backup/mongodb-dump'`
+* Default: `'/backup/var-lib-mongo'`
 
 `mongodb__dump_method_mongodump`
 
 * Use `mongodump` to create database dumps. This is recommended since it allows the most flexible restores.
 * Type: Bool.
 * Default: `true`
+
+`mongodb__dump_method_mongodump_backup_dir`
+
+* Where to store the `mongodump`-based backup.
+* Type: String.
+* Default: `'/backup/mongodb-dump'`
 
 `mongodb__dump_on_calendar`
 

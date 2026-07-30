@@ -4,6 +4,14 @@ duplicity__backup_dest_container: '{{ ansible_nodename }}'
 duplicity__backup_full_if_older_than: '30D'
 duplicity__backup_retention_time: '30D'
 
+duplicity__backup_sources__combined_var: '{{ (
+      duplicity__backup_sources__role_var +
+      duplicity__backup_sources__dependent_var +
+      duplicity__backup_sources__group_var +
+      duplicity__backup_sources__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
+
 duplicity__backup_sources__dependent_var: []
 duplicity__backup_sources__group_var: []
 duplicity__backup_sources__host_var: []
@@ -26,14 +34,6 @@ duplicity__backup_sources__role_var:
   - path: '/var/spool/cron'
     divide: false
     state: 'present'
-duplicity__backup_sources__combined_var: '{{ (
-      duplicity__backup_sources__role_var +
-      duplicity__backup_sources__dependent_var +
-      duplicity__backup_sources__group_var +
-      duplicity__backup_sources__host_var
-    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
-  }}'
-
 duplicity__excludes:
   - '**/*.git*'
   - '**/*.svn*'
@@ -43,12 +43,13 @@ duplicity__excludes:
   - '**/cache'
   - '**/log'
 
-duplicity__timer_enabled: true
-duplicity__on_calendar_hour: '23'
-duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 59 | random(seed=inventory_hostname) }}'
-
 duplicity__loglevel: 'notice'
 
+duplicity__on_calendar: '*-*-* {{ duplicity__on_calendar_hour }}:{{ 59 | random(seed=inventory_hostname) }}'
+
+duplicity__on_calendar_hour: '23'
 duplicity__swift_authurl: 'https://swiss-backup02.infomaniak.com/identity/v3'
 duplicity__swift_authversion: '3'
 duplicity__swift_tenantname: 'sb_project_{{ duplicity__swift_login["username"] | d("") }}'
+
+duplicity__timer_enabled: true

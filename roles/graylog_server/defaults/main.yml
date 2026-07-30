@@ -17,9 +17,6 @@ graylog_server__ring_size: 65536
 graylog_server__service_enabled: true
 graylog_server__service_state: '{{ graylog_server__service_enabled | bool | ternary("started", "stopped") }}'
 graylog_server__stale_leader_timeout_ms: 2000
-graylog_server__timezone: 'Europe/Zurich'
-graylog_server__trusted_proxies: []
-
 graylog_server__system_default_index_set:
   creation_date: '{{ ansible_date_time.iso8601 }}'
   description: 'One index per day; 365 indices max'
@@ -102,6 +99,9 @@ graylog_server__system_inputs:
     global: true
     title: 'Syslog (1514/UDP - managed by Ansible - do not edit)'
     type: 'org.graylog2.inputs.syslog.udp.SyslogUDPInput'
+
+graylog_server__timezone: 'Europe/Zurich'
+graylog_server__trusted_proxies: []
 
 # ---------------------------------------------------
 

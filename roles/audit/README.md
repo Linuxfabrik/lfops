@@ -45,6 +45,12 @@ This role installs and configures [audit](http://people.redhat.com/sgrubb/audit/
 * Type: Number.
 * Default: `10`
 
+`audit__service_enabled`
+
+* Enables or disables the auditd service, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
 `audit__space_left`
 
 * If  the  free space in the filesystem containing log_file drops below this value, the audit daemon takes the action  specified  by  space_left_action.   If  the  value  of space_left  is  specified as a whole number, it is interpreted as an absolute size in megabytes (MiB).  If the value is specified as a number between 1 and 99 followed  by a  percentage  sign  (e.g.,  5%),  the  audit  daemon calculates the absolute size in megabytes based on the size of the filesystem containing  log_file.   (E.g.,  if  the filesystem  containing log_file is 2 gigabytes in size, and space_left is set to 25%, then the audit daemon sets space_left to approximately 500 megabytes.  Note that this calculation  is performed when the audit daemon starts, so if you resize the filesys‐ tem containing log_file while the audit daemon is running, you should send the  audit daemon  SIGHUP to re-read the configuration file and recalculate the correct percent‐ age.
@@ -56,12 +62,6 @@ This role installs and configures [audit](http://people.redhat.com/sgrubb/audit/
 * This parameter tells the system what action to take when the system has detected that it  is  starting  to get low on disk space.  Valid values are ignore, syslog, rotate, email, exec, suspend, single, and halt.  If set to  ignore,  the  audit  daemon  does nothing.   syslog  means  that it will issue a warning to syslog.  rotate will rotate logs, losing the oldest to free up space.  Email means that it will send a warning to the  email  account  specified  in action_mail_acct as well as sending the message to syslog.  exec /path-to-script will execute the script. You cannot pass parameters  to the  script.  The  script is also responsible for telling the auditd daemon to resume logging once its completed its action. This can be done by adding service auditd  re‐ sume  to  the script.  suspend will cause the audit daemon to stop writing records to the disk. The daemon will still be alive. The single option will cause the audit dae‐ mon  to  put  the computer system in single user mode. The halt option will cause the audit daemon to shutdown the computer system. Except for rotate, it will perform this action just one time.
 * Type: String.
 * Default: `'ROTATE'`
-
-`audit__service_enabled`
-
-* Enables or disables the auditd service, analogous to `systemctl enable/disable --now`.
-* Type: Bool.
-* Default: `true`
 
 Example:
 ```yaml

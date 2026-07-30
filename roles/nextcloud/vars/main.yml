@@ -84,9 +84,9 @@ __nextcloud__php__modules__dependent_var:
       state: 'present'
     - name: 'php{{ __php__installed_version }}-zip'
       state: 'present'
+__nextcloud__php_fpm_service_name: '{{ __php__fpm_service_name }}'
+
 nextcloud__php__modules__dependent_var: '{{
     __nextcloud__php__modules__dependent_var
     | linuxfabrik.lfops.platform_select(ansible_facts)
   }}'
-
-__nextcloud__php_fpm_service_name: '{{ __php__fpm_service_name }}'

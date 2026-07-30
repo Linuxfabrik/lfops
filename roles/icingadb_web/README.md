@@ -76,6 +76,24 @@ icingadb_web__api_user_login:
 * Type: Number.
 * Default: `20000`
 
+`icingadb_web__redis2_host`
+
+* The host on which the secondary Redis instance is reachable.
+* Type: String.
+* Default: unset
+
+`icingadb_web__redis2_password`
+
+* The password for the secondary Redis instance, if authentication is enabled.
+* Type: String.
+* Default: `'{{ icingadb_web__redis_password }}'`
+
+`icingadb_web__redis2_port`
+
+* The port on which the secondary Redis instance is reachable.
+* Type: Number.
+* Default: `'{{ icingadb_web__redis_port }}'`
+
 `icingadb_web__redis_ca`
 
 * Path to the CA certificate used to check the Redis TLS certificate.
@@ -111,24 +129,6 @@ icingadb_web__api_user_login:
 * Enable TLS when connecting to Redis.
 * Type: Bool.
 * Default: `'{{ icingadb__redis_tls }}'`
-
-`icingadb_web__redis2_host`
-
-* The host on which the secondary Redis instance is reachable.
-* Type: String.
-* Default: unset
-
-`icingadb_web__redis2_password`
-
-* The password for the secondary Redis instance, if authentication is enabled.
-* Type: String.
-* Default: `'{{ icingadb_web__redis_password }}'`
-
-`icingadb_web__redis2_port`
-
-* The port on which the secondary Redis instance is reachable.
-* Type: Number.
-* Default: `'{{ icingadb_web__redis_port }}'`
 
 Example:
 ```yaml

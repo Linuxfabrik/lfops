@@ -5,7 +5,6 @@ keycloak__apps__apps__dependent_var:
 keycloak__db_url_database: 'keycloak'
 keycloak__db_url_host: 'localhost'
 keycloak__db_vendor: 'mariadb'
-keycloak__service_enabled: true
 keycloak__expose_healthcheck_endpoints: true
 keycloak__expose_metrics_endpoints: true
 keycloak__hostname_backchannel_dynamic: false
@@ -16,6 +15,7 @@ keycloak__log: 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
 keycloak__mode: 'production'
 keycloak__proxy_headers: 'xforwarded'
+keycloak__service_enabled: true
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
 keycloak__state: 'started'
 

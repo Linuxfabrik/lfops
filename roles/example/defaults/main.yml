@@ -1,9 +1,6 @@
 # --- scalar injection pattern ---
 # priority: host > group > dependent > role
-example__conf_log_level__dependent_var: ''
-example__conf_log_level__group_var: ''
-example__conf_log_level__host_var: ''
-example__conf_log_level__role_var: 'info'
+example__backup_target: ''
 example__conf_log_level__combined_var: '{{
     example__conf_log_level__host_var if (example__conf_log_level__host_var | string | length) else
     example__conf_log_level__group_var if (example__conf_log_level__group_var | string | length) else
@@ -11,16 +8,23 @@ example__conf_log_level__combined_var: '{{
     example__conf_log_level__role_var
   }}'
 
-example__conf_max_connections__dependent_var: ''
-example__conf_max_connections__group_var: ''
-example__conf_max_connections__host_var: ''
-example__conf_max_connections__role_var: 100
+example__conf_log_level__dependent_var: ''
+example__conf_log_level__group_var: ''
+example__conf_log_level__host_var: ''
+example__conf_log_level__role_var: 'info'
 example__conf_max_connections__combined_var: '{{
     example__conf_max_connections__host_var if (example__conf_max_connections__host_var | string | length) else
     example__conf_max_connections__group_var if (example__conf_max_connections__group_var | string | length) else
     example__conf_max_connections__dependent_var if (example__conf_max_connections__dependent_var | string | length) else
     example__conf_max_connections__role_var
   }}'
+
+example__conf_max_connections__dependent_var: ''
+example__conf_max_connections__group_var: ''
+example__conf_max_connections__host_var: ''
+example__conf_max_connections__role_var: 100
+example__conf_tls_protocols: 'TLSv1.2 TLSv1.3'
+
 
 # version-specific default from vars/<version>.yml, overridable by the user via inventory
 example__conf_worker_threads: '{{ __example__conf_worker_threads }}'
@@ -39,16 +43,8 @@ example__maintenance_cron_minute: '{{ 59 | random(seed=inventory_hostname) }}'
 example__service_enabled: true
 example__service_state: 'started'
 
-example__backup_target: ''
-example__conf_tls_protocols: 'TLSv1.2 TLSv1.3'
-
-
 # --- list of dicts injection pattern ---
 # combined using linuxfabrik.lfops.combine_lod
-example__plugins__dependent_var: []
-example__plugins__group_var: []
-example__plugins__host_var: []
-example__plugins__role_var: []
 example__plugins__combined_var: '{{ (
       example__plugins__role_var +
       example__plugins__dependent_var +
@@ -57,10 +53,10 @@ example__plugins__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
-example__users__dependent_var: []
-example__users__group_var: []
-example__users__host_var: []
-example__users__role_var: []
+example__plugins__dependent_var: []
+example__plugins__group_var: []
+example__plugins__host_var: []
+example__plugins__role_var: []
 example__users__combined_var: '{{ (
       example__users__role_var +
       example__users__dependent_var +
@@ -69,9 +65,21 @@ example__users__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
+example__users__dependent_var: []
+example__users__group_var: []
+example__users__host_var: []
+example__users__role_var: []
 # --- list of dicts injection pattern with composite unique key ---
 # when items are identified by a combination of keys (e.g. same name on different ports),
 # pass a list of key names to unique_key.
+example__listeners__combined_var: '{{ (
+      example__listeners__role_var +
+      example__listeners__dependent_var +
+      example__listeners__group_var +
+      example__listeners__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["name", "port"])
+  }}'
+
 example__listeners__dependent_var: []
 example__listeners__group_var: []
 example__listeners__host_var: []
@@ -81,10 +89,3 @@ example__listeners__role_var:
   - name: 'default'
     port: 8443
     ssl: true
-example__listeners__combined_var: '{{ (
-      example__listeners__role_var +
-      example__listeners__dependent_var +
-      example__listeners__group_var +
-      example__listeners__host_var
-    ) | linuxfabrik.lfops.combine_lod(unique_key=["name", "port"])
-  }}'

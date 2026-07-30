@@ -2,10 +2,6 @@ influxdb__conf_continuous_queries_log_enabled: false
 influxdb__conf_continuous_queries_run_interval: '1s'
 influxdb__conf_log_queries_after: '0s'
 influxdb__conf_logging_level: 'warn'
-influxdb__databases__dependent_var: []
-influxdb__databases__group_var: []
-influxdb__databases__host_var: []
-influxdb__databases__role_var: []
 influxdb__databases__combined_var: '{{ (
       influxdb__databases__role_var +
       influxdb__databases__dependent_var +
@@ -14,11 +10,13 @@ influxdb__databases__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
+influxdb__databases__dependent_var: []
+influxdb__databases__group_var: []
+influxdb__databases__host_var: []
+influxdb__databases__role_var: []
 influxdb__dump_timer_enabled: true
-influxdb__users__dependent_var: []
-influxdb__users__group_var: []
-influxdb__users__host_var: []
-influxdb__users__role_var: []
+influxdb__service_enabled: true
+influxdb__service_state: '{{ influxdb__service_enabled | bool | ternary("started", "stopped") }}'
 influxdb__users__combined_var: '{{ (
       influxdb__users__role_var +
       influxdb__users__dependent_var +
@@ -27,8 +25,10 @@ influxdb__users__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
-influxdb__service_enabled: true
-influxdb__service_state: '{{ influxdb__service_enabled | bool | ternary("started", "stopped") }}'
+influxdb__users__dependent_var: []
+influxdb__users__group_var: []
+influxdb__users__host_var: []
+influxdb__users__role_var: []
 influxdb__validate_certs: true
 
 # -----------------------------------------------------------------------------

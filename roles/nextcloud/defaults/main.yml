@@ -1,3 +1,11 @@
+nextcloud__app_configs__combined_var: '{{ (
+      nextcloud__app_configs__role_var +
+      nextcloud__app_configs__dependent_var +
+      nextcloud__app_configs__group_var +
+      nextcloud__app_configs__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="key")
+  }}'
+
 nextcloud__app_configs__dependent_var: []
 nextcloud__app_configs__group_var: []
 nextcloud__app_configs__host_var: []
@@ -52,12 +60,12 @@ nextcloud__app_configs__role_var:
   - key: 'theming url'
     value: 'https:\/\/www.linuxfabrik.ch'
     state: 'present'
-nextcloud__app_configs__combined_var: '{{ (
-      nextcloud__app_configs__role_var +
-      nextcloud__app_configs__dependent_var +
-      nextcloud__app_configs__group_var +
-      nextcloud__app_configs__host_var
-    ) | linuxfabrik.lfops.combine_lod(unique_key="key")
+nextcloud__apps__combined_var: '{{ (
+      nextcloud__apps__role_var +
+      nextcloud__apps__dependent_var +
+      nextcloud__apps__group_var +
+      nextcloud__apps__host_var
+    ) | linuxfabrik.lfops.combine_lod
   }}'
 
 nextcloud__apps__dependent_var: []
@@ -155,18 +163,10 @@ nextcloud__apps__role_var:
     state: 'disabled'
   # - name: 'workflowengine'
   #   state: 'disabled'
-nextcloud__apps__combined_var: '{{ (
-      nextcloud__apps__role_var +
-      nextcloud__apps__dependent_var +
-      nextcloud__apps__group_var +
-      nextcloud__apps__host_var
-    ) | linuxfabrik.lfops.combine_lod
-  }}'
-
-nextcloud__datadir: '/data'
-
 nextcloud__database_host: 'localhost'
 nextcloud__database_name: 'nextcloud'
+
+nextcloud__datadir: '/data'
 
 nextcloud__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
 nextcloud__icinga2_api_user_login: '{{ system_update__icinga2_api_user_login }}'
@@ -185,6 +185,14 @@ nextcloud__on_calendar_scan_files: '*:50:15'  # every hour at hh:50:15
 
 nextcloud__skip_apps: false
 nextcloud__skip_notify_push: false
+
+nextcloud__sysconfig__combined_var: '{{ (
+      nextcloud__sysconfig__role_var +
+      nextcloud__sysconfig__dependent_var +
+      nextcloud__sysconfig__group_var +
+      nextcloud__sysconfig__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="key")
+  }}'
 
 nextcloud__sysconfig__dependent_var: []
 nextcloud__sysconfig__group_var: []
@@ -300,14 +308,6 @@ nextcloud__sysconfig__role_var:
   - key: 'memcache.local'
     value: '\OC\Memcache\Redis'
     state: 'present'
-nextcloud__sysconfig__combined_var: '{{ (
-      nextcloud__sysconfig__role_var +
-      nextcloud__sysconfig__dependent_var +
-      nextcloud__sysconfig__group_var +
-      nextcloud__sysconfig__host_var
-    ) | linuxfabrik.lfops.combine_lod(unique_key="key")
-  }}'
-
 nextcloud__timer_app_update_enabled: true
 nextcloud__timer_jobs_enabled: true
 nextcloud__timer_ldap_show_remnants_enabled: true

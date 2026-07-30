@@ -1,3 +1,11 @@
+kernel_modules__modules__combined_var: '{{ (
+      kernel_modules__modules__role_var +
+      kernel_modules__modules__dependent_var +
+      kernel_modules__modules__group_var +
+      kernel_modules__modules__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
 kernel_modules__modules__dependent_var: []
 kernel_modules__modules__group_var: []
 kernel_modules__modules__host_var: []
@@ -30,10 +38,3 @@ kernel_modules__modules__role_var:
     enabled: false
   - name: 'tipc'
     enabled: false
-kernel_modules__modules__combined_var: '{{ (
-      kernel_modules__modules__role_var +
-      kernel_modules__modules__dependent_var +
-      kernel_modules__modules__group_var +
-      kernel_modules__modules__host_var
-    ) | linuxfabrik.lfops.combine_lod
-  }}'

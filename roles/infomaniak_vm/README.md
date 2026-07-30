@@ -39,16 +39,6 @@ Manual steps:
 
 ## Mandatory Role Variables
 
-`infomaniak_vm__flavor`
-
-* The flavor for the instance. This defines the amount of CPU cores, RAM and disk space. The possible options can be obtained using `openstack flavor list`.
-* Type: String.
-
-`infomaniak_vm__image`
-
-* The image to use for this instance. The possible options can be obtained using `openstack image list`.
-* Type: String.
-
 `infomaniak_vm__api_password`
 
 * The password for the OpenStack API. Normally this is the same as your admin user login.
@@ -62,6 +52,16 @@ Manual steps:
 `infomaniak_vm__api_username`
 
 * The username for the OpenStack API. Normally this is the same as your admin user login.
+* Type: String.
+
+`infomaniak_vm__flavor`
+
+* The flavor for the instance. This defines the amount of CPU cores, RAM and disk space. The possible options can be obtained using `openstack flavor list`.
+* Type: String.
+
+`infomaniak_vm__image`
+
+* The image to use for this instance. The possible options can be obtained using `openstack image list`.
 * Type: String.
 
 Example:

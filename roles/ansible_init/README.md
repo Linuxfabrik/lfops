@@ -55,12 +55,6 @@ ansible_init__url: 'git@example.com:my-ansinv.git'
 
 ## Optional Role Variables
 
-`ansible_init__ansinv_path`
-
-* The directory holding the ansinv checkout. LFOps, the extra roles and the inventories are placed relative to it. Defaults to the parent of the inventory directory the role is run against, which is the layout `ansinv` itself creates.
-* Type: String.
-* Default: `'{{ inventory_dir }}/../'`
-
 `ansible_init__ansible_collections`
 
 * List of dictionaries of Ansible collections to install.
@@ -79,6 +73,12 @@ ansible_init__url: 'git@example.com:my-ansinv.git'
 
 * Type: List of dictionaries.
 * Default: `[]`
+
+`ansible_init__ansinv_path`
+
+* The directory holding the ansinv checkout. LFOps, the extra roles and the inventories are placed relative to it. Defaults to the parent of the inventory directory the role is run against, which is the layout `ansinv` itself creates.
+* Type: String.
+* Default: `'{{ inventory_dir }}/../'`
 
 `ansible_init__inventories`
 

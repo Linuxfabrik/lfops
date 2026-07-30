@@ -87,18 +87,6 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 ## Optional Role Variables
 
-`php__fpm_service_enabled`
-
-* Enables or disables the php-fpm service, analogous to `systemctl enable/disable`.
-* Type: Bool.
-* Default: `true`
-
-`php__fpm_service_state`
-
-* Changes the state of the php-fpm service, analogous to `systemctl start/stop/restart/reload`.
-* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
-* Default: `'started'` if `php__fpm_service_enabled` is `true`, else `'stopped'`
-
 `php__fpm_pools__host_var` / `php__fpm_pools__group_var`
 
 * List of dictionaries containing PHP-FPM pools.
@@ -134,6 +122,18 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
         * Optional. Raw content which will be added to the end of the pool config.
         * Type: String.
+
+`php__fpm_service_enabled`
+
+* Enables or disables the php-fpm service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`php__fpm_service_state`
+
+* Changes the state of the php-fpm service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `php__fpm_service_enabled` is `true`, else `'stopped'`
 
 `php__modules__host_var` / `php__modules__group_var`
 

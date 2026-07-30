@@ -5,15 +5,6 @@ monitoring_plugins_grafana_dashboards__repo_version: '{{ lfops__monitoring_plugi
 
 # -----------------------------------------------------------------------------
 
-monitoring_plugins_grafana_dashboards__influxdb__users__dependent_var:
-  - name: '{{ monitoring_plugins_grafana_dashboard__influxdb_login["username"] }}'
-    password: '{{ monitoring_plugins_grafana_dashboard__influxdb_login["password"] }}'
-    state: 'present'
-    admin: false
-    grants:
-      - database: '{{ monitoring_plugins_grafana_dashboard__influxdb_database_name }}'
-        privilege: 'READ'
-
 monitoring_plugins_grafana_dashboards__grafana__provisioning_datasources__dependent_var:
   - name: 'InfluxDB'
     type: 'influxdb'
@@ -31,3 +22,12 @@ monitoring_plugins_grafana_dashboards__grafana__provisioning_datasources__depend
       password: '{{ monitoring_plugins_grafana_dashboard__influxdb_login["password"] }}'
     version: 1
     editable: false
+
+monitoring_plugins_grafana_dashboards__influxdb__users__dependent_var:
+  - name: '{{ monitoring_plugins_grafana_dashboard__influxdb_login["username"] }}'
+    password: '{{ monitoring_plugins_grafana_dashboard__influxdb_login["password"] }}'
+    state: 'present'
+    admin: false
+    grants:
+      - database: '{{ monitoring_plugins_grafana_dashboard__influxdb_database_name }}'
+        privilege: 'READ'

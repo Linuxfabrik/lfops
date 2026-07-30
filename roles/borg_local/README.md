@@ -158,17 +158,17 @@ borg_local__passphrase: 'linuxfabrik'
         * Type: String.
         * Default: `'present'`
 
-`borg_local__on_calendar_daily_hour`
-
-* The hour of the daily backup.
-* Type: Number.
-* Default: `23`
-
 `borg_local__on_calendar_daily`
 
 * The time at which the daily backup will run. Once per day.
 * Type: String.
 * Default: `'*-*-* {{ borg_local__on_calendar_daily_hour }}:{{ 45 | random(seed=inventory_hostname) }}'`
+
+`borg_local__on_calendar_daily_hour`
+
+* The hour of the daily backup.
+* Type: Number.
+* Default: `23`
 
 `borg_local__on_calendar_hourly`
 

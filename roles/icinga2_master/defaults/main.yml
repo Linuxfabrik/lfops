@@ -1,14 +1,6 @@
 icinga2_master__additional_master_endpoints: []
 icinga2_master__api_ticket_login: '{{ icinga2_master__enrolment_api_user }}'
 
-icinga2_master__api_users__dependent_var: []
-icinga2_master__api_users__group_var: []
-icinga2_master__api_users__host_var: []
-icinga2_master__api_users__role_var:
-  - username: '{{ icinga2_master__enrolment_api_user["username"] }}'
-    password: '{{ icinga2_master__enrolment_api_user["password"] }}'
-    permissions:
-      - 'actions/generate-ticket'
 icinga2_master__api_users__combined_var: '{{ (
       icinga2_master__api_users__role_var +
       icinga2_master__api_users__dependent_var +
@@ -17,6 +9,14 @@ icinga2_master__api_users__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod(unique_key="username")
   }}'
 
+icinga2_master__api_users__dependent_var: []
+icinga2_master__api_users__group_var: []
+icinga2_master__api_users__host_var: []
+icinga2_master__api_users__role_var:
+  - username: '{{ icinga2_master__enrolment_api_user["username"] }}'
+    password: '{{ icinga2_master__enrolment_api_user["password"] }}'
+    permissions:
+      - 'actions/generate-ticket'
 icinga2_master__cn: '{{ ansible_facts["nodename"] }}'
 icinga2_master__influxdb_database_name: 'icinga2'
 icinga2_master__influxdb_enable_ha: false

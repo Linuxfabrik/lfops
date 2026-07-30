@@ -59,14 +59,14 @@ Manual steps:
 
 ## Mandatory Role Variables
 
-`duplicity__gpg_encrypt_master_key_block`
-
-* The ASCII-armored **public** master GPG key. Obtain it using `gpg --armor --export $GPG_KEY`. This key is imported on the server and is used in addition to the server's own local GPG key to encrypt the backups. This means that the backups can be restored using either the master or the server's local private key (which is pretty cool in case of a desaster recovery). Be aware of the empty line between `-----BEGIN PGP PUBLIC KEY BLOCK-----` and your public key block.
-* Type: String.
-
 `duplicity__gpg_encrypt_master_key`
 
 * The long key ID of the master GPG key. Obtain it using `gpg --list-keys --keyid-format=long` (after importing the key) or `gpg /path/to/keyfile`.
+* Type: String.
+
+`duplicity__gpg_encrypt_master_key_block`
+
+* The ASCII-armored **public** master GPG key. Obtain it using `gpg --armor --export $GPG_KEY`. This key is imported on the server and is used in addition to the server's own local GPG key to encrypt the backups. This means that the backups can be restored using either the master or the server's local private key (which is pretty cool in case of a desaster recovery). Be aware of the empty line between `-----BEGIN PGP PUBLIC KEY BLOCK-----` and your public key block.
 * Type: String.
 
 `duplicity__swift_login`
@@ -110,17 +110,17 @@ duplicity__swift_login:
 * Type: String.
 * Default: `'swift'`
 
-`duplicity__backup_dest_container`
-
-* The Swift container. This can be used to separate backups on the destination. By default, this will be used in `duplicity__backup_dest`.
-* Type: String.
-* Default: `'{{ ansible_nodename }}'`
-
 `duplicity__backup_dest`
 
 * The backup destination. This will be used in combination with the backup source path to create the target URL for `duplicity`.
 * Type: String.
 * Default: `'swift://{{ duplicity__backup_dest_container | regex_replace("/$", "") }}'`
+
+`duplicity__backup_dest_container`
+
+* The Swift container. This can be used to separate backups on the destination. By default, this will be used in `duplicity__backup_dest`.
+* Type: String.
+* Default: `'{{ ansible_nodename }}'`
 
 `duplicity__backup_full_if_older_than`
 
@@ -190,17 +190,17 @@ duplicity__swift_login:
 * Type: Number.
 * Default: `{{ logrotate__rotate | d(14) }}`
 
-`duplicity__on_calendar_hour`
-
-* A shorthand to set the hour of `duplicity__on_calendar`.
-* Type: String.
-* Default: `'23'`
-
 `duplicity__on_calendar`
 
 * The `OnCalendar` definition for the daily systemd timer. Have a look at `man systemd.time(7)` for the format.
 * Type: String.
 * Default: `'*-*-* {{ duplicity__on_calendar_hour }}:{{ 59 | random(seed=inventory_hostname) }}'`
+
+`duplicity__on_calendar_hour`
+
+* A shorthand to set the hour of `duplicity__on_calendar`.
+* Type: String.
+* Default: `'23'`
 
 `duplicity__sftp_password`
 
