@@ -531,13 +531,13 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#character_set_server)
 * Type: String.
-* Default: 10.11-: `'utf8mb4'`, 11.1+: `'uca1400'`
+* Default: `'utf8mb4'`
 
 `mariadb_server__cnf_collation_server__group_var` / `mariadb_server__cnf_collation_server__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#collation_server)
 * Type: String.
-* Default: 10.11-: `'utf8mb4_unicode_ci'`, 11.1+: `'utf8mb3=utf8mb3_uca1400_ai_ci,ucs2=ucs2_uca1400_ai_ci,utf8mb4=utf8mb4_uca1400_ai_ci,utf16=utf16_uca1400_ai_ci,utf32=utf32_uca1400_ai_ci'`
+* Default: 10.11-: `'utf8mb4_unicode_ci'`, 11.4+: `'utf8mb4_uca1400_ai_ci'`
 
 `mariadb_server__cnf_datadir__group_var` / `mariadb_server__cnf_datadir__host_var`
 
@@ -603,7 +603,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_chunk_size) (Deprecated and ignored: MariaDB 10.11.12, MariaDB 11.4.6, MariaDB 11.8.2; no longer written to the generated config on these versions, value is derived automatically from `innodb_buffer_pool_size`)
 * Type: String or Number.
-* Default: 10.08-: `'128M'`, 10.8+: `0` (autosize)
+* Default: 10.6: `'128M'`, 10.11+: unset (the directive is not written, MariaDB derives the value)
 
 `mariadb_server__cnf_innodb_buffer_pool_size__group_var` / `mariadb_server__cnf_innodb_buffer_pool_size__host_var`
 

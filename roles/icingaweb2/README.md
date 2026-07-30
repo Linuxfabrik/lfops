@@ -198,7 +198,7 @@ icingaweb2__url_host: 'monitoring.example.com'
 * A list of dictionaries defining additional menu entries in the IcingaWeb2 navigation bar.
 * For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
-* Default: IcingaWeb2 Database
+* Default: `[]`
 * Subkeys:
 
     * `name`:

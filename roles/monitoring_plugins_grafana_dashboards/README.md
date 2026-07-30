@@ -59,18 +59,6 @@ monitoring_plugins_grafana_dashboards__repo_version: '1.2.0.11'
 
 ## Optional Role Variables
 
-`monitoring_plugins_grafana_dashboard__director_database_host`
-
-* The host of the Director SQL database.
-* Type: String.
-* Default: `'127.0.0.1'`
-
-`monitoring_plugins_grafana_dashboard__director_database_name`
-
-* The name of the Director SQL database.
-* Type: String.
-* Default: `'{{ icingaweb2_module_director__database_name }}'`
-
 `monitoring_plugins_grafana_dashboard__influxdb_database_name`
 
 * The name of the InfluxDB database.
@@ -92,8 +80,6 @@ monitoring_plugins_grafana_dashboards__repo_version: '1.2.0.11'
 Example:
 ```yaml
 # optional
-monitoring_plugins_grafana_dashboard__director_database_host: 'localhost'
-monitoring_plugins_grafana_dashboard__director_database_name: 'my-db'
 monitoring_plugins_grafana_dashboard__influxdb_database_name: 'my-director-db'
 monitoring_plugins_grafana_dashboard__influxdb_host: '127.0.0.1'
 monitoring_plugins_grafana_dashboards__grafana_url: 'http://localhost:3000'
