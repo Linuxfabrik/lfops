@@ -1,18 +1,22 @@
 # verify.yml runs after converge and again after the idempotence step. It asserts the observable
-# end state of the Debian version handling, not that individual tasks ran.
+# end state, not that individual tasks ran.
 #
-# The core claim under test: with php__version set, the host runs exactly the declared version and
-# nothing else. On a sury host that is not automatic. The unversioned php-defaults metapackages
-# (php-cli, php-fpm, php-curl, ...) resolve to whatever sury currently declares as its default, so
-# any of them slipping into the dependency graph drags a second, undeclared PHP stack onto the
-# machine. Asserting "no foreign phpX.Y-* package exists" catches that regardless of which
-# metapackage caused it, which is why it is the primary assertion here.
+# The two families make different promises, so they get one play each. Debian is where the role
+# itself has to hold a version; RedHat is where the repo does it and the role must keep its hands
+# off. Both plays end with the same memory_limit check, which is the one assertion that is about
+# the role's ordinary job rather than about version handling.
 - name: 'Verify php installed and pinned the declared version'
-  hosts: 'systems_under_test'
+  hosts: 'systems_under_test_debian'
   gather_facts: true
   become: true
   tasks:
 
+    # The core claim under test: with php__version set, the host runs exactly the declared version
+    # and nothing else. On a sury host that is not automatic. The unversioned php-defaults
+    # metapackages (php-cli, php-fpm, php-curl, ...) resolve to whatever sury currently declares as
+    # its default, so any of them slipping into the dependency graph drags a second, undeclared PHP
+    # stack onto the machine. Asserting "no foreign phpX.Y-* package exists" catches that regardless
+    # of which metapackage caused it, which is why it is the primary assertion here.
     - name: 'Get the list of installed packages'
       ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
 
@@ -92,6 +96,88 @@
       loop: '{{ __molecule__php_ini_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
+
+    # Not "the file exists" but "the interpreter uses the value", which is what actually matters.
+    - name: 'Read memory_limit from the running interpreter'
+      ansible.builtin.command: 'php --run "echo ini_get(''memory_limit'');"'
+      register: '__molecule__php_memory_limit_result'
+      changed_when: false
+
+    - name: 'Assert the deployed ini is in effect'
+      ansible.builtin.assert:
+        that: '__molecule__php_memory_limit_result["stdout"] == php__ini_memory_limit__group_var'
+        fail_msg: 'memory_limit is {{ __molecule__php_memory_limit_result["stdout"] }}, expected {{ php__ini_memory_limit__group_var }}'
+
+
+# On RedHat the role must NOT do version handling: the dnf module stream already pins the version
+# at repo level, and every versioned code path in the role is gated on os_family == 'Debian'.
+# group_vars/systems_under_test_redhat.yml therefore asks for two different versions, the stream for
+# repo_remi__enabled_php_version and php__version for another one. Asserting the host runs the
+# stream version proves php__version was ignored, rather than merely agreed with.
+- name: 'Verify php installed the module stream version and ignored php__version'
+  hosts: 'systems_under_test_redhat'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Get the list of installed packages'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    # The mirror image of the Debian assertion: here the unversioned names are the correct ones,
+    # because the module stream is what decides which version they resolve to.
+    - name: 'Assert the unversioned packages are installed'
+      ansible.builtin.assert:
+        that: 'item in ansible_facts["packages"]'
+        fail_msg: '{{ item }} is not installed'
+      loop:
+        - 'composer'
+        - 'php'
+        - 'php-fpm'
+
+    - name: 'php --version'
+      ansible.builtin.command: 'php --version'
+      register: '__molecule__php_version_result'
+      changed_when: false
+
+    - name: 'Assert the CLI runs the module stream version, not php__version'
+      ansible.builtin.assert:
+        that: '__molecule__php_version_result["stdout"] is match("PHP " ~ (repo_remi__enabled_php_version | regex_escape) ~ "\.")'
+        fail_msg: 'expected PHP {{ repo_remi__enabled_php_version }} from the remi stream, but php__version ({{ php__version }}) appears to have taken effect: {{ __molecule__php_version_result["stdout_lines"][0] }}'
+
+    # RedHat does not register php with alternatives at all, so the link group the Debian play
+    # asserts on must not exist here. A non-zero exit is the expected outcome; a successful lookup
+    # would mean the role pinned something it has no business pinning.
+    # `--display`, not the `--query` the Debian play uses: RedHat's alternatives (1.24) has no
+    # --query option and exits 2 for every name, existing or not, which would make this assertion
+    # pass vacuously. --display exits 0 for an existing link group and non-zero for a missing one.
+    # That difference is also why the role gates its --query tasks on Debian.
+    - name: 'alternatives --display php'
+      ansible.builtin.command: 'alternatives --display php'
+      register: '__molecule__php_alternatives_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the role did not create a php alternatives link group'
+      ansible.builtin.assert:
+        that: '__molecule__php_alternatives_result["rc"] != 0'
+        fail_msg: 'a php link group exists on RedHat: {{ __molecule__php_alternatives_result["stdout"] }}'
+
+    - name: 'systemctl is-active php-fpm' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active php-fpm'
+      register: '__molecule__php_fpm_active_result'
+      changed_when: false
+      failed_when: '__molecule__php_fpm_active_result["stdout"] != "active"'
+
+    # RedHat has a single conf.d for all SAPIs, unlike Debian's per-SAPI tree.
+    - name: 'stat the deployed ini file'
+      ansible.builtin.stat:
+        path: '/etc/php.d/z00-linuxfabrik.ini'
+      register: '__molecule__php_ini_result'
+
+    - name: 'Assert the ini was deployed'
+      ansible.builtin.assert:
+        that: '__molecule__php_ini_result["stat"]["exists"]'
+        fail_msg: '/etc/php.d/z00-linuxfabrik.ini is missing'
 
     # Not "the file exists" but "the interpreter uses the value", which is what actually matters.
     - name: 'Read memory_limit from the running interpreter'
