@@ -45,46 +45,42 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `php`
 
-* Install php php-fpm composer.
-* Get the list of installed packages.
-* Ensure PHP modules are absent.
-* Ensure PHP modules are present.
-* Get PHP version.
-* Load default values for `{{ __php__installed_version }}`.
-* Deploy the /etc/php.d/z00-linuxfabrik.ini.
-* `systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`.
-* Remove absent pools from `/etc/php-fpm.d`.
-* Deploy the pools to `/etc/php-fpm.d/`.
+* Installs php, php-fpm and composer.
+* Installs and removes the configured PHP modules.
+* Deploys the `z00-linuxfabrik.ini` for every SAPI.
+* Deploys and removes the PHP-FPM pools.
+* Manages the state of the php-fpm service.
+* Pins the `php`, `phar` and `phar.phar` alternatives (Debian with `php__version` set only).
 * Triggers: php-fpm.service restart.
-
-`php:fpm`
-
-* Remove absent pools from /etc/php-fpm.d.
-* Deploy the pools to /etc/php-fpm.d/.
-* Triggers: php-fpm.service restart.
-
-`php:ini`
-
-* Get PHP version.
-* Load default values for `{{ __php__installed_version }}`.
-* Deploy the `/etc/php.d/z00-linuxfabrik.ini`.
-* Triggers: php-fpm.service restart.
-
-`php:state`
-
-* `systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`.
-* Remove absent pools from `/etc/php-fpm.d`.
-* Deploy the pools to `/etc/php-fpm.d/`.
-* Triggers: none.
 
 `php:alternatives`
 
 * Debian with `php__version` set only. Pins the `php`, `phar` and `phar.phar` alternatives to the declared version, so installing another version does not silently switch the CLI.
 * Triggers: none.
 
+`php:fpm`
+
+* Deploys and removes the PHP-FPM pools. On Debian these live under the declared version's tree, on RedHat under `/etc/php-fpm.d`.
+* Triggers: php-fpm.service restart.
+
+`php:ini`
+
+* Deploys the `z00-linuxfabrik.ini`. RedHat has a single `/etc/php.d`, Debian one conf.d per SAPI (apache2, cli and fpm) below the declared version's tree.
+* Triggers: php-fpm.service restart.
+
+`php:modules`
+
+* Installs and removes the PHP modules from `php__modules__combined_var`.
+* Triggers: none.
+
+`php:state`
+
+* Enables or disables the php-fpm service and brings it into the state requested by `php__fpm_service_state`.
+* Triggers: none.
+
 `php:update`
 
-* Updates the PHP Packages and the configuration. Do not forget to update the repo beforehand.
+* Updates the PHP packages, composer and the PHP modules, and reasserts the ini, the pools, the service state and the alternatives. Do not forget to update the repo beforehand.
 * On Debian with `php__version` set, this is also how a major version change is carried out: raise `php__version`, then run this tag. It installs the declared version, moves the pools, alternatives and the FPM service over to it, and purges the stacks of all other versions.
 * Triggers: php-fpm.service restart.
 
