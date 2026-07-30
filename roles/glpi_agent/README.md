@@ -6,6 +6,17 @@ This role installs and configures the [GLPI Agent](https://glpi-agent.readthedoc
 *Available since LFOps `3.0.0`.*
 
 
+## How the Role Behaves
+
+The scheduled database inventory runs as a one-shot via a systemd timer instead of as part of the always-on daemon, because the agent refuses `--credentials` in daemon mode and offers no equivalent configuration directive.
+
+Enabling the scheduled inventory also disables the `database` category on the always-on daemon. Without credentials the daemon falls back to its default database access (root via the local socket) on every cycle, which the dedicated account is meant to replace.
+
+The one-shot must not inherit that `no-category` setting, otherwise the agent would discard its own `--partial=database` run. It therefore gets its own configuration file at `/etc/glpi-agent/db-inventory.cfg`, passed via `--conf-file`, which carries the same settings without the `no-category` directive. Both files are rendered from the same template, so they cannot drift apart. Note that the file lives outside `conf.d`, since the daemon would otherwise read it too.
+
+The credentials are assembled from `glpi_agent__database_inventory_login` into the `0600` environment file `/etc/glpi-agent/db-inventory.env` and pulled into the unit via `EnvironmentFile`, so they are not part of the unit file itself. systemd expands the variable into the command line when it starts the job, so the password is readable in the process list for as long as the one-shot runs. Use a dedicated read-only database account, and keep the password in Ansible Vault.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -22,7 +33,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `glpi_agent:configure`
 
-* Deploys the configuration file.
+* Deploys the configuration files.
 * Triggers: glpi-agent.service restart.
 
 `glpi_agent:database_inventory`
@@ -77,21 +88,21 @@ glpi_agent__conf_server: 'https://glpi.example.com'
 * Type: String.
 * Default: unset
 
-`glpi_agent__database_inventory_credentials`
-
-* The GLPI Agent `--credentials` string used by the scheduled database inventory, for example `type:login_password,login:glpi-reader,password:...`. Since the daemon rejects `--credentials`, the database inventory runs as a separate one-shot via a systemd timer. This value is written to the `0600` environment file `/etc/glpi-agent/db-inventory.env` and referenced from the service unit via `EnvironmentFile`, so it is not exposed by `systemctl show`. Use a dedicated read-only database account and store this value in Ansible Vault. Mandatory when `glpi_agent__database_inventory_enabled` is `true`.
-* Type: String.
-* Default: `''`
-
 `glpi_agent__database_inventory_enabled`
 
-* Deploys a systemd timer that periodically runs `glpi-agent --partial=database` with `glpi_agent__database_inventory_credentials`, and disables the `database` category on the always-on daemon so it no longer connects to the database as root. When `false`, the timer, service and credentials file are removed.
+* Deploys a systemd timer that periodically runs `glpi-agent --partial=database`, and disables the `database` category on the always-on daemon. When `false`, the timer, service, configuration and environment file are removed.
 * Type: Bool.
 * Default: `false`
 
+`glpi_agent__database_inventory_login`
+
+* The database account used by the scheduled database inventory. Mandatory when `glpi_agent__database_inventory_enabled` is `true`.
+* Type: Dictionary.
+* Default: none
+
 `glpi_agent__database_inventory_on_calendar`
 
-* The `OnCalendar` schedule of the database inventory timer. Defaults to every 6 hours; the timer also applies a `RandomizedDelaySec` of 30 minutes to avoid overlapping with fixed maintenance windows such as system updates.
+* The `OnCalendar` schedule of the database inventory timer. The timer also applies a `RandomizedDelaySec` of 30 minutes, so the job does not collide with fixed maintenance windows such as system updates.
 * Type: String.
 * Default: `'*-*-* 00/6:17:00'`
 
@@ -120,8 +131,10 @@ glpi_agent__conf_local: '/tmp'
 glpi_agent__conf_no_category: []
 glpi_agent__conf_no_ssl_check: false
 glpi_agent__conf_ssl_fingerprint: 'sha256$...'
-glpi_agent__database_inventory_credentials: 'type:login_password,login:glpi-reader,password:...'
 glpi_agent__database_inventory_enabled: false
+glpi_agent__database_inventory_login:
+  username: 'glpi-reader'
+  password: 'linuxfabrik'
 glpi_agent__database_inventory_on_calendar: '*-*-* 00/6:17:00'
 glpi_agent__service_enabled: true
 glpi_agent__service_state: 'started'

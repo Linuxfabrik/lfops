@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026071301
+# 2026072801
 
 [Unit]
 Description=GLPI Agent database inventory
@@ -9,4 +9,4 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/glpi-agent/db-inventory.env
-ExecStart=/usr/bin/glpi-agent --credentials=${GLPI_DB_CRED} --partial=database
+ExecStart=/usr/bin/glpi-agent --conf-file=/etc/glpi-agent/db-inventory.cfg --credentials=${GLPI_DB_CRED} --partial=database

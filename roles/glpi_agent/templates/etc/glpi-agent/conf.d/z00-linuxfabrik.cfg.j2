@@ -1,13 +1,21 @@
 # {{ ansible_managed }}
-# 2026071301
+# 2026072801
+{#
+  This template is rendered to two destinations: conf.d/z00-linuxfabrik.cfg for the always-on
+  daemon, and db-inventory.cfg for the scheduled database inventory one-shot, which is started
+  with --conf-file so it reads the latter instead of agent.cfg and its conf.d include.
+  The one-shot must not inherit "no-category = database": the agent validates a partial
+  inventory against the disabled categories and would filter its own --partial=database run
+  away ("Nothing to inventory on partial inventory event"). Hence the render flag below.
+#}
 
-{% set glpi_agent__no_category = (glpi_agent__conf_no_category + (['database'] if glpi_agent__database_inventory_enabled | bool else [])) | unique | sort %}
+{% set __glpi_agent__no_category = (glpi_agent__conf_no_category + (['database'] if glpi_agent__database_inventory_enabled | bool else [])) | unique | sort %}
 local = {{ glpi_agent__conf_local }}
-{% if glpi_agent__no_category | length %}
-no-category = {{ glpi_agent__no_category | join(',') }}
+{% if __glpi_agent__render_no_category | bool and __glpi_agent__no_category | length > 0 %}
+no-category = {{ __glpi_agent__no_category | join(',') }}
 {% endif %}
 no-ssl-check = {{ glpi_agent__conf_no_ssl_check | ternary('1', '0') }}
 server = {{ glpi_agent__conf_server }}
-{% if glpi_agent__conf_ssl_fingerprint is defined and glpi_agent__conf_ssl_fingerprint | length %}
+{% if glpi_agent__conf_ssl_fingerprint is defined and glpi_agent__conf_ssl_fingerprint | length > 0 %}
 ssl-fingerprint = {{ glpi_agent__conf_ssl_fingerprint }}
 {% endif %}
