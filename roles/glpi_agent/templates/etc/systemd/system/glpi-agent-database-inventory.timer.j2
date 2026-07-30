@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026071301
+
+[Unit]
+Description=GLPI Agent database inventory timer
+
+[Timer]
+OnCalendar={{ glpi_agent__database_inventory_on_calendar }}
+Persistent=true
+RandomizedDelaySec=30m
+
+[Install]
+WantedBy=timers.target
