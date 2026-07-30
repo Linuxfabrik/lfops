@@ -1,8 +1,9 @@
 # OS-specific values consumed by a *different* role that runs *earlier* in the same play (the
 # `__dependent_var` pattern). vars/<os>.yml would load too late for an earlier consumer, but
-# vars/main.yml is auto-loaded at play parse and is visible to every role in the play. The public
-# variable in defaults/main.yml selects from this dict with the linuxfabrik.lfops.platform_select
-# filter.
+# vars/main.yml is auto-loaded at play parse and is visible to every role in the play. The OS
+# selection happens here, so consumers reference the public variable directly. Internal
+# (`__`-prefixed) dict first, public variable second, both non-overridable from inventory.
+# See "OS-specific Dependent Variables" in CONTRIBUTING.md.
 
 # PHP modules installed by the linuxfabrik.lfops.php role via
 # icingaweb2_module_fileshipper__php__modules__dependent_var.
@@ -24,3 +25,7 @@ __icingaweb2_module_fileshipper__php__modules__dependent_var:
       state: 'present'
     - name: 'php-zip'
       state: 'present'
+icingaweb2_module_fileshipper__php__modules__dependent_var: '{{
+    __icingaweb2_module_fileshipper__php__modules__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts)
+  }}'

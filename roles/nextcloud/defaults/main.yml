@@ -477,12 +477,6 @@ nextcloud__php__ini_memory_limit__dependent_var: '1024M'
 nextcloud__php__ini_opcache_interned_strings_buffer__dependent_var: '20'
 nextcloud__php__ini_post_max_size__dependent_var: '16M'
 nextcloud__php__ini_upload_max_filesize__dependent_var: '10000M'
-# OS-specific package names live in vars/main.yml (see platform_select). The php role runs earlier in the play and consumes this via the __dependent_var pattern.
-nextcloud__php__modules__dependent_var: '{{
-    __nextcloud__php__modules__dependent_var
-    | linuxfabrik.lfops.platform_select(ansible_facts)
-  }}'
-
 nextcloud__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
     value: 'on'

@@ -1,9 +1,1 @@
 icingaweb2_module_fileshipper__url: 'https://github.com/Icinga/icingaweb2-module-fileshipper/archive/{{ icingaweb2_module_fileshipper__version }}.tar.gz'
-
-# -----------------------------------------------------------------------------
-
-# OS-specific package names live in vars/main.yml (see platform_select). The php role runs earlier in the play and consumes this via the __dependent_var pattern.
-icingaweb2_module_fileshipper__php__modules__dependent_var: '{{
-    __icingaweb2_module_fileshipper__php__modules__dependent_var
-    | linuxfabrik.lfops.platform_select(ansible_facts)
-  }}'
