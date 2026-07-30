@@ -14,6 +14,7 @@ Other roles reuse this mechanism instead of rebooting themselves: they drop a re
 * **Reboots are modelled as state.** A pending reboot is a file in `/run/schedule-reboot/`; the file name is a category and its content is included in the notification mail. Several pending reasons coalesce into a single reboot. The spool lives on tmpfs, so it clears on the reboot itself.
 * **Producers order themselves before the actor.** A role that runs work at the same window (such as a system update) declares its unit `Before=schedule-reboot.service` (order-only, no `Wants=`/`Requires=`). systemd then runs the reboot only after that work finishes; on a window where no producer runs, the actor runs alone and reboots only if a request is pending.
 * **An Icinga downtime is set around the reboot.** When `schedule_reboot__icinga2_api_user_login` is set, the actor schedules a short host downtime before rebooting, so the reboot does not raise alerts. Without it, the reboot happens without a downtime.
+* **Changing the window means redeploying the producers.** Producers might render the window into their own systemd timers at deploy time. Running this role alone after a change therefore moves the actor but leaves those timers on the old window, so the work runs at the old time while the host reboots at the new one. Run the producers in the same play, for example via the [system_update](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/system_update.yml) playbook.
 
 To request a reboot from a script or by hand:
 
@@ -125,7 +126,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `schedule_reboot__reboot_time__host_var` / `schedule_reboot__reboot_time__group_var`
 
-* The reboot window: the time of day at which the actor (and the producers ordered before it) run. Steer it per inventory group. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* The reboot window: the time of day at which the actor (and the producers ordered before it) run. Steer it per inventory group. Changing it later also requires redeploying the producers, see "How the Role Behaves". Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 * Type: String.
 * Default: a deterministic per-host minute within `04:00`-`04:59`, staggered by hostname so a fleet does not reboot in lockstep. Pin a fixed value to override, e.g. `'04:00'`.
 
