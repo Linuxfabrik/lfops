@@ -1,1 +1,1 @@
-nfs_server__nfs_server_package: 'nfs-kernel-server'
+__nfs_server__nfs_server_package: 'nfs-kernel-server'

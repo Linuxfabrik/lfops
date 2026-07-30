@@ -40,17 +40,17 @@ This role is compatible with the following Redis versions:
 * Type: Bool.
 * Default: `true`
 
-`redis__service_state`
-
-* Changes the state of the redis service, analogous to `systemctl start/stop/restart/reload`.
-* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
-* Default: `'started'` if `redis__service_enabled` is `true`, else `'stopped'`
-
 `redis__service_limit_nofile`
 
 * Systemd: Resource limit directive for the number of file descriptors.
 * Type: Number.
 * Default: `10240`
+
+`redis__service_state`
+
+* Changes the state of the redis service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `redis__service_enabled` is `true`, else `'stopped'`
 
 `redis__service_timeout_start_sec`
 

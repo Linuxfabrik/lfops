@@ -142,6 +142,12 @@ Manual steps:
 * Type: Bool.
 * Default: `true`
 
+`system_update__update_on_calendar`
+
+* When the regular update lane installs the available updates. Defaults to `system_update__update_day` at the maintenance window (`schedule_reboot__reboot_time__*`), so the reboot follows right after. Set this to schedule the update lane independently of `system_update__update_day`, for example on the first Tuesday of the month. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* Type: String.
+* Default: `'{{ system_update__update_day }} {{ schedule_reboot__reboot_time__combined_var | d("04:00") }}'`
+
 Example:
 ```yaml
 # optional
@@ -174,10 +180,12 @@ system_update__pre_update_code: |-
 system_update__rocketchat_msg_suffix: '@administrator'
 system_update__rocketchat_url: 'https://chat.example.com/hooks/abcd1234'
 system_update__security_enabled: true
+system_update__security_on_calendar: '*-*-* 04:00'
 system_update__security_repos:
   - 'security'
 system_update__update_day: 'Tue'
 system_update__update_enabled: true
+system_update__update_on_calendar: 'Tue *-*-01..07 04:00' # first tuesday of the month
 ```
 
 

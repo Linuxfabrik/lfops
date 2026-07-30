@@ -1,11 +1,21 @@
-apache_httpd__base_packages:
+__apache_httpd__base_packages:
   - 'httpd'
   - 'bind-utils'  # for dig etc.
-apache_httpd__config_file: '{{ apache_httpd__config_path }}/conf/httpd.conf'
-apache_httpd__config_path: '/etc/httpd'
-apache_httpd__config_prefix: ''
-apache_httpd__config_test_command: 'httpd -t'
-apache_httpd__log_path: '/var/log/httpd'
+__apache_httpd__config_file: '{{ __apache_httpd__config_path }}/conf/httpd.conf'
+__apache_httpd__config_path: '/etc/httpd'
+__apache_httpd__config_prefix: ''
+__apache_httpd__config_test_command: 'httpd -t'
+__apache_httpd__log_path: '/var/log/httpd'
+__apache_httpd__modules_path: 'modules'
+__apache_httpd__openssl_certificate_path: '/etc/pki/tls/certs'
+__apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'
+__apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
+__apache_httpd__php_set_handler_default: 'SetHandler "proxy:unix:{{ __apache_httpd__php_socket }}|fcgi://localhost"'
+__apache_httpd__php_socket: '/run/php-fpm/www.sock'
+__apache_httpd__root_path: '/var/www'
+__apache_httpd__roothtml_path: '/var/www/html'
+__apache_httpd__service_name: 'httpd'
+
 apache_httpd__mods__role_var:
   - filename: 'alias'
     enabled: true
@@ -276,10 +286,6 @@ apache_httpd__mods__role_var:
     enabled: false
     state: 'present'
     template: 'wsgi_python3'
-apache_httpd__modules_path: 'modules'
-apache_httpd__openssl_certificate_path: '/etc/pki/tls/certs'
-apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'
-apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
 apache_httpd__packages__role_var:
   - name: 'mod_auth_openidc'
     state: 'present'
@@ -292,8 +298,3 @@ apache_httpd__packages__role_var:
 
   - name: 'mod_ssl'
     state: 'present'
-apache_httpd__php_set_handler_default: 'SetHandler "proxy:unix:{{ apache_httpd__php_socket }}|fcgi://localhost"'
-apache_httpd__php_socket: '/run/php-fpm/www.sock'
-apache_httpd__root_path: '/var/www'
-apache_httpd__roothtml_path: '/var/www/html'
-apache_httpd__service_name: 'httpd'

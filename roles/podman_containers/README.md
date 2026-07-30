@@ -139,7 +139,7 @@ login__users__host_var:
         * Type: String.
         * Default: `'default.target'`
 
-`podman_networks__networks__host_var` / `podman_networks__networks__group_var`
+`podman_containers__networks__host_var` / `podman_containers__networks__group_var`
 
 * List of dictionaries describing the Podman networks.
 * Type: List of dictionaries.
@@ -199,7 +199,7 @@ login__users__host_var:
         * Type: String.
         * Default: `'default.target'`
 
-`podman_volumes__volumes__host_var` / `podman_volumes__volumes__group_var`
+`podman_containers__volumes__host_var` / `podman_containers__volumes__group_var`
 
 * List of dictionaries describing the Podman volumes.
 * Type: List of dictionaries.

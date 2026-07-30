@@ -741,7 +741,10 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `php__skip_yum_utils`
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `php__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `php__skip_repo_epel`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `php__skip_repo_remi`
+* [repo_sury](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_sury): `php__skip_repo_sury`
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)
 
 
@@ -813,6 +816,8 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `redis__skip_kernel_settings`
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `redis__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `redis__skip_repo_epel`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `redis__skip_repo_remi`
 * [repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis)
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)
@@ -1069,6 +1074,8 @@ Calls the following roles (in order):
 * [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `grav__skip_yum_utils`
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `grav__skip_policycoreutils`
 * [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps): `grav__skip_apps`
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `grav__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `grav__skip_repo_epel`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `grav__skip_repo_remi`
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): `grav__skip_php`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_grav__skip_selinux`
@@ -1231,6 +1238,8 @@ Calls the following roles (in order):
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_moodle__skip_kernel_settings`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_moodle__skip_python`
 * [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps): `setup_moodle__skip_apps`
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `setup_moodle__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_moodle__skip_repo_epel`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `setup_moodle__skip_repo_remi`
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): `setup_moodle__skip_php`
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): `setup_moodle__skip_redis`

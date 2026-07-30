@@ -1,0 +1,21 @@
+apache_httpd__conf_server_admin: 'root@localhost'
+
+coturn__denied_peer_ip: []
+coturn__realm: 'nextcloud.example.com'
+coturn__static_auth_secret: 'linuxfabrik'
+
+mariadb_server__admin_user:
+  username: 'mariadb-admin'
+  password: 'linuxfabrik'
+
+nextcloud__fqdn: 'nextcloud.example.com'
+nextcloud__skip_notify_push: true
+nextcloud__users:
+  - username: 'nextcloud-admin'
+    password: 'linuxfabrik'
+    group: 'admin'
+
+repo_mariadb__version: '11.4'
+
+repo_remi__enabled_php_version: '8.5'
+repo_remi__enabled_redis_version: '8.8'

@@ -1,6 +1,33 @@
-php__conf_dest:
-  - '/etc/php/{{ php__installed_version }}/apache2/conf.d/z00-linuxfabrik.ini'
-  - '/etc/php/{{ php__installed_version }}/cli/conf.d/z00-linuxfabrik.ini'
-  - '/etc/php/{{ php__installed_version }}/fpm/conf.d/z00-linuxfabrik.ini'
-php__fpm_pools_path: '/etc/php/{{ php__installed_version }}/fpm/pool.d'
-php__fpm_service_name: 'php{{ php__installed_version }}-fpm'
+# With php__version set, install the versioned packages so the host stays on that version. The
+# unversioned metapackages come from the php-defaults source and follow whatever the configured
+# repo declares as its default. Within a Debian release that never moves, but with the sury repo
+# enabled it moves whenever sury promotes a new PHP version, turning a plain `apt upgrade` into an
+# unplanned major migration.
+# composer can stay the Debian package because every phpX.Y-<ext> package provides the unversioned
+# php-<ext> name. apt therefore satisfies composer's dependency chain from the versioned packages
+# and installs no floating metapackage at all.
+# curl, intl, mbstring and zip are in this list purely to act as those providers, not because PHP
+# needs them: without one of them apt falls back to the php-<ext> metapackage, which resolves to
+# whatever version sury currently defaults to and drags that version's stack onto the host. The set
+# is a superset across releases (Debian 12 composer needs intl and mbstring, Debian 13 composer
+# needs curl and zip). The molecule scenario asserts that no unversioned metapackage survives, so a
+# future composer release that adds another one is caught by the test rather than in production.
+__php__base_packages: '{{
+    [
+      "php" ~ php__version ~ "-cli",
+      "php" ~ php__version ~ "-fpm",
+      "php" ~ php__version ~ "-curl",
+      "php" ~ php__version ~ "-intl",
+      "php" ~ php__version ~ "-mbstring",
+      "php" ~ php__version ~ "-zip",
+      "composer",
+    ] if (php__version | string | length)
+    else ["php", "php-fpm", "composer"]
+  }}'
+
+__php__conf_dest:
+  - '/etc/php/{{ __php__installed_version }}/apache2/conf.d/z00-linuxfabrik.ini'
+  - '/etc/php/{{ __php__installed_version }}/cli/conf.d/z00-linuxfabrik.ini'
+  - '/etc/php/{{ __php__installed_version }}/fpm/conf.d/z00-linuxfabrik.ini'
+__php__fpm_pools_path: '/etc/php/{{ __php__installed_version }}/fpm/pool.d'
+__php__fpm_service_name: 'php{{ __php__installed_version }}-fpm'

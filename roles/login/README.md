@@ -155,6 +155,10 @@ Example:
 
 ```yaml
 # optional
+login__login_defs_pass_max_days: 365
+login__login_defs_pass_min_days: 1
+login__login_defs_pass_warn_age: 7
+login__login_defs_umask: '027'
 login__passwordless_sudo_group: 'linuxfabrik'
 login__users__host_var:
   - name: 'test'

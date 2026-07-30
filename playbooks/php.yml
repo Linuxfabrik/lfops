@@ -24,10 +24,32 @@
         - 'ansible_facts["distribution_major_version"] in ["7"]'
         - 'not php__skip_yum_utils | default(false)'
 
+    - role: 'linuxfabrik.lfops.repo_baseos'
+      repo_baseos__crb_repo_enabled__dependent_var: '{{
+          repo_epel__repo_baseos__crb_repo_enabled__dependent_var
+        }}'
+      # CRB is shipped in the Rocky default repo file (Rocky 9+, formerly from EPEL), so enable it there only.
+      when:
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] | int >= 9'
+        - 'not php__skip_repo_baseos | d(false)'
+
+    # remi packages link against EPEL content, for example php-opcache needs libcapstone from EPEL
+    # on RedHat 8, where neither the default repos nor PowerTools carry it.
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution"] != "Fedora"'
+        - 'not php__skip_repo_epel | d(false)'
+
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not php__skip_repo_remi | default(false)'
+
+    - role: 'linuxfabrik.lfops.repo_sury'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+        - 'not php__skip_repo_sury | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
 

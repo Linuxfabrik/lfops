@@ -8,10 +8,6 @@ apache_httpd__systemd_state: 'started'
 # Apache Module Installation
 # --------------------------
 
-# apache_httpd__packages__role_var: # see vars/
-apache_httpd__packages__dependent_var: []
-apache_httpd__packages__group_var: []
-apache_httpd__packages__host_var: []
 apache_httpd__packages__combined_var: '{{ (
       apache_httpd__packages__role_var +
       apache_httpd__packages__dependent_var +
@@ -22,13 +18,12 @@ apache_httpd__packages__combined_var: '{{ (
 
 
 # Apache Module Configuration
+# apache_httpd__packages__role_var: # see vars/
+apache_httpd__packages__dependent_var: []
+apache_httpd__packages__group_var: []
+apache_httpd__packages__host_var: []
 # ---------------------------
 
-# Apache mods managed by this Ansible role.
-# apache_httpd__mods__role_var: # see vars/
-apache_httpd__mods__dependent_var: []
-apache_httpd__mods__group_var: []
-apache_httpd__mods__host_var: []
 apache_httpd__mods__combined_var: '{{ (
       apache_httpd__mods__role_var +
       apache_httpd__mods__dependent_var +
@@ -39,8 +34,25 @@ apache_httpd__mods__combined_var: '{{ (
 
 
 # Apache "conf-available"
+# Apache mods managed by this Ansible role.
+# apache_httpd__mods__role_var: # see vars/
+apache_httpd__mods__dependent_var: []
+apache_httpd__mods__group_var: []
+apache_httpd__mods__host_var: []
 # -----------------------
 
+apache_httpd__conf__combined_var: '{{ (
+      apache_httpd__conf__role_var +
+      apache_httpd__conf__dependent_var +
+      apache_httpd__conf__group_var +
+      apache_httpd__conf__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
+  }}'
+
+# Apache "htpasswd"
+apache_httpd__conf__dependent_var: []
+apache_httpd__conf__group_var: []
+apache_httpd__conf__host_var: []
 # Apache conf used internally by this role.
 apache_httpd__conf__role_var:
   - filename: 'deflate'
@@ -145,25 +157,8 @@ apache_httpd__conf__role_var:
     state: 'present'
     template: 'unixd'
 
-apache_httpd__conf__dependent_var: []
-apache_httpd__conf__group_var: []
-apache_httpd__conf__host_var: []
-apache_httpd__conf__combined_var: '{{ (
-      apache_httpd__conf__role_var +
-      apache_httpd__conf__dependent_var +
-      apache_httpd__conf__group_var +
-      apache_httpd__conf__host_var
-    ) | linuxfabrik.lfops.combine_lod(unique_key="filename")
-  }}'
-
-# Apache "htpasswd"
 # -----------------
 
-# apache_httpd__htpasswd__combined_var
-apache_httpd__htpasswd__dependent_var: []
-apache_httpd__htpasswd__group_var: []
-apache_httpd__htpasswd__host_var: []
-apache_httpd__htpasswd__role_var: []
 apache_httpd__htpasswd__combined_var: '{{ (
       apache_httpd__htpasswd__role_var +
       apache_httpd__htpasswd__dependent_var +
@@ -174,6 +169,11 @@ apache_httpd__htpasswd__combined_var: '{{ (
 
 
 # Apache Module Config
+# apache_httpd__htpasswd__combined_var
+apache_httpd__htpasswd__dependent_var: []
+apache_httpd__htpasswd__group_var: []
+apache_httpd__htpasswd__host_var: []
+apache_httpd__htpasswd__role_var: []
 # --------------------
 
 # core
@@ -197,6 +197,18 @@ apache_httpd__conf_trace_enable: 'Off'
 # mod_dir
 apache_httpd__mod_dir_directory_index: 'index.html index.htm index.txt'
 
+# mod_security
+# normally nothing that you have to change
+# get details from https://coreruleset.org/installation/
+# origin: https://github.com/coreruleset/coreruleset/releases
+apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
+apache_httpd__mod_security_coreruleset_version: '4.27.0'
+
+# mod_ssl
+apache_httpd__mod_ssl_ssl_use_stapling: 'on'
+
+
+# Apache Virtual Host Configuration
 # mod_common_listen
 apache_httpd__mpm_common_listen:
   - 80
@@ -226,20 +238,27 @@ apache_httpd__mpm_worker_start_servers: 3
 apache_httpd__mpm_worker_thread_limit: 64
 apache_httpd__mpm_worker_threads_per_child: 25
 
-# mod_security
-# normally nothing that you have to change
-# get details from https://coreruleset.org/installation/
-# origin: https://github.com/coreruleset/coreruleset/releases
-apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '4.27.0'
-
-# mod_ssl
-apache_httpd__mod_ssl_ssl_use_stapling: 'on'
-
-
-# Apache Virtual Host Configuration
 # ---------------------------------
 
+apache_httpd__python__modules__dependent_var:
+  - name: 'python3-passlib'
+
+apache_httpd__selinux__booleans__dependent_var:
+  - key: 'httpd_can_network_connect'
+    value: 'on'
+
+apache_httpd__vhosts__combined_var: '{{ (
+      apache_httpd__vhosts__role_var +
+      apache_httpd__vhosts__dependent_var +
+      apache_httpd__vhosts__group_var +
+      apache_httpd__vhosts__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["conf_server_name", "virtualhost_port"])
+  }}'
+
+
+apache_httpd__vhosts__dependent_var: []
+apache_httpd__vhosts__group_var: []
+apache_httpd__vhosts__host_var: []
 # Used internally by this role. Order is important.
 apache_httpd__vhosts__role_var:
 
@@ -293,22 +312,3 @@ apache_httpd__vhosts__role_var:
       Header set Referrer-Policy: "strict-origin-when-cross-origin"
       Header set X-Content-Type-Options: "nosniff"
       Header set X-XSS-Protection: "1; mode=block"
-
-apache_httpd__vhosts__dependent_var: []
-apache_httpd__vhosts__group_var: []
-apache_httpd__vhosts__host_var: []
-apache_httpd__vhosts__combined_var: '{{ (
-      apache_httpd__vhosts__role_var +
-      apache_httpd__vhosts__dependent_var +
-      apache_httpd__vhosts__group_var +
-      apache_httpd__vhosts__host_var
-    ) | linuxfabrik.lfops.combine_lod(unique_key=["conf_server_name", "virtualhost_port"])
-  }}'
-
-
-apache_httpd__python__modules__dependent_var:
-  - name: 'python3-passlib'
-
-apache_httpd__selinux__booleans__dependent_var:
-  - key: 'httpd_can_network_connect'
-    value: 'on'

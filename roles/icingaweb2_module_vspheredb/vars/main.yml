@@ -1,0 +1,23 @@
+# OS-specific values consumed by a *different* role that runs *earlier* in the same play (the
+# `__dependent_var` pattern). vars/<os>.yml would load too late for an earlier consumer, but
+# vars/main.yml is auto-loaded at play parse and is visible to every role in the play. The OS
+# selection happens here, so consumers reference the public variable directly. Internal
+# (`__`-prefixed) dict first, public variable second, both non-overridable from inventory.
+# See "OS-specific Dependent Variables" in CONTRIBUTING.md.
+
+# PHP modules installed by the linuxfabrik.lfops.php role via
+# icingaweb2_module_vspheredb__php__modules__dependent_var.
+# Debian names every extension per PHP version. The unversioned php-soap metapackage resolves to
+# whatever the configured repo declares as its default, which under Sury moves on Sury's schedule
+# and would drag a second PHP runtime onto the host.
+__icingaweb2_module_vspheredb__php__modules__dependent_var:
+  Debian:
+    - name: 'php{{ __php__installed_version }}-soap'
+      state: 'present'
+  RedHat:
+    - name: 'php-soap'
+      state: 'present'
+icingaweb2_module_vspheredb__php__modules__dependent_var: '{{
+    __icingaweb2_module_vspheredb__php__modules__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts)
+  }}'

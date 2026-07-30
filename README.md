@@ -535,7 +535,7 @@ Which Ansible role is proven to run on which OS? See [COMPATIBILITY.md](https://
 
 ## Contributing
 
-See [CONTRIBUTING.rst](CONTRIBUTING.rst) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 
 ## License

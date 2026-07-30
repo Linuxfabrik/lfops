@@ -57,23 +57,6 @@ Manual steps:
 * Set the Hetzner API token. API tokens can be managed in your project > Security > API Tokens. The API token requires read and write permissions.
 * Type: String.
 
-`hetzner_vm__image`
-
-* The Hetzner image to use for the server. The possible options can be obtained using `hcloud image list`.
-* Type: String.
-
-`hetzner_vm__location`
-
-* The Hetzner location the instance should run in. The possible options can be obtained using `hcloud location list`.
-* Type: String.
-
-`hetzner_vm__server_type`
-
-* The Hetzner server type. This defines the number of CPU cores, the CPU type, the disk space and the memory size. The possible options can be obtained using `hcloud server-type list`. Note that you cannot upgrade a running instance (otherwise you'll get `server must be stopped before changing type`). Either stop the instance using `hetzner_vm__state: 'stopped'` or set `hetzner_vm__force: true`. Also have a look at `hetzner_vm__upgrade_disk`.
-* Type: String.
-
-You also need ONE of these:
-
 `hetzner_vm__enable_public_ipv4`
 
 * Choose if the VM should have a public IPv4 address.
@@ -85,6 +68,16 @@ You also need ONE of these:
 * Choose if the VM should have a public IPv6 address.
 * Type: Bool.
 * Default: `false`
+
+`hetzner_vm__image`
+
+* The Hetzner image to use for the server. The possible options can be obtained using `hcloud image list`.
+* Type: String.
+
+`hetzner_vm__location`
+
+* The Hetzner location the instance should run in. The possible options can be obtained using `hcloud location list`.
+* Type: String.
 
 `hetzner_vm__networks`
 
@@ -119,6 +112,13 @@ You also need ONE of these:
         * Optional. Routes for this network, with `destination` and `gateway` subkeys.
         * Type: List.
         * Default: `[]`
+
+`hetzner_vm__server_type`
+
+* The Hetzner server type. This defines the number of CPU cores, the CPU type, the disk space and the memory size. The possible options can be obtained using `hcloud server-type list`. Note that you cannot upgrade a running instance (otherwise you'll get `server must be stopped before changing type`). Either stop the instance using `hetzner_vm__state: 'stopped'` or set `hetzner_vm__force: true`. Also have a look at `hetzner_vm__upgrade_disk`.
+* Type: String.
+
+You also need ONE of these:
 
 Example:
 ```yaml

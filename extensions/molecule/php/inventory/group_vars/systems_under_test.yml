@@ -1,0 +1,4 @@
+# Applies to both families. A value that matches neither the PHP default (128M) nor any role
+# default, so verify.yml can prove the deployed ini is actually read by the running interpreter
+# rather than just present on disk.
+php__ini_memory_limit__group_var: '256M'

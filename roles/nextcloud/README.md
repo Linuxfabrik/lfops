@@ -14,7 +14,8 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 
 ## How the Role Behaves
 
-* App updates are applied automatically by the `nextcloud-app-update.timer` (managed via `nextcloud__timer_app_update_enabled`). The timer runs `/usr/local/bin/nextcloud-app-update`, which first checks whether any app update is pending. Nextcloud is switched into maintenance mode only when there is something to update; when everything is up to date the instance keeps serving requests untouched. After updating, the recommended database migrations (`db:add-missing-indices`, `db:add-missing-columns`, `db:add-missing-primary-keys`) are applied. A failed run leaves maintenance mode disabled again, so the instance does not stay offline, and reports the failure to systemd. This automatic update covers app updates only. Updating the Nextcloud server itself is a separate, manual step via `/usr/local/bin/nextcloud-update`.
+* App updates are applied automatically by the `nextcloud-app-update.timer` (enabled by default, disable via `nextcloud__timer_app_update_enabled`). The timer runs `/usr/local/bin/nextcloud-app-update`, which first checks whether any app update is pending. Nextcloud is switched into maintenance mode only when there is something to update; when everything is up to date the instance keeps serving requests untouched. After updating, the recommended database migrations (`db:add-missing-indices`, `db:add-missing-columns`, `db:add-missing-primary-keys`) are applied. A failed run leaves maintenance mode disabled again, so the instance does not stay offline, and reports the failure to systemd.
+* This automatic update covers app updates only. Updating the Nextcloud server itself is a separate, manual step via `/usr/local/bin/nextcloud-update`.
 
 
 ## Dependent Roles
@@ -224,6 +225,18 @@ nextcloud__users:
 * Type: String.
 * Default: `'10m'`
 
+`nextcloud__mail_from`
+
+* Sender used in the `From:` header and as the envelope sender (`sendmail -f`) of the monthly `ldap:show-remnants` report. Defaults to the global `mailto_root__from`.
+* Type: String.
+* Default: `'{{ mailto_root__from }}'`
+
+`nextcloud__mail_recipients`
+
+* Recipients of the monthly `ldap:show-remnants` report (users removed from LDAP that still have remnants in Nextcloud) sent by `/usr/local/bin/nextcloud-ldap-show-remnants`. Defaults to the global `mailto_root__to`. The report is always printed to stdout; when recipients are set it is additionally mailed to them.
+* Type: List.
+* Default: `'{{ mailto_root__to | d([]) }}'`
+
 `nextcloud__mariadb_login`
 
 * The user account for the database administrator. The Nextcloud setup will create its own database account.
@@ -366,6 +379,10 @@ nextcloud__icinga2_api_user_login:
   username: 'downtime-user'
   password: 'linuxfabrik'
 nextcloud__icinga2_hostname: 'myhost.example.com'
+nextcloud__jobs_timeout_start_sec: '10m'
+nextcloud__mail_from: '{{ mailto_root__from }}'
+nextcloud__mail_recipients:
+  - 'info@example.com'
 nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'

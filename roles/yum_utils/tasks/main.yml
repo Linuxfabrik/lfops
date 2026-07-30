@@ -5,9 +5,9 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
-  - name: 'Install package {{ yum_utils__package }}'
+  - name: 'Install package {{ __yum_utils__package }}'
     ansible.builtin.package:
-      name: '{{ yum_utils__package }}'
+      name: '{{ __yum_utils__package }}'
       state: 'present'
 
   tags:

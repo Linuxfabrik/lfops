@@ -6,7 +6,7 @@
 # the result is never registered.
 - name: 'redis: restart redis'
   ansible.builtin.service:
-    name: '{{ redis__service_name }}'
+    name: '{{ __redis__service_name }}'
     state: 'restarted'
   when:
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'

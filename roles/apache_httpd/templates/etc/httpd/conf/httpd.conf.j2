@@ -17,9 +17,9 @@
 # possible.
 #
 # It is split into several files forming the configuration hierarchy outlined
-# below, all located in the {{ apache_httpd__config_path }}/ directory:
+# below, all located in the {{ __apache_httpd__config_path }}/ directory:
 #
-#   {{ apache_httpd__config_path }}/
+#   {{ __apache_httpd__config_path }}/
 #   |-- httpd.conf
 #   |-- conf-enabled
 #   |   `-- *.conf
@@ -29,11 +29,11 @@
 #       `-- *.conf
 
 
-ServerRoot "{{ apache_httpd__config_path }}"
+ServerRoot "{{ __apache_httpd__config_path }}"
 
 
 # Load Modules
-IncludeOptional {{ apache_httpd__config_prefix }}mods-enabled/*.conf
+IncludeOptional {{ __apache_httpd__config_prefix }}mods-enabled/*.conf
 
 
 # core
@@ -102,12 +102,12 @@ CustomLog {{ apache_httpd__mod_log_config_custom_log }}
     Require all denied
 </Directory>
 
-<Directory "{{ apache_httpd__root_path | d('/var/www') }}">
+<Directory "{{ __apache_httpd__root_path | d('/var/www') }}">
     AllowOverride None
     Require all granted
 </Directory>
 
-<Directory "{{ apache_httpd__root_path | d('/var/www') }}/html">
+<Directory "{{ __apache_httpd__root_path | d('/var/www') }}/html">
    Options None
    AllowOverride None
    Require all granted
@@ -142,5 +142,5 @@ BrowserMatchNoCase (wiederfreibot) is_a_bot
 BrowserMatchNoCase (yacybot|Yandex) is_a_bot
 
 
-IncludeOptional {{ apache_httpd__config_prefix }}conf-enabled/*.conf
-IncludeOptional {{ apache_httpd__config_prefix }}sites-enabled/*.conf
+IncludeOptional {{ __apache_httpd__config_prefix }}conf-enabled/*.conf
+IncludeOptional {{ __apache_httpd__config_prefix }}sites-enabled/*.conf

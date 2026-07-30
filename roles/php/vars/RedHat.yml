@@ -1,4 +1,11 @@
-php__conf_dest:
+# RedHat pins the PHP version at repo level via the module stream (see the repo_remi role), so the
+# unversioned package names are already deterministic here and php__version is not used.
+__php__base_packages:
+  - 'php'
+  - 'php-fpm'
+  - 'composer'
+
+__php__conf_dest:
   - '/etc/php.d/z00-linuxfabrik.ini'
-php__fpm_pools_path: '/etc/php-fpm.d'
-php__fpm_service_name: 'php-fpm'
+__php__fpm_pools_path: '/etc/php-fpm.d'
+__php__fpm_service_name: 'php-fpm'

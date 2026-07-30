@@ -24,17 +24,35 @@
     notify:
       - 'fail2ban: restart fail2ban'
 
-  - name: 'Deploy filters'
+  - name: 'Combined Filters'
+    ansible.builtin.debug:
+      var: 'fail2ban__filters__combined_var'
+
+  - name: 'Remove Filters'
+    ansible.builtin.file:
+      path: '/etc/fail2ban/filter.d/{{ item["filename"] }}.conf'
+      state: 'absent'
+    loop: '{{ fail2ban__filters__combined_var }}'
+    loop_control:
+      label: '{{ item["filename"] }}'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+    notify:
+      - 'fail2ban: restart fail2ban'
+
+  - name: 'Create Filters'
     ansible.builtin.template:
       backup: true
-      src: 'etc/fail2ban/filter.d/{{ item }}.conf.j2'
-      dest: '/etc/fail2ban/filter.d/{{ item }}.conf'
+      src: 'etc/fail2ban/filter.d/{{ item["template"] }}.conf.j2'
+      dest: '/etc/fail2ban/filter.d/{{ item["filename"] }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
-    loop:
-      - 'apache-dos'
-      - 'portscan'
+    loop: '{{ fail2ban__filters__combined_var }}'
+    loop_control:
+      label: '{{ item["filename"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
     notify:
       - 'fail2ban: restart fail2ban'
 
@@ -49,7 +67,7 @@
     notify:
       - 'fail2ban: restart fail2ban'
 
-  - name: 'Combined Jails:'
+  - name: 'Combined Jails'
     ansible.builtin.debug:
       var: 'fail2ban__jails__combined_var'
 
@@ -57,9 +75,11 @@
     ansible.builtin.file:
       path: '/etc/fail2ban/jail.d/{{ item["filename"] }}.conf'
       state: 'absent'
+    loop: '{{ fail2ban__jails__combined_var }}'
+    loop_control:
+      label: '{{ item["filename"] }}'
     when:
       - 'item["state"] | d("present") == "absent"'
-    loop: '{{ fail2ban__jails__combined_var }}'
     notify:
       - 'fail2ban: restart fail2ban'
 
@@ -71,9 +91,11 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    loop: '{{ fail2ban__jails__combined_var }}'
+    loop_control:
+      label: '{{ item["filename"] }}'
     when:
       - 'item["state"] | d("present") != "absent"'
-    loop: '{{ fail2ban__jails__combined_var }}'
     notify:
       - 'fail2ban: restart fail2ban'
 

@@ -3,22 +3,14 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'php'
-    - 'php:fpm'
-    - 'php:ini'
-    - 'php:modules'
-    - 'php:state'
-    - 'php:update'
+    - 'always'
 
 
 - block:
 
   - name: 'Install php php-fpm composer'
     ansible.builtin.package:
-      name:
-        - 'php'
-        - 'php-fpm'
-        - 'composer'
+      name: '{{ __php__base_packages }}'
       state: 'present'
 
   tags:
@@ -37,12 +29,13 @@
     changed_when: false # refreshing the package cache is not a config change
     when: 'ansible_facts["os_family"] == "Debian"'
 
+  # On Debian with php__version set, the package names carry the declared version, so this task
+  # installs the new stack as soon as the user raises php__version. That is deliberate: pinning the
+  # version makes a major change explicit, it does not make it impossible. Without php__version the
+  # unversioned metapackages are updated exactly as before.
   - name: 'Update php php-fpm composer' # noqa package-latest (we explicitly want latest here)
     ansible.builtin.package:
-      name:
-        - 'php'
-        - 'php-fpm'
-        - 'composer'
+      name: '{{ __php__base_packages }}'
       state: 'latest'
     notify: 'php: restart php-fpm'
 
@@ -57,15 +50,21 @@
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
 
+  # php__version wins when set: the role then manages exactly the declared version instead of
+  # adopting whatever happens to be installed. Falling back to discovery keeps the previous
+  # behaviour, and is the only option on RedHat, where the 'php' package always exists.
   - name: 'Get PHP version'
     ansible.builtin.set_fact:
-      php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
+      __php__installed_version: '{{
+          php__version if (php__version | string | length)
+          else (ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d"))
+        }}'
 
+  # 'always': __php__installed_version / __php__fpm_service_name are prerequisites referenced by
+  # the php:state block and by consuming roles (e.g. nextcloud) under their own --tags runs,
+  # where the php-specific blocks are filtered out. Tagging the discovery 'always' keeps them defined.
   tags:
-    - 'php'
-    - 'php:ini'
-    - 'php:modules'
-    - 'php:update'
+    - 'always'
 
 
 - block:
@@ -123,18 +122,34 @@
 
 - block:
 
-  - name: 'Load default values for {{ php__installed_version }}'
-    ansible.builtin.include_vars: 'vars/{{ php__installed_version }}.yml'
+  - name: 'Load default values for {{ __php__installed_version }}'
+    ansible.builtin.include_vars: 'vars/{{ __php__installed_version }}.yml'
+
+  # On Debian every SAPI has its own conf.d, and the apache2 one is shipped by
+  # libapache2-mod-phpX.Y, which is not installed when only FPM is used. Creating the directories
+  # unconditionally keeps __php__conf_dest a plain static list instead of a conditional one. dpkg
+  # takes ownership of a pre-existing directory without complaining, so installing mod_php later
+  # still works and our ini survives both that install and a later purge of the module.
+  # On a host without mod_php the apache2 ini is simply never read.
+  - name: 'Create the conf.d directories'
+    ansible.builtin.file:
+      path: '{{ item | dirname }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    loop: '{{ __php__conf_dest }}'
+    when: 'ansible_facts["os_family"] == "Debian"'
 
   - name: 'Deploy the PHP configs'
     ansible.builtin.template:
       backup: true
-      src: 'etc/php.d/{{ php__installed_version }}-z00-linuxfabrik.ini.j2'
+      src: 'etc/php.d/{{ __php__installed_version }}-z00-linuxfabrik.ini.j2'
       dest: '{{ item }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
-    loop: '{{ php__conf_dest }}'
+    loop: '{{ __php__conf_dest }}'
     notify: 'php: restart php-fpm'
 
   tags:
@@ -145,20 +160,20 @@
 
 - block:
 
-  - name: 'Remove absent pools from {{ php__fpm_pools_path }}'
+  - name: 'Remove absent pools from {{ __php__fpm_pools_path }}'
     ansible.builtin.file:
-      path: '{{ php__fpm_pools_path }}/{{ item["name"] }}.conf'
+      path: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'
       state: 'absent'
     when:
       - 'item["state"] | d("present") == "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
-  - name: 'Deploy the pools to {{ php__fpm_pools_path }}'
+  - name: 'Deploy the pools to {{ __php__fpm_pools_path }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/php-fpm.d/{{ ansible_facts["os_family"] }}-pool.conf.j2'
-      dest: '{{ php__fpm_pools_path }}/{{ item["name"] }}.conf'
+      dest: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -167,24 +182,117 @@
     loop: '{{ php__fpm_pools__combined_var }}'
     notify: 'php: restart php-fpm'
 
+  # 'php:update' is included because a version change moves __php__fpm_pools_path to the new
+  # version's tree, which the package ships with nothing but its own default pool.
   tags:
     - 'php'
     - 'php:fpm'
+    - 'php:update'
 
 
 - block:
 
-  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} {{ php__fpm_service_name }}'
+  - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} {{ __php__fpm_service_name }}'
     ansible.builtin.service:
-      name: '{{ php__fpm_service_name }}'
+      name: '{{ __php__fpm_service_name }}'
       enabled: '{{ php__fpm_service_enabled }}'
+    ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified, as the service could not exist yet
 
-  - name: 'systemctl {{ php__fpm_service_state | regex_replace("p?ed$", "") }} {{ php__fpm_service_name }}'
+  - name: 'systemctl {{ php__fpm_service_state | regex_replace("p?ed$", "") }} {{ __php__fpm_service_name }}'
     ansible.builtin.service:
-      name: '{{ php__fpm_service_name }}'
+      name: '{{ __php__fpm_service_name }}'
       state: '{{ php__fpm_service_state }}'
     register: '__php__fpm_service_state_result'
+    ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified, as the service could not exist yet
 
+  # 'php:update' is included because a version change moves __php__fpm_service_name to a new,
+  # not yet enabled unit. Without this the migrated host would come up without its FPM service.
   tags:
     - 'php'
     - 'php:state'
+    - 'php:update'
+
+
+- block:
+
+  # phpX.Y-cli registers /usr/bin/php with a priority derived from the version (8.4 becomes 84), so
+  # in auto mode the highest installed version wins and merely installing a newer stack switches
+  # the CLI. Pin all three link groups: php and phar must not end up on different versions.
+  # PHP-FPM does not use alternatives, its version follows the socket in the webserver config.
+  - name: 'update-alternatives --query php phar phar.phar'
+    ansible.builtin.command: 'update-alternatives --query {{ item }}'
+    register: '__php__alternatives_query_result'
+    changed_when: false # querying is not a config change
+    check_mode: false # run task even if `--check` is specified
+    loop:
+      - 'php'
+      - 'phar'
+      - 'phar.phar'
+
+  # community.general.alternatives cannot express this: `state: selected` compares only the
+  # currently selected path, never the mode. While the declared version is the only one installed,
+  # auto mode already resolves to the right binary, so the module makes no change and the group
+  # stays in auto. The pin that is the whole point of php__version then never happens, and a later
+  # stray phpX.Y-cli silently takes the link over. The module does evaluate the mode for
+  # `state: auto`, so it can force a group into auto but not into manual.
+  # Upstream issue: https://github.com/ansible-collections/community.general/issues/6756
+  # Once the module can enforce the mode, these two tasks collapse back into one module call.
+  - name: 'update-alternatives --set {{ item["item"] }}'
+    ansible.builtin.command: 'update-alternatives --set {{ item["item"] }} /usr/bin/{{ item["item"] }}{{ php__version }}'
+    changed_when: true # the `when` below only lets this run when the link group is not pinned yet
+    when:
+      - '"Status: manual" not in item["stdout"] or ("Value: /usr/bin/" ~ item["item"] ~ php__version) not in item["stdout"]'
+    loop: '{{ __php__alternatives_query_result["results"] }}'
+    loop_control:
+      label: '{{ item["item"] }}'
+
+  # block
+  when:
+    - 'ansible_facts["os_family"] == "Debian"'
+    - 'php__version | string | length > 0'
+  tags:
+    - 'php'
+    - 'php:alternatives'
+    - 'php:update'
+
+
+- block:
+
+  # sury builds every PHP version co-installable, so nothing removes the previous stack on its own.
+  # Left alone it keeps a second FPM service, a second config tree and a second set of security
+  # updates around forever. Purging runs last, after the new version's config, pools and service
+  # are in place.
+  # The list is computed from package_facts instead of a glob because the apt module hands names to
+  # apt-get, which treats them as unanchored regexes rather than shell globs.
+  # php-common is deliberately not matched: it is version 2:101~ with `Depends: psmisc` and belongs
+  # to no single PHP version.
+  - name: 'Determine the PHP stacks to purge'
+    ansible.builtin.set_fact:
+      __php__stale_packages: '{{
+          ansible_facts["packages"] | list
+          | select("match", "^(libapache2-mod-)?php[0-9]+\.[0-9]+")
+          | reject("match", "^(libapache2-mod-)?php" ~ (php__version | regex_escape) ~ "(-|$)")
+          | list | sort
+        }}'
+
+  # Purging is the one destructive step in this role, so the list is printed before it runs. Under
+  # `--check` the apt task reports a change without naming the packages, and package_facts is
+  # gathered for real (check_mode: false), so this debug is what makes a dry run reviewable.
+  - name: 'Stale PHP packages, will be purged'
+    ansible.builtin.debug:
+      var: '__php__stale_packages'
+
+  - name: 'Purge PHP stacks other than {{ php__version }}'
+    ansible.builtin.apt:
+      name: '{{ __php__stale_packages }}'
+      state: 'absent'
+      purge: true
+    when: '__php__stale_packages | length > 0'
+
+  when:
+    - 'ansible_facts["os_family"] == "Debian"'
+    - 'php__version | string | length > 0'
+
+  tags:
+    - 'never'
+    - 'php:update'

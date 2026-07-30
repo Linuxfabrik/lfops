@@ -197,10 +197,12 @@ Example:
 ```yaml
 # optional
 clamav__clamd_service_enabled: true
+clamav__clamd_service_state: 'started'
 clamav__clamdscan_on_calendar: '*-*-* 21:{{ 59 | random(seed=inventory_hostname) }}'
 clamav__clamdscan_paths: '{{ clamav__scan_on_access_include_paths }}'
 clamav__clamdscan_timer_enabled: false
 clamav__clamonacc_service_enabled: false
+clamav__clamonacc_service_state: 'stopped'
 clamav__freshclam_private_mirror: []
 clamav__freshclam_service_enabled: true
 clamav__mail_from: '{{ mailto_root__from }}'

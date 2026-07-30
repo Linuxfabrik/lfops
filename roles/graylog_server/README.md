@@ -416,6 +416,7 @@ graylog_server__outputbuffer_processors: 3
 graylog_server__processbuffer_processors: 5
 graylog_server__ring_size: 65536
 graylog_server__service_enabled: false
+graylog_server__service_state: 'stopped'
 graylog_server__stale_leader_timeout_ms: 10000
 graylog_server__system_default_index_set:
   creation_date: '{{ ansible_date_time.iso8601 }}'

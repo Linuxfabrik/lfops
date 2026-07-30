@@ -27,8 +27,8 @@
       backup: true
       src: 'etc/icinga2/features-available/icingadb.conf.j2'
       dest: '/etc/icinga2/features-available/icingadb.conf'
-      owner: '{{ icingadb__icinga_user }}'
-      group: '{{ icingadb__icinga_user }}'
+      owner: '{{ __icingadb__icinga_user }}'
+      group: '{{ __icingadb__icinga_user }}'
       mode: 0o640
     notify: 'icingadb: icinga2 daemon --validate'
 

@@ -39,16 +39,16 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '{{ __redis__config_dir }}/{{ __redis__config_file }}'
 
-  - name: 'mkdir -p /etc/systemd/system/{{ redis__service_name }}.d/'
+  - name: 'mkdir -p /etc/systemd/system/{{ __redis__service_name }}.d/'
     ansible.builtin.file:
-      path: '/etc/systemd/system/{{ redis__service_name }}.d/'
+      path: '/etc/systemd/system/{{ __redis__service_name }}.d/'
       state: 'directory'
 
-  - name: 'Deploy /etc/systemd/system/{{ redis__service_name }}.d/z00-linuxfabrik.conf.j2'
+  - name: 'Deploy /etc/systemd/system/{{ __redis__service_name }}.d/z00-linuxfabrik.conf.j2'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/redis.service.d/z00-linuxfabrik.conf.j2'
-      dest: '/etc/systemd/system/{{ redis__service_name }}.d/z00-linuxfabrik.conf'
+      dest: '/etc/systemd/system/{{ __redis__service_name }}.d/z00-linuxfabrik.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -59,15 +59,15 @@
 
 - block:
 
-  - name: 'systemctl {{ redis__service_enabled | bool | ternary("enable", "disable") }} {{ redis__service_name }}'
+  - name: 'systemctl {{ redis__service_enabled | bool | ternary("enable", "disable") }} {{ __redis__service_name }}'
     ansible.builtin.systemd:
-      name: '{{ redis__service_name }}'
+      name: '{{ __redis__service_name }}'
       enabled: '{{ redis__service_enabled }}'
       daemon_reload: true
 
-  - name: 'systemctl {{ redis__service_state | regex_replace("p?ed$", "") }} {{ redis__service_name }}'
+  - name: 'systemctl {{ redis__service_state | regex_replace("p?ed$", "") }} {{ __redis__service_name }}'
     ansible.builtin.systemd:
-      name: '{{ redis__service_name }}'
+      name: '{{ __redis__service_name }}'
       state: '{{ redis__service_state }}'
     register: '__redis__service_state_result'
 

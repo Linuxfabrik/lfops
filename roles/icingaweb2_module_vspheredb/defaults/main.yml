@@ -29,10 +29,6 @@ icingaweb2_module_vspheredb__mariadb_server__users__dependent_var:
       - '{{ icingaweb2_module_vspheredb__database_name | replace("_", "\_") | replace("%", "\%") }}.*:ALL'
     state: 'present'
 
-icingaweb2_module_vspheredb__php__modules__dependent_var:
-  - name: 'php-soap'
-    state: 'present'
-
 icingaweb2_module_vspheredb__selinux__fcontexts__dependent_var:
   - setype: 'icingaweb2_rw_content_t'
     target: '/var/run/icinga-vspheredb(/.*)?'

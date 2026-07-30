@@ -1,8 +1,8 @@
 - block:
 
-  - name: 'Install {{ repo_icinga__rpm_release_url }}'
+  - name: 'Install {{ __repo_icinga__rpm_release_url }}'
     ansible.builtin.package:
-      name: '{{ repo_icinga__rpm_release_url }}'
+      name: '{{ __repo_icinga__rpm_release_url }}'
       state: 'present'
       disable_gpg_check: true
 

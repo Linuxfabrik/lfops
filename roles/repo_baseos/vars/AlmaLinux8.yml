@@ -1,2 +1,2 @@
-repo_baseos__repo_files:
+__repo_baseos__repo_files:
   - 'AlmaLinux8/etc/yum.repos.d/almalinux.repo'

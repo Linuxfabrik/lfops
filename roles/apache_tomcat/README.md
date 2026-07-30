@@ -175,16 +175,6 @@ Note that for Tomcat 7 onwards, the roles required to use the manager applicatio
 
 The GUI is protected against CSRF, but the text and JMX interfaces are not. To maintain CSRF protection, users with the `manager-gui` role should not be given the `manager-script` or `manager-jmx` roles.
 
-`apache_tomcat__webapps_docs_context_xml_allow`
-
-* A regex that describes which IP addresses are allowed to access the documentation webapp.
-* Type: String.
-
-`apache_tomcat__webapps_manager_context_xml_allow`
-
-* A regex that describes which IP addresses are allowed to access the [manager and host-manager](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html) webapps.
-* Type: String.
-
 `apache_tomcat__users__host_var` / `apache_tomcat__users__group_var`
 
 * Users allowed to access the Manager Web GUI.
@@ -210,6 +200,16 @@ The GUI is protected against CSRF, but the text and JMX interfaces are not. To m
 
         * Mandatory.
         * Type: String.
+
+`apache_tomcat__webapps_docs_context_xml_allow`
+
+* A regex that describes which IP addresses are allowed to access the documentation webapp.
+* Type: String.
+
+`apache_tomcat__webapps_manager_context_xml_allow`
+
+* A regex that describes which IP addresses are allowed to access the [manager and host-manager](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html) webapps.
+* Type: String.
 
 Example:
 ```yaml

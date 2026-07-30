@@ -17,7 +17,7 @@
 
   - name: 'install icinga2 and dependent packages'
     ansible.builtin.package:
-      name: '{{ icinga2_master__required_packages }}'
+      name: '{{ __icinga2_master__required_packages }}'
       state: 'present'
 
   tags:
@@ -99,8 +99,8 @@
       backup: true
       src: 'etc/icinga2/features-available/influxdb.conf.j2'
       dest: '/etc/icinga2/features-available/influxdb.conf'
-      owner: '{{ icinga2_master__icinga_user }}'
-      group: '{{ icinga2_master__icinga_user }}'
+      owner: '{{ __icinga2_master__icinga_user }}'
+      group: '{{ __icinga2_master__icinga_user }}'
       mode: 0o640
     notify: 'icinga2_master: icinga2 daemon --validate'
 
@@ -219,8 +219,8 @@
       backup: true
       src: 'etc/icinga2/zones.conf.j2'
       dest: '/etc/icinga2/zones.conf'
-      owner: '{{ icinga2_master__icinga_user }}'
-      group: '{{ icinga2_master__icinga_user }}'
+      owner: '{{ __icinga2_master__icinga_user }}'
+      group: '{{ __icinga2_master__icinga_user }}'
       mode: 0o640
     notify: 'icinga2_master: icinga2 daemon --validate'
 

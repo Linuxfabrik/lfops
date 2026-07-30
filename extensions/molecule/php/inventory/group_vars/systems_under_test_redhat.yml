@@ -1,0 +1,11 @@
+# The two versions below disagree on purpose. On RedHat the version comes from the dnf module
+# stream, so the host must end up on repo_remi__enabled_php_version and php__version must do
+# nothing (the role gates its version handling on os_family == 'Debian'). Setting php__version to
+# a different version is what makes that assertion meaningful: if the gating ever breaks, the host
+# lands on 8.4 and verify.yml fails, whereas matching versions would hide the regression.
+# Do not "fix" this by aligning them.
+php__version: '8.4'
+
+# 8.3 exists as a remi stream on Rocky 8, 9 and 10, and is not the distribution default on any of
+# them, so the stream is provably what drives the installed version.
+repo_remi__enabled_php_version: '8.3'

@@ -8,9 +8,9 @@
 
 - block:
 
-  - name: 'Install {{ nfs_client__nfs_client_package }}'
+  - name: 'Install {{ __nfs_client__nfs_client_package }}'
     ansible.builtin.package:
-      name: '{{ nfs_client__nfs_client_package }}'
+      name: '{{ __nfs_client__nfs_client_package }}'
       state: 'present'
 
   tags:

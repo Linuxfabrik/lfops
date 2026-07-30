@@ -1,7 +1,3 @@
-opensearch__action_auto_create_index__dependent_var: ''
-opensearch__action_auto_create_index__group_var: ''
-opensearch__action_auto_create_index__host_var: ''
-opensearch__action_auto_create_index__role_var: true
 opensearch__action_auto_create_index__combined_var: '{{
     opensearch__action_auto_create_index__host_var if (opensearch__action_auto_create_index__host_var | string | length) else
     opensearch__action_auto_create_index__group_var if (opensearch__action_auto_create_index__group_var | string | length) else
@@ -9,10 +5,10 @@ opensearch__action_auto_create_index__combined_var: '{{
     opensearch__action_auto_create_index__role_var
   }}'
 
-opensearch__cluster_name__dependent_var: ''
-opensearch__cluster_name__group_var: ''
-opensearch__cluster_name__host_var: ''
-opensearch__cluster_name__role_var: 'my-application'
+opensearch__action_auto_create_index__dependent_var: ''
+opensearch__action_auto_create_index__group_var: ''
+opensearch__action_auto_create_index__host_var: ''
+opensearch__action_auto_create_index__role_var: true
 opensearch__cluster_name__combined_var: '{{
     opensearch__cluster_name__host_var if (opensearch__cluster_name__host_var | string | length) else
     opensearch__cluster_name__group_var if (opensearch__cluster_name__group_var | string | length) else
@@ -20,15 +16,15 @@ opensearch__cluster_name__combined_var: '{{
     opensearch__cluster_name__role_var
   }}'
 
+opensearch__cluster_name__dependent_var: ''
+opensearch__cluster_name__group_var: ''
+opensearch__cluster_name__host_var: ''
+opensearch__cluster_name__role_var: 'my-application'
 opensearch__generate_certs_admin_cn: 'OpenSearch Admin'
 opensearch__generate_certs_ca_cn: 'OpenSearch Self-signed RootCA'
 
 opensearch__heap: '{{ [((ansible_facts["memtotal_mb"] * 0.5) | int), 31744] | min }}m'
 
-opensearch__internal_users__dependent_var: []
-opensearch__internal_users__group_var: []
-opensearch__internal_users__host_var: []
-opensearch__internal_users__role_var: []
 opensearch__internal_users__combined_var: '{{ (
       opensearch__internal_users__role_var +
       opensearch__internal_users__dependent_var +
@@ -37,13 +33,13 @@ opensearch__internal_users__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod(unique_key="username")
   }}'
 
+opensearch__internal_users__dependent_var: []
+opensearch__internal_users__group_var: []
+opensearch__internal_users__host_var: []
+opensearch__internal_users__role_var: []
 opensearch__network_host: '127.0.0.1'
 opensearch__node_name: '{{ ansible_facts["nodename"] }}'
 
-opensearch__path_data__dependent_var: ''
-opensearch__path_data__group_var: ''
-opensearch__path_data__host_var: ''
-opensearch__path_data__role_var: '/var/lib/opensearch'
 opensearch__path_data__combined_var: '{{
     opensearch__path_data__host_var if (opensearch__path_data__host_var | string | length) else
     opensearch__path_data__group_var if (opensearch__path_data__group_var | string | length) else
@@ -51,6 +47,10 @@ opensearch__path_data__combined_var: '{{
     opensearch__path_data__role_var
   }}'
 
+opensearch__path_data__dependent_var: ''
+opensearch__path_data__group_var: ''
+opensearch__path_data__host_var: ''
+opensearch__path_data__role_var: '/var/lib/opensearch'
 opensearch__path_repo: []
 opensearch__plugins_security_allow_unsafe_democertificates: false
 opensearch__plugins_security_authcz_admin_dns: []
@@ -61,13 +61,14 @@ opensearch__plugins_security_transport_resolve_hostname: true
 opensearch__service_enabled: true
 opensearch__service_state: '{{ opensearch__service_enabled | bool | ternary("started", "stopped") }}'
 
-opensearch__version__dependent_var: ''
-opensearch__version__group_var: ''
-opensearch__version__host_var: ''
-opensearch__version__role_var: ''
 opensearch__version__combined_var: '{{
     opensearch__version__host_var if (opensearch__version__host_var | string | length) else
     opensearch__version__group_var if (opensearch__version__group_var | string | length) else
     opensearch__version__dependent_var if (opensearch__version__dependent_var | string | length) else
     opensearch__version__role_var
   }}'
+
+opensearch__version__dependent_var: ''
+opensearch__version__group_var: ''
+opensearch__version__host_var: ''
+opensearch__version__role_var: ''

@@ -396,9 +396,9 @@ RequestHeader set X-Forwarded-Proto "https"
 
 ```
 SSLEngine on
-SSLCertificateFile      {{ apache_httpd__openssl_certificate_path }}/localhost.pem
-SSLCertificateKeyFile   {{ apache_httpd__openssl_privatekey_path }}/localhost.key
-SSLCertificateChainFile {{ apache_httpd__openssl_chain_path }}/chain.pem
+SSLCertificateFile      {{ __apache_httpd__openssl_certificate_path }}/localhost.pem
+SSLCertificateKeyFile   {{ __apache_httpd__openssl_privatekey_path }}/localhost.key
+SSLCertificateChainFile {{ __apache_httpd__openssl_chain_path }}/chain.pem
 ```
 
 

@@ -28,6 +28,9 @@ icingaweb2_module_director__icingaweb2__resources__dependent_var:
     password: '{{ icingaweb2_module_director__database_login.password }}'
     charset: 'utf8mb4'
 
+icingaweb2_module_director__icingaweb2__users__dependent_var:
+  - '{{ icingaweb2_module_director__enrolment_user_login }}'
+
 icingaweb2_module_director__mariadb_server__databases__dependent_var:
   - name: '{{ icingaweb2_module_director__database_name }}'
     collation: 'utf8_general_ci'
@@ -41,6 +44,3 @@ icingaweb2_module_director__mariadb_server__users__dependent_var:
     priv:
       - '{{ icingaweb2_module_director__database_name | replace("_", "\_") | replace("%", "\%") }}.*:ALL'
     state: 'present'
-
-icingaweb2_module_director__icingaweb2__users__dependent_var:
-  - '{{ icingaweb2_module_director__enrolment_user_login }}'

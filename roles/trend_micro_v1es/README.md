@@ -180,6 +180,7 @@ Example:
 trend_micro_v1es__group_id: 10
 trend_micro_v1es__policy_id: 42
 trend_micro_v1es__relay_group_id: 5
+trend_micro_v1es__xbc_env: 'prod-us1'
 trend_micro_v1es__xbc_fqdn: 'api-us1.xbc.trendmicro.com'
 ```
 

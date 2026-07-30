@@ -66,7 +66,7 @@
       login_user: '{{ icingaweb2_module_reporting__database_login["username"] }}'
       login_password: '{{ icingaweb2_module_reporting__database_login["password"] }}'
       login_host: '{{ icingaweb2_module_reporting__database_host }}'
-      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary(icingaweb2_module_reporting__mysql_login_unix_socket, omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary(__icingaweb2_module_reporting__mysql_login_unix_socket, omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
       login_db: '{{ icingaweb2_module_reporting__database_name }}'
       query: 'SHOW TABLES LIKE "config";'
     register: 'icingaweb2_module_reporting__table_exists_result'
@@ -77,7 +77,7 @@
       login_user: '{{ icingaweb2_module_reporting__database_login["username"] }}'
       login_password: '{{ icingaweb2_module_reporting__database_login["password"] }}'
       login_host: '{{ icingaweb2_module_reporting__database_host }}'
-      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary(icingaweb2_module_reporting__mysql_login_unix_socket, omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+      login_unix_socket: '{{ (icingaweb2__database_host == "localhost") | ternary(__icingaweb2_module_reporting__mysql_login_unix_socket, omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
       name: '{{ icingaweb2_module_reporting__database_name }}'
       state: 'import'
       target: '/usr/share/icingaweb2/modules/reporting/schema/mysql.schema.sql'

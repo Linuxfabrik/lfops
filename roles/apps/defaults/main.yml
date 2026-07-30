@@ -1,7 +1,3 @@
-apps__apps__dependent_var: []
-apps__apps__group_var: []
-apps__apps__host_var: []
-apps__apps__role_var: []
 apps__apps__combined_var: '{{ (
       apps__apps__role_var +
       apps__apps__dependent_var +
@@ -9,3 +5,8 @@ apps__apps__combined_var: '{{ (
       apps__apps__host_var
     ) | linuxfabrik.lfops.combine_lod
   }}'
+
+apps__apps__dependent_var: []
+apps__apps__group_var: []
+apps__apps__host_var: []
+apps__apps__role_var: []

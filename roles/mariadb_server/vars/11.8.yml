@@ -14,16 +14,27 @@ mariadb_server__cnf_client_ssl_verify_server_cert__role_var: true
 mariadb_server__cnf_collation_server__role_var: 'utf8mb4_uca1400_ai_ci'  # default: utf8mb4_uca1400_ai_ci
 mariadb_server__cnf_datadir__role_var: '/var/lib/mysql/'
 mariadb_server__cnf_default_storage_engine__role_var: 'InnoDB'
+# DARE using the File Key Management plugin
+mariadb_server__cnf_encrypt_binlog__role_var: 'ON'  # default: 'OFF'
+mariadb_server__cnf_encrypt_tmp_files__role_var: 'ON'  # default: 'OFF'
 mariadb_server__cnf_eq_range_index_dive_limit__role_var: '200'
 mariadb_server__cnf_extra_max_connections__role_var: 3
 mariadb_server__cnf_extra_port__role_var: 3307
+mariadb_server__cnf_file_key_management_encryption_algorithm__role_var: 'AES_CTR'
+mariadb_server__cnf_file_key_management_filename__role_var: '/etc/my.cnf.d/keyfile'
 mariadb_server__cnf_general_log__role_var: 'OFF'
 mariadb_server__cnf_general_log_file__role_var: '/var/log/mariadb/mariadb-general.log'
 mariadb_server__cnf_innodb_adaptive_hash_index__role_var: 'OFF'
 mariadb_server__cnf_innodb_adaptive_hash_index_parts__role_var: '8'
 mariadb_server__cnf_innodb_autoinc_lock_mode__role_var: 1
 mariadb_server__cnf_innodb_buffer_pool_size__role_var: '128M'
+mariadb_server__cnf_innodb_default_encryption_key_id__role_var: 1
 mariadb_server__cnf_innodb_doublewrite__role_var: 'ON'
+mariadb_server__cnf_innodb_encrypt_log__role_var: 'ON'  # default: 'OFF'
+mariadb_server__cnf_innodb_encrypt_tables__role_var: 'ON'  # default: 'OFF'
+mariadb_server__cnf_innodb_encrypt_temporary_tables__role_var: 'ON'  # default: 'OFF'
+mariadb_server__cnf_innodb_encryption_rotate_key_age__role_var: 1
+mariadb_server__cnf_innodb_encryption_threads__role_var: 4  # default: 0
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__role_var: 1
 mariadb_server__cnf_innodb_flush_neighbors__role_var: 0
 mariadb_server__cnf_innodb_io_capacity__role_var: 200
@@ -56,6 +67,8 @@ mariadb_server__cnf_max_heap_table_size__role_var: '16M'
 mariadb_server__cnf_net_read_timeout__role_var: '30'
 mariadb_server__cnf_net_write_timeout__role_var: '60'
 mariadb_server__cnf_performance_schema__role_var: 'ON'  # default: 'OFF'
+mariadb_server__cnf_plugin_load_add__role_var: 'file_key_management'
+
 mariadb_server__cnf_plugin_maturity__role_var: ''
 mariadb_server__cnf_query_cache_limit__role_var: '1M'
 mariadb_server__cnf_query_cache_size__role_var: 0  # default: 1048576
@@ -77,19 +90,6 @@ mariadb_server__cnf_tmp_table_size__role_var: '16M'
 mariadb_server__cnf_tmpdir__role_var: ''
 mariadb_server__cnf_wait_timeout__role_var: 28800
 
-# DARE using the File Key Management plugin
-mariadb_server__cnf_encrypt_binlog__role_var: 'ON'  # default: 'OFF'
-mariadb_server__cnf_encrypt_tmp_files__role_var: 'ON'  # default: 'OFF'
-mariadb_server__cnf_file_key_management_encryption_algorithm__role_var: 'AES_CTR'
-mariadb_server__cnf_file_key_management_filename__role_var: '/etc/my.cnf.d/keyfile'
-mariadb_server__cnf_innodb_default_encryption_key_id__role_var: 1
-mariadb_server__cnf_innodb_encrypt_log__role_var: 'ON'  # default: 'OFF'
-mariadb_server__cnf_innodb_encrypt_tables__role_var: 'ON'  # default: 'OFF'
-mariadb_server__cnf_innodb_encrypt_temporary_tables__role_var: 'ON'  # default: 'OFF'
-mariadb_server__cnf_innodb_encryption_rotate_key_age__role_var: 1
-mariadb_server__cnf_innodb_encryption_threads__role_var: 4  # default: 0
-mariadb_server__cnf_plugin_load_add__role_var: 'file_key_management'
-
 # Galera
 mariadb_server__cnf_wsrep_gtid_mode__role_var: 'OFF'
 mariadb_server__cnf_wsrep_log_conflicts__role_var: 'OFF'
@@ -97,4 +97,4 @@ mariadb_server__cnf_wsrep_retry_autocommit__role_var: 1
 
 # ===
 
-mariadb_server__logrotate_path: '/etc/logrotate.d/mariadb' # internal variable, not intended for the user
+__mariadb_server__logrotate_path: '/etc/logrotate.d/mariadb'

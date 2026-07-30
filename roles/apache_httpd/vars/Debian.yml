@@ -1,11 +1,23 @@
-apache_httpd__base_packages:
+__apache_httpd__base_packages:
   - 'apache2'
   - 'bind9-dnsutils'  # for dig etc.
-apache_httpd__config_file: '{{ apache_httpd__config_path }}/apache2.conf'
-apache_httpd__config_path: '/etc/apache2'
-apache_httpd__config_prefix: 'lfops-' # deploy our configs into an directory that is not influenced by the package manager
-apache_httpd__config_test_command: 'apachectl -t'
-apache_httpd__log_path: '/var/log/apache2'
+__apache_httpd__config_file: '{{ __apache_httpd__config_path }}/apache2.conf'
+__apache_httpd__config_path: '/etc/apache2'
+__apache_httpd__config_prefix: 'lfops-' # deploy our configs into an directory that is not influenced by the package manager
+__apache_httpd__config_test_command: 'apachectl -t'
+__apache_httpd__log_path: '/var/log/apache2'
+__apache_httpd__modules_path: '/usr/lib/apache2/modules'
+__apache_httpd__openssl_certificate_path: '/etc/pki/tls/certs'
+__apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'
+__apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
+  # - name: 'mod_ssl' # part of apache2-bin package on deb
+  #   state: 'present'
+__apache_httpd__php_set_handler_default: 'SetHandler "proxy:unix:{{ __apache_httpd__php_socket }}|fcgi://localhost"'
+__apache_httpd__php_socket: '/run/php/www.sock'
+__apache_httpd__root_path: '/var/www'
+__apache_httpd__roothtml_path: '/var/www/html'
+__apache_httpd__service_name: 'apache2'
+
 apache_httpd__mods__role_var:
   - filename: 'alias'
     enabled: true
@@ -276,10 +288,6 @@ apache_httpd__mods__role_var:
     enabled: false
     state: 'present'
     template: 'wsgi_python3'
-apache_httpd__modules_path: '/usr/lib/apache2/modules'
-apache_httpd__openssl_certificate_path: '/etc/pki/tls/certs'
-apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'
-apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
 apache_httpd__packages__role_var:
   # - name: 'libapache2-mod-qos'
   #   state: 'absent' # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1000072
@@ -289,11 +297,3 @@ apache_httpd__packages__role_var:
 
   - name: 'libapache2-mod-security2'
     state: 'present'
-
-  # - name: 'mod_ssl' # part of apache2-bin package on deb
-  #   state: 'present'
-apache_httpd__php_set_handler_default: 'SetHandler "proxy:unix:{{ apache_httpd__php_socket }}|fcgi://localhost"'
-apache_httpd__php_socket: '/run/php/www.sock'
-apache_httpd__root_path: '/var/www'
-apache_httpd__roothtml_path: '/var/www/html'
-apache_httpd__service_name: 'apache2'

@@ -531,13 +531,13 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#character_set_server)
 * Type: String.
-* Default: 10.11-: `'utf8mb4'`, 11.1+: `'uca1400'`
+* Default: `'utf8mb4'`
 
 `mariadb_server__cnf_collation_server__group_var` / `mariadb_server__cnf_collation_server__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#collation_server)
 * Type: String.
-* Default: 10.11-: `'utf8mb4_unicode_ci'`, 11.1+: `'utf8mb3=utf8mb3_uca1400_ai_ci,ucs2=ucs2_uca1400_ai_ci,utf8mb4=utf8mb4_uca1400_ai_ci,utf16=utf16_uca1400_ai_ci,utf32=utf32_uca1400_ai_ci'`
+* Default: 10.11-: `'utf8mb4_unicode_ci'`, 11.4+: `'utf8mb4_uca1400_ai_ci'`
 
 `mariadb_server__cnf_datadir__group_var` / `mariadb_server__cnf_datadir__host_var`
 
@@ -603,7 +603,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_chunk_size) (Deprecated and ignored: MariaDB 10.11.12, MariaDB 11.4.6, MariaDB 11.8.2; no longer written to the generated config on these versions, value is derived automatically from `innodb_buffer_pool_size`)
 * Type: String or Number.
-* Default: 10.08-: `'128M'`, 10.8+: `0` (autosize)
+* Default: 10.6: `'128M'`, 10.11+: unset (the directive is not written, MariaDB derives the value)
 
 `mariadb_server__cnf_innodb_buffer_pool_size__group_var` / `mariadb_server__cnf_innodb_buffer_pool_size__host_var`
 
@@ -707,6 +707,18 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'ON'`
 
+`mariadb_server__cnf_innodb_sync_spin_loops__group_var` / `mariadb_server__cnf_innodb_sync_spin_loops__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_sync_spin_loops)
+* Type: Number.
+* Default: `30`
+
+`mariadb_server__cnf_innodb_write_io_threads__group_var` / `mariadb_server__cnf_innodb_write_io_threads__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_write_io_threads)
+* Type: Number.
+* Default: `4`
+
 `mariadb_server__cnf_interactive_timeout__group_var` / `mariadb_server__cnf_interactive_timeout__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#interactive_timeout)
@@ -808,6 +820,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/performance-schema-system-variables/#performance_schema)
 * Type: String.
 * Default: `'ON'`
+
+`mariadb_server__cnf_plugin_maturity__group_var` / `mariadb_server__cnf_plugin_maturity__host_var`
+
+* [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#plugin_maturity). Left empty, so the server keeps its own default and the setting is omitted from the configuration file.
+* Type: String.
+* Default: `''`
 
 `mariadb_server__cnf_query_cache_limit__group_var` / `mariadb_server__cnf_query_cache_limit__host_var`
 
@@ -916,6 +934,7 @@ Example:
 # optional - cnf directives
 mariadb_server__cnf_aria_pagecache_buffer_size__host_var: '128M'
 mariadb_server__cnf_bind_address__host_var: '0.0.0.0'
+mariadb_server__cnf_binlog_cache_size__host_var: 32768
 mariadb_server__cnf_binlog_expire_logs_seconds__host_var: '9000' # 2.5hrs
 mariadb_server__cnf_binlog_format__host_var: 'MIXED'
 mariadb_server__cnf_bulk_insert_buffer_size__host_var: '8M'
@@ -923,10 +942,13 @@ mariadb_server__cnf_character_set_server__host_var: 'utf8mb4'
 mariadb_server__cnf_collation_server__host_var: 'utf8mb4_unicode_ci'
 mariadb_server__cnf_datadir__host_var: '/data/mariadb'
 mariadb_server__cnf_default_storage_engine__host_var: 'InnoDB'
+mariadb_server__cnf_eq_range_index_dive_limit__host_var: 200
 mariadb_server__cnf_extra_max_connections__host_var: 10
 mariadb_server__cnf_extra_port__host_var: 3308
 mariadb_server__cnf_general_log__host_var: 'OFF'
 mariadb_server__cnf_general_log_file__host_var: '/var/log/mariadb/mariadb-general.log'
+mariadb_server__cnf_innodb_adaptive_hash_index__host_var: 'OFF'
+mariadb_server__cnf_innodb_adaptive_hash_index_parts__host_var: 8
 mariadb_server__cnf_innodb_autoinc_lock_mode__host_var: 2
 mariadb_server__cnf_innodb_buffer_pool_chunk_size__host_var: '{{ (mariadb_server__cnf_innodb_buffer_pool_size__host_var / 64 ) | int }}'
 mariadb_server__cnf_innodb_buffer_pool_size__host_var: '{{ (ansible_facts["memtotal_mb"] * 0.8) | int }}M'
@@ -937,20 +959,39 @@ mariadb_server__cnf_innodb_flush_neighbors__host_var: 0
 mariadb_server__cnf_innodb_io_capacity__host_var: 200
 mariadb_server__cnf_innodb_log_buffer_size__host_var: '20M'
 mariadb_server__cnf_innodb_log_file_size__host_var: '96M'
+mariadb_server__cnf_innodb_max_dirty_pages_pct__host_var: 90
+mariadb_server__cnf_innodb_max_purge_lag__host_var: 0
+mariadb_server__cnf_innodb_monitor_disable__host_var: 'all'
+mariadb_server__cnf_innodb_open_files__host_var: 0
+mariadb_server__cnf_innodb_print_all_deadlocks__host_var: 'OFF'
+mariadb_server__cnf_innodb_purge_batch_size__host_var: 127
+mariadb_server__cnf_innodb_read_io_threads__host_var: 4
+mariadb_server__cnf_innodb_snapshot_isolation__host_var: 'ON'
+mariadb_server__cnf_innodb_strict_mode__host_var: 'ON'
+mariadb_server__cnf_innodb_sync_spin_loops__host_var: 30
+mariadb_server__cnf_innodb_write_io_threads__host_var: 4
 mariadb_server__cnf_interactive_timeout__host_var: 28800
 mariadb_server__cnf_join_buffer_size__host_var: '256K'
 mariadb_server__cnf_key_buffer_size__host_var: '128M'
+mariadb_server__cnf_local_infile__host_var: 'ON'
+mariadb_server__cnf_lock_wait_timeout__host_var: 86400
 mariadb_server__cnf_log_bin__host_var: 'log_bin'
+mariadb_server__cnf_log_bin_trust_function_creators__host_var: 'OFF'
 mariadb_server__cnf_log_error__host_var: '/var/log/mariadb/mariadb.log'
 mariadb_server__cnf_log_slave_updates__host_var: 'ON'
+mariadb_server__cnf_long_query_time__host_var: 10
 mariadb_server__cnf_lower_case_table_names__host_var: 0
 mariadb_server__cnf_max_allowed_packet__host_var: '16M'
 mariadb_server__cnf_max_connections__host_var: 64
 mariadb_server__cnf_max_heap_table_size__host_var: '16M'
+mariadb_server__cnf_net_read_timeout__host_var: 30
+mariadb_server__cnf_net_write_timeout__host_var: 60
 mariadb_server__cnf_performance_schema__host_var: 'ON'
+mariadb_server__cnf_plugin_maturity__host_var: 'gamma'
 mariadb_server__cnf_query_cache_limit__host_var: '1M'
 mariadb_server__cnf_query_cache_size__host_var: 0
 mariadb_server__cnf_query_cache_type__host_var: 'OFF'
+mariadb_server__cnf_server_id__host_var: 1
 mariadb_server__cnf_server_raw: |
   encrypt-binlog
   encrypt-tmp-disk-tables

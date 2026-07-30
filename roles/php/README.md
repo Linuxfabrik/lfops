@@ -2,7 +2,11 @@
 
 This role installs and configures PHP (and PHP-FPM) on the system, optionally with additional modules.
 
-Note that this role does NOT let you specify a particular PHP version. It simply installs the latest available PHP version from the repos configured in the system. If you want or need to install a specific or the latest PHP version available, use the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) beforehand.
+By default this role does not select a PHP version. It installs the latest version the configured repos offer. On RedHat that is deterministic, because the module stream pins the version at repo level: use [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) beforehand to choose it.
+
+Debian has no repo-level equivalent. Its unversioned metapackages (`php-cli`, `php-fpm`, `php-curl`, ...) point at whatever the configured repo declares as its default, which never moves within a Debian release but does move with the [sury](https://packages.sury.org/php/) repo, whenever sury promotes a new PHP version. On a sury host an ordinary `apt upgrade` therefore migrates PHP to a new major version without anyone deciding to. Set `php__version` to prevent that.
+
+Consuming roles that inject `php__modules__dependent_var` on Debian must build the package names from the detected version, for example `php{{ __php__installed_version }}-curl`, because the unversioned names would reintroduce exactly that drift. See `roles/nextcloud/vars/main.yml` for the platform-keyed pattern.
 
 This role is compatible with the following PHP versions:
 
@@ -33,6 +37,7 @@ This role never exposes to the world that PHP is installed on the server, no mat
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
+* Optional: The EPEL repository, and CRB on Rocky 9 and newer, must be enabled (roles: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) and [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)). Remi's packages link against EPEL content: on RedHat 8 for example `php-opcache` needs `libcapstone`, which neither the default repositories nor PowerTools carry.
 * Optional: [Remi's RPM repository](https://rpms.remirepo.net/) (role: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi)) provides newer PHP versions.
 
 
@@ -40,57 +45,47 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `php`
 
-* Install php php-fpm composer.
-* Get the list of installed packages.
-* Ensure PHP modules are absent.
-* Ensure PHP modules are present.
-* Get PHP version.
-* Load default values for `{{ php__installed_version }}`.
-* Deploy the /etc/php.d/z00-linuxfabrik.ini.
-* `systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`.
-* Remove absent pools from `/etc/php-fpm.d`.
-* Deploy the pools to `/etc/php-fpm.d/`.
+* Installs php, php-fpm and composer.
+* Installs and removes the configured PHP modules.
+* Deploys the `z00-linuxfabrik.ini` for every SAPI.
+* Deploys and removes the PHP-FPM pools.
+* Manages the state of the php-fpm service.
+* Pins the `php`, `phar` and `phar.phar` alternatives (Debian with `php__version` set only).
 * Triggers: php-fpm.service restart.
+
+`php:alternatives`
+
+* Debian with `php__version` set only. Pins the `php`, `phar` and `phar.phar` alternatives to the declared version, so installing another version does not silently switch the CLI.
+* Triggers: none.
 
 `php:fpm`
 
-* Remove absent pools from /etc/php-fpm.d.
-* Deploy the pools to /etc/php-fpm.d/.
+* Deploys and removes the PHP-FPM pools. On Debian these live under the declared version's tree, on RedHat under `/etc/php-fpm.d`.
 * Triggers: php-fpm.service restart.
 
 `php:ini`
 
-* Get PHP version.
-* Load default values for `{{ php__installed_version }}`.
-* Deploy the `/etc/php.d/z00-linuxfabrik.ini`.
+* Deploys the `z00-linuxfabrik.ini`. RedHat has a single `/etc/php.d`, Debian one conf.d per SAPI (apache2, cli and fpm) below the declared version's tree.
 * Triggers: php-fpm.service restart.
+
+`php:modules`
+
+* Installs and removes the PHP modules from `php__modules__combined_var`.
+* Triggers: none.
 
 `php:state`
 
-* `systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} --now php-fpm`.
-* Remove absent pools from `/etc/php-fpm.d`.
-* Deploy the pools to `/etc/php-fpm.d/`.
+* Enables or disables the php-fpm service and brings it into the state requested by `php__fpm_service_state`.
 * Triggers: none.
 
 `php:update`
 
-* Updates the PHP Packages and the configuration. Do not forget to update the repo beforehand.
+* Updates the PHP packages, composer and the PHP modules, and reasserts the ini, the pools, the service state and the alternatives. Do not forget to update the repo beforehand.
+* On Debian with `php__version` set, this is also how a major version change is carried out: raise `php__version`, then run this tag. It installs the declared version, moves the pools, alternatives and the FPM service over to it, and purges the stacks of all other versions.
 * Triggers: php-fpm.service restart.
 
 
 ## Optional Role Variables
-
-`php__fpm_service_enabled`
-
-* Enables or disables the php-fpm service, analogous to `systemctl enable/disable`.
-* Type: Bool.
-* Default: `true`
-
-`php__fpm_service_state`
-
-* Changes the state of the php-fpm service, analogous to `systemctl start/stop/restart/reload`.
-* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
-* Default: `'started'` if `php__fpm_service_enabled` is `true`, else `'stopped'`
 
 `php__fpm_pools__host_var` / `php__fpm_pools__group_var`
 
@@ -128,6 +123,18 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
         * Optional. Raw content which will be added to the end of the pool config.
         * Type: String.
 
+`php__fpm_service_enabled`
+
+* Enables or disables the php-fpm service, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+
+`php__fpm_service_state`
+
+* Changes the state of the php-fpm service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `php__fpm_service_enabled` is `true`, else `'stopped'`
+
 `php__modules__host_var` / `php__modules__group_var`
 
 * List of dictionaries containing additional PHP modules that should be installed via the standard package manager.
@@ -147,6 +154,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
         * Type: String.
         * Default: `'present'`
 
+`php__version`
+
+* Debian only. The PHP version this host runs, for example `'8.4'`. Makes the role install the versioned packages (`php8.4-cli`, `php8.4-fpm`, ...) instead of the unversioned metapackages, pin the `php` alternatives to it, and purge other versions on `php:update`. Empty adopts whatever version the configured repos provide, which is correct without the sury repo. Has no effect on RedHat, where the module stream pins the version at repo level.
+* Type: String.
+* Default: `''`
+
 Example:
 ```yaml
 # optional
@@ -161,6 +174,7 @@ php__fpm_pools__host_var:
 php__modules__host_var:
   - name: 'php-mysqlnd'
     state: 'present'
+php__version: '8.4'
 ```
 
 
@@ -341,9 +355,33 @@ Note that setting `php__ini_opcache_huge_code_pages__group_var` or `php__ini_opc
 Example:
 ```yaml
 # optional
+php__ini_date_timezone__host_var: 'Europe/Zurich'
+php__ini_default_socket_timeout__host_var: 10
+php__ini_display_errors__host_var: 'Off'
+php__ini_display_startup_errors__host_var: 'Off'
+php__ini_error_reporting__host_var: 'E_ALL & ~E_NOTICE & ~E_DEPRECATED'
 php__ini_max_execution_time__host_var: 3600
 php__ini_max_file_uploads__host_var: 100
+php__ini_max_input_time__host_var: -1
+php__ini_max_input_vars__host_var: 1000
 php__ini_memory_limit__host_var: '1024M'
+php__ini_opcache_blacklist_filename__host_var: '/etc/opcache.blacklist'
+php__ini_opcache_enable__host_var: 1
+php__ini_opcache_enable_cli__host_var: 1
+php__ini_opcache_huge_code_pages__host_var: 0
+php__ini_opcache_interned_strings_buffer__host_var: 12
+php__ini_opcache_max_accelerated_files__host_var: 7963
+php__ini_opcache_memory_consumption__host_var: 128
+php__ini_opcache_revalidate_freq__host_var: 60
+php__ini_opcache_save_comments__host_var: 1
+php__ini_opcache_validate_timestamps__host_var: 1
+php__ini_post_max_size__host_var: '8M'
+php__ini_session_cookie_httponly__host_var: 'On'
+php__ini_session_cookie_secure__host_var: 'Off'
+php__ini_session_gc_maxlifetime__host_var: 1440
+php__ini_session_sid_length__host_var: 32
+php__ini_session_trans_sid_tags__host_var: 'a=href,area=href,frame=src,input=src,form=fakeentry'
+php__ini_smtp__host_var: 'localhost'
 php__ini_upload_max_filesize__host_var: '10000M'
 ```
 

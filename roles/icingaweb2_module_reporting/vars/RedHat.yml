@@ -1,1 +1,1 @@
-icingaweb2_module_reporting__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'
+__icingaweb2_module_reporting__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'

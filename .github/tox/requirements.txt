@@ -54,9 +54,9 @@ tomli-w==1.2.0 \
     --hash=sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90 \
     --hash=sha256:2dd14fac5a47c27be9cd4c976af5a12d87fb1f0b4512f81d69cce3b35ae25021
     # via tox
-tox==4.56.4 \
-    --hash=sha256:53bac88382b9638a5ce40fbaddd6076e1c8f638751af7bf8e759392c953df2f0 \
-    --hash=sha256:d49e371119ebfafb15054ad7ccff3d03027ccb65195fae3ac656b431b5524055
+tox==4.58.0 \
+    --hash=sha256:ab0b126a04dd56bc18e6d216386db09335247f2289b54cf534deb5c4ae3a8d2e \
+    --hash=sha256:dcae21f5f015f3a67658e35644cce0d1aa0dedcd06f3927f95d84e1717f6cea5
     # via -r requirements.in
 virtualenv==21.6.0 \
     --hash=sha256:bce9d097950fef9d81129b333babfb7767072850c2f1acce0ec536708401bfd1 \

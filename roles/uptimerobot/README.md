@@ -92,6 +92,12 @@ Typical impact: a `--check` run over 56 monitors goes from ~56× 4 page `getMoni
 
 ## Optional Role Variables
 
+`uptimerobot__alert_contacts`
+
+* Stale alert contacts to delete. UptimeRobot API v2 does not allow creating or editing alert contacts (web-UI only), so this list is delete-only. Each entry needs `state: 'absent'` plus either `id` or `friendly_name`.
+* Type: List of dictionaries.
+* Default: `[]`
+
 `uptimerobot__api_key`
 
 * UptimeRobot API key. If empty, the modules fall back to `uptimerobot__api_key_file` and finally to the `UPTIMEROBOT_API_KEY` environment variable. The Bitwarden lookup plugin (`linuxfabrik.lfops.bitwarden_item`) is the recommended way to populate this in production inventories.
@@ -310,13 +316,6 @@ Typical impact: a `--check` run over 56 monitors goes from ~56× 4 page `getMoni
         * Optional. `'present'` (default) or `'absent'`.
         * Type: String.
 
-`uptimerobot__alert_contacts`
-
-* Stale alert contacts to delete. UptimeRobot API v2 does not allow creating or editing alert contacts (web-UI only), so this list is delete-only. Each entry needs `state: 'absent'` plus either `id` or `friendly_name`.
-* Type: List of dictionaries.
-* Default: `[]`
-
-
 ## Example Inventory
 
 A complete `group_vars/lfops_uptimerobot.yml` covering all four lists:
@@ -329,6 +328,9 @@ uptimerobot__api_key: "{{ lookup('linuxfabrik.lfops.bitwarden_item', {
     'collection_id': lfops__bitwarden_collection_id,
     'organization_id': lfops__bitwarden_organization_id,
   })['password'] }}"
+
+# alternatively, point at a file holding the key instead of setting it inline
+# uptimerobot__api_key_file: '~/.uptimerobot'
 
 uptimerobot__mwindows:
   - type: 'weekly'

@@ -9,10 +9,6 @@ grafana__auth_jwt__pub_key_file: '/etc/grafana/jwt.key.pub'
 grafana__bitwarden_collection_id: '{{ lfops__bitwarden_collection_id | default() }}'
 grafana__bitwarden_organization_id: '{{ lfops__bitwarden_organization_id | default() }}'
 grafana__cookie_samesite: 'lax'
-grafana__plugins__dependent_var: []
-grafana__plugins__group_var: []
-grafana__plugins__host_var: []
-grafana__plugins__role_var: []
 grafana__plugins__combined_var: '{{ (
       grafana__plugins__role_var +
       grafana__plugins__dependent_var +
@@ -21,10 +17,10 @@ grafana__plugins__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
-grafana__provisioning_dashboards__dependent_var: []
-grafana__provisioning_dashboards__group_var: []
-grafana__provisioning_dashboards__host_var: []
-grafana__provisioning_dashboards__role_var: []
+grafana__plugins__dependent_var: []
+grafana__plugins__group_var: []
+grafana__plugins__host_var: []
+grafana__plugins__role_var: []
 grafana__provisioning_dashboards__combined_var: '{{ (
       grafana__provisioning_dashboards__role_var +
       grafana__provisioning_dashboards__dependent_var +
@@ -33,10 +29,10 @@ grafana__provisioning_dashboards__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
-grafana__provisioning_datasources__dependent_var: []
-grafana__provisioning_datasources__group_var: []
-grafana__provisioning_datasources__host_var: []
-grafana__provisioning_datasources__role_var: []
+grafana__provisioning_dashboards__dependent_var: []
+grafana__provisioning_dashboards__group_var: []
+grafana__provisioning_dashboards__host_var: []
+grafana__provisioning_dashboards__role_var: []
 grafana__provisioning_datasources__combined_var: '{{ (
       grafana__provisioning_datasources__role_var +
       grafana__provisioning_datasources__dependent_var +
@@ -45,10 +41,10 @@ grafana__provisioning_datasources__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
-grafana__provisioning_service_accounts__dependent_var: []
-grafana__provisioning_service_accounts__group_var: []
-grafana__provisioning_service_accounts__host_var: []
-grafana__provisioning_service_accounts__role_var: []
+grafana__provisioning_datasources__dependent_var: []
+grafana__provisioning_datasources__group_var: []
+grafana__provisioning_datasources__host_var: []
+grafana__provisioning_datasources__role_var: []
 grafana__provisioning_service_accounts__combined_var: '{{ (
       grafana__provisioning_service_accounts__role_var +
       grafana__provisioning_service_accounts__dependent_var +
@@ -57,6 +53,10 @@ grafana__provisioning_service_accounts__combined_var: '{{ (
     ) | linuxfabrik.lfops.combine_lod
   }}'
 
+grafana__provisioning_service_accounts__dependent_var: []
+grafana__provisioning_service_accounts__group_var: []
+grafana__provisioning_service_accounts__host_var: []
+grafana__provisioning_service_accounts__role_var: []
 grafana__serve_from_sub_path: false
 grafana__service_enabled: true
 grafana__service_state: '{{ grafana__service_enabled | bool | ternary("started", "stopped") }}'

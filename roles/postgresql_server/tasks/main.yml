@@ -173,7 +173,7 @@
       privs: '{{ item["privs"] | default([]) | join(",") }}'
       type: '{{ item["type"] | d("database") }}'
       objs: '{{ item["objs"] | join(",") }}'
-      grant_option: '{{ item["priv"] | default(false) }}'
+      grant_option: '{{ item["grant_option"] | default(false) }}'
       state: '{{ item["state"] | default("present") }}'
     loop: '{{ postgresql_server__privs__combined_var }}'
     become: true
