@@ -27,7 +27,7 @@ Which Ansible role is proven to run on which OS?
 | coturn                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | crypto_policy                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| dnf_versionlock                       |        |        |   x    |   x    |         |           |           |           | Fedora 40                                    |
+| dnf_versionlock                       |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | docker                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | duplicity                             |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
 | elastic_agent                         |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |

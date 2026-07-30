@@ -1,0 +1,11 @@
+dnf_versionlock__versionlocks__combined_var: '{{ (
+      dnf_versionlock__versionlocks__role_var +
+      dnf_versionlock__versionlocks__dependent_var +
+      dnf_versionlock__versionlocks__group_var +
+      dnf_versionlock__versionlocks__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="name")
+  }}'
+dnf_versionlock__versionlocks__dependent_var: []
+dnf_versionlock__versionlocks__group_var: []
+dnf_versionlock__versionlocks__host_var: []
+dnf_versionlock__versionlocks__role_var: []

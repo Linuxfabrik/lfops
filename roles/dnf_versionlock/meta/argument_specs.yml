@@ -1,0 +1,24 @@
+argument_specs:
+  main:
+    options:
+
+      dnf_versionlock__versionlocks__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Versionlock entries to manage. Dependent-role injection.'
+
+      dnf_versionlock__versionlocks__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Versionlock entries to manage. Group-level override.'
+
+      dnf_versionlock__versionlocks__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Versionlock entries to manage. Host-level override.'

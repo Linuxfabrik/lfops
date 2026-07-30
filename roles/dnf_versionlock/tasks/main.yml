@@ -1,23 +1,20 @@
 - block:
 
-  - name: 'Set platform/version specific variables'
-    ansible.builtin.import_role:
-      name: 'shared'
-      tasks_from: 'platform-variables.yml'
-
-  - name: 'install {{ __dnf_versionlock__packages | join(" ") }}'
+  - name: 'install dnf-command(versionlock)'
     ansible.builtin.package:
-      name: '{{ __dnf_versionlock__packages }}'
+      name: 'dnf-command(versionlock)'
       state: 'present'
 
-  - name: 'deploy /etc/dnf/plugins/versionlock.list'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/dnf/plugins/versionlock.list.j2'
-      dest: '{{ __dnf_versionlock__list_path }}'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
+  # the module manages single entries instead of rewriting the whole locklist, so
+  # locks set outside of this role (for example by monitoring_plugins) survive.
+  - name: 'dnf versionlock {{ item["state"] | d("present") }} {{ item["name"] }}'
+    community.general.dnf_versionlock:
+      name: '{{ item["name"] }}'
+      raw: '{{ item["raw"] | d(false) | bool }}'
+      state: '{{ item["state"] | d("present") }}'
+    loop: '{{ dnf_versionlock__versionlocks__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
 
   tags:
     - 'dnf_versionlock'
