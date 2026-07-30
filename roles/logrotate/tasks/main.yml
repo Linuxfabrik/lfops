@@ -30,7 +30,7 @@
     ansible.builtin.template:
       backup: true
       src: 'etc/logrotate.d/syslog.j2'
-      dest: '/etc/logrotate.d/{{ logrotate__syslog_filename }}'
+      dest: '/etc/logrotate.d/{{ __logrotate__syslog_filename }}'
       owner: 'root'
       group: 'root'
       mode: 0o644

@@ -9,9 +9,9 @@
 
 - block:
 
-  - name: 'Install {{ nfs_server__nfs_server_package }}'
+  - name: 'Install {{ __nfs_server__nfs_server_package }}'
     ansible.builtin.package:
-      name: '{{ nfs_server__nfs_server_package }}'
+      name: '{{ __nfs_server__nfs_server_package }}'
       state: 'present'
 
   tags:

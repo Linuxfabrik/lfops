@@ -12,20 +12,20 @@
 - name: 'tar xzf coreruleset-v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
   ansible.builtin.unarchive:
     src: '/tmp/coreruleset-v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
-    dest: '{{ apache_httpd__config_path }}/modsecurity.d/'
+    dest: '{{ __apache_httpd__config_path }}/modsecurity.d/'
     remote_src: true
   ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified
 
-- name: 'ln -s {{ apache_httpd__config_path }}/modsecurity.d/coreruleset-{{ apache_httpd__mod_security_coreruleset_version }} {{ apache_httpd__config_path }}/modsecurity.d/crs'
+- name: 'ln -s {{ __apache_httpd__config_path }}/modsecurity.d/coreruleset-{{ apache_httpd__mod_security_coreruleset_version }} {{ __apache_httpd__config_path }}/modsecurity.d/crs'
   ansible.builtin.file:
-    src: '{{ apache_httpd__config_path }}/modsecurity.d/coreruleset-{{ apache_httpd__mod_security_coreruleset_version }}'
-    dest: '{{ apache_httpd__config_path }}/modsecurity.d/crs'
+    src: '{{ __apache_httpd__config_path }}/modsecurity.d/coreruleset-{{ apache_httpd__mod_security_coreruleset_version }}'
+    dest: '{{ __apache_httpd__config_path }}/modsecurity.d/crs'
     state: 'link'
   ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified
 
-- name: 'cp {{ apache_httpd__config_path }}/modsecurity.d/crs-setup.conf.example {{ apache_httpd__config_path }}/modsecurity.d/crs-setup.conf'
+- name: 'cp {{ __apache_httpd__config_path }}/modsecurity.d/crs-setup.conf.example {{ __apache_httpd__config_path }}/modsecurity.d/crs-setup.conf'
   ansible.builtin.copy:
-    src: '{{ apache_httpd__config_path }}/modsecurity.d/crs/crs-setup.conf.example'
-    dest: '{{ apache_httpd__config_path }}/modsecurity.d/crs/crs-setup.conf'
+    src: '{{ __apache_httpd__config_path }}/modsecurity.d/crs/crs-setup.conf.example'
+    dest: '{{ __apache_httpd__config_path }}/modsecurity.d/crs/crs-setup.conf'
     remote_src: true
   ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified

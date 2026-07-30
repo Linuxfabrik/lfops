@@ -1,4 +1,4 @@
-repo_rpmfusion__gpg_keys:
+__repo_rpmfusion__gpg_keys:
   - url: 'https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-free-el-8'
     dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-8'
   - url: 'https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-nonfree-el-8'

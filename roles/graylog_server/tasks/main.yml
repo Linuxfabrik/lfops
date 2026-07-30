@@ -55,11 +55,11 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/graylog/server/server.conf'
 
-  - name: 'Deploy {{ graylog_server__opts_file }}'
+  - name: 'Deploy {{ __graylog_server__opts_file }}'
     ansible.builtin.template:
       backup: true
-      src: '{{ graylog_server__opts_file[1:] }}.j2'
-      dest: '{{ graylog_server__opts_file }}'
+      src: '{{ __graylog_server__opts_file[1:] }}.j2'
+      dest: '{{ __graylog_server__opts_file }}'
       owner: 'root'
       group: 'root'
       mode: 0o644

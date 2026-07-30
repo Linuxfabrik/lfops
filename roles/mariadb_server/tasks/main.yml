@@ -291,11 +291,11 @@
     when:
       - 'mariadb_server__run_galera_new_cluster is true'
 
-  - name: 'Deploy {{ mariadb_server__config_file_00 }}'
+  - name: 'Deploy {{ __mariadb_server__config_file_00 }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
-      dest: '{{ mariadb_server__config_file_00 }}'
+      dest: '{{ __mariadb_server__config_file_00 }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -405,11 +405,11 @@
       or mariadb_server__z00_linuxfabrik_result is changed
       or mariadb_server__service_result is changed
 
-  - name: 'Deploy {{ mariadb_server__logrotate_path }}'
+  - name: 'Deploy {{ __mariadb_server__logrotate_path }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/logrotate.d/mariadb.j2'
-      dest: '{{ mariadb_server__logrotate_path }}'
+      dest: '{{ __mariadb_server__logrotate_path }}'
       owner: 'root'
       mode: 0o600
 
@@ -694,11 +694,11 @@
 # galera
 - block:
 
-  - name: 'Deploy {{ mariadb_server__config_file_00 }}'
+  - name: 'Deploy {{ __mariadb_server__config_file_00 }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/my.cnf.d/{{ mariadb_server__installed_version }}-z00-linuxfabrik.cnf.j2'
-      dest: '{{ mariadb_server__config_file_00 }}'
+      dest: '{{ __mariadb_server__config_file_00 }}'
       owner: 'root'
       group: 'root'
       mode: 0o644

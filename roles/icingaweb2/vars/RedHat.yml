@@ -1,6 +1,6 @@
 __icingaweb2__icinga_user: 'icinga'
-icingaweb2__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'
-icingaweb2__required_packages:
+__icingaweb2__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'
+__icingaweb2__required_packages:
   - 'icingacli'
   - 'icingaweb2'
   - 'icingaweb2-selinux'

@@ -5,5 +5,5 @@ __redis__module_dir: '/etc/redis/modules'
 __redis__package: 'redis'
 __redis__runtime_dir: '/var/run/redis'
 
-redis__conf_logfile: '/var/log/redis/redis.log'
-redis__service_name: 'redis.service'
+__redis__conf_logfile: '/var/log/redis/redis.log'
+__redis__service_name: 'redis.service'

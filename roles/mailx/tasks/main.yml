@@ -5,9 +5,9 @@
       name: 'shared'
       tasks_from: 'platform-variables.yml'
 
-  - name: 'Install {{ mailx__package }} package'
+  - name: 'Install {{ __mailx__package }} package'
     ansible.builtin.package:
-      name: '{{ mailx__package }}'
+      name: '{{ __mailx__package }}'
       state: 'present'
 
   - name: 'Deploy bash wrapper script that makes sending mail easier to /root/send-mail'

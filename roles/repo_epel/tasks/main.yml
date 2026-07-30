@@ -18,7 +18,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    loop: '{{ repo_epel__repo_files }}'
+    loop: '{{ __repo_epel__repo_files }}'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
@@ -26,22 +26,22 @@
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
-    loop: '{{ repo_epel__repo_files }}'
+    loop: '{{ __repo_epel__repo_files }}'
 
-  - name: 'curl {{ repo_epel__gpg_key_url }} --output /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
+  - name: 'curl {{ __repo_epel__gpg_key_url }} --output /tmp/ansible.{{ __repo_epel__gpg_key_dest | basename }}'
     ansible.builtin.get_url:
-      url: '{{ repo_epel__gpg_key_url }}'
-      dest: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
+      url: '{{ __repo_epel__gpg_key_url }}'
+      dest: '/tmp/ansible.{{ __repo_epel__gpg_key_dest | basename }}'
       mode: 0o644
     delegate_to: 'localhost'
     become: false
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
-  - name: 'copy /tmp/ansible.{{ repo_epel__gpg_key_dest | basename }} to {{ repo_epel__gpg_key_dest }}'
+  - name: 'copy /tmp/ansible.{{ __repo_epel__gpg_key_dest | basename }} to {{ __repo_epel__gpg_key_dest }}'
     ansible.builtin.copy:
-      src: '/tmp/ansible.{{ repo_epel__gpg_key_dest | basename }}'
-      dest: '{{ repo_epel__gpg_key_dest }}'
+      src: '/tmp/ansible.{{ __repo_epel__gpg_key_dest | basename }}'
+      dest: '{{ __repo_epel__gpg_key_dest }}'
       mode: 0o644
 
   tags:

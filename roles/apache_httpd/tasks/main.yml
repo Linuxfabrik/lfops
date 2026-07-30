@@ -17,11 +17,11 @@
 
   - name: 'Base Packages:'
     ansible.builtin.debug:
-      var: 'apache_httpd__base_packages'
+      var: '__apache_httpd__base_packages'
 
   - name: 'Ensure base packages are in their desired state'
     ansible.builtin.package:
-      name: '{{ q("flattened", apache_httpd__base_packages) }}'
+      name: '{{ q("flattened", __apache_httpd__base_packages) }}'
       state: 'present'
 
   - name: 'Combined Packages:'
@@ -39,7 +39,7 @@
           + (apache_httpd__packages__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
 
-  - name: 'mkdir -p {{ apache_httpd__config_path}}/{conf,mods,sites}-{available,enabled}'
+  - name: 'mkdir -p {{ __apache_httpd__config_path}}/{conf,mods,sites}-{available,enabled}'
     ansible.builtin.file:
       path: '{{ item }}'
       state: 'directory'
@@ -47,17 +47,17 @@
       group: 'root'
       mode: 0o755
     loop:
-      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}conf-available'
-      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}conf-enabled'
-      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}mods-available'
-      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}mods-enabled'
-      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}sites-available'
-      - '{{ apache_httpd__config_path }}/{{ apache_httpd__config_prefix }}sites-enabled'
+      - '{{ __apache_httpd__config_path }}/{{ __apache_httpd__config_prefix }}conf-available'
+      - '{{ __apache_httpd__config_path }}/{{ __apache_httpd__config_prefix }}conf-enabled'
+      - '{{ __apache_httpd__config_path }}/{{ __apache_httpd__config_prefix }}mods-available'
+      - '{{ __apache_httpd__config_path }}/{{ __apache_httpd__config_prefix }}mods-enabled'
+      - '{{ __apache_httpd__config_path }}/{{ __apache_httpd__config_prefix }}sites-available'
+      - '{{ __apache_httpd__config_path }}/{{ __apache_httpd__config_prefix }}sites-enabled'
 
-  - name: 'ln -s {{ apache_httpd__config_path}}/logs {{ apache_httpd__log_path }}'
+  - name: 'ln -s {{ __apache_httpd__config_path}}/logs {{ __apache_httpd__log_path }}'
     ansible.builtin.file:
-      dest: '{{ apache_httpd__config_path}}/logs'
-      src: '{{ apache_httpd__log_path }}'
+      dest: '{{ __apache_httpd__config_path}}/logs'
+      src: '{{ __apache_httpd__log_path }}'
       state: 'link'
 
   tags:
@@ -79,11 +79,11 @@
 # Manage global Apache config
 - block:
 
-  - name: 'Create or update global Apache configuration {{ apache_httpd__config_file }}'
+  - name: 'Create or update global Apache configuration {{ __apache_httpd__config_file }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/httpd/conf/httpd.conf.j2'
-      dest: '{{ apache_httpd__config_file }}'
+      dest: '{{ __apache_httpd__config_file }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -95,7 +95,7 @@
       name: 'shared'
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
-      shared__remove_rpmnew_rpmsave_config_file: '{{ apache_httpd__config_file }}'
+      shared__remove_rpmnew_rpmsave_config_file: '{{ __apache_httpd__config_file }}'
 
   tags:
     - 'apache_httpd'
@@ -140,9 +140,9 @@
 
 - block:
 
-  - name: 'chmod -R g-w {{ apache_httpd__config_path }} # enhance security a little bit'
+  - name: 'chmod -R g-w {{ __apache_httpd__config_path }} # enhance security a little bit'
     ansible.builtin.file:
-      path: '{{ apache_httpd__config_path }}'
+      path: '{{ __apache_httpd__config_path }}'
       mode: 'g-w'
       recurse: true
 
@@ -162,15 +162,15 @@
 # Manage Systemd start and enable
 - block:
 
-  - name: 'systemctl {{ apache_httpd__systemd_enabled | bool | ternary("enable", "disable") }} {{ apache_httpd__service_name }}'
+  - name: 'systemctl {{ apache_httpd__systemd_enabled | bool | ternary("enable", "disable") }} {{ __apache_httpd__service_name }}'
     ansible.builtin.systemd:
-      name: '{{ apache_httpd__service_name }}'
+      name: '{{ __apache_httpd__service_name }}'
       enabled: '{{ apache_httpd__systemd_enabled }}'
     ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified
 
-  - name: 'systemctl {{ apache_httpd__systemd_state | regex_replace("p?ed$", "") }} {{ apache_httpd__service_name }}'
+  - name: 'systemctl {{ apache_httpd__systemd_state | regex_replace("p?ed$", "") }} {{ __apache_httpd__service_name }}'
     ansible.builtin.systemd:
-      name: '{{ apache_httpd__service_name }}'
+      name: '{{ __apache_httpd__service_name }}'
       state: '{{ apache_httpd__systemd_state }}'
     register: '__apache_httpd__service_state_result'
     ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified

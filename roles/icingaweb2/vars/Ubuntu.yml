@@ -1,5 +1,5 @@
 __icingaweb2__icinga_user: 'nagios'
-icingaweb2__mysql_login_unix_socket: '/run/mysqld/mysqld.sock'
-icingaweb2__required_packages:
+__icingaweb2__mysql_login_unix_socket: '/run/mysqld/mysqld.sock'
+__icingaweb2__required_packages:
   - 'icingacli'
   - 'icingaweb2'

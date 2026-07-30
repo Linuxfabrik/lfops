@@ -35,11 +35,11 @@
       cmd: 'cp --archive {{ mariadb_server__datadir_result }}/. {{ mariadb_server__cnf_datadir__combined_var }}/'
       creates: '{{ mariadb_server__cnf_datadir__combined_var }}/ibdata1'
 
-  - name: 'Deploy {{ mariadb_server__config_file_01 }}'
+  - name: 'Deploy {{ __mariadb_server__config_file_01 }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/my.cnf.d/z01-linuxfabrik.cnf.j2'
-      dest: '{{ mariadb_server__config_file_01 }}'
+      dest: '{{ __mariadb_server__config_file_01 }}'
       owner: 'root'
       group: 'root'
       mode: 0o644

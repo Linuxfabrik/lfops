@@ -27,7 +27,7 @@
       - 'etc/yum.repos.d/rpmfusion-nonfree-updates.repo'
 
   - ansible.builtin.include_tasks: 'download-gpg-key.yml'
-    loop: '{{ repo_rpmfusion__gpg_keys }}'
+    loop: '{{ __repo_rpmfusion__gpg_keys }}'
     loop_control:
       loop_var: 'gpg_key'
 

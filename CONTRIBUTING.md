@@ -649,7 +649,7 @@ Make sure to use the following format when passing multiple injections to avoid 
         tasks_from: 'remove-rpmnew-rpmsave.yml'
       vars:
         shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
-      loop: '{{ repo_epel__repo_files }}'
+      loop: '{{ __repo_epel__repo_files }}'
     ```
 
 

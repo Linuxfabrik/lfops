@@ -6,5 +6,5 @@ __redis__module_dir: '/etc/valkey/modules'
 __redis__package: 'valkey'
 __redis__runtime_dir: '/var/run/valkey'
 
-redis__conf_logfile: '/var/log/valkey/valkey.log'
-redis__service_name: 'valkey.service'
+__redis__conf_logfile: '/var/log/valkey/valkey.log'
+__redis__service_name: 'valkey.service'

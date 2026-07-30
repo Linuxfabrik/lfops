@@ -7,11 +7,11 @@
 
   - name: 'Combined Packages:'
     ansible.builtin.debug:
-      var: 'python_venv__required_packages'
+      var: '__python_venv__required_packages'
 
   - name: 'Install the required packages'
     ansible.builtin.package:
-      name: '{{ python_venv__required_packages }}'
+      name: '{{ __python_venv__required_packages }}'
       state: 'present'
 
   - name: 'Deploy /etc/pip.conf'
