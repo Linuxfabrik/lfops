@@ -196,12 +196,14 @@
     ansible.builtin.service:
       name: '{{ __php__fpm_service_name }}'
       enabled: '{{ php__fpm_service_enabled }}'
+    ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified, as the service could not exist yet
 
   - name: 'systemctl {{ php__fpm_service_state | regex_replace("p?ed$", "") }} {{ __php__fpm_service_name }}'
     ansible.builtin.service:
       name: '{{ __php__fpm_service_name }}'
       state: '{{ php__fpm_service_state }}'
     register: '__php__fpm_service_state_result'
+    ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified, as the service could not exist yet
 
   # 'php:update' is included because a version change moves __php__fpm_service_name to a new,
   # not yet enabled unit. Without this the migrated host would come up without its FPM service.
@@ -276,7 +278,7 @@
   # Purging is the one destructive step in this role, so the list is printed before it runs. Under
   # `--check` the apt task reports a change without naming the packages, and package_facts is
   # gathered for real (check_mode: false), so this debug is what makes a dry run reviewable.
-  - name: 'Stale PHP stacks:'
+  - name: 'Stale PHP packages, will be purged'
     ansible.builtin.debug:
       var: '__php__stale_packages'
 

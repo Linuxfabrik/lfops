@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:php**: A dry run (`--check`) against a host that does not have PHP-FPM installed yet no longer aborts, so the role can be previewed before the first real run.
 * **role:icingaweb2, role:icingaweb2_module_fileshipper, role:icingaweb2_module_vspheredb, role:icingaweb2_module_x509, role:nextcloud**: On Debian and Ubuntu these roles requested their PHP extensions through the unversioned `php-<module>` metapackages, which resolve to whatever the configured repo declares as its default. With the sury repo enabled that default moves whenever sury promotes a new PHP version, so the extensions could pull a second, undeclared PHP runtime onto the host next to the one actually in use. The extension names are now built from the PHP version the `php` role manages. `nextcloud` already worked around this for IMAP alone; the fix now covers every extension. RedHat is unaffected, its package names are unchanged.
 * **role:nextcloud**: The IMAP PHP extension now installs on current PHP. On PHP 8.4 and newer IMAP was removed from PHP core, so the role installs it from the PECL package instead, where previously the install aborted because the old `php-imap` package no longer exists for that PHP version.
 * **role:php**: Running the role with a specific tag (for example `--tags php:state`) on Debian and Ubuntu no longer fails with an undefined PHP version. Roles that build on php and only restart php-fpm (such as nextcloud) now also work when run with their own tags.
