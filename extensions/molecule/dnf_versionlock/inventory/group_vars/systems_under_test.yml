@@ -1,0 +1,27 @@
+# Exercises every state the role supports. 'bash' and 'sudo' are chosen because
+# they are installed on every supported platform, so a 'present' entry always
+# resolves to a concrete version.
+
+dnf_versionlock__versionlocks__group_var:
+
+  # resolved against the installed package, so the entry ends up as a concrete
+  # name-epoch:version-release.arch spec
+  - name: 'bash'
+    state: 'present'
+
+  # written verbatim. the version deliberately does not exist, which is only
+  # possible with raw: true
+  - name: 'linuxfabrik-example-0:1.2.3-4.*'
+    raw: true
+    state: 'present'
+
+  # excluded entries land in the lock list prefixed with '!'
+  - name: 'curl'
+    state: 'excluded'
+
+  # nothing locks this package, so the run is a no-op. verify.yml asserts it
+  # stays absent. testing the stronger "lock it, then unlock it" flow would need
+  # the lock seeded outside of converge.yml, otherwise the idempotence step sees
+  # the seed and the removal fight each other on the second run.
+  - name: 'tar'
+    state: 'absent'

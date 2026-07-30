@@ -1,0 +1,37 @@
+# Asks dnf for the effective lock list rather than reading the file the role
+# wrote. That is the only way to confirm the plugin actually accepted the
+# entries: a spec that matches no package is silently dropped, which a file
+# content check would not notice.
+- name: 'Verify the versionlock entries are in effect'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'dnf versionlock list'
+      ansible.builtin.command: 'dnf -q versionlock list'
+      changed_when: false
+      register: '__molecule__dnf_versionlock_list_result'
+
+    # The point of driving the module instead of templating the file: an entry
+    # this role does not manage has to survive the run.
+    - name: 'Assert that the foreign lock on sudo survived'
+      ansible.builtin.assert:
+        that: '__molecule__dnf_versionlock_list_result["stdout_lines"] | select("match", "^sudo-") | length > 0'
+        fail_msg: 'the role removed a lock it does not manage'
+
+    # A resolved entry must name a concrete version, not the bare package name.
+    - name: 'Assert that bash is locked to a concrete version'
+      ansible.builtin.assert:
+        that: '__molecule__dnf_versionlock_list_result["stdout_lines"] | select("match", "^bash-.+") | length > 0'
+
+    - name: 'Assert that the raw entry was written verbatim'
+      ansible.builtin.assert:
+        that: '"linuxfabrik-example-0:1.2.3-4.*" in __molecule__dnf_versionlock_list_result["stdout_lines"]'
+
+    - name: 'Assert that curl is excluded'
+      ansible.builtin.assert:
+        that: '__molecule__dnf_versionlock_list_result["stdout_lines"] | select("match", "^!curl-") | length > 0'
+
+    - name: 'Assert that tar is not locked'
+      ansible.builtin.assert:
+        that: '__molecule__dnf_versionlock_list_result["stdout_lines"] | select("match", "^!?tar-") | length == 0'

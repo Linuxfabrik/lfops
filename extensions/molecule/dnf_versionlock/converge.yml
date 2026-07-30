@@ -1,0 +1,21 @@
+# Seed a lock that this role does not manage, the way the monitoring_plugins
+# role pins its own package. The role must leave it alone: it manages single
+# entries instead of rewriting the whole lock list. Seeding through the module
+# keeps this idempotent, so the idempotence step still passes.
+- name: 'Seed a versionlock entry owned by someone else'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'install dnf-command(versionlock)'
+      ansible.builtin.package:
+        name: 'dnf-command(versionlock)'
+        state: 'present'
+
+    - name: 'dnf versionlock add sudo'
+      community.general.dnf_versionlock:
+        name: 'sudo'
+        state: 'present'
+
+- name: 'Converge dnf_versionlock playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.dnf_versionlock'
