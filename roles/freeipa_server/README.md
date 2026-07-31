@@ -462,14 +462,14 @@ freeipa_server__ipa_admin_password: 'linuxfabrik'
         * Optional. List of host group names.
         * Type: List.
 
-    * `cmds`:
+    * `allow_sudocmds`:
 
-        * Optional. List of sudo command names.
+        * Optional. List of sudo command names the rule allows.
         * Type: List.
 
-    * `cmdgroups`:
+    * `allow_sudocmdgroups`:
 
-        * Optional. List of sudo command group names.
+        * Optional. List of sudo command group names the rule allows.
         * Type: List.
 
     * `runasusers`:
@@ -614,7 +614,7 @@ freeipa_server__sudorules__host_var:
     groups:
       - 'developers'
     hostcategory: 'all'
-    cmdgroups:
+    allow_sudocmdgroups:
       - 'network_cmds'
     options:
       - '!authenticate'

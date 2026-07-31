@@ -501,8 +501,8 @@
       group: '{{ item["groups"] | default(omit) }}'
       host: '{{ item["hosts"] | default(omit) }}'
       hostgroup: '{{ item["hostgroups"] | default(omit) }}'
-      cmd: '{{ item["cmds"] | default(omit) }}'
-      cmdgroup: '{{ item["cmdgroups"] | default(omit) }}'
+      allow_sudocmd: '{{ item["allow_sudocmds"] | default(omit) }}'
+      allow_sudocmdgroup: '{{ item["allow_sudocmdgroups"] | default(omit) }}'
       runasuser: '{{ item["runasusers"] | default(omit) }}'
       runasgroup: '{{ item["runasgroups"] | default(omit) }}'
       sudooption: '{{ item["options"] | default(omit) }}'
@@ -511,7 +511,7 @@
             + (freeipa_server__sudorules__combined_var | selectattr("state", "undefined") | list) }}'
     loop_control:
       label: '{{ item["name"] }}'
-    when: 'item["users"] is defined or item["groups"] is defined or item["hosts"] is defined or item["hostgroups"] is defined or item["cmds"] is defined or item["cmdgroups"] is defined or item["runasusers"] is defined or item["runasgroups"] is defined or item["options"] is defined'
+    when: 'item["users"] is defined or item["groups"] is defined or item["hosts"] is defined or item["hostgroups"] is defined or item["allow_sudocmds"] is defined or item["allow_sudocmdgroups"] is defined or item["runasusers"] is defined or item["runasgroups"] is defined or item["options"] is defined'
 
   - name: 'Enable or disable FreeIPA sudo rules'
     # freeipa.ansible_freeipa.ipasudorule: # TODO: switch back once https://github.com/freeipa/ansible-freeipa/pull/1415 is merged and released
