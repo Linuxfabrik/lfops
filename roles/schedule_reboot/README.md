@@ -5,7 +5,7 @@ This role provides a single, windowed reboot mechanism for a host. A reboot is r
 Other roles reuse this mechanism instead of rebooting themselves: they drop a request file and let this role reboot the host once, at the window. The [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update) role works this way.
 
 
-*Available in the next LFOps release.*
+*Available since LFOps `8.0.0`.*
 
 
 ## How the Role Behaves

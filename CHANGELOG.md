@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+tbd
+
+
+## [v8.0.0] - 2026-07-31
+
 ### Breaking Changes
 
 * **role:dnf_versionlock**: Rename `dnf_versionlock__versionlocks` to `dnf_versionlock__versionlocks__group_var` / `__host_var` and change it from a list of strings to a list of dictionaries (`name`, plus the optional `raw` and `state` subkeys). The role no longer rewrites the whole lock list, so locks set elsewhere (for example by `monitoring_plugins`) survive, but removing an entry from the inventory no longer unlocks the package: set `state: 'absent'` instead.
@@ -999,7 +1004,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **module_util:gnupg**: Add new module util
 
 
-[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v7.0.0...HEAD
+[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v8.0.0...HEAD
+[v8.0.0]: https://github.com/Linuxfabrik/lfops/compare/v7.0.0...v8.0.0
 [v7.0.0]: https://github.com/Linuxfabrik/lfops/compare/v6.0.1...v7.0.0
 [v6.0.1]: https://github.com/Linuxfabrik/lfops/compare/v6.0.0...v6.0.1
 [v6.0.0]: https://github.com/Linuxfabrik/lfops/compare/v5.1.0...v6.0.0

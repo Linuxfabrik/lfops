@@ -5,7 +5,7 @@ This role imports Apache (or other) access logs into [Matomo](https://matomo.org
 This is the batch counterpart to the realtime piped-log tracking documented in the [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role. Both share the same `import_logs.py`, which this role deploys.
 
 
-*Available in the next LFOps release.*
+*Available since LFOps `8.0.0`.*
 
 
 ## How the Role Behaves

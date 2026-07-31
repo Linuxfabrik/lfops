@@ -3,7 +3,7 @@
 This role installs and activates the [Trend Vision One Endpoint Security](https://www.trendmicro.com/en_us/business/products/hybrid-cloud/vision-one-endpoint-security.html) agent (`v1es`) on Linux servers. It covers pre-flight checks, agent download and installation via the XBC API, agent registration, and Server & Workload Protection (SWP) activation.
 
 
-*Available in the next LFOps release.*
+*Available since LFOps `8.0.0`.*
 
 
 ## How the Role Behaves
