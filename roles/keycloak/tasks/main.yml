@@ -202,8 +202,8 @@
       validate_certs: false
     register: '__keycloak__admin_token_result'
     until: '__keycloak__admin_token_result["status"] | d(0) == 200'
-    retries: 30
-    delay: 5
+    retries: 10
+    delay: 6
     no_log: true
     changed_when: false
     check_mode: false
