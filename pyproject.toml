@@ -12,14 +12,20 @@
 # https://github.com/Linuxfabrik/lfops/issues/221) so unrelated commits
 # don't fail the hook. Drop entries from .vulture_whitelist.py as the
 # real issues are fixed.
-paths = ["plugins", ".vulture_whitelist.py"]
+paths = ['plugins', '.vulture_whitelist.py']
 min_confidence = 80
 
 [tool.pytest.ini_options]
 # Unit tests for the in-house plugins. The matrix of Python / ansible-core
 # versions is driven by tox; see tox.ini.
-testpaths = ["tests/unit"]
+testpaths = ['tests/unit']
 # importlib mode lets same-named test files live in different plugin-type
 # directories (e.g. modules/ and lookup/ both have test_bitwarden_item.py)
 # without needing __init__.py packages.
-addopts = ["--import-mode=importlib"]
+addopts = ['--import-mode=importlib']
+
+[tool.bandit]
+# B110 (try/except/pass) and B112 (try/except/continue): intentional patterns
+# for graceful degradation.
+# B311 (pseudo-random): not used for cryptographic purposes.
+skips = ['B110', 'B112', 'B311']
