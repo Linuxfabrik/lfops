@@ -36,7 +36,7 @@ jobs:
         uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' # v7.0.1
 
       - name: 'Log in to GitHub Container Registry'
-        uses: 'redhat-actions/podman-login@4934294ad0449894bcd1e9f191899d7292469603' # v1.7
+        uses: 'redhat-actions/podman-login@50c2d9a331bb67c8fdab99b86455fad05e2e3252' # v2.0
         with:
           registry: 'ghcr.io'
           username: '${{ github.actor }}'
