@@ -25,7 +25,6 @@ import textwrap
 import unittest
 
 import yaml
-
 from ansible.errors import AnsibleFilterError
 
 # The plugin lives outside any importable package, so load it by path

@@ -223,7 +223,9 @@ def main():
             '--output=json',
             'config:app:get',
             app,
-        ] + name.split() # occ expects each part of the name as a separate argument
+            # occ expects each part of the name as a separate argument
+            *name.split(),
+        ]
 
         try:
             get_rc, get_stdout, _ = module.run_command(get_cmd)
@@ -270,7 +272,9 @@ def main():
             f'--value={value}',
             f'--type={value_type}',
             app,
-        ] + name.split() # occ expects each part of the name as a separate argument
+            # occ expects each part of the name as a separate argument
+            *name.split(),
+        ]
 
         try:
             set_rc, set_stdout, set_stderr = module.run_command(set_cmd, check_rc=True)
@@ -309,7 +313,9 @@ def main():
             '--no-interaction',
             'config:app:delete',
             app,
-        ] + name.split() # occ expects each part of the name as a separate argument
+            # occ expects each part of the name as a separate argument
+            *name.split(),
+        ]
 
         try:
             delete_rc, delete_stdout, delete_stderr = module.run_command(delete_cmd, check_rc=True)

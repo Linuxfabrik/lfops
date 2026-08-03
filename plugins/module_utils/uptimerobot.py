@@ -29,7 +29,6 @@ from urllib.parse import urlencode
 
 from ansible.module_utils.urls import fetch_url
 
-
 API_BASE = 'https://api.uptimerobot.com/v2/'
 ENV_API_KEY = 'UPTIMEROBOT_API_KEY'
 DEFAULT_API_KEY_FILE = '~/.uptimerobot'

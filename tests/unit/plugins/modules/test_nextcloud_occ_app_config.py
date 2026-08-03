@@ -23,8 +23,9 @@ __metaclass__ = type
 import unittest
 
 import ansible_harness
-
-from ansible_collections.linuxfabrik.lfops.plugins.modules import nextcloud_occ_app_config as mod
+from ansible_collections.linuxfabrik.lfops.plugins.modules import (
+    nextcloud_occ_app_config as mod,
+)
 
 
 class TestValuesMatch(unittest.TestCase):

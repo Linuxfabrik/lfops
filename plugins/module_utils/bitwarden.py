@@ -98,7 +98,7 @@ def prepare_multipart_no_base64(fields):
                     mime = mimetypes.guess_type(filename or '', strict=False)[0] or 'application/octet-stream'
                 except Exception:
                     mime = 'application/octet-stream'
-            main_type, sep, sub_type = mime.partition('/')
+            main_type, _sep, sub_type = mime.partition('/')
         else:
             raise TypeError(
                 f'value must be a string, or mapping, cannot be type {value.__class__.__name__}'
@@ -134,7 +134,7 @@ def prepare_multipart_no_base64(fields):
     b_data = m.as_bytes(policy=email.policy.HTTP)
     del m
 
-    headers, sep, b_content = b_data.partition(b'\r\n\r\n')
+    headers, _sep, b_content = b_data.partition(b'\r\n\r\n')
     del b_data
 
     parser = email.parser.BytesHeaderParser().parsebytes
@@ -174,7 +174,7 @@ class Bitwarden:
                 try:
                     content_type, body = prepare_multipart_no_base64(body)
                 except (TypeError, ValueError) as e:
-                    raise BitwardenException(f'failed to parse body as form-multipart: {to_native(e)}')
+                    raise BitwardenException(f'failed to parse body as form-multipart: {to_native(e)}') from e
                 headers['Content-Type'] = content_type
 
         # mostly taken from ansible.builtin.url lookup plugin
@@ -182,18 +182,18 @@ class Bitwarden:
             # increased the timeout since listing all items via `list/object/items` takes forever (13s for ~2500 items)
             response = open_url(url, method=method, data=body, headers=headers, timeout=60)
         except HTTPError as e:
-            raise BitwardenException(f'Received HTTP error for {url} : {to_native(e)}')
+            raise BitwardenException(f'Received HTTP error for {url} : {to_native(e)}') from e
         except URLError as e:
-            raise BitwardenException(f'Failed lookup url for {url} : {to_native(e)}')
+            raise BitwardenException(f'Failed lookup url for {url} : {to_native(e)}') from e
         except SSLValidationError as e:
-            raise BitwardenException(f"Error validating the server's certificate for {url}: {to_native(e)}")
+            raise BitwardenException(f"Error validating the server's certificate for {url}: {to_native(e)}") from e
         except ConnectionError as e:
-            raise BitwardenException(f'Error connecting to {url}: {to_native(e)}')
+            raise BitwardenException(f'Error connecting to {url}: {to_native(e)}') from e
 
         try:
             result = json.loads(to_text(response.read()))
         except json.decoder.JSONDecodeError as e:
-            raise BitwardenException(f'Unable to load JSON: {to_native(e)}')
+            raise BitwardenException(f'Unable to load JSON: {to_native(e)}') from e
 
         if not result.get('success'):
             raise BitwardenException(f"API call failed: {result.get('data')}")
@@ -213,7 +213,7 @@ class Bitwarden:
                 item_count = len(self._cache['items']) if self._cache['items'] is not None else 0
                 display.vvv(f'lfbw - cache loaded from {CACHE_FILE} ({item_count} items)')
                 return
-        except (IOError, OSError, ValueError, json.decoder.JSONDecodeError):
+        except (OSError, ValueError, json.decoder.JSONDecodeError):
             pass
         self._cache = {
             'version': CACHE_VERSION,
@@ -240,7 +240,7 @@ class Bitwarden:
             except Exception:
                 os.unlink(tmp_path)
                 raise
-        except (IOError, OSError):
+        except OSError:
             display.vvv(f'lfbw - failed to save cache to {CACHE_FILE}')
 
 

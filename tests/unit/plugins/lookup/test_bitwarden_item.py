@@ -18,15 +18,18 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import unittest
+from typing import ClassVar
 
 from ansible.errors import AnsibleError
-from ansible_collections.linuxfabrik.lfops.plugins.lookup import bitwarden_item as lookup_mod
+from ansible_collections.linuxfabrik.lfops.plugins.lookup import (
+    bitwarden_item as lookup_mod,
+)
 
 
 class _FakeBitwarden:
     """Minimal stand-in for the Bitwarden client used by the lookup."""
 
-    items_by_search = []
+    items_by_search: ClassVar[list] = []
     item_by_id = None
 
     def __init__(self, *args, **kwargs):

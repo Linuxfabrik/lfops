@@ -166,10 +166,8 @@ def select(conn, sql, data=None, fetchone=False, as_dict=True):
         # https://stackoverflow.com/questions/3300464/how-can-i-get-dict-from-sqlite-query
         if as_dict:
             if fetchone:
-                try:
-                    return (True, [dict(row) for row in c.fetchall()][0])
-                except IndexError:
-                    return (True, [])
+                rows = [dict(row) for row in c.fetchall()]
+                return (True, rows[0] if rows else [])
             return (True, [dict(row) for row in c.fetchall()])
         if fetchone:
             return (True,  c.fetchone())

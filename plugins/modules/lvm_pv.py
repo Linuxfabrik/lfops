@@ -83,7 +83,7 @@ def get_pv_status(module, device):
 def get_pv_size(module, device):
     """Get current PV size in bytes."""
     cmd = ["pvs", "--noheadings", "--nosuffix", "--units", "b", "-o", "pv_size", device]
-    rc, out, err = module.run_command(cmd, check_rc=True)
+    _rc, out, _err = module.run_command(cmd, check_rc=True)
     return int(out.strip())
 
 
@@ -151,7 +151,7 @@ def main():
                 if force:
                     cmd.append("-f")
                 cmd.append(device)
-                rc, out, err = module.run_command(cmd, check_rc=True)
+                _rc, _out, _err = module.run_command(cmd, check_rc=True)
                 changed = True
                 actions.append("created")
             is_pv = True
@@ -167,7 +167,7 @@ def main():
                 if rescan_device(module, device):
                     actions.append("rescanned")
                 original_size = get_pv_size(module, device)
-                rc, out, err = module.run_command(["pvresize", device], check_rc=True)
+                _rc, _out, _err = module.run_command(["pvresize", device], check_rc=True)
                 new_size = get_pv_size(module, device)
                 if new_size != original_size:
                     changed = True
@@ -184,7 +184,7 @@ def main():
                     cmd.append("-ff")
                 changed = True
                 cmd.append(device)
-                rc, out, err = module.run_command(cmd, check_rc=True)
+                _rc, _out, _err = module.run_command(cmd, check_rc=True)
                 actions.append("removed")
 
     # Generate final message

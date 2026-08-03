@@ -258,8 +258,9 @@ username:
 import os
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.linuxfabrik.lfops.plugins.module_utils.bitwarden import \
-    Bitwarden
+from ansible_collections.linuxfabrik.lfops.plugins.module_utils.bitwarden import (
+    Bitwarden,
+)
 
 
 def diff_and_update(current, target):
@@ -389,7 +390,7 @@ def run_module():
         result = target_item if module.check_mode else bw.create_item(target_item)
 
     if attachments:
-        current_attachments = set(current_attachment['fileName'] for current_attachment in result.get('attachments', []))
+        current_attachments = {current_attachment['fileName'] for current_attachment in result.get('attachments', [])}
         attachments_changed = False
         for attachment in attachments:
             if os.path.basename(attachment) not in current_attachments:

@@ -248,7 +248,6 @@ import traceback
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
-
 from ansible_collections.linuxfabrik.lfops.plugins.module_utils.gnupg import GPG
 
 logger = logging.getLogger('gnupg')
@@ -307,7 +306,7 @@ def match_key(key, params):
         # if there is at least one matching subkey, we assume a match. the unattended creation can only create a single subkey,
         # howerever, it is possible to add another one manually later.
         first_subkey_match = None
-        for subkey_id, subkey in key['subkey_info'].items():
+        for _subkey_id, subkey in key['subkey_info'].items():
 
             if algo_ids.get(int(subkey['algo']), 'Unknown') != params['subkey_type']:
                 continue

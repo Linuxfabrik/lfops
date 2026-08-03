@@ -18,12 +18,10 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import os
 import tempfile
 import unittest
 
 import ansible_harness
-
 from ansible_collections.linuxfabrik.lfops.plugins.modules import sqlite_query as mod
 
 
@@ -98,7 +96,7 @@ class TestMain(unittest.TestCase):
 
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp(prefix='lfops_sqlite_main_test_')
-        ok, conn = mod.connect(path=self.tmpdir, filename='main.db')
+        _ok, conn = mod.connect(path=self.tmpdir, filename='main.db')
         conn.execute('CREATE TABLE t (id INTEGER)')
         conn.execute('INSERT INTO t VALUES (1)')
         conn.commit()
@@ -108,9 +106,10 @@ class TestMain(unittest.TestCase):
         ansible_harness.set_module_args({
             'path': self.tmpdir, 'db': 'main.db', 'query': 'SELECT id FROM t',
         })
-        with ansible_harness.patch_module():
-            with self.assertRaises(ansible_harness.AnsibleExitJson) as cm:
-                mod.main()
+        with ansible_harness.patch_module(), self.assertRaises(
+            ansible_harness.AnsibleExitJson
+        ) as cm:
+            mod.main()
         self.assertEqual(cm.exception.args[0]['query_result'], [{'id': 1}])
         self.assertFalse(cm.exception.args[0]['changed'])
 
@@ -118,9 +117,10 @@ class TestMain(unittest.TestCase):
         ansible_harness.set_module_args({
             'path': self.tmpdir, 'db': 'main.db', 'query': 'SELECT * FROM does_not_exist',
         })
-        with ansible_harness.patch_module():
-            with self.assertRaises(ansible_harness.AnsibleFailJson) as cm:
-                mod.main()
+        with ansible_harness.patch_module(), self.assertRaises(
+            ansible_harness.AnsibleFailJson
+        ) as cm:
+            mod.main()
         self.assertIn('Query failed', cm.exception.args[0]['msg'])
 
 

@@ -283,8 +283,9 @@ username:
 from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
 from ansible.utils.display import Display
-from ansible_collections.linuxfabrik.lfops.plugins.module_utils.bitwarden import \
-    Bitwarden
+from ansible_collections.linuxfabrik.lfops.plugins.module_utils.bitwarden import (
+    Bitwarden,
+)
 
 display = Display()  # log prefix "lfbwlp" = Linuxfabrik Bitwarden Lookup Plugin
 
@@ -319,7 +320,7 @@ class LookupModule(LookupBase):
                 uris = term.get('uris', [])
                 username = term.get('username', None)
             except Exception as e:
-                raise AnsibleError(f'Encountered exception while fetching {term}: {e}')
+                raise AnsibleError(f'Encountered exception while fetching {term}: {e}') from e
 
             if id_:
                 result = bw.get_item_by_id(id_)

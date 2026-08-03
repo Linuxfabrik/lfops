@@ -20,7 +20,9 @@ __metaclass__ = type
 
 import unittest
 
-from ansible_collections.linuxfabrik.lfops.plugins.modules import uptimerobot_monitor as mod
+from ansible_collections.linuxfabrik.lfops.plugins.modules import (
+    uptimerobot_monitor as mod,
+)
 
 
 class TestNormalizeAlertContacts(unittest.TestCase):

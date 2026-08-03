@@ -22,11 +22,13 @@ __metaclass__ = type
 import copy
 import unittest
 import unittest.mock
+from typing import ClassVar
 
 import ansible_harness
-
 from ansible_collections.linuxfabrik.lfops.plugins.modules import bitwarden_item as mod
-from ansible_collections.linuxfabrik.lfops.plugins.modules.bitwarden_item import diff_and_update
+from ansible_collections.linuxfabrik.lfops.plugins.modules.bitwarden_item import (
+    diff_and_update,
+)
 
 
 class TestDiffAndUpdate(unittest.TestCase):
@@ -34,7 +36,7 @@ class TestDiffAndUpdate(unittest.TestCase):
     def test_takes_over_id(self):
         current = {'id': 'abc', 'name': 'x'}
         target = {'name': 'x'}
-        changed, updated = diff_and_update(current, target)
+        _changed, updated = diff_and_update(current, target)
         self.assertEqual(updated['id'], 'abc')
 
     def test_no_change_when_equal(self):
@@ -83,9 +85,9 @@ _EXISTING_ITEM = {
 class _FakeBitwarden:
     """Stand-in for the Bitwarden client; records writes instead of doing them."""
 
-    items = []
-    edited = []
-    created = []
+    items: ClassVar[list] = []
+    edited: ClassVar[list] = []
+    created: ClassVar[list] = []
 
     def __init__(self, *args, **kwargs):
         pass

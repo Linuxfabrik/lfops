@@ -224,7 +224,7 @@ def combine_lod(*args, **kwargs):
 
 
 
-class FilterModule(object):
+class FilterModule:
     """Register custom filter plugins in Ansible"""
 
     def filters(self):

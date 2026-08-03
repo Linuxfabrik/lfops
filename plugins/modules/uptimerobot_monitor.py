@@ -314,7 +314,6 @@ debug:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.linuxfabrik.lfops.plugins.module_utils import uptimerobot as ur
 
-
 # Fields we ship to new_monitor / edit_monitor and that we also diff against
 # the API's current state to decide whether an edit call is needed.
 _MONITOR_DIFFABLE_FIELDS = [

@@ -126,7 +126,7 @@ def platform_select(values, ansible_facts, default=_SENTINEL):
     )
 
 
-class FilterModule(object):
+class FilterModule:
     """Register custom filter plugins in Ansible"""
 
     def filters(self):

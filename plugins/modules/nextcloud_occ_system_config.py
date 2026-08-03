@@ -109,6 +109,7 @@ import traceback
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
 
+
 def main():
     # define available arguments/parameters a user can pass to this module
     module_args = dict(
@@ -191,7 +192,9 @@ def main():
             occ_path,
             '--no-interaction',
             'config:system:get',
-        ] + name.split() # occ expects each part of the name as a separate argument
+            # occ expects each part of the name as a separate argument
+            *name.split(),
+        ]
 
         try:
             get_rc, get_stdout, _ = module.run_command(get_cmd)
@@ -230,7 +233,9 @@ def main():
             'config:system:set',
             f'--value={value}',
             f'--type={value_type}',
-        ] + name.split() # occ expects each part of the name as a separate argument
+            # occ expects each part of the name as a separate argument
+            *name.split(),
+        ]
 
         try:
             set_rc, set_stdout, set_stderr = module.run_command(set_cmd, check_rc=True)
@@ -268,7 +273,9 @@ def main():
             occ_path,
             '--no-interaction',
             'config:system:delete',
-        ] + name.split() # occ expects each part of the name as a separate argument
+            # occ expects each part of the name as a separate argument
+            *name.split(),
+        ]
 
         try:
             delete_rc, delete_stdout, delete_stderr = module.run_command(delete_cmd, check_rc=True)

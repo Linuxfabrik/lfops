@@ -22,7 +22,6 @@ import unittest
 
 from ansible_collections.linuxfabrik.lfops.plugins.modules import gpg_key
 
-
 _KEY = {
     'algo': '1',          # 1 -> RSA
     'length': '2048',

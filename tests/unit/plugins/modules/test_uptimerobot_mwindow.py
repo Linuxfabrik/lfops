@@ -17,7 +17,9 @@ __metaclass__ = type
 
 import unittest
 
-from ansible_collections.linuxfabrik.lfops.plugins.modules import uptimerobot_mwindow as mod
+from ansible_collections.linuxfabrik.lfops.plugins.modules import (
+    uptimerobot_mwindow as mod,
+)
 
 
 class TestHhmmToMinutes(unittest.TestCase):
