@@ -32,6 +32,7 @@ from ansible.module_utils.urls import ConnectionError, SSLValidationError, open_
 
 try:
     from ansible.utils.display import Display
+
     display = Display()
 except ImportError:
     # When used from a module (not a lookup plugin), this code runs inside an AnsiballZ
@@ -39,6 +40,7 @@ except ImportError:
     class _NoopDisplay:
         def vvv(self, msg, **kwargs):
             pass
+
     display = _NoopDisplay()
 
 
@@ -95,7 +97,10 @@ def prepare_multipart_no_base64(fields):
             mime = value.get('mime_type')
             if not mime:
                 try:
-                    mime = mimetypes.guess_type(filename or '', strict=False)[0] or 'application/octet-stream'
+                    mime = (
+                        mimetypes.guess_type(filename or '', strict=False)[0]
+                        or 'application/octet-stream'
+                    )
                 except Exception:
                     mime = 'application/octet-stream'
             main_type, _sep, sub_type = mime.partition('/')
@@ -106,7 +111,9 @@ def prepare_multipart_no_base64(fields):
 
         if not content and filename:
             with open(to_bytes(filename, errors='surrogate_or_strict'), 'rb') as f:
-                part = email.mime.application.MIMEApplication(f.read(), _encoder=email.encoders.encode_noop)
+                part = email.mime.application.MIMEApplication(
+                    f.read(), _encoder=email.encoders.encode_noop
+                )
                 del part['Content-Type']
                 part.add_header('Content-Type', f'{main_type}/{sub_type}')
         else:
@@ -115,16 +122,12 @@ def prepare_multipart_no_base64(fields):
 
         part.add_header('Content-Disposition', 'form-data')
         del part['MIME-Version']
-        part.set_param(
-            'name',
-            field,
-            header='Content-Disposition'
-        )
+        part.set_param('name', field, header='Content-Disposition')
         if filename:
             part.set_param(
                 'filename',
                 to_native(os.path.basename(filename)),
-                header='Content-Disposition'
+                header='Content-Disposition',
             )
 
         m.attach(part)
@@ -141,7 +144,7 @@ def prepare_multipart_no_base64(fields):
 
     return (
         parser(headers)['content-type'],  # Message converts to native strings
-        b_content
+        b_content,
     )
 
 
@@ -174,21 +177,33 @@ class Bitwarden:
                 try:
                     content_type, body = prepare_multipart_no_base64(body)
                 except (TypeError, ValueError) as e:
-                    raise BitwardenException(f'failed to parse body as form-multipart: {to_native(e)}') from e
+                    raise BitwardenException(
+                        f'failed to parse body as form-multipart: {to_native(e)}'
+                    ) from e
                 headers['Content-Type'] = content_type
 
         # mostly taken from ansible.builtin.url lookup plugin
         try:
             # increased the timeout since listing all items via `list/object/items` takes forever (13s for ~2500 items)
-            response = open_url(url, method=method, data=body, headers=headers, timeout=60)
+            response = open_url(
+                url, method=method, data=body, headers=headers, timeout=60
+            )
         except HTTPError as e:
-            raise BitwardenException(f'Received HTTP error for {url} : {to_native(e)}') from e
+            raise BitwardenException(
+                f'Received HTTP error for {url} : {to_native(e)}'
+            ) from e
         except URLError as e:
-            raise BitwardenException(f'Failed lookup url for {url} : {to_native(e)}') from e
+            raise BitwardenException(
+                f'Failed lookup url for {url} : {to_native(e)}'
+            ) from e
         except SSLValidationError as e:
-            raise BitwardenException(f"Error validating the server's certificate for {url}: {to_native(e)}") from e
+            raise BitwardenException(
+                f"Error validating the server's certificate for {url}: {to_native(e)}"
+            ) from e
         except ConnectionError as e:
-            raise BitwardenException(f'Error connecting to {url}: {to_native(e)}') from e
+            raise BitwardenException(
+                f'Error connecting to {url}: {to_native(e)}'
+            ) from e
 
         try:
             result = json.loads(to_text(response.read()))
@@ -196,10 +211,9 @@ class Bitwarden:
             raise BitwardenException(f'Unable to load JSON: {to_native(e)}') from e
 
         if not result.get('success'):
-            raise BitwardenException(f"API call failed: {result.get('data')}")
+            raise BitwardenException(f'API call failed: {result.get("data")}')
 
         return result
-
 
     def _load_cache(self):
         """Load the cache from disk. If missing, unreadable, or invalid, start with an empty cache.
@@ -210,8 +224,12 @@ class Bitwarden:
                 data = json.load(f)
             if data.get('version') == CACHE_VERSION:
                 self._cache = data
-                item_count = len(self._cache['items']) if self._cache['items'] is not None else 0
-                display.vvv(f'lfbw - cache loaded from {CACHE_FILE} ({item_count} items)')
+                item_count = (
+                    len(self._cache['items']) if self._cache['items'] is not None else 0
+                )
+                display.vvv(
+                    f'lfbw - cache loaded from {CACHE_FILE} ({item_count} items)'
+                )
                 return
         except (OSError, ValueError, json.decoder.JSONDecodeError):
             pass
@@ -223,10 +241,8 @@ class Bitwarden:
         }
         display.vvv('lfbw - no valid cache found, starting fresh')
 
-
     def _save_cache(self):
-        """Write the cache to disk atomically.
-        """
+        """Write the cache to disk atomically."""
         try:
             fd, tmp_path = tempfile.mkstemp(
                 dir=os.path.dirname(CACHE_FILE),
@@ -243,7 +259,6 @@ class Bitwarden:
         except OSError:
             display.vvv(f'lfbw - failed to save cache to {CACHE_FILE}')
 
-
     def _get_template(self, template_name):
         """Return a template from cache, fetching from API on first use.
         Templates are static API schema definitions that never change.
@@ -257,14 +272,11 @@ class Bitwarden:
             display.vvv(f'lfbw - using cached template "{template_name}"')
         return copy.deepcopy(self._cache['templates'][template_name])
 
-
     @property
     def is_unlocked(self):
-        """Check if the Bitwarden vault is unlocked.
-        """
+        """Check if the Bitwarden vault is unlocked."""
         result = self._api_call('status')
         return result['data']['template']['status'] == 'unlocked'
-
 
     def sync(self, force=False, interval=60):
         """Pull the latest vault data from server and repopulate the items cache.
@@ -278,11 +290,17 @@ class Bitwarden:
         result = self._api_call('list/object/items')
         self._cache['items'] = result['data']['data']
         self._cache['sync_timestamp'] = time.time()
-        display.vvv(f"lfbw - sync complete, cached {len(self._cache['items'])} items")
+        display.vvv(f'lfbw - sync complete, cached {len(self._cache["items"])} items')
         self._save_cache()
 
-
-    def get_items(self, name, username=None, folder_id=None, collection_id=None, organization_id=None):
+    def get_items(
+        self,
+        name,
+        username=None,
+        folder_id=None,
+        collection_id=None,
+        organization_id=None,
+    ):
         """Search for items in Bitwarden. Returns a list of the items that *exactly* matches all the parameters.
 
         A complete object:
@@ -330,22 +348,22 @@ class Bitwarden:
         matching_items = []
         for item in self._cache['items']:
             if item.get('type') != 1:
-                continue # skip non-login items (cards, secure notes, identities)
-            if item['name'] == name \
-            and (item['login']['username'] == username) \
-            and (item.get('folderId') == folder_id) \
-            and (
-                # cover case if collectionIds is an empty list
-                (collection_id is None and not item.get('collectionIds')) \
-                or \
-                (collection_id in item.get('collectionIds', [])) \
-            ) \
-            and (item.get('organizationId') == organization_id):
+                continue  # skip non-login items (cards, secure notes, identities)
+            if (
+                item['name'] == name
+                and (item['login']['username'] == username)
+                and (item.get('folderId') == folder_id)
+                and (
+                    # cover case if collectionIds is an empty list
+                    (collection_id is None and not item.get('collectionIds'))
+                    or (collection_id in item.get('collectionIds', []))
+                )
+                and (item.get('organizationId') == organization_id)
+            ):
                 matching_items.append(item)
 
         display.vvv(f'lfbw - found {len(matching_items)} matching item(s)')
         return matching_items
-
 
     def get_item_by_id(self, item_id):
         """Get an item by ID from Bitwarden. Looks in the cache first, then falls back to the
@@ -362,8 +380,11 @@ class Bitwarden:
         result = self._api_call(f'object/item/{item_id}')
         return result['data']
 
-
-    def generate(self, password_length=60, password_choice='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'):  # nosec B107 - this is the character set to draw from, not a password
+    def generate(
+        self,
+        password_length=60,
+        password_choice='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    ):  # nosec B107 - this is the character set to draw from, not a password
         """Generates a random password of a given length. If you want to generate a hex-based
         password, ensure that password_length is positive and even (as hex characters typically
         come in pairs representing bytes), and that password_choice is set to '0123456789abcdef'.
@@ -375,9 +396,10 @@ class Bitwarden:
         if password_length <= 0:
             raise ValueError('Password length must be a positive integer.')
         if password_choice.lower() == '0123456789abcdef' and password_length % 2 != 0:
-            raise ValueError('Password length must be an even number to represent full hex bytes.')
+            raise ValueError(
+                'Password length must be an even number to represent full hex bytes.'
+            )
         return ''.join(secrets.choice(password_choice) for _ in range(password_length))
-
 
     def get_template_item_login_uri(self, uris):
         """Get an item.login.uri object from the vault.
@@ -393,12 +415,13 @@ class Bitwarden:
         if uris:
             template = self._get_template('item.login.uri')
             for uri in uris:
-                login_uri = template.copy() # make sure we are not editing the same object repeatedly
+                login_uri = (
+                    template.copy()
+                )  # make sure we are not editing the same object repeatedly
                 login_uri['uri'] = uri
                 login_uris.append(login_uri)
 
         return login_uris
-
 
     def get_template_item_login(self, username=None, password=None, login_uris=None):
         """Get an item.login object from the vault.
@@ -420,8 +443,15 @@ class Bitwarden:
 
         return login
 
-
-    def get_template_item(self, name, login=None, notes=None, organization_id=None, collection_ids=None, folder_id=None):
+    def get_template_item(
+        self,
+        name,
+        login=None,
+        notes=None,
+        organization_id=None,
+        collection_ids=None,
+        folder_id=None,
+    ):
         """Get an item.login object from the vault.
 
         A complete item object:
@@ -452,10 +482,8 @@ class Bitwarden:
 
         return item
 
-
     def create_item(self, item):
-        """Creates an item object in Bitwarden.
-        """
+        """Creates an item object in Bitwarden."""
         display.vvv(f'lfbw - creating item "{item.get("name", "")}"')
         result = self._api_call('object/item', method='POST', body=item)
         self._cache['items'].append(result['data'])
@@ -463,10 +491,8 @@ class Bitwarden:
         time.sleep(1)
         return result['data']
 
-
     def edit_item(self, item, item_id):
-        """Edits an item object in Bitwarden.
-        """
+        """Edits an item object in Bitwarden."""
         display.vvv(f'lfbw - editing item {item_id}')
         result = self._api_call(f'object/item/{item_id}', method='PUT', body=item)
         for i, cached_item in enumerate(self._cache['items']):
@@ -477,10 +503,8 @@ class Bitwarden:
         time.sleep(1)
         return result['data']
 
-
     def add_attachment(self, item_id, attachment_path):
-        """Adds the file at `attachment_path` to the item specified by `item_id`
-        """
+        """Adds the file at `attachment_path` to the item specified by `item_id`"""
         display.vvv(f'lfbw - adding attachment "{attachment_path}" to item {item_id}')
 
         body = {
@@ -488,7 +512,12 @@ class Bitwarden:
                 'filename': attachment_path,
             },
         }
-        result = self._api_call(f'attachment?itemId={item_id}', method='POST', body=body, body_format='form-multipart')
+        result = self._api_call(
+            f'attachment?itemId={item_id}',
+            method='POST',
+            body=body,
+            body_format='form-multipart',
+        )
         for i, cached_item in enumerate(self._cache['items']):
             if cached_item.get('id') == item_id:
                 self._cache['items'][i] = result['data']

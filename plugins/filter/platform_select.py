@@ -12,7 +12,7 @@ __metaclass__ = type
 
 from ansible.errors import AnsibleFilterError
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
   name: platform_select
   version_added: "6.0.2"
   short_description: Pick the value matching the target host from a platform-keyed dictionary
@@ -34,9 +34,9 @@ DOCUMENTATION = r'''
       description: Value to return when no key in I(_input) matches the target host. If omitted, an unmatched call raises C(AnsibleFilterError).
       type: raw
       required: false
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # in a role's vars/main.yml (auto-loaded at play parse, so visible to roles
 # that run earlier in the same play via the `__dependent_var` pattern):
 mariadb_server__python__modules__dependent_var:
@@ -67,13 +67,13 @@ mariadb_server__python__modules__dependent_var:
       + (apache_httpd__python__modules__dependent_var
         | linuxfabrik.lfops.platform_select(ansible_facts, default=[]))
     }}'
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
   _value:
     description: The value associated with the most specific matching key in I(_input), or the supplied I(default) if no key matches.
     type: raw
-'''
+"""
 
 
 _SENTINEL = object()
@@ -87,13 +87,13 @@ def platform_select(values, ansible_facts, default=_SENTINEL):
     """
     if not isinstance(values, dict):
         raise AnsibleFilterError(
-            "platform_select: input must be a dict keyed by platform identifier, "
-            f"got {type(values).__name__}"
+            'platform_select: input must be a dict keyed by platform identifier, '
+            f'got {type(values).__name__}'
         )
     if not isinstance(ansible_facts, dict):
         raise AnsibleFilterError(
-            "platform_select: ansible_facts must be a dict, "
-            f"got {type(ansible_facts).__name__}"
+            'platform_select: ansible_facts must be a dict, '
+            f'got {type(ansible_facts).__name__}'
         )
 
     os_family = ansible_facts.get('os_family')
@@ -106,10 +106,10 @@ def platform_select(values, ansible_facts, default=_SENTINEL):
     # least to most specific and the later (more specific) call wins.
     candidates = [
         f'{distribution}{version}' if distribution and version else None,
-        f'{distribution}{major}'   if distribution and major   else None,
+        f'{distribution}{major}' if distribution and major else None,
         distribution,
-        f'{os_family}{version}'    if os_family    and version else None,
-        f'{os_family}{major}'      if os_family    and major   else None,
+        f'{os_family}{version}' if os_family and version else None,
+        f'{os_family}{major}' if os_family and major else None,
         os_family,
     ]
     for key in candidates:
@@ -119,10 +119,10 @@ def platform_select(values, ansible_facts, default=_SENTINEL):
     if default is not _SENTINEL:
         return default
     raise AnsibleFilterError(
-        f"platform_select: no key in the input dict matched the target host "
-        f"(os_family={os_family!r}, distribution={distribution!r}, "
-        f"distribution_major_version={major!r}, distribution_version={version!r}); "
-        f"input keys: {sorted(values)}"
+        f'platform_select: no key in the input dict matched the target host '
+        f'(os_family={os_family!r}, distribution={distribution!r}, '
+        f'distribution_major_version={major!r}, distribution_version={version!r}); '
+        f'input keys: {sorted(values)}'
     )
 
 

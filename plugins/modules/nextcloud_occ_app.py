@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 module: nextcloud_occ_app
 
 short_description: Install, enable, disable or remove a Nextcloud app via occ
@@ -63,9 +63,9 @@ options:
     description:
       - Pre-fetched output of C(occ app:list --output=json), as either a JSON string or an already-parsed dict. When set, the module skips the C(app:list) call and reads the current state from this value, which avoids running C(occ) once per app when looping over a list.
     type: raw
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: 'Enable a Nextcloud app'
   linuxfabrik.lfops.nextcloud_occ_app:
     name: 'notify_push'
@@ -86,9 +86,9 @@ EXAMPLES = r'''
     name: 'notify_push'
     state: 'present'
     force: true
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 changed:
   description: Whether the app state had to be changed.
   returned: always
@@ -109,7 +109,7 @@ stdout:
   description: Standard output of the last C(occ) command that was executed.
   returned: when changed and not in check mode
   type: str
-'''
+"""
 
 import json
 import traceback
@@ -125,7 +125,9 @@ def get_current_state(module, php_path, occ_path, name, installed_apps_json):
             try:
                 app_list = json.loads(installed_apps_json)
             except (json.JSONDecodeError, ValueError):
-                module.fail_json(msg=f'Failed to parse installed_apps_json: {installed_apps_json}')
+                module.fail_json(
+                    msg=f'Failed to parse installed_apps_json: {installed_apps_json}'
+                )
         else:
             app_list = installed_apps_json
     else:
@@ -148,7 +150,9 @@ def get_current_state(module, php_path, occ_path, name, installed_apps_json):
         try:
             app_list = json.loads(stdout)
         except (json.JSONDecodeError, ValueError):
-            module.fail_json(msg=f'Failed to parse JSON from occ app:list output: {stdout}')
+            module.fail_json(
+                msg=f'Failed to parse JSON from occ app:list output: {stdout}'
+            )
 
     enabled_apps = app_list.get('enabled', {})
     disabled_apps = app_list.get('disabled', {})
@@ -163,7 +167,11 @@ def get_current_state(module, php_path, occ_path, name, installed_apps_json):
 def main():
     module_args = dict(
         name=dict(type='str', required=True),
-        state=dict(type='str', choices=['absent', 'disabled', 'enabled', 'present'], default='enabled'),
+        state=dict(
+            type='str',
+            choices=['absent', 'disabled', 'enabled', 'present'],
+            default='enabled',
+        ),
         force=dict(type='bool', default=False),
         occ_path=dict(type='str', default='/var/www/html/nextcloud/occ'),
         php_path=dict(type='str', default='php'),
@@ -183,7 +191,9 @@ def main():
 
     installed_apps_json = module.params['installed_apps_json']
 
-    current_state = get_current_state(module, php_path, occ_path, name, installed_apps_json)
+    current_state = get_current_state(
+        module, php_path, occ_path, name, installed_apps_json
+    )
 
     result = {
         'changed': False,
@@ -203,7 +213,13 @@ def main():
             cmd.append(name)
             commands.append(cmd)
         elif current_state == 'absent':
-            install_cmd = [php_path, occ_path, '--no-interaction', 'app:install', '--keep-disabled']
+            install_cmd = [
+                php_path,
+                occ_path,
+                '--no-interaction',
+                'app:install',
+                '--keep-disabled',
+            ]
             if force:
                 install_cmd.append('--force')
             install_cmd.append(name)
@@ -216,13 +232,21 @@ def main():
 
     elif state == 'disabled':
         if current_state == 'enabled':
-            commands.append([php_path, occ_path, '--no-interaction', 'app:disable', name])
+            commands.append(
+                [php_path, occ_path, '--no-interaction', 'app:disable', name]
+            )
         else:
             module.exit_json(**result)
 
     elif state == 'present':
         if current_state == 'absent':
-            install_cmd = [php_path, occ_path, '--no-interaction', 'app:install', '--keep-disabled']
+            install_cmd = [
+                php_path,
+                occ_path,
+                '--no-interaction',
+                'app:install',
+                '--keep-disabled',
+            ]
             if force:
                 install_cmd.append('--force')
             install_cmd.append(name)
@@ -234,7 +258,9 @@ def main():
         if current_state == 'absent':
             module.exit_json(**result)
         else:
-            commands.append([php_path, occ_path, '--no-interaction', 'app:remove', name])
+            commands.append(
+                [php_path, occ_path, '--no-interaction', 'app:remove', name]
+            )
 
     # if we get here, there are commands to run
     result['changed'] = True

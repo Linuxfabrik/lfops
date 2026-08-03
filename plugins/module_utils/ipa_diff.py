@@ -24,9 +24,13 @@ def _compare_key(arg, ipa_arg):
             arg = [arg]
         if len(ipa_arg) != len(arg):
             return False
-        if ipa_arg and arg and not (
-            isinstance(ipa_arg[0], type(arg[0]))
-            or isinstance(arg[0], type(ipa_arg[0]))
+        if (
+            ipa_arg
+            and arg
+            and not (
+                isinstance(ipa_arg[0], type(arg[0]))
+                or isinstance(arg[0], type(ipa_arg[0]))
+            )
         ):
             arg = [to_text(_a) for _a in arg]
         try:
@@ -52,12 +56,14 @@ class IPADiffTracker:
         """Record a diff entry for one IPA object."""
         if before == after:
             return
-        self._diffs.append({
-            'before_header': name,
-            'after_header': name,
-            'before': before,
-            'after': after,
-        })
+        self._diffs.append(
+            {
+                'before_header': name,
+                'after_header': name,
+                'before': before,
+                'after': after,
+            }
+        )
 
 
 def gen_args_diff(args, res_find, ignore=None):
@@ -77,13 +83,15 @@ def gen_args_diff(args, res_find, ignore=None):
         if key in ignore:
             continue
         arg = args[key]
-        ipa_arg = res_find.get(key, [""])
+        ipa_arg = res_find.get(key, [''])
         if not _compare_key(arg, ipa_arg):
             # Normalize for display
-            _ipa = ipa_arg[0] if isinstance(ipa_arg, (list, tuple)) \
-                and len(ipa_arg) == 1 else ipa_arg
-            _arg = arg[0] if isinstance(arg, (list, tuple)) \
-                and len(arg) == 1 else arg
+            _ipa = (
+                ipa_arg[0]
+                if isinstance(ipa_arg, (list, tuple)) and len(ipa_arg) == 1
+                else ipa_arg
+            )
+            _arg = arg[0] if isinstance(arg, (list, tuple)) and len(arg) == 1 else arg
             before[key] = _ipa
             after[key] = _arg
     return before, after
@@ -99,8 +107,7 @@ def gen_member_diff(member_key, add_list, del_list, current_list):
         return {}, {}
     current = sorted(current_list or [])
     desired = sorted(
-        [x for x in current if x not in (del_list or [])]
-        + (add_list or [])
+        [x for x in current if x not in (del_list or [])] + (add_list or [])
     )
     return {member_key: current}, {member_key: desired}
 

@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: uptimerobot_psp_info
 short_description: List UptimeRobot Public Status Pages
@@ -34,10 +34,10 @@ options:
         description:
             - Filter the returned list to the PSP whose C(friendly_name) is an exact match for this value. The result is still a list (length 0 or 1) for shape stability.
         type: str
-'''
+"""
 
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # 1) List every public status page on the account.
 - name: 'Capture all public status pages'
   linuxfabrik.lfops.uptimerobot_psp_info:
@@ -66,10 +66,10 @@ EXAMPLES = r'''
         | map(attribute="friendly_name")
         | list
       }}
-'''
+"""
 
 
-RETURN = r'''
+RETURN = r"""
 psps:
     description: List of PSP dicts. Empty list when nothing matched.
     type: list
@@ -82,7 +82,7 @@ debug:
     sample:
         operation: 'list'
         count: 2
-'''
+"""
 
 
 from ansible.module_utils.basic import AnsibleModule
@@ -98,7 +98,9 @@ def main():
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
-    api_key = ur.resolve_api_key(module, module.params.get('api_key'), module.params.get('api_key_file'))
+    api_key = ur.resolve_api_key(
+        module, module.params.get('api_key'), module.params.get('api_key_file')
+    )
     friendly_name = module.params.get('friendly_name')
 
     module.log('uptimerobot_psp_info: fetching public status pages')
@@ -110,10 +112,14 @@ def main():
         match = ur.find_by_friendly_name(psps, friendly_name)
         psps = [match] if match else []
 
-    module.exit_json(changed=False, psps=psps, debug={
-        'operation': 'list',
-        'count': len(psps),
-    })
+    module.exit_json(
+        changed=False,
+        psps=psps,
+        debug={
+            'operation': 'list',
+            'count': len(psps),
+        },
+    )
 
 
 if __name__ == '__main__':

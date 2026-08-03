@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: uptimerobot_mwindow_info
 short_description: List UptimeRobot maintenance windows
@@ -34,10 +34,10 @@ options:
         description:
             - Filter the returned list to the maintenance window whose C(friendly_name) is an exact match for this value. The result is still a list (length 0 or 1) for shape stability.
         type: str
-'''
+"""
 
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # 1) List every maintenance window on the account.
 - name: 'Capture all maintenance windows'
   linuxfabrik.lfops.uptimerobot_mwindow_info:
@@ -68,10 +68,10 @@ EXAMPLES = r'''
         | map(attribute="friendly_name")
         | list
       }}
-'''
+"""
 
 
-RETURN = r'''
+RETURN = r"""
 mwindows:
     description: List of maintenance window dicts. Empty list when nothing matched.
     type: list
@@ -84,7 +84,7 @@ debug:
     sample:
         operation: 'list'
         count: 4
-'''
+"""
 
 
 from ansible.module_utils.basic import AnsibleModule
@@ -100,7 +100,9 @@ def main():
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
-    api_key = ur.resolve_api_key(module, module.params.get('api_key'), module.params.get('api_key_file'))
+    api_key = ur.resolve_api_key(
+        module, module.params.get('api_key'), module.params.get('api_key_file')
+    )
     friendly_name = module.params.get('friendly_name')
 
     module.log('uptimerobot_mwindow_info: fetching maintenance windows')
@@ -112,10 +114,14 @@ def main():
         match = ur.find_by_friendly_name(mwindows, friendly_name)
         mwindows = [match] if match else []
 
-    module.exit_json(changed=False, mwindows=mwindows, debug={
-        'operation': 'list',
-        'count': len(mwindows),
-    })
+    module.exit_json(
+        changed=False,
+        mwindows=mwindows,
+        debug={
+            'operation': 'list',
+            'count': len(mwindows),
+        },
+    )
 
 
 if __name__ == '__main__':

@@ -42,7 +42,14 @@ class _FakeBitwarden:
     def sync(self, *args, **kwargs):
         pass
 
-    def get_items(self, name, username=None, folder_id=None, collection_id=None, organization_id=None):
+    def get_items(
+        self,
+        name,
+        username=None,
+        folder_id=None,
+        collection_id=None,
+        organization_id=None,
+    ):
         return list(type(self).items_by_search)
 
     def get_item_by_id(self, item_id):
@@ -54,7 +61,6 @@ class _FakeBitwarden:
 
 
 class _BitwardenLookupTestCase(unittest.TestCase):
-
     def setUp(self):
         self._orig = lookup_mod.Bitwarden
         lookup_mod.Bitwarden = _FakeBitwarden
@@ -67,10 +73,12 @@ class _BitwardenLookupTestCase(unittest.TestCase):
 
 
 class TestRun(_BitwardenLookupTestCase):
-
     def test_existing_single_item_lifts_credentials(self):
         _FakeBitwarden.items_by_search = [
-            {'name': 'host - db', 'login': {'username': 'dba', 'password': 'linuxfabrik'}},
+            {
+                'name': 'host - db',
+                'login': {'username': 'dba', 'password': 'linuxfabrik'},
+            },
         ]
         result = self.lookup.run([{'name': 'host - db', 'username': 'dba'}])
         self.assertEqual(len(result), 1)
@@ -79,15 +87,22 @@ class TestRun(_BitwardenLookupTestCase):
 
     def test_multiple_matches_raise(self):
         _FakeBitwarden.items_by_search = [
-            {'name': 'host - db', 'login': {'username': 'dba', 'password': 'linuxfabrik'}},
-            {'name': 'host - db', 'login': {'username': 'dba', 'password': 'linuxfabrik'}},
+            {
+                'name': 'host - db',
+                'login': {'username': 'dba', 'password': 'linuxfabrik'},
+            },
+            {
+                'name': 'host - db',
+                'login': {'username': 'dba', 'password': 'linuxfabrik'},
+            },
         ]
         with self.assertRaises(AnsibleError):
             self.lookup.run([{'name': 'host - db', 'username': 'dba'}])
 
     def test_lookup_by_id_lifts_credentials(self):
         _FakeBitwarden.item_by_id = {
-            'id': 'abc', 'login': {'username': 'dba', 'password': 'linuxfabrik'},
+            'id': 'abc',
+            'login': {'username': 'dba', 'password': 'linuxfabrik'},
         }
         result = self.lookup.run([{'id': 'abc'}])
         self.assertEqual(len(result), 1)

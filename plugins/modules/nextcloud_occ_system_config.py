@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 module: nextcloud_occ_system_config
 
 short_description: Manage a Nextcloud system configuration value via occ
@@ -65,9 +65,9 @@ options:
     description:
       - Pre-fetched output of C(occ config:list --output=json --private), as either a JSON string or an already-parsed dict. When set, the module skips the C(config:system:get) call and walks I(name) through the dict tree (descending into both dicts and lists by index), which avoids running C(occ) once per key when looping over many keys.
     type: raw
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: 'Set a system configuration value'
   linuxfabrik.lfops.nextcloud_occ_system_config:
     name: 'check_for_working_wellknown_setup'
@@ -78,9 +78,9 @@ EXAMPLES = r'''
   linuxfabrik.lfops.nextcloud_occ_system_config:
     name: 'forbidden_filename_characters 0'
     value: '*'
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 changed:
   description: Whether the value had to be changed.
   returned: always
@@ -101,7 +101,7 @@ stdout:
   description: Standard output of the C(occ config:system:set) or C(config:system:delete) command.
   returned: when changed and not in check mode
   type: str
-'''
+"""
 
 import json
 import traceback
@@ -113,13 +113,17 @@ from ansible.module_utils.common.text.converters import to_native
 def main():
     # define available arguments/parameters a user can pass to this module
     module_args = dict(
-            name=dict(type='str', required=True),
-            value=dict(type='str'),
-            type=dict(type='str', choices=['string', 'integer', 'double', 'boolean'], default='string'),
-            state=dict(type='str', choices=['absent', 'present'], default='present'),
-            occ_path=dict(type='str', default='/var/www/html/nextcloud/occ'),
-            php_path=dict(type='str', default='php'),
-            installed_config_json=dict(type='raw'),
+        name=dict(type='str', required=True),
+        value=dict(type='str'),
+        type=dict(
+            type='str',
+            choices=['string', 'integer', 'double', 'boolean'],
+            default='string',
+        ),
+        state=dict(type='str', choices=['absent', 'present'], default='present'),
+        occ_path=dict(type='str', default='/var/www/html/nextcloud/occ'),
+        php_path=dict(type='str', default='php'),
+        installed_config_json=dict(type='raw'),
     )
 
     module = AnsibleModule(
@@ -247,7 +251,6 @@ def main():
         result['stderr'] = set_stderr
         module.exit_json(**result)
 
-
     elif state == 'absent':
         if not key_exists:
             # config does not exist, so there is no change
@@ -278,7 +281,9 @@ def main():
         ]
 
         try:
-            delete_rc, delete_stdout, delete_stderr = module.run_command(delete_cmd, check_rc=True)
+            delete_rc, delete_stdout, delete_stderr = module.run_command(
+                delete_cmd, check_rc=True
+            )
         except Exception as e:
             module.fail_json(msg=to_native(e), exception=traceback.format_exc())
 

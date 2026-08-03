@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 module: nextcloud_occ_app_config
 
 short_description: Manage a Nextcloud app configuration value via occ
@@ -71,9 +71,9 @@ options:
     description:
       - Pre-fetched output of C(occ config:list --output=json --private), as either a JSON string or an already-parsed dict. When set, the module skips the C(config:app:get) call and reads the current value from this value, which avoids running C(occ) once per key when looping over many keys.
     type: raw
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: 'Set an app configuration value'
   linuxfabrik.lfops.nextcloud_occ_app_config:
     app: 'core'
@@ -82,9 +82,9 @@ EXAMPLES = r'''
     type: 'integer'
     occ_path: '/data/nextcloud/occ'
     php_path: '/usr/bin/php'
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 changed:
   description: Whether the value or type had to be changed.
   returned: always
@@ -109,7 +109,7 @@ stdout:
   description: Standard output of the C(occ config:app:set) or C(config:app:delete) command.
   returned: when changed and not in check mode
   type: str
-'''
+"""
 
 import json
 import traceback
@@ -137,14 +137,18 @@ def values_match(current_value, value, value_type):
 def main():
     # define available arguments/parameters a user can pass to this module
     module_args = dict(
-            app=dict(type='str', required=True),
-            name=dict(type='str', required=True),
-            value=dict(type='str'),
-            type=dict(type='str', choices=['string', 'integer', 'float', 'boolean', 'array'], default='string'),
-            state=dict(type='str', choices=['absent', 'present'], default='present'),
-            occ_path=dict(type='str', default='/var/www/html/nextcloud/occ'),
-            php_path=dict(type='str', default='php'),
-            installed_config_json=dict(type='raw'),
+        app=dict(type='str', required=True),
+        name=dict(type='str', required=True),
+        value=dict(type='str'),
+        type=dict(
+            type='str',
+            choices=['string', 'integer', 'float', 'boolean', 'array'],
+            default='string',
+        ),
+        state=dict(type='str', choices=['absent', 'present'], default='present'),
+        occ_path=dict(type='str', default='/var/www/html/nextcloud/occ'),
+        php_path=dict(type='str', default='php'),
+        installed_config_json=dict(type='raw'),
     )
 
     module = AnsibleModule(
@@ -235,7 +239,9 @@ def main():
         try:
             current = json.loads(get_stdout) if get_rc == 0 else {}
         except (json.JSONDecodeError, ValueError):
-            module.fail_json(msg=f'Failed to parse JSON from occ config:app:get output: {get_stdout}')
+            module.fail_json(
+                msg=f'Failed to parse JSON from occ config:app:get output: {get_stdout}'
+            )
 
         key_exists = get_rc == 0
         current_type = current.get('type', '')
@@ -246,7 +252,9 @@ def main():
 
     if state == 'present':
         # check if the current value and type match the desired settings
-        if current_type == value_type and values_match(current_value, value, value_type):
+        if current_type == value_type and values_match(
+            current_value, value, value_type
+        ):
             module.exit_json(**result)
 
         # else, the value will be changed
@@ -286,7 +294,6 @@ def main():
         result['stderr'] = set_stderr
         module.exit_json(**result)
 
-
     elif state == 'absent':
         if not key_exists:
             # config does not exist, so there is no change
@@ -318,7 +325,9 @@ def main():
         ]
 
         try:
-            delete_rc, delete_stdout, delete_stderr = module.run_command(delete_cmd, check_rc=True)
+            delete_rc, delete_stdout, delete_stderr = module.run_command(
+                delete_cmd, check_rc=True
+            )
         except Exception as e:
             module.fail_json(msg=to_native(e), exception=traceback.format_exc())
 

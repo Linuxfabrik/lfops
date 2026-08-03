@@ -33,7 +33,9 @@ import unittest
 
 import yaml
 
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_REPO_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 _PLUGIN_GLOBS = [
     'plugins/filter/*.py',
     'plugins/lookup/*.py',
@@ -64,8 +66,11 @@ def _extract_doc_constants(source):
             continue
         names = [t.id for t in node.targets if isinstance(t, ast.Name)]
         for wanted in ('DOCUMENTATION', 'RETURN'):
-            if wanted in names and isinstance(node.value, ast.Constant) \
-                    and isinstance(node.value.value, str):
+            if (
+                wanted in names
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            ):
                 docs[wanted] = yaml.safe_load(node.value.value)
     return docs
 
@@ -90,7 +95,6 @@ def _iter_description_problems(obj, path=''):
 
 
 class TestPluginDocs(unittest.TestCase):
-
     def test_in_house_plugins_have_renderable_descriptions(self):
         files = _in_house_plugin_files()
         self.assertTrue(files, 'no in-house plugin files found')
@@ -101,9 +105,12 @@ class TestPluginDocs(unittest.TestCase):
                 docs = _extract_doc_constants(source)
                 problems = []
                 for const_name, doc in docs.items():
-                    problems += [f'{const_name}{p}' for p in _iter_description_problems(doc)]
+                    problems += [
+                        f'{const_name}{p}' for p in _iter_description_problems(doc)
+                    ]
                 self.assertEqual(
-                    problems, [],
+                    problems,
+                    [],
                     'description fields must be str or list[str] '
                     '(a colon + space in a bullet makes ansible-doc fail):\n  '
                     + '\n  '.join(problems),

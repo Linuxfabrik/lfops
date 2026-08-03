@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: uptimerobot_account_info
 short_description: Read UptimeRobot account details
@@ -30,10 +30,10 @@ options:
         description: Path to a file whose first line is the UptimeRobot API key. Tilde-expanded.
         type: str
         default: '~/.uptimerobot'
-'''
+"""
 
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # 1) Read account quota and current usage. The API key comes from
 #    ~/.uptimerobot when no parameter is given.
 - name: 'Capture UptimeRobot account info'
@@ -58,10 +58,10 @@ EXAMPLES = r'''
 - ansible.builtin.assert:
     that: 'ur_account.account.up_monitors / ur_account.account.monitor_limit < 0.9'
     fail_msg: 'UptimeRobot quota is nearly exhausted; bump the plan or delete stale monitors.'
-'''
+"""
 
 
-RETURN = r'''
+RETURN = r"""
 account:
     description: Account details as returned by C(getAccountDetails).
     type: dict
@@ -80,7 +80,7 @@ debug:
     sample:
         operation: 'read'
         fields: ['down_monitors', 'email', 'monitor_interval', 'monitor_limit', 'paused_monitors', 'up_monitors']
-'''
+"""
 
 
 from ansible.module_utils.basic import AnsibleModule
@@ -98,20 +98,26 @@ def main():
         supports_check_mode=True,
     )
 
-    api_key = ur.resolve_api_key(module, module.params.get('api_key'), module.params.get('api_key_file'))
+    api_key = ur.resolve_api_key(
+        module, module.params.get('api_key'), module.params.get('api_key_file')
+    )
     module.log('uptimerobot_account_info: fetching account details')
     success, account = ur.get_account_details(module, api_key)
     if not success:
         module.fail_json(msg=f'Could not fetch UptimeRobot account details: {account}')
     module.log(
-        f"uptimerobot_account_info: monitor_limit={account.get('monitor_limit')} "
-        f"up={account.get('up_monitors')} down={account.get('down_monitors')} "
-        f"paused={account.get('paused_monitors')}"
+        f'uptimerobot_account_info: monitor_limit={account.get("monitor_limit")} '
+        f'up={account.get("up_monitors")} down={account.get("down_monitors")} '
+        f'paused={account.get("paused_monitors")}'
     )
-    module.exit_json(changed=False, account=account, debug={
-        'operation': 'read',
-        'fields': sorted(account.keys()) if isinstance(account, dict) else None,
-    })
+    module.exit_json(
+        changed=False,
+        account=account,
+        debug={
+            'operation': 'read',
+            'fields': sorted(account.keys()) if isinstance(account, dict) else None,
+        },
+    )
 
 
 if __name__ == '__main__':

@@ -26,7 +26,6 @@ from ansible_collections.linuxfabrik.lfops.plugins.modules import sqlite_query a
 
 
 class SqliteHelpersTestCase(unittest.TestCase):
-
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp(prefix='lfops_sqlite_test_')
         ok, self.conn = mod.connect(path=self.tmpdir, filename='test.db')
@@ -41,14 +40,15 @@ class SqliteHelpersTestCase(unittest.TestCase):
 
 
 class TestSelect(SqliteHelpersTestCase):
-
     def test_as_dict(self):
         ok, rows = mod.select(self.conn, 'SELECT id, name FROM t WHERE id = 1')
         self.assertTrue(ok)
         self.assertEqual(rows, [{'id': 1, 'name': 'alpha'}])
 
     def test_as_tuple(self):
-        ok, rows = mod.select(self.conn, 'SELECT id, name FROM t WHERE id = 1', as_dict=False)
+        ok, rows = mod.select(
+            self.conn, 'SELECT id, name FROM t WHERE id = 1', as_dict=False
+        )
         self.assertTrue(ok)
         self.assertEqual(tuple(rows[0]), (1, 'alpha'))
 
@@ -58,13 +58,17 @@ class TestSelect(SqliteHelpersTestCase):
         self.assertEqual(row, {'id': 1})
 
     def test_fetch_one_empty(self):
-        ok, row = mod.select(self.conn, 'SELECT id FROM t WHERE id = 999', fetchone=True)
+        ok, row = mod.select(
+            self.conn, 'SELECT id FROM t WHERE id = 999', fetchone=True
+        )
         self.assertTrue(ok)
         self.assertEqual(row, [])
 
     def test_named_args(self):
         ok, rows = mod.select(
-            self.conn, 'SELECT name FROM t WHERE id = :wanted', data={'wanted': 2},
+            self.conn,
+            'SELECT name FROM t WHERE id = :wanted',
+            data={'wanted': 2},
         )
         self.assertTrue(ok)
         self.assertEqual(rows, [{'name': 'beta'}])
@@ -76,7 +80,6 @@ class TestSelect(SqliteHelpersTestCase):
 
 
 class TestRegexp(SqliteHelpersTestCase):
-
     def test_regexp_in_where(self):
         ok, rows = mod.select(self.conn, "SELECT name FROM t WHERE name REGEXP '^al'")
         self.assertTrue(ok)
@@ -84,9 +87,10 @@ class TestRegexp(SqliteHelpersTestCase):
 
 
 class TestConnectFailure(unittest.TestCase):
-
     def test_connect_to_unwritable_path(self):
-        ok, result = mod.connect(path='/nonexistent/dir/that/should/not/exist', filename='x.db')
+        ok, result = mod.connect(
+            path='/nonexistent/dir/that/should/not/exist', filename='x.db'
+        )
         self.assertFalse(ok)
         self.assertIn('failed', result.lower())
 
@@ -103,23 +107,33 @@ class TestMain(unittest.TestCase):
         mod.close(conn)
 
     def test_successful_query_exits_with_result(self):
-        ansible_harness.set_module_args({
-            'path': self.tmpdir, 'db': 'main.db', 'query': 'SELECT id FROM t',
-        })
-        with ansible_harness.patch_module(), self.assertRaises(
-            ansible_harness.AnsibleExitJson
-        ) as cm:
+        ansible_harness.set_module_args(
+            {
+                'path': self.tmpdir,
+                'db': 'main.db',
+                'query': 'SELECT id FROM t',
+            }
+        )
+        with (
+            ansible_harness.patch_module(),
+            self.assertRaises(ansible_harness.AnsibleExitJson) as cm,
+        ):
             mod.main()
         self.assertEqual(cm.exception.args[0]['query_result'], [{'id': 1}])
         self.assertFalse(cm.exception.args[0]['changed'])
 
     def test_failed_query_fails_the_task(self):
-        ansible_harness.set_module_args({
-            'path': self.tmpdir, 'db': 'main.db', 'query': 'SELECT * FROM does_not_exist',
-        })
-        with ansible_harness.patch_module(), self.assertRaises(
-            ansible_harness.AnsibleFailJson
-        ) as cm:
+        ansible_harness.set_module_args(
+            {
+                'path': self.tmpdir,
+                'db': 'main.db',
+                'query': 'SELECT * FROM does_not_exist',
+            }
+        )
+        with (
+            ansible_harness.patch_module(),
+            self.assertRaises(ansible_harness.AnsibleFailJson) as cm,
+        ):
             mod.main()
         self.assertIn('Query failed', cm.exception.args[0]['msg'])
 
