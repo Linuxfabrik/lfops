@@ -1,3 +1,43 @@
+[tool.ruff]
+line-length = 88
+target-version = 'py39'
+# Vendored upstream code that is kept as-is so patches stay sendable, plus the
+# vulture whitelist, which is a list of bare names by construction and not
+# runnable Python.
+exclude = [
+    '.vulture_whitelist.py',
+    'plugins/module_utils/gnupg.py',
+    'plugins/modules/ipa*.py',
+]
+
+[tool.ruff.lint]
+select = [
+    'B',    # flake8-bugbear (potential bugs)
+    'C4',   # flake8-comprehensions
+    'E',    # pycodestyle errors
+    'F',    # pyflakes (logic errors)
+    'I',    # isort (import sorting)
+    'RUF',  # Ruff-specific rules
+    'SIM',  # flake8-simplify
+    'UP',   # pyupgrade (modernize syntax for py39+)
+    'W',    # pycodestyle warnings
+]
+ignore = [
+    'C408',    # dict() instead of a literal (Ansible argument_spec convention)
+    'E402',    # import not at top of file (the DOCUMENTATION block comes first)
+    'E501',    # line too long (handled by code review, not auto-enforcement)
+    'SIM102',  # nested if statements (sometimes clearer than combined conditions)
+    'SIM105',  # contextlib.suppress (try/except/pass is more explicit)
+    'UP001',   # __metaclass__ = type is obsolete (Ansible module preamble)
+    'UP009',   # UTF-8 encoding declaration (we keep our standard file header)
+    'UP010',   # unnecessary __future__ import (Ansible module preamble)
+    'UP015',   # redundant open() mode (we keep explicit modes for clarity)
+]
+
+[tool.ruff.format]
+docstring-code-format = true
+quote-style = 'single'
+
 # Configuration for tools that the LFOps repo runs under pre-commit.
 # This file does *not* describe the Ansible collection itself — that lives
 # in galaxy.yml. It exists only to point the linters at the right paths.
