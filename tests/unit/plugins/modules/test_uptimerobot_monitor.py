@@ -20,11 +20,12 @@ __metaclass__ = type
 
 import unittest
 
-from ansible_collections.linuxfabrik.lfops.plugins.modules import uptimerobot_monitor as mod
+from ansible_collections.linuxfabrik.lfops.plugins.modules import (
+    uptimerobot_monitor as mod,
+)
 
 
 class TestNormalizeAlertContacts(unittest.TestCase):
-
     def test_current_is_sorted_by_id(self):
         current = [
             {'id': 2, 'threshold': 5, 'recurrence': 0, 'friendly_name': 'b'},
@@ -36,11 +37,15 @@ class TestNormalizeAlertContacts(unittest.TestCase):
         self.assertEqual(mod._normalize_current_alert_contacts([]), '')
 
     def test_desired_wire_is_sorted(self):
-        self.assertEqual(mod._normalize_desired_alert_contacts('2_5_0-1_0_0'), '1_0_0-2_5_0')
+        self.assertEqual(
+            mod._normalize_desired_alert_contacts('2_5_0-1_0_0'), '1_0_0-2_5_0'
+        )
 
     def test_current_and_desired_match_when_equivalent(self):
-        current = [{'id': 1, 'threshold': 0, 'recurrence': 0},
-                   {'id': 2, 'threshold': 5, 'recurrence': 0}]
+        current = [
+            {'id': 1, 'threshold': 0, 'recurrence': 0},
+            {'id': 2, 'threshold': 5, 'recurrence': 0},
+        ]
         self.assertEqual(
             mod._normalize_current_alert_contacts(current),
             mod._normalize_desired_alert_contacts('2_5_0-1_0_0'),
@@ -48,7 +53,6 @@ class TestNormalizeAlertContacts(unittest.TestCase):
 
 
 class TestNormalizeMwindows(unittest.TestCase):
-
     def test_current_sorted(self):
         self.assertEqual(mod._normalize_current_mwindows([{'id': 3}, {'id': 1}]), '1-3')
 

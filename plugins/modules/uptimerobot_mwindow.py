@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: uptimerobot_mwindow
 short_description: Create, update or delete an UptimeRobot maintenance window
@@ -66,10 +66,10 @@ options:
         description: C(active) un-pauses the window, C(paused) pauses it. Only honoured on edit; UptimeRobot rejects this field on create.
         type: str
         choices: ['active', 'paused']
-'''
+"""
 
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # 1) Create-or-update a weekly window. friendly_name is auto-synthesised as
 #    "weekly mon 03:30-05:30" so re-runs are idempotent without naming it.
 - name: 'Weekly Monday-night maintenance window'
@@ -106,10 +106,10 @@ EXAMPLES = r'''
 - linuxfabrik.lfops.uptimerobot_mwindow:
     friendly_name: 'old-window'
     state: 'absent'
-'''
+"""
 
 
-RETURN = r'''
+RETURN = r"""
 mwindow:
     description:
         - On create or update, the maintenance window as returned by UptimeRobot's C(newMWindow) / C(editMWindow). On delete, the last known state of the window.
@@ -126,7 +126,7 @@ debug:
         friendly_name: 'weekly mon 03:30-05:30'
         mwindow_id: 12345
         diff_fields: ['duration']
-'''
+"""
 
 
 from ansible.module_utils.basic import AnsibleModule
@@ -154,7 +154,7 @@ def _synthesise_name(params):
     parts = [params['type']]
     if params.get('value'):
         parts.append(str(params['value']))
-    parts.append(f"{params['start_time']}-{params['end_time']}")
+    parts.append(f'{params["start_time"]}-{params["end_time"]}')
     return ' '.join(parts)
 
 
@@ -178,61 +178,89 @@ def main():
         mutually_exclusive=[['end_time', 'duration']],
     )
 
-    api_key = ur.resolve_api_key(module, module.params.get('api_key'), module.params.get('api_key_file'))
+    api_key = ur.resolve_api_key(
+        module, module.params.get('api_key'), module.params.get('api_key_file')
+    )
     state = module.params['state']
 
     # Synthesise friendly_name on create when the user didn't pass one.
     friendly_name = module.params.get('friendly_name')
     if not friendly_name and state == 'present':
-        if not (module.params.get('type') and module.params.get('start_time') and module.params.get('end_time')):
-            module.fail_json(msg='Either pass `friendly_name` or pass `type`, `start_time`, `end_time` so it can be synthesised.')
+        if not (
+            module.params.get('type')
+            and module.params.get('start_time')
+            and module.params.get('end_time')
+        ):
+            module.fail_json(
+                msg='Either pass `friendly_name` or pass `type`, `start_time`, `end_time` so it can be synthesised.'
+            )
         friendly_name = _synthesise_name(module.params)
 
     module.log(f'uptimerobot_mwindow: looking up friendly_name={friendly_name!r}')
     success, mwindows = ur.get_mwindows(module, api_key)
     if not success:
         module.fail_json(msg=f'Could not list maintenance windows: {mwindows}')
-    current = ur.find_by_friendly_name(mwindows, friendly_name) if friendly_name else None
-    module.log(f'uptimerobot_mwindow: existing={bool(current)} (out of {len(mwindows)} mwindows on the account)')
+    current = (
+        ur.find_by_friendly_name(mwindows, friendly_name) if friendly_name else None
+    )
+    module.log(
+        f'uptimerobot_mwindow: existing={bool(current)} (out of {len(mwindows)} mwindows on the account)'
+    )
 
     if state == 'absent':
         if current is None:
-            module.exit_json(changed=False, mwindow={}, debug={
-                'operation': 'noop',
-                'reason': 'mwindow not present',
-                'friendly_name': friendly_name,
-            })
+            module.exit_json(
+                changed=False,
+                mwindow={},
+                debug={
+                    'operation': 'noop',
+                    'reason': 'mwindow not present',
+                    'friendly_name': friendly_name,
+                },
+            )
         delete_before = {
             'friendly_name': current.get('friendly_name'),
             'id': current.get('id'),
             'type': current.get('type'),
         }
         if module.check_mode:
-            module.exit_json(changed=True, mwindow=current,
+            module.exit_json(
+                changed=True,
+                mwindow=current,
                 diff={'before': delete_before, 'after': {}},
                 debug={
                     'operation': 'delete (check_mode)',
                     'friendly_name': friendly_name,
                     'mwindow_id': current['id'],
-                })
-        module.log(f"uptimerobot_mwindow: deleting id={current['id']}")
+                },
+            )
+        module.log(f'uptimerobot_mwindow: deleting id={current["id"]}')
         success, result = ur.delete_mwindow(module, api_key, current['id'])
         if not success:
-            module.fail_json(msg=f'Could not delete maintenance window {friendly_name!r}: {result}')
-        module.exit_json(changed=True, mwindow=current,
+            module.fail_json(
+                msg=f'Could not delete maintenance window {friendly_name!r}: {result}'
+            )
+        module.exit_json(
+            changed=True,
+            mwindow=current,
             diff={'before': delete_before, 'after': {}},
             debug={
                 'operation': 'delete',
                 'friendly_name': friendly_name,
                 'mwindow_id': current['id'],
-            })
+            },
+        )
 
     # Build desired payload.
     duration = module.params.get('duration')
     if duration is None and module.params.get('end_time'):
         if not module.params.get('start_time'):
-            module.fail_json(msg='`start_time` is required when `end_time` is given (so duration can be computed).')
-        duration = _compute_duration(module.params['start_time'], module.params['end_time'])
+            module.fail_json(
+                msg='`start_time` is required when `end_time` is given (so duration can be computed).'
+            )
+        duration = _compute_duration(
+            module.params['start_time'], module.params['end_time']
+        )
 
     desired = {
         'friendly_name': friendly_name,
@@ -248,32 +276,46 @@ def main():
         # Create. type/start_time/duration are required for new mwindows.
         for required in ('type', 'start_time'):
             if not desired.get(required):
-                module.fail_json(msg=f'`{required}` is required when creating a new maintenance window.')
+                module.fail_json(
+                    msg=f'`{required}` is required when creating a new maintenance window.'
+                )
         if not desired.get('duration'):
-            module.fail_json(msg='Either `end_time` or `duration` is required when creating a new maintenance window.')
+            module.fail_json(
+                msg='Either `end_time` or `duration` is required when creating a new maintenance window.'
+            )
         # `status` not honoured on create.
         body = dict(desired)
         body.pop('status', None)
         create_diff = {'before': {}, 'after': dict(body)}
         if module.check_mode:
-            module.exit_json(changed=True, mwindow=body,
+            module.exit_json(
+                changed=True,
+                mwindow=body,
                 diff=create_diff,
                 debug={
                     'operation': 'create (check_mode)',
                     'friendly_name': friendly_name,
                     'sent_keys': sorted(body.keys()),
-                })
-        module.log(f'uptimerobot_mwindow: creating friendly_name={friendly_name!r} sent_keys={sorted(body.keys())}')
+                },
+            )
+        module.log(
+            f'uptimerobot_mwindow: creating friendly_name={friendly_name!r} sent_keys={sorted(body.keys())}'
+        )
         success, result = ur.new_mwindow(module, api_key, body)
         if not success:
-            module.fail_json(msg=f'Could not create maintenance window {friendly_name!r}: {result}')
-        module.exit_json(changed=True, mwindow=result,
+            module.fail_json(
+                msg=f'Could not create maintenance window {friendly_name!r}: {result}'
+            )
+        module.exit_json(
+            changed=True,
+            mwindow=result,
             diff=create_diff,
             debug={
                 'operation': 'create',
                 'friendly_name': friendly_name,
                 'sent_keys': sorted(body.keys()),
-            })
+            },
+        )
 
     # Update. `get_mwindows` already translated type/value/status to labels.
     # `friendly_name` already encodes type/value/start_time/end_time (it is
@@ -286,15 +328,21 @@ def main():
     current_compare = {field: current.get(field) for field in diff_fields}
     field_diff = ur.diff_for_update(current_compare, desired, diff_fields)
     if not field_diff:
-        module.log(f"uptimerobot_mwindow: id={current['id']} no diff -> changed=false")
-        module.exit_json(changed=False, mwindow=current, debug={
-            'operation': 'noop',
-            'reason': 'no diff',
-            'friendly_name': friendly_name,
-            'mwindow_id': current['id'],
-        })
+        module.log(f'uptimerobot_mwindow: id={current["id"]} no diff -> changed=false')
+        module.exit_json(
+            changed=False,
+            mwindow=current,
+            debug={
+                'operation': 'noop',
+                'reason': 'no diff',
+                'friendly_name': friendly_name,
+                'mwindow_id': current['id'],
+            },
+        )
 
-    module.log(f"uptimerobot_mwindow: id={current['id']} diff_fields={sorted(field_diff.keys())}")
+    module.log(
+        f'uptimerobot_mwindow: id={current["id"]} diff_fields={sorted(field_diff.keys())}'
+    )
 
     update_diff = {
         'before': {k: current_compare.get(k) for k in field_diff},
@@ -304,28 +352,36 @@ def main():
     if module.check_mode:
         preview = dict(current)
         preview.update(field_diff)
-        module.exit_json(changed=True, mwindow=preview,
+        module.exit_json(
+            changed=True,
+            mwindow=preview,
             diff=update_diff,
             debug={
                 'operation': 'update (check_mode)',
                 'friendly_name': friendly_name,
                 'mwindow_id': current['id'],
                 'diff_fields': sorted(field_diff.keys()),
-            })
+            },
+        )
 
     body = dict(desired)
     body['id'] = current['id']
     success, result = ur.edit_mwindow(module, api_key, body)
     if not success:
-        module.fail_json(msg=f'Could not edit maintenance window {friendly_name!r}: {result}')
-    module.exit_json(changed=True, mwindow=result,
+        module.fail_json(
+            msg=f'Could not edit maintenance window {friendly_name!r}: {result}'
+        )
+    module.exit_json(
+        changed=True,
+        mwindow=result,
         diff=update_diff,
         debug={
             'operation': 'update',
             'friendly_name': friendly_name,
             'mwindow_id': current['id'],
             'diff_fields': sorted(field_diff.keys()),
-        })
+        },
+    )
 
 
 if __name__ == '__main__':

@@ -23,25 +23,33 @@ __metaclass__ = type
 import unittest
 
 import ansible_harness
-
-from ansible_collections.linuxfabrik.lfops.plugins.modules import nextcloud_occ_app_config as mod
+from ansible_collections.linuxfabrik.lfops.plugins.modules import (
+    nextcloud_occ_app_config as mod,
+)
 
 
 class TestValuesMatch(unittest.TestCase):
-
     def test_array_equal_ignoring_whitespace(self):
         # occ returns '["alpha","beta"]'; user passes a spaced literal
-        self.assertTrue(mod.values_match('["alpha","beta"]', '["alpha", "beta"]', 'array'))
+        self.assertTrue(
+            mod.values_match('["alpha","beta"]', '["alpha", "beta"]', 'array')
+        )
 
     def test_array_canonical_vs_user(self):
         # cached path stores json.dumps(list) -> '["alpha", "beta"]'
-        self.assertTrue(mod.values_match('["alpha", "beta"]', '["alpha","beta"]', 'array'))
+        self.assertTrue(
+            mod.values_match('["alpha", "beta"]', '["alpha","beta"]', 'array')
+        )
 
     def test_array_different(self):
-        self.assertFalse(mod.values_match('["alpha", "beta"]', '["alpha","gamma"]', 'array'))
+        self.assertFalse(
+            mod.values_match('["alpha", "beta"]', '["alpha","gamma"]', 'array')
+        )
 
     def test_array_invalid_json_is_not_a_match(self):
-        self.assertFalse(mod.values_match("['alpha', 'beta']", '["alpha","beta"]', 'array'))
+        self.assertFalse(
+            mod.values_match("['alpha', 'beta']", '["alpha","beta"]', 'array')
+        )
 
     def test_non_array_string_compare(self):
         self.assertTrue(mod.values_match('90', '90', 'integer'))
@@ -67,24 +75,32 @@ class TestMainCachedArray(unittest.TestCase):
         raise AssertionError('module did not call exit_json')
 
     def test_array_already_set_is_idempotent(self):
-        result = self._run({
-            'app': 'core',
-            'name': 'test_array',
-            'value': '["alpha","beta"]',
-            'type': 'array',
-            'installed_config_json': {'apps': {'core': {'test_array': ['alpha', 'beta']}}},
-        })
+        result = self._run(
+            {
+                'app': 'core',
+                'name': 'test_array',
+                'value': '["alpha","beta"]',
+                'type': 'array',
+                'installed_config_json': {
+                    'apps': {'core': {'test_array': ['alpha', 'beta']}}
+                },
+            }
+        )
         self.assertFalse(result['changed'])
 
     def test_array_differs_reports_change(self):
-        result = self._run({
-            'app': 'core',
-            'name': 'test_array',
-            'value': '["alpha","beta"]',
-            'type': 'array',
-            'installed_config_json': {'apps': {'core': {'test_array': ['alpha', 'gamma']}}},
-            '_ansible_check_mode': True,  # avoid the real occ config:app:set call
-        })
+        result = self._run(
+            {
+                'app': 'core',
+                'name': 'test_array',
+                'value': '["alpha","beta"]',
+                'type': 'array',
+                'installed_config_json': {
+                    'apps': {'core': {'test_array': ['alpha', 'gamma']}}
+                },
+                '_ansible_check_mode': True,  # avoid the real occ config:app:set call
+            }
+        )
         self.assertTrue(result['changed'])
 
 

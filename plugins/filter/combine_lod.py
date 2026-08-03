@@ -14,7 +14,7 @@ import collections
 
 from ansible.errors import AnsibleFilterError
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
   name: combine_lod
   version_added: "3.0.0"
   short_description: Merge lists of dictionaries by a unique key
@@ -45,9 +45,9 @@ DOCUMENTATION = r'''
         - Pass a list when no single key is unique on its own (e.g. C(["server_name", "server_port"]) for vHosts where the same hostname can appear on multiple ports).
       type: raw
       default: name
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # create two lists of dictionaries
 - set_fact:
     # this list could be in the role defaults
@@ -152,14 +152,14 @@ kernel_settings__sysctl__combined_var: '{{ (
 #   value: 1
 # - name: net.core.somaxconn
 #   value: 2048
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
   _value:
     description: Resulting merged list of dictionaries.
     type: list
     elements: dictionary
-'''
+"""
 
 
 def combine_lod(*args, **kwargs):
@@ -184,7 +184,9 @@ def combine_lod(*args, **kwargs):
     for lod in list(args):
         for item in lod:
             if not isinstance(item, collections.abc.MutableMapping):
-                raise AnsibleFilterError('found a non-dictionary item in the list, this is not supported')
+                raise AnsibleFilterError(
+                    'found a non-dictionary item in the list, this is not supported'
+                )
 
             # A unique_key is the item's identity, so every key must be set
             # explicitly and may not be left to a default applied elsewhere:
@@ -223,8 +225,7 @@ def combine_lod(*args, **kwargs):
     return list(result.values())
 
 
-
-class FilterModule(object):
+class FilterModule:
     """Register custom filter plugins in Ansible"""
 
     def filters(self):

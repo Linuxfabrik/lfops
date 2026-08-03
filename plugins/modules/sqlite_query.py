@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: sqlite_query
 short_description: Run a read-only SQLite query
@@ -58,9 +58,9 @@ options:
         type: str
         choices: ['select']
         default: 'select'
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: 'Simple select query'
   linuxfabrik.lfops.sqlite_query:
     db: 'acme.db'
@@ -76,9 +76,9 @@ EXAMPLES = r'''
       profile_name: 'CIS CentOS 7'
       enabled: 1
   delegate_to: 'localhost'
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 changed:
     description: Always C(false). The module never modifies the database.
     returned: always
@@ -106,7 +106,7 @@ rowcount:
     returned: always
     type: int
     sample: 42
-'''
+"""
 
 
 import os
@@ -143,7 +143,7 @@ def connect(path='', filename=''):
         conn.row_factory = sqlite3.Row
         # https://stackoverflow.com/questions/3425320/sqlite3-programmingerror-you-must-not-use-8-bit-bytestrings-unless-you-use-a-te
         conn.text_factory = str
-        conn.create_function("REGEXP", 2, regexp)
+        conn.create_function('REGEXP', 2, regexp)
     except Exception as e:
         return (False, f'Connecting to DB {db} failed, Error: {e}, CWD: {os.getcwd()}')
     return (True, conn)
@@ -166,13 +166,11 @@ def select(conn, sql, data=None, fetchone=False, as_dict=True):
         # https://stackoverflow.com/questions/3300464/how-can-i-get-dict-from-sqlite-query
         if as_dict:
             if fetchone:
-                try:
-                    return (True, [dict(row) for row in c.fetchall()][0])
-                except IndexError:
-                    return (True, [])
+                rows = [dict(row) for row in c.fetchall()]
+                return (True, rows[0] if rows else [])
             return (True, [dict(row) for row in c.fetchall()])
         if fetchone:
-            return (True,  c.fetchone())
+            return (True, c.fetchone())
         return (True, c.fetchall())
     except Exception as e:
         return (False, f'Query failed: {sql}, Error: {e}, Data: {data}')
@@ -226,7 +224,9 @@ def main():
 
     query_result = []
     if query_type == 'select':
-        success, query_result = select(conn, query, named_args, fetchone=fetch_one, as_dict=as_dict)
+        success, query_result = select(
+            conn, query, named_args, fetchone=fetch_one, as_dict=as_dict
+        )
         changed = False
         if not success:
             close(conn)

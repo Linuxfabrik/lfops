@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: uptimerobot_alert_contact
 short_description: Delete an UptimeRobot alert contact
@@ -42,10 +42,10 @@ options:
         type: str
         choices: ['absent', 'present']
         default: 'absent'
-'''
+"""
 
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # UptimeRobot's v2 API does not allow CREATING or EDITING alert contacts via
 # the API — they must be added in the web UI (which sends an opt-in mail).
 # This module is therefore delete-only, useful for sweeping contacts that no
@@ -73,10 +73,10 @@ EXAMPLES = r'''
   loop: '{{ ur_contacts.alert_contacts | selectattr("status", "equalto", "not activated") | list }}'
   loop_control:
     label: '{{ item.friendly_name }}'
-'''
+"""
 
 
-RETURN = r'''
+RETURN = r"""
 alert_contact:
     description: The alert contact that was deleted (or that would have been deleted, in check mode), as returned by C(getAlertContacts). Empty dict when there was nothing to delete.
     type: dict
@@ -89,7 +89,7 @@ debug:
         operation: 'delete'
         contact_id: 7068316
         friendly_name: 'monitoring@example.com'
-'''
+"""
 
 
 from ansible.module_utils.basic import AnsibleModule
@@ -112,17 +112,23 @@ def main():
     )
 
     if module.params['state'] == 'present':
-        module.fail_json(msg=(
-            "uptimerobot_alert_contact only supports state='absent'. "
-            "UptimeRobot API v2 does not expose creating or editing alert "
-            "contacts; use the web UI for that."
-        ))
+        module.fail_json(
+            msg=(
+                "uptimerobot_alert_contact only supports state='absent'. "
+                'UptimeRobot API v2 does not expose creating or editing alert '
+                'contacts; use the web UI for that.'
+            )
+        )
 
-    api_key = ur.resolve_api_key(module, module.params.get('api_key'), module.params.get('api_key_file'))
+    api_key = ur.resolve_api_key(
+        module, module.params.get('api_key'), module.params.get('api_key_file')
+    )
     contact_id = module.params.get('id')
     friendly_name = module.params.get('friendly_name')
 
-    module.log(f'uptimerobot_alert_contact: looking up id={contact_id} friendly_name={friendly_name!r}')
+    module.log(
+        f'uptimerobot_alert_contact: looking up id={contact_id} friendly_name={friendly_name!r}'
+    )
 
     target = None
     if contact_id is None:
@@ -131,11 +137,15 @@ def main():
             module.fail_json(msg=f'Could not list alert contacts: {contacts}')
         target = ur.find_by_friendly_name(contacts, friendly_name)
         if target is None:
-            module.exit_json(changed=False, alert_contact={}, debug={
-                'operation': 'noop',
-                'reason': 'alert contact not present',
-                'friendly_name': friendly_name,
-            })
+            module.exit_json(
+                changed=False,
+                alert_contact={},
+                debug={
+                    'operation': 'noop',
+                    'reason': 'alert contact not present',
+                    'friendly_name': friendly_name,
+                },
+            )
         contact_id = int(target['id'])
     else:
         # We can still try to look up the friendly_name for the report, but it
@@ -149,31 +159,43 @@ def main():
         if target is None:
             # Either the listing failed or the contact does not exist; treat
             # both as "nothing to do".
-            module.exit_json(changed=False, alert_contact={}, debug={
-                'operation': 'noop',
-                'reason': 'alert contact not present (or could not list)',
-                'contact_id': contact_id,
-            })
+            module.exit_json(
+                changed=False,
+                alert_contact={},
+                debug={
+                    'operation': 'noop',
+                    'reason': 'alert contact not present (or could not list)',
+                    'contact_id': contact_id,
+                },
+            )
 
     if module.check_mode:
-        module.exit_json(changed=True, alert_contact=target, debug={
-            'operation': 'delete (check_mode)',
-            'contact_id': contact_id,
-            'friendly_name': target.get('friendly_name'),
-        })
+        module.exit_json(
+            changed=True,
+            alert_contact=target,
+            debug={
+                'operation': 'delete (check_mode)',
+                'contact_id': contact_id,
+                'friendly_name': target.get('friendly_name'),
+            },
+        )
 
     module.log(
-        f"uptimerobot_alert_contact: deleting id={contact_id} "
-        f"friendly_name={target.get('friendly_name')!r}"
+        f'uptimerobot_alert_contact: deleting id={contact_id} '
+        f'friendly_name={target.get("friendly_name")!r}'
     )
     success, result = ur.delete_alert_contact(module, api_key, contact_id)
     if not success:
         module.fail_json(msg=f'Could not delete alert contact {target!r}: {result}')
-    module.exit_json(changed=True, alert_contact=target, debug={
-        'operation': 'delete',
-        'contact_id': contact_id,
-        'friendly_name': target.get('friendly_name'),
-    })
+    module.exit_json(
+        changed=True,
+        alert_contact=target,
+        debug={
+            'operation': 'delete',
+            'contact_id': contact_id,
+            'friendly_name': target.get('friendly_name'),
+        },
+    )
 
 
 if __name__ == '__main__':

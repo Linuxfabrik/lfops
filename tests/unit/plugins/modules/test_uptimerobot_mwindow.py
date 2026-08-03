@@ -17,11 +17,12 @@ __metaclass__ = type
 
 import unittest
 
-from ansible_collections.linuxfabrik.lfops.plugins.modules import uptimerobot_mwindow as mod
+from ansible_collections.linuxfabrik.lfops.plugins.modules import (
+    uptimerobot_mwindow as mod,
+)
 
 
 class TestHhmmToMinutes(unittest.TestCase):
-
     def test_basic(self):
         self.assertEqual(mod._hhmm_to_minutes('00:00'), 0)
         self.assertEqual(mod._hhmm_to_minutes('01:30'), 90)
@@ -29,7 +30,6 @@ class TestHhmmToMinutes(unittest.TestCase):
 
 
 class TestComputeDuration(unittest.TestCase):
-
     def test_same_day(self):
         self.assertEqual(mod._compute_duration('09:00', '17:00'), 480)
 
@@ -42,9 +42,13 @@ class TestComputeDuration(unittest.TestCase):
 
 
 class TestSynthesiseName(unittest.TestCase):
-
     def test_with_value(self):
-        params = {'type': 'weekly', 'value': 'mon-wed', 'start_time': '03:30', 'end_time': '05:30'}
+        params = {
+            'type': 'weekly',
+            'value': 'mon-wed',
+            'start_time': '03:30',
+            'end_time': '05:30',
+        }
         self.assertEqual(mod._synthesise_name(params), 'weekly mon-wed 03:30-05:30')
 
     def test_without_value(self):

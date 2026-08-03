@@ -21,7 +21,6 @@ from ansible_collections.linuxfabrik.lfops.plugins.module_utils import ipa_diff
 
 
 class TestCompareKey(unittest.TestCase):
-
     def test_scalar_equal(self):
         self.assertTrue(ipa_diff._compare_key('a', 'a'))
         self.assertFalse(ipa_diff._compare_key('a', 'b'))
@@ -38,9 +37,10 @@ class TestCompareKey(unittest.TestCase):
 
 
 class TestGenArgsDiff(unittest.TestCase):
-
     def test_only_changed_keys(self):
-        before, after = ipa_diff.gen_args_diff({'a': 'x', 'b': 'y'}, {'a': ['x'], 'b': ['z']})
+        before, after = ipa_diff.gen_args_diff(
+            {'a': 'x', 'b': 'y'}, {'a': ['x'], 'b': ['z']}
+        )
         self.assertEqual(before, {'b': 'z'})
         self.assertEqual(after, {'b': 'y'})
 
@@ -53,18 +53,20 @@ class TestGenArgsDiff(unittest.TestCase):
 
 
 class TestGenMemberDiff(unittest.TestCase):
-
     def test_no_change(self):
-        self.assertEqual(ipa_diff.gen_member_diff('member_user', [], [], ['a']), ({}, {}))
+        self.assertEqual(
+            ipa_diff.gen_member_diff('member_user', [], [], ['a']), ({}, {})
+        )
 
     def test_add_and_delete(self):
-        before, after = ipa_diff.gen_member_diff('member_user', ['c'], ['a'], ['a', 'b'])
+        before, after = ipa_diff.gen_member_diff(
+            'member_user', ['c'], ['a'], ['a', 'b']
+        )
         self.assertEqual(before, {'member_user': ['a', 'b']})
         self.assertEqual(after, {'member_user': ['b', 'c']})
 
 
 class TestMergeDiffs(unittest.TestCase):
-
     def test_merge(self):
         before, after = ipa_diff.merge_diffs(({'a': 1}, {'a': 2}), ({'b': 3}, {'b': 4}))
         self.assertEqual(before, {'a': 1, 'b': 3})
@@ -72,7 +74,6 @@ class TestMergeDiffs(unittest.TestCase):
 
 
 class TestIPADiffTracker(unittest.TestCase):
-
     def test_empty_build(self):
         self.assertEqual(ipa_diff.IPADiffTracker().build_diff(), {})
 

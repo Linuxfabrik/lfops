@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: uptimerobot_monitor
 short_description: Create, update or delete an UptimeRobot monitor
@@ -202,10 +202,10 @@ options:
             id:
                 description: Numeric ID of an existing maintenance window. Takes precedence over I(friendly_name) when both are set.
                 type: int
-'''
+"""
 
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # 1) Create-or-update a simple HTTPS monitor. Idempotent: re-running with the
 #    same values reports `changed=false`.
 - name: 'Manage a simple HTTPS monitor'
@@ -281,10 +281,10 @@ EXAMPLES = r'''
 #   * Tail per-call syslog: `journalctl --identifier ansible-uptimerobot_monitor --follow`
 #   * Inspect the structured operation summary: `register: r` + `debug var=r.debug`.
 #   * Use `--check --diff` to preview create/update/delete without API writes.
-'''
+"""
 
 
-RETURN = r'''
+RETURN = r"""
 monitor:
     description:
         - On create or update, the monitor object as returned by UptimeRobot's C(newMonitor) / C(editMonitor). On delete, the last known state of the monitor as returned by C(getMonitors).
@@ -308,26 +308,37 @@ debug:
         friendly_name: '001 www.example.com/index.php/login'
         monitor_id: 794294
         diff_fields: ['interval']
-'''
+"""
 
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.linuxfabrik.lfops.plugins.module_utils import uptimerobot as ur
 
-
 # Fields we ship to new_monitor / edit_monitor and that we also diff against
 # the API's current state to decide whether an edit call is needed.
 _MONITOR_DIFFABLE_FIELDS = [
     'url',
-    'sub_type', 'port',
-    'keyword_type', 'keyword_case_type', 'keyword_value',
-    'interval', 'timeout',
-    'http_username', 'http_password', 'http_auth_type',
-    'post_type', 'post_value', 'http_method', 'post_content_type',
-    'custom_http_headers', 'custom_http_statuses',
-    'ignore_ssl_errors', 'disable_domain_expire_notifications',
+    'sub_type',
+    'port',
+    'keyword_type',
+    'keyword_case_type',
+    'keyword_value',
+    'interval',
+    'timeout',
+    'http_username',
+    'http_password',
+    'http_auth_type',
+    'post_type',
+    'post_value',
+    'http_method',
+    'post_content_type',
+    'custom_http_headers',
+    'custom_http_statuses',
+    'ignore_ssl_errors',
+    'disable_domain_expire_notifications',
     'status',
-    'alert_contacts', 'mwindows',
+    'alert_contacts',
+    'mwindows',
 ]
 
 
@@ -353,11 +364,13 @@ def _build_alert_contacts(module, api_key, items):
             if name not in by_name:
                 module.fail_json(msg=f'Alert contact {name!r} not found on UptimeRobot')
             contact_id = int(by_name[name]['id'])
-        resolved.append({
-            'id': contact_id,
-            'threshold': int(item.get('threshold', 0)),
-            'recurrence': int(item.get('recurrence', 0)),
-        })
+        resolved.append(
+            {
+                'id': contact_id,
+                'threshold': int(item.get('threshold', 0)),
+                'recurrence': int(item.get('recurrence', 0)),
+            }
+        )
     return ur.alert_contacts_wire(resolved)
 
 
@@ -378,7 +391,9 @@ def _build_mwindows(module, api_key, items):
         if wid is None:
             name = item['friendly_name']
             if name not in by_name:
-                module.fail_json(msg=f'Maintenance window {name!r} not found on UptimeRobot')
+                module.fail_json(
+                    msg=f'Maintenance window {name!r} not found on UptimeRobot'
+                )
             wid = int(by_name[name]['id'])
         ids.append(int(wid))
     return ur.mwindows_wire(ids)
@@ -393,11 +408,13 @@ def _normalize_current_alert_contacts(current_field):
         return ''
     items = []
     for ac in current_field:
-        items.append({
-            'id': int(ac['id']),
-            'threshold': int(ac.get('threshold', 0)),
-            'recurrence': int(ac.get('recurrence', 0)),
-        })
+        items.append(
+            {
+                'id': int(ac['id']),
+                'threshold': int(ac.get('threshold', 0)),
+                'recurrence': int(ac.get('recurrence', 0)),
+            }
+        )
     items.sort(key=lambda x: x['id'])
     return ur.alert_contacts_wire(items)
 
@@ -416,7 +433,9 @@ def _normalize_desired_alert_contacts(wire):
     parts = []
     for token in wire.split('-'):
         bits = token.split('_')
-        parts.append({'id': int(bits[0]), 'threshold': int(bits[1]), 'recurrence': int(bits[2])})
+        parts.append(
+            {'id': int(bits[0]), 'threshold': int(bits[1]), 'recurrence': int(bits[2])}
+        )
     parts.sort(key=lambda x: x['id'])
     return ur.alert_contacts_wire(parts)
 
@@ -434,10 +453,12 @@ def main():
         api_key_file=dict(type='str', required=False, default='~/.uptimerobot'),
         friendly_name=dict(type='str', required=True),
         state=dict(type='str', choices=['absent', 'present'], default='present'),
-
         url=dict(type='str'),
         type=dict(type='str', choices=['beat', 'http', 'keyw', 'ping', 'port']),
-        sub_type=dict(type='str', choices=['custom', 'ftp', 'http', 'https', 'imap', 'pop3', 'smtp']),
+        sub_type=dict(
+            type='str',
+            choices=['custom', 'ftp', 'http', 'https', 'imap', 'pop3', 'smtp'],
+        ),
         port=dict(type='int'),
         keyword_type=dict(type='str', choices=['exist', 'notex']),
         keyword_case_type=dict(type='str', choices=['ci', 'cs']),
@@ -448,14 +469,19 @@ def main():
         http_username=dict(type='str'),
         http_password=dict(type='str', no_log=True),
         http_auth_type=dict(type='str', choices=['basic', 'digest']),
-        http_method=dict(type='str', choices=['delete', 'get', 'head', 'options', 'patch', 'post', 'put']),
+        http_method=dict(
+            type='str',
+            choices=['delete', 'get', 'head', 'options', 'patch', 'post', 'put'],
+        ),
         post_type=dict(type='str', choices=['key-value', 'raw data']),
         post_value=dict(type='str'),
         post_content_type=dict(type='str', choices=['content/json', 'text/html']),
         custom_http_headers=dict(type='raw'),
         custom_http_statuses=dict(type='str'),
         ignore_ssl_errors=dict(type='bool'),
-        disable_domain_expire_notifications=dict(type='str', choices=['disable', 'enable']),
+        disable_domain_expire_notifications=dict(
+            type='str', choices=['disable', 'enable']
+        ),
         alert_contacts=dict(type='list', elements='dict'),
         mwindows=dict(type='list', elements='dict'),
     )
@@ -465,7 +491,9 @@ def main():
         supports_check_mode=True,
     )
 
-    api_key = ur.resolve_api_key(module, module.params.get('api_key'), module.params.get('api_key_file'))
+    api_key = ur.resolve_api_key(
+        module, module.params.get('api_key'), module.params.get('api_key_file')
+    )
     friendly_name = module.params['friendly_name']
     state = module.params['state']
 
@@ -477,60 +505,92 @@ def main():
     if not success:
         module.fail_json(msg=f'Could not list monitors: {monitors}')
     current = ur.find_by_friendly_name(monitors, friendly_name)
-    module.log(f'uptimerobot_monitor: existing={bool(current)} (out of {len(monitors)} monitors on the account)')
+    module.log(
+        f'uptimerobot_monitor: existing={bool(current)} (out of {len(monitors)} monitors on the account)'
+    )
 
     # Step 2: build the desired payload (only fields the user actually set).
     desired = {}
     for field in [
-        'url', 'sub_type', 'port',
-        'keyword_type', 'keyword_case_type', 'keyword_value',
-        'interval', 'timeout',
-        'http_username', 'http_password', 'http_auth_type',
-        'post_type', 'post_value', 'http_method', 'post_content_type',
-        'custom_http_headers', 'custom_http_statuses',
-        'ignore_ssl_errors', 'disable_domain_expire_notifications',
+        'url',
+        'sub_type',
+        'port',
+        'keyword_type',
+        'keyword_case_type',
+        'keyword_value',
+        'interval',
+        'timeout',
+        'http_username',
+        'http_password',
+        'http_auth_type',
+        'post_type',
+        'post_value',
+        'http_method',
+        'post_content_type',
+        'custom_http_headers',
+        'custom_http_statuses',
+        'ignore_ssl_errors',
+        'disable_domain_expire_notifications',
         'status',
     ]:
         value = module.params.get(field)
         if value is not None and value != '':
             desired[field] = value
     if module.params.get('alert_contacts'):
-        desired['alert_contacts'] = _build_alert_contacts(module, api_key, module.params['alert_contacts'])
+        desired['alert_contacts'] = _build_alert_contacts(
+            module, api_key, module.params['alert_contacts']
+        )
     if module.params.get('mwindows'):
-        desired['mwindows'] = _build_mwindows(module, api_key, module.params['mwindows'])
+        desired['mwindows'] = _build_mwindows(
+            module, api_key, module.params['mwindows']
+        )
 
     # --- absent -------------------------------------------------------------
     if state == 'absent':
         if current is None:
-            module.exit_json(changed=False, monitor={}, debug={
-                'operation': 'noop',
-                'reason': 'monitor not present',
-                'friendly_name': friendly_name,
-            })
+            module.exit_json(
+                changed=False,
+                monitor={},
+                debug={
+                    'operation': 'noop',
+                    'reason': 'monitor not present',
+                    'friendly_name': friendly_name,
+                },
+            )
         delete_before = {
             'friendly_name': current.get('friendly_name'),
             'id': current.get('id'),
             'url': current.get('url'),
         }
         if module.check_mode:
-            module.exit_json(changed=True, monitor=current,
+            module.exit_json(
+                changed=True,
+                monitor=current,
                 diff={'before': delete_before, 'after': {}},
                 debug={
                     'operation': 'delete (check_mode)',
                     'friendly_name': friendly_name,
                     'monitor_id': current['id'],
-                })
-        module.log(f"uptimerobot_monitor: deleting id={current['id']} friendly_name={friendly_name!r}")
+                },
+            )
+        module.log(
+            f'uptimerobot_monitor: deleting id={current["id"]} friendly_name={friendly_name!r}'
+        )
         success, result = ur.delete_monitor(module, api_key, current['id'])
         if not success:
-            module.fail_json(msg=f'Could not delete monitor {friendly_name!r}: {result}')
-        module.exit_json(changed=True, monitor=current,
+            module.fail_json(
+                msg=f'Could not delete monitor {friendly_name!r}: {result}'
+            )
+        module.exit_json(
+            changed=True,
+            monitor=current,
             diff={'before': delete_before, 'after': {}},
             debug={
                 'operation': 'delete',
                 'friendly_name': friendly_name,
                 'monitor_id': current['id'],
-            })
+            },
+        )
 
     # --- present, create ----------------------------------------------------
     if current is None:
@@ -546,24 +606,34 @@ def main():
         body.pop('status', None)
         create_diff = {'before': {}, 'after': dict(body)}
         if module.check_mode:
-            module.exit_json(changed=True, monitor=body,
+            module.exit_json(
+                changed=True,
+                monitor=body,
                 diff=create_diff,
                 debug={
                     'operation': 'create (check_mode)',
                     'friendly_name': friendly_name,
                     'sent_keys': sorted(body.keys()),
-                })
-        module.log(f'uptimerobot_monitor: creating friendly_name={friendly_name!r} sent_keys={sorted(body.keys())}')
+                },
+            )
+        module.log(
+            f'uptimerobot_monitor: creating friendly_name={friendly_name!r} sent_keys={sorted(body.keys())}'
+        )
         success, result = ur.new_monitor(module, api_key, body)
         if not success:
-            module.fail_json(msg=f'Could not create monitor {friendly_name!r}: {result}')
-        module.exit_json(changed=True, monitor=result,
+            module.fail_json(
+                msg=f'Could not create monitor {friendly_name!r}: {result}'
+            )
+        module.exit_json(
+            changed=True,
+            monitor=result,
             diff=create_diff,
             debug={
                 'operation': 'create',
                 'friendly_name': friendly_name,
                 'sent_keys': sorted(body.keys()),
-            })
+            },
+        )
 
     # --- present, update ----------------------------------------------------
     # Build the comparable representation of the current state. `get_monitors`
@@ -588,17 +658,25 @@ def main():
         'custom_http_headers': current.get('custom_http_headers'),
         'custom_http_statuses': current.get('custom_http_statuses'),
         'ignore_ssl_errors': current.get('ignore_ssl_errors'),
-        'disable_domain_expire_notifications': current.get('disable_domain_expire_notifications'),
+        'disable_domain_expire_notifications': current.get(
+            'disable_domain_expire_notifications'
+        ),
         'status': current.get('status'),
-        'alert_contacts': _normalize_current_alert_contacts(current.get('alert_contacts')),
+        'alert_contacts': _normalize_current_alert_contacts(
+            current.get('alert_contacts')
+        ),
         'mwindows': _normalize_current_mwindows(current.get('mwindows')),
     }
 
     desired_compare = dict(desired)
     if 'alert_contacts' in desired_compare:
-        desired_compare['alert_contacts'] = _normalize_desired_alert_contacts(desired_compare['alert_contacts'])
+        desired_compare['alert_contacts'] = _normalize_desired_alert_contacts(
+            desired_compare['alert_contacts']
+        )
     if 'mwindows' in desired_compare:
-        desired_compare['mwindows'] = _normalize_desired_mwindows(desired_compare['mwindows'])
+        desired_compare['mwindows'] = _normalize_desired_mwindows(
+            desired_compare['mwindows']
+        )
 
     # `http_password` and `http_auth_type` can't be diffed reliably because
     # the API hides them in `getMonitors` responses (the `auth_type` field
@@ -610,15 +688,21 @@ def main():
     field_diff = ur.diff_for_update(current_compare, desired_compare, diff_fields)
 
     if not field_diff:
-        module.log(f"uptimerobot_monitor: id={current['id']} no diff -> changed=false")
-        module.exit_json(changed=False, monitor=current, debug={
-            'operation': 'noop',
-            'reason': 'no diff',
-            'friendly_name': friendly_name,
-            'monitor_id': current['id'],
-        })
+        module.log(f'uptimerobot_monitor: id={current["id"]} no diff -> changed=false')
+        module.exit_json(
+            changed=False,
+            monitor=current,
+            debug={
+                'operation': 'noop',
+                'reason': 'no diff',
+                'friendly_name': friendly_name,
+                'monitor_id': current['id'],
+            },
+        )
 
-    module.log(f"uptimerobot_monitor: id={current['id']} diff_fields={sorted(field_diff.keys())}")
+    module.log(
+        f'uptimerobot_monitor: id={current["id"]} diff_fields={sorted(field_diff.keys())}'
+    )
 
     update_diff = {
         'before': {k: current_compare.get(k) for k in field_diff},
@@ -628,28 +712,34 @@ def main():
     if module.check_mode:
         preview = dict(current)
         preview.update(field_diff)
-        module.exit_json(changed=True, monitor=preview,
+        module.exit_json(
+            changed=True,
+            monitor=preview,
             diff=update_diff,
             debug={
                 'operation': 'update (check_mode)',
                 'friendly_name': friendly_name,
                 'monitor_id': current['id'],
                 'diff_fields': sorted(field_diff.keys()),
-            })
+            },
+        )
 
     body = dict(desired)
     body['id'] = current['id']
     success, result = ur.edit_monitor(module, api_key, body)
     if not success:
         module.fail_json(msg=f'Could not edit monitor {friendly_name!r}: {result}')
-    module.exit_json(changed=True, monitor=result,
+    module.exit_json(
+        changed=True,
+        monitor=result,
         diff=update_diff,
         debug={
             'operation': 'update',
             'friendly_name': friendly_name,
             'monitor_id': current['id'],
             'diff_fields': sorted(field_diff.keys()),
-        })
+        },
+    )
 
 
 if __name__ == '__main__':

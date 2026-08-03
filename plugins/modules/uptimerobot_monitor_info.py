@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: uptimerobot_monitor_info
 short_description: List UptimeRobot monitors
@@ -38,10 +38,10 @@ options:
         description:
             - Server-side, case-insensitive substring filter forwarded to UptimeRobot's C(search) parameter. Useful to keep the response small when the account has thousands of monitors. Combine with I(friendly_name) to narrow further.
         type: str
-'''
+"""
 
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # 1) Quick ad-hoc list of every monitor on the account. The API key is read
 #    from ~/.uptimerobot when not passed.
 - name: 'Capture all monitors'
@@ -94,10 +94,10 @@ EXAMPLES = r'''
         | map(attribute="friendly_name")
         | list
       }}
-'''
+"""
 
 
-RETURN = r'''
+RETURN = r"""
 monitors:
     description: List of monitor dicts. Empty list when nothing matched.
     type: list
@@ -110,7 +110,7 @@ debug:
     sample:
         operation: 'list'
         count: 17
-'''
+"""
 
 
 from ansible.module_utils.basic import AnsibleModule
@@ -127,7 +127,9 @@ def main():
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
-    api_key = ur.resolve_api_key(module, module.params.get('api_key'), module.params.get('api_key_file'))
+    api_key = ur.resolve_api_key(
+        module, module.params.get('api_key'), module.params.get('api_key_file')
+    )
     search = module.params.get('search') or None
     friendly_name = module.params.get('friendly_name')
 
@@ -140,10 +142,14 @@ def main():
         match = ur.find_by_friendly_name(monitors, friendly_name)
         monitors = [match] if match else []
 
-    module.exit_json(changed=False, monitors=monitors, debug={
-        'operation': 'list',
-        'count': len(monitors),
-    })
+    module.exit_json(
+        changed=False,
+        monitors=monitors,
+        debug={
+            'operation': 'list',
+            'count': len(monitors),
+        },
+    )
 
 
 if __name__ == '__main__':

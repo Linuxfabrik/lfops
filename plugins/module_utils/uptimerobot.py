@@ -29,7 +29,6 @@ from urllib.parse import urlencode
 
 from ansible.module_utils.urls import fetch_url
 
-
 API_BASE = 'https://api.uptimerobot.com/v2/'
 ENV_API_KEY = 'UPTIMEROBOT_API_KEY'
 DEFAULT_API_KEY_FILE = '~/.uptimerobot'
@@ -50,9 +49,14 @@ DEFAULT_RATE_LIMIT_RETRY_SECONDS = 10
 CACHE_TTL_SECONDS = 60
 CACHE_DIR = os.path.join(os.path.expanduser('~/.cache'), 'ansible-uptimerobot')
 
-_CACHEABLE_GETS = frozenset({
-    'getAlertContacts', 'getMWindows', 'getMonitors', 'getPSPs',
-})
+_CACHEABLE_GETS = frozenset(
+    {
+        'getAlertContacts',
+        'getMWindows',
+        'getMonitors',
+        'getPSPs',
+    }
+)
 _WRITE_INVALIDATES = {
     'deleteAlertContact': 'getAlertContacts',
     'deleteMWindow': 'getMWindows',
@@ -74,15 +78,25 @@ MONITOR_TYPE = {'http': 1, 'keyw': 2, 'ping': 3, 'port': 4, 'beat': 5}
 MONITOR_STATUS_READ = {0: 'paused', 1: 'wait', 2: 'up', 8: 'seems_down', 9: 'down'}
 MONITOR_STATUS_WRITE = {'paused': 0, 'up': 1}  # write side only allows pause/un-pause
 MONITOR_SUB_TYPE = {
-    'http': 1, 'https': 443, 'ftp': 21, 'smtp': 25,
-    'pop3': 110, 'imap': 143, 'custom': 99,
+    'http': 1,
+    'https': 443,
+    'ftp': 21,
+    'smtp': 25,
+    'pop3': 110,
+    'imap': 143,
+    'custom': 99,
 }
 KEYWORD_TYPE = {'exist': 1, 'notex': 2}
 KEYWORD_CASE_TYPE = {'cs': 0, 'ci': 1}
 HTTP_AUTH_TYPE = {'basic': 1, 'digest': 2}
 HTTP_METHOD = {
-    'head': 1, 'get': 2, 'post': 3, 'put': 4,
-    'patch': 5, 'delete': 6, 'options': 7,
+    'head': 1,
+    'get': 2,
+    'post': 3,
+    'put': 4,
+    'patch': 5,
+    'delete': 6,
+    'options': 7,
 }
 POST_TYPE = {'key-value': 1, 'raw data': 2}
 POST_CONTENT_TYPE = {'text/html': 0, 'content/json': 1}
@@ -90,8 +104,13 @@ DISABLE_DOMAIN_EXPIRE = {'enable': 0, 'disable': 1}
 
 MWINDOW_TYPE = {'once': 1, 'daily': 2, 'weekly': 3, 'monthly': 4}
 MWINDOW_DAY = {
-    'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4,
-    'fri': 5, 'sat': 6, 'sun': 7,
+    'mon': 1,
+    'tue': 2,
+    'wed': 3,
+    'thu': 4,
+    'fri': 5,
+    'sat': 6,
+    'sun': 7,
 }
 MWINDOW_STATUS = {'paused': 0, 'active': 1}
 
@@ -99,10 +118,23 @@ PSP_SORT = {'a-z': 1, 'z-a': 2, 'up-down-paused': 3, 'down-up-paused': 4}
 PSP_STATUS = {'paused': 0, 'active': 1}
 
 ALERT_CONTACT_TYPE_READ = {
-    1: 'sms', 2: 'email', 3: 'twitter_dm', 5: 'web-hook', 6: 'pushbullet',
-    7: 'zapier', 8: 'pushover', 9: 'hipchat', 10: 'slack', 11: 'voice-call',
-    12: 'splunk', 13: 'pagerduty', 14: 'opsgenie', 15: 'ms_teams',
-    16: 'google_chat', 17: 'discord', 18: 'mattermost',
+    1: 'sms',
+    2: 'email',
+    3: 'twitter_dm',
+    5: 'web-hook',
+    6: 'pushbullet',
+    7: 'zapier',
+    8: 'pushover',
+    9: 'hipchat',
+    10: 'slack',
+    11: 'voice-call',
+    12: 'splunk',
+    13: 'pagerduty',
+    14: 'opsgenie',
+    15: 'ms_teams',
+    16: 'google_chat',
+    17: 'discord',
+    18: 'mattermost',
 }
 
 
@@ -149,11 +181,13 @@ def resolve_api_key(module, api_key, api_key_file):
         module.log(f'uptimerobot: api_key resolved from env {ENV_API_KEY}')
         return env
 
-    module.fail_json(msg=(
-        'No UptimeRobot API key found. Provide one via the `api_key` parameter, '
-        f'an `api_key_file` (default: {DEFAULT_API_KEY_FILE}), or the {ENV_API_KEY} '
-        'environment variable.'
-    ))
+    module.fail_json(
+        msg=(
+            'No UptimeRobot API key found. Provide one via the `api_key` parameter, '
+            f'an `api_key_file` (default: {DEFAULT_API_KEY_FILE}), or the {ENV_API_KEY} '
+            'environment variable.'
+        )
+    )
 
 
 # --- Wire format helpers -----------------------------------------------------
@@ -169,7 +203,7 @@ def alert_contacts_wire(items):
     parts = []
     for item in items:
         parts.append(
-            f"{item['id']}_{item.get('threshold', 0)}_{item.get('recurrence', 0)}"
+            f'{item["id"]}_{item.get("threshold", 0)}_{item.get("recurrence", 0)}'
         )
     return '-'.join(parts)
 
@@ -201,10 +235,7 @@ def _safe_keys(params):
     Used for module.log() so we can see which fields a call is sending
     without leaking secrets to syslog.
     """
-    return sorted(
-        f'{k}=<redacted>' if k in _SENSITIVE_KEYS else k
-        for k in params
-    )
+    return sorted(f'{k}=<redacted>' if k in _SENSITIVE_KEYS else k for k in params)
 
 
 def _cache_key(endpoint, api_key, params):
@@ -286,7 +317,9 @@ def _request(module, api_key, endpoint, params, result_key):
         cached = _cache_read(endpoint, api_key, params)
         if cached is not None:
             n = len(cached) if isinstance(cached, list) else 1
-            module.log(f'uptimerobot: cache HIT {endpoint} ({n} items, ttl={CACHE_TTL_SECONDS}s)')
+            module.log(
+                f'uptimerobot: cache HIT {endpoint} ({n} items, ttl={CACHE_TTL_SECONDS}s)'
+            )
             return True, cached
 
     success, result = _request_uncached(module, api_key, endpoint, params, result_key)
@@ -331,7 +364,9 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
         pages += 1
 
         if status == 429:
-            retry_after = int(info.get('retry-after') or DEFAULT_RATE_LIMIT_RETRY_SECONDS)
+            retry_after = int(
+                info.get('retry-after') or DEFAULT_RATE_LIMIT_RETRY_SECONDS
+            )
             sleep_for = min(retry_after, 60)
             module.warn(
                 f'uptimerobot: rate limited on {endpoint} (HTTP 429); sleeping {sleep_for}s and retrying once',
@@ -359,13 +394,17 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
 
         if payload.get('stat') != 'ok':
             err = payload.get('error') or {}
-            module.log(f"uptimerobot: POST {endpoint} stat=fail type={err.get('type', 'unknown')}")
-            return False, f"{err.get('type', 'unknown')}: {err.get('message', payload)}"
+            module.log(
+                f'uptimerobot: POST {endpoint} stat=fail type={err.get("type", "unknown")}'
+            )
+            return False, f'{err.get("type", "unknown")}: {err.get("message", payload)}'
 
         if payload.get(result_key) is None:
             # Some endpoints return only `stat: 'ok'` (e.g. delete, edit when no
             # detail is included). Fall back to the message field if present.
-            module.log(f'uptimerobot: POST {endpoint} stat=ok (no {result_key} in payload)')
+            module.log(
+                f'uptimerobot: POST {endpoint} stat=ok (no {result_key} in payload)'
+            )
             return True, payload.get('message', payload)
 
         item = payload[result_key]
@@ -383,7 +422,9 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
             break
         offset += PAGE_SIZE
 
-    module.log(f'uptimerobot: POST {endpoint} stat=ok pages={pages} items={len(aggregated)}')
+    module.log(
+        f'uptimerobot: POST {endpoint} stat=ok pages={pages} items={len(aggregated)}'
+    )
     return True, aggregated
 
 
@@ -414,14 +455,28 @@ def _translate_keys(params, mapping_per_key):
 
 # Common to new + edit. `id` and `status` are edit-only; `type` is create-only.
 _MONITOR_COMMON_KEYS = {
-    'friendly_name', 'url', 'sub_type', 'port',
-    'keyword_type', 'keyword_case_type', 'keyword_value',
-    'interval', 'timeout',
-    'http_username', 'http_password', 'http_auth_type',
-    'post_type', 'post_value', 'http_method', 'post_content_type',
-    'alert_contacts', 'mwindows',
-    'custom_http_headers', 'custom_http_statuses',
-    'ignore_ssl_errors', 'disable_domain_expire_notifications',
+    'friendly_name',
+    'url',
+    'sub_type',
+    'port',
+    'keyword_type',
+    'keyword_case_type',
+    'keyword_value',
+    'interval',
+    'timeout',
+    'http_username',
+    'http_password',
+    'http_auth_type',
+    'post_type',
+    'post_value',
+    'http_method',
+    'post_content_type',
+    'alert_contacts',
+    'mwindows',
+    'custom_http_headers',
+    'custom_http_statuses',
+    'ignore_ssl_errors',
+    'disable_domain_expire_notifications',
 }
 
 _MONITOR_TRANSLATIONS = {
@@ -494,7 +549,9 @@ def _translate_monitor_response(item):
         item['status'] = MONITOR_STATUS_READ.get(item['status'], item['status'])
     for contact in item.get('alert_contacts') or []:
         if 'type' in contact and contact['type'] is not None:
-            contact['type'] = ALERT_CONTACT_TYPE_READ.get(contact['type'], contact['type'])
+            contact['type'] = ALERT_CONTACT_TYPE_READ.get(
+                contact['type'], contact['type']
+            )
 
 
 def new_monitor(module, api_key, params):
@@ -507,7 +564,9 @@ def new_monitor(module, api_key, params):
 def edit_monitor(module, api_key, params):
     allowed = _MONITOR_COMMON_KEYS | {'id', 'status'}
     body = _filter_keys(params, allowed)
-    body = _translate_keys(body, dict(_MONITOR_TRANSLATIONS, status=MONITOR_STATUS_WRITE))
+    body = _translate_keys(
+        body, dict(_MONITOR_TRANSLATIONS, status=MONITOR_STATUS_WRITE)
+    )
     return _request(module, api_key, 'editMonitor', body, 'monitor')
 
 
@@ -572,7 +631,15 @@ def new_mwindow(module, api_key, params):
 
 
 def edit_mwindow(module, api_key, params):
-    allowed = {'id', 'friendly_name', 'type', 'value', 'start_time', 'duration', 'status'}
+    allowed = {
+        'id',
+        'friendly_name',
+        'type',
+        'value',
+        'start_time',
+        'duration',
+        'status',
+    }
     body = _filter_keys(params, allowed)
     body = _translate_keys(body, _MWINDOW_TRANSLATIONS)
     return _request(module, api_key, 'editMWindow', body, 'mwindow')
@@ -619,8 +686,12 @@ def _translate_psp_response(item):
 def new_psp(module, api_key, params):
     # `status` is not allowed on create per upstream; only edit_psp accepts it.
     allowed = {
-        'friendly_name', 'monitors', 'custom_domain',
-        'password', 'sort', 'hide_url_links',
+        'friendly_name',
+        'monitors',
+        'custom_domain',
+        'password',
+        'sort',
+        'hide_url_links',
     }
     body = _filter_keys(params, allowed)
     body = _translate_keys(body, _PSP_TRANSLATIONS)
@@ -629,8 +700,14 @@ def new_psp(module, api_key, params):
 
 def edit_psp(module, api_key, params):
     allowed = {
-        'id', 'friendly_name', 'monitors', 'custom_domain',
-        'password', 'sort', 'hide_url_links', 'status',
+        'id',
+        'friendly_name',
+        'monitors',
+        'custom_domain',
+        'password',
+        'sort',
+        'hide_url_links',
+        'status',
     }
     body = _filter_keys(params, allowed)
     body = _translate_keys(body, _PSP_TRANSLATIONS)
@@ -654,7 +731,9 @@ ALERT_CONTACT_STATUS_READ = {
 
 
 def get_alert_contacts(module, api_key):
-    success, contacts = _request(module, api_key, 'getAlertContacts', {}, 'alert_contacts')
+    success, contacts = _request(
+        module, api_key, 'getAlertContacts', {}, 'alert_contacts'
+    )
     if not success:
         return success, contacts
     if not isinstance(contacts, list):
@@ -673,7 +752,9 @@ def _translate_alert_contact_response(item):
 
 
 def delete_alert_contact(module, api_key, contact_id):
-    return _request(module, api_key, 'deleteAlertContact', {'id': contact_id}, 'alert_contact')
+    return _request(
+        module, api_key, 'deleteAlertContact', {'id': contact_id}, 'alert_contact'
+    )
 
 
 # --- Per-resource API: account ----------------------------------------------

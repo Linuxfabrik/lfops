@@ -22,9 +22,8 @@ import unittest
 
 from ansible_collections.linuxfabrik.lfops.plugins.modules import gpg_key
 
-
 _KEY = {
-    'algo': '1',          # 1 -> RSA
+    'algo': '1',  # 1 -> RSA
     'length': '2048',
     'uids': ['Test Name (a comment) <test@example.com>'],
 }
@@ -41,7 +40,6 @@ _PARAMS = {
 
 
 class TestMatchKey(unittest.TestCase):
-
     def test_full_match(self):
         self.assertTrue(gpg_key.match_key(copy.deepcopy(_KEY), dict(_PARAMS)))
 

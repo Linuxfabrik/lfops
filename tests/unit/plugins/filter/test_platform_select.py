@@ -29,8 +29,13 @@ from ansible.errors import AnsibleFilterError
 # (repo_root/plugins/filter/platform_select.py) relative to this test file.
 _PLUGIN_PATH = os.path.join(
     os.path.dirname(__file__),
-    '..', '..', '..', '..',
-    'plugins', 'filter', 'platform_select.py',
+    '..',
+    '..',
+    '..',
+    '..',
+    'plugins',
+    'filter',
+    'platform_select.py',
 )
 _spec = importlib.util.spec_from_file_location('platform_select', _PLUGIN_PATH)
 _module = importlib.util.module_from_spec(_spec)
@@ -60,7 +65,6 @@ _FACTS_SUSE = {
 
 
 class Test(unittest.TestCase):
-
     # --- basic matching --------------------------------------------------
 
     def test_os_family_only(self):
@@ -141,7 +145,9 @@ class Test(unittest.TestCase):
             platform_select(values, _FACTS_SUSE)
 
     def test_empty_input_dict_with_default(self):
-        self.assertEqual(platform_select({}, _FACTS_ROCKY8, default='fallback'), 'fallback')
+        self.assertEqual(
+            platform_select({}, _FACTS_ROCKY8, default='fallback'), 'fallback'
+        )
 
     def test_empty_input_dict_without_default_raises(self):
         with self.assertRaises(AnsibleFilterError):
