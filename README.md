@@ -440,6 +440,14 @@ freeipa_server__ipa_admin_password:
   )['password'] }}"
 ```
 
+A lookup is evaluated by the templating engine and has no check mode, so a run with `--check` creates a missing item in your vault for real. To forbid that, and to guard against typos in a `hostname` or `purpose` silently minting a second credential, disable item creation for the run:
+
+```bash
+LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE=false ansible-playbook linuxfabrik.lfops.setup_nextcloud --limit myhost
+```
+
+The lookup then aborts as soon as an item does not exist. The same switch is available as `create` in the `[bitwarden_item_lookup]` section of your `ansible.cfg`.
+
 See `ansible-doc -t lookup linuxfabrik.lfops.bitwarden_item` for all options.
 
 LFOps also ships a small set of custom modules for resource types that are not covered by Ansible core:

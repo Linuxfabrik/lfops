@@ -18,6 +18,14 @@ collection), build a temporary `ansible_collections/linuxfabrik/lfops`
 tree that symlinks back to the repo and put it on sys.path. Filter and
 lookup tests that load a plugin by file path do not need this, but it is
 harmless for them.
+
+On top of that, install Ansible's collection finder for the same tree, so
+tests can pull a plugin through the plugin loader (`lookup_loader.get()`)
+instead of instantiating its class. That is what registers a plugin's
+documented options, and therefore the only way to test option handling
+(`set_options()` / `get_option()`). It has to happen before the first
+plain `ansible_collections` import: once that namespace package exists,
+the finder can no longer take over and plugin resolution fails.
 """
 
 import os
@@ -39,7 +47,17 @@ def _make_collection_importable():
     os.environ.setdefault('ANSIBLE_COLLECTIONS_PATH', str(root))
 
 
+def _init_plugin_loader():
+    from ansible.plugins.loader import init_plugin_loader
+    from ansible.utils.collection_loader import AnsibleCollectionConfig
+
+    # the finder is process-global and may only be installed once
+    if AnsibleCollectionConfig.collection_finder is None:
+        init_plugin_loader([os.environ['ANSIBLE_COLLECTIONS_PATH']])
+
+
 # make the tests/ directory importable so test modules can `import ansible_harness`
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 _make_collection_importable()
+_init_plugin_loader()

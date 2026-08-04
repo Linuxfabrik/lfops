@@ -26,6 +26,7 @@ description:
     - Items are read from a local on-disk cache backed by C(bw serve). A cached C(bw sync) is performed at most every 60 seconds, so consecutive lookups in the same play do not hammer the API.
 
 notes:
+    - Lookups are evaluated by the templating engine on the controller and have no notion of check mode, so a run with C(--check) creates a missing item for real. Set I(create) to C(false) to turn that into a failure.
     - Only login items (Bitwarden type 1) are supported. Cards, secure notes and identities are ignored.
     - TOTP secrets are not managed; the C(totp) field is set to an empty string on creation.
     - URIs on existing items are not edited by this lookup; they are only set at item creation time.
@@ -46,6 +47,20 @@ options:
         description: Bitwarden collection ID the item belongs to. Used both as a search filter and, if the item has to be created, as the target collection.
         required: False
         type: str
+    create:
+        description:
+            - Whether an item that does not exist yet may be created.
+            - Set this to C(false) for runs in which no new secrets must be minted, for example when re-running a playbook against a host whose credentials are known to exist already. A name-based lookup that finds no item then fails instead of creating one.
+            - Unlike the per-term settings above, this is a plugin-wide option and is therefore set via its environment variable or in C(ansible.cfg), not inside the lookup term.
+        default: True
+        required: False
+        type: bool
+        env:
+            - name: LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE
+        ini:
+            - section: bitwarden_item_lookup
+              key: create
+        version_added: "8.1.0"
     folder_id:
         description: Bitwarden folder ID the item belongs to. Used both as a search filter and, if the item has to be created, as the target folder.
         required: False
@@ -295,6 +310,8 @@ display = Display()  # log prefix "lfbwlp" = Linuxfabrik Bitwarden Lookup Plugin
 
 class LookupModule(LookupBase):
     def run(self, terms, variables=None, **kwargs):
+        self.set_options(var_options=variables, direct=kwargs)
+
         bw = Bitwarden()
 
         if not bw.is_unlocked:
@@ -359,6 +376,12 @@ class LookupModule(LookupBase):
                 result[0]['username'] = result[0]['login']['username']
                 result[0]['password'] = result[0]['login']['password']
                 ret.append(result[0])
+            elif not self.get_option('create'):
+                # the user declared that this run must not mint new secrets
+                raise AnsibleError(
+                    f'Bitwarden item "{name}" not found, and item creation is disabled '
+                    '(LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE=false). Aborting.'
+                )
             else:
                 display.vvv('lfbwlp - run - no item found. generating new one')
                 # generate a new one

@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* **plugin:bitwarden_item**: The lookup can be told not to create secrets. Set `LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE=false` (or `create = false` in the `[bitwarden_item_lookup]` section of your `ansible.cfg`) for runs against hosts whose credentials must already exist: a lookup that finds no matching item then aborts the run instead of silently generating a new password. Defaults to the previous behaviour.
+
 ### Fixed
 
 * **role:freeipa_server**: Assigning commands or command groups to a sudo rule now works. The subkeys are called `allow_sudocmds` and `allow_sudocmdgroups`; entries in `freeipa_server__sudorules` using the former `cmds` and `cmdgroups` names never reached FreeIPA and aborted the run with `Unsupported parameters`, so a sudo rule could only be managed without its command members. Rename them in your inventory, otherwise the rule is created without its commands.
