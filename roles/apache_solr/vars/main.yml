@@ -1,3 +1,4 @@
 __apache_solr__java_package:
+  '10': 'java-21-openjdk-headless'
   '9': 'java-17-openjdk-headless'
   '8': 'java-1.8.0-openjdk-headless'

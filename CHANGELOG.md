@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_solr**: Extend `__apache_solr__java_package` with an entry for the Java package required by Solr 10.
 * **role:freeipa_server**: Assigning commands or command groups to a sudo rule now works. The subkeys are called `allow_sudocmds` and `allow_sudocmdgroups`; entries in `freeipa_server__sudorules` using the former `cmds` and `cmdgroups` names never reached FreeIPA and aborted the run with `Unsupported parameters`, so a sudo rule could only be managed without its command members. Rename them in your inventory, otherwise the rule is created without its commands.
 
 
