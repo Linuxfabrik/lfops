@@ -1,3 +1,10 @@
+# `php-fpm --test` catches a broken pool or ini before the running service is bounced, so a bad
+# deploy fails loudly here instead of leaving PHP-FPM down after the restart.
+- name: 'php: php-fpm --test; restart php-fpm'
+  ansible.builtin.command: '{{ __php__config_test_command }}'
+  changed_when: true # must report changed so the chained restart handler is triggered
+  notify: 'php: restart php-fpm'
+
 # skip restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers), if
 # the service was just started (redundant), or if the user wants it stopped.
 # __php__fpm_service_state_result is registered on a dedicated state-only task (not the enabled

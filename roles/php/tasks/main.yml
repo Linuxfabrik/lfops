@@ -37,7 +37,7 @@
     ansible.builtin.package:
       name: '{{ __php__base_packages }}'
       state: 'latest'
-    notify: 'php: restart php-fpm'
+    notify: 'php: php-fpm --test; restart php-fpm'
 
   tags:
     - 'never'
@@ -113,7 +113,7 @@
       name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
           + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'latest'
-    notify: 'php: restart php-fpm'
+    notify: 'php: php-fpm --test; restart php-fpm'
 
   tags:
     - 'never'
@@ -150,7 +150,7 @@
       group: 'root'
       mode: 0o644
     loop: '{{ __php__conf_dest }}'
-    notify: 'php: restart php-fpm'
+    notify: 'php: php-fpm --test; restart php-fpm'
 
   tags:
     - 'php'
@@ -167,7 +167,7 @@
     when:
       - 'item["state"] | d("present") == "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
-    notify: 'php: restart php-fpm'
+    notify: 'php: php-fpm --test; restart php-fpm'
 
   - name: 'Deploy the pools to {{ __php__fpm_pools_path }}'
     ansible.builtin.template:
@@ -180,7 +180,7 @@
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
-    notify: 'php: restart php-fpm'
+    notify: 'php: php-fpm --test; restart php-fpm'
 
   # 'php:update' is included because a version change moves __php__fpm_pools_path to the new
   # version's tree, which the package ships with nothing but its own default pool.

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:php**: The PHP-FPM configuration is checked with `php-fpm --test` before the service is restarted. A broken pool or ini therefore aborts the run with the error message, instead of taking PHP-FPM down on the restart.
 * **ci**: The documentation toolchain lockfile is watched by Dependabot, so it receives updates like every other lockfile in the repository.
 
 ### Fixed

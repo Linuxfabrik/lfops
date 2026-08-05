@@ -29,5 +29,8 @@ __php__conf_dest:
   - '/etc/php/{{ __php__installed_version }}/apache2/conf.d/z00-linuxfabrik.ini'
   - '/etc/php/{{ __php__installed_version }}/cli/conf.d/z00-linuxfabrik.ini'
   - '/etc/php/{{ __php__installed_version }}/fpm/conf.d/z00-linuxfabrik.ini'
+# Debian ships no unversioned php-fpm binary and registers none with alternatives, so the config
+# test has to address the installed version explicitly.
+__php__config_test_command: 'php-fpm{{ __php__installed_version }} --test'
 __php__fpm_pools_path: '/etc/php/{{ __php__installed_version }}/fpm/pool.d'
 __php__fpm_service_name: 'php{{ __php__installed_version }}-fpm'
