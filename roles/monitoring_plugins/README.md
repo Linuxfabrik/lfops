@@ -21,7 +21,7 @@ Notes:
 
 ## Installation Methods
 
- Taken from the Linuxfabrik Monitoring Plugins [INSTALL](https://github.com/Linuxfabrik/monitoring-plugins/blob/main/INSTALL.rst) document:
+ Taken from the Linuxfabrik Monitoring Plugins [INSTALL](https://github.com/Linuxfabrik/monitoring-plugins/blob/main/INSTALL.md) document:
 
 | Platform | Install | Implemented by | Mandatory Requirements |
 |----------|---------|----------------|--------------|
