@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **plugin:bitwarden_item**: The lookup can be told not to create secrets. Set `LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE=false` (or `create = false` in the `[bitwarden_item_lookup]` section of your `ansible.cfg`) for runs against hosts whose credentials must already exist: a lookup that finds no matching item then aborts the run instead of silently generating a new password. Defaults to the previous behaviour.
 
+### Changed
+
+* **ci**: The documentation toolchain lockfile is watched by Dependabot, so it receives updates like every other lockfile in the repository.
+
 ### Fixed
 
 * **role:apache_solr**: Extend `__apache_solr__java_package` with an entry for the Java package required by Solr 10.
