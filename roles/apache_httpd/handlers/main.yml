@@ -6,6 +6,7 @@
 # where the result is never registered.
 - name: 'apache_httpd: httpd -t; systemctl reload httpd'
   ansible.builtin.command: '{{ __apache_httpd__config_test_command }}'
+  changed_when: true # must report changed so the chained reload handler is triggered
   notify:
     - 'apache_httpd: systemctl reload httpd'
 
@@ -19,6 +20,7 @@
 
 - name: 'apache_httpd: httpd -t; systemctl restart httpd'
   ansible.builtin.command: '{{ __apache_httpd__config_test_command }}'
+  changed_when: true # must report changed so the chained restart handler is triggered
   notify:
     - 'apache_httpd: systemctl restart httpd'
 

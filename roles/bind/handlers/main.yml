@@ -6,6 +6,7 @@
 # the result is never registered.
 - name: 'bind: named-checkzone ... && reload named'
   ansible.builtin.command: 'named-checkzone {{ item["name"] }} /var/named/{{ item["file"] | d(item["name"] ~ ".zone") }}'
+  changed_when: true # must report changed so the chained reload handler is triggered
   loop: '{{ bind__zones }}'
   loop_control:
     label: '{{ item["name"] }}'

@@ -3,7 +3,7 @@
 
 - name: 'example: validate config; restart example'
   ansible.builtin.command: 'example --validate-config'
-  changed_when: false # no config change
+  changed_when: true # must report changed so the chained restart handler is triggered
   notify: 'example: restart example'
 
 # skip restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers), if

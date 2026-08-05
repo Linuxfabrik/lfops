@@ -6,6 +6,7 @@
 # the result is never registered.
 - name: 'blocky: validate config & restart blocky.service'
   ansible.builtin.command: '/usr/local/sbin/blocky validate --config /etc/blocky/config.yml'
+  changed_when: true # must report changed so the chained restart handler is triggered
   notify:
     - 'blocky: restart blocky.service'
 

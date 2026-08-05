@@ -1,5 +1,6 @@
 - name: 'sshd: sshd -t; reload sshd'
   ansible.builtin.command: 'sshd -t'
+  changed_when: true # must report changed so the chained reload handler is triggered
   notify:
     - 'sshd: reload sshd'
 

@@ -16,5 +16,5 @@
 - name: 'icinga_kubernetes: systemctl daemon reload && restart icinga-kubernetes'
   ansible.builtin.systemd:
     daemon_reload: true
-  changed_when: true # else the next handler does not get called
+  changed_when: true # must report changed so the chained restart handler is triggered
   notify: 'icinga_kubernetes: restart icinga-kubernetes'

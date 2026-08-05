@@ -4,8 +4,9 @@
 # task), so that enabled-only changes don't prevent the restart.
 # `is not defined` covers a run that skips the state block (`--skip-tags squid:state`), where
 # the result is never registered.
-- name: 'squid: squid -k parse # and then restart' # noqa no-changed-when no config change
+- name: 'squid: squid -k parse # and then restart'
   ansible.builtin.command: 'squid -k parse'
+  changed_when: true # must report changed so the chained restart handler is triggered
   notify:
     - 'squid: restart squid'
 
