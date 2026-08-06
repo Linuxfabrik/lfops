@@ -538,7 +538,6 @@ def generate_mkdocs_yml(roles, plugin_pages):
     lines.append("    not_found: 'info'")
     lines.append('')
     lines.append('not_in_nav: |')
-    lines.append('  CHANGELOG.md')
     lines.append('  CODE_OF_CONDUCT.md')
     lines.append('')
 
@@ -550,6 +549,7 @@ def generate_mkdocs_yml(roles, plugin_pages):
     lines.append("  - 'Home': 'index.md'")
     lines.append("  - 'Compatibility': 'compatibility.md'")
     lines.append("  - 'Playbooks': 'playbooks.md'")
+    lines.append("  - 'Changelog': 'CHANGELOG.md'")
     lines.append("  - 'Security': 'security.md'")
     lines.append("  - 'Contributing': 'contributing.md'")
     lines.append("  - 'Roles':")
