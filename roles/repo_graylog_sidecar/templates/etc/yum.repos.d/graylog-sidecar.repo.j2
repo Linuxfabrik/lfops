@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+# 2026052801
+
+# https://go2docs.graylog.org/current/getting_in_log_data/install_sidecar_on_linux.htm
+[graylog-sidecar]
+name=graylog-sidecar
+{% if repo_graylog_sidecar__mirror_url is defined and repo_graylog_sidecar__mirror_url | length %}
+baseurl={{ repo_graylog_sidecar__mirror_url }}/graylog/repo/el/sidecar-stable/{{ repo_graylog_sidecar__version }}/$basearch/
+{% else %}
+baseurl=https://packages.graylog2.org/repo/el/sidecar-stable/{{ repo_graylog_sidecar__version }}/$basearch/
+{% endif %}
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-graylog-sidecar
+{% if repo_graylog_sidecar__mirror_url is defined and repo_graylog_sidecar__mirror_url | length and repo_graylog_sidecar__basic_auth_login is defined and repo_graylog_sidecar__basic_auth_login | length %}
+username={{ repo_graylog_sidecar__basic_auth_login["username"] }}
+password={{ repo_graylog_sidecar__basic_auth_login["password"] }}
+{% endif %}

@@ -1,0 +1,2 @@
+repo_graylog_sidecar__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
+repo_graylog_sidecar__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'

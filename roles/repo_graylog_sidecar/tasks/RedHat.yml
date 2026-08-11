@@ -1,0 +1,38 @@
+- block:
+
+  # the same pubkey signs all Graylog repositories, served from the debian path
+  - name: 'curl https://packages.graylog2.org/repo/debian/pubkey.gpg --output /tmp/ansible.RPM-GPG-KEY-graylog-sidecar'
+    ansible.builtin.get_url:
+      url: 'https://packages.graylog2.org/repo/debian/pubkey.gpg'
+      dest: '/tmp/ansible.RPM-GPG-KEY-graylog-sidecar'
+      mode: 0o644
+    delegate_to: 'localhost'
+    become: false
+    changed_when: false # not an actual config change on the server
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'copy /tmp/ansible.RPM-GPG-KEY-graylog-sidecar to remote host'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.RPM-GPG-KEY-graylog-sidecar'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-graylog-sidecar'
+      mode: 0o644
+
+  # https://go2docs.graylog.org/current/getting_in_log_data/install_sidecar_on_linux.htm
+  - name: 'Deploy the graylog-sidecar repo (mirror: {{ repo_graylog_sidecar__mirror_url }})'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/yum.repos.d/graylog-sidecar.repo.j2'
+      dest: '/etc/yum.repos.d/graylog-sidecar.repo'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/graylog-sidecar.repo'
+
+  tags:
+    - 'repo_graylog_sidecar'

@@ -107,6 +107,7 @@
 - import_playbook: 'repo_gitlab_runner.yml'
 - import_playbook: 'repo_grafana.yml'
 - import_playbook: 'repo_graylog.yml'
+- import_playbook: 'repo_graylog_sidecar.yml'
 - import_playbook: 'repo_icinga.yml'
 - import_playbook: 'repo_influxdb.yml'
 - import_playbook: 'repo_mariadb.yml'

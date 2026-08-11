@@ -900,6 +900,13 @@ Calls the following roles (in order):
 * [repo_graylog](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog)
 
 
+## repo_graylog_sidecar.yml
+
+Calls the following roles (in order):
+
+* [repo_graylog_sidecar](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog_sidecar)
+
+
 ## repo_icinga.yml
 
 Calls the following roles (in order):

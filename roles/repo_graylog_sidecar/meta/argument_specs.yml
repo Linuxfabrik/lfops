@@ -1,0 +1,31 @@
+argument_specs:
+  main:
+    options:
+
+      repo_graylog_sidecar__basic_auth_login:
+        # 'raw' rather than 'dict', because the default in defaults/main.yml
+        # resolves to '' (empty string) when lfops__repo_basic_auth_login is
+        # not set; a strict 'dict' spec would reject the empty default.
+        type: 'raw'
+        required: false
+        description: >-
+          HTTP basic auth credentials for the Graylog Sidecar repository.
+          Expected as a dict with `username` and `password` keys. Typically
+          fed by `linuxfabrik.lfops.bitwarden_item`, which returns the full
+          Bitwarden item with additional keys.
+
+      repo_graylog_sidecar__mirror_url:
+        type: 'str'
+        required: false
+        description: >-
+          URL of a custom mirror server providing the repository. Defaults
+          to `lfops__repo_mirror_url`; if that is also unset, the default
+          upstream mirrors are used.
+
+      repo_graylog_sidecar__version:
+        type: 'str'
+        required: true
+        description: >-
+          The Graylog Sidecar repo version to install, in `major.minor`
+          format. The Sidecar repository is versioned independently of the
+          Graylog server.
