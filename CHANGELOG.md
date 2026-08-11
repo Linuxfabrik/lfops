@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:graylog_sidecar**: New role to install and configure the Graylog Sidecar log collector agent on RHEL-family hosts. It ships logs to a Graylog server and is managed centrally from the Graylog web UI via tags.
 * **role:repo_graylog_sidecar**: New role deploying the Graylog Sidecar package repository (separate from the main Graylog repository), with support for custom mirrors and basic auth like the other `repo_*` roles.
 * **role:files**: The `files:directories`, `files:files` and `files:symlinks` tags manage one kind of file system entity each, so a single directory or symlink can be deployed without touching the rest.
 * **plugin:bitwarden_item**: The lookup can be told not to create secrets, so a lookup that finds no matching item aborts the run instead of silently generating a new password. Set `LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE=false`, or `create = false` in the `[bitwarden_item_lookup]` section of your `ansible.cfg`; the default is the previous behaviour.

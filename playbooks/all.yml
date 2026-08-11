@@ -40,6 +40,7 @@
 - import_playbook: 'glpi_agent.yml'
 - import_playbook: 'grafana.yml'
 - import_playbook: 'grafana_grizzly.yml'
+- import_playbook: 'graylog_sidecar.yml'
 - import_playbook: 'haveged.yml'
 - import_playbook: 'hetzner_vm.yml'
 - import_playbook: 'hostname.yml'

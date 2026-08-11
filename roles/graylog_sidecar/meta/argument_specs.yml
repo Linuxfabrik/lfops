@@ -1,0 +1,78 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      graylog_sidecar__collector_binaries_accesslist:
+        type: 'list'
+        elements: 'str'
+        required: false
+        description: >-
+          Absolute paths of the binaries the Graylog server is allowed to make
+          this sidecar execute. Supports the wildcards of Go's filepath.Match.
+          An empty list disables the check.
+
+      graylog_sidecar__node_name:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The node name of the sidecar. Empty means use the hostname.'
+
+      graylog_sidecar__send_status:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Transmit detailed sidecar information (collector statuses, metrics, log file lists).'
+
+      graylog_sidecar__server_api_token:
+        type: 'str'
+        required: true
+        description: 'The API token to authenticate against the Graylog server API.'
+
+      graylog_sidecar__server_url:
+        type: 'str'
+        required: true
+        description: 'The URL to the Graylog server API, e.g. "http://graylog.example.com:9000/api/".'
+
+      graylog_sidecar__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the service at boot.'
+
+      graylog_sidecar__service_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Desired runtime state of the graylog-sidecar service.'
+
+      graylog_sidecar__tags:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'default'
+        description: >-
+          Tags to assign to this sidecar for collector configuration matching.
+          Defaults to "default", the tag of the collector configuration Graylog
+          ships out of the box. Set to an empty list to register the sidecar
+          without applying any configuration.
+
+      graylog_sidecar__tls_skip_verify:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Skip the verification of TLS connections.'
+
+      graylog_sidecar__update_interval:
+        type: 'int'
+        required: false
+        default: 10
+        description: 'The update interval in seconds.'

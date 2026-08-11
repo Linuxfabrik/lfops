@@ -1,0 +1,25 @@
+graylog_sidecar__collector_binaries_accesslist:
+  - '/usr/bin/auditbeat'
+  - '/usr/bin/filebeat'
+  - '/usr/bin/heartbeat'
+  - '/usr/bin/journalbeat'
+  - '/usr/bin/metricbeat'
+  - '/usr/bin/nxlog'
+  - '/usr/bin/packetbeat'
+  - '/usr/lib/graylog-sidecar/auditbeat'
+  - '/usr/lib/graylog-sidecar/filebeat'
+  - '/usr/share/auditbeat/bin/auditbeat'
+  - '/usr/share/filebeat/bin/filebeat'
+  - '/usr/share/heartbeat/bin/heartbeat'
+  - '/usr/share/journalbeat/bin/journalbeat'
+  - '/usr/share/metricbeat/bin/metricbeat'
+  - '/usr/share/packetbeat/bin/packetbeat'
+  - '/opt/nxlog/bin/nxlog'
+graylog_sidecar__node_name: ''
+graylog_sidecar__send_status: true
+graylog_sidecar__service_enabled: true
+graylog_sidecar__service_state: 'started'
+graylog_sidecar__tags:
+  - 'default'
+graylog_sidecar__tls_skip_verify: false
+graylog_sidecar__update_interval: 10

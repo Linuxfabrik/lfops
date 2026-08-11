@@ -1,0 +1,65 @@
+- block:
+
+  - name: 'Install graylog-sidecar'
+    ansible.builtin.package:
+      name:
+        - 'graylog-sidecar'
+      state: 'present'
+
+  tags:
+    - 'graylog_sidecar'
+
+
+- block:
+
+  - name: 'Deploy /etc/graylog/sidecar/sidecar.yml'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/graylog/sidecar/sidecar.yml.j2'
+      dest: '/etc/graylog/sidecar/sidecar.yml'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600 # contains graylog_sidecar__server_api_token; the package ships it 0600 too
+    notify: 'graylog_sidecar: restart graylog-sidecar'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/graylog/sidecar/sidecar.yml'
+
+  # the package ships no systemd unit at all; the binary generates one (and enables it).
+  # upstream asked for the package to do this in 2018 and it is still open:
+  # https://github.com/Graylog2/collector-sidecar/issues/225
+  # the call is not idempotent either - a second run exits 1 with "Init already exists" -
+  # hence the `creates` guard.
+  - name: 'graylog-sidecar -service install'
+    ansible.builtin.command: 'graylog-sidecar -service install'
+    args:
+      creates: '/etc/systemd/system/graylog-sidecar.service'
+
+  tags:
+    - 'graylog_sidecar'
+    - 'graylog_sidecar:configure'
+
+
+- block:
+
+  # split enabled and state into separate tasks so that the register on the state task
+  # only reflects actual state changes (started/stopped), not enabled/disabled changes.
+  # this lets the restart handler correctly skip a restart when the service was just started.
+  - name: 'systemctl {{ graylog_sidecar__service_enabled | bool | ternary("enable", "disable") }} graylog-sidecar.service'
+    ansible.builtin.service:
+      name: 'graylog-sidecar.service'
+      enabled: '{{ graylog_sidecar__service_enabled | bool }}'
+
+  - name: 'systemctl {{ graylog_sidecar__service_state | regex_replace("p?ed$", "") }} graylog-sidecar.service'
+    ansible.builtin.service:
+      name: 'graylog-sidecar.service'
+      state: '{{ graylog_sidecar__service_state }}'
+    register: '__graylog_sidecar__service_state_result'
+
+  tags:
+    - 'graylog_sidecar'
+    - 'graylog_sidecar:state'

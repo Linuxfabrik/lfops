@@ -373,6 +373,14 @@ Calls the following roles (in order):
 * [grafana_grizzly](https://github.com/Linuxfabrik/lfops/tree/main/roles/grafana_grizzly)
 
 
+## graylog_sidecar.yml
+
+Calls the following roles (in order):
+
+* [repo_graylog_sidecar](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_graylog_sidecar): `graylog_sidecar__skip_repo_graylog_sidecar`
+* [graylog_sidecar](https://github.com/Linuxfabrik/lfops/tree/main/roles/graylog_sidecar)
+
+
 ## haveged.yml
 
 Calls the following roles (in order):

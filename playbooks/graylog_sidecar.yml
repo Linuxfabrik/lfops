@@ -1,0 +1,33 @@
+- name: 'Playbook linuxfabrik.lfops.graylog_sidecar'
+  hosts:
+    - 'lfops_graylog_sidecar'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_graylog_sidecar'
+      when:
+        - 'not graylog_sidecar__skip_repo_graylog_sidecar | d(false) | bool'
+
+    - role: 'linuxfabrik.lfops.graylog_sidecar'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

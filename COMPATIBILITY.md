@@ -49,6 +49,7 @@ Which Ansible role is proven to run on which OS?
 | grav                                  |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | graylog_datanode                      |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | graylog_server                        |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| graylog_sidecar                       |        |        |  (x)   |  (x)   |    x    |           |           |           |                                              |
 | haveged                               |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | hetzner_vm                            |        |        |        |        |         |           |           |           | Fedora 35+                                   |
 | hostname                              |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
