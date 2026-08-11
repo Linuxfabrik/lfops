@@ -1,0 +1,21 @@
+# Variables the playbook under test needs, applied to every system under test.
+
+# Mandatory: the repository is versioned independently of the Graylog server.
+repo_graylog_sidecar__version: '1.5'
+
+# Mandatory: the sidecar needs a server to talk to. No Graylog server runs in this scenario, so
+# the URL points at a documentation domain (RFC 2606). The sidecar starts anyway and retries,
+# which is what verify.yml uses to prove it read the configured value.
+graylog_sidecar__server_url: 'http://graylog.example.com:9000/api/'
+graylog_sidecar__server_api_token: 'linuxfabrik'
+
+# Optional, set to a non-default so the scenario exercises the templating rather than only the
+# shipped defaults.
+graylog_sidecar__tags:
+  - 'linuxfabrik-molecule'
+graylog_sidecar__update_interval: 30
+
+# Narrowed to the collector the RPM actually ships, which is what a real deployment should do.
+# Also exercises the list rendering with a value other than the shipped default.
+graylog_sidecar__collector_binaries_accesslist:
+  - '/usr/lib/graylog-sidecar/filebeat'

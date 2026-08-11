@@ -1,0 +1,2 @@
+- name: 'Converge graylog_sidecar playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.graylog_sidecar'

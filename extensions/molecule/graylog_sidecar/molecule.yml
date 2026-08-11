@@ -1,0 +1,8 @@
+# Molecule scenario marker. Required even when empty, so that Molecule discovers the scenario.
+# Everything this scenario needs comes from extensions/molecule/config.yml; nothing is overridden
+# here.
+#
+# The scenario converges without a Graylog server in the test setup. That is deliberate: the
+# sidecar keeps running and retries when the server is unreachable, so the whole role is still
+# exercised, and the retry attempts in the journal prove the running process picked up the
+# configured server_url.
