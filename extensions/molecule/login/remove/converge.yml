@@ -1,0 +1,4 @@
+# Same playbook as the install sub-scenario; only the inputs differ. The account prepare.yml
+# created is flipped to state: 'absent' here, which exercises the role's removal path.
+- name: 'Converge login playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.login'

@@ -1,0 +1,7 @@
+# Molecule scenario marker. Inherits the VM backend and the full test_sequence
+# (including idempotence) from extensions/molecule/config.yml.
+#
+# This sub-scenario creates the users; the 'remove' sub-scenario deletes them
+# again. VMs are used rather than containers because the role manages user
+# lingering, which needs a running systemd-logind: the init container images
+# ship it masked, and unmasking it requires a privileged container.

@@ -1,0 +1,2 @@
+- name: 'Converge login playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.login'

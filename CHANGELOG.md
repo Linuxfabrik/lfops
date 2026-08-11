@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:login**: Removing a user that had lingering enabled no longer aborts the run.
 * **role:example**: The config-validation handler of the reference role triggers the restart handler it notifies; only the template new roles are copied from was affected, not any role that manages an application.
 * **role:freeipa_server**: Commands and command groups can be assigned to a sudo rule, through the `allow_sudocmds` and `allow_sudocmdgroups` subkeys of `freeipa_server__sudorules`; the former `cmds` and `cmdgroups` names never reached FreeIPA and aborted the run with `Unsupported parameters`.
 * **role:apache_solr**: `__apache_solr__java_package` covers the Java package required by Solr 10.

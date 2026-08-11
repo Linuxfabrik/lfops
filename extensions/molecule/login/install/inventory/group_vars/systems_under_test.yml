@@ -1,0 +1,23 @@
+# Two users, so verify.yml can contrast the two halves of the lingering logic on one host:
+# 'molecule-linger' lingers and carries the extras (password, additional group, SSH key),
+# 'molecule-plain' does not linger.
+#
+# The authorized key is the public half of the ephemeral keypair that vm-create.yml generates for
+# this run. verify.yml logs in with the private half, which proves the key was deployed in a way
+# sshd actually accepts.
+
+login__passwordless_sudo_group: 'linuxfabrik'
+
+login__users__group_var:
+  - name: 'molecule-linger'
+    additional_groups:
+      - 'linuxfabrik'
+    linger: true
+    password: 'linuxfabrik'
+    sshd_authorized_keys:
+      - '{{ lookup("ansible.builtin.file", lookup("ansible.builtin.env", "MOLECULE_EPHEMERAL_DIRECTORY") ~ "/molecule_key.pub") | trim }}'
+    state: 'present'
+
+  - name: 'molecule-plain'
+    linger: false
+    state: 'present'

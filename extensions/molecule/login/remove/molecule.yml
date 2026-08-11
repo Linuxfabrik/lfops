@@ -1,0 +1,12 @@
+# Molecule scenario marker for the 'remove' sub-scenario, run with
+# `molecule test --scenario-name login/remove`.
+#
+# It overrides the prepare step (see prepare.yml): removing an account is only
+# interesting if the account is there in the first place, and Molecule creates a
+# fresh VM for every scenario run, so the sub-scenario has to set up its own
+# starting point. The precondition is built with plain user and loginctl tasks
+# rather than by running the playbook under test, so the removal path is tested
+# independently of the creation path.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

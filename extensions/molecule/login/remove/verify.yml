@@ -1,0 +1,46 @@
+# Verifies the removal. That converge finished at all is already half the test: while the account
+# lingers, `userdel` refuses to remove it, so an unhandled removal path fails the converge step and
+# verify.yml never runs.
+- name: 'Verify the login account is removed'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'getent passwd'
+      ansible.builtin.getent:
+        database: 'passwd'
+
+    - name: 'Assert the account is gone'
+      ansible.builtin.assert:
+        that: '"molecule-linger" not in ansible_facts["getent_passwd"]'
+
+    - name: 'stat /home/molecule-linger'
+      ansible.builtin.stat:
+        path: '/home/molecule-linger'
+      register: '__molecule__home_result'
+
+    - name: 'Assert the home directory is gone'
+      ansible.builtin.assert:
+        that: 'not __molecule__home_result["stat"]["exists"]'
+
+    - name: 'loginctl list-users --no-legend'
+      ansible.builtin.command: 'loginctl list-users --no-legend'
+      changed_when: false
+      register: '__molecule__list_users_result'
+
+    - name: 'Assert logind no longer tracks the account'
+      ansible.builtin.assert:
+        that: '"molecule-linger" not in __molecule__list_users_result["stdout"]'
+
+    # Lingering is stored as a marker file per account, and `userdel` does not clean it up. A
+    # leftover marker would silently make a later account of the same name linger again, so this
+    # is checked on disk - logind cannot be asked about an account that no longer exists.
+    - name: 'find /var/lib/systemd/linger'
+      ansible.builtin.find:
+        paths: '/var/lib/systemd/linger'
+        file_type: 'any'
+      register: '__molecule__linger_markers_result'
+
+    - name: 'Assert no lingering marker was left behind'
+      ansible.builtin.assert:
+        that: '"molecule-linger" not in (__molecule__linger_markers_result["files"] | map(attribute="path") | map("basename"))'
