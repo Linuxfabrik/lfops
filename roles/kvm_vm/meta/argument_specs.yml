@@ -1,0 +1,166 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+#
+# kvm_vm__base_image and kvm_vm__install_location are mutually exclusive and
+# exactly one of them is required, unless kvm_vm__existing_boot_disk is set.
+# that is cross-variable logic, so it lives in an assert in tasks/main.yml and
+# both are declared optional here.
+#
+# options whose default in defaults/main.yml is a Jinja expression referencing
+# another variable carry no `default:` here, to avoid the two drifting apart.
+# their default is documented in the description and in the README instead.
+argument_specs:
+  main:
+    options:
+
+      kvm_vm__additional_disks:
+        type: 'list'
+        required: false
+        default: []
+        description: 'Additional disks to create and attach to the VM.'
+
+      kvm_vm__autostart:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether the VM starts when the KVM host boots.'
+
+      kvm_vm__base_image:
+        type: 'str'
+        required: false
+        description: 'Base image the boot disk is derived from. Mutually exclusive with kvm_vm__install_location.'
+
+      kvm_vm__boot:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Value for the virt-install --boot parameter, for example uefi. Empty means BIOS.'
+
+      kvm_vm__boot_disk_size:
+        type: 'str'
+        required: true
+        description: 'Size of the boot disk, for example 40G.'
+
+      kvm_vm__connect_url:
+        type: 'str'
+        required: false
+        default: 'qemu:///system'
+        description: 'URL for connecting to the hypervisor on the KVM host.'
+
+      kvm_vm__existing_additional_disks:
+        type: 'list'
+        required: false
+        default: []
+        description: 'Existing additional disks to attach unmodified.'
+
+      kvm_vm__existing_boot_disk:
+        type: 'str'
+        required: false
+        description: 'Existing boot disk to attach unmodified, skipping any disk creation.'
+
+      kvm_vm__host:
+        type: 'str'
+        required: true
+        description: 'The KVM host. Used in delegate_to.'
+
+      kvm_vm__install_extra_args:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Kernel command line passed to the installer via virt-install --extra-args.'
+
+      kvm_vm__install_location:
+        type: 'str'
+        required: false
+        description: 'ISO path or install tree URL to install from. Mutually exclusive with kvm_vm__base_image.'
+
+      kvm_vm__machine:
+        type: 'str'
+        required: false
+        description: 'The machine type to emulate, for example q35.'
+
+      kvm_vm__max_memory:
+        type: 'raw'
+        required: false
+        description: 'Maximum memory that can be hot-plugged. Defaults to kvm_vm__memory.'
+
+      kvm_vm__memory:
+        type: 'int'
+        required: true
+        description: 'Memory of the VM in MB.'
+
+      kvm_vm__name:
+        type: 'str'
+        required: false
+        description: 'Name of the VM. Defaults to inventory_hostname.'
+
+      kvm_vm__network_connections:
+        type: 'list'
+        required: false
+        default: []
+        description: 'Networks to attach to the VM.'
+
+      kvm_vm__osinfo:
+        type: 'str'
+        required: false
+        default: 'detect=on'
+        description: 'Value for the virt-install --osinfo parameter.'
+
+      kvm_vm__packages:
+        type: 'list'
+        required: false
+        default:
+          - 'cloud-init'
+          - 'qemu-guest-agent'
+        description: 'Packages installed into the boot disk with virt-customize. Has no effect when kvm_vm__install_location is set, the installer pulls the packages instead.'
+
+      kvm_vm__pool:
+        type: 'str'
+        required: false
+        default: 'default'
+        description: 'Libvirt storage pool the disks live in.'
+
+      kvm_vm__root_password:
+        type: 'str'
+        required: false
+        description: 'Root password set by virt-sysprep. Unset leaves the password untouched.'
+
+      kvm_vm__skip_cloud_init:
+        type: 'bool'
+        required: false
+        description: 'Do not build and attach a cloud-init cidata ISO. Defaults to false, or true if kvm_vm__install_location is set.'
+
+      kvm_vm__skip_sysprep:
+        type: 'bool'
+        required: false
+        description: 'Do not run virt-sysprep on the boot disk. Defaults to false, or true if kvm_vm__install_location is set.'
+
+      kvm_vm__ssh_authorized_keys:
+        type: 'list'
+        required: false
+        default: []
+        description: 'SSH keys handed to cloud-init. Has no effect when kvm_vm__skip_cloud_init is true.'
+
+      kvm_vm__state:
+        type: 'str'
+        required: false
+        default: 'running'
+        choices:
+          - 'absent'
+          - 'destroyed'
+          - 'paused'
+          - 'running'
+          - 'shutdown'
+        description: 'State of the VM.'
+
+      kvm_vm__vcpus:
+        type: 'int'
+        required: true
+        description: 'Number of virtual CPUs of the VM.'
+
+      kvm_vm__wait:
+        type: 'int'
+        required: false
+        default: -1
+        description: 'Minutes virt-install waits for the installation to finish, -1 waits indefinitely. Only has an effect when kvm_vm__install_location is set.'
