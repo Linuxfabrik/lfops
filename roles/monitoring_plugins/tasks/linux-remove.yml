@@ -443,6 +443,11 @@
       path: '/etc/sudoers.d/monitoring-plugins'
       state: 'absent'
 
+  - name: 'Make sure the bash completion is absent (a source install is not covered by the package removal)'
+    ansible.builtin.file:
+      path: '/etc/bash_completion.d/linuxfabrik-monitoring-plugins'
+      state: 'absent'
+
   - name: 'Make sure the legacy Linuxfabrik plugin cache is removed'
     ansible.builtin.file:
       path: '/tmp/linuxfabrik-plugin-cache.db'
