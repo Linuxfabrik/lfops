@@ -153,7 +153,7 @@
       --import
       --connect {{ kvm_vm__connect_url }}
       --name {{ kvm_vm__name }}
-      --cpu host
+      --cpu host-model
       --vcpus {{ kvm_vm__vcpus }}
       --memory {{ kvm_vm__memory }},maxmemory={{ kvm_vm__max_memory }}
       {% if kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length %}
@@ -189,7 +189,7 @@
       --import
       --connect {{ kvm_vm__connect_url }}
       --name {{ kvm_vm__name }}
-      --cpu host
+      --cpu host-model
       --vcpus {{ kvm_vm__vcpus }}
       --memory {{ kvm_vm__memory }},maxmemory={{ kvm_vm__max_memory }}
 
