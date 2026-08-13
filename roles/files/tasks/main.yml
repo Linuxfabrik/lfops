@@ -15,6 +15,13 @@
     loop_control:
       label: 'path={{ item["path"] }}, state={{ item["state"] | d("present") }}'
 
+  tags:
+    - 'files'
+    - 'files:directories'
+
+
+- block:
+
   - name: 'Combined files:'
     ansible.builtin.debug:
       var: 'files__files__combined_var'
@@ -63,6 +70,13 @@
     loop_control:
       label: '{{ item["path"] }}'
 
+  tags:
+    - 'files'
+    - 'files:files'
+
+
+- block:
+
   - name: 'Combined symlinks:'
     ansible.builtin.debug:
       var: 'files__symlinks__combined_var'
@@ -81,3 +95,4 @@
 
   tags:
     - 'files'
+    - 'files:symlinks'

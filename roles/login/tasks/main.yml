@@ -51,6 +51,42 @@
       local: true # this is required for servers which are using FreeIPA, for example
     loop: '{{ login__required_groups }}'
 
+  # Needed by the linger tasks below: `loginctl` resolves the account name and fails with
+  # `Failed to look up user <name>: No such process` if it does not exist (yet), and stopping the
+  # user manager requires the UID.
+  - name: 'getent passwd'
+    ansible.builtin.getent:
+      database: 'passwd'
+
+  # Lingering has to be switched off before the account is removed, for two reasons: `loginctl`
+  # no longer resolves a deleted account, and lingering keeps a `user@<uid>.service` running
+  # without an active session, which makes `userdel` refuse with `user <name> is currently used
+  # by process <pid>`.
+  - name: 'loginctl disable-linger {{ item["name"] }} # for items with state=absent'
+    ansible.builtin.command: 'loginctl disable-linger {{ item["name"] }}'
+    args:
+      removes: '/var/lib/systemd/linger/{{ item["name"] }}'
+    loop: '{{ login__users__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["name"] in ansible_facts["getent_passwd"]'
+      - 'item["state"] | d("present") == "absent" or not (item["linger"] | d(false) | bool)'
+
+  # `loginctl disable-linger` only asks logind to stop the user manager and returns immediately,
+  # so `userdel` in the next task would still hit its processes. Stopping the unit blocks until
+  # it is really gone. It is a no-op for users without a running manager.
+  - name: 'systemctl stop user@{{ ansible_facts["getent_passwd"][item["name"]][1] }}.service # for items with state=absent'
+    ansible.builtin.service:
+      name: 'user@{{ ansible_facts["getent_passwd"][item["name"]][1] }}.service'
+      state: 'stopped'
+    loop: '{{ login__users__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["name"] in ansible_facts["getent_passwd"]'
+      - 'item["state"] | d("present") == "absent"'
+
   - name: 'Create the user with the given groups and a home directory'
     ansible.builtin.user:
       append: false
@@ -84,16 +120,9 @@
     loop: '{{ login__users__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}'
-    when: 'item["linger"] | d(false)'
-
-  - name: 'loginctl disable-linger {{ item["name"] }}'
-    ansible.builtin.command: 'loginctl disable-linger {{ item["name"] }}'
-    args:
-      removes: '/var/lib/systemd/linger/{{ item["name"] }}'
-    loop: '{{ login__users__combined_var }}'
-    loop_control:
-      label: '{{ item["name"] }}'
-    when: 'not (item["linger"] | d(false))'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["linger"] | d(false) | bool'
 
   - name: 'Set up authorized keys'
     ansible.posix.authorized_key:

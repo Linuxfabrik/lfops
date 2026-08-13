@@ -1,0 +1,38 @@
+# Replaces the shared vm-prepare.yml for this sub-scenario (see molecule.yml), so it imports it
+# first and only adds the precondition on top.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# The starting point for the removal: an account that lingers, and therefore has a running
+# `user@<uid>.service`. Such an account cannot simply be deleted - `userdel` refuses while the
+# user manager still owns processes - which is exactly what converge has to handle.
+- name: 'Create a lingering account for the login playbook to remove'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'useradd --create-home --shell /bin/bash molecule-linger'
+      ansible.builtin.user:
+        name: 'molecule-linger'
+        create_home: true
+        shell: '/bin/bash'
+        state: 'present'
+      register: '__molecule__user_result'
+
+    - name: 'loginctl enable-linger molecule-linger'
+      ansible.builtin.command: 'loginctl enable-linger molecule-linger'
+      args:
+        creates: '/var/lib/systemd/linger/molecule-linger'
+
+    # `loginctl enable-linger` returns before logind has started the user manager. Without waiting
+    # for it, converge would sometimes face an account whose processes are not up yet, and the
+    # removal would succeed for the wrong reason.
+    - name: 'systemctl is-active user@{{ __molecule__user_result["uid"] }}.service'
+      ansible.builtin.command: 'systemctl is-active user@{{ __molecule__user_result["uid"] }}.service'
+      changed_when: false
+      failed_when: false # `is-active` exits 3 while the unit is still starting
+      register: '__molecule__user_manager_result'
+      until: '__molecule__user_manager_result["stdout"] == "active"'
+      retries: 10
+      delay: 3

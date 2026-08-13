@@ -1,0 +1,99 @@
+# Checks the observable end result: what the running system reports about the accounts, not which
+# tasks the role ran. Lingering is asked of logind (`loginctl`) instead of looking at
+# /var/lib/systemd/linger, and the SSH key is proven by logging in with it.
+- name: 'Verify the login users exist and are set up as configured'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'getent passwd'
+      ansible.builtin.getent:
+        database: 'passwd'
+
+    - name: 'Assert both accounts exist, with the home directory and shell of the lingering one'
+      ansible.builtin.assert:
+        that:
+          - '"molecule-linger" in ansible_facts["getent_passwd"]'
+          - '"molecule-plain" in ansible_facts["getent_passwd"]'
+          - 'ansible_facts["getent_passwd"]["molecule-linger"][4] == "/home/molecule-linger"'
+          - 'ansible_facts["getent_passwd"]["molecule-linger"][5] == "/bin/bash"'
+
+    # The role hashes the plaintext password from the inventory with sha512. An account whose
+    # password never made it through shows `!` or `*` here and cannot log in with a password.
+    - name: 'getent shadow'
+      ansible.builtin.getent:
+        database: 'shadow'
+
+    - name: 'Assert the password of the lingering account is set, and the plain one has none'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["getent_shadow"]["molecule-linger"][0].startswith("$6$")'
+          - 'not ansible_facts["getent_shadow"]["molecule-plain"][0].startswith("$")'
+
+    - name: 'id --name --groups molecule-linger'
+      ansible.builtin.command: 'id --name --groups molecule-linger'
+      changed_when: false
+      register: '__molecule__id_result'
+
+    - name: 'Assert the account is a member of the password-less sudo group'
+      ansible.builtin.assert:
+        that: '"linuxfabrik" in __molecule__id_result["stdout"].split()'
+
+    # Ask sudo itself instead of reading /etc/sudoers.d: sudo parses its whole configuration here,
+    # so a drop-in that does not apply (or does not even parse) shows up as a failure.
+    - name: 'sudo --list --other-user=molecule-linger'
+      ansible.builtin.command: 'sudo --list --other-user=molecule-linger'
+      changed_when: false
+      register: '__molecule__sudo_result'
+
+    - name: 'Assert sudo grants the account password-less root'
+      ansible.builtin.assert:
+        that: '"NOPASSWD: ALL" in __molecule__sudo_result["stdout"]'
+
+    - name: 'loginctl show-user --property=Linger molecule-linger'
+      ansible.builtin.command: 'loginctl show-user --property=Linger molecule-linger'
+      changed_when: false
+      register: '__molecule__linger_result'
+
+    - name: 'Assert logind reports the account as lingering'
+      ansible.builtin.assert:
+        that: '__molecule__linger_result["stdout"] == "Linger=yes"'
+
+    # The point of lingering: the user manager runs without anybody being logged in. This is also
+    # what makes the account impossible to delete unless lingering is switched off first, which
+    # the remove sub-scenario covers.
+    - name: 'systemctl is-active user@{{ ansible_facts["getent_passwd"]["molecule-linger"][1] }}.service'
+      ansible.builtin.command: 'systemctl is-active user@{{ ansible_facts["getent_passwd"]["molecule-linger"][1] }}.service'
+      changed_when: false
+      register: '__molecule__user_manager_result'
+
+    - name: 'Assert the user manager of the lingering account runs'
+      ansible.builtin.assert:
+        that: '__molecule__user_manager_result["stdout"] == "active"'
+
+    - name: 'systemctl is-active user@{{ ansible_facts["getent_passwd"]["molecule-plain"][1] }}.service'
+      ansible.builtin.command: 'systemctl is-active user@{{ ansible_facts["getent_passwd"]["molecule-plain"][1] }}.service'
+      changed_when: false
+      failed_when: false # `is-active` exits 3 for an inactive unit
+      register: '__molecule__plain_user_manager_result'
+
+    - name: 'Assert the account without lingering has no user manager'
+      ansible.builtin.assert:
+        that: '__molecule__plain_user_manager_result["stdout"] != "active"'
+
+    # End-to-end check of the deployed key: log in over SSH from the controller with the private
+    # half of the keypair. BatchMode makes sshd's fallback to password authentication a failure
+    # instead of an interactive prompt, so only the key can make this succeed.
+    - name: 'ssh molecule-linger@{{ ansible_host }} id --user --name'
+      ansible.builtin.command: >-
+        ssh -i {{ ansible_ssh_private_key_file }}
+        -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+        molecule-linger@{{ ansible_host }} id --user --name
+      delegate_to: 'localhost'
+      become: false
+      changed_when: false
+      register: '__molecule__ssh_result'
+
+    - name: 'Assert the SSH login landed on the expected account'
+      ansible.builtin.assert:
+        that: '__molecule__ssh_result["stdout"] == "molecule-linger"'

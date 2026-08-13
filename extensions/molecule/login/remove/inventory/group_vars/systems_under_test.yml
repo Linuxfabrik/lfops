@@ -1,0 +1,8 @@
+# Removes the lingering account that prepare.yml created. `linger` deliberately stays `true`: an
+# admin who retires an account flips its state and leaves the rest of the entry alone, and that is
+# the combination the role has to cope with.
+
+login__users__group_var:
+  - name: 'molecule-linger'
+    linger: true
+    state: 'absent'

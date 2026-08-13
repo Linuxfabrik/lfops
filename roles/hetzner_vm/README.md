@@ -71,7 +71,8 @@ Manual steps:
 
 `hetzner_vm__image`
 
-* The Hetzner image to use for the server. The possible options can be obtained using `hcloud image list`.
+* The Hetzner image to use for the server. Accepts either an image name (for example `rocky-9`; see `hcloud image list`) or a numeric image ID.
+* Snapshots have no name, so a server based on your own snapshot is created by giving its ID. Find it in your project > Snapshots, or with `hcloud image list --type snapshot`.
 * Type: String.
 
 `hetzner_vm__location`
@@ -125,6 +126,8 @@ Example:
 # mandatory
 hetzner_vm__api_token: 'V5bg8DsrWxgbydkiS6RrE2Jcbcw1eWEZxh26Oms2t6ZhTWfg25r60ua9upCZgt79ui'
 hetzner_vm__image: 'rocky-8'
+# or a snapshot of your own, by ID:
+# hetzner_vm__image: '123456789'
 hetzner_vm__location: 'nbg1'
 hetzner_vm__server_type: 'cx11'
 

@@ -98,7 +98,7 @@ Manual steps:
 
     * `linger`:
 
-        * Optional. Enable lingering of the account, analogous to `loginctl enable/disable-linger`.
+        * Optional. Enable lingering of the account, analogous to `loginctl enable/disable-linger`. Lingering is switched off again when the account is removed via `state: 'absent'`.
         * Type: Bool.
         * Default: `false`
 

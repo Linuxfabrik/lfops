@@ -1,5 +1,28 @@
 - block:
 
+  - name: 'assert that exactly one boot disk source is given'
+    ansible.builtin.assert:
+      that:
+        - >-
+          (kvm_vm__base_image is defined and kvm_vm__base_image | length > 0)
+          !=
+          (kvm_vm__install_location is defined and kvm_vm__install_location | length > 0)
+      fail_msg: >-
+        Set exactly one of kvm_vm__base_image (boot a prepared image) or
+        kvm_vm__install_location (install from an ISO or install tree).
+        Set neither only when reusing a disk via kvm_vm__existing_boot_disk.
+    when:
+      - 'kvm_vm__state != "absent"'
+      - 'kvm_vm__existing_boot_disk is not defined or not kvm_vm__existing_boot_disk | length > 0'
+
+  delegate_to: 'localhost'
+  become: false
+  tags:
+    - 'kvm_vm'
+
+
+- block:
+
   - name: 'get info on storage pools'
     community.libvirt.virt_pool:
       command: 'info'
@@ -29,6 +52,32 @@
     register: 'kvm_vm__boot_disk_create_result'
     when:
       - 'kvm_vm__existing_boot_disk is not defined or not kvm_vm__existing_boot_disk | length > 0'
+      - 'kvm_vm__install_location is not defined or not kvm_vm__install_location | length > 0'
+
+  - name: >
+      create blank boot disk for the installer:
+      qemu-img create -f qcow2
+      {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
+      {{ kvm_vm__boot_disk_size }}
+    ansible.builtin.command: >
+      qemu-img create -f qcow2
+      {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
+      {{ kvm_vm__boot_disk_size }}
+    args:
+      creates: '{{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ kvm_vm__name ~ "-boot.qcow2" }}'
+    register: 'kvm_vm__blank_boot_disk_create_result'
+    when:
+      - 'kvm_vm__existing_boot_disk is not defined or not kvm_vm__existing_boot_disk | length > 0'
+      - 'kvm_vm__install_location is defined and kvm_vm__install_location | length > 0'
+
+  # both disk-creating tasks are mutually exclusive, so at most one of them can
+  # report "changed". everything that must only happen on a freshly created boot
+  # disk keys off this fact instead of one specific task result.
+  - name: 'remember whether the boot disk was created in this run'
+    ansible.builtin.set_fact:
+      __kvm_vm__boot_disk_created: >-
+        {{ kvm_vm__boot_disk_create_result is changed
+           or kvm_vm__blank_boot_disk_create_result is changed }}
 
   - name: >
       required since we are using a base image:
@@ -106,7 +155,8 @@
 
     # block (cloud-init)
     when:
-      - 'kvm_vm__boot_disk_create_result is changed'
+      - '__kvm_vm__boot_disk_created'
+      - 'not kvm_vm__skip_cloud_init'
 
 
   - name: >
@@ -119,7 +169,9 @@
       --install {{ kvm_vm__packages | join(',') }}
     when:
       - 'kvm_vm__packages is defined and kvm_vm__packages | length > 0'
-      - 'kvm_vm__boot_disk_create_result is changed'
+      - '__kvm_vm__boot_disk_created'
+      # a blank disk has no OS yet, the installer pulls the packages instead
+      - 'kvm_vm__install_location is not defined or not kvm_vm__install_location | length > 0'
 
   - name: >
       virt-sysprep
@@ -136,7 +188,11 @@
       {% endif %}
       --add {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
     when:
-      - 'kvm_vm__boot_disk_create_result is changed'
+      - '__kvm_vm__boot_disk_created'
+      - 'not kvm_vm__skip_sysprep'
+      # with an installer the disk is still blank at this point, so sysprep runs
+      # after virt-install instead
+      - 'kvm_vm__install_location is not defined or not kvm_vm__install_location | length > 0'
 
   - name: 'get vm list'
     community.libvirt.virt:
@@ -150,10 +206,18 @@
       {% if kvm_vm__boot is defined and kvm_vm__boot | length %}
       --boot {{ kvm_vm__boot }}
       {% endif %}
+      {% if kvm_vm__install_location is defined and kvm_vm__install_location | length %}
+      --location {{ kvm_vm__install_location | quote }}
+      {% if kvm_vm__install_extra_args | length %}
+      --extra-args {{ kvm_vm__install_extra_args | quote }}
+      {% endif %}
+      --wait {{ kvm_vm__wait }}
+      {% else %}
       --import
+      {% endif %}
       --connect {{ kvm_vm__connect_url }}
       --name {{ kvm_vm__name }}
-      --cpu host
+      --cpu host-model
       --vcpus {{ kvm_vm__vcpus }}
       --memory {{ kvm_vm__memory }},maxmemory={{ kvm_vm__max_memory }}
       {% if kvm_vm__existing_boot_disk is defined and kvm_vm__existing_boot_disk | length %}
@@ -167,7 +231,7 @@
       {% for item in kvm_vm__existing_additional_disks %}
       --disk {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ item ~ ",bus=virtio") | quote }}
       {% endfor %}
-      {% if kvm_vm__boot_disk_create_result is changed %}
+      {% if __kvm_vm__boot_disk_created and not kvm_vm__skip_cloud_init %}
       --disk {{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] }}/{{ kvm_vm__name }}-cloud-init.iso,device=cdrom,bus=scsi,format=iso
       {% endif %}
       {% for item in kvm_vm__network_connections %}
@@ -186,10 +250,18 @@
       {% if kvm_vm__boot is defined and kvm_vm__boot | length %}
       --boot {{ kvm_vm__boot }}
       {% endif %}
+      {% if kvm_vm__install_location is defined and kvm_vm__install_location | length %}
+      --location {{ kvm_vm__install_location | quote }}
+      {% if kvm_vm__install_extra_args | length %}
+      --extra-args {{ kvm_vm__install_extra_args | quote }}
+      {% endif %}
+      --wait {{ kvm_vm__wait }}
+      {% else %}
       --import
+      {% endif %}
       --connect {{ kvm_vm__connect_url }}
       --name {{ kvm_vm__name }}
-      --cpu host
+      --cpu host-model
       --vcpus {{ kvm_vm__vcpus }}
       --memory {{ kvm_vm__memory }},maxmemory={{ kvm_vm__max_memory }}
 
@@ -207,7 +279,7 @@
       --disk {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ "/" ~ item ~ ",bus=virtio") | quote }}
       {% endfor %}
 
-      {% if kvm_vm__boot_disk_create_result is changed %}
+      {% if __kvm_vm__boot_disk_created and not kvm_vm__skip_cloud_init %}
       --disk {{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] }}/{{ kvm_vm__name }}-cloud-init.iso,device=cdrom,bus=scsi,format=iso
       --controller type=scsi,model=virtio-scsi
       {% endif %}
@@ -226,7 +298,29 @@
       --serial pty
       --sound none
       --virt-type kvm
+    register: 'kvm_vm__virt_install_result'
     when: 'kvm_vm__name not in kvm_vm__virt_info_result["list_vms"]'
+
+  # the installer path only has a populated disk once virt-install returned, so
+  # the counterpart of the sysprep above runs here instead
+  - name: >
+      virt-sysprep
+      --selinux-relabel
+      {% if kvm_vm__root_password is defined and kvm_vm__root_password | length %}
+      --root-password password:{{ kvm_vm__root_password | quote }}
+      {% endif %}
+      --add {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
+    ansible.builtin.command: >
+      virt-sysprep
+      --selinux-relabel
+      {% if kvm_vm__root_password is defined and kvm_vm__root_password | length %}
+      --root-password password:{{ kvm_vm__root_password | quote }}
+      {% endif %}
+      --add {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
+    when:
+      - 'kvm_vm__virt_install_result is changed'
+      - 'not kvm_vm__skip_sysprep'
+      - 'kvm_vm__install_location is defined and kvm_vm__install_location | length > 0'
 
   when: 'kvm_vm__state != "absent"'
   delegate_to: '{{ kvm_vm__host }}'

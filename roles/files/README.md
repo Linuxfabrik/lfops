@@ -20,6 +20,21 @@ Manual steps:
 * Manages files, directories and symlinks.
 * Triggers: none.
 
+`files:directories`
+
+* Manages directories.
+* Triggers: none.
+
+`files:files`
+
+* Manages files, both plain and Jinja-templated.
+* Triggers: none.
+
+`files:symlinks`
+
+* Manages symlinks.
+* Triggers: none.
+
 
 ## Optional Role Variables
 
