@@ -320,6 +320,27 @@
       dest: '/etc/sudoers.d/linuxfabrik-monitoring-plugins'
       mode: 0o440
 
+  # Completes the plugins' command line options in an interactive shell, the same file the
+  # rpm/deb packages install. It is only read when the bash-completion package is present,
+  # which this role deliberately does not pull onto a monitored host.
+  - name: 'Check whether the checkout ships the bash completion'
+    ansible.builtin.stat:
+      path: '/tmp/ansible.monitoring-plugins-repo/assets/bash-completion/linuxfabrik-monitoring-plugins.bash'
+    delegate_to: 'localhost'
+    become: false
+    changed_when: false
+    register: '__monitoring_plugins__bash_completion_source'
+
+  - name: 'Copy the /etc/bash_completion.d/linuxfabrik-monitoring-plugins file to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/assets/bash-completion/linuxfabrik-monitoring-plugins.bash'
+      # same file name as the rpm/deb packages
+      dest: '/etc/bash_completion.d/linuxfabrik-monitoring-plugins'
+      mode: 0o644
+    when:
+      # a pinned `monitoring_plugins__version` can predate the completion
+      - '__monitoring_plugins__bash_completion_source["stat"]["exists"] | bool'
+
   - name: 'Make sure sudoers drop-ins placed under earlier names are absent (each would duplicate the Cmnd_Alias)'
     ansible.builtin.file:
       # monitoring-plugins: the name this role used before; icinga2-plugins: the manual scp
