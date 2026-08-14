@@ -10,17 +10,27 @@ permissions: 'read-all'
 jobs:
   update:
     runs-on: 'ubuntu-latest'
-    permissions:
-      contents: 'write'
-      pull-requests: 'write'
     steps:
       - name: 'Harden the runner (Audit all outbound calls)'
         uses: 'step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40' # v2.20.1
         with:
           egress-policy: 'audit'
 
+      # The pull request is created with the automation app's token, not with
+      # GITHUB_TOKEN. GitHub does not run workflows on a pull request that
+      # GITHUB_TOKEN opened, so the checks required by the branch ruleset would
+      # never report and the pull request would sit blocked forever.
+      - name: 'Generate app token'
+        id: 'app-token'
+        uses: 'actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1' # v3.2.0
+        with:
+          client-id: '${{ vars.LF_AUTOMATION_CLIENT_ID }}'
+          private-key: '${{ secrets.LF_AUTOMATION_APP_PRIVATE_KEY }}'
+
       - name: 'Checkout repository'
         uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' # v7.0.1
+        with:
+          token: '${{ steps.app-token.outputs.token }}'
 
       - name: 'Set up Python'
         uses: 'actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97' # v7.0.0
@@ -36,6 +46,7 @@ jobs:
       - name: 'Create Pull Request'
         uses: 'peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1' # v8.1.1
         with:
+          token: '${{ steps.app-token.outputs.token }}'
           commit-message: 'chore: update pre-commit hooks'
           title: 'chore: update pre-commit hooks'
           body: 'Automatic pre-commit hook version update.'
