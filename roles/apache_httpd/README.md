@@ -431,20 +431,27 @@ apache_httpd__systemd_state: 'started'
 
 ## Mandatory Role Variables - vHosts
 
+vHosts are defined as a list of dictionaries in `apache_httpd__vhosts__group_var` or `apache_httpd__vhosts__host_var`. Their mandatory subkeys are documented here, the optional ones in the next section.
+
 `apache_httpd__vhosts__group_var` / `apache_httpd__vhosts__host_var`
 
-* vHost definitions for Apache. See the "Optional Role Variables - vHosts" section below for all available subkeys.
+* vHost definitions for Apache. See the "Optional Role Variables - vHosts" section below for all optional subkeys.
 * Type: List of dictionaries.
-* Subkeys:
+* Subkeys, mandatory for every vHost regardless of its template:
 
     * `conf_server_name`:
 
-        * Mandatory. Set this variable for each vHost definition. Although this is just best practice, we would never use a vHost without a ServerName.
+        * Set this variable for each vHost definition. Part of the vHost's unique identity. See [ServerName](https://httpd.apache.org/docs/2.4/mod/core.html#servername).
+        * Type: String.
+
+    * `template`:
+
+        * Selects which kind of vHost is rendered. See the "Types of vHosts" section below for the available values.
         * Type: String.
 
     * `virtualhost_port`:
 
-        * Mandatory. Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. Part of the vHost's unique identity, so it must be set explicitly (`443`, or `80` for a redirect vHost).
+        * Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive. Part of the vHost's unique identity, so it must be set explicitly (`443`, or `80` for a redirect vHost).
         * Type: Number.
 
 Example:
@@ -454,12 +461,13 @@ apache_httpd__vhosts__host_var:
   # Application vHosts
   - template: 'app'
     conf_server_name: 'myapp.example.com'
+    virtualhost_port: 443
 ```
 
 
 ## Optional Role Variables - vHosts
 
-Using `apache_httpd__vhosts__group_var` or `apache_httpd__vhosts__host_var` (which are dictionaries), you define vHosts for Apache. The example below shows a complete example, use this as a starting point.
+Every vHost is rendered from the template selected via its `template` subkey. A template only honours the subkeys listed in its own `Applies to:` line below; a subkey a template does not know is silently ignored.
 
 Types of vHosts:
 
@@ -473,8 +481,8 @@ Types of vHosts:
     * `/server-status` - Apache server status (`mod_status` required)
 * **proxy**: A typical hardened reverse proxy vHost. Can be extended by using the `raw` variable. This proxy vHost definition prevents Apache from functioning as a forward proxy server (inside > out).
 * **raw**: If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>` and `</VirtualHost>` completely from scratch.
-* **redirect**: A vHost that redirects from one port (default "80") to another (default "443"). Custom redirect rules can be provided using the `raw` variable.
-* **wordpress**: A special vHost just for deploying WordPress instances.
+* **redirect**: A vHost that redirects every request to `https://` on the same host, keeping the requested hostname and path. Set `virtualhost_port: 80` to redirect the plain HTTP port. Requests below `/.well-known/acme-challenge/` are excluded, so ACME/Let's Encrypt HTTP-01 challenges keep working. The `raw` variable replaces the redirect rule instead of extending it.
+* **wordpress**: A hardened vHost for a WordPress instance, adding WordPress-specific rules on top of the app-vHost hardening: hotlink protection, blocked access to `wp-config.php`, `xmlrpc.php` and the other WordPress metadata files, blocked direct access to `wp-includes`, blocked author scans, and comment-spam mitigation. It is usually injected by the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role; define it by hand only when running WordPress without that role, and then set `wordpress_url`.
 
 "Hardened" means among other things:
 
@@ -486,154 +494,7 @@ Types of vHosts:
 
 This role creates a vHost named `localhost` by default. See [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/defaults/main.yml)
 
-`allow_accessing_dotfiles`
-
-* app-vHosts block access to files that begin with a period. With this setting you can disable this behavior.
-* Type: Bool.
-* Default: `false`
-
-`allow_requests_without_hostname`
-
-* app-vHosts forbid accessing them without a hostname / just by IP. With this setting you can disable this behavior.
-* Type: Bool.
-* Default: `false`
-
-`allowed_file_extensions`
-
-* app- and localhost-vHosts block ALL file extensions by default, unless specifically allowed. The patterns use Apache regex syntax (e.g. `html?` matches both `html` and `htm`, `jpe?g` matches both `jpeg` and `jpg`). Files and folders starting with a dot are always forbidden. Use `skip_allowed_file_extensions` to allow all file extensions.
-* To compile a list of file extensions present in your application, run:
-  `find {{ apache_httpd__conf_document_root }} -type f -name '*.*' | awk -F. '{print $NF }' | sort --unique | sed -e 's/^/- \x27/' -e 's/$/\x27/'`
-* Type: List.
-* Default: app/localhost `['css', 'gif', 'html?', 'ico', 'jpe?g', 'js', 'pdf', 'php', 'png', 'svg', 'ttf', 'txt', 'woff2?']`
-
-`allowed_http_methods`
-
-* Restrict allowed [HTTP methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods). Only the explicitly listed ones are allowed; all others return [405 Method Not Allowed](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes). This does not disable TRACE. Always enable GET and OPTIONS at least. For an OPTIONS request, Apache always returns `Allow: GET,POST,OPTIONS,HEAD`, no matter what. We are NOT using [LimitExcept](https://httpd.apache.org/docs/2.4/mod/core.html#limitexcept), because this directive is not allowed in a VirtualHost context. Use `skip_allowed_http_methods` to allow all HTTP methods.
-* Available HTTP methods:
-
-    * CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT
-
-* Available WebDAV methods:
-
-    * COPY, LOCK, MKCOL, MOVE, PROPFIND, PROPPATCH, UNLOCK
-* Type: List.
-* Default: app/localhost/proxy `['GET', 'OPTIONS']`
-
-`authz_document_root`
-
-* Authorization statement for the `DocumentRoot {{ apache_httpd__conf_document_root }}/{{ conf_server_name }}` directive.
-* Type: String.
-* Default: app/localhost `'Require all granted'`
-
-`by_role`
-
-* If defined it results in a comment `# Generated by Ansible role: {{ by_role }}` at the beginning of a vHost definition.
-* Type: String.
-* Default: unset
-
-`comment`
-
-* Describes the vHost and results in a comment right above the `<VirtualHost>` section.
-* Type: String.
-* Default: `'no description available'`
-
-`conf_allow_override`
-
-* Will be set in the `<Directory>` directive of the vHost. See [AllowOverride](https://httpd.apache.org/docs/2.4/mod/core.html#allowoverride).
-* Type: String.
-* Default: app/localhost `'None'`
-
-`conf_custom_log`
-
-* The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
-* Type: String.
-* Default: app/localhost/proxy `'logs/{{ conf_server_name }}-access.log linuxfabrikio'`
-
-`conf_directory_index`
-
-* See [DirectoryIndex](https://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex).
-* Type: String.
-* Default: app `{{ apache_httpd__mod_dir_directory_index }}`
-
-`conf_document_root`
-
-* See [DocumentRoot](https://httpd.apache.org/docs/2.4/mod/core.html#documentroot).
-* Type: String.
-* Default: app/localhost `'{{ apache_httpd__conf_document_root }}/{{ conf_server_name }}'`
-
-`conf_error_log`
-
-* See [ErrorLog](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog).
-* Type: String.
-* Default: app/localhost/proxy `'logs/{{ conf_server_name }}-error.log'`
-
-`conf_keep_alive_timeout`
-
-* See [KeepAliveTimeout](https://httpd.apache.org/docs/2.4/mod/core.html#keepalivetimeout).
-* Type: Number.
-* CIS: Do not set it above `15` seconds.
-* Default: `5`
-
-`conf_log_level`
-
-* See [LogLevel](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel).
-* Type: String.
-* Default: `'notice core:info'`
-
-`conf_options`
-
-* Sets the `Options` for the `<Directory>` directive. See [Options](https://httpd.apache.org/docs/2.4/mod/core.html#options).
-* Type: String.
-* Default: app/localhost `'None'`
-
-`conf_proxy_error_override`
-
-* If you want to have a common look and feel on the error pages seen by the end user, set this to "On" and define them on the reverse proxy server. See [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride).
-* Type: String.
-* Default: proxy `'On'`
-
-`conf_proxy_preserve_host`
-
-* When enabled, this option will pass the `Host:` line from the incoming request to the proxied host, instead of the hostname specified in the `ProxyPass` line. See [ProxyPreserveHost](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxypreservehost).
-* Type: String.
-* Default: `'Off'`
-
-`conf_proxy_timeout`
-
-* See [ProxyTimeout](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxytimeout).
-* Type: Number.
-* Default: `5`
-
-`conf_request_read_timeout`
-
-* See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html#requestreadtimeout).
-* Type: Number.
-* CIS: Do not set the Timeout Limits for Request Headers above 40. Do not set the Timeout Limits for the Request Body above 20.
-* Default: `'header=20-40,MinRate=500 body=20,MinRate=500'`
-
-`conf_server_admin`
-
-* See [ServerAdmin](https://httpd.apache.org/docs/2.4/mod/core.html#serveradmin).
-* Type: String.
-* Default: `{{ apache_httpd__conf_server_admin }}`
-
-`conf_server_alias`
-
-* Set this only if you need more than one `conf_server_name`. See [ServerAlias](https://httpd.apache.org/docs/2.4/mod/core.html#serveralias).
-* Type: List.
-* Default: unset
-
-`conf_server_name`
-
-* See [ServerName](https://httpd.apache.org/docs/2.4/mod/core.html#servername).
-* Type: String.
-* Default: unset
-
-`conf_timeout`
-
-* See [Timeout](https://httpd.apache.org/docs/2.4/mod/core.html#timeout).
-* Type: Number.
-* Default: `{{ apache_httpd__conf_timeout }}`
+The following subkeys control whether and where the vHost file is deployed. They are evaluated by the role itself, so they work with every template:
 
 `enabled`
 
@@ -647,53 +508,220 @@ This role creates a vHost named `localhost` by default. See [defaults/main.yml](
 * Type: String.
 * Default: `conf_server_name.virtualhost_port.conf`
 
+`state`
+
+* Should the vhost definition file be created (`present`) or deleted (`absent`).
+* Type: String.
+* Default: `'present'`
+
+The remaining subkeys configure the contents of the vHost and are only honoured by the templates named in their `Applies to:` line:
+
+`allow_accessing_dotfiles`
+
+* Access to files that begin with a period is blocked. With this setting you can disable this behavior.
+* Applies to: app, localhost, wordpress.
+* Type: Bool.
+* Default: `false`
+
+`allow_requests_without_hostname`
+
+* Accessing the vHost without a hostname / just by IP is forbidden. With this setting you can disable this behavior.
+* Applies to: app, localhost, proxy, wordpress.
+* Type: Bool.
+* Default: `false`
+
+`allowed_file_extensions`
+
+* ALL file extensions are blocked by default, unless specifically allowed. The patterns use Apache regex syntax (e.g. `html?` matches both `html` and `htm`, `jpe?g` matches both `jpeg` and `jpg`). Files and folders starting with a dot are always forbidden. Use `skip_allowed_file_extensions` to allow all file extensions. wordpress-vHosts have no file extension allowlist at all.
+* To compile a list of file extensions present in your application, run:
+  `find {{ apache_httpd__conf_document_root }} -type f -name '*.*' | awk -F. '{print $NF }' | sort --unique | sed -e 's/^/- \x27/' -e 's/$/\x27/'`
+* Applies to: app, localhost.
+* Type: List.
+* Default: `['css', 'gif', 'html?', 'ico', 'jpe?g', 'js', 'pdf', 'php', 'png', 'svg', 'ttf', 'txt', 'woff2?']`
+
+`allowed_http_methods`
+
+* Restrict allowed [HTTP methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods). Only the explicitly listed ones are allowed; all others return [405 Method Not Allowed](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes). This does not disable TRACE. Always enable GET and OPTIONS at least. For an OPTIONS request, Apache always returns `Allow: GET,POST,OPTIONS,HEAD`, no matter what. We are NOT using [LimitExcept](https://httpd.apache.org/docs/2.4/mod/core.html#limitexcept), because this directive is not allowed in a VirtualHost context. Use `skip_allowed_http_methods` to allow all HTTP methods.
+* Available HTTP methods:
+
+    * CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT
+
+* Available WebDAV methods:
+
+    * COPY, LOCK, MKCOL, MOVE, PROPFIND, PROPPATCH, UNLOCK
+* Applies to: app, localhost, proxy, wordpress.
+* Type: List.
+* Default: `['GET', 'OPTIONS']`
+
+`authz_document_root`
+
+* Authorization statement for the `DocumentRoot {{ apache_httpd__conf_document_root }}/{{ conf_server_name }}` directive.
+* Applies to: app, localhost, wordpress.
+* Type: String.
+* Default: `'Require all granted'`
+
+`by_role`
+
+* If defined it results in a comment `# Generated by Ansible role: {{ by_role }}` at the beginning of a vHost definition.
+* Applies to: all templates.
+* Type: String.
+* Default: unset
+
+`comment`
+
+* Describes the vHost and results in a comment right above the `<VirtualHost>` section.
+* Applies to: app, localhost, proxy, raw, wordpress.
+* Type: String.
+* Default: `'no description available'`
+
+`conf_allow_override`
+
+* Will be set in the `<Directory>` directive of the vHost. See [AllowOverride](https://httpd.apache.org/docs/2.4/mod/core.html#allowoverride).
+* Applies to: app, localhost, wordpress.
+* Type: String.
+* Default: `'None'`
+
+`conf_custom_log`
+
+* The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. Set it to an empty string to disable the access log. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
+* Applies to: app, localhost, proxy, wordpress.
+* Type: String.
+* Default: `'logs/{{ conf_server_name }}-access.log linuxfabrikio'`
+
+`conf_directory_index`
+
+* See [DirectoryIndex](https://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex).
+* Applies to: app, wordpress.
+* Type: String.
+* Default: `{{ apache_httpd__mod_dir_directory_index }}`
+
+`conf_document_root`
+
+* See [DocumentRoot](https://httpd.apache.org/docs/2.4/mod/core.html#documentroot). The role creates this directory for app- and localhost-vHosts only; for a wordpress-vHost the directory is created by the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role.
+* Applies to: app, localhost, wordpress.
+* Type: String.
+* Default: `'{{ apache_httpd__conf_document_root }}/{{ conf_server_name }}'`
+
+`conf_error_log`
+
+* See [ErrorLog](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog).
+* Applies to: app, localhost, proxy, wordpress.
+* Type: String.
+* Default: `'logs/{{ conf_server_name }}-error.log'`
+
+`conf_keep_alive_timeout`
+
+* See [KeepAliveTimeout](https://httpd.apache.org/docs/2.4/mod/core.html#keepalivetimeout).
+* Applies to: app, localhost, proxy, wordpress.
+* Type: Number.
+* CIS: Do not set it above `15` seconds.
+* Default: `5`
+
+`conf_log_level`
+
+* See [LogLevel](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel).
+* Applies to: app, localhost, proxy, wordpress.
+* Type: String.
+* Default: `'notice core:info'`
+
+`conf_options`
+
+* Sets the `Options` for the `<Directory>` directive. See [Options](https://httpd.apache.org/docs/2.4/mod/core.html#options).
+* Applies to: app, localhost, wordpress.
+* Type: String.
+* Default: `'None'`
+
+`conf_proxy_error_override`
+
+* If you want to have a common look and feel on the error pages seen by the end user, set this to "On" and define them on the reverse proxy server. See [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride).
+* Applies to: proxy.
+* Type: String.
+* Default: `'On'`
+
+`conf_proxy_preserve_host`
+
+* When enabled, this option will pass the `Host:` line from the incoming request to the proxied host, instead of the hostname specified in the `ProxyPass` line. See [ProxyPreserveHost](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxypreservehost).
+* Applies to: proxy.
+* Type: String.
+* Default: `'Off'`
+
+`conf_proxy_timeout`
+
+* See [ProxyTimeout](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxytimeout).
+* Applies to: proxy.
+* Type: Number.
+* Default: `5`
+
+`conf_request_read_timeout`
+
+* See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html#requestreadtimeout).
+* Applies to: app, localhost, proxy, wordpress.
+* Type: Number.
+* CIS: Do not set the Timeout Limits for Request Headers above 40. Do not set the Timeout Limits for the Request Body above 20.
+* Default: `'header=20-40,MinRate=500 body=20,MinRate=500'`
+
+`conf_server_admin`
+
+* See [ServerAdmin](https://httpd.apache.org/docs/2.4/mod/core.html#serveradmin).
+* Applies to: app, localhost, proxy, wordpress.
+* Type: String.
+* Default: `{{ apache_httpd__conf_server_admin }}`
+
+`conf_server_alias`
+
+* Set this only if you need more than one `conf_server_name`. See [ServerAlias](https://httpd.apache.org/docs/2.4/mod/core.html#serveralias).
+* Applies to: all templates.
+* Type: List.
+* Default: unset
+
+`conf_timeout`
+
+* See [Timeout](https://httpd.apache.org/docs/2.4/mod/core.html#timeout).
+* Applies to: app, localhost, proxy, wordpress.
+* Type: Number.
+* Default: `{{ apache_httpd__conf_timeout }}`
+
 `php_set_handler`
 
-* Set the handler for PHP. Socket-based: `SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"`. Network-based: `SetHandler "proxy:fcgi://127.0.0.1:9000/"`.
+* Set the handler for PHP. Socket-based: `SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"`. Network-based: `SetHandler "proxy:fcgi://127.0.0.1:9000/"`. Only rendered if `apache_httpd__skip_php_fpm` is `false`.
+* Applies to: app, localhost, wordpress.
 * Type: String.
-* Default: app/localhost `'SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"'`
+* Default: `'SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"'`
 
 `raw`
 
 * It is sometimes desirable to pass variable content that Jinja would handle as variables or blocks. The best and safest solution is to declare `raw` variables as `!unsafe`, to prevent templating errors and information disclosure.
+* Applies to: all templates.
 * Type: String.
 * Default: unset
 
 `skip_allowed_file_extensions`
 
-* Skips checking file extensions in app- and localhost-vHosts, allowing essentially all file extensions.
+* Skips checking file extensions, allowing essentially all file extensions.
+* Applies to: app, localhost.
 * Type: Bool.
 * Default: `false`
 
 `skip_allowed_http_methods`
 
-* Skips checking the HTTP methods in app-, localhost-, proxy-, wordpress-vHosts, allowing essentially all HTTP methods.
+* Skips checking the HTTP methods, allowing essentially all HTTP methods.
+* Applies to: app, localhost, proxy, wordpress.
 * Type: Bool.
 * Default: `false`
-
-`state`
-
-* Should the vhost definition file be created (`present`) or deleted (`absent`).
-* Type: String.
-* Default: localhost `'present'`, others unset
-
-`template`
-
-* See the "Types of vHosts" section above.
-* Type: String.
-* Default: unset
 
 `virtualhost_ip`
 
 * Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive.
+* Applies to: all templates.
 * Type: String.
 * Default: `'*'`
 
-`virtualhost_port`
+`wordpress_url`
 
-* Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive.
-* Mandatory. Part of the vHost's unique identity, so it must be set explicitly (`443`, or `80` for a redirect vHost).
-* Type: Number.
+* The URL of the WordPress site. Used by the hotlink protection and the comment-spam rules to recognize requests originating from the site itself. Set this when the vHost is defined by hand; the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role provides the fallback `wordpress__url`, and without either the vHost fails to render.
+* Applies to: wordpress.
+* Type: String.
+* Default: `{{ wordpress__url }}`
 
 Example: See [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md).
 

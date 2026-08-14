@@ -86,6 +86,31 @@ apache_httpd__vhosts__host_var:
 ```
 
 
+### WordPress vHost
+
+The [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role injects this vHost by itself. Define it by hand only for a WordPress installation that is not managed by that role, and set `wordpress_url` to the site URL, otherwise the hotlink protection and the comment-spam rules have nothing to compare the referrer against:
+
+```yaml
+apache_httpd__mods__host_var:
+  - filename: 'proxy_fcgi'
+    enabled: true
+    state: 'present'
+apache_httpd__vhosts__host_var:
+  - template: 'wordpress'
+    virtualhost_port: 443
+    allowed_http_methods:
+      - 'GET'
+      - 'OPTIONS'
+      - 'POST'
+    conf_allow_override: 'All'
+    conf_directory_index: 'index.php'
+    conf_document_root: '/var/www/html/blog.example.com'
+    conf_options: 'FollowSymLinks'
+    conf_server_name: 'blog.example.com'
+    wordpress_url: 'blog.example.com'
+```
+
+
 ### A non-hardened standard Apache vHost
 
 This is an Apache configuration that is close to the RHEL default configuration, without any CIS remediations.
