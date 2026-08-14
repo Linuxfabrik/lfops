@@ -463,7 +463,7 @@ Using `apache_httpd__vhosts__group_var` or `apache_httpd__vhosts__host_var` (whi
 
 Types of vHosts:
 
-* **app**: A hardened vHost running an application like Nextcloud, Wordpress etc. with the most common options. Can be extended by using the `raw` variable.
+* **app**: A hardened vHost running an application like Nextcloud, etc. with the most common options. Can be extended by using the `raw` variable.
 * **localhost**: A hardened, pre-defined VirtualHost just listening on https://localhost, and only accessible from localhost. Due to its naming, it is the first defined vHost. Can be extended by using the `raw` variable. The following URLs are pre-configured and only accessible from localhost:
 
     * `/fpm-ping` - PHP-FPM health check

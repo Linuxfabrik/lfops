@@ -92,7 +92,7 @@
 
     # block hotlinking
     RewriteCond %{HTTP_REFERER} !^$
-    RewriteCond %{HTTP_REFERER} !^http(?:s)?://{{ wordpress__url | regex_escape() }}(?:/.*)?$ [nocase]
+    RewriteCond %{HTTP_REFERER} !^http(?:s)?://{{ (item['wordpress_url'] | d(wordpress__url)) | regex_escape() }}(?:/.*)?$ [nocase]
     RewriteRule \.(?:jpe?g|gif|png|svg|webp|zip|rar|pdf)$ - [nocase,forbidden,last]
 
     # block direct access to /wp-includes
@@ -109,7 +109,7 @@
     # reduce automated wordpress comment spam
     RewriteCond %{REQUEST_METHOD} POST [nocase]
     RewriteCond %{REQUEST_URI} wp-comments-post\.php [nocase]
-    RewriteCond %{HTTP_REFERER} !^http(s)?://{{ wordpress__url | regex_escape() }}(/.*)?$ [OR,nocase]
+    RewriteCond %{HTTP_REFERER} !^http(s)?://{{ (item['wordpress_url'] | d(wordpress__url)) | regex_escape() }}(/.*)?$ [OR,nocase]
     RewriteCond %{HTTP_USER_AGENT} ^(?:\s|-)*$
     RewriteRule ^ - [last,forbidden]
 
