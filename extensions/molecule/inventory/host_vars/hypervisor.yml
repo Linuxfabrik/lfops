@@ -1,0 +1,7 @@
+# The libvirt hypervisor the VM backend provisions on: the machine running Molecule, reached
+# over a local connection. Declared as its own host instead of using `localhost`, because the
+# implicit localhost is pinned to the controller's own Python - the venv Molecule runs in,
+# which has no libvirt bindings. A declared host goes through the usual interpreter discovery
+# and lands on the system Python that has them, so no ansible_python_interpreter override is
+# needed. Plays only ever delegate to it, so it does not have to be part of --limit.
+ansible_connection: 'local'

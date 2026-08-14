@@ -21,9 +21,9 @@ Depending on the backend a scenario uses:
 
 * VM backend:
 
-    * A libvirt/KVM hypervisor reachable as the create host (`kvm_vm__host`, `localhost` by default), with a `default` storage pool and a `default` network.
-    * `virsh` on the Ansible controller.
-    * Passwordless sudo on the Ansible controller.
+    * A libvirt/KVM hypervisor, addressed through the `hypervisor` inventory host (`kvm_vm__host`), with a `default` storage pool and a `default` network. The shared inventory declares it with `ansible_connection: 'local'`, so it is the machine running Molecule. Its Python needs the libvirt bindings, that is, `python3 -c 'import libvirt'` must work.
+    * `virsh` on the hypervisor.
+    * Passwordless sudo on the hypervisor.
 
 * Container backend:
 
