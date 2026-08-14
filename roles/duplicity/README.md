@@ -30,7 +30,6 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 Manual steps:
 
-* Optionally, create a symbolic link from `/opt/python-venv/duplicity/bin/duplicity` to `/usr/local/bin/duplicity` for easier usage on the command line.
 * Either configure journald to persist your logs and do the rotating, or use logrotated.
 
 
