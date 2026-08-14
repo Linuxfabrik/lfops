@@ -205,6 +205,8 @@
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: "{{ icingaweb2__users__combined_var }}"
+    loop_control:
+      label: '{{ item["username"] }}'
     register: 'icingaweb2__mysql_user_insert_result'
     changed_when: "'error 1062 (23000)' not in icingaweb2__mysql_user_insert_result.stderr | lower"
     failed_when: "icingaweb2__mysql_user_insert_result.rc != 0 and 'error 1062 (23000)' not in icingaweb2__mysql_user_insert_result.stderr | lower"
@@ -227,6 +229,8 @@
     when:
       - 'item["state"] | d("present") == "updated"'
     loop: "{{ icingaweb2__users__combined_var }}"
+    loop_control:
+      label: '{{ item["username"] }}'
     register: 'icingaweb2__mysql_user_insert_result'
 
   - name: 'remove users from the icingaweb2 database'
@@ -240,6 +244,8 @@
     when:
       - 'item["state"] | d("present") == "absent"'
     loop: "{{ icingaweb2__users__combined_var }}"
+    loop_control:
+      label: '{{ item["username"] }}'
 
   tags:
     - 'icingaweb2'
