@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist.
+**Highlights:** A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
+
+### Breaking Changes
+
+* **role:icingaweb2_module_grafana**: The graph configuration for the Linuxfabrik Monitoring Plugins is only deployed when the role is called with `--tags icingaweb2_module_grafana:monitoring_plugins_graphs`, matching the `icingaweb2_module_director:basket` tag. Run the role with that tag to update `/etc/icingaweb2/modules/grafana/graphs.ini`. The `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config` variable is gone; remove it from your inventory.
 
 ### Added
 

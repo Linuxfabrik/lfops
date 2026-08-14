@@ -7,8 +7,8 @@
       fail_msg: 'icingaweb2_module_grafana__monitoring_plugins_version is unset. Make sure to either set icingaweb2_module_grafana__monitoring_plugins_version or `lfops__monitoring_plugins_version`.'
 
   tags:
-    - 'icingaweb2_module_grafana'
     - 'icingaweb2_module_grafana:monitoring_plugins_graphs'
+    - 'never'
 
 
 - block:
@@ -21,7 +21,6 @@
   tags:
     - 'icingaweb2_module_grafana'
     - 'icingaweb2_module_grafana:configure'
-    - 'icingaweb2_module_grafana:monitoring_plugins_graphs'
 
 
 - block:
@@ -162,9 +161,6 @@
       group: 'icingaweb2'
       mode: 0o664
 
-  # block
-  when:
-    - 'not icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config'
   tags:
-    - 'icingaweb2_module_grafana'
     - 'icingaweb2_module_grafana:monitoring_plugins_graphs'
+    - 'never'

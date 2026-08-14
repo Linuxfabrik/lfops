@@ -1,7 +1,6 @@
 # Ansible Role linuxfabrik.lfops.icingaweb2_module_grafana
 
-This role installs and configures the [IcingaWeb2 Grafana Module](https://github.com/NETWAYS/icingaweb2-module-grafana).
-Additionally, it deploys the the graph configuration for the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). This can be disabled using `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config`.
+This role installs and configures the [IcingaWeb2 Grafana Module](https://github.com/NETWAYS/icingaweb2-module-grafana), and deploys the graph configuration for the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) when called with the `icingaweb2_module_grafana:monitoring_plugins_graphs` tag.
 
 This role is tested with the following IcingaWeb2 Grafana Module versions:
 
@@ -28,12 +27,12 @@ Manual steps:
 
 `icingaweb2_module_grafana:configure`
 
-* Configures the IcingaWeb2 Grafana Module, excluding the graph configs.
+* Configures the IcingaWeb2 Grafana Module.
 * Triggers: none.
 
 `icingaweb2_module_grafana:monitoring_plugins_graphs`
 
-* Deploys the configuration for the graphs for the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins).
+* Only runs if explicitly called. Deploys the graph configuration for the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins).
 * Triggers: none.
 
 
@@ -89,12 +88,6 @@ icingaweb2_module_grafana__version: 'v3.1.3'
 * Type: String.
 * Default: `'Default'`
 
-`icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config`
-
-* Skip the deployment of the graph configuration for [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins).
-* Type: Bool.
-* Default: `false`
-
 `icingaweb2_module_grafana__theme`
 
 * The theme for the Grafana graphs. Possible options:
@@ -126,7 +119,6 @@ icingaweb2_module_grafana__custom_graphs_config: |-
   dashboarduid = "default"
   timerange = "7d"
 icingaweb2_module_grafana__default_dashboard: 'Default'
-icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config: true
 icingaweb2_module_grafana__theme: 'light'
 icingaweb2_module_grafana__url: 'https://monitoring.example.com/grafana'
 ```
