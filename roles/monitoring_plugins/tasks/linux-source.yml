@@ -18,49 +18,48 @@
     vars:
       shared__lib_version: 'dev'
 
-  - name: 'Flatten check-plugins locally using shell'
+  # Mirrors `build/install-plugins.sh` of the monitoring-plugins repo, which is what the rpm and
+  # deb packages run: every `<tree>/<name>/<name>` executable of check-plugins, event-plugins and
+  # notification-plugins goes flat into the plugin directory, and the per-plugin assets go into a
+  # single `assets/` directory next to them. The `example` plugin is skipped, as in the packages.
+  # A pinned `monitoring_plugins__version` can predate a tree, so each one is only walked if the
+  # checkout has it.
+  #
+  # The shebangs are rewritten here, on the controller, instead of on the target: the plugin
+  # directory is shared with the distribution's own Nagios plugins, and rewriting it in place
+  # would have to walk that directory and could catch a foreign plugin.
+  - name: 'Flatten the plugins and their assets locally using shell'
     ansible.builtin.shell:
       cmd: |
-        set -o pipefail
-        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins
-        find /tmp/ansible.monitoring-plugins-repo/check-plugins -mindepth 2 -maxdepth 2 -type f | while read file; do
-          base=$(basename "$file")
-          parent=$(basename "$(dirname "$file")")
-          if [ "$base" = "$parent" ]; then
-            cp -- "$file" /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/"$base"
-          fi
+        set -e -o pipefail
+        rm -rf /tmp/ansible.monitoring-plugins-repo-flattened
+        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/assets
+        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/plugins
+        for tree in check-plugins event-plugins notification-plugins; do
+          [ -d "$tree" ] || continue
+          find "$tree" \
+            -maxdepth 2 \
+            -type f \
+            -not -name example \
+            -regextype posix-extended \
+            -regex '.*/([^/]+)/\1$' \
+            -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/plugins/ \;
+          find "$tree" \
+            -mindepth 3 \
+            -type f \
+            -path '*/assets/*' \
+            -not -path '*/example/assets/*' \
+            -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/assets/ \;
         done
-      executable: '/bin/bash'
-    delegate_to: 'localhost'
-    become: false
-    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
-    check_mode: false # run task even if `--check` is specified
-    changed_when: false # no change on the remote host
-
-  - name: 'Flatten notification-plugins locally using shell'
-    ansible.builtin.shell:
-      cmd: |
-        set -o pipefail
-        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins
-        find /tmp/ansible.monitoring-plugins-repo/notification-plugins -mindepth 2 -maxdepth 2 -type f | while read file; do
-          base=$(basename "$file")
-          parent=$(basename "$(dirname "$file")")
-          if [ "$base" = "$parent" ]; then
-            cp -- "$file" /tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/"$base"
-          fi
-        done
-      executable: '/bin/bash'
-    delegate_to: 'localhost'
-    become: false
-    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
-    check_mode: false # run task even if `--check` is specified
-    changed_when: false # no change on the remote host
-
-  - name: 'Flatten asset files from plugin assets directories'
-    ansible.builtin.shell:
-      cmd: |
-        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets
-        find /tmp/ansible.monitoring-plugins-repo/check-plugins/*/assets -type f -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/assets/ \;
+        # A checkout always carries plugins. None of them means the clone produced something
+        # unusable, and going on would report a successful run on a host that has no plugins.
+        if [ "$(ls -1 /tmp/ansible.monitoring-plugins-repo-flattened/plugins | wc -l)" -eq 0 ]; then
+          echo 'found no plugins in the checkout' >&2
+          exit 1
+        fi
+        sed -i '1s|^#!.*python.*|#!/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python|' \
+          /tmp/ansible.monitoring-plugins-repo-flattened/plugins/*
+      chdir: '/tmp/ansible.monitoring-plugins-repo'
       executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
@@ -207,29 +206,59 @@
 
 - block:
 
-  - name: 'mkdir -p /usr/lib64/nagios/plugins/notifications/'
+  - name: 'mkdir -p /usr/lib64/nagios/plugins/'
     ansible.builtin.file:
-      path: '/usr/lib64/nagios/plugins/notifications/'
+      path: '/usr/lib64/nagios/plugins/'
       state: 'directory'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
   - name: 'mkdir -p /usr/lib64/nagios/plugins/lib/'
     ansible.builtin.file:
       path: '/usr/lib64/nagios/plugins/lib/'
       state: 'directory'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
-  - name: 'rsync flattened check-plugins to remote host'
+  # The rsync options are the same for all three transfers below:
+  #
+  # --chmod          forces the modes instead of inheriting them from the checkout on the
+  #                  controller. A hardened controller umask (027 or 077) leaves the git working
+  #                  directory unreadable for everyone but its owner, and rsync would carry that
+  #                  over and leave the monitoring user unable to read and execute the plugins.
+  # --checksum       compares content instead of size and modification time. The staging tree is
+  #                  rebuilt on every run, so its modification times are always new and rsync
+  #                  would re-transfer everything and report a change on an unchanged checkout.
+  # --no-times       keeps rsync from writing those modification times to the target, which would
+  #                  itself count as a change on every run.
+  # --no-owner       leaves ownership to the receiving side, which runs as root. Without it rsync
+  # --no-group       pushes the numeric owner of the controller user, which the chown below then
+  #                  corrects, so both tasks report a change on every run.
+  - name: 'rsync the flattened plugins to remote host'
     ansible.posix.synchronize:
-      src: '/tmp/ansible.monitoring-plugins-repo-flattened/check-plugins/'
+      src: '/tmp/ansible.monitoring-plugins-repo-flattened/plugins/'
       dest: '/usr/lib64/nagios/plugins/'
       mode: 'push'
+      rsync_opts:
+        - '--checksum'
+        - '--chmod=D755,F755'
+        - '--no-group'
+        - '--no-owner'
+        - '--no-times'
 
-  - name: 'rsync flattened notification-plugins to remote host'
+  - name: 'rsync the flattened plugin assets to remote host'
     ansible.posix.synchronize:
-      src: '/tmp/ansible.monitoring-plugins-repo-flattened/notification-plugins/'
-      dest: '/usr/lib64/nagios/plugins/notifications/'
+      src: '/tmp/ansible.monitoring-plugins-repo-flattened/assets/'
+      dest: '/usr/lib64/nagios/plugins/assets/'
       mode: 'push'
+      rsync_opts:
+        - '--checksum'
+        - '--chmod=D755,F644'
+        - '--no-group'
+        - '--no-owner'
+        - '--no-times'
 
   # The Linuxfabrik library is deployed straight from its GitHub repo (not via pip),
   # into the plugin directory. The plugins import it as `lib.*`, which resolves because a
@@ -242,12 +271,54 @@
       mode: 'push'
       delete: true
       rsync_opts:
+        - '--checksum'
+        - '--chmod=D755,F644'
+        - '--no-group'
+        - '--no-owner'
+        - '--no-times'
         - '--exclude=.git'
         - '--exclude=.github'
         - '--exclude=dist'
         - '--exclude=lockfiles'
         - '--exclude=tests'
         - '--exclude=*.egg-info'
+
+  - name: 'Make sure artifacts of earlier versions of this role are absent'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    loop:
+      # The notification plugins used to go into a `notifications/` subdirectory, but the Icinga
+      # command definitions and the rpm/deb packages expect them next to the check plugins.
+      # `example` was deployed along with the other check plugins; the packages skip it.
+      - '/usr/lib64/nagios/plugins/example'
+      - '/usr/lib64/nagios/plugins/notifications'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+- block:
+
+  # `ansible.builtin.pip` reuses an existing virtual environment as it is, so a venv built by an
+  # earlier run with a different interpreter would silently keep that Python and no longer match
+  # the one this role selects. Drop it and let the next task rebuild it, which is what the
+  # `python -m venv --clear` of the upstream installer does.
+  - name: '/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python --version'
+    ansible.builtin.command: '/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python --version'
+    register: '__monitoring_plugins__venv_python_version_result'
+    changed_when: false
+    failed_when: false
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Remove a venv that was built with another Python'
+    ansible.builtin.file:
+      path: '/usr/lib64/linuxfabrik-monitoring-plugins'
+      state: 'absent'
+    when:
+      - '__monitoring_plugins__venv_python_version_result["rc"] == 0'
+      - '__monitoring_plugins__venv_python_version_result["stdout"].split()[1].split(".")[0:2]
+         != __monitoring_plugins__source_python_version_result["stdout"].split()[1].split(".")[0:2]'
 
   # linuxfabrik-lib is removed here because the library is deployed from GitHub above; the
   # rest of `requirements.in` (unpinned) provides the newest third-party dependencies.
@@ -257,37 +328,31 @@
         {{ lookup("ansible.builtin.file", "/tmp/ansible.monitoring-plugins-repo/requirements.in").split("\n")
            | reject("match", "^linuxfabrik-lib")
            | join("\n") }}
-      dest: '/tmp/requirements.txt'
+      dest: '/tmp/ansible.monitoring-plugins-requirements.txt'
+      mode: 0o644
+
+  # Dropping linuxfabrik-lib also drops everything the library itself needs (httpx, pymysql,
+  # pypsrp, PySmbClient, pywinrm), because none of those is a direct dependency of the plugins.
+  # Without them `lib.url.fetch()` answers `Python module "httpx" is not installed` and every
+  # check that speaks HTTP or MySQL fails, so the library's own dependency list is deployed
+  # alongside. The two lists overlap, which is why they go into separate pip calls.
+  - name: 'Deploy the venv requirements of the Linuxfabrik library'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.lib-repo/requirements.in'
+      dest: '/tmp/ansible.monitoring-plugins-lib-requirements.txt'
       mode: 0o644
 
   - name: 'Create the dependency venv and install the newest plugin dependencies into it'
     ansible.builtin.pip:
-      requirements: '/tmp/requirements.txt'
+      requirements: '/tmp/ansible.monitoring-plugins-requirements.txt'
       virtualenv: '/usr/lib64/linuxfabrik-monitoring-plugins/venv'
       virtualenv_command: '{{ __monitoring_plugins__source_python_interpreter }} -m venv'
 
-  # Point every plugin at the venv interpreter so the third-party dependencies resolve no
-  # matter which user runs it. Only the executable plugins in the plugin directory and the
-  # notifications directory are touched, not the imported `lib/` modules or the assets.
-  - name: 'Point the plugin shebangs at the venv interpreter'
-    ansible.builtin.shell:
-      cmd: |
-        set -o pipefail
-        venv_python='/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python'
-        find /usr/lib64/nagios/plugins /usr/lib64/nagios/plugins/notifications -maxdepth 1 -type f | while read -r plugin; do
-          first_line="$(head -1 "$plugin")"
-          case "$first_line" in
-            '#!'*python*)
-              if [ "$first_line" != "#!${venv_python}" ]; then
-                sed -i "1s|^#!.*|#!${venv_python}|" "$plugin"
-                echo "$plugin"
-              fi
-              ;;
-          esac
-        done
-      executable: '/bin/bash'
-    register: '__monitoring_plugins__shebang_result'
-    changed_when: '__monitoring_plugins__shebang_result["stdout"] | length > 0'
+  - name: 'Install the dependencies of the Linuxfabrik library into the venv'
+    ansible.builtin.pip:
+      requirements: '/tmp/ansible.monitoring-plugins-lib-requirements.txt'
+      virtualenv: '/usr/lib64/linuxfabrik-monitoring-plugins/venv'
+      virtualenv_command: '{{ __monitoring_plugins__source_python_interpreter }} -m venv'
 
   tags:
     - 'monitoring_plugins'
@@ -304,6 +369,17 @@
     ansible.builtin.command: 'chown --recursive --changes root:root /usr/lib64/nagios/plugins /usr/lib64/linuxfabrik-monitoring-plugins'
     register: '__monitoring_plugins__chown_result'
     changed_when: '__monitoring_plugins__chown_result["stdout"] | length > 0'
+
+  # Same reasoning as for the plugins: the venv is created with the umask of the run, so on a
+  # host hardened to umask 027 or 077 the monitoring user cannot traverse it and cannot execute
+  # the interpreter the plugin shebangs point at. `X` grants the executable bit to directories
+  # and to files that already carry one, so the library modules stay non-executable. The plugin
+  # directory itself is left alone here, as it is shared with the distribution's own Nagios
+  # plugins, some of which are setuid root.
+  - name: 'chmod --recursive --changes u=rwX,go=rX the venv'
+    ansible.builtin.command: 'chmod --recursive --changes u=rwX,go=rX /usr/lib64/linuxfabrik-monitoring-plugins'
+    register: '__monitoring_plugins__chmod_result'
+    changed_when: '__monitoring_plugins__chmod_result["stdout"] | length > 0'
 
   - name: 'restorecon -Fvr the plugins and the venv'
     ansible.builtin.command: 'restorecon -Fvr /usr/lib64/nagios/plugins/ /usr/lib64/linuxfabrik-monitoring-plugins/'
@@ -330,6 +406,19 @@
     become: false
     changed_when: false
     register: '__monitoring_plugins__bash_completion_source'
+
+  # A host without the bash-completion package has no /etc/bash_completion.d, and this role does
+  # not pull that package onto a monitored host, so the directory is created here.
+  - name: 'mkdir -p /etc/bash_completion.d/'
+    ansible.builtin.file:
+      path: '/etc/bash_completion.d/'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    when:
+      # a pinned `monitoring_plugins__version` can predate the completion
+      - '__monitoring_plugins__bash_completion_source["stat"]["exists"] | bool'
 
   - name: 'Copy the /etc/bash_completion.d/linuxfabrik-monitoring-plugins file to the server'
     ansible.builtin.copy:

@@ -8,10 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
+**Highlights:** A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag. Hosts running the Monitoring Plugins from source get a repaired installation on the next run: checks that speak HTTP or MySQL work again, and the notification plugins move to the location the Icinga commands point at.
 
 ### Breaking Changes
 
+* **role:monitoring_plugins**: A source install now places the notification plugins in `/usr/lib64/nagios/plugins`, next to the check plugins, and removes the `/usr/lib64/nagios/plugins/notifications` directory it used before. This is where the shipped Icinga command definitions and the rpm/deb packages have always expected them. Adjust any command definition of your own that points into the `notifications` subdirectory.
 * **role:icingaweb2_module_grafana**: The graph configuration for the Linuxfabrik Monitoring Plugins is only deployed when the role is called with `--tags icingaweb2_module_grafana:monitoring_plugins_graphs`, matching the `icingaweb2_module_director:basket` tag. Run the role with that tag to update `/etc/icingaweb2/modules/grafana/graphs.ini`. The `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config` variable is gone; remove it from your inventory.
 
 ### Added
@@ -27,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins**: A source install installs the dependencies of the Linuxfabrik library, so checks that speak HTTP, MySQL, SMB or WinRM no longer report `Python module "httpx" is not installed` and its equivalents.
+* **role:monitoring_plugins**: A source install deploys the event plugins, which only the rpm/deb package used to ship.
+* **role:monitoring_plugins**: A source install completes on a minimal installation, which has neither the Python module `ansible.builtin.pip` needs nor an `/etc/bash_completion.d` directory.
+* **role:monitoring_plugins**: A source install leaves the plugins, the library and the virtual environment readable and executable for the monitoring user, even when the Ansible controller runs with a hardened umask.
+* **role:monitoring_plugins**: A second source install run against an unchanged host no longer reports changes.
 * **role:login**: Removing a user that had lingering enabled no longer aborts the run.
 * **role:example**: The config-validation handler of the reference role triggers the restart handler it notifies; only the template new roles are copied from was affected, not any role that manages an application.
 * **role:freeipa_server**: Commands and command groups can be assigned to a sudo rule, through the `allow_sudocmds` and `allow_sudocmdgroups` subkeys of `freeipa_server__sudorules`; the former `cmds` and `cmdgroups` names never reached FreeIPA and aborted the run with `Unsupported parameters`.

@@ -4,8 +4,11 @@
 # inheriting Debian values.
 __monitoring_plugins__icinga_user: 'nagios'
 __monitoring_plugins__package_version_separator: '='
+# python3-packaging is a requirement of `ansible.builtin.pip` on the managed node and is absent
+# from a minimal installation; python3-venv bootstraps pip for `python3 -m venv`.
 __monitoring_plugins__source_python_interpreter: 'python3'
 __monitoring_plugins__source_python_packages:
+  - 'python3-packaging'
   - 'python3-venv'
 __monitoring_plugins__versionlock_lock_command: 'apt-mark hold'
 __monitoring_plugins__versionlock_unlock_command: 'apt-mark unhold'

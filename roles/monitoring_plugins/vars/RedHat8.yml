@@ -1,6 +1,9 @@
 # RHEL 8's system python3 is 3.6, too old for the monitoring plugins. Install the
 # python39 module package and build the source venv with python3.9, mirroring the
-# rpm package build (which also pins python3.9 on RHEL 8).
+# rpm package build (which also pins python3.9 on RHEL 8). `ansible.builtin.pip` runs under the
+# system python3 and needs either packaging or setuptools there; RHEL 8 has no python3-packaging,
+# so setuptools provides it.
 __monitoring_plugins__source_python_interpreter: 'python3.9'
 __monitoring_plugins__source_python_packages:
+  - 'python3-setuptools'
   - 'python39'
