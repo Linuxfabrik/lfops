@@ -1,0 +1,85 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Install {{ __valkey__package }}'
+    ansible.builtin.package:
+      name: '{{ __valkey__package }}'
+      state: 'present'
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get Valkey version'
+    ansible.builtin.set_fact:
+      valkey__installed_version: '{{ ansible_facts.packages[__valkey__package][0]["version"] | regex_search("\d+\.\d+") }}'
+
+  - name: 'Assert that a configuration template for the installed Valkey version exists'
+    ansible.builtin.assert:
+      that:
+        - 'valkey__installed_version in __valkey__supported_versions'
+      fail_msg: 'Valkey {{ valkey__installed_version }} is not supported by this role. Supported versions: {{ __valkey__supported_versions | join(", ") }}.'
+
+  - name: 'Deploy {{ __valkey__config_dir }}/{{ __valkey__config_file }} (v{{ valkey__installed_version }})'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/valkey/{{ valkey__installed_version }}-valkey.conf.j2'
+      dest: '{{ __valkey__config_dir }}/{{ __valkey__config_file }}'
+      owner: 'root'
+      group: '{{ __valkey__group }}'
+      mode: 0o640
+    notify: 'valkey: restart valkey'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ __valkey__config_dir }}/{{ __valkey__config_file }}'
+
+  - name: 'mkdir -p /etc/systemd/system/{{ __valkey__service_name }}.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/{{ __valkey__service_name }}.d/'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/system/{{ __valkey__service_name }}.d/z00-linuxfabrik.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/valkey.service.d/z00-linuxfabrik.conf.j2'
+      dest: '/etc/systemd/system/{{ __valkey__service_name }}.d/z00-linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'valkey: restart valkey'
+
+  tags:
+    - 'valkey'
+
+
+- block:
+
+  - name: 'systemctl {{ valkey__service_enabled | bool | ternary("enable", "disable") }} {{ __valkey__service_name }}'
+    ansible.builtin.systemd:
+      name: '{{ __valkey__service_name }}'
+      enabled: '{{ valkey__service_enabled }}'
+      daemon_reload: true
+
+  - name: 'systemctl {{ valkey__service_state | regex_replace("p?ed$", "") }} {{ __valkey__service_name }}'
+    ansible.builtin.systemd:
+      name: '{{ __valkey__service_name }}'
+      state: '{{ valkey__service_state }}'
+    register: '__valkey__service_state_result'
+
+  tags:
+    - 'valkey'
+    - 'valkey:state'

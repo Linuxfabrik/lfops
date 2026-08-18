@@ -4,6 +4,8 @@ This role installs and configures [Redis](https://redis.io/), per default listen
 
 This role is compatible with Redis v6+.
 
+RHEL 10 does not ship Redis, so this role does not support it. Use the [linuxfabrik.lfops.valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey) role there.
+
 You can pre-enable Remi's repo with the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) role to get an up-to-date Redis version. If you use the [Redis Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/redis.yml), this is automatically done for you.
 
 This role is compatible with the following Redis versions:

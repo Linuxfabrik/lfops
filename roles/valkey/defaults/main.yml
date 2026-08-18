@@ -1,0 +1,32 @@
+valkey__conf_appendonly: 'no'
+valkey__conf_auto_aof_rewrite_min_size: '64mb'
+valkey__conf_bind: '127.0.0.1'  # '127.0.0.1 ::1' results in "Failed listening on port 6379 (tcp), aborting." on RHEL9 Minimal
+valkey__conf_daemonize: 'no'
+valkey__conf_databases: 16
+valkey__conf_loglevel: 'notice'
+valkey__conf_maxmemory: '50M'
+valkey__conf_maxmemory_policy: 'noeviction'
+valkey__conf_port: 6379
+valkey__conf_protected_mode: 'yes'
+valkey__conf_replica_serve_stale_data: 'yes'
+valkey__conf_supervised: 'auto'
+
+valkey__service_enabled: true
+valkey__service_limit_nofile: 10240
+valkey__service_state: '{{ valkey__service_enabled | bool | ternary("started", "stopped") }}'
+valkey__service_timeout_start_sec: '90s'
+valkey__service_timeout_stop_sec: '90s'
+
+# -----------------------------------------------------------------------------
+
+valkey__kernel_settings__sysctl__dependent_var:
+  # WARNING overcommit_memory is set to 0! Background save may fail under low memory condition.
+  # To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run
+  # the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+  - name: 'vm.overcommit_memory'
+    value: 1
+  # WARNING: The TCP backlog setting of 511 cannot be enforced because
+  # /proc/sys/net/core/somaxconn is set to the lower value of 128.
+  - name: 'net.core.somaxconn'
+    value: 4096
+valkey__kernel_settings__transparent_hugepages__dependent_var: 'madvise'

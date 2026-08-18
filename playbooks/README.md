@@ -1413,6 +1413,15 @@ Calls the following roles (in order):
 * [unattended_upgrades](https://github.com/Linuxfabrik/lfops/tree/main/roles/unattended_upgrades)
 
 
+## valkey.yml
+
+Calls the following roles (in order):
+
+* [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `valkey__skip_kernel_settings`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `valkey__skip_repo_epel`
+* [valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey)
+
+
 ## vsftpd.yml
 
 Calls the following roles (in order):

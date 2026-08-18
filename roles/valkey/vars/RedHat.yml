@@ -1,0 +1,9 @@
+__valkey__conf_logfile: '/var/log/valkey/valkey.log'
+__valkey__config_dir: '/etc/valkey'
+__valkey__config_file: 'valkey.conf'
+__valkey__data_dir: '/var/lib/valkey'
+__valkey__group: 'valkey'
+__valkey__package: 'valkey'
+__valkey__runtime_dir: '/run/valkey'
+
+__valkey__service_name: 'valkey.service'
