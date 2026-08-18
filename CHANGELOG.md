@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:collabora**: Drop support for EOL Collabora 23.05. Upgrade to 24.04 or newer.
 * **role:icingaweb2_module_grafana**: The graph configuration for the Linuxfabrik Monitoring Plugins is only deployed when the role is called with `--tags icingaweb2_module_grafana:monitoring_plugins_graphs`, matching the `icingaweb2_module_director:basket` tag. Run the role with that tag to update `/etc/icingaweb2/modules/grafana/graphs.ini`. The `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config` variable is gone; remove it from your inventory.
 
 ### Added
