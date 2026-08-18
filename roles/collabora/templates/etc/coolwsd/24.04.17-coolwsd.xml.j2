@@ -2,7 +2,7 @@
 <config>
     <!-- {{ ansible_managed }} -->
     <!-- 24.04.17 -->
-    <!-- 2026031901 -->
+    <!-- 2026081801 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -295,13 +295,23 @@
                     <unlock_link desc="Link from where user can unlock the features, which will get mapped with alias_group. According to hostname coolwsd will set the unlock link for feature unlock dialog. If not specified it will fallback to feature_lock.unlock_link entry" default=""></unlock_link>
             </group>-->
             <!-- More "group"s possible here -->
+            {#
+              coolwsd parses every alias_groups <host> with Poco::URI and keeps only the host part
+              of the result. A value without a scheme parses to an empty host, which
+              HostUtil::addWopiHost() then drops without an error message, so the whole allow list
+              ends up empty and no WOPI host is trusted any more. The scheme itself is never used
+              for matching, only the host and the port are, which is why hard-coding https:// here
+              is safe no matter how the WOPI host is actually reached. Consequently the entries in
+              collabora__coolwsd_storage_wopi__* carry the bare hostname regex, without a scheme.
+              Verified against coolwsd 24.04, 25.04 and 26.04.
+            -#}
             {% for item in collabora__coolwsd_storage_wopi__combined_var if item['state'] | d('present') != 'absent' %}
             <group>
-                <host desc="Regex pattern of hostname to allow or deny." allow="true">{{ item['name'] }}</host>
+                <host desc="Regex pattern of hostname to allow or deny." allow="true">https://{{ item['name'] }}</host>
             </group>
             {% endfor %}
             <group>
-                <host desc="Regex pattern of hostname to allow or deny." allow="true">localhost</host>
+                <host desc="Regex pattern of hostname to allow or deny." allow="true">https://localhost</host>
             </group>
             </alias_groups>
 

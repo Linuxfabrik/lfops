@@ -166,7 +166,7 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 
     * `name`:
 
-        * Mandatory. Regex pattern.
+        * Mandatory. Regex pattern of the hostname, without a scheme. The role prefixes it with `https://`, which coolwsd requires to parse the hostname out of the entry. The scheme is not used for matching, so it does not have to match how the WOPI host is actually reached.
         * Type: String.
 
     * `state`:

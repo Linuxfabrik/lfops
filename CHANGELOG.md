@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:example**: The config-validation handler of the reference role triggers the restart handler it notifies; only the template new roles are copied from was affected, not any role that manages an application.
 * **role:freeipa_server**: Commands and command groups can be assigned to a sudo rule, through the `allow_sudocmds` and `allow_sudocmdgroups` subkeys of `freeipa_server__sudorules`; the former `cmds` and `cmdgroups` names never reached FreeIPA and aborted the run with `Unsupported parameters`.
 * **role:apache_solr**: `__apache_solr__java_package` covers the Java package required by Solr 10.
+* **role:collabora**: The WOPI hosts from `collabora__coolwsd_storage_wopi__*` reach coolwsd again. Every entry was discarded on load, and access only kept working because coolwsd trusted the first host that happened to connect. Collabora 26.04 drops that fallback, where the result would have been that no document loads at all.
 
 
 ## [v8.0.0] - 2026-07-31
