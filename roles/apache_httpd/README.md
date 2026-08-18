@@ -25,6 +25,8 @@ The config is split into several files forming the configuration hierarchy outli
 
 We avoid using `<IfModule>` in vHost definitions and in the global `httpd.conf` to facilitate debugging. Without `<IfModule>`, a missing module causes a clear startup error instead of silently dropping configuration. `<IfModule>` is only used in `mods-available/` and `conf-available/` where it is necessary to guard module-specific configuration.
 
+`mod_info` is not enabled. It serves the complete configuration on `/server-info`, including the credentials other modules carry in their directives. The endpoint stays configured in the localhost vHost and answers with an empty response until the `info` module is enabled via `apache_httpd__mods__group_var` / `apache_httpd__mods__host_var`.
+
 For flexibility, use the `raw` variable to configure the following topics (see [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md) for vHost configuration examples):
 
 * SSL/TLS Certificates.
@@ -477,7 +479,7 @@ Types of vHosts:
     * `/fpm-ping` - PHP-FPM health check
     * `/fpm-status` - PHP-FPM status page
     * `/monitoring.php` - Linuxfabrik monitoring endpoint
-    * `/server-info` - Apache server info (`mod_info` required)
+    * `/server-info` - Apache server info (`mod_info` required, disabled by default)
     * `/server-status` - Apache server status (`mod_status` required)
 * **proxy**: A typical hardened reverse proxy vHost. Can be extended by using the `raw` variable. This proxy vHost definition prevents Apache from functioning as a forward proxy server (inside > out).
 * **raw**: If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>` and `</VirtualHost>` completely from scratch.
