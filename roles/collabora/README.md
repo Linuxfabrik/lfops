@@ -160,7 +160,7 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 
 * List of dictionaries containing regex pattern of hostname to allow access to the backend storage. Usually the hostname application that uses Collabora CODE, for example Nextcloud.
 * Type: List of dictionaries.
-* Default: `[]`
+* Default: `localhost`, which can be removed by setting it to `state: 'absent'`.
 
 * Subkeys:
 

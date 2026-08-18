@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:collabora**: The `localhost` WOPI host is an ordinary entry of `collabora__coolwsd_storage_wopi__*` instead of being hard-coded in the template, so it can be dropped with `state: 'absent'` like any other host.
 * **role:php**: The PHP-FPM configuration is checked with `php-fpm --test` before the service is restarted, so a broken pool or ini aborts the run with the error message instead of taking PHP-FPM down on the restart.
 
 ### Fixed

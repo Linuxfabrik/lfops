@@ -2,7 +2,7 @@
 <config>
     <!-- {{ ansible_managed }} -->
     <!-- 24.04.12 -->
-    <!-- 2026081801 -->
+    <!-- 2026081802 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -304,9 +304,6 @@
                 <host desc="Regex pattern of hostname to allow or deny." allow="true">https://{{ item['name'] }}</host>
             </group>
             {% endfor %}
-            <group>
-                <host desc="Regex pattern of hostname to allow or deny." allow="true">https://localhost</host>
-            </group>
             </alias_groups>
 
             <is_legacy_server desc="Set to true for legacy server that need deprecated headers." type="bool" default="false">false</is_legacy_server>
