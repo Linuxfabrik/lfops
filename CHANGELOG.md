@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd**: A missing or mistyped role variable aborts the run at role entry with a clear message instead of failing later while a configuration file is rendered.
 * **role:php**: The PHP-FPM configuration is checked with `php-fpm --test` before the service is restarted, so a broken pool or ini aborts the run with the error message instead of taking PHP-FPM down on the restart.
 
 ### Fixed
