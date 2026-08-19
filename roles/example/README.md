@@ -377,6 +377,10 @@ example__conf_tls_protocols: 'TLSv1.3'
 
 * Another process occupies a configured port. Change the affected `example__listeners` entry or stop the conflicting service.
 
+**The run aborts with `example-server X.Y.Z is not supported by this role`**
+
+* The enabled repositories offer a version this role ships no version-specific files for. Either pin the host to a supported version, or add the matching `roles/example/vars/<version>.yml` and list the version in `roles/example/vars/main.yml`.
+
 
 ## License
 

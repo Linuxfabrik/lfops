@@ -1,0 +1,32 @@
+# Collabora versions this role ships a coolwsd.xml template for, one list per edition.
+# The installed version is matched against the list so an unsupported one aborts with a
+# clear message instead of a missing-template error. Extend the list whenever a template
+# for a new version is added.
+__collabora__supported_versions_code:
+  - '24.04.4'
+  - '24.04.5'
+  - '24.04.6'
+  - '24.04.7'
+  - '24.04.8'
+  - '24.04.9'
+  - '24.04.10'
+  - '24.04.11'
+  - '24.04.12'
+  - '24.04.13'
+  - '25.04.2'
+  - '25.04.3'
+  - '25.04.4'
+  - '25.04.5'
+  - '25.04.6'
+  - '25.04.10'
+__collabora__supported_versions_enterprise:
+  - '24.04.13'
+  - '24.04.15'
+  - '24.04.16'
+  - '24.04.17'
+__collabora__supported_versions: '{{
+    collabora__use_code | bool | ternary(
+      __collabora__supported_versions_code,
+      __collabora__supported_versions_enterprise
+    )
+  }}'

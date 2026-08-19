@@ -279,6 +279,13 @@ collabora__use_code: false
 ```
 
 
+## Troubleshooting
+
+**The run aborts with `Collabora CODE X.Y.Z is not supported by this role`**
+
+* The enabled repository offers a Collabora version this role has no `coolwsd.xml` template for. Either pin the host to a supported version, or add the matching `roles/collabora/templates/etc/coolwsd/<version>-coolwsd-code.xml.j2` template (`<version>-coolwsd.xml.j2` for Collabora Enterprise) and list the version in `roles/collabora/vars/main.yml`.
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)

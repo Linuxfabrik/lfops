@@ -673,6 +673,23 @@ Make sure to use the following format when passing multiple injections to avoid 
 * Always use the `.j2` file extension for files in the `template` folder.
 * If deploying self-written scripts, copy them to `/usr/local/sbin` (due to SELinux). Internal helper scripts that are only ever run by a systemd unit (not invoked by an admin and not exec'd by a confined domain) MAY instead live in `/usr/local/libexec`. Files there get the `usr_t` type, and the targeted policy lets a root `oneshot` service (which runs in `init_t`) execute them in place via `execute_no_trans`, so there is no AVC denial on RHEL/Rocky 8, 9 and 10. Keep admin-invokable commands in `/usr/local/sbin`, and never put a script a confined domain must exec under `/usr/local/libexec`.
 * Keep templates as close to the original file as possible. This makes handling of rpmnew/rpmsave files easier.
+* If the role picks a file by the installed version of the managed software (a `<version>-<name>.conf.j2` template, or a `vars/<version>.yml`), keep the list of versions the role actually ships in `vars/main.yml` and assert against it right after reading the version, the way `roles/example` does. Without the assert, an unsupported version fails on a missing file and names a path the admin has never heard of, instead of the versions the role covers.
+    ```yaml
+    # vars/main.yml
+    __example__supported_versions:
+      - '1.0.0'
+      - '2.0.0'
+    ```
+    ```yaml
+    # tasks/main.yml
+    - name: 'Assert that this role supports the installed version'
+      ansible.builtin.assert:
+        that:
+          - '__example__installed_server_version in __example__supported_versions'
+        quiet: true
+        fail_msg: 'example-server {{ __example__installed_server_version }} is not supported by this role. Supported versions: {{ __example__supported_versions | join(", ") }}.'
+    ```
+    Document the abort in the role README as a `## Troubleshooting` entry: the enabled repositories offer a version the role ships no file for, and the fix is either pinning the host to a supported version or adding the matching file.
 * Add the following task after deploying a file that might get rpmnew or rpmsave files (or their Debian equivalents):
     ```yaml
     - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
