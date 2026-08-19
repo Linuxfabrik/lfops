@@ -39,6 +39,13 @@
     ansible.builtin.set_fact:
       tomcat__installed_version: '{{ (ansible_facts["packages"]["tomcat"][0]["version"] | d(ansible_facts["packages"]["tomcat"][0]["version"])) | regex_search("\d+\.\d+") }}'
 
+  - name: 'Assert that configuration templates for the installed Tomcat version exist'
+    ansible.builtin.assert:
+      that:
+        - 'tomcat__installed_version in __apache_tomcat__supported_versions'
+      quiet: true
+      fail_msg: 'Tomcat {{ tomcat__installed_version }} is not supported by this role. Supported versions: {{ __apache_tomcat__supported_versions | join(", ") }}.'
+
   tags:
     - 'apache_tomcat'
     - 'apache_tomcat:configure'

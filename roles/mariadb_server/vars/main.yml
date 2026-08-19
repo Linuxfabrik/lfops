@@ -1,3 +1,12 @@
+# MariaDB versions this role ships a configuration template and a vars file for. The installed version is matched
+# against this list so an unsupported one aborts with a clear message instead of a
+# missing-file error. Extend it whenever a version for a new version is added.
+__mariadb_server__supported_versions:
+  - '10.6'
+  - '10.11'
+  - '11.4'
+  - '11.8'
+
 __mariadb_server__python__modules__dependent_var:
   Debian:
     - name: 'python3-pymysql'

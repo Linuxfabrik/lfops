@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking Changes
 
 * **role:monitoring_plugins**: A source install now places the notification plugins in `/usr/lib64/nagios/plugins`, next to the check plugins, and removes the `/usr/lib64/nagios/plugins/notifications` directory it used before. This is where the shipped Icinga command definitions and the rpm/deb packages have always expected them. Adjust any command definition of your own that points into the `notifications` subdirectory.
+* **role:collabora**: Drop support for EOL Collabora 23.05. Upgrade to 24.04 or newer.
 * **role:icingaweb2_module_grafana**: The graph configuration for the Linuxfabrik Monitoring Plugins is only deployed when the role is called with `--tags icingaweb2_module_grafana:monitoring_plugins_graphs`, matching the `icingaweb2_module_director:basket` tag. Run the role with that tag to update `/etc/icingaweb2/modules/grafana/graphs.ini`. The `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config` variable is gone; remove it from your inventory.
 
 ### Added
@@ -24,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:collabora**: A host running a Collabora version the role has no configuration template for aborts with that version and the list of supported ones, instead of failing on a missing file.
+* **role:collabora**: The `localhost` WOPI host is an ordinary entry of `collabora__coolwsd_storage_wopi__*` instead of being hard-coded in the template, so it can be dropped with `state: 'absent'` like any other host.
 * **role:php**: The PHP-FPM configuration is checked with `php-fpm --test` before the service is restarted, so a broken pool or ini aborts the run with the error message instead of taking PHP-FPM down on the restart.
 
 ### Fixed
@@ -37,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:example**: The config-validation handler of the reference role triggers the restart handler it notifies; only the template new roles are copied from was affected, not any role that manages an application.
 * **role:freeipa_server**: Commands and command groups can be assigned to a sudo rule, through the `allow_sudocmds` and `allow_sudocmdgroups` subkeys of `freeipa_server__sudorules`; the former `cmds` and `cmdgroups` names never reached FreeIPA and aborted the run with `Unsupported parameters`.
 * **role:apache_solr**: `__apache_solr__java_package` covers the Java package required by Solr 10.
+* **role:collabora**: The WOPI hosts from `collabora__coolwsd_storage_wopi__*` reach coolwsd again. Every entry was discarded on load, and access only kept working because coolwsd trusted the first host that happened to connect. Collabora 26.04 drops that fallback, where the result would have been that no document loads at all.
 
 
 ## [v8.0.0] - 2026-07-31

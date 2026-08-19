@@ -1,3 +1,12 @@
+# Versions of the managed software this role ships version-specific files for. Here that
+# is `vars/<version>.yml`; a role that deploys a `<version>-<name>.conf.j2` template per
+# version keeps that list the same way. The version read from the package database is
+# asserted against this list, so an unsupported one aborts naming the versions the role
+# covers instead of failing on a missing file. Extend it whenever a version is added.
+__example__supported_versions:
+  - '1.0.0'
+  - '2.0.0'
+
 # OS-specific dependent_var, published by this role and consumed by an earlier role in
 # the play via the `__dependent_var` slot of the consumer (see "OS-specific Dependent
 # Variables" in CONTRIBUTING.md).

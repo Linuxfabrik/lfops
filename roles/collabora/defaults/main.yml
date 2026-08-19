@@ -54,7 +54,9 @@ collabora__coolwsd_storage_wopi__combined_var: '{{ (
 collabora__coolwsd_storage_wopi__dependent_var: []
 collabora__coolwsd_storage_wopi__group_var: []
 collabora__coolwsd_storage_wopi__host_var: []
-collabora__coolwsd_storage_wopi__role_var: []
+collabora__coolwsd_storage_wopi__role_var:
+  - name: 'localhost'
+    state: 'present'
 collabora__coolwsd_welcome_enable: false
 collabora__language_packages__combined_var: '{{ (
       collabora__language_packages__role_var +

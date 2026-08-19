@@ -404,6 +404,10 @@ Caused by: org.hibernate.HibernateException: Connection cannot be null when 'hib
 * Connection string correct? Example: `jdbc:mysql://localhost/linuxfabrik?createDatabaseIfNotExist=true&useEncoding=true&characterEncoding=UTF-8`
 * SELinux Boolean for Tomcat set? `setsebool tomcat_can_network_connect_db on`
 
+**The run aborts with `Tomcat X.Y is not supported by this role`**
+
+* The enabled repositories offer a Tomcat version this role has no configuration templates for. Either pin the host to a supported version, or add the matching `roles/apache_tomcat/templates/` files and list the version in `roles/apache_tomcat/vars/main.yml`.
+
 
 ## License
 

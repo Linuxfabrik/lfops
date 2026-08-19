@@ -478,6 +478,13 @@ php__fpm_pools__host_var:
 ```
 
 
+## Troubleshooting
+
+**The run aborts with `PHP X.Y is not supported by this role`**
+
+* The enabled repositories offer a PHP version this role ships no ini template and vars file for. Either pin the host to a supported version via `php__version`, or add the matching `roles/php/templates/etc/php.d/<version>-z00-linuxfabrik.ini.j2` and `roles/php/vars/<version>.yml`, and list the version in `roles/php/vars/main.yml`.
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)

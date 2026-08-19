@@ -1,0 +1,19 @@
+# MongoDB versions this role ships a configuration template for, per OS family, since
+# the template name carries the family. The installed version is matched against the
+# list so an unsupported one aborts with a clear message instead of a missing-file
+# error. Extend it whenever a template for a new version is added.
+__mongodb__supported_versions_per_os_family:
+  Debian:
+    - '6.0'
+    - '7.0'
+  RedHat:
+    - '4.2'
+    - '4.4'
+    - '5.0'
+    - '6.0'
+    - '7.0'
+    - '8.0'
+__mongodb__supported_versions: '{{
+    __mongodb__supported_versions_per_os_family
+    | linuxfabrik.lfops.platform_select(ansible_facts)
+  }}'

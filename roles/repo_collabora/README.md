@@ -2,12 +2,6 @@
 
 This role deploys the official package repository for [Collabora Enterprise](https://www.collaboraonline.com/) (a self-hostable web-based office suite based on LibreOffice).
 
-Supported Versions:
-
-* 23.05
-* 24.04
-
-
 *Available since LFOps `2.0.0`.*
 
 

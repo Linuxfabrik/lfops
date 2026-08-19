@@ -98,6 +98,17 @@
     ansible.builtin.set_fact:
       __example__installed_server_version: '{{ ansible_facts["packages"]["example-server"][0]["version"] }}'
 
+  # whenever a version-specific file (a vars file or a template) is picked by the installed
+  # version, assert against the list of versions the role actually ships. otherwise an
+  # unsupported version fails on a missing file, which names a path the admin has never
+  # heard of instead of the versions the role covers.
+  - name: 'Assert that this role supports the installed version'
+    ansible.builtin.assert:
+      that:
+        - '__example__installed_server_version in __example__supported_versions'
+      quiet: true
+      fail_msg: 'example-server {{ __example__installed_server_version }} is not supported by this role. Supported versions: {{ __example__supported_versions | join(", ") }}.'
+
   # load the version-specific vars right after install, before any task uses them
   # (__example__init_flag in the next block, __example__conf_worker_threads in the configure block).
   - name: 'Load default values for {{ __example__installed_server_version }}'
